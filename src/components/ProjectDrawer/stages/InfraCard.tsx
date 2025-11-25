@@ -1,27 +1,57 @@
+import { useState, useEffect } from "react";
 import { Project, ProjectStatus } from "@/types/project";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Save, Server } from "lucide-react";
+import { Server } from "lucide-react";
+import { useProjects } from "@/hooks/useProjects";
+import { useDebounce } from "@/hooks/use-debounce";
 import { toast } from "sonner";
-import { useProjectStore } from "@/stores/projectStore";
 
 interface InfraCardProps {
   project: Project;
 }
 
 export const InfraCard = ({ project }: InfraCardProps) => {
-  const { updateProject } = useProjectStore();
+  const { updateProject } = useProjects();
   const stage = project.stages.infra;
   const isBlocked = stage.status === ProjectStatus.BLOCKED;
 
-  const handleSave = () => {
-    toast.success("Alterações salvas!");
-  };
+  const [localData, setLocalData] = useState({
+    status: stage.status,
+    responsible: stage.responsible || "",
+    blockingReason: stage.blockingReason || "",
+    observations: stage.observations || "",
+  });
+
+  const debouncedData = useDebounce(localData, 1000);
+
+  useEffect(() => {
+    if (JSON.stringify(debouncedData) !== JSON.stringify({
+      status: stage.status,
+      responsible: stage.responsible || "",
+      blockingReason: stage.blockingReason || "",
+      observations: stage.observations || "",
+    })) {
+      updateProject.mutate({
+        projectId: project.id,
+        updates: {
+          infra_status: debouncedData.status,
+          infra_responsible: debouncedData.responsible,
+          infra_blocking_reason: debouncedData.blockingReason,
+          infra_observations: debouncedData.observations,
+        },
+      }, {
+        onSuccess: () => {
+          toast.success("Alterações salvas automaticamente", { duration: 2000 });
+        },
+      });
+    }
+  }, [debouncedData]);
 
   return (
     <AccordionItem value="infra">
@@ -31,10 +61,10 @@ export const InfraCard = ({ project }: InfraCardProps) => {
             <Server className="h-5 w-5 text-primary" />
             <span className="font-semibold">Análise de Infraestrutura</span>
             <span className="text-xs text-muted-foreground">
-              {stage.status === ProjectStatus.DONE && "✓ Finalizado"}
-              {stage.status === ProjectStatus.IN_PROGRESS && "→ Em Andamento"}
-              {stage.status === ProjectStatus.BLOCKED && "⚠ Bloqueado"}
-              {stage.status === ProjectStatus.TODO && "○ Aguardando"}
+              {localData.status === ProjectStatus.DONE && "✓ Finalizado"}
+              {localData.status === ProjectStatus.IN_PROGRESS && "→ Em Andamento"}
+              {localData.status === ProjectStatus.BLOCKED && "⚠ Bloqueado"}
+              {localData.status === ProjectStatus.TODO && "○ Aguardando"}
             </span>
           </div>
         </AccordionTrigger>
@@ -43,7 +73,10 @@ export const InfraCard = ({ project }: InfraCardProps) => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Status</Label>
-                <Select defaultValue={stage.status}>
+                <Select 
+                  value={localData.status} 
+                  onValueChange={(value) => setLocalData({...localData, status: value as ProjectStatus})}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -58,37 +91,22 @@ export const InfraCard = ({ project }: InfraCardProps) => {
 
               <div>
                 <Label>Responsável</Label>
-                <Select defaultValue={stage.responsible}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="user-joao">João Infra</SelectItem>
-                    <SelectItem value="user-alex">Alex Silva</SelectItem>
-                    <SelectItem value="user-maria">Maria Conversão</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Input
+                  placeholder="Nome do responsável"
+                  value={localData.responsible}
+                  onChange={(e) => setLocalData({...localData, responsible: e.target.value})}
+                />
               </div>
             </div>
 
             {isBlocked && (
               <div>
                 <Label>Motivo do Bloqueio</Label>
-                <Select defaultValue={stage.blockingReason}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Aguardando Compra de Servidor">
-                      Aguardando Compra de Servidor
-                    </SelectItem>
-                    <SelectItem value="Upgrade SO Necessário">
-                      Upgrade SO Necessário
-                    </SelectItem>
-                    <SelectItem value="Rede Instável">Rede Instável</SelectItem>
-                    <SelectItem value="Outros">Outros</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Input
+                  placeholder="Descreva o motivo do bloqueio"
+                  value={localData.blockingReason}
+                  onChange={(e) => setLocalData({...localData, blockingReason: e.target.value})}
+                />
               </div>
             )}
 
@@ -96,15 +114,15 @@ export const InfraCard = ({ project }: InfraCardProps) => {
               <Label>Observações</Label>
               <Textarea
                 placeholder="Adicione observações..."
-                defaultValue={stage.observations}
+                value={localData.observations}
+                onChange={(e) => setLocalData({...localData, observations: e.target.value})}
                 rows={3}
               />
             </div>
 
-            <Button onClick={handleSave} className="w-full">
-              <Save className="h-4 w-4 mr-2" />
-              Salvar Alterações
-            </Button>
+            <p className="text-xs text-muted-foreground italic">
+              💾 Salvamento automático ativado
+            </p>
           </div>
         </AccordionContent>
       </Card>

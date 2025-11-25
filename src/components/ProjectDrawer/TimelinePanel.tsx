@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Project } from "@/types/project";
-import { useProjectStore } from "@/stores/projectStore";
+import { useTimeline } from "@/hooks/useTimeline";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Send, Bot, User } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -16,7 +16,7 @@ interface TimelinePanelProps {
 
 export const TimelinePanel = ({ project }: TimelinePanelProps) => {
   const [comment, setComment] = useState("");
-  const { addComment, users } = useProjectStore();
+  const { addComment } = useTimeline();
 
   const handleSendComment = () => {
     if (!comment.trim()) {
@@ -24,13 +24,15 @@ export const TimelinePanel = ({ project }: TimelinePanelProps) => {
       return;
     }
 
-    addComment(project.id, comment.trim());
-    setComment("");
-    toast.success("Comentário adicionado!");
-  };
-
-  const getUserById = (userId: string) => {
-    return users.find((u) => u.id === userId);
+    addComment.mutate(
+      { projectId: project.id, message: comment.trim() },
+      {
+        onSuccess: () => {
+          setComment("");
+          toast.success("Comentário adicionado!");
+        },
+      }
+    );
   };
 
   const sortedTimeline = [...project.timeline].sort(
@@ -46,8 +48,6 @@ export const TimelinePanel = ({ project }: TimelinePanelProps) => {
       <ScrollArea className="flex-1 px-4">
         <div className="space-y-4 py-4">
           {sortedTimeline.map((event) => {
-            const user = event.author !== "system" ? getUserById(event.author) : null;
-
             return (
               <div
                 key={event.id}
@@ -56,9 +56,8 @@ export const TimelinePanel = ({ project }: TimelinePanelProps) => {
                 }`}
               >
                 <div className="flex items-start gap-3">
-                  {event.type === "comment" && user ? (
+                  {event.type === "comment" ? (
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={user.avatar} />
                       <AvatarFallback>
                         <User className="h-4 w-4" />
                       </AvatarFallback>
@@ -72,7 +71,7 @@ export const TimelinePanel = ({ project }: TimelinePanelProps) => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-sm font-medium">
-                        {user?.name || "Sistema"}
+                        {event.author}
                       </span>
                       <span className="text-xs text-muted-foreground whitespace-nowrap">
                         {format(new Date(event.timestamp), "dd/MM 'às' HH:mm", {
@@ -98,9 +97,13 @@ export const TimelinePanel = ({ project }: TimelinePanelProps) => {
             className="resize-none"
             rows={3}
           />
-          <Button onClick={handleSendComment} className="w-full">
+          <Button 
+            onClick={handleSendComment} 
+            className="w-full"
+            disabled={addComment.isPending}
+          >
             <Send className="h-4 w-4 mr-2" />
-            Enviar Comentário
+            {addComment.isPending ? "Enviando..." : "Enviar Comentário"}
           </Button>
         </div>
       </div>
