@@ -1,42 +1,77 @@
+import { useState, useEffect } from "react";
 import { Project, ProjectStatus } from "@/types/project";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
-import { Save, CheckSquare } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { CheckCircle2 } from "lucide-react";
+import { useProjects } from "@/hooks/useProjects";
+import { useDebounce } from "@/hooks/use-debounce";
 import { toast } from "sonner";
-import { useState } from "react";
 
 interface AdherenceCardProps {
   project: Project;
 }
 
 export const AdherenceCard = ({ project }: AdherenceCardProps) => {
+  const { updateProject } = useProjects();
   const stage = project.stages.adherence;
-  const [hasGap, setHasGap] = useState(stage.hasProductGap);
 
-  const handleSave = () => {
-    toast.success("Alterações salvas!");
-  };
+  const [localData, setLocalData] = useState({
+    status: stage.status,
+    responsible: stage.responsible || "",
+    hasProductGap: stage.hasProductGap,
+    devTicket: stage.devTicket || "",
+    devEstimatedDate: stage.devEstimatedDate ? stage.devEstimatedDate.toISOString().split('T')[0] : "",
+    startDate: stage.startDate ? stage.startDate.toISOString().split('T')[0] : "",
+    endDate: stage.endDate ? stage.endDate.toISOString().split('T')[0] : "",
+    observations: stage.observations || "",
+  });
+
+  const debouncedData = useDebounce(localData, 1000);
+
+  useEffect(() => {
+    const hasChanges = 
+      debouncedData.status !== stage.status ||
+      debouncedData.responsible !== (stage.responsible || "") ||
+      debouncedData.hasProductGap !== stage.hasProductGap ||
+      debouncedData.devTicket !== (stage.devTicket || "") ||
+      debouncedData.devEstimatedDate !== (stage.devEstimatedDate ? stage.devEstimatedDate.toISOString().split('T')[0] : "") ||
+      debouncedData.startDate !== (stage.startDate ? stage.startDate.toISOString().split('T')[0] : "") ||
+      debouncedData.endDate !== (stage.endDate ? stage.endDate.toISOString().split('T')[0] : "") ||
+      debouncedData.observations !== (stage.observations || "");
+
+    if (hasChanges) {
+      updateProject.mutate({
+        projectId: project.id,
+        updates: {
+          adherence_status: debouncedData.status,
+          adherence_responsible: debouncedData.responsible,
+          adherence_has_product_gap: debouncedData.hasProductGap,
+          adherence_dev_ticket: debouncedData.devTicket,
+          adherence_dev_estimated_date: debouncedData.devEstimatedDate || null,
+          adherence_start_date: debouncedData.startDate || null,
+          adherence_end_date: debouncedData.endDate || null,
+          adherence_observations: debouncedData.observations,
+        },
+      }, {
+        onSuccess: () => {
+          toast.success("Alterações salvas automaticamente", { duration: 2000 });
+        },
+      });
+    }
+  }, [debouncedData]);
 
   return (
     <AccordionItem value="adherence">
-      <Card className={cn("overflow-hidden", hasGap && "border-l-4 border-l-warning")}>
+      <Card>
         <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/50">
           <div className="flex items-center gap-3">
-            <CheckSquare className="h-5 w-5 text-primary" />
+            <CheckCircle2 className="h-5 w-5 text-primary" />
             <span className="font-semibold">Análise de Aderência</span>
-            <span className="text-xs text-muted-foreground">
-              {stage.status === ProjectStatus.DONE && "✓ Finalizado"}
-              {stage.status === ProjectStatus.IN_PROGRESS && "→ Em Andamento"}
-              {stage.status === ProjectStatus.BLOCKED && "⚠ Impedimento"}
-              {stage.status === ProjectStatus.TODO && "○ Aguardando"}
-            </span>
           </div>
         </AccordionTrigger>
         <AccordionContent>
@@ -44,7 +79,10 @@ export const AdherenceCard = ({ project }: AdherenceCardProps) => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Status</Label>
-                <Select defaultValue={stage.status}>
+                <Select 
+                  value={localData.status} 
+                  onValueChange={(value) => setLocalData({...localData, status: value as ProjectStatus})}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -52,46 +90,67 @@ export const AdherenceCard = ({ project }: AdherenceCardProps) => {
                     <SelectItem value="todo">Não Iniciado</SelectItem>
                     <SelectItem value="in-progress">Em Andamento</SelectItem>
                     <SelectItem value="done">Finalizado</SelectItem>
-                    <SelectItem value="blocked">Impedimento</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
                 <Label>Responsável</Label>
-                <Select defaultValue={stage.responsible}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="user-alex">Alex Silva</SelectItem>
-                    <SelectItem value="user-joao">João Infra</SelectItem>
-                    <SelectItem value="user-maria">Maria Conversão</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Input
+                  placeholder="Nome do responsável"
+                  value={localData.responsible}
+                  onChange={(e) => setLocalData({...localData, responsible: e.target.value})}
+                />
+              </div>
+
+              <div>
+                <Label>Data de Início</Label>
+                <Input 
+                  type="date" 
+                  value={localData.startDate}
+                  onChange={(e) => setLocalData({...localData, startDate: e.target.value})}
+                />
+              </div>
+
+              <div>
+                <Label>Data de Término</Label>
+                <Input 
+                  type="date" 
+                  value={localData.endDate}
+                  onChange={(e) => setLocalData({...localData, endDate: e.target.value})}
+                />
               </div>
             </div>
 
-            <div className="flex items-center justify-between p-3 border rounded-lg">
-              <Label htmlFor="product-gap" className="cursor-pointer">
-                Pendência de Produto?
-              </Label>
+            <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="product-gap">Gap de Produto Identificado?</Label>
+              </div>
               <Switch
                 id="product-gap"
-                checked={hasGap}
-                onCheckedChange={setHasGap}
+                checked={localData.hasProductGap}
+                onCheckedChange={(checked) => setLocalData({...localData, hasProductGap: checked})}
               />
             </div>
 
-            {hasGap && (
-              <div className="space-y-4 p-4 bg-warning/10 rounded-lg border border-warning/20">
+            {localData.hasProductGap && (
+              <div className="grid grid-cols-2 gap-4 p-4 bg-warning/5 border border-warning/20 rounded-lg">
                 <div>
-                  <Label>Ticket Dev</Label>
-                  <Input placeholder="DEV-1234" defaultValue={stage.devTicket} />
+                  <Label>Ticket DEV</Label>
+                  <Input 
+                    placeholder="Ex: DEV-1234" 
+                    value={localData.devTicket}
+                    onChange={(e) => setLocalData({...localData, devTicket: e.target.value})}
+                  />
                 </div>
+
                 <div>
-                  <Label>Prazo Estimado Dev</Label>
-                  <Input type="date" />
+                  <Label>Previsão de Entrega DEV</Label>
+                  <Input 
+                    type="date" 
+                    value={localData.devEstimatedDate}
+                    onChange={(e) => setLocalData({...localData, devEstimatedDate: e.target.value})}
+                  />
                 </div>
               </div>
             )}
@@ -100,15 +159,15 @@ export const AdherenceCard = ({ project }: AdherenceCardProps) => {
               <Label>Observações</Label>
               <Textarea
                 placeholder="Adicione observações..."
-                defaultValue={stage.observations}
+                value={localData.observations}
+                onChange={(e) => setLocalData({...localData, observations: e.target.value})}
                 rows={3}
               />
             </div>
 
-            <Button onClick={handleSave} className="w-full">
-              <Save className="h-4 w-4 mr-2" />
-              Salvar Alterações
-            </Button>
+            <p className="text-xs text-muted-foreground italic">
+              💾 Salvamento automático ativado
+            </p>
           </div>
         </AccordionContent>
       </Card>
