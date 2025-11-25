@@ -1,9 +1,13 @@
 import { DashboardTable } from "@/components/Dashboard/DashboardTable";
 import { ProjectDrawer } from "@/components/ProjectDrawer/ProjectDrawer";
 import { NewProjectDialog } from "@/components/NewProjectDialog";
-import { Package, LayoutDashboard } from "lucide-react";
+import { Package, LayoutDashboard, Home } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card sticky top-0 z-10">
@@ -18,6 +22,14 @@ const Index = () => {
                 <p className="text-sm text-muted-foreground">Gestão de Implantações</p>
               </div>
             </div>
+            <Button 
+              variant="outline" 
+              className="gap-2"
+              onClick={() => navigate("/")}
+            >
+              <Home className="h-4 w-4" />
+              Dashboard
+            </Button>
           </div>
         </div>
       </header>

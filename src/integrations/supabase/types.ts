@@ -174,7 +174,9 @@ export type Database = {
           is_archived: boolean | null
           is_deleted: boolean | null
           last_update_by: string
+          legacy_system: string | null
           next_follow_up_date: string | null
+          op_number: number | null
           overall_progress: number | null
           payment_method: string | null
           post_benefits_delivered: string | null
@@ -195,7 +197,10 @@ export type Database = {
           project_leader: string
           project_type: string | null
           responsible_environment: string | null
+          sales_order_number: number | null
+          sold_hours: number | null
           special_considerations: string | null
+          specialty: string | null
           start_date_actual: string | null
           start_date_planned: string | null
           system_type: string
@@ -280,7 +285,9 @@ export type Database = {
           is_archived?: boolean | null
           is_deleted?: boolean | null
           last_update_by: string
+          legacy_system?: string | null
           next_follow_up_date?: string | null
+          op_number?: number | null
           overall_progress?: number | null
           payment_method?: string | null
           post_benefits_delivered?: string | null
@@ -301,7 +308,10 @@ export type Database = {
           project_leader: string
           project_type?: string | null
           responsible_environment?: string | null
+          sales_order_number?: number | null
+          sold_hours?: number | null
           special_considerations?: string | null
+          specialty?: string | null
           start_date_actual?: string | null
           start_date_planned?: string | null
           system_type: string
@@ -386,7 +396,9 @@ export type Database = {
           is_archived?: boolean | null
           is_deleted?: boolean | null
           last_update_by?: string
+          legacy_system?: string | null
           next_follow_up_date?: string | null
+          op_number?: number | null
           overall_progress?: number | null
           payment_method?: string | null
           post_benefits_delivered?: string | null
@@ -407,7 +419,10 @@ export type Database = {
           project_leader?: string
           project_type?: string | null
           responsible_environment?: string | null
+          sales_order_number?: number | null
+          sold_hours?: number | null
           special_considerations?: string | null
+          specialty?: string | null
           start_date_actual?: string | null
           start_date_planned?: string | null
           system_type?: string
