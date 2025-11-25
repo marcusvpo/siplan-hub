@@ -1,11 +1,14 @@
-import { Project } from "@/types/project";
+import { useState, useEffect } from "react";
+import { Project, ProjectStatus } from "@/types/project";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Save, CheckCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { CheckCircle } from "lucide-react";
+import { useProjects } from "@/hooks/useProjects";
+import { useDebounce } from "@/hooks/use-debounce";
 import { toast } from "sonner";
 
 interface PostCardProps {
@@ -13,11 +16,44 @@ interface PostCardProps {
 }
 
 export const PostCard = ({ project }: PostCardProps) => {
+  const { updateProject } = useProjects();
   const stage = project.stages.post;
 
-  const handleSave = () => {
-    toast.success("Alterações salvas!");
-  };
+  const [localData, setLocalData] = useState({
+    status: stage.status,
+    responsible: stage.responsible || "",
+    startDate: stage.startDate ? stage.startDate.toISOString().split('T')[0] : "",
+    endDate: stage.endDate ? stage.endDate.toISOString().split('T')[0] : "",
+    observations: stage.observations || "",
+  });
+
+  const debouncedData = useDebounce(localData, 1000);
+
+  useEffect(() => {
+    const hasChanges = 
+      debouncedData.status !== stage.status ||
+      debouncedData.responsible !== (stage.responsible || "") ||
+      debouncedData.startDate !== (stage.startDate ? stage.startDate.toISOString().split('T')[0] : "") ||
+      debouncedData.endDate !== (stage.endDate ? stage.endDate.toISOString().split('T')[0] : "") ||
+      debouncedData.observations !== (stage.observations || "");
+
+    if (hasChanges) {
+      updateProject.mutate({
+        projectId: project.id,
+        updates: {
+          post_status: debouncedData.status,
+          post_responsible: debouncedData.responsible,
+          post_start_date: debouncedData.startDate || null,
+          post_end_date: debouncedData.endDate || null,
+          post_observations: debouncedData.observations,
+        },
+      }, {
+        onSuccess: () => {
+          toast.success("Alterações salvas automaticamente", { duration: 2000 });
+        },
+      });
+    }
+  }, [debouncedData]);
 
   return (
     <AccordionItem value="post">
@@ -33,7 +69,10 @@ export const PostCard = ({ project }: PostCardProps) => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Status</Label>
-                <Select defaultValue={stage.status}>
+                <Select 
+                  value={localData.status} 
+                  onValueChange={(value) => setLocalData({...localData, status: value as ProjectStatus})}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -47,16 +86,31 @@ export const PostCard = ({ project }: PostCardProps) => {
 
               <div>
                 <Label>Responsável</Label>
-                <Select defaultValue={stage.responsible}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="user-alex">Alex Silva</SelectItem>
-                    <SelectItem value="user-joao">João Infra</SelectItem>
-                    <SelectItem value="user-maria">Maria Conversão</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Input
+                  placeholder="Nome do responsável"
+                  value={localData.responsible}
+                  onChange={(e) => setLocalData({...localData, responsible: e.target.value})}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Data de Início</Label>
+                <Input 
+                  type="date" 
+                  value={localData.startDate}
+                  onChange={(e) => setLocalData({...localData, startDate: e.target.value})}
+                />
+              </div>
+
+              <div>
+                <Label>Data de Término</Label>
+                <Input 
+                  type="date" 
+                  value={localData.endDate}
+                  onChange={(e) => setLocalData({...localData, endDate: e.target.value})}
+                />
               </div>
             </div>
 
@@ -64,15 +118,15 @@ export const PostCard = ({ project }: PostCardProps) => {
               <Label>Observações</Label>
               <Textarea
                 placeholder="Adicione observações..."
-                defaultValue={stage.observations}
+                value={localData.observations}
+                onChange={(e) => setLocalData({...localData, observations: e.target.value})}
                 rows={3}
               />
             </div>
 
-            <Button onClick={handleSave} className="w-full">
-              <Save className="h-4 w-4 mr-2" />
-              Salvar Alterações
-            </Button>
+            <p className="text-xs text-muted-foreground italic">
+              💾 Salvamento automático ativado
+            </p>
           </div>
         </AccordionContent>
       </Card>
