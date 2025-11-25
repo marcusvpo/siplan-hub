@@ -58,6 +58,11 @@ export const useProjectsV2 = () => {
           overall_progress: 0,
           last_update_by: "Sistema",
           tags: project.tags || [],
+          op_number: project.opNumber,
+          sales_order_number: project.salesOrderNumber,
+          sold_hours: project.soldHours,
+          legacy_system: project.legacySystem,
+          specialty: project.specialty,
         })
         .select()
         .single();
@@ -91,6 +96,11 @@ function transformToProjectV2(row: any): ProjectV2 {
     externalId: row.external_id,
     clientName: row.client_name,
     ticketNumber: row.ticket_number,
+    opNumber: row.op_number,
+    salesOrderNumber: row.sales_order_number,
+    soldHours: row.sold_hours,
+    legacySystem: row.legacy_system,
+    specialty: row.specialty,
     systemType: row.system_type,
     implantationType: row.implantation_type || "new",
     tags: row.tags || [],

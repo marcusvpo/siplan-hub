@@ -26,6 +26,13 @@ export interface ProjectV2 {
   clientName: string;
   ticketNumber: string;
 
+  // Dados do Projeto
+  opNumber?: number;
+  salesOrderNumber?: number;
+  soldHours?: number;
+  legacySystem?: string;
+  specialty?: string;
+
   // Tipos & Categoria
   systemType: string;
   implantationType: ImplantationType;

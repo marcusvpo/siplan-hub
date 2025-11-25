@@ -3,64 +3,94 @@ import { DashboardKPI } from "@/components/Dashboard/DashboardKPI";
 import { ProjectDistributionChart } from "@/components/Dashboard/ProjectDistributionChart";
 import { StatusChart } from "@/components/Dashboard/StatusChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Package, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 export default function DashboardV2() {
   const { projects, isLoading } = useProjectsV2();
+  const navigate = useNavigate();
 
   const criticalAlerts = projects
     .filter((p) => p.healthScore === "critical")
     .slice(0, 5);
 
   return (
-    <div className="min-h-screen bg-background p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">Visão geral dos projetos de implantação</p>
-        </div>
-      </div>
-
-      {/* KPIs */}
-      <DashboardKPI />
-
-      {/* Gráficos */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <ProjectDistributionChart projects={projects} />
-        <StatusChart projects={projects} />
-      </div>
-
-      {/* Alertas Críticos */}
-      {criticalAlerts.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-red-500" />
-              Alertas Críticos
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {criticalAlerts.map((project) => (
-                <div
-                  key={project.id}
-                  className="flex items-center justify-between p-3 border border-red-500/20 rounded-lg bg-red-500/5"
-                >
-                  <div className="space-y-1">
-                    <p className="font-medium">{project.clientName}</p>
-                    <p className="text-sm text-muted-foreground">
-                      Ticket: {project.ticketNumber} • Sistema: {project.systemType}
-                    </p>
-                  </div>
-                  <Badge variant="destructive">Crítico</Badge>
-                </div>
-              ))}
+    <div className="min-h-screen bg-background">
+      {/* Header com padrão da página /projects */}
+      <header className="border-b bg-card sticky top-0 z-10">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center">
+                <Package className="h-6 w-6 text-primary-foreground" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold">Siplan Manager</h1>
+                <p className="text-sm text-muted-foreground">Dashboard de Implantações</p>
+              </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
+            <Button 
+              variant="outline" 
+              className="gap-2"
+              onClick={() => navigate("/projects")}
+            >
+              Ver Todos os Projetos
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <main className="container mx-auto px-6 py-8 space-y-6">
+        {/* Header Section */}
+        <div>
+          <h2 className="text-2xl font-bold">Visão Geral</h2>
+          <p className="text-muted-foreground">
+            Acompanhe métricas e status dos projetos de implantação
+          </p>
+        </div>
+
+        {/* KPIs */}
+        <DashboardKPI />
+
+        {/* Gráficos */}
+        <div className="grid gap-6 md:grid-cols-2">
+          <ProjectDistributionChart projects={projects} />
+          <StatusChart projects={projects} />
+        </div>
+
+        {/* Alertas Críticos */}
+        {criticalAlerts.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-destructive" />
+                Alertas Críticos
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {criticalAlerts.map((project) => (
+                  <div
+                    key={project.id}
+                    className="flex items-center justify-between p-3 border border-destructive/20 rounded-lg bg-destructive/5"
+                  >
+                    <div className="space-y-1">
+                      <p className="font-medium">{project.clientName}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Ticket: {project.ticketNumber} • Sistema: {project.systemType}
+                      </p>
+                    </div>
+                    <Badge variant="destructive">Crítico</Badge>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </main>
     </div>
   );
 }
