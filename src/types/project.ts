@@ -5,24 +5,6 @@ export enum ProjectStatus {
   BLOCKED = "blocked",
 }
 
-export enum SystemType {
-  ORION_PRO = "Orion PRO",
-  ORION_TN = "Orion TN",
-  ORION_REG = "Orion REG",
-}
-
-export enum HealthScore {
-  OK = "ok",
-  WARNING = "warning",
-  CRITICAL = "critical",
-}
-
-export enum UserRole {
-  ADMIN = "admin",
-  ANALYST = "analyst",
-  VIEWER = "viewer",
-}
-
 export interface Stage {
   status: ProjectStatus;
   responsible: string;
@@ -48,14 +30,14 @@ export interface EnvironmentStage extends Stage {
 }
 
 export interface ConversionStage extends Stage {
-  sourceSystem?: "Siplan" | "Control-M" | "Argon" | "Alkasoft" | "other";
+  sourceSystem?: string; // Agora é texto livre
 }
 
 export interface ImplementationStage extends Stage {
   remoteInstallDate?: Date;
   trainingStartDate?: Date;
   trainingEndDate?: Date;
-  switchType?: "weekend" | "business-day";
+  switchType?: string; // Agora é texto livre
 }
 
 export interface PostStage extends Stage {}
@@ -77,14 +59,14 @@ export interface Project {
   id: string;
   clientName: string;
   ticketNumber: string;
-  systemType: SystemType;
+  systemType: string; // Agora é texto livre
   projectLeader: string;
   createdAt: Date;
   updatedAt: Date;
   lastUpdateBy: string;
   nextFollowUpDate?: Date;
   
-  healthScore?: HealthScore;
+  healthScore?: "ok" | "warning" | "critical";
   daysSinceUpdate?: number;
 
   stages: {
@@ -103,7 +85,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: UserRole;
+  role: string; // Agora é texto livre
   avatar?: string;
   createdAt: Date;
 }

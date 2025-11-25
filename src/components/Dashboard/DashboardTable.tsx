@@ -1,17 +1,26 @@
 import { useProjectStore } from "@/stores/projectStore";
+import { useProjects } from "@/hooks/useProjects";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { HealthBadge } from "./HealthBadge";
 import { PipelineStatus } from "./PipelineStatus";
-import { Eye } from "lucide-react";
+import { Eye, Loader2 } from "lucide-react";
 import { format, isPast } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { getRelativeTime } from "@/utils/calculations";
 import { cn } from "@/lib/utils";
 
 export const DashboardTable = () => {
-  const { getProjectsWithCalculations, setSelectedProject, users } = useProjectStore();
-  const projects = getProjectsWithCalculations();
+  const { setSelectedProject } = useProjectStore();
+  const { projects, isLoading } = useProjects();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   const sortedProjects = [...projects].sort((a, b) => {
     if (a.healthScore === "critical" && b.healthScore !== "critical") return -1;
@@ -20,10 +29,6 @@ export const DashboardTable = () => {
     if (b.healthScore === "warning" && a.healthScore === "ok") return 1;
     return 0;
   });
-
-  const getLastUpdateUser = (userId: string) => {
-    return users.find((u) => u.id === userId)?.name || "Sistema";
-  };
 
   return (
     <div className="space-y-3">
@@ -84,7 +89,7 @@ export const DashboardTable = () => {
                   {getRelativeTime(project.updatedAt)}
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  por {getLastUpdateUser(project.lastUpdateBy)}
+                  por {project.lastUpdateBy}
                 </div>
               </div>
               <Button size="sm" variant="outline">

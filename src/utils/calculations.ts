@@ -1,30 +1,27 @@
-import { Project, ProjectStatus, HealthScore } from "@/types/project";
+import { Project } from "@/types/project";
+import { isPast } from "date-fns";
 
-export function calculateHealthScore(project: Project): HealthScore {
-  const now = new Date();
-  const lastUpdate = new Date(project.updatedAt);
+export function calculateHealthScore(project: Project): "ok" | "warning" | "critical" {
+  const daysSinceUpdate = getDaysSinceUpdate(project);
+
+  // Verificar se há mais de 5 dias sem update
+  if (daysSinceUpdate > 5) return "critical";
   
-  const daysSince = Math.floor(
-    (now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24)
+  // Verificar follow-up vencido
+  if (project.nextFollowUpDate && isPast(project.nextFollowUpDate)) {
+    return "critical";
+  }
+  
+  // Verificar se há bloqueios ativos
+  const hasBlockers = Object.values(project.stages).some(
+    (stage) => stage.status === "blocked"
   );
-
-  const followUpVencido = project.nextFollowUpDate 
-    && new Date(project.nextFollowUpDate) < now;
-
-  const hasBlockers =
-    project.stages.infra.status === ProjectStatus.BLOCKED ||
-    project.stages.adherence.status === ProjectStatus.BLOCKED ||
-    project.stages.environment.status === ProjectStatus.BLOCKED;
-
-  if (followUpVencido || daysSince > 5) {
-    return HealthScore.CRITICAL;
-  }
-
-  if ((daysSince >= 2 && daysSince <= 5) || hasBlockers) {
-    return HealthScore.WARNING;
-  }
-
-  return HealthScore.OK;
+  if (hasBlockers) return "critical";
+  
+  // Projeto em atenção (2-5 dias)
+  if (daysSinceUpdate > 2) return "warning";
+  
+  return "ok";
 }
 
 export function getDaysSinceUpdate(project: Project): number {

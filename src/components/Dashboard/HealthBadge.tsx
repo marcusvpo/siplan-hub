@@ -1,24 +1,23 @@
-import { HealthScore } from "@/types/project";
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface HealthBadgeProps {
-  healthScore: HealthScore;
+  healthScore: "ok" | "warning" | "critical";
   daysSince: number;
 }
 
 export const HealthBadge = ({ healthScore, daysSince }: HealthBadgeProps) => {
   const getHealthConfig = () => {
     switch (healthScore) {
-      case HealthScore.CRITICAL:
+      case "critical":
         return {
           icon: AlertCircle,
           label: "Crítico",
           variant: "critical" as const,
           tooltip: `Sem atualização há ${daysSince} dias`,
         };
-      case HealthScore.WARNING:
+      case "warning":
         return {
           icon: AlertTriangle,
           label: "Atenção",

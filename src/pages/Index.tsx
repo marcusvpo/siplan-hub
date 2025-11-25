@@ -1,5 +1,6 @@
 import { DashboardTable } from "@/components/Dashboard/DashboardTable";
 import { ProjectDrawer } from "@/components/ProjectDrawer/ProjectDrawer";
+import { NewProjectDialog } from "@/components/NewProjectDialog";
 import { Package, LayoutDashboard } from "lucide-react";
 
 const Index = () => {
@@ -17,21 +18,18 @@ const Index = () => {
                 <p className="text-sm text-muted-foreground">Gestão de Implantações</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Bruno Fernandes</span>
-              <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
-                <span className="text-sm font-medium text-primary-foreground">BF</span>
-              </div>
-            </div>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-6 py-8">
         <div className="mb-6">
-          <div className="flex items-center gap-3 mb-2">
-            <LayoutDashboard className="h-6 w-6 text-primary" />
-            <h2 className="text-2xl font-bold">Projetos Ativos</h2>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
+              <LayoutDashboard className="h-6 w-6 text-primary" />
+              <h2 className="text-2xl font-bold">Projetos Ativos</h2>
+            </div>
+            <NewProjectDialog />
           </div>
           <p className="text-muted-foreground">
             Visão geral de todos os projetos de implantação
