@@ -1,12 +1,13 @@
 import { create } from 'zustand';
-import { Project } from '@/types/project';
+import { ProjectV2 } from '@/types/ProjectV2';
 
 interface ProjectStore {
-  selectedProject: Project | null;
-  setSelectedProject: (project: Project | null) => void;
+  selectedProject: ProjectV2 | null;
+  setSelectedProject: (project: ProjectV2 | null) => void;
 }
 
 export const useProjectStore = create<ProjectStore>((set) => ({
   selectedProject: null,
   setSelectedProject: (project) => set({ selectedProject: project }),
 }));
+

@@ -80,6 +80,14 @@ export const DashboardKPI = () => {
           icon={Calendar}
           variant={kpis.nextFollowups > 5 ? "warning" : "default"}
         />
+
+        <KPICard
+          title="Tempo Médio"
+          value={kpis.avgTotalTime}
+          unit="dias"
+          icon={Clock}
+          variant="default"
+        />
       </div>
     </div>
   );

@@ -35,7 +35,8 @@ export const TimelinePanel = ({ project }: TimelinePanelProps) => {
     );
   };
 
-  const sortedTimeline = [...project.timeline].sort(
+  const timeline = project.timeline || [];
+  const sortedTimeline = [...timeline].sort(
     (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
   );
 

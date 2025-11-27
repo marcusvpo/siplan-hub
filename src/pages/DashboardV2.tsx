@@ -7,6 +7,9 @@ import { AlertTriangle, Package, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { ModeToggle } from "@/components/mode-toggle";
+import { TrendChart } from "@/components/Dashboard/TrendChart";
+import { TimelineChart } from "@/components/Dashboard/TimelineChart";
 
 export default function DashboardV2() {
   const { projects, isLoading } = useProjectsV2();
@@ -31,14 +34,17 @@ export default function DashboardV2() {
                 <p className="text-sm text-muted-foreground">Dashboard de Implantações</p>
               </div>
             </div>
-            <Button 
-              variant="outline" 
-              className="gap-2"
-              onClick={() => navigate("/projects")}
-            >
-              Ver Todos os Projetos
-              <ArrowRight className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                className="gap-2"
+                onClick={() => navigate("/projects")}
+              >
+                Ver Todos os Projetos
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+              <ModeToggle />
+            </div>
           </div>
         </div>
       </header>
@@ -55,10 +61,14 @@ export default function DashboardV2() {
         {/* KPIs */}
         <DashboardKPI />
 
+
+
         {/* Gráficos */}
         <div className="grid gap-6 md:grid-cols-2">
           <ProjectDistributionChart projects={projects} />
           <StatusChart projects={projects} />
+          <TrendChart projects={projects} />
+          <TimelineChart projects={projects} />
         </div>
 
         {/* Alertas Críticos */}

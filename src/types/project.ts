@@ -1,91 +1,129 @@
-export enum ProjectStatus {
-  TODO = "todo",
-  IN_PROGRESS = "in-progress",
-  DONE = "done",
-  BLOCKED = "blocked",
-}
-
-export interface Stage {
-  status: ProjectStatus;
-  responsible: string;
-  startDate?: Date;
-  endDate?: Date;
-  observations?: string;
-}
-
-export interface InfraStage extends Stage {
-  blockingReason?: string;
-}
-
-export interface AdherenceStage extends Stage {
-  hasProductGap: boolean;
-  devTicket?: string;
-  devEstimatedDate?: Date;
-}
-
-export interface EnvironmentStage extends Stage {
-  realDate?: Date;
-  osVersion?: string;
-  approvedByInfra: boolean;
-}
-
-export interface ConversionStage extends Stage {
-  sourceSystem?: string; // Agora é texto livre
-}
-
-export interface ImplementationStage extends Stage {
-  remoteInstallDate?: Date;
-  trainingStartDate?: Date;
-  trainingEndDate?: Date;
-  switchType?: string; // Agora é texto livre
-}
-
-export interface PostStage extends Stage {}
-
-export interface TimelineEvent {
-  id: string;
-  type: "auto" | "comment";
-  author: string;
-  message: string;
-  timestamp: Date;
-  metadata?: {
-    field?: string;
-    oldValue?: any;
-    newValue?: any;
-  };
-}
+export type ImplantationType = "new" | "migration_siplan" | "migration_competitor" | "upgrade";
+export type Priority = "critical" | "high" | "normal" | "low";
+export type GlobalStatus = "todo" | "in-progress" | "done" | "blocked" | "archived";
+export type HealthScore = "ok" | "warning" | "critical";
+export type StageStatus = "todo" | "in-progress" | "done" | "blocked";
 
 export interface Project {
+  // Básicos
   id: string;
   clientName: string;
   ticketNumber: string;
-  systemType: string; // Agora é texto livre
-  projectLeader: string;
-  createdAt: Date;
-  updatedAt: Date;
-  lastUpdateBy: string;
-  nextFollowUpDate?: Date;
+  systemType: string;
+  implantationType: ImplantationType;
   
-  healthScore?: "ok" | "warning" | "critical";
-  daysSinceUpdate?: number;
-
+  // Status
+  healthScore: HealthScore;
+  globalStatus: GlobalStatus;
+  overallProgress: number; // 0-100
+  
+  // Pessoas
+  projectLeader: string;
+  clientPrimaryContact: string;
+  clientEmail?: string;
+  clientPhone?: string;
+  responsibleInfra: string;
+  responsibleAdherence: string;
+  responsibleConversion: string;
+  responsibleImplementation: string;
+  responsiblePost: string;
+  
+  // Datas (Consolidado)
+  startDatePlanned?: Date;
+  endDatePlanned?: Date;
+  startDateActual?: Date;
+  endDateActual?: Date;
+  nextFollowUpDate?: Date;
+  createdAt: Date;
+  lastUpdatedAt: Date;
+  lastUpdatedBy: string;
+  
+  // Estágios
   stages: {
-    infra: InfraStage;
-    adherence: AdherenceStage;
-    environment: EnvironmentStage;
-    conversion: ConversionStage;
-    implementation: ImplementationStage;
-    post: PostStage;
+    infra: Stage;
+    adherence: Stage;
+    environment: Stage;
+    conversion: Stage;
+    implementation: Stage;
+    post: Stage;
   };
-
+  
+  // Dados Sociais
   timeline: TimelineEvent[];
+  auditLog: AuditEntry[];
+  files: ProjectFile[];
+  
+  // Notas Rich
+  notes: RichContent;
+  
+  // Metadados
+  tags: string[];
+  priority: Priority;
+  customFields?: Record<string, any>;
 }
 
-export interface User {
+export interface Stage {
+  status: StageStatus;
+  responsible: string;
+  startDate?: Date;
+  endDate?: Date;
+  observations: string;
+  // Campos específicos podem ser adicionados via interseção ou propriedades opcionais aqui se necessário, 
+  // mas para simplificar o type base, mantemos genérico e estendemos onde preciso ou usamos Record<string, any>
+  [key: string]: any; 
+}
+
+export interface RichContent {
   id: string;
-  name: string;
-  email: string;
-  role: string; // Agora é texto livre
-  avatar?: string;
-  createdAt: Date;
+  projectId: string;
+  blocks: ContentBlock[];
+  lastEditedBy: string;
+  lastEditedAt: Date;
+}
+
+export interface ContentBlock {
+  id: string;
+  type: "heading" | "paragraph" | "list" | "callout" | "divider" | "checkbox" | "embed";
+  content: string;
+  metadata?: Record<string, any>;
+}
+
+export interface TimelineEvent {
+  id: string;
+  projectId: string;
+  type: "comment" | "file_upload" | "status_change" | "mention";
+  author: string;
+  authorName: string;
+  message?: string;
+  timestamp: Date;
+  visibility: "public" | "archived";
+}
+
+export interface AuditEntry {
+  id: string;
+  projectId: string;
+  author: string;
+  field: string;
+  oldValue: any;
+  newValue: any;
+  timestamp: Date;
+}
+
+export interface ProjectFile {
+  id: string;
+  projectId: string;
+  fileName: string;
+  fileSize: number;
+  fileType: string;
+  fileUrl: string;
+  uploadedBy: string;
+  uploadedAt: Date;
+  versions: FileVersion[];
+}
+
+export interface FileVersion {
+  version: number;
+  url: string;
+  uploadedAt: Date;
+  uploadedBy: string;
 }
