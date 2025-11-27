@@ -1,9 +1,9 @@
-import { DashboardTable } from "@/components/Dashboard/DashboardTable";
-import { ProjectDrawer } from "@/components/ProjectDrawer/ProjectDrawer";
+import { ProjectGrid } from "@/components/ProjectManagement/ProjectGrid";
 import { NewProjectDialog } from "@/components/NewProjectDialog";
 import { Package, LayoutDashboard, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { ModeToggle } from "@/components/mode-toggle";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -19,17 +19,20 @@ const Index = () => {
               </div>
               <div>
                 <h1 className="text-xl font-bold">Siplan Manager</h1>
-                <p className="text-sm text-muted-foreground">Gestão de Implantações</p>
+                <p className="text-sm text-muted-foreground">Gestão de Implantações V3</p>
               </div>
             </div>
-            <Button 
-              variant="outline" 
-              className="gap-2"
-              onClick={() => navigate("/")}
-            >
-              <Home className="h-4 w-4" />
-              Dashboard
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                className="gap-2"
+                onClick={() => navigate("/")}
+              >
+                <Home className="h-4 w-4" />
+                Dashboard
+              </Button>
+              <ModeToggle />
+            </div>
           </div>
         </div>
       </header>
@@ -44,14 +47,12 @@ const Index = () => {
             <NewProjectDialog />
           </div>
           <p className="text-muted-foreground">
-            Visão geral de todos os projetos de implantação
+            Visão geral de todos os projetos de implantação (Layout Centralizado)
           </p>
         </div>
 
-        <DashboardTable />
+        <ProjectGrid />
       </main>
-
-      <ProjectDrawer />
     </div>
   );
 };

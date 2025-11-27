@@ -91,7 +91,9 @@ export interface ProjectV2 {
   archivedAt?: Date;
 
   // Customização
-  customFields?: Record<string, any>;
+  customFields?: Record<string, unknown>;
+  auditLog?: AuditEntry[];
+  timeline?: TimelineEventV2[];
 }
 
 export interface InfraStageV2 {
@@ -218,8 +220,8 @@ export interface TimelineEventV2 {
   // Field Change
   fieldName?: string;
   fieldType?: string;
-  oldValue?: any;
-  newValue?: any;
+  oldValue?: unknown;
+  newValue?: unknown;
 
   // Status Change
   statusStage?: string;
@@ -254,7 +256,7 @@ export interface SavedFilter {
 export interface FilterCondition {
   field: string;
   operator: "=" | "!=" | ">" | "<" | ">=" | "<=" | "contains" | "in" | "between" | "regex" | "is_null";
-  value: any;
+  value: string | number | boolean | null;
 }
 
 export interface ChecklistItem {
@@ -283,3 +285,13 @@ export interface KPIData {
 }
 
 export type ViewMode = "table" | "kanban" | "calendar" | "gantt";
+
+export interface AuditEntry {
+  id: string;
+  projectId: string;
+  action: string;
+  changedBy: string;
+  changedAt: Date;
+  details: Record<string, unknown>;
+  ipAddress?: string;
+}

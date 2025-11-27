@@ -20,6 +20,7 @@ import { Plus } from "lucide-react";
 import { useProjectsV2 } from "@/hooks/useProjectsV2";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ProjectV2 } from "@/types/ProjectV2";
 
 export const NewProjectDialog = () => {
   const [open, setOpen] = useState(false);
@@ -56,7 +57,7 @@ export const NewProjectDialog = () => {
         soldHours: soldHours ? parseFloat(soldHours) : undefined,
         legacySystem: legacySystem || undefined,
         specialty: specialty || undefined,
-      } as any,
+      } as Partial<ProjectV2>,
       {
         onSuccess: () => {
           toast.success("Projeto criado com sucesso!");
@@ -72,7 +73,7 @@ export const NewProjectDialog = () => {
           setLegacySystem("");
           setSpecialty("");
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
           toast.error("Erro ao criar projeto: " + error.message);
         },
       }

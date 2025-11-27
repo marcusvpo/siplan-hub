@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ProjectV2 } from "@/types/ProjectV2";
+import { Project, Stage, RichContent, ContentBlock } from "@/types/project";
 import { useTimeline } from "./useTimeline";
 
 export const useProjectsV2 = () => {
@@ -8,7 +8,7 @@ export const useProjectsV2 = () => {
   const { addAutoLog } = useTimeline();
 
   const { data: projects, isLoading } = useQuery({
-    queryKey: ["projectsV2"],
+    queryKey: ["projectsV3"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("projects")
@@ -18,52 +18,37 @@ export const useProjectsV2 = () => {
 
       if (error) throw error;
 
-      return (data || []).map(transformToProjectV2);
+      return (data || []).map(transformToProjectV3);
     },
   });
 
   const updateProject = useMutation({
-    mutationFn: async ({ projectId, updates }: { projectId: string; updates: any }) => {
-      const { error } = await supabase.from("projects").update(updates).eq("id", projectId);
+    mutationFn: async ({ projectId, updates }: { projectId: string; updates: Partial<Project> }) => {
+      const dbUpdates = transformToDB(updates);
+      const { error } = await supabase.from("projects").update(dbUpdates).eq("id", projectId);
 
       if (error) throw error;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["projectsV2"] });
+      queryClient.invalidateQueries({ queryKey: ["projectsV3"] });
       
-      // Log automático de mudanças
-      Object.keys(variables.updates).forEach((field) => {
-        addAutoLog.mutate({
-          projectId: variables.projectId,
-          message: `Campo ${field} atualizado`,
-          metadata: { field, newValue: variables.updates[field] },
-        });
+      // Log automático de mudanças (simplificado, pois agora updates é o objeto V3)
+      // Idealmente, compararíamos com o estado anterior para saber o que mudou
+      addAutoLog.mutate({
+        projectId: variables.projectId,
+        message: "Projeto atualizado",
+        metadata: { action: "update" },
       });
     },
   });
 
   const createProject = useMutation({
-    mutationFn: async (project: Partial<ProjectV2>) => {
+    mutationFn: async (project: Partial<Project>) => {
+      const dbProject = transformToDB(project);
       const { data, error } = await supabase
         .from("projects")
-        .insert({
-          client_name: project.clientName,
-          ticket_number: project.ticketNumber,
-          system_type: project.systemType,
-          project_leader: project.projectLeader,
-          implantation_type: project.implantationType || "new",
-          priority: project.priority || "normal",
-          project_type: project.projectType || "new",
-          global_status: "in-progress",
-          overall_progress: 0,
-          last_update_by: "Sistema",
-          tags: project.tags || [],
-          op_number: project.opNumber,
-          sales_order_number: project.salesOrderNumber,
-          sold_hours: project.soldHours,
-          legacy_system: project.legacySystem,
-          specialty: project.specialty,
-        })
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .insert(dbProject as any)
         .select()
         .single();
 
@@ -71,7 +56,7 @@ export const useProjectsV2 = () => {
       return data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["projectsV2"] });
+      queryClient.invalidateQueries({ queryKey: ["projectsV3"] });
       
       addAutoLog.mutate({
         projectId: data.id,
@@ -83,181 +68,161 @@ export const useProjectsV2 = () => {
 
   return {
     projects: projects || [],
-    isLoading,
     updateProject,
     createProject,
   };
 };
 
-// Transform DB row to ProjectV2 interface
-function transformToProjectV2(row: any): ProjectV2 {
+// Transform DB row to Project V3 interface
+function transformToProjectV3(row: Record<string, unknown>): Project {
+  // Helper to create a basic stage
+  const createStage = (prefix: string): Stage => ({
+    status: (row[`${prefix}_status`] as Stage['status']) || 'todo',
+    responsible: (row[`${prefix}_responsible`] as string) || '',
+    startDate: row[`${prefix}_start_date`] ? new Date(row[`${prefix}_start_date`] as string) : undefined,
+    endDate: row[`${prefix}_end_date`] ? new Date(row[`${prefix}_end_date`] as string) : undefined,
+    observations: (row[`${prefix}_observations`] as string) || '',
+    // Spread other specific fields
+    ...Object.keys(row).reduce((acc, key) => {
+      if (key.startsWith(prefix + '_') && 
+          !key.endsWith('_status') && 
+          !key.endsWith('_responsible') && 
+          !key.endsWith('_start_date') && 
+          !key.endsWith('_end_date') && 
+          !key.endsWith('_observations')) {
+        // Convert snake_case to camelCase for the property name
+        const propName = key.replace(prefix + '_', '').replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+        acc[propName] = row[key];
+      }
+      return acc;
+    }, {} as Record<string, unknown>)
+  });
+
+  // Mock Rich Content if not present
+  const notesData = row.notes as { blocks: ContentBlock[] } | undefined;
+  const notes: RichContent = {
+    id: crypto.randomUUID(),
+    projectId: row.id as string,
+    blocks: notesData ? notesData.blocks : [
+      { id: '1', type: 'paragraph', content: (row.description as string) || '' }
+    ],
+    lastEditedBy: row.last_update_by as string,
+    lastEditedAt: new Date(row.updated_at as string)
+  };
+
   return {
-    id: row.id,
-    externalId: row.external_id,
-    clientName: row.client_name,
-    ticketNumber: row.ticket_number,
-    opNumber: row.op_number,
-    salesOrderNumber: row.sales_order_number,
-    soldHours: row.sold_hours,
-    legacySystem: row.legacy_system,
-    specialty: row.specialty,
-    systemType: row.system_type,
-    implantationType: row.implantation_type || "new",
-    tags: row.tags || [],
-    priority: row.priority || "normal",
-    projectType: row.project_type || "new",
+    id: row.id as string,
+    clientName: row.client_name as string,
+    ticketNumber: row.ticket_number as string,
+    systemType: row.system_type as string,
+    implantationType: (row.implantation_type as Project['implantationType']) || "new",
+    
     healthScore: calculateHealthScore(row),
-    globalStatus: row.global_status || "in-progress",
-    overallProgress: row.overall_progress || 0,
-    description: row.description,
-    specialConsiderations: row.special_considerations,
-    contractValue: row.contract_value,
-    paymentMethod: row.payment_method,
-    projectLeader: row.project_leader,
-    clientPrimaryContact: row.client_primary_contact,
-    clientEmail: row.client_email,
-    clientPhone: row.client_phone,
-    responsibleInfra: row.infra_responsible,
-    responsibleAdherence: row.adherence_responsible,
-    responsibleEnvironment: row.responsible_environment,
-    responsibleConversion: row.conversion_responsible,
-    responsibleImplementation: row.implementation_responsible,
-    responsiblePost: row.post_responsible,
-    createdAt: new Date(row.created_at),
-    startDatePlanned: row.start_date_planned ? new Date(row.start_date_planned) : undefined,
-    endDatePlanned: row.end_date_planned ? new Date(row.end_date_planned) : undefined,
-    startDateActual: row.start_date_actual ? new Date(row.start_date_actual) : undefined,
-    endDateActual: row.end_date_actual ? new Date(row.end_date_actual) : undefined,
-    nextFollowUpDate: row.next_follow_up_date ? new Date(row.next_follow_up_date) : undefined,
-    lastUpdatedAt: new Date(row.updated_at),
-    lastUpdatedBy: row.last_update_by,
+    globalStatus: (row.global_status as Project['globalStatus']) || "in-progress",
+    overallProgress: (row.overall_progress as number) || 0,
+    
+    projectLeader: (row.project_leader as string) || '',
+    clientPrimaryContact: (row.client_primary_contact as string) || '',
+    clientEmail: row.client_email as string,
+    clientPhone: row.client_phone as string,
+    responsibleInfra: (row.infra_responsible as string) || '',
+    responsibleAdherence: (row.adherence_responsible as string) || '',
+    responsibleConversion: (row.conversion_responsible as string) || '',
+    responsibleImplementation: (row.implementation_responsible as string) || '',
+    responsiblePost: (row.post_responsible as string) || '',
+    
+    startDatePlanned: row.start_date_planned ? new Date(row.start_date_planned as string) : undefined,
+    endDatePlanned: row.end_date_planned ? new Date(row.end_date_planned as string) : undefined,
+    startDateActual: row.start_date_actual ? new Date(row.start_date_actual as string) : undefined,
+    endDateActual: row.end_date_actual ? new Date(row.end_date_actual as string) : undefined,
+    nextFollowUpDate: row.next_follow_up_date ? new Date(row.next_follow_up_date as string) : undefined,
+    createdAt: new Date(row.created_at as string),
+    lastUpdatedAt: new Date(row.updated_at as string),
+    lastUpdatedBy: (row.last_update_by as string) || 'Sistema',
+    
     stages: {
-      infra: {
-        status: row.infra_status,
-        responsible: row.infra_responsible,
-        startDate: row.infra_start_date ? new Date(row.infra_start_date) : undefined,
-        endDate: row.infra_end_date ? new Date(row.infra_end_date) : undefined,
-        blockingReason: row.infra_blocking_reason,
-        serverInUse: row.infra_server_in_use,
-        serverNeeded: row.infra_server_needed,
-        approvedByInfra: row.infra_approved_by_infra || false,
-        technicalNotes: row.infra_technical_notes,
-        observations: row.infra_observations,
-      },
-      adherence: {
-        status: row.adherence_status,
-        responsible: row.adherence_responsible,
-        startDate: row.adherence_start_date ? new Date(row.adherence_start_date) : undefined,
-        endDate: row.adherence_end_date ? new Date(row.adherence_end_date) : undefined,
-        hasProductGap: row.adherence_has_product_gap || false,
-        gapDescription: row.adherence_gap_description,
-        devTicket: row.adherence_dev_ticket,
-        devEstimatedDate: row.adherence_dev_estimated_date ? new Date(row.adherence_dev_estimated_date) : undefined,
-        gapPriority: row.adherence_gap_priority,
-        analysisComplete: row.adherence_analysis_complete || false,
-        conformityStandards: row.adherence_conformity_standards,
-        observations: row.adherence_observations,
-      },
-      environment: {
-        status: row.environment_status,
-        responsible: row.environment_responsible,
-        osVersion: row.environment_os_version,
-        version: row.environment_version,
-        realDate: row.environment_real_date ? new Date(row.environment_real_date) : undefined,
-        approvedByInfra: row.environment_approved_by_infra || false,
-        testAvailable: row.environment_test_available || false,
-        preparationChecklist: row.environment_preparation_checklist,
-        observations: row.environment_observations,
-      },
-      conversion: {
-        status: row.conversion_status,
-        responsible: row.conversion_responsible,
-        sourceSystem: row.conversion_source_system,
-        complexity: row.conversion_complexity,
-        recordCount: row.conversion_record_count,
-        dataVolumeGb: row.conversion_data_volume_gb,
-        toolUsed: row.conversion_tool_used,
-        homologationComplete: row.conversion_homologation_complete || false,
-        homologationDate: row.conversion_homologation_date ? new Date(row.conversion_homologation_date) : undefined,
-        deviations: row.conversion_deviations,
-        observations: row.conversion_observations,
-      },
-      implementation: {
-        status: row.implementation_status,
-        responsible: row.implementation_responsible,
-        remoteInstallDate: row.implementation_remote_install_date
-          ? new Date(row.implementation_remote_install_date)
-          : undefined,
-        switchType: row.implementation_switch_type,
-        switchStartTime: row.implementation_switch_start_time,
-        switchEndTime: row.implementation_switch_end_time,
-        trainingStartDate: row.implementation_training_start_date
-          ? new Date(row.implementation_training_start_date)
-          : undefined,
-        trainingEndDate: row.implementation_training_end_date
-          ? new Date(row.implementation_training_end_date)
-          : undefined,
-        trainingType: row.implementation_training_type,
-        trainingLocation: row.implementation_training_location,
-        participantsCount: row.implementation_participants_count,
-        clientFeedback: row.implementation_client_feedback,
-        acceptanceStatus: row.implementation_acceptance_status,
-        observations: row.implementation_observations,
-      },
-      post: {
-        status: row.post_status,
-        responsible: row.post_responsible,
-        startDate: row.post_start_date ? new Date(row.post_start_date) : undefined,
-        endDate: row.post_end_date ? new Date(row.post_end_date) : undefined,
-        supportPeriodDays: row.post_support_period_days,
-        supportEndDate: row.post_support_end_date ? new Date(row.post_support_end_date) : undefined,
-        benefitsDelivered: row.post_benefits_delivered,
-        challengesFound: row.post_challenges_found,
-        roiEstimated: row.post_roi_estimated,
-        clientSatisfaction: row.post_client_satisfaction,
-        recommendations: row.post_recommendations,
-        followupNeeded: row.post_followup_needed || false,
-        followupDate: row.post_followup_date ? new Date(row.post_followup_date) : undefined,
-        observations: row.post_observations,
-      },
+      infra: createStage('infra'),
+      adherence: createStage('adherence'),
+      environment: createStage('environment'),
+      conversion: createStage('conversion'),
+      implementation: createStage('implementation'),
+      post: createStage('post'),
     },
-    isDeleted: row.is_deleted || false,
-    deletedAt: row.deleted_at ? new Date(row.deleted_at) : undefined,
-    deletedBy: row.deleted_by,
-    isArchived: row.is_archived || false,
-    archivedAt: row.archived_at ? new Date(row.archived_at) : undefined,
-    customFields: row.custom_fields || {},
+    
+    timeline: [], // Fetch separately or include if joined
+    auditLog: [], // Fetch separately or include if joined
+    files: [], // Fetch separately or include if joined
+    
+    notes: notes,
+    
+    tags: (row.tags as string[]) || [],
+    priority: (row.priority as Project['priority']) || "normal",
+    customFields: (row.custom_fields as Record<string, unknown>) || {},
   };
 }
 
-function calculateHealthScore(row: any): "ok" | "warning" | "critical" {
+// Transform Project V3 to DB row
+function transformToDB(project: Partial<Project>): Record<string, unknown> {
+  const dbRow: Record<string, unknown> = {};
+
+  if (project.clientName) dbRow.client_name = project.clientName;
+  if (project.ticketNumber) dbRow.ticket_number = project.ticketNumber;
+  if (project.systemType) dbRow.system_type = project.systemType;
+  if (project.implantationType) dbRow.implantation_type = project.implantationType;
+  if (project.globalStatus) dbRow.global_status = project.globalStatus;
+  if (project.overallProgress !== undefined) dbRow.overall_progress = project.overallProgress;
+  if (project.projectLeader) dbRow.project_leader = project.projectLeader;
+  if (project.clientPrimaryContact) dbRow.client_primary_contact = project.clientPrimaryContact;
+  if (project.clientEmail) dbRow.client_email = project.clientEmail;
+  if (project.clientPhone) dbRow.client_phone = project.clientPhone;
+  if (project.responsibleInfra) dbRow.infra_responsible = project.responsibleInfra;
+  if (project.responsibleAdherence) dbRow.adherence_responsible = project.responsibleAdherence;
+  if (project.responsibleConversion) dbRow.conversion_responsible = project.responsibleConversion;
+  if (project.responsibleImplementation) dbRow.implementation_responsible = project.responsibleImplementation;
+  if (project.responsiblePost) dbRow.post_responsible = project.responsiblePost;
+  
+  if (project.startDatePlanned) dbRow.start_date_planned = project.startDatePlanned;
+  if (project.endDatePlanned) dbRow.end_date_planned = project.endDatePlanned;
+  if (project.startDateActual) dbRow.start_date_actual = project.startDateActual;
+  if (project.endDateActual) dbRow.end_date_actual = project.endDateActual;
+  if (project.nextFollowUpDate) dbRow.next_follow_up_date = project.nextFollowUpDate;
+  
+  if (project.tags) dbRow.tags = project.tags;
+  if (project.priority) dbRow.priority = project.priority;
+  if (project.customFields) dbRow.custom_fields = project.customFields;
+
+  // Stages flattening
+  if (project.stages) {
+    const stages = project.stages;
+    const stageKeys = ['infra', 'adherence', 'environment', 'conversion', 'implementation', 'post'] as const;
+    
+    stageKeys.forEach(key => {
+      if (stages[key]) {
+        const stage = stages[key];
+        dbRow[`${key}_status`] = stage.status;
+        dbRow[`${key}_responsible`] = stage.responsible;
+        if (stage.startDate) dbRow[`${key}_start_date`] = stage.startDate;
+        if (stage.endDate) dbRow[`${key}_end_date`] = stage.endDate;
+        if (stage.observations) dbRow[`${key}_observations`] = stage.observations;
+      }
+    });
+  }
+
+  // Notes
+  if (project.notes) {
+    dbRow.notes = project.notes; // Assuming DB has a jsonb 'notes' column
+  }
+
+  return dbRow;
+}
+
+function calculateHealthScore(row: Record<string, unknown>): "ok" | "warning" | "critical" {
   const now = new Date();
-  const lastUpdate = new Date(row.updated_at);
-  const daysSinceUpdate = Math.floor((now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24));
+  const lastUpdate = new Date(row.updated_at as string);
+  const diffDays = (now.getTime() - lastUpdate.getTime()) / (1000 * 3600 * 24);
 
-  // Follow-up vencido
-  if (row.next_follow_up_date && new Date(row.next_follow_up_date) < now) {
-    return "critical";
-  }
-
-  // Sem update > 5 dias
-  if (daysSinceUpdate > 5) {
-    return "critical";
-  }
-
-  // Bloqueado
-  if (
-    row.infra_status === "blocked" ||
-    row.adherence_status === "blocked" ||
-    row.conversion_status === "blocked"
-  ) {
-    return "warning";
-  }
-
-  // Sem update 2-5 dias
-  if (daysSinceUpdate >= 2) {
-    return "warning";
-  }
-
+  if (diffDays > 7) return "critical";
+  if (diffDays > 3) return "warning";
   return "ok";
 }
+
