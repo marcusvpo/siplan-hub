@@ -1,4 +1,4 @@
-import { Project } from "@/types/project";
+import { ProjectV2 } from "@/types/ProjectV2";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -15,9 +15,9 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 interface ProjectCardV3Props {
-  project: Project;
-  onClick: (project: Project) => void;
-  onAction: (action: string, project: Project) => void;
+  project: ProjectV2;
+  onClick: (project: ProjectV2) => void;
+  onAction: (action: string, project: ProjectV2) => void;
 }
 
 export function ProjectCardV3({ project, onClick, onAction }: ProjectCardV3Props) {

@@ -1,4 +1,4 @@
-import { Project } from "@/types/project";
+import { ProjectV2 } from "@/types/ProjectV2";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,8 +12,8 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 interface TabProps {
-  project: Project;
-  onUpdate: (project: Project) => void;
+  project: ProjectV2;
+  onUpdate: (project: ProjectV2) => void;
 }
 
 export function GeneralInfoTab({ project, onUpdate }: TabProps) {

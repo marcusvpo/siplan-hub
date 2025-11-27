@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useProjectsV2 } from "@/hooks/useProjectsV2";
 import { ProjectCardV3 } from "./ProjectCardV3";
 import { ProjectModal } from "./ProjectModal";
-import { Project } from "@/types/project";
+import { ProjectV2 } from "@/types/ProjectV2";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Filter, SlidersHorizontal, Loader2 } from "lucide-react";
@@ -16,7 +16,7 @@ import {
 
 export function ProjectGrid() {
   const { projects, isLoading, updateProject } = useProjectsV2();
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [selectedProject, setSelectedProject] = useState<ProjectV2 | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
@@ -30,7 +30,7 @@ export function ProjectGrid() {
     return matchesSearch && matchesStatus;
   });
 
-  const handleProjectUpdate = (updatedProject: Project) => {
+  const handleProjectUpdate = (updatedProject: ProjectV2) => {
     // In a real app, this would trigger a mutation via react-query
     // For now, we just update the local state if it's the selected project
     // The useAutoSave hook in the modal tabs handles the actual saving calls

@@ -1,4 +1,4 @@
-import { Project, TimelineEvent } from "@/types/project";
+import { ProjectV2, TimelineEventV2 } from "@/types/ProjectV2";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -12,8 +12,8 @@ import { Send, Paperclip, MessageSquare, FileText, Activity } from "lucide-react
 import { useState } from "react";
 
 interface TabProps {
-  project: Project;
-  onUpdate: (project: Project) => void;
+  project: ProjectV2;
+  onUpdate: (project: ProjectV2) => void;
 }
 
 export function TimelineTab({ project, onUpdate }: TabProps) {
@@ -26,7 +26,7 @@ export function TimelineTab({ project, onUpdate }: TabProps) {
   const handlePostComment = () => {
     if (!newComment.trim()) return;
 
-    const newEvent: TimelineEvent = {
+    const newEvent: TimelineEventV2 = {
       id: crypto.randomUUID(),
       projectId: project.id,
       type: 'comment',
@@ -37,12 +37,12 @@ export function TimelineTab({ project, onUpdate }: TabProps) {
       visibility: 'public'
     };
 
-    const newTimeline = [newEvent, ...data.timeline];
+    const newTimeline = [newEvent, ...(data.timeline || [])];
     handleChange('timeline', newTimeline);
     setNewComment("");
   };
 
-  const getIcon = (type: TimelineEvent['type']) => {
+  const getIcon = (type: TimelineEventV2['type']) => {
     switch (type) {
       case 'comment': return <MessageSquare className="h-4 w-4" />;
       case 'file_upload': return <Paperclip className="h-4 w-4" />;
@@ -86,13 +86,13 @@ export function TimelineTab({ project, onUpdate }: TabProps) {
 
       {/* Feed */}
       <div className="space-y-6">
-        {data.timeline.length === 0 && (
+        {(!data.timeline || data.timeline.length === 0) && (
           <div className="text-center text-muted-foreground py-10">
             Nenhuma atividade registrada.
           </div>
         )}
         
-        {data.timeline.map((event) => (
+        {(data.timeline || []).map((event) => (
           <div key={event.id} className="flex gap-4">
             <Avatar className="h-10 w-10 border">
               <AvatarFallback>{event.authorName.substring(0, 2).toUpperCase()}</AvatarFallback>

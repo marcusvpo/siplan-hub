@@ -7,6 +7,40 @@ export type GlobalStatus = "todo" | "in-progress" | "done" | "blocked" | "archiv
 export type HealthScore = "ok" | "warning" | "critical";
 export type StageStatus = "todo" | "in-progress" | "done" | "blocked";
 
+export interface FileVersion {
+  version: number;
+  url: string;
+  uploadedAt: Date;
+  uploadedBy: string;
+}
+
+export interface ProjectFile {
+  id: string;
+  projectId: string;
+  fileName: string;
+  fileSize: number;
+  fileType: string;
+  fileUrl: string;
+  uploadedBy: string;
+  uploadedAt: Date;
+  versions: FileVersion[];
+}
+
+export interface ContentBlock {
+  id: string;
+  type: "heading" | "paragraph" | "list" | "callout" | "divider" | "checkbox" | "embed";
+  content: string;
+  metadata?: Record<string, any>;
+}
+
+export interface RichContent {
+  id: string;
+  projectId: string;
+  blocks: ContentBlock[];
+  lastEditedBy: string;
+  lastEditedAt: Date;
+}
+
 export type BlockingReason =
   | "awaiting-purchase"
   | "os-upgrade"
@@ -50,6 +84,8 @@ export interface ProjectV2 {
   specialConsiderations?: string;
   contractValue?: number;
   paymentMethod?: string;
+  notes?: RichContent;
+  files?: ProjectFile[];
 
   // Pessoas
   projectLeader: string;

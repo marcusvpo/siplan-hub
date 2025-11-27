@@ -1,4 +1,4 @@
-import { Project, ProjectFile } from "@/types/project";
+import { ProjectV2, ProjectFile } from "@/types/ProjectV2";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,8 +14,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 interface TabProps {
-  project: Project;
-  onUpdate: (project: Project) => void;
+  project: ProjectV2;
+  onUpdate: (project: ProjectV2) => void;
 }
 
 export function FilesTab({ project, onUpdate }: TabProps) {
@@ -51,7 +51,7 @@ export function FilesTab({ project, onUpdate }: TabProps) {
       </div>
 
       <div className="grid grid-cols-1 gap-4">
-        {data.files.length === 0 && (
+        {(!data.files || data.files.length === 0) && (
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-10 text-center">
               <UploadCloud className="h-10 w-10 text-muted-foreground mb-4" />
@@ -62,7 +62,7 @@ export function FilesTab({ project, onUpdate }: TabProps) {
           </Card>
         )}
 
-        {data.files.map((file) => (
+        {(data.files || []).map((file) => (
           <Card key={file.id} className="hover:shadow-sm transition-shadow">
             <CardContent className="p-4 flex items-center gap-4">
               <div className="h-10 w-10 bg-muted rounded-lg flex items-center justify-center">
