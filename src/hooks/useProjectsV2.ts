@@ -1,6 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Project, Stage, RichContent, ContentBlock } from "@/types/project";
+import { 
+  ProjectV2, 
+  StageStatus, 
+  InfraStageV2, 
+  AdherenceStageV2, 
+  EnvironmentStageV2, 
+  ConversionStageV2, 
+  ImplementationStageV2, 
+  PostStageV2,
+  RichContent,
+  ContentBlock
+} from "@/types/ProjectV2";
 import { useTimeline } from "./useTimeline";
 
 export const useProjectsV2 = () => {
@@ -23,7 +34,7 @@ export const useProjectsV2 = () => {
   });
 
   const updateProject = useMutation({
-    mutationFn: async ({ projectId, updates }: { projectId: string; updates: Partial<Project> }) => {
+    mutationFn: async ({ projectId, updates }: { projectId: string; updates: Partial<ProjectV2> }) => {
       const dbUpdates = transformToDB(updates);
       const { error } = await supabase.from("projects").update(dbUpdates).eq("id", projectId);
 
@@ -32,8 +43,6 @@ export const useProjectsV2 = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["projectsV3"] });
       
-      // Log automático de mudanças (simplificado, pois agora updates é o objeto V3)
-      // Idealmente, compararíamos com o estado anterior para saber o que mudou
       addAutoLog.mutate({
         projectId: variables.projectId,
         message: "Projeto atualizado",
@@ -43,7 +52,7 @@ export const useProjectsV2 = () => {
   });
 
   const createProject = useMutation({
-    mutationFn: async (project: Partial<Project>) => {
+    mutationFn: async (project: Partial<ProjectV2>) => {
       const dbProject = transformToDB(project);
       const { data, error } = await supabase
         .from("projects")
@@ -68,35 +77,40 @@ export const useProjectsV2 = () => {
 
   return {
     projects: projects || [],
+    isLoading,
     updateProject,
     createProject,
   };
 };
 
 // Transform DB row to Project V3 interface
-function transformToProjectV3(row: Record<string, unknown>): Project {
+function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
   // Helper to create a basic stage
-  const createStage = (prefix: string): Stage => ({
-    status: (row[`${prefix}_status`] as Stage['status']) || 'todo',
-    responsible: (row[`${prefix}_responsible`] as string) || '',
-    startDate: row[`${prefix}_start_date`] ? new Date(row[`${prefix}_start_date`] as string) : undefined,
-    endDate: row[`${prefix}_end_date`] ? new Date(row[`${prefix}_end_date`] as string) : undefined,
-    observations: (row[`${prefix}_observations`] as string) || '',
-    // Spread other specific fields
-    ...Object.keys(row).reduce((acc, key) => {
-      if (key.startsWith(prefix + '_') && 
-          !key.endsWith('_status') && 
-          !key.endsWith('_responsible') && 
-          !key.endsWith('_start_date') && 
-          !key.endsWith('_end_date') && 
-          !key.endsWith('_observations')) {
-        // Convert snake_case to camelCase for the property name
-        const propName = key.replace(prefix + '_', '').replace(/_([a-z])/g, (g) => g[1].toUpperCase());
-        acc[propName] = row[key];
-      }
-      return acc;
-    }, {} as Record<string, unknown>)
-  });
+  // We need to cast to specific stage types because createStage is generic
+  const createStage = <T extends { status: StageStatus }>(prefix: string): T => {
+    const stage = {
+      status: (row[`${prefix}_status`] as StageStatus) || 'todo',
+      responsible: (row[`${prefix}_responsible`] as string) || '',
+      startDate: row[`${prefix}_start_date`] ? new Date(row[`${prefix}_start_date`] as string) : undefined,
+      endDate: row[`${prefix}_end_date`] ? new Date(row[`${prefix}_end_date`] as string) : undefined,
+      observations: (row[`${prefix}_observations`] as string) || '',
+      // Spread other specific fields
+      ...Object.keys(row).reduce((acc, key) => {
+        if (key.startsWith(prefix + '_') && 
+            !key.endsWith('_status') && 
+            !key.endsWith('_responsible') && 
+            !key.endsWith('_start_date') && 
+            !key.endsWith('_end_date') && 
+            !key.endsWith('_observations')) {
+          // Convert snake_case to camelCase for the property name
+          const propName = key.replace(prefix + '_', '').replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+          acc[propName] = row[key];
+        }
+        return acc;
+      }, {} as Record<string, unknown>)
+    };
+    return stage as unknown as T;
+  };
 
   // Mock Rich Content if not present
   const notesData = row.notes as { blocks: ContentBlock[] } | undefined;
@@ -106,8 +120,8 @@ function transformToProjectV3(row: Record<string, unknown>): Project {
     blocks: notesData ? notesData.blocks : [
       { id: '1', type: 'paragraph', content: (row.description as string) || '' }
     ],
-    lastEditedBy: row.last_update_by as string,
-    lastEditedAt: new Date(row.updated_at as string)
+    lastEditedBy: (row.last_update_by as string) || 'Sistema',
+    lastEditedAt: row.updated_at ? new Date(row.updated_at as string) : new Date()
   };
 
   return {
@@ -115,10 +129,11 @@ function transformToProjectV3(row: Record<string, unknown>): Project {
     clientName: row.client_name as string,
     ticketNumber: row.ticket_number as string,
     systemType: row.system_type as string,
-    implantationType: (row.implantation_type as Project['implantationType']) || "new",
+    implantationType: (row.implantation_type as ProjectV2['implantationType']) || "new",
+    projectType: (row.project_type as ProjectV2['projectType']) || "new",
     
     healthScore: calculateHealthScore(row),
-    globalStatus: (row.global_status as Project['globalStatus']) || "in-progress",
+    globalStatus: (row.global_status as ProjectV2['globalStatus']) || "in-progress",
     overallProgress: (row.overall_progress as number) || 0,
     
     projectLeader: (row.project_leader as string) || '',
@@ -141,34 +156,37 @@ function transformToProjectV3(row: Record<string, unknown>): Project {
     lastUpdatedBy: (row.last_update_by as string) || 'Sistema',
     
     stages: {
-      infra: createStage('infra'),
-      adherence: createStage('adherence'),
-      environment: createStage('environment'),
-      conversion: createStage('conversion'),
-      implementation: createStage('implementation'),
-      post: createStage('post'),
+      infra: createStage<InfraStageV2>('infra'),
+      adherence: createStage<AdherenceStageV2>('adherence'),
+      environment: createStage<EnvironmentStageV2>('environment'),
+      conversion: createStage<ConversionStageV2>('conversion'),
+      implementation: createStage<ImplementationStageV2>('implementation'),
+      post: createStage<PostStageV2>('post'),
     },
     
     timeline: [], // Fetch separately or include if joined
     auditLog: [], // Fetch separately or include if joined
-    files: [], // Fetch separately or include if joined
     
     notes: notes,
     
     tags: (row.tags as string[]) || [],
-    priority: (row.priority as Project['priority']) || "normal",
+    priority: (row.priority as ProjectV2['priority']) || "normal",
     customFields: (row.custom_fields as Record<string, unknown>) || {},
+    
+    isDeleted: (row.is_deleted as boolean) || false,
+    isArchived: (row.is_archived as boolean) || false,
   };
 }
 
 // Transform Project V3 to DB row
-function transformToDB(project: Partial<Project>): Record<string, unknown> {
+function transformToDB(project: Partial<ProjectV2>): Record<string, unknown> {
   const dbRow: Record<string, unknown> = {};
 
   if (project.clientName) dbRow.client_name = project.clientName;
   if (project.ticketNumber) dbRow.ticket_number = project.ticketNumber;
   if (project.systemType) dbRow.system_type = project.systemType;
   if (project.implantationType) dbRow.implantation_type = project.implantationType;
+  if (project.projectType) dbRow.project_type = project.projectType;
   if (project.globalStatus) dbRow.global_status = project.globalStatus;
   if (project.overallProgress !== undefined) dbRow.overall_progress = project.overallProgress;
   if (project.projectLeader) dbRow.project_leader = project.projectLeader;
@@ -190,6 +208,9 @@ function transformToDB(project: Partial<Project>): Record<string, unknown> {
   if (project.tags) dbRow.tags = project.tags;
   if (project.priority) dbRow.priority = project.priority;
   if (project.customFields) dbRow.custom_fields = project.customFields;
+  
+  if (project.isDeleted !== undefined) dbRow.is_deleted = project.isDeleted;
+  if (project.isArchived !== undefined) dbRow.is_archived = project.isArchived;
 
   // Stages flattening
   if (project.stages) {
@@ -198,7 +219,8 @@ function transformToDB(project: Partial<Project>): Record<string, unknown> {
     
     stageKeys.forEach(key => {
       if (stages[key]) {
-        const stage = stages[key];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const stage = stages[key] as any;
         dbRow[`${key}_status`] = stage.status;
         dbRow[`${key}_responsible`] = stage.responsible;
         if (stage.startDate) dbRow[`${key}_start_date`] = stage.startDate;
@@ -210,7 +232,7 @@ function transformToDB(project: Partial<Project>): Record<string, unknown> {
 
   // Notes
   if (project.notes) {
-    dbRow.notes = project.notes; // Assuming DB has a jsonb 'notes' column
+    dbRow.notes = project.notes; 
   }
 
   return dbRow;
@@ -218,11 +240,10 @@ function transformToDB(project: Partial<Project>): Record<string, unknown> {
 
 function calculateHealthScore(row: Record<string, unknown>): "ok" | "warning" | "critical" {
   const now = new Date();
-  const lastUpdate = new Date(row.updated_at as string);
+  const lastUpdate = row.updated_at ? new Date(row.updated_at as string) : new Date();
   const diffDays = (now.getTime() - lastUpdate.getTime()) / (1000 * 3600 * 24);
 
   if (diffDays > 7) return "critical";
   if (diffDays > 3) return "warning";
   return "ok";
 }
-

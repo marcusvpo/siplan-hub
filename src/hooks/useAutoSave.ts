@@ -1,11 +1,12 @@
 import { useState, useCallback } from 'react';
-import { debounce } from 'lodash'; // Assuming lodash is available or we need to implement a simple debounce
+
 
 // Simple debounce implementation if lodash is not desired/available, 
 // but usually it's better to use a library. For now I'll assume we can use a custom one or import.
 // Let's implement a simple one inside to be dependency-free for this snippet if needed, 
 // but standard practice is lodash.debounce. I will use a custom implementation to avoid import errors if lodash isn't installed.
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function customDebounce<T extends (...args: any[]) => any>(func: T, wait: number) {
   let timeout: NodeJS.Timeout;
   return (...args: Parameters<T>) => {
@@ -26,6 +27,7 @@ export interface SaveState {
   lastSavedAt?: Date;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function useAutoSave<T extends Record<string, any>>(
   initialData: T,
   onSave: (data: T) => Promise<void>,
@@ -71,7 +73,7 @@ export function useAutoSave<T extends Record<string, any>>(
     [onSave, config.debounceMs, config.maxRetries, config.retryDelayMs]
   );
 
-  const handleChange = (field: keyof T, value: any) => {
+  const handleChange = (field: keyof T, value: T[keyof T]) => {
     const newData = { ...data, [field]: value };
     setData(newData);
     debouncedSave(newData);

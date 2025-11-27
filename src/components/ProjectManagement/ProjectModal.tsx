@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Project } from "@/types/project";
+import { ProjectV2 } from "@/types/ProjectV2";
 import { GeneralInfoTab } from "./Tabs/GeneralInfoTab";
 import { StepsTab } from "./Tabs/StepsTab";
 import { TimelineTab } from "./Tabs/TimelineTab";
@@ -9,10 +9,10 @@ import { AuditTab } from "./Tabs/AuditTab";
 import { Badge } from "@/components/ui/badge";
 
 interface ProjectModalProps {
-  project: Project | null;
+  project: ProjectV2 | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUpdate: (project: Project) => void;
+  onUpdate: (project: ProjectV2) => void;
 }
 
 export function ProjectModal({ project, open, onOpenChange, onUpdate }: ProjectModalProps) {

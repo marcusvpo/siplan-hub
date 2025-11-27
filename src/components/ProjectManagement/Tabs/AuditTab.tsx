@@ -1,4 +1,4 @@
-import { Project } from "@/types/project";
+import { ProjectV2 } from "@/types/ProjectV2";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +8,7 @@ import { Search, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface TabProps {
-  project: Project;
+  project: ProjectV2;
 }
 
 export function AuditTab({ project }: TabProps) {
@@ -38,29 +38,22 @@ export function AuditTab({ project }: TabProps) {
           </div>
         )}
 
-        {project.auditLog.map((entry) => (
+        {(project.auditLog || []).map((entry) => (
           <Card key={entry.id} className="text-sm">
             <CardContent className="p-4 flex gap-4">
               <div className="min-w-[150px] text-xs text-muted-foreground">
-                {format(new Date(entry.timestamp), "dd/MM/yyyy HH:mm:ss", { locale: ptBR })}
+                {format(new Date(entry.changedAt), "dd/MM/yyyy HH:mm:ss", { locale: ptBR })}
               </div>
               
               <div className="flex-1 space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold">{entry.author}</span>
-                  <span className="text-muted-foreground">alterou</span>
-                  <Badge variant="outline" className="font-mono text-xs">{entry.field}</Badge>
+                  <span className="font-semibold">{entry.changedBy}</span>
+                  <span className="text-muted-foreground">executou</span>
+                  <Badge variant="outline" className="font-mono text-xs">{entry.action}</Badge>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4 mt-2 bg-muted/30 p-2 rounded border">
-                  <div>
-                    <span className="text-xs text-muted-foreground uppercase block mb-1">Anterior</span>
-                    <code className="text-red-600 break-all">{JSON.stringify(entry.oldValue)}</code>
-                  </div>
-                  <div className="border-l pl-4">
-                    <span className="text-xs text-muted-foreground uppercase block mb-1">Novo</span>
-                    <code className="text-green-600 break-all">{JSON.stringify(entry.newValue)}</code>
-                  </div>
+                <div className="mt-2 bg-muted/30 p-2 rounded border overflow-x-auto">
+                    <pre className="text-xs">{JSON.stringify(entry.details, null, 2)}</pre>
                 </div>
               </div>
             </CardContent>

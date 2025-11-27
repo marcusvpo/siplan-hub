@@ -1,4 +1,4 @@
-import { Project, Stage, ContentBlock } from "@/types/project";
+import { ProjectV2, ContentBlock, InfraStageV2, AdherenceStageV2, EnvironmentStageV2, ConversionStageV2, ImplementationStageV2, PostStageV2 } from "@/types/ProjectV2";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Label } from "@/components/ui/label";
@@ -14,9 +14,11 @@ import { cn } from "@/lib/utils";
 import { useState } from "react";
 
 interface TabProps {
-  project: Project;
-  onUpdate: (project: Project) => void;
+  project: ProjectV2;
+  onUpdate: (project: ProjectV2) => void;
 }
+
+type AnyStage = InfraStageV2 | AdherenceStageV2 | EnvironmentStageV2 | ConversionStageV2 | ImplementationStageV2 | PostStageV2;
 
 export function StepsTab({ project, onUpdate }: TabProps) {
   const { data, handleChange, saveState } = useAutoSave(project, async (newData) => {
@@ -26,16 +28,18 @@ export function StepsTab({ project, onUpdate }: TabProps) {
 
   const [activeBlockId, setActiveBlockId] = useState<string | null>(null);
 
-  const handleStageChange = (stageKey: keyof Project['stages'], field: string, value: unknown) => {
+  const handleStageChange = (stageKey: keyof ProjectV2['stages'], field: string, value: unknown) => {
     const currentStages = { ...data.stages };
-    const currentStage = { ...currentStages[stageKey] };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const currentStage: any = { ...currentStages[stageKey] };
     currentStage[field] = value;
-    currentStages[stageKey] = currentStage;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (currentStages as any)[stageKey] = currentStage;
     handleChange('stages', currentStages);
   };
 
   // Rich Text Logic for Stages
-  const getStageBlocks = (stage: Stage): ContentBlock[] => {
+  const getStageBlocks = (stage: AnyStage): ContentBlock[] => {
     if (typeof stage.observations === 'string') {
         // Migration/Fallback: convert string to block
         return stage.observations ? [{ id: crypto.randomUUID(), type: 'paragraph', content: stage.observations }] : [];
@@ -55,11 +59,11 @@ export function StepsTab({ project, onUpdate }: TabProps) {
     }
   };
 
-  const updateStageBlocks = (stageKey: keyof Project['stages'], blocks: ContentBlock[]) => {
+  const updateStageBlocks = (stageKey: keyof ProjectV2['stages'], blocks: ContentBlock[]) => {
       handleStageChange(stageKey, 'observations', JSON.stringify(blocks));
   };
 
-  const addBlock = (stageKey: keyof Project['stages'], type: ContentBlock['type'], index: number) => {
+  const addBlock = (stageKey: keyof ProjectV2['stages'], type: ContentBlock['type'], index: number) => {
     const currentBlocks = getStageBlocks(data.stages[stageKey]);
     const newBlock: ContentBlock = {
       id: crypto.randomUUID(),
@@ -72,7 +76,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
     setActiveBlockId(newBlock.id);
   };
 
-  const updateBlock = (stageKey: keyof Project['stages'], blockId: string, content: string) => {
+  const updateBlock = (stageKey: keyof ProjectV2['stages'], blockId: string, content: string) => {
     const currentBlocks = getStageBlocks(data.stages[stageKey]);
     const newBlocks = currentBlocks.map(block => 
       block.id === blockId ? { ...block, content } : block
@@ -80,13 +84,13 @@ export function StepsTab({ project, onUpdate }: TabProps) {
     updateStageBlocks(stageKey, newBlocks);
   };
 
-  const deleteBlock = (stageKey: keyof Project['stages'], blockId: string) => {
+  const deleteBlock = (stageKey: keyof ProjectV2['stages'], blockId: string) => {
     const currentBlocks = getStageBlocks(data.stages[stageKey]);
     const newBlocks = currentBlocks.filter(block => block.id !== blockId);
     updateStageBlocks(stageKey, newBlocks);
   };
 
-  const renderBlock = (stageKey: keyof Project['stages'], block: ContentBlock) => {
+  const renderBlock = (stageKey: keyof ProjectV2['stages'], block: ContentBlock) => {
     return (
       <div 
         key={block.id} 
@@ -145,7 +149,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
     );
   };
 
-  const renderRichEditor = (stageKey: keyof Project['stages']) => {
+  const renderRichEditor = (stageKey: keyof ProjectV2['stages']) => {
       const blocks = getStageBlocks(data.stages[stageKey]);
       return (
           <div className="border rounded-md p-4 bg-card">
@@ -175,7 +179,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
       );
   };
 
-  const renderCommonFields = (stageKey: keyof Project['stages'], stage: Stage) => (
+  const renderCommonFields = (stageKey: keyof ProjectV2['stages'], stage: AnyStage) => (
     <div className="space-y-4 mb-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="space-y-2">
