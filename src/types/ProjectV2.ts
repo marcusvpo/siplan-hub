@@ -6,6 +6,7 @@ export type ProjectType = "new" | "migration" | "upgrade" | "maintenance";
 export type GlobalStatus = "todo" | "in-progress" | "done" | "blocked" | "archived";
 export type HealthScore = "ok" | "warning" | "critical";
 export type StageStatus = "todo" | "in-progress" | "done" | "blocked";
+export type ProjectStatus = StageStatus;
 
 export interface FileVersion {
   version: number;

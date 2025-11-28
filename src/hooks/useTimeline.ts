@@ -22,7 +22,7 @@ export const useTimeline = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      queryClient.invalidateQueries({ queryKey: ["projectsV3"] });
     },
   });
 
@@ -34,7 +34,8 @@ export const useTimeline = () => {
     }: {
       projectId: string;
       message: string;
-      metadata?: any;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      metadata?: Record<string, any>;
     }) => {
       const { error } = await supabase.from("timeline_events").insert({
         project_id: projectId,
@@ -47,7 +48,7 @@ export const useTimeline = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      queryClient.invalidateQueries({ queryKey: ["projectsV3"] });
     },
   });
 

@@ -1,24 +1,8 @@
-import { useState, useCallback } from 'react';
-
-
-// Simple debounce implementation if lodash is not desired/available, 
-// but usually it's better to use a library. For now I'll assume we can use a custom one or import.
-// Let's implement a simple one inside to be dependency-free for this snippet if needed, 
-// but standard practice is lodash.debounce. I will use a custom implementation to avoid import errors if lodash isn't installed.
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function customDebounce<T extends (...args: any[]) => any>(func: T, wait: number) {
-  let timeout: NodeJS.Timeout;
-  return (...args: Parameters<T>) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  };
-}
+import { useState, useEffect, useRef } from "react";
+import { useDebounce } from "./use-debounce";
 
 export interface AutoSaveConfig {
-  debounceMs: number;
-  maxRetries: number;
-  retryDelayMs: number;
+  debounceMs?: number;
 }
 
 export interface SaveState {
@@ -27,62 +11,104 @@ export interface SaveState {
   lastSavedAt?: Date;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function useAutoSave<T extends Record<string, any>>(
+export function useAutoSave<T>(
   initialData: T,
-  onSave: (data: T) => Promise<void>,
-  config: AutoSaveConfig = { debounceMs: 1000, maxRetries: 3, retryDelayMs: 500 }
+  onSave: (data: T) => Promise<void> | void,
+  config: AutoSaveConfig = {}
 ) {
   const [data, setData] = useState<T>(initialData);
   const [saveState, setSaveState] = useState<SaveState>({ status: "idle" });
+  const debouncedData = useDebounce(data, config.debounceMs || 1000);
+  const firstRender = useRef(true);
+  const lastSavedData = useRef<string>(JSON.stringify(initialData));
+  const onSaveRef = useRef(onSave);
 
-  const performSave = async (newData: T) => {
-    setSaveState({ status: "saving", message: "Salvando..." });
-    
-    let lastError: Error | null = null;
-    for (let i = 0; i < config.maxRetries; i++) {
-      try {
-        await onSave(newData);
-        setSaveState({
-          status: "success",
-          message: `✓ Salvo em ${new Date().toLocaleTimeString()}`,
-          lastSavedAt: new Date()
-        });
-        return; // Success
-      } catch (error) {
-        lastError = error as Error;
-        if (i < config.maxRetries - 1) {
-          await new Promise(r => setTimeout(r, config.retryDelayMs));
+  useEffect(() => {
+    onSaveRef.current = onSave;
+  }, [onSave]);
+
+  // Sync with initialData if it changes significantly
+  useEffect(() => {
+    const initialJson = JSON.stringify(initialData);
+    if (initialJson !== lastSavedData.current && initialJson !== JSON.stringify(data)) {
+        // Only update if external data is different from current local data
+        // This is a bit risky if user is typing. 
+        // Ideally we only update if we are "pristine" or if we want to force update.
+        // For now, let's respect local changes and only update if we haven't touched it?
+        // Or just update `lastSavedData` so we don't save it back?
+        // Let's assume initialData updates are from our own saves or background refreshes.
+        // If background refresh, we might want to merge? 
+        // For this task, let's just update `lastSavedData` to avoid re-saving what came from server.
+        lastSavedData.current = initialJson;
+        // And update local data? If we do, we overwrite user input.
+        // Let's NOT update local data automatically to avoid conflicts, 
+        // unless we implement a more complex merge strategy.
+        // But if the user navigates away and back, initialData changes.
+        // Let's just set data if it's the first load or if we explicitly want to reset.
+        // For now, let's leave this effect minimal or manual.
+    }
+  }, [initialData, data]);
+
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+
+    const saveData = async () => {
+      const currentJson = JSON.stringify(debouncedData);
+      if (currentJson === lastSavedData.current) {
+          return;
+      }
+
+      setSaveState({ status: "saving", message: "Salvando..." });
+      
+      let attempt = 0;
+      const maxRetries = 3;
+      
+      while (attempt < maxRetries) {
+        try {
+          await onSaveRef.current(debouncedData);
+          lastSavedData.current = currentJson;
+          setSaveState({
+            status: "success",
+            message: "Salvo com sucesso",
+            lastSavedAt: new Date(),
+          });
+          setTimeout(() => setSaveState(prev => prev.status === 'success' ? { ...prev, status: 'idle', message: undefined } : prev), 3000);
+          return;
+        } catch (error) {
+          attempt++;
+          if (attempt === maxRetries) {
+            console.error("AutoSave Error:", error);
+            setSaveState({
+              status: "error",
+              message: "Erro ao salvar",
+            });
+          } else {
+            // Wait before retrying (500ms, 1000ms, etc.)
+            await new Promise(resolve => setTimeout(resolve, 500 * attempt));
+          }
         }
       }
-    }
-    
-    if (lastError) {
-      setSaveState({
-        status: "error",
-        message: `⚠️ Erro: ${lastError.message}`
-      });
-    }
-  };
+    };
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const debouncedSave = useCallback(
-    customDebounce((newData: T) => {
-      performSave(newData);
-    }, config.debounceMs),
-    [onSave, config.debounceMs, config.maxRetries, config.retryDelayMs]
-  );
+    saveData();
+  }, [debouncedData]);
 
   const handleChange = (field: keyof T, value: T[keyof T]) => {
-    const newData = { ...data, [field]: value };
-    setData(newData);
-    debouncedSave(newData);
+    setData((prev) => ({ ...prev, [field]: value }));
   };
 
   const updateData = (newData: T) => {
       setData(newData);
-      debouncedSave(newData);
   }
 
-  return { data, saveState, handleChange, updateData };
+  return {
+    data,
+    setData,
+    handleChange,
+    updateData,
+    saveState,
+  };
 }

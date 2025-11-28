@@ -1,4 +1,4 @@
-import { Project } from "@/types/project";
+import { ProjectV2 } from "@/types/ProjectV2";
 import { Accordion } from "@/components/ui/accordion";
 import { InfraCard } from "./stages/InfraCard";
 import { AdherenceCard } from "./stages/AdherenceCard";
@@ -8,7 +8,7 @@ import { ImplementationCard } from "./stages/ImplementationCard";
 import { PostCard } from "./stages/PostCard";
 
 interface StageCardsProps {
-  project: Project;
+  project: ProjectV2;
 }
 
 export const StageCards = ({ project }: StageCardsProps) => {
