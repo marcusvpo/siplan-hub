@@ -3,6 +3,7 @@ export type Priority = "critical" | "high" | "normal" | "low";
 export type GlobalStatus = "todo" | "in-progress" | "done" | "blocked" | "archived";
 export type HealthScore = "ok" | "warning" | "critical";
 export type StageStatus = "todo" | "in-progress" | "done" | "blocked";
+export type ProjectStatus = StageStatus;
 
 export interface Project {
   // Básicos
@@ -40,12 +41,12 @@ export interface Project {
   
   // Estágios
   stages: {
-    infra: Stage;
-    adherence: Stage;
-    environment: Stage;
-    conversion: Stage;
-    implementation: Stage;
-    post: Stage;
+    infra: InfraStage;
+    adherence: AdherenceStage;
+    environment: EnvironmentStage;
+    conversion: ConversionStage;
+    implementation: ImplementationStage;
+    post: PostStage;
   };
   
   // Dados Sociais
@@ -62,16 +63,80 @@ export interface Project {
   customFields?: Record<string, unknown>;
 }
 
-export interface Stage {
+export interface BaseStage {
   status: StageStatus;
   responsible: string;
   startDate?: Date;
   endDate?: Date;
   observations: string;
-  // Campos específicos podem ser adicionados via interseção ou propriedades opcionais aqui se necessário, 
-  // mas para simplificar o type base, mantemos genérico e estendemos onde preciso ou usamos Record<string, any>
-  [key: string]: unknown; 
+  [key: string]: unknown;
 }
+
+export interface InfraStage extends BaseStage {
+  blockingReason?: string;
+  serverInUse?: string;
+  serverNeeded?: string;
+  approvedByInfra?: boolean;
+  technicalNotes?: string;
+}
+
+export interface AdherenceStage extends BaseStage {
+  hasProductGap?: boolean;
+  gapDescription?: string;
+  devTicket?: string;
+  devEstimatedDate?: Date;
+  gapPriority?: string;
+  analysisComplete?: boolean;
+  conformityStandards?: string;
+}
+
+export interface EnvironmentStage extends BaseStage {
+  osVersion?: string;
+  version?: string;
+  realDate?: Date;
+  approvedByInfra?: boolean;
+  testAvailable?: boolean;
+  preparationChecklist?: string;
+}
+
+export interface ConversionStage extends BaseStage {
+  sourceSystem?: string;
+  complexity?: string;
+  recordCount?: number;
+  dataVolumeGb?: number;
+  toolUsed?: string;
+  homologationComplete?: boolean;
+  homologationDate?: Date;
+  deviations?: string;
+}
+
+export interface ImplementationStage extends BaseStage {
+  remoteInstallDate?: Date;
+  switchType?: string;
+  switchStartTime?: string;
+  switchEndTime?: string;
+  trainingStartDate?: Date;
+  trainingEndDate?: Date;
+  trainingType?: string;
+  trainingLocation?: string;
+  participantsCount?: number;
+  clientFeedback?: string;
+  acceptanceStatus?: string;
+}
+
+export interface PostStage extends BaseStage {
+  supportPeriodDays?: number;
+  supportEndDate?: Date;
+  benefitsDelivered?: string;
+  challengesFound?: string;
+  roiEstimated?: string;
+  clientSatisfaction?: string;
+  recommendations?: string;
+  followupNeeded?: boolean;
+  followupDate?: Date;
+}
+
+export type Stage = BaseStage;
 
 export interface RichContent {
   id: string;

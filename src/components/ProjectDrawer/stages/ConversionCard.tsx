@@ -1,22 +1,33 @@
 import { useState, useEffect } from "react";
-import { Project, ProjectStatus } from "@/types/project";
-import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { ProjectV2, StageStatus } from "@/types/ProjectV2";
+import {
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { RefreshCw } from "lucide-react";
-import { useProjects } from "@/hooks/useProjects";
+import { AutocompleteInput } from "@/components/ui/autocomplete-input";
+import { useProjectsV2 } from "@/hooks/useProjectsV2";
 import { useDebounce } from "@/hooks/use-debounce";
 import { toast } from "sonner";
 
 interface ConversionCardProps {
-  project: Project;
+  project: ProjectV2;
 }
 
 export const ConversionCard = ({ project }: ConversionCardProps) => {
-  const { updateProject } = useProjects();
+  const { updateProject } = useProjectsV2();
   const stage = project.stages.conversion;
 
   const [localData, setLocalData] = useState({
@@ -29,28 +40,48 @@ export const ConversionCard = ({ project }: ConversionCardProps) => {
   const debouncedData = useDebounce(localData, 1000);
 
   useEffect(() => {
-    const hasChanges = 
+    const hasChanges =
       debouncedData.status !== stage.status ||
       debouncedData.responsible !== (stage.responsible || "") ||
       debouncedData.sourceSystem !== (stage.sourceSystem || "") ||
       debouncedData.observations !== (stage.observations || "");
 
     if (hasChanges) {
-      updateProject.mutate({
-        projectId: project.id,
-        updates: {
-          conversion_status: debouncedData.status,
-          conversion_responsible: debouncedData.responsible,
-          conversion_source_system: debouncedData.sourceSystem,
-          conversion_observations: debouncedData.observations,
+      updateProject.mutate(
+        {
+          projectId: project.id,
+          updates: {
+            stages: {
+              ...project.stages,
+              conversion: {
+                ...project.stages.conversion,
+                status: debouncedData.status,
+                responsible: debouncedData.responsible,
+                sourceSystem: debouncedData.sourceSystem,
+                observations: debouncedData.observations,
+              },
+            },
+          },
         },
-      }, {
-        onSuccess: () => {
-          toast.success("Alterações salvas automaticamente", { duration: 2000 });
-        },
-      });
+        {
+          onSuccess: () => {
+            toast.success("Alterações salvas automaticamente", {
+              duration: 2000,
+            });
+          },
+        }
+      );
     }
-  }, [debouncedData]);
+  }, [
+    debouncedData,
+    project.id,
+    project.stages,
+    stage.status,
+    stage.responsible,
+    stage.sourceSystem,
+    stage.observations,
+    updateProject,
+  ]);
 
   return (
     <AccordionItem value="conversion">
@@ -66,9 +97,14 @@ export const ConversionCard = ({ project }: ConversionCardProps) => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Status</Label>
-                <Select 
-                  value={localData.status} 
-                  onValueChange={(value) => setLocalData({...localData, status: value as ProjectStatus})}
+                <Select
+                  value={localData.status}
+                  onValueChange={(value) =>
+                    setLocalData({
+                      ...localData,
+                      status: value as StageStatus,
+                    })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -83,10 +119,12 @@ export const ConversionCard = ({ project }: ConversionCardProps) => {
 
               <div>
                 <Label>Responsável</Label>
-                <Input
+                <AutocompleteInput
                   placeholder="Nome do responsável"
                   value={localData.responsible}
-                  onChange={(e) => setLocalData({...localData, responsible: e.target.value})}
+                  onChange={(value) =>
+                    setLocalData({ ...localData, responsible: value })
+                  }
                 />
               </div>
             </div>
@@ -96,7 +134,9 @@ export const ConversionCard = ({ project }: ConversionCardProps) => {
               <Input
                 placeholder="Ex: Datasul, Protheus, SAP, etc."
                 value={localData.sourceSystem}
-                onChange={(e) => setLocalData({...localData, sourceSystem: e.target.value})}
+                onChange={(e) =>
+                  setLocalData({ ...localData, sourceSystem: e.target.value })
+                }
               />
             </div>
 
@@ -105,7 +145,9 @@ export const ConversionCard = ({ project }: ConversionCardProps) => {
               <Textarea
                 placeholder="Adicione observações sobre a conversão..."
                 value={localData.observations}
-                onChange={(e) => setLocalData({...localData, observations: e.target.value})}
+                onChange={(e) =>
+                  setLocalData({ ...localData, observations: e.target.value })
+                }
                 rows={3}
               />
             </div>
