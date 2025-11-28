@@ -1,23 +1,34 @@
 import { useState, useEffect } from "react";
-import { Project, ProjectStatus } from "@/types/project";
-import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { ProjectV2, StageStatus } from "@/types/ProjectV2";
+import {
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { MonitorCheck } from "lucide-react";
-import { useProjects } from "@/hooks/useProjects";
+import { AutocompleteInput } from "@/components/ui/autocomplete-input";
+import { useProjectsV2 } from "@/hooks/useProjectsV2";
 import { useDebounce } from "@/hooks/use-debounce";
 import { toast } from "sonner";
 
 interface EnvironmentCardProps {
-  project: Project;
+  project: ProjectV2;
 }
 
 export const EnvironmentCard = ({ project }: EnvironmentCardProps) => {
-  const { updateProject } = useProjects();
+  const { updateProject } = useProjectsV2();
   const stage = project.stages.environment;
 
   const [localData, setLocalData] = useState({
@@ -25,39 +36,68 @@ export const EnvironmentCard = ({ project }: EnvironmentCardProps) => {
     responsible: stage.responsible || "",
     osVersion: stage.osVersion || "",
     approvedByInfra: stage.approvedByInfra,
-    realDate: stage.realDate ? stage.realDate.toISOString().split('T')[0] : "",
+    realDate: stage.realDate
+      ? new Date(stage.realDate).toISOString().split("T")[0]
+      : "",
     observations: stage.observations || "",
   });
 
   const debouncedData = useDebounce(localData, 1000);
 
   useEffect(() => {
-    const hasChanges = 
+    const hasChanges =
       debouncedData.status !== stage.status ||
       debouncedData.responsible !== (stage.responsible || "") ||
       debouncedData.osVersion !== (stage.osVersion || "") ||
       debouncedData.approvedByInfra !== stage.approvedByInfra ||
-      debouncedData.realDate !== (stage.realDate ? stage.realDate.toISOString().split('T')[0] : "") ||
+      debouncedData.realDate !==
+        (stage.realDate
+          ? new Date(stage.realDate).toISOString().split("T")[0]
+          : "") ||
       debouncedData.observations !== (stage.observations || "");
 
     if (hasChanges) {
-      updateProject.mutate({
-        projectId: project.id,
-        updates: {
-          environment_status: debouncedData.status,
-          environment_responsible: debouncedData.responsible,
-          environment_os_version: debouncedData.osVersion,
-          environment_approved_by_infra: debouncedData.approvedByInfra,
-          environment_real_date: debouncedData.realDate || null,
-          environment_observations: debouncedData.observations,
+      updateProject.mutate(
+        {
+          projectId: project.id,
+          updates: {
+            stages: {
+              ...project.stages,
+              environment: {
+                ...project.stages.environment,
+                status: debouncedData.status,
+                responsible: debouncedData.responsible,
+                osVersion: debouncedData.osVersion,
+                approvedByInfra: debouncedData.approvedByInfra,
+                realDate: debouncedData.realDate
+                  ? new Date(debouncedData.realDate)
+                  : undefined,
+                observations: debouncedData.observations,
+              },
+            },
+          },
         },
-      }, {
-        onSuccess: () => {
-          toast.success("Alterações salvas automaticamente", { duration: 2000 });
-        },
-      });
+        {
+          onSuccess: () => {
+            toast.success("Alterações salvas automaticamente", {
+              duration: 2000,
+            });
+          },
+        }
+      );
     }
-  }, [debouncedData]);
+  }, [
+    debouncedData,
+    project.id,
+    project.stages,
+    stage.status,
+    stage.responsible,
+    stage.approvedByInfra,
+    stage.observations,
+    stage.osVersion,
+    stage.realDate,
+    updateProject,
+  ]);
 
   return (
     <AccordionItem value="environment">
@@ -73,9 +113,14 @@ export const EnvironmentCard = ({ project }: EnvironmentCardProps) => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Status</Label>
-                <Select 
-                  value={localData.status} 
-                  onValueChange={(value) => setLocalData({...localData, status: value as ProjectStatus})}
+                <Select
+                  value={localData.status}
+                  onValueChange={(value) =>
+                    setLocalData({
+                      ...localData,
+                      status: value as StageStatus,
+                    })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -90,10 +135,12 @@ export const EnvironmentCard = ({ project }: EnvironmentCardProps) => {
 
               <div>
                 <Label>Responsável</Label>
-                <Input
+                <AutocompleteInput
                   placeholder="Nome do responsável"
                   value={localData.responsible}
-                  onChange={(e) => setLocalData({...localData, responsible: e.target.value})}
+                  onChange={(value) =>
+                    setLocalData({ ...localData, responsible: value })
+                  }
                 />
               </div>
 
@@ -102,25 +149,34 @@ export const EnvironmentCard = ({ project }: EnvironmentCardProps) => {
                 <Input
                   placeholder="Ex: Windows Server 2019, Ubuntu 22.04"
                   value={localData.osVersion}
-                  onChange={(e) => setLocalData({...localData, osVersion: e.target.value})}
+                  onChange={(e) =>
+                    setLocalData({ ...localData, osVersion: e.target.value })
+                  }
                 />
               </div>
 
               <div>
                 <Label>Data Real de Disponibilização</Label>
-                <Input 
-                  type="date" 
+                <Input
+                  type="date"
                   value={localData.realDate}
-                  onChange={(e) => setLocalData({...localData, realDate: e.target.value})}
+                  onChange={(e) =>
+                    setLocalData({ ...localData, realDate: e.target.value })
+                  }
                 />
               </div>
             </div>
 
             <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="infra-approval" 
+              <Checkbox
+                id="infra-approval"
                 checked={localData.approvedByInfra}
-                onCheckedChange={(checked) => setLocalData({...localData, approvedByInfra: checked as boolean})}
+                onCheckedChange={(checked) =>
+                  setLocalData({
+                    ...localData,
+                    approvedByInfra: checked as boolean,
+                  })
+                }
               />
               <label
                 htmlFor="infra-approval"
@@ -135,7 +191,9 @@ export const EnvironmentCard = ({ project }: EnvironmentCardProps) => {
               <Textarea
                 placeholder="Adicione observações..."
                 value={localData.observations}
-                onChange={(e) => setLocalData({...localData, observations: e.target.value})}
+                onChange={(e) =>
+                  setLocalData({ ...localData, observations: e.target.value })
+                }
                 rows={3}
               />
             </div>

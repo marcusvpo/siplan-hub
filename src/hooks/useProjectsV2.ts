@@ -23,7 +23,7 @@ export const useProjectsV2 = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("projects")
-        .select("*")
+        .select("*, timeline_events(*)")
         .eq("is_deleted", false)
         .order("updated_at", { ascending: false });
 
@@ -35,6 +35,10 @@ export const useProjectsV2 = () => {
 
   const updateProject = useMutation({
     mutationFn: async ({ projectId, updates }: { projectId: string; updates: Partial<ProjectV2> }) => {
+      // Get current project state for comparison
+      const currentProjects = queryClient.getQueryData<ProjectV2[]>(["projectsV3"]);
+      const currentProject = currentProjects?.find(p => p.id === projectId);
+      
       const dbUpdates = transformToDB(updates);
       
       console.log("--- DEBUG: Update Project Payload ---", JSON.stringify(dbUpdates, null, 2));
@@ -45,15 +49,105 @@ export const useProjectsV2 = () => {
         console.error("--- DEBUG: Supabase Update Error ---", error);
         throw error;
       }
+
+      // Generate specific log messages by comparing with current state
+      const logMessages: string[] = [];
+      
+      if (currentProject) {
+        // Helper to check if a value changed
+        const hasChanged = (newVal: unknown, oldVal: unknown) => {
+           if (newVal === undefined) return false; // Not updated
+           if (newVal === null && oldVal === null) return false;
+           // Simple equality check for primitives
+           if (newVal instanceof Date && oldVal instanceof Date) {
+             return newVal.getTime() !== oldVal.getTime();
+           }
+           return newVal !== oldVal;
+        };
+
+        // Stage Status Changes
+        if (updates.stages?.infra?.status && hasChanged(updates.stages.infra.status, currentProject.stages.infra.status)) {
+            logMessages.push(`Status de Infraestrutura alterado para ${updates.stages.infra.status}`);
+        }
+        if (updates.stages?.adherence?.status && hasChanged(updates.stages.adherence.status, currentProject.stages.adherence.status)) {
+            logMessages.push(`Status de Aderência alterado para ${updates.stages.adherence.status}`);
+        }
+        if (updates.stages?.environment?.status && hasChanged(updates.stages.environment.status, currentProject.stages.environment.status)) {
+            logMessages.push(`Status de Ambiente alterado para ${updates.stages.environment.status}`);
+        }
+        if (updates.stages?.conversion?.status && hasChanged(updates.stages.conversion.status, currentProject.stages.conversion.status)) {
+            logMessages.push(`Status de Conversão alterado para ${updates.stages.conversion.status}`);
+        }
+        if (updates.stages?.implementation?.status && hasChanged(updates.stages.implementation.status, currentProject.stages.implementation.status)) {
+            logMessages.push(`Status de Implantação alterado para ${updates.stages.implementation.status}`);
+        }
+        if (updates.stages?.post?.status && hasChanged(updates.stages.post.status, currentProject.stages.post.status)) {
+            logMessages.push(`Status de Pós-Implantação alterado para ${updates.stages.post.status}`);
+        }
+
+        // Responsibles
+        if (updates.stages?.infra?.responsible && hasChanged(updates.stages.infra.responsible, currentProject.stages.infra.responsible)) {
+            logMessages.push(`Responsável de Infraestrutura definido como ${updates.stages.infra.responsible}`);
+        }
+        if (updates.stages?.adherence?.responsible && hasChanged(updates.stages.adherence.responsible, currentProject.stages.adherence.responsible)) {
+            logMessages.push(`Responsável de Aderência definido como ${updates.stages.adherence.responsible}`);
+        }
+        if (updates.stages?.environment?.responsible && hasChanged(updates.stages.environment.responsible, currentProject.stages.environment.responsible)) {
+            logMessages.push(`Responsável de Ambiente definido como ${updates.stages.environment.responsible}`);
+        }
+        if (updates.stages?.conversion?.responsible && hasChanged(updates.stages.conversion.responsible, currentProject.stages.conversion.responsible)) {
+            logMessages.push(`Responsável de Conversão definido como ${updates.stages.conversion.responsible}`);
+        }
+        if (updates.stages?.implementation?.responsible && hasChanged(updates.stages.implementation.responsible, currentProject.stages.implementation.responsible)) {
+            logMessages.push(`Responsável de Implantação definido como ${updates.stages.implementation.responsible}`);
+        }
+        if (updates.stages?.post?.responsible && hasChanged(updates.stages.post.responsible, currentProject.stages.post.responsible)) {
+            logMessages.push(`Responsável de Pós-Implantação definido como ${updates.stages.post.responsible}`);
+        }
+
+        // Dates (Example for Infra)
+        if (updates.stages?.infra?.startDate && hasChanged(updates.stages.infra.startDate, currentProject.stages.infra.startDate)) {
+            logMessages.push("Data de início de Infraestrutura atualizada");
+        }
+        if (updates.stages?.infra?.endDate && hasChanged(updates.stages.infra.endDate, currentProject.stages.infra.endDate)) {
+            logMessages.push("Data de fim de Infraestrutura atualizada");
+        }
+        
+        // Global Status
+        if (updates.globalStatus && hasChanged(updates.globalStatus, currentProject.globalStatus)) {
+            logMessages.push(`Status Global alterado para ${updates.globalStatus}`);
+        }
+
+      } else {
+        // Fallback if current project not found (shouldn't happen often)
+        if (dbUpdates.infra_status) logMessages.push(`Status de Infraestrutura alterado para ${dbUpdates.infra_status}`);
+        // ... fallback logic
+        if (logMessages.length === 0 && Object.keys(dbUpdates).length > 1) {
+             logMessages.push("Projeto atualizado");
+        }
+      }
+      
+      if (logMessages.length === 0 && Object.keys(dbUpdates).length > 1 && !currentProject) {
+         // If we couldn't compare but there are updates
+         logMessages.push("Projeto atualizado");
+      }
+
+      // Return messages to be used in onSuccess
+      return logMessages;
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (logMessages, variables) => {
       queryClient.invalidateQueries({ queryKey: ["projectsV3"] });
       
-      addAutoLog.mutate({
-        projectId: variables.projectId,
-        message: "Projeto atualizado",
-        metadata: { action: "update" },
-      });
+      // Create a log entry for each message, or join them
+      if (logMessages && logMessages.length > 0) {
+        logMessages.forEach(msg => {
+          addAutoLog.mutate({
+            projectId: variables.projectId,
+            message: msg,
+            metadata: { action: "update", details: variables.updates },
+          });
+        });
+      }
     },
   });
 
@@ -130,6 +224,17 @@ function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
     lastEditedAt: row.updated_at ? new Date(row.updated_at as string) : new Date()
   };
 
+  // Map timeline events to AuditEntry
+  const timelineEvents = (row.timeline_events as Record<string, unknown>[]) || [];
+  const auditLog = timelineEvents.map(event => ({
+    id: event.id as string,
+    projectId: event.project_id as string,
+    action: event.message as string, // Use message as action description
+    changedBy: event.author as string,
+    changedAt: new Date(event.timestamp as string),
+    details: (event.metadata as Record<string, unknown>) || {},
+  }));
+
   return {
     id: row.id as string,
     clientName: row.client_name as string,
@@ -171,7 +276,7 @@ function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
     },
     
     timeline: [], // Fetch separately or include if joined
-    auditLog: [], // Fetch separately or include if joined
+    auditLog: auditLog, 
     
     notes: notes,
     

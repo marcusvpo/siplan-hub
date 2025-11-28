@@ -2,6 +2,7 @@ import { ProjectV2 } from "@/types/ProjectV2";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 
 interface ContactsGroupProps {
   project: ProjectV2;
@@ -17,16 +18,16 @@ export const ContactsGroup = ({ project, onUpdate }: ContactsGroupProps) => {
       <CardContent className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
           <Label>Líder do Projeto</Label>
-          <Input 
-            value={project.projectLeader} 
-            onChange={(e) => onUpdate("projectLeader", e.target.value)}
+          <AutocompleteInput
+            value={project.projectLeader}
+            onChange={(value) => onUpdate("projectLeader", value)}
           />
         </div>
-        
+
         <div className="space-y-2">
           <Label>Contato Principal (Cliente)</Label>
-          <Input 
-            value={project.clientPrimaryContact || ""} 
+          <Input
+            value={project.clientPrimaryContact || ""}
             onChange={(e) => onUpdate("clientPrimaryContact", e.target.value)}
             placeholder="Nome + Email/Telefone"
           />
@@ -34,41 +35,41 @@ export const ContactsGroup = ({ project, onUpdate }: ContactsGroupProps) => {
 
         <div className="space-y-2">
           <Label>Resp. Infraestrutura</Label>
-          <Input 
-            value={project.responsibleInfra || ""} 
-            onChange={(e) => onUpdate("responsibleInfra", e.target.value)}
+          <AutocompleteInput
+            value={project.responsibleInfra || ""}
+            onChange={(value) => onUpdate("responsibleInfra", value)}
           />
         </div>
 
         <div className="space-y-2">
           <Label>Resp. Aderência</Label>
-          <Input 
-            value={project.responsibleAdherence || ""} 
-            onChange={(e) => onUpdate("responsibleAdherence", e.target.value)}
+          <AutocompleteInput
+            value={project.responsibleAdherence || ""}
+            onChange={(value) => onUpdate("responsibleAdherence", value)}
           />
         </div>
 
         <div className="space-y-2">
           <Label>Resp. Conversão</Label>
-          <Input 
-            value={project.responsibleConversion || ""} 
-            onChange={(e) => onUpdate("responsibleConversion", e.target.value)}
+          <AutocompleteInput
+            value={project.responsibleConversion || ""}
+            onChange={(value) => onUpdate("responsibleConversion", value)}
           />
         </div>
 
         <div className="space-y-2">
           <Label>Resp. Implantação</Label>
-          <Input 
-            value={project.responsibleImplementation || ""} 
-            onChange={(e) => onUpdate("responsibleImplementation", e.target.value)}
+          <AutocompleteInput
+            value={project.responsibleImplementation || ""}
+            onChange={(value) => onUpdate("responsibleImplementation", value)}
           />
         </div>
 
         <div className="space-y-2">
           <Label>Resp. Pós-Implantação</Label>
-          <Input 
-            value={project.responsiblePost || ""} 
-            onChange={(e) => onUpdate("responsiblePost", e.target.value)}
+          <AutocompleteInput
+            value={project.responsiblePost || ""}
+            onChange={(value) => onUpdate("responsiblePost", value)}
           />
         </div>
       </CardContent>
