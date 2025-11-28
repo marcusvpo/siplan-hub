@@ -30,7 +30,8 @@ export interface ContentBlock {
   id: string;
   type: "heading" | "paragraph" | "list" | "callout" | "divider" | "checkbox" | "embed";
   content: string;
-  metadata?: Record<string, any>;
+  checked?: boolean;
+  metadata?: Record<string, unknown>;
 }
 
 export interface RichContent {

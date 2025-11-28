@@ -59,7 +59,7 @@ export interface Project {
   // Metadados
   tags: string[];
   priority: Priority;
-  customFields?: Record<string, any>;
+  customFields?: Record<string, unknown>;
 }
 
 export interface Stage {
@@ -70,7 +70,7 @@ export interface Stage {
   observations: string;
   // Campos específicos podem ser adicionados via interseção ou propriedades opcionais aqui se necessário, 
   // mas para simplificar o type base, mantemos genérico e estendemos onde preciso ou usamos Record<string, any>
-  [key: string]: any; 
+  [key: string]: unknown; 
 }
 
 export interface RichContent {
@@ -85,7 +85,7 @@ export interface ContentBlock {
   id: string;
   type: "heading" | "paragraph" | "list" | "callout" | "divider" | "checkbox" | "embed";
   content: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface TimelineEvent {
@@ -104,8 +104,8 @@ export interface AuditEntry {
   projectId: string;
   author: string;
   field: string;
-  oldValue: any;
-  newValue: any;
+  oldValue: unknown;
+  newValue: unknown;
   timestamp: Date;
 }
 

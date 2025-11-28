@@ -9,9 +9,26 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, GripVertical, Trash2, Type, CheckSquare } from "lucide-react";
+import { GripVertical, Trash2, Type, CheckSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface TabProps {
   project: ProjectV2;
@@ -20,6 +37,118 @@ interface TabProps {
 
 type AnyStage = InfraStageV2 | AdherenceStageV2 | EnvironmentStageV2 | ConversionStageV2 | ImplementationStageV2 | PostStageV2;
 
+interface SortableBlockProps {
+  block: ContentBlock;
+  stageKey: keyof ProjectV2['stages'];
+  activeBlockId: string | null;
+  setActiveBlockId: (id: string) => void;
+  updateBlock: (stageKey: keyof ProjectV2['stages'], blockId: string, content: string, checked?: boolean) => void;
+  deleteBlock: (stageKey: keyof ProjectV2['stages'], blockId: string) => void;
+}
+
+function SortableBlock({ block, stageKey, activeBlockId, setActiveBlockId, updateBlock, deleteBlock }: SortableBlockProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: block.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 10 : 1,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  const isFocused = activeBlockId === block.id;
+
+  return (
+    <div 
+      ref={setNodeRef} 
+      style={style}
+      className={cn(
+        "group flex items-start gap-2 py-2 px-3 rounded-md hover:bg-muted/30 transition-all border border-transparent",
+        isFocused ? "bg-muted/40 border-muted-foreground/20 shadow-sm" : ""
+      )}
+      onClick={() => setActiveBlockId(block.id)}
+    >
+      <div 
+        className={cn(
+            "flex flex-col items-center gap-1 mt-1.5 transition-opacity",
+            isFocused ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+        )}
+      >
+         <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded">
+           <GripVertical className="h-4 w-4 text-muted-foreground" />
+         </div>
+      </div>
+
+      <div className="flex-1 space-y-1">
+        {block.type === 'heading' && (
+          <Input 
+            className="text-xl font-bold border-none shadow-none focus-visible:ring-0 px-0 h-auto py-1 bg-transparent placeholder:text-muted-foreground/50"
+            placeholder="Digite um título..."
+            value={block.content}
+            onChange={(e) => updateBlock(stageKey, block.id, e.target.value)}
+            autoFocus={isFocused}
+          />
+        )}
+        {block.type === 'paragraph' && (
+          <Textarea 
+            className="min-h-[24px] resize-none border-none shadow-none focus-visible:ring-0 px-0 py-1 overflow-hidden bg-transparent leading-relaxed"
+            placeholder="Digite suas observações..."
+            value={block.content}
+            onChange={(e) => {
+              updateBlock(stageKey, block.id, e.target.value);
+              e.target.style.height = 'auto';
+              e.target.style.height = e.target.scrollHeight + 'px';
+            }}
+            autoFocus={isFocused}
+          />
+        )}
+        {block.type === 'checkbox' && (
+          <div className="flex items-center gap-3">
+            <Checkbox 
+              id={block.id} 
+              className="h-5 w-5" 
+              checked={block.checked || false}
+              onCheckedChange={(checked) => updateBlock(stageKey, block.id, block.content, checked as boolean)}
+            />
+            <Input 
+              className={cn(
+                "border-none shadow-none focus-visible:ring-0 px-0 h-auto py-1 bg-transparent flex-1 transition-all",
+                block.checked ? "text-muted-foreground line-through decoration-muted-foreground/50" : ""
+              )}
+              placeholder="Item da lista..."
+              value={block.content}
+              onChange={(e) => updateBlock(stageKey, block.id, e.target.value, block.checked)}
+              autoFocus={isFocused}
+            />
+          </div>
+        )}
+      </div>
+
+      <div className={cn(
+          "flex items-center mt-1.5 transition-opacity",
+          isFocused ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+      )}>
+         <Button 
+          variant="ghost" 
+          size="icon" 
+          className="h-6 w-6 text-destructive hover:bg-destructive/10" 
+          onClick={(e) => { e.stopPropagation(); deleteBlock(stageKey, block.id); }}
+          title="Excluir bloco"
+         >
+           <Trash2 className="h-3.5 w-3.5" />
+         </Button>
+      </div>
+    </div>
+  );
+}
+
 export function StepsTab({ project, onUpdate }: TabProps) {
   const { data, handleChange, saveState } = useAutoSave(project, async (newData) => {
     onUpdate(newData);
@@ -27,6 +156,13 @@ export function StepsTab({ project, onUpdate }: TabProps) {
   });
 
   const [activeBlockId, setActiveBlockId] = useState<string | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   const handleStageChange = (stageKey: keyof ProjectV2['stages'], field: string, value: unknown) => {
     const currentStages = { ...data.stages };
@@ -40,46 +176,40 @@ export function StepsTab({ project, onUpdate }: TabProps) {
 
   // Rich Text Logic for Stages
   const getStageBlocks = (stage: AnyStage): ContentBlock[] => {
-    if (typeof stage.observations === 'string') {
-        // Migration/Fallback: convert string to block
-        return stage.observations ? [{ id: crypto.randomUUID(), type: 'paragraph', content: stage.observations }] : [];
-    }
-    // Assuming observations can be stored as ContentBlock[] or we use a separate field.
-    // Since the type definition says observations: string, we need to handle this.
-    // Ideally, we should update the Type. But for now, let's store the JSON string in observations field if possible,
-    // OR we just use a local state hack. 
-    // BUT, the prompt asked to "add this model".
-    // Let's assume we can store JSON string in the 'observations' field which is a string.
+    if (!stage.observations) return [];
+
     try {
-        const parsed = JSON.parse(stage.observations);
-        if (Array.isArray(parsed)) return parsed;
-        return [];
+      const parsed = JSON.parse(stage.observations);
+      if (Array.isArray(parsed)) return parsed;
     } catch {
-        return stage.observations ? [{ id: crypto.randomUUID(), type: 'paragraph', content: stage.observations }] : [];
+      // Ignore error, treat as plain text
     }
+
+    return [{ id: crypto.randomUUID(), type: 'paragraph', content: stage.observations }];
   };
 
   const updateStageBlocks = (stageKey: keyof ProjectV2['stages'], blocks: ContentBlock[]) => {
       handleStageChange(stageKey, 'observations', JSON.stringify(blocks));
   };
 
-  const addBlock = (stageKey: keyof ProjectV2['stages'], type: ContentBlock['type'], index: number) => {
+  const addBlock = (stageKey: keyof ProjectV2['stages'], type: ContentBlock['type']) => {
     const currentBlocks = getStageBlocks(data.stages[stageKey]);
     const newBlock: ContentBlock = {
       id: crypto.randomUUID(),
       type,
       content: '',
+      checked: false
     };
-    const newBlocks = [...currentBlocks];
-    newBlocks.splice(index + 1, 0, newBlock);
+    // Append to the end
+    const newBlocks = [...currentBlocks, newBlock];
     updateStageBlocks(stageKey, newBlocks);
     setActiveBlockId(newBlock.id);
   };
 
-  const updateBlock = (stageKey: keyof ProjectV2['stages'], blockId: string, content: string) => {
+  const updateBlock = (stageKey: keyof ProjectV2['stages'], blockId: string, content: string, checked?: boolean) => {
     const currentBlocks = getStageBlocks(data.stages[stageKey]);
     const newBlocks = currentBlocks.map(block => 
-      block.id === blockId ? { ...block, content } : block
+      block.id === blockId ? { ...block, content, checked: checked !== undefined ? checked : block.checked } : block
     );
     updateStageBlocks(stageKey, newBlocks);
   };
@@ -90,90 +220,72 @@ export function StepsTab({ project, onUpdate }: TabProps) {
     updateStageBlocks(stageKey, newBlocks);
   };
 
-  const renderBlock = (stageKey: keyof ProjectV2['stages'], block: ContentBlock) => {
-    return (
-      <div 
-        key={block.id} 
-        className={cn(
-          "group flex items-start gap-2 py-1 px-2 rounded-md hover:bg-muted/30 transition-colors",
-          activeBlockId === block.id ? "bg-muted/50" : ""
-        )}
-        onClick={() => setActiveBlockId(block.id)}
-      >
-        <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 mt-1.5">
-           <Button variant="ghost" size="icon" className="h-6 w-6 cursor-grab">
-             <GripVertical className="h-3 w-3 text-muted-foreground" />
-           </Button>
-           <Button variant="ghost" size="icon" className="h-6 w-6 text-red-500" onClick={() => deleteBlock(stageKey, block.id)}>
-             <Trash2 className="h-3 w-3" />
-           </Button>
-        </div>
+  const handleDragEnd = (event: DragEndEvent, stageKey: keyof ProjectV2['stages']) => {
+    const { active, over } = event;
 
-        <div className="flex-1">
-          {block.type === 'heading' && (
-            <Input 
-              className="text-lg font-bold border-none shadow-none focus-visible:ring-0 px-0 h-auto py-1 bg-transparent"
-              placeholder="Título..."
-              value={block.content}
-              onChange={(e) => updateBlock(stageKey, block.id, e.target.value)}
-              autoFocus={activeBlockId === block.id}
-            />
-          )}
-          {block.type === 'paragraph' && (
-            <Textarea 
-              className="min-h-[24px] resize-none border-none shadow-none focus-visible:ring-0 px-0 py-1 overflow-hidden bg-transparent"
-              placeholder="Digite algo..."
-              value={block.content}
-              onChange={(e) => {
-                updateBlock(stageKey, block.id, e.target.value);
-                e.target.style.height = 'auto';
-                e.target.style.height = e.target.scrollHeight + 'px';
-              }}
-              autoFocus={activeBlockId === block.id}
-            />
-          )}
-          {block.type === 'checkbox' && (
-            <div className="flex items-center gap-2">
-              <Checkbox id={block.id} />
-              <Input 
-                className="border-none shadow-none focus-visible:ring-0 px-0 h-auto py-1 bg-transparent"
-                placeholder="Item da lista..."
-                value={block.content}
-                onChange={(e) => updateBlock(stageKey, block.id, e.target.value)}
-                autoFocus={activeBlockId === block.id}
-              />
-            </div>
-          )}
-        </div>
-      </div>
-    );
+    if (over && active.id !== over.id) {
+      const currentBlocks = getStageBlocks(data.stages[stageKey]);
+      const oldIndex = currentBlocks.findIndex((block) => block.id === active.id);
+      const newIndex = currentBlocks.findIndex((block) => block.id === over.id);
+
+      const newBlocks = arrayMove(currentBlocks, oldIndex, newIndex);
+      updateStageBlocks(stageKey, newBlocks);
+    }
   };
 
   const renderRichEditor = (stageKey: keyof ProjectV2['stages']) => {
       const blocks = getStageBlocks(data.stages[stageKey]);
       return (
-          <div className="border rounded-md p-4 bg-card">
-              <div className="flex items-center gap-2 mb-4 border-b pb-2">
-                <span className="text-xs text-muted-foreground font-medium uppercase">Observações & Checklist</span>
+          <div className="border rounded-md bg-card shadow-sm overflow-hidden">
+              <div className="flex items-center gap-2 p-3 border-b bg-muted/30">
+                <span className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Editor de Conteúdo</span>
                 <div className="flex-1" />
-                <Button variant="ghost" size="sm" onClick={() => addBlock(stageKey, 'heading', -1)} title="Adicionar Título">
-                  <Type className="h-3 w-3" />
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => addBlock(stageKey, 'paragraph', -1)} title="Adicionar Texto">
-                  <Type className="h-3 w-3" />
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => addBlock(stageKey, 'checkbox', -1)} title="Adicionar Checklist">
-                  <CheckSquare className="h-3 w-3" />
-                </Button>
+                <div className="flex items-center bg-background rounded-md border shadow-sm p-0.5">
+                    <Button variant="ghost" size="sm" className="h-7 px-2 gap-1.5 text-xs font-medium" onClick={() => addBlock(stageKey, 'heading')}>
+                    <Type className="h-3.5 w-3.5" /> Título
+                    </Button>
+                    <div className="w-px h-4 bg-border mx-0.5" />
+                    <Button variant="ghost" size="sm" className="h-7 px-2 gap-1.5 text-xs font-medium" onClick={() => addBlock(stageKey, 'paragraph')}>
+                    <Type className="h-3.5 w-3.5" /> Texto
+                    </Button>
+                    <div className="w-px h-4 bg-border mx-0.5" />
+                    <Button variant="ghost" size="sm" className="h-7 px-2 gap-1.5 text-xs font-medium" onClick={() => addBlock(stageKey, 'checkbox')}>
+                    <CheckSquare className="h-3.5 w-3.5" /> Checklist
+                    </Button>
+                </div>
               </div>
               
-              <div className="space-y-1 min-h-[100px]">
+              <div className="space-y-1 min-h-[150px] p-4 bg-background/50">
                 {blocks.length === 0 && (
-                  <div className="text-center text-muted-foreground py-4 text-sm">
-                    Nenhuma observação. Clique nos ícones acima para adicionar.
+                  <div className="flex flex-col items-center justify-center py-10 text-muted-foreground gap-2 border-2 border-dashed rounded-lg m-4">
+                    <Type className="h-8 w-8 opacity-20" />
+                    <p className="text-sm font-medium">Nenhum conteúdo adicionado</p>
+                    <p className="text-xs opacity-70">Utilize a barra de ferramentas acima para começar</p>
                   </div>
                 )}
-                {blocks.map((block) => renderBlock(stageKey, block))}
+                
+                <DndContext 
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={(event) => handleDragEnd(event, stageKey)}
+                >
+                  <SortableContext 
+                    items={blocks.map(b => b.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {blocks.map((block) => (
+                      <SortableBlock 
+                        key={block.id} 
+                        block={block} 
+                        stageKey={stageKey}
+                        activeBlockId={activeBlockId}
+                        setActiveBlockId={setActiveBlockId}
+                        updateBlock={updateBlock}
+                        deleteBlock={deleteBlock}
+                      />
+                    ))}
+                  </SortableContext>
+                </DndContext>
               </div>
           </div>
       );

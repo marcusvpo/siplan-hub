@@ -32,7 +32,7 @@ export function AuditTab({ project }: TabProps) {
       </div>
 
       <div className="space-y-4">
-        {project.auditLog.length === 0 && (
+        {(project.auditLog?.length || 0) === 0 && (
           <div className="text-center text-muted-foreground py-10">
             Nenhum registro de auditoria encontrado.
           </div>

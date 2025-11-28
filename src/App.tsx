@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import DashboardV2 from "./pages/DashboardV2";
 import NotFound from "./pages/NotFound";
+import { MainLayout } from "@/components/Layout/MainLayout";
 
 const queryClient = new QueryClient();
 
@@ -18,11 +19,13 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<DashboardV2 />} />
-            <Route path="/projects" element={<Index />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <MainLayout>
+            <Routes>
+              <Route path="/" element={<DashboardV2 />} />
+              <Route path="/projects" element={<Index />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </MainLayout>
         </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>

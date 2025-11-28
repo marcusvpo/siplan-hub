@@ -5,6 +5,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,7 +42,7 @@ export const NewProjectDialog = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!clientName || !ticketNumber || !systemType) {
+    if (!clientName || !ticketNumber || !systemType || !projectLeader) {
       toast.error("Preencha todos os campos obrigatórios");
       return;
     }
@@ -52,6 +53,7 @@ export const NewProjectDialog = () => {
         ticketNumber,
         systemType,
         projectLeader,
+        lastUpdatedBy: "Sistema", // Explicitly set user
         opNumber: opNumber ? parseInt(opNumber) : undefined,
         salesOrderNumber: salesOrderNumber ? parseInt(salesOrderNumber) : undefined,
         soldHours: soldHours ? parseFloat(soldHours) : undefined,
@@ -91,6 +93,9 @@ export const NewProjectDialog = () => {
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Criar Novo Projeto</DialogTitle>
+          <DialogDescription>
+            Preencha os dados abaixo para cadastrar um novo projeto de implantação.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6 mt-4">
           <Tabs defaultValue="dados" className="w-full">

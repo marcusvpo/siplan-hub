@@ -83,37 +83,30 @@ export function ProjectCardV3({ project, onClick, onAction }: ProjectCardV3Props
           <div className="absolute top-1/2 left-0 right-0 h-[2px] bg-slate-100 dark:bg-slate-800 -z-10 transform -translate-y-1/2" />
           
           {stages.map((stage) => (
-            <div key={stage.id} className="flex flex-col items-center gap-1 z-0 bg-background px-1">
+            <div key={stage.id} className="flex flex-col items-center gap-1.5 z-0 bg-background px-2">
               <div 
                 className={cn(
-                  "h-3 w-3 rounded-full ring-2 ring-background transition-colors", 
+                  "h-5 w-5 rounded-full ring-4 ring-background transition-all shadow-sm", 
                   getStageColor(stage.status)
                 )} 
-                title={`${stage.label}: ${stage.status}`}
+                title={`${stage.label}: ${stage.status === 'todo' ? 'To-Do' : stage.status}`}
               />
-              <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-tight">{stage.label.substring(0, 3)}</span>
+              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-tight whitespace-nowrap">
+                {stage.label}
+              </span>
             </div>
           ))}
         </div>
       </div>
 
       {/* 3. Metricas & Ações */}
-      <div className="flex items-center gap-6 min-w-[200px] justify-end">
-        {/* Progresso */}
-        <div className="flex flex-col w-24 gap-1">
-           <div className="flex justify-between text-[10px]">
-             <span className="text-muted-foreground">Progresso</span>
-             <span className="font-bold">{project.overallProgress}%</span>
-           </div>
-           <Progress value={project.overallProgress} className="h-1.5" />
-        </div>
-
-        {/* Follow-up */}
+      <div className="flex items-center gap-6 min-w-[150px] justify-end">
+        {/* UAT (Última Atualização) */}
         <div className="flex flex-col items-end min-w-[80px]">
-           <span className="text-[10px] text-muted-foreground">Follow-up</span>
-           <div className={cn("flex items-center gap-1 text-xs font-medium", isFollowUpOverdue ? "text-rose-600" : "")}>
-              {isFollowUpOverdue && <AlertCircle className="h-3 w-3" />}
-              <span>{project.nextFollowUpDate ? format(new Date(project.nextFollowUpDate), "dd/MM", { locale: ptBR }) : "-"}</span>
+           <span className="text-[12px] text-muted-foreground uppercase tracking-wider font-semibold">UAT</span>
+           <div className="flex items-center gap-1 text-xs font-bold text-foreground">
+              <Clock className="h-3 w-3 text-muted-foreground" />
+              <span>{format(new Date(project.lastUpdatedAt), "dd/MM HH:mm", { locale: ptBR })}</span>
            </div>
         </div>
 

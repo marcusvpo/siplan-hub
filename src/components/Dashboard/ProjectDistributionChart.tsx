@@ -50,7 +50,7 @@ export const ProjectDistributionChart = ({ projects }: ProjectDistributionChartP
         <CardTitle>Distribuição por Etapa</CardTitle>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className="h-[300px]">
+        <ChartContainer config={chartConfig} className="h-[300px] min-h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie

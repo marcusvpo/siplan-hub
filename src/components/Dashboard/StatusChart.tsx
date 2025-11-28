@@ -44,7 +44,7 @@ export const StatusChart = ({ projects }: StatusChartProps) => {
         <CardTitle>Projetos por Status</CardTitle>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className="h-[300px]">
+        <ChartContainer config={chartConfig} className="h-[300px] min-h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />

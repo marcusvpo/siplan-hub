@@ -21,33 +21,7 @@ export default function DashboardV2() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header com padrão da página /projects */}
-      <header className="border-b bg-card sticky top-0 z-10">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center">
-                <Package className="h-6 w-6 text-primary-foreground" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold">Siplan Manager</h1>
-                <p className="text-sm text-muted-foreground">Dashboard de Implantações</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="outline" 
-                className="gap-2"
-                onClick={() => navigate("/projects")}
-              >
-                Ver Todos os Projetos
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-              <ModeToggle />
-            </div>
-          </div>
-        </div>
-      </header>
+
 
       <main className="container mx-auto px-6 py-8 space-y-6">
         {/* Header Section */}

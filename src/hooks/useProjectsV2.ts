@@ -36,9 +36,15 @@ export const useProjectsV2 = () => {
   const updateProject = useMutation({
     mutationFn: async ({ projectId, updates }: { projectId: string; updates: Partial<ProjectV2> }) => {
       const dbUpdates = transformToDB(updates);
+      
+      console.log("--- DEBUG: Update Project Payload ---", JSON.stringify(dbUpdates, null, 2));
+
       const { error } = await supabase.from("projects").update(dbUpdates).eq("id", projectId);
 
-      if (error) throw error;
+      if (error) {
+        console.error("--- DEBUG: Supabase Update Error ---", error);
+        throw error;
+      }
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["projectsV3"] });
@@ -215,24 +221,117 @@ function transformToDB(project: Partial<ProjectV2>): Record<string, unknown> {
   // Stages flattening
   if (project.stages) {
     const stages = project.stages;
-    const stageKeys = ['infra', 'adherence', 'environment', 'conversion', 'implementation', 'post'] as const;
     
-    stageKeys.forEach(key => {
-      if (stages[key]) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const stage = stages[key] as any;
-        dbRow[`${key}_status`] = stage.status;
-        dbRow[`${key}_responsible`] = stage.responsible;
-        if (stage.startDate) dbRow[`${key}_start_date`] = stage.startDate;
-        if (stage.endDate) dbRow[`${key}_end_date`] = stage.endDate;
-        if (stage.observations) dbRow[`${key}_observations`] = stage.observations;
-      }
-    });
+    // Infra
+    if (stages.infra) {
+      const s = stages.infra;
+      dbRow.infra_status = s.status;
+      dbRow.infra_responsible = s.responsible;
+      dbRow.infra_start_date = s.startDate || null;
+      dbRow.infra_end_date = s.endDate || null;
+      dbRow.infra_observations = s.observations;
+      dbRow.infra_server_in_use = s.serverInUse;
+      dbRow.infra_server_needed = s.serverNeeded;
+      dbRow.infra_approved_by_infra = s.approvedByInfra;
+      dbRow.infra_technical_notes = s.technicalNotes;
+    }
+
+    // Adherence
+    if (stages.adherence) {
+      const s = stages.adherence;
+      dbRow.adherence_status = s.status;
+      dbRow.adherence_responsible = s.responsible;
+      dbRow.adherence_start_date = s.startDate || null;
+      dbRow.adherence_end_date = s.endDate || null;
+      dbRow.adherence_observations = s.observations;
+      dbRow.adherence_has_product_gap = s.hasProductGap;
+      dbRow.adherence_gap_description = s.gapDescription;
+      dbRow.adherence_dev_ticket = s.devTicket;
+      dbRow.adherence_dev_estimated_date = s.devEstimatedDate || null;
+      dbRow.adherence_gap_priority = s.gapPriority;
+      dbRow.adherence_analysis_complete = s.analysisComplete;
+      dbRow.adherence_conformity_standards = s.conformityStandards;
+    }
+
+    // Environment
+    if (stages.environment) {
+      const s = stages.environment;
+      dbRow.environment_status = s.status;
+      dbRow.environment_responsible = s.responsible;
+      dbRow.environment_real_date = s.realDate || null;
+      dbRow.environment_observations = s.observations;
+      dbRow.environment_os_version = s.osVersion;
+      dbRow.environment_version = s.version;
+      dbRow.environment_test_available = s.testAvailable;
+      dbRow.environment_preparation_checklist = s.preparationChecklist;
+      dbRow.environment_approved_by_infra = s.approvedByInfra;
+    }
+
+    // Conversion
+    if (stages.conversion) {
+      const s = stages.conversion;
+      dbRow.conversion_status = s.status;
+      dbRow.conversion_responsible = s.responsible;
+      dbRow.conversion_observations = s.observations;
+      dbRow.conversion_complexity = s.complexity;
+      dbRow.conversion_record_count = s.recordCount || null;
+      dbRow.conversion_data_volume_gb = s.dataVolumeGb || null;
+      dbRow.conversion_tool_used = s.toolUsed;
+      dbRow.conversion_homologation_complete = s.homologationComplete;
+      dbRow.conversion_homologation_date = s.homologationDate || null;
+      dbRow.conversion_deviations = s.deviations;
+      dbRow.conversion_source_system = s.sourceSystem;
+    }
+
+    // Implementation
+    if (stages.implementation) {
+      const s = stages.implementation;
+      dbRow.implementation_status = s.status;
+      dbRow.implementation_responsible = s.responsible;
+      dbRow.implementation_observations = s.observations;
+      dbRow.implementation_remote_install_date = s.remoteInstallDate || null;
+      dbRow.implementation_training_start_date = s.trainingStartDate || null;
+      dbRow.implementation_training_end_date = s.trainingEndDate || null;
+      dbRow.implementation_switch_type = s.switchType;
+      dbRow.implementation_switch_start_time = s.switchStartTime || null;
+      dbRow.implementation_switch_end_time = s.switchEndTime || null;
+      dbRow.implementation_training_type = s.trainingType;
+      dbRow.implementation_training_location = s.trainingLocation;
+      dbRow.implementation_participants_count = s.participantsCount || null;
+      dbRow.implementation_client_feedback = s.clientFeedback;
+      dbRow.implementation_acceptance_status = s.acceptanceStatus;
+    }
+
+    // Post
+    if (stages.post) {
+      const s = stages.post;
+      dbRow.post_status = s.status;
+      dbRow.post_responsible = s.responsible;
+      dbRow.post_start_date = s.startDate || null;
+      dbRow.post_end_date = s.endDate || null;
+      dbRow.post_observations = s.observations;
+      dbRow.post_support_period_days = s.supportPeriodDays || null;
+      dbRow.post_support_end_date = s.supportEndDate || null;
+      dbRow.post_benefits_delivered = s.benefitsDelivered;
+      dbRow.post_challenges_found = s.challengesFound;
+      dbRow.post_roi_estimated = s.roiEstimated;
+      dbRow.post_client_satisfaction = s.clientSatisfaction;
+      dbRow.post_recommendations = s.recommendations;
+      dbRow.post_followup_needed = s.followupNeeded;
+      dbRow.post_followup_date = s.followupDate || null;
+    }
   }
 
   // Notes
   if (project.notes) {
     dbRow.notes = project.notes; 
+  }
+
+  // Ensure last_update_by is always set (required by DB)
+  if (project.lastUpdatedBy) {
+    dbRow.last_update_by = project.lastUpdatedBy;
+  } else {
+    dbRow.last_update_by = "Sistema";
   }
 
   return dbRow;
