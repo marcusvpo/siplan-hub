@@ -1,5 +1,5 @@
 import { useProjectStore } from "@/stores/projectStore";
-import { useProjects } from "@/hooks/useProjects";
+import { useProjectsV2 } from "@/hooks/useProjectsV2";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { HealthBadge } from "./HealthBadge";
@@ -7,12 +7,12 @@ import { PipelineStatus } from "./PipelineStatus";
 import { Eye, Loader2 } from "lucide-react";
 import { format, isPast } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { getRelativeTime } from "@/utils/calculations";
+import { getRelativeTime, getDaysSinceUpdate } from "@/utils/calculations";
 import { cn } from "@/lib/utils";
 
 export const DashboardTable = () => {
   const { setSelectedProject } = useProjectStore();
-  const { projects, isLoading } = useProjects();
+  const { projects, isLoading } = useProjectsV2();
 
   if (isLoading) {
     return (
@@ -42,11 +42,17 @@ export const DashboardTable = () => {
             <div>
               <div className="flex items-center gap-3">
                 <div>
-                  <h3 className="font-semibold text-base">{project.clientName}</h3>
+                  <h3 className="font-semibold text-base">
+                    {project.clientName}
+                  </h3>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs text-muted-foreground">{project.systemType}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {project.systemType}
+                    </span>
                     <span className="text-xs text-muted-foreground">•</span>
-                    <span className="text-xs text-muted-foreground font-mono">#{project.ticketNumber}</span>
+                    <span className="text-xs text-muted-foreground font-mono">
+                      #{project.ticketNumber}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -59,7 +65,7 @@ export const DashboardTable = () => {
             <div>
               <HealthBadge
                 healthScore={project.healthScore!}
-                daysSince={project.daysSinceUpdate!}
+                daysSince={getDaysSinceUpdate(project)}
               />
             </div>
 
@@ -72,7 +78,9 @@ export const DashboardTable = () => {
                       isPast(project.nextFollowUpDate) && "text-critical"
                     )}
                   >
-                    {format(project.nextFollowUpDate, "dd/MM", { locale: ptBR })}
+                    {format(new Date(project.nextFollowUpDate), "dd/MM", {
+                      locale: ptBR,
+                    })}
                   </div>
                   <div className="text-xs text-muted-foreground">
                     {isPast(project.nextFollowUpDate) ? "Vencido" : "Próximo"}
@@ -86,10 +94,10 @@ export const DashboardTable = () => {
             <div className="flex items-center gap-3">
               <div className="text-right min-w-[100px]">
                 <div className="text-xs text-muted-foreground">
-                  {getRelativeTime(project.updatedAt)}
+                  {getRelativeTime(new Date(project.lastUpdatedAt))}
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  por {project.lastUpdateBy}
+                  por {project.lastUpdatedBy}
                 </div>
               </div>
               <Button size="sm" variant="outline">

@@ -1,7 +1,7 @@
-import { Project } from "@/types/project";
+import { ProjectV2 } from "@/types/ProjectV2";
 import { isPast } from "date-fns";
 
-export function calculateHealthScore(project: Project): "ok" | "warning" | "critical" {
+export function calculateHealthScore(project: ProjectV2): "ok" | "warning" | "critical" {
   const daysSinceUpdate = getDaysSinceUpdate(project);
 
   // Verificar se há mais de 5 dias sem update
@@ -24,9 +24,9 @@ export function calculateHealthScore(project: Project): "ok" | "warning" | "crit
   return "ok";
 }
 
-export function getDaysSinceUpdate(project: Project): number {
+export function getDaysSinceUpdate(project: ProjectV2): number {
   const now = new Date();
-  const lastUpdate = new Date(project.updatedAt);
+  const lastUpdate = new Date(project.lastUpdatedAt);
   return Math.floor(
     (now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24)
   );

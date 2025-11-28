@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Project } from "@/types/project";
+import { ProjectV2 } from "@/types/ProjectV2";
 import { useTimeline } from "@/hooks/useTimeline";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 
 interface TimelinePanelProps {
-  project: Project;
+  project: ProjectV2;
 }
 
 export const TimelinePanel = ({ project }: TimelinePanelProps) => {
@@ -80,7 +80,9 @@ export const TimelinePanel = ({ project }: TimelinePanelProps) => {
                         })}
                       </span>
                     </div>
-                    <p className="text-sm text-foreground mt-1">{event.message}</p>
+                    <p className="text-sm text-foreground mt-1">
+                      {event.message}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -98,8 +100,8 @@ export const TimelinePanel = ({ project }: TimelinePanelProps) => {
             className="resize-none"
             rows={3}
           />
-          <Button 
-            onClick={handleSendComment} 
+          <Button
+            onClick={handleSendComment}
             className="w-full"
             disabled={addComment.isPending}
           >

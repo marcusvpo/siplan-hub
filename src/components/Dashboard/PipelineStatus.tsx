@@ -1,41 +1,62 @@
-import { Project, ProjectStatus } from "@/types/project";
+import { ProjectV2, StageStatus } from "@/types/ProjectV2";
 import { cn } from "@/lib/utils";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface PipelineStatusProps {
-  project: Project;
+  project: ProjectV2;
 }
 
 export const PipelineStatus = ({ project }: PipelineStatusProps) => {
   const stages = [
     { key: "infra", label: "Infra", status: project.stages.infra.status },
-    { key: "adherence", label: "Aderência", status: project.stages.adherence.status },
-    { key: "environment", label: "Ambiente", status: project.stages.environment.status },
-    { key: "conversion", label: "Conversão", status: project.stages.conversion.status },
-    { key: "implementation", label: "Implantação", status: project.stages.implementation.status },
+    {
+      key: "adherence",
+      label: "Aderência",
+      status: project.stages.adherence.status,
+    },
+    {
+      key: "environment",
+      label: "Ambiente",
+      status: project.stages.environment.status,
+    },
+    {
+      key: "conversion",
+      label: "Conversão",
+      status: project.stages.conversion.status,
+    },
+    {
+      key: "implementation",
+      label: "Implantação",
+      status: project.stages.implementation.status,
+    },
     { key: "post", label: "Pós", status: project.stages.post.status },
   ];
 
-  const getStatusColor = (status: ProjectStatus) => {
+  const getStatusColor = (status: StageStatus) => {
     switch (status) {
-      case ProjectStatus.DONE:
+      case "done":
         return "bg-success";
-      case ProjectStatus.IN_PROGRESS:
+      case "in-progress":
         return "bg-warning";
-      case ProjectStatus.BLOCKED:
+      case "blocked":
         return "bg-critical";
       default:
         return "bg-muted";
     }
   };
 
-  const getStatusLabel = (status: ProjectStatus) => {
+  const getStatusLabel = (status: StageStatus) => {
     switch (status) {
-      case ProjectStatus.DONE:
+      case "done":
         return "Finalizado";
-      case ProjectStatus.IN_PROGRESS:
+      case "in-progress":
         return "Em Andamento";
-      case ProjectStatus.BLOCKED:
+      case "blocked":
         return "Bloqueado";
       default:
         return "Aguardando";
