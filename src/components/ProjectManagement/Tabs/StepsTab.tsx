@@ -627,40 +627,6 @@ export function StepsTab({ project, onUpdate }: TabProps) {
                       }
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Ticket Dev</Label>
-                      <Input
-                        value={data.stages.adherence.devTicket || ""}
-                        onChange={(e) =>
-                          handleStageChange(
-                            "adherence",
-                            "devTicket",
-                            e.target.value
-                          )
-                        }
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Prioridade</Label>
-                      <Select
-                        value={data.stages.adherence.gapPriority}
-                        onValueChange={(value) =>
-                          handleStageChange("adherence", "gapPriority", value)
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="critical">Crítico</SelectItem>
-                          <SelectItem value="high">Alto</SelectItem>
-                          <SelectItem value="medium">Médio</SelectItem>
-                          <SelectItem value="low">Baixo</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
                 </div>
               )}
             </div>
@@ -709,18 +675,6 @@ export function StepsTab({ project, onUpdate }: TabProps) {
                   }
                   placeholder="Ex: Windows Server 2022"
                 />
-              </div>
-              <div className="flex items-center space-x-2 pt-8">
-                <Checkbox
-                  id="test-available"
-                  checked={data.stages.environment.testAvailable || false}
-                  onCheckedChange={(checked) =>
-                    handleStageChange("environment", "testAvailable", checked)
-                  }
-                />
-                <Label htmlFor="test-available">
-                  Ambiente de Teste Disponível?
-                </Label>
               </div>
             </div>
           </AccordionContent>

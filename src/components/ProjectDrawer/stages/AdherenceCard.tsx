@@ -205,18 +205,7 @@ export const AdherenceCard = ({ project }: AdherenceCardProps) => {
             </div>
 
             {localData.hasProductGap && (
-              <div className="grid grid-cols-2 gap-4 p-4 bg-warning/5 border border-warning/20 rounded-lg">
-                <div>
-                  <Label>Ticket DEV</Label>
-                  <Input
-                    placeholder="Ex: DEV-1234"
-                    value={localData.devTicket}
-                    onChange={(e) =>
-                      setLocalData({ ...localData, devTicket: e.target.value })
-                    }
-                  />
-                </div>
-
+              <div className="p-4 bg-warning/5 border border-warning/20 rounded-lg">
                 <div>
                   <Label>Previsão de Entrega DEV</Label>
                   <Input
