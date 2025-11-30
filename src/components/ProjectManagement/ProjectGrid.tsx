@@ -13,21 +13,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { CheckCircle2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export function ProjectGrid() {
   const { projects, isLoading, updateProject } = useProjectsV2();
-  const [selectedProject, setSelectedProject] = useState<ProjectV2 | null>(null);
+  const [selectedProject, setSelectedProject] = useState<ProjectV2 | null>(
+    null
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-
+  const [healthFilter, setHealthFilter] = useState<string>("all");
   const filteredProjects = projects.filter((project) => {
-    const matchesSearch = 
+    const matchesSearch =
       project.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       project.ticketNumber.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesStatus = statusFilter === "all" || project.globalStatus === statusFilter;
 
-    return matchesSearch && matchesStatus;
+    const matchesStatus =
+      statusFilter === "all" || project.globalStatus === statusFilter;
+    const matchesHealth =
+      healthFilter === "all" || project.healthScore === healthFilter;
+
+    return matchesSearch && matchesStatus && matchesHealth;
   });
 
   const handleProjectUpdate = (updatedProject: ProjectV2) => {
@@ -37,7 +50,7 @@ export function ProjectGrid() {
     if (selectedProject?.id === updatedProject.id) {
       setSelectedProject(updatedProject);
     }
-    
+
     // We also need to update the list, but react-query invalidation in useProjectsV2 should handle it
     // if the mutation was called.
     // Since useAutoSave calls onUpdate, we need to bridge that to the mutation.
@@ -59,14 +72,14 @@ export function ProjectGrid() {
       <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
         <div className="relative w-full sm:w-96">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input 
-            placeholder="Buscar por cliente, ticket..." 
+          <Input
+            placeholder="Buscar por cliente, ticket..."
             className="pl-8"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        
+
         <div className="flex gap-2 w-full sm:w-auto">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[180px]">
@@ -81,11 +94,47 @@ export function ProjectGrid() {
               <SelectItem value="blocked">Bloqueado</SelectItem>
             </SelectContent>
           </Select>
-          
-          <Button variant="outline">
-            <SlidersHorizontal className="h-4 w-4 mr-2" />
-            Mais Filtros
-          </Button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                <SlidersHorizontal className="h-4 w-4 mr-2" />
+                Mais Filtros
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem onClick={() => setHealthFilter("all")}>
+                <CheckCircle2
+                  className={cn(
+                    "mr-2 h-4 w-4",
+                    healthFilter === "all" ? "opacity-100" : "opacity-0"
+                  )}
+                />
+                Todos os Health Scores
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setHealthFilter("ok")}>
+                <div className="h-2 w-2 rounded-full bg-emerald-500 mr-2" />
+                Saúde OK
+                {healthFilter === "ok" && (
+                  <CheckCircle2 className="ml-auto h-4 w-4" />
+                )}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setHealthFilter("warning")}>
+                <div className="h-2 w-2 rounded-full bg-amber-500 mr-2" />
+                Atenção
+                {healthFilter === "warning" && (
+                  <CheckCircle2 className="ml-auto h-4 w-4" />
+                )}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setHealthFilter("critical")}>
+                <div className="h-2 w-2 rounded-full bg-rose-500 mr-2" />
+                Crítico
+                {healthFilter === "critical" && (
+                  <CheckCircle2 className="ml-auto h-4 w-4" />
+                )}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -126,7 +175,7 @@ export function ProjectGrid() {
           // In my implementation of Tabs, I passed `onUpdate` as a prop.
           // In `ProjectModal`, I passed `onUpdate` down.
           // So here `onUpdate` is responsible for saving.
-          
+
           // Let's use the updateProject mutation from the hook
           updateProject.mutate({
             projectId: updatedProject.id,
@@ -137,18 +186,18 @@ export function ProjectGrid() {
               // Sending the whole project object might be too much or wrong format.
               // Ideally, the `useAutoSave` should track *what* changed.
               // But my `useAutoSave` implementation just passes the whole new state.
-              
+
               // For this prototype, I'll just log it and assume the hook handles it or we refine it later.
               // Actually, looking at `useProjectsV2`, it takes `updates`.
               // I should probably improve `useAutoSave` to return diffs, or just send the fields I know changed.
               // But for now, let's just update the local state to reflect changes in UI immediately.
               // The actual persistence logic needs to be robust.
-              
+
               // For the purpose of this task (UI Reconstruction), I will simulate the update.
-              ...updatedProject
-            }
+              ...updatedProject,
+            },
           });
-          
+
           handleProjectUpdate(updatedProject);
         }}
       />
