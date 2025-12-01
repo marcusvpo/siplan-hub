@@ -7,6 +7,7 @@ import {
   ConversionStageV2,
   ImplementationStageV2,
   PostStageV2,
+  ImplementationPhase,
 } from "@/types/ProjectV2";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import {
@@ -66,25 +67,18 @@ type AnyStage =
 
 interface SortableBlockProps {
   block: ContentBlock;
-  stageKey: keyof ProjectV2["stages"];
   activeBlockId: string | null;
   setActiveBlockId: (id: string) => void;
-  updateBlock: (
-    stageKey: keyof ProjectV2["stages"],
-    blockId: string,
-    content: string,
-    checked?: boolean
-  ) => void;
-  deleteBlock: (stageKey: keyof ProjectV2["stages"], blockId: string) => void;
+  onUpdate: (blockId: string, content: string, checked?: boolean) => void;
+  onDelete: (blockId: string) => void;
 }
 
 function SortableBlock({
   block,
-  stageKey,
   activeBlockId,
   setActiveBlockId,
-  updateBlock,
-  deleteBlock,
+  onUpdate,
+  onDelete,
 }: SortableBlockProps) {
   const {
     attributes,
@@ -135,7 +129,7 @@ function SortableBlock({
             className="text-xl font-bold border-none shadow-none focus-visible:ring-0 px-0 h-auto py-1 bg-transparent placeholder:text-muted-foreground/50"
             placeholder="Digite um título..."
             value={block.content}
-            onChange={(e) => updateBlock(stageKey, block.id, e.target.value)}
+            onChange={(e) => onUpdate(block.id, e.target.value)}
             autoFocus={isFocused}
           />
         )}
@@ -145,7 +139,7 @@ function SortableBlock({
             placeholder="Digite suas observações..."
             value={block.content}
             onChange={(e) => {
-              updateBlock(stageKey, block.id, e.target.value);
+              onUpdate(block.id, e.target.value);
               e.target.style.height = "auto";
               e.target.style.height = e.target.scrollHeight + "px";
             }}
@@ -159,12 +153,7 @@ function SortableBlock({
               className="h-5 w-5"
               checked={block.checked || false}
               onCheckedChange={(checked) =>
-                updateBlock(
-                  stageKey,
-                  block.id,
-                  block.content,
-                  checked as boolean
-                )
+                onUpdate(block.id, block.content, checked as boolean)
               }
             />
             <Input
@@ -177,7 +166,7 @@ function SortableBlock({
               placeholder="Item da lista..."
               value={block.content}
               onChange={(e) =>
-                updateBlock(stageKey, block.id, e.target.value, block.checked)
+                onUpdate(block.id, e.target.value, block.checked)
               }
               autoFocus={isFocused}
             />
@@ -197,7 +186,7 @@ function SortableBlock({
           className="h-6 w-6 text-destructive hover:bg-destructive/10"
           onClick={(e) => {
             e.stopPropagation();
-            deleteBlock(stageKey, block.id);
+            onDelete(block.id);
           }}
           title="Excluir bloco"
         >
@@ -237,6 +226,26 @@ export function StepsTab({ project, onUpdate }: TabProps) {
     currentStage[field] = value;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (currentStages as any)[stageKey] = currentStage;
+    handleChange("stages", currentStages);
+  };
+
+  const handlePhaseChange = (
+    stageKey: "implementation",
+    phase: "phase1" | "phase2",
+    field: string,
+    value: unknown
+  ) => {
+    const currentStages = { ...data.stages };
+    const currentStage = { ...currentStages[stageKey] };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const currentPhase = { ...(currentStage as any)[phase] };
+    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (currentPhase as any)[field] = value;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (currentStage as any)[phase] = currentPhase;
+    
+    currentStages[stageKey] = currentStage;
     handleChange("stages", currentStages);
   };
 
@@ -393,11 +402,186 @@ export function StepsTab({ project, onUpdate }: TabProps) {
                 <SortableBlock
                   key={block.id}
                   block={block}
-                  stageKey={stageKey}
                   activeBlockId={activeBlockId}
                   setActiveBlockId={setActiveBlockId}
-                  updateBlock={updateBlock}
-                  deleteBlock={deleteBlock}
+                  onUpdate={(id, content, checked) =>
+                    updateBlock(stageKey, id, content, checked)
+                  }
+                  onDelete={(id) => deleteBlock(stageKey, id)}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
+        </div>
+      </div>
+    );
+  };
+
+  // Phase Rich Text Logic
+  const getPhaseBlocks = (phase: ImplementationPhase): ContentBlock[] => {
+    if (!phase.observations) return [];
+    try {
+      const parsed = JSON.parse(phase.observations);
+      if (Array.isArray(parsed)) return parsed;
+    } catch {
+      // Ignore error
+    }
+    return [
+      {
+        id: crypto.randomUUID(),
+        type: "paragraph",
+        content: phase.observations,
+      },
+    ];
+  };
+
+  const updatePhaseBlocks = (
+    phaseKey: "phase1" | "phase2",
+    blocks: ContentBlock[]
+  ) => {
+    handlePhaseChange(
+      "implementation",
+      phaseKey,
+      "observations",
+      JSON.stringify(blocks)
+    );
+  };
+
+  const addPhaseBlock = (
+    phaseKey: "phase1" | "phase2",
+    type: ContentBlock["type"]
+  ) => {
+    const phase = data.stages.implementation[phaseKey];
+    const currentBlocks = getPhaseBlocks(phase);
+    const newBlock: ContentBlock = {
+      id: crypto.randomUUID(),
+      type,
+      content: "",
+      checked: false,
+    };
+    const newBlocks = [...currentBlocks, newBlock];
+    updatePhaseBlocks(phaseKey, newBlocks);
+    setActiveBlockId(newBlock.id);
+  };
+
+  const updatePhaseBlock = (
+    phaseKey: "phase1" | "phase2",
+    blockId: string,
+    content: string,
+    checked?: boolean
+  ) => {
+    const phase = data.stages.implementation[phaseKey];
+    const currentBlocks = getPhaseBlocks(phase);
+    const newBlocks = currentBlocks.map((block) =>
+      block.id === blockId
+        ? {
+            ...block,
+            content,
+            checked: checked !== undefined ? checked : block.checked,
+          }
+        : block
+    );
+    updatePhaseBlocks(phaseKey, newBlocks);
+  };
+
+  const deletePhaseBlock = (
+    phaseKey: "phase1" | "phase2",
+    blockId: string
+  ) => {
+    const phase = data.stages.implementation[phaseKey];
+    const currentBlocks = getPhaseBlocks(phase);
+    const newBlocks = currentBlocks.filter((block) => block.id !== blockId);
+    updatePhaseBlocks(phaseKey, newBlocks);
+  };
+
+  const handlePhaseDragEnd = (
+    event: DragEndEvent,
+    phaseKey: "phase1" | "phase2"
+  ) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const phase = data.stages.implementation[phaseKey];
+      const currentBlocks = getPhaseBlocks(phase);
+      const oldIndex = currentBlocks.findIndex(
+        (block) => block.id === active.id
+      );
+      const newIndex = currentBlocks.findIndex((block) => block.id === over.id);
+      const newBlocks = arrayMove(currentBlocks, oldIndex, newIndex);
+      updatePhaseBlocks(phaseKey, newBlocks);
+    }
+  };
+
+  const renderPhaseRichEditor = (phaseKey: "phase1" | "phase2") => {
+    const phase = data.stages.implementation[phaseKey];
+    const blocks = getPhaseBlocks(phase);
+
+    return (
+      <div className="border rounded-md bg-card shadow-sm overflow-hidden mt-4">
+        <div className="flex items-center gap-2 p-3 border-b bg-muted/30">
+          <span className="text-xs text-muted-foreground font-bold uppercase tracking-wider">
+            Editor de Conteúdo
+          </span>
+          <div className="flex-1" />
+          <div className="flex items-center bg-background rounded-md border shadow-sm p-0.5">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 gap-1.5 text-xs font-medium"
+              onClick={() => addPhaseBlock(phaseKey, "heading")}
+            >
+              <Type className="h-3.5 w-3.5" /> Título
+            </Button>
+            <div className="w-px h-4 bg-border mx-0.5" />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 gap-1.5 text-xs font-medium"
+              onClick={() => addPhaseBlock(phaseKey, "paragraph")}
+            >
+              <Type className="h-3.5 w-3.5" /> Texto
+            </Button>
+            <div className="w-px h-4 bg-border mx-0.5" />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 gap-1.5 text-xs font-medium"
+              onClick={() => addPhaseBlock(phaseKey, "checkbox")}
+            >
+              <CheckSquare className="h-3.5 w-3.5" /> Checklist
+            </Button>
+          </div>
+        </div>
+
+        <div className="space-y-1 min-h-[150px] p-4 bg-background/50">
+          {blocks.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-10 text-muted-foreground gap-2 border-2 border-dashed rounded-lg m-4">
+              <Type className="h-8 w-8 opacity-20" />
+              <p className="text-sm font-medium">Nenhum conteúdo adicionado</p>
+              <p className="text-xs opacity-70">
+                Utilize a barra de ferramentas acima para começar
+              </p>
+            </div>
+          )}
+
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={(event) => handlePhaseDragEnd(event, phaseKey)}
+          >
+            <SortableContext
+              items={blocks.map((b) => b.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {blocks.map((block) => (
+                <SortableBlock
+                  key={block.id}
+                  block={block}
+                  activeBlockId={activeBlockId}
+                  setActiveBlockId={setActiveBlockId}
+                  onUpdate={(id, content, checked) =>
+                    updatePhaseBlock(phaseKey, id, content, checked)
+                  }
+                  onDelete={(id) => deletePhaseBlock(phaseKey, id)}
                 />
               ))}
             </SortableContext>
@@ -557,13 +741,27 @@ export function StepsTab({ project, onUpdate }: TabProps) {
                     handleStageChange("infra", "workstationsStatus", value)
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className={cn(
+                    data.stages.infra.workstationsStatus === "Adequado" && "bg-green-100 text-green-800 border-green-200",
+                    data.stages.infra.workstationsStatus === "Parcialmente Adequado" && "bg-orange-100 text-orange-800 border-orange-200",
+                    data.stages.infra.workstationsStatus === "Inadequado" && "bg-red-100 text-red-800 border-red-200",
+                    data.stages.infra.workstationsStatus === "Aguardando Adequação" && "bg-gray-100 text-gray-800 border-gray-200"
+                  )}>
                     <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Adequado">Adequado</SelectItem>
-                    <SelectItem value="Parcialmente Adequado">Parcialmente Adequado</SelectItem>
-                    <SelectItem value="Inadequado">Inadequado</SelectItem>
+                    <SelectItem value="Adequado" className="text-green-600 font-medium focus:bg-green-50 focus:text-green-700">
+                      Adequado
+                    </SelectItem>
+                    <SelectItem value="Parcialmente Adequado" className="text-orange-600 font-medium focus:bg-orange-50 focus:text-orange-700">
+                      Parcialmente Adequado
+                    </SelectItem>
+                    <SelectItem value="Inadequado" className="text-red-600 font-medium focus:bg-red-50 focus:text-red-700">
+                      Inadequado
+                    </SelectItem>
+                    <SelectItem value="Aguardando Adequação" className="text-gray-600 font-medium focus:bg-gray-50 focus:text-gray-700">
+                      Aguardando Adequação
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -575,13 +773,27 @@ export function StepsTab({ project, onUpdate }: TabProps) {
                     handleStageChange("infra", "serverStatus", value)
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className={cn(
+                    data.stages.infra.serverStatus === "Adequado" && "bg-green-100 text-green-800 border-green-200",
+                    data.stages.infra.serverStatus === "Parcialmente Adequado" && "bg-orange-100 text-orange-800 border-orange-200",
+                    data.stages.infra.serverStatus === "Inadequado" && "bg-red-100 text-red-800 border-red-200",
+                    data.stages.infra.serverStatus === "Aguardando Adequação" && "bg-gray-100 text-gray-800 border-gray-200"
+                  )}>
                     <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Adequado">Adequado</SelectItem>
-                    <SelectItem value="Parcialmente Adequado">Parcialmente Adequado</SelectItem>
-                    <SelectItem value="Inadequado">Inadequado</SelectItem>
+                    <SelectItem value="Adequado" className="text-green-600 font-medium focus:bg-green-50 focus:text-green-700">
+                      Adequado
+                    </SelectItem>
+                    <SelectItem value="Parcialmente Adequado" className="text-orange-600 font-medium focus:bg-orange-50 focus:text-orange-700">
+                      Parcialmente Adequado
+                    </SelectItem>
+                    <SelectItem value="Inadequado" className="text-red-600 font-medium focus:bg-red-50 focus:text-red-700">
+                      Inadequado
+                    </SelectItem>
+                    <SelectItem value="Aguardando Adequação" className="text-gray-600 font-medium focus:bg-gray-50 focus:text-gray-700">
+                      Aguardando Adequação
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -811,46 +1023,170 @@ export function StepsTab({ project, onUpdate }: TabProps) {
               </Badge>
             </div>
           </AccordionTrigger>
-          <AccordionContent className="pt-4">
-            {renderCommonFields("implementation", data.stages.implementation)}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4 bg-muted/20 p-4 rounded-md">
-              <div className="space-y-2">
-                <Label>Tipo de Virada</Label>
-                <Select
-                  value={data.stages.implementation.switchType}
-                  onValueChange={(value) =>
-                    handleStageChange("implementation", "switchType", value)
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="weekend">Fim de Semana</SelectItem>
-                    <SelectItem value="business_day">Dia Útil</SelectItem>
-                    <SelectItem value="holiday">Feriado</SelectItem>
-                  </SelectContent>
-                </Select>
+          <AccordionContent className="pt-4 space-y-6">
+            
+            {/* Fase 1 */}
+            <div className="border rounded-md p-4 bg-muted/10">
+              <h4 className="font-semibold mb-4 flex items-center gap-2">
+                <Badge variant="outline">Fase 1</Badge>
+                Implantação Inicial
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                <div className="space-y-2">
+                  <Label>Status</Label>
+                  <Select
+                    value={data.stages.implementation.phase1?.status || "todo"}
+                    onValueChange={(value) =>
+                      handlePhaseChange("implementation", "phase1", "status", value)
+                    }
+                  >
+                    <SelectTrigger className={cn(
+                      data.stages.implementation.phase1?.status === "done" && "bg-emerald-100 text-emerald-800 border-emerald-200",
+                      data.stages.implementation.phase1?.status === "in-progress" && "bg-blue-100 text-blue-800 border-blue-200",
+                      data.stages.implementation.phase1?.status === "blocked" && "bg-amber-100 text-amber-800 border-amber-200"
+                    )}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="todo">Não Iniciado</SelectItem>
+                      <SelectItem value="in-progress">Em Andamento</SelectItem>
+                      <SelectItem value="done">Finalizado</SelectItem>
+                      <SelectItem value="blocked">Bloqueado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Responsável</Label>
+                  <AutocompleteInput
+                    value={data.stages.implementation.phase1?.responsible || ""}
+                    onChange={(value) =>
+                      handlePhaseChange("implementation", "phase1", "responsible", value)
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Início</Label>
+                  <Input
+                    type="date"
+                    value={
+                      data.stages.implementation.phase1?.startDate
+                        ? format(new Date(data.stages.implementation.phase1.startDate), "yyyy-MM-dd")
+                        : ""
+                    }
+                    onChange={(e) =>
+                      handlePhaseChange(
+                        "implementation",
+                        "phase1",
+                        "startDate",
+                        e.target.value ? new Date(e.target.value) : undefined
+                      )
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Término</Label>
+                  <Input
+                    type="date"
+                    value={
+                      data.stages.implementation.phase1?.endDate
+                        ? format(new Date(data.stages.implementation.phase1.endDate), "yyyy-MM-dd")
+                        : ""
+                    }
+                    onChange={(e) =>
+                      handlePhaseChange(
+                        "implementation",
+                        "phase1",
+                        "endDate",
+                        e.target.value ? new Date(e.target.value) : undefined
+                      )
+                    }
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label>Tipo Treinamento</Label>
-                <Select
-                  value={data.stages.implementation.trainingType}
-                  onValueChange={(value) =>
-                    handleStageChange("implementation", "trainingType", value)
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="remote">Remoto</SelectItem>
-                    <SelectItem value="onsite">Presencial</SelectItem>
-                    <SelectItem value="hybrid">Híbrido</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              {renderPhaseRichEditor("phase1")}
             </div>
+
+            {/* Fase 2 */}
+            <div className="border rounded-md p-4 bg-muted/10">
+              <h4 className="font-semibold mb-4 flex items-center gap-2">
+                <Badge variant="outline">Fase 2</Badge>
+                Treinamento & Acompanhamento
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                <div className="space-y-2">
+                  <Label>Status</Label>
+                  <Select
+                    value={data.stages.implementation.phase2?.status || "todo"}
+                    onValueChange={(value) =>
+                      handlePhaseChange("implementation", "phase2", "status", value)
+                    }
+                  >
+                    <SelectTrigger className={cn(
+                      data.stages.implementation.phase2?.status === "done" && "bg-emerald-100 text-emerald-800 border-emerald-200",
+                      data.stages.implementation.phase2?.status === "in-progress" && "bg-blue-100 text-blue-800 border-blue-200",
+                      data.stages.implementation.phase2?.status === "blocked" && "bg-amber-100 text-amber-800 border-amber-200"
+                    )}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="todo">Não Iniciado</SelectItem>
+                      <SelectItem value="in-progress">Em Andamento</SelectItem>
+                      <SelectItem value="done">Finalizado</SelectItem>
+                      <SelectItem value="blocked">Bloqueado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Responsável</Label>
+                  <AutocompleteInput
+                    value={data.stages.implementation.phase2?.responsible || ""}
+                    onChange={(value) =>
+                      handlePhaseChange("implementation", "phase2", "responsible", value)
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Início</Label>
+                  <Input
+                    type="date"
+                    value={
+                      data.stages.implementation.phase2?.startDate
+                        ? format(new Date(data.stages.implementation.phase2.startDate), "yyyy-MM-dd")
+                        : ""
+                    }
+                    onChange={(e) =>
+                      handlePhaseChange(
+                        "implementation",
+                        "phase2",
+                        "startDate",
+                        e.target.value ? new Date(e.target.value) : undefined
+                      )
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Término</Label>
+                  <Input
+                    type="date"
+                    value={
+                      data.stages.implementation.phase2?.endDate
+                        ? format(new Date(data.stages.implementation.phase2.endDate), "yyyy-MM-dd")
+                        : ""
+                    }
+                    onChange={(e) =>
+                      handlePhaseChange(
+                        "implementation",
+                        "phase2",
+                        "endDate",
+                        e.target.value ? new Date(e.target.value) : undefined
+                      )
+                    }
+                  />
+                </div>
+              </div>
+              {renderPhaseRichEditor("phase2")}
+            </div>
+
           </AccordionContent>
         </AccordionItem>
 

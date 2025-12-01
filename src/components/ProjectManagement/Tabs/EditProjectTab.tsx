@@ -12,6 +12,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AutocompleteInput } from "@/components/ui/autocomplete-input";
+import { Button } from "@/components/ui/button";
+import { Plus, Trash2 } from "lucide-react";
 
 interface TabProps {
   project: ProjectV2;
@@ -197,6 +199,61 @@ export function EditProjectTab({ project, onUpdate }: TabProps) {
               </SelectContent>
             </Select>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Chamados Relacionados */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Chamados Relacionados</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {data.relatedTickets?.map((ticket, index) => (
+            <div key={index} className="flex items-center gap-2">
+              <Input
+                placeholder="Nome (ex: Bug Fix)"
+                value={ticket.name}
+                onChange={(e) => {
+                  const newTickets = [...(data.relatedTickets || [])];
+                  newTickets[index].name = e.target.value;
+                  handleChange("relatedTickets", newTickets);
+                }}
+                className="flex-1"
+              />
+              <Input
+                placeholder="Número (ex: #1234)"
+                value={ticket.number}
+                onChange={(e) => {
+                  const newTickets = [...(data.relatedTickets || [])];
+                  newTickets[index].number = e.target.value;
+                  handleChange("relatedTickets", newTickets);
+                }}
+                className="w-32"
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  const newTickets = [...(data.relatedTickets || [])];
+                  newTickets.splice(index, 1);
+                  handleChange("relatedTickets", newTickets);
+                }}
+              >
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            </div>
+          ))}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const newTickets = [...(data.relatedTickets || [])];
+              newTickets.push({ name: "", number: "" });
+              handleChange("relatedTickets", newTickets);
+            }}
+          >
+            <Plus className="h-4 w-4 mr-2" /> Adicionar Chamado
+          </Button>
         </CardContent>
       </Card>
 

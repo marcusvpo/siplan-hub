@@ -1,11 +1,24 @@
 import { ProjectV2, ContentBlock } from "@/types/ProjectV2";
 import { useAutoSave } from "@/hooks/useAutoSave";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Clock, Calendar, User, CheckCircle2, AlertCircle, FileText, GripVertical, Trash2, Type, CheckSquare } from "lucide-react";
+import { 
+  Clock, 
+  User, 
+  CheckCircle2, 
+  FileText, 
+  GripVertical, 
+  Trash2, 
+  Type, 
+  CheckSquare,
+  Server,
+  Database,
+  RefreshCw,
+  Rocket,
+  Power,
+  Check
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -161,22 +174,13 @@ export function GeneralInfoTab({ project, onUpdate }: TabProps) {
     })
   );
 
-  const getStageColor = (status: string) => {
-    switch (status) {
-      case "done": return "bg-emerald-500 ring-emerald-200";
-      case "in-progress": return "bg-blue-500 ring-blue-200";
-      case "blocked": return "bg-amber-500 ring-amber-200";
-      default: return "bg-slate-200 ring-slate-100 dark:bg-slate-700 dark:ring-slate-800";
-    }
-  };
-
   const stages = [
-    { id: 'infra', label: 'Infraestrutura', status: data.stages.infra.status },
-    { id: 'adherence', label: 'Aderência', status: data.stages.adherence.status },
-    { id: 'environment', label: 'Ambiente', status: data.stages.environment.status },
-    { id: 'conversion', label: 'Conversão', status: data.stages.conversion.status },
-    { id: 'implementation', label: 'Implantação', status: data.stages.implementation.status },
-    { id: 'post', label: 'Pós-Implantação', status: data.stages.post.status },
+    { id: 'infra', label: 'Infraestrutura', status: data.stages.infra.status, icon: Server },
+    { id: 'adherence', label: 'Aderência', status: data.stages.adherence.status, icon: CheckCircle2 },
+    { id: 'environment', label: 'Ambiente', status: data.stages.environment.status, icon: Database },
+    { id: 'conversion', label: 'Conversão', status: data.stages.conversion.status, icon: RefreshCw },
+    { id: 'implementation', label: 'Implantação', status: data.stages.implementation.status, icon: Rocket },
+    { id: 'post', label: 'Pós-Implantação', status: data.stages.post.status, icon: Power },
   ];
 
   // Rich Text Logic
@@ -227,7 +231,7 @@ export function GeneralInfoTab({ project, onUpdate }: TabProps) {
   };
 
   return (
-    <div className="space-y-8 max-w-6xl mx-auto pb-10">
+    <div className="space-y-8 max-w-7xl mx-auto pb-10">
       {/* Feedback Visual do Autosave */}
       <div className="fixed bottom-4 right-4 z-50">
         {saveState.status === 'saving' && <Badge variant="secondary" className="animate-pulse">Salvando...</Badge>}
@@ -235,175 +239,226 @@ export function GeneralInfoTab({ project, onUpdate }: TabProps) {
         {saveState.status === 'error' && <Badge variant="destructive">{saveState.message}</Badge>}
       </div>
 
-      {/* 1. Pipeline Visual Detalhado */}
-      <div className="w-full py-6 px-4 bg-card rounded-xl border shadow-sm relative overflow-hidden">
-         <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
-         <div className="flex items-center justify-between relative z-10">
-            <div className="absolute top-1/2 left-4 right-4 h-[2px] bg-slate-100 dark:bg-slate-800 -z-10 transform -translate-y-1/2" />
-            {stages.map((stage) => (
-              <div key={stage.id} className="flex flex-col items-center gap-3 bg-card px-4 z-10">
-                 <div className={cn(
-                   "h-8 w-8 rounded-full ring-4 shadow-sm flex items-center justify-center transition-all",
-                   getStageColor(stage.status)
-                 )}>
-                    {stage.status === 'done' && <CheckCircle2 className="h-5 w-5 text-white" />}
-                    {stage.status === 'blocked' && <AlertCircle className="h-5 w-5 text-white" />}
+      {/* 1. Pipeline Visual Moderno */}
+      <div className="w-full py-10 px-4 bg-card rounded-xl border shadow-sm relative overflow-hidden">
+         <div className="flex items-center justify-between relative z-10 max-w-5xl mx-auto">
+            {/* Connecting Line */}
+            <div className="absolute top-8 left-0 right-0 h-1 bg-slate-100 dark:bg-slate-800 -z-10" />
+            
+            {/* Active Progress Line */}
+            <div 
+              className="absolute top-8 left-0 h-1 bg-emerald-500 -z-10 transition-all duration-1000 ease-in-out" 
+              style={{ 
+                width: `${Math.min(
+                  100, 
+                  Math.max(
+                    0, 
+                    (stages.reduce((acc, stage, index) => {
+                      if (stage.status === 'done') return Math.max(acc, index + 1);
+                      if (stage.status === 'in-progress') return Math.max(acc, index);
+                      return acc;
+                    }, 0) / (stages.length - 1)) * 100
+                  )
+                )}%` 
+              }} 
+            />
+
+            {stages.map((stage) => {
+              const Icon = stage.icon;
+              const isDone = stage.status === 'done';
+              const isActive = stage.status === 'in-progress';
+              
+              return (
+                <div key={stage.id} className="flex flex-col items-center gap-4 group cursor-pointer">
+                   <div className={cn(
+                     "h-16 w-16 rounded-full flex items-center justify-center transition-all duration-300 border-4",
+                     isDone ? "bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-200" :
+                     isActive ? "bg-blue-500 border-blue-500 text-white shadow-lg shadow-blue-200 scale-110" :
+                     "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-400"
+                   )}>
+                      {isDone ? <Check className="h-8 w-8" /> : <Icon className="h-7 w-7" />}
+                   </div>
+                   <div className="text-center space-y-1">
+                      <p className={cn(
+                        "text-xs font-bold uppercase tracking-wider",
+                        isActive ? "text-blue-600 dark:text-blue-400" : 
+                        isDone ? "text-emerald-600 dark:text-emerald-400" : 
+                        "text-muted-foreground"
+                      )}>
+                        {stage.label}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground font-medium uppercase">
+                        {stage.status === 'todo' ? 'Pendente' : 
+                         stage.status === 'in-progress' ? 'Em Progresso' : 
+                         stage.status === 'done' ? 'Concluído' : stage.status}
+                      </p>
+                   </div>
+                </div>
+              );
+            })}
+         </div>
+      </div>
+
+      {/* 2. Dados do Projeto (Layout 3 Colunas) */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+           <FileText className="h-5 w-5 text-muted-foreground" />
+           <h3 className="text-lg font-semibold text-muted-foreground">Dados do Projeto</h3>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+           {/* Coluna 1: Campos de Input (5 cols) */}
+           <div className="lg:col-span-5 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                 {/* Sistema */}
+                 <div className="bg-white dark:bg-card rounded-xl border shadow-sm p-4 space-y-1">
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Sistema</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-bold">{data.systemType}</p>
+                      <Badge variant="secondary" className="text-[10px] bg-emerald-100 text-emerald-700 hover:bg-emerald-100 h-5 px-1.5">new</Badge>
+                    </div>
                  </div>
-                 <div className="text-center">
-                    <p className="text-xs font-bold uppercase tracking-wider text-foreground">{stage.label}</p>
-                    <p className="text-[10px] text-muted-foreground font-medium uppercase mt-0.5">
-                      {stage.status === 'todo' ? 'A Fazer' : stage.status}
-                    </p>
+                 {/* Chamado */}
+                 <div className="bg-white dark:bg-card rounded-xl border shadow-sm p-4 space-y-1">
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Chamado</p>
+                    <p className="font-bold font-mono">{data.ticketNumber}</p>
                  </div>
               </div>
-            ))}
-         </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                 {/* Líder */}
+                 <div className="bg-white dark:bg-card rounded-xl border shadow-sm p-4 space-y-1">
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Líder</p>
+                    <div className="flex items-center gap-2">
+                       <div className="h-6 w-6 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden">
+                          <User className="h-4 w-4 text-slate-500" />
+                       </div>
+                       <p className="font-bold text-sm truncate">{data.projectLeader}</p>
+                    </div>
+                 </div>
+                 {/* Horas */}
+                 <div className="bg-white dark:bg-card rounded-xl border shadow-sm p-4 space-y-1">
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Horas</p>
+                    <p className="font-bold">{data.soldHours || 0}h</p>
+                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                 {/* Legado */}
+                 <div className="bg-white dark:bg-card rounded-xl border shadow-sm p-4 space-y-1">
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Legado</p>
+                    <p className="font-bold">{data.legacySystem || '-'}</p>
+                 </div>
+                 {/* Próximo Follow-up */}
+                 <div className="bg-white dark:bg-card rounded-xl border shadow-sm p-4 space-y-1">
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Próximo Follow-up</p>
+                    <div className="flex items-center gap-2">
+                       <Clock className="h-4 w-4 text-muted-foreground" />
+                       <p className="font-bold">
+                         {data.nextFollowUpDate ? format(new Date(new Date(data.nextFollowUpDate).getTime() + new Date().getTimezoneOffset() * 60000), "dd/MM", { locale: ptBR }) : '-'}
+                       </p>
+                    </div>
+                 </div>
+              </div>
+           </div>
+
+           {/* Coluna 2: Status Card (4 cols) */}
+           <div className="lg:col-span-4">
+              <div className="h-full bg-blue-500 rounded-xl shadow-lg shadow-blue-200 dark:shadow-none p-8 flex flex-col items-center justify-center text-white relative overflow-hidden">
+                 <div className="absolute top-0 right-0 p-32 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
+                 
+                 <Clock className="h-12 w-12 mb-4 text-blue-100" />
+                 
+                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-100 mb-1">Status</p>
+                 <h2 className="text-3xl font-black uppercase tracking-tight mb-6 text-center">
+                    {data.globalStatus === 'in-progress' ? 'Em Andamento' : 
+                     data.globalStatus === 'done' ? 'Concluído' : 
+                     data.globalStatus === 'blocked' ? 'Bloqueado' : 'A Fazer'}
+                 </h2>
+
+                 <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
+                    <Check className="h-6 w-6 text-white" />
+                 </div>
+              </div>
+           </div>
+
+           {/* Coluna 3: Updates (3 cols) */}
+           <div className="lg:col-span-3">
+              {/* Last Update */}
+              <div className="h-full bg-rose-500 rounded-xl shadow-lg shadow-rose-200 dark:shadow-none p-8 flex flex-col items-center justify-center text-white relative overflow-hidden">
+                 <div className="absolute top-0 left-0 p-32 bg-white/10 rounded-full blur-3xl -ml-16 -mt-16 pointer-events-none" />
+                 
+                 <Clock className="h-12 w-12 mb-4 text-rose-100" />
+
+                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-rose-100 mb-1">Última Atualização</p>
+                 <h2 className="text-2xl font-black uppercase tracking-tight mb-2 text-center">
+                   {format(new Date(data.lastUpdatedAt), "dd MMM", { locale: ptBR })}
+                 </h2>
+                 <p className="text-lg font-medium text-rose-100">
+                   {format(new Date(data.lastUpdatedAt), "HH:mm")}
+                 </p>
+              </div>
+           </div>
+        </div>
       </div>
-
-      {/* 2. Project Abstract (Document View) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-         {/* Card 1: Cliente & Sistema */}
-         <Card className="md:col-span-2 border-none shadow-none bg-transparent">
-            <CardHeader className="px-0 pt-0 pb-4">
-               <CardTitle className="text-xl flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-primary" />
-                  Dados do Projeto
-               </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0 grid grid-cols-2 gap-6">
-               <div className="bg-card p-4 rounded-lg border shadow-sm space-y-1 col-span-2">
-                  <p className="text-xs text-muted-foreground uppercase font-semibold">Cliente</p>
-                  <p className="text-2xl font-bold break-words leading-tight">{data.clientName}</p>
-               </div>
-               <div className="bg-card p-4 rounded-lg border shadow-sm space-y-1">
-                  <p className="text-xs text-muted-foreground uppercase font-semibold">Sistema / Tipo</p>
-                  <p className="text-lg font-medium">
-                    {data.systemType.replace('(new)', '').trim()} 
-                    <span className="text-muted-foreground text-sm font-normal ml-1">({data.implantationType})</span>
-                  </p>
-               </div>
-               <div className="bg-card p-4 rounded-lg border shadow-sm space-y-1">
-                  <p className="text-xs text-muted-foreground uppercase font-semibold">Chamado 0800</p>
-                  <p className="font-mono text-base">{data.ticketNumber}</p>
-               </div>
-               <div className="bg-card p-4 rounded-lg border shadow-sm space-y-1">
-                  <p className="text-xs text-muted-foreground uppercase font-semibold">Líder do Projeto</p>
-                  <div className="flex items-center gap-2">
-                     <User className="h-4 w-4 text-muted-foreground" />
-                     <p className="font-medium">{data.projectLeader}</p>
-                  </div>
-               </div>
-               <div className="bg-card p-4 rounded-lg border shadow-sm space-y-1">
-                  <p className="text-xs text-muted-foreground uppercase font-semibold">Horas Vendidas</p>
-                  <p className="font-medium">{data.soldHours || 0}h</p>
-               </div>
-               <div className="bg-card p-4 rounded-lg border shadow-sm space-y-1">
-                  <p className="text-xs text-muted-foreground uppercase font-semibold">Sistema Legado</p>
-                  <p className="font-medium">{data.legacySystem || '-'}</p>
-               </div>
-            </CardContent>
-         </Card>
-
-         {/* Card 2: UAT & Status */}
-         <div className="space-y-6">
-            {/* UAT Indicator */}
-            <div className="bg-primary/5 border border-primary/20 rounded-xl p-6 flex flex-col items-center justify-center text-center space-y-2 relative overflow-hidden group">
-               <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-               <p className="text-xs font-bold text-primary uppercase tracking-widest relative z-10">Última Atualização (UAT)</p>
-               <div className="text-2xl font-black text-foreground relative z-10 capitalize">
-                  {format(new Date(data.lastUpdatedAt), "dd 'de' MMMM", { locale: ptBR })}
-               </div>
-               <div className="flex items-center gap-2 text-sm text-muted-foreground font-medium relative z-10">
-                  <Clock className="h-4 w-4 text-primary animate-pulse" />
-                  {format(new Date(data.lastUpdatedAt), "HH:mm")}
-               </div>
-            </div>
-
-            {/* Status Indicator */}
-            <div className={cn(
-               "rounded-xl p-6 flex flex-col items-center justify-center text-center space-y-2 relative overflow-hidden border shadow-sm",
-               data.globalStatus === 'done' ? "bg-emerald-50 border-emerald-200" :
-               data.globalStatus === 'blocked' ? "bg-red-50 border-red-200" :
-               data.globalStatus === 'in-progress' ? "bg-blue-50 border-blue-200" :
-               "bg-slate-50 border-slate-200"
-            )}>
-               <p className={cn(
-                  "text-xs font-bold uppercase tracking-widest relative z-10",
-                  data.globalStatus === 'done' ? "text-emerald-700" :
-                  data.globalStatus === 'blocked' ? "text-red-700" :
-                  data.globalStatus === 'in-progress' ? "text-blue-700" :
-                  "text-slate-700"
-               )}>Status Atual</p>
-               <div className={cn(
-                  "text-2xl font-black relative z-10 uppercase",
-                  data.globalStatus === 'done' ? "text-emerald-900" :
-                  data.globalStatus === 'blocked' ? "text-red-900" :
-                  data.globalStatus === 'in-progress' ? "text-blue-900" :
-                  "text-slate-900"
-               )}>
-                  {data.globalStatus === 'todo' ? 'A Fazer' : 
-                   data.globalStatus === 'in-progress' ? 'Em Andamento' :
-                   data.globalStatus === 'done' ? 'Concluído' :
-                   data.globalStatus === 'blocked' ? 'Bloqueado' : data.globalStatus}
-               </div>
-            </div>
-         </div>
-      </div>
-
-      <Separator />
 
       {/* 3. Observações Gerais (Rich Editor) */}
-      <div className="space-y-4">
-         <div className="flex items-center justify-between">
-            <h3 className="text-xl font-bold flex items-center gap-2">
-               <FileText className="h-5 w-5 text-primary" />
-               Observações Gerais
-            </h3>
-            <div className="flex items-center bg-background rounded-md border shadow-sm p-0.5">
-                <Button variant="ghost" size="sm" className="h-7 px-2 gap-1.5 text-xs font-medium" onClick={() => addBlock('heading')}>
-                <Type className="h-3.5 w-3.5" /> Título
-                </Button>
-                <div className="w-px h-4 bg-border mx-0.5" />
-                <Button variant="ghost" size="sm" className="h-7 px-2 gap-1.5 text-xs font-medium" onClick={() => addBlock('paragraph')}>
-                <Type className="h-3.5 w-3.5" /> Texto
-                </Button>
-                <div className="w-px h-4 bg-border mx-0.5" />
-                <Button variant="ghost" size="sm" className="h-7 px-2 gap-1.5 text-xs font-medium" onClick={() => addBlock('checkbox')}>
-                <CheckSquare className="h-3.5 w-3.5" /> Checklist
-                </Button>
-            </div>
+      <div className="space-y-4 pt-4">
+         <div className="flex items-center gap-2">
+            <FileText className="h-5 w-5 text-muted-foreground" />
+            <h3 className="text-lg font-semibold text-muted-foreground">Observações Gerais</h3>
          </div>
 
-         <div className="min-h-[300px] bg-card rounded-xl border shadow-sm p-6 space-y-2">
-            {blocks.length === 0 && (
-               <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3 border-2 border-dashed rounded-lg opacity-50">
-                  <FileText className="h-10 w-10" />
-                  <p className="font-medium">Nenhuma observação registrada</p>
-                  <p className="text-sm">Utilize a barra de ferramentas acima para adicionar conteúdo</p>
-               </div>
-            )}
-            
-            <DndContext 
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext 
-                items={blocks.map(b => b.id)}
-                strategy={verticalListSortingStrategy}
-              >
-                {blocks.map((block) => (
-                  <SortableBlock 
-                    key={block.id} 
-                    block={block} 
-                    activeBlockId={activeBlockId}
-                    setActiveBlockId={setActiveBlockId}
-                    updateBlock={updateBlock}
-                    deleteBlock={deleteBlock}
-                  />
-                ))}
-              </SortableContext>
-            </DndContext>
+         <div className="bg-white dark:bg-card rounded-xl border shadow-sm overflow-hidden">
+            {/* Toolbar */}
+            <div className="border-b bg-muted/30 p-2 flex items-center gap-2">
+                <div className="flex items-center bg-background rounded-md border shadow-sm p-0.5">
+                    <Button variant="ghost" size="sm" className="h-8 px-3 gap-2 text-xs font-medium" onClick={() => addBlock('heading')}>
+                    <Type className="h-4 w-4" /> Título
+                    </Button>
+                    <div className="w-px h-4 bg-border mx-0.5" />
+                    <Button variant="ghost" size="sm" className="h-8 px-3 gap-2 text-xs font-medium" onClick={() => addBlock('paragraph')}>
+                    <Type className="h-4 w-4" /> Texto
+                    </Button>
+                    <div className="w-px h-4 bg-border mx-0.5" />
+                    <Button variant="ghost" size="sm" className="h-8 px-3 gap-2 text-xs font-medium" onClick={() => addBlock('checkbox')}>
+                    <CheckSquare className="h-4 w-4" /> Checklist
+                    </Button>
+                </div>
+            </div>
+
+            {/* Content Area */}
+            <div className="min-h-[300px] p-6 space-y-2">
+                {blocks.length === 0 && (
+                   <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3 border-2 border-dashed rounded-lg opacity-50 mx-auto max-w-lg mt-10">
+                      <FileText className="h-10 w-10" />
+                      <p className="font-medium">Nenhuma observação registrada</p>
+                      <p className="text-sm text-center">Utilize a barra de ferramentas acima para adicionar conteúdo</p>
+                   </div>
+                )}
+                
+                <DndContext 
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext 
+                    items={blocks.map(b => b.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {blocks.map((block) => (
+                      <SortableBlock 
+                        key={block.id} 
+                        block={block} 
+                        activeBlockId={activeBlockId}
+                        setActiveBlockId={setActiveBlockId}
+                        updateBlock={updateBlock}
+                        deleteBlock={deleteBlock}
+                      />
+                    ))}
+                  </SortableContext>
+                </DndContext>
+            </div>
          </div>
       </div>
     </div>

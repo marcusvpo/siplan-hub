@@ -53,6 +53,11 @@ export function ProjectModal({
               <span className="text-sm text-muted-foreground">
                 #{project.ticketNumber}
               </span>
+              {project.relatedTickets?.map((ticket, index) => (
+                <span key={index} className="text-sm text-muted-foreground border-l pl-2 ml-2">
+                  <span className="font-medium">{ticket.name}:</span> {ticket.number}
+                </span>
+              ))}
             </div>
             <DialogDescription>
               Detalhes e gerenciamento do projeto.

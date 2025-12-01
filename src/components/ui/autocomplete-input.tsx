@@ -15,7 +15,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useTeamStore } from "@/stores/teamStore";
+import { useTeamMembers } from "@/hooks/useTeamMembers";
 
 interface AutocompleteInputProps {
   value?: string;
@@ -31,7 +31,7 @@ export function AutocompleteInput({
   className,
 }: AutocompleteInputProps) {
   const [open, setOpen] = React.useState(false);
-  const { members } = useTeamStore();
+  const { members } = useTeamMembers();
 
   // Filter active members only
   const activeMembers = members.filter((m) => m.active);

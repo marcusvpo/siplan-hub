@@ -89,6 +89,8 @@ export interface ProjectV2 {
   notes?: RichContent;
   files?: ProjectFile[];
 
+  relatedTickets?: { name: string; number: string }[];
+
   // Pessoas
   projectLeader: string;
   clientPrimaryContact?: string;
@@ -140,8 +142,8 @@ export interface InfraStageV2 {
   startDate?: Date;
   endDate?: Date;
   blockingReason?: BlockingReason;
-  workstationsStatus?: "Adequado" | "Parcialmente Adequado" | "Inadequado";
-  serverStatus?: "Adequado" | "Parcialmente Adequado" | "Inadequado";
+  workstationsStatus?: "Adequado" | "Parcialmente Adequado" | "Inadequado" | "Aguardando Adequação";
+  serverStatus?: "Adequado" | "Parcialmente Adequado" | "Inadequado" | "Aguardando Adequação";
   workstationsCount?: number;
   technicalNotes?: string;
   observations?: string;
@@ -200,7 +202,7 @@ export interface ConversionStageV2 {
   lastUpdatedBy?: string;
 }
 
-export interface ImplementationStageV2 {
+export interface ImplementationPhase {
   status: StageStatus;
   responsible?: string;
   startDate?: Date;
@@ -217,8 +219,20 @@ export interface ImplementationStageV2 {
   clientFeedback?: string;
   acceptanceStatus?: string;
   observations?: string;
+}
+
+export interface ImplementationStageV2 {
+  status: StageStatus;
+  responsible?: string;
+  startDate?: Date;
+  endDate?: Date;
+  
+  phase1: ImplementationPhase;
+  phase2: ImplementationPhase;
+
   lastUpdatedAt?: Date;
   lastUpdatedBy?: string;
+  observations?: string; // General observations
 }
 
 export interface PostStageV2 {

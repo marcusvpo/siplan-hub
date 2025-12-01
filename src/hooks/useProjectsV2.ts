@@ -280,6 +280,8 @@ function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
     
     notes: notes,
     
+    relatedTickets: (row.related_tickets as { name: string; number: string }[]) || [],
+    
     tags: (row.tags as string[]) || [],
     priority: (row.priority as ProjectV2['priority']) || "normal",
     customFields: (row.custom_fields as Record<string, unknown>) || {},
@@ -295,6 +297,7 @@ function transformToDB(project: Partial<ProjectV2>): Record<string, unknown> {
 
   if (project.clientName) dbRow.client_name = project.clientName;
   if (project.ticketNumber) dbRow.ticket_number = project.ticketNumber;
+  if (project.relatedTickets) dbRow.related_tickets = project.relatedTickets;
   if (project.systemType) dbRow.system_type = project.systemType;
   if (project.implantationType) dbRow.implantation_type = project.implantationType;
   if (project.projectType) dbRow.project_type = project.projectType;
@@ -335,10 +338,10 @@ function transformToDB(project: Partial<ProjectV2>): Record<string, unknown> {
       dbRow.infra_start_date = s.startDate || null;
       dbRow.infra_end_date = s.endDate || null;
       dbRow.infra_observations = s.observations;
-      dbRow.infra_server_in_use = s.serverInUse;
-      dbRow.infra_server_needed = s.serverNeeded;
-      dbRow.infra_approved_by_infra = s.approvedByInfra;
       dbRow.infra_technical_notes = s.technicalNotes;
+      dbRow.infra_workstations_status = s.workstationsStatus;
+      dbRow.infra_server_status = s.serverStatus;
+      dbRow.infra_workstations_count = s.workstationsCount;
     }
 
     // Adherence
@@ -394,17 +397,8 @@ function transformToDB(project: Partial<ProjectV2>): Record<string, unknown> {
       dbRow.implementation_status = s.status;
       dbRow.implementation_responsible = s.responsible;
       dbRow.implementation_observations = s.observations;
-      dbRow.implementation_remote_install_date = s.remoteInstallDate || null;
-      dbRow.implementation_training_start_date = s.trainingStartDate || null;
-      dbRow.implementation_training_end_date = s.trainingEndDate || null;
-      dbRow.implementation_switch_type = s.switchType;
-      dbRow.implementation_switch_start_time = s.switchStartTime || null;
-      dbRow.implementation_switch_end_time = s.switchEndTime || null;
-      dbRow.implementation_training_type = s.trainingType;
-      dbRow.implementation_training_location = s.trainingLocation;
-      dbRow.implementation_participants_count = s.participantsCount || null;
-      dbRow.implementation_client_feedback = s.clientFeedback;
-      dbRow.implementation_acceptance_status = s.acceptanceStatus;
+      dbRow.implementation_phase1 = s.phase1;
+      dbRow.implementation_phase2 = s.phase2;
     }
 
     // Post

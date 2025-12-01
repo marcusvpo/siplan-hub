@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useTeamStore } from "@/stores/teamStore";
+import { useTeamMembers } from "@/hooks/useTeamMembers";
 import { TeamMember } from "@/types/team";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,7 +34,7 @@ import { Plus, Pencil, Trash2, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function TeamManagement() {
-  const { members, addMember, updateMember, removeMember } = useTeamStore();
+  const { members, addMember, updateMember, removeMember, isLoading } = useTeamMembers();
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
@@ -63,21 +63,31 @@ export default function TeamManagement() {
     e.preventDefault();
 
     if (editingMember) {
-      updateMember(editingMember.id, formData);
-      toast({
-        title: "Membro atualizado",
-        description: `${formData.name} foi atualizado com sucesso.`,
-      });
+      updateMember.mutate(
+        { id: editingMember.id, updates: formData },
+        {
+          onSuccess: () => {
+            toast({
+              title: "Membro atualizado",
+              description: `${formData.name} foi atualizado com sucesso.`,
+            });
+            setIsDialogOpen(false);
+            resetForm();
+          },
+        }
+      );
     } else {
-      addMember(formData);
-      toast({
-        title: "Membro adicionado",
-        description: `${formData.name} foi adicionado à equipe.`,
+      addMember.mutate(formData, {
+        onSuccess: () => {
+          toast({
+            title: "Membro adicionado",
+            description: `${formData.name} foi adicionado à equipe.`,
+          });
+          setIsDialogOpen(false);
+          resetForm();
+        },
       });
     }
-
-    setIsDialogOpen(false);
-    resetForm();
   };
 
   const handleEdit = (member: TeamMember) => {
@@ -98,10 +108,13 @@ export default function TeamManagement() {
 
   const confirmDelete = () => {
     if (memberToDelete) {
-      removeMember(memberToDelete);
-      toast({ title: "Membro removido", variant: "destructive" });
-      setMemberToDelete(null);
-      setIsDeleteAlertOpen(false);
+      removeMember.mutate(memberToDelete, {
+        onSuccess: () => {
+          toast({ title: "Membro removido", variant: "destructive" });
+          setMemberToDelete(null);
+          setIsDeleteAlertOpen(false);
+        },
+      });
     }
   };
 
