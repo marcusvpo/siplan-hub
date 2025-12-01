@@ -11,6 +11,7 @@ import {
   Database,
   ChevronDown,
   Users,
+  BarChart3,
 } from "lucide-react";
 import {
   Collapsible,
@@ -114,12 +115,22 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                       <span>Gerenciar Projetos</span>
                     </Button>
                   </Link>
+                  <Link to="/reports">
+                    <Button
+                      variant={isActive("/reports") ? "secondary" : "ghost"}
+                      size="sm"
+                      className="w-full justify-start gap-3 h-9"
+                    >
+                      <BarChart3 className="h-4 w-4" />
+                      <span>Relatórios</span>
+                    </Button>
+                  </Link>
                 </div>
               </CollapsibleContent>
             </Collapsible>
           ) : (
             <Button
-              variant={isActive("/projects") ? "secondary" : "ghost"}
+              variant={isActive("/projects") || isActive("/reports") ? "secondary" : "ghost"}
               className="w-full justify-center px-0"
               title="Implantação"
             >

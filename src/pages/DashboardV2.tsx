@@ -11,9 +11,29 @@ import { ModeToggle } from "@/components/mode-toggle";
 import { TrendChart } from "@/components/Dashboard/TrendChart";
 import { TimelineChart } from "@/components/Dashboard/TimelineChart";
 
+import { useToast } from "@/components/ui/use-toast";
+import { useEffect } from "react";
+
 export default function DashboardV2() {
   const { projects, isLoading } = useProjectsV2();
   const navigate = useNavigate();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (isLoading) return;
+    
+    const overdueProjects = projects.filter(p => 
+      p.nextFollowUpDate && new Date(p.nextFollowUpDate) < new Date()
+    );
+
+    if (overdueProjects.length > 0) {
+      toast({
+        title: "Atenção: Follow-ups Vencidos",
+        description: `Você tem ${overdueProjects.length} projetos com follow-up vencido.`,
+        variant: "destructive",
+      });
+    }
+  }, [projects, isLoading, toast]);
 
   const criticalAlerts = projects
     .filter((p) => p.healthScore === "critical")

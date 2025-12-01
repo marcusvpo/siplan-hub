@@ -140,9 +140,9 @@ export interface InfraStageV2 {
   startDate?: Date;
   endDate?: Date;
   blockingReason?: BlockingReason;
-  serverInUse?: string;
-  serverNeeded?: string;
-  approvedByInfra: boolean;
+  workstationsStatus?: "Adequado" | "Parcialmente Adequado" | "Inadequado";
+  serverStatus?: "Adequado" | "Parcialmente Adequado" | "Inadequado";
+  workstationsCount?: number;
   technicalNotes?: string;
   observations?: string;
   lastUpdatedAt?: Date;

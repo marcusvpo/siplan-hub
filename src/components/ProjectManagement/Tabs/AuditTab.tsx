@@ -52,9 +52,7 @@ export function AuditTab({ project }: TabProps) {
                   <Badge variant="outline" className="font-mono text-xs">{entry.action}</Badge>
                 </div>
                 
-                <div className="mt-2 bg-muted/30 p-2 rounded border overflow-x-auto">
-                    <pre className="text-xs">{JSON.stringify(entry.details, null, 2)}</pre>
-                </div>
+
               </div>
             </CardContent>
           </Card>

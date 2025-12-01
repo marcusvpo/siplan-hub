@@ -24,17 +24,22 @@ import {
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface ProjectCardV3Props {
   project: ProjectV2;
   onClick: (project: ProjectV2) => void;
   onAction: (action: string, project: ProjectV2) => void;
+  selected?: boolean;
+  onSelect?: (selected: boolean) => void;
 }
 
 export function ProjectCardV3({
   project,
   onClick,
   onAction,
+  selected,
+  onSelect,
 }: ProjectCardV3Props) {
   const isFollowUpOverdue =
     project.nextFollowUpDate && new Date(project.nextFollowUpDate) < new Date();
@@ -92,13 +97,7 @@ export function ProjectCardV3({
 
   return (
     <Card
-      className="w-full hover:shadow-md transition-all cursor-pointer border-l-4 flex flex-row items-center p-3 gap-4 h-24"
-      style={{
-        borderLeftColor: getHealthColor(project.healthScore).replace(
-          "bg-",
-          "var(--"
-        ),
-      }}
+      className="w-full hover:shadow-md transition-all cursor-pointer flex flex-row items-center p-3 gap-4 h-24 relative overflow-hidden"
       onClick={() => onClick(project)}
     >
       <div
@@ -107,6 +106,16 @@ export function ProjectCardV3({
           getHealthColor(project.healthScore)
         )}
       />
+
+      {/* Selection Checkbox */}
+      {onSelect && (
+        <div className="mr-2" onClick={(e) => e.stopPropagation()}>
+          <Checkbox 
+            checked={selected} 
+            onCheckedChange={(checked) => onSelect(checked as boolean)} 
+          />
+        </div>
+      )}
 
       {/* 1. Info Principal */}
       <div className="flex flex-col justify-center min-w-[200px] max-w-[250px]">
@@ -149,13 +158,29 @@ export function ProjectCardV3({
           <span>•</span>
           <span>#{project.ticketNumber}</span>
         </p>
-        <div className="flex items-center gap-1 mt-1 text-[10px] text-muted-foreground">
-          <Clock className="h-3 w-3" />
-          <span>
-            {format(new Date(project.lastUpdatedAt), "dd/MM HH:mm", {
-              locale: ptBR,
-            })}
-          </span>
+        
+        <div className="flex flex-col gap-0.5 mt-1">
+           {/* Follow Up Indicator */}
+           {project.nextFollowUpDate && (
+            <div className={cn(
+              "flex items-center gap-1 text-[10px]",
+              isFollowUpOverdue ? "text-destructive font-bold" : "text-muted-foreground"
+            )}>
+              <Calendar className="h-3 w-3" />
+              <span>
+                {format(new Date(project.nextFollowUpDate), "dd/MM", { locale: ptBR })}
+              </span>
+              {isFollowUpOverdue && <span>(Vencido)</span>}
+            </div>
+          )}
+
+          {/* Project Leader */}
+          <div className="flex items-center gap-1 text-[10px] text-muted-foreground" title={`Líder: ${project.projectLeader}`}>
+            <div className="h-3.5 w-3.5 rounded-full bg-primary/10 flex items-center justify-center text-[8px] font-bold text-primary">
+              {project.projectLeader.substring(0, 2).toUpperCase()}
+            </div>
+            <span className="truncate max-w-[100px]">{project.projectLeader}</span>
+          </div>
         </div>
       </div>
 
@@ -168,20 +193,24 @@ export function ProjectCardV3({
           {stages.map((stage) => (
             <div
               key={stage.id}
-              className="flex flex-col items-center gap-1.5 z-0 bg-background px-2"
+              className="flex flex-col items-center gap-1.5 z-0 bg-background px-2 group relative"
             >
               <div
                 className={cn(
-                  "h-5 w-5 rounded-full ring-4 ring-background transition-all shadow-sm",
+                  "h-5 w-5 rounded-full ring-4 ring-background transition-all shadow-sm cursor-help",
                   getStageColor(stage.status)
                 )}
-                title={`${stage.label}: ${
-                  stage.status === "todo" ? "To-Do" : stage.status
-                }`}
               />
               <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-tight whitespace-nowrap">
                 {stage.label}
               </span>
+              
+              {/* Hover Tooltip */}
+              <div className="absolute bottom-full mb-2 hidden group-hover:block z-50 w-48 bg-popover text-popover-foreground text-xs rounded-md border shadow-md p-2">
+                <p className="font-bold mb-1">{stage.label}</p>
+                <p>Status: {stage.status === 'done' ? 'Concluído' : stage.status === 'in-progress' ? 'Em Andamento' : 'Pendente'}</p>
+                {/* We would need to pass responsible data here if available in the stages array mapping */}
+              </div>
             </div>
           ))}
         </div>

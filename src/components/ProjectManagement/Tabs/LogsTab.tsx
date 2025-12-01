@@ -62,18 +62,7 @@ export function LogsTab({ project }: LogsTabProps) {
                       </span>{" "}
                       realizou uma alteração.
                     </div>
-                    {log.details && (
-                      <div className="mt-2 text-xs bg-muted p-2 rounded-md font-mono">
-                        {Object.entries(log.details).map(([key, value]) => (
-                          <div key={key}>
-                            <span className="font-semibold">{key}:</span>{" "}
-                            {typeof value === "object" && value !== null
-                              ? JSON.stringify(value, null, 2)
-                              : String(value)}
-                          </div>
-                        ))}
-                      </div>
-                    )}
+
                   </div>
                 ))
               )}

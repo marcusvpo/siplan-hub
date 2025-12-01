@@ -450,8 +450,12 @@ export function StepsTab({ project, onUpdate }: TabProps) {
             }
           />
         </div>
-        <div className="space-y-2">
-          <Label>Início</Label>
+      <div className="space-y-2">
+          <Label>
+            {["infra", "adherence", "environment", "conversion"].includes(stageKey)
+              ? "Enviado em"
+              : "Início"}
+          </Label>
           <Input
             type="date"
             value={
@@ -469,7 +473,11 @@ export function StepsTab({ project, onUpdate }: TabProps) {
           />
         </div>
         <div className="space-y-2">
-          <Label>Término</Label>
+          <Label>
+            {["infra", "adherence", "environment", "conversion"].includes(stageKey)
+              ? "Finalizado em"
+              : "Término"}
+          </Label>
           <Input
             type="date"
             value={
@@ -540,34 +548,52 @@ export function StepsTab({ project, onUpdate }: TabProps) {
           </AccordionTrigger>
           <AccordionContent className="pt-4">
             {renderCommonFields("infra", data.stages.infra)}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4 bg-muted/20 p-4 rounded-md">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t pt-4 bg-muted/20 p-4 rounded-md">
               <div className="space-y-2">
-                <Label>Servidor Atual</Label>
-                <Input
-                  value={data.stages.infra.serverInUse || ""}
-                  onChange={(e) =>
-                    handleStageChange("infra", "serverInUse", e.target.value)
+                <Label>Status Estações</Label>
+                <Select
+                  value={data.stages.infra.workstationsStatus}
+                  onValueChange={(value) =>
+                    handleStageChange("infra", "workstationsStatus", value)
                   }
-                />
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Adequado">Adequado</SelectItem>
+                    <SelectItem value="Parcialmente Adequado">Parcialmente Adequado</SelectItem>
+                    <SelectItem value="Inadequado">Inadequado</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
-                <Label>Servidor Necessário</Label>
-                <Input
-                  value={data.stages.infra.serverNeeded || ""}
-                  onChange={(e) =>
-                    handleStageChange("infra", "serverNeeded", e.target.value)
+                <Label>Status Servidor</Label>
+                <Select
+                  value={data.stages.infra.serverStatus}
+                  onValueChange={(value) =>
+                    handleStageChange("infra", "serverStatus", value)
                   }
-                />
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Adequado">Adequado</SelectItem>
+                    <SelectItem value="Parcialmente Adequado">Parcialmente Adequado</SelectItem>
+                    <SelectItem value="Inadequado">Inadequado</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              <div className="flex items-center space-x-2 pt-4">
-                <Checkbox
-                  id="infra-approved"
-                  checked={data.stages.infra.approvedByInfra || false}
-                  onCheckedChange={(checked) =>
-                    handleStageChange("infra", "approvedByInfra", checked)
+              <div className="space-y-2">
+                <Label>Qtd. de Estações</Label>
+                <Input
+                  type="number"
+                  value={data.stages.infra.workstationsCount || ""}
+                  onChange={(e) =>
+                    handleStageChange("infra", "workstationsCount", parseInt(e.target.value))
                   }
                 />
-                <Label htmlFor="infra-approved">Infraestrutura Aprovada?</Label>
               </div>
             </div>
           </AccordionContent>

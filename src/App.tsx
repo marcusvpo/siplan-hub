@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import DashboardV2 from "./pages/DashboardV2";
 import TeamManagement from "./pages/TeamManagement";
+import Reports from "./pages/Reports";
+import CompareProjects from "./pages/CompareProjects";
 import NotFound from "./pages/NotFound";
 import { MainLayout } from "@/components/Layout/MainLayout";
 
@@ -24,6 +26,8 @@ const App = () => (
             <Routes>
               <Route path="/" element={<DashboardV2 />} />
               <Route path="/projects" element={<Index />} />
+              <Route path="/compare" element={<CompareProjects />} />
+              <Route path="/reports" element={<Reports />} />
               <Route path="/team" element={<TeamManagement />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
