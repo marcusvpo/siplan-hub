@@ -33,21 +33,21 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "bg-card border-r transition-all duration-300 flex flex-col z-20",
-        collapsed ? "w-16" : "w-64"
+        "bg-sidebar border-r transition-all duration-300 flex flex-col z-20 shadow-xl shadow-black/5",
+        collapsed ? "w-20" : "w-72"
       )}
     >
-      <div className="h-14 flex items-center justify-between px-4 border-b">
+      <div className="h-16 flex items-center justify-between px-6 border-b bg-sidebar/50 backdrop-blur-sm">
         {!collapsed && (
-          <span className="font-bold text-lg tracking-tight text-primary">
-            Siplan Manager
+          <span className="font-black text-xl tracking-tight bg-gradient-to-r from-primary to-rose-600 bg-clip-text text-transparent">
+            Siplan HUB
           </span>
         )}
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setCollapsed(!collapsed)}
-          className={cn("h-8 w-8", collapsed ? "mx-auto" : "")}
+          className={cn("h-8 w-8 rounded-full hover:bg-primary/10 hover:text-primary transition-colors", collapsed ? "mx-auto" : "")}
         >
           {collapsed ? (
             <ChevronRight className="h-4 w-4" />

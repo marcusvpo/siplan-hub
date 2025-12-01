@@ -22,7 +22,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
       
       <div className="flex flex-col flex-1 overflow-hidden transition-all duration-300">
-        <header className="flex h-14 items-center justify-between gap-4 border-b bg-background px-6 shrink-0 z-10">
+        <header className="flex h-16 items-center justify-between gap-4 border-b bg-background/80 backdrop-blur-md px-6 shrink-0 z-10 sticky top-0">
            <Breadcrumbs />
            
            <div className="flex items-center gap-2">

@@ -240,14 +240,14 @@ export function GeneralInfoTab({ project, onUpdate }: TabProps) {
       </div>
 
       {/* 1. Pipeline Visual Moderno */}
-      <div className="w-full py-10 px-4 bg-card rounded-xl border shadow-sm relative overflow-hidden">
+      <div className="w-full py-12 px-6 bg-card/50 backdrop-blur-sm rounded-2xl border shadow-sm relative overflow-hidden mb-8">
          <div className="flex items-center justify-between relative z-10 max-w-5xl mx-auto">
             {/* Connecting Line */}
-            <div className="absolute top-8 left-0 right-0 h-1 bg-slate-100 dark:bg-slate-800 -z-10" />
+            <div className="absolute top-10 left-0 right-0 h-1.5 bg-muted -z-10 rounded-full" />
             
             {/* Active Progress Line */}
             <div 
-              className="absolute top-8 left-0 h-1 bg-emerald-500 -z-10 transition-all duration-1000 ease-in-out" 
+              className="absolute top-10 left-0 h-1.5 bg-gradient-to-r from-emerald-500 to-emerald-400 -z-10 transition-all duration-1000 ease-in-out rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]" 
               style={{ 
                 width: `${Math.min(
                   100, 
@@ -269,25 +269,25 @@ export function GeneralInfoTab({ project, onUpdate }: TabProps) {
               const isActive = stage.status === 'in-progress';
               
               return (
-                <div key={stage.id} className="flex flex-col items-center gap-4 group cursor-pointer">
+                <div key={stage.id} className="flex flex-col items-center gap-5 group cursor-pointer relative">
                    <div className={cn(
-                     "h-16 w-16 rounded-full flex items-center justify-center transition-all duration-300 border-4",
-                     isDone ? "bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-200" :
-                     isActive ? "bg-blue-500 border-blue-500 text-white shadow-lg shadow-blue-200 scale-110" :
-                     "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-400"
+                     "h-20 w-20 rounded-2xl rotate-3 flex items-center justify-center transition-all duration-500 border-4 shadow-xl",
+                     isDone ? "bg-gradient-to-br from-emerald-500 to-emerald-600 border-emerald-400 text-white shadow-emerald-500/30 rotate-0" :
+                     isActive ? "bg-gradient-to-br from-blue-500 to-blue-600 border-blue-400 text-white shadow-blue-500/30 scale-110 -rotate-3 ring-4 ring-blue-500/20" :
+                     "bg-card border-border text-muted-foreground hover:border-primary/50 hover:text-primary"
                    )}>
-                      {isDone ? <Check className="h-8 w-8" /> : <Icon className="h-7 w-7" />}
+                      {isDone ? <Check className="h-9 w-9" /> : <Icon className="h-8 w-8" />}
                    </div>
-                   <div className="text-center space-y-1">
+                   <div className="text-center space-y-1.5 bg-background/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-transparent group-hover:border-border/50 transition-colors">
                       <p className={cn(
-                        "text-xs font-bold uppercase tracking-wider",
+                        "text-xs font-bold uppercase tracking-widest",
                         isActive ? "text-blue-600 dark:text-blue-400" : 
                         isDone ? "text-emerald-600 dark:text-emerald-400" : 
                         "text-muted-foreground"
                       )}>
                         {stage.label}
                       </p>
-                      <p className="text-[10px] text-muted-foreground font-medium uppercase">
+                      <p className="text-[10px] text-muted-foreground font-medium uppercase opacity-80">
                         {stage.status === 'todo' ? 'Pendente' : 
                          stage.status === 'in-progress' ? 'Em Progresso' : 
                          stage.status === 'done' ? 'Concluído' : stage.status}
@@ -300,10 +300,12 @@ export function GeneralInfoTab({ project, onUpdate }: TabProps) {
       </div>
 
       {/* 2. Dados do Projeto (Layout 3 Colunas) */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-           <FileText className="h-5 w-5 text-muted-foreground" />
-           <h3 className="text-lg font-semibold text-muted-foreground">Dados do Projeto</h3>
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+           <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+             <FileText className="h-4 w-4" />
+           </div>
+           <h3 className="text-xl font-bold text-foreground tracking-tight">Dados do Projeto</h3>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -311,50 +313,50 @@ export function GeneralInfoTab({ project, onUpdate }: TabProps) {
            <div className="lg:col-span-5 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                  {/* Sistema */}
-                 <div className="bg-white dark:bg-card rounded-xl border shadow-sm p-4 space-y-1">
-                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Sistema</p>
+                 <div className="bg-card hover:bg-accent/50 transition-colors rounded-xl border shadow-sm p-5 space-y-2 group">
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider group-hover:text-primary transition-colors">Sistema</p>
                     <div className="flex items-center gap-2">
-                      <p className="font-bold">{data.systemType}</p>
-                      <Badge variant="secondary" className="text-[10px] bg-emerald-100 text-emerald-700 hover:bg-emerald-100 h-5 px-1.5">new</Badge>
+                      <p className="font-bold text-lg">{data.systemType}</p>
+                      <Badge variant="secondary" className="text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/20 h-5 px-1.5">new</Badge>
                     </div>
                  </div>
                  {/* Chamado */}
-                 <div className="bg-white dark:bg-card rounded-xl border shadow-sm p-4 space-y-1">
-                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Chamado</p>
-                    <p className="font-bold font-mono">{data.ticketNumber}</p>
+                 <div className="bg-card hover:bg-accent/50 transition-colors rounded-xl border shadow-sm p-5 space-y-2 group">
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider group-hover:text-primary transition-colors">Chamado</p>
+                    <p className="font-bold font-mono text-lg text-foreground/80">#{data.ticketNumber}</p>
                  </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                  {/* Líder */}
-                 <div className="bg-white dark:bg-card rounded-xl border shadow-sm p-4 space-y-1">
-                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Líder</p>
-                    <div className="flex items-center gap-2">
-                       <div className="h-6 w-6 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden">
-                          <User className="h-4 w-4 text-slate-500" />
+                 <div className="bg-card hover:bg-accent/50 transition-colors rounded-xl border shadow-sm p-5 space-y-2 group">
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider group-hover:text-primary transition-colors">Líder</p>
+                    <div className="flex items-center gap-3">
+                       <div className="h-8 w-8 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center overflow-hidden shadow-inner">
+                          <User className="h-4 w-4 text-slate-600" />
                        </div>
                        <p className="font-bold text-sm truncate">{data.projectLeader}</p>
                     </div>
                  </div>
                  {/* Horas */}
-                 <div className="bg-white dark:bg-card rounded-xl border shadow-sm p-4 space-y-1">
-                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Horas</p>
-                    <p className="font-bold">{data.soldHours || 0}h</p>
+                 <div className="bg-card hover:bg-accent/50 transition-colors rounded-xl border shadow-sm p-5 space-y-2 group">
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider group-hover:text-primary transition-colors">Horas</p>
+                    <p className="font-bold text-lg">{data.soldHours || 0}<span className="text-sm text-muted-foreground font-normal ml-1">h</span></p>
                  </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                  {/* Legado */}
-                 <div className="bg-white dark:bg-card rounded-xl border shadow-sm p-4 space-y-1">
-                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Legado</p>
-                    <p className="font-bold">{data.legacySystem || '-'}</p>
+                 <div className="bg-card hover:bg-accent/50 transition-colors rounded-xl border shadow-sm p-5 space-y-2 group">
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider group-hover:text-primary transition-colors">Legado</p>
+                    <p className="font-bold text-lg">{data.legacySystem || '-'}</p>
                  </div>
                  {/* Próximo Follow-up */}
-                 <div className="bg-white dark:bg-card rounded-xl border shadow-sm p-4 space-y-1">
-                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Próximo Follow-up</p>
+                 <div className="bg-card hover:bg-accent/50 transition-colors rounded-xl border shadow-sm p-5 space-y-2 group">
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider group-hover:text-primary transition-colors">Próximo Follow-up</p>
                     <div className="flex items-center gap-2">
                        <Clock className="h-4 w-4 text-muted-foreground" />
-                       <p className="font-bold">
+                       <p className="font-bold text-lg">
                          {data.nextFollowUpDate ? format(new Date(new Date(data.nextFollowUpDate).getTime() + new Date().getTimezoneOffset() * 60000), "dd/MM", { locale: ptBR }) : '-'}
                        </p>
                     </div>
@@ -364,20 +366,22 @@ export function GeneralInfoTab({ project, onUpdate }: TabProps) {
 
            {/* Coluna 2: Status Card (4 cols) */}
            <div className="lg:col-span-4">
-              <div className="h-full bg-blue-500 rounded-xl shadow-lg shadow-blue-200 dark:shadow-none p-8 flex flex-col items-center justify-center text-white relative overflow-hidden">
-                 <div className="absolute top-0 right-0 p-32 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
+              <div className="h-full bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl shadow-xl shadow-blue-900/20 p-8 flex flex-col items-center justify-center text-white relative overflow-hidden group">
+                 <div className="absolute top-0 right-0 p-32 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none group-hover:bg-white/20 transition-colors duration-500" />
                  
-                 <Clock className="h-12 w-12 mb-4 text-blue-100" />
+                 <div className="h-16 w-16 bg-white/10 rounded-2xl flex items-center justify-center mb-6 backdrop-blur-md shadow-inner">
+                    <Clock className="h-8 w-8 text-blue-100" />
+                 </div>
                  
-                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-100 mb-1">Status</p>
-                 <h2 className="text-3xl font-black uppercase tracking-tight mb-6 text-center">
+                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-100 mb-2">Status Atual</p>
+                 <h2 className="text-3xl font-black uppercase tracking-tight mb-8 text-center leading-tight">
                     {data.globalStatus === 'in-progress' ? 'Em Andamento' : 
                      data.globalStatus === 'done' ? 'Concluído' : 
                      data.globalStatus === 'blocked' ? 'Bloqueado' : 'A Fazer'}
                  </h2>
 
-                 <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
-                    <Check className="h-6 w-6 text-white" />
+                 <div className="h-14 w-14 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm border border-white/30 shadow-lg">
+                    <Check className="h-7 w-7 text-white" />
                  </div>
               </div>
            </div>
@@ -385,16 +389,18 @@ export function GeneralInfoTab({ project, onUpdate }: TabProps) {
            {/* Coluna 3: Updates (3 cols) */}
            <div className="lg:col-span-3">
               {/* Last Update */}
-              <div className="h-full bg-rose-500 rounded-xl shadow-lg shadow-rose-200 dark:shadow-none p-8 flex flex-col items-center justify-center text-white relative overflow-hidden">
-                 <div className="absolute top-0 left-0 p-32 bg-white/10 rounded-full blur-3xl -ml-16 -mt-16 pointer-events-none" />
+              <div className="h-full bg-gradient-to-br from-rose-500 to-pink-600 rounded-2xl shadow-xl shadow-rose-900/20 p-8 flex flex-col items-center justify-center text-white relative overflow-hidden group">
+                 <div className="absolute top-0 left-0 p-32 bg-white/10 rounded-full blur-3xl -ml-16 -mt-16 pointer-events-none group-hover:bg-white/20 transition-colors duration-500" />
                  
-                 <Clock className="h-12 w-12 mb-4 text-rose-100" />
+                 <div className="h-16 w-16 bg-white/10 rounded-2xl flex items-center justify-center mb-6 backdrop-blur-md shadow-inner">
+                    <Clock className="h-8 w-8 text-rose-100" />
+                 </div>
 
-                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-rose-100 mb-1">Última Atualização</p>
-                 <h2 className="text-2xl font-black uppercase tracking-tight mb-2 text-center">
+                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-rose-100 mb-2">Última Atualização</p>
+                 <h2 className="text-4xl font-black uppercase tracking-tighter mb-2 text-center">
                    {format(new Date(data.lastUpdatedAt), "dd MMM", { locale: ptBR })}
                  </h2>
-                 <p className="text-lg font-medium text-rose-100">
+                 <p className="text-xl font-medium text-rose-100/90 bg-black/10 px-4 py-1 rounded-full">
                    {format(new Date(data.lastUpdatedAt), "HH:mm")}
                  </p>
               </div>
