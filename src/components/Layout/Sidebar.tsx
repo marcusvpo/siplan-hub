@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import {
   ChevronDown,
   Users,
   BarChart3,
+  LogOut,
 } from "lucide-react";
 import {
   Collapsible,
@@ -26,6 +28,7 @@ interface SidebarProps {
 
 export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
   const location = useLocation();
+  const { signOut } = useAuth();
   const [isImplantacaoOpen, setIsImplantacaoOpen] = useState(true);
 
   const isActive = (path: string) => location.pathname === path;
@@ -133,6 +136,7 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
               variant={isActive("/projects") || isActive("/reports") ? "secondary" : "ghost"}
               className="w-full justify-center px-0"
               title="Implantação"
+              onClick={() => setCollapsed(false)}
             >
               <Layers className="h-5 w-5" />
             </Button>
@@ -148,6 +152,7 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
               collapsed ? "justify-center px-0" : ""
             )}
             title="Conversão (Em breve)"
+            onClick={() => setCollapsed(false)}
           >
             <Database className="h-5 w-5" />
             {!collapsed && <span>Conversão</span>}
@@ -155,20 +160,19 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
         </div>
       </div>
 
-      <div className="p-2 border-t mt-auto">
-        <Link to="/team">
-          <Button
-            variant={isActive("/team") ? "secondary" : "ghost"}
-            className={cn(
-              "w-full justify-start gap-3",
-              collapsed ? "justify-center px-0" : ""
-            )}
-            title="Gerenciar Equipe"
-          >
-            <Users className="h-5 w-5" />
-            {!collapsed && <span>Equipe</span>}
-          </Button>
-        </Link>
+      <div className="p-2 border-t mt-auto space-y-1">
+        <Button
+          variant="ghost"
+          className={cn(
+            "w-full justify-start gap-3 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20",
+            collapsed ? "justify-center px-0" : ""
+          )}
+          onClick={() => signOut()}
+          title="Sair"
+        >
+          <LogOut className="h-5 w-5" />
+          {!collapsed && <span>Sair</span>}
+        </Button>
       </div>
     </aside>
   );

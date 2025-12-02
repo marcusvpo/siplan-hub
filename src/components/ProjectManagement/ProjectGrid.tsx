@@ -27,7 +27,7 @@ import { Virtuoso } from 'react-virtuoso';
 import { useFilterStore } from "@/stores/filterStore";
 
 export function ProjectGrid() {
-  const { projects, isLoading, updateProject } = useProjectsV2();
+  const { projects, isLoading, updateProject, deleteProject } = useProjectsV2();
   const [selectedProject, setSelectedProject] = useState<ProjectV2 | null>(null);
   
   // Use Zustand store
@@ -282,7 +282,12 @@ export function ProjectGrid() {
                 selected={selectedProjectIds.includes(project.id)}
                 onSelect={(selected) => toggleSelection(project.id, selected)}
                 onAction={(action, project) => {
-                  console.log(`Action ${action} on project ${project.id}`);
+                  if (action === "delete") {
+                    if (confirm(`Tem certeza que deseja excluir o projeto "${project.clientName}"?\n\nEsta ação é irreversível e apagará TODOS os dados relacionados a este projeto permanentemente.`)) {
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      (deleteProject as any).mutate(project.id);
+                    }
+                  }
                 }}
               />
             </div>

@@ -18,7 +18,7 @@ export function useAutoSave<T>(
 ) {
   const [data, setData] = useState<T>(initialData);
   const [saveState, setSaveState] = useState<SaveState>({ status: "idle" });
-  const debouncedData = useDebounce(data, config.debounceMs || 1000);
+  const debouncedData = useDebounce(data, config.debounceMs || 500);
   const firstRender = useRef(true);
   const lastSavedData = useRef<string>(JSON.stringify(initialData));
   const onSaveRef = useRef(onSave);
@@ -30,24 +30,29 @@ export function useAutoSave<T>(
   // Sync with initialData if it changes significantly
   useEffect(() => {
     const initialJson = JSON.stringify(initialData);
-    if (initialJson !== lastSavedData.current && initialJson !== JSON.stringify(data)) {
-        // Only update if external data is different from current local data
-        // This is a bit risky if user is typing. 
-        // Ideally we only update if we are "pristine" or if we want to force update.
-        // For now, let's respect local changes and only update if we haven't touched it?
-        // Or just update `lastSavedData` so we don't save it back?
-        // Let's assume initialData updates are from our own saves or background refreshes.
-        // If background refresh, we might want to merge? 
-        // For this task, let's just update `lastSavedData` to avoid re-saving what came from server.
+    if (initialJson !== lastSavedData.current) {
+        // If initialData changed and it's different from what we last saved, 
+        // it means it was updated externally (e.g. by another user or a refresh).
+        // We should update our local state to reflect that, BUT we need to be careful not to overwrite user's unsaved work.
+        // Since we debounce, 'data' might be ahead of 'initialData'.
+        
+        // For now, let's only update if we are not in the middle of editing? 
+        // Or simply update lastSavedData so we don't re-save.
         lastSavedData.current = initialJson;
-        // And update local data? If we do, we overwrite user input.
-        // Let's NOT update local data automatically to avoid conflicts, 
-        // unless we implement a more complex merge strategy.
-        // But if the user navigates away and back, initialData changes.
-        // Let's just set data if it's the first load or if we explicitly want to reset.
-        // For now, let's leave this effect minimal or manual.
+        
+        // If we want to reflect external changes:
+        // setData(initialData); 
+        // But this is dangerous. Let's assume for this specific issue (notes not saving), 
+        // the problem might be that 'initialData' is not being updated after save, 
+        // so the hook thinks nothing changed on next edit?
+        
+        // Actually, if onSave is successful, we update lastSavedData. 
+        // If parent re-renders with new initialData (which should match lastSavedData), nothing happens.
+        // If parent re-renders with OLD initialData, we might have a conflict.
+        
+        // Let's trust that onSave updates the parent state eventually.
     }
-  }, [initialData, data]);
+  }, [initialData]);
 
   useEffect(() => {
     if (firstRender.current) {
@@ -94,7 +99,33 @@ export function useAutoSave<T>(
     };
 
     saveData();
+
+    return () => {
+      // On unmount, if we have pending changes (debouncedData might be stale, check data vs lastSaved)
+      // Actually, we can't reliably call async onSave on unmount because the component might be gone.
+      // But we can try. Or better, we can force a save if data changed.
+      // However, 'data' in this scope is closed over.
+      // We need a ref to current data.
+    };
   }, [debouncedData]);
+
+  // Ref to track current data for unmount save
+  const dataRef = useRef(data);
+  useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
+
+  useEffect(() => {
+    return () => {
+      const currentJson = JSON.stringify(dataRef.current);
+      if (currentJson !== lastSavedData.current) {
+        // Attempt to save immediately on unmount
+        // Note: This might fail if the parent component is also unmounting and invalidates callbacks.
+        // But for tab switching, it should work.
+        onSaveRef.current(dataRef.current);
+      }
+    };
+  }, []);
 
   const handleChange = (field: keyof T, value: T[keyof T]) => {
     setData((prev) => ({ ...prev, [field]: value }));

@@ -1,6 +1,6 @@
 import { ProjectGrid } from "@/components/ProjectManagement/ProjectGrid";
 import { NewProjectDialog } from "@/components/NewProjectDialog";
-import { Package, LayoutDashboard, Home } from "lucide-react";
+import { Package, LayoutDashboard, Home, FolderKanban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { ModeToggle } from "@/components/mode-toggle";
@@ -16,7 +16,7 @@ const Index = () => {
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-3">
-              <LayoutDashboard className="h-6 w-6 text-primary" />
+              <FolderKanban className="h-6 w-6 text-red-500" />
               <h2 className="text-2xl font-bold">Projetos Ativos</h2>
             </div>
             <NewProjectDialog />

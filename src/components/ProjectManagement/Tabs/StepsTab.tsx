@@ -34,23 +34,7 @@ import { GripVertical, Trash2, Type, CheckSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { AutocompleteInput } from "@/components/ui/autocomplete-input";
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from "@dnd-kit/core";
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-  useSortable,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 
 interface TabProps {
   project: ProjectV2;
@@ -65,168 +49,28 @@ type AnyStage =
   | ImplementationStageV2
   | PostStageV2;
 
-interface SortableBlockProps {
-  block: ContentBlock;
-  activeBlockId: string | null;
-  setActiveBlockId: (id: string) => void;
-  onUpdate: (blockId: string, content: string, checked?: boolean) => void;
-  onDelete: (blockId: string) => void;
-}
-
-function SortableBlock({
-  block,
-  activeBlockId,
-  setActiveBlockId,
-  onUpdate,
-  onDelete,
-}: SortableBlockProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: block.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    zIndex: isDragging ? 10 : 1,
-    opacity: isDragging ? 0.5 : 1,
-  };
-
-  const isFocused = activeBlockId === block.id;
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={cn(
-        "group flex items-start gap-2 py-2 px-3 rounded-md hover:bg-muted/30 transition-all border border-transparent",
-        isFocused ? "bg-muted/40 border-muted-foreground/20 shadow-sm" : ""
-      )}
-      onClick={() => setActiveBlockId(block.id)}
-    >
-      <div
-        className={cn(
-          "flex flex-col items-center gap-1 mt-1.5 transition-opacity",
-          isFocused ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-        )}
-      >
-        <div
-          {...attributes}
-          {...listeners}
-          className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded"
-        >
-          <GripVertical className="h-4 w-4 text-muted-foreground" />
-        </div>
-      </div>
-
-      <div className="flex-1 space-y-1">
-        {block.type === "heading" && (
-          <Input
-            className="text-xl font-bold border-none shadow-none focus-visible:ring-0 px-0 h-auto py-1 bg-transparent placeholder:text-muted-foreground/50"
-            placeholder="Digite um título..."
-            value={block.content}
-            onChange={(e) => onUpdate(block.id, e.target.value)}
-            autoFocus={isFocused}
-          />
-        )}
-        {block.type === "paragraph" && (
-          <Textarea
-            className="min-h-[24px] resize-none border-none shadow-none focus-visible:ring-0 px-0 py-1 overflow-hidden bg-transparent leading-relaxed"
-            placeholder="Digite suas observações..."
-            value={block.content}
-            onChange={(e) => {
-              onUpdate(block.id, e.target.value);
-              e.target.style.height = "auto";
-              e.target.style.height = e.target.scrollHeight + "px";
-            }}
-            autoFocus={isFocused}
-          />
-        )}
-        {block.type === "checkbox" && (
-          <div className="flex items-center gap-3">
-            <Checkbox
-              id={block.id}
-              className="h-5 w-5"
-              checked={block.checked || false}
-              onCheckedChange={(checked) =>
-                onUpdate(block.id, block.content, checked as boolean)
-              }
-            />
-            <Input
-              className={cn(
-                "border-none shadow-none focus-visible:ring-0 px-0 h-auto py-1 bg-transparent flex-1 transition-all",
-                block.checked
-                  ? "text-muted-foreground line-through decoration-muted-foreground/50"
-                  : ""
-              )}
-              placeholder="Item da lista..."
-              value={block.content}
-              onChange={(e) =>
-                onUpdate(block.id, e.target.value, block.checked)
-              }
-              autoFocus={isFocused}
-            />
-          </div>
-        )}
-      </div>
-
-      <div
-        className={cn(
-          "flex items-center mt-1.5 transition-opacity",
-          isFocused ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-        )}
-      >
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6 text-destructive hover:bg-destructive/10"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(block.id);
-          }}
-          title="Excluir bloco"
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </Button>
-      </div>
-    </div>
-  );
-}
+import { convertBlocksToTiptap } from "@/lib/editor-utils";
 
 export function StepsTab({ project, onUpdate }: TabProps) {
-  const { data, handleChange, saveState } = useAutoSave(
-    project,
-    async (newData) => {
-      onUpdate(newData);
+  const { data: stagesData, handleChange: handleStagesChangeField, saveState } = useAutoSave(
+    project.stages,
+    async (newStages) => {
+      onUpdate({ ...project, stages: newStages });
       await new Promise((resolve) => setTimeout(resolve, 500));
     }
   );
 
-  const [activeBlockId, setActiveBlockId] = useState<string | null>(null);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
 
   const handleStageChange = (
     stageKey: keyof ProjectV2["stages"],
     field: string,
     value: unknown
   ) => {
-    const currentStages = { ...data.stages };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const currentStage: any = { ...currentStages[stageKey] };
+    const currentStage: any = { ...stagesData[stageKey] };
     currentStage[field] = value;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (currentStages as any)[stageKey] = currentStage;
-    handleChange("stages", currentStages);
+    handleStagesChangeField(stageKey, currentStage);
   };
 
   const handlePhaseChange = (
@@ -235,8 +79,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
     field: string,
     value: unknown
   ) => {
-    const currentStages = { ...data.stages };
-    const currentStage = { ...currentStages[stageKey] };
+    const currentStage = { ...stagesData[stageKey] };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const currentPhase = { ...(currentStage as any)[phase] };
     
@@ -245,348 +88,96 @@ export function StepsTab({ project, onUpdate }: TabProps) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (currentStage as any)[phase] = currentPhase;
     
-    currentStages[stageKey] = currentStage;
-    handleChange("stages", currentStages);
+    // Sync main status with Phase 1 status
+    if (phase === "phase1" && field === "status") {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        currentStage.status = value as any;
+    }
+
+    handleStagesChangeField(stageKey, currentStage);
   };
 
   // Rich Text Logic for Stages
-  const getStageBlocks = (stage: AnyStage): ContentBlock[] => {
-    if (!stage.observations) return [];
-
+  const getStageContent = (stage: AnyStage) => {
+    if (!stage.observations) return "";
     try {
       const parsed = JSON.parse(stage.observations);
-      if (Array.isArray(parsed)) return parsed;
+      if (Array.isArray(parsed)) {
+        return convertBlocksToTiptap(parsed);
+      }
+      return parsed;
     } catch {
-      // Ignore error, treat as plain text
+      return stage.observations;
     }
-
-    return [
-      {
-        id: crypto.randomUUID(),
-        type: "paragraph",
-        content: stage.observations,
-      },
-    ];
   };
 
-  const updateStageBlocks = (
+  const updateStageContent = (
     stageKey: keyof ProjectV2["stages"],
-    blocks: ContentBlock[]
+    content: string
   ) => {
-    handleStageChange(stageKey, "observations", JSON.stringify(blocks));
-  };
-
-  const addBlock = (
-    stageKey: keyof ProjectV2["stages"],
-    type: ContentBlock["type"]
-  ) => {
-    const currentBlocks = getStageBlocks(data.stages[stageKey]);
-    const newBlock: ContentBlock = {
-      id: crypto.randomUUID(),
-      type,
-      content: "",
-      checked: false,
-    };
-    // Append to the end
-    const newBlocks = [...currentBlocks, newBlock];
-    updateStageBlocks(stageKey, newBlocks);
-    setActiveBlockId(newBlock.id);
-  };
-
-  const updateBlock = (
-    stageKey: keyof ProjectV2["stages"],
-    blockId: string,
-    content: string,
-    checked?: boolean
-  ) => {
-    const currentBlocks = getStageBlocks(data.stages[stageKey]);
-    const newBlocks = currentBlocks.map((block) =>
-      block.id === blockId
-        ? {
-            ...block,
-            content,
-            checked: checked !== undefined ? checked : block.checked,
-          }
-        : block
-    );
-    updateStageBlocks(stageKey, newBlocks);
-  };
-
-  const deleteBlock = (
-    stageKey: keyof ProjectV2["stages"],
-    blockId: string
-  ) => {
-    const currentBlocks = getStageBlocks(data.stages[stageKey]);
-    const newBlocks = currentBlocks.filter((block) => block.id !== blockId);
-    updateStageBlocks(stageKey, newBlocks);
-  };
-
-  const handleDragEnd = (
-    event: DragEndEvent,
-    stageKey: keyof ProjectV2["stages"]
-  ) => {
-    const { active, over } = event;
-
-    if (over && active.id !== over.id) {
-      const currentBlocks = getStageBlocks(data.stages[stageKey]);
-      const oldIndex = currentBlocks.findIndex(
-        (block) => block.id === active.id
-      );
-      const newIndex = currentBlocks.findIndex((block) => block.id === over.id);
-
-      const newBlocks = arrayMove(currentBlocks, oldIndex, newIndex);
-      updateStageBlocks(stageKey, newBlocks);
-    }
+    handleStageChange(stageKey, "observations", content);
   };
 
   const renderRichEditor = (stageKey: keyof ProjectV2["stages"]) => {
-    const blocks = getStageBlocks(data.stages[stageKey]);
+    const content = getStageContent(stagesData[stageKey]);
     return (
-      <div className="border rounded-md bg-card shadow-sm overflow-hidden">
-        <div className="flex items-center gap-2 p-3 border-b bg-muted/30">
-          <span className="text-xs text-muted-foreground font-bold uppercase tracking-wider">
+      <div className="mt-4">
+        <div className="flex items-center gap-2 mb-2">
+           <span className="text-xs text-muted-foreground font-bold uppercase tracking-wider">
             Editor de Conteúdo
           </span>
-          <div className="flex-1" />
-          <div className="flex items-center bg-background rounded-md border shadow-sm p-0.5">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 px-2 gap-1.5 text-xs font-medium"
-              onClick={() => addBlock(stageKey, "heading")}
-            >
-              <Type className="h-3.5 w-3.5" /> Título
-            </Button>
-            <div className="w-px h-4 bg-border mx-0.5" />
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 px-2 gap-1.5 text-xs font-medium"
-              onClick={() => addBlock(stageKey, "paragraph")}
-            >
-              <Type className="h-3.5 w-3.5" /> Texto
-            </Button>
-            <div className="w-px h-4 bg-border mx-0.5" />
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 px-2 gap-1.5 text-xs font-medium"
-              onClick={() => addBlock(stageKey, "checkbox")}
-            >
-              <CheckSquare className="h-3.5 w-3.5" /> Checklist
-            </Button>
-          </div>
         </div>
-
-        <div className="space-y-1 min-h-[150px] p-4 bg-background/50">
-          {blocks.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-10 text-muted-foreground gap-2 border-2 border-dashed rounded-lg m-4">
-              <Type className="h-8 w-8 opacity-20" />
-              <p className="text-sm font-medium">Nenhum conteúdo adicionado</p>
-              <p className="text-xs opacity-70">
-                Utilize a barra de ferramentas acima para começar
-              </p>
-            </div>
-          )}
-
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={(event) => handleDragEnd(event, stageKey)}
-          >
-            <SortableContext
-              items={blocks.map((b) => b.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              {blocks.map((block) => (
-                <SortableBlock
-                  key={block.id}
-                  block={block}
-                  activeBlockId={activeBlockId}
-                  setActiveBlockId={setActiveBlockId}
-                  onUpdate={(id, content, checked) =>
-                    updateBlock(stageKey, id, content, checked)
-                  }
-                  onDelete={(id) => deleteBlock(stageKey, id)}
-                />
-              ))}
-            </SortableContext>
-          </DndContext>
-        </div>
+        <RichTextEditor 
+          content={content} 
+          onChange={(newContent) => updateStageContent(stageKey, newContent)} 
+          placeholder="Adicione observações, checklists ou detalhes desta etapa..."
+        />
       </div>
     );
   };
 
   // Phase Rich Text Logic
-  const getPhaseBlocks = (phase: ImplementationPhase): ContentBlock[] => {
-    if (!phase.observations) return [];
+  const getPhaseContent = (phase: ImplementationPhase) => {
+    if (!phase.observations) return "";
     try {
       const parsed = JSON.parse(phase.observations);
-      if (Array.isArray(parsed)) return parsed;
+      if (Array.isArray(parsed)) {
+        return convertBlocksToTiptap(parsed);
+      }
+      return parsed;
     } catch {
-      // Ignore error
+      return phase.observations;
     }
-    return [
-      {
-        id: crypto.randomUUID(),
-        type: "paragraph",
-        content: phase.observations,
-      },
-    ];
   };
 
-  const updatePhaseBlocks = (
+  const updatePhaseContent = (
     phaseKey: "phase1" | "phase2",
-    blocks: ContentBlock[]
+    content: string
   ) => {
     handlePhaseChange(
       "implementation",
       phaseKey,
       "observations",
-      JSON.stringify(blocks)
+      content
     );
-  };
-
-  const addPhaseBlock = (
-    phaseKey: "phase1" | "phase2",
-    type: ContentBlock["type"]
-  ) => {
-    const phase = data.stages.implementation[phaseKey];
-    const currentBlocks = getPhaseBlocks(phase);
-    const newBlock: ContentBlock = {
-      id: crypto.randomUUID(),
-      type,
-      content: "",
-      checked: false,
-    };
-    const newBlocks = [...currentBlocks, newBlock];
-    updatePhaseBlocks(phaseKey, newBlocks);
-    setActiveBlockId(newBlock.id);
-  };
-
-  const updatePhaseBlock = (
-    phaseKey: "phase1" | "phase2",
-    blockId: string,
-    content: string,
-    checked?: boolean
-  ) => {
-    const phase = data.stages.implementation[phaseKey];
-    const currentBlocks = getPhaseBlocks(phase);
-    const newBlocks = currentBlocks.map((block) =>
-      block.id === blockId
-        ? {
-            ...block,
-            content,
-            checked: checked !== undefined ? checked : block.checked,
-          }
-        : block
-    );
-    updatePhaseBlocks(phaseKey, newBlocks);
-  };
-
-  const deletePhaseBlock = (
-    phaseKey: "phase1" | "phase2",
-    blockId: string
-  ) => {
-    const phase = data.stages.implementation[phaseKey];
-    const currentBlocks = getPhaseBlocks(phase);
-    const newBlocks = currentBlocks.filter((block) => block.id !== blockId);
-    updatePhaseBlocks(phaseKey, newBlocks);
-  };
-
-  const handlePhaseDragEnd = (
-    event: DragEndEvent,
-    phaseKey: "phase1" | "phase2"
-  ) => {
-    const { active, over } = event;
-    if (over && active.id !== over.id) {
-      const phase = data.stages.implementation[phaseKey];
-      const currentBlocks = getPhaseBlocks(phase);
-      const oldIndex = currentBlocks.findIndex(
-        (block) => block.id === active.id
-      );
-      const newIndex = currentBlocks.findIndex((block) => block.id === over.id);
-      const newBlocks = arrayMove(currentBlocks, oldIndex, newIndex);
-      updatePhaseBlocks(phaseKey, newBlocks);
-    }
   };
 
   const renderPhaseRichEditor = (phaseKey: "phase1" | "phase2") => {
-    const phase = data.stages.implementation[phaseKey];
-    const blocks = getPhaseBlocks(phase);
+    const phase = stagesData.implementation[phaseKey];
+    const content = getPhaseContent(phase);
 
     return (
-      <div className="border rounded-md bg-card shadow-sm overflow-hidden mt-4">
-        <div className="flex items-center gap-2 p-3 border-b bg-muted/30">
-          <span className="text-xs text-muted-foreground font-bold uppercase tracking-wider">
+      <div className="mt-4">
+        <div className="flex items-center gap-2 mb-2">
+           <span className="text-xs text-muted-foreground font-bold uppercase tracking-wider">
             Editor de Conteúdo
           </span>
-          <div className="flex-1" />
-          <div className="flex items-center bg-background rounded-md border shadow-sm p-0.5">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 px-2 gap-1.5 text-xs font-medium"
-              onClick={() => addPhaseBlock(phaseKey, "heading")}
-            >
-              <Type className="h-3.5 w-3.5" /> Título
-            </Button>
-            <div className="w-px h-4 bg-border mx-0.5" />
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 px-2 gap-1.5 text-xs font-medium"
-              onClick={() => addPhaseBlock(phaseKey, "paragraph")}
-            >
-              <Type className="h-3.5 w-3.5" /> Texto
-            </Button>
-            <div className="w-px h-4 bg-border mx-0.5" />
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 px-2 gap-1.5 text-xs font-medium"
-              onClick={() => addPhaseBlock(phaseKey, "checkbox")}
-            >
-              <CheckSquare className="h-3.5 w-3.5" /> Checklist
-            </Button>
-          </div>
         </div>
-
-        <div className="space-y-1 min-h-[150px] p-4 bg-background/50">
-          {blocks.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-10 text-muted-foreground gap-2 border-2 border-dashed rounded-lg m-4">
-              <Type className="h-8 w-8 opacity-20" />
-              <p className="text-sm font-medium">Nenhum conteúdo adicionado</p>
-              <p className="text-xs opacity-70">
-                Utilize a barra de ferramentas acima para começar
-              </p>
-            </div>
-          )}
-
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={(event) => handlePhaseDragEnd(event, phaseKey)}
-          >
-            <SortableContext
-              items={blocks.map((b) => b.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              {blocks.map((block) => (
-                <SortableBlock
-                  key={block.id}
-                  block={block}
-                  activeBlockId={activeBlockId}
-                  setActiveBlockId={setActiveBlockId}
-                  onUpdate={(id, content, checked) =>
-                    updatePhaseBlock(phaseKey, id, content, checked)
-                  }
-                  onDelete={(id) => deletePhaseBlock(phaseKey, id)}
-                />
-              ))}
-            </SortableContext>
-          </DndContext>
-        </div>
+        <RichTextEditor 
+          content={content} 
+          onChange={(newContent) => updatePhaseContent(phaseKey, newContent)} 
+          placeholder="Detalhes da fase de implantação..."
+        />
       </div>
     );
   };
@@ -612,16 +203,30 @@ export function StepsTab({ project, onUpdate }: TabProps) {
                 stage.status === "in-progress" &&
                   "bg-blue-100 text-blue-800 border-blue-200",
                 stage.status === "blocked" &&
-                  "bg-amber-100 text-amber-800 border-amber-200"
+                  "bg-amber-100 text-amber-800 border-amber-200",
+                stage.status === "waiting_adjustment" &&
+                  "bg-orange-100 text-orange-800 border-orange-200"
               )}
             >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="todo">Não Iniciado</SelectItem>
-              <SelectItem value="in-progress">Em Andamento</SelectItem>
-              <SelectItem value="done">Finalizado</SelectItem>
-              <SelectItem value="blocked">Bloqueado</SelectItem>
+              {stageKey === "adherence" ? (
+                <>
+                  <SelectItem value="todo">Não Iniciado</SelectItem>
+                  <SelectItem value="in-progress">Em Análise</SelectItem>
+                  <SelectItem value="done">Adequado</SelectItem>
+                  <SelectItem value="blocked">Inadequado</SelectItem>
+                  <SelectItem value="waiting_adjustment">Em Adequação</SelectItem>
+                </>
+              ) : (
+                <>
+                  <SelectItem value="todo">Não Iniciado</SelectItem>
+                  <SelectItem value="in-progress">Em Andamento</SelectItem>
+                  <SelectItem value="done">Finalizado</SelectItem>
+                  <SelectItem value="blocked">Bloqueado</SelectItem>
+                </>
+              )}
             </SelectContent>
           </Select>
         </div>
@@ -634,7 +239,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
             }
           />
         </div>
-      <div className="space-y-2">
+        <div className="space-y-2">
           <Label>
             {["infra", "adherence", "environment", "conversion"].includes(stageKey)
               ? "Enviado em"
@@ -644,14 +249,14 @@ export function StepsTab({ project, onUpdate }: TabProps) {
             type="date"
             value={
               stage.startDate
-                ? format(new Date(stage.startDate), "yyyy-MM-dd")
+                ? format(new Date(stage.startDate).toISOString().split('T')[0], "yyyy-MM-dd")
                 : ""
             }
             onChange={(e) =>
               handleStageChange(
                 stageKey,
                 "startDate",
-                e.target.value ? new Date(e.target.value) : undefined
+                e.target.value ? new Date(e.target.value + 'T12:00:00') : undefined
               )
             }
           />
@@ -665,13 +270,13 @@ export function StepsTab({ project, onUpdate }: TabProps) {
           <Input
             type="date"
             value={
-              stage.endDate ? format(new Date(stage.endDate), "yyyy-MM-dd") : ""
+              stage.endDate ? format(new Date(stage.endDate).toISOString().split('T')[0], "yyyy-MM-dd") : ""
             }
             onChange={(e) =>
               handleStageChange(
                 stageKey,
                 "endDate",
-                e.target.value ? new Date(e.target.value) : undefined
+                e.target.value ? new Date(e.target.value + 'T12:00:00') : undefined
               )
             }
           />
@@ -715,37 +320,37 @@ export function StepsTab({ project, onUpdate }: TabProps) {
               </span>
               <Badge
                 variant={
-                  data.stages.infra.status === "done" ? "default" : "secondary"
+                  stagesData.infra.status === "done" ? "default" : "secondary"
                 }
                 className={cn(
-                  data.stages.infra.status === "done" &&
+                  stagesData.infra.status === "done" &&
                     "bg-emerald-500 hover:bg-emerald-600",
-                  data.stages.infra.status === "in-progress" &&
+                  stagesData.infra.status === "in-progress" &&
                     "bg-blue-500 hover:bg-blue-600",
-                  data.stages.infra.status === "blocked" &&
+                  stagesData.infra.status === "blocked" &&
                     "bg-amber-500 hover:bg-amber-600"
                 )}
               >
-                {data.stages.infra.status}
+                {stagesData.infra.status}
               </Badge>
             </div>
           </AccordionTrigger>
           <AccordionContent className="pt-4">
-            {renderCommonFields("infra", data.stages.infra)}
+            {renderCommonFields("infra", stagesData.infra)}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t pt-4 bg-muted/20 p-4 rounded-md">
               <div className="space-y-2">
                 <Label>Status Estações</Label>
                 <Select
-                  value={data.stages.infra.workstationsStatus}
+                  value={stagesData.infra.workstationsStatus}
                   onValueChange={(value) =>
                     handleStageChange("infra", "workstationsStatus", value)
                   }
                 >
                   <SelectTrigger className={cn(
-                    data.stages.infra.workstationsStatus === "Adequado" && "bg-green-100 text-green-800 border-green-200",
-                    data.stages.infra.workstationsStatus === "Parcialmente Adequado" && "bg-orange-100 text-orange-800 border-orange-200",
-                    data.stages.infra.workstationsStatus === "Inadequado" && "bg-red-100 text-red-800 border-red-200",
-                    data.stages.infra.workstationsStatus === "Aguardando Adequação" && "bg-gray-100 text-gray-800 border-gray-200"
+                    stagesData.infra.workstationsStatus === "Adequado" && "bg-green-100 text-green-800 border-green-200",
+                    stagesData.infra.workstationsStatus === "Parcialmente Adequado" && "bg-orange-100 text-orange-800 border-orange-200",
+                    stagesData.infra.workstationsStatus === "Inadequado" && "bg-red-100 text-red-800 border-red-200",
+                    stagesData.infra.workstationsStatus === "Aguardando Adequação" && "bg-gray-100 text-gray-800 border-gray-200"
                   )}>
                     <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
@@ -768,16 +373,16 @@ export function StepsTab({ project, onUpdate }: TabProps) {
               <div className="space-y-2">
                 <Label>Status Servidor</Label>
                 <Select
-                  value={data.stages.infra.serverStatus}
+                  value={stagesData.infra.serverStatus}
                   onValueChange={(value) =>
                     handleStageChange("infra", "serverStatus", value)
                   }
                 >
                   <SelectTrigger className={cn(
-                    data.stages.infra.serverStatus === "Adequado" && "bg-green-100 text-green-800 border-green-200",
-                    data.stages.infra.serverStatus === "Parcialmente Adequado" && "bg-orange-100 text-orange-800 border-orange-200",
-                    data.stages.infra.serverStatus === "Inadequado" && "bg-red-100 text-red-800 border-red-200",
-                    data.stages.infra.serverStatus === "Aguardando Adequação" && "bg-gray-100 text-gray-800 border-gray-200"
+                    stagesData.infra.serverStatus === "Adequado" && "bg-green-100 text-green-800 border-green-200",
+                    stagesData.infra.serverStatus === "Parcialmente Adequado" && "bg-orange-100 text-orange-800 border-orange-200",
+                    stagesData.infra.serverStatus === "Inadequado" && "bg-red-100 text-red-800 border-red-200",
+                    stagesData.infra.serverStatus === "Aguardando Adequação" && "bg-gray-100 text-gray-800 border-gray-200"
                   )}>
                     <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
@@ -801,7 +406,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
                 <Label>Qtd. de Estações</Label>
                 <Input
                   type="number"
-                  value={data.stages.infra.workstationsCount || ""}
+                  value={stagesData.infra.workstationsCount || ""}
                   onChange={(e) =>
                     handleStageChange("infra", "workstationsCount", parseInt(e.target.value))
                   }
@@ -820,42 +425,44 @@ export function StepsTab({ project, onUpdate }: TabProps) {
               </span>
               <Badge
                 variant={
-                  data.stages.adherence.status === "done"
+                  stagesData.adherence.status === "done"
                     ? "default"
                     : "secondary"
                 }
                 className={cn(
-                  data.stages.adherence.status === "done" &&
+                  stagesData.adherence.status === "done" &&
                     "bg-emerald-500 hover:bg-emerald-600",
-                  data.stages.adherence.status === "in-progress" &&
+                  stagesData.adherence.status === "in-progress" &&
                     "bg-blue-500 hover:bg-blue-600",
-                  data.stages.adherence.status === "blocked" &&
-                    "bg-amber-500 hover:bg-amber-600"
+                  stagesData.adherence.status === "blocked" &&
+                    "bg-amber-500 hover:bg-amber-600",
+                  stagesData.adherence.status === "waiting_adjustment" &&
+                    "bg-orange-500 hover:bg-orange-600"
                 )}
               >
-                {data.stages.adherence.status}
+                {stagesData.adherence.status}
               </Badge>
             </div>
           </AccordionTrigger>
           <AccordionContent className="pt-4">
-            {renderCommonFields("adherence", data.stages.adherence)}
+            {renderCommonFields("adherence", stagesData.adherence)}
             <div className="border-t pt-4 space-y-4 bg-muted/20 p-4 rounded-md">
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="has-gap"
-                  checked={data.stages.adherence.hasProductGap || false}
+                  checked={stagesData.adherence.hasProductGap || false}
                   onCheckedChange={(checked) =>
                     handleStageChange("adherence", "hasProductGap", checked)
                   }
                 />
                 <Label htmlFor="has-gap">Existe Gap de Produto?</Label>
               </div>
-              {data.stages.adherence.hasProductGap && (
+              {stagesData.adherence.hasProductGap && (
                 <div className="bg-background p-4 rounded-md space-y-4 border">
                   <div className="space-y-2">
                     <Label>Descrição do Gap</Label>
                     <Textarea
-                      value={data.stages.adherence.gapDescription || ""}
+                      value={stagesData.adherence.gapDescription || ""}
                       onChange={(e) =>
                         handleStageChange(
                           "adherence",
@@ -880,30 +487,30 @@ export function StepsTab({ project, onUpdate }: TabProps) {
               </span>
               <Badge
                 variant={
-                  data.stages.environment.status === "done"
+                  stagesData.environment.status === "done"
                     ? "default"
                     : "secondary"
                 }
                 className={cn(
-                  data.stages.environment.status === "done" &&
+                  stagesData.environment.status === "done" &&
                     "bg-emerald-500 hover:bg-emerald-600",
-                  data.stages.environment.status === "in-progress" &&
+                  stagesData.environment.status === "in-progress" &&
                     "bg-blue-500 hover:bg-blue-600",
-                  data.stages.environment.status === "blocked" &&
+                  stagesData.environment.status === "blocked" &&
                     "bg-amber-500 hover:bg-amber-600"
                 )}
               >
-                {data.stages.environment.status}
+                {stagesData.environment.status}
               </Badge>
             </div>
           </AccordionTrigger>
           <AccordionContent className="pt-4">
-            {renderCommonFields("environment", data.stages.environment)}
+            {renderCommonFields("environment", stagesData.environment)}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4 bg-muted/20 p-4 rounded-md">
               <div className="space-y-2">
                 <Label>Sistema Operacional</Label>
                 <Input
-                  value={data.stages.environment.osVersion || ""}
+                  value={stagesData.environment.osVersion || ""}
                   onChange={(e) =>
                     handleStageChange(
                       "environment",
@@ -927,68 +534,96 @@ export function StepsTab({ project, onUpdate }: TabProps) {
               </span>
               <Badge
                 variant={
-                  data.stages.conversion.status === "done"
+                  stagesData.conversion.status === "done"
                     ? "default"
                     : "secondary"
                 }
                 className={cn(
-                  data.stages.conversion.status === "done" &&
+                  stagesData.conversion.status === "done" &&
                     "bg-emerald-500 hover:bg-emerald-600",
-                  data.stages.conversion.status === "in-progress" &&
+                  stagesData.conversion.status === "in-progress" &&
                     "bg-blue-500 hover:bg-blue-600",
-                  data.stages.conversion.status === "blocked" &&
+                  stagesData.conversion.status === "blocked" &&
                     "bg-amber-500 hover:bg-amber-600"
                 )}
               >
-                {data.stages.conversion.status}
+                {stagesData.conversion.status}
               </Badge>
             </div>
           </AccordionTrigger>
           <AccordionContent className="pt-4">
-            {renderCommonFields("conversion", data.stages.conversion)}
+            {renderCommonFields("conversion", stagesData.conversion)}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4 bg-muted/20 p-4 rounded-md">
               <div className="space-y-2">
-                <Label>Sistema de Origem</Label>
-                <Input
-                  value={data.stages.conversion.sourceSystem || ""}
-                  onChange={(e) =>
-                    handleStageChange(
-                      "conversion",
-                      "sourceSystem",
-                      e.target.value
-                    )
+                <Label>Status Homologação</Label>
+                <Select
+                  value={stagesData.conversion.homologationStatus}
+                  onValueChange={(value) =>
+                    handleStageChange("conversion", "homologationStatus", value)
+                  }
+                >
+                  <SelectTrigger className={cn(
+                    stagesData.conversion.homologationStatus === "Adequado" && "bg-green-100 text-green-800 border-green-200",
+                    stagesData.conversion.homologationStatus === "Parcialmente Adequado" && "bg-orange-100 text-orange-800 border-orange-200",
+                    stagesData.conversion.homologationStatus === "Inadequado" && "bg-red-100 text-red-800 border-red-200",
+                    stagesData.conversion.homologationStatus === "Aguardando Adequação" && "bg-gray-100 text-gray-800 border-gray-200"
+                  )}>
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Adequado" className="text-green-600 font-medium focus:bg-green-50 focus:text-green-700">
+                      Adequado
+                    </SelectItem>
+                    <SelectItem value="Parcialmente Adequado" className="text-orange-600 font-medium focus:bg-orange-50 focus:text-orange-700">
+                      Parcialmente Adequado
+                    </SelectItem>
+                    <SelectItem value="Inadequado" className="text-red-600 font-medium focus:bg-red-50 focus:text-red-700">
+                      Inadequado
+                    </SelectItem>
+                    <SelectItem value="Aguardando Adequação" className="text-gray-600 font-medium focus:bg-gray-50 focus:text-gray-700">
+                      Aguardando Adequação
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Responsável Homolog.</Label>
+                <AutocompleteInput
+                  value={stagesData.conversion.homologationResponsible || ""}
+                  onChange={(value) =>
+                    handleStageChange("conversion", "homologationResponsible", value)
                   }
                 />
               </div>
               <div className="space-y-2">
-                <Label>Qtd Registros</Label>
+                <Label>Enviado em</Label>
                 <Input
-                  type="number"
-                  value={data.stages.conversion.recordCount || ""}
-                  onChange={(e) =>
-                    handleStageChange(
-                      "conversion",
-                      "recordCount",
-                      parseInt(e.target.value)
-                    )
+                  type="date"
+                  value={
+                    stagesData.conversion.sentAt
+                      ? format(new Date(stagesData.conversion.sentAt).toISOString().split('T')[0], "yyyy-MM-dd")
+                      : ""
                   }
+                  onChange={(e) => {
+                    const date = e.target.value ? new Date(e.target.value + 'T12:00:00') : undefined;
+                    handleStageChange("conversion", "sentAt", date);
+                  }}
                 />
               </div>
-              <div className="flex items-center space-x-2 pt-4">
-                <Checkbox
-                  id="homologation-complete"
-                  checked={data.stages.conversion.homologationComplete || false}
-                  onCheckedChange={(checked) =>
-                    handleStageChange(
-                      "conversion",
-                      "homologationComplete",
-                      checked
-                    )
+              <div className="space-y-2">
+                <Label>Finalizado em</Label>
+                <Input
+                  type="date"
+                  value={
+                    stagesData.conversion.finishedAt
+                      ? format(new Date(stagesData.conversion.finishedAt).toISOString().split('T')[0], "yyyy-MM-dd")
+                      : ""
                   }
+                  onChange={(e) => {
+                    const date = e.target.value ? new Date(e.target.value + 'T12:00:00') : undefined;
+                    handleStageChange("conversion", "finishedAt", date);
+                  }}
                 />
-                <Label htmlFor="homologation-complete">
-                  Homologação Concluída?
-                </Label>
               </div>
             </div>
           </AccordionContent>
@@ -1006,20 +641,20 @@ export function StepsTab({ project, onUpdate }: TabProps) {
               </span>
               <Badge
                 variant={
-                  data.stages.implementation.status === "done"
+                  stagesData.implementation.status === "done"
                     ? "default"
                     : "secondary"
                 }
                 className={cn(
-                  data.stages.implementation.status === "done" &&
+                  stagesData.implementation.status === "done" &&
                     "bg-emerald-500 hover:bg-emerald-600",
-                  data.stages.implementation.status === "in-progress" &&
+                  stagesData.implementation.status === "in-progress" &&
                     "bg-blue-500 hover:bg-blue-600",
-                  data.stages.implementation.status === "blocked" &&
+                  stagesData.implementation.status === "blocked" &&
                     "bg-amber-500 hover:bg-amber-600"
                 )}
               >
-                {data.stages.implementation.status}
+                {stagesData.implementation.status}
               </Badge>
             </div>
           </AccordionTrigger>
@@ -1035,15 +670,15 @@ export function StepsTab({ project, onUpdate }: TabProps) {
                 <div className="space-y-2">
                   <Label>Status</Label>
                   <Select
-                    value={data.stages.implementation.phase1?.status || "todo"}
+                    value={stagesData.implementation.phase1?.status || "todo"}
                     onValueChange={(value) =>
                       handlePhaseChange("implementation", "phase1", "status", value)
                     }
                   >
                     <SelectTrigger className={cn(
-                      data.stages.implementation.phase1?.status === "done" && "bg-emerald-100 text-emerald-800 border-emerald-200",
-                      data.stages.implementation.phase1?.status === "in-progress" && "bg-blue-100 text-blue-800 border-blue-200",
-                      data.stages.implementation.phase1?.status === "blocked" && "bg-amber-100 text-amber-800 border-amber-200"
+                      stagesData.implementation.phase1?.status === "done" && "bg-emerald-100 text-emerald-800 border-emerald-200",
+                      stagesData.implementation.phase1?.status === "in-progress" && "bg-blue-100 text-blue-800 border-blue-200",
+                      stagesData.implementation.phase1?.status === "blocked" && "bg-amber-100 text-amber-800 border-amber-200"
                     )}>
                       <SelectValue />
                     </SelectTrigger>
@@ -1058,7 +693,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
                 <div className="space-y-2">
                   <Label>Responsável</Label>
                   <AutocompleteInput
-                    value={data.stages.implementation.phase1?.responsible || ""}
+                    value={stagesData.implementation.phase1?.responsible || ""}
                     onChange={(value) =>
                       handlePhaseChange("implementation", "phase1", "responsible", value)
                     }
@@ -1069,8 +704,8 @@ export function StepsTab({ project, onUpdate }: TabProps) {
                   <Input
                     type="date"
                     value={
-                      data.stages.implementation.phase1?.startDate
-                        ? format(new Date(data.stages.implementation.phase1.startDate), "yyyy-MM-dd")
+                      stagesData.implementation.phase1?.startDate
+                        ? format(new Date(stagesData.implementation.phase1.startDate).toISOString().split('T')[0], "yyyy-MM-dd")
                         : ""
                     }
                     onChange={(e) =>
@@ -1078,7 +713,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
                         "implementation",
                         "phase1",
                         "startDate",
-                        e.target.value ? new Date(e.target.value) : undefined
+                        e.target.value ? new Date(e.target.value + 'T12:00:00') : undefined
                       )
                     }
                   />
@@ -1088,8 +723,8 @@ export function StepsTab({ project, onUpdate }: TabProps) {
                   <Input
                     type="date"
                     value={
-                      data.stages.implementation.phase1?.endDate
-                        ? format(new Date(data.stages.implementation.phase1.endDate), "yyyy-MM-dd")
+                      stagesData.implementation.phase1?.endDate
+                        ? format(new Date(stagesData.implementation.phase1.endDate).toISOString().split('T')[0], "yyyy-MM-dd")
                         : ""
                     }
                     onChange={(e) =>
@@ -1097,7 +732,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
                         "implementation",
                         "phase1",
                         "endDate",
-                        e.target.value ? new Date(e.target.value) : undefined
+                        e.target.value ? new Date(e.target.value + 'T12:00:00') : undefined
                       )
                     }
                   />
@@ -1116,15 +751,15 @@ export function StepsTab({ project, onUpdate }: TabProps) {
                 <div className="space-y-2">
                   <Label>Status</Label>
                   <Select
-                    value={data.stages.implementation.phase2?.status || "todo"}
+                    value={stagesData.implementation.phase2?.status || "todo"}
                     onValueChange={(value) =>
                       handlePhaseChange("implementation", "phase2", "status", value)
                     }
                   >
                     <SelectTrigger className={cn(
-                      data.stages.implementation.phase2?.status === "done" && "bg-emerald-100 text-emerald-800 border-emerald-200",
-                      data.stages.implementation.phase2?.status === "in-progress" && "bg-blue-100 text-blue-800 border-blue-200",
-                      data.stages.implementation.phase2?.status === "blocked" && "bg-amber-100 text-amber-800 border-amber-200"
+                      stagesData.implementation.phase2?.status === "done" && "bg-emerald-100 text-emerald-800 border-emerald-200",
+                      stagesData.implementation.phase2?.status === "in-progress" && "bg-blue-100 text-blue-800 border-blue-200",
+                      stagesData.implementation.phase2?.status === "blocked" && "bg-amber-100 text-amber-800 border-amber-200"
                     )}>
                       <SelectValue />
                     </SelectTrigger>
@@ -1139,7 +774,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
                 <div className="space-y-2">
                   <Label>Responsável</Label>
                   <AutocompleteInput
-                    value={data.stages.implementation.phase2?.responsible || ""}
+                    value={stagesData.implementation.phase2?.responsible || ""}
                     onChange={(value) =>
                       handlePhaseChange("implementation", "phase2", "responsible", value)
                     }
@@ -1150,8 +785,8 @@ export function StepsTab({ project, onUpdate }: TabProps) {
                   <Input
                     type="date"
                     value={
-                      data.stages.implementation.phase2?.startDate
-                        ? format(new Date(data.stages.implementation.phase2.startDate), "yyyy-MM-dd")
+                      stagesData.implementation.phase2?.startDate
+                        ? format(new Date(stagesData.implementation.phase2.startDate).toISOString().split('T')[0], "yyyy-MM-dd")
                         : ""
                     }
                     onChange={(e) =>
@@ -1159,7 +794,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
                         "implementation",
                         "phase2",
                         "startDate",
-                        e.target.value ? new Date(e.target.value) : undefined
+                        e.target.value ? new Date(e.target.value + 'T12:00:00') : undefined
                       )
                     }
                   />
@@ -1169,8 +804,8 @@ export function StepsTab({ project, onUpdate }: TabProps) {
                   <Input
                     type="date"
                     value={
-                      data.stages.implementation.phase2?.endDate
-                        ? format(new Date(data.stages.implementation.phase2.endDate), "yyyy-MM-dd")
+                      stagesData.implementation.phase2?.endDate
+                        ? format(new Date(stagesData.implementation.phase2.endDate).toISOString().split('T')[0], "yyyy-MM-dd")
                         : ""
                     }
                     onChange={(e) =>
@@ -1178,7 +813,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
                         "implementation",
                         "phase2",
                         "endDate",
-                        e.target.value ? new Date(e.target.value) : undefined
+                        e.target.value ? new Date(e.target.value + 'T12:00:00') : undefined
                       )
                     }
                   />
@@ -1197,28 +832,28 @@ export function StepsTab({ project, onUpdate }: TabProps) {
               <span className="font-semibold text-lg">6. Pós-Implantação</span>
               <Badge
                 variant={
-                  data.stages.post.status === "done" ? "default" : "secondary"
+                  stagesData.post.status === "done" ? "default" : "secondary"
                 }
                 className={cn(
-                  data.stages.post.status === "done" &&
+                  stagesData.post.status === "done" &&
                     "bg-emerald-500 hover:bg-emerald-600",
-                  data.stages.post.status === "in-progress" &&
+                  stagesData.post.status === "in-progress" &&
                     "bg-blue-500 hover:bg-blue-600",
-                  data.stages.post.status === "blocked" &&
+                  stagesData.post.status === "blocked" &&
                     "bg-amber-500 hover:bg-amber-600"
                 )}
               >
-                {data.stages.post.status}
+                {stagesData.post.status}
               </Badge>
             </div>
           </AccordionTrigger>
           <AccordionContent className="pt-4">
-            {renderCommonFields("post", data.stages.post)}
+            {renderCommonFields("post", stagesData.post)}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4 bg-muted/20 p-4 rounded-md">
               <div className="space-y-2">
                 <Label>Satisfação do Cliente</Label>
                 <Select
-                  value={data.stages.post.clientSatisfaction}
+                  value={stagesData.post.clientSatisfaction}
                   onValueChange={(value) =>
                     handleStageChange("post", "clientSatisfaction", value)
                   }
@@ -1239,7 +874,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
               <div className="flex items-center space-x-2 pt-8">
                 <Checkbox
                   id="followup-needed"
-                  checked={data.stages.post.followupNeeded || false}
+                  checked={stagesData.post.followupNeeded || false}
                   onCheckedChange={(checked) =>
                     handleStageChange("post", "followupNeeded", checked)
                   }

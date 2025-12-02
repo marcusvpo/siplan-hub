@@ -25,209 +25,102 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-  useSortable,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { convertBlocksToTiptap } from "@/lib/editor-utils";
 
 interface TabProps {
   project: ProjectV2;
   onUpdate: (project: ProjectV2) => void;
 }
 
-interface SortableBlockProps {
-  block: ContentBlock;
-  activeBlockId: string | null;
-  setActiveBlockId: (id: string) => void;
-  updateBlock: (blockId: string, content: string, checked?: boolean) => void;
-  deleteBlock: (blockId: string) => void;
-}
 
-function SortableBlock({ block, activeBlockId, setActiveBlockId, updateBlock, deleteBlock }: SortableBlockProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: block.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    zIndex: isDragging ? 10 : 1,
-    opacity: isDragging ? 0.5 : 1,
-  };
-
-  const isFocused = activeBlockId === block.id;
-
-  return (
-    <div 
-      ref={setNodeRef} 
-      style={style}
-      className={cn(
-        "group flex items-start gap-2 py-2 px-3 rounded-md hover:bg-muted/30 transition-all border border-transparent",
-        isFocused ? "bg-muted/40 border-muted-foreground/20 shadow-sm" : ""
-      )}
-      onClick={() => setActiveBlockId(block.id)}
-    >
-      <div 
-        className={cn(
-            "flex flex-col items-center gap-1 mt-1.5 transition-opacity",
-            isFocused ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-        )}
-      >
-         <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded">
-           <GripVertical className="h-4 w-4 text-muted-foreground" />
-         </div>
-      </div>
-
-      <div className="flex-1 space-y-1">
-        {block.type === 'heading' && (
-          <Input 
-            className="text-xl font-bold border-none shadow-none focus-visible:ring-0 px-0 h-auto py-1 bg-transparent placeholder:text-muted-foreground/50"
-            placeholder="Digite um título..."
-            value={block.content}
-            onChange={(e) => updateBlock(block.id, e.target.value)}
-            autoFocus={isFocused}
-          />
-        )}
-        {block.type === 'paragraph' && (
-          <Textarea 
-            className="min-h-[24px] resize-none border-none shadow-none focus-visible:ring-0 px-0 py-1 overflow-hidden bg-transparent leading-relaxed"
-            placeholder="Digite suas observações..."
-            value={block.content}
-            onChange={(e) => {
-              updateBlock(block.id, e.target.value);
-              e.target.style.height = 'auto';
-              e.target.style.height = e.target.scrollHeight + 'px';
-            }}
-            autoFocus={isFocused}
-          />
-        )}
-        {block.type === 'checkbox' && (
-          <div className="flex items-center gap-3">
-            <Checkbox 
-              id={block.id} 
-              className="h-5 w-5" 
-              checked={block.checked || false}
-              onCheckedChange={(checked) => updateBlock(block.id, block.content, checked as boolean)}
-            />
-            <Input 
-              className={cn(
-                "border-none shadow-none focus-visible:ring-0 px-0 h-auto py-1 bg-transparent flex-1 transition-all",
-                block.checked ? "text-muted-foreground line-through decoration-muted-foreground/50" : ""
-              )}
-              placeholder="Item da lista..."
-              value={block.content}
-              onChange={(e) => updateBlock(block.id, e.target.value, block.checked)}
-              autoFocus={isFocused}
-            />
-          </div>
-        )}
-      </div>
-
-      <div className={cn(
-          "flex items-center mt-1.5 transition-opacity",
-          isFocused ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-      )}>
-         <Button 
-          variant="ghost" 
-          size="icon" 
-          className="h-6 w-6 text-destructive hover:bg-destructive/10" 
-          onClick={(e) => { e.stopPropagation(); deleteBlock(block.id); }}
-          title="Excluir bloco"
-         >
-           <Trash2 className="h-3.5 w-3.5" />
-         </Button>
-      </div>
-    </div>
-  );
-}
 
 export function GeneralInfoTab({ project, onUpdate }: TabProps) {
-  const { data, handleChange, saveState } = useAutoSave(project, async (newData) => {
-    onUpdate(newData);
-    await new Promise(resolve => setTimeout(resolve, 500));
-  });
-
-  const [activeBlockId, setActiveBlockId] = useState<string | null>(null);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
+  const { data: notesData, updateData: updateNotes, saveState } = useAutoSave(
+    project.notes || {
+      id: crypto.randomUUID(),
+      projectId: project.id,
+      blocks: [],
+      lastEditedBy: 'Sistema',
+      lastEditedAt: new Date()
+    },
+    async (newNotes) => {
+      onUpdate({ ...project, notes: newNotes });
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
   );
 
   const stages = [
-    { id: 'infra', label: 'Infraestrutura', status: data.stages.infra.status, icon: Server },
-    { id: 'adherence', label: 'Aderência', status: data.stages.adherence.status, icon: CheckCircle2 },
-    { id: 'environment', label: 'Ambiente', status: data.stages.environment.status, icon: Database },
-    { id: 'conversion', label: 'Conversão', status: data.stages.conversion.status, icon: RefreshCw },
-    { id: 'implementation', label: 'Implantação', status: data.stages.implementation.status, icon: Rocket },
-    { id: 'post', label: 'Pós-Implantação', status: data.stages.post.status, icon: Power },
+    { id: 'infra', label: 'Infraestrutura', status: project.stages.infra.status, icon: Server },
+    { id: 'adherence', label: 'Aderência', status: project.stages.adherence.status, icon: CheckCircle2 },
+    { id: 'environment', label: 'Ambiente', status: project.stages.environment.status, icon: Database },
+    { id: 'conversion', label: 'Conversão', status: project.stages.conversion.status, icon: RefreshCw },
+    { id: 'implementation', label: 'Implantação', status: project.stages.implementation.status, icon: Rocket },
+    { id: 'post', label: 'Pós-Implantação', status: project.stages.post.status, icon: Power },
   ];
 
-  // Rich Text Logic
-  const blocks = data.notes?.blocks || [];
+  // Local state for editor content to ensure persistence while typing and after save
+  const [editorContent, setEditorContent] = useState<string | object>(() => {
+    const blocks = project.notes?.blocks || [];
+    
+    if (blocks.length === 0) return "";
+    
+    // If single block with JSON content, return it
+    if (blocks.length === 1 && blocks[0].type === 'paragraph') {
+      try {
+        // If content is empty string, return empty string to let editor initialize empty
+        if (!blocks[0].content) return "";
 
-  const updateBlocks = (newBlocks: ContentBlock[]) => {
+        const parsed = JSON.parse(blocks[0].content);
+        if (parsed.type === 'doc' || parsed.root) return parsed;
+      } catch {
+        // Not JSON, treat as text
+        return ""; 
+      }
+    }
+
+    // If we have legacy blocks (Tiptap structure or simple blocks), we can't easily convert to Lexical state here without a complex transformer.
+    // Returning empty string ensures the editor doesn't crash and starts fresh.
+    // The user will lose legacy formatting but can re-enter data.
+    return ""; 
+  });
+
+  const updateEditorContent = (content: string) => {
+    // Update local state immediately
+    setEditorContent(content);
+
+    // Parse content to check if it's valid JSON
+    let blocks: ContentBlock[] = [];
+    try {
+        const parsed = JSON.parse(content);
+        // If it's a Lexical state (has root), we store it as a single block with JSON content for now
+        blocks = [{
+            id: crypto.randomUUID(),
+            type: 'paragraph',
+            content: content,
+            checked: false
+        }];
+    } catch {
+        // If not JSON, it's plain text
+        blocks = [{
+            id: crypto.randomUUID(),
+            type: 'paragraph',
+            content: content,
+            checked: false
+        }];
+    }
+
     const newNotes = {
-      ...data.notes,
-      id: data.notes?.id || crypto.randomUUID(),
-      projectId: data.id,
-      blocks: newBlocks,
-      lastEditedBy: 'User', // TODO: Get actual user
+      ...notesData,
+      id: notesData?.id || crypto.randomUUID(),
+      projectId: project.id,
+      blocks: blocks,
+      lastEditedBy: 'User', 
       lastEditedAt: new Date(),
     };
-    handleChange('notes', newNotes);
-  };
-
-  const addBlock = (type: ContentBlock['type']) => {
-    const newBlock: ContentBlock = {
-      id: crypto.randomUUID(),
-      type,
-      content: '',
-      checked: false
-    };
-    updateBlocks([...blocks, newBlock]);
-    setActiveBlockId(newBlock.id);
-  };
-
-  const updateBlock = (blockId: string, content: string, checked?: boolean) => {
-    const newBlocks = blocks.map(block => 
-      block.id === blockId ? { ...block, content, checked: checked !== undefined ? checked : block.checked } : block
-    );
-    updateBlocks(newBlocks);
-  };
-
-  const deleteBlock = (blockId: string) => {
-    const newBlocks = blocks.filter(block => block.id !== blockId);
-    updateBlocks(newBlocks);
-  };
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (over && active.id !== over.id) {
-      const oldIndex = blocks.findIndex((block) => block.id === active.id);
-      const newIndex = blocks.findIndex((block) => block.id === over.id);
-      updateBlocks(arrayMove(blocks, oldIndex, newIndex));
-    }
+    
+    // Trigger autosave
+    updateNotes(newNotes);
   };
 
   return (
@@ -316,14 +209,14 @@ export function GeneralInfoTab({ project, onUpdate }: TabProps) {
                  <div className="bg-card hover:bg-accent/50 transition-colors rounded-xl border shadow-sm p-5 space-y-2 group">
                     <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider group-hover:text-primary transition-colors">Sistema</p>
                     <div className="flex items-center gap-2">
-                      <p className="font-bold text-lg">{data.systemType}</p>
+                      <p className="font-bold text-lg">{project.systemType}</p>
                       <Badge variant="secondary" className="text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/20 h-5 px-1.5">new</Badge>
                     </div>
                  </div>
                  {/* Chamado */}
                  <div className="bg-card hover:bg-accent/50 transition-colors rounded-xl border shadow-sm p-5 space-y-2 group">
                     <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider group-hover:text-primary transition-colors">Chamado</p>
-                    <p className="font-bold font-mono text-lg text-foreground/80">#{data.ticketNumber}</p>
+                    <p className="font-bold font-mono text-lg text-foreground/80">#{project.ticketNumber}</p>
                  </div>
               </div>
 
@@ -335,13 +228,13 @@ export function GeneralInfoTab({ project, onUpdate }: TabProps) {
                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center overflow-hidden shadow-inner">
                           <User className="h-4 w-4 text-slate-600" />
                        </div>
-                       <p className="font-bold text-sm truncate">{data.projectLeader}</p>
+                       <p className="font-bold text-sm truncate">{project.projectLeader}</p>
                     </div>
                  </div>
                  {/* Horas */}
                  <div className="bg-card hover:bg-accent/50 transition-colors rounded-xl border shadow-sm p-5 space-y-2 group">
                     <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider group-hover:text-primary transition-colors">Horas</p>
-                    <p className="font-bold text-lg">{data.soldHours || 0}<span className="text-sm text-muted-foreground font-normal ml-1">h</span></p>
+                    <p className="font-bold text-lg">{project.soldHours || 0}<span className="text-sm text-muted-foreground font-normal ml-1">h</span></p>
                  </div>
               </div>
 
@@ -349,7 +242,7 @@ export function GeneralInfoTab({ project, onUpdate }: TabProps) {
                  {/* Legado */}
                  <div className="bg-card hover:bg-accent/50 transition-colors rounded-xl border shadow-sm p-5 space-y-2 group">
                     <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider group-hover:text-primary transition-colors">Legado</p>
-                    <p className="font-bold text-lg">{data.legacySystem || '-'}</p>
+                    <p className="font-bold text-lg">{project.legacySystem || '-'}</p>
                  </div>
                  {/* Próximo Follow-up */}
                  <div className="bg-card hover:bg-accent/50 transition-colors rounded-xl border shadow-sm p-5 space-y-2 group">
@@ -357,7 +250,7 @@ export function GeneralInfoTab({ project, onUpdate }: TabProps) {
                     <div className="flex items-center gap-2">
                        <Clock className="h-4 w-4 text-muted-foreground" />
                        <p className="font-bold text-lg">
-                         {data.nextFollowUpDate ? format(new Date(new Date(data.nextFollowUpDate).getTime() + new Date().getTimezoneOffset() * 60000), "dd/MM", { locale: ptBR }) : '-'}
+                         {project.nextFollowUpDate ? format(new Date(project.nextFollowUpDate).toISOString().split('T')[0], "dd/MM", { locale: ptBR }) : '-'}
                        </p>
                     </div>
                  </div>
@@ -375,9 +268,9 @@ export function GeneralInfoTab({ project, onUpdate }: TabProps) {
                  
                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-100 mb-2">Status Atual</p>
                  <h2 className="text-3xl font-black uppercase tracking-tight mb-8 text-center leading-tight">
-                    {data.globalStatus === 'in-progress' ? 'Em Andamento' : 
-                     data.globalStatus === 'done' ? 'Concluído' : 
-                     data.globalStatus === 'blocked' ? 'Bloqueado' : 'A Fazer'}
+                    {project.globalStatus === 'in-progress' ? 'Em Andamento' : 
+                     project.globalStatus === 'done' ? 'Concluído' : 
+                     project.globalStatus === 'blocked' ? 'Bloqueado' : 'A Fazer'}
                  </h2>
 
                  <div className="h-14 w-14 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm border border-white/30 shadow-lg">
@@ -398,10 +291,10 @@ export function GeneralInfoTab({ project, onUpdate }: TabProps) {
 
                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-rose-100 mb-2">Última Atualização</p>
                  <h2 className="text-4xl font-black uppercase tracking-tighter mb-2 text-center">
-                   {format(new Date(data.lastUpdatedAt), "dd MMM", { locale: ptBR })}
+                   {format(new Date(project.lastUpdatedAt), "dd MMM", { locale: ptBR })}
                  </h2>
                  <p className="text-xl font-medium text-rose-100/90 bg-black/10 px-4 py-1 rounded-full">
-                   {format(new Date(data.lastUpdatedAt), "HH:mm")}
+                   {format(new Date(project.lastUpdatedAt), "HH:mm")}
                  </p>
               </div>
            </div>
@@ -416,57 +309,20 @@ export function GeneralInfoTab({ project, onUpdate }: TabProps) {
          </div>
 
          <div className="bg-white dark:bg-card rounded-xl border shadow-sm overflow-hidden">
-            {/* Toolbar */}
-            <div className="border-b bg-muted/30 p-2 flex items-center gap-2">
-                <div className="flex items-center bg-background rounded-md border shadow-sm p-0.5">
-                    <Button variant="ghost" size="sm" className="h-8 px-3 gap-2 text-xs font-medium" onClick={() => addBlock('heading')}>
-                    <Type className="h-4 w-4" /> Título
-                    </Button>
-                    <div className="w-px h-4 bg-border mx-0.5" />
-                    <Button variant="ghost" size="sm" className="h-8 px-3 gap-2 text-xs font-medium" onClick={() => addBlock('paragraph')}>
-                    <Type className="h-4 w-4" /> Texto
-                    </Button>
-                    <div className="w-px h-4 bg-border mx-0.5" />
-                    <Button variant="ghost" size="sm" className="h-8 px-3 gap-2 text-xs font-medium" onClick={() => addBlock('checkbox')}>
-                    <CheckSquare className="h-4 w-4" /> Checklist
-                    </Button>
-                </div>
-            </div>
-
             {/* Content Area */}
-            <div className="min-h-[300px] p-6 space-y-2">
-                {blocks.length === 0 && (
-                   <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3 border-2 border-dashed rounded-lg opacity-50 mx-auto max-w-lg mt-10">
-                      <FileText className="h-10 w-10" />
-                      <p className="font-medium">Nenhuma observação registrada</p>
-                      <p className="text-sm text-center">Utilize a barra de ferramentas acima para adicionar conteúdo</p>
-                   </div>
-                )}
-                
-                <DndContext 
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleDragEnd}
-                >
-                  <SortableContext 
-                    items={blocks.map(b => b.id)}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    {blocks.map((block) => (
-                      <SortableBlock 
-                        key={block.id} 
-                        block={block} 
-                        activeBlockId={activeBlockId}
-                        setActiveBlockId={setActiveBlockId}
-                        updateBlock={updateBlock}
-                        deleteBlock={deleteBlock}
-                      />
-                    ))}
-                  </SortableContext>
-                </DndContext>
+            <div className="p-4">
+                <RichTextEditor 
+                  content={editorContent} 
+                  onChange={updateEditorContent} 
+                  placeholder="Digite suas observações gerais aqui..."
+                />
             </div>
          </div>
       </div>
     </div>
   );
 }
+
+
+
+

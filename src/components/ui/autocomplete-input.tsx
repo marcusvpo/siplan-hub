@@ -58,7 +58,7 @@ export function AutocompleteInput({
           <CommandInput placeholder="Buscar colaborador..." />
           <CommandList>
             <CommandEmpty>Nenhum colaborador encontrado.</CommandEmpty>
-            <CommandGroup>
+            <CommandGroup className="max-h-64 overflow-y-auto">
               {activeMembers.map((member) => (
                 <CommandItem
                   key={member.id}

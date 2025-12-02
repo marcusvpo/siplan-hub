@@ -5,7 +5,7 @@ export type Priority = "critical" | "high" | "normal" | "low";
 export type ProjectType = "new" | "migration" | "upgrade" | "maintenance";
 export type GlobalStatus = "todo" | "in-progress" | "done" | "blocked" | "archived";
 export type HealthScore = "ok" | "warning" | "critical";
-export type StageStatus = "todo" | "in-progress" | "done" | "blocked";
+export type StageStatus = "todo" | "in-progress" | "done" | "blocked" | "waiting_adjustment";
 export type ProjectStatus = StageStatus;
 
 export interface FileVersion {
@@ -189,12 +189,15 @@ export interface ConversionStageV2 {
   responsible?: string;
   startDate?: Date;
   endDate?: Date;
-  sourceSystem?: string;
+  
+  homologationStatus?: "Adequado" | "Parcialmente Adequado" | "Inadequado" | "Aguardando Adequação";
+  homologationResponsible?: string;
+  sentAt?: Date;
+  finishedAt?: Date;
+
   complexity?: ConversionComplexity;
-  recordCount?: number;
   dataVolumeGb?: number;
   toolUsed?: string;
-  homologationComplete: boolean;
   homologationDate?: Date;
   deviations?: string;
   observations?: string;

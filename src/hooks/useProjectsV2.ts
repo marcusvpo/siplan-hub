@@ -180,6 +180,15 @@ export const useProjectsV2 = () => {
     isLoading,
     updateProject,
     createProject,
+    deleteProject: useMutation({
+      mutationFn: async (projectId: string) => {
+        const { error } = await supabase.from("projects").delete().eq("id", projectId);
+        if (error) throw error;
+      },
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["projectsV3"] });
+      },
+    }),
   };
 };
 
@@ -213,11 +222,23 @@ function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
   };
 
   // Mock Rich Content if not present
-  const notesData = row.notes as { blocks: ContentBlock[] } | undefined;
+  let notesData: { blocks: ContentBlock[], id?: string } | undefined;
+  
+  if (typeof row.notes === 'string') {
+    try {
+      notesData = JSON.parse(row.notes);
+    } catch (e) {
+      console.error("Error parsing project notes:", e);
+      notesData = undefined;
+    }
+  } else {
+    notesData = row.notes as { blocks: ContentBlock[], id?: string } | undefined;
+  }
+
   const notes: RichContent = {
-    id: crypto.randomUUID(),
+    id: notesData?.id || crypto.randomUUID(),
     projectId: row.id as string,
-    blocks: notesData ? notesData.blocks : [
+    blocks: notesData?.blocks ? notesData.blocks : [
       { id: '1', type: 'paragraph', content: (row.description as string) || '' }
     ],
     lastEditedBy: (row.last_update_by as string) || 'Sistema',
@@ -242,6 +263,13 @@ function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
     systemType: row.system_type as string,
     implantationType: (row.implantation_type as ProjectV2['implantationType']) || "new",
     projectType: (row.project_type as ProjectV2['projectType']) || "new",
+    
+    // New fields
+    opNumber: row.op_number as number | undefined,
+    salesOrderNumber: row.sales_order_number as number | undefined,
+    soldHours: row.sold_hours as number | undefined,
+    legacySystem: row.legacy_system as string | undefined,
+    specialty: row.specialty as string | undefined,
     
     healthScore: calculateHealthScore(row),
     globalStatus: (row.global_status as ProjectV2['globalStatus']) || "in-progress",
@@ -303,6 +331,14 @@ function transformToDB(project: Partial<ProjectV2>): Record<string, unknown> {
   if (project.projectType) dbRow.project_type = project.projectType;
   if (project.globalStatus) dbRow.global_status = project.globalStatus;
   if (project.overallProgress !== undefined) dbRow.overall_progress = project.overallProgress;
+  
+  // New fields
+  if (project.opNumber) dbRow.op_number = project.opNumber;
+  if (project.salesOrderNumber) dbRow.sales_order_number = project.salesOrderNumber;
+  if (project.soldHours) dbRow.sold_hours = project.soldHours;
+  if (project.legacySystem) dbRow.legacy_system = project.legacySystem;
+  if (project.specialty) dbRow.specialty = project.specialty;
+
   if (project.projectLeader) dbRow.project_leader = project.projectLeader;
   if (project.clientPrimaryContact) dbRow.client_primary_contact = project.clientPrimaryContact;
   if (project.clientEmail) dbRow.client_email = project.clientEmail;
@@ -382,13 +418,16 @@ function transformToDB(project: Partial<ProjectV2>): Record<string, unknown> {
       dbRow.conversion_responsible = s.responsible;
       dbRow.conversion_observations = s.observations;
       dbRow.conversion_complexity = s.complexity;
-      dbRow.conversion_record_count = s.recordCount || null;
       dbRow.conversion_data_volume_gb = s.dataVolumeGb || null;
       dbRow.conversion_tool_used = s.toolUsed;
-      dbRow.conversion_homologation_complete = s.homologationComplete;
       dbRow.conversion_homologation_date = s.homologationDate || null;
       dbRow.conversion_deviations = s.deviations;
-      dbRow.conversion_source_system = s.sourceSystem;
+      
+      // New Conversion Fields
+      dbRow.conversion_homologation_status = s.homologationStatus;
+      dbRow.conversion_homologation_responsible = s.homologationResponsible;
+      // dbRow.conversion_sent_at = s.sentAt || null; // Column might be missing in DB schema cache
+      // dbRow.conversion_finished_at = s.finishedAt || null; // Column might be missing in DB schema cache
     }
 
     // Implementation
@@ -423,7 +462,9 @@ function transformToDB(project: Partial<ProjectV2>): Record<string, unknown> {
 
   // Notes
   if (project.notes) {
-    dbRow.notes = project.notes; 
+    // Ensure notes is passed as a plain object for JSONB column
+    // Supabase client handles the serialization
+    dbRow.notes = project.notes;
   }
 
   // Ensure last_update_by is always set (required by DB)

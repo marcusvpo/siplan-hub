@@ -65,6 +65,8 @@ export function ProjectCardV3({
         return "bg-blue-500";
       case "blocked":
         return "bg-amber-500";
+      case "waiting_adjustment":
+        return "bg-orange-500";
       default:
         return "bg-slate-200 dark:bg-slate-700";
     }
@@ -220,7 +222,10 @@ export function ProjectCardV3({
                 <div className="flex items-center gap-2">
                   <div className={cn("h-2 w-2 rounded-full", getStageColor(stage.status))} />
                   <p className="capitalize text-muted-foreground">
-                    {stage.status === 'done' ? 'Concluído' : stage.status === 'in-progress' ? 'Em Andamento' : 'Pendente'}
+                    {stage.status === 'done' ? 'Concluído' : 
+                     stage.status === 'in-progress' ? 'Em Andamento' : 
+                     stage.status === 'blocked' ? 'Bloqueado' :
+                     stage.status === 'waiting_adjustment' ? 'Em Adequação' : 'Pendente'}
                   </p>
                 </div>
               </div>
@@ -258,14 +263,11 @@ export function ProjectCardV3({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem onClick={() => onAction("duplicate", project)} className="cursor-pointer">
-              Duplicar Projeto
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onAction("archive", project)} className="cursor-pointer">
-              Arquivar
-            </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => onAction("delete", project)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onAction("delete", project);
+              }}
               className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
             >
               Excluir
