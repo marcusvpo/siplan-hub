@@ -43,7 +43,7 @@ export function TrendChart({ projects }: TrendChartProps) {
         <CardTitle>Tendência (30 Dias)</CardTitle>
       </CardHeader>
       <CardContent className="pl-2">
-        <div className="h-[300px] w-full">
+        <div className="h-[300px] w-full min-w-0">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data}>
               <XAxis 

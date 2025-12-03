@@ -147,8 +147,7 @@ export function GeneralInfoTab({ project, onUpdate }: TabProps) {
                   Math.max(
                     0, 
                     (stages.reduce((acc, stage, index) => {
-                      if (stage.status === 'done') return Math.max(acc, index + 1);
-                      if (stage.status === 'in-progress') return Math.max(acc, index);
+                      if (stage.status === 'done' || stage.status === 'in-progress') return index;
                       return acc;
                     }, 0) / (stages.length - 1)) * 100
                   )

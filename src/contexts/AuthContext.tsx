@@ -22,10 +22,59 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     async function initializeAuth() {
       try {
-        // Get initial session
-        const { data: { session }, error } = await supabase.auth.getSession();
+        // Get initial session with timeout to prevent hanging
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise<{ data: { session: Session | null }, error: Error }>((resolve) => 
+            setTimeout(() => resolve({ data: { session: null }, error: new Error("Auth timeout") }), 5000)
+        );
+
+        const { data: { session }, error } = await Promise.race([sessionPromise, timeoutPromise]);
         
         if (error) {
+            // If timeout or specific error, clear session to prevent infinite loop
+            if (error.message === "Auth timeout") {
+                console.warn("Session fetch timed out. Retrying once...");
+                
+                // Retry once with longer timeout
+                const retrySessionPromise = supabase.auth.getSession();
+                const retryTimeoutPromise = new Promise<{ data: { session: Session | null }, error: Error }>((resolve) => 
+                    setTimeout(() => resolve({ data: { session: null }, error: new Error("Auth timeout retry") }), 8000)
+                );
+                
+                const { data: { session: retrySession }, error: retryError } = await Promise.race([retrySessionPromise, retryTimeoutPromise]);
+
+                if (!retryError && retrySession) {
+                     if (mounted) {
+                        setSession(retrySession);
+                        setUser(retrySession.user ?? null);
+                        // Don't await this, let it run in background to not block UI
+                        fetchUserRole(retrySession.user.id);
+                        setLoading(false); 
+                     }
+                     return;
+                }
+
+                console.warn("Retry failed or timed out. Clearing session.");
+                
+                // Force sign out without waiting to prevent blocking
+                supabase.auth.signOut().catch(console.error);
+                
+                // Manually clear ALL Supabase keys from local storage
+                Object.keys(localStorage).forEach(key => {
+                    if (key.startsWith('sb-')) {
+                        localStorage.removeItem(key);
+                    }
+                });
+
+                if (mounted) {
+                    setSession(null);
+                    setUser(null);
+                    setRole(null);
+                    setLoading(false);
+                }
+                return;
+            }
+            
             console.error("Error getting session:", error);
             if (mounted) setLoading(false);
             return;
@@ -36,7 +85,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(session?.user ?? null);
           
           if (session?.user) {
-            await fetchUserRole(session.user.id);
+            // Don't await role fetch to prevent blocking initial load
+            fetchUserRole(session.user.id);
+            setLoading(false);
           } else {
             setLoading(false);
           }
@@ -58,7 +109,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-           await fetchUserRole(session.user.id);
+           // Don't await role fetch here either
+           fetchUserRole(session.user.id);
         } else {
           setRole(null);
           setLoading(false);
@@ -72,7 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.warn("Auth loading timed out, forcing completion.");
             setLoading(false);
         }
-    }, 5000); // 5 seconds timeout
+    }, 10000); // 10 seconds timeout
 
     return () => {
       mounted = false;
@@ -83,12 +135,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchUserRole = async (userId: string) => {
     try {
+      // Create a promise that rejects after timeout
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Role fetch timeout")), 6000)
+      );
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase as any)
+      const fetchPromise = (supabase as any)
         .from("profiles")
         .select("role")
         .eq("id", userId)
         .single();
+
+      // Race the fetch against the timeout
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await Promise.race([fetchPromise, timeoutPromise]) as any;
 
       if (error) {
         console.error("Error fetching role:", error);
@@ -97,10 +158,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setRole(data?.role as UserRole);
       }
     } catch (error) {
-      console.error("Error in fetchUserRole:", error);
-      setRole("user");
+        // If timeout, try one more time
+        if (error instanceof Error && error.message === "Role fetch timeout") {
+             console.warn("Role fetch timed out. Retrying once...");
+             try {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const { data, error: retryError } = await (supabase as any)
+                    .from("profiles")
+                    .select("role")
+                    .eq("id", userId)
+                    .single();
+                
+                if (retryError) {
+                    console.error("Error fetching role (retry):", retryError);
+                    setRole("user");
+                } else {
+                    setRole(data?.role as UserRole);
+                }
+             } catch (retryErr) {
+                 console.error("Error in fetchUserRole (retry):", retryErr);
+                 setRole("user");
+             }
+        } else {
+            console.error("Error in fetchUserRole:", error);
+            setRole("user");
+        }
     } finally {
-      setLoading(false);
+      // Ensure loading is set to false regardless of outcome
+      // We check if loading is still true to avoid unnecessary state updates
+      if (loadingRef.current) {
+          setLoading(false);
+      }
     }
   };
 
