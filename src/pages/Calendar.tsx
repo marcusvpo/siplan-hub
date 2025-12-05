@@ -9,15 +9,38 @@ import {
   useSensor,
   useSensors,
   PointerSensor,
+  useDroppable,
 } from "@dnd-kit/core";
 import { useEffect, useState } from "react";
 import { CalendarEvent, CALENDAR_MEMBERS } from "@/types/calendar";
 import { startOfDay } from "date-fns";
 import { useProjects } from "@/hooks/useProjects";
 import { ProjectV2 } from "@/types/ProjectV2";
+import { Trash2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+function TrashDroppable() {
+  const { setNodeRef, isOver } = useDroppable({
+    id: "trash",
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "flex items-center justify-center w-12 h-12 rounded-full border transition-colors ml-auto",
+        isOver
+          ? "bg-red-100 border-red-500 text-red-600 scale-110"
+          : "bg-background border-dashed border-muted-foreground/30 text-muted-foreground hover:bg-muted"
+      )}
+    >
+      <Trash2 className="w-5 h-5" />
+    </div>
+  );
+}
 
 const Calendar = () => {
-  const { isInteractiveMode, addInteractiveEvent, updateInteractiveEvent } =
+  const { isInteractiveMode, addInteractiveEvent, updateInteractiveEvent, removeInteractiveEvent } =
     useCalendarStore();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -109,6 +132,14 @@ const Calendar = () => {
 
     if (!over) return;
 
+    // Handle Delete Drop
+    if (over.id === "trash") {
+        if (active.data.current?.event) {
+            removeInteractiveEvent(active.data.current.event.id);
+        }
+        return;
+    }
+
     // The droppable ID is now the Date string (yyyy-MM-dd)
     const targetDateStr = over.id as string;
     const targetDate = new Date(targetDateStr + "T12:00:00"); // Avoid timezone issues by picking noon
@@ -147,29 +178,35 @@ const Calendar = () => {
   };
 
   return (
-    <DndContext
-      sensors={sensors}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-    >
-      <div className="h-full flex flex-col bg-background overflow-hidden">
-        <CalendarControls />
+    <div className="h-full flex flex-col bg-background overflow-hidden">
+      <CalendarControls />
 
-        {/* Team Dock (Drag Source) */}
-        {isInteractiveMode && (
-          <div className="flex items-center justify-center gap-4 p-4 bg-muted/20 border-b shrink-0">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mr-2">
-              Equipe Disponível:
-            </span>
-            {CALENDAR_MEMBERS.map((member) => (
-              <DraggableTeamMember key={member.id} member={member} />
-            ))}
+      <DndContext
+        sensors={sensors}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Team Dock (Drag Source) */}
+          {isInteractiveMode && (
+            <div className="flex items-center justify-between gap-4 p-4 bg-muted/20 border-b shrink-0">
+              <div className="flex items-center gap-4">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mr-2">
+                  Equipe Disponível:
+                </span>
+                {CALENDAR_MEMBERS.map((member) => (
+                  <DraggableTeamMember key={member.id} member={member} />
+                ))}
+              </div>
+
+              <TrashDroppable />
+            </div>
+          )}
+
+          {/* Main Grid */}
+          <div className="flex-1 p-4 overflow-hidden">
+            <CalendarGrid />
           </div>
-        )}
-
-        {/* Main Grid */}
-        <div className="flex-1 p-4 overflow-hidden">
-          <CalendarGrid />
         </div>
 
         <DragOverlay>
@@ -189,8 +226,8 @@ const Calendar = () => {
             </div>
           ) : null}
         </DragOverlay>
-      </div>
-    </DndContext>
+      </DndContext>
+    </div>
   );
 };
 

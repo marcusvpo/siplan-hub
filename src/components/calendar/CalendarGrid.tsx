@@ -13,7 +13,7 @@ import {
   isWithinInterval,
   startOfDay,
   endOfDay,
-  differenceInDays,
+  differenceInCalendarDays,
   addDays,
   isBefore,
   isAfter,
@@ -31,8 +31,6 @@ import { useState, useEffect, useRef } from "react";
 
 import { CalendarEventPill, EventSegment } from "./EventCard";
 
-// --- Main Component ---
-
 export function CalendarGrid() {
   const {
     currentDate,
@@ -44,109 +42,92 @@ export function CalendarGrid() {
 
   const displayEvents = isInteractiveMode ? interactiveEvents : realEvents;
 
-  // Resize State
-  const [resizingEvent, setResizingEvent] = useState<CalendarEvent | null>(
-    null
-  );
-  const [previewEndDate, setPreviewEndDate] = useState<Date | null>(null);
+  // --- Ghost State Implementation ---
+  const [resizingEventId, setResizingEventId] = useState<string | null>(null);
+  const [ghostEndDate, setGhostEndDate] = useState<Date | null>(null);
+  
+  // "Live Responsive Pixels" State
+  const [containerWidth, setContainerWidth] = useState(0);
 
-  // Generate Grid Data
-  const monthStart = startOfMonth(currentDate);
-  const monthEnd = endOfMonth(monthStart);
-  const startDate = startOfWeek(monthStart);
-  const endDate = endOfWeek(monthEnd);
-  const days = eachDayOfInterval({ start: startDate, end: endDate });
-
-  // Group days into weeks
-  const weeks: Date[][] = [];
-  for (let i = 0; i < days.length; i += 7) {
-    weeks.push(days.slice(i, i + 7));
-  }
-
-  // --- Resize Logic ---
-
-  // Ref for the grid container to calculate coordinates
+  // References
+  const initialEndDateRef = useRef<Date>(new Date());
+  const ghostEndDateRef = useRef<Date | null>(null); 
+  const startXRef = useRef<number>(0);
+  const activeRowWidthRef = useRef<number>(0); // NEW: precise width of the active row
+  const resizingEventRef = useRef<CalendarEvent | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Drag State Ref to avoid stale closures and re-renders
-  const dragStateRef = useRef<{
-    startX: number;
-    initialEndDate: Date;
-    cellWidth: number;
-    event: CalendarEvent;
-    pointerId?: number;
-  } | null>(null);
-
-  // Ref to track the latest preview date for the event handler closure
-  const latestPreviewDateRef = useRef<Date | null>(null);
-
-  // Update the ref whenever state changes
+  // ResizeObserver Logic
   useEffect(() => {
-    latestPreviewDateRef.current = previewEndDate;
-  }, [previewEndDate]);
+    if (!containerRef.current) return;
 
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setContainerWidth(entry.contentRect.width);
+      }
+    });
+
+    resizeObserver.observe(containerRef.current);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
+
+  // Sync Ref with State
+  const currentCellWidth = containerWidth > 0 ? containerWidth / 7 : 0;
+  
+  // --- Resize Logic ---
   const handleResizeMove = (e: PointerEvent) => {
-    if (!dragStateRef.current) return;
-
-    const { startX, initialEndDate, cellWidth, event } = dragStateRef.current;
-
-    // Prevent default to stop scrolling/interactions on touch devices
-    e.preventDefault();
-
+    
     const currentX = e.clientX;
-    const deltaX = currentX - startX;
+    const diffX = currentX - startXRef.current;
+    
+    // Safety check
+    const totalWidth = activeRowWidthRef.current || 1000;
+    
+    // PERCENTAGE BASED CALCULATION
+    const percentMoved = diffX / totalWidth;
+    
+    // Convert % to Days (7 days = 100%)
+    const rawDays = percentMoved * 7;
+    const daysToShift = Math.round(rawDays);
 
-    // Calculate how many "days" we moved based on cell width
-    // Rounding ensures we snap to the nearest day
-    const daysMoved = Math.round(deltaX / cellWidth);
-
-    // Calculate new date
-    const newDate = addDays(initialEndDate, daysMoved);
-
-    // Constraint: Cannot resize to before start date
-    if (newDate >= startOfDay(event.start)) {
-      setPreviewEndDate((prev) => {
-        if (!prev || !isSameDay(prev, newDate)) {
-          return newDate;
-        }
-        return prev;
-      });
+    // A data final é SEMPRE a data ORIGINAL + o deslocamento (Cálculo Absoluto)
+    let newDate = addDays(initialEndDateRef.current, daysToShift);
+    const evtStart = startOfDay(resizingEventRef.current!.start); 
+    
+    if (isBefore(newDate, evtStart)) {
+       newDate = evtStart;
     }
+
+    setGhostEndDate(newDate);
+    ghostEndDateRef.current = newDate;
   };
 
   const handleResizeEnd = (e: PointerEvent) => {
-    // Release pointer capture if needed
-    try {
-      const target = e.target as HTMLElement;
-      if (
-        target &&
-        target.releasePointerCapture &&
-        dragStateRef.current?.pointerId
-      ) {
-        target.releasePointerCapture(dragStateRef.current.pointerId);
-      }
-    } catch {
-      // Ignore errors
-    }
-
-    // Cleanup styles
+    window.removeEventListener("pointermove", handleResizeMove);
+    window.removeEventListener("pointerup", handleResizeEnd);
+    
     document.body.style.userSelect = "";
     document.body.style.cursor = "";
 
-    // Remove listeners
-    window.removeEventListener("pointermove", handleResizeMove);
-    window.removeEventListener("pointerup", handleResizeEnd);
+    const currentGhostDate = ghostEndDateRef.current;
+    if (resizingEventRef.current && currentGhostDate) {
+       // "Safety Noon"
+       const finalDate = new Date(currentGhostDate);
+       finalDate.setHours(12, 0, 0, 0);
 
-    if (dragStateRef.current && latestPreviewDateRef.current) {
-      updateInteractiveEvent({
-        ...dragStateRef.current.event,
-        end: latestPreviewDateRef.current,
-      });
+       updateInteractiveEvent({
+         ...resizingEventRef.current,
+         end: finalDate
+       });
     }
 
-    setResizingEvent(null);
-    setPreviewEndDate(null);
-    dragStateRef.current = null;
+    setResizingEventId(null);
+    setGhostEndDate(null);
+    resizingEventRef.current = null;
+    ghostEndDateRef.current = null;
   };
 
   const handleResizeStart = (
@@ -156,65 +137,60 @@ export function CalendarGrid() {
     e.preventDefault();
     e.stopPropagation();
 
-    if (!containerRef.current) return;
-
-    // Robust cell width calculation:
-    // Try to measure a real week row first for accuracy
-    let cellWidth = 0;
-    const firstWeekRow = containerRef.current.firstElementChild;
-    if (firstWeekRow) {
-      cellWidth = firstWeekRow.getBoundingClientRect().width / 7;
-    } else {
-      // Fallback to container width
-      cellWidth = containerRef.current.getBoundingClientRect().width / 7;
+    // Robust Width Detection: Find the specific week row we are interacting with
+    const targetElement = e.target as HTMLElement;
+    const weekRow = targetElement.closest('.js-week-row');
+    
+    let currentRowWidth = 0;
+    if (weekRow) {
+        currentRowWidth = weekRow.getBoundingClientRect().width;
+    } else if (containerRef.current) {
+        // Fallback
+        currentRowWidth = containerRef.current.getBoundingClientRect().width;
     }
 
-    if (cellWidth === 0) cellWidth = 100;
+    if (currentRowWidth === 0) currentRowWidth = 800; // Emergency fallback
 
-    // Set pointer capture for smoother dragging
-    let pointerId = 0;
-    if ("pointerId" in e) {
-      const pe = e as React.PointerEvent;
-      pointerId = pe.pointerId;
-      try {
-        (e.target as HTMLElement).setPointerCapture(pointerId);
-      } catch {
-        // ignore
-      }
-    }
+    setResizingEventId(event.id);
+    setGhostEndDate(event.end);
 
-    setResizingEvent(event);
-    setPreviewEndDate(event.end);
-    latestPreviewDateRef.current = event.end;
+    initialEndDateRef.current = new Date(event.end);
+    startXRef.current = e.clientX;
+    activeRowWidthRef.current = currentRowWidth;
+    resizingEventRef.current = event;
+    ghostEndDateRef.current = event.end;
 
-    dragStateRef.current = {
-      startX: e.clientX,
-      initialEndDate: event.end,
-      cellWidth: cellWidth,
-      event: event,
-      pointerId: pointerId,
-    };
-
-    // Disable text selection globally
     document.body.style.userSelect = "none";
     document.body.style.cursor = "col-resize";
 
-    // Attach window listeners
     window.addEventListener("pointermove", handleResizeMove);
     window.addEventListener("pointerup", handleResizeEnd);
   };
 
-  // --- Rendering Helpers ---
+  // Generate Grid Data
+  const monthStart = startOfMonth(currentDate);
+  const monthEnd = endOfMonth(monthStart);
+  const startDate = startOfWeek(monthStart);
+  const endDate = endOfWeek(monthEnd);
+  const days = eachDayOfInterval({ start: startDate, end: endDate });
 
-  const effectiveEvents = displayEvents.map((evt) => {
-    if (resizingEvent && evt.id === resizingEvent.id && previewEndDate) {
-      return { ...evt, end: previewEndDate };
-    }
-    return evt;
+  const weeks: Date[][] = [];
+  for (let i = 0; i < days.length; i += 7) {
+    weeks.push(days.slice(i, i + 7));
+  }
+
+  // --- Layout Calculation for Slots ---
+  const layoutEvents = displayEvents.map(evt => {
+     if (evt.id === resizingEventId && ghostEndDate) {
+        // DIRECT MAPPING: Force the event to use the ghost date exactly.
+        // This enables shrinking and expansion with 1:1 visual fidelity.
+        return { ...evt, end: ghostEndDate };
+     }
+     return evt;
   });
 
   return (
-    <div className="flex flex-col h-full border rounded-lg bg-background shadow-sm overflow-hidden select-none">
+    <div className="flex flex-col h-full border rounded-lg bg-background shadow-sm select-none overflow-visible">
       {/* Header */}
       <div className="grid grid-cols-7 border-b bg-muted/40">
         {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((d) => (
@@ -230,43 +206,35 @@ export function CalendarGrid() {
       {/* Weeks */}
       <div ref={containerRef} className="flex-1 flex flex-col">
         {weeks.map((week, weekIndex) => {
-          // --- Slot Layout Algorithm for this Week ---
           const weekStart = startOfDay(week[0]);
           const weekEnd = endOfDay(week[6]);
 
-          // 1. Filter events in this week
-          const weekEvents = effectiveEvents.filter((evt) => {
+          const weekEvents = layoutEvents.filter((evt) => {
             const evtStart = startOfDay(evt.start);
             const evtEnd = endOfDay(evt.end);
             return evtEnd >= weekStart && evtStart <= weekEnd;
           });
 
-          // 2. Sort by start date, then duration (longer first)
           weekEvents.sort((a, b) => {
             const startDiff = a.start.getTime() - b.start.getTime();
             if (startDiff !== 0) return startDiff;
+             // Longer events first
             return b.end.getTime() - a.end.getTime();
           });
 
-          // 3. Assign slots
-          const slots: string[][] = Array(7)
-            .fill(null)
-            .map(() => []); // 7 days, list of event IDs in each slot
-          const eventSlots: Record<string, number> = {}; // Map event ID -> slot index
+          // Slot logic remains the same
+          const slots: string[][] = Array(7).fill(null).map(() => []);
+          const eventSlots: Record<string, number> = {};
 
           weekEvents.forEach((evt) => {
             const evtStart = startOfDay(evt.start);
             const evtEnd = endOfDay(evt.end);
+            let startIndex = differenceInCalendarDays(evtStart, weekStart);
+            let endIndex = differenceInCalendarDays(evtEnd, weekStart);
 
-            // Calculate start/end indices in this week (0-6)
-            let startIndex = differenceInDays(evtStart, weekStart);
-            let endIndex = differenceInDays(evtEnd, weekStart);
-
-            // Clamp to 0-6
             if (startIndex < 0) startIndex = 0;
             if (endIndex > 6) endIndex = 6;
 
-            // Find first available slot index
             let slotIndex = 0;
             while (true) {
               let isAvailable = true;
@@ -280,7 +248,6 @@ export function CalendarGrid() {
               slotIndex++;
             }
 
-            // Mark slots as occupied
             for (let d = startIndex; d <= endIndex; d++) {
               slots[d][slotIndex] = evt.id;
             }
@@ -290,75 +257,95 @@ export function CalendarGrid() {
           return (
             <div
               key={weekIndex}
-              className="flex-1 grid grid-cols-7 min-h-[120px] relative"
+              className="js-week-row relative w-full min-h-[120px] border-b bg-background"
             >
-              {/* Background Cells */}
-              {week.map((day) => (
-                <DayCellBackground
-                  key={day.toISOString()}
-                  day={day}
-                  isInteractiveMode={isInteractiveMode}
-                />
-              ))}
-
-              {/* Events Layer */}
-              <div className="absolute inset-0 grid grid-cols-7 pointer-events-none">
-                {week.map((day, dayIndex) => {
-                  // Render events that START on this day (or continue from prev week if dayIndex 0)
-                  const dayEventsToRender = weekEvents.filter((evt) => {
-                    const evtStart = startOfDay(evt.start);
-                    const startsToday = isSameDay(day, evtStart);
-                    const continuesFromPrevWeek =
-                      isBefore(evtStart, weekStart) && dayIndex === 0;
-                    return startsToday || continuesFromPrevWeek;
-                  });
-
-                  return (
-                    <div
-                      key={day.toISOString()}
-                      className="relative w-full h-full"
-                    >
-                      {dayEventsToRender.map((event) => {
-                        const evtEnd = endOfDay(event.end);
-                        const actualEnd = isBefore(evtEnd, weekEnd)
-                          ? evtEnd
-                          : weekEnd;
-                        const span =
-                          differenceInDays(actualEnd, startOfDay(day)) + 1;
-                        const slotIndex = eventSlots[event.id] || 0;
-
-                        const segment: EventSegment = {
-                          event,
-                          isStart: isSameDay(day, startOfDay(event.start)),
-                          isEnd:
-                            isSameDay(day, startOfDay(event.end)) ||
-                            isSameDay(actualEnd, startOfDay(event.end)),
-                          span,
-                        };
-
-                        return (
-                          <div
-                            key={event.id}
-                            className="absolute left-0 right-0 pointer-events-auto px-1"
-                            style={{
-                              top: `${32 + slotIndex * 28}px`, // 32px offset for header/padding, 28px per row
-                              width: `${span * 100}%`,
-                              zIndex: 10 + slotIndex,
-                            }}
-                          >
-                            <CalendarEventPill
-                              event={event}
-                              isInteractiveMode={isInteractiveMode}
-                              segment={segment}
-                              onResizeStart={handleResizeStart}
-                              isResizing={resizingEvent?.id === event.id}
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
+              {/* CAMADA 1: GRID DE FUNDO VAZIO (Apenas linhas) */}
+              <div className="absolute inset-0 grid grid-cols-7 w-full h-full z-0 pointer-events-none">
+                {week.map((day) => {
+                   const isCurrentMonth = isSameMonth(day, currentDate);
+                   return (
+                    <div 
+                        key={day.toISOString()} 
+                        className={cn(
+                            "border-r h-full border-border/50",
+                            !isCurrentMonth && "bg-muted/10"
+                        )} 
+                    />
+                   );
                 })}
+              </div>
+
+              {/* CAMADA 2: GRID DE EVENTOS (Funcional e Visual) */}
+              <div className="absolute inset-0 pt-6 grid grid-cols-7 w-full h-full z-10 pointer-events-none">
+                {weekEvents.map((layoutEvt) => {
+                  const originalEvt = displayEvents.find((e) => e.id === layoutEvt.id);
+                  if (!originalEvt) return null;
+
+                  const slotIndex = eventSlots[layoutEvt.id] || 0;
+                  const isResizing = resizingEventId === originalEvt.id;
+                  const children = [];
+
+                  // --- Render Original Event ---
+                  const evtStart = startOfDay(originalEvt.start);
+                  const evtEnd = endOfDay(originalEvt.end);
+                  const actualStart = isAfter(evtStart, weekStart) ? evtStart : weekStart;
+                  const actualEnd = isBefore(evtEnd, weekEnd) ? evtEnd : weekEnd;
+
+                  if (!isBefore(actualEnd, actualStart)) {
+                    const startIndex = differenceInCalendarDays(actualStart, weekStart);
+                    const durationDays = differenceInCalendarDays(actualEnd, actualStart) + 1;
+
+                    children.push(
+                      <div
+                        key={originalEvt.id}
+                        className={cn(
+                          "relative mx-1 rounded-md shadow-md transition-none pointer-events-auto", 
+                          isResizing && "opacity-40"
+                        )}
+                        style={{
+                          gridColumnStart: startIndex + 1,
+                          gridColumnEnd: `span ${durationDays}`,
+                          gridRowStart: slotIndex + 1, // Native Grid Row Stacking
+                          height: "28px",
+                          zIndex: 20, 
+                        }}
+                      >
+                        <CalendarEventPill
+                          event={originalEvt}
+                          isInteractiveMode={isInteractiveMode}
+                          onUpdate={updateInteractiveEvent}
+                          segment={{
+                            event: originalEvt,
+                            isStart: isSameDay(actualStart, evtStart),
+                            isEnd: isSameDay(actualEnd, evtEnd),
+                            span: durationDays,
+                          }}
+                          onResizeStart={handleResizeStart}
+                          isResizing={isResizing}
+                        />
+                      </div>
+                    );
+                  }
+
+                  // --- Render Ghost Event ---
+                  // HIDE GHOST if we are already modifying the original event live.
+                  // This cleaner approach avoids double-rendering and stacking issues.
+                  // We only rely on the layoutEvents mapping to show the change.
+                  
+                  return children;
+                })}
+              </div>
+
+              {/* CAMADA 3: INTERAÇÃO (Drop Targets) - Z-Index 0 */}
+              <div className="absolute inset-0 grid grid-cols-7 w-full h-full z-0">
+                  {week.map((day) => (
+                      <div key={day.toISOString()} className="h-full min-h-[120px]">
+                        <DayDroppableZone
+                            day={day}
+                            isInteractiveMode={isInteractiveMode}
+                        />
+                      </div>
+                  ))}
               </div>
             </div>
           );
@@ -368,7 +355,8 @@ export function CalendarGrid() {
   );
 }
 
-function DayCellBackground({
+// Separated Component for the Interaction Layer
+function DayDroppableZone({
   day,
   isInteractiveMode,
 }: {
@@ -381,16 +369,13 @@ function DayCellBackground({
     disabled: !isInteractiveMode,
   });
 
-  const { currentDate } = useCalendarStore();
-  const isCurrentMonth = isSameMonth(day, currentDate);
-
   return (
     <div
       ref={setNodeRef}
-      data-date={format(day, "yyyy-MM-dd")} // For resize detection
+      data-date={format(day, "yyyy-MM-dd")} 
       className={cn(
-        "border-b border-r p-2 transition-colors relative h-full",
-        !isCurrentMonth && "bg-muted/10 text-muted-foreground",
+        "w-full h-full transition-colors relative", 
+        // No borders here, they are in Layer 1
         isOver &&
           isInteractiveMode &&
           "bg-primary/5 ring-2 ring-inset ring-primary/20",
@@ -399,7 +384,7 @@ function DayCellBackground({
     >
       <span
         className={cn(
-          "text-sm font-medium ml-auto w-6 h-6 flex items-center justify-center rounded-full absolute top-2 right-2",
+          "text-sm font-medium ml-auto w-6 h-6 flex items-center justify-center rounded-full absolute top-2 right-2 pointer-events-none", // Ensure text doesn't steal clicks
           isToday(day) && "bg-primary text-primary-foreground"
         )}
       >
@@ -408,3 +393,4 @@ function DayCellBackground({
     </div>
   );
 }
+
