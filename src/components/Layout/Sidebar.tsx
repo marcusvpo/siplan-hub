@@ -14,6 +14,7 @@ import {
   Users,
   BarChart3,
   LogOut,
+  Calendar as CalendarIcon,
 } from "lucide-react";
 import {
   Collapsible,
@@ -50,7 +51,10 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
           variant="ghost"
           size="icon"
           onClick={() => setCollapsed(!collapsed)}
-          className={cn("h-8 w-8 rounded-full hover:bg-primary/10 hover:text-primary transition-colors", collapsed ? "mx-auto" : "")}
+          className={cn(
+            "h-8 w-8 rounded-full hover:bg-primary/10 hover:text-primary transition-colors",
+            collapsed ? "mx-auto" : ""
+          )}
         >
           {collapsed ? (
             <ChevronRight className="h-4 w-4" />
@@ -128,12 +132,28 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                       <span>Relatórios</span>
                     </Button>
                   </Link>
+                  <Link to="/calendar">
+                    <Button
+                      variant={isActive("/calendar") ? "secondary" : "ghost"}
+                      size="sm"
+                      className="w-full justify-start gap-3 h-9"
+                    >
+                      <CalendarIcon className="h-4 w-4" />
+                      <span>Calendário</span>
+                    </Button>
+                  </Link>
                 </div>
               </CollapsibleContent>
             </Collapsible>
           ) : (
             <Button
-              variant={isActive("/projects") || isActive("/reports") ? "secondary" : "ghost"}
+              variant={
+                isActive("/projects") ||
+                isActive("/reports") ||
+                isActive("/calendar")
+                  ? "secondary"
+                  : "ghost"
+              }
               className="w-full justify-center px-0"
               title="Implantação"
               onClick={() => setCollapsed(false)}

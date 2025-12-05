@@ -9,6 +9,7 @@ import TeamManagement from "./pages/admin/TeamManagement";
 import Reports from "./pages/Reports";
 import CompareProjects from "./pages/CompareProjects";
 import NotFound from "./pages/NotFound";
+import Calendar from "./pages/Calendar";
 import { MainLayout } from "@/components/Layout/MainLayout";
 
 const queryClient = new QueryClient();
@@ -39,7 +40,10 @@ const App = () => (
                 <Route index element={<AdminDashboard />} />
                 <Route path="users" element={<UserManagement />} />
                 <Route path="team" element={<TeamManagement />} />
-                <Route path="settings" element={<div className="p-8">Configurações (Em breve)</div>} />
+                <Route
+                  path="settings"
+                  element={<div className="p-8">Configurações (Em breve)</div>}
+                />
               </Route>
 
               {/* Protected App Routes */}
@@ -51,6 +55,7 @@ const App = () => (
                       <Routes>
                         <Route path="/" element={<DashboardV2 />} />
                         <Route path="/projects" element={<Index />} />
+                        <Route path="/calendar" element={<Calendar />} />
                         <Route path="/compare" element={<CompareProjects />} />
                         <Route path="/reports" element={<Reports />} />
                         <Route path="*" element={<NotFound />} />
