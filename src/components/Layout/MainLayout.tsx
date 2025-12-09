@@ -5,6 +5,7 @@ import { ModeToggle } from "@/components/mode-toggle";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
 import { LayoutDashboard, Home, ArrowRight } from "lucide-react";
+import { NotificationBell } from "@/components/NotificationBell";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -47,6 +48,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               )}
+              <NotificationBell />
               <ModeToggle />
            </div>
         </header>

@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useProjectsList } from "@/hooks/useProjectsList";
 import { useProjectsV2 } from "@/hooks/useProjectsV2";
 import { ProjectCardV3 } from "./ProjectCardV3";
 import { ProjectModal } from "./ProjectModal";
@@ -27,8 +28,9 @@ import { Virtuoso } from 'react-virtuoso';
 import { useFilterStore } from "@/stores/filterStore";
 
 export function ProjectGrid() {
-  const { projects, isLoading, updateProject, deleteProject } = useProjectsV2();
-  const [selectedProject, setSelectedProject] = useState<ProjectV2 | null>(null);
+  const { projects, isLoading } = useProjectsList();
+  const { updateProject, deleteProject } = useProjectsV2(); // Use V2 for mutations
+  const [selectedProject, setSelectedProject] = useState<Partial<ProjectV2> | null>(null);
   
   // Use Zustand store
   const { 
@@ -44,9 +46,13 @@ export function ProjectGrid() {
   // Removed manual localStorage effects as Zustand handles persistence
 
   const filteredProjects = projects.filter((project) => {
+    // Safety check for search
+    const clientName = project.clientName || '';
+    const ticketNumber = project.ticketNumber || '';
+    
     const matchesSearch =
-      project.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.ticketNumber.toLowerCase().includes(searchQuery.toLowerCase());
+      clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      ticketNumber.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesStatus =
       statusFilter === "all" || project.globalStatus === statusFilter;
@@ -55,12 +61,6 @@ export function ProjectGrid() {
 
     return matchesSearch && matchesStatus && matchesHealth;
   });
-
-  const handleProjectUpdate = (updatedProject: ProjectV2) => {
-    if (selectedProject?.id === updatedProject.id) {
-      setSelectedProject(updatedProject);
-    }
-  };
 
   const toggleSelection = (id: string, selected: boolean) => {
     if (selected) {
@@ -272,7 +272,7 @@ export function ProjectGrid() {
       {/* Grid with Virtualization */}
       <div className="flex-1 h-[calc(100vh-220px)] min-h-[400px]">
         <Virtuoso
-          data={filteredProjects}
+          data={projects as ProjectV2[]} // Cast partial to ProjectV2 for now
           itemContent={(index, project) => (
             <div className="pb-3 pr-2">
               <ProjectCardV3
@@ -303,7 +303,7 @@ export function ProjectGrid() {
 
       {/* Modal */}
       <ProjectModal
-        project={selectedProject}
+        project={selectedProject as ProjectV2}
         open={!!selectedProject}
         onOpenChange={(open) => !open && setSelectedProject(null)}
         onUpdate={(updatedProject) => {
@@ -313,12 +313,8 @@ export function ProjectGrid() {
               ...updatedProject,
             },
           });
-
-          handleProjectUpdate(updatedProject);
         }}
       />
     </div>
   );
 }
-
-

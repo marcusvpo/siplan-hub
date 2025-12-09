@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import DashboardV2 from "./pages/DashboardV2";
 import TeamManagement from "./pages/admin/TeamManagement";
 import Reports from "./pages/Reports";
+import Analytics from "./pages/Analytics";
 import CompareProjects from "./pages/CompareProjects";
 import NotFound from "./pages/NotFound";
 import Calendar from "./pages/Calendar";
@@ -58,6 +59,7 @@ const App = () => (
                         <Route path="/calendar" element={<Calendar />} />
                         <Route path="/compare" element={<CompareProjects />} />
                         <Route path="/reports" element={<Reports />} />
+                        <Route path="/analytics" element={<Analytics />} />
                         <Route path="*" element={<NotFound />} />
                       </Routes>
                     </MainLayout>

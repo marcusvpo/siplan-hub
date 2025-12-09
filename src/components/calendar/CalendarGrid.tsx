@@ -53,7 +53,7 @@ export function CalendarGrid() {
   const initialEndDateRef = useRef<Date>(new Date());
   const ghostEndDateRef = useRef<Date | null>(null); 
   const startXRef = useRef<number>(0);
-  const activeRowWidthRef = useRef<number>(0); // NEW: precise width of the active row
+  const activeRowWidthRef = useRef<number>(0);
   const resizingEventRef = useRef<CalendarEvent | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -257,7 +257,7 @@ export function CalendarGrid() {
           return (
             <div
               key={weekIndex}
-              className="js-week-row relative w-full min-h-[120px] border-b bg-background"
+              className="js-week-row relative w-full min-h-[120px] border-b bg-background overflow-visible"
             >
               {/* CAMADA 1: GRID DE FUNDO VAZIO (Apenas linhas) */}
               <div className="absolute inset-0 grid grid-cols-7 w-full h-full z-0 pointer-events-none">
@@ -267,23 +267,44 @@ export function CalendarGrid() {
                     <div 
                         key={day.toISOString()} 
                         className={cn(
-                            "border-r h-full border-border/50",
+                            "border-r h-full border-border/50 relative",
                             !isCurrentMonth && "bg-muted/10"
-                        )} 
-                    />
+                        )}
+                    >
+                         <span
+                            className={cn(
+                              "text-sm font-medium ml-auto w-6 h-6 flex items-center justify-center rounded-full absolute top-2 right-2",
+                              isToday(day) && "bg-primary text-primary-foreground"
+                            )}
+                          >
+                            {format(day, "d")}
+                          </span>
+                    </div>
                    );
                 })}
               </div>
 
-              {/* CAMADA 2: GRID DE EVENTOS (Funcional e Visual) */}
-              <div className="absolute inset-0 pt-6 grid grid-cols-7 w-full h-full z-10 pointer-events-none">
+               {/* CAMADA 3: INTERAÇÃO (Drop Targets) - Z-Index 10 */}
+               {/* This must be interactable, so z-10. Events will be z-20. */}
+              <div className="absolute inset-0 grid grid-cols-7 w-full h-full z-10">
+                  {week.map((day) => (
+                      <div key={day.toISOString()} className="h-full min-h-[120px]">
+                        <DayDroppableZone
+                            day={day}
+                            isInteractiveMode={isInteractiveMode}
+                        />
+                      </div>
+                  ))}
+              </div>
+
+              {/* CAMADA 2: GRID DE EVENTOS (Funcional e Visual) - Z-index 20 */}
+              <div className="absolute inset-0 pt-8 grid grid-cols-7 w-full h-full z-20 pointer-events-none">
                 {weekEvents.map((layoutEvt) => {
                   const originalEvt = displayEvents.find((e) => e.id === layoutEvt.id);
                   if (!originalEvt) return null;
 
                   const slotIndex = eventSlots[layoutEvt.id] || 0;
                   const isResizing = resizingEventId === originalEvt.id;
-                  const children = [];
 
                   // --- Render Original Event ---
                   const evtStart = startOfDay(originalEvt.start);
@@ -295,7 +316,7 @@ export function CalendarGrid() {
                     const startIndex = differenceInCalendarDays(actualStart, weekStart);
                     const durationDays = differenceInCalendarDays(actualEnd, actualStart) + 1;
 
-                    children.push(
+                    return (
                       <div
                         key={originalEvt.id}
                         className={cn(
@@ -307,7 +328,7 @@ export function CalendarGrid() {
                           gridColumnEnd: `span ${durationDays}`,
                           gridRowStart: slotIndex + 1, // Native Grid Row Stacking
                           height: "28px",
-                          zIndex: 20, 
+                          marginBottom: "4px"
                         }}
                       >
                         <CalendarEventPill
@@ -326,27 +347,11 @@ export function CalendarGrid() {
                       </div>
                     );
                   }
-
-                  // --- Render Ghost Event ---
-                  // HIDE GHOST if we are already modifying the original event live.
-                  // This cleaner approach avoids double-rendering and stacking issues.
-                  // We only rely on the layoutEvents mapping to show the change.
                   
-                  return children;
+                  return null;
                 })}
               </div>
 
-              {/* CAMADA 3: INTERAÇÃO (Drop Targets) - Z-Index 0 */}
-              <div className="absolute inset-0 grid grid-cols-7 w-full h-full z-0">
-                  {week.map((day) => (
-                      <div key={day.toISOString()} className="h-full min-h-[120px]">
-                        <DayDroppableZone
-                            day={day}
-                            isInteractiveMode={isInteractiveMode}
-                        />
-                      </div>
-                  ))}
-              </div>
             </div>
           );
         })}
@@ -379,18 +384,10 @@ function DayDroppableZone({
         isOver &&
           isInteractiveMode &&
           "bg-primary/5 ring-2 ring-inset ring-primary/20",
-        isToday(day) && "bg-accent/5"
+        // isToday(day) && "bg-accent/5" // Removed as it is handled in background or not needed for drop zone
       )}
     >
-      <span
-        className={cn(
-          "text-sm font-medium ml-auto w-6 h-6 flex items-center justify-center rounded-full absolute top-2 right-2 pointer-events-none", // Ensure text doesn't steal clicks
-          isToday(day) && "bg-primary text-primary-foreground"
-        )}
-      >
-        {format(day, "d")}
-      </span>
+        {/* Empty zone, just for drop */}
     </div>
   );
 }
-
