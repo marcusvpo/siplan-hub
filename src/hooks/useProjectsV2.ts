@@ -121,14 +121,12 @@ export const useProjectsV2 = () => {
       } else {
         // Fallback if current project not found (shouldn't happen often)
         if (dbUpdates.infra_status) logMessages.push(`Status de Infraestrutura alterado para ${dbUpdates.infra_status}`);
-        // ... fallback logic
         if (logMessages.length === 0 && Object.keys(dbUpdates).length > 1) {
              logMessages.push("Projeto atualizado");
         }
       }
       
       if (logMessages.length === 0 && Object.keys(dbUpdates).length > 1 && !currentProject) {
-         // If we couldn't compare but there are updates
          logMessages.push("Projeto atualizado");
       }
 
@@ -137,6 +135,8 @@ export const useProjectsV2 = () => {
     },
     onSuccess: (logMessages, variables) => {
       queryClient.invalidateQueries({ queryKey: ["projectsV3"] });
+      queryClient.invalidateQueries({ queryKey: ["projectsList"] }); // Invalidate list
+      queryClient.invalidateQueries({ queryKey: ["projectDetails", variables.projectId] }); // Invalidate specific detail
       
       // Create a log entry for each message, or join them
       if (logMessages && logMessages.length > 0) {
@@ -166,7 +166,8 @@ export const useProjectsV2 = () => {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["projectsV3"] });
-      
+      queryClient.invalidateQueries({ queryKey: ["projectsList"] });
+
       addAutoLog.mutate({
         projectId: data.id,
         message: "Projeto criado",
@@ -187,6 +188,7 @@ export const useProjectsV2 = () => {
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["projectsV3"] });
+        queryClient.invalidateQueries({ queryKey: ["projectsList"] });
       },
     }),
   };
@@ -426,8 +428,8 @@ function transformToDB(project: Partial<ProjectV2>): Record<string, unknown> {
       // New Conversion Fields
       dbRow.conversion_homologation_status = s.homologationStatus;
       dbRow.conversion_homologation_responsible = s.homologationResponsible;
-      // dbRow.conversion_sent_at = s.sentAt || null; // Column might be missing in DB schema cache
-      // dbRow.conversion_finished_at = s.finishedAt || null; // Column might be missing in DB schema cache
+      // dbRow.conversion_sent_at = s.sentAt || null; 
+      // dbRow.conversion_finished_at = s.finishedAt || null; 
     }
 
     // Implementation

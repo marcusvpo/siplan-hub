@@ -1,0 +1,58 @@
+# Regras Universais do Projeto Siplan Hub
+
+## 1. Stack Tecnológica Core
+- **Frontend:** React + TypeScript (Vite)
+- **Estilização:** TailwindCSS + Shadcn/UI (Radix Primitives)
+- **Estado Global:** Zustand (preferencial para UI state) + TanStack Query (para server state)
+- **Backend/Data:** Supabase (PostgreSQL + Realtime)
+- **Router:** React Router DOM v6
+- **Ícones:** Lucide React
+- **Gráficos:** Recharts
+- **Drag & Drop:** @dnd-kit/core
+
+## 2. Padrões de Código e Arquitetura
+- **Estrutura de Diretórios:**
+  - `/components`: Componentes reutilizáveis (UI, Forms, Widgets).
+  - `/pages`: Componentes de nível de página/rota.
+  - `/hooks`: Custom hooks (ex: `useProjectsList`, `useProjectDetails`).
+  - `/types`: Definições de tipos TypeScript (ex: `ProjectV2`).
+  - `/stores`: Stores do Zustand.
+  - `/integrations/supabase`: Cliente e tipos do Supabase.
+
+- **Componentização:**
+  - Evite "God Components". Divida em sub-componentes funcionais.
+  - Use **composição** em vez de prop drilling excessivo.
+  - Componentes de UI (botões, inputs) devem seguir o padrão Shadcn/UI.
+
+- **Data Fetching:**
+  - Use `useQuery` para GET e `useMutation` para POST/PUT/DELETE.
+  - **SEMPRE** invalide as queries relevantes (`queryClient.invalidateQueries`) no `onSuccess` das mutações.
+  - Separe queries "leves" (listas) de queries "pesadas" (detalhes/JSON).
+
+- **Estilização:**
+  - Use classes utilitárias do Tailwind.
+  - Evite CSS modules ou styled-components, a menos que estritamente necessário para animações complexas.
+  - Use `cn()` (`clsx` + `tailwind-merge`) para concatenação condicional de classes.
+
+## 3. Regras Críticas (NÃO QUEBRAR)
+- **Calendário (CalendarGrid):**
+  - **NUNCA** use `overflow: hidden` nas linhas da semana (`js-week-row`).
+  - **NUNCA** coloque eventos como filhos diretos da célula do dia.
+  - Siga a arquitetura de **3 Camadas (Background, Eventos, Interação)**.
+  - Eventos devem usar `z-index: 20` e Grids de Background `z-index: 0`.
+
+- **Formulários e Autosave:**
+  - Use `useAutoSave` ou `useProjectForm` para persistência.
+  - Forneça feedback visual (badges/toasts) para ações de salvar.
+
+- **TypeScript:**
+  - Evite `any`. Use tipos explícitos ou genéricos.
+  - Use `Partial<T>` quando lidar com dados incompletos em listas.
+
+- **Acessibilidade:**
+  - Use elementos semânticos (`<button>`, `<main>`, `<header>`).
+  - Mantenha atributos `aria-*` ao usar Radix.
+
+## 4. Fluxo de Trabalho
+- Ao criar novas funcionalidades, verifique se existem componentes reutilizáveis na pasta `/ui`.
+- Atualize os tipos em `src/types` antes de implementar a lógica.
