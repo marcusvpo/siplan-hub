@@ -1,4 +1,5 @@
 import { ProjectV2 } from "@/types/ProjectV2";
+
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -274,15 +275,13 @@ export function EditProjectTab({ project, onUpdate }: TabProps) {
                   type="date"
                   value={
                     data.startDatePlanned
-                      ? new Date(data.startDatePlanned)
-                          .toISOString()
-                          .split("T")[0]
+                      ? new Date(data.startDatePlanned).toISOString().split("T")[0]
                       : ""
                   }
                   onChange={(e) =>
                     handleChange(
                       "startDatePlanned",
-                      e.target.value ? new Date(e.target.value) : undefined
+                      e.target.value ? new Date(e.target.value + 'T12:00:00') : undefined
                     )
                   }
                 />
@@ -293,15 +292,13 @@ export function EditProjectTab({ project, onUpdate }: TabProps) {
                   type="date"
                   value={
                     data.endDatePlanned
-                      ? new Date(data.endDatePlanned)
-                          .toISOString()
-                          .split("T")[0]
+                      ? new Date(data.endDatePlanned).toISOString().split("T")[0]
                       : ""
                   }
                   onChange={(e) =>
                     handleChange(
                       "endDatePlanned",
-                      e.target.value ? new Date(e.target.value) : undefined
+                      e.target.value ? new Date(e.target.value + 'T12:00:00') : undefined
                     )
                   }
                 />
@@ -320,15 +317,13 @@ export function EditProjectTab({ project, onUpdate }: TabProps) {
                   type="date"
                   value={
                     data.startDateActual
-                      ? new Date(data.startDateActual)
-                          .toISOString()
-                          .split("T")[0]
+                      ? new Date(data.startDateActual).toISOString().split("T")[0]
                       : ""
                   }
                   onChange={(e) =>
                     handleChange(
                       "startDateActual",
-                      e.target.value ? new Date(e.target.value) : undefined
+                      e.target.value ? new Date(e.target.value + 'T12:00:00') : undefined
                     )
                   }
                 />
@@ -345,7 +340,7 @@ export function EditProjectTab({ project, onUpdate }: TabProps) {
                   onChange={(e) =>
                     handleChange(
                       "endDateActual",
-                      e.target.value ? new Date(e.target.value) : undefined
+                      e.target.value ? new Date(e.target.value + 'T12:00:00') : undefined
                     )
                   }
                 />
@@ -363,15 +358,13 @@ export function EditProjectTab({ project, onUpdate }: TabProps) {
                 className="border-red-200 focus:border-red-500"
                 value={
                   data.nextFollowUpDate
-                    ? new Date(data.nextFollowUpDate)
-                        .toISOString()
-                        .split("T")[0]
+                    ? new Date(data.nextFollowUpDate).toISOString().split("T")[0]
                     : ""
                 }
                 onChange={(e) =>
                   handleChange(
                     "nextFollowUpDate",
-                    e.target.value ? new Date(e.target.value) : undefined
+                    e.target.value ? new Date(e.target.value + 'T12:00:00') : undefined
                   )
                 }
               />

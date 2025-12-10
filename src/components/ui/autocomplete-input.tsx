@@ -56,9 +56,12 @@ export function AutocompleteInput({
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
         <Command>
           <CommandInput placeholder="Buscar colaborador..." />
-          <CommandList>
+          <CommandList
+            className="max-h-64 overflow-y-auto"
+            onWheel={(e) => e.stopPropagation()}
+          >
             <CommandEmpty>Nenhum colaborador encontrado.</CommandEmpty>
-            <CommandGroup className="max-h-64 overflow-y-auto">
+            <CommandGroup>
               {activeMembers.map((member) => (
                 <CommandItem
                   key={member.id}

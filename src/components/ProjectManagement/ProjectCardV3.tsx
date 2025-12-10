@@ -80,14 +80,14 @@ export function ProjectCardV3({
       status: project.stages.adherence.status,
     },
     {
-      id: "environment",
-      label: "Ambiente",
-      status: project.stages.environment.status,
-    },
-    {
       id: "conversion",
       label: "Conversão",
       status: project.stages.conversion.status,
+    },
+    {
+      id: "environment",
+      label: "Ambiente",
+      status: project.stages.environment.status,
     },
     {
       id: "implementation",
@@ -113,9 +113,9 @@ export function ProjectCardV3({
       {/* Selection Checkbox */}
       {onSelect && (
         <div className="mr-2" onClick={(e) => e.stopPropagation()}>
-          <Checkbox 
-            checked={selected} 
-            onCheckedChange={(checked) => onSelect(checked as boolean)} 
+          <Checkbox
+            checked={selected}
+            onCheckedChange={(checked) => onSelect(checked as boolean)}
             className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
           />
         </div>
@@ -152,40 +152,59 @@ export function ProjectCardV3({
             </Badge>
           )}
           {project.healthScore === "critical" && (
-            <Badge variant="destructive" className="text-[10px] px-1.5 py-0.5 h-5 font-semibold shadow-sm">
+            <Badge
+              variant="destructive"
+              className="text-[10px] px-1.5 py-0.5 h-5 font-semibold shadow-sm"
+            >
               Crítico
             </Badge>
           )}
         </div>
-        
+
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
-           <Badge variant="outline" className="font-medium bg-muted/50 text-muted-foreground border-border/50">
-             {project.systemType}
-           </Badge>
-           <span className="font-mono text-xs opacity-70">#{project.ticketNumber}</span>
+          <Badge
+            variant="outline"
+            className="font-medium bg-muted/50 text-muted-foreground border-border/50"
+          >
+            {project.systemType}
+          </Badge>
+          <span className="font-mono text-xs opacity-70">
+            #{project.ticketNumber}
+          </span>
         </div>
-        
+
         <div className="flex items-center gap-3 mt-1">
-           {/* Follow Up Indicator */}
-           {project.nextFollowUpDate && (
-            <div className={cn(
-              "flex items-center gap-1.5 text-[11px] px-2 py-0.5 rounded-full bg-muted/30 border border-border/50",
-              isFollowUpOverdue ? "text-destructive bg-destructive/5 border-destructive/20 font-semibold" : "text-muted-foreground"
-            )}>
+          {/* Follow Up Indicator */}
+          {project.nextFollowUpDate && (
+            <div
+              className={cn(
+                "flex items-center gap-1.5 text-[11px] px-2 py-0.5 rounded-full bg-muted/30 border border-border/50",
+                isFollowUpOverdue
+                  ? "text-destructive bg-destructive/5 border-destructive/20 font-semibold"
+                  : "text-muted-foreground"
+              )}
+            >
               <Calendar className="h-3 w-3" />
               <span>
-                {format(new Date(project.nextFollowUpDate), "dd/MM", { locale: ptBR })}
+                {format(new Date(project.nextFollowUpDate), "dd/MM", {
+                  locale: ptBR,
+                })}
               </span>
               {isFollowUpOverdue && <span>!</span>}
             </div>
           )}
 
           {/* Project Leader */}
-          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground" title={`Líder: ${project.projectLeader}`}>
+          <div
+            className="flex items-center gap-1.5 text-[11px] text-muted-foreground"
+            title={`Líder: ${project.projectLeader}`}
+          >
             <div className="h-4 w-4 rounded-full bg-primary/10 flex items-center justify-center text-[9px] font-bold text-primary ring-1 ring-primary/20">
               {project.projectLeader.substring(0, 2).toUpperCase()}
             </div>
-            <span className="truncate max-w-[100px] font-medium">{project.projectLeader}</span>
+            <span className="truncate max-w-[100px] font-medium">
+              {project.projectLeader}
+            </span>
           </div>
         </div>
       </div>
@@ -207,25 +226,39 @@ export function ProjectCardV3({
                   getStageColor(stage.status)
                 )}
               />
-              <span className={cn(
-                "text-[10px] font-bold uppercase tracking-wider whitespace-nowrap",
-                stage.status === 'done' ? "text-emerald-600/70 dark:text-emerald-400/70" :
-                stage.status === 'in-progress' ? "text-primary" :
-                "text-muted-foreground/50"
-              )}>
+              <span
+                className={cn(
+                  "text-[10px] font-bold uppercase tracking-wider whitespace-nowrap",
+                  stage.status === "done"
+                    ? "text-emerald-600/70 dark:text-emerald-400/70"
+                    : stage.status === "in-progress"
+                    ? "text-primary"
+                    : "text-muted-foreground/50"
+                )}
+              >
                 {stage.label}
               </span>
-              
+
               {/* Hover Tooltip */}
               <div className="absolute bottom-full mb-3 hidden group-hover/stage:block z-50 min-w-[120px] bg-popover text-popover-foreground text-xs rounded-lg border shadow-xl p-3 animate-in fade-in zoom-in-95 duration-200">
                 <p className="font-bold mb-1 text-sm">{stage.label}</p>
                 <div className="flex items-center gap-2">
-                  <div className={cn("h-2 w-2 rounded-full", getStageColor(stage.status))} />
+                  <div
+                    className={cn(
+                      "h-2 w-2 rounded-full",
+                      getStageColor(stage.status)
+                    )}
+                  />
                   <p className="capitalize text-muted-foreground">
-                    {stage.status === 'done' ? 'Concluído' : 
-                     stage.status === 'in-progress' ? 'Em Andamento' : 
-                     stage.status === 'blocked' ? 'Pausado' :
-                     stage.status === 'waiting_adjustment' ? 'Em Adequação' : 'Pendente'}
+                    {stage.status === "done"
+                      ? "Concluído"
+                      : stage.status === "in-progress"
+                      ? "Em Andamento"
+                      : stage.status === "blocked"
+                      ? "Pausado"
+                      : stage.status === "waiting_adjustment"
+                      ? "Em Adequação"
+                      : "Pendente"}
                   </p>
                 </div>
               </div>
