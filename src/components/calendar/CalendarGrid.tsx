@@ -31,7 +31,11 @@ import { useState, useEffect, useRef } from "react";
 
 import { CalendarEventPill, EventSegment } from "./EventCard";
 
-export function CalendarGrid() {
+interface CalendarGridProps {
+  onEventClick?: (event: CalendarEvent) => void;
+}
+
+export function CalendarGrid({ onEventClick }: CalendarGridProps) {
   const {
     currentDate,
     interactiveEvents,
@@ -343,6 +347,7 @@ export function CalendarGrid() {
                           }}
                           onResizeStart={handleResizeStart}
                           isResizing={isResizing}
+                          onEventClick={onEventClick}
                         />
                       </div>
                     );

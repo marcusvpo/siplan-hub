@@ -20,6 +20,7 @@ export interface CalendarEvent {
   status?: "planned" | "confirmed" | "completed";
   notes?: string;
   isGhost?: boolean; // True if it's a draggable ghost card
+  color?: string;
 }
 
 export const CALENDAR_MEMBERS: CalendarMember[] = [

@@ -5,7 +5,7 @@ import { useAutoSave } from "@/hooks/useAutoSave";
 interface UseProjectFormReturn {
   data: ProjectV2;
   updateField: <K extends keyof ProjectV2>(field: K, value: ProjectV2[K]) => void;
-  updateStage: (stageKey: keyof ProjectV2['stages'], updates: Partial<any>) => void;
+  updateStage: (stageKey: keyof ProjectV2['stages'], updates: Partial<ProjectV2['stages'][typeof stageKey]>) => void;
   saveState: {
     status: 'idle' | 'saving' | 'success' | 'error';
     message?: string;
@@ -32,7 +32,7 @@ export function useProjectForm(
     });
   }, [data, updateData]);
 
-  const updateStage = useCallback((stageKey: keyof ProjectV2['stages'], updates: Partial<any>) => {
+  const updateStage = useCallback((stageKey: keyof ProjectV2['stages'], updates: Partial<ProjectV2['stages'][typeof stageKey]>) => {
     updateData({
       ...data,
       stages: {

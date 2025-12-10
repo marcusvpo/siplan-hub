@@ -224,7 +224,7 @@ export function ProjectCardV3({
                   <p className="capitalize text-muted-foreground">
                     {stage.status === 'done' ? 'Concluído' : 
                      stage.status === 'in-progress' ? 'Em Andamento' : 
-                     stage.status === 'blocked' ? 'Bloqueado' :
+                     stage.status === 'blocked' ? 'Pausado' :
                      stage.status === 'waiting_adjustment' ? 'Em Adequação' : 'Pendente'}
                   </p>
                 </div>

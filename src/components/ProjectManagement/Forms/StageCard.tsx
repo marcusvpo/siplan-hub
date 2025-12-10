@@ -20,7 +20,7 @@ interface StageCardProps {
   startDate?: Date;
   endDate?: Date;
   observations?: string;
-  onUpdate: (updates: Partial<any>) => void;
+  onUpdate: (updates: Record<string, unknown>) => void;
   children?: React.ReactNode;
   isExpanded?: boolean;
 }

@@ -24,6 +24,7 @@ import { CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { Virtuoso } from 'react-virtuoso';
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { useFilterStore } from "@/stores/filterStore";
 
@@ -42,6 +43,7 @@ export function ProjectGrid() {
   
   const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("active");
 
   // Removed manual localStorage effects as Zustand handles persistence
 
@@ -54,8 +56,15 @@ export function ProjectGrid() {
       clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       ticketNumber.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesStatus =
-      statusFilter === "all" || project.globalStatus === statusFilter;
+    let matchesStatus = false;
+    if (activeTab === "active") {
+        matchesStatus = project.globalStatus === "todo" || project.globalStatus === "in-progress";
+    } else if (activeTab === "paused") {
+        matchesStatus = project.globalStatus === "blocked";
+    } else if (activeTab === "done") {
+        matchesStatus = project.globalStatus === "done" || project.globalStatus === "archived";
+    }
+
     const matchesHealth =
       healthFilter === "all" || project.healthScore === healthFilter;
 
@@ -100,170 +109,97 @@ export function ProjectGrid() {
           />
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          <Button 
-            variant={healthFilter === 'critical' ? "default" : "outline"} 
-            size="sm" 
-            onClick={() => {
-              if (healthFilter === 'critical') {
-                setHealthFilter('all');
-              } else {
-                setHealthFilter('critical');
-                setStatusFilter('all');
-              }
-            }}
-            className={cn(
-              "h-8 transition-all",
-              healthFilter === 'critical' 
-                ? "bg-rose-500 hover:bg-rose-600 text-white border-rose-600" 
-                : "hover:border-rose-500 hover:text-rose-500"
-            )}
-          >
-            Críticos
-          </Button>
-          <Button 
-            variant={statusFilter === 'blocked' ? "default" : "outline"} 
-            size="sm" 
-            onClick={() => {
-              if (statusFilter === 'blocked') {
-                setStatusFilter('all');
-              } else {
-                setStatusFilter('blocked');
-                setHealthFilter('all');
-              }
-            }}
-            className={cn(
-              "h-8 transition-all",
-              statusFilter === 'blocked' 
-                ? "bg-amber-500 hover:bg-amber-600 text-white border-amber-600" 
-                : "hover:border-amber-500 hover:text-amber-500"
-            )}
-          >
-            Bloqueados
-          </Button>
-          <Button 
-            variant={statusFilter === 'done' ? "default" : "outline"} 
-            size="sm" 
-            onClick={() => {
-              if (statusFilter === 'done') {
-                setStatusFilter('all');
-              } else {
-                setStatusFilter('done');
-                setHealthFilter('all');
-              }
-            }}
-            className={cn(
-              "h-8 transition-all",
-              statusFilter === 'done' 
-                ? "bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600" 
-                : "hover:border-emerald-500 hover:text-emerald-500"
-            )}
-          >
-            Concluídos
-          </Button>
-           {(statusFilter !== 'all' || healthFilter !== 'all' || searchQuery) && (
-            <Button variant="ghost" size="sm" onClick={resetFilters} className="h-8">
-              Limpar Filtros
-            </Button>
-          )}
-        </div>
+        <div className="flex flex-wrap gap-2 items-center">
+             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-[400px]">
+                <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="active">Em andamento</TabsTrigger>
+                    <TabsTrigger value="paused">Pausado</TabsTrigger>
+                    <TabsTrigger value="done">Finalizado</TabsTrigger>
+                </TabsList>
+            </Tabs>
 
-        <div className="flex gap-2 w-full sm:w-auto">
-          {/* Saved Filters */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" title="Filtros Salvos">
-                <SlidersHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem onClick={() => {
-                const name = prompt("Nome do filtro:");
-                if (name) saveFilter(name);
-              }}>
-                <div className="flex items-center gap-2">
-                  <span className="font-bold">+ Salvar Filtro Atual</span>
-                </div>
-              </DropdownMenuItem>
-              {savedFilters.length > 0 && <div className="h-px bg-border my-1" />}
-              {savedFilters.map((filter) => (
-                <DropdownMenuItem key={filter.id} className="justify-between group">
-                  <span onClick={() => loadFilter(filter.id)} className="cursor-pointer flex-1">{filter.name}</span>
-                  <span 
-                    onClick={(e) => { e.stopPropagation(); deleteFilter(filter.id); }}
-                    className="text-muted-foreground hover:text-destructive p-1 rounded-sm"
-                  >
-                    ×
-                  </span>
+          <div className="flex gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon" title="Filtros Salvos">
+                    <SlidersHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem onClick={() => {
+                    const name = prompt("Nome do filtro:");
+                    if (name) saveFilter(name);
+                  }}>
+                    <div className="flex items-center gap-2">
+                        <span className="font-bold">+ Salvar Filtro Atual</span>
+                    </div>
+                  </DropdownMenuItem>
+                  {savedFilters.length > 0 && <div className="h-px bg-border my-1" />}
+                  {savedFilters.map((filter) => (
+                    <DropdownMenuItem key={filter.id} className="justify-between group">
+                      <span onClick={() => loadFilter(filter.id)} className="cursor-pointer flex-1">{filter.name}</span>
+                      <span 
+                        onClick={(e) => { e.stopPropagation(); deleteFilter(filter.id); }}
+                        className="text-muted-foreground hover:text-destructive p-1 rounded-sm"
+                      >
+                        ×
+                      </span>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+            {selectedProjectIds.length > 0 && (
+                <Button 
+                variant="default" 
+                onClick={handleCompare}
+                disabled={selectedProjectIds.length < 2}
+                >
+                Comparar ({selectedProjectIds.length})
+                </Button>
+            )}
+
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                    <SlidersHorizontal className="h-4 w-4 mr-2" />
+                    Mais Filtros
+                </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={() => setHealthFilter("all")}>
+                    <CheckCircle2
+                    className={cn(
+                        "mr-2 h-4 w-4",
+                        healthFilter === "all" ? "opacity-100" : "opacity-0"
+                    )}
+                    />
+                    Todos os Health Scores
                 </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {selectedProjectIds.length > 0 && (
-            <Button 
-              variant="default" 
-              onClick={handleCompare}
-              disabled={selectedProjectIds.length < 2}
-            >
-              Comparar ({selectedProjectIds.length})
-            </Button>
-          )}
-
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[180px]">
-              <Filter className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os Status</SelectItem>
-              <SelectItem value="todo">A Fazer</SelectItem>
-              <SelectItem value="in-progress">Em Andamento</SelectItem>
-              <SelectItem value="done">Concluído</SelectItem>
-              <SelectItem value="blocked">Bloqueado</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                <SlidersHorizontal className="h-4 w-4 mr-2" />
-                Mais Filtros
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem onClick={() => setHealthFilter("all")}>
-                <CheckCircle2
-                  className={cn(
-                    "mr-2 h-4 w-4",
-                    healthFilter === "all" ? "opacity-100" : "opacity-0"
-                  )}
-                />
-                Todos os Health Scores
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setHealthFilter("ok")}>
-                <div className="h-2 w-2 rounded-full bg-emerald-500 mr-2" />
-                Saúde OK
-                {healthFilter === "ok" && (
-                  <CheckCircle2 className="ml-auto h-4 w-4" />
-                )}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setHealthFilter("warning")}>
-                <div className="h-2 w-2 rounded-full bg-amber-500 mr-2" />
-                Atenção
-                {healthFilter === "warning" && (
-                  <CheckCircle2 className="ml-auto h-4 w-4" />
-                )}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setHealthFilter("critical")}>
-                <div className="h-2 w-2 rounded-full bg-rose-500 mr-2" />
-                Crítico
-                {healthFilter === "critical" && (
-                  <CheckCircle2 className="ml-auto h-4 w-4" />
-                )}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <DropdownMenuItem onClick={() => setHealthFilter("ok")}>
+                    <div className="h-2 w-2 rounded-full bg-emerald-500 mr-2" />
+                    Saúde OK
+                    {healthFilter === "ok" && (
+                    <CheckCircle2 className="ml-auto h-4 w-4" />
+                    )}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setHealthFilter("warning")}>
+                    <div className="h-2 w-2 rounded-full bg-amber-500 mr-2" />
+                    Atenção (7+ dias)
+                    {healthFilter === "warning" && (
+                    <CheckCircle2 className="ml-auto h-4 w-4" />
+                    )}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setHealthFilter("critical")}>
+                    <div className="h-2 w-2 rounded-full bg-rose-500 mr-2" />
+                    Crítico (15+ dias)
+                    {healthFilter === "critical" && (
+                    <CheckCircle2 className="ml-auto h-4 w-4" />
+                    )}
+                </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </div>
 

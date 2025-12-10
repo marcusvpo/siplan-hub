@@ -28,19 +28,22 @@ export function Editor({
   editorSerializedState,
   onChange,
   onSerializedChange,
-  placeholder
+  placeholder,
+  editable,
 }: {
   editorState?: EditorState
   editorSerializedState?: SerializedEditorState
   onChange?: (editorState: EditorState) => void
   onSerializedChange?: (editorSerializedState: SerializedEditorState) => void
   placeholder?: string
+  editable?: boolean
 }) {
   return (
     <div className="bg-background overflow-hidden rounded-lg border shadow w-full h-full flex flex-col">
       <LexicalComposer
         initialConfig={{
           ...editorConfig,
+          editable,
           ...(editorState ? { editorState } : {}),
           ...(editorSerializedState
             ? { editorState: JSON.stringify(editorSerializedState) }

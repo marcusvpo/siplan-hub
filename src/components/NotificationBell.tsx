@@ -45,15 +45,15 @@ export function NotificationBell() {
           console.log("Realtime event:", payload);
           let title = "Atualização de Projeto";
           let description = "Um projeto foi atualizado.";
-          const projectId = (payload.new as any).id;
-          const projectName = (payload.new as any).client_name;
+          const projectId = (payload.new as { id: string, client_name: string }).id;
+          const projectName = (payload.new as { id: string, client_name: string }).client_name;
 
           if (payload.eventType === "INSERT") {
              title = "Novo Projeto";
              description = `Projeto ${projectName} foi criado.`;
           } else if (payload.eventType === "UPDATE") {
-             const newData = payload.new as any;
-             const oldData = payload.old as any;
+             const newData = payload.new as { global_status: string };
+             const oldData = payload.old as { global_status: string };
              title = `Atualização: ${projectName}`;
              
              if (newData.global_status !== oldData.global_status) {

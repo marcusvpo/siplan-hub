@@ -107,7 +107,7 @@ export function CalendarControls() {
         >
           <TabsList className="grid w-[300px] grid-cols-2 h-10">
             <TabsTrigger value="real" className="font-semibold">
-              Real (Supabase)
+              Real
             </TabsTrigger>
             <TabsTrigger value="interactive" className="font-semibold">
               Playground

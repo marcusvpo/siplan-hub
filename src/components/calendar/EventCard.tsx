@@ -25,6 +25,7 @@ interface CalendarEventPillProps {
   onUpdate?: (event: CalendarEvent) => void; 
   isResizing?: boolean;
   isResizingAny?: boolean;
+  onEventClick?: (event: CalendarEvent) => void;
 }
 
 export function CalendarEventPill({
@@ -34,9 +35,10 @@ export function CalendarEventPill({
   onResizeStart,
   onUpdate,
   isResizing,
+  onEventClick,
 }: CalendarEventPillProps) {
   const member = CALENDAR_MEMBERS.find((m) => m.id === event.resourceId);
-  const colorClass = member?.color || "bg-slate-500";
+  const colorClass = event.color || member?.color || "bg-slate-500";
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(event.title);
 
@@ -90,11 +92,12 @@ export function CalendarEventPill({
           isInteractiveMode && !isEditing &&
             "cursor-grab active:cursor-grabbing hover:brightness-110"
         )}
-        onDoubleClick={(e) => {
+        onClick={(e) => {
             if (isInteractiveMode && segment.isStart) {
-                e.stopPropagation(); // Avoid dragging triggers?
-                // Double click is safer than single click for edit to avoid conflict with drag
-                // But user asked for "Clicking exactly on the text".
+                // Interactive mode edit logic is inside the children, 
+                // but if we click outside the text span (e.g. empty space), maybe we want to select?
+            } else if (!isInteractiveMode && onEventClick) {
+                onEventClick(event);
             }
         }}
       >
@@ -124,6 +127,9 @@ export function CalendarEventPill({
                         e.stopPropagation();
                         setIsEditing(true);
                         setEditTitle(event.title);
+                    } else if (onEventClick) {
+                        e.stopPropagation();
+                        onEventClick(event);
                     }
                 }}
             >

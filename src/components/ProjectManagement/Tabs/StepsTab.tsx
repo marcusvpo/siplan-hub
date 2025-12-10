@@ -7,7 +7,9 @@ import {
   ImplementationStageV2,
   PostStageV2,
   ImplementationPhase,
+  StageStatus,
 } from "@/types/ProjectV2";
+import { format } from "date-fns";
 import { useProjectForm } from "@/hooks/useProjectForm";
 import { StageCard } from "@/components/ProjectManagement/Forms/StageCard";
 import { Accordion } from "@/components/ui/accordion";
@@ -35,6 +37,8 @@ interface TabProps {
   onUpdate: (project: ProjectV2) => void;
 }
 
+type StatusType = "Adequado" | "Parcialmente Adequado" | "Inadequado" | "Aguardando Adequação";
+
 export function StepsTab({ project, onUpdate }: TabProps) {
   const { data, updateStage, saveState } = useProjectForm(project, onUpdate);
 
@@ -47,7 +51,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
             <Label>Status Estações</Label>
             <Select
                 value={stage.workstationsStatus}
-                onValueChange={(v) => updateStage("infra", { workstationsStatus: v })}
+                onValueChange={(v) => updateStage("infra", { workstationsStatus: v as StatusType })}
             >
                 <SelectTrigger className={cn(
                     stage.workstationsStatus === "Adequado" && "bg-green-100 text-green-800 border-green-200",
@@ -69,7 +73,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
             <Label>Status Servidor</Label>
             <Select
                 value={stage.serverStatus}
-                onValueChange={(v) => updateStage("infra", { serverStatus: v })}
+                onValueChange={(v) => updateStage("infra", { serverStatus: v as StatusType })}
             >
                 <SelectTrigger className={cn(
                     stage.serverStatus === "Adequado" && "bg-green-100 text-green-800 border-green-200",
@@ -104,7 +108,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
             <Checkbox
                 id="has-gap"
                 checked={stage.hasProductGap || false}
-                onCheckedChange={(checked) => updateStage("adherence", { hasProductGap: checked })}
+                onCheckedChange={(checked) => updateStage("adherence", { hasProductGap: checked === true })}
             />
             <Label htmlFor="has-gap">Existe Gap de Produto?</Label>
         </div>
@@ -139,7 +143,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
             <Label>Status Homologação</Label>
             <Select
                 value={stage.homologationStatus}
-                onValueChange={(v) => updateStage("conversion", { homologationStatus: v })}
+                onValueChange={(v) => updateStage("conversion", { homologationStatus: v as StatusType })}
             >
                 <SelectTrigger className={cn(
                     stage.homologationStatus === "Adequado" && "bg-green-100 text-green-800 border-green-200",
@@ -196,8 +200,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
 
       // Sync status if phase1
       if (phase === 'phase1' && updates.status) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          newImpl.status = updates.status as any; 
+          newImpl.status = updates.status as StageStatus; 
       }
 
       updateStage('implementation', newImpl);
@@ -225,7 +228,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                   <div className="space-y-2">
                       <Label>Status</Label>
-                      <Select value={stage.phase1?.status || "todo"} onValueChange={(v) => updatePhase('phase1', { status: v as any })}>
+                      <Select value={stage.phase1?.status || "todo"} onValueChange={(v) => updatePhase('phase1', { status: v as StageStatus })}>
                           <SelectTrigger className={cn(
                               stage.phase1?.status === "done" && "bg-emerald-100 text-emerald-800 border-emerald-200",
                               stage.phase1?.status === "in-progress" && "bg-blue-100 text-blue-800 border-blue-200",
@@ -271,7 +274,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                   <div className="space-y-2">
                       <Label>Status</Label>
-                      <Select value={stage.phase2?.status || "todo"} onValueChange={(v) => updatePhase('phase2', { status: v as any })}>
+                      <Select value={stage.phase2?.status || "todo"} onValueChange={(v) => updatePhase('phase2', { status: v as StageStatus })}>
                           <SelectTrigger className={cn(
                               stage.phase2?.status === "done" && "bg-emerald-100 text-emerald-800 border-emerald-200",
                               stage.phase2?.status === "in-progress" && "bg-blue-100 text-blue-800 border-blue-200",

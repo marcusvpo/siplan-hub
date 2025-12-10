@@ -135,11 +135,14 @@ export function useAutoSave<T>(
       setData(newData);
   }
 
+  const hasUnsavedChanges = JSON.stringify(data) !== lastSavedData.current;
+
   return {
     data,
     setData,
     handleChange,
     updateData,
     saveState,
+    hasUnsavedChanges
   };
 }

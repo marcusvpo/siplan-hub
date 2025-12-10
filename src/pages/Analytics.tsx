@@ -39,10 +39,10 @@ export default function Analytics() {
   // Average Lead Time (Cycle Time)
   // Approximate using updateAt - createdAt for done projects, or just use explicit dates if available.
   // Since we only have lightweight data in 'projects list', we might not have 'finishedAt' clearly for all stages.
-  // We'll use (updatedAt - createdAt) for 'done' projects as a proxy.
+  // We'll use (lastUpdatedAt - createdAt) for 'done' projects as a proxy.
   const doneProjectsData = projects.filter(p => p.globalStatus === "done");
   const totalLeadTime = doneProjectsData.reduce((acc, p) => {
-    return acc + differenceInDays(p.updatedAt, p.createdAt);
+    return acc + differenceInDays(p.lastUpdatedAt!, p.createdAt!);
   }, 0);
   const avgLeadTime = doneProjectsData.length > 0 ? Math.round(totalLeadTime / doneProjectsData.length) : 0;
 
@@ -51,7 +51,7 @@ export default function Analytics() {
   // 1. Deliveries per Month (Bar Chart)
   // Group 'done' projects by updated_at month
   const deliveriesByMonth = doneProjectsData.reduce((acc, p) => {
-    const month = format(p.updatedAt, "MMM/yy", { locale: ptBR });
+    const month = format(p.lastUpdatedAt!, "MMM/yy", { locale: ptBR });
     acc[month] = (acc[month] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
