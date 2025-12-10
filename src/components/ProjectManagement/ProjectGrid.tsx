@@ -1,81 +1,172 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useProjectsList } from "@/hooks/useProjectsList";
 import { useProjectsV2 } from "@/hooks/useProjectsV2";
 import { ProjectCardV3 } from "./ProjectCardV3";
 import { ProjectModal } from "./ProjectModal";
 import { ProjectV2 } from "@/types/ProjectV2";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Search, Filter, SlidersHorizontal, Loader2 } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { CheckCircle2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Virtuoso } from 'react-virtuoso';
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
+import { Virtuoso } from "react-virtuoso";
+import { AdvancedFilters } from "./AdvancedFilters";
 import { useFilterStore } from "@/stores/filterStore";
 
 export function ProjectGrid() {
   const { projects, isLoading } = useProjectsList();
-  const { updateProject, deleteProject } = useProjectsV2(); // Use V2 for mutations
-  const [selectedProject, setSelectedProject] = useState<Partial<ProjectV2> | null>(null);
-  
-  // Use Zustand store
-  const { 
-    searchQuery, setSearchQuery,
-    status: statusFilter, setStatus: setStatusFilter,
-    healthScore: healthFilter, setHealthScore: setHealthFilter,
-    savedFilters, saveFilter, loadFilter, deleteFilter, resetFilters
-  } = useFilterStore();
-  
+  const { updateProject, deleteProject } = useProjectsV2();
+  const [selectedProject, setSelectedProject] =
+    useState<Partial<ProjectV2> | null>(null);
   const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("active");
 
-  // Removed manual localStorage effects as Zustand handles persistence
+  const {
+    searchQuery,
+    viewPreset,
+    healthScore,
+    currentStage,
+    projectLeader,
+    systemType,
+    sortOrder,
+    dateFrom,
+    dateTo,
+  } = useFilterStore();
 
-  const filteredProjects = projects.filter((project) => {
-    // Safety check for search
-    const clientName = project.clientName || '';
-    const ticketNumber = project.ticketNumber || '';
-    
-    const matchesSearch =
-      clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      ticketNumber.toLowerCase().includes(searchQuery.toLowerCase());
+  // Extract unique values for filter dropdowns
+  const uniqueLeaders = useMemo(() => {
+    const leaders = new Set<string>();
+    projects.forEach((p) => {
+      if (p.projectLeader) leaders.add(p.projectLeader);
+    });
+    return Array.from(leaders).sort();
+  }, [projects]);
 
-    let matchesStatus = false;
-    if (activeTab === "active") {
-        matchesStatus = project.globalStatus === "todo" || project.globalStatus === "in-progress";
-    } else if (activeTab === "paused") {
-        matchesStatus = project.globalStatus === "blocked";
-    } else if (activeTab === "done") {
-        matchesStatus = project.globalStatus === "done" || project.globalStatus === "archived";
-    }
+  const uniqueSystemTypes = useMemo(() => {
+    const types = new Set<string>();
+    projects.forEach((p) => {
+      if (p.systemType) types.add(p.systemType);
+    });
+    return Array.from(types).sort();
+  }, [projects]);
 
-    const matchesHealth =
-      healthFilter === "all" || project.healthScore === healthFilter;
+  // Filter and Sort Logic
+  const filteredAndSortedProjects = useMemo(() => {
+    let result = projects.filter((project) => {
+      // Search filter
+      const clientName = project.clientName || "";
+      const ticketNumber = project.ticketNumber || "";
+      const matchesSearch =
+        clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        ticketNumber.toLowerCase().includes(searchQuery.toLowerCase());
 
-    return matchesSearch && matchesStatus && matchesHealth;
-  });
+      // View preset (status) filter
+      let matchesPreset = true;
+      if (viewPreset === "active") {
+        matchesPreset =
+          project.globalStatus === "todo" ||
+          project.globalStatus === "in-progress";
+      } else if (viewPreset === "paused") {
+        matchesPreset = project.globalStatus === "blocked";
+      } else if (viewPreset === "done") {
+        matchesPreset =
+          project.globalStatus === "done" ||
+          project.globalStatus === "archived";
+      }
+
+      // Health score filter
+      const matchesHealth =
+        healthScore === "all" || project.healthScore === healthScore;
+
+      // Current stage filter
+      let matchesStage = true;
+      if (currentStage !== "all") {
+        const stageData =
+          project.stages[currentStage as keyof typeof project.stages];
+        matchesStage = stageData?.status === "in-progress";
+      }
+
+      // Project leader filter
+      const matchesLeader =
+        !projectLeader || project.projectLeader === projectLeader;
+
+      // System type filter
+      const matchesSystemType =
+        !systemType || project.systemType === systemType;
+
+      // Date range filter
+      let matchesDateRange = true;
+      if (dateFrom) {
+        const projectDate = new Date(project.createdAt);
+        const fromDate = new Date(dateFrom);
+        matchesDateRange = projectDate >= fromDate;
+      }
+      if (dateTo && matchesDateRange) {
+        const projectDate = new Date(project.createdAt);
+        const toDate = new Date(dateTo);
+        toDate.setHours(23, 59, 59, 999);
+        matchesDateRange = projectDate <= toDate;
+      }
+
+      return (
+        matchesSearch &&
+        matchesPreset &&
+        matchesHealth &&
+        matchesStage &&
+        matchesLeader &&
+        matchesSystemType &&
+        matchesDateRange
+      );
+    });
+
+    // Sort
+    result = [...result].sort((a, b) => {
+      switch (sortOrder) {
+        case "alpha-asc":
+          return (a.clientName || "").localeCompare(b.clientName || "");
+        case "alpha-desc":
+          return (b.clientName || "").localeCompare(a.clientName || "");
+        case "uat-desc":
+          return (
+            new Date(b.lastUpdatedAt).getTime() -
+            new Date(a.lastUpdatedAt).getTime()
+          );
+        case "uat-asc":
+          return (
+            new Date(a.lastUpdatedAt).getTime() -
+            new Date(b.lastUpdatedAt).getTime()
+          );
+        case "created-desc":
+          return (
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+        case "created-asc":
+          return (
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          );
+        case "progress-desc":
+          return (b.overallProgress || 0) - (a.overallProgress || 0);
+        case "progress-asc":
+          return (a.overallProgress || 0) - (b.overallProgress || 0);
+        default:
+          return 0;
+      }
+    });
+
+    return result;
+  }, [
+    projects,
+    searchQuery,
+    viewPreset,
+    healthScore,
+    currentStage,
+    projectLeader,
+    systemType,
+    sortOrder,
+    dateFrom,
+    dateTo,
+  ]);
 
   const toggleSelection = (id: string, selected: boolean) => {
     if (selected) {
-      if (selectedProjectIds.length >= 3) {
-        return;
-      }
+      if (selectedProjectIds.length >= 3) return;
       setSelectedProjectIds([...selectedProjectIds, id]);
     } else {
       setSelectedProjectIds(selectedProjectIds.filter((pid) => pid !== id));
@@ -97,143 +188,68 @@ export function ProjectGrid() {
 
   return (
     <div className="space-y-6">
-      {/* Filters & Controls */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
-        <div className="relative w-full sm:w-96">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por cliente, ticket..."
-            className="pl-8"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
+      {/* Advanced Filters */}
+      <AdvancedFilters
+        leaders={uniqueLeaders}
+        systemTypes={uniqueSystemTypes}
+        onCompare={handleCompare}
+        selectedCount={selectedProjectIds.length}
+      />
 
-        <div className="flex flex-wrap gap-2 items-center">
-             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-[400px]">
-                <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="active">Em andamento</TabsTrigger>
-                    <TabsTrigger value="paused">Pausado</TabsTrigger>
-                    <TabsTrigger value="done">Finalizado</TabsTrigger>
-                </TabsList>
-            </Tabs>
-
-          <div className="flex gap-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon" title="Filtros Salvos">
-                    <SlidersHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuItem onClick={() => {
-                    const name = prompt("Nome do filtro:");
-                    if (name) saveFilter(name);
-                  }}>
-                    <div className="flex items-center gap-2">
-                        <span className="font-bold">+ Salvar Filtro Atual</span>
-                    </div>
-                  </DropdownMenuItem>
-                  {savedFilters.length > 0 && <div className="h-px bg-border my-1" />}
-                  {savedFilters.map((filter) => (
-                    <DropdownMenuItem key={filter.id} className="justify-between group">
-                      <span onClick={() => loadFilter(filter.id)} className="cursor-pointer flex-1">{filter.name}</span>
-                      <span 
-                        onClick={(e) => { e.stopPropagation(); deleteFilter(filter.id); }}
-                        className="text-muted-foreground hover:text-destructive p-1 rounded-sm"
-                      >
-                        ×
-                      </span>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-            {selectedProjectIds.length > 0 && (
-                <Button 
-                variant="default" 
-                onClick={handleCompare}
-                disabled={selectedProjectIds.length < 2}
-                >
-                Comparar ({selectedProjectIds.length})
-                </Button>
-            )}
-
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                <Button variant="outline">
-                    <SlidersHorizontal className="h-4 w-4 mr-2" />
-                    Mais Filtros
-                </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem onClick={() => setHealthFilter("all")}>
-                    <CheckCircle2
-                    className={cn(
-                        "mr-2 h-4 w-4",
-                        healthFilter === "all" ? "opacity-100" : "opacity-0"
-                    )}
-                    />
-                    Todos os Health Scores
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setHealthFilter("ok")}>
-                    <div className="h-2 w-2 rounded-full bg-emerald-500 mr-2" />
-                    Saúde OK
-                    {healthFilter === "ok" && (
-                    <CheckCircle2 className="ml-auto h-4 w-4" />
-                    )}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setHealthFilter("warning")}>
-                    <div className="h-2 w-2 rounded-full bg-amber-500 mr-2" />
-                    Atenção (7+ dias)
-                    {healthFilter === "warning" && (
-                    <CheckCircle2 className="ml-auto h-4 w-4" />
-                    )}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setHealthFilter("critical")}>
-                    <div className="h-2 w-2 rounded-full bg-rose-500 mr-2" />
-                    Crítico (15+ dias)
-                    {healthFilter === "critical" && (
-                    <CheckCircle2 className="ml-auto h-4 w-4" />
-                    )}
-                </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
+      {/* Results Count */}
+      <div className="flex items-center justify-between text-sm text-muted-foreground">
+        <span>
+          {filteredAndSortedProjects.length} projeto
+          {filteredAndSortedProjects.length !== 1 ? "s" : ""} encontrado
+          {filteredAndSortedProjects.length !== 1 ? "s" : ""}
+        </span>
+        {selectedProjectIds.length > 0 && (
+          <span className="text-primary font-medium">
+            {selectedProjectIds.length} selecionado
+            {selectedProjectIds.length !== 1 ? "s" : ""}
+          </span>
+        )}
       </div>
-
-
 
       {/* Grid with Virtualization */}
-      <div className="flex-1 h-[calc(100vh-220px)] min-h-[400px]">
-        <Virtuoso
-          data={projects as ProjectV2[]} // Cast partial to ProjectV2 for now
-          itemContent={(index, project) => (
-            <div className="pb-3 pr-2">
-              <ProjectCardV3
-                key={project.id}
-                project={project}
-                onClick={() => setSelectedProject(project)}
-                selected={selectedProjectIds.includes(project.id)}
-                onSelect={(selected) => toggleSelection(project.id, selected)}
-                onAction={(action, project) => {
-                  if (action === "delete") {
-                    if (confirm(`Tem certeza que deseja excluir o projeto "${project.clientName}"?\n\nEsta ação é irreversível e apagará TODOS os dados relacionados a este projeto permanentemente.`)) {
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      (deleteProject as any).mutate(project.id);
+      {filteredAndSortedProjects.length > 0 ? (
+        <div className="flex-1 h-[calc(100vh-320px)] min-h-[400px]">
+          <Virtuoso
+            data={filteredAndSortedProjects as ProjectV2[]}
+            itemContent={(index, project) => (
+              <div className="pb-3 pr-2">
+                <ProjectCardV3
+                  key={project.id}
+                  project={project}
+                  onClick={() => setSelectedProject(project)}
+                  selected={selectedProjectIds.includes(project.id)}
+                  onSelect={(selected) => toggleSelection(project.id, selected)}
+                  onAction={(action, project) => {
+                    if (action === "delete") {
+                      if (
+                        confirm(
+                          `Tem certeza que deseja excluir o projeto "${project.clientName}"?\n\nEsta ação é irreversível e apagará TODOS os dados relacionados a este projeto permanentemente.`
+                        )
+                      ) {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        (deleteProject as any).mutate(project.id);
+                      }
                     }
-                  }
-                }}
-              />
-            </div>
-          )}
-        />
-      </div>
-
-      {filteredProjects.length === 0 && (
-        <div className="text-center py-20 text-muted-foreground">
-          Nenhum projeto encontrado com os filtros atuais.
+                  }}
+                />
+              </div>
+            )}
+          />
+        </div>
+      ) : (
+        <div className="text-center py-20">
+          <div className="text-6xl mb-4">🔍</div>
+          <h3 className="text-lg font-semibold text-muted-foreground mb-2">
+            Nenhum projeto encontrado
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Tente ajustar os filtros ou realizar uma nova busca
+          </p>
         </div>
       )}
 
