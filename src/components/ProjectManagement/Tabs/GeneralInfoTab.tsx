@@ -158,7 +158,9 @@ export function GeneralInfoTab({ project, onUpdate }: TabProps) {
                   (stages.reduce((acc, stage, index) => {
                     if (
                       stage.status === "done" ||
-                      stage.status === "in-progress"
+                      stage.status === "in-progress" ||
+                      stage.status === "waiting_adjustment" ||
+                      stage.status === "blocked"
                     )
                       return index;
                     return acc;
@@ -174,6 +176,8 @@ export function GeneralInfoTab({ project, onUpdate }: TabProps) {
             const Icon = stage.icon;
             const isDone = stage.status === "done";
             const isActive = stage.status === "in-progress";
+            const isWaitingAdjustment = stage.status === "waiting_adjustment";
+            const isBlocked = stage.status === "blocked";
 
             return (
               <div
@@ -185,6 +189,10 @@ export function GeneralInfoTab({ project, onUpdate }: TabProps) {
                     "h-20 w-20 rounded-2xl rotate-3 flex items-center justify-center transition-all duration-500 border-4 shadow-xl",
                     isDone
                       ? "bg-gradient-to-br from-emerald-500 to-emerald-600 border-emerald-400 text-white shadow-emerald-500/30 rotate-0"
+                      : isWaitingAdjustment
+                      ? "bg-gradient-to-br from-orange-500 to-orange-600 border-orange-400 text-white shadow-orange-500/30 scale-105 -rotate-2 ring-4 ring-orange-500/20"
+                      : isBlocked
+                      ? "bg-gradient-to-br from-amber-500 to-amber-600 border-amber-400 text-white shadow-amber-500/30 scale-105"
                       : isActive
                       ? "bg-gradient-to-br from-blue-500 to-blue-600 border-blue-400 text-white shadow-blue-500/30 scale-110 -rotate-3 ring-4 ring-blue-500/20"
                       : "bg-card border-border text-muted-foreground hover:border-primary/50 hover:text-primary"
@@ -200,14 +208,23 @@ export function GeneralInfoTab({ project, onUpdate }: TabProps) {
                   <p
                     className={cn(
                       "text-xs font-bold uppercase tracking-widest",
-                      isActive
-                        ? "text-blue-600 dark:text-blue-400"
-                        : isDone
+                      isDone
                         ? "text-emerald-600 dark:text-emerald-400"
+                        : isWaitingAdjustment
+                        ? "text-orange-600 dark:text-orange-400"
+                        : isBlocked
+                        ? "text-amber-600 dark:text-amber-400"
+                        : isActive
+                        ? "text-blue-600 dark:text-blue-400"
                         : "text-muted-foreground"
                     )}
                   >
                     {stage.label}
+                    {isWaitingAdjustment && (
+                      <span className="block text-[10px] font-medium text-orange-500 dark:text-orange-300 mt-0.5">
+                        Em Adequação
+                      </span>
+                    )}
                   </p>
                 </div>
               </div>
