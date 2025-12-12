@@ -63,7 +63,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
           Status Estações
         </Label>
         <Select
-          value={stage.workstationsStatus}
+          value={stage.workstationsStatus || ""}
           onValueChange={(v) =>
             updateStage("infra", { workstationsStatus: v as StatusType })
           }
@@ -123,7 +123,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
           Status Servidor
         </Label>
         <Select
-          value={stage.serverStatus}
+          value={stage.serverStatus || ""}
           onValueChange={(v) =>
             updateStage("infra", { serverStatus: v as StatusType })
           }
@@ -260,7 +260,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
           Status Homologação
         </Label>
         <Select
-          value={stage.homologationStatus}
+          value={stage.homologationStatus || ""}
           onValueChange={(v) =>
             updateStage("conversion", { homologationStatus: v as StatusType })
           }
@@ -780,7 +780,8 @@ export function StepsTab({ project, onUpdate }: TabProps) {
           label="5. Implantação & Treinamento"
           icon={Rocket}
           status={stagesData.implementation.status}
-          responsible={stagesData.implementation.responsible}
+          responsible={stagesData.implementation.responsible || ""}
+          hideResponsible={true}
           // Phase 1 dates are used as the main dates for the implementation stage
           // These are synced automatically when phase 1 dates are updated
           startDate={

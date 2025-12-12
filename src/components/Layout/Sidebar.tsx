@@ -15,6 +15,7 @@ import {
   BarChart3,
   LogOut,
   Calendar as CalendarIcon,
+  Rocket,
 } from "lucide-react";
 import {
   Collapsible,
@@ -142,6 +143,16 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                       <span>Calendário</span>
                     </Button>
                   </Link>
+                  <Link to="/deployments">
+                    <Button
+                      variant={isActive("/deployments") ? "secondary" : "ghost"}
+                      size="sm"
+                      className="w-full justify-start gap-3 h-9"
+                    >
+                      <Rocket className="h-4 w-4" />
+                      <span>Próx. Implantações</span>
+                    </Button>
+                  </Link>
                 </div>
               </CollapsibleContent>
             </Collapsible>
@@ -150,7 +161,8 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
               variant={
                 isActive("/projects") ||
                 isActive("/reports") ||
-                isActive("/calendar")
+                isActive("/calendar") ||
+                isActive("/deployments")
                   ? "secondary"
                   : "ghost"
               }

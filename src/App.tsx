@@ -12,6 +12,7 @@ import CompareProjects from "./pages/CompareProjects";
 import NotFound from "./pages/NotFound";
 import Calendar from "./pages/Calendar";
 import { MainLayout } from "@/components/Layout/MainLayout";
+import NextDeployments from "@/pages/NextDeployments";
 
 const queryClient = new QueryClient();
 
@@ -60,6 +61,10 @@ const App = () => (
                         <Route path="/compare" element={<CompareProjects />} />
                         <Route path="/reports" element={<Reports />} />
                         <Route path="/analytics" element={<Analytics />} />
+                        <Route
+                          path="/deployments"
+                          element={<NextDeployments />}
+                        />
                         <Route path="*" element={<NotFound />} />
                       </Routes>
                     </MainLayout>
