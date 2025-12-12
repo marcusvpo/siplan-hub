@@ -1,6 +1,7 @@
 # Regras Universais do Projeto Siplan Hub
 
 ## 1. Stack Tecnológica Core
+
 - **Frontend:** React + TypeScript (Vite)
 - **Estilização:** TailwindCSS + Shadcn/UI (Radix Primitives)
 - **Estado Global:** Zustand (preferencial para UI state) + TanStack Query (para server state)
@@ -11,6 +12,7 @@
 - **Drag & Drop:** @dnd-kit/core
 
 ## 2. Padrões de Código e Arquitetura
+
 - **Estrutura de Diretórios:**
   - `/components`: Componentes reutilizáveis (UI, Forms, Widgets).
   - `/pages`: Componentes de nível de página/rota.
@@ -35,6 +37,7 @@
   - Use `cn()` (`clsx` + `tailwind-merge`) para concatenação condicional de classes.
 
 ## 3. Regras Críticas (NÃO QUEBRAR)
+
 - **Calendário (CalendarGrid):**
   - **NUNCA** use `overflow: hidden` nas linhas da semana (`js-week-row`).
   - **NUNCA** coloque eventos como filhos diretos da célula do dia.
@@ -54,5 +57,6 @@
   - Mantenha atributos `aria-*` ao usar Radix.
 
 ## 4. Fluxo de Trabalho
+
 - Ao criar novas funcionalidades, verifique se existem componentes reutilizáveis na pasta `/ui`.
 - Atualize os tipos em `src/types` antes de implementar a lógica.

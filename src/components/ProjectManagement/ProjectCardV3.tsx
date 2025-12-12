@@ -72,6 +72,28 @@ export function ProjectCardV3({
     }
   };
 
+  const getGlobalStatusBadge = (status: ProjectV2["globalStatus"]) => {
+    switch (status) {
+      case "done":
+        return {
+          label: "Finalizado",
+          className: "bg-blue-500 text-white border-blue-600",
+        };
+      case "blocked":
+        return {
+          label: "Pausado",
+          className: "bg-amber-500 text-white border-amber-600",
+        };
+      default: // in-progress
+        return {
+          label: "Em andamento",
+          className: "bg-emerald-500 text-white border-emerald-600",
+        };
+    }
+  };
+
+  const globalStatusBadge = getGlobalStatusBadge(project.globalStatus);
+
   const stages = [
     { id: "infra", label: "Infra", status: project.stages.infra.status },
     {
@@ -99,7 +121,7 @@ export function ProjectCardV3({
 
   return (
     <Card
-      className="w-full hover:shadow-lg hover:border-primary/20 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer flex flex-row items-center p-4 gap-6 h-28 relative overflow-hidden group bg-card/50 backdrop-blur-sm"
+      className="w-full hover:shadow-lg hover:border-primary/20 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer flex flex-row items-center p-4 gap-6 h-28 relative overflow-visible group bg-card/50 backdrop-blur-sm"
       onClick={() => onClick(project)}
     >
       <div
@@ -109,6 +131,16 @@ export function ProjectCardV3({
           "group-hover:w-2"
         )}
       />
+
+      {/* Project Status Badge - Top Right Corner */}
+      <Badge
+        className={cn(
+          "absolute -top-2 -right-2 z-10 text-[10px] px-3 py-1 font-bold shadow-lg border-2 border-background",
+          globalStatusBadge.className
+        )}
+      >
+        {globalStatusBadge.label}
+      </Badge>
 
       {/* Selection Checkbox */}
       {onSelect && (
@@ -143,22 +175,6 @@ export function ProjectCardV3({
           >
             {project.clientName}
           </h3>
-          {project.healthScore === "warning" && (
-            <Badge
-              variant="secondary"
-              className="bg-amber-100 text-amber-800 border-amber-200 text-[10px] px-1.5 py-0.5 h-5 font-semibold"
-            >
-              Atenção
-            </Badge>
-          )}
-          {project.healthScore === "critical" && (
-            <Badge
-              variant="destructive"
-              className="text-[10px] px-1.5 py-0.5 h-5 font-semibold shadow-sm"
-            >
-              Crítico
-            </Badge>
-          )}
         </div>
 
         <div className="flex items-center gap-3 text-xs text-muted-foreground">

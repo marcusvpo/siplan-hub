@@ -3,14 +3,15 @@ import { useProjectsV2 } from "@/hooks/useProjectsV2";
 import { GlobalMetrics } from "@/components/Reports/GlobalMetrics";
 import { TimePerStageChart } from "@/components/Reports/TimePerStageChart";
 import { TrendChart } from "@/components/Reports/TrendChart";
-import { TopResponsibles } from "@/components/Reports/TopResponsibles";
+import { StatusDistribution } from "@/components/Reports/StatusDistribution";
+import { HealthDistribution } from "@/components/Reports/HealthDistribution";
+import { AdherenceGapCard } from "@/components/Reports/AdherenceGapCard";
 import { ReportsFilters } from "@/components/Reports/ReportsFilters";
 import { Loader2 } from "lucide-react";
 
 export default function Reports() {
   const { projects, isLoading } = useProjectsV2();
   const [systemFilter, setSystemFilter] = useState("all");
-  const [responsibleFilter, setResponsibleFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState<Date | undefined>();
 
   if (isLoading) {
@@ -21,14 +22,16 @@ export default function Reports() {
     );
   }
 
-  // Extract unique responsibles
-  const responsibles = Array.from(new Set(projects.map(p => p.projectLeader))).sort();
+  // Extract unique systems from actual projects (dynamic filter)
+  const systems = Array.from(
+    new Set(projects.map((p) => p.systemType).filter(Boolean))
+  ).sort();
 
   // Apply filters
-  const filteredProjects = projects.filter(project => {
-    const matchesSystem = systemFilter === "all" || project.systemType === systemFilter;
-    const matchesResponsible = responsibleFilter === "all" || project.projectLeader === responsibleFilter;
-    
+  const filteredProjects = projects.filter((project) => {
+    const matchesSystem =
+      systemFilter === "all" || project.systemType === systemFilter;
+
     let matchesDate = true;
     if (dateFilter) {
       const projectDate = new Date(project.createdAt);
@@ -36,35 +39,38 @@ export default function Reports() {
       matchesDate = projectDate >= dateFilter;
     }
 
-    return matchesSystem && matchesResponsible && matchesDate;
+    return matchesSystem && matchesDate;
   });
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Relatórios & Análises</h2>
+        <h2 className="text-2xl font-bold tracking-tight">
+          Relatórios & Análises
+        </h2>
         <p className="text-muted-foreground">
-          Acompanhe métricas, tendências e performance da equipe.
+          Acompanhe métricas, tendências e performance dos projetos.
         </p>
       </div>
 
-      <ReportsFilters 
+      <ReportsFilters
         onSystemChange={setSystemFilter}
-        onResponsibleChange={setResponsibleFilter}
         onDateChange={setDateFilter}
-        responsibles={responsibles}
+        systems={systems}
       />
 
       <GlobalMetrics projects={filteredProjects} />
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <TimePerStageChart projects={filteredProjects} />
-        <TrendChart projects={filteredProjects} />
+      {/* Status and Health Distribution Cards */}
+      <div className="grid gap-6 md:grid-cols-3">
+        <StatusDistribution projects={filteredProjects} />
+        <HealthDistribution projects={filteredProjects} />
+        <AdherenceGapCard projects={filteredProjects} />
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <TopResponsibles projects={filteredProjects} />
-        {/* Placeholder for another chart or list if needed */}
+        <TimePerStageChart projects={filteredProjects} />
+        <TrendChart projects={filteredProjects} />
       </div>
     </div>
   );

@@ -21,15 +21,13 @@ import { useState } from "react";
 interface ReportsFiltersProps {
   onSystemChange: (value: string) => void;
   onDateChange: (date: Date | undefined) => void;
-  onResponsibleChange: (value: string) => void;
-  responsibles: string[];
+  systems: string[];
 }
 
-export function ReportsFilters({ 
-  onSystemChange, 
-  onDateChange, 
-  onResponsibleChange,
-  responsibles 
+export function ReportsFilters({
+  onSystemChange,
+  onDateChange,
+  systems,
 }: ReportsFiltersProps) {
   const [date, setDate] = useState<Date>();
 
@@ -51,10 +49,11 @@ export function ReportsFilters({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">Todos os Sistemas</SelectItem>
-          <SelectItem value="Orion TN">Orion TN</SelectItem>
-          <SelectItem value="Autocom">Autocom</SelectItem>
-          <SelectItem value="Linx">Linx</SelectItem>
-          <SelectItem value="Totvs">Totvs</SelectItem>
+          {systems.map((system) => (
+            <SelectItem key={system} value={system}>
+              {system}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
 
@@ -68,7 +67,11 @@ export function ReportsFilters({
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {date ? format(date, "PPP", { locale: ptBR }) : <span>Data Início</span>}
+            {date ? (
+              format(date, "PPP", { locale: ptBR })
+            ) : (
+              <span>Data Início</span>
+            )}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
@@ -80,20 +83,6 @@ export function ReportsFilters({
           />
         </PopoverContent>
       </Popover>
-
-      <Select onValueChange={onResponsibleChange} defaultValue="all">
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Responsável" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Todos Responsáveis</SelectItem>
-          {responsibles.map((resp) => (
-            <SelectItem key={resp} value={resp}>
-              {resp}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
     </div>
   );
 }

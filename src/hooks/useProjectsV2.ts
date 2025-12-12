@@ -297,10 +297,21 @@ function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
     lastUpdatedBy: (row.last_update_by as string) || 'Sistema',
     
     stages: {
-      infra: createStage<InfraStageV2>('infra'),
+      infra: {
+        ...createStage<InfraStageV2>('infra'),
+        // Explicitly read infra-specific status fields to ensure persistence
+        workstationsStatus: row.infra_workstations_status as InfraStageV2['workstationsStatus'],
+        serverStatus: row.infra_server_status as InfraStageV2['serverStatus'],
+        workstationsCount: row.infra_workstations_count as number | undefined,
+      },
       adherence: createStage<AdherenceStageV2>('adherence'),
       environment: createStage<EnvironmentStageV2>('environment'),
-      conversion: createStage<ConversionStageV2>('conversion'),
+      conversion: {
+        ...createStage<ConversionStageV2>('conversion'),
+        // Explicitly read conversion-specific status fields
+        homologationStatus: row.conversion_homologation_status as ConversionStageV2['homologationStatus'],
+        homologationResponsible: row.conversion_homologation_responsible as string | undefined,
+      },
       implementation: createStage<ImplementationStageV2>('implementation'),
       post: createStage<PostStageV2>('post'),
     },
