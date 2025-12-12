@@ -300,17 +300,30 @@ function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
       infra: {
         ...createStage<InfraStageV2>('infra'),
         // Explicitly read infra-specific status fields to ensure persistence
-        workstationsStatus: row.infra_workstations_status as InfraStageV2['workstationsStatus'],
-        serverStatus: row.infra_server_status as InfraStageV2['serverStatus'],
+        // Only override if the value exists in the database (not null/undefined)
+        workstationsStatus: (row.infra_workstations_status as InfraStageV2['workstationsStatus']) || undefined,
+        serverStatus: (row.infra_server_status as InfraStageV2['serverStatus']) || undefined,
         workstationsCount: row.infra_workstations_count as number | undefined,
       },
       adherence: createStage<AdherenceStageV2>('adherence'),
-      environment: createStage<EnvironmentStageV2>('environment'),
+      environment: {
+        ...createStage<EnvironmentStageV2>('environment'),
+        startDate: row.environment_start_date ? new Date(row.environment_start_date as string) : undefined,
+        endDate: row.environment_end_date ? new Date(row.environment_end_date as string) : undefined,
+      },
       conversion: {
         ...createStage<ConversionStageV2>('conversion'),
         // Explicitly read conversion-specific status fields
         homologationStatus: row.conversion_homologation_status as ConversionStageV2['homologationStatus'],
         homologationResponsible: row.conversion_homologation_responsible as string | undefined,
+        sentAt: row.conversion_sent_at ? new Date(row.conversion_sent_at as string) : undefined,
+        finishedAt: row.conversion_finished_at ? new Date(row.conversion_finished_at as string) : undefined,
+        startDate: row.conversion_sent_at 
+          ? new Date(row.conversion_sent_at as string) 
+          : (row.conversion_start_date ? new Date(row.conversion_start_date as string) : undefined),
+        endDate: row.conversion_finished_at 
+          ? new Date(row.conversion_finished_at as string) 
+          : (row.conversion_end_date ? new Date(row.conversion_end_date as string) : undefined),
       },
       implementation: createStage<ImplementationStageV2>('implementation'),
       post: createStage<PostStageV2>('post'),
@@ -415,6 +428,10 @@ function transformToDB(project: Partial<ProjectV2>): Record<string, unknown> {
       const s = stages.environment;
       dbRow.environment_status = s.status;
       dbRow.environment_responsible = s.responsible;
+      // Add start/end dates for Environment
+      dbRow.environment_start_date = s.startDate || null;
+      dbRow.environment_end_date = s.endDate || null;
+      
       dbRow.environment_real_date = s.realDate || null;
       dbRow.environment_observations = s.observations;
       dbRow.environment_os_version = s.osVersion;
@@ -439,8 +456,8 @@ function transformToDB(project: Partial<ProjectV2>): Record<string, unknown> {
       // New Conversion Fields
       dbRow.conversion_homologation_status = s.homologationStatus;
       dbRow.conversion_homologation_responsible = s.homologationResponsible;
-      // dbRow.conversion_sent_at = s.sentAt || null; 
-      // dbRow.conversion_finished_at = s.finishedAt || null; 
+      dbRow.conversion_sent_at = s.startDate || s.sentAt || null; 
+      dbRow.conversion_finished_at = s.endDate || s.finishedAt || null; 
     }
 
     // Implementation

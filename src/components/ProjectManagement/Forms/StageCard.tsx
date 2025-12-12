@@ -32,7 +32,9 @@ interface StageCardProps {
   onUpdate: (updates: Record<string, unknown>) => void;
   children?: React.ReactNode;
   isExpanded?: boolean;
+
   hideDates?: boolean; // Hide date fields for stages like implementation where phases have their own dates
+  hideResponsible?: boolean;
 }
 
 export function StageCard({
@@ -47,6 +49,7 @@ export function StageCard({
   onUpdate,
   children,
   hideDates = false,
+  hideResponsible = false,
 }: StageCardProps) {
   const getStatusColor = (s: StageStatus) => {
     switch (s) {
@@ -175,7 +178,7 @@ export function StageCard({
             <span className="font-bold text-lg tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
               {label}
             </span>
-            {responsible && (
+            {!hideResponsible && responsible && (
               <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
                 <User className="h-3 w-3" />
                 {responsible}
@@ -252,17 +255,19 @@ export function StageCard({
           </div>
 
           {/* Responsible Field */}
-          <div className="space-y-2.5">
-            <Label className="text-xs font-bold uppercase tracking-widest text-violet-600 flex items-center gap-2">
-              <User className="h-3.5 w-3.5" />
-              Responsável
-            </Label>
-            <AutocompleteInput
-              value={responsible}
-              onChange={(v) => onUpdate({ responsible: v })}
-              className="h-11 border-2 border-violet-200 hover:border-violet-300 focus:border-violet-400 bg-violet-50/50"
-            />
-          </div>
+          {!hideResponsible && (
+            <div className="space-y-2.5">
+              <Label className="text-xs font-bold uppercase tracking-widest text-violet-600 flex items-center gap-2">
+                <User className="h-3.5 w-3.5" />
+                Responsável
+              </Label>
+              <AutocompleteInput
+                value={responsible}
+                onChange={(v) => onUpdate({ responsible: v })}
+                className="h-11 border-2 border-violet-200 hover:border-violet-300 focus:border-violet-400 bg-violet-50/50"
+              />
+            </div>
+          )}
 
           {/* Start Date Field - Hidden when hideDates is true */}
           {!hideDates && (

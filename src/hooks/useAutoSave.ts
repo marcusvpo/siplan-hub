@@ -27,32 +27,39 @@ export function useAutoSave<T>(
     onSaveRef.current = onSave;
   }, [onSave]);
 
+  // Ref to track current data for sync checks
+  const currentDataRef = useRef<string>(JSON.stringify(initialData));
+  
+  // Keep currentDataRef in sync with data
+  useEffect(() => {
+    currentDataRef.current = JSON.stringify(data);
+  }, [data]);
+
   // Sync with initialData if it changes significantly
+  // This is important when the data is reloaded from the database (e.g., page refresh)
   useEffect(() => {
     const initialJson = JSON.stringify(initialData);
+    
+    // Only sync if:
+    // 1. initialData is different from lastSavedData (external update happened)
+    // 2. AND we don't have unsaved local changes (data matches lastSavedData)
+    // This prevents overwriting user's pending edits
     if (initialJson !== lastSavedData.current) {
-        // If initialData changed and it's different from what we last saved, 
-        // it means it was updated externally (e.g. by another user or a refresh).
-        // We should update our local state to reflect that, BUT we need to be careful not to overwrite user's unsaved work.
-        // Since we debounce, 'data' might be ahead of 'initialData'.
-        
-        // For now, let's only update if we are not in the middle of editing? 
-        // Or simply update lastSavedData so we don't re-save.
+      // Check if we have local unsaved changes
+      const hasLocalChanges = currentDataRef.current !== lastSavedData.current;
+      
+      if (!hasLocalChanges) {
+        // No local changes, safe to sync with external data
+        setData(initialData);
         lastSavedData.current = initialJson;
-        
-        // If we want to reflect external changes:
-        // setData(initialData); 
-        // But this is dangerous. Let's assume for this specific issue (notes not saving), 
-        // the problem might be that 'initialData' is not being updated after save, 
-        // so the hook thinks nothing changed on next edit?
-        
-        // Actually, if onSave is successful, we update lastSavedData. 
-        // If parent re-renders with new initialData (which should match lastSavedData), nothing happens.
-        // If parent re-renders with OLD initialData, we might have a conflict.
-        
-        // Let's trust that onSave updates the parent state eventually.
+      } else {
+        // We have local changes, just update the reference
+        // but don't overwrite local state to preserve user's work
+        lastSavedData.current = initialJson;
+      }
     }
   }, [initialData]);
+
 
   useEffect(() => {
     if (firstRender.current) {
