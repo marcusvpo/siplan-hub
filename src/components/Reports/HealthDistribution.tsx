@@ -9,7 +9,9 @@ interface HealthDistributionProps {
 export function HealthDistribution({ projects }: HealthDistributionProps) {
   const ok = projects.filter((p) => p.healthScore === "ok").length;
   const warning = projects.filter((p) => p.healthScore === "warning").length;
-  const critical = projects.filter((p) => p.healthScore === "critical").length;
+  const critical = projects.filter(
+    (p) => p.healthScore === "critical" && p.globalStatus !== "blocked"
+  ).length;
   const total = projects.length;
 
   const getPercentage = (count: number) =>

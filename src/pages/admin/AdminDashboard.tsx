@@ -1,5 +1,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Activity, ShieldCheck } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Users,
+  Activity,
+  ShieldCheck,
+  UserCog,
+  Users as UsersIcon,
+} from "lucide-react";
+import UserManagement from "./UserManagement";
+import TeamManagement from "./TeamManagement";
 
 export default function AdminDashboard() {
   return (
@@ -49,18 +58,24 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4">
-          <CardHeader>
-            <CardTitle>Atividade Recente</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Implementação futura de logs de atividade.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      <Tabs defaultValue="users" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="users">
+            <UserCog className="mr-2 h-4 w-4" />
+            Usuários
+          </TabsTrigger>
+          <TabsTrigger value="teams">
+            <UsersIcon className="mr-2 h-4 w-4" />
+            Equipes
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="users" className="space-y-4">
+          <UserManagement />
+        </TabsContent>
+        <TabsContent value="teams" className="space-y-4">
+          <TeamManagement />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

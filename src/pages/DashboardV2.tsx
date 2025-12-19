@@ -8,8 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { ModeToggle } from "@/components/mode-toggle";
-import { TrendChart } from "@/components/Dashboard/TrendChart";
-import { TimelineChart } from "@/components/Dashboard/TimelineChart";
 
 import { useToast } from "@/components/ui/use-toast";
 import { useEffect } from "react";
@@ -21,9 +19,9 @@ export default function DashboardV2() {
 
   useEffect(() => {
     if (isLoading) return;
-    
-    const overdueProjects = projects.filter(p => 
-      p.nextFollowUpDate && new Date(p.nextFollowUpDate) < new Date()
+
+    const overdueProjects = projects.filter(
+      (p) => p.nextFollowUpDate && new Date(p.nextFollowUpDate) < new Date()
     );
 
     if (overdueProjects.length > 0) {
@@ -36,13 +34,11 @@ export default function DashboardV2() {
   }, [projects, isLoading, toast]);
 
   const criticalAlerts = projects
-    .filter((p) => p.healthScore === "critical")
+    .filter((p) => p.healthScore === "critical" && p.globalStatus !== "blocked")
     .slice(0, 5);
 
   return (
     <div className="min-h-screen bg-background">
-
-
       <main className="container mx-auto px-6 py-8 space-y-6">
         {/* Header Section */}
         <div>
@@ -55,14 +51,10 @@ export default function DashboardV2() {
         {/* KPIs */}
         <DashboardKPI />
 
-
-
         {/* Gráficos */}
         <div className="grid gap-6 md:grid-cols-2">
           <ProjectDistributionChart projects={projects} />
           <StatusChart projects={projects} />
-          <TrendChart projects={projects} />
-          <TimelineChart projects={projects} />
         </div>
 
         {/* Alertas Críticos */}
@@ -84,7 +76,8 @@ export default function DashboardV2() {
                     <div className="space-y-1">
                       <p className="font-medium">{project.clientName}</p>
                       <p className="text-sm text-muted-foreground">
-                        Ticket: {project.ticketNumber} • Sistema: {project.systemType}
+                        Ticket: {project.ticketNumber} • Sistema:{" "}
+                        {project.systemType}
                       </p>
                     </div>
                     <Badge variant="destructive">Crítico</Badge>

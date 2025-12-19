@@ -4,7 +4,7 @@ import { ProjectV2, KPIData } from "@/types/ProjectV2";
 export const useKPIs = (projects: ProjectV2[]): KPIData => {
   return useMemo(() => {
     const totalProjects = projects.length;
-    const criticalProjects = projects.filter((p) => p.healthScore === "critical").length;
+    const criticalProjects = projects.filter((p) => p.healthScore === "critical" && p.globalStatus !== "blocked").length;
     const blockedProjects = projects.filter((p) => p.globalStatus === "blocked").length;
     const atRiskProjects = projects.filter((p) => p.healthScore === "warning").length;
     const completedProjects = projects.filter((p) => p.globalStatus === "done").length;

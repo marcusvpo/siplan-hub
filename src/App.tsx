@@ -24,6 +24,7 @@ import Login from "@/pages/Login";
 import AdminLayout from "@/layouts/AdminLayout";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import UserManagement from "@/pages/admin/UserManagement";
+import { AdminSettings } from "@/components/Admin/Settings/AdminSettings";
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -42,10 +43,7 @@ const App = () => (
                 <Route index element={<AdminDashboard />} />
                 <Route path="users" element={<UserManagement />} />
                 <Route path="team" element={<TeamManagement />} />
-                <Route
-                  path="settings"
-                  element={<div className="p-8">Configurações (Em breve)</div>}
-                />
+                <Route path="settings" element={<AdminSettings />} />
               </Route>
 
               {/* Protected App Routes */}
