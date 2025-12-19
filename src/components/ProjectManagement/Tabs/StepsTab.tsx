@@ -9,6 +9,7 @@ import {
   ImplementationPhase,
   StageStatus,
 } from "@/types/ProjectV2";
+import { useState } from "react";
 import { format } from "date-fns";
 import { useProjectForm } from "@/hooks/useProjectForm";
 import { StageCard } from "@/components/ProjectManagement/Forms/StageCard";
@@ -25,9 +26,12 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import {
   Server,
+  Megaphone,
   CheckCircle2,
   Database,
   RefreshCw,
@@ -51,12 +55,51 @@ type StatusType =
 
 export function StepsTab({ project, onUpdate }: TabProps) {
   const { data, updateStage, saveState } = useProjectForm(project, onUpdate);
+  const { toast } = useToast();
+  const [notifying, setNotifying] = useState(false);
+
+  const handleNotifyComercial = async () => {
+    setNotifying(true);
+    try {
+      await fetch(
+        "http://10.0.21.109:5678/webhook-test/infra-inadequada-disparo",
+        {
+          method: "POST",
+          mode: "no-cors",
+        }
+      );
+      toast({
+        title: "Sucesso",
+        description: "Comercial notificado com sucesso!",
+        className: "bg-green-500 text-white border-green-600",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Falha ao notificar comercial.",
+        variant: "destructive",
+      });
+    } finally {
+      setNotifying(false);
+    }
+  };
 
   const stagesData = data.stages;
 
   // Render Functions for Specific Fields
   const renderInfraFields = (stage: InfraStageV2) => (
     <>
+      <div className="col-span-full mb-4">
+        <Button
+          onClick={handleNotifyComercial}
+          variant="destructive"
+          disabled={notifying}
+          className="w-full md:w-auto font-bold shadow-sm"
+        >
+          <Megaphone className="mr-2 h-4 w-4" />
+          {notifying ? "Notificando..." : "Notificar Comercial"}
+        </Button>
+      </div>
       <div className="space-y-2.5">
         <Label className="text-xs font-bold uppercase tracking-widest text-teal-600 flex items-center gap-2">
           <div className="h-2 w-2 rounded-full bg-teal-500" />
