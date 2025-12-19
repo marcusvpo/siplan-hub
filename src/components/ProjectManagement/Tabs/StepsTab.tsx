@@ -61,13 +61,13 @@ export function StepsTab({ project, onUpdate }: TabProps) {
   const handleNotifyComercial = async () => {
     setNotifying(true);
     try {
-      await fetch(
-        "http://10.0.21.109:5678/webhook-test/infra-inadequada-disparo",
-        {
-          method: "POST",
-          mode: "no-cors",
-        }
-      );
+      await fetch("http://10.0.21.109:5678/webhook/infra-inadequada-disparo", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id: project.id }),
+      });
       toast({
         title: "Sucesso",
         description: "Comercial notificado com sucesso!",
