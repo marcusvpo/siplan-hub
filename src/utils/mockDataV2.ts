@@ -45,9 +45,8 @@ export const MOCK_PROJECTS_V2: ProjectV2[] = [
         responsible: "João Infra",
         startDate: new Date("2025-11-01"),
         endDate: new Date("2025-11-10"),
-        serverInUse: "2008 Server",
-        serverNeeded: "Windows 2022 / 8GB RAM / SSD",
-        approvedByInfra: true,
+        serverStatus: "Adequado",
+        workstationsStatus: "Adequado",
         technicalNotes: "Upgrade completo realizado com sucesso",
         observations: "Servidor configurado e testado",
         lastUpdatedAt: new Date("2025-11-10T16:45:00"),
@@ -75,10 +74,12 @@ export const MOCK_PROJECTS_V2: ProjectV2[] = [
       },
       conversion: {
         status: "todo",
-        homologationComplete: false,
+        homologationStatus: "Aguardando Adequação",
       },
       implementation: {
         status: "todo",
+        phase1: { status: "todo" },
+        phase2: { status: "todo" },
       },
       post: {
         status: "todo",
@@ -129,7 +130,7 @@ export const MOCK_PROJECTS_V2: ProjectV2[] = [
         responsible: "João Infra",
         startDate: new Date("2025-10-15"),
         endDate: new Date("2025-10-22"),
-        approvedByInfra: true,
+        serverStatus: "Adequado",
         observations: "Infraestrutura aprovada",
       },
       adherence: {
@@ -155,15 +156,15 @@ export const MOCK_PROJECTS_V2: ProjectV2[] = [
         status: "in-progress",
         responsible: "Maria Conversão",
         startDate: new Date("2025-11-13"),
-        sourceSystem: "Siplan Legacy",
         complexity: "high",
-        recordCount: 150000,
         dataVolumeGb: 25,
-        homologationComplete: false,
+        homologationStatus: "Parcialmente Adequado",
         observations: "Conversão em andamento",
       },
       implementation: {
         status: "todo",
+        phase1: { status: "todo" },
+        phase2: { status: "todo" },
       },
       post: {
         status: "todo",
@@ -208,8 +209,7 @@ export const MOCK_PROJECTS_V2: ProjectV2[] = [
         responsible: "João Infra",
         startDate: new Date("2025-11-05"),
         blockingReason: "client-access",
-        serverNeeded: "Windows 2022 / 16GB RAM / SSD 500GB",
-        approvedByInfra: false,
+        serverStatus: "Aguardando Adequação",
         observations: "Aguardando cliente disponibilizar acesso ao ambiente",
         lastUpdatedAt: new Date("2025-11-18T11:00:00"),
         lastUpdatedBy: "João Infra",
@@ -226,10 +226,12 @@ export const MOCK_PROJECTS_V2: ProjectV2[] = [
       },
       conversion: {
         status: "todo",
-        homologationComplete: false,
+        homologationStatus: "Aguardando Adequação",
       },
       implementation: {
         status: "todo",
+        phase1: { status: "todo" },
+        phase2: { status: "todo" },
       },
       post: {
         status: "todo",
