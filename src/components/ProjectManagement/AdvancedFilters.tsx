@@ -469,14 +469,16 @@ export function AdvancedFilters({
                   <div className="space-y-3">
                     <Label className="text-sm font-semibold">Responsável</Label>
                     <Select
-                      value={projectLeader}
-                      onValueChange={setProjectLeader}
+                      value={projectLeader || "all"}
+                      onValueChange={(v) =>
+                        setProjectLeader(v === "all" ? "" : v)
+                      }
                     >
                       <SelectTrigger className="h-11">
                         <SelectValue placeholder="Todos os responsáveis" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Todos</SelectItem>
+                        <SelectItem value="all">Todos</SelectItem>
                         {leaders.map((leader) => (
                           <SelectItem key={leader} value={leader}>
                             {leader}
@@ -493,12 +495,15 @@ export function AdvancedFilters({
                     <Label className="text-sm font-semibold">
                       Tipo de Sistema
                     </Label>
-                    <Select value={systemType} onValueChange={setSystemType}>
+                    <Select
+                      value={systemType || "all"}
+                      onValueChange={(v) => setSystemType(v === "all" ? "" : v)}
+                    >
                       <SelectTrigger className="h-11">
                         <SelectValue placeholder="Todos os tipos" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Todos</SelectItem>
+                        <SelectItem value="all">Todos</SelectItem>
                         {systemTypes.map((type) => (
                           <SelectItem key={type} value={type}>
                             {type}

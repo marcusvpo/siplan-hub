@@ -143,7 +143,7 @@ export function TimePerStageChart({ projects }: TimePerStageChartProps) {
       </CardHeader>
       <CardContent className="pl-2">
         <div className="h-[300px] w-full min-w-0">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <BarChart data={data}>
               <XAxis
                 dataKey="name"

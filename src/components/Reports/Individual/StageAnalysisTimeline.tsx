@@ -134,7 +134,7 @@ export function StageAnalysisTimeline({
       </CardHeader>
       <CardContent>
         <div className="h-[350px]">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <BarChart data={data} layout="vertical" margin={{ left: 40 }}>
               <XAxis type="number" hide />
               <YAxis

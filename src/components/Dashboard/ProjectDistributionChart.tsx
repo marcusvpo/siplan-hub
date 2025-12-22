@@ -86,7 +86,7 @@ export const ProjectDistributionChart = ({
           config={chartConfig}
           className="h-[300px] min-h-[300px] w-full"
         >
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <PieChart>
               <Pie
                 data={data}

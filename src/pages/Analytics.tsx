@@ -193,7 +193,7 @@ export default function Analytics() {
             </CardDescription>
           </CardHeader>
           <CardContent className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <BarChart data={barChartData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis
@@ -224,7 +224,7 @@ export default function Analytics() {
             <CardDescription>Visão geral da saúde do portfólio</CardDescription>
           </CardHeader>
           <CardContent className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <PieChart>
                 <Pie
                   data={pieChartData}
