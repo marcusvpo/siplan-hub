@@ -41,6 +41,17 @@ import {
 import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { convertBlocksToTiptap } from "@/lib/editor-utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface TabProps {
   project: ProjectV2;
@@ -90,15 +101,33 @@ export function StepsTab({ project, onUpdate }: TabProps) {
   const renderInfraFields = (stage: InfraStageV2) => (
     <>
       <div className="col-span-full mb-4">
-        <Button
-          onClick={handleNotifyComercial}
-          variant="destructive"
-          disabled={notifying}
-          className="w-full md:w-auto font-bold shadow-sm"
-        >
-          <Megaphone className="mr-2 h-4 w-4" />
-          {notifying ? "Notificando..." : "Notificar Comercial"}
-        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="destructive"
+              disabled={notifying}
+              className="w-full md:w-auto font-bold shadow-sm"
+            >
+              <Megaphone className="mr-2 h-4 w-4" />
+              {notifying ? "Notificando..." : "Notificar Comercial"}
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmar notificação</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja notificar o comercial? Um e-mail será
+                enviado informando a infraestrutura inadequada.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleNotifyComercial}>
+                Confirmar
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
       <div className="space-y-2.5">
         <Label className="text-xs font-bold uppercase tracking-widest text-teal-600 flex items-center gap-2">
