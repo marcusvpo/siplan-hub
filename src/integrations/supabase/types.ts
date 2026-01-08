@@ -432,6 +432,53 @@ export type Database = {
         }
         Relationships: []
       }
+      roadmaps: {
+        Row: {
+          id: string
+          project_id: string
+          share_token: string
+          is_active: boolean
+          view_count: number
+          custom_theme: Json | null
+          welcome_message: string | null
+          config: Json | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          share_token?: string
+          is_active?: boolean
+          view_count?: number
+          custom_theme?: Json | null
+          welcome_message?: string | null
+          config?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          share_token?: string
+          is_active?: boolean
+          view_count?: number
+          custom_theme?: Json | null
+          welcome_message?: string | null
+          config?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roadmaps_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       saved_filters: {
         Row: {
           created_at: string | null

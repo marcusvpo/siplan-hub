@@ -13,6 +13,7 @@ import NotFound from "./pages/NotFound";
 import Calendar from "./pages/Calendar";
 import { MainLayout } from "@/components/Layout/MainLayout";
 import NextDeployments from "@/pages/NextDeployments";
+import RoadmapPage from "./pages/RoadmapPage";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,7 @@ const App = () => (
             <Routes>
               {/* Public Routes */}
               <Route path="/login" element={<Login />} />
+              <Route path="/roadmap/:token" element={<RoadmapPage />} />
 
               {/* Admin Routes */}
               <Route path="/admin" element={<AdminLayout />}>
