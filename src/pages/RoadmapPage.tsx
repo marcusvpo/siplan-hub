@@ -1,24 +1,26 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, useScroll, useSpring, useTransform } from "framer-motion";
 import {
   CheckCircle2,
   Clock,
-  Settings,
   Cpu,
   Database,
   Truck,
-  LifeBuoy,
-  ChevronRight,
-  Info,
+  Settings,
+  Archive,
+  AlertCircle,
   LucideIcon,
+  ChevronDown,
 } from "lucide-react";
 import confetti from "canvas-confetti";
+import { cn } from "@/lib/utils";
+
+// --- Types ---
 
 interface StageData {
   status: "todo" | "in-progress" | "done" | "blocked";
-  // Add other stage properties if they exist
 }
 
 interface RoadmapData {
@@ -27,8 +29,8 @@ interface RoadmapData {
     welcome_message: string;
     custom_theme: {
       primary: string;
-      secondary: string;
-      background: string;
+      secondary?: string;
+      background?: string;
     };
     config: {
       show_dates: boolean;
@@ -50,44 +52,65 @@ interface StageConfig {
   label: string;
   icon: LucideIcon;
   description: string;
+  details?: string[];
 }
 
+// Configuração das etapas atualizada com o novo cronograma
 const STAGES_CONFIG: StageConfig[] = [
   {
     id: "infra",
-    label: "Infraestrutura",
+    label: "Infraestrutura do seu Cartório",
     icon: Cpu,
-    description: "Preparação dos servidores e estações de trabalho.",
+    description: "Preparando o terreno para a inovação.",
+    details: [
+      "Validação de Servidores e Hardware",
+      "Verificação de Segurança e Rede",
+      "Conferência de Pré-requisitos",
+    ],
   },
   {
     id: "adherence",
-    label: "Aderência",
+    label: "Planejamento & Aderência",
     icon: Settings,
-    description: "Análise de requisitos e processos do cartório.",
-  },
-  {
-    id: "environment",
-    label: "Ambiente",
-    icon: Database,
-    description: "Configuração do sistema e banco de dados.",
+    description: "Desenhando o futuro da operação.",
+    details: [
+      "Mapeamento de Processos Críticos",
+      "Análise de Gaps Operacionais",
+      "Estudo das principais rotinas do seu cartório",
+    ],
   },
   {
     id: "conversion",
-    label: "Conversão",
+    label: "Diagnóstico e Extração",
     icon: Truck,
-    description: "Migração e validação dos dados históricos.",
+    description: "Migração inteligente do legado.",
+    details: [
+      "Preparação para Conversão da Base de Dados",
+      "Extração Segura de Dados",
+      "Primeira Carga em Homologação",
+    ],
+  },
+  {
+    id: "environment",
+    label: "Configuração e Parâmetros",
+    icon: Database,
+    description: "O sistema, do seu jeito.",
+    details: [
+      "Instalação dos Sistemas Siplan",
+      "Parametrização de Regras de Negócio",
+      "Setup de Perfis e Permissões",
+    ],
   },
   {
     id: "implementation",
-    label: "Implantação",
-    icon: CheckCircle2,
-    description: "Treinamento e entrada em produção.",
-  },
-  {
-    id: "post",
-    label: "Pós-Implantação",
-    icon: LifeBuoy,
-    description: "Acompanhamento inicial e suporte assistido.",
+    label: "Treinamento e Go-Live",
+    icon: Archive,
+    description: "A reta final para a transformação.",
+    details: [
+      "Treinamentos Coletivos por Setor",
+      "Validação Final pela Serventia",
+      "🚀 GO-LIVE: Entrada Oficial em Produção",
+    ],
   },
 ];
 
@@ -96,6 +119,12 @@ export default function RoadmapPage() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<RoadmapData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001,
+  });
 
   useEffect(() => {
     async function fetchData() {
@@ -113,21 +142,9 @@ export default function RoadmapPage() {
         if (!roadmapData) throw new Error("Roadmap não encontrado ou inativo.");
 
         setData(roadmapData as RoadmapData);
-
-        if (roadmapData.project.overall_progress === 100) {
-          confetti({
-            particleCount: 150,
-            spread: 70,
-            origin: { y: 0.6 },
-            colors: ["#800000", "#ffffff", "#000000"],
-          });
-        }
       } catch (err: unknown) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError("An unknown error occurred");
-        }
+        console.error(err);
+        setError("Não foi possível carregar o roadmap.");
       } finally {
         setLoading(false);
       }
@@ -136,13 +153,50 @@ export default function RoadmapPage() {
     fetchData();
   }, [token]);
 
+  // Recalcular progresso no frontend se necessário
+  const calculatedProgress = useMemo(() => {
+    if (!data) return 0;
+    const stages = data.project.stages;
+    const totalStages = STAGES_CONFIG.length;
+    let completedStages = 0;
+
+    STAGES_CONFIG.forEach((config) => {
+      if (stages[config.id]?.status === "done") {
+        completedStages++;
+      }
+    });
+
+    const progress = Math.round((completedStages / totalStages) * 100);
+    // Se o backend vier 0, usamos o nosso. Se vier algo, usamos o maior (para garantir).
+    return Math.max(data.project.overall_progress || 0, progress);
+  }, [data]);
+
+  useEffect(() => {
+    if (calculatedProgress === 100 && !loading) {
+      confetti({
+        particleCount: 200,
+        spread: 100,
+        origin: { y: 0.6 },
+        colors: [
+          data?.roadmap.custom_theme.primary || "#800000",
+          "#ffffff",
+          "#000000",
+        ],
+      });
+    }
+  }, [calculatedProgress, loading, data]);
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
         <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="w-12 h-12 border-4 border-[#800000] border-t-transparent rounded-full"
+          animate={{
+            scale: [1, 1.2, 1],
+            rotate: [0, 180, 360],
+            borderRadius: ["20%", "50%", "20%"],
+          }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="w-16 h-16 border-4 border-[#800000] border-t-transparent"
         />
       </div>
     );
@@ -150,11 +204,13 @@ export default function RoadmapPage() {
 
   if (error || !data) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center p-6 text-center">
+      <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center p-6 text-center">
         <div>
-          <h1 className="text-4xl font-bold mb-4 text-[#800000]">Ops!</h1>
+          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h1 className="text-3xl font-bold mb-2">Ops! Link Inválido</h1>
           <p className="text-gray-400 max-w-md">
-            {error || "Não foi possível carregar o roadmap solicitado."}
+            O roadmap que você está tentando acessar não existe ou foi
+            desativado.
           </p>
         </div>
       </div>
@@ -162,266 +218,409 @@ export default function RoadmapPage() {
   }
 
   const { project, roadmap } = data;
+  const primaryColor = roadmap.custom_theme?.primary || "#800000";
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white selection:bg-[#800000]/30 overflow-x-hidden">
-      {/* Mesh Gradient Background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none opacity-20">
-        <div
-          className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full blur-[120px]"
-          style={{
-            backgroundColor: roadmap.custom_theme?.primary || "#800000",
+    <div className="min-h-screen bg-[#050505] text-white selection:bg-white/20 overflow-x-hidden font-sans">
+      {/* Scroll Progress Bar */}
+      <motion.div
+        className="fixed top-0 left-0 right-0 h-1 z-50 origin-left"
+        style={{ scaleX, backgroundColor: primaryColor }}
+      />
+
+      {/* Dynamic Background with Animation */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <motion.div
+          animate={{
+            scale: [1, 1.2, 1],
+            rotate: [0, 45, 0],
+            opacity: [0.1, 0.2, 0.1],
           }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] rounded-full blur-[120px]"
+          style={{ backgroundColor: primaryColor }}
         />
-        <div
-          className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full blur-[120px]"
-          style={{
-            backgroundColor: roadmap.custom_theme?.primary || "#800000",
+        <motion.div
+          animate={{
+            scale: [1, 1.3, 1],
+            x: [0, -100, 0],
+            opacity: [0.05, 0.15, 0.05],
           }}
+          transition={{
+            duration: 15,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 1,
+          }}
+          className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full blur-[150px] bg-blue-900/40"
         />
+        <motion.div
+          animate={{
+            opacity: [0.05, 0.1, 0.05],
+          }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-[40%] left-[30%] w-[40%] h-[40%] rounded-full blur-[180px] bg-purple-900/20"
+        />
+        <div className="absolute inset-0 bg-[url('/assets/noise.png')] opacity-[0.04] mix-blend-overlay" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-[#050505]/80" />
       </div>
 
-      <main className="relative z-10 max-w-5xl mx-auto px-6 py-12">
-        {/* Header */}
-        <header className="flex flex-col items-center mb-16 space-y-6">
-          <motion.img
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            src="/assets/Siplan_logo.png"
-            alt="Siplan Logo"
-            className="h-16 w-auto"
-          />
+      <main className="relative z-10 w-full">
+        {/* Full Screen Hero Section */}
+        <section className="min-h-[95vh] flex flex-col items-center justify-center relative px-6 py-12 md:py-0">
+          {/* Logo */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="text-center space-y-2"
-          >
-            <h1 className="text-3xl md:text-5xl font-bold tracking-tight">
-              {project.client_name}
-            </h1>
-            <p className="text-gray-400 text-lg">
-              Acompanhamento da Implantação:{" "}
-              <span
-                className="font-semibold"
-                style={{ color: roadmap.custom_theme?.primary || "#be123c" }}
-              >
-                {project.system_type}
-              </span>
-            </p>
-          </motion.div>
-        </header>
-
-        {/* Hero Section / Progress */}
-        <section className="mb-20">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3 }}
-            className="relative p-1 rounded-3xl bg-gradient-to-b from-[#800000]/30 to-transparent"
+            transition={{ duration: 0.8, type: "spring" }}
+            className="mb-12"
           >
-            <div className="bg-black/60 backdrop-blur-xl rounded-[calc(1.5rem-2px)] p-8 md:p-12 border border-[#ffffff]/5">
-              <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
-                <div>
-                  <h2 className="text-sm font-medium uppercase tracking-[0.2em] text-[#800000] mb-2">
-                    Progresso Global
-                  </h2>
-                  <div
-                    className="text-6xl font-bold"
-                    style={{ color: roadmap.custom_theme?.primary || "white" }}
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.3 }}
+              className="relative z-10"
+            >
+              <img
+                src="/assets/Siplan_logo_branco.png"
+                alt="Siplan Logo"
+                className="h-20 md:h-28 w-auto drop-shadow-2xl"
+              />
+            </motion.div>
+          </motion.div>
+
+          {/* Main Title & Status */}
+          <div className="text-center space-y-6 max-w-4xl mx-auto z-20">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.8 }}
+            >
+              <h1 className="text-4xl md:text-7xl font-bold tracking-tight text-white mb-4">
+                <span className="text-transparent bg-clip-text bg-gradient-to-br from-white via-gray-200 to-gray-500">
+                  {project.client_name}
+                </span>
+              </h1>
+              <p className="text-xl md:text-2xl text-gray-400 font-light flex flex-col md:flex-row items-center justify-center gap-2 md:gap-3">
+                <span>Jornada de Transformação Digital</span>
+                <span className="hidden md:inline text-gray-600">•</span>
+                <span className="font-medium px-4 py-1 rounded-full bg-white/5 border border-white/10 text-white shadow-inner">
+                  {project.system_type}
+                </span>
+              </p>
+            </motion.div>
+
+            {/* Interactive Welcome Card */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.4 }}
+              className="mt-12 mx-auto max-w-3xl bg-white/5 hover:bg-white/10 border border-white/10 rounded-3xl p-8 backdrop-blur-2xl transition-all duration-500 group shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)]"
+              style={{
+                boxShadow: `0 0 60px -20px ${primaryColor}20`,
+              }}
+            >
+              <div className="flex flex-col md:flex-row items-center gap-8">
+                {/* Progress Radial */}
+                <div className="relative w-32 h-32 flex-shrink-0">
+                  <svg
+                    className="w-full h-full -rotate-90"
+                    viewBox="0 0 100 100"
                   >
-                    {project.overall_progress}%
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="45"
+                      fill="none"
+                      stroke="#2a2a2a"
+                      strokeWidth="6"
+                    />
+                    <motion.circle
+                      cx="50"
+                      cy="50"
+                      r="45"
+                      fill="none"
+                      stroke={primaryColor}
+                      strokeWidth="6"
+                      strokeLinecap="round"
+                      initial={{ pathLength: 0 }}
+                      animate={{ pathLength: calculatedProgress / 100 }}
+                      transition={{ duration: 2, ease: "easeOut", delay: 0.8 }}
+                      style={{ filter: `drop-shadow(0 0 4px ${primaryColor})` }}
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-2xl font-bold text-white">
+                      {calculatedProgress}%
+                    </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 text-gray-400 bg-[#ffffff]/5 px-4 py-2 rounded-full border border-[#ffffff]/10">
-                  <Clock size={16} />
-                  <span className="text-sm font-medium">
-                    Horas Vendidas: {project.sold_hours}h
-                  </span>
+
+                <div className="text-left space-y-3 flex-1">
+                  <h2 className="text-2xl font-semibold text-white flex items-center gap-2">
+                    <span className="animate-wave inline-block origin-bottom-right">
+                      👋
+                    </span>
+                    Bem-vindo ao seu Portal
+                  </h2>
+                  <p className="text-gray-400 leading-relaxed font-light">
+                    Acompanhe em tempo real cada passo da implantação dos
+                    sitemas Siplan no seu cartório. Estamos construindo juntos
+                    uma nova era de eficiência e tecnologia.
+                  </p>
+                  <div className="pt-2 flex items-center gap-2 text-sm text-gray-500">
+                    <Clock size={14} />
+                    <span>
+                      Status Atual:{" "}
+                      <span className="text-gray-300 font-medium">
+                        {roadmap.welcome_message || "Projeto em Andamento..."}
+                      </span>
+                    </span>
+                  </div>
                 </div>
               </div>
-
-              {/* Progress Bar Container */}
-              <div className="h-4 w-full bg-[#1a1a1a] rounded-full overflow-hidden border border-[#ffffff]/5">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${project.overall_progress}%` }}
-                  transition={{ duration: 1.5, ease: "easeOut" }}
-                  className="h-full relative"
-                  style={{
-                    background: `linear-gradient(90deg, ${
-                      roadmap.custom_theme?.primary || "#800000"
-                    }, ${roadmap.custom_theme?.primary || "#be123c"}dd)`,
-                  }}
-                >
-                  <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_25%,rgba(255,255,255,0.2)_50%,transparent_75%)] bg-[length:40px_100%] animate-shimmer" />
-                </motion.div>
-              </div>
-            </div>
-          </motion.div>
-        </section>
-
-        {/* Roadmap Grid */}
-        <section className="space-y-12">
-          <div className="flex items-center gap-4 mb-8">
-            <h3 className="text-2xl font-semibold">Jornada do Projeto</h3>
-            <div className="h-px flex-1 bg-gradient-to-r from-[#800000]/50 to-transparent" />
+            </motion.div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <AnimatePresence>
-              {STAGES_CONFIG.map((stage, index) => {
-                const stageData = project.stages[stage.id];
-                const status = stageData?.status || "todo";
-                const isActive = status === "in-progress";
-                const isDone = status === "done";
-                const isBlocked = status === "blocked";
+          <ButtonScrollDown />
+        </section>
 
-                return (
-                  <motion.div
-                    key={stage.id}
-                    initial={{ opacity: 0, x: index % 2 === 0 ? -20 : 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.4 + index * 0.1 }}
-                    whileHover={{ scale: 1.02 }}
-                    className={`group relative p-6 rounded-2xl border transition-all duration-300 ${
-                      isActive
-                        ? "bg-muted/10 border-primary/40 shadow-xl"
-                        : isDone
-                        ? "bg-[#ffffff]/5 border-[#ffffff]/10"
-                        : "bg-[#ffffff]/2 border-[#ffffff]/5 opacity-60"
-                    }`}
-                    style={
-                      isActive
-                        ? {
-                            borderColor: `${
-                              roadmap.custom_theme?.primary || "#800000"
-                            }66`,
-                            backgroundColor: `${
-                              roadmap.custom_theme?.primary || "#800000"
-                            }1a`,
-                            boxShadow: `0 0 40px -15px ${
-                              roadmap.custom_theme?.primary || "#800000"
-                            }4d`,
-                          }
-                        : {}
-                    }
-                  >
-                    <div className="flex items-start gap-5">
-                      <div
-                        className="p-3 rounded-xl transition-colors duration-300"
-                        style={
-                          isActive
-                            ? {
-                                backgroundColor:
-                                  roadmap.custom_theme?.primary || "#800000",
-                                color: "white",
-                              }
-                            : {
-                                backgroundColor: "#1a1a1a",
-                                color: "#4b5563",
-                              }
-                        }
-                      >
-                        <stage.icon size={24} />
-                      </div>
-                      <div className="flex-1 space-y-1">
-                        <div className="flex justify-between items-center">
-                          <h4
-                            className={`font-semibold text-lg ${
-                              isActive ? "text-white" : "text-gray-300"
-                            }`}
-                          >
-                            {stage.label}
-                          </h4>
-                          {isDone ? (
-                            <CheckCircle2
-                              size={18}
-                              className="text-[#800000]"
-                            />
-                          ) : isActive ? (
-                            <div className="flex h-2 w-2 relative">
-                              <div className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#800000] opacity-75"></div>
-                              <div className="relative inline-flex rounded-full h-2 w-2 bg-[#800000]"></div>
-                            </div>
-                          ) : null}
-                        </div>
-                        <p className="text-gray-500 text-sm leading-relaxed">
-                          {stage.description}
-                        </p>
+        {/* Timeline Section */}
+        <section className="relative max-w-6xl mx-auto px-4 pb-32">
+          <div className="flex items-center justify-center gap-4 mb-24 opacity-80">
+            <div className="h-px w-24 bg-gradient-to-r from-transparent to-gray-600" />
+            <span className="text-sm font-medium tracking-[0.3em] uppercase text-gray-400">
+              Linha do Tempo
+            </span>
+            <div className="h-px w-24 bg-gradient-to-l from-transparent to-gray-600" />
+          </div>
 
-                        {/* Status Label */}
-                        <div className="pt-4 flex items-center justify-between">
-                          <span
-                            className={`text-[10px] uppercase tracking-widest font-bold ${
-                              isActive
-                                ? "text-[#800000]"
-                                : isDone
-                                ? "text-gray-400"
-                                : "text-gray-600"
-                            }`}
-                          >
-                            {status === "todo"
-                              ? "Aguardando"
-                              : status === "in-progress"
-                              ? "Em Andamento"
-                              : status === "done"
-                              ? "Concluído"
-                              : "Bloqueado"}
-                          </span>
+          {/* Timeline Vertical Line */}
+          <div className="absolute left-6 md:left-1/2 top-32 bottom-32 w-px bg-gradient-to-b from-transparent via-white/20 to-transparent -translate-x-1/2 hidden md:block" />
+          <div className="absolute left-8 top-32 bottom-32 w-px bg-gradient-to-b from-transparent via-white/20 to-transparent md:hidden" />
 
-                          {isActive && (
-                            <motion.div
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              className="flex items-center gap-1.5 text-[#800000]"
-                            >
-                              <span className="text-[10px] font-bold">
-                                Foco Atual
-                              </span>
-                              <ChevronRight size={12} />
-                            </motion.div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
+          <div className="space-y-24">
+            {STAGES_CONFIG.map((stage, index) => {
+              const stageData = project.stages[stage.id];
+              const status = stageData?.status || "todo";
+              return (
+                <TimelineItem
+                  key={stage.id}
+                  stage={stage}
+                  status={status}
+                  index={index}
+                  primaryColor={primaryColor}
+                  isLeft={index % 2 === 0}
+                />
+              );
+            })}
           </div>
         </section>
 
-        {/* Footer Info */}
-        <footer className="mt-32 pt-12 border-t border-[#ffffff]/5 text-center space-y-8">
-          <div className="flex flex-col items-center space-y-4">
-            <div className="p-4 bg-[#ffffff]/5 rounded-2xl flex items-center gap-4 max-w-lg text-left border border-[#ffffff]/10 backdrop-blur-sm">
-              <Info className="flex-shrink-0 text-[#800000]" />
-              <p className="text-sm text-gray-400 italic">
-                "
-                {roadmap.welcome_message ||
-                  `Olá! Estamos muito felizes em ter você como parceiro Siplan. Nosso time está trabalhando para garantir a melhor implantação do seu novo sistema.`}
-                "
-              </p>
-            </div>
-          </div>
-
-          <div className="pb-12 text-gray-600 text-xs tracking-widest uppercase">
-            Powered by Siplan HUB &bull; 2026
+        {/* Footer */}
+        <footer className="text-center py-12 border-t border-white/5 space-y-6">
+          <div className="inline-block px-6 py-3 rounded-full bg-white/5 border border-white/5 text-xs text-gray-600 uppercase tracking-[0.2em] hover:bg-white/10 transition-colors">
+            Powered by Siplan &bull; {new Date().getFullYear()}
           </div>
         </footer>
       </main>
-
-      {/* Styles for shimmer animation */}
-      <style>{`
-        @keyframes shimmer {
-          0% { background-position: -40px 0; }
-          100% { background-position: 40px 0; }
-        }
-        .animate-shimmer {
-          animation: shimmer 1.5s infinite linear;
-        }
-      `}</style>
     </div>
+  );
+}
+
+// --- Subcomponents ---
+
+function ButtonScrollDown() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{
+        delay: 2,
+        duration: 2,
+        repeat: Infinity,
+        repeatType: "reverse",
+      }}
+      className="absolute bottom-12 left-1/2 -translate-x-1/2 cursor-pointer p-4 group"
+      onClick={() =>
+        window.scrollTo({ top: window.innerHeight, behavior: "smooth" })
+      }
+    >
+      <div className="flex flex-col items-center gap-2 text-gray-500 group-hover:text-white transition-colors duration-300">
+        <span className="text-[10px] uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
+          Iniciar Jornada
+        </span>
+        <ChevronDown className="w-6 h-6 animate-bounce" />
+      </div>
+    </motion.div>
+  );
+}
+
+function TimelineItem({
+  stage,
+  status,
+  index,
+  primaryColor,
+  isLeft,
+}: {
+  stage: StageConfig;
+  status: StageData["status"];
+  index: number;
+  primaryColor: string;
+  isLeft: boolean;
+}) {
+  const isDone = status === "done";
+  const isInProgress = status === "in-progress";
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 100 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-100px" }}
+      transition={{
+        duration: 0.8,
+        delay: index * 0.1,
+        type: "spring",
+        bounce: 0.4,
+      }}
+      className={cn(
+        "relative flex flex-col md:flex-row items-center gap-8 md:gap-16 w-full",
+        isLeft ? "" : "md:flex-row-reverse"
+      )}
+    >
+      {/* Node / Marker */}
+      <div className="absolute left-8 md:left-1/2 -translate-x-1/2 flex flex-col items-center justify-center z-10 top-0 md:top-8">
+        <motion.div
+          whileHover={{ scale: 1.2 }}
+          animate={
+            isInProgress ? { boxShadow: `0 0 30px ${primaryColor}` } : {}
+          }
+          className={cn(
+            "w-12 h-12 md:w-16 md:h-16 rounded-full border-[3px] flex items-center justify-center transition-all duration-500 bg-[#050505] shadow-2xl relative z-20",
+            isDone
+              ? "border-emerald-500 text-emerald-500"
+              : isInProgress
+              ? "text-white"
+              : "border-white/10 text-gray-600"
+          )}
+          style={{
+            borderColor: isInProgress ? primaryColor : undefined,
+            backgroundColor: isDone
+              ? "#050505"
+              : isInProgress
+              ? primaryColor
+              : "#050505",
+          }}
+        >
+          {isDone ? (
+            <CheckCircle2 className="w-5 h-5 md:w-7 md:h-7" />
+          ) : (
+            <stage.icon className="w-5 h-5 md:w-7 md:h-7" />
+          )}
+        </motion.div>
+      </div>
+
+      {/* Spacer for Flex positioning */}
+      <div className="flex-1 w-full md:w-1/2 hidden md:block" />
+
+      {/* Content Card */}
+      <div
+        className={cn(
+          "flex-1 w-full md:w-1/2 pl-24 md:pl-0",
+          isLeft ? "md:pr-12 md:text-right" : "md:pl-12 md:text-left"
+        )}
+      >
+        <div
+          className={cn(
+            "group relative p-8 md:p-10 rounded-[2rem] border backdrop-blur-sm transition-all duration-500 bg-white/5 border-white/5",
+            isInProgress
+              ? "hover:bg-white/10"
+              : "hover:bg-white/10 opacity-70 hover:opacity-100"
+          )}
+          style={{
+            borderColor: isInProgress
+              ? `${primaryColor}66`
+              : "rgba(255,255,255,0.05)",
+            boxShadow: isInProgress
+              ? `0 0 40px -20px ${primaryColor}40`
+              : "none",
+          }}
+        >
+          {/* Status Badge */}
+          <div
+            className={cn(
+              "inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest mb-6 border",
+              isDone
+                ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                : isInProgress
+                ? "text-white border-white/20"
+                : "bg-white/5 text-gray-500 border-white/5"
+            )}
+            style={{
+              backgroundColor: isInProgress ? primaryColor : undefined,
+              borderColor: isInProgress ? primaryColor : undefined,
+            }}
+          >
+            {isDone
+              ? "Finalizado"
+              : isInProgress
+              ? "Em Andamento"
+              : "Aguardando"}
+          </div>
+
+          <h3
+            className={cn(
+              "text-3xl font-bold mb-3 group-hover:text-white transition-colors",
+              isDone ? "text-gray-300" : "text-white"
+            )}
+          >
+            {stage.label}
+          </h3>
+
+          <p className="text-gray-400 text-lg leading-relaxed mb-8 font-light">
+            {stage.description}
+          </p>
+
+          {/* Sub-steps / Details */}
+          {stage.details && (
+            <ul
+              className={cn(
+                "space-y-4",
+                isLeft ? "md:items-end" : "md:items-start",
+                "flex flex-col"
+              )}
+            >
+              {stage.details.map((detail, i) => (
+                <li key={i} className="flex items-center gap-3 text-gray-400">
+                  {!isLeft && (
+                    <div
+                      className={cn(
+                        "w-1.5 h-1.5 rounded-full flex-shrink-0",
+                        isDone ? "bg-emerald-500" : "bg-gray-700"
+                      )}
+                    />
+                  )}
+                  <span
+                    className={cn(
+                      isDone ? "line-through opacity-50" : "",
+                      "text-base"
+                    )}
+                  >
+                    {detail}
+                  </span>
+                  {isLeft && (
+                    <div
+                      className={cn(
+                        "w-1.5 h-1.5 rounded-full flex-shrink-0",
+                        isDone ? "bg-emerald-500" : "bg-gray-700"
+                      )}
+                    />
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    </motion.div>
   );
 }
