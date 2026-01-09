@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   ProjectV2, 
@@ -15,10 +15,22 @@ import {
   Priority
 } from "@/types/ProjectV2";
 
+const ITEMS_PER_PAGE = 20;
+
 export const useProjectsList = () => {
-  const { data: projects, isLoading, error } = useQuery({
+  const { 
+    data, 
+    isLoading, 
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage 
+  } = useInfiniteQuery({
     queryKey: ["projectsList"],
-    queryFn: async () => {
+    queryFn: async ({ pageParam = 0 }) => {
+      const from = pageParam * ITEMS_PER_PAGE;
+      const to = from + ITEMS_PER_PAGE - 1;
+
       // Fetch only essential columns for dashboard
       // We purposefully exclude 'notes' and 'timeline_events' and heavy 'stages' JSON if possible,
       // but 'stages' is a JSONB column so we cannot easily select partial properties in Supabase without a Function.
@@ -30,18 +42,33 @@ export const useProjectsList = () => {
         .from("projects")
         .select("id, client_name, ticket_number, system_type, global_status, updated_at, project_leader, client_primary_contact, overall_progress, priority, is_deleted, created_at, start_date_planned, end_date_planned, infra_status, adherence_status, environment_status, conversion_status, implementation_status, post_status") 
         .eq("is_deleted", false)
-        .order("updated_at", { ascending: false });
+        .order("updated_at", { ascending: false })
+        .range(from, to);
 
       if (error) throw error;
 
       return (data || []).map(row => userProjectsListTransform(row));
     },
+    getNextPageParam: (lastPage, allPages) => {
+      // If the last page has fewer items than ITEMS_PER_PAGE, we've reached the end
+      if (lastPage.length < ITEMS_PER_PAGE) {
+        return undefined;
+      }
+      return allPages.length;
+    },
+    initialPageParam: 0,
   });
 
+  // Flatten the pages into a single array
+  const projects = data?.pages.flatMap(page => page) || [];
+
   return {
-    projects: projects || [],
+    projects,
     isLoading,
-    error
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
   };
 };
 

@@ -11,7 +11,13 @@ import { AdvancedFilters } from "./AdvancedFilters";
 import { useFilterStore } from "@/stores/filterStore";
 
 export function ProjectGrid() {
-  const { projects, isLoading } = useProjectsList();
+  const {
+    projects,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useProjectsList();
   const { updateProject, deleteProject } = useProjectsV2();
   const [selectedProject, setSelectedProject] =
     useState<Partial<ProjectV2> | null>(null);
@@ -216,6 +222,18 @@ export function ProjectGrid() {
         <div className="flex-1 h-[calc(100vh-320px)] min-h-[400px]">
           <Virtuoso
             data={filteredAndSortedProjects as ProjectV2[]}
+            endReached={() => {
+              if (hasNextPage) fetchNextPage();
+            }}
+            components={{
+              Footer: () => {
+                return isFetchingNextPage ? (
+                  <div className="flex justify-center py-4">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  </div>
+                ) : null;
+              },
+            }}
             itemContent={(index, project) => (
               <div className="pb-3 pr-2">
                 <ProjectCardV3
