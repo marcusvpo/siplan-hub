@@ -23,7 +23,7 @@ export const useProjectsV2 = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("projects")
-        .select("*, timeline_events(*)")
+        .select("*")
         .eq("is_deleted", false)
         .order("updated_at", { ascending: false });
 
@@ -250,7 +250,8 @@ function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
   // Map timeline events to AuditEntry
   // Timeline events are no longer fetched in the main query for performance
   // They should be fetched separately using useTimelineEvents hook when needed
-  const auditLog: unknown[] = []; 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const auditLog: any[] = []; 
 
   return {
     id: row.id as string,
