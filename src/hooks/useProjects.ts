@@ -11,7 +11,7 @@ export const useProjects = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("projects")
-        .select("*, timeline_events(*)")
+        .select("*")
         .order("updated_at", { ascending: false });
 
       if (error) throw error;
@@ -19,20 +19,7 @@ export const useProjects = () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return data.map((proj: Record<string, any>) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const timeline: TimelineEventV2[] = (proj.timeline_events || []).map((event: Record<string, any>) => ({
-          id: event.id,
-          projectId: event.project_id,
-          type: event.type,
-          author: event.author,
-          authorName: event.author, // Fallback
-          message: event.message,
-          timestamp: new Date(event.timestamp),
-          details: event.metadata || {},
-          visibility: "public",
-          action: event.message, // Fallback
-          changedBy: event.author,
-          changedAt: new Date(event.timestamp),
-        }));
+        const timeline: TimelineEventV2[] = [];
 
         const tempProject: ProjectV2 = {
           id: proj.id,

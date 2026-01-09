@@ -248,15 +248,9 @@ function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
   };
 
   // Map timeline events to AuditEntry
-  const timelineEvents = (row.timeline_events as Record<string, unknown>[]) || [];
-  const auditLog = timelineEvents.map(event => ({
-    id: event.id as string,
-    projectId: event.project_id as string,
-    action: event.message as string, // Use message as action description
-    changedBy: event.author as string,
-    changedAt: new Date(event.timestamp as string),
-    details: (event.metadata as Record<string, unknown>) || {},
-  }));
+  // Timeline events are no longer fetched in the main query for performance
+  // They should be fetched separately using useTimelineEvents hook when needed
+  const auditLog: unknown[] = []; 
 
   return {
     id: row.id as string,

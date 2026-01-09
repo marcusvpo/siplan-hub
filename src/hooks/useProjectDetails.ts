@@ -78,15 +78,9 @@ function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
     lastEditedAt: row.updated_at ? new Date(row.updated_at as string) : new Date()
   };
 
-  const timelineEvents = (row.timeline_events as Record<string, unknown>[]) || [];
-  const auditLog = timelineEvents.map(event => ({
-    id: event.id as string,
-    projectId: event.project_id as string,
-    action: event.message as string,
-    changedBy: event.author as string,
-    changedAt: new Date(event.timestamp as string),
-    details: (event.metadata as Record<string, unknown>) || {},
-  }));
+  // Timeline events fetched separately
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const auditLog: any[] = [];
 
   return {
     id: row.id as string,

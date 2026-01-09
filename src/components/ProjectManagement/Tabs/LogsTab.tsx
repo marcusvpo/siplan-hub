@@ -9,18 +9,33 @@ interface LogsTabProps {
   project: ProjectV2;
 }
 
-export function LogsTab({ project }: LogsTabProps) {
-  // Assuming logs are stored in project.auditLog based on previous context
-  // If not, we might need to use a different field or fetch them.
-  // The user asked to "programar para que TODA E QUALQUER alteração nas Etapas sejam computadas".
-  // This implies we need to ensure the backend/store populates this.
-  // For now, let's display what's in auditLog, sorted by date descending.
+import { useTimelineEvents } from "@/hooks/useTimelineEvents";
+import { Loader2 } from "lucide-react";
 
-  const logs =
-    project.auditLog?.sort(
-      (a, b) =>
+export function LogsTab({ project }: LogsTabProps) {
+  const { data: timelineEvents, isLoading } = useTimelineEvents(project.id);
+
+  const logs = (timelineEvents || [])
+    .map((event: any) => ({
+      id: event.id,
+      projectId: event.project_id,
+      action: event.message,
+      changedBy: event.author,
+      changedAt: new Date(event.timestamp),
+      details: event.metadata || {},
+    }))
+    .sort(
+      (a: any, b: any) =>
         new Date(b.changedAt).getTime() - new Date(a.changedAt).getTime()
-    ) || [];
+    );
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 h-full flex flex-col">
@@ -39,7 +54,7 @@ export function LogsTab({ project }: LogsTabProps) {
                   Nenhuma alteração registrada até o momento.
                 </div>
               ) : (
-                logs.map((log, index) => (
+                logs.map((log: any, index: number) => (
                   <div
                     key={log.id || index}
                     className="flex flex-col gap-1 p-4 border-b last:border-0 hover:bg-muted/50 transition-colors"
@@ -62,7 +77,6 @@ export function LogsTab({ project }: LogsTabProps) {
                       </span>{" "}
                       realizou uma alteração.
                     </div>
-
                   </div>
                 ))
               )}
