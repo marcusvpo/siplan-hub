@@ -39,18 +39,30 @@ function TrashDroppable() {
   );
 }
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { User, Server, Hash, Rocket } from "lucide-react";
 
 export default function Calendar() {
-  const { isInteractiveMode, addInteractiveEvent, updateInteractiveEvent, removeInteractiveEvent } =
-    useCalendarStore();
+  const {
+    isInteractiveMode,
+    addInteractiveEvent,
+    updateInteractiveEvent,
+    removeInteractiveEvent,
+  } = useCalendarStore();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [activeDragItem, setActiveDragItem] = useState<any>(null);
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
+    null
+  );
   const { projects, isLoading } = useProjects();
 
   // Fetch and Transform Real Data
@@ -60,21 +72,29 @@ export default function Calendar() {
     const realEvents: CalendarEvent[] = [];
 
     const findMember = (name: string) => {
-        if (!name) return undefined;
-        const n = name.toLowerCase().trim();
-        return CALENDAR_MEMBERS.find(m => { 
-            const mName = m.name.toLowerCase();
-            return mName === n || mName.includes(n) || n.includes(mName);
-        });
+      if (!name) return undefined;
+      const n = name.toLowerCase().trim();
+      return CALENDAR_MEMBERS.find((m) => {
+        const mName = m.name.toLowerCase();
+        return mName === n || mName.includes(n) || n.includes(mName);
+      });
     };
 
     const getFallbackColor = (name: string) => {
-        const colors = ["bg-indigo-500", "bg-blue-500", "bg-green-500", "bg-orange-500", "bg-pink-500", "bg-purple-500", "bg-cyan-500"];
-        let hash = 0;
-        for (let i = 0; i < name.length; i++) {
-            hash = name.charCodeAt(i) + ((hash << 5) - hash);
-        }
-        return colors[Math.abs(hash) % colors.length];
+      const colors = [
+        "bg-indigo-500",
+        "bg-blue-500",
+        "bg-green-500",
+        "bg-orange-500",
+        "bg-pink-500",
+        "bg-purple-500",
+        "bg-cyan-500",
+      ];
+      let hash = 0;
+      for (let i = 0; i < name.length; i++) {
+        hash = name.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      return colors[Math.abs(hash) % colors.length];
     };
 
     projects.forEach((project: ProjectV2) => {
@@ -90,17 +110,17 @@ export default function Calendar() {
         const color = member ? member.color : getFallbackColor(responsible);
 
         realEvents.push({
-            id: `real-${project.id}-p1`,
-            resourceId: member?.id || "unknown",
-            title: `Implantação: ${project.clientName}`,
-            clientName: project.clientName,
-            start: new Date(implStage.phase1.startDate),
-            end: new Date(implStage.phase1.endDate),
-            type: "implementation",
-            status: "confirmed",
-            projectId: project.id,
-            notes: implStage.phase1.observations,
-            color
+          id: `real-${project.id}-p1`,
+          resourceId: member?.id || "unknown",
+          title: `Implantação: ${project.clientName}`,
+          clientName: project.clientName,
+          start: new Date(implStage.phase1.startDate),
+          end: new Date(implStage.phase1.endDate),
+          type: "implementation",
+          status: "confirmed",
+          projectId: project.id,
+          notes: implStage.phase1.observations,
+          color,
         });
       }
 
@@ -115,17 +135,17 @@ export default function Calendar() {
         const color = member ? member.color : getFallbackColor(responsible);
 
         realEvents.push({
-            id: `real-${project.id}-p2`,
-            resourceId: member?.id || "unknown",
-            title: `Treinamento: ${project.clientName}`,
-            clientName: project.clientName,
-            start: new Date(implStage.phase2.startDate),
-            end: new Date(implStage.phase2.endDate),
-            type: "training",
-            status: "confirmed",
-            projectId: project.id,
-            notes: implStage.phase2.observations,
-            color
+          id: `real-${project.id}-p2`,
+          resourceId: member?.id || "unknown",
+          title: `Treinamento: ${project.clientName}`,
+          clientName: project.clientName,
+          start: new Date(implStage.phase2.startDate),
+          end: new Date(implStage.phase2.endDate),
+          type: "training",
+          status: "confirmed",
+          projectId: project.id,
+          notes: implStage.phase2.observations,
+          color,
         });
       }
     });
@@ -154,10 +174,10 @@ export default function Calendar() {
 
     // Handle Delete Drop
     if (over.id === "trash") {
-        if (active.data.current?.event) {
-            removeInteractiveEvent(active.data.current.event.id);
-        }
-        return;
+      if (active.data.current?.event) {
+        removeInteractiveEvent(active.data.current.event.id);
+      }
+      return;
     }
 
     // The droppable ID is now the Date string (yyyy-MM-dd)
@@ -197,7 +217,9 @@ export default function Calendar() {
     }
   };
 
-  const activeProject = selectedEvent?.projectId ? projects.find(p => p.id === selectedEvent.projectId) : null;
+  const activeProject = selectedEvent?.projectId
+    ? projects.find((p) => p.id === selectedEvent.projectId)
+    : null;
 
   return (
     <div className="h-full flex flex-col bg-background overflow-hidden">
@@ -226,7 +248,7 @@ export default function Calendar() {
           )}
 
           {/* Main Grid */}
-          <div className="flex-1 p-4 overflow-hidden">
+          <div className="flex-1 p-4 overflow-y-auto">
             <CalendarGrid onEventClick={(evt) => setSelectedEvent(evt)} />
           </div>
         </div>
@@ -251,70 +273,92 @@ export default function Calendar() {
       </DndContext>
 
       {/* Details Dialog */}
-       <Dialog open={!!selectedEvent} onOpenChange={(v) => !v && setSelectedEvent(null)}>
+      <Dialog
+        open={!!selectedEvent}
+        onOpenChange={(v) => !v && setSelectedEvent(null)}
+      >
         <DialogContent className="max-w-md">
-            <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                    {selectedEvent && <div className={cn("w-3 h-3 rounded-full", selectedEvent.color || "bg-primary")} />}
-                    {selectedEvent?.clientName || selectedEvent?.title}
-                </DialogTitle>
-                <DialogDescription>
-                    Detalhes do Agendamento
-                </DialogDescription>
-            </DialogHeader>
-            
-            {activeProject ? (
-                <div className="space-y-4">
-                     <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                            <span className="text-xs text-muted-foreground font-semibold uppercase flex items-center gap-1">
-                                <Hash className="w-3 h-3" /> Chamado
-                            </span>
-                            <p className="text-sm font-medium">{activeProject.ticketNumber}</p>
-                        </div>
-                        <div className="space-y-1">
-                            <span className="text-xs text-muted-foreground font-semibold uppercase flex items-center gap-1">
-                                <Server className="w-3 h-3" /> Sistema
-                            </span>
-                            <p className="text-sm font-medium">{activeProject.systemType}</p>
-                        </div>
-                         <div className="space-y-1">
-                            <span className="text-xs text-muted-foreground font-semibold uppercase flex items-center gap-1">
-                                <Rocket className="w-3 h-3" /> Horas
-                            </span>
-                            <Badge variant="outline" className="text-xs">{activeProject.soldHours || 0}h</Badge>
-                        </div>
-                         <div className="space-y-1">
-                            <span className="text-xs text-muted-foreground font-semibold uppercase flex items-center gap-1">
-                                <User className="w-3 h-3" /> Responsável
-                            </span>
-                            <p className="text-sm font-medium truncate" title={selectedEvent?.title.split(':')[0] || "N/A"}>
-                                {/* Usually the resourceId maps to a member, but we can also use the responsible field from project if needed */}
-                                {activeProject.stages.implementation.phase1?.responsible || "N/A"}
-                            </p>
-                        </div>
-                     </div>
-                     
-                     {selectedEvent?.notes && (
-                        <div className="pt-2 border-t">
-                             <span className="text-xs text-muted-foreground font-semibold uppercase block mb-1">
-                                Observações do Evento
-                            </span>
-                            <ScrollArea className="h-[100px] w-full rounded-md border p-2 bg-muted/30">
-                                <div className="text-sm text-muted-foreground whitespace-pre-wrap">
-                                     {/* This might be JSON from RichText, if so, strip or just show simple text if possible */}
-                                     {selectedEvent.notes.startsWith('{') ? "Conteúdo rico (ver detalhes do projeto)" : selectedEvent.notes}
-                                </div>
-                            </ScrollArea>
-                        </div>
-                     )}
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {selectedEvent && (
+                <div
+                  className={cn(
+                    "w-3 h-3 rounded-full",
+                    selectedEvent.color || "bg-primary"
+                  )}
+                />
+              )}
+              {selectedEvent?.clientName || selectedEvent?.title}
+            </DialogTitle>
+            <DialogDescription>Detalhes do Agendamento</DialogDescription>
+          </DialogHeader>
+
+          {activeProject ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <span className="text-xs text-muted-foreground font-semibold uppercase flex items-center gap-1">
+                    <Hash className="w-3 h-3" /> Chamado
+                  </span>
+                  <p className="text-sm font-medium">
+                    {activeProject.ticketNumber}
+                  </p>
                 </div>
-            ) : (
-                <div className="py-4 text-center text-muted-foreground">
-                    <p>Informações detalhadas do projeto não encontradas.</p>
-                    <p className="text-xs mt-2 opacity-70">ID: {selectedEvent?.projectId}</p>
+                <div className="space-y-1">
+                  <span className="text-xs text-muted-foreground font-semibold uppercase flex items-center gap-1">
+                    <Server className="w-3 h-3" /> Sistema
+                  </span>
+                  <p className="text-sm font-medium">
+                    {activeProject.systemType}
+                  </p>
                 </div>
-            )}
+                <div className="space-y-1">
+                  <span className="text-xs text-muted-foreground font-semibold uppercase flex items-center gap-1">
+                    <Rocket className="w-3 h-3" /> Horas
+                  </span>
+                  <Badge variant="outline" className="text-xs">
+                    {activeProject.soldHours || 0}h
+                  </Badge>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-xs text-muted-foreground font-semibold uppercase flex items-center gap-1">
+                    <User className="w-3 h-3" /> Responsável
+                  </span>
+                  <p
+                    className="text-sm font-medium truncate"
+                    title={selectedEvent?.title.split(":")[0] || "N/A"}
+                  >
+                    {/* Usually the resourceId maps to a member, but we can also use the responsible field from project if needed */}
+                    {activeProject.stages.implementation.phase1?.responsible ||
+                      "N/A"}
+                  </p>
+                </div>
+              </div>
+
+              {selectedEvent?.notes && (
+                <div className="pt-2 border-t">
+                  <span className="text-xs text-muted-foreground font-semibold uppercase block mb-1">
+                    Observações do Evento
+                  </span>
+                  <ScrollArea className="h-[100px] w-full rounded-md border p-2 bg-muted/30">
+                    <div className="text-sm text-muted-foreground whitespace-pre-wrap">
+                      {/* This might be JSON from RichText, if so, strip or just show simple text if possible */}
+                      {selectedEvent.notes.startsWith("{")
+                        ? "Conteúdo rico (ver detalhes do projeto)"
+                        : selectedEvent.notes}
+                    </div>
+                  </ScrollArea>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="py-4 text-center text-muted-foreground">
+              <p>Informações detalhadas do projeto não encontradas.</p>
+              <p className="text-xs mt-2 opacity-70">
+                ID: {selectedEvent?.projectId}
+              </p>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

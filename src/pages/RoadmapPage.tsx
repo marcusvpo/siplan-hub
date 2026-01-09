@@ -55,7 +55,7 @@ interface StageConfig {
   details?: string[];
 }
 
-// Configuração das etapas atualizada com o novo cronograma
+// Configuração das etapas com Emojis e Novos Textos
 const STAGES_CONFIG: StageConfig[] = [
   {
     id: "infra",
@@ -63,9 +63,9 @@ const STAGES_CONFIG: StageConfig[] = [
     icon: Cpu,
     description: "Preparando o terreno para a inovação.",
     details: [
-      "Validação de Servidores e Hardware",
-      "Verificação de Segurança e Rede",
-      "Conferência de Pré-requisitos",
+      "🖥️ Validação de Servidores e Hardware",
+      "🔒 Verificação de Segurança e Rede",
+      "✅ Conferência de Pré-requisitos",
     ],
   },
   {
@@ -74,9 +74,9 @@ const STAGES_CONFIG: StageConfig[] = [
     icon: Settings,
     description: "Desenhando o futuro da operação.",
     details: [
-      "Mapeamento de Processos Críticos",
-      "Análise de Gaps Operacionais",
-      "Estudo das principais rotinas do seu cartório",
+      "🗺️ Mapeamento de Processos Críticos",
+      "🔍 Análise de Gaps Operacionais",
+      "📅 Estudo das principais rotinas do seu cartório",
     ],
   },
   {
@@ -85,9 +85,9 @@ const STAGES_CONFIG: StageConfig[] = [
     icon: Truck,
     description: "Migração inteligente do legado.",
     details: [
-      "Preparação para Conversão da Base de Dados",
-      "Extração Segura de Dados",
-      "Primeira Carga em Homologação",
+      "💾 Preparação para Conversão da Base de Dados",
+      "🛡️ Extração Segura de Dados",
+      "🔄 Primeira Carga em Homologação",
     ],
   },
   {
@@ -96,19 +96,19 @@ const STAGES_CONFIG: StageConfig[] = [
     icon: Database,
     description: "O sistema, do seu jeito.",
     details: [
-      "Instalação dos Sistemas Siplan",
-      "Parametrização de Regras de Negócio",
-      "Setup de Perfis e Permissões",
+      "🛠️ Instalação dos Sistemas Siplan",
+      "⚙️ Parametrização de Regras de Negócio",
+      "👤 Setup de Perfis e Permissões",
     ],
   },
   {
     id: "implementation",
-    label: "Treinamento e Go-Live",
+    label: "Implantação & Treinamento",
     icon: Archive,
     description: "A reta final para a transformação.",
     details: [
-      "Treinamentos Coletivos por Setor",
-      "Validação Final pela Serventia",
+      "🎓 Treinamentos Coletivos por Setor",
+      "🏆 Validação Final pela Serventia",
       "🚀 GO-LIVE: Entrada Oficial em Produção",
     ],
   },
@@ -119,12 +119,10 @@ export default function RoadmapPage() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<RoadmapData | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { scrollYProgress } = useScroll();
-  const scaleX = useSpring(scrollYProgress, {
-    stiffness: 100,
-    damping: 30,
-    restDelta: 0.001,
-  });
+
+  // NOTE: Barra de progresso do topo removida para evitar "linha vermelha estranha"
+  // const { scrollYProgress } = useScroll();
+  // const scaleX = useSpring(scrollYProgress, ...);
 
   useEffect(() => {
     async function fetchData() {
@@ -222,47 +220,80 @@ export default function RoadmapPage() {
 
   return (
     <div className="min-h-screen bg-[#050505] text-white selection:bg-white/20 overflow-x-hidden font-sans">
-      {/* Scroll Progress Bar */}
-      <motion.div
-        className="fixed top-0 left-0 right-0 h-1 z-50 origin-left"
-        style={{ scaleX, backgroundColor: primaryColor }}
-      />
-
-      {/* Dynamic Background with Animation */}
+      {/* Dynamic Background with Animation - Enhanced */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        {/* Animated Grid Pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
+
+        {/* Moving Gradient Orbs */}
         <motion.div
           animate={{
-            scale: [1, 1.2, 1],
-            rotate: [0, 45, 0],
-            opacity: [0.1, 0.2, 0.1],
+            scale: [1, 1.2, 0.9, 1],
+            x: [0, 100, -50, 0],
+            y: [0, -50, 50, 0],
+            opacity: [0.15, 0.25, 0.15],
           }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] rounded-full blur-[120px]"
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          className="absolute top-[-20%] left-[-10%] w-[80%] h-[80%] rounded-full blur-[120px]"
           style={{ backgroundColor: primaryColor }}
         />
         <motion.div
           animate={{
-            scale: [1, 1.3, 1],
-            x: [0, -100, 0],
-            opacity: [0.05, 0.15, 0.05],
+            scale: [1, 1.4, 0.9, 1],
+            x: [0, -150, 50, 0],
+            y: [0, 80, -30, 0],
+            opacity: [0.1, 0.2, 0.1],
           }}
           transition={{
-            duration: 15,
+            duration: 25,
             repeat: Infinity,
-            ease: "easeInOut",
+            ease: "linear",
             delay: 1,
           }}
-          className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full blur-[150px] bg-blue-900/40"
+          className="absolute bottom-[-10%] right-[-10%] w-[70%] h-[70%] rounded-full blur-[140px] bg-blue-900/40"
         />
         <motion.div
           animate={{
-            opacity: [0.05, 0.1, 0.05],
+            opacity: [0.05, 0.15, 0.05],
+            scale: [1, 1.5, 1],
           }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-[40%] left-[30%] w-[40%] h-[40%] rounded-full blur-[180px] bg-purple-900/20"
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-[30%] left-[20%] w-[40%] h-[40%] rounded-full blur-[160px] bg-indigo-900/30"
         />
-        <div className="absolute inset-0 bg-[url('/assets/noise.png')] opacity-[0.04] mix-blend-overlay" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-[#050505]/80" />
+
+        {/* Floating Particles (Stars effect) */}
+        {[...Array(20)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute bg-white rounded-full"
+            initial={{
+              x:
+                Math.random() *
+                (typeof window !== "undefined" ? window.innerWidth : 1000),
+              y:
+                Math.random() *
+                (typeof window !== "undefined" ? window.innerHeight : 1000),
+              scale: Math.random() * 0.5 + 0.5,
+              opacity: Math.random() * 0.3 + 0.1,
+            }}
+            animate={{
+              y: [null, Math.random() * -100],
+              opacity: [null, 0],
+            }}
+            transition={{
+              duration: Math.random() * 10 + 10,
+              repeat: Infinity,
+              ease: "linear",
+            }}
+            style={{
+              width: Math.random() * 3 + 1 + "px",
+              height: Math.random() * 3 + 1 + "px",
+            }}
+          />
+        ))}
+
+        <div className="absolute inset-0 bg-[url('/assets/noise.png')] opacity-[0.05] mix-blend-overlay" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-[#050505]/90" />
       </div>
 
       <main className="relative z-10 w-full">
@@ -273,17 +304,21 @@ export default function RoadmapPage() {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, type: "spring" }}
-            className="mb-12"
+            className="mb-12 mt-12 md:mt-0"
           >
             <motion.div
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.1, rotate: 2 }}
+              whileTap={{ scale: 0.95 }}
               transition={{ duration: 0.3 }}
-              className="relative z-10"
+              className="relative z-10 cursor-pointer"
+              onClick={() =>
+                confetti({ particleCount: 50, spread: 60, origin: { y: 0.3 } })
+              }
             >
               <img
                 src="/assets/Siplan_logo_branco.png"
                 alt="Siplan Logo"
-                className="h-20 md:h-28 w-auto drop-shadow-2xl"
+                className="h-24 md:h-32 w-auto drop-shadow-2xl"
               />
             </motion.div>
           </motion.div>
@@ -303,9 +338,12 @@ export default function RoadmapPage() {
               <p className="text-xl md:text-2xl text-gray-400 font-light flex flex-col md:flex-row items-center justify-center gap-2 md:gap-3">
                 <span>Jornada de Transformação Digital</span>
                 <span className="hidden md:inline text-gray-600">•</span>
-                <span className="font-medium px-4 py-1 rounded-full bg-white/5 border border-white/10 text-white shadow-inner">
+                <motion.span
+                  whileHover={{ scale: 1.05 }}
+                  className="font-medium px-4 py-1 rounded-full bg-white/5 border border-white/10 text-white shadow-inner cursor-default"
+                >
                   {project.system_type}
-                </span>
+                </motion.span>
               </p>
             </motion.div>
 
@@ -313,15 +351,19 @@ export default function RoadmapPage() {
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
+              whileHover={{
+                scale: 1.02,
+                backgroundColor: "rgba(255,255,255,0.08)",
+              }}
               transition={{ delay: 0.4 }}
-              className="mt-12 mx-auto max-w-3xl bg-white/5 hover:bg-white/10 border border-white/10 rounded-3xl p-8 backdrop-blur-2xl transition-all duration-500 group shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)]"
+              className="mt-12 mx-auto max-w-3xl bg-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-2xl transition-all duration-300 group shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] cursor-pointer"
               style={{
-                boxShadow: `0 0 60px -20px ${primaryColor}20`,
+                boxShadow: `0 0 60px -20px ${primaryColor}15`,
               }}
             >
               <div className="flex flex-col md:flex-row items-center gap-8">
                 {/* Progress Radial */}
-                <div className="relative w-32 h-32 flex-shrink-0">
+                <div className="relative w-32 h-32 flex-shrink-0 group-hover:scale-110 transition-transform duration-500">
                   <svg
                     className="w-full h-full -rotate-90"
                     viewBox="0 0 100 100"
@@ -357,14 +399,14 @@ export default function RoadmapPage() {
 
                 <div className="text-left space-y-3 flex-1">
                   <h2 className="text-2xl font-semibold text-white flex items-center gap-2">
-                    <span className="animate-wave inline-block origin-bottom-right">
+                    <span className="animate-wave inline-block origin-bottom-right text-3xl">
                       👋
                     </span>
                     Bem-vindo ao seu Portal
                   </h2>
                   <p className="text-gray-400 leading-relaxed font-light">
                     Acompanhe em tempo real cada passo da implantação dos
-                    sitemas Siplan no seu cartório. Estamos construindo juntos
+                    sistemas Siplan no seu cartório. Estamos construindo juntos
                     uma nova era de eficiência e tecnologia.
                   </p>
                   <div className="pt-2 flex items-center gap-2 text-sm text-gray-500">
@@ -418,9 +460,12 @@ export default function RoadmapPage() {
 
         {/* Footer */}
         <footer className="text-center py-12 border-t border-white/5 space-y-6">
-          <div className="inline-block px-6 py-3 rounded-full bg-white/5 border border-white/5 text-xs text-gray-600 uppercase tracking-[0.2em] hover:bg-white/10 transition-colors">
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            className="inline-block px-6 py-3 rounded-full bg-white/5 border border-white/5 text-xs text-gray-600 uppercase tracking-[0.2em] hover:bg-white/10 transition-colors cursor-pointer"
+          >
             Powered by Siplan &bull; {new Date().getFullYear()}
-          </div>
+          </motion.div>
         </footer>
       </main>
     </div>
@@ -433,14 +478,17 @@ function ButtonScrollDown() {
   return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
+      animate={{
+        opacity: 1,
+        y: 0,
+      }}
       transition={{
         delay: 2,
         duration: 2,
         repeat: Infinity,
         repeatType: "reverse",
       }}
-      className="absolute bottom-12 left-1/2 -translate-x-1/2 cursor-pointer p-4 group"
+      className="mt-16 md:mt-24 cursor-pointer p-4 group z-20"
       onClick={() =>
         window.scrollTo({ top: window.innerHeight, behavior: "smooth" })
       }
@@ -471,6 +519,22 @@ function TimelineItem({
   const isDone = status === "done";
   const isInProgress = status === "in-progress";
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.15,
+        delayChildren: 0.3,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, x: -10 },
+    visible: { opacity: 1, x: 0 },
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 100 }}
@@ -490,12 +554,13 @@ function TimelineItem({
       {/* Node / Marker */}
       <div className="absolute left-8 md:left-1/2 -translate-x-1/2 flex flex-col items-center justify-center z-10 top-0 md:top-8">
         <motion.div
-          whileHover={{ scale: 1.2 }}
+          whileHover={{ scale: 1.2, rotate: 10 }}
+          whileTap={{ scale: 0.9 }}
           animate={
             isInProgress ? { boxShadow: `0 0 30px ${primaryColor}` } : {}
           }
           className={cn(
-            "w-12 h-12 md:w-16 md:h-16 rounded-full border-[3px] flex items-center justify-center transition-all duration-500 bg-[#050505] shadow-2xl relative z-20",
+            "w-12 h-12 md:w-16 md:h-16 rounded-full border-[3px] flex items-center justify-center transition-all duration-500 bg-[#050505] shadow-2xl relative z-20 cursor-pointer",
             isDone
               ? "border-emerald-500 text-emerald-500"
               : isInProgress
@@ -529,12 +594,13 @@ function TimelineItem({
           isLeft ? "md:pr-12 md:text-right" : "md:pl-12 md:text-left"
         )}
       >
-        <div
+        <motion.div
+          whileHover={{ y: -5, boxShadow: `0 20px 40px -10px rgba(0,0,0,0.5)` }}
           className={cn(
-            "group relative p-8 md:p-10 rounded-[2rem] border backdrop-blur-sm transition-all duration-500 bg-white/5 border-white/5",
+            "group relative p-8 md:p-10 rounded-[2rem] border backdrop-blur-sm transition-all duration-500 bg-white/5 border-white/5 cursor-default",
             isInProgress
               ? "hover:bg-white/10"
-              : "hover:bg-white/10 opacity-70 hover:opacity-100"
+              : "hover:bg-white/10 opacity-80 hover:opacity-100"
           )}
           style={{
             borderColor: isInProgress
@@ -569,7 +635,7 @@ function TimelineItem({
 
           <h3
             className={cn(
-              "text-3xl font-bold mb-3 group-hover:text-white transition-colors",
+              "text-2xl md:text-3xl font-bold mb-3 group-hover:text-white transition-colors",
               isDone ? "text-gray-300" : "text-white"
             )}
           >
@@ -582,7 +648,11 @@ function TimelineItem({
 
           {/* Sub-steps / Details */}
           {stage.details && (
-            <ul
+            <motion.ul
+              variants={containerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
               className={cn(
                 "space-y-4",
                 isLeft ? "md:items-end" : "md:items-start",
@@ -590,7 +660,11 @@ function TimelineItem({
               )}
             >
               {stage.details.map((detail, i) => (
-                <li key={i} className="flex items-center gap-3 text-gray-400">
+                <motion.li
+                  key={i}
+                  variants={itemVariants}
+                  className="flex items-center gap-3 text-gray-400 hover:text-gray-200 transition-colors"
+                >
                   {!isLeft && (
                     <div
                       className={cn(
@@ -615,11 +689,11 @@ function TimelineItem({
                       )}
                     />
                   )}
-                </li>
+                </motion.li>
               ))}
-            </ul>
+            </motion.ul>
           )}
-        </div>
+        </motion.div>
       </div>
     </motion.div>
   );
