@@ -18,7 +18,6 @@ export const useProjects = () => {
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return data.map((proj: Record<string, any>) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const timeline: TimelineEventV2[] = [];
 
         const tempProject: ProjectV2 = {
