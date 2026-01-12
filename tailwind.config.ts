@@ -28,6 +28,7 @@ export default {
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
+          "secondary-hover": "hsl(var(--secondary) / 0.8)",
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
@@ -84,6 +85,10 @@ export default {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      boxShadow: {
+        subtle: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+        layered: "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
       },
       keyframes: {
         "accordion-down": {
