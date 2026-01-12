@@ -2,62 +2,70 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 222 47% 11%;
+    /* Base: Slate (Zinc-like precision) */
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%; /* Slate 900 */
 
+    /* Cards - White with subtle separation */
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
-
+    
+    /* Popovers - crisp white */
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    --primary: 346 77% 49%; /* Premium Red */
-    --primary-foreground: 210 40% 98%;
-    --primary-light: 346 100% 96%;
+    /* Primary: Refined Crimson/Red (High Trust, Premium) */
+    --primary: 346 84% 45%; 
+    --primary-foreground: 0 0% 100%;
+    --primary-light: 346 84% 96%;
 
+    /* Secondary: Slate 100 - Subtle backing */
     --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222 47% 11.2%;
+    --secondary-foreground: 222 47% 11%;
 
+    /* Muted: Slate 100/200 mix for less emphasis */
     --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted-foreground: 215 16% 47%; /* Slate 500 */
 
+    /* Accent: Interactive hover states */
     --accent: 210 40% 96.1%;
-    --accent-foreground: 222 47% 11.2%;
+    --accent-foreground: 222 47% 11%;
 
+    /* Destructive */
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --success: 142 76% 36%;
-    --success-foreground: 355 100% 97%;
-
-    --warning: 45 93% 47%;
+    /* Semantic Status Colors */
+    --success: 142 72% 29%;
+    --success-foreground: 0 0% 100%;
+    
+    --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
     --critical: 0 84% 60%;
     --critical-foreground: 0 0% 100%;
 
+    /* Borders & Inputs: Slate 200 - Crisp, barely there */
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 346 77% 49%;
+    --ring: 346 84% 45%; /* Matches primary */
 
-    --radius: 1rem; /* More rounded for modern feel */
+    --radius: 0.5rem; /* 8px - Precision standard */
 
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Sidebar - Slight off-white or white with border */
+    --sidebar-background: 210 40% 98%; 
+    --sidebar-foreground: 215 16% 47%;
+    --sidebar-primary: 346 84% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 40% 93%; /* Slightly darker than bg */
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 214.3 31.8% 91.4%;
+    --sidebar-ring: 346 84% 45%;
 
-    --chart-1: 346 77% 49%;
+    /* Charts */
+    --chart-1: 346 84% 45%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
@@ -65,26 +73,28 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 222 47% 11%;
+    /* Dark Mode: Deep Slate/Navy feel - NOT Just Black */
+    --background: 222 47% 4%; /* Very deep slate */
     --foreground: 210 40% 98%;
 
-    --card: 222 47% 11%;
+    --card: 222 47% 6%; /* Slightly lighter than bg */
     --card-foreground: 210 40% 98%;
 
-    --popover: 222 47% 11%;
+    --popover: 222 47% 6%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 346 77% 49%;
-    --primary-foreground: 210 40% 98%;
-    --primary-light: 346 77% 20%;
+    /* Primary stays vibrant but readable */
+    --primary: 346 84% 55%; 
+    --primary-foreground: 0 0% 100%;
+    --primary-light: 346 84% 20%;
 
-    --secondary: 217.2 32.6% 17.5%;
+    --secondary: 217 32% 12%; /* Dark slate */
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 217 32% 12%;
+    --muted-foreground: 215 20% 65%;
 
-    --accent: 217.2 32.6% 17.5%;
+    --accent: 217 32% 12%;
     --accent-foreground: 210 40% 98%;
 
     --destructive: 0 62.8% 30.6%;
@@ -99,20 +109,21 @@ All colors MUST be HSL.
     --critical: 0 62.8% 30.6%;
     --critical-foreground: 0 0% 100%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 346 77% 49%;
+    /* Borders move to darker slates */
+    --border: 217 32% 12%; /* Subtle integration */
+    --input: 217 32% 12%;
+    --ring: 346 84% 55%;
 
-    --sidebar-background: 222 47% 11%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-background: 222 47% 4%; /* Matches bg for seamless look */
+    --sidebar-foreground: 215 20% 65%;
+    --sidebar-primary: 346 84% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 217 32% 12%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217 32% 12%;
+    --sidebar-ring: 346 84% 55%;
 
-    --chart-1: 346 77% 49%;
+    --chart-1: 346 84% 55%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
@@ -124,8 +135,23 @@ All colors MUST be HSL.
   * {
     @apply border-border;
   }
-
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary;
+    font-feature-settings: "ss01", "ss02", "cv01", "cv02"; /* Technical font features if available */
+  }
+  
+  /* Precision Headers */
+  h1, h2, h3, h4, h5, h6 {
+    @apply tracking-tight font-semibold text-foreground;
+  }
+}
+
+@layer utilities {
+  /* Subtle box shadow utility for "Precision" look */
+  .shadow-subtle {
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  }
+  .shadow-layered {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   }
 }

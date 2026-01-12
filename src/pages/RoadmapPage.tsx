@@ -13,12 +13,12 @@ import {
   AlertCircle,
   LucideIcon,
   ChevronDown,
+  Loader2,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { cn } from "@/lib/utils";
 
 // --- Types ---
-
 interface StageData {
   status: "todo" | "in-progress" | "done" | "blocked";
 }
@@ -44,6 +44,7 @@ interface RoadmapData {
     overall_progress: number;
     global_status: string;
     stages: Record<string, StageData>;
+    last_update?: string;
   };
 }
 
@@ -222,90 +223,35 @@ export default function RoadmapPage() {
     <div className="min-h-screen bg-[#050505] text-white selection:bg-white/20 overflow-x-hidden font-sans">
       {/* Dynamic Background with Animation - Enhanced */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        {/* Animated Grid Pattern */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
+        {/* Deep Space / Mesh Gradient Background */}
+        <div className="absolute inset-0 bg-[#030303]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,_rgba(120,0,0,0.15),transparent_70%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,_rgba(50,50,150,0.1),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_0%_50%,_rgba(100,100,100,0.05),transparent_50%)]" />
 
-        {/* Moving Gradient Orbs */}
+        {/* Subtle Grid - fiber optic feel */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:50px_50px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_50%,#000_20%,transparent_100%)]" />
+
+        {/* Dynamic Orbs */}
         <motion.div
           animate={{
             scale: [1, 1.2, 0.9, 1],
-            x: [0, 100, -50, 0],
-            y: [0, -50, 50, 0],
-            opacity: [0.15, 0.25, 0.15],
-          }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          className="absolute top-[-20%] left-[-10%] w-[80%] h-[80%] rounded-full blur-[120px]"
-          style={{ backgroundColor: primaryColor }}
-        />
-        <motion.div
-          animate={{
-            scale: [1, 1.4, 0.9, 1],
-            x: [0, -150, 50, 0],
-            y: [0, 80, -30, 0],
             opacity: [0.1, 0.2, 0.1],
           }}
-          transition={{
-            duration: 25,
-            repeat: Infinity,
-            ease: "linear",
-            delay: 1,
-          }}
-          className="absolute bottom-[-10%] right-[-10%] w-[70%] h-[70%] rounded-full blur-[140px] bg-blue-900/40"
-        />
-        <motion.div
-          animate={{
-            opacity: [0.05, 0.15, 0.05],
-            scale: [1, 1.5, 1],
-          }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-[30%] left-[20%] w-[40%] h-[40%] rounded-full blur-[160px] bg-indigo-900/30"
+          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+          className="absolute top-[-10%] left-[20%] w-[60%] h-[60%] rounded-full blur-[150px]"
+          style={{ backgroundColor: primaryColor }}
         />
 
-        {/* Floating Particles (Stars effect) */}
-        {[...Array(20)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute bg-white rounded-full"
-            initial={{
-              x:
-                Math.random() *
-                (typeof window !== "undefined" ? window.innerWidth : 1000),
-              y:
-                Math.random() *
-                (typeof window !== "undefined" ? window.innerHeight : 1000),
-              scale: Math.random() * 0.5 + 0.5,
-              opacity: Math.random() * 0.3 + 0.1,
-            }}
-            animate={{
-              y: [null, Math.random() * -100],
-              opacity: [null, 0],
-            }}
-            transition={{
-              duration: Math.random() * 10 + 10,
-              repeat: Infinity,
-              ease: "linear",
-            }}
-            style={{
-              width: Math.random() * 3 + 1 + "px",
-              height: Math.random() * 3 + 1 + "px",
-            }}
-          />
-        ))}
-
-        <div className="absolute inset-0 bg-[url('/assets/noise.png')] opacity-[0.05] mix-blend-overlay" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-[#050505]/90" />
+        {/* Noise Texture for Film Grain */}
+        <div className="absolute inset-0 bg-[url('/assets/noise.png')] opacity-[0.03] mix-blend-overlay" />
       </div>
 
       <main className="relative z-10 w-full">
         {/* Full Screen Hero Section */}
         <section className="min-h-[95vh] flex flex-col items-center justify-center relative px-6 py-12 md:py-0">
           {/* Logo */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, type: "spring" }}
-            className="mb-12 mt-12 md:mt-0"
-          >
+          <div className="mb-12 mt-24 md:mt-12">
             <motion.div
               whileHover={{ scale: 1.1, rotate: 2 }}
               whileTap={{ scale: 0.95 }}
@@ -321,7 +267,7 @@ export default function RoadmapPage() {
                 className="h-24 md:h-32 w-auto drop-shadow-2xl"
               />
             </motion.div>
-          </motion.div>
+          </div>
 
           {/* Main Title & Status */}
           <div className="text-center space-y-6 max-w-4xl mx-auto z-20">
@@ -330,12 +276,13 @@ export default function RoadmapPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2, duration: 0.8 }}
             >
-              <h1 className="text-4xl md:text-7xl font-bold tracking-tight text-white mb-4">
-                <span className="text-transparent bg-clip-text bg-gradient-to-br from-white via-gray-200 to-gray-500">
-                  {project.client_name}
-                </span>
+              <p className="text-sm md:text-base text-gray-400 uppercase tracking-[0.2em] mb-4">
+                Portal do Cliente
+              </p>
+              <h1 className="text-5xl md:text-8xl font-bold tracking-tighter text-white mb-6">
+                {project.client_name}
               </h1>
-              <p className="text-xl md:text-2xl text-gray-400 font-light flex flex-col md:flex-row items-center justify-center gap-2 md:gap-3">
+              <p className="text-lg md:text-xl text-gray-400 font-light flex flex-col md:flex-row items-center justify-center gap-2 md:gap-3">
                 <span>Jornada de Transformação Digital</span>
                 <span className="hidden md:inline text-gray-600">•</span>
                 <motion.span
@@ -347,74 +294,78 @@ export default function RoadmapPage() {
               </p>
             </motion.div>
 
-            {/* Interactive Welcome Card */}
+            {/* Epic Progress Widget */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              whileHover={{
-                scale: 1.02,
-                backgroundColor: "rgba(255,255,255,0.08)",
-              }}
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              whileHover={{ scale: 1.01 }}
               transition={{ delay: 0.4 }}
-              className="mt-12 mx-auto max-w-3xl bg-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-2xl transition-all duration-300 group shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] cursor-pointer"
-              style={{
-                boxShadow: `0 0 60px -20px ${primaryColor}15`,
-              }}
+              className="mt-16 mx-auto max-w-4xl bg-white/[0.02] border border-white/10 rounded-[2.5rem] p-8 md:p-12 backdrop-blur-2xl relative overflow-hidden group"
             >
-              <div className="flex flex-col md:flex-row items-center gap-8">
-                {/* Progress Radial */}
-                <div className="relative w-32 h-32 flex-shrink-0 group-hover:scale-110 transition-transform duration-500">
-                  <svg
-                    className="w-full h-full -rotate-90"
-                    viewBox="0 0 100 100"
-                  >
+              <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+
+              <div className="flex flex-col md:flex-row items-center gap-10">
+                {/* Big Percentage */}
+                <div className="relative flex-shrink-0">
+                  <svg className="w-40 h-40 md:w-48 md:h-48 -rotate-90">
                     <circle
-                      cx="50"
-                      cy="50"
-                      r="45"
+                      cx="50%"
+                      cy="50%"
+                      r="45%"
                       fill="none"
-                      stroke="#2a2a2a"
-                      strokeWidth="6"
+                      stroke="#222"
+                      strokeWidth="8"
                     />
                     <motion.circle
-                      cx="50"
-                      cy="50"
-                      r="45"
+                      cx="50%"
+                      cy="50%"
+                      r="45%"
                       fill="none"
                       stroke={primaryColor}
-                      strokeWidth="6"
+                      strokeWidth="8"
                       strokeLinecap="round"
                       initial={{ pathLength: 0 }}
                       animate={{ pathLength: calculatedProgress / 100 }}
-                      transition={{ duration: 2, ease: "easeOut", delay: 0.8 }}
-                      style={{ filter: `drop-shadow(0 0 4px ${primaryColor})` }}
+                      transition={{
+                        duration: 2.5,
+                        ease: "easeOut",
+                        delay: 0.5,
+                      }}
+                      className=""
                     />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-2xl font-bold text-white">
+                    <span className="text-4xl md:text-5xl font-bold text-white tracking-tighter">
                       {calculatedProgress}%
+                    </span>
+                    <span className="text-xs uppercase tracking-[0.2em] text-gray-500 mt-2">
+                      Concluído
                     </span>
                   </div>
                 </div>
 
-                <div className="text-left space-y-3 flex-1">
-                  <h2 className="text-2xl font-semibold text-white flex items-center gap-2">
-                    <span className="animate-wave inline-block origin-bottom-right text-3xl">
-                      👋
+                <div className="text-left space-y-4 flex-1">
+                  <h2 className="text-3xl md:text-4xl font-bold text-white leading-tight">
+                    Olá,{" "}
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">
+                      {project.client_name}
                     </span>
-                    Bem-vindo ao seu Portal
+                    .
                   </h2>
-                  <p className="text-gray-400 leading-relaxed font-light">
-                    Acompanhe em tempo real cada passo da implantação dos
-                    sistemas Siplan no seu cartório. Estamos construindo juntos
-                    uma nova era de eficiência e tecnologia.
+                  <p className="text-xl text-gray-400 font-light max-w-lg">
+                    Sua transformação digital está avançando. Acompanhe abaixo
+                    cada etapa desta jornada.
                   </p>
-                  <div className="pt-2 flex items-center gap-2 text-sm text-gray-500">
-                    <Clock size={14} />
-                    <span>
-                      Status Atual:{" "}
-                      <span className="text-gray-300 font-medium">
-                        {roadmap.welcome_message || "Projeto em Andamento..."}
+
+                  <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 border border-white/5 mt-4">
+                    <div
+                      className="w-2 h-2 rounded-full animate-pulse"
+                      style={{ backgroundColor: primaryColor }}
+                    />
+                    <span className="text-sm font-medium text-gray-300">
+                      Fase Atual:{" "}
+                      <span className="text-white">
+                        {roadmap.welcome_message}
                       </span>
                     </span>
                   </div>
@@ -427,8 +378,8 @@ export default function RoadmapPage() {
         </section>
 
         {/* Timeline Section */}
-        <section className="relative max-w-6xl mx-auto px-4 pb-32">
-          <div className="flex items-center justify-center gap-4 mb-24 opacity-80">
+        <section className="relative max-w-6xl mx-auto px-4 pb-32 isolate">
+          <div className="flex items-center justify-center gap-4 mb-24 opacity-80 relative z-40 bg-[#050505] py-4">
             <div className="h-px w-24 bg-gradient-to-r from-transparent to-gray-600" />
             <span className="text-sm font-medium tracking-[0.3em] uppercase text-gray-400">
               Linha do Tempo
@@ -436,11 +387,24 @@ export default function RoadmapPage() {
             <div className="h-px w-24 bg-gradient-to-l from-transparent to-gray-600" />
           </div>
 
-          {/* Timeline Vertical Line */}
-          <div className="absolute left-6 md:left-1/2 top-32 bottom-32 w-px bg-gradient-to-b from-transparent via-white/20 to-transparent -translate-x-1/2 hidden md:block" />
-          <div className="absolute left-8 top-32 bottom-32 w-px bg-gradient-to-b from-transparent via-white/20 to-transparent md:hidden" />
+          {/* Timeline Vertical Line - Logic Based */}
+          <div className="absolute left-8 md:left-1/2 top-40 bottom-0 -translate-x-1/2 flex flex-col items-center z-0">
+            {/* The Track Container */}
+            <div className="w-[3px] h-full bg-white/5 relative overflow-hidden rounded-full">
+              {/* Background Gradient */}
+              <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent opacity-30" />
+              {/* Filling Line */}
+              <motion.div
+                initial={{ height: "0%" }}
+                animate={{ height: `${calculatedProgress}%` }}
+                transition={{ duration: 2.5, ease: "easeOut", delay: 0.5 }}
+                className="absolute top-0 left-0 w-full bg-gradient-to-b from-emerald-400 via-emerald-500 to-emerald-900 shadow-[0_0_20px_rgba(16,185,129,0.5)]"
+                style={{ borderRadius: "0 0 100px 100px" }}
+              />
+            </div>
+          </div>
 
-          <div className="space-y-24">
+          <div className="relative z-30 space-y-12 md:space-y-16">
             {STAGES_CONFIG.map((stage, index) => {
               const stageData = project.stages[stage.id];
               const status = stageData?.status || "todo";
@@ -459,14 +423,7 @@ export default function RoadmapPage() {
         </section>
 
         {/* Footer */}
-        <footer className="text-center py-12 border-t border-white/5 space-y-6">
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            className="inline-block px-6 py-3 rounded-full bg-white/5 border border-white/5 text-xs text-gray-600 uppercase tracking-[0.2em] hover:bg-white/10 transition-colors cursor-pointer"
-          >
-            Powered by Siplan &bull; {new Date().getFullYear()}
-          </motion.div>
-        </footer>
+        <RealtimeFooter />
       </main>
     </div>
   );
@@ -539,47 +496,54 @@ function TimelineItem({
     <motion.div
       initial={{ opacity: 0, y: 100 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-100px" }}
+      viewport={{ once: true, margin: "-50px" }}
       transition={{
         duration: 0.8,
         delay: index * 0.1,
         type: "spring",
-        bounce: 0.4,
+        bounce: 0.3,
       }}
       className={cn(
-        "relative flex flex-col md:flex-row items-center gap-8 md:gap-16 w-full",
+        "relative flex flex-col md:flex-row items-center gap-8 md:gap-12 w-full z-10",
         isLeft ? "" : "md:flex-row-reverse"
       )}
     >
-      {/* Node / Marker */}
+      {/* Tech Node / Marker */}
       <div className="absolute left-8 md:left-1/2 -translate-x-1/2 flex flex-col items-center justify-center z-10 top-0 md:top-8">
         <motion.div
-          whileHover={{ scale: 1.2, rotate: 10 }}
-          whileTap={{ scale: 0.9 }}
+          whileHover={{ scale: 1.2 }}
           animate={
-            isInProgress ? { boxShadow: `0 0 30px ${primaryColor}` } : {}
+            isInProgress
+              ? {
+                  boxShadow: `0 0 50px ${primaryColor}66`,
+                }
+              : {}
           }
           className={cn(
-            "w-12 h-12 md:w-16 md:h-16 rounded-full border-[3px] flex items-center justify-center transition-all duration-500 bg-[#050505] shadow-2xl relative z-20 cursor-pointer",
+            "w-12 h-12 md:w-16 md:h-16 rounded-full border-4 flex items-center justify-center transition-all duration-500 shadow-2xl relative z-20 cursor-pointer backdrop-blur-xl",
             isDone
-              ? "border-emerald-500 text-emerald-500"
+              ? "border-emerald-500 bg-[#050505] text-emerald-500"
               : isInProgress
-              ? "text-white"
-              : "border-white/10 text-gray-600"
+              ? "bg-[#050505] text-white"
+              : "border-white/10 bg-[#050505] text-gray-600"
           )}
           style={{
             borderColor: isInProgress ? primaryColor : undefined,
-            backgroundColor: isDone
-              ? "#050505"
-              : isInProgress
-              ? primaryColor
-              : "#050505",
           }}
         >
+          {isInProgress && (
+            <div
+              className="absolute inset-0 rounded-full animate-ping opacity-20"
+              style={{ backgroundColor: primaryColor }}
+            />
+          )}
+
           {isDone ? (
-            <CheckCircle2 className="w-5 h-5 md:w-7 md:h-7" />
+            <CheckCircle2 className="w-6 h-6" />
           ) : (
-            <stage.icon className="w-5 h-5 md:w-7 md:h-7" />
+            <stage.icon
+              className={cn("w-6 h-6", isInProgress ? "animate-pulse" : "")}
+            />
           )}
         </motion.div>
       </div>
@@ -587,62 +551,59 @@ function TimelineItem({
       {/* Spacer for Flex positioning */}
       <div className="flex-1 w-full md:w-1/2 hidden md:block" />
 
-      {/* Content Card */}
+      {/* Content Card with Glassmorphism */}
       <div
         className={cn(
           "flex-1 w-full md:w-1/2 pl-24 md:pl-0",
-          isLeft ? "md:pr-12 md:text-right" : "md:pl-12 md:text-left"
+          isLeft ? "md:pr-16 md:text-right" : "md:pl-16 md:text-left"
         )}
       >
         <motion.div
-          whileHover={{ y: -5, boxShadow: `0 20px 40px -10px rgba(0,0,0,0.5)` }}
+          whileHover={{ y: -5, borderColor: "rgba(255,255,255,0.3)" }}
           className={cn(
-            "group relative p-8 md:p-10 rounded-[2rem] border backdrop-blur-sm transition-all duration-500 bg-white/5 border-white/5 cursor-default",
+            "group relative p-8 md:p-10 rounded-[2rem] border transition-all duration-500 overflow-hidden",
+            "bg-white/[0.03] backdrop-blur-3xl",
             isInProgress
-              ? "hover:bg-white/10"
-              : "hover:bg-white/10 opacity-80 hover:opacity-100"
+              ? "border-emerald-500/50 shadow-[0_0_30px_-10px_rgba(16,185,129,0.2)]"
+              : "border-white/10 hover:bg-white/[0.06]"
           )}
           style={{
-            borderColor: isInProgress
-              ? `${primaryColor}66`
-              : "rgba(255,255,255,0.05)",
+            borderColor: isInProgress ? primaryColor : undefined,
             boxShadow: isInProgress
-              ? `0 0 40px -20px ${primaryColor}40`
+              ? `0 0 30px -10px ${primaryColor}40`
               : "none",
           }}
         >
+          {/* Active Gradient Border Effect (Neon) */}
+          {isInProgress && (
+            <div
+              className="absolute inset-0 border-2 border-transparent rounded-[2rem]"
+              style={{ borderColor: primaryColor, opacity: 0.5 }}
+            />
+          )}
+
           {/* Status Badge */}
           <div
             className={cn(
-              "inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest mb-6 border",
-              isDone
-                ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
-                : isInProgress
-                ? "text-white border-white/20"
-                : "bg-white/5 text-gray-500 border-white/5"
+              "mb-6 flex",
+              isLeft ? "md:justify-end" : "md:justify-start"
             )}
-            style={{
-              backgroundColor: isInProgress ? primaryColor : undefined,
-              borderColor: isInProgress ? primaryColor : undefined,
-            }}
           >
-            {isDone
-              ? "Finalizado"
-              : isInProgress
-              ? "Em Andamento"
-              : "Aguardando"}
+            <RoadmapStatusBadge status={status} color={primaryColor} />
           </div>
 
           <h3
             className={cn(
-              "text-2xl md:text-3xl font-bold mb-3 group-hover:text-white transition-colors",
-              isDone ? "text-gray-300" : "text-white"
+              "text-3xl font-bold mb-4 tracking-tight transition-colors",
+              isDone
+                ? "text-gray-400 decoration-slate-600 line-through decoration-2"
+                : "text-white"
             )}
           >
             {stage.label}
           </h3>
 
-          <p className="text-gray-400 text-lg leading-relaxed mb-8 font-light">
+          <p className="text-[#CCCCCC] text-lg leading-relaxed mb-10 font-light">
             {stage.description}
           </p>
 
@@ -663,32 +624,32 @@ function TimelineItem({
                 <motion.li
                   key={i}
                   variants={itemVariants}
-                  className="flex items-center gap-3 text-gray-400 hover:text-gray-200 transition-colors"
+                  className="flex items-center gap-4 text-gray-400 group/item"
                 >
-                  {!isLeft && (
-                    <div
-                      className={cn(
-                        "w-1.5 h-1.5 rounded-full flex-shrink-0",
-                        isDone ? "bg-emerald-500" : "bg-gray-700"
-                      )}
-                    />
-                  )}
+                  {!isLeft &&
+                    (isDone ? (
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    ) : (
+                      <div className="w-1.5 h-1.5 rounded-full bg-white/20 group-hover/item:bg-white transition-colors" />
+                    ))}
+
                   <span
                     className={cn(
-                      isDone ? "line-through opacity-50" : "",
-                      "text-base"
+                      "text-base transition-colors duration-300",
+                      isDone
+                        ? "opacity-50 line-through"
+                        : "group-hover/item:text-gray-200"
                     )}
                   >
                     {detail}
                   </span>
-                  {isLeft && (
-                    <div
-                      className={cn(
-                        "w-1.5 h-1.5 rounded-full flex-shrink-0",
-                        isDone ? "bg-emerald-500" : "bg-gray-700"
-                      )}
-                    />
-                  )}
+
+                  {isLeft &&
+                    (isDone ? (
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    ) : (
+                      <div className="w-1.5 h-1.5 rounded-full bg-white/20 group-hover/item:bg-white transition-colors" />
+                    ))}
                 </motion.li>
               ))}
             </motion.ul>
@@ -696,5 +657,118 @@ function TimelineItem({
         </motion.div>
       </div>
     </motion.div>
+  );
+}
+
+function RoadmapStatusBadge({
+  status,
+  color,
+}: {
+  status: StageData["status"];
+  color: string;
+}) {
+  const isDone = status === "done";
+  const isInProgress = status === "in-progress";
+
+  if (isDone) {
+    return (
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-widest shadow-[0_0_15px_-3px_rgba(16,185,129,0.3)]"
+      >
+        <CheckCircle2 className="w-3.5 h-3.5" />
+        <span>Finalizado</span>
+      </motion.div>
+    );
+  }
+
+  if (isInProgress) {
+    return (
+      <div className="relative inline-flex group">
+        <div
+          className="absolute -inset-[1px] rounded-full blur-sm opacity-75 animate-pulse"
+          style={{ backgroundColor: color }}
+        />
+        <div className="relative inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[#050505] border border-white/20 text-white text-xs font-bold uppercase tracking-widest shadow-xl">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+          >
+            <Loader2 className="w-3.5 h-3.5 text-white" />
+          </motion.div>
+          <span className="text-white drop-shadow-md">Em Andamento</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Pending / Blocked
+  return (
+    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.02] border border-white/5 text-gray-500 text-xs font-bold uppercase tracking-widest">
+      <Clock className="w-3.5 h-3.5" />
+      <span>Aguardando</span>
+    </div>
+  );
+}
+
+export function RealtimeFooter() {
+  return (
+    <section className="relative py-32 px-6 mt-12 overflow-hidden border-t border-white/5">
+      {/* Footer Background Effects */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-white/5 via-[#050505] to-[#050505] pointer-events-none" />
+
+      <div className="max-w-4xl mx-auto text-center relative z-10 space-y-10">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-900/20 border border-emerald-500/20 text-emerald-400 text-xs font-medium"
+        >
+          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_#10b981]" />
+          Sincronização em Tempo Real
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.1 }}
+        >
+          <h2 className="text-3xl md:text-5xl font-bold text-white tracking-tight mb-6">
+            Transparência Total <br /> na Sua Jornada
+          </h2>
+
+          <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed font-light">
+            Este roadmap é conectado diretamente ao nosso sistema interno de
+            gestão. Cada avanço da nossa equipe técnica é refletido aqui
+            instantaneamente, garantindo que você esteja sempre no controle do
+            progresso.
+          </p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.3 }}
+          className="pt-12 flex flex-col items-center gap-6"
+        >
+          <div className="flex items-center justify-center gap-6 opacity-30 grayscale hover:grayscale-0 transition-all duration-700">
+            <div className="h-px w-16 md:w-32 bg-gradient-to-r from-transparent to-white/30" />
+            <img
+              src="/assets/Siplan_logo_branco.png"
+              alt="Siplan"
+              className="h-6 md:h-8"
+            />
+            <div className="h-px w-16 md:w-32 bg-gradient-to-l from-transparent to-white/30" />
+          </div>
+
+          <p className="text-xs text-gray-600 uppercase tracking-[0.2em]">
+            Atualizado Agora
+          </p>
+        </motion.div>
+      </div>
+    </section>
   );
 }
