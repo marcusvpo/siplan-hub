@@ -1,4 +1,5 @@
 # PRD - Siplan Manager
+
 ## Plataforma de Gestão de Implantação de Softwares
 
 **Versão:** 1.0 (Vibe Coding Definition)  
@@ -8,6 +9,7 @@
 ---
 
 ## ÍNDICE
+
 1. [Contexto e Problema](#1-contexto-e-problema)
 2. [Visão do Produto](#2-visão-do-produto)
 3. [Personas e Stakeholders](#3-personas-e-stakeholders)
@@ -32,25 +34,30 @@ O processo de implantação de softwares é **complexo, multidisciplinar e crít
 ### 1.2 Dores Operacionais Identificadas
 
 #### a) **Falta de Visibilidade Centralizada**
+
 - Cada projeto é uma "linha" em uma tabela.
 - Para saber o status real, o gestor precisa **abrir item por item**, expandir o formulário e ler manualmente as observações.
 - A última atualização é documentada em um campo de texto gigante no padrão manual: "**UAT. 25/11/2025, por Marcus Ortiz**", empilhando observações sem estrutura.
 
 #### b) **Impedimento de Rastreabilidade e Follow-up**
+
 - Não há registro automático de quando cada etapa começou/terminou.
 - O gestor depende de **lembrança humana** para cobrar a equipe (ex: solicitou análise de aderência ao Alex no dia 19, mas só descobriu no dia 25 que ainda não havia retorno).
 - Sem alertas automáticos, pendências **passam despercebidas**.
 
 #### c) **Poluição Visual de Campos**
+
 - O formulário atual contém campos **completamente desnecessários** (% de conclusão, datas de previsão genéricas, campos legados).
 - Usuários se perdem identificando quais campos importam para o seu papel.
 - Isso aumenta o **tempo de entrada de dados** e a **margem de erro**.
 
 #### d) **Inexistência de Gestão por Exceção**
+
 - Não há indicadores visuais que sinalizem automaticamente quais projetos estão "críticos" ou "parados".
 - O gestor precisa fazer um **scan manual** semanal de todos os projetos.
 
 #### e) **Processo de Implantação Complexo e Não-Linear**
+
 - O fluxo Siplan é: Contrato → Levantamento Infra → Análise Aderência → Análise Ambiente → Conversão Dados → Homologação → Agendamento → Instalação Remota → Treinamento Presencial → Virada para Produção → Pós-Implantação.
 - As fases **não são estritamente sequenciais**. A análise de aderência pode ocorrer enquanto a infra está sendo adequada.
 - **Bloqueadores** podem aparecer em qualquer ponto (ex: infra inadequada retorna ao Comercial, conversão de dados falha na homologação).
@@ -80,6 +87,7 @@ Criar uma **plataforma web moderna (SPA)** que transforme a gestão manual e rea
 ### 2.3 Escopo v1.0
 
 **Funcionalidades Incluídas:**
+
 - Dashboard principal com visão de torre de controle.
 - Drawer de detalhes com formulário modular.
 - Timeline automática de eventos.
@@ -87,6 +95,7 @@ Criar uma **plataforma web moderna (SPA)** que transforme a gestão manual e rea
 - Suporte para múltiplos usuários com permissões básicas (Gestor vs Técnico).
 
 **Funcionalidades Futuras (v2.0+):**
+
 - Integração com SAC 0800 da Siplan para devoluções automáticas.
 - Notificações por email/Slack para alertas críticos.
 - Relatórios e BI (quantidade de projetos por estágio, tempo médio de implantação, gargalos recorrentes).
@@ -100,18 +109,21 @@ Criar uma **plataforma web moderna (SPA)** que transforme a gestão manual e rea
 ### 3.1 Persona Primária: Bruno Fernandes (Gestor de Implantação)
 
 **Perfil:**
+
 - Responsável por orquestrar todo o fluxo de implantação de ~50-70 projetos ativos simultaneamente.
 - Interage com múltiplos times (Infra, Aderência, Conversão, Implantação).
 - Precisa prestar contas para a direção sobre cronogramas e gargalos.
 - Usuário diário da plataforma (~6-8 horas/dia).
 
 **Necessidades:**
+
 - Visão macro instantânea: quais projetos estão em risco?
 - Capacidade de cobrar a equipe com dados: "Alex, o projeto X está parado há 6 dias em Aderência."
 - Histórico auditável para justificar atrasos.
 - Relatórios rápidos para reuniões de gestão.
 
 **Comportamento:**
+
 - Acessa a plataforma pela manhã para fazer seu "scan diário".
 - Clica em projetos específicos para investigar gargalos.
 - Adiciona comentários contextuais ("Cliente confirmou servidor para amanhã").
@@ -121,16 +133,19 @@ Criar uma **plataforma web moderna (SPA)** que transforme a gestão manual e rea
 ### 3.2 Persona Secundária: Alex Silva (Analista de Implantação)
 
 **Perfil:**
+
 - Responsável por executar análises (Aderência, Ambiente) e treinamentos.
 - Usuário ocasional da plataforma (~1-2 horas/dia).
 - Precisa de um formulário simples para atualizar seu status rapidamente.
 
 **Necessidades:**
+
 - Entender claramente o que ele precisa fazer agora.
 - Poder editar apenas os campos que o afetam.
 - Não quer preencher "% Conclusão" ou campos irrelevantes.
 
 **Comportamento:**
+
 - Acessa quando recebe um "chamado" do gestor.
 - Atualiza o status rapidamente.
 - Deixa um comentário explicando a situação atual.
@@ -140,11 +155,13 @@ Criar uma **plataforma web moderna (SPA)** que transforme a gestão manual e rea
 ### 3.3 Persona Terciária: Equipe de Infraestrutura
 
 **Perfil:**
+
 - Responsável pelo Levantamento de Infraestrutura e Instalação Remota do Sistema.
 - Usuário esporádico (~menos de 1 hora/semana por projeto).
 - Trabalha com tickets no SAC 0800.
 
 **Necessidades:**
+
 - Ver claramente quando uma infraestrutura foi "Devolvida ao Comercial" (bloqueio).
 - Atualizar o status quando a instalação remota estiver completa.
 
@@ -160,6 +177,7 @@ A tela inicial da plataforma exibe uma visão centralizada de todos os projetos 
 **Componentes Visuais:**
 
 #### Tabela Rica (Rich Data Grid)
+
 - **Não é uma tabela HTML simples.** Usa componentes visuais para criar "linhas interativas" com densidade visual controlada.
 - **Seletor de Filtros (Sticky no topo):**
   - Filtro por Status Geral (Andamento, Risco, Crítico, Finalizado).
@@ -167,7 +185,8 @@ A tela inicial da plataforma exibe uma visão centralizada de todos os projetos 
   - Filtro por Etapa Atual (Infra, Aderência, Conversão, etc.).
   - Campo de busca por Cliente/Ticket.
 
-#### Colunas Exibidas:
+#### Colunas Exibidas
+
 1. **Cliente / Sistema**
    - Nome do cartório (ex: "Mogi-Mirim").
    - Subtexto: Sistema em implantação (ex: "Orion PRO").
@@ -227,7 +246,8 @@ Ao clicar em um projeto no dashboard, um painel lateral desliza da direita (85% 
 
 Cada card representa uma etapa do fluxo. Por padrão, abrem os cards que estão "Em Andamento". Outros vêm colapsados.
 
-**Card 1: Análise de Infraestrutura**
+##### Card 1: Análise de Infraestrutura
+
 - **Campos:**
   - Status (Select): Não Iniciado | Em Andamento | Finalizado | Reprovado.
   - Responsável (Select, busca de usuários).
@@ -248,7 +268,8 @@ Cada card representa uma etapa do fluxo. Por padrão, abrem os cards que estão 
 
 ---
 
-**Card 2: Análise de Aderência**
+##### Card 2: Análise de Aderência
+
 - **Campos:**
   - Status (Select): Não Iniciado | Em Andamento | Finalizado | Impedimento.
   - Responsável (Select).
@@ -263,7 +284,8 @@ Cada card representa uma etapa do fluxo. Por padrão, abrem os cards que estão 
 
 ---
 
-**Card 3: Criação/Configuração de Ambiente**
+##### Card 3: Criação/Configuração de Ambiente
+
 - **Campos:**
   - Status (Select).
   - Responsável (Select).
@@ -274,7 +296,8 @@ Cada card representa uma etapa do fluxo. Por padrão, abrem os cards que estão 
 
 ---
 
-**Card 4: Conversão de Dados**
+##### Card 4: Conversão de Dados
+
 - **Campos:**
   - Status (Select): Não Iniciado | Análise | Desenvolvendo Conversor | Homologação | Finalizado.
   - Responsável (Select).
@@ -287,7 +310,8 @@ Cada card representa uma etapa do fluxo. Por padrão, abrem os cards que estão 
 
 ---
 
-**Card 5: Implantação (Fase 1 e 2)**
+##### Card 5: Implantação (Fase 1 e 2)
+
 - **Campos:**
   - Status (Select).
   - Responsável (Select).
@@ -299,7 +323,8 @@ Cada card representa uma etapa do fluxo. Por padrão, abrem os cards que estão 
 
 ---
 
-**Card 6: Pós-Implantação**
+##### Card 6: Pós-Implantação
+
 - **Campos:**
   - Status (Select): Não Iniciado | Em Andamento | Finalizado.
   - Responsável (Select).
@@ -308,7 +333,8 @@ Cada card representa uma etapa do fluxo. Por padrão, abrem os cards que estão 
 
 ---
 
-**Botões de Ação (Footer do Formulário):**
+##### Botões de Ação (Footer do Formulário)
+
 - "Salvar Alterações" (primário).
 - "Descartar Alterações" (secundário).
 
@@ -319,7 +345,8 @@ Cada card representa uma etapa do fluxo. Por padrão, abrem os cards que estão 
 **Feed de Atividades:**
 Uma lista vertical mostrando o histórico completo do projeto.
 
-**Tipos de Eventos:**
+##### Tipos de Eventos
+
 1. **Log Automático (🤖 System Log):**
    - Ex: "Status de Infra atualizado para 'Finalizado' em 25/11 às 14:30".
    - Ex: "Data Fim de Aderência preenchida em 24/11 às 10:15".
@@ -334,12 +361,14 @@ Uma lista vertical mostrando o histórico completo do projeto.
 3. **Evento Manual (Criação do Projeto):**
    - Ex: "Projeto criado em 10/11 por Marcus Ortiz".
 
-**Input de Comentário (Bottom da Timeline):**
+##### Input de Comentário (Bottom da Timeline)
+
 - Textarea: "Escreva uma atualização...".
 - Botão Enviar (com ícone de paper plane).
 - Ao enviar, o comentário aparece imediatamente no topo da timeline com o avatar do usuário autenticado.
 
-**Scrolling:**
+##### Scrolling
+
 - Timeline tem scroll interno independente.
 - Agenda mais antiga aparece no topo (ordem cronológica de cima para baixo).
 
@@ -349,7 +378,7 @@ Uma lista vertical mostrando o histórico completo do projeto.
 
 **Fórmula:**
 
-```
+```javascript
 healthScore = calcular_score({
   diasSemUpdate = hoje - dataUltimaAlteracao,
   proximoFollowUpVencido = proximoFollowUpDate < hoje,
@@ -392,11 +421,12 @@ O sistema deve substituir completamente o campo de texto manual "Observações G
 ### 4.5 RF-05: Gestão de Permissões Básicas
 
 **Papéis:**
+
 - **Gestor de Implantação:** Acesso total (ler, criar, editar, deletar projetos, adicionar comentários).
 - **Analista/Técnico:** Acesso limitado (ler todos os projetos, editar apenas os campos de seu módulo, adicionar comentários).
 - **Visualizador:** Apenas leitura.
 
-**Implementação:** 
+**Implementação:**
 - Campo `role` no usuário: "admin" | "analyst" | "viewer".
 - No Drawer, desabilitar inputs de edição para usuários sem permissão.
 
@@ -506,7 +536,7 @@ O sistema deve substituir completamente o campo de texto manual "Observações G
 
 ### 6.1 Fluxo Principal: Criação e Gestão de Projeto
 
-```
+```text
 [1. Novo Projeto Criado]
     ↓
 [2. Dashboard: Exibir em status "todo", health "ok"]
@@ -533,7 +563,7 @@ O sistema deve substituir completamente o campo de texto manual "Observações G
 
 ### 6.2 Fluxo de Exceção: Bloqueio por Impedimento
 
-```
+```text
 [Análise de Aderência identifica Gap de Produto]
     ↓
 [Analista ativa "Pendência de Produto?" = Sim]
@@ -554,7 +584,7 @@ O sistema deve substituir completamente o campo de texto manual "Observações G
 
 ### 6.3 Fluxo de Rastreabilidade: Descobrindo Por Que Parou
 
-```
+```text
 [Gestor vê projeto em "critical" (vermelho)]
     ↓
 [Clica "Ver Detalhes"]
@@ -575,6 +605,7 @@ O sistema deve substituir completamente o campo de texto manual "Observações G
 ### 7.1 Design System
 
 **Paleta de Cores:**
+
 - **Primária:** Roxo/Violeta (#7C3AED ou similar, referência Siplan).
 - **Secundária:** Azul suave.
 - **Fundo Principal:** #F8F9FA (cinza muito claro).
@@ -585,12 +616,14 @@ O sistema deve substituir completamente o campo de texto manual "Observações G
 - **Status Cinza:** #A3A3A3 (não iniciado).
 
 **Tipografia:**
+
 - **Font Family:** Inter, sans-serif.
 - **Headlines:** Bold, tamanho 16-24px.
 - **Corpo:** Regular 14px.
 - **Labels:** Semibold 12px.
 
 **Componentes Base:**
+
 - Usar **Shadcn UI** para componentes padrão (Button, Select, Input, Card, etc.).
 - Usar **Lucide React** para ícones.
 - Layout responsivo com Tailwind CSS.
@@ -610,6 +643,7 @@ O sistema deve substituir completamente o campo de texto manual "Observações G
 Sempre que qualquer campo de um projeto é alterado (status, data, responsável, comentário), o sistema automaticamente atualiza `lastUpdateDate = agora`.
 
 **Usada para:**
+
 - Calcular "Dias sem Atualização" no Dashboard.
 - Determinar Health Score.
 
@@ -644,6 +678,7 @@ O gestor pode **override** essa sugestão manualmente.
 ### 8.4 Notificações e Alertas (MVP)
 
 No dashboard, highlighting automático:
+
 - Se `nextFollowUpDate <= hoje` e projeto não está "done": **borda laranja ou ícone ⚠️**.
 - Se `diasSemUpdate > 5`: **borda vermelha**.
 - Se projeto tem um card com "Pendência de Produto?" = Sim: **borda amarela do card**.
@@ -651,7 +686,7 @@ No dashboard, highlighting automático:
 ### 8.5 Permissões de Edição por Papel
 
 | Campo / Ação | Admin | Analyst | Viewer |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Criar Novo Projeto | ✅ | ❌ | ❌ |
 | Editar Dados Gerais | ✅ | ❌ | ❌ |
 | Editar Card de seu módulo | ✅ | ✅ (se assigned) | ❌ |
@@ -670,6 +705,7 @@ No dashboard, highlighting automático:
 Gestor abre o dashboard pela manhã. Há 15 projetos ativos. Sem clicker em nenhum, ele deve ser capaz de identificar que o projeto "Mogi-Mirim" (Orion PRO) está há 7 dias sem atualização.
 
 **Critério de Aceitação:**
+
 - Dashboard renderiza com visibilidade de health score.
 - "Mogi-Mirim" aparece com borde laranja ou badge 🔴 "Crítico".
 - Coluna "Última Atualização" exibe "7 dias atrás".
@@ -682,6 +718,7 @@ Gestor abre o dashboard pela manhã. Há 15 projetos ativos. Sem clicker em nenh
 Gestor abre o projeto de Mogi-Mirim, clica no Drawer, vê a Timeline. A partir dela, consegue contar a história inteira do projeto (quando começou, quem mexeu em quê, por quê parou).
 
 **Critério de Aceitação:**
+
 - Timeline exibe mínimo 10 eventos (logs automáticos + comentários).
 - Cada log mostra: "Status alterado de X para Y em DD/MM às HH:MM por NOME".
 - Comentários de usuários mostram avatar, nome, timestamp, texto.
@@ -695,6 +732,7 @@ Gestor abre o projeto de Mogi-Mirim, clica no Drawer, vê a Timeline. A partir d
 Analista recebe um chamado do gestor: "Atualize o status de Aderência para Finalizado". Abre o Drawer, encontra o Card de Aderência, atualiza o status.
 
 **Critério de Aceitação:**
+
 - Encontra o Card em < 10 segundos.
 - Consegue mudar o status sem preencher campos irrelevantes.
 - Após clicar "Salvar", recebe feedback visual (toast/snackbar) confirmando a mudança.
@@ -708,6 +746,7 @@ Analista recebe um chamado do gestor: "Atualize o status de Aderência para Fina
 Usuário tenta salvar um projeto com Status de Infra = "done" mas Data Fim vazia.
 
 **Critério de Aceitação:**
+
 - Sistema exibe mensagem de erro: "Data Fim é obrigatória quando Status = Finalizado".
 - Campo é destacado em vermelho.
 - Botão "Salvar" desabilitado até que o campo seja preenchido.
@@ -717,6 +756,7 @@ Usuário tenta salvar um projeto com Status de Infra = "done" mas Data Fim vazia
 ## 10. ROADMAP DE IMPLEMENTAÇÃO
 
 ### Fase 1 (Sprint 1-2): MVP - Dashboard + Drawer Básico
+
 - ✅ Dashboard com tabela de projetos.
 - ✅ Drawer com formulário modular.
 - ✅ Timeline com logs automáticos e comentários.
@@ -724,11 +764,13 @@ Usuário tenta salvar um projeto com Status de Infra = "done" mas Data Fim vazia
 - ✅ Permissões básicas (Admin vs Analyst).
 
 ### Fase 2 (Sprint 3-4): Refinamento e Alertas
+
 - ✅ Sistema de alertas visuais (destacar projetos em risco).
 - ✅ Notificações (badge no menu, lista de "próximos follow-ups").
 - ✅ Exportar relatório em PDF.
 
 ### Fase 3 (Sprint 5+): Avançados
+
 - ✅ Integração com SAC 0800 (devolução automática de chamados ao Comercial).
 - ✅ Dashboard de BI (gráficos, tempo médio por etapa, gargalos).
 - ✅ Notificações via Slack/Email.
@@ -737,4 +779,4 @@ Usuário tenta salvar um projeto com Status de Infra = "done" mas Data Fim vazia
 
 ---
 
-**FIM DO DOCUMENTO PRD**
+FIM DO DOCUMENTO PRD
