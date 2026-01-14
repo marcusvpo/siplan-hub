@@ -223,6 +223,7 @@ A tela inicial da plataforma exibe uma visão centralizada de todos os projetos 
    - Disponível em todos os estados.
 
 **Comportamento:**
+
 - Ao carregar, exibir todos os projetos **ordenados por prioridade** (Críticos no topo).
 - Linhas clicáveis: clicar em qualquer lugar da linha (exceto botões) abre o Drawer.
 - Suporte a múltiplas ordenações: por Cliente, por Última Atualização, por Follow-up.
@@ -239,6 +240,7 @@ Ao clicar em um projeto no dashboard, um painel lateral desliza da direita (85% 
 #### Lado Esquerdo (70%) - Formulário Modular
 
 **Cabeçalho Fixo (Sticky Top):**
+
 - **Linha 1:** Cliente, Nº Ticket SAC, Líder do Projeto.
 - **Linha 2:** Sistema (Orion PRO/TN), Status Geral Calculado, Botão "Exportar Relatório".
 
@@ -427,6 +429,7 @@ O sistema deve substituir completamente o campo de texto manual "Observações G
 - **Visualizador:** Apenas leitura.
 
 **Implementação:**
+
 - Campo `role` no usuário: "admin" | "analyst" | "viewer".
 - No Drawer, desabilitar inputs de edição para usuários sem permissão.
 

@@ -14,6 +14,11 @@ import Calendar from "./pages/Calendar";
 import { MainLayout } from "@/components/Layout/MainLayout";
 import NextDeployments from "@/pages/NextDeployments";
 import RoadmapPage from "./pages/RoadmapPage";
+import CommercialBlockers from "./pages/commercial/CommercialBlockers";
+import CommercialContacts from "./pages/commercial/CommercialContacts";
+import ClientOverview from "./pages/commercial/ClientOverview";
+import CommercialCustomers from "./pages/commercial/CommercialCustomers";
+import CustomerTimeline from "./pages/commercial/CustomerTimeline";
 
 const queryClient = new QueryClient();
 
@@ -63,9 +68,26 @@ const App = () => (
                         <Route path="/compare" element={<CompareProjects />} />
                         <Route path="/reports" element={<Reports />} />
                         <Route path="/analytics" element={<Analytics />} />
+                        <Route element={<NextDeployments />} />
                         <Route
-                          path="/deployments"
-                          element={<NextDeployments />}
+                          path="/commercial/blockers"
+                          element={<CommercialBlockers />}
+                        />
+                        <Route
+                          path="/commercial/contacts"
+                          element={<CommercialContacts />}
+                        />
+                        <Route
+                          path="/commercial/customers"
+                          element={<CommercialCustomers />}
+                        />
+                        <Route
+                          path="/commercial/client/:id"
+                          element={<ClientOverview />}
+                        />
+                        <Route
+                          path="/commercial/client/:id/timeline"
+                          element={<CustomerTimeline />}
                         />
                         <Route path="*" element={<NotFound />} />
                       </Routes>

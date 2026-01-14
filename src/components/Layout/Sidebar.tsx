@@ -16,6 +16,9 @@ import {
   LogOut,
   Calendar as CalendarIcon,
   Rocket,
+  Briefcase,
+  AlertCircle,
+  Contact,
 } from "lucide-react";
 import {
   Collapsible,
@@ -171,6 +174,84 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
               onClick={() => setCollapsed(false)}
             >
               <Layers className="h-5 w-5" />
+            </Button>
+          )}
+        </div>
+
+        {/* Commercial Group */}
+        <div className="px-2">
+          {!collapsed ? (
+            <Collapsible className="space-y-1">
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-between hover:bg-muted/50"
+                  title="Comercial"
+                >
+                  <div className="flex items-center gap-3">
+                    <Briefcase className="h-5 w-5" />
+                    <span>Comercial</span>
+                  </div>
+                  <ChevronDown className="h-4 w-4 transition-transform" />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-1 pl-4 animate-in slide-in-from-top-2">
+                <div className="pt-1 pb-2">
+                  <Link to="/commercial/customers">
+                    <Button
+                      variant={
+                        isActive("/commercial/customers")
+                          ? "secondary"
+                          : "ghost"
+                      }
+                      size="sm"
+                      className="w-full justify-start gap-3 h-9"
+                    >
+                      <Users className="h-4 w-4" />
+                      <span>Painel de Clientes</span>
+                    </Button>
+                  </Link>
+                  <Link to="/commercial/blockers">
+                    <Button
+                      variant={
+                        isActive("/commercial/blockers") ? "secondary" : "ghost"
+                      }
+                      size="sm"
+                      className="w-full justify-start gap-3 h-9"
+                    >
+                      <AlertCircle className="h-4 w-4" />
+                      <span>Bloqueios</span>
+                    </Button>
+                  </Link>
+                  <Link to="/commercial/contacts">
+                    <Button
+                      variant={
+                        isActive("/commercial/contacts") ? "secondary" : "ghost"
+                      }
+                      size="sm"
+                      className="w-full justify-start gap-3 h-9"
+                    >
+                      <Contact className="h-4 w-4" />
+                      <span>Contatos</span>
+                    </Button>
+                  </Link>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          ) : (
+            <Button
+              variant={
+                isActive("/commercial/customers") ||
+                isActive("/commercial/blockers") ||
+                isActive("/commercial/contacts")
+                  ? "secondary"
+                  : "ghost"
+              }
+              className="w-full justify-center px-0"
+              title="Comercial"
+              onClick={() => setCollapsed(false)}
+            >
+              <Briefcase className="h-5 w-5" />
             </Button>
           )}
         </div>
