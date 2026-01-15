@@ -53,26 +53,53 @@ export default function CommercialCustomers() {
     const clientProjects =
       projectsWithClients?.filter((p) => p.client_id === clientId) || [];
 
-    const hasCritical = clientProjects.some(
-      (p) => p.health_score === "critical"
-    );
-    const hasWarning = clientProjects.some((p) => p.health_score === "warning");
+    // Calculate dynamic health score
+    let hasCritical = false;
+    let hasWarning = false;
+    let blockersCount = 0;
+    let lastUpdateDate: Date | null = null;
 
-    // Count blockers (assuming infra_status 'blocked' or derived from previous logic)
-    // We can use a simpler heuristic if explicit blocker count isn't in project properties
-    // In CommercialBlockers we look for p.infra_status === 'blocked' && p.infra_blocking_reason
-    const blockersCount = clientProjects.filter(
-      (p) => p.infra_status === "blocked"
-    ).length;
+    clientProjects.forEach((p) => {
+      // Track latest update (UAT)
+      const uat = new Date(p.updated_at);
+      if (!lastUpdateDate || uat > lastUpdateDate) {
+        lastUpdateDate = uat;
+      }
+
+      // Check blockers
+      const isBlocked =
+        p.global_status === "blocked" ||
+        p.infra_status === "blocked" ||
+        p.adherence_status === "blocked" ||
+        p.environment_status === "blocked" ||
+        p.conversion_status === "blocked" ||
+        p.implementation_status === "blocked" ||
+        p.post_status === "blocked";
+
+      if (isBlocked) blockersCount++;
+
+      // Check Health Rules (matching useProjectsList.ts logic strictly - ONLY Recency)
+      const daysSinceUpdate =
+        (new Date().getTime() - uat.getTime()) / (1000 * 3600 * 24);
+
+      // Note: Blockers and FollowUps are tracked but don't affect the "Recency Status" badge to match /projects view
+      // User requested "healthscore according to Last Update"
+
+      if (daysSinceUpdate >= 15) {
+        hasCritical = true;
+      } else if (daysSinceUpdate >= 7) {
+        hasWarning = true;
+      }
+    });
 
     let status = "healthy";
     if (hasCritical) status = "critical";
     else if (hasWarning) status = "attention";
 
-    // Last Action
+    // Last Action (Legacy Note) - kept for internal logic but not primary display
     const clientNotes =
       allCommercialNotes?.filter((n) => n.client_id === clientId) || [];
-    const lastNote = clientNotes.length > 0 ? clientNotes[0] : null; // Assuming sorted desc
+    const lastNote = clientNotes.length > 0 ? clientNotes[0] : null;
 
     return {
       status,
@@ -80,6 +107,7 @@ export default function CommercialCustomers() {
       blockers: blockersCount,
       lastAction: lastNote ? new Date(lastNote.created_at!) : null,
       lastActionId: lastNote?.id,
+      lastUpdateUAT: lastUpdateDate,
     };
   };
 
@@ -106,7 +134,12 @@ export default function CommercialCustomers() {
         matchesProjects = stats.blockers > 0;
       }
 
-      // Last Action Filter
+      // Last Action Filter (Using UAT now?)
+      // Keeping logic on lastAction (notes) or switching to UAT?
+      // User only asked to remove column "Ultima Ação" and replace with "Ultima Atualização UAT".
+      // Filters usually rely on displayed data, but let's keep filter on "Last Interaction" (notes) as it might refer to commercial touchpoints.
+      // However, if the user sees "Ultima Atualização UAT", they might expect the filter to work on that.
+      // For now I will leave filter as "Last Interaction" (commercial notes) to distinct from "System Update"
       let matchesLastAction = true;
       if (lastActionFilter !== "any") {
         if (!stats.lastAction) {
@@ -139,9 +172,9 @@ export default function CommercialCustomers() {
     if (score(statsA.status) !== score(statsB.status)) {
       return score(statsB.status) - score(statsA.status);
     }
-    // Then by last action (recent first)
-    const timeA = statsA.lastAction?.getTime() || 0;
-    const timeB = statsB.lastAction?.getTime() || 0;
+    // Then by last update UAT (recent first)
+    const timeA = statsA.lastUpdateUAT?.getTime() || 0;
+    const timeB = statsB.lastUpdateUAT?.getTime() || 0;
     return timeB - timeA;
   });
 
@@ -225,7 +258,7 @@ export default function CommercialCustomers() {
               <TableHead>Status</TableHead>
               <TableHead>Projetos Ativos</TableHead>
               <TableHead>Bloqueios</TableHead>
-              <TableHead>Última Ação</TableHead>
+              <TableHead>Última Atualização UAT</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -324,10 +357,10 @@ export default function CommercialCustomers() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center text-sm text-muted-foreground">
-                        {stats.lastAction ? (
+                        {stats.lastUpdateUAT ? (
                           <>
                             <CalendarClock className="w-3 h-3 mr-1.5" />
-                            {stats.lastAction.toLocaleDateString()}
+                            {stats.lastUpdateUAT.toLocaleDateString()}
                           </>
                         ) : (
                           <span className="text-xs italic">Sem registros</span>
@@ -392,18 +425,18 @@ export default function CommercialCustomers() {
                     <div className="text-xs text-muted-foreground mt-1 flex gap-2">
                       <span>{stats.activeProjects} Projetos</span>
                       <span>•</span>
-                      {stats.lastAction ? (
+                      {stats.lastUpdateUAT ? (
                         <span>
                           Há{" "}
                           {Math.floor(
                             (new Date().getTime() -
-                              stats.lastAction.getTime()) /
+                              stats.lastUpdateUAT.getTime()) /
                               (1000 * 3600 * 24)
                           )}{" "}
                           dias
                         </span>
                       ) : (
-                        <span>Sem nota</span>
+                        <span>Sem atualização</span>
                       )}
                     </div>
                   </div>

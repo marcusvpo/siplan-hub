@@ -198,6 +198,7 @@ export type Database = {
           client_id: string | null
           client_name: string
           client_phone: string | null
+          client_primary_contact: string | null
           commercial_notes: string | null
           commercial_responsible: string | null
           contract_value: number | null
@@ -297,6 +298,7 @@ export type Database = {
           client_id?: string | null
           client_name: string
           client_phone?: string | null
+          client_primary_contact?: string | null
           commercial_notes?: string | null
           commercial_responsible?: string | null
           contract_value?: number | null
@@ -396,6 +398,7 @@ export type Database = {
           client_id?: string | null
           client_name?: string
           client_phone?: string | null
+          client_primary_contact?: string | null
           commercial_notes?: string | null
           commercial_responsible?: string | null
           contract_value?: number | null
@@ -540,6 +543,44 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      timeline_events: {
+        Row: {
+          author: string
+          created_at: string | null
+          id: string
+          message: string | null
+          metadata: Json | null
+          project_id: string | null
+          type: string
+        }
+        Insert: {
+          author: string
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          metadata?: Json | null
+          project_id?: string | null
+          type: string
+        }
+        Update: {
+          author?: string
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          metadata?: Json | null
+          project_id?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "timeline_events_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          }
+        ]
       }
     }
     Views: {
