@@ -71,7 +71,7 @@ export default function NextDeployments() {
 
       {/* Cards Grid */}
       {sortedProjects.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
           {sortedProjects.map((project, index) => (
             <motion.div
               key={project.id}

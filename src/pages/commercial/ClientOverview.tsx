@@ -1,5 +1,6 @@
 import { useCommercial } from "@/hooks/useCommercial";
 import { useParams, useNavigate } from "react-router-dom";
+import { differenceInDays } from "date-fns";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -320,7 +321,16 @@ export default function ClientOverview() {
                 S/ Atualização
               </p>
               <p className="text-2xl font-bold mt-1">
-                3{" "}
+                {(() => {
+                  const lastUpdate = clientProjects.reduce((latest, p) => {
+                    const pDate = new Date(
+                      p.updated_at || p.created_at || new Date()
+                    );
+                    return pDate > latest ? pDate : latest;
+                  }, new Date(client.updated_at || client.created_at || new Date()));
+
+                  return differenceInDays(new Date(), lastUpdate);
+                })()}{" "}
                 <span className="text-xs font-normal text-muted-foreground">
                   dias
                 </span>
@@ -439,12 +449,45 @@ export default function ClientOverview() {
                     <div className="mt-3 space-y-1">
                       <div className="flex justify-between text-xs text-muted-foreground">
                         <span>Progresso</span>
-                        <span>{project.overall_progress}%</span>
+                        <span>
+                          {(() => {
+                            const stages = [
+                              "infra_status",
+                              "adherence_status",
+                              "environment_status",
+                              "conversion_status",
+                              "implementation_status",
+                            ];
+                            const completed = stages.filter(
+                              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                              (s) => (project as any)[s] === "done"
+                            ).length;
+                            return Math.round(
+                              (completed / stages.length) * 100
+                            );
+                          })()}
+                          %
+                        </span>
                       </div>
                       <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden">
                         <div
                           className="h-full bg-primary"
-                          style={{ width: `${project.overall_progress || 0}%` }}
+                          style={{
+                            width: `${Math.round(
+                              ([
+                                "infra_status",
+                                "adherence_status",
+                                "environment_status",
+                                "conversion_status",
+                                "implementation_status",
+                              ].filter(
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                (s) => (project as any)[s] === "done"
+                              ).length /
+                                5) *
+                                100
+                            )}%`,
+                          }}
                         ></div>
                       </div>
                     </div>
