@@ -1,7 +1,8 @@
 # PROMPT MESTRE AVANÇADO - Siplan Manager v2.0
+
 ## Reestruturação Completa para Enterprise-Grade
 
-**Versão:** 2.0 (Enterprise)  
+**Versão:** 2.0 (Enterprise)
 **Objetivo:** Transformar Siplan Manager em plataforma robusta, equiparada ao Microsoft Lists, com dashboards inteligentes, filtros avançados, bulk operations, e gestão completa de projetos de implantação.
 
 ---
@@ -27,7 +28,7 @@ Esta versão 2.0 reestrutura completamente a plataforma com:
 
 ### Estrutura de Navegação
 
-```
+```text
 Siplan Manager
 ├── 📊 Dashboard Geral (Home/Overview)
 │   ├── KPIs Globais (Projetos Ativos, Críticos, Bloqueados, etc)
@@ -91,7 +92,8 @@ Siplan Manager
 ### 1.1 Layout e Componentes
 
 **Estrutura:**
-```
+
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │ Siplan Manager - Dashboard                                  │
 ├─────────────────────────────────────────────────────────────┤
@@ -143,6 +145,7 @@ Siplan Manager
 ### 1.4 Filtros Globais e Filtros Salvos
 
 **Filtros Disponíveis:**
+
 - Por Sistema (Orion PRO, Orion TN, Orion REG, etc)
 - Por Status Global (Crítico, Atenção, Em Dia)
 - Por Etapa Atual (Infra, Aderência, Ambiente, Conversão, Implantação, Pós)
@@ -153,6 +156,7 @@ Siplan Manager
 - Personalizado (Combinação de qualquer campo)
 
 **Filtros Salvos:**
+
 - Permitir salvar combinações de filtros com nome customizável
 - "Meus Projetos Críticos", "Aguardando Dev", "Prontos para Implantação", etc
 - Exibir como abas ou menu dropdown
@@ -167,6 +171,7 @@ Esta é a **central de informações críticas** do projeto. Deve ser a primeira
 ### 2.1 Campos Incluídos (Organizados por Grupo)
 
 #### Grupo A: Informações Gerais
+
 - **Nome do Cliente** (texto livre)
 - **Nº Ticket SAC** (texto)
 - **Sistema/Produto** (texto livre: Orion PRO, Orion TN, Orion REG, Custom)
@@ -177,6 +182,7 @@ Esta é a **central de informações críticas** do projeto. Deve ser a primeira
 - **Progresso Geral (%)** (calculado automaticamente: quantas etapas finalizadas / 6 * 100)
 
 #### Grupo B: Contatos & Responsáveis
+
 - **Líder do Projeto** (texto livre)
 - **Contato Principal do Cliente** (texto livre: Nome + Email/Telefone)
 - **Responsável por Infra** (texto livre)
@@ -186,6 +192,7 @@ Esta é a **central de informações críticas** do projeto. Deve ser a primeira
 - **Responsável por Pós-Impl** (texto livre)
 
 #### Grupo C: Datas Críticas
+
 - **Data de Início Prevista** (date picker)
 - **Data de Término Prevista** (date picker)
 - **Data Real de Início** (date picker)
@@ -194,12 +201,14 @@ Esta é a **central de informações críticas** do projeto. Deve ser a primeira
 - **Última Atualização** (datetime, read-only com nome do usuário)
 
 #### Grupo D: Dados do Contrato / Negócio
+
 - **Valor do Contrato** (currency field, opcional)
 - **Forma de Pagamento** (select: À Vista, Parcelado, Outros)
 - **Descrição do Projeto** (textarea longa: escopo, observações gerais)
 - **Restrições/Considerações Especiais** (textarea: compatibilidades, ambiente, etc)
 
 #### Grupo E: Pipeline Visual & Resumo
+
 - **Pipeline Visual** (6 dots coloridos, não editável, automático)
 - **Resumo de Status Atual** (card formatado com cada etapa e seu status)
 - **Última Ação Registrada** (texto + data/hora, read-only)
@@ -209,11 +218,11 @@ Esta é a **central de informações críticas** do projeto. Deve ser a primeira
 - **Cards por Grupo:** Cada grupo em um card colapsável/expandível
 - **Edit Inline:** Clicar em campo para editar diretamente (sem modal)
 - **Salvamento Automático:** Debounce de 1s, feedback visual "Salvando..." → "Salvo!"
-- **Indicadores Visuais:** 
+- **Indicadores Visuais:**
   - Campos obrigatórios com asterisco *
   - Campo modificado com borda dourada por 2s
   - Campos críticos (follow-up vencido) com fundo vermelho suave
-- **Quick Actions Button (Floating):** 
+- **Quick Actions Button (Floating):**
   - "Duplicar Projeto", "Exportar Relatório", "Enviar para Revisão", "Marcar como Finalizado"
 
 ---
@@ -225,6 +234,7 @@ Esta é a **central de informações críticas** do projeto. Deve ser a primeira
 Accordion com 6 cards colapsáveis. **Cada card agora possui:**
 
 #### Campos Base (Todos os Cards)
+
 - **Status** (select: Não Iniciado, Em Andamento, Finalizado, Bloqueado)
 - **Responsável** (texto livre)
 - **Data de Início** (date picker)
@@ -233,6 +243,7 @@ Accordion com 6 cards colapsáveis. **Cada card agora possui:**
 - **Último Update By / Timestamp** (display read-only)
 
 #### Card 1: Análise de Infraestrutura
+
 - Status, Responsável, Datas, Observações (base)
 - **Motivo de Bloqueio** (select condicional: "Aguardando Compra Servidor", "Upgrade SO Necessário", "Rede Instável", "Conflito com Sistema Legado", "Cliente não Disponibilizou Acesso", "Outro")
 - **Servidor Atualmente em Uso** (texto)
@@ -241,6 +252,7 @@ Accordion com 6 cards colapsáveis. **Cada card agora possui:**
 - **Observações Técnicas** (textarea adicional)
 
 #### Card 2: Análise de Aderência
+
 - Status, Responsável, Datas, Observações (base)
 - **Gap de Produto Identificado?** (toggle Yes/No)
 - **Descrição do Gap** (textarea, visível se toggle = Yes)
@@ -251,6 +263,7 @@ Accordion com 6 cards colapsáveis. **Cada card agora possui:**
 - **Conformidade com Padrões** (textarea: verificações realizadas)
 
 #### Card 3: Preparação de Ambiente
+
 - Status, Responsável, Datas, Observações (base)
 - **Sistema Operacional** (texto livre: "Windows 2019, Ubuntu 20.04", etc)
 - **Data Real de Disponibilização** (date picker)
@@ -260,6 +273,7 @@ Accordion com 6 cards colapsáveis. **Cada card agora possui:**
 - **Checklist de Preparação** (textarea: itens validados)
 
 #### Card 4: Conversão de Dados
+
 - Status, Responsável, Datas, Observações (base)
 - **Sistema de Origem** (texto livre: "Siplan", "Control-M", "Argon", "Alkasoft", "SAP", "Custom")
 - **Estimativa de Complexidade** (select: Baixa, Média, Alta, Muito Alta)
@@ -271,6 +285,7 @@ Accordion com 6 cards colapsáveis. **Cada card agora possui:**
 - **Desvios Identificados** (textarea)
 
 #### Card 5: Implantação (Instalação e Treinamento)
+
 - Status, Responsável, Datas, Observações (base)
 - **Data de Instalação Remota** (date picker)
 - **Tipo de Virada** (select: Fim de Semana, Dia Útil, Feriado, Custom)
@@ -285,6 +300,7 @@ Accordion com 6 cards colapsáveis. **Cada card agora possui:**
 - **Aceitação da Implantação** (select: Aprovado, Aprovado com Ressalvas, Rejeitado)
 
 #### Card 6: Pós-Implantação
+
 - Status, Responsável, Datas, Observações (base)
 - **Período de Suporte (dias)** (number)
 - **Data Fim Suporte** (date picker)
@@ -297,7 +313,7 @@ Accordion com 6 cards colapsáveis. **Cada card agora possui:**
 
 ### 3.2 TAB "Timeline" (Histórico Completo)
 
-**Feed de Eventos Automáticos e Comentários**
+### Feed de Eventos Automáticos e Comentários
 
 #### Tipos de Eventos Registrados Automaticamente
 
@@ -332,6 +348,7 @@ Accordion com 6 cards colapsáveis. **Cada card agora possui:**
 ### 4.1 Visualização "Tabela Rica" (Padrão)
 
 **Colunas Customizáveis:**
+
 - Cliente (nome + sistema)
 - Pipeline Visual (6 dots)
 - Status Global (🟢🟡🔴)
@@ -343,6 +360,7 @@ Accordion com 6 cards colapsáveis. **Cada card agora possui:**
 - Ações (botões: Editar, Duplicar, Deletar)
 
 **Funcionalidades:**
+
 - Ordenar por qualquer coluna (asc/desc)
 - Redimensionar colunas
 - Selecionar/Deselecionar colunas para exibir
@@ -351,13 +369,12 @@ Accordion com 6 cards colapsáveis. **Cada card agora possui:**
 
 ### 4.2 Visualização "Kanban" (Board View)
 
-**Colunas = Etapas do Projeto**
+### Colunas = Etapas do Projeto
 
-```
+```text
 ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
 │   INFRA      │ │  ADERÊNCIA   │ │ CONVERSÃO    │ │ IMPLANTAÇÃO  │
 │ (12 proj)    │ │  (8 proj)    │ │  (15 proj)   │ │  (6 proj)    │
-├──────────────┤ ├──────────────┤ ├──────────────┤ ├──────────────┤
 │              │ │              │ │              │ │              │
 │ [Card]       │ │ [Card]       │ │ [Card]       │ │ [Card]       │
 │ Mogi-Mirim   │ │ Itu          │ │ Campinas     │ │ São Paulo    │
@@ -376,6 +393,7 @@ Accordion com 6 cards colapsáveis. **Cada card agora possui:**
 ### 4.3 Visualização "Calendário" (Calendar View)
 
 **Exibe projetos por datas importantes:**
+
 - Data de Criação (ponto cinza)
 - Data de Início Prevista (ponto azul)
 - Data de Término Prevista (ponto verde)
@@ -387,9 +405,9 @@ Accordion com 6 cards colapsáveis. **Cada card agora possui:**
 
 ### 4.4 Visualização "Gantt" (Timeline/Roadmap)
 
-**Mostra duração de cada etapa por projeto**
+### Mostra duração de cada etapa por projeto
 
-```
+```text
 Mogi-Mirim    |████████|      |████|  |████████████|  |████|
 Itu           |████|  |████|  |███████|  |████████|
 Araçatuba     |████████████| BLOQUEADO |
@@ -410,7 +428,7 @@ São Paulo     |████|  |████|  |████|  |█████�
 
 **Localização:** Sticky bar no topo, abaixo do título da página
 
-```
+```text
 [+ Adicionar Filtro ▼] [X Filtros Ativos: 3] [Limpar Tudo]
 ┌────────────────────────────────────────────────────────────┐
 │ ☑ Sistema = "Orion PRO"                              [X]  │
@@ -461,7 +479,7 @@ São Paulo     |████|  |████|  |████|  |█████�
 
 ### 6.1 Interface
 
-```
+```text
 [✓] 3 Projetos Selecionados
 
 ┌──────────────────────────────────────┐
@@ -602,6 +620,7 @@ interface TimelineEvent {
 ### 10.1 Novos Campos (Além do Anterior)
 
 #### Metadados do Projeto
+
 - **ID Único do Projeto** (gerado automaticamente, imutável)
 - **ID de Referência Externa** (para integração com sistemas)
 - **Tags/Categorias** (múltiplas, para organização)
@@ -609,12 +628,14 @@ interface TimelineEvent {
 - **Tipo de Projeto** (select: Novo, Migração, Upgrade, Manutenção)
 
 #### Rastreamento
+
 - **Criado por** (user, datetime)
 - **Última modificação por** (user, datetime)
 - **Deletado?** (soft delete, com data)
 - **Arquivado?** (soft archive, com data)
 
 #### Customizações
+
 - **Campos Customizados** (user-defined fields por projeto)
 - **Checklist Customizado** (múltiplos itens de verificação)
 
@@ -993,7 +1014,7 @@ interface KPICard {
 
 ### 13.2 KPIs Exibidos
 
-```
+```text
 ┌─────────┬──────────┬──────────┬──────────┬──────────┐
 │ Total   │ Críticos │ Bloqueados│ Em Risco │ Completos│
 │ 47      │ 5 (↑2)   │ 3        │ 12 (↓1)  │ 18 (↑3)  │
@@ -1090,7 +1111,7 @@ const REQUIRED_FIELDS = {
 
 ## 16. ESTRUTURA DE COMPONENTES COMPLETA
 
-```
+```text
 src/
 ├── components/
 │   ├── Dashboard/
@@ -1220,18 +1241,21 @@ src/
 ## 17. INSTRUÇÕES DE IMPLEMENTAÇÃO (FASE POR FASE)
 
 ### Fase 1: Core (1-2 sprints)
+
 1. Expandir estrutura de dados (TypeScript types)
 2. Criar Seção "Dados do Projeto"
 3. Implementar 5 tabs no Drawer
 4. Expandir campos em cada stage
 
 ### Fase 2: Advanced Features (2-3 sprints)
+
 1. Dashboard com KPIs
 2. Filtros Avançados & Salvos
 3. Bulk Operations
 4. Visualizações alternativas (Kanban, Calendário, Gantt)
 
 ### Fase 3: Polish & Integração (1-2 sprints)
+
 1. Timeline Automática Completa
 2. Auditoria & Logs
 3. Exportação (Excel, PDF)
@@ -1241,7 +1265,7 @@ src/
 
 ## 18. PROMPT PARA LOVABLE (COPIAR/COLAR)
 
-```
+```text
 Você é um Expert em Full-Stack Development e UX/UI Design.
 
 Sua tarefa é RECONSTRUIR completamente o Siplan Manager para v2.0 ENTERPRISE-GRADE.
@@ -1281,6 +1305,6 @@ GENERATE 100% FUNCIONAL & PRONTO PARA PRODUÇÃO.
 
 ---
 
-**FIM DO PROMPT MASTER V2.0**
+## FIM DO PROMPT MASTER V2.0
 
 Este documento é autossuficiente para reconstruir a plataforma completamente. 🚀
