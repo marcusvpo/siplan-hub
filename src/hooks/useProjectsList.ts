@@ -17,7 +17,7 @@ import {
 
 const ITEMS_PER_PAGE = 20;
 
-export const useProjectsList = () => {
+export const useProjectsList = (searchQuery: string = "") => {
   const { 
     data, 
     isLoading, 
@@ -26,22 +26,21 @@ export const useProjectsList = () => {
     hasNextPage,
     isFetchingNextPage 
   } = useInfiniteQuery({
-    queryKey: ["projectsList"],
+    queryKey: ["projectsList", searchQuery],
     queryFn: async ({ pageParam = 0 }) => {
       const from = pageParam * ITEMS_PER_PAGE;
       const to = from + ITEMS_PER_PAGE - 1;
 
-      // Fetch only essential columns for dashboard
-      // We purposefully exclude 'notes' and 'timeline_events' and heavy 'stages' JSON if possible,
-      // but 'stages' is a JSONB column so we cannot easily select partial properties in Supabase without a Function.
-      // So we fetch everything BUT 'timeline_events' (which is a join) and 'notes' (if it were a separate table or large text).
-      // Notes is a JSONB column in projects, so we fetch it. 
-      // Actually, for list view, we don't need notes.
-      
-      const { data, error } = await supabase
+      let query = supabase
         .from("projects")
         .select("id, client_name, ticket_number, system_type, global_status, updated_at, project_leader, client_primary_contact, overall_progress, priority, is_deleted, created_at, start_date_planned, end_date_planned, infra_status, adherence_status, environment_status, conversion_status, implementation_status, post_status") 
-        .eq("is_deleted", false)
+        .eq("is_deleted", false);
+
+      if (searchQuery) {
+        query = query.or(`client_name.ilike.%${searchQuery}%,ticket_number.ilike.%${searchQuery}%`);
+      }
+
+      const { data, error } = await query
         .order("updated_at", { ascending: false })
         .range(from, to);
 

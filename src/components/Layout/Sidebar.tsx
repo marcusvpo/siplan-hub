@@ -47,9 +47,16 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
     >
       <div className="h-16 flex items-center justify-between px-6 border-b bg-sidebar/50 backdrop-blur-sm">
         {!collapsed && (
-          <span className="font-black text-xl tracking-tight bg-gradient-to-r from-primary to-rose-600 bg-clip-text text-transparent">
-            Siplan HUB
-          </span>
+          <div className="flex items-center gap-2">
+            <img
+              src="/assets/Siplan_logo.png"
+              alt="Siplan Logo"
+              className="h-8 w-auto"
+            />
+            <span className="font-black text-xl tracking-tight bg-gradient-to-r from-primary to-rose-600 bg-clip-text text-transparent">
+              HUB
+            </span>
+          </div>
         )}
         <Button
           variant="ghost"

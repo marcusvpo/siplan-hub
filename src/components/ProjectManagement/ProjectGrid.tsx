@@ -1,29 +1,16 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useProjectsList } from "@/hooks/useProjectsList";
 import { useProjectsV2 } from "@/hooks/useProjectsV2";
 import { ProjectCardV3 } from "./ProjectCardV3";
 import { ProjectModal } from "./ProjectModal";
 import { ProjectV2 } from "@/types/ProjectV2";
 import { Loader2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Virtuoso } from "react-virtuoso";
 import { AdvancedFilters } from "./AdvancedFilters";
 import { useFilterStore } from "@/stores/filterStore";
 
 export function ProjectGrid() {
-  const {
-    projects,
-    isLoading,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useProjectsList();
-  const { updateProject, deleteProject } = useProjectsV2();
-  const [selectedProject, setSelectedProject] =
-    useState<Partial<ProjectV2> | null>(null);
-  const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
-  const navigate = useNavigate();
-
   const {
     searchQuery,
     viewPreset,
@@ -35,6 +22,42 @@ export function ProjectGrid() {
     dateFrom,
     dateTo,
   } = useFilterStore();
+
+  const {
+    projects,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useProjectsList(searchQuery);
+
+  const { updateProject, deleteProject } = useProjectsV2();
+  const [selectedProject, setSelectedProject] =
+    useState<Partial<ProjectV2> | null>(null);
+  const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Open project from URL if present
+  useEffect(() => {
+    const projectId = searchParams.get("id");
+    if (projectId && projects.length > 0) {
+      const project = projects.find((p) => p.id === projectId);
+      // Only set if different to avoid loops or unnecessary updates
+      if (project && project.id !== selectedProject?.id) {
+        setSelectedProject(project);
+      }
+    }
+  }, [searchParams, projects, selectedProject]);
+
+  const handleCloseModal = () => {
+    setSelectedProject(null);
+    if (searchParams.get("id")) {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("id");
+      setSearchParams(newParams);
+    }
+  };
 
   // Extract unique values for filter dropdowns
   const uniqueLeaders = useMemo(() => {
@@ -184,14 +207,6 @@ export function ProjectGrid() {
     navigate(`/compare?ids=${selectedProjectIds.join(",")}`);
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       {/* Advanced Filters */}
@@ -202,80 +217,91 @@ export function ProjectGrid() {
         selectedCount={selectedProjectIds.length}
       />
 
-      {/* Results Count */}
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
-        <span>
-          {filteredAndSortedProjects.length} projeto
-          {filteredAndSortedProjects.length !== 1 ? "s" : ""} encontrado
-          {filteredAndSortedProjects.length !== 1 ? "s" : ""}
-        </span>
-        {selectedProjectIds.length > 0 && (
-          <span className="text-primary font-medium">
-            {selectedProjectIds.length} selecionado
-            {selectedProjectIds.length !== 1 ? "s" : ""}
-          </span>
-        )}
-      </div>
-
-      {/* Grid with Virtualization */}
-      {filteredAndSortedProjects.length > 0 ? (
-        <div className="flex-1 h-[calc(100vh-320px)] min-h-[400px]">
-          <Virtuoso
-            data={filteredAndSortedProjects as ProjectV2[]}
-            endReached={() => {
-              if (hasNextPage) fetchNextPage();
-            }}
-            components={{
-              Footer: () => {
-                return isFetchingNextPage ? (
-                  <div className="flex justify-center py-4">
-                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                  </div>
-                ) : null;
-              },
-            }}
-            itemContent={(index, project) => (
-              <div className="pb-3 pr-2">
-                <ProjectCardV3
-                  key={project.id}
-                  project={project}
-                  onClick={() => setSelectedProject(project)}
-                  selected={selectedProjectIds.includes(project.id)}
-                  onSelect={(selected) => toggleSelection(project.id, selected)}
-                  onAction={(action, project) => {
-                    if (action === "delete") {
-                      if (
-                        confirm(
-                          `Tem certeza que deseja excluir o projeto "${project.clientName}"?\n\nEsta ação é irreversível e apagará TODOS os dados relacionados a este projeto permanentemente.`
-                        )
-                      ) {
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        (deleteProject as any).mutate(project.id);
-                      }
-                    }
-                  }}
-                />
-              </div>
-            )}
-          />
+      {/* Content Area */}
+      {isLoading ? (
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : (
-        <div className="text-center py-20">
-          <div className="text-6xl mb-4">🔍</div>
-          <h3 className="text-lg font-semibold text-muted-foreground mb-2">
-            Nenhum projeto encontrado
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            Tente ajustar os filtros ou realizar uma nova busca
-          </p>
-        </div>
+        <>
+          {/* Results Count */}
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>
+              {filteredAndSortedProjects.length} projeto
+              {filteredAndSortedProjects.length !== 1 ? "s" : ""} encontrado
+              {filteredAndSortedProjects.length !== 1 ? "s" : ""}
+            </span>
+            {selectedProjectIds.length > 0 && (
+              <span className="text-primary font-medium">
+                {selectedProjectIds.length} selecionado
+                {selectedProjectIds.length !== 1 ? "s" : ""}
+              </span>
+            )}
+          </div>
+
+          {/* Grid with Virtualization */}
+          {filteredAndSortedProjects.length > 0 ? (
+            <div className="flex-1 h-[calc(100vh-320px)] min-h-[400px]">
+              <Virtuoso
+                data={filteredAndSortedProjects as ProjectV2[]}
+                endReached={() => {
+                  if (hasNextPage) fetchNextPage();
+                }}
+                components={{
+                  Footer: () => {
+                    return isFetchingNextPage ? (
+                      <div className="flex justify-center py-4">
+                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                      </div>
+                    ) : null;
+                  },
+                }}
+                itemContent={(index, project) => (
+                  <div className="pb-3 pr-2">
+                    <ProjectCardV3
+                      key={project.id}
+                      project={project}
+                      onClick={() => setSelectedProject(project)}
+                      selected={selectedProjectIds.includes(project.id)}
+                      onSelect={(selected) =>
+                        toggleSelection(project.id, selected)
+                      }
+                      onAction={(action, project) => {
+                        if (action === "delete") {
+                          if (
+                            confirm(
+                              `Tem certeza que deseja excluir o projeto "${project.clientName}"?\n\nEsta ação é irreversível e apagará TODOS os dados relacionados a este projeto permanentemente.`
+                            )
+                          ) {
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            (deleteProject as any).mutate(project.id);
+                          }
+                        }
+                      }}
+                    />
+                  </div>
+                )}
+              />
+            </div>
+          ) : (
+            <div className="text-center py-20">
+              <div className="text-6xl mb-4">🔍</div>
+              <h3 className="text-lg font-semibold text-muted-foreground mb-2">
+                Nenhum projeto encontrado
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Tente ajustar os filtros ou realizar uma nova busca
+              </p>
+            </div>
+          )}
+        </>
       )}
 
       {/* Modal */}
       <ProjectModal
         project={selectedProject as ProjectV2}
         open={!!selectedProject}
-        onOpenChange={(open) => !open && setSelectedProject(null)}
+        onOpenChange={(open) => !open && handleCloseModal()}
         onUpdate={(updatedProject) => {
           updateProject.mutate({
             projectId: updatedProject.id,

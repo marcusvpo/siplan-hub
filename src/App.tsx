@@ -68,7 +68,10 @@ const App = () => (
                         <Route path="/compare" element={<CompareProjects />} />
                         <Route path="/reports" element={<Reports />} />
                         <Route path="/analytics" element={<Analytics />} />
-                        <Route element={<NextDeployments />} />
+                        <Route
+                          path="/deployments"
+                          element={<NextDeployments />}
+                        />
                         <Route
                           path="/commercial/blockers"
                           element={<CommercialBlockers />}
