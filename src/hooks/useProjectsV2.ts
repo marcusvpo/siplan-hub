@@ -19,7 +19,7 @@ export const useProjectsV2 = () => {
   const { addAutoLog } = useTimeline();
 
   const { data: projects, isLoading } = useQuery({
-    queryKey: ["projectsV3"],
+    queryKey: ["projectsV3_with_dates"], // Changed key to force refresh
     queryFn: async () => {
       const { data, error } = await supabase
         .from("projects")
@@ -36,10 +36,10 @@ export const useProjectsV2 = () => {
   const updateProject = useMutation({
     mutationFn: async ({ projectId, updates }: { projectId: string; updates: Partial<ProjectV2> }) => {
       // Get current project state for comparison
-      const currentProjects = queryClient.getQueryData<ProjectV2[]>(["projectsV3"]);
+      const currentProjects = queryClient.getQueryData<ProjectV2[]>(["projectsV3_with_dates"]);
       const currentProject = currentProjects?.find(p => p.id === projectId);
       
-      const dbUpdates = transformToDB(updates);
+      const dbUpdates = transformToDB(updates, currentProject);
       
       console.log("--- DEBUG: Update Project Payload ---", JSON.stringify(dbUpdates, null, 2));
 
@@ -293,32 +293,62 @@ function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
     
     stages: {
       infra: {
-        ...createStage<InfraStageV2>('infra'),
-        // Explicitly read infra-specific status fields to ensure persistence
-        // Only override if the value exists in the database (not null/undefined)
+        status: (row.infra_status as StageStatus) || 'todo',
+        responsible: (row.infra_responsible as string) || undefined,
+        startDate: row.infra_start_date ? new Date(row.infra_start_date as string) : undefined,
+        endDate: row.infra_end_date ? new Date(row.infra_end_date as string) : undefined,
+        observations: (row.infra_observations as string) || undefined,
+        technicalNotes: (row.infra_technical_notes as string) || undefined,
         workstationsStatus: (row.infra_workstations_status as InfraStageV2['workstationsStatus']) || undefined,
         serverStatus: (row.infra_server_status as InfraStageV2['serverStatus']) || undefined,
         workstationsCount: row.infra_workstations_count as number | undefined,
       },
-      adherence: createStage<AdherenceStageV2>('adherence'),
+      adherence: {
+        status: (row.adherence_status as StageStatus) || 'todo',
+        responsible: (row.adherence_responsible as string) || undefined,
+        startDate: row.adherence_start_date ? new Date(row.adherence_start_date as string) : undefined,
+        endDate: row.adherence_end_date ? new Date(row.adherence_end_date as string) : undefined,
+        observations: (row.adherence_observations as string) || undefined,
+        hasProductGap: row.adherence_has_product_gap as boolean | undefined,
+        gapDescription: row.adherence_gap_description as string | undefined,
+        devTicket: row.adherence_dev_ticket as string | undefined,
+        devEstimatedDate: row.adherence_dev_estimated_date ? new Date(row.adherence_dev_estimated_date as string) : undefined,
+        gapPriority: row.adherence_gap_priority as AdherenceStageV2['gapPriority'],
+        analysisComplete: row.adherence_analysis_complete as boolean | undefined,
+        conformityStandards: row.adherence_conformity_standards as string | undefined,
+      },
       environment: {
-        ...createStage<EnvironmentStageV2>('environment'),
+        status: (row.environment_status as StageStatus) || 'todo',
+        responsible: (row.environment_responsible as string) || undefined,
         startDate: row.environment_start_date ? new Date(row.environment_start_date as string) : undefined,
         endDate: row.environment_end_date ? new Date(row.environment_end_date as string) : undefined,
+        observations: (row.environment_observations as string) || undefined,
+        realDate: row.environment_real_date ? new Date(row.environment_real_date as string) : undefined,
+        osVersion: row.environment_os_version as string | undefined,
+        version: row.environment_version as string | undefined,
+        testAvailable: row.environment_test_available as boolean | undefined,
+        preparationChecklist: row.environment_preparation_checklist as string | undefined,
+        approvedByInfra: row.environment_approved_by_infra as boolean | undefined,
       },
       conversion: {
-        ...createStage<ConversionStageV2>('conversion'),
-        // Explicitly read conversion-specific status fields
-        homologationStatus: row.conversion_homologation_status as ConversionStageV2['homologationStatus'],
-        homologationResponsible: row.conversion_homologation_responsible as string | undefined,
-        sentAt: row.conversion_sent_at ? new Date(row.conversion_sent_at as string) : undefined,
-        finishedAt: row.conversion_finished_at ? new Date(row.conversion_finished_at as string) : undefined,
+        status: (row.conversion_status as StageStatus) || 'todo',
+        responsible: (row.conversion_responsible as string) || undefined,
         startDate: row.conversion_sent_at 
           ? new Date(row.conversion_sent_at as string) 
           : (row.conversion_start_date ? new Date(row.conversion_start_date as string) : undefined),
         endDate: row.conversion_finished_at 
           ? new Date(row.conversion_finished_at as string) 
           : (row.conversion_end_date ? new Date(row.conversion_end_date as string) : undefined),
+        observations: (row.conversion_observations as string) || undefined,
+        homologationStatus: row.conversion_homologation_status as ConversionStageV2['homologationStatus'],
+        homologationResponsible: row.conversion_homologation_responsible as string | undefined,
+        sentAt: row.conversion_sent_at ? new Date(row.conversion_sent_at as string) : undefined,
+        finishedAt: row.conversion_finished_at ? new Date(row.conversion_finished_at as string) : undefined,
+        complexity: row.conversion_complexity as ConversionStageV2['complexity'],
+        dataVolumeGb: row.conversion_data_volume_gb as number | undefined,
+        toolUsed: row.conversion_tool_used as string | undefined,
+        homologationDate: row.conversion_homologation_date ? new Date(row.conversion_homologation_date as string) : undefined,
+        deviations: row.conversion_deviations as string | undefined,
       },
       implementation: createStage<ImplementationStageV2>('implementation'),
       post: createStage<PostStageV2>('post'),
@@ -341,7 +371,7 @@ function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
 }
 
 // Transform Project V3 to DB row
-function transformToDB(project: Partial<ProjectV2>): Record<string, unknown> {
+function transformToDB(project: Partial<ProjectV2>, currentProject?: ProjectV2): Record<string, unknown> {
   const dbRow: Record<string, unknown> = {};
 
   if (project.clientName) dbRow.client_name = project.clientName;
@@ -390,10 +420,26 @@ function transformToDB(project: Partial<ProjectV2>): Record<string, unknown> {
     // Infra
     if (stages.infra) {
       const s = stages.infra;
+      const oldStatus = currentProject?.stages?.infra?.status;
+      const newStatus = s.status;
+      
       dbRow.infra_status = s.status;
       dbRow.infra_responsible = s.responsible;
-      dbRow.infra_start_date = s.startDate || null;
-      dbRow.infra_end_date = s.endDate || null;
+      
+      // Auto-fill startDate if changing to in-progress and no startDate exists
+      if (newStatus === 'in-progress' && oldStatus !== 'in-progress' && !s.startDate) {
+        dbRow.infra_start_date = new Date().toISOString();
+      } else {
+        dbRow.infra_start_date = s.startDate || null;
+      }
+      
+      // Auto-fill endDate if changing to done and no endDate exists
+      if (newStatus === 'done' && oldStatus !== 'done' && !s.endDate) {
+        dbRow.infra_end_date = new Date().toISOString();
+      } else {
+        dbRow.infra_end_date = s.endDate || null;
+      }
+      
       dbRow.infra_observations = s.observations;
       dbRow.infra_technical_notes = s.technicalNotes;
       dbRow.infra_workstations_status = s.workstationsStatus;
@@ -404,10 +450,25 @@ function transformToDB(project: Partial<ProjectV2>): Record<string, unknown> {
     // Adherence
     if (stages.adherence) {
       const s = stages.adherence;
+      const oldStatus = currentProject?.stages?.adherence?.status;
+      const newStatus = s.status;
+      
       dbRow.adherence_status = s.status;
       dbRow.adherence_responsible = s.responsible;
-      dbRow.adherence_start_date = s.startDate || null;
-      dbRow.adherence_end_date = s.endDate || null;
+      
+      // Auto-fill dates
+      if (newStatus === 'in-progress' && oldStatus !== 'in-progress' && !s.startDate) {
+        dbRow.adherence_start_date = new Date().toISOString();
+      } else {
+        dbRow.adherence_start_date = s.startDate || null;
+      }
+      
+      if (newStatus === 'done' && oldStatus !== 'done' && !s.endDate) {
+        dbRow.adherence_end_date = new Date().toISOString();
+      } else {
+        dbRow.adherence_end_date = s.endDate || null;
+      }
+      
       dbRow.adherence_observations = s.observations;
       dbRow.adherence_has_product_gap = s.hasProductGap;
       dbRow.adherence_gap_description = s.gapDescription;
@@ -421,11 +482,24 @@ function transformToDB(project: Partial<ProjectV2>): Record<string, unknown> {
     // Environment
     if (stages.environment) {
       const s = stages.environment;
+      const oldStatus = currentProject?.stages?.environment?.status;
+      const newStatus = s.status;
+      
       dbRow.environment_status = s.status;
       dbRow.environment_responsible = s.responsible;
-      // Add start/end dates for Environment
-      dbRow.environment_start_date = s.startDate || null;
-      dbRow.environment_end_date = s.endDate || null;
+      
+      // Auto-fill dates
+      if (newStatus === 'in-progress' && oldStatus !== 'in-progress' && !s.startDate) {
+        dbRow.environment_start_date = new Date().toISOString();
+      } else {
+        dbRow.environment_start_date = s.startDate || null;
+      }
+      
+      if (newStatus === 'done' && oldStatus !== 'done' && !s.endDate) {
+        dbRow.environment_end_date = new Date().toISOString();
+      } else {
+        dbRow.environment_end_date = s.endDate || null;
+      }
       
       dbRow.environment_real_date = s.realDate || null;
       dbRow.environment_observations = s.observations;
@@ -458,8 +532,25 @@ function transformToDB(project: Partial<ProjectV2>): Record<string, unknown> {
     // Implementation
     if (stages.implementation) {
       const s = stages.implementation;
+      const oldStatus = currentProject?.stages?.implementation?.status;
+      const newStatus = s.status;
+      
       dbRow.implementation_status = s.status;
       dbRow.implementation_responsible = s.responsible;
+      
+      // Auto-fill dates
+      if (newStatus === 'in-progress' && oldStatus !== 'in-progress' && !s.startDate) {
+        dbRow.implementation_start_date = new Date().toISOString();
+      } else {
+        dbRow.implementation_start_date = s.startDate || null;
+      }
+      
+      if (newStatus === 'done' && oldStatus !== 'done' && !s.endDate) {
+        dbRow.implementation_end_date = new Date().toISOString();
+      } else {
+        dbRow.implementation_end_date = s.endDate || null;
+      }
+      
       dbRow.implementation_observations = s.observations;
       dbRow.implementation_phase1 = s.phase1;
       dbRow.implementation_phase2 = s.phase2;
@@ -468,10 +559,25 @@ function transformToDB(project: Partial<ProjectV2>): Record<string, unknown> {
     // Post
     if (stages.post) {
       const s = stages.post;
+      const oldStatus = currentProject?.stages?.post?.status;
+      const newStatus = s.status;
+      
       dbRow.post_status = s.status;
       dbRow.post_responsible = s.responsible;
-      dbRow.post_start_date = s.startDate || null;
-      dbRow.post_end_date = s.endDate || null;
+      
+      // Auto-fill dates
+      if (newStatus === 'in-progress' && oldStatus !== 'in-progress' && !s.startDate) {
+        dbRow.post_start_date = new Date().toISOString();
+      } else {
+        dbRow.post_start_date = s.startDate || null;
+      }
+      
+      if (newStatus === 'done' && oldStatus !== 'done' && !s.endDate) {
+        dbRow.post_end_date = new Date().toISOString();
+      } else {
+        dbRow.post_end_date = s.endDate || null;
+      }
+      
       dbRow.post_observations = s.observations;
       dbRow.post_support_period_days = s.supportPeriodDays || null;
       dbRow.post_support_end_date = s.supportEndDate || null;

@@ -70,7 +70,8 @@ export const useCommercial = () => {
           )
         `)
         .eq('is_deleted', false)
-        .eq('is_archived', false);
+        .eq('is_archived', false)
+        .not('global_status', 'in', '("done","canceled")');
       
       if (error) throw error;
       return data;

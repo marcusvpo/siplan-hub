@@ -35,6 +35,10 @@ interface StageCardProps {
 
   hideDates?: boolean; // Hide date fields for stages like implementation where phases have their own dates
   hideResponsible?: boolean;
+
+  // Predictability features
+  isReadyToStart?: boolean;
+  readinessReason?: string;
 }
 
 export function StageCard({
@@ -50,6 +54,8 @@ export function StageCard({
   children,
   hideDates = false,
   hideResponsible = false,
+  isReadyToStart = false,
+  readinessReason = "",
 }: StageCardProps) {
   const getStatusColor = (s: StageStatus) => {
     switch (s) {
@@ -154,7 +160,11 @@ export function StageCard({
       className={cn(
         "border rounded-xl bg-card shadow-sm hover:shadow-md transition-all duration-300",
         "border-l-4",
-        getStatusBorderColor(status)
+        getStatusBorderColor(status),
+        // Add glow effect if ready to start
+        isReadyToStart &&
+          status === "todo" &&
+          "animate-glow-green border-emerald-500",
       )}
     >
       <AccordionTrigger className="hover:no-underline py-5 px-5">
@@ -163,7 +173,7 @@ export function StageCard({
           <div
             className={cn(
               "p-3 rounded-xl transition-all duration-300 shadow-md",
-              getIconBg(status)
+              getIconBg(status),
             )}
           >
             {Icon ? (
@@ -186,11 +196,18 @@ export function StageCard({
             )}
           </div>
 
+          {/* Ready to Start Badge */}
+          {isReadyToStart && status === "todo" && (
+            <Badge className="px-3 py-1 text-xs font-bold bg-emerald-500 text-white shadow-md animate-pulse mr-2">
+              ✨ Pronto para Iniciar
+            </Badge>
+          )}
+
           {/* Status Badge with gradient */}
           <Badge
             className={cn(
               "px-4 py-1.5 text-sm font-semibold shadow-lg transition-all duration-300",
-              getStatusColor(status)
+              getStatusColor(status),
             )}
           >
             {statusOptions.find((o) => o.value === status)?.label || status}
@@ -199,6 +216,24 @@ export function StageCard({
       </AccordionTrigger>
 
       <AccordionContent className="px-5 pt-2 pb-6 space-y-6">
+        {/* Readiness Indicator */}
+        {isReadyToStart && status === "todo" && readinessReason && (
+          <div className="bg-gradient-to-r from-emerald-50 to-green-50  p-4 rounded-lg border-2 border-emerald-200 flex items-start gap-3">
+            <div className="text-2xl">🚀</div>
+            <div className="flex-1">
+              <p className="font-bold text-emerald-900 mb-1">
+                Pré-requisitos Completos!
+              </p>
+              <p className="text-sm text-emerald-700">{readinessReason}</p>
+              <button
+                onClick={() => onUpdate({ status: "in-progress" })}
+                className="mt-3 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg transition-colors shadow-md"
+              >
+                Iniciar {label.split(".")[1]?.trim() || "Esta Etapa"}
+              </button>
+            </div>
+          </div>
+        )}
         {/* Main Controls Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
           {/* Status Field */}
@@ -223,7 +258,7 @@ export function StageCard({
                   status === "waiting_adjustment" &&
                     "bg-orange-50 text-orange-900 border-orange-300 hover:border-orange-400",
                   status === "todo" &&
-                    "bg-slate-50 text-slate-900 border-slate-300 hover:border-slate-400"
+                    "bg-slate-50 text-slate-900 border-slate-300 hover:border-slate-400",
                 )}
               >
                 <SelectValue />
@@ -243,7 +278,7 @@ export function StageCard({
                           opt.value === "in-progress" && "bg-blue-500",
                           opt.value === "blocked" && "bg-amber-500",
                           opt.value === "waiting_adjustment" && "bg-orange-500",
-                          opt.value === "todo" && "bg-slate-400"
+                          opt.value === "todo" && "bg-slate-400",
                         )}
                       />
                       {opt.label}
@@ -275,7 +310,7 @@ export function StageCard({
               <Label className="text-xs font-bold uppercase tracking-widest text-cyan-600 flex items-center gap-2">
                 <Calendar className="h-3.5 w-3.5" />
                 {["infra", "adherence", "environment", "conversion"].includes(
-                  id
+                  id,
                 )
                   ? "Enviado em"
                   : "Início"}
@@ -305,7 +340,7 @@ export function StageCard({
               <Label className="text-xs font-bold uppercase tracking-widest text-rose-600 flex items-center gap-2">
                 <Calendar className="h-3.5 w-3.5" />
                 {["infra", "adherence", "environment", "conversion"].includes(
-                  id
+                  id,
                 )
                   ? "Finalizado em"
                   : "Término"}

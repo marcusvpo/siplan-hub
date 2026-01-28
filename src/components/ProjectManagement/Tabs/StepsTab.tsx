@@ -16,14 +16,28 @@ import { StageCard } from "@/components/ProjectManagement/Forms/StageCard";
 import { Accordion } from "@/components/ui/accordion";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Server, Megaphone, CheckCircle2, Database, RefreshCw, Rocket, Power } from "lucide-react";
+import {
+  Server,
+  Megaphone,
+  CheckCircle2,
+  Database,
+  RefreshCw,
+  Rocket,
+  Power,
+} from "lucide-react";
 import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { convertBlocksToTiptap } from "@/lib/editor-utils";
@@ -38,18 +52,30 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  getStageReadiness,
+  identifyBottleneck,
+} from "@/lib/predictability-utils";
 
 interface TabProps {
   project: ProjectV2;
   onUpdate: (project: ProjectV2) => void;
 }
 
-type StatusType = "Adequado" | "Parcialmente Adequado" | "Inadequado" | "Aguardando Adequação";
+type StatusType =
+  | "Adequado"
+  | "Parcialmente Adequado"
+  | "Inadequado"
+  | "Aguardando Adequação";
 
 export function StepsTab({ project, onUpdate }: TabProps) {
   const { data, updateStage, saveState } = useProjectForm(project, onUpdate);
   const { toast } = useToast();
   const [notifying, setNotifying] = useState(false);
+
+  // Predictability: Calculate stage readiness
+  const stageReadiness = getStageReadiness(data);
+  const bottleneck = identifyBottleneck(data);
 
   const handleNotifyComercial = async () => {
     setNotifying(true);
@@ -118,15 +144,21 @@ export function StepsTab({ project, onUpdate }: TabProps) {
         </Label>
         <Select
           value={stage.workstationsStatus || ""}
-          onValueChange={(v) => updateStage("infra", { workstationsStatus: v as StatusType })}
+          onValueChange={(v) =>
+            updateStage("infra", { workstationsStatus: v as StatusType })
+          }
         >
           <SelectTrigger
             className={cn(
               "h-11 border-2 font-medium transition-all",
-              stage.workstationsStatus === "Adequado" && "bg-green-50 text-green-800 border-green-300",
-              stage.workstationsStatus === "Parcialmente Adequado" && "bg-orange-50 text-orange-800 border-orange-300",
-              stage.workstationsStatus === "Inadequado" && "bg-red-50 text-red-800 border-red-300",
-              stage.workstationsStatus === "Aguardando Adequação" && "bg-gray-50 text-gray-800 border-gray-300",
+              stage.workstationsStatus === "Adequado" &&
+                "bg-green-50 text-green-800 border-green-300",
+              stage.workstationsStatus === "Parcialmente Adequado" &&
+                "bg-orange-50 text-orange-800 border-orange-300",
+              stage.workstationsStatus === "Inadequado" &&
+                "bg-red-50 text-red-800 border-red-300",
+              stage.workstationsStatus === "Aguardando Adequação" &&
+                "bg-gray-50 text-gray-800 border-gray-300",
             )}
           >
             <SelectValue placeholder="Selecione..." />
@@ -138,7 +170,10 @@ export function StepsTab({ project, onUpdate }: TabProps) {
                 Adequado
               </div>
             </SelectItem>
-            <SelectItem value="Parcialmente Adequado" className="text-orange-600 font-medium">
+            <SelectItem
+              value="Parcialmente Adequado"
+              className="text-orange-600 font-medium"
+            >
               <div className="flex items-center gap-2">
                 <div className="h-2.5 w-2.5 rounded-full bg-orange-500" />
                 Parcialmente Adequado
@@ -150,7 +185,10 @@ export function StepsTab({ project, onUpdate }: TabProps) {
                 Inadequado
               </div>
             </SelectItem>
-            <SelectItem value="Aguardando Adequação" className="text-gray-600 font-medium">
+            <SelectItem
+              value="Aguardando Adequação"
+              className="text-gray-600 font-medium"
+            >
               <div className="flex items-center gap-2">
                 <div className="h-2.5 w-2.5 rounded-full bg-gray-500" />
                 Aguardando Adequação
@@ -166,15 +204,21 @@ export function StepsTab({ project, onUpdate }: TabProps) {
         </Label>
         <Select
           value={stage.serverStatus || ""}
-          onValueChange={(v) => updateStage("infra", { serverStatus: v as StatusType })}
+          onValueChange={(v) =>
+            updateStage("infra", { serverStatus: v as StatusType })
+          }
         >
           <SelectTrigger
             className={cn(
               "h-11 border-2 font-medium transition-all",
-              stage.serverStatus === "Adequado" && "bg-green-50 text-green-800 border-green-300",
-              stage.serverStatus === "Parcialmente Adequado" && "bg-orange-50 text-orange-800 border-orange-300",
-              stage.serverStatus === "Inadequado" && "bg-red-50 text-red-800 border-red-300",
-              stage.serverStatus === "Aguardando Adequação" && "bg-gray-50 text-gray-800 border-gray-300",
+              stage.serverStatus === "Adequado" &&
+                "bg-green-50 text-green-800 border-green-300",
+              stage.serverStatus === "Parcialmente Adequado" &&
+                "bg-orange-50 text-orange-800 border-orange-300",
+              stage.serverStatus === "Inadequado" &&
+                "bg-red-50 text-red-800 border-red-300",
+              stage.serverStatus === "Aguardando Adequação" &&
+                "bg-gray-50 text-gray-800 border-gray-300",
             )}
           >
             <SelectValue placeholder="Selecione..." />
@@ -186,7 +230,10 @@ export function StepsTab({ project, onUpdate }: TabProps) {
                 Adequado
               </div>
             </SelectItem>
-            <SelectItem value="Parcialmente Adequado" className="text-orange-600 font-medium">
+            <SelectItem
+              value="Parcialmente Adequado"
+              className="text-orange-600 font-medium"
+            >
               <div className="flex items-center gap-2">
                 <div className="h-2.5 w-2.5 rounded-full bg-orange-500" />
                 Parcialmente Adequado
@@ -198,7 +245,10 @@ export function StepsTab({ project, onUpdate }: TabProps) {
                 Inadequado
               </div>
             </SelectItem>
-            <SelectItem value="Aguardando Adequação" className="text-gray-600 font-medium">
+            <SelectItem
+              value="Aguardando Adequação"
+              className="text-gray-600 font-medium"
+            >
               <div className="flex items-center gap-2">
                 <div className="h-2.5 w-2.5 rounded-full bg-gray-500" />
                 Aguardando Adequação
@@ -232,10 +282,15 @@ export function StepsTab({ project, onUpdate }: TabProps) {
         <Checkbox
           id="has-gap"
           checked={stage.hasProductGap || false}
-          onCheckedChange={(checked) => updateStage("adherence", { hasProductGap: checked === true })}
+          onCheckedChange={(checked) =>
+            updateStage("adherence", { hasProductGap: checked === true })
+          }
           className="border-amber-400 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
         />
-        <Label htmlFor="has-gap" className="text-amber-800 font-semibold cursor-pointer">
+        <Label
+          htmlFor="has-gap"
+          className="text-amber-800 font-semibold cursor-pointer"
+        >
           ⚠️ Existe Gap de Produto?
         </Label>
       </div>
@@ -248,7 +303,9 @@ export function StepsTab({ project, onUpdate }: TabProps) {
             </Label>
             <Textarea
               value={stage.gapDescription || ""}
-              onChange={(e) => updateStage("adherence", { gapDescription: e.target.value })}
+              onChange={(e) =>
+                updateStage("adherence", { gapDescription: e.target.value })
+              }
               className="min-h-[100px] border-2 border-red-200 focus:border-red-400 bg-white"
               placeholder="Descreva detalhadamente o gap identificado..."
             />
@@ -266,7 +323,9 @@ export function StepsTab({ project, onUpdate }: TabProps) {
       </Label>
       <Input
         value={stage.osVersion || ""}
-        onChange={(e) => updateStage("environment", { osVersion: e.target.value })}
+        onChange={(e) =>
+          updateStage("environment", { osVersion: e.target.value })
+        }
         placeholder="Ex: Windows Server 2022"
         className="h-11 border-2 border-emerald-200 hover:border-emerald-300 focus:border-emerald-400 bg-emerald-50/50 font-medium"
       />
@@ -282,15 +341,21 @@ export function StepsTab({ project, onUpdate }: TabProps) {
         </Label>
         <Select
           value={stage.homologationStatus || ""}
-          onValueChange={(v) => updateStage("conversion", { homologationStatus: v as StatusType })}
+          onValueChange={(v) =>
+            updateStage("conversion", { homologationStatus: v as StatusType })
+          }
         >
           <SelectTrigger
             className={cn(
               "h-11 border-2 font-medium transition-all",
-              stage.homologationStatus === "Adequado" && "bg-green-50 text-green-800 border-green-300",
-              stage.homologationStatus === "Parcialmente Adequado" && "bg-orange-50 text-orange-800 border-orange-300",
-              stage.homologationStatus === "Inadequado" && "bg-red-50 text-red-800 border-red-300",
-              stage.homologationStatus === "Aguardando Adequação" && "bg-gray-50 text-gray-800 border-gray-300",
+              stage.homologationStatus === "Adequado" &&
+                "bg-green-50 text-green-800 border-green-300",
+              stage.homologationStatus === "Parcialmente Adequado" &&
+                "bg-orange-50 text-orange-800 border-orange-300",
+              stage.homologationStatus === "Inadequado" &&
+                "bg-red-50 text-red-800 border-red-300",
+              stage.homologationStatus === "Aguardando Adequação" &&
+                "bg-gray-50 text-gray-800 border-gray-300",
             )}
           >
             <SelectValue placeholder="Selecione..." />
@@ -302,7 +367,10 @@ export function StepsTab({ project, onUpdate }: TabProps) {
                 Adequado
               </div>
             </SelectItem>
-            <SelectItem value="Parcialmente Adequado" className="text-orange-600 font-medium">
+            <SelectItem
+              value="Parcialmente Adequado"
+              className="text-orange-600 font-medium"
+            >
               <div className="flex items-center gap-2">
                 <div className="h-2.5 w-2.5 rounded-full bg-orange-500" />
                 Parcialmente Adequado
@@ -314,7 +382,10 @@ export function StepsTab({ project, onUpdate }: TabProps) {
                 Inadequado
               </div>
             </SelectItem>
-            <SelectItem value="Aguardando Adequação" className="text-gray-600 font-medium">
+            <SelectItem
+              value="Aguardando Adequação"
+              className="text-gray-600 font-medium"
+            >
               <div className="flex items-center gap-2">
                 <div className="h-2.5 w-2.5 rounded-full bg-gray-500" />
                 Aguardando Adequação
@@ -330,7 +401,9 @@ export function StepsTab({ project, onUpdate }: TabProps) {
         </Label>
         <AutocompleteInput
           value={stage.homologationResponsible || ""}
-          onChange={(v) => updateStage("conversion", { homologationResponsible: v })}
+          onChange={(v) =>
+            updateStage("conversion", { homologationResponsible: v })
+          }
           className="h-11 border-2 border-violet-200 hover:border-violet-300 focus:border-violet-400 bg-violet-50/50"
         />
       </div>
@@ -341,10 +414,16 @@ export function StepsTab({ project, onUpdate }: TabProps) {
         </Label>
         <Input
           type="date"
-          value={stage.sentAt ? new Date(stage.sentAt).toISOString().split("T")[0] : ""}
+          value={
+            stage.sentAt
+              ? new Date(stage.sentAt).toISOString().split("T")[0]
+              : ""
+          }
           onChange={(e) =>
             updateStage("conversion", {
-              sentAt: e.target.value ? new Date(e.target.value + "T12:00:00") : undefined,
+              sentAt: e.target.value
+                ? new Date(e.target.value + "T12:00:00")
+                : undefined,
             })
           }
           className="h-11 border-2 border-cyan-200 hover:border-cyan-300 focus:border-cyan-400 bg-cyan-50/50 font-medium"
@@ -357,10 +436,16 @@ export function StepsTab({ project, onUpdate }: TabProps) {
         </Label>
         <Input
           type="date"
-          value={stage.finishedAt ? new Date(stage.finishedAt).toISOString().split("T")[0] : ""}
+          value={
+            stage.finishedAt
+              ? new Date(stage.finishedAt).toISOString().split("T")[0]
+              : ""
+          }
           onChange={(e) =>
             updateStage("conversion", {
-              finishedAt: e.target.value ? new Date(e.target.value + "T12:00:00") : undefined,
+              finishedAt: e.target.value
+                ? new Date(e.target.value + "T12:00:00")
+                : undefined,
             })
           }
           className="h-11 border-2 border-rose-200 hover:border-rose-300 focus:border-rose-400 bg-rose-50/50 font-medium"
@@ -370,7 +455,10 @@ export function StepsTab({ project, onUpdate }: TabProps) {
   );
 
   // Special handling for Implementation Phases
-  const updatePhase = (phase: "phase1" | "phase2", updates: Partial<ImplementationPhase>) => {
+  const updatePhase = (
+    phase: "phase1" | "phase2",
+    updates: Partial<ImplementationPhase>,
+  ) => {
     const currentImpl = stagesData.implementation;
     const currentPhase = currentImpl[phase] || {};
     const newPhase = { ...currentPhase, ...updates };
@@ -417,7 +505,9 @@ export function StepsTab({ project, onUpdate }: TabProps) {
           <Badge className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-3 py-1 shadow-md">
             🚀 Fase 1
           </Badge>
-          <span className="text-lg text-blue-900">Treinamento & Acompanhamento</span>
+          <span className="text-lg text-blue-900">
+            Treinamento & Acompanhamento
+          </span>
         </h4>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-5 relative">
           <div className="space-y-2.5">
@@ -427,15 +517,21 @@ export function StepsTab({ project, onUpdate }: TabProps) {
             </Label>
             <Select
               value={stage.phase1?.status || "todo"}
-              onValueChange={(v) => updatePhase("phase1", { status: v as StageStatus })}
+              onValueChange={(v) =>
+                updatePhase("phase1", { status: v as StageStatus })
+              }
             >
               <SelectTrigger
                 className={cn(
                   "h-11 border-2 font-medium transition-all",
-                  stage.phase1?.status === "done" && "bg-emerald-50 text-emerald-800 border-emerald-300",
-                  stage.phase1?.status === "in-progress" && "bg-blue-50 text-blue-800 border-blue-300",
-                  stage.phase1?.status === "blocked" && "bg-amber-50 text-amber-800 border-amber-300",
-                  stage.phase1?.status === "todo" && "bg-slate-50 text-slate-800 border-slate-300",
+                  stage.phase1?.status === "done" &&
+                    "bg-emerald-50 text-emerald-800 border-emerald-300",
+                  stage.phase1?.status === "in-progress" &&
+                    "bg-blue-50 text-blue-800 border-blue-300",
+                  stage.phase1?.status === "blocked" &&
+                    "bg-amber-50 text-amber-800 border-amber-300",
+                  stage.phase1?.status === "todo" &&
+                    "bg-slate-50 text-slate-800 border-slate-300",
                 )}
               >
                 <SelectValue />
@@ -486,10 +582,16 @@ export function StepsTab({ project, onUpdate }: TabProps) {
             </Label>
             <Input
               type="date"
-              value={stage.phase1?.startDate ? new Date(stage.phase1.startDate).toISOString().split("T")[0] : ""}
+              value={
+                stage.phase1?.startDate
+                  ? new Date(stage.phase1.startDate).toISOString().split("T")[0]
+                  : ""
+              }
               onChange={(e) =>
                 updatePhase("phase1", {
-                  startDate: e.target.value ? new Date(e.target.value + "T12:00:00") : undefined,
+                  startDate: e.target.value
+                    ? new Date(e.target.value + "T12:00:00")
+                    : undefined,
                 })
               }
               className="h-11 border-2 border-cyan-200 hover:border-cyan-300 focus:border-cyan-400 bg-white font-medium"
@@ -502,10 +604,16 @@ export function StepsTab({ project, onUpdate }: TabProps) {
             </Label>
             <Input
               type="date"
-              value={stage.phase1?.endDate ? new Date(stage.phase1.endDate).toISOString().split("T")[0] : ""}
+              value={
+                stage.phase1?.endDate
+                  ? new Date(stage.phase1.endDate).toISOString().split("T")[0]
+                  : ""
+              }
               onChange={(e) =>
                 updatePhase("phase1", {
-                  endDate: e.target.value ? new Date(e.target.value + "T12:00:00") : undefined,
+                  endDate: e.target.value
+                    ? new Date(e.target.value + "T12:00:00")
+                    : undefined,
                 })
               }
               className="h-11 border-2 border-rose-200 hover:border-rose-300 focus:border-rose-400 bg-white font-medium"
@@ -515,7 +623,9 @@ export function StepsTab({ project, onUpdate }: TabProps) {
         <div className="space-y-3 relative">
           <div className="flex items-center gap-3">
             <div className="h-1 w-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full" />
-            <Label className="text-xs font-bold uppercase tracking-widest text-blue-600">Observações da Fase 1</Label>
+            <Label className="text-xs font-bold uppercase tracking-widest text-blue-600">
+              Observações da Fase 1
+            </Label>
           </div>
           <div className="rounded-xl border-2 border-blue-200 overflow-hidden bg-white">
             <RichTextEditor
@@ -544,15 +654,21 @@ export function StepsTab({ project, onUpdate }: TabProps) {
             </Label>
             <Select
               value={stage.phase2?.status || "todo"}
-              onValueChange={(v) => updatePhase("phase2", { status: v as StageStatus })}
+              onValueChange={(v) =>
+                updatePhase("phase2", { status: v as StageStatus })
+              }
             >
               <SelectTrigger
                 className={cn(
                   "h-11 border-2 font-medium transition-all",
-                  stage.phase2?.status === "done" && "bg-emerald-50 text-emerald-800 border-emerald-300",
-                  stage.phase2?.status === "in-progress" && "bg-purple-50 text-purple-800 border-purple-300",
-                  stage.phase2?.status === "blocked" && "bg-amber-50 text-amber-800 border-amber-300",
-                  stage.phase2?.status === "todo" && "bg-slate-50 text-slate-800 border-slate-300",
+                  stage.phase2?.status === "done" &&
+                    "bg-emerald-50 text-emerald-800 border-emerald-300",
+                  stage.phase2?.status === "in-progress" &&
+                    "bg-purple-50 text-purple-800 border-purple-300",
+                  stage.phase2?.status === "blocked" &&
+                    "bg-amber-50 text-amber-800 border-amber-300",
+                  stage.phase2?.status === "todo" &&
+                    "bg-slate-50 text-slate-800 border-slate-300",
                 )}
               >
                 <SelectValue />
@@ -603,10 +719,16 @@ export function StepsTab({ project, onUpdate }: TabProps) {
             </Label>
             <Input
               type="date"
-              value={stage.phase2?.startDate ? new Date(stage.phase2.startDate).toISOString().split("T")[0] : ""}
+              value={
+                stage.phase2?.startDate
+                  ? new Date(stage.phase2.startDate).toISOString().split("T")[0]
+                  : ""
+              }
               onChange={(e) =>
                 updatePhase("phase2", {
-                  startDate: e.target.value ? new Date(e.target.value + "T12:00:00") : undefined,
+                  startDate: e.target.value
+                    ? new Date(e.target.value + "T12:00:00")
+                    : undefined,
                 })
               }
               className="h-11 border-2 border-cyan-200 hover:border-cyan-300 focus:border-cyan-400 bg-white font-medium"
@@ -619,10 +741,16 @@ export function StepsTab({ project, onUpdate }: TabProps) {
             </Label>
             <Input
               type="date"
-              value={stage.phase2?.endDate ? new Date(stage.phase2.endDate).toISOString().split("T")[0] : ""}
+              value={
+                stage.phase2?.endDate
+                  ? new Date(stage.phase2.endDate).toISOString().split("T")[0]
+                  : ""
+              }
               onChange={(e) =>
                 updatePhase("phase2", {
-                  endDate: e.target.value ? new Date(e.target.value + "T12:00:00") : undefined,
+                  endDate: e.target.value
+                    ? new Date(e.target.value + "T12:00:00")
+                    : undefined,
                 })
               }
               className="h-11 border-2 border-rose-200 hover:border-rose-300 focus:border-rose-400 bg-white font-medium"
@@ -632,7 +760,9 @@ export function StepsTab({ project, onUpdate }: TabProps) {
         <div className="space-y-3 relative">
           <div className="flex items-center gap-3">
             <div className="h-1 w-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full" />
-            <Label className="text-xs font-bold uppercase tracking-widest text-purple-600">Observações da Fase 2</Label>
+            <Label className="text-xs font-bold uppercase tracking-widest text-purple-600">
+              Observações da Fase 2
+            </Label>
           </div>
           <div className="rounded-xl border-2 border-purple-200 overflow-hidden bg-white">
             <RichTextEditor
@@ -656,11 +786,16 @@ export function StepsTab({ project, onUpdate }: TabProps) {
           </Badge>
         )}
         {saveState.status === "success" && (
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+          <Badge
+            variant="outline"
+            className="bg-green-50 text-green-700 border-green-200"
+          >
             {saveState.message}
           </Badge>
         )}
-        {saveState.status === "error" && <Badge variant="destructive">{saveState.message}</Badge>}
+        {saveState.status === "error" && (
+          <Badge variant="destructive">{saveState.message}</Badge>
+        )}
       </div>
 
       <Accordion type="single" collapsible className="w-full space-y-4">
@@ -674,6 +809,12 @@ export function StepsTab({ project, onUpdate }: TabProps) {
           endDate={stagesData.infra.endDate}
           observations={stagesData.infra.observations}
           onUpdate={(u) => updateStage("infra", u)}
+          isReadyToStart={
+            stageReadiness.find((r) => r.stageId === "infra")?.isReady
+          }
+          readinessReason={
+            stageReadiness.find((r) => r.stageId === "infra")?.reason
+          }
         >
           {renderInfraFields(stagesData.infra)}
         </StageCard>
@@ -688,6 +829,12 @@ export function StepsTab({ project, onUpdate }: TabProps) {
           endDate={stagesData.adherence.endDate}
           observations={stagesData.adherence.observations}
           onUpdate={(u) => updateStage("adherence", u)}
+          isReadyToStart={
+            stageReadiness.find((r) => r.stageId === "adherence")?.isReady
+          }
+          readinessReason={
+            stageReadiness.find((r) => r.stageId === "adherence")?.reason
+          }
         >
           {renderAdherenceFields(stagesData.adherence)}
         </StageCard>
@@ -702,6 +849,12 @@ export function StepsTab({ project, onUpdate }: TabProps) {
           endDate={stagesData.conversion.endDate}
           observations={stagesData.conversion.observations}
           onUpdate={(u) => updateStage("conversion", u)}
+          isReadyToStart={
+            stageReadiness.find((r) => r.stageId === "conversion")?.isReady
+          }
+          readinessReason={
+            stageReadiness.find((r) => r.stageId === "conversion")?.reason
+          }
         >
           {renderConversionFields(stagesData.conversion)}
         </StageCard>
@@ -716,6 +869,12 @@ export function StepsTab({ project, onUpdate }: TabProps) {
           endDate={stagesData.environment.endDate}
           observations={stagesData.environment.observations}
           onUpdate={(u) => updateStage("environment", u)}
+          isReadyToStart={
+            stageReadiness.find((r) => r.stageId === "environment")?.isReady
+          }
+          readinessReason={
+            stageReadiness.find((r) => r.stageId === "environment")?.reason
+          }
         >
           {renderEnvironmentFields(stagesData.environment)}
         </StageCard>
@@ -729,10 +888,22 @@ export function StepsTab({ project, onUpdate }: TabProps) {
           hideResponsible={true}
           // Phase 1 dates are used as the main dates for the implementation stage
           // These are synced automatically when phase 1 dates are updated
-          startDate={stagesData.implementation.phase1?.startDate || stagesData.implementation.startDate}
-          endDate={stagesData.implementation.phase1?.endDate || stagesData.implementation.endDate}
+          startDate={
+            stagesData.implementation.phase1?.startDate ||
+            stagesData.implementation.startDate
+          }
+          endDate={
+            stagesData.implementation.phase1?.endDate ||
+            stagesData.implementation.endDate
+          }
           observations={stagesData.implementation.observations}
           hideDates={true} // Hide main dates - will be managed by Phase 1 and Phase 2
+          isReadyToStart={
+            stageReadiness.find((r) => r.stageId === "implementation")?.isReady
+          }
+          readinessReason={
+            stageReadiness.find((r) => r.stageId === "implementation")?.reason
+          }
           onUpdate={(u) => {
             // Sync phase 1 dates with main stage dates for calendar compatibility
             const updates: Record<string, unknown> = { ...u };
@@ -766,6 +937,12 @@ export function StepsTab({ project, onUpdate }: TabProps) {
           endDate={stagesData.post.endDate}
           observations={stagesData.post.observations}
           onUpdate={(u) => updateStage("post", u)}
+          isReadyToStart={
+            stageReadiness.find((r) => r.stageId === "post")?.isReady
+          }
+          readinessReason={
+            stageReadiness.find((r) => r.stageId === "post")?.reason
+          }
         />
       </Accordion>
     </div>

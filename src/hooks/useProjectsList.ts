@@ -33,7 +33,16 @@ export const useProjectsList = (searchQuery: string = "") => {
 
       let query = supabase
         .from("projects")
-        .select("id, client_name, ticket_number, system_type, global_status, updated_at, project_leader, client_primary_contact, overall_progress, priority, is_deleted, created_at, start_date_planned, end_date_planned, infra_status, adherence_status, environment_status, conversion_status, implementation_status, post_status") 
+        .select(`
+          id, client_name, ticket_number, system_type, global_status, updated_at, 
+          project_leader, client_primary_contact, overall_progress, priority, is_deleted, created_at,
+          infra_status, infra_start_date, infra_end_date, infra_responsible,
+          adherence_status, adherence_start_date, adherence_end_date, adherence_responsible,
+          environment_status, environment_start_date, environment_end_date, environment_responsible,
+          conversion_status, conversion_start_date, conversion_end_date, conversion_sent_at, conversion_finished_at, conversion_responsible,
+          implementation_status, implementation_start_date, implementation_end_date, implementation_responsible,
+          post_status, post_start_date, post_end_date, post_responsible
+        `) 
         .eq("is_deleted", false);
 
       if (searchQuery) {
@@ -116,14 +125,50 @@ function userProjectsListTransform(row: ProjectRow): Partial<ProjectV2> {
         overallProgress: row.overall_progress,
         priority: row.priority as unknown as Priority,
         healthScore,
-        // Mock stages status for the dashboard pipeline view
+        // Stages with complete date tracking for bottleneck detection
         stages: {
-            infra: { status: row.infra_status || 'todo' } as InfraStageV2,
-            adherence: { status: row.adherence_status || 'todo' } as AdherenceStageV2,
-            environment: { status: row.environment_status || 'todo' } as EnvironmentStageV2,
-            conversion: { status: row.conversion_status || 'todo' } as ConversionStageV2,
-            implementation: { status: row.implementation_status || 'todo' } as ImplementationStageV2,
-            post: { status: row.post_status || 'todo' } as PostStageV2,
+            infra: { 
+                status: row.infra_status || 'todo',
+                startDate: row.infra_start_date ? new Date(row.infra_start_date as string) : undefined,
+                endDate: row.infra_end_date ? new Date(row.infra_end_date as string) : undefined,
+                responsible: row.infra_responsible as string | undefined
+            } as InfraStageV2,
+            adherence: { 
+                status: row.adherence_status || 'todo',
+                startDate: row.adherence_start_date ? new Date(row.adherence_start_date as string) : undefined,
+                endDate: row.adherence_end_date ? new Date(row.adherence_end_date as string) : undefined,
+                responsible: row.adherence_responsible as string | undefined
+            } as AdherenceStageV2,
+            environment: { 
+                status: row.environment_status || 'todo',
+                startDate: row.environment_start_date ? new Date(row.environment_start_date as string) : undefined,
+                endDate: row.environment_end_date ? new Date(row.environment_end_date as string) : undefined,
+                responsible: row.environment_responsible as string | undefined
+            } as EnvironmentStageV2,
+            conversion: { 
+                status: row.conversion_status || 'todo',
+                sentAt: row.conversion_sent_at ? new Date(row.conversion_sent_at as string) : undefined,
+                startDate: row.conversion_sent_at 
+                    ? new Date(row.conversion_sent_at as string)
+                    : (row.conversion_start_date ? new Date(row.conversion_start_date as string) : undefined),
+                endDate: row.conversion_finished_at 
+                    ? new Date(row.conversion_finished_at as string)
+                    : (row.conversion_end_date ? new Date(row.conversion_end_date as string) : undefined),
+                finishedAt: row.conversion_finished_at ? new Date(row.conversion_finished_at as string) : undefined,
+                responsible: row.conversion_responsible as string | undefined
+            } as ConversionStageV2,
+            implementation: { 
+                status: row.implementation_status || 'todo',
+                startDate: row.implementation_start_date ? new Date(row.implementation_start_date as string) : undefined,
+                endDate: row.implementation_end_date ? new Date(row.implementation_end_date as string) : undefined,
+                responsible: row.implementation_responsible as string | undefined
+            } as ImplementationStageV2,
+            post: { 
+                status: row.post_status || 'todo',
+                startDate: row.post_start_date ? new Date(row.post_start_date as string) : undefined,
+                endDate: row.post_end_date ? new Date(row.post_end_date as string) : undefined,
+                responsible: row.post_responsible as string | undefined
+            } as PostStageV2,
         },
     };
 }
