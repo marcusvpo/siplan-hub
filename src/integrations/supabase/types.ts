@@ -10,131 +10,10 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1"
+    PostgrestVersion: "13.0.5"
   }
   public: {
     Tables: {
-      client_contacts: {
-        Row: {
-          client_id: string
-          created_at: string
-          email: string | null
-          id: string
-          is_primary: boolean | null
-          name: string
-          notes: string | null
-          phone: string | null
-          role: string | null
-          updated_at: string
-        }
-        Insert: {
-          client_id: string
-          created_at?: string
-          email?: string | null
-          id?: string
-          is_primary?: boolean | null
-          name: string
-          notes?: string | null
-          phone?: string | null
-          role?: string | null
-          updated_at?: string
-        }
-        Update: {
-          client_id?: string
-          created_at?: string
-          email?: string | null
-          id?: string
-          is_primary?: boolean | null
-          name?: string
-          notes?: string | null
-          phone?: string | null
-          role?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "client_contacts_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      clients: {
-        Row: {
-          created_at: string
-          document: string | null
-          health_status: string | null
-          id: string
-          name: string
-          notes: string | null
-          tags: string[] | null
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          document?: string | null
-          health_status?: string | null
-          id?: string
-          name: string
-          notes?: string | null
-          tags?: string[] | null
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          document?: string | null
-          health_status?: string | null
-          id?: string
-          name?: string
-          notes?: string | null
-          tags?: string[] | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      commercial_notes: {
-        Row: {
-          author_name: string
-          client_id: string
-          content: string
-          created_at: string | null
-          deleted_at: string | null
-          id: string
-          type: string
-          updated_at: string | null
-        }
-        Insert: {
-          author_name: string
-          client_id: string
-          content: string
-          created_at?: string | null
-          deleted_at?: string | null
-          id?: string
-          type: string
-          updated_at?: string | null
-        }
-        Update: {
-          author_name?: string
-          client_id?: string
-          content?: string
-          created_at?: string | null
-          deleted_at?: string | null
-          id?: string
-          type?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "commercial_notes_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       project_checklist: {
         Row: {
           completed: boolean | null
@@ -143,9 +22,8 @@ export type Database = {
           created_at: string | null
           description: string | null
           id: string
-          item_key: string
+          label: string
           project_id: string | null
-          updated_at: string | null
         }
         Insert: {
           completed?: boolean | null
@@ -154,9 +32,8 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
-          item_key: string
+          label: string
           project_id?: string | null
-          updated_at?: string | null
         }
         Update: {
           completed?: boolean | null
@@ -165,13 +42,53 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
-          item_key?: string
+          label?: string
           project_id?: string | null
-          updated_at?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "project_checklist_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_files: {
+        Row: {
+          file_name: string
+          file_path: string
+          file_size: number
+          id: string
+          mime_type: string | null
+          project_id: string
+          uploaded_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          file_name: string
+          file_path: string
+          file_size: number
+          id?: string
+          mime_type?: string | null
+          project_id: string
+          uploaded_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          id?: string
+          mime_type?: string | null
+          project_id?: string
+          uploaded_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_files_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
@@ -195,44 +112,55 @@ export type Database = {
           adherence_status: string
           archived_at: string | null
           client_email: string | null
-          client_id: string | null
           client_name: string
           client_phone: string | null
           client_primary_contact: string | null
-          commercial_notes: string | null
-          commercial_responsible: string | null
           contract_value: number | null
           conversion_complexity: string | null
-          conversion_data_origin: string | null
-          conversion_end_date: string | null
-          conversion_estimated_records: number | null
+          conversion_data_volume_gb: number | null
+          conversion_deviations: string | null
+          conversion_homologation_complete: boolean | null
+          conversion_homologation_date: string | null
           conversion_observations: string | null
+          conversion_record_count: number | null
           conversion_responsible: string | null
-          conversion_start_date: string | null
+          conversion_source_system: string | null
           conversion_status: string
+          conversion_tool_used: string | null
           created_at: string
-          environment_access_data: string | null
-          environment_created: boolean | null
-          environment_end_date: string | null
+          custom_fields: Json | null
+          deleted_at: string | null
+          deleted_by: string | null
+          description: string | null
+          end_date_actual: string | null
+          end_date_planned: string | null
+          environment_approved_by_infra: boolean | null
           environment_observations: string | null
+          environment_os_version: string | null
+          environment_preparation_checklist: string | null
+          environment_real_date: string | null
           environment_responsible: string | null
-          environment_start_date: string | null
           environment_status: string
-          environment_type: string | null
-          environment_url: string | null
-          follow_up_history: Json[] | null
+          environment_test_available: boolean | null
+          environment_version: string | null
+          external_id: string | null
           global_status: string | null
-          go_live_date: string | null
-          health_score: string
           id: string
-          implementation_checklist_status: string | null
-          implementation_end_date: string | null
+          implantation_type: string | null
+          implementation_acceptance_status: string | null
+          implementation_client_feedback: string | null
           implementation_observations: string | null
+          implementation_participants_count: number | null
+          implementation_remote_install_date: string | null
           implementation_responsible: string | null
-          implementation_start_date: string | null
           implementation_status: string
-          implementation_training_status: string | null
-          impl_status: string | null
+          implementation_switch_end_time: string | null
+          implementation_switch_start_time: string | null
+          implementation_switch_type: string | null
+          implementation_training_end_date: string | null
+          implementation_training_location: string | null
+          implementation_training_start_date: string | null
+          implementation_training_type: string | null
           infra_approved_by_infra: boolean | null
           infra_blocking_reason: string | null
           infra_end_date: string | null
@@ -240,12 +168,9 @@ export type Database = {
           infra_responsible: string | null
           infra_server_in_use: string | null
           infra_server_needed: string | null
-          infra_server_status: string | null
           infra_start_date: string | null
-          infra_stations_status: string | null
           infra_status: string
           infra_technical_notes: string | null
-          infra_workstations_status: string | null
           is_archived: boolean | null
           is_deleted: boolean | null
           last_update_by: string
@@ -257,6 +182,9 @@ export type Database = {
           post_benefits_delivered: string | null
           post_challenges_found: string | null
           post_client_satisfaction: string | null
+          post_end_date: string | null
+          post_followup_date: string | null
+          post_followup_needed: boolean | null
           post_observations: string | null
           post_recommendations: string | null
           post_responsible: string | null
@@ -295,44 +223,55 @@ export type Database = {
           adherence_status?: string
           archived_at?: string | null
           client_email?: string | null
-          client_id?: string | null
           client_name: string
           client_phone?: string | null
           client_primary_contact?: string | null
-          commercial_notes?: string | null
-          commercial_responsible?: string | null
           contract_value?: number | null
           conversion_complexity?: string | null
-          conversion_data_origin?: string | null
-          conversion_end_date?: string | null
-          conversion_estimated_records?: number | null
+          conversion_data_volume_gb?: number | null
+          conversion_deviations?: string | null
+          conversion_homologation_complete?: boolean | null
+          conversion_homologation_date?: string | null
           conversion_observations?: string | null
+          conversion_record_count?: number | null
           conversion_responsible?: string | null
-          conversion_start_date?: string | null
+          conversion_source_system?: string | null
           conversion_status?: string
+          conversion_tool_used?: string | null
           created_at?: string
-          environment_access_data?: string | null
-          environment_created?: boolean | null
-          environment_end_date?: string | null
+          custom_fields?: Json | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          description?: string | null
+          end_date_actual?: string | null
+          end_date_planned?: string | null
+          environment_approved_by_infra?: boolean | null
           environment_observations?: string | null
+          environment_os_version?: string | null
+          environment_preparation_checklist?: string | null
+          environment_real_date?: string | null
           environment_responsible?: string | null
-          environment_start_date?: string | null
           environment_status?: string
-          environment_type?: string | null
-          environment_url?: string | null
-          follow_up_history?: Json[] | null
+          environment_test_available?: boolean | null
+          environment_version?: string | null
+          external_id?: string | null
           global_status?: string | null
-          go_live_date?: string | null
-          health_score?: string
           id?: string
-          implementation_checklist_status?: string | null
-          implementation_end_date?: string | null
+          implantation_type?: string | null
+          implementation_acceptance_status?: string | null
+          implementation_client_feedback?: string | null
           implementation_observations?: string | null
+          implementation_participants_count?: number | null
+          implementation_remote_install_date?: string | null
           implementation_responsible?: string | null
-          implementation_start_date?: string | null
           implementation_status?: string
-          implementation_training_status?: string | null
-          impl_status?: string | null
+          implementation_switch_end_time?: string | null
+          implementation_switch_start_time?: string | null
+          implementation_switch_type?: string | null
+          implementation_training_end_date?: string | null
+          implementation_training_location?: string | null
+          implementation_training_start_date?: string | null
+          implementation_training_type?: string | null
           infra_approved_by_infra?: boolean | null
           infra_blocking_reason?: string | null
           infra_end_date?: string | null
@@ -340,15 +279,12 @@ export type Database = {
           infra_responsible?: string | null
           infra_server_in_use?: string | null
           infra_server_needed?: string | null
-          infra_server_status?: string | null
           infra_start_date?: string | null
-          infra_stations_status?: string | null
           infra_status?: string
           infra_technical_notes?: string | null
-          infra_workstations_status?: string | null
           is_archived?: boolean | null
           is_deleted?: boolean | null
-          last_update_by?: string
+          last_update_by: string
           legacy_system?: string | null
           next_follow_up_date?: string | null
           op_number?: number | null
@@ -357,6 +293,9 @@ export type Database = {
           post_benefits_delivered?: string | null
           post_challenges_found?: string | null
           post_client_satisfaction?: string | null
+          post_end_date?: string | null
+          post_followup_date?: string | null
+          post_followup_needed?: boolean | null
           post_observations?: string | null
           post_recommendations?: string | null
           post_responsible?: string | null
@@ -366,7 +305,7 @@ export type Database = {
           post_support_end_date?: string | null
           post_support_period_days?: number | null
           priority?: string | null
-          project_leader?: string
+          project_leader: string
           project_type?: string | null
           responsible_environment?: string | null
           sales_order_number?: number | null
@@ -395,44 +334,55 @@ export type Database = {
           adherence_status?: string
           archived_at?: string | null
           client_email?: string | null
-          client_id?: string | null
           client_name?: string
           client_phone?: string | null
           client_primary_contact?: string | null
-          commercial_notes?: string | null
-          commercial_responsible?: string | null
           contract_value?: number | null
           conversion_complexity?: string | null
-          conversion_data_origin?: string | null
-          conversion_end_date?: string | null
-          conversion_estimated_records?: number | null
+          conversion_data_volume_gb?: number | null
+          conversion_deviations?: string | null
+          conversion_homologation_complete?: boolean | null
+          conversion_homologation_date?: string | null
           conversion_observations?: string | null
+          conversion_record_count?: number | null
           conversion_responsible?: string | null
-          conversion_start_date?: string | null
+          conversion_source_system?: string | null
           conversion_status?: string
+          conversion_tool_used?: string | null
           created_at?: string
-          environment_access_data?: string | null
-          environment_created?: boolean | null
-          environment_end_date?: string | null
+          custom_fields?: Json | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          description?: string | null
+          end_date_actual?: string | null
+          end_date_planned?: string | null
+          environment_approved_by_infra?: boolean | null
           environment_observations?: string | null
+          environment_os_version?: string | null
+          environment_preparation_checklist?: string | null
+          environment_real_date?: string | null
           environment_responsible?: string | null
-          environment_start_date?: string | null
           environment_status?: string
-          environment_type?: string | null
-          environment_url?: string | null
-          follow_up_history?: Json[] | null
+          environment_test_available?: boolean | null
+          environment_version?: string | null
+          external_id?: string | null
           global_status?: string | null
-          go_live_date?: string | null
-          health_score?: string
           id?: string
-          implementation_checklist_status?: string | null
-          implementation_end_date?: string | null
+          implantation_type?: string | null
+          implementation_acceptance_status?: string | null
+          implementation_client_feedback?: string | null
           implementation_observations?: string | null
+          implementation_participants_count?: number | null
+          implementation_remote_install_date?: string | null
           implementation_responsible?: string | null
-          implementation_start_date?: string | null
           implementation_status?: string
-          implementation_training_status?: string | null
-          impl_status?: string | null
+          implementation_switch_end_time?: string | null
+          implementation_switch_start_time?: string | null
+          implementation_switch_type?: string | null
+          implementation_training_end_date?: string | null
+          implementation_training_location?: string | null
+          implementation_training_start_date?: string | null
+          implementation_training_type?: string | null
           infra_approved_by_infra?: boolean | null
           infra_blocking_reason?: string | null
           infra_end_date?: string | null
@@ -440,12 +390,9 @@ export type Database = {
           infra_responsible?: string | null
           infra_server_in_use?: string | null
           infra_server_needed?: string | null
-          infra_server_status?: string | null
           infra_start_date?: string | null
-          infra_stations_status?: string | null
           infra_status?: string
           infra_technical_notes?: string | null
-          infra_workstations_status?: string | null
           is_archived?: boolean | null
           is_deleted?: boolean | null
           last_update_by?: string
@@ -457,6 +404,9 @@ export type Database = {
           post_benefits_delivered?: string | null
           post_challenges_found?: string | null
           post_client_satisfaction?: string | null
+          post_end_date?: string | null
+          post_followup_date?: string | null
+          post_followup_needed?: boolean | null
           post_observations?: string | null
           post_recommendations?: string | null
           post_responsible?: string | null
@@ -480,96 +430,64 @@ export type Database = {
           ticket_number?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "projects_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      settings: {
-        Row: {
-          created_at: string
-          id: string
-          key: string
-          updated_at: string
-          value: Json
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          key: string
-          updated_at?: string
-          value: Json
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          key?: string
-          updated_at?: string
-          value?: Json
-        }
         Relationships: []
       }
-      team_members: {
+      saved_filters: {
         Row: {
-          avatar_url: string | null
-          created_at: string
-          email: string
+          created_at: string | null
+          created_by: string
+          filters: Json
           id: string
+          is_public: boolean | null
           name: string
-          role: string
-          updated_at: string
+          usage_count: number | null
         }
         Insert: {
-          avatar_url?: string | null
-          created_at?: string
-          email: string
+          created_at?: string | null
+          created_by: string
+          filters: Json
           id?: string
+          is_public?: boolean | null
           name: string
-          role: string
-          updated_at?: string
+          usage_count?: number | null
         }
         Update: {
-          avatar_url?: string | null
-          created_at?: string
-          email?: string
+          created_at?: string | null
+          created_by?: string
+          filters?: Json
           id?: string
+          is_public?: boolean | null
           name?: string
-          role?: string
-          updated_at?: string
+          usage_count?: number | null
         }
         Relationships: []
       }
       timeline_events: {
         Row: {
           author: string
-          created_at: string | null
           id: string
-          message: string | null
+          message: string
           metadata: Json | null
-          project_id: string | null
+          project_id: string
+          timestamp: string
           type: string
         }
         Insert: {
           author: string
-          created_at?: string | null
           id?: string
-          message?: string | null
+          message: string
           metadata?: Json | null
-          project_id?: string | null
+          project_id: string
+          timestamp?: string
           type: string
         }
         Update: {
           author?: string
-          created_at?: string | null
           id?: string
-          message?: string | null
+          message?: string
           metadata?: Json | null
-          project_id?: string | null
+          project_id?: string
+          timestamp?: string
           type?: string
         }
         Relationships: [
@@ -579,7 +497,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
     }
@@ -587,22 +505,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_roadmap_data: {
-        Args: {
-          start_date: string
-          end_date: string
-        }
-        Returns: {
-          project_id: string
-          client_name: string
-          system_type: string
-          current_stage: string
-          stage_status: string
-          stage_start_date: string
-          stage_end_date: string
-          health_score: string
-        }[]
-      }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never
@@ -613,101 +516,125 @@ export type Database = {
   }
 }
 
-type PublicSchema = Database[Extract<keyof Database, "public">]
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-export type SchemaName = Exclude<keyof Database, "__InternalSupabase">
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
-  PublicTableNameOrOptions extends
-    | keyof (PublicSchema["Tables"] & PublicSchema["Views"])
-    | { schema: SchemaName },
-  TableName extends PublicTableNameOrOptions extends { schema: SchemaName }
-    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-        Database[PublicTableNameOrOptions["schema"]]["Views"])
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = PublicTableNameOrOptions extends { schema: SchemaName }
-  ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-      Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : PublicTableNameOrOptions extends keyof (PublicSchema["Tables"] &
-        PublicSchema["Views"])
-  ? (PublicSchema["Tables"] &
-      PublicSchema["Views"])[PublicTableNameOrOptions] extends {
-      Row: infer R
-    }
-    ? R
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
     : never
-  : never
 
 export type TablesInsert<
-  PublicTableNameOrOptions extends
-    | keyof PublicSchema["Tables"]
-    | { schema: SchemaName },
-  TableName extends PublicTableNameOrOptions extends { schema: SchemaName }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = PublicTableNameOrOptions extends { schema: SchemaName }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-  ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
-      Insert: infer I
-    }
-    ? I
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
     : never
-  : never
 
 export type TablesUpdate<
-  PublicTableNameOrOptions extends
-    | keyof PublicSchema["Tables"]
-    | { schema: SchemaName },
-  TableName extends PublicTableNameOrOptions extends { schema: SchemaName }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = PublicTableNameOrOptions extends { schema: SchemaName }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-  ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
-      Update: infer U
-    }
-    ? U
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
     : never
-  : never
 
 export type Enums<
-  PublicEnumNameOrOptions extends
-    | keyof PublicSchema["Enums"]
-    | { schema: SchemaName },
-  EnumName extends PublicEnumNameOrOptions extends { schema: SchemaName }
-    ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = PublicEnumNameOrOptions extends { schema: SchemaName }
-  ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
-  ? PublicSchema["Enums"][PublicEnumNameOrOptions]
-  : never
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof PublicSchema["CompositeTypes"]
-    | { schema: SchemaName },
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: SchemaName
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
-> = PublicCompositeTypeNameOrOptions extends { schema: SchemaName }
-  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
-  ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-  : never
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const
