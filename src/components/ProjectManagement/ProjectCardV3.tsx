@@ -25,6 +25,13 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  getStageReadiness,
+  identifyBottleneck,
+  identifyBottlenecks,
+  getBottleneckColor,
+  getBottleneckIcon,
+} from "@/lib/predictability-utils";
 
 interface ProjectCardV3Props {
   project: ProjectV2;
@@ -43,6 +50,11 @@ export function ProjectCardV3({
 }: ProjectCardV3Props) {
   const isFollowUpOverdue =
     project.nextFollowUpDate && new Date(project.nextFollowUpDate) < new Date();
+
+  // Predictability: Detect bottleneck(s) and stage readiness
+  const bottleneck = identifyBottleneck(project);
+  const bottlenecks = identifyBottlenecks(project); // Array of all bottlenecks
+  const stageReadiness = getStageReadiness(project);
 
   const getHealthColor = (score: string) => {
     switch (score) {
@@ -128,7 +140,7 @@ export function ProjectCardV3({
         className={cn(
           "absolute left-0 top-0 bottom-0 w-1.5 transition-all duration-300",
           getHealthColor(project.healthScore),
-          "group-hover:w-2"
+          "group-hover:w-2",
         )}
       />
 
@@ -136,7 +148,7 @@ export function ProjectCardV3({
       <Badge
         className={cn(
           "absolute -top-2 -right-2 z-10 text-[10px] px-3 py-1 font-bold shadow-lg border-2 border-background",
-          globalStatusBadge.className
+          globalStatusBadge.className,
         )}
       >
         {globalStatusBadge.label}
@@ -159,14 +171,14 @@ export function ProjectCardV3({
           <div
             className={cn(
               "h-3 w-3 rounded-full shrink-0 shadow-sm ring-2 ring-background",
-              getHealthColor(project.healthScore)
+              getHealthColor(project.healthScore),
             )}
             title={`Saúde: ${
               project.healthScore === "ok"
                 ? "OK"
                 : project.healthScore === "warning"
-                ? "Atenção"
-                : "Crítico"
+                  ? "Atenção"
+                  : "Crítico"
             }`}
           />
           <h3
@@ -197,7 +209,7 @@ export function ProjectCardV3({
                 "flex items-center gap-1.5 text-[11px] px-2 py-0.5 rounded-full bg-muted/30 border border-border/50",
                 isFollowUpOverdue
                   ? "text-destructive bg-destructive/5 border-destructive/20 font-semibold"
-                  : "text-muted-foreground"
+                  : "text-muted-foreground",
               )}
             >
               <Calendar className="h-3 w-3" />
@@ -225,65 +237,133 @@ export function ProjectCardV3({
         </div>
       </div>
 
-      {/* 2. Pipeline Visual (Modernizado - Estático) */}
+      {/* 2. Pipeline Visual (Modernizado - com Predictability) */}
       <div className="flex-1 flex flex-col justify-center px-6 border-l border-r border-border/40 h-full bg-gradient-to-r from-transparent via-muted/5 to-transparent">
         <div className="flex items-center justify-between gap-2 relative w-full max-w-2xl mx-auto">
           {/* Linha de conexão (fundo) */}
           <div className="absolute top-1/2 left-0 right-0 h-[2px] bg-muted-foreground/10 -z-10 transform -translate-y-1/2 rounded-full" />
 
-          {stages.map((stage) => (
-            <div
-              key={stage.id}
-              className="flex flex-col items-center gap-2 z-0 group/stage relative cursor-help"
-            >
-              <div
-                className={cn(
-                  "h-3.5 w-3.5 rounded-full ring-4 ring-background shadow-sm",
-                  getStageColor(stage.status)
-                )}
-              />
-              <span
-                className={cn(
-                  "text-[10px] font-bold uppercase tracking-wider whitespace-nowrap",
-                  stage.status === "done"
-                    ? "text-emerald-600/70 dark:text-emerald-400/70"
-                    : stage.status === "in-progress"
-                    ? "text-primary"
-                    : "text-muted-foreground/50"
-                )}
-              >
-                {stage.label}
-              </span>
+          {stages.map((stage) => {
+            const readiness = stageReadiness.find(
+              (r) => r.stageId === stage.id,
+            );
+            const isReady = readiness?.isReady || false;
 
-              {/* Hover Tooltip */}
-              <div className="absolute bottom-full mb-3 hidden group-hover/stage:block z-50 min-w-[120px] bg-popover text-popover-foreground text-xs rounded-lg border shadow-xl p-3 animate-in fade-in zoom-in-95 duration-200">
-                <p className="font-bold mb-1 text-sm">{stage.label}</p>
-                <div className="flex items-center gap-2">
-                  <div
-                    className={cn(
-                      "h-2 w-2 rounded-full",
-                      getStageColor(stage.status)
-                    )}
-                  />
-                  <p className="capitalize text-muted-foreground">
-                    {stage.status === "done"
-                      ? "Concluído"
+            return (
+              <div
+                key={stage.id}
+                className="flex flex-col items-center gap-2 z-0 group/stage relative cursor-help"
+              >
+                <div
+                  className={cn(
+                    "h-3.5 w-3.5 rounded-full ring-4 ring-background shadow-sm transition-all",
+                    getStageColor(stage.status),
+                    // Pulsing effect ONLY for ready stages that haven't started yet (todo)
+                    isReady && stage.status === "todo" && "animate-pulse-ring",
+                  )}
+                />
+                <span
+                  className={cn(
+                    "text-[10px] font-bold uppercase tracking-wider whitespace-nowrap",
+                    stage.status === "done"
+                      ? "text-emerald-600/70 dark:text-emerald-400/70"
                       : stage.status === "in-progress"
-                      ? "Em Andamento"
-                      : stage.status === "blocked"
-                      ? "Pausado"
-                      : stage.status === "waiting_adjustment"
-                      ? "Em Adequação"
-                      : "Pendente"}
-                  </p>
+                        ? "text-primary"
+                        : isReady && stage.status === "todo"
+                          ? "text-primary font-extrabold"
+                          : "text-muted-foreground/50",
+                  )}
+                >
+                  {stage.label}
+                </span>
+
+                {/* Enhanced Tooltip with Readiness Info */}
+                <div className="absolute bottom-full mb-3 hidden group-hover/stage:block z-50 min-w-[180px] bg-popover text-popover-foreground text-xs rounded-lg border shadow-xl p-3 animate-in fade-in zoom-in-95 duration-200">
+                  <p className="font-bold mb-1 text-sm">{stage.label}</p>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div
+                      className={cn(
+                        "h-2 w-2 rounded-full",
+                        getStageColor(stage.status),
+                      )}
+                    />
+                    <p className="capitalize text-muted-foreground">
+                      {stage.status === "done"
+                        ? "Concluído"
+                        : stage.status === "in-progress"
+                          ? "Em Andamento"
+                          : stage.status === "blocked"
+                            ? "Pausado"
+                            : stage.status === "waiting_adjustment"
+                              ? "Em Adequação"
+                              : "Pendente"}
+                    </p>
+                  </div>
+
+                  {/* Readiness indicator */}
+                  {isReady && stage.status === "todo" && (
+                    <div className="mt-2 pt-2 border-t">
+                      <p className="text-primary font-semibold flex items-center gap-1">
+                        <span className="text-base">🔥</span>
+                        {readiness.reason}
+                      </p>
+                    </div>
+                  )}
+
+                  {!isReady && stage.status === "todo" && readiness && (
+                    <div className="mt-2 pt-2 border-t">
+                      <p className="text-muted-foreground text-[10px]">
+                        {readiness.reason}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
-      {/* 3. Metricas & Ações */}
+      {/* 3. Gargalo Atual (Bottleneck Indicator) */}
+      <div className="flex flex-col justify-center px-4 min-w-[140px] border-r border-border/40 h-full bg-gradient-to-r from-transparent via-muted/3 to-transparent">
+        <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold opacity-60 mb-1">
+          Gargalo{bottlenecks.length > 1 ? "s" : ""} Atual
+          {bottlenecks.length > 1 ? " (" + bottlenecks.length + ")" : ""}
+        </span>
+        {bottlenecks.length === 0 ? (
+          <div className="flex items-center gap-2">
+            <span className="text-base">🟢</span>
+            <span className="text-sm text-muted-foreground">Nenhum</span>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-1.5">
+            {bottlenecks.map((b, idx) => (
+              <div key={idx} className="flex items-center gap-2">
+                <span className="text-base">
+                  {getBottleneckIcon(b.severity)}
+                </span>
+                <div className="flex flex-col">
+                  <span
+                    className={cn(
+                      "text-sm font-bold leading-tight",
+                      getBottleneckColor(b.severity),
+                    )}
+                  >
+                    {b.stageName}
+                  </span>
+                  {b.daysStuck > 0 && (
+                    <span className="text-[10px] text-muted-foreground">
+                      há {b.daysStuck} {b.daysStuck === 1 ? "dia" : "dias"}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* 4. Metricas & Ações */}
       <div className="flex items-center gap-6 min-w-[160px] justify-end pl-2">
         {/* UAT (Última Atualização) */}
         <div className="flex flex-col items-end min-w-[90px]">
