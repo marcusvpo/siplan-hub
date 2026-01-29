@@ -10,10 +10,259 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "13.0.5"
+    PostgrestVersion: "14.1"
   }
   public: {
     Tables: {
+      client_contacts: {
+        Row: {
+          client_id: string
+          created_at: string
+          email: string | null
+          id: string
+          is_primary: boolean | null
+          name: string
+          notes: string | null
+          phone: string | null
+          role: string | null
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_primary?: boolean | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          role?: string | null
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_primary?: boolean | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          role?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_contacts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clients: {
+        Row: {
+          created_at: string
+          document: string | null
+          health_status: string | null
+          id: string
+          name: string
+          notes: string | null
+          tags: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          document?: string | null
+          health_status?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          document?: string | null
+          health_status?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      commercial_notes: {
+        Row: {
+          author_name: string
+          client_id: string
+          content: string
+          created_at: string | null
+          deleted_at: string | null
+          id: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          author_name: string
+          client_id: string
+          content: string
+          created_at?: string | null
+          deleted_at?: string | null
+          id?: string
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          author_name?: string
+          client_id?: string
+          content?: string
+          created_at?: string | null
+          deleted_at?: string | null
+          id?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commercial_notes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          id: string
+          email: string | null
+          full_name: string | null
+          role: string | null
+          created_at: string
+        }
+        Insert: {
+          id: string
+          email?: string | null
+          full_name?: string | null
+          role?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string | null
+          full_name?: string | null
+          role?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      roadmaps: {
+        Row: {
+          id: string
+          project_id: string
+          share_token: string
+          is_active: boolean
+          view_count: number
+          custom_theme: Json | null
+          welcome_message: string | null
+          config: Json | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          share_token?: string
+          is_active?: boolean
+          view_count?: number
+          custom_theme?: Json | null
+          welcome_message?: string | null
+          config?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          share_token?: string
+          is_active?: boolean
+          view_count?: number
+          custom_theme?: Json | null
+          welcome_message?: string | null
+          config?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roadmaps_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      settings: {
+        Row: {
+          key: string
+          value: Json
+          description: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          key: string
+          value: Json
+          description?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          key?: string
+          value?: Json
+          description?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      team_members: {
+        Row: {
+          id: string
+          name: string
+          role: string
+          email: string
+          avatar_url: string | null
+          active: boolean | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          role: string
+          email: string
+          avatar_url?: string | null
+          active?: boolean | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          role?: string
+          email?: string
+          avatar_url?: string | null
+          active?: boolean | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       project_checklist: {
         Row: {
           completed: boolean | null
@@ -119,12 +368,13 @@ export type Database = {
           conversion_complexity: string | null
           conversion_data_volume_gb: number | null
           conversion_deviations: string | null
-          conversion_homologation_complete: boolean | null
+          conversion_finished_at: string | null
           conversion_homologation_date: string | null
+          conversion_homologation_responsible: string | null
+          conversion_homologation_status: string | null
           conversion_observations: string | null
-          conversion_record_count: number | null
           conversion_responsible: string | null
-          conversion_source_system: string | null
+          conversion_sent_at: string | null
           conversion_status: string
           conversion_tool_used: string | null
           created_at: string
@@ -135,47 +385,43 @@ export type Database = {
           end_date_actual: string | null
           end_date_planned: string | null
           environment_approved_by_infra: boolean | null
+          environment_end_date: string | null
           environment_observations: string | null
           environment_os_version: string | null
           environment_preparation_checklist: string | null
           environment_real_date: string | null
           environment_responsible: string | null
+          environment_start_date: string | null
           environment_status: string
           environment_test_available: boolean | null
           environment_version: string | null
           external_id: string | null
           global_status: string | null
           id: string
-          implantation_type: string | null
-          implementation_acceptance_status: string | null
-          implementation_client_feedback: string | null
+          implementation_end_date: string | null
           implementation_observations: string | null
-          implementation_participants_count: number | null
-          implementation_remote_install_date: string | null
+          implementation_phase1: Json | null
+          implementation_phase2: Json | null
           implementation_responsible: string | null
+          implementation_start_date: string | null
           implementation_status: string
-          implementation_switch_end_time: string | null
-          implementation_switch_start_time: string | null
-          implementation_switch_type: string | null
-          implementation_training_end_date: string | null
-          implementation_training_location: string | null
-          implementation_training_start_date: string | null
-          implementation_training_type: string | null
-          infra_approved_by_infra: boolean | null
+          implantation_type: string | null
           infra_blocking_reason: string | null
           infra_end_date: string | null
           infra_observations: string | null
           infra_responsible: string | null
-          infra_server_in_use: string | null
-          infra_server_needed: string | null
+          infra_server_status: string | null
           infra_start_date: string | null
           infra_status: string
           infra_technical_notes: string | null
+          infra_workstations_count: number | null
+          infra_workstations_status: string | null
           is_archived: boolean | null
           is_deleted: boolean | null
           last_update_by: string
           legacy_system: string | null
           next_follow_up_date: string | null
+          notes: Json | null
           op_number: number | null
           overall_progress: number | null
           payment_method: string | null
@@ -196,6 +442,7 @@ export type Database = {
           priority: string | null
           project_leader: string
           project_type: string | null
+          related_tickets: Json | null
           responsible_environment: string | null
           sales_order_number: number | null
           sold_hours: number | null
@@ -230,12 +477,13 @@ export type Database = {
           conversion_complexity?: string | null
           conversion_data_volume_gb?: number | null
           conversion_deviations?: string | null
-          conversion_homologation_complete?: boolean | null
+          conversion_finished_at?: string | null
           conversion_homologation_date?: string | null
+          conversion_homologation_responsible?: string | null
+          conversion_homologation_status?: string | null
           conversion_observations?: string | null
-          conversion_record_count?: number | null
           conversion_responsible?: string | null
-          conversion_source_system?: string | null
+          conversion_sent_at?: string | null
           conversion_status?: string
           conversion_tool_used?: string | null
           created_at?: string
@@ -246,47 +494,43 @@ export type Database = {
           end_date_actual?: string | null
           end_date_planned?: string | null
           environment_approved_by_infra?: boolean | null
+          environment_end_date?: string | null
           environment_observations?: string | null
           environment_os_version?: string | null
           environment_preparation_checklist?: string | null
           environment_real_date?: string | null
           environment_responsible?: string | null
+          environment_start_date?: string | null
           environment_status?: string
           environment_test_available?: boolean | null
           environment_version?: string | null
           external_id?: string | null
           global_status?: string | null
           id?: string
-          implantation_type?: string | null
-          implementation_acceptance_status?: string | null
-          implementation_client_feedback?: string | null
+          implementation_end_date?: string | null
           implementation_observations?: string | null
-          implementation_participants_count?: number | null
-          implementation_remote_install_date?: string | null
+          implementation_phase1?: Json | null
+          implementation_phase2?: Json | null
           implementation_responsible?: string | null
+          implementation_start_date?: string | null
           implementation_status?: string
-          implementation_switch_end_time?: string | null
-          implementation_switch_start_time?: string | null
-          implementation_switch_type?: string | null
-          implementation_training_end_date?: string | null
-          implementation_training_location?: string | null
-          implementation_training_start_date?: string | null
-          implementation_training_type?: string | null
-          infra_approved_by_infra?: boolean | null
+          implantation_type?: string | null
           infra_blocking_reason?: string | null
           infra_end_date?: string | null
           infra_observations?: string | null
           infra_responsible?: string | null
-          infra_server_in_use?: string | null
-          infra_server_needed?: string | null
+          infra_server_status?: string | null
           infra_start_date?: string | null
           infra_status?: string
           infra_technical_notes?: string | null
+          infra_workstations_count?: number | null
+          infra_workstations_status?: string | null
           is_archived?: boolean | null
           is_deleted?: boolean | null
           last_update_by: string
           legacy_system?: string | null
           next_follow_up_date?: string | null
+          notes?: Json | null
           op_number?: number | null
           overall_progress?: number | null
           payment_method?: string | null
@@ -307,6 +551,7 @@ export type Database = {
           priority?: string | null
           project_leader: string
           project_type?: string | null
+          related_tickets?: Json | null
           responsible_environment?: string | null
           sales_order_number?: number | null
           sold_hours?: number | null
@@ -341,12 +586,13 @@ export type Database = {
           conversion_complexity?: string | null
           conversion_data_volume_gb?: number | null
           conversion_deviations?: string | null
-          conversion_homologation_complete?: boolean | null
+          conversion_finished_at?: string | null
           conversion_homologation_date?: string | null
+          conversion_homologation_responsible?: string | null
+          conversion_homologation_status?: string | null
           conversion_observations?: string | null
-          conversion_record_count?: number | null
           conversion_responsible?: string | null
-          conversion_source_system?: string | null
+          conversion_sent_at?: string | null
           conversion_status?: string
           conversion_tool_used?: string | null
           created_at?: string
@@ -357,47 +603,43 @@ export type Database = {
           end_date_actual?: string | null
           end_date_planned?: string | null
           environment_approved_by_infra?: boolean | null
+          environment_end_date?: string | null
           environment_observations?: string | null
           environment_os_version?: string | null
           environment_preparation_checklist?: string | null
           environment_real_date?: string | null
           environment_responsible?: string | null
+          environment_start_date?: string | null
           environment_status?: string
           environment_test_available?: boolean | null
           environment_version?: string | null
           external_id?: string | null
           global_status?: string | null
           id?: string
-          implantation_type?: string | null
-          implementation_acceptance_status?: string | null
-          implementation_client_feedback?: string | null
+          implementation_end_date?: string | null
           implementation_observations?: string | null
-          implementation_participants_count?: number | null
-          implementation_remote_install_date?: string | null
+          implementation_phase1?: Json | null
+          implementation_phase2?: Json | null
           implementation_responsible?: string | null
+          implementation_start_date?: string | null
           implementation_status?: string
-          implementation_switch_end_time?: string | null
-          implementation_switch_start_time?: string | null
-          implementation_switch_type?: string | null
-          implementation_training_end_date?: string | null
-          implementation_training_location?: string | null
-          implementation_training_start_date?: string | null
-          implementation_training_type?: string | null
-          infra_approved_by_infra?: boolean | null
+          implantation_type?: string | null
           infra_blocking_reason?: string | null
           infra_end_date?: string | null
           infra_observations?: string | null
           infra_responsible?: string | null
-          infra_server_in_use?: string | null
-          infra_server_needed?: string | null
+          infra_server_status?: string | null
           infra_start_date?: string | null
           infra_status?: string
           infra_technical_notes?: string | null
+          infra_workstations_count?: number | null
+          infra_workstations_status?: string | null
           is_archived?: boolean | null
           is_deleted?: boolean | null
           last_update_by?: string
           legacy_system?: string | null
           next_follow_up_date?: string | null
+          notes?: Json | null
           op_number?: number | null
           overall_progress?: number | null
           payment_method?: string | null
@@ -418,6 +660,7 @@ export type Database = {
           priority?: string | null
           project_leader?: string
           project_type?: string | null
+          related_tickets?: Json | null
           responsible_environment?: string | null
           sales_order_number?: number | null
           sold_hours?: number | null

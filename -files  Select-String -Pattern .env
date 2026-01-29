@@ -1,0 +1,81 @@
+[33mcommit 41523f597bbbfbd9896a840e87eb85db4cf04e6d[m
+Author: marcusvpo <vpo.marcus@gmail.com>
+Date:   Fri Jan 16 09:11:43 2026 -0300
+
+    chore: Update Supabase environment variables.
+
+[33mcommit afff5a67bbd940577df6490c079230b349437732[m
+Merge: 9259a0e 5c30af1
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Thu Jan 15 18:30:47 2026 +0000
+
+    Corrige sidebar logo path
+    
+    Move or copy Siplan_logo.png to public/assets and update Sidebar to reference public/assets/Siplan_logo.png to fix broken logo in the menu. Ensure consistency with other pages using Siplan_logo_branco.png.
+    
+    X-Lovable-Edit-ID: edt-173148e6-6fb8-4c39-a784-e4f7c39037f3
+
+[33mcommit 5c30af1ad29c46bf3b61133c3183e9b78ea6d1de[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Thu Jan 15 18:30:47 2026 +0000
+
+    Changes
+
+[33mcommit ed26c0aa23b40ab6b2b54d815c88a199b6663e5d[m
+Author: marcusvpo <vpo.marcus@gmail.com>
+Date:   Mon Dec 22 15:29:11 2025 -0300
+
+    ajustes finais
+
+[33mcommit 5f8bef8bc03183ab853b2b70024974b7319c4a8d[m
+Merge: 4777bad af381c5
+Author: marcusvpo <vpo.marcus@gmail.com>
+Date:   Mon Dec 22 10:45:31 2025 -0300
+
+    Merge branch 'main' of https://github.com/marcusvpo/siplan-hub
+
+[33mcommit af381c51ef7987f5ac87c9d3c2463f06fd89eace[m
+Merge: dbc7900 d928500
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Fri Dec 19 21:16:12 2025 +0000
+
+    Fix mock data types for V2
+    
+    Update mockDataV2.ts to align with ProjectV2.v2 types by correcting stage fields:
+    - remove unknown properties (serverInUse, homologationComplete, approvedByInfra in some contexts, etc.)
+    - use correct fields (serverStatus, workstationsStatus, homologationStatus, phase1/phase2 in Implementation)
+    - adjust environment/conversion fields to match Infra/ConversionStageV2 definitions
+    - fix incorrect replacements to ensure all stages match their interfaces
+    
+    This resolves TS2353/2561/2739 errors and ensures mock data compiles with v2 types.
+    
+    X-Lovable-Edit-ID: edt-6697e730-c989-42f0-a96c-1526bad7d910
+
+[33mcommit d928500782487e707e25d884a88a73d0ad067139[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Fri Dec 19 21:16:10 2025 +0000
+
+    Changes
+
+[33mcommit 941f79dd547573234fbffd0c341b072c0ec8f78f[m
+Author: marcusvpo <vpo.marcus@gmail.com>
+Date:   Fri Nov 28 12:06:49 2025 -0300
+
+    feat: Implement new project management features including a dashboard, detailed project views with rich notes, and a database migration for the `projects` table.
+
+[33mcommit 77ec98d16ea2c3ffd9bac2740c64385a5fa01c27[m
+Merge: 3747e05 1107f8f
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Tue Nov 25 14:55:09 2025 +0000
+
+    Connect Lovable Cloud
+    
+    Establishes Lovable Cloud (Supabase) backend integration as the primary data source for the platform, enabling real data flows. This includes setting up hooks, store adjustments, and UI wiring to operate with the cloud backend.
+    
+    X-Lovable-Edit-ID: edt-63bc30ca-c944-472e-9c47-87a99fd8b18d
+
+[33mcommit 1107f8fa9c110f735d9684420a40f8bec9eaee9a[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Tue Nov 25 14:55:08 2025 +0000
+
+    Changes

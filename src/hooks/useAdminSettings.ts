@@ -27,8 +27,7 @@ export function useAdminSettings() {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from("settings" as any)
+        .from("settings")
         .select("*")
         .eq("key", "project_health_thresholds")
         .single();
@@ -37,10 +36,8 @@ export function useAdminSettings() {
         throw error;
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if ((data as any)?.value) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        setHealthSettings((data as any).value as ProjectHealthSettings);
+      if (data?.value) {
+        setHealthSettings(data.value as ProjectHealthSettings);
       }
     } catch (error) {
       console.error("Error fetching settings:", error);
@@ -53,8 +50,7 @@ export function useAdminSettings() {
   const updateHealthSettings = async (newSettings: ProjectHealthSettings) => {
     try {
       const { error } = await supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from("settings" as any)
+        .from("settings")
         .upsert({
           key: "project_health_thresholds",
           value: newSettings,

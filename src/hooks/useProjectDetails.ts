@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ProjectV2, RichContent, ContentBlock, StageStatus, InfraStageV2, AdherenceStageV2, EnvironmentStageV2, ConversionStageV2, ImplementationStageV2, PostStageV2 } from "@/types/ProjectV2";
+import { ProjectV2, RichContent, ContentBlock, StageStatus, InfraStageV2, AdherenceStageV2, EnvironmentStageV2, ConversionStageV2, ImplementationStageV2, PostStageV2, AuditEntry } from "@/types/ProjectV2";
 
 export const useProjectDetails = (projectId: string | null) => {
   const { data: project, isLoading, error } = useQuery({
@@ -79,8 +79,7 @@ function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
   };
 
   // Timeline events fetched separately
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const auditLog: any[] = [];
+  const auditLog: AuditEntry[] = [];
 
   return {
     id: row.id as string,

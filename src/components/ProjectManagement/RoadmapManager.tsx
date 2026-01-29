@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -29,6 +30,7 @@ interface CustomTheme {
   primary?: string;
   secondary?: string;
   background?: string;
+  [key: string]: string | undefined; // Index signature para compatibilidade com Json
 }
 
 interface RoadmapSettings {
@@ -41,11 +43,8 @@ interface RoadmapSettings {
   custom_theme: CustomTheme | null;
   created_at: string;
   updated_at: string;
-  config: Record<string, unknown>; // Stricter type than any
+  config: Record<string, unknown>;
 }
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type SupabaseResult = { data: RoadmapSettings | null; error: Error | null };
 
 export function RoadmapManager({ projectId }: RoadmapManagerProps) {
   const [loading, setLoading] = useState(true);
@@ -62,8 +61,7 @@ export function RoadmapManager({ projectId }: RoadmapManagerProps) {
       // or just trust the response structure if we typed the state correctly.
       // The cleanest way with current supabase-js types without regeneration is:
       const { data, error } = await supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from("roadmaps" as any)
+        .from("roadmaps")
         .select("*")
         .eq("project_id", projectId)
         .maybeSingle();
@@ -97,11 +95,10 @@ export function RoadmapManager({ projectId }: RoadmapManagerProps) {
 
       if (roadmap) {
         const { error } = await supabase
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .from("roadmaps" as any)
+          .from("roadmaps")
           .update({
             welcome_message: welcomeMessage,
-            custom_theme: theme,
+            custom_theme: theme as unknown as Json,
           })
           .eq("id", roadmap.id);
 
@@ -114,12 +111,11 @@ export function RoadmapManager({ projectId }: RoadmapManagerProps) {
         });
       } else {
         const { data, error } = await supabase
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .from("roadmaps" as any)
+          .from("roadmaps")
           .insert({
             project_id: projectId,
             welcome_message: welcomeMessage,
-            custom_theme: theme,
+            custom_theme: theme as unknown as Json,
           })
           .select()
           .single();
@@ -141,8 +137,7 @@ export function RoadmapManager({ projectId }: RoadmapManagerProps) {
       setSaving(true);
       if (roadmap) {
         const { error } = await supabase
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .from("roadmaps" as any)
+          .from("roadmaps")
           .update({ is_active: checked })
           .eq("id", roadmap.id);
 
@@ -151,8 +146,7 @@ export function RoadmapManager({ projectId }: RoadmapManagerProps) {
       } else {
         // Create new roadmap record if it doesn't exist
         const { data, error } = await supabase
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .from("roadmaps" as any)
+          .from("roadmaps")
           .insert({ project_id: projectId, is_active: checked })
           .select()
           .single();
@@ -316,7 +310,7 @@ export function RoadmapManager({ projectId }: RoadmapManagerProps) {
                           style={{ backgroundColor: color }}
                           title={color}
                         />
-                      )
+                      ),
                     )}
                   </div>
                 </div>

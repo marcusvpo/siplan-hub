@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type {TablesInsert } from "@/integrations/supabase/types";
 import { 
   ProjectV2, 
   StageStatus, 
@@ -10,7 +11,8 @@ import {
   ImplementationStageV2, 
   PostStageV2,
   RichContent,
-  ContentBlock
+  ContentBlock,
+  AuditEntry
 } from "@/types/ProjectV2";
 import { useTimeline } from "./useTimeline";
 
@@ -153,11 +155,10 @@ export const useProjectsV2 = () => {
 
   const createProject = useMutation({
     mutationFn: async (project: Partial<ProjectV2>) => {
-      const dbProject = transformToDB(project);
+      const dbProject = transformToDB(project) as TablesInsert<"projects">;
       const { data, error } = await supabase
         .from("projects")
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .insert(dbProject as any)
+        .insert(dbProject)
         .select()
         .single();
 
@@ -250,8 +251,7 @@ function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
   // Map timeline events to AuditEntry
   // Timeline events are no longer fetched in the main query for performance
   // They should be fetched separately using useTimelineEvents hook when needed
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const auditLog: any[] = []; 
+  const auditLog: AuditEntry[] = []; 
 
   return {
     id: row.id as string,

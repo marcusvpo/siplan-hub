@@ -80,7 +80,13 @@ export function StepsTab({ project, onUpdate }: TabProps) {
   const handleNotifyComercial = async () => {
     setNotifying(true);
     try {
-      await fetch("http://10.0.21.109:5678/webhook/infra-inadequada-disparo", {
+      const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL;
+
+      if (!webhookUrl) {
+        throw new Error("Webhook URL not configured");
+      }
+
+      await fetch(webhookUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

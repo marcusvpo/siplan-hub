@@ -178,7 +178,7 @@ export default function RoadmapPage() {
     if (!data) return "Carregando...";
     const stages = data.project.stages;
     const activeStages = STAGES_CONFIG.filter(
-      (config) => stages[config.id]?.status === "in-progress"
+      (config) => stages[config.id]?.status === "in-progress",
     );
 
     if (activeStages.length > 0) {
@@ -280,9 +280,6 @@ export default function RoadmapPage() {
           }}
           className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full blur-[150px] bg-blue-900/20"
         />
-
-        {/* Noise Texture */}
-        <div className="absolute inset-0 bg-[url('/assets/noise.png')] opacity-[0.04] mix-blend-overlay" />
       </div>
 
       <main className="relative z-10 w-full">
@@ -566,7 +563,7 @@ function TimelineItem({
       }}
       className={cn(
         "relative flex flex-col md:flex-row items-center gap-8 md:gap-16 w-full z-10",
-        isLeft ? "" : "md:flex-row-reverse"
+        isLeft ? "" : "md:flex-row-reverse",
       )}
     >
       {/* Node / Marker */}
@@ -577,8 +574,8 @@ function TimelineItem({
             isDone
               ? "bg-[#050505] border-emerald-500/50 text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.3)]"
               : isInProgress
-              ? "bg-[#050505] border-transparent text-white shadow-[0_0_30px_rgba(255,255,255,0.2)]"
-              : "bg-[#0a0a0a] border-white/10 text-gray-600"
+                ? "bg-[#050505] border-transparent text-white shadow-[0_0_30px_rgba(255,255,255,0.2)]"
+                : "bg-[#0a0a0a] border-white/10 text-gray-600",
           )}
           style={{
             borderColor: isInProgress ? primaryColor : undefined,
@@ -613,7 +610,7 @@ function TimelineItem({
       <div
         className={cn(
           "flex-1 w-full md:w-1/2 pl-24 md:pl-0",
-          isLeft ? "md:pr-12 md:text-right" : "md:pl-12 md:text-left"
+          isLeft ? "md:pr-12 md:text-right" : "md:pl-12 md:text-left",
         )}
       >
         <motion.div
@@ -623,7 +620,7 @@ function TimelineItem({
             "bg-[#0a0a0a]/80 backdrop-blur-xl", // Darker card background
             isInProgress
               ? "border-t border-l border-white/20 shadow-2xl"
-              : "border border-white/5 hover:border-white/10"
+              : "border border-white/5 hover:border-white/10",
           )}
           style={{
             borderColor: isInProgress ? primaryColor : undefined,
@@ -639,7 +636,7 @@ function TimelineItem({
           <div
             className={cn(
               "mb-6 flex",
-              isLeft ? "md:justify-end" : "md:justify-start"
+              isLeft ? "md:justify-end" : "md:justify-start",
             )}
           >
             <RoadmapStatusBadge status={status} color={primaryColor} />
@@ -648,7 +645,7 @@ function TimelineItem({
           <h3
             className={cn(
               "text-2xl md:text-3xl font-bold mb-4 tracking-tight transition-colors",
-              isDone ? "text-emerald-500" : "text-white" // CHANGED: No strike-through, green color for done
+              isDone ? "text-emerald-500" : "text-white", // CHANGED: No strike-through, green color for done
             )}
           >
             {stage.label}
@@ -668,7 +665,7 @@ function TimelineItem({
               className={cn(
                 "space-y-3",
                 isLeft ? "md:items-end" : "md:items-start",
-                "flex flex-col"
+                "flex flex-col",
               )}
             >
               {stage.details.map((detail, i) => (
@@ -690,7 +687,7 @@ function TimelineItem({
                       // CHANGED: No strike-through, just dimmed opacity for done
                       isDone
                         ? "text-gray-500"
-                        : "text-gray-400 group-hover/item:text-gray-200"
+                        : "text-gray-400 group-hover/item:text-gray-200",
                     )}
                   >
                     {detail}
