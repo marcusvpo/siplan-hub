@@ -47,17 +47,19 @@ export function StageAnalysisTimeline({
       start = p.stages.conversion.sentAt || p.stages.conversion.startDate;
       end = p.stages.conversion.finishedAt || p.stages.conversion.endDate;
     } else {
-      // Dynamic access to stages
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      start = (p.stages as any)[stageKey]?.startDate;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      end = (p.stages as any)[stageKey]?.endDate;
+      // Type-safe dynamic access to stages
+      type StageKey = keyof typeof p.stages;
+      if (stageKey in p.stages) {
+        const stage = p.stages[stageKey as StageKey];
+        start = "startDate" in stage ? stage.startDate : undefined;
+        end = "endDate" in stage ? stage.endDate : undefined;
+      }
     }
 
     if (start && end) {
       return Math.ceil(
         Math.abs(new Date(end).getTime() - new Date(start).getTime()) /
-          (1000 * 60 * 60 * 24)
+          (1000 * 60 * 60 * 24),
       );
     }
     return 0;

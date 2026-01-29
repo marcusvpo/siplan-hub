@@ -9,8 +9,7 @@ export const useTeamMembers = () => {
     queryKey: ["teamMembers"],
     queryFn: async () => {
       const { data, error } = await supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from("team_members" as any)
+        .from("team_members")
         .select("*")
         .order("name");
 
@@ -31,8 +30,7 @@ export const useTeamMembers = () => {
   const addMember = useMutation({
     mutationFn: async (newMember: Omit<TeamMember, "id">) => {
       const { data, error } = await supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from("team_members" as any)
+        .from("team_members")
         .insert({
           name: newMember.name,
           role: newMember.role,
@@ -62,8 +60,7 @@ export const useTeamMembers = () => {
       if (updates.active !== undefined) dbUpdates.active = updates.active;
 
       const { data, error } = await supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from("team_members" as any)
+        .from("team_members")
         .update(dbUpdates)
         .eq("id", id)
         .select()
@@ -80,8 +77,7 @@ export const useTeamMembers = () => {
   const removeMember = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from("team_members" as any)
+        .from("team_members")
         .delete()
         .eq("id", id);
 
