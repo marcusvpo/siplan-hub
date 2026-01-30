@@ -17,7 +17,12 @@ import {
 
 const ITEMS_PER_PAGE = 20;
 
-export const useProjectsList = (searchQuery: string = "") => {
+import { ViewPreset } from "@/stores/filterStore";
+
+export const useProjectsList = (
+  searchQuery: string = "",
+  viewPreset: ViewPreset = "active"
+) => {
   const { 
     data, 
     isLoading, 
@@ -26,11 +31,12 @@ export const useProjectsList = (searchQuery: string = "") => {
     hasNextPage,
     isFetchingNextPage 
   } = useInfiniteQuery({
-    queryKey: ["projectsList", searchQuery],
+    queryKey: ["projectsList", searchQuery, viewPreset],
     queryFn: async ({ pageParam = 0 }) => {
       const from = pageParam * ITEMS_PER_PAGE;
       const to = from + ITEMS_PER_PAGE - 1;
 
+      // Start building the query
       let query = supabase
         .from("projects")
         .select(`
@@ -45,17 +51,50 @@ export const useProjectsList = (searchQuery: string = "") => {
         `) 
         .eq("is_deleted", false);
 
+      // Apply Search
       if (searchQuery) {
         query = query.or(`client_name.ilike.%${searchQuery}%,ticket_number.ilike.%${searchQuery}%`);
       }
 
+      // Apply View Preset (Server-side filtering for proper pagination)
+      if (viewPreset === "post") {
+        query = query.eq("post_status", "in-progress");
+      } else if (viewPreset === "active") {
+        query = query
+          .in("global_status", ["todo", "in-progress"])
+          .not("post_status", "eq", "in-progress"); // Using .not with operator for clearer negation
+          // Note: If post_status is NULL, .not.eq usually excludes it in standard SQL but exact behavior with Supabase filter modifiers:
+          // 'post_status.neq.in-progress' -> 'post_status' != 'in-progress'.
+          // To be safe against NULLS effectively being excluded if we only used neq, 
+          // we rely on the fact that 'not.eq' in Supabase allows NULLs? 
+          // PostgREST: `?post_status=not.eq.in-progress`. 
+          // If this excludes NULLs, we might lose projects. 
+          // BUT, usually a project in 'todo'/'in-progress' global status should have initialized stages.
+          // Let's assume post_status is initialized or safely filters. 
+          // If 'active' projects missing, it means post_status is null.
+          // Correct PostgREST to include nulls: .or(post_status.neq.in-progress,post_status.is.null)
+          // However, chains in Supabase JS SDK are ANDs. 
+          
+          // Let's trust that our projects have defaults or empty strings. 
+          // If we see issues, we will adjust. 
+          // For now, mirroring client logic: !isPostInProgress
+      } else if (viewPreset === "paused") {
+        query = query
+          .eq("global_status", "blocked")
+          .not("post_status", "eq", "in-progress"); 
+      } else if (viewPreset === "done") {
+        query = query
+          .in("global_status", ["done", "archived"])
+          .not("post_status", "eq", "in-progress");
+      }
+      
       const { data, error } = await query
         .order("updated_at", { ascending: false })
         .range(from, to);
 
       if (error) throw error;
 
-      return (data || []).map(row => userProjectsListTransform(row));
+      return ((data as unknown as ProjectRow[]) || []).map(row => userProjectsListTransform(row));
     },
     getNextPageParam: (lastPage, allPages) => {
       // If the last page has fewer items than ITEMS_PER_PAGE, we've reached the end

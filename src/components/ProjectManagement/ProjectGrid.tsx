@@ -29,7 +29,7 @@ export function ProjectGrid() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useProjectsList(searchQuery);
+  } = useProjectsList(searchQuery, viewPreset);
 
   const { updateProject, deleteProject } = useProjectsV2();
   const [selectedProject, setSelectedProject] =
@@ -88,16 +88,22 @@ export function ProjectGrid() {
 
       // View preset (status) filter
       let matchesPreset = true;
-      if (viewPreset === "active") {
+      const isPostInProgress = project.stages?.post?.status === "in-progress";
+
+      if (viewPreset === "post") {
+        matchesPreset = isPostInProgress;
+      } else if (viewPreset === "active") {
         matchesPreset =
-          project.globalStatus === "todo" ||
-          project.globalStatus === "in-progress";
+          (project.globalStatus === "todo" ||
+            project.globalStatus === "in-progress") &&
+          !isPostInProgress;
       } else if (viewPreset === "paused") {
-        matchesPreset = project.globalStatus === "blocked";
+        matchesPreset = project.globalStatus === "blocked" && !isPostInProgress;
       } else if (viewPreset === "done") {
         matchesPreset =
-          project.globalStatus === "done" ||
-          project.globalStatus === "archived";
+          (project.globalStatus === "done" ||
+            project.globalStatus === "archived") &&
+          !isPostInProgress;
       }
 
       // Health score filter
@@ -270,7 +276,7 @@ export function ProjectGrid() {
                         if (action === "delete") {
                           if (
                             confirm(
-                              `Tem certeza que deseja excluir o projeto "${project.clientName}"?\n\nEsta ação é irreversível e apagará TODOS os dados relacionados a este projeto permanentemente.`
+                              `Tem certeza que deseja excluir o projeto "${project.clientName}"?\n\nEsta ação é irreversível e apagará TODOS os dados relacionados a este projeto permanentemente.`,
                             )
                           ) {
                             // eslint-disable-next-line @typescript-eslint/no-explicit-any
