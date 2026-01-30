@@ -58,6 +58,7 @@ import {
   Star,
   Folder,
   ChevronDown,
+  Rocket,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -230,6 +231,13 @@ export function AdvancedFilters({
                 Em Andamento
               </TabsTrigger>
               <TabsTrigger
+                value="post"
+                className="gap-2 data-[state=active]:bg-purple-500 data-[state=active]:text-white"
+              >
+                <Rocket className="h-3.5 w-3.5" />
+                Pós
+              </TabsTrigger>
+              <TabsTrigger
                 value="paused"
                 className="gap-2 data-[state=active]:bg-amber-500 data-[state=active]:text-white"
               >
@@ -305,7 +313,7 @@ export function AdvancedFilters({
                       key={filter.id}
                       className={cn(
                         "gap-3 justify-between group cursor-pointer",
-                        activeFilterId === filter.id && "bg-primary/10"
+                        activeFilterId === filter.id && "bg-primary/10",
                       )}
                     >
                       <div
@@ -318,14 +326,14 @@ export function AdvancedFilters({
                             filter.color === "green"
                               ? "bg-emerald-500"
                               : filter.color === "purple"
-                              ? "bg-purple-500"
-                              : filter.color === "orange"
-                              ? "bg-orange-500"
-                              : filter.color === "pink"
-                              ? "bg-pink-500"
-                              : filter.color === "cyan"
-                              ? "bg-cyan-500"
-                              : "bg-blue-500"
+                                ? "bg-purple-500"
+                                : filter.color === "orange"
+                                  ? "bg-orange-500"
+                                  : filter.color === "pink"
+                                    ? "bg-pink-500"
+                                    : filter.color === "cyan"
+                                      ? "bg-cyan-500"
+                                      : "bg-blue-500",
                           )}
                         />
                         <span className="truncate">{filter.name}</span>
@@ -419,8 +427,8 @@ export function AdvancedFilters({
                               (option.value === "ok"
                                 ? "bg-emerald-500 hover:bg-emerald-600"
                                 : option.value === "warning"
-                                ? "bg-amber-500 hover:bg-amber-600"
-                                : "bg-rose-500 hover:bg-rose-600")
+                                  ? "bg-amber-500 hover:bg-amber-600"
+                                  : "bg-rose-500 hover:bg-rose-600"),
                           )}
                           onClick={() =>
                             setHealthScore(option.value as HealthFilter)
@@ -429,7 +437,7 @@ export function AdvancedFilters({
                           <div
                             className={cn(
                               "h-2.5 w-2.5 rounded-full",
-                              option.color
+                              option.color,
                             )}
                           />
                           {option.label}
@@ -592,8 +600,8 @@ export function AdvancedFilters({
               {healthScore === "ok"
                 ? "Saudável"
                 : healthScore === "warning"
-                ? "Atenção"
-                : "Crítico"}
+                  ? "Atenção"
+                  : "Crítico"}
               <Button
                 variant="ghost"
                 size="icon"
@@ -683,7 +691,7 @@ export function AdvancedFilters({
                       "h-8 w-8 rounded-full transition-all",
                       color.class,
                       newFilterColor === color.value &&
-                        "ring-2 ring-offset-2 ring-primary"
+                        "ring-2 ring-offset-2 ring-primary",
                     )}
                     onClick={() => setNewFilterColor(color.value)}
                   />

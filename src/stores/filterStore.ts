@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 export type SortOrder = 'alpha-asc' | 'alpha-desc' | 'uat-asc' | 'uat-desc' | 'created-asc' | 'created-desc' | 'progress-asc' | 'progress-desc';
-export type ViewPreset = 'all' | 'active' | 'paused' | 'done' | 'custom';
+export type ViewPreset = 'all' | 'active' | 'post' | 'paused' | 'done' | 'custom';
 export type HealthFilter = 'all' | 'ok' | 'warning' | 'critical';
 export type StageFilter = 'all' | 'infra' | 'adherence' | 'conversion' | 'environment' | 'implementation' | 'post';
 
