@@ -38,11 +38,26 @@ const CustomerTimeline = lazy(
   () => import("./pages/commercial/CustomerTimeline"),
 );
 
+// Conversion Pages (lazy)
+const Conversion = lazy(() => import("./pages/conversion/Conversion"));
+const ConversionMappings = lazy(
+  () => import("./pages/conversion/ConversionMappings"),
+);
+const ConversionIssues = lazy(
+  () => import("./pages/conversion/ConversionIssues"),
+);
+const ConversionHomologation = lazy(
+  () => import("./pages/conversion/ConversionHomologation"),
+);
+
 // Admin Pages (lazy)
 const AdminLayout = lazy(() => import("./layouts/AdminLayout"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const UserManagement = lazy(() => import("./pages/admin/UserManagement"));
 const TeamManagement = lazy(() => import("./pages/admin/TeamManagement"));
+const TeamAreasManagement = lazy(
+  () => import("./pages/admin/TeamAreasManagement"),
+);
 const AdminSettings = lazy(() =>
   import("@/components/Admin/Settings/AdminSettings").then((m) => ({
     default: m.AdminSettings,
@@ -121,6 +136,14 @@ const App = () => (
                     </Suspense>
                   }
                 />
+                <Route
+                  path="areas"
+                  element={
+                    <Suspense fallback={<PageLoader />}>
+                      <TeamAreasManagement />
+                    </Suspense>
+                  }
+                />
               </Route>
 
               {/* Protected App Routes */}
@@ -163,6 +186,19 @@ const App = () => (
                           <Route
                             path="/commercial/client/:id/timeline"
                             element={<CustomerTimeline />}
+                          />
+                          <Route path="/conversion" element={<Conversion />} />
+                          <Route
+                            path="/conversion/mappings"
+                            element={<ConversionMappings />}
+                          />
+                          <Route
+                            path="/conversion/issues"
+                            element={<ConversionIssues />}
+                          />
+                          <Route
+                            path="/conversion/homologation"
+                            element={<ConversionHomologation />}
                           />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
