@@ -135,6 +135,327 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          id: string
+          user_id: string | null
+          team: string | null
+          project_id: string | null
+          type: string
+          title: string
+          message: string
+          action_url: string | null
+          read: boolean | null
+          created_at: string
+          read_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          team?: string | null
+          project_id?: string | null
+          type: string
+          title: string
+          message: string
+          action_url?: string | null
+          read?: boolean | null
+          created_at?: string
+          read_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          team?: string | null
+          project_id?: string | null
+          type?: string
+          title?: string
+          message?: string
+          action_url?: string | null
+          read?: boolean | null
+          created_at?: string
+          read_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversion_queue: {
+        Row: {
+          id: string
+          project_id: string
+          sent_by: string | null
+          sent_by_name: string
+          sent_at: string
+          queue_status: string
+          priority: number
+          assigned_to: string | null
+          assigned_to_name: string | null
+          assigned_at: string | null
+          started_at: string | null
+          estimated_completion: string | null
+          completed_at: string | null
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          sent_by?: string | null
+          sent_by_name: string
+          sent_at?: string
+          queue_status?: string
+          priority?: number
+          assigned_to?: string | null
+          assigned_to_name?: string | null
+          assigned_at?: string | null
+          started_at?: string | null
+          estimated_completion?: string | null
+          completed_at?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          sent_by?: string | null
+          sent_by_name?: string
+          sent_at?: string
+          queue_status?: string
+          priority?: number
+          assigned_to?: string | null
+          assigned_to_name?: string | null
+          assigned_at?: string | null
+          started_at?: string | null
+          estimated_completion?: string | null
+          completed_at?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversion_queue_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_areas: {
+        Row: {
+          id: string
+          name: string
+          label: string
+          color: string | null
+          icon: string | null
+          active: boolean | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          label: string
+          color?: string | null
+          icon?: string | null
+          active?: boolean | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          label?: string
+          color?: string | null
+          icon?: string | null
+          active?: boolean | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      conversion_mappings: {
+        Row: {
+          id: string
+          project_id: string
+          source_origin: string
+          origin_table: string
+          destination_table: string
+          field_mappings: Json | null
+          script_snippet: string | null
+          script_url: string | null
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          source_origin: string
+          origin_table: string
+          destination_table: string
+          field_mappings?: Json | null
+          script_snippet?: string | null
+          script_url?: string | null
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          source_origin?: string
+          origin_table?: string
+          destination_table?: string
+          field_mappings?: Json | null
+          script_snippet?: string | null
+          script_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversion_mappings_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversion_issues: {
+        Row: {
+          id: string
+          project_id: string
+          title: string
+          description: string | null
+          priority: string
+          status: string
+          reported_by: string | null
+          reported_at: string
+          fixed_by: string | null
+          fixed_at: string | null
+          notes: string | null
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          title: string
+          description?: string | null
+          priority: string
+          status?: string
+          reported_by?: string | null
+          reported_at?: string
+          fixed_by?: string | null
+          fixed_at?: string | null
+          notes?: string | null
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          title?: string
+          description?: string | null
+          priority?: string
+          status?: string
+          reported_by?: string | null
+          reported_at?: string
+          fixed_by?: string | null
+          fixed_at?: string | null
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversion_issues_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversion_logs: {
+        Row: {
+          id: string
+          project_id: string
+          action_type: string
+          details: string | null
+          performed_by: string | null
+          timestamp: string
+          old_value: string | null
+          new_value: string | null
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          action_type: string
+          details?: string | null
+          performed_by?: string | null
+          timestamp?: string
+          old_value?: string | null
+          new_value?: string | null
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          action_type?: string
+          details?: string | null
+          performed_by?: string | null
+          timestamp?: string
+          old_value?: string | null
+          new_value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversion_logs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      homologation_events: {
+        Row: {
+          id: string
+          project_id: string
+          from_status: string
+          to_status: string
+          performed_by: string | null
+          performed_by_name: string
+          timestamp: string
+          notes: string | null
+          issues_count: number | null
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          from_status: string
+          to_status: string
+          performed_by?: string | null
+          performed_by_name: string
+          timestamp?: string
+          notes?: string | null
+          issues_count?: number | null
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          from_status?: string
+          to_status?: string
+          performed_by?: string | null
+          performed_by_name?: string
+          timestamp?: string
+          notes?: string | null
+          issues_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "homologation_events_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           id: string
@@ -238,6 +559,7 @@ export type Database = {
           email: string
           avatar_url: string | null
           active: boolean | null
+          area: string | null
           created_at: string
           updated_at: string
         }
@@ -248,6 +570,7 @@ export type Database = {
           email: string
           avatar_url?: string | null
           active?: boolean | null
+          area?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -258,6 +581,7 @@ export type Database = {
           email?: string
           avatar_url?: string | null
           active?: boolean | null
+          area?: string | null
           created_at?: string
           updated_at?: string
         }

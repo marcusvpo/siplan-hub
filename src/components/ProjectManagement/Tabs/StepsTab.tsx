@@ -12,6 +12,7 @@ import {
 import { useState } from "react";
 import { format } from "date-fns";
 import { useProjectForm } from "@/hooks/useProjectForm";
+import { useConversionQueue } from "@/hooks/useConversionQueue";
 import { StageCard } from "@/components/ProjectManagement/Forms/StageCard";
 import { Accordion } from "@/components/ui/accordion";
 import { Label } from "@/components/ui/label";
@@ -37,6 +38,8 @@ import {
   RefreshCw,
   Rocket,
   Power,
+  Send,
+  ExternalLink,
 } from "lucide-react";
 import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
@@ -72,10 +75,67 @@ export function StepsTab({ project, onUpdate }: TabProps) {
   const { data, updateStage, saveState } = useProjectForm(project, onUpdate);
   const { toast } = useToast();
   const [notifying, setNotifying] = useState(false);
+  const [sendingToConversion, setSendingToConversion] = useState(false);
+  const { sendToConversion, getItemByProjectId } = useConversionQueue();
+
+  // Check if project is already in conversion queue
+  const conversionItem = getItemByProjectId(project.id);
+  const isInConversionQueue = !!conversionItem;
 
   // Predictability: Calculate stage readiness
   const stageReadiness = getStageReadiness(data);
   const bottleneck = identifyBottleneck(data);
+
+  const handleSendToConversion = async () => {
+    if (isInConversionQueue) {
+      toast({
+        title: "Aviso",
+        description: "Este projeto já está na fila de conversão.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSendingToConversion(true);
+    try {
+      const priority =
+        project.priority === "critical"
+          ? 1
+          : project.priority === "high"
+            ? 2
+            : 3;
+      const result = await sendToConversion(
+        project.id,
+        project.projectLeader,
+        undefined,
+        priority,
+      );
+
+      if (result) {
+        // Update the conversion stage with the sent date
+        updateStage("conversion", {
+          sentAt: new Date(),
+          status: "in-progress" as StageStatus,
+        });
+
+        toast({
+          title: "Sucesso",
+          description: "Projeto enviado para a fila de conversão!",
+          className: "bg-green-500 text-white border-green-600",
+        });
+      } else {
+        throw new Error("Falha ao adicionar à fila");
+      }
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Falha ao enviar para conversão.",
+        variant: "destructive",
+      });
+    } finally {
+      setSendingToConversion(false);
+    }
+  };
 
   const handleNotifyComercial = async () => {
     setNotifying(true);
@@ -340,6 +400,83 @@ export function StepsTab({ project, onUpdate }: TabProps) {
 
   const renderConversionFields = (stage: ConversionStageV2) => (
     <>
+      {/* Send to Conversion Button */}
+      <div className="col-span-full mb-4">
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant={isInConversionQueue ? "outline" : "default"}
+              disabled={sendingToConversion || isInConversionQueue}
+              className={cn(
+                "w-full md:w-auto font-bold shadow-sm",
+                isInConversionQueue
+                  ? "border-purple-300 text-purple-600"
+                  : "bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-700 hover:to-fuchsia-700",
+              )}
+            >
+              {isInConversionQueue ? (
+                <>
+                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                  Na Fila de Conversão
+                  <a
+                    href="/conversion"
+                    className="ml-2 inline-flex items-center text-xs underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </>
+              ) : (
+                <>
+                  <Send className="mr-2 h-4 w-4" />
+                  {sendingToConversion
+                    ? "Enviando..."
+                    : "Enviar para Conversão"}
+                </>
+              )}
+            </Button>
+          </AlertDialogTrigger>
+          {!isInConversionQueue && (
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Confirmar envio</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Deseja enviar este projeto para a fila de conversão? A equipe
+                  de conversão será notificada e o projeto aparecerá no
+                  dashboard deles.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={handleSendToConversion}>
+                  Confirmar Envio
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          )}
+        </AlertDialog>
+        {isInConversionQueue && conversionItem && (
+          <div className="mt-2 text-sm text-muted-foreground">
+            Status:{" "}
+            <Badge variant="outline" className="ml-1">
+              {conversionItem.queueStatus === "pending" && "Pendente"}
+              {conversionItem.queueStatus === "in_progress" && "Em Andamento"}
+              {conversionItem.queueStatus === "awaiting_homologation" &&
+                "Aguard. Homologação"}
+              {conversionItem.queueStatus === "homologation_issues" &&
+                "Inconsistências"}
+              {conversionItem.queueStatus === "approved" && "Aprovado"}
+              {conversionItem.queueStatus === "done" && "Concluído"}
+            </Badge>
+            {conversionItem.assignedToName && (
+              <span className="ml-3">
+                Responsável: <strong>{conversionItem.assignedToName}</strong>
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+
       <div className="space-y-2.5">
         <Label className="text-xs font-bold uppercase tracking-widest text-fuchsia-600 flex items-center gap-2">
           <RefreshCw className="h-3.5 w-3.5" />

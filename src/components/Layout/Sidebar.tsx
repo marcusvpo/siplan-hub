@@ -42,7 +42,7 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
     <aside
       className={cn(
         "bg-sidebar border-r transition-all duration-300 flex flex-col z-20 shadow-xl shadow-black/5",
-        collapsed ? "w-20" : "w-72"
+        collapsed ? "w-20" : "w-72",
       )}
     >
       <div className="h-16 flex items-center justify-between px-6 border-b bg-sidebar/50 backdrop-blur-sm">
@@ -64,7 +64,7 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
           onClick={() => setCollapsed(!collapsed)}
           className={cn(
             "h-8 w-8 rounded-full hover:bg-primary/10 hover:text-primary transition-colors",
-            collapsed ? "mx-auto" : ""
+            collapsed ? "mx-auto" : "",
           )}
         >
           {collapsed ? (
@@ -83,7 +83,7 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
               variant={isActive("/") ? "secondary" : "ghost"}
               className={cn(
                 "w-full justify-start gap-3",
-                collapsed ? "justify-center px-0" : ""
+                collapsed ? "justify-center px-0" : "",
               )}
               title="Dashboard"
             >
@@ -113,7 +113,7 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                   <ChevronDown
                     className={cn(
                       "h-4 w-4 transition-transform",
-                      isImplantacaoOpen ? "transform rotate-180" : ""
+                      isImplantacaoOpen ? "transform rotate-180" : "",
                     )}
                   />
                 </Button>
@@ -263,20 +263,95 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
           )}
         </div>
 
-        {/* Conversão (Placeholder) */}
+        {/* Conversão Group */}
         <div className="px-2">
-          <Button
-            variant="ghost"
-            className={cn(
-              "w-full justify-start gap-3 opacity-50 cursor-not-allowed",
-              collapsed ? "justify-center px-0" : ""
-            )}
-            title="Conversão (Em breve)"
-            onClick={() => setCollapsed(false)}
-          >
-            <Database className="h-5 w-5" />
-            {!collapsed && <span>Conversão</span>}
-          </Button>
+          {!collapsed ? (
+            <Collapsible className="space-y-1">
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant={
+                    location.pathname.startsWith("/conversion")
+                      ? "secondary"
+                      : "ghost"
+                  }
+                  className="w-full justify-between hover:bg-muted/50"
+                  title="Conversão"
+                >
+                  <div className="flex items-center gap-3">
+                    <Database className="h-5 w-5" />
+                    <span>Conversão</span>
+                  </div>
+                  <ChevronDown className="h-4 w-4 transition-transform" />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-1 pl-4 animate-in slide-in-from-top-2">
+                <div className="pt-1 pb-2">
+                  <Link to="/conversion">
+                    <Button
+                      variant={isActive("/conversion") ? "secondary" : "ghost"}
+                      size="sm"
+                      className="w-full justify-start gap-3 h-9"
+                    >
+                      <Home className="h-4 w-4" />
+                      <span>Gestão de Atividades</span>
+                    </Button>
+                  </Link>
+                  <Link to="/conversion/mappings">
+                    <Button
+                      variant={
+                        isActive("/conversion/mappings") ? "secondary" : "ghost"
+                      }
+                      size="sm"
+                      className="w-full justify-start gap-3 h-9"
+                    >
+                      <FolderKanban className="h-4 w-4" />
+                      <span>Módulos</span>
+                    </Button>
+                  </Link>
+                  <Link to="/conversion/issues">
+                    <Button
+                      variant={
+                        isActive("/conversion/issues") ? "secondary" : "ghost"
+                      }
+                      size="sm"
+                      className="w-full justify-start gap-3 h-9"
+                    >
+                      <AlertCircle className="h-4 w-4" />
+                      <span>Inconsistências</span>
+                    </Button>
+                  </Link>
+                  <Link to="/conversion/homologation">
+                    <Button
+                      variant={
+                        isActive("/conversion/homologation")
+                          ? "secondary"
+                          : "ghost"
+                      }
+                      size="sm"
+                      className="w-full justify-start gap-3 h-9"
+                    >
+                      <BarChart3 className="h-4 w-4" />
+                      <span>Homologação</span>
+                    </Button>
+                  </Link>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          ) : (
+            <Link to="/conversion">
+              <Button
+                variant={
+                  location.pathname.startsWith("/conversion")
+                    ? "secondary"
+                    : "ghost"
+                }
+                className="w-full justify-center px-0"
+                title="Conversão"
+              >
+                <Database className="h-5 w-5" />
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
 
@@ -285,7 +360,7 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
           variant="ghost"
           className={cn(
             "w-full justify-start gap-3 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20",
-            collapsed ? "justify-center px-0" : ""
+            collapsed ? "justify-center px-0" : "",
           )}
           onClick={() => signOut()}
           title="Sair"

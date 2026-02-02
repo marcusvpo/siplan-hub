@@ -222,6 +222,30 @@ export function ProjectCardV3({
             </div>
           )}
 
+          {/* Conversion Queue Indicator */}
+          {project.stages.conversion.sentAt &&
+            !project.stages.conversion.finishedAt && (
+              <div
+                className="flex items-center gap-1.5 text-[11px] px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/30 border border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-300 font-medium"
+                title="Projeto na fila de conversão"
+              >
+                <svg
+                  className="h-3 w-3"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7c-2 0-3 1-3 3z" />
+                  <path d="M9 22v-4" />
+                  <path d="M15 22v-4" />
+                  <path d="M9 7h6" />
+                  <path d="M9 11h4" />
+                </svg>
+                <span>Conversão</span>
+              </div>
+            )}
+
           {/* Project Leader */}
           <div
             className="flex items-center gap-1.5 text-[11px] text-muted-foreground"
