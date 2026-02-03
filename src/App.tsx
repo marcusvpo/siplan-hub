@@ -22,6 +22,8 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const Calendar = lazy(() => import("./pages/Calendar"));
 const NextDeployments = lazy(() => import("./pages/NextDeployments"));
 const RoadmapPage = lazy(() => import("./pages/RoadmapPage"));
+const TeamConfiguration = lazy(() => import("./pages/admin/TeamConfiguration"));
+const AuditLogPage = lazy(() => import("./pages/admin/AuditLog"));
 
 // Commercial Pages (lazy)
 const CommercialBlockers = lazy(
@@ -121,10 +123,18 @@ const App = () => (
                   }
                 />
                 <Route
-                  path="team"
+                  path="teams-config"
                   element={
                     <Suspense fallback={<PageLoader />}>
-                      <TeamManagement />
+                      <TeamConfiguration />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="audit"
+                  element={
+                    <Suspense fallback={<PageLoader />}>
+                      <AuditLogPage />
                     </Suspense>
                   }
                 />
@@ -133,14 +143,6 @@ const App = () => (
                   element={
                     <Suspense fallback={<PageLoader />}>
                       <AdminSettings />
-                    </Suspense>
-                  }
-                />
-                <Route
-                  path="areas"
-                  element={
-                    <Suspense fallback={<PageLoader />}>
-                      <TeamAreasManagement />
                     </Suspense>
                   }
                 />

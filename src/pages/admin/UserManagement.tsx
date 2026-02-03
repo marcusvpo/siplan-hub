@@ -33,25 +33,15 @@ import { Loader2, Plus, Trash2, UserCog, Edit } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-
-const TEAMS = [
-  { value: "conversion", label: "Conversão" },
-  { value: "implementation", label: "Implantação" },
-  { value: "implementer", label: "Implantador" },
-  { value: "commercial", label: "Comercial" },
-  { value: "sd", label: "SD" },
-  { value: "infra", label: "Infra" },
-  { value: "management", label: "Diretoria" },
-] as const;
-
-type TeamValue = (typeof TEAMS)[number]["value"];
+import { useTeams } from "@/hooks/useTeams";
+import { useAuditLogs } from "@/hooks/useAuditLogs";
 
 interface Profile {
   id: string;
   email: string;
   full_name: string;
   role: "admin" | "user";
-  team: TeamValue | null;
+  team: string | null;
   created_at: string;
 }
 
@@ -61,13 +51,15 @@ export default function UserManagement() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const { toast } = useToast();
+  const { teams } = useTeams();
+  const { logAction } = useAuditLogs();
 
   // Create Form State
   const [newUserEmail, setNewUserEmail] = useState("");
   const [newUserPassword, setNewUserPassword] = useState("");
   const [newUserName, setNewUserName] = useState("");
   const [newUserRole, setNewUserRole] = useState<"admin" | "user">("user");
-  const [newUserTeam, setNewUserTeam] = useState<TeamValue | "">("");
+  const [newUserTeam, setNewUserTeam] = useState<string>("");
 
   // Edit Form State
   const [editingUser, setEditingUser] = useState<Profile | null>(null);
@@ -75,7 +67,7 @@ export default function UserManagement() {
   const [updating, setUpdating] = useState(false);
   const [editName, setEditName] = useState("");
   const [editRole, setEditRole] = useState<"admin" | "user">("user");
-  const [editTeam, setEditTeam] = useState<TeamValue | "">("");
+  const [editTeam, setEditTeam] = useState<string>("");
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -86,14 +78,7 @@ export default function UserManagement() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-
-      // Cast data to Profile[] ensuring team matches TeamValue or null
-      const typedData = (data || []).map((user) => ({
-        ...user,
-        team: user.team as TeamValue | null,
-      }));
-
-      setUsers(typedData as Profile[]);
+      setUsers(data as Profile[]);
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : "Erro desconhecido";
@@ -135,8 +120,7 @@ export default function UserManagement() {
         options: {
           data: {
             full_name: newUserName,
-            // We pass team in metadata too, although main source of truth is profiles table
-            // This might be helpful if we have triggers using metadata
+            // Pass team in metadata
             team: newUserTeam || null,
           },
         },
@@ -145,8 +129,7 @@ export default function UserManagement() {
       if (error) throw error;
 
       if (data.user) {
-        // Explicitly update the profile with the team and role
-        // The trigger creates the profile, but might not set all fields correctly depending on how it's written
+        // Explicitly update the profile
         const { error: profileError } = await supabase
           .from("profiles")
           .update({
@@ -158,13 +141,16 @@ export default function UserManagement() {
 
         if (profileError) {
           console.error("Error updating profile after signup:", profileError);
-          // Don't throw here, the user was created, just profile update failed
           toast({
             variant: "destructive",
             title: "Usuário criado, mas erro ao atualizar perfil",
             description: profileError.message,
           });
         } else {
+          logAction.mutate({
+            action: "USER_CREATED",
+            details: { email: newUserEmail, role: newUserRole },
+          });
           toast({
             title: "Usuário criado com sucesso",
             description: `O usuário ${newUserName} foi criado.`,
@@ -217,6 +203,13 @@ export default function UserManagement() {
 
       if (error) throw error;
 
+      logAction.mutate({
+        action: "USER_UPDATED",
+        details: {
+          userId: editingUser.id,
+          updates: { full_name: editName, role: editRole },
+        },
+      });
       toast({
         title: "Usuário atualizado",
         description: "As informações do usuário foram atualizadas com sucesso.",
@@ -247,12 +240,19 @@ export default function UserManagement() {
       return;
 
     try {
+      // NOTE: We can't delete from auth.users easily via client.
+      // We can only delete the profile usually.
+      // Real deletion requires a backend function or Supabase Admin API.
+      // Assuming existing logic (deleting profile) is what user wants,
+      // or that an Edge Function handles it.
+      // But for now, we just delete the profile row as per previous code.
       const { error } = await supabase
         .from("profiles")
         .delete()
         .eq("id", userId);
       if (error) throw error;
 
+      logAction.mutate({ action: "USER_DELETED", details: { userId } });
       toast({
         title: "Usuário removido",
         description:
@@ -272,7 +272,9 @@ export default function UserManagement() {
 
   const getTeamLabel = (value: string | null) => {
     if (!value) return "-";
-    return TEAMS.find((t) => t.value === value)?.label || value;
+    // Try to find in loaded teams, else return value itself
+    const team = teams?.find((t) => t.value === value);
+    return team ? team.label : value;
   };
 
   return (
@@ -354,14 +356,14 @@ export default function UserManagement() {
                   <Label htmlFor="team">Time</Label>
                   <Select
                     value={newUserTeam}
-                    onValueChange={(val: TeamValue) => setNewUserTeam(val)}
+                    onValueChange={(val: string) => setNewUserTeam(val)}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {TEAMS.map((team) => (
-                        <SelectItem key={team.value} value={team.value}>
+                      {teams?.map((team) => (
+                        <SelectItem key={team.id} value={team.value}>
                           {team.label}
                         </SelectItem>
                       ))}
@@ -429,14 +431,14 @@ export default function UserManagement() {
                 <Label htmlFor="edit-team">Time</Label>
                 <Select
                   value={editTeam}
-                  onValueChange={(val: TeamValue) => setEditTeam(val)}
+                  onValueChange={(val: string) => setEditTeam(val)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {TEAMS.map((team) => (
-                      <SelectItem key={team.value} value={team.value}>
+                    {teams?.map((team) => (
+                      <SelectItem key={team.id} value={team.value}>
                         {team.label}
                       </SelectItem>
                     ))}
