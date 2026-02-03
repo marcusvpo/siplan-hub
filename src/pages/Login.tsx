@@ -4,9 +4,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Lock } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -34,36 +41,38 @@ export default function Login() {
         console.log("Session found, navigating...");
         // Check role if trying to login as admin
         if (isAdminLogin) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { data: profile } = await (supabase as any)
-                .from('profiles')
-                .select('role')
-                .eq('id', data.session.user.id)
-                .single();
-            
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            if ((profile as any)?.role !== 'admin') {
-                await supabase.auth.signOut();
-                throw new Error("Acesso negado. Esta área é restrita para administradores.");
-            }
-            navigate("/admin");
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { data: profile } = await (supabase as any)
+            .from("profiles")
+            .select("role")
+            .eq("id", data.session.user.id)
+            .single();
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          if ((profile as any)?.role !== "admin") {
+            await supabase.auth.signOut();
+            throw new Error(
+              "Acesso negado. Esta área é restrita para administradores.",
+            );
+          }
+          navigate("/admin");
         } else {
-            navigate("/");
+          navigate("/");
         }
       }
     } catch (error: unknown) {
       console.error("Login error:", error);
       let errorMessage = "Verifique suas credenciais e tente novamente.";
-      
+
       if (error instanceof Error) {
         errorMessage = error.message;
       }
-      
+
       // Check for Supabase specific error structure safely
-      if (typeof error === 'object' && error !== null && 'status' in error) {
-          if ((error as { status: number }).status === 400) {
-              errorMessage = "Email ou senha inválidos.";
-          }
+      if (typeof error === "object" && error !== null && "status" in error) {
+        if ((error as { status: number }).status === 400) {
+          errorMessage = "Email ou senha inválidos.";
+        }
       }
 
       toast({
@@ -79,9 +88,9 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/20 p-4 relative">
-      <Button 
-        variant="ghost" 
-        size="sm" 
+      <Button
+        variant="ghost"
+        size="sm"
         className="absolute top-4 right-4 text-muted-foreground hover:text-primary"
         onClick={() => setIsAdminLogin(!isAdminLogin)}
       >
@@ -90,22 +99,27 @@ export default function Login() {
 
       <Card className="w-full max-w-md border-none shadow-xl bg-white/80 backdrop-blur-sm">
         <CardHeader className="space-y-1 text-center">
-          <div className="flex justify-center mb-4">
-            {isAdminLogin ? (
-                <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center">
-                    <Lock className="h-6 w-6 text-primary" />
+          <div className="flex justify-center mb-6">
+            <div className="bg-white p-4 rounded-xl shadow-lg border border-gray-100/50 relative flex items-center justify-center">
+              <img
+                src="/assets/Siplan_logo.png"
+                alt="Siplan"
+                className="h-12 w-auto object-contain"
+              />
+              {isAdminLogin && (
+                <div className="absolute -bottom-2 -right-2 bg-primary text-primary-foreground text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm">
+                  ADMIN
                 </div>
-            ) : (
-                <img src="/logo.png" alt="Logo" className="h-12 w-auto object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />
-            )}
+              )}
+            </div>
           </div>
           <CardTitle className="text-2xl font-bold tracking-tight">
             {isAdminLogin ? "Área Administrativa" : "Bem-vindo de volta"}
           </CardTitle>
           <CardDescription>
-            {isAdminLogin 
-                ? "Entre com suas credenciais de administrador para gerenciar a plataforma."
-                : "Insira suas credenciais para acessar sua conta."}
+            {isAdminLogin
+              ? "Entre com suas credenciais de administrador para gerenciar a plataforma."
+              : "Insira suas credenciais para acessar sua conta."}
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleLogin}>
