@@ -8,78 +8,45 @@ export const useTeamMembers = () => {
   const { data: members, isLoading } = useQuery({
     queryKey: ["teamMembers"],
     queryFn: async () => {
+      // FETCH members from profiles table instead of team_members
       const { data, error } = await supabase
-        .from("team_members")
-        .select("*")
-        .order("name");
+        .from("profiles")
+        .select("id, full_name, email, role, team, created_at")
+        .order("full_name");
 
       if (error) throw error;
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return data.map((member: any) => ({
+      return data.map((member) => ({
         id: member.id,
-        name: member.name,
-        role: member.role,
-        email: member.email,
-        avatarUrl: member.avatar_url,
-        active: member.active,
+        name: member.full_name || member.email || "Sem nome",
+        role: member.role || "user",
+        email: member.email || "",
+        active: true, // All profiles are considered active
+        team: member.team,
+        avatarUrl: undefined, // Gravatars could be added later
       })) as TeamMember[];
     },
   });
 
+  // Deprecated/Modified mutations to support new structure
+  // Ideally, these should be replaced by UserManagement calls
+  
   const addMember = useMutation({
     mutationFn: async (newMember: Omit<TeamMember, "id">) => {
-      const { data, error } = await supabase
-        .from("team_members")
-        .insert({
-          name: newMember.name,
-          role: newMember.role,
-          email: newMember.email,
-          avatar_url: newMember.avatarUrl,
-          active: newMember.active,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["teamMembers"] });
+      throw new Error("Para adicionar membros, utilize o Gerenciamento de Usuários");
     },
   });
 
   const updateMember = useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: Partial<TeamMember> }) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const dbUpdates: Record<string, any> = {};
-      if (updates.name) dbUpdates.name = updates.name;
-      if (updates.role) dbUpdates.role = updates.role;
-      if (updates.email) dbUpdates.email = updates.email;
-      if (updates.avatarUrl !== undefined) dbUpdates.avatar_url = updates.avatarUrl;
-      if (updates.active !== undefined) dbUpdates.active = updates.active;
-
-      const { data, error } = await supabase
-        .from("team_members")
-        .update(dbUpdates)
-        .eq("id", id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["teamMembers"] });
-    },
-  });
-
-  const removeMember = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (member: TeamMember) => {
+      // Best effort update
       const { error } = await supabase
-        .from("team_members")
-        .delete()
-        .eq("id", id);
+        .from("profiles")
+        .update({
+          full_name: member.name,
+          team: member.team as string | null // cast to match type
+        })
+        .eq("id", member.id);
 
       if (error) throw error;
     },
@@ -88,11 +55,16 @@ export const useTeamMembers = () => {
     },
   });
 
-  return {
-    members: members || [],
-    isLoading,
-    addMember,
-    updateMember,
-    removeMember,
-  };
+  const deleteMember = useMutation({
+    mutationFn: async (id: string) => {
+      // This will delete the profile
+       const { error } = await supabase.from('profiles').delete().eq('id', id);
+       if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["teamMembers"] });
+    },
+  });
+
+  return { members: members || [], isLoading, addMember, updateMember, deleteMember };
 };

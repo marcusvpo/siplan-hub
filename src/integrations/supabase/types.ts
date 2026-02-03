@@ -462,6 +462,7 @@ export type Database = {
           email: string | null
           full_name: string | null
           role: string | null
+          team: string | null
           created_at: string
         }
         Insert: {
@@ -469,6 +470,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           role?: string | null
+          team?: string | null
           created_at?: string
         }
         Update: {
@@ -476,9 +478,39 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           role?: string | null
+          team?: string | null
           created_at?: string
         }
         Relationships: []
+      }
+      responsible_name_mapping: {
+        Row: {
+          id: string
+          name: string
+          user_id: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          user_id?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          user_id?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "responsible_name_mapping_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       roadmaps: {
         Row: {
@@ -681,11 +713,16 @@ export type Database = {
           adherence_has_product_gap: boolean | null
           adherence_observations: string | null
           adherence_responsible: string | null
+          adherence_responsible_id: string | null
           adherence_start_date: string | null
           adherence_status: string
           archived_at: string | null
           client_email: string | null
+          client_id: string | null
           client_name: string
+          commercial_notes: string | null
+          go_live_date: string | null
+          health_score: string | null
           client_phone: string | null
           client_primary_contact: string | null
           contract_value: number | null
@@ -695,9 +732,11 @@ export type Database = {
           conversion_finished_at: string | null
           conversion_homologation_date: string | null
           conversion_homologation_responsible: string | null
+          conversion_homologation_responsible_id: string | null
           conversion_homologation_status: string | null
           conversion_observations: string | null
           conversion_responsible: string | null
+          conversion_responsible_id: string | null
           conversion_sent_at: string | null
           conversion_status: string
           conversion_tool_used: string | null
@@ -715,6 +754,7 @@ export type Database = {
           environment_preparation_checklist: string | null
           environment_real_date: string | null
           environment_responsible: string | null
+          environment_responsible_id: string | null
           environment_start_date: string | null
           environment_status: string
           environment_test_available: boolean | null
@@ -727,6 +767,7 @@ export type Database = {
           implementation_phase1: Json | null
           implementation_phase2: Json | null
           implementation_responsible: string | null
+          implementation_responsible_id: string | null
           implementation_start_date: string | null
           implementation_status: string
           implantation_type: string | null
@@ -734,6 +775,7 @@ export type Database = {
           infra_end_date: string | null
           infra_observations: string | null
           infra_responsible: string | null
+          infra_responsible_id: string | null
           infra_server_status: string | null
           infra_start_date: string | null
           infra_status: string
@@ -758,6 +800,7 @@ export type Database = {
           post_observations: string | null
           post_recommendations: string | null
           post_responsible: string | null
+          post_responsible_id: string | null
           post_roi_estimated: string | null
           post_start_date: string | null
           post_status: string
@@ -765,6 +808,7 @@ export type Database = {
           post_support_period_days: number | null
           priority: string | null
           project_leader: string
+          project_leader_id: string | null
           project_type: string | null
           related_tickets: Json | null
           responsible_environment: string | null
@@ -794,7 +838,11 @@ export type Database = {
           adherence_status?: string
           archived_at?: string | null
           client_email?: string | null
+          client_id?: string | null
           client_name: string
+          commercial_notes?: string | null
+          go_live_date?: string | null
+          health_score?: string | null
           client_phone?: string | null
           client_primary_contact?: string | null
           contract_value?: number | null
@@ -873,7 +921,8 @@ export type Database = {
           post_support_end_date?: string | null
           post_support_period_days?: number | null
           priority?: string | null
-          project_leader: string
+          project_leader?: string
+          project_leader_id?: string | null
           project_type?: string | null
           related_tickets?: Json | null
           responsible_environment?: string | null
@@ -903,7 +952,11 @@ export type Database = {
           adherence_status?: string
           archived_at?: string | null
           client_email?: string | null
+          client_id?: string | null
           client_name?: string
+          commercial_notes?: string | null
+          go_live_date?: string | null
+          health_score?: string | null
           client_phone?: string | null
           client_primary_contact?: string | null
           contract_value?: number | null
@@ -983,6 +1036,7 @@ export type Database = {
           post_support_period_days?: number | null
           priority?: string | null
           project_leader?: string
+          project_leader_id?: string | null
           project_type?: string | null
           related_tickets?: Json | null
           responsible_environment?: string | null
@@ -997,7 +1051,71 @@ export type Database = {
           ticket_number?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "projects_adherence_responsible_id_fkey"
+            columns: ["adherence_responsible_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_conversion_homologation_responsible_id_fkey"
+            columns: ["conversion_homologation_responsible_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_conversion_responsible_id_fkey"
+            columns: ["conversion_responsible_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_environment_responsible_id_fkey"
+            columns: ["environment_responsible_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_implementation_responsible_id_fkey"
+            columns: ["implementation_responsible_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_infra_responsible_id_fkey"
+            columns: ["infra_responsible_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_post_responsible_id_fkey"
+            columns: ["post_responsible_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_project_leader_id_fkey"
+            columns: ["project_leader_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       saved_filters: {
         Row: {

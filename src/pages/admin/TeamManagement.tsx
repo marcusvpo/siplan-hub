@@ -30,11 +30,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Pencil, Trash2, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Link } from "react-router-dom";
 
 export default function TeamManagement() {
-  const { members, addMember, updateMember, removeMember, isLoading } = useTeamMembers();
+  const { members, addMember, updateMember, deleteMember, isLoading } =
+    useTeamMembers();
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
@@ -56,7 +59,7 @@ export default function TeamManagement() {
     (member) =>
       member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.email.toLowerCase().includes(searchTerm.toLowerCase())
+      member.email.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -64,7 +67,7 @@ export default function TeamManagement() {
 
     if (editingMember) {
       updateMember.mutate(
-        { id: editingMember.id, updates: formData },
+        { ...editingMember, ...formData, id: editingMember.id },
         {
           onSuccess: () => {
             toast({
@@ -74,7 +77,7 @@ export default function TeamManagement() {
             setIsDialogOpen(false);
             resetForm();
           },
-        }
+        },
       );
     } else {
       addMember.mutate(formData, {
@@ -108,7 +111,7 @@ export default function TeamManagement() {
 
   const confirmDelete = () => {
     if (memberToDelete) {
-      removeMember.mutate(memberToDelete, {
+      deleteMember.mutate(memberToDelete, {
         onSuccess: () => {
           toast({ title: "Membro removido", variant: "destructive" });
           setMemberToDelete(null);
@@ -130,7 +133,21 @@ export default function TeamManagement() {
 
   return (
     <div className="container mx-auto py-10 space-y-8">
-      <div className="flex justify-between items-center">
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Página Descontinuada</AlertTitle>
+        <AlertDescription>
+          Esta página será removida em breve. Utilize o novo{" "}
+          <Link
+            to="/admin/users"
+            className="font-medium underline underline-offset-4"
+          >
+            Gerenciamento de Usuários
+          </Link>
+          .
+        </AlertDescription>
+      </Alert>
+      <div className="flex justify-between items-center opacity-75">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
             Gerenciamento de Equipe
