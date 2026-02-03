@@ -11,9 +11,11 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/hooks/use-theme";
 
 export default function AdminLayout() {
   const { user, role, loading, signOut } = useAuth();
+  const { theme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const location = useLocation();
 
@@ -46,9 +48,22 @@ export default function AdminLayout() {
       >
         <div className="h-full flex flex-col">
           <div className="h-16 flex items-center px-6 border-b">
-            <span className="font-bold text-xl tracking-tight text-primary">
-              Siplan Admin
-            </span>
+            <div className="flex items-center gap-2">
+              <img
+                src={
+                  theme === "dark" ||
+                  (theme === "system" &&
+                    window.matchMedia("(prefers-color-scheme: dark)").matches)
+                    ? "/assets/Siplan_logo_branco.png"
+                    : "/assets/Siplan_logo.png"
+                }
+                alt="Siplan Logo"
+                className="h-8 w-auto object-contain drop-shadow-md transition-all"
+              />
+              <span className="font-bold text-xl tracking-tight text-primary sr-only">
+                Siplan Admin
+              </span>
+            </div>
             <Button
               variant="ghost"
               size="icon"
