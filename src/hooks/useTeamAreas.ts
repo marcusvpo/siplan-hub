@@ -10,6 +10,8 @@ export function useTeamAreas() {
 
   const fetchAreas = useCallback(async () => {
     try {
+      // Kept fetching team_areas for labels/colors config if needed
+      // If team_areas is to be removed, we could hardcode this list
       const { data, error: fetchError } = await supabase
         .from('team_areas')
         .select('*')
@@ -34,25 +36,43 @@ export function useTeamAreas() {
     }
   }, []);
 
+  const mapTeamToArea = (team: string | null): TeamArea => {
+    switch (team) {
+      case 'conversion': return 'conversion';
+      case 'implementation': return 'implementation';
+      case 'implementer': return 'implementation'; // Map implementer to implementation area
+      case 'commercial': return 'commercial';
+      case 'sd': 
+      case 'infra': return 'support'; // Map SD and Infra to support area
+      case 'support': // Legacy fallback
+      case 'management': return 'support';
+      default: return 'implementation'; // Default fallback
+    }
+  };
+
+  const mapAreaToTeam = (area: TeamArea): string => {
+    return area;
+  };
+
   const fetchMembers = useCallback(async () => {
     try {
       setLoading(true);
+      // Fetch from PROFILES instead of team_members
       const { data, error: fetchError } = await supabase
-        .from('team_members')
-        .select('id, name, email, role, area, avatar_url, active')
-        .eq('active', true)
-        .order('name');
+        .from('profiles')
+        .select('id, full_name, email, role, team')
+        .order('full_name');
 
       if (fetchError) throw fetchError;
 
       const mapped: TeamMemberWithArea[] = (data || []).map((member) => ({
         id: member.id,
-        name: member.name,
-        email: member.email,
-        role: member.role,
-        area: (member.area || 'implementation') as TeamArea,
-        avatarUrl: member.avatar_url ?? undefined,
-        active: member.active ?? true,
+        name: member.full_name || member.email || 'Sem nome',
+        email: member.email || '',
+        role: member.role || 'user',
+        area: mapTeamToArea(member.team),
+        avatarUrl: undefined,
+        active: true,
       }));
 
       setMembers(mapped);
@@ -74,9 +94,11 @@ export function useTeamAreas() {
   const updateMemberArea = useCallback(
     async (memberId: string, area: TeamArea) => {
       try {
+        const teamValue = mapAreaToTeam(area);
+        
         const { error: updateError } = await supabase
-          .from('team_members')
-          .update({ area })
+          .from('profiles')
+          .update({ team: teamValue })
           .eq('id', memberId);
 
         if (updateError) throw updateError;
@@ -96,6 +118,7 @@ export function useTeamAreas() {
 
   const createArea = useCallback(
     async (name: string, label: string, color?: string, icon?: string) => {
+      // Keeping this as is for now, but note it touches team_areas table
       try {
         const { data, error: insertError } = await supabase
           .from('team_areas')

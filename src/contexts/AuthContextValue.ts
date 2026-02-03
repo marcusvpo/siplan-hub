@@ -7,6 +7,7 @@ export interface AuthContextType {
   session: Session | null;
   user: User | null;
   role: UserRole;
+  team: string | null;
   loading: boolean;
   signOut: () => Promise<void>;
   isAdmin: boolean;

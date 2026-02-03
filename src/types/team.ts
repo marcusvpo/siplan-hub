@@ -6,4 +6,5 @@ export interface TeamMember {
   email: string;
   avatarUrl?: string;
   active: boolean;
+  team?: string | null;
 }

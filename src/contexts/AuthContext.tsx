@@ -8,6 +8,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<UserRole>(null);
+  const [team, setTeam] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -96,6 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               setSession(null);
               setUser(null);
               setRole(null);
+              setTeam(null);
               setLoading(false);
             }
             return;
@@ -139,6 +141,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           fetchUserRole(session.user.id);
         } else {
           setRole(null);
+          setTeam(null);
           setLoading(false);
         }
       }
@@ -162,41 +165,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchUserRole = async (userId: string) => {
     try {
       // Create a promise that rejects after timeout
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Role fetch timeout")), 6000),
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Role fetch timeout")), 15000),
       );
-
-      // NOTE: 'profiles' table não está no schema TypeScript gerado (types.ts)
-      // Mas existe no banco. Precisamos adicionar ao schema ou usar 'as any'
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const fetchPromise = (supabase as any)
+      const fetchPromise = supabase
         .from("profiles")
-        .select("role")
+        .select("role, team")
         .eq("id", userId)
         .single();
 
       // Race the fetch against the timeout
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = (await Promise.race([
+      const { data, error } = await Promise.race([
         fetchPromise,
         timeoutPromise,
-      ])) as any;
+      ]);
 
       if (error) {
         console.error("Error fetching role:", error);
         setRole("user");
       } else {
         setRole(data?.role as UserRole);
+        setTeam(data?.team || null);
       }
     } catch (error) {
       // If timeout, try one more time
       if (error instanceof Error && error.message === "Role fetch timeout") {
         console.warn("Role fetch timed out. Retrying once...");
         try {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const { data, error: retryError } = await (supabase as any)
+          const { data, error: retryError } = await supabase
             .from("profiles")
-            .select("role")
+            .select("role, team")
             .eq("id", userId)
             .single();
 
@@ -205,6 +203,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setRole("user");
           } else {
             setRole(data?.role as UserRole);
+            setTeam(data?.team || null);
           }
         } catch (retryErr) {
           console.error("Error in fetchUserRole (retry):", retryErr);
@@ -224,12 +223,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Erro ao sair",
-        description: error.message,
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("Error signing out:", error);
+      }
+    } catch (err) {
+      console.error("Exception during sign out:", err);
+    } finally {
+      // Force clear local state
+      setSession(null);
+      setUser(null);
+      setRole(null);
+      setTeam(null);
+
+      // Clear Supabase tokens from local storage
+      Object.keys(localStorage).forEach((key) => {
+        if (key.startsWith("sb-")) {
+          localStorage.removeItem(key);
+        }
       });
     }
   };
@@ -238,6 +250,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     session,
     user,
     role,
+    team,
     loading,
     signOut,
     isAdmin: role === "admin",
