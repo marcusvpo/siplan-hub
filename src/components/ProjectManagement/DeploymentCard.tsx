@@ -7,9 +7,10 @@ import { motion } from "framer-motion";
 
 interface DeploymentCardProps {
   project: ProjectV2;
+  onClick?: () => void;
 }
 
-export function DeploymentCard({ project }: DeploymentCardProps) {
+export function DeploymentCard({ project, onClick }: DeploymentCardProps) {
   const phase1 = project.stages.implementation.phase1;
   const startDate = phase1?.startDate;
   const endDate = phase1?.endDate;
@@ -30,8 +31,9 @@ export function DeploymentCard({ project }: DeploymentCardProps) {
 
   return (
     <motion.div
+      onClick={onClick}
       whileHover={{ y: -5, scale: 1.02 }}
-      className="group relative w-full h-[220px] rounded-2xl bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-900/50 border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col"
+      className={`group relative w-full h-[220px] rounded-2xl bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-900/50 border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col ${onClick ? "cursor-pointer" : ""}`}
     >
       {/* Decorative Gradient Blob - Reduced size */}
       <div className="absolute -top-16 -right-16 w-32 h-32 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
@@ -42,7 +44,7 @@ export function DeploymentCard({ project }: DeploymentCardProps) {
           <Badge
             variant="outline"
             className={`${getSystemBadgeColor(
-              project.systemType
+              project.systemType,
             )} backdrop-blur-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider`}
           >
             {project.systemType}
