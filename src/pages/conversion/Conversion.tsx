@@ -13,7 +13,9 @@ import {
   MoreVertical,
   UserPlus,
   Send,
+  UserCheck,
 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,12 +54,7 @@ import {
 import { useTeamAreas } from "@/hooks/useTeamAreas";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
-
-// Mock current user - replace with actual auth
-const CURRENT_USER = {
-  id: "current-user-id",
-  name: "Usuário Atual",
-};
+import { MyQueueDetailedCard } from "./MyQueueDetailedCard";
 
 // Status labels and colors
 const STATUS_LABELS: Record<string, string> = {
@@ -77,10 +74,18 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function Conversion() {
+  const { user, team } = useAuth();
+  const isConversionTeam = team === "conversion";
+
+  // Current user info from auth
+  const currentUserId = user?.id || "";
+  const currentUserName =
+    user?.user_metadata?.full_name || user?.email || "Usuário";
+
   const {
     queue,
     myQueue,
-    unassignedQueue,
+    generalQueue,
     homologationQueue,
     kpis,
     loading,
@@ -90,7 +95,7 @@ export default function Conversion() {
     sendToHomologation,
     approveHomologation,
     refetch,
-  } = useConversionQueue({ userId: CURRENT_USER.id });
+  } = useConversionQueue({ userId: currentUserId });
 
   const { members } = useTeamAreas();
   const conversionMembers = useMemo(
@@ -98,7 +103,7 @@ export default function Conversion() {
     [members],
   );
 
-  const [activeTab, setActiveTab] = useState("my-queue");
+  const [activeTab, setActiveTab] = useState("general");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
@@ -130,8 +135,9 @@ export default function Conversion() {
   const handleAssign = async (item: ConversionQueueItem) => {
     const success = await assignToMe(
       item.id,
-      CURRENT_USER.id,
-      CURRENT_USER.name,
+      currentUserId,
+      currentUserName,
+      item.projectId,
     );
     if (success) {
       toast.success("Projeto assumido com sucesso!");
@@ -304,6 +310,23 @@ export default function Conversion() {
                   <span className="text-xs">← {item.legacySystem}</span>
                 )}
               </div>
+              {/* Assignment Status - Prominent Display */}
+              <div className="mt-3">
+                {item.assignedToName ? (
+                  <Badge className="bg-emerald-100 text-emerald-700 border-emerald-300 gap-1">
+                    <UserCheck className="h-3 w-3" />
+                    Assumido por: {item.assignedToName}
+                  </Badge>
+                ) : (
+                  <Badge
+                    variant="outline"
+                    className="bg-amber-50 text-amber-700 border-amber-300 gap-1"
+                  >
+                    <Clock className="h-3 w-3" />
+                    Não assumido
+                  </Badge>
+                )}
+              </div>
               <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
                 <span>
                   Enviado{" "}
@@ -312,12 +335,6 @@ export default function Conversion() {
                     locale: ptBR,
                   })}
                 </span>
-                {item.assignedToName && (
-                  <span className="flex items-center gap-1">
-                    <User className="h-3 w-3" />
-                    {item.assignedToName}
-                  </span>
-                )}
               </div>
             </div>
 
@@ -351,7 +368,7 @@ export default function Conversion() {
 
             {/* Actions */}
             <div className="flex items-center gap-2">
-              {showAssignButton && (
+              {showAssignButton && isConversionTeam && (
                 <Button
                   size="sm"
                   onClick={() => handleAssign(item)}
@@ -394,13 +411,21 @@ export default function Conversion() {
                       <DropdownMenuSeparator />
                     </>
                   )}
+                  {isConversionTeam && (
+                    <DropdownMenuItem
+                      onClick={() => setTransferDialog({ open: true, item })}
+                    >
+                      <ArrowRight className="h-4 w-4 mr-2" />
+                      Transferir
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem
-                    onClick={() => setTransferDialog({ open: true, item })}
+                    onClick={() => {
+                      if (item.projectId) {
+                        window.location.href = `/projects?id=${item.projectId}`;
+                      }
+                    }}
                   >
-                    <ArrowRight className="h-4 w-4 mr-2" />
-                    Transferir
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
                     <AlertCircle className="h-4 w-4 mr-2" />
                     Ver Detalhes
                   </DropdownMenuItem>
@@ -428,10 +453,41 @@ export default function Conversion() {
             </p>
           </div>
         </div>
-        <Button onClick={refetch} variant="outline" size="sm">
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Atualizar
-        </Button>
+        <div className="flex items-center gap-2">
+          {/* Minha Fila Button - Only for conversion team */}
+          {isConversionTeam && (
+            <Button
+              onClick={() => setActiveTab("my-queue")}
+              variant={activeTab === "my-queue" ? "default" : "outline"}
+              className={cn(
+                "gap-2",
+                activeTab === "my-queue"
+                  ? "bg-purple-600 hover:bg-purple-700"
+                  : "border-purple-300 text-purple-600 hover:bg-purple-50",
+              )}
+            >
+              <User className="h-4 w-4" />
+              Minha Fila
+              {myQueue.length > 0 && (
+                <Badge
+                  variant={activeTab === "my-queue" ? "secondary" : "default"}
+                  className={cn(
+                    "ml-1",
+                    activeTab === "my-queue"
+                      ? "bg-white/20 text-white"
+                      : "bg-purple-600 text-white",
+                  )}
+                >
+                  {myQueue.length}
+                </Badge>
+              )}
+            </Button>
+          )}
+          <Button onClick={refetch} variant="outline" size="sm">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Atualizar
+          </Button>
+        </div>
       </div>
 
       {/* KPIs */}
@@ -468,21 +524,12 @@ export default function Conversion() {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-4">
-          <TabsTrigger value="my-queue" className="gap-2">
-            <User className="h-4 w-4" />
-            Minha Fila
-            {myQueue.length > 0 && (
-              <Badge variant="secondary" className="ml-1">
-                {myQueue.length}
-              </Badge>
-            )}
-          </TabsTrigger>
           <TabsTrigger value="general" className="gap-2">
             <Users className="h-4 w-4" />
             Fila Geral
-            {unassignedQueue.length > 0 && (
-              <Badge variant="destructive" className="ml-1">
-                {unassignedQueue.length}
+            {generalQueue.length > 0 && (
+              <Badge variant="secondary" className="ml-1">
+                {generalQueue.length}
               </Badge>
             )}
           </TabsTrigger>
@@ -497,26 +544,40 @@ export default function Conversion() {
           </TabsTrigger>
         </TabsList>
 
-        {/* My Queue Tab */}
+        {/* My Queue Tab - Detailed View */}
         <TabsContent value="my-queue">
           {loading ? (
             <div className="text-center py-12 text-muted-foreground">
               Carregando...
             </div>
           ) : filterItems(myQueue).length === 0 ? (
-            <Card className="p-12 text-center">
-              <Database className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-              <h3 className="text-lg font-medium mb-2">Sua fila está vazia</h3>
+            <Card className="p-12 text-center border-2 border-dashed border-purple-200 bg-purple-50/30">
+              <Database className="h-12 w-12 mx-auto text-purple-400/50 mb-4" />
+              <h3 className="text-lg font-medium mb-2 text-purple-900">
+                Sua fila está vazia
+              </h3>
               <p className="text-muted-foreground mb-4">
                 Assuma projetos da fila geral para começar a trabalhar
               </p>
-              <Button onClick={() => setActiveTab("general")}>
+              <Button
+                onClick={() => setActiveTab("general")}
+                className="bg-purple-600 hover:bg-purple-700"
+              >
                 Ver Fila Geral
               </Button>
             </Card>
           ) : (
-            <div className="space-y-3">
-              {filterItems(myQueue).map((item) => renderQueueItem(item))}
+            <div className="space-y-4">
+              {filterItems(myQueue).map((item) => (
+                <MyQueueDetailedCard
+                  key={item.id}
+                  item={item}
+                  onSendToHomologation={(i) =>
+                    setHomologationDialog({ open: true, item: i })
+                  }
+                  onTransfer={(i) => setTransferDialog({ open: true, item: i })}
+                />
+              ))}
             </div>
           )}
         </TabsContent>
@@ -527,20 +588,20 @@ export default function Conversion() {
             <div className="text-center py-12 text-muted-foreground">
               Carregando...
             </div>
-          ) : filterItems(unassignedQueue).length === 0 ? (
+          ) : filterItems(generalQueue).length === 0 ? (
             <Card className="p-12 text-center">
               <CheckCircle2 className="h-12 w-12 mx-auto text-green-500/50 mb-4" />
               <h3 className="text-lg font-medium mb-2">
-                Nenhum projeto pendente
+                Nenhuma conversão na fila
               </h3>
               <p className="text-muted-foreground">
-                Todos os projetos foram atribuídos
+                Não há conversões ativas no momento
               </p>
             </Card>
           ) : (
             <div className="space-y-3">
-              {filterItems(unassignedQueue).map((item) =>
-                renderQueueItem(item, true),
+              {filterItems(generalQueue).map((item) =>
+                renderQueueItem(item, !item.assignedTo),
               )}
             </div>
           )}
@@ -597,7 +658,7 @@ export default function Conversion() {
                 </SelectTrigger>
                 <SelectContent>
                   {conversionMembers
-                    .filter((m) => m.id !== CURRENT_USER.id)
+                    .filter((m) => m.id !== currentUserId)
                     .map((member) => (
                       <SelectItem key={member.id} value={member.id}>
                         {member.name}

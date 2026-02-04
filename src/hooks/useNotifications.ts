@@ -18,6 +18,17 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
   const fetchNotifications = useCallback(async () => {
     try {
       setLoading(true);
+      
+      // Build OR filter for user_id and team
+      // Users should see: their own notifications OR team-wide notifications for their team
+      const orFilters: string[] = [];
+      if (userId) {
+        orFilters.push(`user_id.eq.${userId}`);
+      }
+      if (team) {
+        orFilters.push(`team.eq.${team}`);
+      }
+
       let query = supabase
         .from('notifications')
         .select(`
@@ -37,11 +48,9 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
         .order('created_at', { ascending: false })
         .limit(limit);
 
-      if (userId) {
-        query = query.eq('user_id', userId);
-      }
-      if (team) {
-        query = query.eq('team', team);
+      // Apply OR filter if we have any conditions
+      if (orFilters.length > 0) {
+        query = query.or(orFilters.join(','));
       }
 
       const { data, error: fetchError } = await query;

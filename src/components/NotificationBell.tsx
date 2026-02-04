@@ -10,11 +10,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import type { TeamArea } from "@/types/conversion";
 
 const NOTIFICATION_TYPE_ICONS: Record<string, string> = {
   new_demand: "📥",
@@ -24,12 +26,18 @@ const NOTIFICATION_TYPE_ICONS: Record<string, string> = {
   client_response: "💬",
   conversion_complete: "✅",
   homologation_approved: "🎉",
+  homologation_issues: "⚠️",
   mention: "📢",
 };
 
 export function NotificationBell() {
+  const { user, team } = useAuth();
   const { notifications, unreadCount, loading, markAsRead, markAllAsRead } =
-    useNotifications({ limit: 30 });
+    useNotifications({
+      userId: user?.id,
+      team: team as TeamArea | undefined,
+      limit: 30,
+    });
   const navigate = useNavigate();
 
   const handleNotificationClick = (notification: (typeof notifications)[0]) => {
