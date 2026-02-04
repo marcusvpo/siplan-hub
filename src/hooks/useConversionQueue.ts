@@ -107,10 +107,13 @@ export function useConversionQueue(options: UseConversionQueueOptions = {}) {
     [queue, userId]
   );
 
-  const unassignedQueue = useMemo(
+  // General queue: all active conversions (not done or cancelled)
+  // This allows all teams to see the full queue and track who is handling each conversion
+  const generalQueue = useMemo(
     () =>
       queue.filter(
-        (item) => !item.assignedTo && item.queueStatus === "pending"
+        (item) =>
+          item.queueStatus !== "done" && item.queueStatus !== "cancelled"
       ),
     [queue]
   );
@@ -152,6 +155,7 @@ export function useConversionQueue(options: UseConversionQueueOptions = {}) {
       priority: number = 3
     ) => {
       try {
+        // Insert into conversion queue
         const { error } = await supabase.from("conversion_queue").insert({
           project_id: projectId,
           sent_by: sentBy || null,
@@ -161,6 +165,27 @@ export function useConversionQueue(options: UseConversionQueueOptions = {}) {
         });
 
         if (error) throw error;
+
+        // Create notification for the conversion team
+        // First, get the project info for the notification message
+        const { data: projectData } = await supabase
+          .from("projects")
+          .select("client_name, ticket_number")
+          .eq("id", projectId)
+          .single();
+
+        const clientName = projectData?.client_name || "Cliente";
+        const ticketNumber = projectData?.ticket_number || "";
+
+        await supabase.from("notifications").insert({
+          team: "conversion",
+          project_id: projectId,
+          type: "new_demand",
+          title: "Nova conversão na fila",
+          message: `${clientName}${ticketNumber ? ` (#${ticketNumber})` : ""} foi enviado para a fila de conversão por ${sentByName}.`,
+          action_url: "/conversion",
+        });
+
         await fetchQueue();
         return true;
       } catch (err) {
@@ -171,11 +196,12 @@ export function useConversionQueue(options: UseConversionQueueOptions = {}) {
     [fetchQueue]
   );
 
-  // Assign to me
+  // Assign to me - also updates the project's conversion responsible
   const assignToMe = useCallback(
-    async (queueId: string, userId: string, userName: string) => {
+    async (queueId: string, userId: string, userName: string, projectId: string) => {
       try {
-        const { error } = await supabase
+        // Update conversion queue
+        const { error: queueError } = await supabase
           .from("conversion_queue")
           .update({
             assigned_to: userId,
@@ -186,7 +212,24 @@ export function useConversionQueue(options: UseConversionQueueOptions = {}) {
           })
           .eq("id", queueId);
 
-        if (error) throw error;
+        if (queueError) throw queueError;
+
+        // Also update the project's conversion responsible field
+        const { error: projectError } = await supabase
+          .from("projects")
+          .update({
+            conversion_responsible: userName,
+            conversion_start_date: new Date().toISOString(),
+            conversion_status: "in-progress",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", projectId);
+
+        if (projectError) {
+          console.error("Error updating project responsible:", projectError);
+          // Don't fail the whole operation, just log it
+        }
+
         await fetchQueue();
         return true;
       } catch (err) {
@@ -316,7 +359,7 @@ export function useConversionQueue(options: UseConversionQueueOptions = {}) {
   return {
     queue,
     myQueue,
-    unassignedQueue,
+    generalQueue,
     homologationQueue,
     kpis,
     loading,
