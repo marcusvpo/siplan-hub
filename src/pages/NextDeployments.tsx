@@ -2,10 +2,15 @@ import { useProjectsV2 } from "@/hooks/useProjectsV2";
 import { DeploymentCard } from "@/components/ProjectManagement/DeploymentCard";
 import { motion } from "framer-motion";
 import { Rocket } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { ProjectV2 } from "@/types/ProjectV2";
+import { DeploymentDetailsDialog } from "@/components/ProjectManagement/DeploymentDetailsDialog";
 
 export default function NextDeployments() {
   const { projects, isLoading } = useProjectsV2();
+  const [selectedProject, setSelectedProject] = useState<ProjectV2 | null>(
+    null,
+  );
 
   const sortedProjects = useMemo(() => {
     const today = new Date();
@@ -79,7 +84,10 @@ export default function NextDeployments() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
             >
-              <DeploymentCard project={project} />
+              <DeploymentCard
+                project={project}
+                onClick={() => setSelectedProject(project)}
+              />
             </motion.div>
           ))}
         </div>
@@ -103,6 +111,13 @@ export default function NextDeployments() {
           </div>
         </motion.div>
       )}
+
+      {/* Details Dialog */}
+      <DeploymentDetailsDialog
+        project={selectedProject}
+        open={!!selectedProject}
+        onOpenChange={(open) => !open && setSelectedProject(null)}
+      />
     </div>
   );
 }

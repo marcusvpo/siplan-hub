@@ -31,13 +31,15 @@ function TrashDroppable() {
         "flex items-center justify-center w-12 h-12 rounded-full border transition-colors ml-auto",
         isOver
           ? "bg-red-100 border-red-500 text-red-600 scale-110"
-          : "bg-background border-dashed border-muted-foreground/30 text-muted-foreground hover:bg-muted"
+          : "bg-background border-dashed border-muted-foreground/30 text-muted-foreground hover:bg-muted",
       )}
     >
       <Trash2 className="w-5 h-5" />
     </div>
   );
 }
+
+import { DeploymentDetailsDialog } from "@/components/ProjectManagement/DeploymentDetailsDialog";
 
 import {
   Dialog,
@@ -61,7 +63,7 @@ export default function Calendar() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [activeDragItem, setActiveDragItem] = useState<any>(null);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
-    null
+    null,
   );
   const { projects, isLoading } = useProjects();
 
@@ -158,7 +160,7 @@ export default function Calendar() {
       activationConstraint: {
         distance: 5,
       },
-    })
+    }),
   );
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -273,94 +275,62 @@ export default function Calendar() {
       </DndContext>
 
       {/* Details Dialog */}
-      <Dialog
-        open={!!selectedEvent}
-        onOpenChange={(v) => !v && setSelectedEvent(null)}
-      >
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              {selectedEvent && (
-                <div
-                  className={cn(
-                    "w-3 h-3 rounded-full",
-                    selectedEvent.color || "bg-primary"
-                  )}
-                />
-              )}
-              {selectedEvent?.clientName || selectedEvent?.title}
-            </DialogTitle>
-            <DialogDescription>Detalhes do Agendamento</DialogDescription>
-          </DialogHeader>
+      {/* Details Dialog */}
+      {activeProject ? (
+        <DeploymentDetailsDialog
+          project={activeProject}
+          open={!!selectedEvent}
+          onOpenChange={(v) => !v && setSelectedEvent(null)}
+          customTitle={selectedEvent?.title}
+          customDescription={`Agendamento: ${
+            selectedEvent?.type === "implementation"
+              ? "Implantação (Fase 1)"
+              : selectedEvent?.type === "training"
+                ? "Treinamento (Fase 2)"
+                : "Evento"
+          }`}
+          customStartDate={selectedEvent?.start}
+          customEndDate={selectedEvent?.end}
+          customResponsible={
+            CALENDAR_MEMBERS.find((m) => m.id === selectedEvent?.resourceId)
+              ?.name || activeProject.stages.implementation.phase1?.responsible
+          }
+        />
+      ) : (
+        <Dialog
+          open={!!selectedEvent}
+          onOpenChange={(v) => !v && setSelectedEvent(null)}
+        >
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                {selectedEvent && (
+                  <div
+                    className={cn(
+                      "w-3 h-3 rounded-full",
+                      selectedEvent.color || "bg-primary",
+                    )}
+                  />
+                )}
+                {selectedEvent?.clientName || selectedEvent?.title}
+              </DialogTitle>
+              <DialogDescription>Detalhes do Agendamento</DialogDescription>
+            </DialogHeader>
 
-          {activeProject ? (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <span className="text-xs text-muted-foreground font-semibold uppercase flex items-center gap-1">
-                    <Hash className="w-3 h-3" /> Chamado
-                  </span>
-                  <p className="text-sm font-medium">
-                    {activeProject.ticketNumber}
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-xs text-muted-foreground font-semibold uppercase flex items-center gap-1">
-                    <Server className="w-3 h-3" /> Sistema
-                  </span>
-                  <p className="text-sm font-medium">
-                    {activeProject.systemType}
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-xs text-muted-foreground font-semibold uppercase flex items-center gap-1">
-                    <Rocket className="w-3 h-3" /> Horas
-                  </span>
-                  <Badge variant="outline" className="text-xs">
-                    {activeProject.soldHours || 0}h
-                  </Badge>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-xs text-muted-foreground font-semibold uppercase flex items-center gap-1">
-                    <User className="w-3 h-3" /> Responsável
-                  </span>
-                  <p
-                    className="text-sm font-medium truncate"
-                    title={selectedEvent?.title.split(":")[0] || "N/A"}
-                  >
-                    {/* Usually the resourceId maps to a member, but we can also use the responsible field from project if needed */}
-                    {activeProject.stages.implementation.phase1?.responsible ||
-                      "N/A"}
-                  </p>
-                </div>
-              </div>
-
-              {selectedEvent?.notes && (
-                <div className="pt-2 border-t">
-                  <span className="text-xs text-muted-foreground font-semibold uppercase block mb-1">
-                    Observações do Evento
-                  </span>
-                  <ScrollArea className="h-[100px] w-full rounded-md border p-2 bg-muted/30">
-                    <div className="text-sm text-muted-foreground whitespace-pre-wrap">
-                      {/* This might be JSON from RichText, if so, strip or just show simple text if possible */}
-                      {selectedEvent.notes.startsWith("{")
-                        ? "Conteúdo rico (ver detalhes do projeto)"
-                        : selectedEvent.notes}
-                    </div>
-                  </ScrollArea>
-                </div>
-              )}
-            </div>
-          ) : (
             <div className="py-4 text-center text-muted-foreground">
-              <p>Informações detalhadas do projeto não encontradas.</p>
-              <p className="text-xs mt-2 opacity-70">
-                ID: {selectedEvent?.projectId}
-              </p>
+              <p>Este é um evento manual sem vínculo direto com projeto.</p>
+              <div className="mt-4 p-4 bg-muted/30 rounded-lg text-left">
+                <p className="text-sm font-medium text-foreground mb-1">
+                  Notas:
+                </p>
+                <p className="text-sm whitespace-pre-wrap">
+                  {selectedEvent?.notes || "Sem notas."}
+                </p>
+              </div>
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
