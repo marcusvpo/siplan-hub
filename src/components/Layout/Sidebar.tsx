@@ -19,12 +19,14 @@ import {
   Briefcase,
   AlertCircle,
   Contact,
+  UserCircle,
 } from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { UserProfileDrawer } from "./UserProfileDrawer";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -35,6 +37,7 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
   const location = useLocation();
   const { signOut } = useAuth();
   const [isImplantacaoOpen, setIsImplantacaoOpen] = useState(true);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -356,19 +359,44 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
       </div>
 
       <div className="p-2 border-t mt-auto space-y-1">
-        <Button
-          variant="ghost"
-          className={cn(
-            "w-full justify-start gap-3 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20",
-            collapsed ? "justify-center px-0" : "",
-          )}
-          onClick={() => signOut()}
-          title="Sair"
-        >
-          <LogOut className="h-5 w-5" />
-          {!collapsed && <span>Sair</span>}
-        </Button>
+        <div className={cn("flex gap-1", collapsed ? "flex-col" : "")}>
+          {/* Profile Button */}
+          <Button
+            variant="ghost"
+            size={collapsed ? "icon" : "default"}
+            className={cn(
+              "justify-start gap-3 text-slate-600 hover:text-primary hover:bg-primary/10",
+              collapsed ? "w-full justify-center px-0" : "flex-1",
+            )}
+            onClick={() => setIsProfileOpen(true)}
+            title="Meu Perfil"
+          >
+            <UserCircle className="h-5 w-5" />
+            {!collapsed && <span>Perfil</span>}
+          </Button>
+
+          {/* Logout Button */}
+          <Button
+            variant="ghost"
+            size={collapsed ? "icon" : "default"}
+            className={cn(
+              "justify-start gap-3 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20",
+              collapsed ? "w-full justify-center px-0" : "",
+            )}
+            onClick={() => signOut()}
+            title="Sair"
+          >
+            <LogOut className="h-5 w-5" />
+            {!collapsed && <span>Sair</span>}
+          </Button>
+        </div>
       </div>
+
+      {/* User Profile Drawer */}
+      <UserProfileDrawer
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
+      />
     </aside>
   );
 }

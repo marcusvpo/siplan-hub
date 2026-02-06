@@ -25,7 +25,7 @@ import { ProjectV2 } from "@/types/ProjectV2";
 
 export const NewProjectDialog = () => {
   const [open, setOpen] = useState(false);
-  
+
   // Dados do Projeto
   const [clientName, setClientName] = useState("");
   const [ticketNumber, setTicketNumber] = useState("");
@@ -53,9 +53,11 @@ export const NewProjectDialog = () => {
         ticketNumber,
         systemType,
         projectLeader,
-        lastUpdatedBy: "Sistema", // Explicitly set user
+        // lastUpdatedBy is now set automatically by useProjectsV2
         opNumber: opNumber ? parseInt(opNumber) : undefined,
-        salesOrderNumber: salesOrderNumber ? parseInt(salesOrderNumber) : undefined,
+        salesOrderNumber: salesOrderNumber
+          ? parseInt(salesOrderNumber)
+          : undefined,
         soldHours: soldHours ? parseFloat(soldHours) : undefined,
         legacySystem: legacySystem || undefined,
         specialty: specialty || undefined,
@@ -78,7 +80,7 @@ export const NewProjectDialog = () => {
         onError: (error: Error) => {
           toast.error("Erro ao criar projeto: " + error.message);
         },
-      }
+      },
     );
   };
 
@@ -94,7 +96,8 @@ export const NewProjectDialog = () => {
         <DialogHeader>
           <DialogTitle>Criar Novo Projeto</DialogTitle>
           <DialogDescription>
-            Preencha os dados abaixo para cadastrar um novo projeto de implantação.
+            Preencha os dados abaixo para cadastrar um novo projeto de
+            implantação.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6 mt-4">
@@ -120,7 +123,8 @@ export const NewProjectDialog = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="ticketNumber">
-                    Número do Ticket SAC <span className="text-destructive">*</span>
+                    Número do Ticket SAC{" "}
+                    <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="ticketNumber"
@@ -210,8 +214,12 @@ export const NewProjectDialog = () => {
                     <SelectContent>
                       <SelectItem value="protesto">Protesto</SelectItem>
                       <SelectItem value="notas">Notas</SelectItem>
-                      <SelectItem value="registro_civil">Registro Civil</SelectItem>
-                      <SelectItem value="registro_imoveis">Registro de Imóveis</SelectItem>
+                      <SelectItem value="registro_civil">
+                        Registro Civil
+                      </SelectItem>
+                      <SelectItem value="registro_imoveis">
+                        Registro de Imóveis
+                      </SelectItem>
                       <SelectItem value="tdpj">TDPJ</SelectItem>
                     </SelectContent>
                   </Select>
