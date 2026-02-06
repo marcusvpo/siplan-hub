@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { activityLogger } from "@/services/activityLogger";
 
 // Types based on actual database schema
 export interface ConversionQueueItem {
@@ -230,6 +231,14 @@ export function useConversionQueue(options: UseConversionQueueOptions = {}) {
           // Don't fail the whole operation, just log it
         }
 
+        // Log the assignment action
+        activityLogger.logConversionAction(
+          "conversion_queue_assigned",
+          projectId,
+          "",
+          { assignedTo: userName, queueId },
+        );
+
         await fetchQueue();
         return true;
       } catch (err) {
@@ -237,12 +246,12 @@ export function useConversionQueue(options: UseConversionQueueOptions = {}) {
         return false;
       }
     },
-    [fetchQueue]
+    [fetchQueue],
   );
 
   // Transfer to another user
   const transferTo = useCallback(
-    async (queueId: string, newUserId: string, newUserName: string) => {
+    async (queueId: string, newUserId: string, newUserName: string, projectId?: string) => {
       try {
         const { error } = await supabase
           .from("conversion_queue")
@@ -254,6 +263,30 @@ export function useConversionQueue(options: UseConversionQueueOptions = {}) {
           .eq("id", queueId);
 
         if (error) throw error;
+
+        // Also update the project's conversion responsible if projectId is provided
+        if (projectId) {
+          const { error: projectError } = await supabase
+            .from("projects")
+            .update({
+              conversion_responsible: newUserName,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", projectId);
+
+          if (projectError) {
+            console.error("Error updating project responsible on transfer:", projectError);
+          }
+        }
+
+        // Log the transfer action
+        activityLogger.logConversionAction(
+          "conversion_queue_transferred",
+          projectId || "",
+          "",
+          { transferredTo: newUserName, queueId },
+        );
+
         await fetchQueue();
         return true;
       } catch (err) {
@@ -261,7 +294,7 @@ export function useConversionQueue(options: UseConversionQueueOptions = {}) {
         return false;
       }
     },
-    [fetchQueue]
+    [fetchQueue],
   );
 
   // Update status

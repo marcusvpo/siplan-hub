@@ -24,7 +24,7 @@ export interface CalendarEvent {
 }
 
 export const CALENDAR_MEMBERS: CalendarMember[] = [
-  { id: "ricardo-vieira", name: "Ricardo Vieira", role: "Implantador", color: "bg-indigo-500" },
+  { id: "ricardo-vieira", name: "Ricardo Vieira", role: "Implantador", color: "bg-red-500" },
   { id: "rodrigo-brites", name: "Rodrigo Brites", role: "Implantador", color: "bg-blue-500" },
   { id: "bruno-matos", name: "Bruno Matos", role: "Implantador", color: "bg-green-500" },
   { id: "julio-araujo", name: "Julio Araujo", role: "Implantador", color: "bg-orange-500" },

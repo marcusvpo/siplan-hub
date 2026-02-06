@@ -500,7 +500,7 @@ export function MyQueueDetailedCard({
                     />
                   </div>
 
-                  {/* Enviado em */}
+                  {/* Enviado em - Read Only (gerenciado em /projects) */}
                   <div className="space-y-2">
                     <Label className="text-xs font-bold uppercase tracking-widest text-cyan-600 flex items-center gap-2">
                       <Rocket className="h-3.5 w-3.5" />
@@ -509,18 +509,13 @@ export function MyQueueDetailedCard({
                     <Input
                       type="date"
                       value={fields.sentAt ? fields.sentAt.split("T")[0] : ""}
-                      onChange={(e) => {
-                        const value = e.target.value
-                          ? e.target.value + "T12:00:00Z"
-                          : null;
-                        handleFieldChange(
-                          "sentAt",
-                          value,
-                          "conversion_sent_at",
-                        );
-                      }}
-                      className="h-11 border-2 border-cyan-200 hover:border-cyan-300 focus:border-cyan-400 bg-cyan-50/50 font-medium"
+                      disabled
+                      className="h-11 border-2 border-cyan-200 bg-cyan-50/50 font-medium text-cyan-900 cursor-not-allowed"
+                      title="Este campo só pode ser alterado em /projects"
                     />
+                    <p className="text-[10px] text-muted-foreground">
+                      Edite via Projetos → Etapas
+                    </p>
                   </div>
 
                   {/* Finalizado em */}

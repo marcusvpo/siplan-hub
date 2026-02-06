@@ -28,7 +28,13 @@ import { cn } from "@/lib/utils";
 
 // --- Types ---
 interface StageData {
-  status: "todo" | "in-progress" | "done" | "blocked";
+  status:
+    | "todo"
+    | "in-progress"
+    | "done"
+    | "blocked"
+    | "paused"
+    | "waiting_adjustment";
 }
 
 interface RoadmapData {
@@ -157,19 +163,23 @@ export default function RoadmapPage() {
   }, [token]);
 
   // Recalcular progresso no frontend se necessário
+  // waiting_adjustment counts as partial progress (analysis done, dev working)
   const calculatedProgress = useMemo(() => {
     if (!data) return 0;
     const stages = data.project.stages;
     const totalStages = STAGES_CONFIG.length;
-    let completedStages = 0;
+    let progressPoints = 0;
 
     STAGES_CONFIG.forEach((config) => {
-      if (stages[config.id]?.status === "done") {
-        completedStages++;
+      const status = stages[config.id]?.status;
+      if (status === "done") {
+        progressPoints += 1; // Full progress
+      } else if (status === "waiting_adjustment" || status === "in-progress") {
+        progressPoints += 0.5; // Half progress - work in progress
       }
     });
 
-    const progress = Math.round((completedStages / totalStages) * 100);
+    const progress = Math.round((progressPoints / totalStages) * 100);
     return Math.max(data.project.overall_progress || 0, progress);
   }, [data]);
 
@@ -177,12 +187,23 @@ export default function RoadmapPage() {
   const currentPhaseLabel = useMemo(() => {
     if (!data) return "Carregando...";
     const stages = data.project.stages;
+
+    // Check for stages in progress
     const activeStages = STAGES_CONFIG.filter(
       (config) => stages[config.id]?.status === "in-progress",
     );
 
     if (activeStages.length > 0) {
       return activeStages.map((s) => s.label).join(" & ");
+    }
+
+    // Check for stages in adjustment
+    const adjustmentStages = STAGES_CONFIG.filter(
+      (config) => stages[config.id]?.status === "waiting_adjustment",
+    );
+
+    if (adjustmentStages.length > 0) {
+      return `Desenvolvendo Adequações (${adjustmentStages.map((s) => s.label).join(", ")})`;
     }
 
     if (calculatedProgress === 100) return "Projeto Concluído";
@@ -490,28 +511,43 @@ export default function RoadmapPage() {
 function ButtonScrollDown() {
   return (
     <motion.div
-      initial={{ opacity: 0, y: -20 }}
-      animate={{
-        opacity: 1,
-        y: 0,
-      }}
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{
-        delay: 2,
-        duration: 2,
-        repeat: Infinity,
-        repeatType: "reverse",
+        delay: 1.5,
+        duration: 0.8,
+        ease: "easeOut",
       }}
-      className="absolute bottom-10 left-1/2 -translate-x-1/2 cursor-pointer p-4 group z-20"
-      onClick={() =>
-        window.scrollTo({ top: window.innerHeight, behavior: "smooth" })
-      }
+      className="flex flex-col items-center justify-center mt-12 mb-8 z-30 relative"
     >
-      <div className="flex flex-col items-center gap-2 text-gray-600 group-hover:text-white transition-colors duration-300">
-        <span className="text-[10px] uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
-          Ver Etapas
-        </span>
-        <ChevronDown className="w-6 h-6 animate-bounce opacity-50 group-hover:opacity-100" />
-      </div>
+      <motion.button
+        onClick={() =>
+          window.scrollTo({ top: window.innerHeight, behavior: "smooth" })
+        }
+        whileHover={{ scale: 1.05, y: -2 }}
+        whileTap={{ scale: 0.98 }}
+        className="group flex items-center gap-3 px-8 py-4 rounded-full bg-white/10 hover:bg-white/15 backdrop-blur-md border border-white/20 hover:border-white/40 text-white font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer"
+      >
+        <span className="text-sm tracking-wide">Ver Etapas</span>
+        <motion.div
+          animate={{ y: [0, 4, 0] }}
+          transition={{
+            duration: 1.5,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        >
+          <ChevronDown className="w-5 h-5" />
+        </motion.div>
+      </motion.button>
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 0.5 }}
+        transition={{ delay: 2.5 }}
+        className="text-xs text-gray-500 mt-3 tracking-wider"
+      >
+        Role para baixo
+      </motion.p>
     </motion.div>
   );
 }
@@ -531,6 +567,8 @@ function TimelineItem({
 }) {
   const isDone = status === "done";
   const isInProgress = status === "in-progress";
+  const isPaused = status === "paused";
+  const isWaitingAdjustment = status === "waiting_adjustment";
   // Determine if this item needs to be dimmed or highlighted, but never crossed out
   const isPending = status === "todo" || status === "blocked";
 
@@ -575,7 +613,11 @@ function TimelineItem({
               ? "bg-[#050505] border-emerald-500/50 text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.3)]"
               : isInProgress
                 ? "bg-[#050505] border-transparent text-white shadow-[0_0_30px_rgba(255,255,255,0.2)]"
-                : "bg-[#0a0a0a] border-white/10 text-gray-600",
+                : isWaitingAdjustment
+                  ? "bg-gradient-to-br from-orange-950 to-orange-900 border-orange-500 text-orange-300 shadow-[0_0_40px_rgba(249,115,22,0.6)]"
+                  : isPaused
+                    ? "bg-[#0a0a0a] border-amber-500/50 text-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.3)] animate-pulse"
+                    : "bg-[#0a0a0a] border-white/10 text-gray-600",
           )}
           style={{
             borderColor: isInProgress ? primaryColor : undefined,
@@ -590,6 +632,18 @@ function TimelineItem({
                 style={{ backgroundColor: primaryColor }}
               />
               <div className="absolute -inset-2 rounded-full border border-white/10 animate-[spin_10s_linear_infinite]" />
+            </>
+          )}
+
+          {/* Glow for Waiting Adjustment - Enhanced */}
+          {isWaitingAdjustment && (
+            <>
+              {/* Outer glow ring */}
+              <div className="absolute -inset-2 rounded-full bg-gradient-to-r from-orange-500 via-amber-500 to-orange-500 opacity-30 animate-pulse" />
+              {/* Spinning dashed border */}
+              <div className="absolute -inset-1.5 rounded-full border-2 border-dashed border-orange-400/60 animate-[spin_6s_linear_infinite]" />
+              {/* Inner pulse */}
+              <div className="absolute inset-0 rounded-full bg-orange-500/25 animate-ping" />
             </>
           )}
 
@@ -744,6 +798,51 @@ function RoadmapStatusBadge({
           </motion.div>
           <span>Em Andamento</span>
         </div>
+      </div>
+    );
+  }
+
+  // Waiting Adjustment status - Product team working on adjustments
+  // This is a special highlighted status that needs prominent visibility
+  if (status === "waiting_adjustment") {
+    return (
+      <div className="relative inline-flex flex-col items-start gap-2 group">
+        {/* Main Badge with enhanced glow */}
+        <div className="relative">
+          <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-orange-500 via-amber-500 to-orange-500 blur-md opacity-60 animate-pulse" />
+          <div className="relative inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-gradient-to-r from-orange-600 via-amber-600 to-orange-600 border-2 border-orange-400/60 text-white text-xs font-bold uppercase tracking-widest shadow-[0_0_30px_rgba(249,115,22,0.5)]">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+            >
+              <Settings className="w-4 h-4" />
+            </motion.div>
+            <span>Em Adequação</span>
+            <Zap className="w-3.5 h-3.5 animate-pulse" />
+          </div>
+        </div>
+
+        {/* Explanation Note */}
+        <div className="max-w-xs px-3 py-2 rounded-lg bg-orange-500/10 border border-orange-500/20 backdrop-blur-sm">
+          <p className="text-[10px] text-orange-200/80 leading-relaxed">
+            <span className="font-semibold text-orange-300">
+              O que significa?
+            </span>{" "}
+            A análise de aderência foi concluída e identificou itens que
+            precisam de adequação. Nossa equipe de produtos e desenvolvedores
+            está trabalhando ativamente nas adaptações do sistema.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Paused status
+  if (status === "paused") {
+    return (
+      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-bold uppercase tracking-widest animate-pulse">
+        <Clock className="w-3 h-3" />
+        <span>Pausado</span>
       </div>
     );
   }

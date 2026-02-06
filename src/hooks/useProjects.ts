@@ -2,9 +2,17 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ProjectV2, TimelineEventV2 } from "@/types/ProjectV2";
 import { calculateHealthScore } from "@/utils/calculations";
+import { useAuth } from "@/hooks/useAuth";
 
 export const useProjects = () => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  // Get the current user's name
+  const getCurrentUserName = (): string => {
+    if (!user) return "Sistema";
+    return user.user_metadata?.full_name || user.email?.split("@")[0] || "Usuário";
+  };
 
   const { data: projects = [], isLoading } = useQuery({
     queryKey: ["projects"],
@@ -109,25 +117,27 @@ export const useProjects = () => {
 
   const createProject = useMutation({
     mutationFn: async (newProject: Partial<ProjectV2>) => {
+      const authorName = getCurrentUserName();
+      
       const { data, error } = await supabase
         .from("projects")
         .insert({
           client_name: newProject.clientName,
           ticket_number: newProject.ticketNumber,
           system_type: newProject.systemType,
-          project_leader: newProject.projectLeader || "Bruno Fernandes",
-          last_update_by: "Sistema",
+          project_leader: newProject.projectLeader || authorName,
+          last_update_by: authorName,
         })
         .select()
         .single();
 
       if (error) throw error;
 
-      // Adicionar evento de criação
+      // Adicionar evento de criação com nome real do usuário
       await supabase.from("timeline_events").insert({
         project_id: data.id,
         type: "project_created",
-        author: "Sistema",
+        author: authorName,
         message: "Projeto criado",
       });
 
@@ -147,9 +157,11 @@ export const useProjects = () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       updates: Partial<Record<string, any>>;
     }) => {
+      const authorName = getCurrentUserName();
+      
       const { error } = await supabase
         .from("projects")
-        .update({ ...updates, last_update_by: "Bruno Fernandes" })
+        .update({ ...updates, last_update_by: authorName })
         .eq("id", projectId);
 
       if (error) throw error;
@@ -164,5 +176,6 @@ export const useProjects = () => {
     isLoading,
     createProject,
     updateProject,
+    getCurrentUserName,
   };
 };

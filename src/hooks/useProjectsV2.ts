@@ -18,7 +18,7 @@ import { useTimeline } from "./useTimeline";
 
 export const useProjectsV2 = () => {
   const queryClient = useQueryClient();
-  const { addAutoLog } = useTimeline();
+  const { addAutoLog, getCurrentUserName } = useTimeline();
 
   const { data: projects, isLoading } = useQuery({
     queryKey: ["projectsV3_with_dates"], // Changed key to force refresh
@@ -41,7 +41,13 @@ export const useProjectsV2 = () => {
       const currentProjects = queryClient.getQueryData<ProjectV2[]>(["projectsV3_with_dates"]);
       const currentProject = currentProjects?.find(p => p.id === projectId);
       
-      const dbUpdates = transformToDB(updates, currentProject);
+      // Ensure the current user's name is recorded
+      const updatesWithUser = {
+        ...updates,
+        lastUpdatedBy: getCurrentUserName(),
+      };
+      
+      const dbUpdates = transformToDB(updatesWithUser, currentProject);
       
       console.log("--- DEBUG: Update Project Payload ---", JSON.stringify(dbUpdates, null, 2));
 
@@ -155,7 +161,13 @@ export const useProjectsV2 = () => {
 
   const createProject = useMutation({
     mutationFn: async (project: Partial<ProjectV2>) => {
-      const dbProject = transformToDB(project) as TablesInsert<"projects">;
+      // Ensure the current user's name is recorded
+      const projectWithUser = {
+        ...project,
+        lastUpdatedBy: getCurrentUserName(),
+      };
+      
+      const dbProject = transformToDB(projectWithUser) as TablesInsert<"projects">;
       const { data, error } = await supabase
         .from("projects")
         .insert(dbProject)
@@ -599,11 +611,11 @@ function transformToDB(project: Partial<ProjectV2>, currentProject?: ProjectV2):
   }
 
   // Ensure last_update_by is always set (required by DB)
+  // Note: The actual user name should be set by the calling code
   if (project.lastUpdatedBy) {
     dbRow.last_update_by = project.lastUpdatedBy;
-  } else {
-    dbRow.last_update_by = "Sistema";
   }
+  // If not provided, caller should ensure it's set before calling
 
   return dbRow;
 }
