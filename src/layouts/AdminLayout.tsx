@@ -8,6 +8,7 @@ import {
   LogOut,
   Menu,
   X,
+  Palmtree,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -34,6 +35,7 @@ export default function AdminLayout() {
   const navItems = [
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/users", label: "Usuários", icon: Users },
+    { href: "/admin/vacations", label: "Férias", icon: Palmtree },
     { href: "/admin/settings", label: "Configurações", icon: Settings },
   ];
 

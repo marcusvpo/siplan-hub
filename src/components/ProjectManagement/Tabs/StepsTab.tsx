@@ -40,6 +40,7 @@ import {
   Power,
   Send,
   ExternalLink,
+  Calendar,
 } from "lucide-react";
 import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
@@ -574,8 +575,8 @@ export function StepsTab({ project, onUpdate }: TabProps) {
       </div>
       <div className="space-y-2.5">
         <Label className="text-xs font-bold uppercase tracking-widest text-rose-600 flex items-center gap-2">
-          <Power className="h-3.5 w-3.5" />
-          Finalizado em
+          <Calendar className="h-3.5 w-3.5" />
+          Agendado Para
         </Label>
         <Input
           type="date"

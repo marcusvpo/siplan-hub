@@ -14,7 +14,7 @@ export interface CalendarEvent {
   title: string;
   start: Date;
   end: Date;
-  type: "implementation" | "training" | "other";
+  type: "implementation" | "training" | "adherence" | "homologation" | "vacation" | "other";
   projectId?: string; // Link to real project
   clientName?: string;
   status?: "planned" | "confirmed" | "completed";
