@@ -18,6 +18,8 @@ import { useProjects } from "@/hooks/useProjects";
 import { ProjectV2 } from "@/types/ProjectV2";
 import { Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useVacations } from "@/hooks/useVacations";
+import { useToast } from "@/hooks/use-toast";
 
 function TrashDroppable() {
   const { setNodeRef, isOver } = useDroppable({
@@ -66,6 +68,7 @@ export default function Calendar() {
     null,
   );
   const { projects, isLoading } = useProjects();
+  const { vacations } = useVacations();
 
   // Fetch and Transform Real Data
   useEffect(() => {
@@ -150,10 +153,89 @@ export default function Calendar() {
           color,
         });
       }
+
+      // Adherence Analysis
+      const adherenceStage = project.stages.adherence;
+      if (adherenceStage?.endDate && adherenceStage?.responsible) {
+        const responsible = adherenceStage.responsible;
+        const member = findMember(responsible);
+        // Use member color or a fallback amber color for Adherence
+        const color = member ? member.color : "bg-amber-500";
+
+        // Adherence doesn't usually have a range, maybe just the end date (deadline)?
+        // Or if it has startDate, use it. If not, use endDate as start.
+        const start = adherenceStage.startDate
+          ? new Date(adherenceStage.startDate)
+          : new Date(adherenceStage.endDate);
+        const end = new Date(adherenceStage.endDate);
+
+        realEvents.push({
+          id: `real-${project.id}-adherence`,
+          resourceId: member?.id || "unknown",
+          title: `Aderência: ${project.clientName}`,
+          clientName: project.clientName,
+          start,
+          end,
+          type: "adherence",
+          status: "confirmed",
+          projectId: project.id,
+          notes: adherenceStage.observations,
+          color: "bg-amber-500", // Enforce specific color for event type clarity? Or keep member color? User asked for amber-500.
+        });
+      }
+
+      // Homologation (Conversion)
+      const conversionStage = project.stages.conversion;
+      if (
+        conversionStage?.finishedAt && // "Agendado Para" maps to finishedAt
+        conversionStage?.homologationResponsible
+      ) {
+        const responsible = conversionStage.homologationResponsible;
+        const member = findMember(responsible);
+
+        // Homologation date seems to be a single date point "Agendado Para"
+        const date = new Date(conversionStage.finishedAt);
+
+        realEvents.push({
+          id: `real-${project.id}-homologation`,
+          resourceId: member?.id || "unknown",
+          title: `Homologação: ${project.clientName}`,
+          clientName: project.clientName,
+          start: date,
+          end: date,
+          type: "homologation",
+          status: "confirmed",
+          projectId: project.id,
+          notes: conversionStage.observations,
+          color: "bg-violet-500", // User asked for violet-500
+        });
+      }
     });
 
+    // Process Vacations
+    if (vacations) {
+      vacations.forEach((vacation) => {
+        const member = CALENDAR_MEMBERS.find(
+          (m) => m.id === vacation.implantador_id,
+        );
+
+        realEvents.push({
+          id: `vacation-${vacation.id}`,
+          resourceId: vacation.implantador_id || "unknown",
+          title: `Férias: ${vacation.implantador_name}`,
+          start: new Date(vacation.start_date + "T12:00:00"), // Noon to avoid timezone issues
+          end: new Date(vacation.end_date + "T12:00:00"),
+          type: "vacation",
+          status: "confirmed",
+          notes: vacation.description || undefined,
+          color: "bg-red-500", // User asked for red
+          isGhost: false,
+        });
+      });
+    }
+
     useCalendarStore.getState().setRealEvents(realEvents);
-  }, [projects, isLoading]);
+  }, [projects, isLoading, vacations]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -167,6 +249,9 @@ export default function Calendar() {
   const handleDragStart = (event: any) => {
     setActiveDragItem(event.active.data.current);
   };
+
+  const { toast } = useToast();
+  const { checkVacationConflict } = useVacations();
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -189,6 +274,17 @@ export default function Calendar() {
     // If dragging new member allocation
     if (active.data.current?.isNew) {
       const memberId = active.data.current.memberId;
+
+      const conflict = checkVacationConflict(memberId, targetDate);
+      if (conflict) {
+        toast({
+          title: "Implantador em férias",
+          description: `Não é possível agendar nesta data. ${conflict.implantador_name} está de férias.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
       const newEvent: CalendarEvent = {
         id: crypto.randomUUID(),
         resourceId: memberId,
@@ -209,6 +305,20 @@ export default function Calendar() {
         const duration =
           existingEvent.end.getTime() - existingEvent.start.getTime();
         const newEnd = new Date(targetDate.getTime() + duration);
+
+        const conflict = checkVacationConflict(
+          existingEvent.resourceId,
+          targetDate,
+        );
+        if (conflict) {
+          toast({
+            title: "Implantador em férias",
+            description:
+              "Não é possível mover para esta data. O implantador responsável está de férias.",
+            variant: "destructive",
+          });
+          return;
+        }
 
         updateInteractiveEvent({
           ...existingEvent,

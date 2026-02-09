@@ -488,6 +488,50 @@ export type Database = {
           },
         ]
       }
+      implantador_vacations: {
+        Row: {
+          id: string
+          implantador_name: string
+          implantador_id: string | null
+          start_date: string
+          end_date: string
+          description: string | null
+          created_by: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          implantador_name: string
+          implantador_id?: string | null
+          start_date: string
+          end_date: string
+          description?: string | null
+          created_by?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          implantador_name?: string
+          implantador_id?: string | null
+          start_date?: string
+          end_date?: string
+          description?: string | null
+          created_by?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "implantador_vacations_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       profiles: {
         Row: {
           id: string

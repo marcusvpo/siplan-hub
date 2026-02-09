@@ -65,6 +65,9 @@ const AdminSettings = lazy(() =>
     default: m.AdminSettings,
   })),
 );
+const VacationManagement = lazy(
+  () => import("./pages/admin/VacationManagement"),
+);
 
 const queryClient = new QueryClient();
 
@@ -143,6 +146,14 @@ const App = () => (
                   element={
                     <Suspense fallback={<PageLoader />}>
                       <AdminSettings />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="vacations"
+                  element={
+                    <Suspense fallback={<PageLoader />}>
+                      <VacationManagement />
                     </Suspense>
                   }
                 />
