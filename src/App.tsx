@@ -42,14 +42,11 @@ const CustomerTimeline = lazy(
 
 // Conversion Pages (lazy)
 const Conversion = lazy(() => import("./pages/conversion/Conversion"));
-const ConversionMappings = lazy(
-  () => import("./pages/conversion/ConversionMappings"),
-);
-const ConversionIssues = lazy(
-  () => import("./pages/conversion/ConversionIssues"),
-);
 const ConversionHomologation = lazy(
   () => import("./pages/conversion/ConversionHomologation"),
+);
+const ConversionEngines = lazy(
+  () => import("./pages/conversion/ConversionEngines"),
 );
 
 // Admin Pages (lazy)
@@ -202,16 +199,12 @@ const App = () => (
                           />
                           <Route path="/conversion" element={<Conversion />} />
                           <Route
-                            path="/conversion/mappings"
-                            element={<ConversionMappings />}
-                          />
-                          <Route
-                            path="/conversion/issues"
-                            element={<ConversionIssues />}
-                          />
-                          <Route
                             path="/conversion/homologation"
                             element={<ConversionHomologation />}
+                          />
+                          <Route
+                            path="/conversion/engines"
+                            element={<ConversionEngines />}
                           />
                           <Route path="*" element={<NotFound />} />
                         </Routes>

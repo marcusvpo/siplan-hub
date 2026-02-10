@@ -17,9 +17,10 @@ import {
   Calendar as CalendarIcon,
   Rocket,
   Briefcase,
-  AlertCircle,
   Contact,
   UserCircle,
+  Cog,
+  AlertCircle,
 } from "lucide-react";
 import {
   Collapsible,
@@ -299,28 +300,16 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                       <span>Gestão de Atividades</span>
                     </Button>
                   </Link>
-                  <Link to="/conversion/mappings">
+                  <Link to="/conversion/engines">
                     <Button
                       variant={
-                        isActive("/conversion/mappings") ? "secondary" : "ghost"
+                        isActive("/conversion/engines") ? "secondary" : "ghost"
                       }
                       size="sm"
                       className="w-full justify-start gap-3 h-9"
                     >
-                      <FolderKanban className="h-4 w-4" />
-                      <span>Módulos</span>
-                    </Button>
-                  </Link>
-                  <Link to="/conversion/issues">
-                    <Button
-                      variant={
-                        isActive("/conversion/issues") ? "secondary" : "ghost"
-                      }
-                      size="sm"
-                      className="w-full justify-start gap-3 h-9"
-                    >
-                      <AlertCircle className="h-4 w-4" />
-                      <span>Inconsistências</span>
+                      <Cog className="h-4 w-4" />
+                      <span>Motores</span>
                     </Button>
                   </Link>
                   <Link to="/conversion/homologation">

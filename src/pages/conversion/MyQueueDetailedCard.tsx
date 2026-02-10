@@ -34,10 +34,14 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ConversionQueueItem } from "@/hooks/useConversionQueue";
+import { useConversionPosts } from "@/hooks/useConversionPosts";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { convertBlocksToTiptap } from "@/lib/editor-utils";
+import { ConversionPostFeed } from "@/components/conversion/ConversionPostFeed";
+import { NewPostForm } from "@/components/conversion/NewPostForm";
+import { useAuth } from "@/hooks/useAuth";
 
 type StatusType =
   | "Adequado"
@@ -85,6 +89,11 @@ export function MyQueueDetailedCard({
   onSendToHomologation,
   onTransfer,
 }: MyQueueDetailedCardProps) {
+  const { user } = useAuth();
+  const currentUserId = user?.id || "";
+  const currentUserName =
+    user?.user_metadata?.full_name || user?.email || "Usuário";
+
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -158,6 +167,15 @@ export function MyQueueDetailedCard({
 
     fetchProject();
   }, [isOpen, item.projectId]);
+
+  // Posts hook
+  const {
+    posts,
+    loading: postsLoading,
+    createPost,
+    deletePost,
+    uploadImage,
+  } = useConversionPosts(isOpen ? item.projectId : null);
 
   // Update field in database
   const updateField = async (dbField: string, value: unknown) => {
@@ -662,6 +680,28 @@ export function MyQueueDetailedCard({
                       placeholder="Detalhes da etapa de Conversão..."
                     />
                   </div>
+                </div>
+
+                {/* Publication Feed */}
+                <div className="mt-4 pt-4 border-t border-purple-200 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-1 w-8 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full" />
+                    <Label className="text-xs font-bold uppercase tracking-widest text-blue-600">
+                      Publicações / Trâmites ({posts.length})
+                    </Label>
+                  </div>
+                  <NewPostForm
+                    onSubmit={createPost}
+                    uploadImage={uploadImage}
+                    authorName={currentUserName}
+                    queueId={item.id}
+                  />
+                  <ConversionPostFeed
+                    posts={posts}
+                    loading={postsLoading}
+                    onDelete={deletePost}
+                    currentUserId={currentUserId}
+                  />
                 </div>
               </div>
 

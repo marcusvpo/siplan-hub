@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import {
   CheckCircle2,
   RefreshCw,
@@ -43,20 +44,18 @@ import {
   useConversionQueue,
   ConversionQueueItem,
 } from "@/hooks/useConversionQueue";
-import { useConversionIssues } from "@/hooks/useConversionIssues";
+import { useAuth } from "@/hooks/useAuth";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-// Mock current user
-const CURRENT_USER = {
-  id: "current-user-id",
-  name: "Usuário Atual",
-};
-
 export default function ConversionHomologation() {
+  const { user } = useAuth();
+  const currentUserId = user?.id || "";
+  const currentUserName =
+    user?.user_metadata?.full_name || user?.email || "Usuário";
+
   const { homologationQueue, loading, approveHomologation, refetch } =
-    useConversionQueue({ userId: CURRENT_USER.id });
-  const { reportIssue } = useConversionIssues();
+    useConversionQueue({ userId: currentUserId });
 
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -103,21 +102,28 @@ export default function ConversionHomologation() {
       return;
     }
 
-    const success = await reportIssue({
-      projectId: issueDialog.item.projectId,
-      title: issueTitle,
-      description: issueDescription,
-      priority: issuePriority,
-      reportedBy: CURRENT_USER.name,
-    });
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any)
+        .from("conversion_posts")
+        .insert({
+          project_id: issueDialog.item.projectId,
+          author_id: currentUserId || null,
+          author_name: currentUserName,
+          content: `**${issueTitle}**${issueDescription ? `\n\n${issueDescription}` : ""}\n\n_Prioridade: ${issuePriority === "high" ? "Alta" : issuePriority === "medium" ? "Média" : "Baixa"}_`,
+          post_type: "issue",
+          image_urls: [],
+        });
 
-    if (success) {
+      if (error) throw error;
+
       toast.success("Inconsistência reportada!");
       setIssueDialog({ open: false });
       setIssueTitle("");
       setIssueDescription("");
       setIssuePriority("medium");
-    } else {
+    } catch (err) {
+      console.error("Error reporting issue:", err);
       toast.error("Erro ao reportar inconsistência");
     }
   };

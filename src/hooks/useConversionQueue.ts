@@ -22,6 +22,7 @@ export interface ConversionQueueItem {
   estimatedCompletion: Date | null;
   completedAt: Date | null;
   notes: string | null;
+  engineStatus: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -63,7 +64,8 @@ export function useConversionQueue(options: UseConversionQueueOptions = {}) {
 
       if (error) throw error;
 
-      const items: ConversionQueueItem[] = (data || []).map((item) => ({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const items: ConversionQueueItem[] = (data || []).map((item: any) => ({
         id: item.id,
         projectId: item.project_id,
         clientName: item.projects?.client_name,
@@ -84,6 +86,7 @@ export function useConversionQueue(options: UseConversionQueueOptions = {}) {
           : null,
         completedAt: item.completed_at ? new Date(item.completed_at) : null,
         notes: item.notes,
+        engineStatus: item.engine_status || null,
         createdAt: new Date(item.created_at),
         updatedAt: new Date(item.updated_at),
       }));

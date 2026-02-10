@@ -14,6 +14,8 @@ import {
   UserPlus,
   Send,
   UserCheck,
+  MessageSquare,
+  Cog,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
@@ -55,6 +57,8 @@ import { useTeamAreas } from "@/hooks/useTeamAreas";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { MyQueueDetailedCard } from "./MyQueueDetailedCard";
+import { ConversionPostDrawer } from "@/components/conversion/ConversionPostDrawer";
+import { useConversionEngines } from "@/hooks/useConversionEngines";
 
 // Status labels and colors
 const STATUS_LABELS: Record<string, string> = {
@@ -103,6 +107,8 @@ export default function Conversion() {
     [members],
   );
 
+  const { requestEngine } = useConversionEngines();
+
   const [activeTab, setActiveTab] = useState("general");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -116,8 +122,18 @@ export default function Conversion() {
     open: boolean;
     item?: ConversionQueueItem;
   }>({ open: false });
+  const [engineDialog, setEngineDialog] = useState<{
+    open: boolean;
+    item?: ConversionQueueItem;
+  }>({ open: false });
+  const [engineNotes, setEngineNotes] = useState("");
   const [selectedNewOwner, setSelectedNewOwner] = useState("");
   const [transferNotes, setTransferNotes] = useState("");
+
+  // Drawer state for post history
+  const [drawerItem, setDrawerItem] = useState<ConversionQueueItem | null>(
+    null,
+  );
 
   // Filter queue items
   const filterItems = (items: ConversionQueueItem[]) => {
@@ -284,6 +300,7 @@ export default function Conversion() {
       <Card
         key={item.id}
         className="hover:shadow-md transition-shadow cursor-pointer"
+        onClick={() => setDrawerItem(item)}
       >
         <CardContent className="p-4">
           <div className="flex items-start justify-between gap-4">
@@ -324,6 +341,26 @@ export default function Conversion() {
                   >
                     <Clock className="h-3 w-3" />
                     Não assumido
+                  </Badge>
+                )}
+                {item.engineStatus && (
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "gap-1 text-xs",
+                      item.engineStatus === "pending_engine" &&
+                        "bg-orange-100 text-orange-700 border-orange-300",
+                      item.engineStatus === "engine_in_development" &&
+                        "bg-blue-100 text-blue-700 border-blue-300",
+                      item.engineStatus === "engine_ready" &&
+                        "bg-green-100 text-green-700 border-green-300",
+                    )}
+                  >
+                    <Cog className="h-3 w-3" />
+                    {item.engineStatus === "pending_engine" && "Aguard. Motor"}
+                    {item.engineStatus === "engine_in_development" &&
+                      "Motor em Dev"}
+                    {item.engineStatus === "engine_ready" && "Motor Pronto"}
                   </Badge>
                 )}
               </div>
@@ -371,7 +408,10 @@ export default function Conversion() {
               {showAssignButton && isConversionTeam && (
                 <Button
                   size="sm"
-                  onClick={() => handleAssign(item)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAssign(item);
+                  }}
                   className="bg-purple-600 hover:bg-purple-700"
                 >
                   <UserPlus className="h-4 w-4 mr-1" />
@@ -380,29 +420,57 @@ export default function Conversion() {
               )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <MoreVertical className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDrawerItem(item);
+                    }}
+                  >
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Ver Publicações
+                  </DropdownMenuItem>
                   {item.queueStatus === "in_progress" && (
                     <>
                       <DropdownMenuItem
-                        onClick={() =>
-                          setHomologationDialog({ open: true, item })
-                        }
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setHomologationDialog({ open: true, item });
+                        }}
                       >
                         <Send className="h-4 w-4 mr-2" />
                         Enviar p/ Homologação
                       </DropdownMenuItem>
-                      <DropdownMenuSeparator />
                     </>
                   )}
+                  {!item.engineStatus && isConversionTeam && (
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEngineDialog({ open: true, item });
+                      }}
+                    >
+                      <Cog className="h-4 w-4 mr-2" />
+                      Enviar para criação do Conversor
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
                   {(item.queueStatus === "awaiting_homologation" ||
                     item.queueStatus === "homologation") && (
                     <>
                       <DropdownMenuItem
-                        onClick={() => handleApproveHomologation(item)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleApproveHomologation(item);
+                        }}
                         className="text-green-600"
                       >
                         <CheckCircle2 className="h-4 w-4 mr-2" />
@@ -413,14 +481,18 @@ export default function Conversion() {
                   )}
                   {isConversionTeam && (
                     <DropdownMenuItem
-                      onClick={() => setTransferDialog({ open: true, item })}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setTransferDialog({ open: true, item });
+                      }}
                     >
                       <ArrowRight className="h-4 w-4 mr-2" />
                       Transferir
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuItem
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       if (item.projectId) {
                         window.location.href = `/projects?id=${item.projectId}`;
                       }
@@ -533,15 +605,6 @@ export default function Conversion() {
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="homologation" className="gap-2">
-            <CheckCircle2 className="h-4 w-4" />
-            Homologação
-            {homologationQueue.length > 0 && (
-              <Badge variant="outline" className="ml-1">
-                {homologationQueue.length}
-              </Badge>
-            )}
-          </TabsTrigger>
         </TabsList>
 
         {/* My Queue Tab - Detailed View */}
@@ -606,32 +669,18 @@ export default function Conversion() {
             </div>
           )}
         </TabsContent>
-
-        {/* Homologation Tab */}
-        <TabsContent value="homologation">
-          {loading ? (
-            <div className="text-center py-12 text-muted-foreground">
-              Carregando...
-            </div>
-          ) : filterItems(homologationQueue).length === 0 ? (
-            <Card className="p-12 text-center">
-              <Send className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-              <h3 className="text-lg font-medium mb-2">
-                Nenhum projeto em homologação
-              </h3>
-              <p className="text-muted-foreground">
-                Projetos aparecerão aqui quando enviados para validação
-              </p>
-            </Card>
-          ) : (
-            <div className="space-y-3">
-              {filterItems(homologationQueue).map((item) =>
-                renderQueueItem(item),
-              )}
-            </div>
-          )}
-        </TabsContent>
       </Tabs>
+
+      {/* Post History Drawer */}
+      <ConversionPostDrawer
+        isOpen={drawerItem !== null}
+        onClose={() => setDrawerItem(null)}
+        projectId={drawerItem?.projectId || null}
+        clientName={drawerItem?.clientName || ""}
+        ticketNumber={drawerItem?.ticketNumber}
+        queueStatus={drawerItem?.queueStatus || "pending"}
+        assignedToName={drawerItem?.assignedToName}
+      />
 
       {/* Transfer Dialog */}
       <Dialog
@@ -721,6 +770,66 @@ export default function Conversion() {
               className="bg-purple-600 hover:bg-purple-700"
             >
               Enviar para Homologação
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Engine Request Dialog */}
+      <Dialog
+        open={engineDialog.open}
+        onOpenChange={(open) => {
+          if (!open) setEngineDialog({ open: false });
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Enviar para Criação do Conversor</DialogTitle>
+            <DialogDescription>
+              Solicitar criação do motor de conversão para "
+              {engineDialog.item?.clientName}"
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="p-3 bg-orange-50 dark:bg-orange-950/30 rounded-lg">
+              <p className="text-sm text-orange-700 dark:text-orange-400">
+                A conversão será marcada como "Aguardando Motor" e ficará
+                visível na tela de Motores até que o conversor esteja pronto.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label>Observações (opcional)</Label>
+              <Textarea
+                value={engineNotes}
+                onChange={(e) => setEngineNotes(e.target.value)}
+                placeholder="Sistema legado, requisitos do motor..."
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setEngineDialog({ open: false })}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={async () => {
+                if (engineDialog.item) {
+                  await requestEngine(
+                    engineDialog.item.id,
+                    engineNotes,
+                    currentUserName,
+                  );
+                  setEngineDialog({ open: false });
+                  setEngineNotes("");
+                  refetch();
+                }
+              }}
+              className="bg-orange-600 hover:bg-orange-700"
+            >
+              <Cog className="h-4 w-4 mr-2" />
+              Enviar para Criação
             </Button>
           </DialogFooter>
         </DialogContent>
