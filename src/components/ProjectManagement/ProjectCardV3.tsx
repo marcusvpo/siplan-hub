@@ -15,6 +15,7 @@ import {
   CheckCircle2,
   Clock,
   X,
+  Cog,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -40,6 +41,7 @@ interface ProjectCardV3Props {
   onAction: (action: string, project: ProjectV2) => void;
   selected?: boolean;
   onSelect?: (selected: boolean) => void;
+  engineStatus?: string | null;
 }
 
 export function ProjectCardV3({
@@ -48,6 +50,7 @@ export function ProjectCardV3({
   onAction,
   selected,
   onSelect,
+  engineStatus,
 }: ProjectCardV3Props) {
   const isFollowUpOverdue =
     project.nextFollowUpDate && new Date(project.nextFollowUpDate) < new Date();
@@ -260,6 +263,52 @@ export function ProjectCardV3({
                 </Button>
               </div>
             )}
+
+          {/* Engine Status Gear Indicator */}
+          {engineStatus && (
+            <div
+              className={cn(
+                "flex items-center gap-1 rounded-full px-2 py-0.5 border",
+                engineStatus === "pending_engine" &&
+                  "bg-orange-100 dark:bg-orange-900/30 border-orange-300 dark:border-orange-700",
+                engineStatus === "engine_in_development" &&
+                  "bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700",
+                engineStatus === "engine_ready" &&
+                  "bg-emerald-100 dark:bg-emerald-900/30 border-emerald-300 dark:border-emerald-700",
+              )}
+              title={
+                engineStatus === "pending_engine"
+                  ? "Aguardando Extração da Base"
+                  : engineStatus === "engine_in_development"
+                    ? "Motor em Desenvolvimento"
+                    : "Motor Pronto"
+              }
+            >
+              <Cog
+                className={cn(
+                  "h-3 w-3",
+                  engineStatus === "pending_engine" && "text-orange-600",
+                  engineStatus === "engine_in_development" && "text-blue-600",
+                  engineStatus === "engine_ready" && "text-emerald-600",
+                )}
+              />
+              <span
+                className={cn(
+                  "text-[10px] font-semibold",
+                  engineStatus === "pending_engine" &&
+                    "text-orange-700 dark:text-orange-300",
+                  engineStatus === "engine_in_development" &&
+                    "text-blue-700 dark:text-blue-300",
+                  engineStatus === "engine_ready" &&
+                    "text-emerald-700 dark:text-emerald-300",
+                )}
+              >
+                {engineStatus === "pending_engine" && "Motor"}
+                {engineStatus === "engine_in_development" && "Motor"}
+                {engineStatus === "engine_ready" && "Motor ✓"}
+              </span>
+            </div>
+          )}
 
           {/* Project Leader */}
           <div

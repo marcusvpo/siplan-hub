@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   useConversionEngines,
   EngineStatus,
+  ConversionEngineItem,
 } from "@/hooks/useConversionEngines";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -30,20 +31,22 @@ import {
   CheckCircle2,
   AlertCircle,
   RefreshCw,
+  Database,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { ConversionPostDrawer } from "@/components/conversion/ConversionPostDrawer";
 
 const ENGINE_STATUS_CONFIG: Record<
   EngineStatus,
   { label: string; color: string; icon: React.ElementType }
 > = {
   pending_engine: {
-    label: "Aguardando Motor",
+    label: "Aguardando Extração da Base",
     color:
       "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border-orange-200 dark:border-orange-800",
-    icon: Clock,
+    icon: Database,
   },
   engine_in_development: {
     label: "Motor em Desenvolvimento",
@@ -66,6 +69,9 @@ export default function ConversionEngines() {
   const [editItem, setEditItem] = useState<string | null>(null);
   const [editStatus, setEditStatus] = useState<EngineStatus>("pending_engine");
   const [editNotes, setEditNotes] = useState("");
+  const [drawerEngine, setDrawerEngine] = useState<ConversionEngineItem | null>(
+    null,
+  );
 
   const filteredEngines = engines.filter((e) => {
     const matchesSearch =
@@ -105,11 +111,11 @@ export default function ConversionEngines() {
         <Card className="border-l-4 border-l-orange-500">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <Clock className="h-8 w-8 text-orange-500" />
+              <Database className="h-8 w-8 text-orange-500" />
               <div>
                 <p className="text-2xl font-bold">{kpis.pendingEngine}</p>
                 <p className="text-xs text-muted-foreground">
-                  Aguardando Motor
+                  Aguard. Extração da Base
                 </p>
               </div>
             </div>
@@ -169,7 +175,9 @@ export default function ConversionEngines() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos os Status</SelectItem>
-            <SelectItem value="pending_engine">Aguardando Motor</SelectItem>
+            <SelectItem value="pending_engine">
+              Aguardando Extração da Base
+            </SelectItem>
             <SelectItem value="engine_in_development">
               Em Desenvolvimento
             </SelectItem>
@@ -199,7 +207,8 @@ export default function ConversionEngines() {
             return (
               <Card
                 key={engine.id}
-                className="hover:shadow-md transition-shadow"
+                className="hover:shadow-md transition-shadow cursor-pointer"
+                onClick={() => setDrawerEngine(engine)}
               >
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-4">
@@ -260,7 +269,8 @@ export default function ConversionEngines() {
                       variant="outline"
                       size="sm"
                       className="gap-1"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setEditItem(engine.id);
                         setEditStatus(engine.engineStatus);
                         setEditNotes(engine.engineNotes || "");
@@ -298,7 +308,7 @@ export default function ConversionEngines() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="pending_engine">
-                    Aguardando Motor
+                    Aguardando Extração da Base
                   </SelectItem>
                   <SelectItem value="engine_in_development">
                     Em Desenvolvimento
@@ -306,17 +316,6 @@ export default function ConversionEngines() {
                   <SelectItem value="engine_ready">Pronto</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-2 block">
-                Observações
-              </label>
-              <Textarea
-                value={editNotes}
-                onChange={(e) => setEditNotes(e.target.value)}
-                placeholder="Notas sobre o motor..."
-                className="min-h-[80px]"
-              />
             </div>
           </div>
           <DialogFooter>
@@ -327,6 +326,17 @@ export default function ConversionEngines() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Post History Drawer */}
+      <ConversionPostDrawer
+        isOpen={drawerEngine !== null}
+        onClose={() => setDrawerEngine(null)}
+        projectId={drawerEngine?.projectId || null}
+        clientName={drawerEngine?.clientName || ""}
+        ticketNumber={drawerEngine?.ticketNumber}
+        queueStatus={drawerEngine?.queueStatus || "pending"}
+        assignedToName={drawerEngine?.assignedToName}
+      />
     </div>
   );
 }

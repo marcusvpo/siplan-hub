@@ -274,6 +274,9 @@ export function ProjectGrid() {
                       onSelect={(selected) =>
                         toggleSelection(project.id, selected)
                       }
+                      engineStatus={
+                        getItemByProjectId(project.id)?.engineStatus
+                      }
                       onAction={(action, project) => {
                         if (action === "delete") {
                           if (

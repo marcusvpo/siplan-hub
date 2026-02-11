@@ -54,7 +54,7 @@ import {
   ConversionQueueItem,
 } from "@/hooks/useConversionQueue";
 import { useTeamAreas } from "@/hooks/useTeamAreas";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { MyQueueDetailedCard } from "./MyQueueDetailedCard";
 import { ConversionPostDrawer } from "@/components/conversion/ConversionPostDrawer";
@@ -305,6 +305,32 @@ export default function Conversion() {
       >
         <CardContent className="p-4">
           <div className="flex items-start justify-between gap-4">
+            {/* Engine Dependency Indicator */}
+            {item.engineStatus && (
+              <div
+                className={cn(
+                  "flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-xl",
+                  item.engineStatus === "pending_engine" &&
+                    "bg-orange-100 dark:bg-orange-900/40 ring-2 ring-orange-300 dark:ring-orange-700",
+                  item.engineStatus === "engine_in_development" &&
+                    "bg-blue-100 dark:bg-blue-900/40 ring-2 ring-blue-300 dark:ring-blue-700",
+                  item.engineStatus === "engine_ready" &&
+                    "bg-emerald-100 dark:bg-emerald-900/40 ring-2 ring-emerald-300 dark:ring-emerald-700",
+                )}
+              >
+                <Cog
+                  className={cn(
+                    "h-7 w-7",
+                    item.engineStatus === "pending_engine" &&
+                      "text-orange-600 animate-[spin_3s_linear_infinite]",
+                    item.engineStatus === "engine_in_development" &&
+                      "text-blue-600 animate-spin",
+                    item.engineStatus === "engine_ready" && "text-emerald-600",
+                  )}
+                />
+              </div>
+            )}
+
             {/* Main Info */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-2">
@@ -358,7 +384,8 @@ export default function Conversion() {
                     )}
                   >
                     <Cog className="h-3 w-3" />
-                    {item.engineStatus === "pending_engine" && "Aguard. Motor"}
+                    {item.engineStatus === "pending_engine" &&
+                      "Aguard. Extração da Base"}
                     {item.engineStatus === "engine_in_development" &&
                       "Motor em Dev"}
                     {item.engineStatus === "engine_ready" && "Motor Pronto"}
@@ -372,6 +399,16 @@ export default function Conversion() {
                     addSuffix: true,
                     locale: ptBR,
                   })}
+                </span>
+                <span className="flex items-center gap-1">
+                  📅 Previsão Implantação:{" "}
+                  <strong>
+                    {item.deploymentDate
+                      ? format(new Date(item.deploymentDate), "dd/MM/yyyy", {
+                          locale: ptBR,
+                        })
+                      : "Ainda Sem Previsão"}
+                  </strong>
                 </span>
               </div>
             </div>
@@ -512,91 +549,98 @@ export default function Conversion() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30">
-            <Database className="h-6 w-6 text-purple-600" />
+    <div className="h-screen flex flex-col bg-gradient-to-br from-background to-muted/30 overflow-hidden">
+      {/* Fixed Header Area */}
+      <div className="flex-shrink-0 p-6 pb-0 space-y-4">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30">
+              <Database className="h-6 w-6 text-purple-600" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">Gestão de Atividades</h1>
+              <p className="text-muted-foreground">
+                Fila de conversão e homologação
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold">Gestão de Atividades</h1>
-            <p className="text-muted-foreground">
-              Fila de conversão e homologação
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {/* Minha Fila Button - Only for conversion team */}
-          {isConversionTeam && (
-            <Button
-              onClick={() => setActiveTab("my-queue")}
-              variant={activeTab === "my-queue" ? "default" : "outline"}
-              className={cn(
-                "gap-2",
-                activeTab === "my-queue"
-                  ? "bg-purple-600 hover:bg-purple-700"
-                  : "border-purple-300 text-purple-600 hover:bg-purple-50",
-              )}
-            >
-              <User className="h-4 w-4" />
-              Minha Fila
-              {myQueue.length > 0 && (
-                <Badge
-                  variant={activeTab === "my-queue" ? "secondary" : "default"}
-                  className={cn(
-                    "ml-1",
-                    activeTab === "my-queue"
-                      ? "bg-white/20 text-white"
-                      : "bg-purple-600 text-white",
-                  )}
-                >
-                  {myQueue.length}
-                </Badge>
-              )}
+          <div className="flex items-center gap-2">
+            {/* Minha Fila Button - Only for conversion team */}
+            {isConversionTeam && (
+              <Button
+                onClick={() => setActiveTab("my-queue")}
+                variant={activeTab === "my-queue" ? "default" : "outline"}
+                className={cn(
+                  "gap-2",
+                  activeTab === "my-queue"
+                    ? "bg-purple-600 hover:bg-purple-700"
+                    : "border-purple-300 text-purple-600 hover:bg-purple-50",
+                )}
+              >
+                <User className="h-4 w-4" />
+                Minha Fila
+                {myQueue.length > 0 && (
+                  <Badge
+                    variant={activeTab === "my-queue" ? "secondary" : "default"}
+                    className={cn(
+                      "ml-1",
+                      activeTab === "my-queue"
+                        ? "bg-white/20 text-white"
+                        : "bg-purple-600 text-white",
+                    )}
+                  >
+                    {myQueue.length}
+                  </Badge>
+                )}
+              </Button>
+            )}
+            <Button onClick={refetch} variant="outline" size="sm">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Atualizar
             </Button>
-          )}
-          <Button onClick={refetch} variant="outline" size="sm">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Atualizar
-          </Button>
+          </div>
+        </div>
+
+        {/* KPIs */}
+        {renderKPIs()}
+
+        {/* Search and Filters */}
+        <div className="flex items-center gap-4">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar cliente ou ticket..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[180px]">
+              <Filter className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os status</SelectItem>
+              <SelectItem value="pending">Pendentes</SelectItem>
+              <SelectItem value="in_progress">Em Andamento</SelectItem>
+              <SelectItem value="awaiting_homologation">
+                Aguard. Homolog.
+              </SelectItem>
+              <SelectItem value="done">Concluídos</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
-      {/* KPIs */}
-      {renderKPIs()}
-
-      {/* Search and Filters */}
-      <div className="flex items-center gap-4 mb-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar cliente ou ticket..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[180px]">
-            <Filter className="h-4 w-4 mr-2" />
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos os status</SelectItem>
-            <SelectItem value="pending">Pendentes</SelectItem>
-            <SelectItem value="in_progress">Em Andamento</SelectItem>
-            <SelectItem value="awaiting_homologation">
-              Aguard. Homolog.
-            </SelectItem>
-            <SelectItem value="done">Concluídos</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-4">
+      {/* Tabs - with fixed trigger and scrollable content */}
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="flex-1 flex flex-col overflow-hidden px-6 pt-4"
+      >
+        <TabsList className="mb-4 flex-shrink-0">
           <TabsTrigger value="general" className="gap-2">
             <Users className="h-4 w-4" />
             Fila Geral
@@ -608,68 +652,73 @@ export default function Conversion() {
           </TabsTrigger>
         </TabsList>
 
-        {/* My Queue Tab - Detailed View */}
-        <TabsContent value="my-queue">
-          {loading ? (
-            <div className="text-center py-12 text-muted-foreground">
-              Carregando...
-            </div>
-          ) : filterItems(myQueue).length === 0 ? (
-            <Card className="p-12 text-center border-2 border-dashed border-purple-200 bg-purple-50/30">
-              <Database className="h-12 w-12 mx-auto text-purple-400/50 mb-4" />
-              <h3 className="text-lg font-medium mb-2 text-purple-900">
-                Sua fila está vazia
-              </h3>
-              <p className="text-muted-foreground mb-4">
-                Assuma projetos da fila geral para começar a trabalhar
-              </p>
-              <Button
-                onClick={() => setActiveTab("general")}
-                className="bg-purple-600 hover:bg-purple-700"
-              >
-                Ver Fila Geral
-              </Button>
-            </Card>
-          ) : (
-            <div className="space-y-4">
-              {filterItems(myQueue).map((item) => (
-                <MyQueueDetailedCard
-                  key={item.id}
-                  item={item}
-                  onSendToHomologation={(i) =>
-                    setHomologationDialog({ open: true, item: i })
-                  }
-                  onTransfer={(i) => setTransferDialog({ open: true, item: i })}
-                />
-              ))}
-            </div>
-          )}
-        </TabsContent>
+        {/* Scrollable Content Area */}
+        <div className="flex-1 overflow-y-auto pb-6">
+          {/* My Queue Tab - Detailed View */}
+          <TabsContent value="my-queue" className="mt-0">
+            {loading ? (
+              <div className="text-center py-12 text-muted-foreground">
+                Carregando...
+              </div>
+            ) : filterItems(myQueue).length === 0 ? (
+              <Card className="p-12 text-center border-2 border-dashed border-purple-200 bg-purple-50/30">
+                <Database className="h-12 w-12 mx-auto text-purple-400/50 mb-4" />
+                <h3 className="text-lg font-medium mb-2 text-purple-900">
+                  Sua fila está vazia
+                </h3>
+                <p className="text-muted-foreground mb-4">
+                  Assuma projetos da fila geral para começar a trabalhar
+                </p>
+                <Button
+                  onClick={() => setActiveTab("general")}
+                  className="bg-purple-600 hover:bg-purple-700"
+                >
+                  Ver Fila Geral
+                </Button>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {filterItems(myQueue).map((item) => (
+                  <MyQueueDetailedCard
+                    key={item.id}
+                    item={item}
+                    onSendToHomologation={(i) =>
+                      setHomologationDialog({ open: true, item: i })
+                    }
+                    onTransfer={(i) =>
+                      setTransferDialog({ open: true, item: i })
+                    }
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
 
-        {/* General Queue Tab */}
-        <TabsContent value="general">
-          {loading ? (
-            <div className="text-center py-12 text-muted-foreground">
-              Carregando...
-            </div>
-          ) : filterItems(generalQueue).length === 0 ? (
-            <Card className="p-12 text-center">
-              <CheckCircle2 className="h-12 w-12 mx-auto text-green-500/50 mb-4" />
-              <h3 className="text-lg font-medium mb-2">
-                Nenhuma conversão na fila
-              </h3>
-              <p className="text-muted-foreground">
-                Não há conversões ativas no momento
-              </p>
-            </Card>
-          ) : (
-            <div className="space-y-3">
-              {filterItems(generalQueue).map((item) =>
-                renderQueueItem(item, !item.assignedTo),
-              )}
-            </div>
-          )}
-        </TabsContent>
+          {/* General Queue Tab */}
+          <TabsContent value="general" className="mt-0">
+            {loading ? (
+              <div className="text-center py-12 text-muted-foreground">
+                Carregando...
+              </div>
+            ) : filterItems(generalQueue).length === 0 ? (
+              <Card className="p-12 text-center">
+                <CheckCircle2 className="h-12 w-12 mx-auto text-green-500/50 mb-4" />
+                <h3 className="text-lg font-medium mb-2">
+                  Nenhuma conversão na fila
+                </h3>
+                <p className="text-muted-foreground">
+                  Não há conversões ativas no momento
+                </p>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {filterItems(generalQueue).map((item) =>
+                  renderQueueItem(item, !item.assignedTo),
+                )}
+              </div>
+            )}
+          </TabsContent>
+        </div>
       </Tabs>
 
       {/* Post History Drawer */}
@@ -817,8 +866,9 @@ export default function Conversion() {
           <div className="space-y-4 py-2">
             <div className="p-3 bg-orange-50 dark:bg-orange-950/30 rounded-lg">
               <p className="text-sm text-orange-700 dark:text-orange-400">
-                A conversão será marcada como "Aguardando Motor" e ficará
-                visível na tela de Motores até que o conversor esteja pronto.
+                A conversão será marcada como "Aguardando Extração da Base" e
+                ficará visível na tela de Motores até que o conversor esteja
+                pronto.
               </p>
             </div>
             <div className="space-y-2">
