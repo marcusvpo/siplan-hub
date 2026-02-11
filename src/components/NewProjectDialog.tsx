@@ -17,11 +17,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus } from "lucide-react";
 import { useProjectsV2 } from "@/hooks/useProjectsV2";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProjectV2 } from "@/types/ProjectV2";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Badge } from "@/components/ui/badge";
+import { Check, ChevronsUpDown, Plus } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export const NewProjectDialog = () => {
   const [open, setOpen] = useState(false);
@@ -36,6 +51,22 @@ export const NewProjectDialog = () => {
   const [soldHours, setSoldHours] = useState("");
   const [legacySystem, setLegacySystem] = useState("");
   const [specialty, setSpecialty] = useState<string>("");
+
+  const [products, setProducts] = useState<string[]>([]);
+  const [productsOpen, setProductsOpen] = useState(false);
+
+  // Constants
+  const MAIN_SYSTEMS = ["Orion TN", "Orion PRO", "Orion REG"];
+  const AVAILABLE_PRODUCTS = [
+    "LCW",
+    "SGA",
+    "On Hand",
+    "Orion GED",
+    "Library",
+    "e-Recepção",
+    "e-Qualificação",
+    "Cartflow",
+  ];
 
   const { createProject } = useProjectsV2();
 
@@ -52,6 +83,7 @@ export const NewProjectDialog = () => {
         clientName,
         ticketNumber,
         systemType,
+        products, // Including products
         projectLeader,
         // lastUpdatedBy is now set automatically by useProjectsV2
         opNumber: opNumber ? parseInt(opNumber) : undefined,
@@ -70,6 +102,7 @@ export const NewProjectDialog = () => {
           setClientName("");
           setTicketNumber("");
           setSystemType("");
+          setProducts([]);
           setProjectLeader("Bruno Fernandes");
           setOpNumber("");
           setSalesOrderNumber("");
@@ -81,6 +114,14 @@ export const NewProjectDialog = () => {
           toast.error("Erro ao criar projeto: " + error.message);
         },
       },
+    );
+  };
+
+  const toggleProduct = (product: string) => {
+    setProducts((current) =>
+      current.includes(product)
+        ? current.filter((p) => p !== product)
+        : [...current, product],
     );
   };
 
@@ -137,15 +178,83 @@ export const NewProjectDialog = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="systemType">
-                    Sistema <span className="text-destructive">*</span>
+                    Sistema Principal{" "}
+                    <span className="text-destructive">*</span>
                   </Label>
-                  <Input
-                    id="systemType"
-                    placeholder="Ex: Orion PRO, Orion TN, Orion REG"
-                    value={systemType}
-                    onChange={(e) => setSystemType(e.target.value)}
-                    required
-                  />
+                  <Select value={systemType} onValueChange={setSystemType}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o sistema principal" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {MAIN_SYSTEMS.map((sys) => (
+                        <SelectItem key={sys} value={sys}>
+                          {sys}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Produtos Adicionais</Label>
+                  <Popover open={productsOpen} onOpenChange={setProductsOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={productsOpen}
+                        className="w-full justify-between h-auto min-h-10 py-2 text-left font-normal"
+                      >
+                        {products.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {products.map((product) => (
+                              <Badge
+                                key={product}
+                                variant="secondary"
+                                className="mr-1"
+                              >
+                                {product}
+                              </Badge>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">
+                            Selecione os produtos...
+                          </span>
+                        )}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[300px] p-0" align="start">
+                      <Command>
+                        <CommandInput placeholder="Buscar produto..." />
+                        <CommandList>
+                          <CommandEmpty>
+                            Nenhum produto encontrado.
+                          </CommandEmpty>
+                          <CommandGroup>
+                            {AVAILABLE_PRODUCTS.map((product) => (
+                              <CommandItem
+                                key={product}
+                                value={product}
+                                onSelect={() => toggleProduct(product)}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    products.includes(product)
+                                      ? "opacity-100"
+                                      : "opacity-0",
+                                  )}
+                                />
+                                {product}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
 
                 <div className="space-y-2">

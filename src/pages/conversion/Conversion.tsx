@@ -98,6 +98,7 @@ export default function Conversion() {
     updateQueueStatus,
     sendToHomologation,
     approveHomologation,
+    removeFromQueue,
     refetch,
   } = useConversionQueue({ userId: currentUserId });
 
@@ -725,16 +726,39 @@ export default function Conversion() {
               />
             </div>
           </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setTransferDialog({ open: false })}
-            >
-              Cancelar
-            </Button>
-            <Button onClick={handleTransfer} disabled={!selectedNewOwner}>
-              Transferir
-            </Button>
+          <DialogFooter className="sm:justify-between">
+            {transferDialog.item && (
+              <Button
+                variant="ghost"
+                className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                onClick={() => {
+                  if (
+                    confirm(
+                      `Tem certeza que deseja remover "${transferDialog.item?.clientName}" da fila?`,
+                    )
+                  ) {
+                    removeFromQueue(
+                      transferDialog.item.id,
+                      transferDialog.item.projectId,
+                    );
+                    setTransferDialog({ open: false });
+                  }
+                }}
+              >
+                Remover da Fila
+              </Button>
+            )}
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setTransferDialog({ open: false })}
+              >
+                Cancelar
+              </Button>
+              <Button onClick={handleTransfer} disabled={!selectedNewOwner}>
+                Transferir
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>

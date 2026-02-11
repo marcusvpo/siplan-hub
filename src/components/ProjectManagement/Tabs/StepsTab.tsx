@@ -41,6 +41,7 @@ import {
   Send,
   ExternalLink,
   Calendar,
+  X,
 } from "lucide-react";
 import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
@@ -77,7 +78,8 @@ export function StepsTab({ project, onUpdate }: TabProps) {
   const { toast } = useToast();
   const [notifying, setNotifying] = useState(false);
   const [sendingToConversion, setSendingToConversion] = useState(false);
-  const { sendToConversion, getItemByProjectId } = useConversionQueue();
+  const { sendToConversion, getItemByProjectId, removeFromQueue } =
+    useConversionQueue();
 
   // Check if project is already in conversion queue
   const conversionItem = getItemByProjectId(project.id);
@@ -403,59 +405,94 @@ export function StepsTab({ project, onUpdate }: TabProps) {
     <>
       {/* Send to Conversion Button */}
       <div className="col-span-full mb-4">
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
+        <div className="flex items-center gap-2">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant={isInConversionQueue ? "outline" : "default"}
+                disabled={sendingToConversion || isInConversionQueue}
+                className={cn(
+                  "w-full md:w-auto font-bold shadow-sm",
+                  isInConversionQueue
+                    ? "border-purple-300 text-purple-600"
+                    : "bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-700 hover:to-fuchsia-700",
+                )}
+              >
+                {isInConversionQueue ? (
+                  <>
+                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                    Na Fila de Conversão
+                    <a
+                      href="/conversion"
+                      className="ml-2 inline-flex items-center text-xs underline"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </>
+                ) : (
+                  <>
+                    <Send className="mr-2 h-4 w-4" />
+                    {sendingToConversion
+                      ? "Enviando..."
+                      : "Enviar para Conversão"}
+                  </>
+                )}
+              </Button>
+            </AlertDialogTrigger>
+            {!isInConversionQueue && (
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Confirmar envio</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Deseja enviar este projeto para a fila de conversão? A
+                    equipe de conversão será notificada e o projeto aparecerá no
+                    dashboard deles.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleSendToConversion}>
+                    Confirmar Envio
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            )}
+          </AlertDialog>
+
+          {isInConversionQueue && conversionItem && (
             <Button
-              variant={isInConversionQueue ? "outline" : "default"}
-              disabled={sendingToConversion || isInConversionQueue}
-              className={cn(
-                "w-full md:w-auto font-bold shadow-sm",
-                isInConversionQueue
-                  ? "border-purple-300 text-purple-600"
-                  : "bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-700 hover:to-fuchsia-700",
-              )}
+              variant="outline"
+              size="icon"
+              className="h-10 w-10 border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors"
+              title="Remover da fila de conversão"
+              onClick={async (e) => {
+                e.stopPropagation();
+                if (
+                  confirm(
+                    "Tem certeza que deseja remover este projeto da fila de conversão?",
+                  )
+                ) {
+                  const success = await removeFromQueue(
+                    conversionItem.id,
+                    project.id,
+                  );
+                  if (success) {
+                    updateStage("conversion", {
+                      sentAt: undefined,
+                      status: "todo" as StageStatus,
+                      homologationStatus: undefined,
+                      homologationResponsible: undefined,
+                    });
+                  }
+                }
+              }}
             >
-              {isInConversionQueue ? (
-                <>
-                  <CheckCircle2 className="mr-2 h-4 w-4" />
-                  Na Fila de Conversão
-                  <a
-                    href="/conversion"
-                    className="ml-2 inline-flex items-center text-xs underline"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                </>
-              ) : (
-                <>
-                  <Send className="mr-2 h-4 w-4" />
-                  {sendingToConversion
-                    ? "Enviando..."
-                    : "Enviar para Conversão"}
-                </>
-              )}
+              <X className="h-4 w-4" />
             </Button>
-          </AlertDialogTrigger>
-          {!isInConversionQueue && (
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Confirmar envio</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Deseja enviar este projeto para a fila de conversão? A equipe
-                  de conversão será notificada e o projeto aparecerá no
-                  dashboard deles.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={handleSendToConversion}>
-                  Confirmar Envio
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
           )}
-        </AlertDialog>
+        </div>
+
         {isInConversionQueue && conversionItem && (
           <div className="mt-2 text-sm text-muted-foreground">
             Status:{" "}

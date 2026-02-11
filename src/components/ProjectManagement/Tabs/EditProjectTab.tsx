@@ -14,7 +14,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2 } from "lucide-react";
+
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Check, ChevronsUpDown, Plus, Trash2, X } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 interface TabProps {
   project: ProjectV2;
@@ -27,8 +43,32 @@ export function EditProjectTab({ project, onUpdate }: TabProps) {
     async (newData) => {
       onUpdate(newData);
       await new Promise((resolve) => setTimeout(resolve, 500));
-    }
+    },
   );
+
+  const [productsOpen, setProductsOpen] = useState(false);
+
+  // Constants
+  const MAIN_SYSTEMS = ["Orion TN", "Orion PRO", "Orion REG"];
+  const AVAILABLE_PRODUCTS = [
+    "LCW",
+    "SGA",
+    "On Hand",
+    "Orion GED",
+    "Library",
+    "e-Recepção",
+    "e-Qualificação",
+    "Cartflow",
+  ];
+
+  const currentProducts = data.products || [];
+
+  const toggleProduct = (product: string) => {
+    const newProducts = currentProducts.includes(product)
+      ? currentProducts.filter((p) => p !== product)
+      : [...currentProducts, product];
+    handleChange("products", newProducts);
+  };
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-10">
@@ -73,12 +113,84 @@ export function EditProjectTab({ project, onUpdate }: TabProps) {
             />
           </div>
           <div className="space-y-2">
-            <Label>Sistema</Label>
-            <Input
+            <Label>Sistema Principal</Label>
+            <Select
               value={data.systemType}
-              onChange={(e) => handleChange("systemType", e.target.value)}
-            />
+              onValueChange={(value) => handleChange("systemType", value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione..." />
+              </SelectTrigger>
+              <SelectContent>
+                {MAIN_SYSTEMS.map((sys) => (
+                  <SelectItem key={sys} value={sys}>
+                    {sys}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
+
+          <div className="space-y-2">
+            <Label>Produtos Adicionais</Label>
+            <Popover open={productsOpen} onOpenChange={setProductsOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={productsOpen}
+                  className="w-full justify-between h-auto min-h-10 py-2 text-left font-normal"
+                >
+                  {currentProducts.length > 0 ? (
+                    <div className="flex flex-wrap gap-1">
+                      {currentProducts.map((product) => (
+                        <Badge
+                          key={product}
+                          variant="secondary"
+                          className="mr-1"
+                        >
+                          {product}
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground">
+                      Selecione os produtos...
+                    </span>
+                  )}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[300px] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Buscar produto..." />
+                  <CommandList>
+                    <CommandEmpty>Nenhum produto encontrado.</CommandEmpty>
+                    <CommandGroup>
+                      {AVAILABLE_PRODUCTS.map((product) => (
+                        <CommandItem
+                          key={product}
+                          value={product}
+                          onSelect={() => toggleProduct(product)}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              currentProducts.includes(product)
+                                ? "opacity-100"
+                                : "opacity-0",
+                            )}
+                          />
+                          {product}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </div>
+
           <div className="space-y-2">
             <Label>Líder do Projeto</Label>
             <AutocompleteInput
@@ -103,7 +215,7 @@ export function EditProjectTab({ project, onUpdate }: TabProps) {
               onChange={(e) =>
                 handleChange(
                   "opNumber",
-                  e.target.value ? Number(e.target.value) : undefined
+                  e.target.value ? Number(e.target.value) : undefined,
                 )
               }
             />
@@ -116,7 +228,7 @@ export function EditProjectTab({ project, onUpdate }: TabProps) {
               onChange={(e) =>
                 handleChange(
                   "salesOrderNumber",
-                  e.target.value ? Number(e.target.value) : undefined
+                  e.target.value ? Number(e.target.value) : undefined,
                 )
               }
             />
@@ -130,7 +242,7 @@ export function EditProjectTab({ project, onUpdate }: TabProps) {
               onChange={(e) =>
                 handleChange(
                   "soldHours",
-                  e.target.value ? Number(e.target.value) : undefined
+                  e.target.value ? Number(e.target.value) : undefined,
                 )
               }
             />
@@ -275,13 +387,17 @@ export function EditProjectTab({ project, onUpdate }: TabProps) {
                   type="date"
                   value={
                     data.startDatePlanned
-                      ? new Date(data.startDatePlanned).toISOString().split("T")[0]
+                      ? new Date(data.startDatePlanned)
+                          .toISOString()
+                          .split("T")[0]
                       : ""
                   }
                   onChange={(e) =>
                     handleChange(
                       "startDatePlanned",
-                      e.target.value ? new Date(e.target.value + 'T12:00:00') : undefined
+                      e.target.value
+                        ? new Date(e.target.value + "T12:00:00")
+                        : undefined,
                     )
                   }
                 />
@@ -292,13 +408,17 @@ export function EditProjectTab({ project, onUpdate }: TabProps) {
                   type="date"
                   value={
                     data.endDatePlanned
-                      ? new Date(data.endDatePlanned).toISOString().split("T")[0]
+                      ? new Date(data.endDatePlanned)
+                          .toISOString()
+                          .split("T")[0]
                       : ""
                   }
                   onChange={(e) =>
                     handleChange(
                       "endDatePlanned",
-                      e.target.value ? new Date(e.target.value + 'T12:00:00') : undefined
+                      e.target.value
+                        ? new Date(e.target.value + "T12:00:00")
+                        : undefined,
                     )
                   }
                 />
@@ -317,13 +437,17 @@ export function EditProjectTab({ project, onUpdate }: TabProps) {
                   type="date"
                   value={
                     data.startDateActual
-                      ? new Date(data.startDateActual).toISOString().split("T")[0]
+                      ? new Date(data.startDateActual)
+                          .toISOString()
+                          .split("T")[0]
                       : ""
                   }
                   onChange={(e) =>
                     handleChange(
                       "startDateActual",
-                      e.target.value ? new Date(e.target.value + 'T12:00:00') : undefined
+                      e.target.value
+                        ? new Date(e.target.value + "T12:00:00")
+                        : undefined,
                     )
                   }
                 />
@@ -340,7 +464,9 @@ export function EditProjectTab({ project, onUpdate }: TabProps) {
                   onChange={(e) =>
                     handleChange(
                       "endDateActual",
-                      e.target.value ? new Date(e.target.value + 'T12:00:00') : undefined
+                      e.target.value
+                        ? new Date(e.target.value + "T12:00:00")
+                        : undefined,
                     )
                   }
                 />
@@ -358,13 +484,17 @@ export function EditProjectTab({ project, onUpdate }: TabProps) {
                 className="border-red-200 focus:border-red-500"
                 value={
                   data.nextFollowUpDate
-                    ? new Date(data.nextFollowUpDate).toISOString().split("T")[0]
+                    ? new Date(data.nextFollowUpDate)
+                        .toISOString()
+                        .split("T")[0]
                     : ""
                 }
                 onChange={(e) =>
                   handleChange(
                     "nextFollowUpDate",
-                    e.target.value ? new Date(e.target.value + 'T12:00:00') : undefined
+                    e.target.value
+                      ? new Date(e.target.value + "T12:00:00")
+                      : undefined,
                   )
                 }
               />

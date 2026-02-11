@@ -22,6 +22,7 @@ export type LogAction =
   // Conversion actions
   | "conversion_queue_assigned"
   | "conversion_queue_transferred"
+  | "conversion_queue_removed"
   | "conversion_queue_completed"
   | "conversion_queue_updated"
   | "conversion_status_changed"

@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { activityLogger } from "@/services/activityLogger";
+import { toast } from "sonner";
 
 // Types based on actual database schema
 export interface ConversionQueueItem {
@@ -392,6 +393,59 @@ export function useConversionQueue(options: UseConversionQueueOptions = {}) {
     [queue]
   );
 
+  // Remove from queue
+  const removeFromQueue = useCallback(
+    async (queueId: string, projectId: string) => {
+      try {
+        // Delete from conversion_queue
+        const { error: deleteError } = await supabase
+          .from("conversion_queue")
+          .delete()
+          .eq("id", queueId);
+
+        if (deleteError) throw deleteError;
+
+        // Update project to reset conversion state
+        // We set conversion_status back to 'todo' or keep it as is?
+        // Usually if we remove from queue, we are cancelling the process, so 'todo' makes sense.
+        const { error: projectError } = await supabase
+          .from("projects")
+          .update({
+            conversion_sent_at: null,
+            conversion_status: "todo",
+            conversion_responsible: null,
+            conversion_start_date: null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", projectId);
+
+        if (projectError) {
+          console.error(
+            "Error updating project on removal from queue:",
+            projectError
+          );
+        }
+
+        // Log the action
+        activityLogger.logConversionAction(
+          "conversion_queue_removed",
+          projectId,
+          "",
+          { queueId }
+        );
+
+        await fetchQueue();
+        toast.success("Removido da fila com sucesso");
+        return true;
+      } catch (err) {
+        console.error("Error removing from queue:", err);
+        toast.error("Erro ao remover da fila");
+        return false;
+      }
+    },
+    [fetchQueue]
+  );
+
   return {
     queue,
     myQueue,
@@ -403,6 +457,7 @@ export function useConversionQueue(options: UseConversionQueueOptions = {}) {
     sendToConversion,
     assignToMe,
     transferTo,
+    removeFromQueue,
     updateQueueStatus,
     updatePriority,
     updateNotes,
