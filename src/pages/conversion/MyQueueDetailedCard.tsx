@@ -31,6 +31,8 @@ import {
   Eye,
   User,
   Calendar,
+  Cog,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ConversionQueueItem } from "@/hooks/useConversionQueue";
@@ -42,6 +44,8 @@ import { convertBlocksToTiptap } from "@/lib/editor-utils";
 import { ConversionPostFeed } from "@/components/conversion/ConversionPostFeed";
 import { NewPostForm } from "@/components/conversion/NewPostForm";
 import { useAuth } from "@/hooks/useAuth";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 type StatusType =
   | "Adequado"
@@ -286,7 +290,49 @@ export function MyQueueDetailedCard({
                   <Database className="h-3.5 w-3.5" />
                   {item.systemType}
                 </span>
+                <span className="flex items-center gap-1 text-xs">
+                  📅{" "}
+                  {item.deploymentDate
+                    ? format(new Date(item.deploymentDate), "dd/MM/yyyy", {
+                        locale: ptBR,
+                      })
+                    : "Sem Previsão"}
+                </span>
               </div>
+              {/* Engine Status Badge - Prominent */}
+              {item.engineStatus && (
+                <div className="mt-2">
+                  <Badge
+                    className={cn(
+                      "text-xs font-semibold gap-1.5 px-3 py-1",
+                      item.engineStatus === "pending_engine" &&
+                        "bg-orange-500 text-white border-orange-600 shadow-sm shadow-orange-200",
+                      item.engineStatus === "engine_in_development" &&
+                        "bg-blue-500 text-white border-blue-600 shadow-sm shadow-blue-200",
+                      item.engineStatus === "engine_ready" &&
+                        "bg-emerald-500 text-white border-emerald-600 shadow-sm shadow-emerald-200",
+                    )}
+                  >
+                    {item.engineStatus === "pending_engine" && (
+                      <>
+                        <Database className="h-3.5 w-3.5" /> Aguardando Extração
+                        da Base
+                      </>
+                    )}
+                    {item.engineStatus === "engine_in_development" && (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" /> Em
+                        Desenvolvimento
+                      </>
+                    )}
+                    {item.engineStatus === "engine_ready" && (
+                      <>
+                        <CheckCircle2 className="h-3.5 w-3.5" /> Pronto
+                      </>
+                    )}
+                  </Badge>
+                </div>
+              )}
             </div>
 
             {/* Right Side - Priority & Actions */}
@@ -346,6 +392,37 @@ export function MyQueueDetailedCard({
                   >
                     {STATUS_LABELS[item.queueStatus] || item.queueStatus}
                   </Badge>
+                  {item.engineStatus && (
+                    <Badge
+                      className={cn(
+                        "text-sm font-semibold gap-1.5",
+                        item.engineStatus === "pending_engine" &&
+                          "bg-orange-500 text-white border-orange-600",
+                        item.engineStatus === "engine_in_development" &&
+                          "bg-blue-500 text-white border-blue-600",
+                        item.engineStatus === "engine_ready" &&
+                          "bg-emerald-500 text-white border-emerald-600",
+                      )}
+                    >
+                      {item.engineStatus === "pending_engine" && (
+                        <>
+                          <Database className="h-3.5 w-3.5" /> Aguardando
+                          Extração da Base
+                        </>
+                      )}
+                      {item.engineStatus === "engine_in_development" && (
+                        <>
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" /> Em
+                          Desenvolvimento
+                        </>
+                      )}
+                      {item.engineStatus === "engine_ready" && (
+                        <>
+                          <CheckCircle2 className="h-3.5 w-3.5" /> Pronto
+                        </>
+                      )}
+                    </Badge>
+                  )}
                 </DialogTitle>
                 <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
                   <span className="font-mono bg-purple-100 px-2 py-0.5 rounded">
@@ -410,10 +487,14 @@ export function MyQueueDetailedCard({
                   </div>
                   <div>
                     <span className="text-xs text-muted-foreground block">
-                      Tipo de Implantação
+                      Data Prevista para Implantação
                     </span>
-                    <span className="font-medium capitalize">
-                      {projectInfo.implantationType?.replace("_", " ") || "—"}
+                    <span className="font-medium">
+                      {item.deploymentDate
+                        ? format(new Date(item.deploymentDate), "dd/MM/yyyy", {
+                            locale: ptBR,
+                          })
+                        : "Ainda Sem Previsão"}
                     </span>
                   </div>
                   <div>

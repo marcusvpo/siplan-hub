@@ -24,6 +24,7 @@ export interface ConversionQueueItem {
   completedAt: Date | null;
   notes: string | null;
   engineStatus: string | null;
+  deploymentDate: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -57,7 +58,8 @@ export function useConversionQueue(options: UseConversionQueueOptions = {}) {
             client_name,
             ticket_number,
             system_type,
-            legacy_system
+            legacy_system,
+            implementation_phase1
           )
         `)
         .order("priority", { ascending: true })
@@ -88,6 +90,15 @@ export function useConversionQueue(options: UseConversionQueueOptions = {}) {
         completedAt: item.completed_at ? new Date(item.completed_at) : null,
         notes: item.notes,
         engineStatus: item.engine_status || null,
+        deploymentDate: (() => {
+          try {
+            const phase1 = item.projects?.implementation_phase1;
+            if (phase1 && typeof phase1 === 'object' && (phase1 as Record<string, unknown>).startDate) {
+              return (phase1 as Record<string, unknown>).startDate as string;
+            }
+          } catch { /* ignore parse errors */ }
+          return null;
+        })(),
         createdAt: new Date(item.created_at),
         updatedAt: new Date(item.updated_at),
       }));
