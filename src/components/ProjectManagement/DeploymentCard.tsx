@@ -7,13 +7,22 @@ import { motion } from "framer-motion";
 
 interface DeploymentCardProps {
   project: ProjectV2;
+  phaseType?: "phase1" | "phase2";
   onClick?: () => void;
 }
 
-export function DeploymentCard({ project, onClick }: DeploymentCardProps) {
-  const phase1 = project.stages.implementation.phase1;
-  const startDate = phase1?.startDate;
-  const endDate = phase1?.endDate;
+export function DeploymentCard({
+  project,
+  phaseType = "phase1",
+  onClick,
+}: DeploymentCardProps) {
+  const phaseData =
+    phaseType === "phase1"
+      ? project.stages.implementation.phase1
+      : project.stages.implementation.phase2;
+
+  const startDate = phaseData?.startDate;
+  const endDate = phaseData?.endDate;
 
   const formatDate = (date?: Date) => {
     if (!date) return "--/--";
@@ -89,7 +98,7 @@ export function DeploymentCard({ project, onClick }: DeploymentCardProps) {
         <div className="px-4 py-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between z-10 relative bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
           <div className="flex flex-col">
             <span className="text-[9px] uppercase tracking-widest text-slate-400 font-bold mb-0.5">
-              Fase 1
+              {phaseType === "phase1" ? "Fase 1" : "Fase 2"}
             </span>
             <div className="flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 font-bold">
               <Calendar className="w-3 h-3" />
@@ -107,9 +116,9 @@ export function DeploymentCard({ project, onClick }: DeploymentCardProps) {
               {/* Avatar placeholder or initials */}
               <div
                 className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 border-2 border-white dark:border-slate-800 flex items-center justify-center text-[9px] font-bold text-slate-600 dark:text-slate-300"
-                title={phase1?.responsible}
+                title={phaseData?.responsible}
               >
-                {phase1?.responsible?.substring(0, 2).toUpperCase() || "?"}
+                {phaseData?.responsible?.substring(0, 2).toUpperCase() || "?"}
               </div>
             </div>
           </div>

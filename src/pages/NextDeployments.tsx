@@ -25,12 +25,18 @@ export default function NextDeployments() {
   const [filterDeployer, setFilterDeployer] = useState<string>("all");
   const [filterSystem, setFilterSystem] = useState<string>("all");
 
-  // Extract unique deployers from phase1 responsible
+  // Extract unique deployers from phase1 and phase2 responsible
   const uniqueDeployers = useMemo(() => {
-    const deployers = projects
-      .map((p) => p.stages.implementation.phase1?.responsible)
-      .filter((r): r is string => Boolean(r));
-    return [...new Set(deployers)].sort();
+    const deployers = new Set<string>();
+    projects.forEach((p) => {
+      if (p.stages.implementation.phase1?.responsible) {
+        deployers.add(p.stages.implementation.phase1.responsible);
+      }
+      if (p.stages.implementation.phase2?.responsible) {
+        deployers.add(p.stages.implementation.phase2.responsible);
+      }
+    });
+    return Array.from(deployers).sort();
   }, [projects]);
 
   // Extract unique system types
@@ -49,38 +55,61 @@ export default function NextDeployments() {
     setFilterSystem("all");
   };
 
-  const sortedProjects = useMemo(() => {
+  const sortedDeployments = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    return projects
-      .filter((p) => {
-        const phase1 = p.stages.implementation.phase1;
-        if (!phase1?.startDate || !phase1?.endDate) return false;
+    const deployments: {
+      project: ProjectV2;
+      phase: "phase1" | "phase2";
+      startDate: Date;
+    }[] = [];
 
+    projects.forEach((p) => {
+      // Check Phase 1
+      const phase1 = p.stages.implementation.phase1;
+      if (phase1?.startDate && phase1?.endDate) {
         const endDate = new Date(phase1.endDate);
         endDate.setHours(0, 0, 0, 0);
 
-        // Show if today is before or equal to the end date
-        if (today > endDate) return false;
+        const matchesDeployer =
+          filterDeployer === "all" || phase1.responsible === filterDeployer;
+        const matchesSystem =
+          filterSystem === "all" || p.systemType === filterSystem;
 
-        // Apply deployer filter
-        if (filterDeployer !== "all" && phase1.responsible !== filterDeployer) {
-          return false;
+        if (endDate >= today && matchesDeployer && matchesSystem) {
+          deployments.push({
+            project: p,
+            phase: "phase1",
+            startDate: new Date(phase1.startDate),
+          });
         }
+      }
 
-        // Apply system filter
-        if (filterSystem !== "all" && p.systemType !== filterSystem) {
-          return false;
+      // Check Phase 2
+      const phase2 = p.stages.implementation.phase2;
+      if (phase2?.startDate && phase2?.endDate) {
+        const endDate = new Date(phase2.endDate);
+        endDate.setHours(0, 0, 0, 0);
+
+        const matchesDeployer =
+          filterDeployer === "all" || phase2.responsible === filterDeployer;
+        const matchesSystem =
+          filterSystem === "all" || p.systemType === filterSystem;
+
+        if (endDate >= today && matchesDeployer && matchesSystem) {
+          deployments.push({
+            project: p,
+            phase: "phase2",
+            startDate: new Date(phase2.startDate),
+          });
         }
+      }
+    });
 
-        return true;
-      })
-      .sort((a, b) => {
-        const dateA = new Date(a.stages.implementation.phase1.startDate!);
-        const dateB = new Date(b.stages.implementation.phase1.startDate!);
-        return dateA.getTime() - dateB.getTime();
-      });
+    return deployments.sort(
+      (a, b) => a.startDate.getTime() - b.startDate.getTime(),
+    );
   }, [projects, filterDeployer, filterSystem]);
 
   if (isLoading) {
@@ -118,7 +147,7 @@ export default function NextDeployments() {
         </div>
 
         <div className="px-4 py-2 bg-white dark:bg-slate-900 rounded-full border border-slate-200 dark:border-slate-800 shadow-sm text-sm font-semibold text-slate-600 dark:text-slate-300">
-          {sortedProjects.length} Projetos Agendados
+          {sortedDeployments.length} Projetos Agendados
         </div>
       </motion.div>
 
@@ -211,18 +240,19 @@ export default function NextDeployments() {
       </motion.div>
 
       {/* Cards Grid */}
-      {sortedProjects.length > 0 ? (
+      {sortedDeployments.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
-          {sortedProjects.map((project, index) => (
+          {sortedDeployments.map((deployment, index) => (
             <motion.div
-              key={project.id}
+              key={`${deployment.project.id}-${deployment.phase}`}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
             >
               <DeploymentCard
-                project={project}
-                onClick={() => setSelectedProject(project)}
+                project={deployment.project}
+                phaseType={deployment.phase}
+                onClick={() => setSelectedProject(deployment.project)}
               />
             </motion.div>
           ))}
@@ -245,7 +275,7 @@ export default function NextDeployments() {
             <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto">
               {hasActiveFilters
                 ? "Tente ajustar ou limpar os filtros para ver mais resultados."
-                : "Nenhum projeto possui datas definidas para a Fase 1 (Implantação) no momento."}
+                : "Nenhum projeto possui datas definidas para Implantação (Fase 1) ou Treinamento (Fase 2) no momento."}
             </p>
             {hasActiveFilters && (
               <Button variant="outline" onClick={clearFilters} className="mt-4">
