@@ -71,6 +71,7 @@ export interface ProjectV2 {
 
   // Tipos & Categoria
   systemType: string;
+  products?: string[];
   implantationType: ImplantationType;
   tags: string[];
   priority: Priority;

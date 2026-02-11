@@ -126,6 +126,24 @@ export const useProjectsV2 = () => {
             logMessages.push(`Status Global alterado para ${updates.globalStatus}`);
         }
 
+        // System & Products
+        if (updates.systemType && hasChanged(updates.systemType, currentProject.systemType)) {
+            logMessages.push(`Sistema alterado para ${updates.systemType}`);
+        }
+        
+        if (updates.products) {
+           const oldProducts = currentProject.products || [];
+           const newProducts = updates.products;
+           // Simple array comparison
+           const isDifferent = newProducts.length !== oldProducts.length || 
+                               !newProducts.every(p => oldProducts.includes(p)) ||
+                               !oldProducts.every(p => newProducts.includes(p));
+           
+           if (isDifferent) {
+               logMessages.push(`Produtos atualizados para: ${newProducts.join(", ")}`);
+           }
+        }
+
       } else {
         // Fallback if current project not found (shouldn't happen often)
         if (dbUpdates.infra_status) logMessages.push(`Status de Infraestrutura alterado para ${dbUpdates.infra_status}`);
@@ -279,6 +297,7 @@ function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
     soldHours: row.sold_hours as number | undefined,
     legacySystem: row.legacy_system as string | undefined,
     specialty: row.specialty as string | undefined,
+    products: (row.products as string[]) || [],
     
     healthScore: calculateHealthScore(row),
     globalStatus: (row.global_status as ProjectV2['globalStatus']) || "in-progress",
@@ -401,6 +420,7 @@ function transformToDB(project: Partial<ProjectV2>, currentProject?: ProjectV2):
   if (project.soldHours) dbRow.sold_hours = project.soldHours;
   if (project.legacySystem) dbRow.legacy_system = project.legacySystem;
   if (project.specialty) dbRow.specialty = project.specialty;
+  if (project.products) dbRow.products = project.products;
 
   if (project.projectLeader) dbRow.project_leader = project.projectLeader;
   if (project.clientPrimaryContact) dbRow.client_primary_contact = project.clientPrimaryContact;

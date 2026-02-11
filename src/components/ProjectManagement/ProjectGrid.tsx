@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useProjectsList } from "@/hooks/useProjectsList";
+import { useConversionQueue } from "@/hooks/useConversionQueue";
 import { useProjectsV2 } from "@/hooks/useProjectsV2";
 import { ProjectCardV3 } from "./ProjectCardV3";
 import { ProjectModal } from "./ProjectModal";
@@ -32,6 +33,7 @@ export function ProjectGrid() {
   } = useProjectsList(searchQuery, viewPreset);
 
   const { updateProject, deleteProject } = useProjectsV2();
+  const { getItemByProjectId, removeFromQueue } = useConversionQueue();
   const [selectedProject, setSelectedProject] =
     useState<Partial<ProjectV2> | null>(null);
   const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
@@ -281,6 +283,26 @@ export function ProjectGrid() {
                           ) {
                             // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             (deleteProject as any).mutate(project.id);
+                          }
+                        } else if (action === "removeFromQueue") {
+                          if (
+                            confirm(
+                              `Tem certeza que deseja remover o projeto "${project.clientName}" da fila de conversão?`,
+                            )
+                          ) {
+                            const queueItem = getItemByProjectId(project.id);
+                            if (queueItem) {
+                              removeFromQueue(queueItem.id, project.id);
+                            } else {
+                              console.error(
+                                "Queue item not found for project:",
+                                project.id,
+                              );
+                              // Fallback attempt: just log or inform user
+                              // Or maybe fetch it specifically if not found?
+                              // For now just error out or try to infer queueId? We can't infer queueId easily.
+                              // But if project says it is in conversion, it SHOULD be in queue.
+                            }
                           }
                         }
                       }}

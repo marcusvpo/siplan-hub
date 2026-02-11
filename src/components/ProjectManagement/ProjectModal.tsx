@@ -37,7 +37,7 @@ export function ProjectModal({
 
   // Always fetch fresh full details
   const { project: fullProject, isLoading } = useProjectDetails(
-    open && initialProject ? initialProject.id! : null
+    open && initialProject ? initialProject.id! : null,
   );
 
   const displayProject = fullProject || (initialProject as ProjectV2); // Fallback to initial for header if loading
@@ -55,33 +55,55 @@ export function ProjectModal({
       <DialogContent className="max-w-[90vw] w-[90vw] h-[90vh] flex flex-col p-0 gap-0">
         <DialogHeader className="px-6 py-4 border-b shrink-0 flex flex-row items-center justify-between">
           <div className="flex flex-col gap-1 w-full">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center flex-wrap gap-2">
               {isLoading ? (
                 <Skeleton className="h-8 w-64" />
               ) : (
-                <DialogTitle className="text-xl font-bold">
+                <DialogTitle className="text-xl font-bold flex items-center gap-2 mr-2">
                   {displayProject?.clientName}
+                  <span className="text-lg font-extrabold text-primary bg-primary/10 px-2 py-0.5 rounded-md border border-primary/20 ml-2">
+                    #{displayProject?.ticketNumber || "..."}
+                  </span>
                 </DialogTitle>
               )}
 
-              <Badge variant="outline">
+              <div className="hidden md:block h-6 w-px bg-border mx-2" />
+
+              <Badge
+                variant="default"
+                className="bg-slate-700 hover:bg-slate-800 text-xs shadow-sm"
+              >
                 {displayProject?.systemType || "..."}
               </Badge>
-              <span className="text-sm text-muted-foreground">
-                #{displayProject?.ticketNumber || "..."}
-              </span>
+
+              {displayProject?.products?.map((product) => (
+                <Badge
+                  key={product}
+                  variant="secondary"
+                  className="border-slate-300 text-xs shadow-sm"
+                >
+                  {product}
+                </Badge>
+              ))}
+
+              {displayProject?.relatedTickets &&
+                displayProject.relatedTickets.length > 0 && (
+                  <div className="hidden md:block h-6 w-px bg-border mx-2" />
+                )}
 
               {displayProject?.relatedTickets?.map((ticket, index) => (
                 <span
                   key={index}
-                  className="text-sm text-muted-foreground border-l pl-2 ml-2"
+                  className="text-sm text-muted-foreground flex items-center gap-1 bg-muted/50 px-2 py-0.5 rounded-md border border-border/50"
                 >
-                  <span className="font-medium">{ticket.name}:</span>{" "}
-                  {ticket.number}
+                  <span className="font-medium text-xs uppercase opacity-70">
+                    {ticket.name}:
+                  </span>
+                  <span className="font-semibold">{ticket.number}</span>
                 </span>
               ))}
             </div>
-            <DialogDescription>
+            <DialogDescription className="mt-1">
               Detalhes e gerenciamento do projeto.
             </DialogDescription>
           </div>

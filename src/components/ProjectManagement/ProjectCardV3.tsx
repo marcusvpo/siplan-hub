@@ -14,6 +14,7 @@ import {
   AlertCircle,
   CheckCircle2,
   Clock,
+  X,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -226,23 +227,37 @@ export function ProjectCardV3({
           {project.stages.conversion.sentAt &&
             !project.stages.conversion.finishedAt && (
               <div
-                className="flex items-center gap-1.5 text-[11px] px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/30 border border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-300 font-medium"
+                className="flex items-center gap-1 bg-purple-100 dark:bg-purple-900/30 border border-purple-300 dark:border-purple-700 rounded-full pl-2 pr-1 py-0.5"
                 title="Projeto na fila de conversão"
               >
-                <svg
-                  className="h-3 w-3"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
+                <div className="flex items-center gap-1.5 text-[11px] text-purple-700 dark:text-purple-300 font-medium">
+                  <svg
+                    className="h-3 w-3"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7c-2 0-3 1-3 3z" />
+                    <path d="M9 22v-4" />
+                    <path d="M15 22v-4" />
+                    <path d="M9 7h6" />
+                    <path d="M9 11h4" />
+                  </svg>
+                  <span>Conversão</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-4 w-4 rounded-full ml-1 text-purple-700 hover:text-purple-900 hover:bg-purple-200 dark:text-purple-300 dark:hover:text-purple-100 dark:hover:bg-purple-800 p-0"
+                  title="Remover da fila"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAction("removeFromQueue", project);
+                  }}
                 >
-                  <path d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7c-2 0-3 1-3 3z" />
-                  <path d="M9 22v-4" />
-                  <path d="M15 22v-4" />
-                  <path d="M9 7h6" />
-                  <path d="M9 11h4" />
-                </svg>
-                <span>Conversão</span>
+                  <X className="h-3 w-3" />
+                </Button>
               </div>
             )}
 
