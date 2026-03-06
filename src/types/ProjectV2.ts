@@ -193,6 +193,7 @@ export interface ConversionStageV2 {
   
   homologationStatus?: "Adequado" | "Parcialmente Adequado" | "Inadequado" | "Aguardando Adequação";
   homologationResponsible?: string;
+  homologationFinishedAt?: Date;
   sentAt?: Date;
   finishedAt?: Date;
 

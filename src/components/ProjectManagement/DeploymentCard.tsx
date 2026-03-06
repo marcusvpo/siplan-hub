@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Calendar, Clock, Monitor, Tag } from "lucide-react";
 import { motion } from "framer-motion";
+import { useMemo } from "react";
 
 interface DeploymentCardProps {
   project: ProjectV2;
@@ -38,27 +39,58 @@ export function DeploymentCard({
     return "bg-slate-500/10 text-slate-500 border-slate-500/20";
   };
 
+  const isInProgress = useMemo(() => {
+    if (!startDate || !endDate) return false;
+    const now = new Date();
+    const start = new Date(startDate);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+    return now >= start && now <= end;
+  }, [startDate, endDate]);
+
   return (
     <motion.div
       onClick={onClick}
       whileHover={{ y: -5, scale: 1.02 }}
-      className={`group relative w-full h-[220px] rounded-2xl bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-900/50 border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col ${onClick ? "cursor-pointer" : ""}`}
+      className={`group relative w-full min-h-[230px] rounded-2xl bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-900/50 border shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col ${
+        isInProgress
+          ? "border-blue-400 dark:border-blue-600 shadow-blue-100 dark:shadow-blue-900/20 ring-1 ring-blue-400 dark:ring-blue-600"
+          : "border-slate-100 dark:border-slate-800"
+      } ${onClick ? "cursor-pointer" : ""}`}
     >
       {/* Decorative Gradient Blob - Reduced size */}
-      <div className="absolute -top-16 -right-16 w-32 h-32 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
+      <div
+        className={`absolute -top-16 -right-16 w-32 h-32 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700 ${
+          isInProgress
+            ? "bg-gradient-to-br from-blue-400/40 to-blue-600/40"
+            : "bg-gradient-to-br from-blue-500/20 to-purple-500/20"
+        }`}
+      />
 
       {/* Header Section */}
-      <div className="p-4 pb-2 z-10">
-        <div className="flex justify-between items-start mb-2">
-          <Badge
-            variant="outline"
-            className={`${getSystemBadgeColor(
-              project.systemType,
-            )} backdrop-blur-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider`}
-          >
-            {project.systemType}
-          </Badge>
-          <div className="flex items-center gap-1 text-[10px] font-medium text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+      <div className="p-4 pb-2 z-10 flex-shrink-0">
+        <div className="flex justify-between items-start mb-2 gap-2">
+          <div className="flex flex-col items-start gap-1.5">
+            <Badge
+              variant="outline"
+              className={`${getSystemBadgeColor(
+                project.systemType,
+              )} backdrop-blur-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider`}
+            >
+              {project.systemType}
+            </Badge>
+            {isInProgress && (
+              <Badge
+                variant="default"
+                className="bg-blue-500 hover:bg-blue-600 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 border-none shadow-sm animate-pulse"
+              >
+                Em Andamento
+              </Badge>
+            )}
+          </div>
+
+          <div className="flex items-center shrink-0 gap-1 text-[10px] font-medium text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
             <Tag className="w-2.5 h-2.5" />
             {project.ticketNumber || "N/A"}
           </div>
