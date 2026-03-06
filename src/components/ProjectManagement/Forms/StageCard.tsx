@@ -339,10 +339,10 @@ export function StageCard({
             <div className="space-y-2.5">
               <Label className="text-xs font-bold uppercase tracking-widest text-rose-600 flex items-center gap-2">
                 <Calendar className="h-3.5 w-3.5" />
-                {["adherence", "conversion"].includes(id)
+                {id === "adherence"
                   ? "Agendado Para"
-                  : ["infra", "environment"].includes(id)
-                    ? "Finalizado em"
+                  : ["infra", "environment", "conversion"].includes(id)
+                    ? "Finalizado Em"
                     : "Término"}
               </Label>
               <Input

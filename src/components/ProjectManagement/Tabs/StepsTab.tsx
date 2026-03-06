@@ -588,43 +588,24 @@ export function StepsTab({ project, onUpdate }: TabProps) {
           className="h-11 border-2 border-violet-200 hover:border-violet-300 focus:border-violet-400 bg-violet-50/50"
         />
       </div>
-      <div className="space-y-2.5">
-        <Label className="text-xs font-bold uppercase tracking-widest text-cyan-600 flex items-center gap-2">
-          <Rocket className="h-3.5 w-3.5" />
-          Enviado em
-        </Label>
-        <Input
-          type="date"
-          value={
-            stage.sentAt
-              ? new Date(stage.sentAt).toISOString().split("T")[0]
-              : ""
-          }
-          onChange={(e) =>
-            updateStage("conversion", {
-              sentAt: e.target.value
-                ? new Date(e.target.value + "T12:00:00")
-                : undefined,
-            })
-          }
-          className="h-11 border-2 border-cyan-200 hover:border-cyan-300 focus:border-cyan-400 bg-cyan-50/50 font-medium"
-        />
-      </div>
+
       <div className="space-y-2.5">
         <Label className="text-xs font-bold uppercase tracking-widest text-rose-600 flex items-center gap-2">
           <Calendar className="h-3.5 w-3.5" />
-          Agendado Para
+          Agendado Para (Homolog.)
         </Label>
         <Input
           type="date"
           value={
-            stage.finishedAt
-              ? new Date(stage.finishedAt).toISOString().split("T")[0]
+            stage.homologationFinishedAt
+              ? new Date(stage.homologationFinishedAt)
+                  .toISOString()
+                  .split("T")[0]
               : ""
           }
           onChange={(e) =>
             updateStage("conversion", {
-              finishedAt: e.target.value
+              homologationFinishedAt: e.target.value
                 ? new Date(e.target.value + "T12:00:00")
                 : undefined,
             })

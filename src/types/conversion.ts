@@ -51,7 +51,6 @@ export interface ConversionQueueItem {
   createdAt: Date;
   updatedAt: Date;
   // Homologation fields
-  homologationSentAt?: Date;
   homologationDeadline?: Date;
   homologationAnalyst?: string;
   homologationAnalystName?: string;
