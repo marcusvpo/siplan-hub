@@ -43,7 +43,7 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
   const { signOut } = useAuth();
   const { theme } = useTheme();
   const { projects } = useProjects();
-  const [isImplantacaoOpen, setIsImplantacaoOpen] = useState(true);
+  const [isImplantacaoOpen, setIsImplantacaoOpen] = useState(false);
   const [isOrionTNModelsOpen, setIsOrionTNModelsOpen] = useState(
     location.pathname.startsWith("/orion-tn-models"),
   );

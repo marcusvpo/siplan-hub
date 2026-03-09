@@ -53,7 +53,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           </div>
         </header>
 
-        <main className="flex-1 overflow-hidden p-4">
+        <main className={`flex-1 ${isProjectsPage ? 'overflow-hidden' : 'overflow-auto'} p-4`}>
           {children}
         </main>
       </div>
