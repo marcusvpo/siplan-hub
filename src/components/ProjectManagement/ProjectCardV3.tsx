@@ -137,21 +137,21 @@ export function ProjectCardV3({
 
   return (
     <Card
-      className="w-full hover:shadow-lg hover:border-primary/20 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer flex flex-row items-center p-4 gap-6 h-28 relative overflow-visible group bg-card/50 backdrop-blur-sm"
+      className="w-full hover:shadow-lg hover:border-primary/20 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer flex flex-col md:flex-row items-center p-2.5 md:p-3 gap-3 md:gap-4 min-h-[5.5rem] h-auto relative overflow-visible group bg-card/50 backdrop-blur-sm"
       onClick={() => onClick(project)}
     >
       <div
         className={cn(
-          "absolute left-0 top-0 bottom-0 w-1.5 transition-all duration-300",
+          "absolute left-0 top-0 bottom-0 w-1 transition-all duration-300",
           getHealthColor(project.healthScore),
-          "group-hover:w-2",
+          "group-hover:w-1.5",
         )}
       />
 
       {/* Project Status Badge - Top Right Corner */}
       <Badge
         className={cn(
-          "absolute -top-2 -right-2 z-10 text-[10px] px-3 py-1 font-bold shadow-lg border-2 border-background",
+          "absolute -top-1.5 -right-1.5 z-10 text-[9px] px-2 py-0.5 font-bold shadow-lg border-2 border-background",
           globalStatusBadge.className,
         )}
       >
@@ -160,176 +160,90 @@ export function ProjectCardV3({
 
       {/* Selection Checkbox */}
       {onSelect && (
-        <div className="mr-2" onClick={(e) => e.stopPropagation()}>
+        <div className="mr-1 shrink-0" onClick={(e) => e.stopPropagation()}>
           <Checkbox
             checked={selected}
             onCheckedChange={(checked) => onSelect(checked as boolean)}
-            className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+            className="h-3.5 w-3.5 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
           />
         </div>
       )}
 
       {/* 1. Info Principal */}
-      <div className="flex flex-col justify-center min-w-[220px] max-w-[280px] space-y-2">
-        <div className="flex items-center gap-2.5">
+      <div className="flex flex-col justify-center flex-[1.5] min-w-0 space-y-1">
+        <div className="flex items-center gap-2 min-w-0">
           <div
             className={cn(
-              "h-3 w-3 rounded-full shrink-0 shadow-sm ring-2 ring-background",
+              "h-2.5 w-2.5 rounded-full shrink-0 shadow-sm ring-1 ring-background",
               getHealthColor(project.healthScore),
             )}
-            title={`Saúde: ${
-              project.healthScore === "ok"
-                ? "OK"
-                : project.healthScore === "warning"
-                  ? "Atenção"
-                  : "Crítico"
-            }`}
+            title={`Saúde: ${project.healthScore === "ok"
+              ? "OK"
+              : project.healthScore === "warning"
+                ? "Atenção"
+                : "Crítico"
+              }`}
           />
           <h3
-            className="font-bold text-lg leading-none truncate tracking-tight text-foreground/90"
+            className="font-bold text-base leading-tight truncate tracking-tight text-foreground/90 overflow-hidden"
             title={project.clientName}
           >
             {project.clientName}
           </h3>
         </div>
 
-        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground">
           <Badge
             variant="outline"
-            className="font-medium bg-muted/50 text-muted-foreground border-border/50"
+            className="font-medium bg-muted/50 text-muted-foreground border-border/50 px-1 py-0 text-[10px]"
           >
             {project.systemType}
           </Badge>
-          <span className="font-mono text-xs opacity-70">
+          <span className="font-mono opacity-70">
             #{project.ticketNumber}
           </span>
         </div>
 
-        <div className="flex items-center gap-3 mt-1">
+        <div className="flex flex-wrap items-center gap-2">
           {/* Follow Up Indicator */}
           {project.nextFollowUpDate && (
             <div
               className={cn(
-                "flex items-center gap-1.5 text-[11px] px-2 py-0.5 rounded-full bg-muted/30 border border-border/50",
+                "flex items-center gap-1 text-[9px] px-1.5 py-0 rounded-full bg-muted/30 border border-border/50",
                 isFollowUpOverdue
                   ? "text-destructive bg-destructive/5 border-destructive/20 font-semibold"
                   : "text-muted-foreground",
               )}
             >
-              <Calendar className="h-3 w-3" />
-              <span>
+              <Calendar className="h-2.5 w-2.5 shrink-0" />
+              <span className="whitespace-nowrap">
                 {format(new Date(project.nextFollowUpDate), "dd/MM", {
                   locale: ptBR,
                 })}
-              </span>
-              {isFollowUpOverdue && <span>!</span>}
-            </div>
-          )}
-
-          {/* Conversion Queue Indicator */}
-          {project.stages.conversion.sentAt &&
-            !project.stages.conversion.finishedAt && (
-              <div
-                className="flex items-center gap-1 bg-purple-100 dark:bg-purple-900/30 border border-purple-300 dark:border-purple-700 rounded-full pl-2 pr-1 py-0.5"
-                title="Projeto na fila de conversão"
-              >
-                <div className="flex items-center gap-1.5 text-[11px] text-purple-700 dark:text-purple-300 font-medium">
-                  <svg
-                    className="h-3 w-3"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7c-2 0-3 1-3 3z" />
-                    <path d="M9 22v-4" />
-                    <path d="M15 22v-4" />
-                    <path d="M9 7h6" />
-                    <path d="M9 11h4" />
-                  </svg>
-                  <span>Conversão</span>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-4 w-4 rounded-full ml-1 text-purple-700 hover:text-purple-900 hover:bg-purple-200 dark:text-purple-300 dark:hover:text-purple-100 dark:hover:bg-purple-800 p-0"
-                  title="Remover da fila"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onAction("removeFromQueue", project);
-                  }}
-                >
-                  <X className="h-3 w-3" />
-                </Button>
-              </div>
-            )}
-
-          {/* Engine Status Gear Indicator */}
-          {engineStatus && (
-            <div
-              className={cn(
-                "flex items-center gap-1 rounded-full px-2 py-0.5 border",
-                engineStatus === "pending_engine" &&
-                  "bg-orange-100 dark:bg-orange-900/30 border-orange-300 dark:border-orange-700",
-                engineStatus === "engine_in_development" &&
-                  "bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700",
-                engineStatus === "engine_ready" &&
-                  "bg-emerald-100 dark:bg-emerald-900/30 border-emerald-300 dark:border-emerald-700",
-              )}
-              title={
-                engineStatus === "pending_engine"
-                  ? "Aguardando Extração da Base"
-                  : engineStatus === "engine_in_development"
-                    ? "Motor em Desenvolvimento"
-                    : "Motor Pronto"
-              }
-            >
-              <Cog
-                className={cn(
-                  "h-3 w-3",
-                  engineStatus === "pending_engine" && "text-orange-600",
-                  engineStatus === "engine_in_development" && "text-blue-600",
-                  engineStatus === "engine_ready" && "text-emerald-600",
-                )}
-              />
-              <span
-                className={cn(
-                  "text-[10px] font-semibold",
-                  engineStatus === "pending_engine" &&
-                    "text-orange-700 dark:text-orange-300",
-                  engineStatus === "engine_in_development" &&
-                    "text-blue-700 dark:text-blue-300",
-                  engineStatus === "engine_ready" &&
-                    "text-emerald-700 dark:text-emerald-300",
-                )}
-              >
-                {engineStatus === "pending_engine" && "Motor"}
-                {engineStatus === "engine_in_development" && "Motor"}
-                {engineStatus === "engine_ready" && "Motor ✓"}
               </span>
             </div>
           )}
 
           {/* Project Leader */}
           <div
-            className="flex items-center gap-1.5 text-[11px] text-muted-foreground"
+            className="flex items-center gap-1 text-[9px] text-muted-foreground min-w-0"
             title={`Líder: ${project.projectLeader}`}
           >
-            <div className="h-4 w-4 rounded-full bg-primary/10 flex items-center justify-center text-[9px] font-bold text-primary ring-1 ring-primary/20">
+            <div className="h-3.5 w-3.5 shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-[7px] font-bold text-primary ring-1 ring-primary/20">
               {project.projectLeader.substring(0, 2).toUpperCase()}
             </div>
-            <span className="truncate max-w-[100px] font-medium">
+            <span className="truncate font-medium">
               {project.projectLeader}
             </span>
           </div>
         </div>
       </div>
 
-      {/* 2. Pipeline Visual (Modernizado - com Predictability) */}
-      <div className="flex-1 flex flex-col justify-center px-6 border-l border-r border-border/40 h-full bg-gradient-to-r from-transparent via-muted/5 to-transparent">
-        <div className="flex items-center justify-between gap-2 relative w-full max-w-2xl mx-auto">
+      {/* 2. Pipeline Visual */}
+      <div className="flex-[2.5] w-full md:w-auto flex flex-col justify-center px-3 md:px-4 md:border-l md:border-r border-border/40 min-h-[2.5rem] bg-gradient-to-r from-transparent via-muted/5 to-transparent overflow-hidden">
+        <div className="flex items-center justify-between gap-1 relative w-full max-w-2xl mx-auto">
           {/* Linha de conexão (fundo) */}
-          <div className="absolute top-1/2 left-0 right-0 h-[2px] bg-muted-foreground/10 -z-10 transform -translate-y-1/2 rounded-full" />
+          <div className="absolute top-1/2 left-0 right-0 h-[1px] bg-muted-foreground/10 -z-10 transform -translate-y-1/2 rounded-full" />
 
           {stages.map((stage) => {
             const readiness = stageReadiness.find(
@@ -340,71 +254,36 @@ export function ProjectCardV3({
             return (
               <div
                 key={stage.id}
-                className="flex flex-col items-center gap-2 z-0 group/stage relative cursor-help"
+                className="flex flex-col items-center gap-1 z-0 group/stage relative cursor-help"
               >
                 <div
                   className={cn(
-                    "h-3.5 w-3.5 rounded-full ring-4 ring-background shadow-sm transition-all",
+                    "h-3 w-3 rounded-full ring-2 ring-background shadow-sm transition-all",
                     getStageColor(stage.status),
-                    // Pulsing effect ONLY for ready stages that haven't started yet (todo)
                     isReady && stage.status === "todo" && "animate-pulse-ring",
                   )}
                 />
                 <span
                   className={cn(
-                    "text-[10px] font-bold uppercase tracking-wider whitespace-nowrap",
+                    "text-[8px] md:text-[9px] font-bold uppercase tracking-wider whitespace-nowrap",
                     stage.status === "done"
                       ? "text-emerald-600/70 dark:text-emerald-400/70"
                       : stage.status === "in-progress"
                         ? "text-primary"
                         : isReady && stage.status === "todo"
                           ? "text-primary font-extrabold"
-                          : "text-muted-foreground/50",
+                          : "text-muted-foreground/40",
                   )}
                 >
                   {stage.label}
                 </span>
 
-                {/* Enhanced Tooltip with Readiness Info */}
-                <div className="absolute bottom-full mb-3 hidden group-hover/stage:block z-50 min-w-[180px] bg-popover text-popover-foreground text-xs rounded-lg border shadow-xl p-3 animate-in fade-in zoom-in-95 duration-200">
-                  <p className="font-bold mb-1 text-sm">{stage.label}</p>
-                  <div className="flex items-center gap-2 mb-2">
-                    <div
-                      className={cn(
-                        "h-2 w-2 rounded-full",
-                        getStageColor(stage.status),
-                      )}
-                    />
-                    <p className="capitalize text-muted-foreground">
-                      {stage.status === "done"
-                        ? "Concluído"
-                        : stage.status === "in-progress"
-                          ? "Em Andamento"
-                          : stage.status === "blocked"
-                            ? "Pausado"
-                            : stage.status === "waiting_adjustment"
-                              ? "Em Adequação"
-                              : "Pendente"}
-                    </p>
-                  </div>
-
-                  {/* Readiness indicator */}
-                  {isReady && stage.status === "todo" && (
-                    <div className="mt-2 pt-2 border-t">
-                      <p className="text-primary font-semibold flex items-center gap-1">
-                        <span className="text-base">🔥</span>
-                        {readiness.reason}
-                      </p>
-                    </div>
-                  )}
-
-                  {!isReady && stage.status === "todo" && readiness && (
-                    <div className="mt-2 pt-2 border-t">
-                      <p className="text-muted-foreground text-[10px]">
-                        {readiness.reason}
-                      </p>
-                    </div>
-                  )}
+                {/* Enhanced Tooltip */}
+                <div className="absolute bottom-full mb-3 hidden group-hover/stage:block z-50 min-w-[150px] bg-popover text-popover-foreground text-xs rounded-lg border shadow-xl p-2 animate-in fade-in zoom-in-95 duration-200">
+                  <p className="font-bold text-[11px]">{stage.label}</p>
+                  <p className="text-[10px] text-muted-foreground capitalize">
+                    {stage.status === "done" ? "Concluído" : stage.status === "in-progress" ? "Em Andamento" : "Pendente"}
+                  </p>
                 </div>
               </div>
             );
@@ -412,36 +291,35 @@ export function ProjectCardV3({
         </div>
       </div>
 
-      {/* 3. Gargalo Atual (Bottleneck Indicator) */}
-      <div className="flex flex-col justify-center px-4 min-w-[140px] border-r border-border/40 h-full bg-gradient-to-r from-transparent via-muted/3 to-transparent">
-        <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold opacity-60 mb-1">
-          Gargalo{bottlenecks.length > 1 ? "s" : ""} Atual
-          {bottlenecks.length > 1 ? " (" + bottlenecks.length + ")" : ""}
+      {/* 3. Gargalo Atual */}
+      <div className="flex-[1.2] flex flex-col justify-center px-4 md:border-r border-border/40 min-w-0 bg-gradient-to-r from-transparent via-muted/3 to-transparent">
+        <span className="text-[9px] text-muted-foreground uppercase tracking-wider font-bold opacity-60 mb-1 whitespace-nowrap overflow-hidden">
+          Gargalo{bottlenecks.length > 1 ? "s" : ""}
         </span>
         {bottlenecks.length === 0 ? (
-          <div className="flex items-center gap-2">
-            <span className="text-base">🟢</span>
-            <span className="text-sm text-muted-foreground">Nenhum</span>
+          <div className="flex items-center gap-1">
+            <span className="text-[10px]">🟢</span>
+            <span className="text-[10px] text-muted-foreground">Nenhum</span>
           </div>
         ) : (
-          <div className="flex flex-col gap-1.5">
-            {bottlenecks.map((b, idx) => (
-              <div key={idx} className="flex items-center gap-2">
-                <span className="text-base">
+          <div className="flex flex-col gap-0.5 overflow-hidden">
+            {bottlenecks.slice(0, 1).map((b, idx) => (
+              <div key={idx} className="flex items-center gap-1 min-w-0">
+                <span className="text-[10px] shrink-0">
                   {getBottleneckIcon(b.severity)}
                 </span>
-                <div className="flex flex-col">
+                <div className="flex flex-col min-w-0">
                   <span
                     className={cn(
-                      "text-sm font-bold leading-tight",
+                      "text-[11px] font-bold leading-tight truncate",
                       getBottleneckColor(b.severity),
                     )}
                   >
                     {b.stageName}
                   </span>
                   {b.daysStuck > 0 && (
-                    <span className="text-[10px] text-muted-foreground">
-                      há {b.daysStuck} {b.daysStuck === 1 ? "dia" : "dias"}
+                    <span className="text-[8px] text-muted-foreground whitespace-nowrap">
+                      há {b.daysStuck}d
                     </span>
                   )}
                 </div>
@@ -452,40 +330,38 @@ export function ProjectCardV3({
       </div>
 
       {/* 4. Metricas & Ações */}
-      <div className="flex items-center gap-6 min-w-[160px] justify-end pl-2">
-        {/* UAT (Última Atualização) */}
-        <div className="flex flex-col items-end min-w-[90px]">
-          <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold opacity-60 mb-0.5">
-            Atualizado
+      <div className="flex-[1.2] flex items-center gap-3 justify-end pl-1 shrink-0">
+        <div className="flex flex-col items-end shrink-0">
+          <span className="text-[8px] text-muted-foreground uppercase tracking-wider font-bold opacity-60 mb-0.5">
+            UAT
           </span>
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground bg-muted/30 px-2 py-1 rounded-md border border-border/50">
-            <Clock className="h-3 w-3 text-primary/70" />
-            <span>
-              {format(new Date(project.lastUpdatedAt), "dd MMM HH:mm", {
+          <div className="flex items-center gap-1 text-[9px] font-semibold text-foreground bg-muted/30 px-1 py-0.5 rounded-md border border-border/50">
+            <Clock className="h-2.5 w-2.5 text-primary/70 shrink-0" />
+            <span className="whitespace-nowrap">
+              {format(new Date(project.lastUpdatedAt), "dd/MM HH:mm", {
                 locale: ptBR,
               })}
             </span>
           </div>
         </div>
 
-        {/* Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
             <Button
               variant="ghost"
               size="icon"
-              className="h-9 w-9 rounded-full hover:bg-primary/10 hover:text-primary transition-colors"
+              className="h-7 w-7 rounded-full hover:bg-primary/10 hover:text-primary transition-colors"
             >
-              <MoreHorizontal className="h-5 w-5" />
+              <MoreHorizontal className="h-3.5 w-3.5" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuContent align="end" className="w-32">
             <DropdownMenuItem
               onClick={(e) => {
                 e.stopPropagation();
                 onAction("delete", project);
               }}
-              className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
+              className="text-red-600 focus:text-red-600 cursor-pointer text-[11px] py-1"
             >
               Excluir
             </DropdownMenuItem>
