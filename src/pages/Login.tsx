@@ -87,20 +87,23 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/20 p-4 relative">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
+      {/* Dynamic background element for premium feel */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(var(--primary),0.05),transparent_50%)] dark:bg-[radial-gradient(circle_at_50%_50%,rgba(var(--primary),0.1),transparent_70%)] pointer-events-none" />
+
       <Button
         variant="ghost"
         size="sm"
-        className="absolute top-4 right-4 text-muted-foreground hover:text-primary"
+        className="absolute top-4 right-4 text-muted-foreground hover:text-primary z-10"
         onClick={() => setIsAdminLogin(!isAdminLogin)}
       >
         {isAdminLogin ? "Voltar para Login de Usuário" : "Admin"}
       </Button>
 
-      <Card className="w-full max-w-md border-none shadow-xl bg-white/80 backdrop-blur-sm">
+      <Card className="w-full max-w-md border border-border/50 shadow-2xl bg-card/80 backdrop-blur-xl dark:bg-card/90 relative z-10 transition-all duration-500">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-6">
-            <div className="bg-white p-4 rounded-xl shadow-lg border border-gray-100/50 relative flex items-center justify-center">
+            <div className="bg-white p-4 rounded-xl shadow-xl border border-border/50 relative flex items-center justify-center transform hover:scale-105 transition-transform duration-300">
               <img
                 src="/assets/Siplan_logo.png"
                 alt="Siplan"
@@ -113,10 +116,10 @@ export default function Login() {
               )}
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold tracking-tight">
+          <CardTitle className="text-2xl font-bold tracking-tight text-foreground">
             {isAdminLogin ? "Área Administrativa" : "Bem-vindo de volta"}
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-muted-foreground">
             {isAdminLogin
               ? "Entre com suas credenciais de administrador para gerenciar a plataforma."
               : "Insira suas credenciais para acessar sua conta."}
@@ -125,7 +128,7 @@ export default function Login() {
         <form onSubmit={handleLogin}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-foreground/80">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -134,11 +137,12 @@ export default function Login() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={loading}
+                className="bg-background/50 border-border/50 focus:border-primary/50 transition-colors"
               />
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password">Senha</Label>
+                <Label htmlFor="password" className="text-foreground/80">Senha</Label>
               </div>
               <Input
                 id="password"
@@ -147,11 +151,12 @@ export default function Login() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 disabled={loading}
+                className="bg-background/50 border-border/50 focus:border-primary/50 transition-colors"
               />
             </div>
           </CardContent>
           <CardFooter>
-            <Button className="w-full" type="submit" disabled={loading}>
+            <Button className="w-full font-bold shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all active:scale-[0.98]" type="submit" disabled={loading}>
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
