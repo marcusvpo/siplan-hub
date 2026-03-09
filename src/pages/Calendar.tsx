@@ -11,7 +11,7 @@ import {
   PointerSensor,
   useDroppable,
 } from "@dnd-kit/core";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { CalendarEvent, CALENDAR_MEMBERS } from "@/types/calendar";
 import { startOfDay } from "date-fns";
 import { useProjects } from "@/hooks/useProjects";
@@ -55,26 +55,25 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { User, Server, Hash, Rocket } from "lucide-react";
 
 export default function Calendar() {
-  const {
-    isInteractiveMode,
-    addInteractiveEvent,
-    updateInteractiveEvent,
-    removeInteractiveEvent,
-  } = useCalendarStore();
+  const isInteractiveMode = useCalendarStore((state) => state.isInteractiveMode);
+  const addInteractiveEvent = useCalendarStore((state) => state.addInteractiveEvent);
+  const updateInteractiveEvent = useCalendarStore((state) => state.updateInteractiveEvent);
+  const removeInteractiveEvent = useCalendarStore((state) => state.removeInteractiveEvent);
+  const setRealEvents = useCalendarStore((state) => state.setRealEvents);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [activeDragItem, setActiveDragItem] = useState<any>(null);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
     null,
   );
-  const { projects, isLoading } = useProjects();
-  const { vacations } = useVacations();
+  const { projects = [], isLoading } = useProjects();
+  const { vacations = [] } = useVacations();
 
-  // Fetch and Transform Real Data
-  useEffect(() => {
-    if (!projects || isLoading) return;
+  // Memoize Transformation Logic to avoid recalculating on every render
+  const realEvents = useMemo(() => {
+    if (!projects || isLoading) return [];
 
-    const realEvents: CalendarEvent[] = [];
+    const events: CalendarEvent[] = [];
 
     const findMember = (name: string) => {
       if (!name) return undefined;
@@ -103,6 +102,7 @@ export default function Calendar() {
     };
 
     const isValidDate = (date: any) => {
+      if (!date) return false;
       const d = new Date(date);
       return d instanceof Date && !isNaN(d.getTime());
     };
@@ -121,7 +121,7 @@ export default function Calendar() {
         const member = findMember(responsible);
         const color = member ? member.color : getFallbackColor(responsible);
 
-        realEvents.push({
+        events.push({
           id: `real-${project.id}-p1`,
           resourceId: member?.id || "unknown",
           title: `Implantação: ${project.clientName}`,
@@ -148,7 +148,7 @@ export default function Calendar() {
         const member = findMember(responsible);
         const color = member ? member.color : getFallbackColor(responsible);
 
-        realEvents.push({
+        events.push({
           id: `real-${project.id}-p2`,
           resourceId: member?.id || "unknown",
           title: `Treinamento: ${project.clientName}`,
@@ -179,7 +179,7 @@ export default function Calendar() {
           : new Date(adherenceStage.endDate);
         const end = new Date(adherenceStage.endDate);
 
-        realEvents.push({
+        events.push({
           id: `real-${project.id}-adherence`,
           resourceId: member?.id || "unknown",
           title: `Aderência: ${project.clientName}`,
@@ -205,7 +205,7 @@ export default function Calendar() {
         const member = findMember(responsible);
         const date = new Date(conversionStage.finishedAt);
 
-        realEvents.push({
+        events.push({
           id: `real-${project.id}-homologation`,
           resourceId: member?.id || "unknown",
           title: `Homologação: ${project.clientName}`,
@@ -222,16 +222,22 @@ export default function Calendar() {
     });
 
     // Process Vacations
-    if (vacations && vacations.length > 0) {
+    if (vacations && Array.isArray(vacations)) {
       vacations.forEach((vacation) => {
+        if (!vacation.start_date || !vacation.end_date) return;
         if (!isValidDate(vacation.start_date) || !isValidDate(vacation.end_date)) return;
 
-        realEvents.push({
+        const startDate = new Date(vacation.start_date + "T12:00:00");
+        const endDate = new Date(vacation.end_date + "T12:00:00");
+
+        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return;
+
+        events.push({
           id: `vacation-${vacation.id}`,
           resourceId: vacation.implantador_id || "unknown",
           title: `Férias: ${vacation.implantador_name}`,
-          start: new Date(vacation.start_date + "T12:00:00"),
-          end: new Date(vacation.end_date + "T12:00:00"),
+          start: startDate,
+          end: endDate,
           type: "vacation",
           status: "confirmed",
           notes: vacation.description || undefined,
@@ -241,15 +247,27 @@ export default function Calendar() {
       });
     }
 
-    useCalendarStore.getState().setRealEvents(realEvents);
+    return events;
   }, [projects, isLoading, vacations]);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 5,
+  // Sync Store when Real Events change
+  useEffect(() => {
+    setRealEvents(realEvents);
+  }, [realEvents, setRealEvents]);
+
+  const sensors = useMemo(() => [
+    {
+      sensor: PointerSensor,
+      options: {
+        activationConstraint: {
+          distance: 5,
+        },
       },
-    }),
+    },
+  ], []);
+
+  const sensorContext = useSensors(
+    useSensor(PointerSensor, sensors[0].options)
   );
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -345,7 +363,7 @@ export default function Calendar() {
       <CalendarControls />
 
       <DndContext
-        sensors={sensors}
+        sensors={sensorContext}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
@@ -400,10 +418,10 @@ export default function Calendar() {
           onOpenChange={(v) => !v && setSelectedEvent(null)}
           customTitle={selectedEvent?.title}
           customDescription={`Agendamento: ${selectedEvent?.type === "implementation"
-              ? "Implantação (Fase 1)"
-              : selectedEvent?.type === "training"
-                ? "Treinamento (Fase 2)"
-                : "Evento"
+            ? "Implantação (Fase 1)"
+            : selectedEvent?.type === "training"
+              ? "Treinamento (Fase 2)"
+              : "Evento"
             }`}
           customStartDate={selectedEvent?.start}
           customEndDate={selectedEvent?.end}

@@ -25,6 +25,7 @@ import {
   Cog,
   AlertCircle,
   FileText,
+  LayoutGrid,
 } from "lucide-react";
 import {
   Collapsible,
@@ -105,11 +106,28 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
       </div>
 
       <div className="flex-1 py-4 space-y-2 overflow-y-auto">
-        {/* Dashboard */}
+        {/* Início */}
         <div className="px-2">
           <Link to="/">
             <Button
               variant={isActive("/") ? "secondary" : "ghost"}
+              className={cn(
+                "w-full justify-start gap-3",
+                collapsed ? "justify-center px-0" : "",
+              )}
+              title="Início"
+            >
+              <LayoutGrid className="h-5 w-5" />
+              {!collapsed && <span>Início</span>}
+            </Button>
+          </Link>
+        </div>
+
+        {/* Dashboard */}
+        <div className="px-2">
+          <Link to="/dashboard">
+            <Button
+              variant={isActive("/dashboard") ? "secondary" : "ghost"}
               className={cn(
                 "w-full justify-start gap-3",
                 collapsed ? "justify-center px-0" : "",

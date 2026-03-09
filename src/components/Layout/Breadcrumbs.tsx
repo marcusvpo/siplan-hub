@@ -10,6 +10,7 @@ export function Breadcrumbs() {
     conversion: "Conversão",
     engines: "Motores",
     homologation: "Homologação",
+    dashboard: "Dashboard",
   };
 
   const getBreadcrumbName = (value: string) => breadcrumbMap[value] || value;

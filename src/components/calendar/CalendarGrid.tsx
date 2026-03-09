@@ -49,13 +49,13 @@ export function CalendarGrid({ onEventClick }: CalendarGridProps) {
   // --- Ghost State Implementation ---
   const [resizingEventId, setResizingEventId] = useState<string | null>(null);
   const [ghostEndDate, setGhostEndDate] = useState<Date | null>(null);
-  
+
   // "Live Responsive Pixels" State
   const [containerWidth, setContainerWidth] = useState(0);
 
   // References
   const initialEndDateRef = useRef<Date>(new Date());
-  const ghostEndDateRef = useRef<Date | null>(null); 
+  const ghostEndDateRef = useRef<Date | null>(null);
   const startXRef = useRef<number>(0);
   const activeRowWidthRef = useRef<number>(0);
   const resizingEventRef = useRef<CalendarEvent | null>(null);
@@ -80,29 +80,29 @@ export function CalendarGrid({ onEventClick }: CalendarGridProps) {
 
   // Sync Ref with State
   const currentCellWidth = containerWidth > 0 ? containerWidth / 7 : 0;
-  
+
   // --- Resize Logic ---
   const handleResizeMove = (e: PointerEvent) => {
-    
+
     const currentX = e.clientX;
     const diffX = currentX - startXRef.current;
-    
+
     // Safety check
     const totalWidth = activeRowWidthRef.current || 1000;
-    
+
     // PERCENTAGE BASED CALCULATION
     const percentMoved = diffX / totalWidth;
-    
+
     // Convert % to Days (7 days = 100%)
     const rawDays = percentMoved * 7;
     const daysToShift = Math.round(rawDays);
 
     // A data final é SEMPRE a data ORIGINAL + o deslocamento (Cálculo Absoluto)
     let newDate = addDays(initialEndDateRef.current, daysToShift);
-    const evtStart = startOfDay(resizingEventRef.current!.start); 
-    
+    const evtStart = startOfDay(resizingEventRef.current!.start);
+
     if (isBefore(newDate, evtStart)) {
-       newDate = evtStart;
+      newDate = evtStart;
     }
 
     setGhostEndDate(newDate);
@@ -112,20 +112,20 @@ export function CalendarGrid({ onEventClick }: CalendarGridProps) {
   const handleResizeEnd = (e: PointerEvent) => {
     window.removeEventListener("pointermove", handleResizeMove);
     window.removeEventListener("pointerup", handleResizeEnd);
-    
+
     document.body.style.userSelect = "";
     document.body.style.cursor = "";
 
     const currentGhostDate = ghostEndDateRef.current;
     if (resizingEventRef.current && currentGhostDate) {
-       // "Safety Noon"
-       const finalDate = new Date(currentGhostDate);
-       finalDate.setHours(12, 0, 0, 0);
+      // "Safety Noon"
+      const finalDate = new Date(currentGhostDate);
+      finalDate.setHours(12, 0, 0, 0);
 
-       updateInteractiveEvent({
-         ...resizingEventRef.current,
-         end: finalDate
-       });
+      updateInteractiveEvent({
+        ...resizingEventRef.current,
+        end: finalDate
+      });
     }
 
     setResizingEventId(null);
@@ -144,13 +144,13 @@ export function CalendarGrid({ onEventClick }: CalendarGridProps) {
     // Robust Width Detection: Find the specific week row we are interacting with
     const targetElement = e.target as HTMLElement;
     const weekRow = targetElement.closest('.js-week-row');
-    
+
     let currentRowWidth = 0;
     if (weekRow) {
-        currentRowWidth = weekRow.getBoundingClientRect().width;
+      currentRowWidth = weekRow.getBoundingClientRect().width;
     } else if (containerRef.current) {
-        // Fallback
-        currentRowWidth = containerRef.current.getBoundingClientRect().width;
+      // Fallback
+      currentRowWidth = containerRef.current.getBoundingClientRect().width;
     }
 
     if (currentRowWidth === 0) currentRowWidth = 800; // Emergency fallback
@@ -185,12 +185,12 @@ export function CalendarGrid({ onEventClick }: CalendarGridProps) {
 
   // --- Layout Calculation for Slots ---
   const layoutEvents = displayEvents.map(evt => {
-     if (evt.id === resizingEventId && ghostEndDate) {
-        // DIRECT MAPPING: Force the event to use the ghost date exactly.
-        // This enables shrinking and expansion with 1:1 visual fidelity.
-        return { ...evt, end: ghostEndDate };
-     }
-     return evt;
+    if (evt.id === resizingEventId && ghostEndDate) {
+      // DIRECT MAPPING: Force the event to use the ghost date exactly.
+      // This enables shrinking and expansion with 1:1 visual fidelity.
+      return { ...evt, end: ghostEndDate };
+    }
+    return evt;
   });
 
   return (
@@ -214,6 +214,9 @@ export function CalendarGrid({ onEventClick }: CalendarGridProps) {
           const weekEnd = endOfDay(week[6]);
 
           const weekEvents = layoutEvents.filter((evt) => {
+            if (!(evt.start instanceof Date) || isNaN(evt.start.getTime())) return false;
+            if (!(evt.end instanceof Date) || isNaN(evt.end.getTime())) return false;
+
             const evtStart = startOfDay(evt.start);
             const evtEnd = endOfDay(evt.end);
             return evtEnd >= weekStart && evtStart <= weekEnd;
@@ -222,7 +225,7 @@ export function CalendarGrid({ onEventClick }: CalendarGridProps) {
           weekEvents.sort((a, b) => {
             const startDiff = a.start.getTime() - b.start.getTime();
             if (startDiff !== 0) return startDiff;
-             // Longer events first
+            // Longer events first
             return b.end.getTime() - a.end.getTime();
           });
 
@@ -266,39 +269,39 @@ export function CalendarGrid({ onEventClick }: CalendarGridProps) {
               {/* CAMADA 1: GRID DE FUNDO VAZIO (Apenas linhas) */}
               <div className="absolute inset-0 grid grid-cols-7 w-full h-full z-0 pointer-events-none">
                 {week.map((day) => {
-                   const isCurrentMonth = isSameMonth(day, currentDate);
-                   return (
-                    <div 
-                        key={day.toISOString()} 
-                        className={cn(
-                            "border-r h-full border-border/50 relative",
-                            !isCurrentMonth && "bg-muted/10"
-                        )}
+                  const isCurrentMonth = isSameMonth(day, currentDate);
+                  return (
+                    <div
+                      key={day.toISOString()}
+                      className={cn(
+                        "border-r h-full border-border/50 relative",
+                        !isCurrentMonth && "bg-muted/10"
+                      )}
                     >
-                         <span
-                            className={cn(
-                              "text-sm font-medium ml-auto w-6 h-6 flex items-center justify-center rounded-full absolute top-2 right-2",
-                              isToday(day) && "bg-primary text-primary-foreground"
-                            )}
-                          >
-                            {format(day, "d")}
-                          </span>
+                      <span
+                        className={cn(
+                          "text-sm font-medium ml-auto w-6 h-6 flex items-center justify-center rounded-full absolute top-2 right-2",
+                          isToday(day) && "bg-primary text-primary-foreground"
+                        )}
+                      >
+                        {format(day, "d")}
+                      </span>
                     </div>
-                   );
+                  );
                 })}
               </div>
 
-               {/* CAMADA 3: INTERAÇÃO (Drop Targets) - Z-Index 10 */}
-               {/* This must be interactable, so z-10. Events will be z-20. */}
+              {/* CAMADA 3: INTERAÇÃO (Drop Targets) - Z-Index 10 */}
+              {/* This must be interactable, so z-10. Events will be z-20. */}
               <div className="absolute inset-0 grid grid-cols-7 w-full h-full z-10">
-                  {week.map((day) => (
-                      <div key={day.toISOString()} className="h-full min-h-[120px]">
-                        <DayDroppableZone
-                            day={day}
-                            isInteractiveMode={isInteractiveMode}
-                        />
-                      </div>
-                  ))}
+                {week.map((day) => (
+                  <div key={day.toISOString()} className="h-full min-h-[120px]">
+                    <DayDroppableZone
+                      day={day}
+                      isInteractiveMode={isInteractiveMode}
+                    />
+                  </div>
+                ))}
               </div>
 
               {/* CAMADA 2: GRID DE EVENTOS (Funcional e Visual) - Z-index 20 */}
@@ -324,7 +327,7 @@ export function CalendarGrid({ onEventClick }: CalendarGridProps) {
                       <div
                         key={originalEvt.id}
                         className={cn(
-                          "relative mx-1 rounded-md shadow-md transition-none pointer-events-auto", 
+                          "relative mx-1 rounded-md shadow-md transition-none pointer-events-auto",
                           isResizing && "opacity-40"
                         )}
                         style={{
@@ -352,7 +355,7 @@ export function CalendarGrid({ onEventClick }: CalendarGridProps) {
                       </div>
                     );
                   }
-                  
+
                   return null;
                 })}
               </div>
@@ -382,17 +385,17 @@ function DayDroppableZone({
   return (
     <div
       ref={setNodeRef}
-      data-date={format(day, "yyyy-MM-dd")} 
+      data-date={format(day, "yyyy-MM-dd")}
       className={cn(
-        "w-full h-full transition-colors relative", 
+        "w-full h-full transition-colors relative",
         // No borders here, they are in Layer 1
         isOver &&
-          isInteractiveMode &&
-          "bg-primary/5 ring-2 ring-inset ring-primary/20",
+        isInteractiveMode &&
+        "bg-primary/5 ring-2 ring-inset ring-primary/20",
         // isToday(day) && "bg-accent/5" // Removed as it is handled in background or not needed for drop zone
       )}
     >
-        {/* Empty zone, just for drop */}
+      {/* Empty zone, just for drop */}
     </div>
   );
 }
