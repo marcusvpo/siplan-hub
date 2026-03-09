@@ -4,7 +4,7 @@ import { Breadcrumbs } from "./Breadcrumbs";
 import { ModeToggle } from "@/components/mode-toggle";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
-import { LayoutDashboard, Home, ArrowRight } from "lucide-react";
+import { LayoutDashboard, Home, ArrowRight, LayoutGrid } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
 
 interface MainLayoutProps {
@@ -12,7 +12,7 @@ interface MainLayoutProps {
 }
 
 export function MainLayout({ children }: MainLayoutProps) {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -34,8 +34,8 @@ export function MainLayout({ children }: MainLayoutProps) {
                 className="gap-2 hidden md:flex"
                 onClick={() => navigate("/")}
               >
-                <Home className="h-4 w-4" />
-                Dashboard
+                <LayoutGrid className="h-4 w-4" />
+                Início
               </Button>
             ) : (
               <Button
@@ -53,7 +53,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           </div>
         </header>
 
-        <main className={`flex-1 ${isProjectsPage ? 'overflow-hidden' : 'overflow-auto'} p-4`}>
+        <main className={`flex-1 flex flex-col h-full ${isProjectsPage ? 'overflow-hidden' : 'overflow-auto'} p-4`}>
           {children}
         </main>
       </div>

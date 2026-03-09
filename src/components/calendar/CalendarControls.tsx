@@ -27,15 +27,13 @@ import {
 } from "lucide-react";
 
 export function CalendarControls() {
-  const {
-    viewMode,
-    setViewMode,
-    currentDate,
-    setCurrentDate,
-    isInteractiveMode,
-    setInteractiveMode,
-    importRealDataToSandbox,
-  } = useCalendarStore();
+  const viewMode = useCalendarStore((state) => state.viewMode);
+  const setViewMode = useCalendarStore((state) => state.setViewMode);
+  const currentDate = useCalendarStore((state) => state.currentDate);
+  const setCurrentDate = useCalendarStore((state) => state.setCurrentDate);
+  const isInteractiveMode = useCalendarStore((state) => state.isInteractiveMode);
+  const setInteractiveMode = useCalendarStore((state) => state.setInteractiveMode);
+  const importRealDataToSandbox = useCalendarStore((state) => state.importRealDataToSandbox);
 
   const handlePrevious = (e: React.MouseEvent) => {
     e.stopPropagation();

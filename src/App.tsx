@@ -15,6 +15,7 @@ import Login from "@/pages/Login";
 
 // Code Splitting: Lazy loading para rotas secundárias
 const Index = lazy(() => import("./pages/Index"));
+const Home = lazy(() => import("./pages/Home"));
 const Reports = lazy(() => import("./pages/Reports"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const CompareProjects = lazy(() => import("./pages/CompareProjects"));
@@ -170,7 +171,8 @@ const App = () => (
                     <MainLayout>
                       <Suspense fallback={<PageLoader />}>
                         <Routes>
-                          <Route path="/" element={<DashboardV2 />} />
+                          <Route path="/" element={<Home />} />
+                          <Route path="/dashboard" element={<DashboardV2 />} />
                           <Route path="/projects" element={<Index />} />
                           <Route path="/calendar" element={<Calendar />} />
                           <Route
