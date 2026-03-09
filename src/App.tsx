@@ -48,6 +48,12 @@ const ConversionHomologation = lazy(
 const ConversionEngines = lazy(
   () => import("./pages/conversion/ConversionEngines"),
 );
+const OrionTNModels = lazy(
+  () => import("./pages/conversion/OrionTNModels"),
+);
+const OrionTNProjects = lazy(
+  () => import("./pages/conversion/OrionTNProjects"),
+);
 
 // Admin Pages (lazy)
 const AdminLayout = lazy(() => import("./layouts/AdminLayout"));
@@ -205,6 +211,14 @@ const App = () => (
                           <Route
                             path="/conversion/engines"
                             element={<ConversionEngines />}
+                          />
+                          <Route
+                            path="/orion-tn-models/projects"
+                            element={<OrionTNProjects />}
+                          />
+                          <Route
+                            path="/orion-tn-models/:projectId?"
+                            element={<OrionTNModels />}
                           />
                           <Route path="*" element={<NotFound />} />
                         </Routes>

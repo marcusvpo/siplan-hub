@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/hooks/use-theme";
+import { useProjects } from "@/hooks/useProjects";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -17,10 +19,12 @@ import {
   Calendar as CalendarIcon,
   Rocket,
   Briefcase,
+  FolderClosed,
   Contact,
   UserCircle,
   Cog,
   AlertCircle,
+  FileText,
 } from "lucide-react";
 import {
   Collapsible,
@@ -37,10 +41,30 @@ interface SidebarProps {
 export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
   const location = useLocation();
   const { signOut } = useAuth();
+  const { theme } = useTheme();
+  const { projects } = useProjects();
   const [isImplantacaoOpen, setIsImplantacaoOpen] = useState(true);
+  const [isOrionTNModelsOpen, setIsOrionTNModelsOpen] = useState(
+    location.pathname.startsWith("/orion-tn-models"),
+  );
+  const [isProjectsSubMenuOpen, setIsProjectsSubMenuOpen] = useState(
+    location.pathname.startsWith("/orion-tn-models/"),
+  );
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   const isActive = (path: string) => location.pathname === path;
+
+  const isDark =
+    theme === "dark" ||
+    (theme === "system" &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches);
+  const logoSrc = isDark
+    ? "/assets/Siplan_logo_branco.png"
+    : "/assets/Siplan_logo.png";
+
+  const orionTNProjects = projects.filter(
+    (p) => p.systemType === "Orion TN" || p.systemType === "OrionTN",
+  );
 
   return (
     <aside
@@ -53,9 +77,10 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
         {!collapsed && (
           <div className="flex items-center gap-2">
             <img
-              src="/assets/Siplan_logo.png"
+              src={logoSrc}
               alt="Siplan Logo"
-              className="h-8 w-auto"
+              className="h-8 w-auto transition-all duration-300 ease-in-out opacity-100"
+              key={logoSrc}
             />
             <span className="font-black text-xl tracking-tight bg-gradient-to-r from-primary to-rose-600 bg-clip-text text-transparent">
               HUB
@@ -174,9 +199,9 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
             <Button
               variant={
                 isActive("/projects") ||
-                isActive("/reports") ||
-                isActive("/calendar") ||
-                isActive("/deployments")
+                  isActive("/reports") ||
+                  isActive("/calendar") ||
+                  isActive("/deployments")
                   ? "secondary"
                   : "ghost"
               }
@@ -253,8 +278,8 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
             <Button
               variant={
                 isActive("/commercial/customers") ||
-                isActive("/commercial/blockers") ||
-                isActive("/commercial/contacts")
+                  isActive("/commercial/blockers") ||
+                  isActive("/commercial/contacts")
                   ? "secondary"
                   : "ghost"
               }
@@ -341,6 +366,73 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                 title="Conversão"
               >
                 <Database className="h-5 w-5" />
+              </Button>
+            </Link>
+          )}
+        </div>
+
+        {/* OrionTN Models */}
+        <div className="px-2">
+          {!collapsed ? (
+            <Collapsible
+              open={isOrionTNModelsOpen}
+              onOpenChange={setIsOrionTNModelsOpen}
+              className="space-y-1"
+            >
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant={
+                    location.pathname.startsWith("/orion-tn-models")
+                      ? "secondary"
+                      : "ghost"
+                  }
+                  className="w-full justify-between hover:bg-muted/50"
+                  title="Modelos Editor OrionTN"
+                >
+                  <div className="flex items-center gap-3">
+                    <FileText className="h-5 w-5" />
+                    <span>Modelos Editor OrionTN</span>
+                  </div>
+                  <ChevronDown
+                    className={cn(
+                      "h-4 w-4 transition-transform",
+                      isOrionTNModelsOpen ? "transform rotate-180" : "",
+                    )}
+                  />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-1 pl-4 animate-in slide-in-from-top-2">
+                <div className="pt-1 pb-1">
+                  <div className="px-4 py-2">
+                    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-2">
+                      Gestão
+                    </span>
+                    <Link to="/orion-tn-models/projects">
+                      <Button
+                        variant={isActive("/orion-tn-models/projects") ? "secondary" : "ghost"}
+                        size="sm"
+                        className="w-full justify-start gap-3 h-9"
+                      >
+                        <FolderClosed className="h-4 w-4" />
+                        <span className="text-xs font-medium">Gerenciar Projetos</span>
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          ) : (
+            <Link to="/orion-tn-models">
+              <Button
+                variant={
+                  location.pathname.startsWith("/orion-tn-models")
+                    ? "secondary"
+                    : "ghost"
+                }
+                className="w-full justify-center px-0"
+                title="Modelos Editor OrionTN"
+              >
+                <FileText className="h-5 w-5" />
               </Button>
             </Link>
           )}
