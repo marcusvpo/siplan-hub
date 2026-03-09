@@ -10,6 +10,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Virtuoso } from "react-virtuoso";
 import { AdvancedFilters } from "./AdvancedFilters";
 import { useFilterStore } from "@/stores/filterStore";
+import { cn } from "@/lib/utils";
 
 export function ProjectGrid() {
   const {
@@ -249,7 +250,7 @@ export function ProjectGrid() {
 
           {/* Grid with Virtualization */}
           {filteredAndSortedProjects.length > 0 ? (
-            <div className="flex-1 h-[calc(100vh-320px)] min-h-[400px]">
+            <div className="flex-1 h-[calc(100vh-210px)]">
               <Virtuoso
                 data={filteredAndSortedProjects as ProjectV2[]}
                 endReached={() => {
@@ -257,15 +258,20 @@ export function ProjectGrid() {
                 }}
                 components={{
                   Footer: () => {
-                    return isFetchingNextPage ? (
-                      <div className="flex justify-center py-4">
-                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                    return (
+                      <div className="flex flex-col">
+                        {isFetchingNextPage && (
+                          <div className="flex justify-center py-4">
+                            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                          </div>
+                        )}
+                        <div className="h-32" /> {/* Bottom Spacer */}
                       </div>
-                    ) : null;
+                    );
                   },
                 }}
                 itemContent={(index, project) => (
-                  <div className="pb-3 pr-2">
+                  <div className={cn("pb-3 pr-2", index === 0 && "pt-4")}>
                     <ProjectCardV3
                       key={project.id}
                       project={project}

@@ -9,10 +9,8 @@ const Index = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-background">
-
-
-      <main className="container mx-auto px-6 py-8">
+    <div className="bg-background">
+      <div className="container mx-auto pt-2 pb-8">
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-3">
@@ -27,7 +25,7 @@ const Index = () => {
         </div>
 
         <ProjectGrid />
-      </main>
+      </div>
     </div>
   );
 };

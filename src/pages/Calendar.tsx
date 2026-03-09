@@ -102,12 +102,19 @@ export default function Calendar() {
       return colors[Math.abs(hash) % colors.length];
     };
 
+    const isValidDate = (date: any) => {
+      const d = new Date(date);
+      return d instanceof Date && !isNaN(d.getTime());
+    };
+
     projects.forEach((project: ProjectV2) => {
       // Implementation Phase 1
       const implStage = project.stages.implementation;
       if (
         implStage?.phase1?.startDate &&
+        isValidDate(implStage.phase1.startDate) &&
         implStage?.phase1?.endDate &&
+        isValidDate(implStage.phase1.endDate) &&
         implStage?.phase1?.responsible
       ) {
         const responsible = implStage.phase1.responsible;
@@ -132,7 +139,9 @@ export default function Calendar() {
       // Implementation Phase 2
       if (
         implStage?.phase2?.startDate &&
+        isValidDate(implStage.phase2.startDate) &&
         implStage?.phase2?.endDate &&
+        isValidDate(implStage.phase2.endDate) &&
         implStage?.phase2?.responsible
       ) {
         const responsible = implStage.phase2.responsible;
@@ -156,15 +165,16 @@ export default function Calendar() {
 
       // Adherence Analysis
       const adherenceStage = project.stages.adherence;
-      if (adherenceStage?.endDate && adherenceStage?.responsible) {
+      if (
+        adherenceStage?.endDate &&
+        isValidDate(adherenceStage.endDate) &&
+        adherenceStage?.responsible
+      ) {
         const responsible = adherenceStage.responsible;
         const member = findMember(responsible);
-        // Use member color or a fallback amber color for Adherence
         const color = member ? member.color : "bg-amber-500";
 
-        // Adherence doesn't usually have a range, maybe just the end date (deadline)?
-        // Or if it has startDate, use it. If not, use endDate as start.
-        const start = adherenceStage.startDate
+        const start = adherenceStage.startDate && isValidDate(adherenceStage.startDate)
           ? new Date(adherenceStage.startDate)
           : new Date(adherenceStage.endDate);
         const end = new Date(adherenceStage.endDate);
@@ -180,20 +190,19 @@ export default function Calendar() {
           status: "confirmed",
           projectId: project.id,
           notes: adherenceStage.observations,
-          color: "bg-amber-500", // Enforce specific color for event type clarity? Or keep member color? User asked for amber-500.
+          color: "bg-amber-500",
         });
       }
 
       // Homologation (Conversion)
       const conversionStage = project.stages.conversion;
       if (
-        conversionStage?.finishedAt && // "Agendado Para" maps to finishedAt
+        conversionStage?.finishedAt &&
+        isValidDate(conversionStage.finishedAt) &&
         conversionStage?.homologationResponsible
       ) {
         const responsible = conversionStage.homologationResponsible;
         const member = findMember(responsible);
-
-        // Homologation date seems to be a single date point "Agendado Para"
         const date = new Date(conversionStage.finishedAt);
 
         realEvents.push({
@@ -207,28 +216,26 @@ export default function Calendar() {
           status: "confirmed",
           projectId: project.id,
           notes: conversionStage.observations,
-          color: "bg-violet-500", // User asked for violet-500
+          color: "bg-violet-500",
         });
       }
     });
 
     // Process Vacations
-    if (vacations) {
+    if (vacations && vacations.length > 0) {
       vacations.forEach((vacation) => {
-        const member = CALENDAR_MEMBERS.find(
-          (m) => m.id === vacation.implantador_id,
-        );
+        if (!isValidDate(vacation.start_date) || !isValidDate(vacation.end_date)) return;
 
         realEvents.push({
           id: `vacation-${vacation.id}`,
           resourceId: vacation.implantador_id || "unknown",
           title: `Férias: ${vacation.implantador_name}`,
-          start: new Date(vacation.start_date + "T12:00:00"), // Noon to avoid timezone issues
+          start: new Date(vacation.start_date + "T12:00:00"),
           end: new Date(vacation.end_date + "T12:00:00"),
           type: "vacation",
           status: "confirmed",
           notes: vacation.description || undefined,
-          color: "bg-red-500", // User asked for red
+          color: "bg-red-500",
           isGhost: false,
         });
       });
@@ -392,13 +399,12 @@ export default function Calendar() {
           open={!!selectedEvent}
           onOpenChange={(v) => !v && setSelectedEvent(null)}
           customTitle={selectedEvent?.title}
-          customDescription={`Agendamento: ${
-            selectedEvent?.type === "implementation"
+          customDescription={`Agendamento: ${selectedEvent?.type === "implementation"
               ? "Implantação (Fase 1)"
               : selectedEvent?.type === "training"
                 ? "Treinamento (Fase 2)"
                 : "Evento"
-          }`}
+            }`}
           customStartDate={selectedEvent?.start}
           customEndDate={selectedEvent?.end}
           customResponsible={

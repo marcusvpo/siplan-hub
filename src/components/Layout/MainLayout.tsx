@@ -21,40 +21,40 @@ export function MainLayout({ children }: MainLayoutProps) {
   return (
     <div className="flex h-screen w-full bg-muted/10 overflow-hidden">
       <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
-      
-      <div className="flex flex-col flex-1 overflow-hidden transition-all duration-300">
-        <header className="flex h-16 items-center justify-between gap-4 border-b bg-background/80 backdrop-blur-md px-6 shrink-0 z-10 sticky top-0">
-           <Breadcrumbs />
-           
-           <div className="flex items-center gap-2">
-              {isProjectsPage ? (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="gap-2 hidden md:flex"
-                  onClick={() => navigate("/")}
-                >
-                  <Home className="h-4 w-4" />
-                  Dashboard
-                </Button>
-              ) : (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="gap-2 hidden md:flex"
-                  onClick={() => navigate("/projects")}
-                >
-                  Ver Todos os Projetos
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              )}
-              <NotificationBell />
-              <ModeToggle />
-           </div>
+
+      <div className="flex flex-col flex-1 h-full overflow-hidden transition-all duration-300 min-w-0">
+        <header className="flex h-16 items-center justify-between gap-4 border-b bg-background/80 backdrop-blur-md px-6 shrink-0 z-10 sticky top-0 overflow-hidden">
+          <Breadcrumbs />
+
+          <div className="flex items-center gap-2">
+            {isProjectsPage ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 hidden md:flex"
+                onClick={() => navigate("/")}
+              >
+                <Home className="h-4 w-4" />
+                Dashboard
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 hidden md:flex"
+                onClick={() => navigate("/projects")}
+              >
+                Ver Todos os Projetos
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            )}
+            <NotificationBell />
+            <ModeToggle />
+          </div>
         </header>
-        
-        <main className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-muted-foreground/20">
-           {children}
+
+        <main className="flex-1 overflow-hidden p-4">
+          {children}
         </main>
       </div>
     </div>
