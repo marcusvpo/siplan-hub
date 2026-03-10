@@ -15,9 +15,10 @@ import {
   Settings2,
   Activity,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/hooks/use-theme";
+import { activityLogger } from "@/services/activityLogger";
 
 export default function AdminLayout() {
   const { user, role, loading, permissionsLoaded, signOut } = useAuth();
@@ -25,6 +26,28 @@ export default function AdminLayout() {
   const { theme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const location = useLocation();
+
+  // Heartbeat to keep user marked as online while in admin area
+  useEffect(() => {
+    if (!user || loading || !permissionsLoaded) return;
+
+    const sendHeartbeat = () => {
+      activityLogger.log({
+        action: "custom_action",
+        details: { 
+          additionalInfo: { type: "heartbeat" } 
+        }
+      });
+    };
+
+    // Initial heartbeat
+    sendHeartbeat();
+
+    // Periodic heartbeat every 10 minutes
+    const interval = setInterval(sendHeartbeat, 10 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [user?.id, loading, permissionsLoaded]);
 
   if (loading || !permissionsLoaded) {
     return (

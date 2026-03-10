@@ -22,10 +22,12 @@ export interface AdminStats {
   totalUsers: number;
   activeProjects: number;
   onlineUsersCount: number;
+  activeNowCount: number;
   onlineUsers: {
     id: string;
     userName: string;
     lastAction: string;
+    status: 'active' | 'away';
   }[];
   mostActiveUsers: {
     userId: string;

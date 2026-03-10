@@ -21,8 +21,10 @@ export function useAdminStats() {
 
       if (usersError) throw usersError;
 
-      // Online: distinct users with logs in the last 10 minutes
-      const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+      // Online: distinct users with logs in the last 2 hours
+      const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+      const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+      
       const { data: onlineLogs, error: onlineError } = await supabase
         .from("audit_logs")
         .select(`
@@ -30,20 +32,29 @@ export function useAdminStats() {
           created_at,
           profiles:user_id (full_name)
         `)
-        .gt("created_at", tenMinutesAgo)
+        .gt("created_at", twoHoursAgo)
         .order('created_at', { ascending: false });
 
-      const onlineUsersMap: Record<string, { id: string; userName: string; lastAction: string }> = {};
+      const onlineUsersMap: Record<string, { id: string; userName: string; lastAction: string; status: 'active' | 'away' }> = {};
       onlineLogs?.forEach(log => {
         if (!log.user_id || onlineUsersMap[log.user_id]) return;
+        
+        const isRecentlyActive = new Date(log.created_at) > new Date(fifteenMinutesAgo);
+        
         onlineUsersMap[log.user_id] = {
           id: log.user_id,
           userName: (log.profiles as any)?.full_name || "Usuário Desconhecido",
-          lastAction: log.created_at
+          lastAction: log.created_at,
+          status: isRecentlyActive ? 'active' : 'away'
         };
       });
 
-      const onlineUsers = Object.values(onlineUsersMap);
+      const onlineUsers = Object.values(onlineUsersMap).sort((a, b) => 
+        new Date(b.lastAction).getTime() - new Date(a.lastAction).getTime()
+      );
+
+      // onlineUsersCount should reflect users active in last 15 mins for the badge
+      const activeNowCount = onlineUsers.filter(u => u.status === 'active').length;
 
       // Most Active: Aggregate recentLogs (last 2000 actions)
       const activityMap: Record<string, { name: string, count: number }> = {};
@@ -69,6 +80,7 @@ export function useAdminStats() {
         totalUsers: usersCount || 0,
         activeProjects: projectsCount || 0,
         onlineUsersCount: onlineUsers.length,
+        activeNowCount,
         onlineUsers,
         mostActiveUsers,
       };
