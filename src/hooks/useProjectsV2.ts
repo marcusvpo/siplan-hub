@@ -39,8 +39,20 @@ export const useProjectsV2 = () => {
   const updateProject = useMutation({
     mutationFn: async ({ projectId, updates }: { projectId: string; updates: Partial<ProjectV2> }) => {
       // Get current project state for comparison
-      const currentProjects = queryClient.getQueryData<ProjectV2[]>(["projectsV3_with_dates"]);
-      const currentProject = currentProjects?.find(p => p.id === projectId);
+      let currentProject = queryClient.getQueryData<ProjectV2[]>(["projectsV3_with_dates"])?.find(p => p.id === projectId);
+
+      // If not in cache, try to fetch it to ensure we have valid old state for comparisons
+      if (!currentProject) {
+        const { data: fetchedProject } = await supabase
+          .from("projects")
+          .select("*")
+          .eq("id", projectId)
+          .single();
+
+        if (fetchedProject) {
+          currentProject = transformToProjectV3(fetchedProject);
+        }
+      }
 
       // Ensure the current user's name is recorded
       const updatesWithUser = {
@@ -332,66 +344,12 @@ function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
     lastUpdatedBy: (row.last_update_by as string) || 'Sistema',
 
     stages: {
-      infra: {
-        status: (row.infra_status as StageStatus) || 'todo',
-        responsible: (row.infra_responsible as string) || undefined,
-        startDate: row.infra_start_date ? new Date(row.infra_start_date as string) : undefined,
-        endDate: row.infra_end_date ? new Date(row.infra_end_date as string) : undefined,
-        observations: (row.infra_observations as string) || undefined,
-        technicalNotes: (row.infra_technical_notes as string) || undefined,
-        workstationsStatus: (row.infra_workstations_status as InfraStageV2['workstationsStatus']) || undefined,
-        serverStatus: (row.infra_server_status as InfraStageV2['serverStatus']) || undefined,
-        workstationsCount: row.infra_workstations_count as number | undefined,
-      },
-      adherence: {
-        status: (row.adherence_status as StageStatus) || 'todo',
-        responsible: (row.adherence_responsible as string) || undefined,
-        startDate: row.adherence_start_date ? new Date(row.adherence_start_date as string) : undefined,
-        endDate: row.adherence_end_date ? new Date(row.adherence_end_date as string) : undefined,
-        observations: (row.adherence_observations as string) || undefined,
-        hasProductGap: row.adherence_has_product_gap as boolean | undefined,
-        gapDescription: row.adherence_gap_description as string | undefined,
-        devTicket: row.adherence_dev_ticket as string | undefined,
-        devEstimatedDate: row.adherence_dev_estimated_date ? new Date(row.adherence_dev_estimated_date as string) : undefined,
-        gapPriority: row.adherence_gap_priority as AdherenceStageV2['gapPriority'],
-        analysisComplete: row.adherence_analysis_complete as boolean | undefined,
-        conformityStandards: row.adherence_conformity_standards as string | undefined,
-      },
-      environment: {
-        status: (row.environment_status as StageStatus) || 'todo',
-        responsible: (row.environment_responsible as string) || undefined,
-        startDate: row.environment_start_date ? new Date(row.environment_start_date as string) : undefined,
-        endDate: row.environment_end_date ? new Date(row.environment_end_date as string) : undefined,
-        observations: (row.environment_observations as string) || undefined,
-        realDate: row.environment_real_date ? new Date(row.environment_real_date as string) : undefined,
-        osVersion: row.environment_os_version as string | undefined,
-        version: row.environment_version as string | undefined,
-        testAvailable: row.environment_test_available as boolean | undefined,
-        preparationChecklist: row.environment_preparation_checklist as string | undefined,
-        approvedByInfra: row.environment_approved_by_infra as boolean | undefined,
-      },
-      conversion: {
-        status: (row.conversion_status as StageStatus) || 'todo',
-        responsible: (row.conversion_responsible as string) || undefined,
-        startDate: row.conversion_sent_at
-          ? new Date(row.conversion_sent_at as string)
-          : (row.conversion_start_date ? new Date(row.conversion_start_date as string) : undefined),
-        endDate: row.conversion_finished_at
-          ? new Date(row.conversion_finished_at as string)
-          : (row.conversion_end_date ? new Date(row.conversion_end_date as string) : undefined),
-        observations: (row.conversion_observations as string) || undefined,
-        homologationStatus: row.conversion_homologation_status as ConversionStageV2['homologationStatus'],
-        homologationResponsible: row.conversion_homologation_responsible as string | undefined,
-        sentAt: row.conversion_sent_at ? new Date(row.conversion_sent_at as string) : undefined,
-        finishedAt: row.conversion_finished_at ? new Date(row.conversion_finished_at as string) : undefined,
-        complexity: row.conversion_complexity as ConversionStageV2['complexity'],
-        dataVolumeGb: row.conversion_data_volume_gb as number | undefined,
-        toolUsed: row.conversion_tool_used as string | undefined,
-        homologationDate: row.conversion_homologation_date ? new Date(row.conversion_homologation_date as string) : undefined,
-        deviations: row.conversion_deviations as string | undefined,
-      },
-      modelosEditor: createStage<ModelosEditorStageV2>('modelos_editor'),
+      infra: createStage<InfraStageV2>('infra'),
+      adherence: createStage<AdherenceStageV2>('adherence'),
+      environment: createStage<EnvironmentStageV2>('environment'),
+      conversion: createStage<ConversionStageV2>('conversion'),
       implementation: createStage<ImplementationStageV2>('implementation'),
+      modelosEditor: createStage<ModelosEditorStageV2>('modelos_editor'),
       post: createStage<PostStageV2>('post'),
     },
 
@@ -610,13 +568,13 @@ function transformToDB(project: Partial<ProjectV2>, currentProject?: ProjectV2):
       if (newStatus === 'in-progress' && oldStatus !== 'in-progress' && !s.startDate) {
         dbRow.modelos_editor_start_date = new Date().toISOString();
       } else {
-        dbRow.modelos_editor_start_date = s.startDate || null;
+        dbRow.modelos_editor_start_date = s.startDate ? new Date(s.startDate).toISOString() : null;
       }
 
       if (newStatus === 'done' && oldStatus !== 'done' && !s.endDate) {
         dbRow.modelos_editor_end_date = new Date().toISOString();
       } else {
-        dbRow.modelos_editor_end_date = s.endDate || null;
+        dbRow.modelos_editor_end_date = s.endDate ? new Date(s.endDate).toISOString() : null;
       }
 
       dbRow.modelos_editor_observations = s.observations;

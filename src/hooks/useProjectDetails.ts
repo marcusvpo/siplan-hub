@@ -42,11 +42,11 @@ function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
       observations: (row[`${prefix}_observations`] as string) || '',
       ...Object.keys(row).reduce((acc, key) => {
         if (key.startsWith(prefix + '_') &&
-          !key.endsWith('_status') &&
-          !key.endsWith('_responsible') &&
-          !key.endsWith('_start_date') &&
-          !key.endsWith('_end_date') &&
-          !key.endsWith('_observations')) {
+          key !== `${prefix}_status` &&
+          key !== `${prefix}_responsible` &&
+          key !== `${prefix}_start_date` &&
+          key !== `${prefix}_end_date` &&
+          key !== `${prefix}_observations`) {
           const propName = key.replace(prefix + '_', '').replace(/_([a-z])/g, (g) => g[1].toUpperCase());
           acc[propName] = row[key];
         }
@@ -78,9 +78,6 @@ function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
     lastEditedAt: row.updated_at ? new Date(row.updated_at as string) : new Date()
   };
 
-  // Timeline events fetched separately
-  const auditLog: AuditEntry[] = [];
-
   return {
     id: row.id as string,
     clientName: row.client_name as string,
@@ -93,6 +90,7 @@ function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
     soldHours: row.sold_hours as number | undefined,
     legacySystem: row.legacy_system as string | undefined,
     specialty: row.specialty as string | undefined,
+    products: (row.products as string[]) || [],
     healthScore: calculateHealthScore(row),
     globalStatus: (row.global_status as ProjectV2['globalStatus']) || "in-progress",
     overallProgress: (row.overall_progress as number) || 0,
@@ -114,40 +112,16 @@ function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
     lastUpdatedAt: new Date(row.updated_at as string),
     lastUpdatedBy: (row.last_update_by as string) || 'Sistema',
     stages: {
-      infra: {
-        ...createStage<InfraStageV2>('infra'),
-        // Explicitly read infra-specific status fields that are excluded by the generic createStage
-        // (because they end with _status which is filtered out)
-        workstationsStatus: (row.infra_workstations_status as InfraStageV2['workstationsStatus']) || undefined,
-        serverStatus: (row.infra_server_status as InfraStageV2['serverStatus']) || undefined,
-        workstationsCount: row.infra_workstations_count as number | undefined,
-      },
+      infra: createStage<InfraStageV2>('infra'),
       adherence: createStage<AdherenceStageV2>('adherence'),
-      environment: {
-        ...createStage<EnvironmentStageV2>('environment'),
-        startDate: row.environment_start_date ? new Date(row.environment_start_date as string) : undefined,
-        endDate: row.environment_end_date ? new Date(row.environment_end_date as string) : undefined,
-      },
-      conversion: {
-        ...createStage<ConversionStageV2>('conversion'),
-        // Explicitly read conversion-specific status fields
-        homologationStatus: (row.conversion_homologation_status as ConversionStageV2['homologationStatus']) || undefined,
-        homologationResponsible: row.conversion_homologation_responsible as string | undefined,
-        sentAt: row.conversion_sent_at ? new Date(row.conversion_sent_at as string) : undefined,
-        finishedAt: row.conversion_finished_at ? new Date(row.conversion_finished_at as string) : undefined,
-        startDate: row.conversion_sent_at
-          ? new Date(row.conversion_sent_at as string)
-          : (row.conversion_start_date ? new Date(row.conversion_start_date as string) : undefined),
-        endDate: row.conversion_finished_at
-          ? new Date(row.conversion_finished_at as string)
-          : (row.conversion_end_date ? new Date(row.conversion_end_date as string) : undefined),
-      },
+      environment: createStage<EnvironmentStageV2>('environment'),
+      conversion: createStage<ConversionStageV2>('conversion'),
       implementation: createStage<ImplementationStageV2>('implementation'),
       modelosEditor: createStage<ModelosEditorStageV2>('modelos_editor'),
       post: createStage<PostStageV2>('post'),
     },
     timeline: [],
-    auditLog: auditLog,
+    auditLog: [],
     notes: notes,
     relatedTickets: (row.related_tickets as { name: string; number: string }[]) || [],
     tags: (row.tags as string[]) || [],
