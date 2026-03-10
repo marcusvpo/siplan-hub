@@ -38,23 +38,23 @@ export default function OrionTNModels() {
     navigate(`/orion-tn-models/${id}`);
   };
 
-  const updateStage = async (projectId: string, stageKey: string, updates: any) => {
-    const project = projects.find(p => p.id === projectId);
-    if (!project) return;
+  const updateStage = async (proj: typeof selectedProject, stageKey: string, updates: any) => {
+    if (!proj) return;
 
-    const updatedStages = {
-      ...project.stages,
-      [stageKey]: {
-        ...project.stages[stageKey as keyof typeof project.stages],
-        ...updates,
-        lastUpdatedAt: new Date(),
-        lastUpdatedBy: "Admin"
+    const updatedProject = {
+      ...proj,
+      stages: {
+        ...proj.stages,
+        [stageKey]: {
+          ...(proj.stages[stageKey as keyof typeof proj.stages] || {}),
+          ...updates,
+        }
       }
     };
 
     await updateProject.mutateAsync({
-      id: projectId,
-      stages: updatedStages
+      projectId: proj.id,
+      updates: updatedProject as any,
     });
   };
 
@@ -145,7 +145,7 @@ export default function OrionTNModels() {
             <div className="max-w-6xl mx-auto space-y-6">
               <ModelosEditorWorkspace
                 project={selectedProject}
-                onUpdate={(u) => updateStage(selectedProject.id, "modelosEditor", u)}
+                onUpdate={(u) => updateStage(selectedProject, "modelosEditor", u)}
               />
             </div>
           ) : (
