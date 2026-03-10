@@ -22,14 +22,28 @@ export function useAdminStats() {
       if (usersError) throw usersError;
 
       // Online: distinct users with logs in the last 10 minutes
-      // Since we can't reliably filter by interval in JS without fetching timestamps, 
-      // let's fetch timestamps too.
+      const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
       const { data: onlineLogs, error: onlineError } = await supabase
         .from("audit_logs")
-        .select("user_id")
-        .gt("created_at", new Date(Date.now() - 10 * 60 * 1000).toISOString());
+        .select(`
+          user_id,
+          created_at,
+          profiles:user_id (full_name)
+        `)
+        .gt("created_at", tenMinutesAgo)
+        .order('created_at', { ascending: false });
 
-      const onlineUsersCount = onlineError ? 0 : new Set(onlineLogs?.map(l => l.user_id)).size;
+      const onlineUsersMap: Record<string, { id: string; userName: string; lastAction: string }> = {};
+      onlineLogs?.forEach(log => {
+        if (!log.user_id || onlineUsersMap[log.user_id]) return;
+        onlineUsersMap[log.user_id] = {
+          id: log.user_id,
+          userName: (log.profiles as any)?.full_name || "Usuário Desconhecido",
+          lastAction: log.created_at
+        };
+      });
+
+      const onlineUsers = Object.values(onlineUsersMap);
 
       // Most Active: Aggregate recentLogs (last 2000 actions)
       const activityMap: Record<string, { name: string, count: number }> = {};
@@ -45,12 +59,17 @@ export function useAdminStats() {
       const mostActiveUsers = Object.values(activityMap)
         .sort((a, b) => b.count - a.count)
         .slice(0, 5)
-        .map(u => ({ userName: u.name, actionCount: u.count }));
+        .map((u, index) => ({ 
+          userId: Object.keys(activityMap).find(key => activityMap[key].name === u.name) || String(index),
+          userName: u.name, 
+          actionCount: u.count 
+        }));
 
       return {
         totalUsers: usersCount || 0,
         activeProjects: projectsCount || 0,
-        onlineUsersCount,
+        onlineUsersCount: onlineUsers.length,
+        onlineUsers,
         mostActiveUsers,
       };
     },
