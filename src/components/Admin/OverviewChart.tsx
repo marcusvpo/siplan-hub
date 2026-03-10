@@ -18,18 +18,19 @@ const data = [
 
 export function OverviewChart() {
   return (
-    <ResponsiveContainer width="100%" height={350}>
-      <BarChart data={data}>
+    <ResponsiveContainer width="100%" height={200}>
+      <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
         <XAxis
           dataKey="name"
           stroke="#888888"
-          fontSize={12}
+          fontSize={10}
           tickLine={false}
           axisLine={false}
+          dy={5}
         />
         <YAxis
           stroke="#888888"
-          fontSize={12}
+          fontSize={10}
           tickLine={false}
           axisLine={false}
           tickFormatter={(value) => `${value}`}

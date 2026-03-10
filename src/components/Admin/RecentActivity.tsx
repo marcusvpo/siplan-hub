@@ -24,24 +24,24 @@ export function RecentActivity() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-2.5">
       {logs.slice(0, 5).map((log) => (
         <div key={log.id} className="flex items-center">
-          <Avatar className="h-9 w-9">
+          <Avatar className="h-7 w-7 text-[10px]">
             <AvatarFallback>
               {log.profile?.full_name?.substring(0, 2).toUpperCase() || "??"}
             </AvatarFallback>
           </Avatar>
-          <div className="ml-4 space-y-1">
-            <p className="text-sm font-medium leading-none">
+          <div className="ml-3 space-y-0.5">
+            <p className="text-[13px] font-medium leading-tight">
               {log.profile?.full_name || "Usuário desconhecido"}
             </p>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-[11px] text-muted-foreground">
               {formatAction(log.action)}
             </p>
           </div>
           <div className="ml-auto font-medium">
-            <span className="text-xs text-muted-foreground">
+            <span className="text-[10px] text-muted-foreground">
               {formatDistanceToNow(new Date(log.created_at), {
                 addSuffix: true,
                 locale: ptBR,
