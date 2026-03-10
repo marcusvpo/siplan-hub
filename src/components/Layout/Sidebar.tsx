@@ -46,6 +46,7 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
   const { theme } = useTheme();
   const { projects } = useProjects();
   const [isImplantacaoOpen, setIsImplantacaoOpen] = useState(false);
+  const [isCalendarioOpen, setIsCalendarioOpen] = useState(false);
   const [isOrionTNModelsOpen, setIsOrionTNModelsOpen] = useState(
     location.pathname.startsWith("/orion-tn-models"),
   );
@@ -191,16 +192,6 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                       <span>Relatórios</span>
                     </Button>
                   </Link>
-                  <Link to="/calendar">
-                    <Button
-                      variant={isActive("/calendar") ? "secondary" : "ghost"}
-                      size="sm"
-                      className="w-full justify-start gap-3 h-9"
-                    >
-                      <CalendarIcon className="h-4 w-4" />
-                      <span>Calendário</span>
-                    </Button>
-                  </Link>
                   <Link to="/deployments">
                     <Button
                       variant={isActive("/deployments") ? "secondary" : "ghost"}
@@ -219,7 +210,6 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
               variant={
                 isActive("/projects") ||
                   isActive("/reports") ||
-                  isActive("/calendar") ||
                   isActive("/deployments")
                   ? "secondary"
                   : "ghost"
@@ -229,6 +219,64 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
               onClick={() => setCollapsed(false)}
             >
               <Layers className="h-5 w-5" />
+            </Button>
+          )}
+        </div>
+
+        {/* Calendário Group */}
+        <div className="px-2">
+          {!collapsed ? (
+            <Collapsible
+              open={isCalendarioOpen}
+              onOpenChange={setIsCalendarioOpen}
+              className="space-y-1"
+            >
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-between hover:bg-muted/50"
+                  title="Calendário"
+                >
+                  <div className="flex items-center gap-3">
+                     <CalendarIcon className="h-5 w-5" />
+                    <span>Calendário</span>
+                  </div>
+                  <ChevronDown
+                    className={cn(
+                      "h-4 w-4 transition-transform",
+                      isCalendarioOpen ? "transform rotate-180" : "",
+                    )}
+                  />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-1 pl-4 animate-in slide-in-from-top-2">
+                <div className="pt-1 pb-2">
+                  <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider pl-4 mb-2 block">
+                    Cronogramas
+                  </span>
+                  <Link to="/calendar">
+                    <Button
+                      variant={isActive("/calendar") ? "secondary" : "ghost"}
+                      size="sm"
+                      className="w-full justify-start gap-3 h-9"
+                    >
+                      <CalendarIcon className="h-4 w-4" />
+                      <span>Calendário de Projetos</span>
+                    </Button>
+                  </Link>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          ) : (
+            <Button
+              variant={
+                isActive("/calendar") ? "secondary" : "ghost"
+              }
+              className="w-full justify-center px-0"
+              title="Calendário"
+              onClick={() => { setCollapsed(false); setIsCalendarioOpen(true); }}
+            >
+              <CalendarIcon className="h-5 w-5" />
             </Button>
           )}
         </div>
