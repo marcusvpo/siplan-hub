@@ -136,6 +136,20 @@ export default function Conversion() {
     null,
   );
 
+  // KPI detail modal
+  const [kpiModal, setKpiModal] = useState<{
+    open: boolean;
+    title: string;
+    color: string;
+    items: ConversionQueueItem[];
+  }>({ open: false, title: "", color: "", items: [] });
+
+  const openKpiModal = (
+    title: string,
+    color: string,
+    items: ConversionQueueItem[],
+  ) => setKpiModal({ open: true, title, color, items });
+
   // Filter queue items
   const filterItems = (items: ConversionQueueItem[]) => {
     return items.filter((item) => {
@@ -222,67 +236,68 @@ export default function Conversion() {
   // KPI Cards
   const renderKPIs = () => (
     <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
-      <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/30 dark:to-purple-900/20 border-purple-200 dark:border-purple-800">
+      <Card
+        className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/30 dark:to-purple-900/20 border-purple-200 dark:border-purple-800 cursor-pointer hover:shadow-md transition-shadow"
+        onClick={() => openKpiModal("Minha Fila", "purple", myQueue)}
+      >
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-1">
             <User className="h-4 w-4 text-purple-600" />
-            <span className="text-xs font-medium text-purple-600">
-              Minha Fila
-            </span>
+            <span className="text-xs font-medium text-purple-600">Minha Fila</span>
           </div>
-          <p className="text-2xl font-bold text-purple-700">
-            {kpis.myQueueCount}
-          </p>
+          <p className="text-2xl font-bold text-purple-700">{kpis.myQueueCount}</p>
         </CardContent>
       </Card>
 
-      <Card className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950/30 dark:to-slate-900/20 border-slate-200 dark:border-slate-800">
+      <Card
+        className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950/30 dark:to-slate-900/20 border-slate-200 dark:border-slate-800 cursor-pointer hover:shadow-md transition-shadow"
+        onClick={() => openKpiModal("Pendentes", "slate", queue.filter((i) => i.queueStatus === "pending"))}
+      >
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-1">
             <Clock className="h-4 w-4 text-slate-600" />
-            <span className="text-xs font-medium text-slate-600">
-              Pendentes
-            </span>
+            <span className="text-xs font-medium text-slate-600">Pendentes</span>
           </div>
           <p className="text-2xl font-bold text-slate-700">{kpis.pending}</p>
         </CardContent>
       </Card>
 
-      <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 border-blue-200 dark:border-blue-800">
+      <Card
+        className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 border-blue-200 dark:border-blue-800 cursor-pointer hover:shadow-md transition-shadow"
+        onClick={() => openKpiModal("Em Andamento", "blue", queue.filter((i) => i.queueStatus === "in_progress"))}
+      >
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-1">
             <RefreshCw className="h-4 w-4 text-blue-600" />
-            <span className="text-xs font-medium text-blue-600">
-              Em Andamento
-            </span>
+            <span className="text-xs font-medium text-blue-600">Em Andamento</span>
           </div>
           <p className="text-2xl font-bold text-blue-700">{kpis.inProgress}</p>
         </CardContent>
       </Card>
 
-      <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-900/20 border-green-200 dark:border-green-800">
+      <Card
+        className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-900/20 border-green-200 dark:border-green-800 cursor-pointer hover:shadow-md transition-shadow"
+        onClick={() => openKpiModal("Finalizados", "green", queue.filter((i) => i.queueStatus === "done"))}
+      >
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-1">
             <CheckCircle2 className="h-4 w-4 text-green-600" />
-            <span className="text-xs font-medium text-green-600">
-              Finalizados
-            </span>
+            <span className="text-xs font-medium text-green-600">Finalizados</span>
           </div>
           <p className="text-2xl font-bold text-green-700">{kpis.completed}</p>
         </CardContent>
       </Card>
 
-      <Card className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/30 dark:to-amber-900/20 border-amber-200 dark:border-amber-800">
+      <Card
+        className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/30 dark:to-amber-900/20 border-amber-200 dark:border-amber-800 cursor-pointer hover:shadow-md transition-shadow"
+        onClick={() => openKpiModal("Total na Fila", "amber", queue)}
+      >
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-1">
             <Database className="h-4 w-4 text-amber-600" />
-            <span className="text-xs font-medium text-amber-600">
-              Total na Fila
-            </span>
+            <span className="text-xs font-medium text-amber-600">Total na Fila</span>
           </div>
-          <p className="text-2xl font-bold text-amber-700">
-            {kpis.totalInQueue}
-          </p>
+          <p className="text-2xl font-bold text-amber-700">{kpis.totalInQueue}</p>
         </CardContent>
       </Card>
     </div>
@@ -906,6 +921,85 @@ export default function Conversion() {
               Enviar para Criação
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* KPI Detail Dialog */}
+      <Dialog open={kpiModal.open} onOpenChange={(open) => !open && setKpiModal((p) => ({ ...p, open: false }))}>
+        <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <span>{kpiModal.title}</span>
+              <Badge variant="secondary">{kpiModal.items.length}</Badge>
+            </DialogTitle>
+            <DialogDescription>
+              Projetos incluídos neste indicador
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto space-y-2 pr-1 mt-2">
+            {kpiModal.items.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <CheckCircle2 className="h-10 w-10 text-muted-foreground/30 mb-3" />
+                <p className="text-sm text-muted-foreground">Nenhum item nesta categoria.</p>
+              </div>
+            ) : (
+              kpiModal.items.map((item) => {
+                const daysInQueue = Math.floor(
+                  (new Date().getTime() - item.sentAt.getTime()) / (1000 * 60 * 60 * 24),
+                );
+                return (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-muted/20 hover:bg-muted/40 transition-colors"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm truncate">{item.clientName}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-[10px] font-mono text-muted-foreground">#{item.ticketNumber}</span>
+                        <span className="text-[10px] text-muted-foreground">{item.systemType}</span>
+                      </div>
+                      {item.assignedToName && (
+                        <p className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-0.5">
+                          ✓ {item.assignedToName}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Badge
+                        variant="outline"
+                        className={cn("text-[10px] px-1.5 py-0", STATUS_COLORS[item.queueStatus] || "")}
+                      >
+                        {STATUS_LABELS[item.queueStatus] || item.queueStatus}
+                      </Badge>
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "text-[10px] px-1.5 py-0",
+                          item.priority <= 2
+                            ? "bg-red-100 text-red-700 border-red-300"
+                            : item.priority <= 4
+                              ? "bg-orange-100 text-orange-700 border-orange-300"
+                              : "bg-slate-100 text-slate-700 border-slate-300",
+                        )}
+                      >
+                        P{item.priority}
+                      </Badge>
+                      <span
+                        className={cn(
+                          "text-[10px] font-medium whitespace-nowrap",
+                          daysInQueue > 5 ? "text-red-600" : daysInQueue > 3 ? "text-orange-600" : "text-muted-foreground",
+                        )}
+                      >
+                        {daysInQueue}d na fila
+                      </span>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
