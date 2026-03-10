@@ -22,7 +22,13 @@ export interface AdminStats {
   totalUsers: number;
   activeProjects: number;
   onlineUsersCount: number;
+  onlineUsers: {
+    id: string;
+    userName: string;
+    lastAction: string;
+  }[];
   mostActiveUsers: {
+    userId: string;
     userName: string;
     actionCount: number;
   }[];

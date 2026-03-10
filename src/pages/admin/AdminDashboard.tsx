@@ -16,12 +16,22 @@ import { useAdminStats } from "@/hooks/useAdminStats";
 import { OverviewChart } from "@/components/Admin/OverviewChart";
 import { RecentActivity } from "@/components/Admin/RecentActivity";
 
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
+
 export default function AdminDashboard() {
   const { stats, isLoading } = useAdminStats();
 
   return (
     <div className="space-y-3">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        {/* Top cards... */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-3">
             <CardTitle className="text-xs font-semibold">
@@ -118,6 +128,92 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent className="px-4 pb-2 flex-1 overflow-auto max-h-[400px]">
             <RecentActivity />
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* New Row with Detailed Lists */}
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-7">
+        <Card className="col-span-3 flex flex-col">
+          <CardHeader className="pt-3 pb-2 flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-sm">Usuários Online Agora</CardTitle>
+              <CardDescription className="text-[10px]">Atividade nos últimos 10 minutos</CardDescription>
+            </div>
+            <Badge variant="outline" className="text-[10px] h-5">
+              {stats?.onlineUsersCount || 0} online
+            </Badge>
+          </CardHeader>
+          <CardContent className="px-4 pb-4 flex-1 overflow-auto max-h-[350px]">
+            <div className="space-y-4">
+              {isLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full" />
+                </div>
+              ) : stats?.onlineUsers && stats.onlineUsers.length > 0 ? (
+                stats.onlineUsers.map((user) => (
+                  <div key={user.id} className="flex items-center gap-3">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={`https://avatar.vercel.sh/${user.userName}.png`} />
+                      <AvatarFallback>{user.userName.substring(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium truncate">{user.userName}</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        Última ação {formatDistanceToNow(new Date(user.lastAction), { addSuffix: true, locale: ptBR })}
+                      </p>
+                    </div>
+                    <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                  </div>
+                ))
+              ) : (
+                <p className="text-xs text-muted-foreground text-center py-4">Nenhum usuário online no momento.</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="col-span-4 flex flex-col">
+          <CardHeader className="pt-3 pb-2">
+            <CardTitle className="text-sm">Ranking de Atividade Recente</CardTitle>
+            <CardDescription className="text-[10px]">Colaboradores com maior volume de ações registradas</CardDescription>
+          </CardHeader>
+          <CardContent className="px-4 pb-4 flex-1 overflow-auto max-h-[350px]">
+            <div className="space-y-4">
+              {isLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full" />
+                </div>
+              ) : stats?.mostActiveUsers && stats.mostActiveUsers.length > 0 ? (
+                stats.mostActiveUsers.map((user, index) => (
+                  <div key={user.userId} className="flex items-center gap-3">
+                    <div className="flex items-center justify-center h-6 w-6 rounded-full bg-muted text-[10px] font-bold">
+                      {index + 1}
+                    </div>
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={`https://avatar.vercel.sh/${user.userName}.png`} />
+                      <AvatarFallback>{user.userName.substring(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium truncate">{user.userName}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <div className="h-1.5 flex-1 bg-muted rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-primary" 
+                            style={{ 
+                              width: `${(user.actionCount / (stats.mostActiveUsers[0]?.actionCount || 1)) * 100}%` 
+                            }} 
+                          />
+                        </div>
+                        <span className="text-[10px] font-semibold">{user.actionCount}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-xs text-muted-foreground text-center py-4">Nenhum dado de atividade disponível.</p>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
