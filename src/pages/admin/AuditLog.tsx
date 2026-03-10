@@ -246,9 +246,6 @@ export default function AuditLogPage() {
                       <span className="text-sm font-semibold group-hover:text-primary transition-colors">
                         {log.profile?.full_name || "Sistema"}
                       </span>
-                      <span className="text-[10px] text-muted-foreground/60 font-mono tracking-tighter">
-                        {log.user_id}
-                      </span>
                     </div>
                   </TableCell>
                   <TableCell>
