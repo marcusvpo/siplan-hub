@@ -55,6 +55,9 @@ const OrionTNModels = lazy(
 const OrionTNProjects = lazy(
   () => import("./pages/conversion/OrionTNProjects"),
 );
+const OrionTNDashboard = lazy(
+  () => import("./pages/conversion/OrionTNDashboard"),
+);
 
 // Admin Pages (lazy)
 const AdminLayout = lazy(() => import("./layouts/AdminLayout"));
@@ -213,6 +216,10 @@ const App = () => (
                           <Route
                             path="/conversion/engines"
                             element={<ConversionEngines />}
+                          />
+                          <Route
+                            path="/orion-tn-models/dashboard"
+                            element={<OrionTNDashboard />}
                           />
                           <Route
                             path="/orion-tn-models/projects"
