@@ -72,6 +72,12 @@ export const menuItems: MenuItem[] = [
                 icon: Calendar,
                 description: "Cronograma de atividades e prazos",
             },
+            {
+                title: "Agenda dos Analistas",
+                path: "/agenda-analistas",
+                icon: Users,
+                description: "Alocações e agendas da equipe",
+            },
         ],
     },
     {

@@ -264,13 +264,23 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                       <span>Calendário de Projetos</span>
                     </Button>
                   </Link>
+                  <Link to="/agenda-analistas">
+                    <Button
+                      variant={isActive("/agenda-analistas") ? "secondary" : "ghost"}
+                      size="sm"
+                      className="w-full justify-start gap-3 h-9"
+                    >
+                      <Users className="h-4 w-4" />
+                      <span>Agenda dos Analistas</span>
+                    </Button>
+                  </Link>
                 </div>
               </CollapsibleContent>
             </Collapsible>
           ) : (
             <Button
               variant={
-                isActive("/calendar") ? "secondary" : "ghost"
+                isActive("/calendar") || isActive("/agenda-analistas") ? "secondary" : "ghost"
               }
               className="w-full justify-center px-0"
               title="Calendário"
