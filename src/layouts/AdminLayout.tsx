@@ -13,6 +13,7 @@ import {
   Shield,
   History,
   Settings2,
+  Activity,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -44,7 +45,7 @@ export default function AdminLayout() {
     { href: "/admin/vacations", label: "Férias", icon: Palmtree },
     { href: "/admin/teams-config", label: "Configurações do Time", icon: Settings2 },
     { href: "/admin/audit", label: "Logs", icon: History },
-    { href: "/admin/settings", label: "Configurações", icon: Settings },
+    { href: "/admin/settings", label: "Saúde dos Projetos", icon: Activity },
   ];
 
   return (
