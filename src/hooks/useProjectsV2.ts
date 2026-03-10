@@ -167,6 +167,7 @@ export const useProjectsV2 = () => {
       return logMessages;
     },
     onSuccess: (logMessages, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
       queryClient.invalidateQueries({ queryKey: ["projectsV3"] });
       queryClient.invalidateQueries({ queryKey: ["projectsV3_with_dates"] });
       queryClient.invalidateQueries({ queryKey: ["projectsList"] }); // Invalidate list
