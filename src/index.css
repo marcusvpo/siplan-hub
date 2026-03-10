@@ -253,4 +253,16 @@
   .scrollbar-thumb-emerald-300::-webkit-scrollbar-thumb:hover {
     @apply bg-emerald-300;
   }
+
+  /* Marquee / scroll-text animation for long project names */
+  @keyframes scroll-text {
+    0%,  10% { transform: translateX(0px); }
+    80%, 90% { transform: translateX(var(--scroll-dist, -120px)); }
+    100%     { transform: translateX(0px); }
+  }
+
+  .animate-scroll-text {
+    animation: scroll-text var(--scroll-dur, 6s) ease-in-out infinite;
+    will-change: transform;
+  }
 }

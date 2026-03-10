@@ -1,5 +1,4 @@
-import { FileText, Search, Loader2, ChevronRight, Layout, Filter } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FileText, Search, Loader2, ChevronRight, Layout } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -9,11 +8,31 @@ import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 
+// Text area width in sidebar item (px): w-80(320) - px-2.5*2(20) - gap(4) - chevron(12) ≈ 284px
+// At font-size 11px bold, ~6.2px per char → threshold ≈ 45 chars
+const TEXT_AREA_PX = 284;
+const CHAR_WIDTH_PX = 6.2;
+
+function getMarqueeStyle(text: string, active: boolean): React.CSSProperties {
+  if (!active) return {};
+  const estimatedWidth = text.length * CHAR_WIDTH_PX;
+  const overflow = estimatedWidth - TEXT_AREA_PX;
+  if (overflow <= 4) return {};
+  const dist = Math.round(overflow + 4);
+  const dur = Math.max(2.5, dist / 30);
+  return {
+    "--scroll-dist": `-${dist}px`,
+    "--scroll-dur": `${dur}s`,
+    animation: `scroll-text ${dur}s ease-in-out infinite`,
+  } as React.CSSProperties;
+}
+
 export default function OrionTNModels() {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const { projects, isLoading, updateProject } = useProjectsV2();
   const [projectSearch, setProjectSearch] = useState("");
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   const orionProjects = useMemo(() => {
     return projects.filter((p) =>
@@ -40,21 +59,18 @@ export default function OrionTNModels() {
 
   const updateStage = async (proj: typeof selectedProject, stageKey: string, updates: any) => {
     if (!proj) return;
-
-    const updatedProject = {
-      ...proj,
-      stages: {
-        ...proj.stages,
-        [stageKey]: {
-          ...(proj.stages[stageKey as keyof typeof proj.stages] || {}),
-          ...updates,
-        }
-      }
-    };
-
     await updateProject.mutateAsync({
       projectId: proj.id,
-      updates: updatedProject as any,
+      updates: {
+        ...proj,
+        stages: {
+          ...proj.stages,
+          [stageKey]: {
+            ...(proj.stages[stageKey as keyof typeof proj.stages] || {}),
+            ...updates,
+          },
+        },
+      } as any,
     });
   };
 
@@ -90,33 +106,48 @@ export default function OrionTNModels() {
         </div>
 
         <ScrollArea className="flex-1">
-          <div className="p-2 space-y-1">
+          <div className="p-1.5 space-y-0.5">
             {filteredProjects.length === 0 ? (
               <div className="p-4 text-center">
                 <p className="text-xs text-muted-foreground">Nenhum projeto encontrado.</p>
               </div>
             ) : (
-              filteredProjects.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => handleSelectProject(p.id)}
-                  className={cn(
-                    "w-full text-left p-3 rounded-lg text-sm transition-all duration-200 group flex items-center justify-between",
-                    projectId === p.id
-                      ? "bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/50"
-                      : "hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-400 border border-transparent"
-                  )}
-                >
-                  <div className="overflow-hidden">
-                    <p className="font-medium truncate">{p.clientName}</p>
-                    <p className="text-[10px] text-muted-foreground truncate uppercase">{p.systemType}</p>
-                  </div>
-                  <ChevronRight className={cn(
-                    "h-4 w-4 transition-transform",
-                    projectId === p.id ? "translate-x-0 opacity-100" : "-translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100"
-                  )} />
-                </button>
-              ))
+              filteredProjects.map((p) => {
+                const isSelected = projectId === p.id;
+                const isHovered = hoveredId === p.id;
+                const animate = isSelected || isHovered;
+
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => handleSelectProject(p.id)}
+                    onMouseEnter={() => setHoveredId(p.id)}
+                    onMouseLeave={() => setHoveredId(null)}
+                    className={cn(
+                      "w-full text-left px-2.5 py-2 rounded-md transition-all duration-200 flex items-center justify-between gap-1",
+                      isSelected
+                        ? "bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/50"
+                        : "hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-400 border border-transparent"
+                    )}
+                  >
+                    <div className="flex-1 min-w-0 overflow-hidden">
+                      <span
+                        className="inline-block whitespace-nowrap font-semibold text-[11px] leading-tight"
+                        style={getMarqueeStyle(p.clientName, animate)}
+                      >
+                        {p.clientName}
+                      </span>
+                      <p className="text-[9px] text-muted-foreground uppercase tracking-wide mt-0.5">
+                        {p.systemType}
+                      </p>
+                    </div>
+                    <ChevronRight className={cn(
+                      "h-3 w-3 shrink-0 transition-all duration-200",
+                      animate ? "translate-x-0 opacity-100" : "-translate-x-1 opacity-0"
+                    )} />
+                  </button>
+                );
+              })
             )}
           </div>
         </ScrollArea>
@@ -124,7 +155,7 @@ export default function OrionTNModels() {
 
       {/* Área Principal */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-16 border-b bg-white dark:bg-slate-900 flex items-center justify-between px-6 shrink-0">
+        <header className="h-16 border-b bg-white dark:bg-slate-900 flex items-center px-6 shrink-0">
           <div className="flex items-center gap-3">
             <div className="bg-indigo-100 dark:bg-indigo-950/50 p-2 rounded-lg">
               <FileText className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
@@ -134,7 +165,9 @@ export default function OrionTNModels() {
                 {selectedProject ? selectedProject.clientName : "Modelos Editor"}
               </h1>
               <p className="text-xs text-muted-foreground mt-1">
-                {selectedProject ? `Central de Modelos - ${selectedProject.systemType}` : "Selecione um projeto para gerenciar modelos"}
+                {selectedProject
+                  ? `Central de Modelos - ${selectedProject.systemType}`
+                  : "Selecione um projeto para gerenciar modelos"}
               </p>
             </div>
           </div>
