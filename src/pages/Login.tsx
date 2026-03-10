@@ -14,6 +14,9 @@ import {
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { useTheme } from "@/hooks/use-theme";
+import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -22,6 +25,16 @@ export default function Login() {
   const [isAdminLogin, setIsAdminLogin] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { theme } = useTheme();
+
+  const isDark =
+    theme === "dark" ||
+    (theme === "system" &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches);
+
+  const logoSrc = isDark
+    ? "/assets/Siplan_logo_branco.png"
+    : "/assets/Siplan_logo.png";
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,9 +100,76 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
-      {/* Dynamic background element for premium feel */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(var(--primary),0.05),transparent_50%)] dark:bg-[radial-gradient(circle_at_50%_50%,rgba(var(--primary),0.1),transparent_70%)] pointer-events-none" />
+    <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden transition-colors duration-700">
+      {/* Liquid Organic Background */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <AnimatePresence>
+          <motion.div
+            key={isDark ? "dark-bg" : "light-bg"}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.5 }}
+            className="absolute inset-0"
+          >
+            {/* Blob 1 - Bordo */}
+            <motion.div
+              animate={{
+                x: [0, 80, -40, 0],
+                y: [0, -80, 40, 0],
+                scale: [1, 1.15, 0.95, 1],
+              }}
+              transition={{
+                duration: 25,
+                repeat: Infinity,
+                ease: "linear",
+              }}
+              className={cn(
+                "absolute -top-[20%] -left-[10%] w-[80%] h-[80%] rounded-full blur-[120px] opacity-25 dark:opacity-15",
+                "bg-[#600000]" // Bordo
+              )}
+            />
+
+            {/* Blob 2 - Theme Color Contrast */}
+            <motion.div
+              animate={{
+                x: [0, -70, 100, 0],
+                y: [0, 120, -80, 0],
+                scale: [1, 1.1, 1.2, 1],
+              }}
+              transition={{
+                duration: 35,
+                repeat: Infinity,
+                ease: "linear",
+              }}
+              className={cn(
+                "absolute top-[30%] -right-[10%] w-[70%] h-[70%] rounded-full blur-[130px] opacity-20 dark:opacity-10",
+                isDark ? "bg-[#0f172a]" : "bg-primary/10"
+              )}
+            />
+
+            {/* Blob 3 - Tertiary Deep Bordo accent */}
+            <motion.div
+              animate={{
+                x: [0, 120, -90, 0],
+                y: [0, -40, 180, 0],
+              }}
+              transition={{
+                duration: 32,
+                repeat: Infinity,
+                ease: "linear",
+              }}
+              className={cn(
+                "absolute -bottom-[10%] left-[10%] w-[60%] h-[60%] rounded-full blur-[140px] opacity-15 dark:opacity-10",
+                isDark ? "bg-[#330000]" : "bg-[#800000]/5"
+              )}
+            />
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Subtle noise/texture overlay for premium look */}
+        <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.04] pointer-events-none mix-blend-overlay bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+      </div>
 
       <Button
         variant="ghost"
@@ -103,9 +183,9 @@ export default function Login() {
       <Card className="w-full max-w-md border border-border/50 shadow-2xl bg-card/80 backdrop-blur-xl dark:bg-card/90 relative z-10 transition-all duration-500">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-6">
-            <div className="bg-white p-4 rounded-xl shadow-xl border border-border/50 relative flex items-center justify-center transform hover:scale-105 transition-transform duration-300">
+            <div className="bg-white dark:bg-accent/20 p-4 rounded-xl shadow-xl border border-border/50 relative flex items-center justify-center transform hover:scale-105 transition-transform duration-300">
               <img
-                src="/assets/Siplan_logo.png"
+                src={logoSrc}
                 alt="Siplan"
                 className="h-12 w-auto object-contain"
               />

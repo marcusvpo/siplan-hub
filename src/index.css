@@ -185,4 +185,15 @@
   .animate-glow-green {
     animation: glow-green 2s ease-in-out infinite;
   }
+
+  @keyframes gradient-flow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  .animate-gradient-slow {
+    background-size: 200% 200%;
+    animation: gradient-flow 15s ease infinite;
+  }
 }
