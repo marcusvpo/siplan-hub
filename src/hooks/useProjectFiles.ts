@@ -101,6 +101,34 @@ export const useProjectFiles = (projectId: string) => {
     },
   });
 
+  const deleteFiles = useMutation({
+    mutationFn: async (filesToDelete: ProjectFile[]) => {
+      if (filesToDelete.length === 0) return;
+
+      // 1. Delete all from Storage
+      const paths = filesToDelete.map((f) => f.fileUrl);
+      const { error: storageError } = await supabase.storage
+        .from("project-files")
+        .remove(paths);
+
+      if (storageError) {
+        console.error("Bulk Storage delete error:", storageError);
+      }
+
+      // 2. Delete all from DB
+      const ids = filesToDelete.map((f) => f.id);
+      const { error: dbError } = await supabase
+        .from("project_files")
+        .delete()
+        .in("id", ids);
+
+      if (dbError) throw dbError;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["projectFiles", projectId] });
+    },
+  });
+
   const getDownloadUrl = async (filePath: string) => {
     const { data, error } = await supabase.storage
       .from("project-files")
@@ -115,6 +143,7 @@ export const useProjectFiles = (projectId: string) => {
     isLoading,
     uploadFile,
     deleteFile,
+    deleteFiles,
     getDownloadUrl,
   };
 };
