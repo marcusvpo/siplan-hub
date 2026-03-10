@@ -28,6 +28,29 @@ export const useProjects = () => {
       return data.map((proj: Record<string, any>) => {
         const timeline: TimelineEventV2[] = [];
 
+        const createStage = <T extends { status: any }>(prefix: string): T => {
+          const stage = {
+            status: proj[`${prefix}_status`] || 'todo',
+            responsible: proj[`${prefix}_responsible`] || '',
+            startDate: proj[`${prefix}_start_date`] ? new Date(proj[`${prefix}_start_date`]) : undefined,
+            endDate: proj[`${prefix}_end_date`] ? new Date(proj[`${prefix}_end_date`]) : undefined,
+            observations: proj[`${prefix}_observations`] || '',
+            ...Object.keys(proj).reduce((acc, key) => {
+              if (key.startsWith(prefix + '_') &&
+                !key.endsWith('_status') &&
+                !key.endsWith('_responsible') &&
+                !key.endsWith('_start_date') &&
+                !key.endsWith('_end_date') &&
+                !key.endsWith('_observations')) {
+                const propName = key.replace(prefix + '_', '').replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+                acc[propName] = proj[key];
+              }
+              return acc;
+            }, {} as Record<string, any>)
+          };
+          return stage as unknown as T;
+        };
+
         const tempProject: ProjectV2 = {
           id: proj.id,
           clientName: proj.client_name,
@@ -41,7 +64,7 @@ export const useProjects = () => {
           lastUpdatedAt: new Date(proj.updated_at),
           lastUpdatedBy: proj.last_update_by || "Sistema",
           nextFollowUpDate: proj.next_follow_up_date ? new Date(proj.next_follow_up_date) : undefined,
-          
+
           // New fields defaults
           projectType: proj.project_type || "new",
           implantationType: proj.implantation_type || "new",
@@ -52,57 +75,57 @@ export const useProjects = () => {
           healthScore: "ok", // Placeholder, calculated below
           priority: proj.priority || "normal",
           tags: proj.tags || [],
-          
+
           stages: {
             infra: {
-              status: proj.infra_status || "todo",
-              responsible: proj.infra_responsible || "",
-              startDate: proj.infra_start_date ? new Date(proj.infra_start_date) : undefined,
-              endDate: proj.infra_end_date ? new Date(proj.infra_end_date) : undefined,
+              ...createStage('infra'),
               blockingReason: proj.infra_blocking_reason,
-              observations: proj.infra_observations,
-            },
+              workstationsStatus: proj.infra_workstations_status,
+              serverStatus: proj.infra_server_status,
+              workstationsCount: proj.infra_workstations_count,
+            } as any,
             adherence: {
-              status: proj.adherence_status || "todo",
-              responsible: proj.adherence_responsible || "",
-              startDate: proj.adherence_start_date ? new Date(proj.adherence_start_date) : undefined,
-              endDate: proj.adherence_end_date ? new Date(proj.adherence_end_date) : undefined,
+              ...createStage('adherence'),
               hasProductGap: proj.adherence_has_product_gap || false,
+              gapDescription: proj.adherence_gap_description,
               devTicket: proj.adherence_dev_ticket,
               devEstimatedDate: proj.adherence_dev_estimated_date ? new Date(proj.adherence_dev_estimated_date) : undefined,
-              observations: proj.adherence_observations,
+              gapPriority: proj.adherence_gap_priority,
               analysisComplete: proj.adherence_analysis_complete || false,
-            },
+              conformityStandards: proj.adherence_conformity_standards,
+            } as any,
             environment: {
-              status: proj.environment_status || "todo",
-              responsible: proj.environment_responsible || "",
+              ...createStage('environment'),
               realDate: proj.environment_real_date ? new Date(proj.environment_real_date) : undefined,
               osVersion: proj.environment_os_version,
+              version: proj.environment_version,
               approvedByInfra: proj.environment_approved_by_infra || false,
-              observations: proj.environment_observations,
               testAvailable: proj.environment_test_available || false,
-            },
+              preparationChecklist: proj.environment_preparation_checklist,
+            } as any,
             conversion: {
-              status: proj.conversion_status || "todo",
-              responsible: proj.conversion_responsible || "",
-              // sourceSystem: proj.conversion_source_system, // Removed in V2? Check type.
-              observations: proj.conversion_observations,
-            },
+              ...createStage('conversion'),
+              homologationStatus: proj.conversion_homologation_status,
+              homologationResponsible: proj.conversion_homologation_responsible,
+              sentAt: proj.conversion_sent_at ? new Date(proj.conversion_sent_at) : undefined,
+              finishedAt: proj.conversion_finished_at ? new Date(proj.conversion_finished_at) : undefined,
+              complexity: proj.conversion_complexity,
+              dataVolumeGb: proj.conversion_data_volume_gb,
+              toolUsed: proj.conversion_tool_used,
+              homologationDate: proj.conversion_homologation_date ? new Date(proj.conversion_homologation_date) : undefined,
+              deviations: proj.conversion_deviations,
+            } as any,
+            modelosEditor: createStage('modelos_editor'),
             implementation: {
-              status: proj.implementation_status || "todo",
-              responsible: proj.implementation_responsible || "",
-              observations: proj.implementation_observations,
+              ...createStage('implementation'),
               phase1: proj.implementation_phase1 || {},
               phase2: proj.implementation_phase2 || {},
-            },
+            } as any,
             post: {
-              status: proj.post_status || "todo",
-              responsible: proj.post_responsible || "",
-              startDate: proj.post_start_date ? new Date(proj.post_start_date) : undefined,
-              endDate: proj.post_end_date ? new Date(proj.post_end_date) : undefined,
-              observations: proj.post_observations,
+              ...createStage('post'),
               followupNeeded: proj.post_followup_needed || false,
-            },
+              followupDate: proj.post_followup_date ? new Date(proj.post_followup_date) : undefined,
+            } as any,
           },
           timeline,
         };
@@ -118,7 +141,7 @@ export const useProjects = () => {
   const createProject = useMutation({
     mutationFn: async (newProject: Partial<ProjectV2>) => {
       const authorName = getCurrentUserName();
-      
+
       const { data, error } = await supabase
         .from("projects")
         .insert({
@@ -158,7 +181,7 @@ export const useProjects = () => {
       updates: Partial<Record<string, any>>;
     }) => {
       const authorName = getCurrentUserName();
-      
+
       const { error } = await supabase
         .from("projects")
         .update({ ...updates, last_update_by: authorName })
