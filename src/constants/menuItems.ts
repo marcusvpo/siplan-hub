@@ -13,6 +13,7 @@ import {
     Home,
     Cog,
     FolderClosed,
+    FileEdit,
 } from "lucide-react";
 
 export interface MenuItem {
@@ -122,10 +123,22 @@ export const menuItems: MenuItem[] = [
         description: "Editor de modelos e templates OrionTN",
         subItems: [
             {
+                title: "Dashboard",
+                path: "/orion-tn-models/dashboard",
+                icon: BarChart3,
+                description: "Métricas e overview da central de modelos",
+            },
+            {
                 title: "Gerenciar Projetos",
                 path: "/orion-tn-models/projects",
-                icon: FolderClosed,
+                icon: FolderKanban,
                 description: "Templates específicos por projeto",
+            },
+            {
+                title: "Editor",
+                path: "/orion-tn-models",
+                icon: FileEdit,
+                description: "Criador e editor avançado de JSON",
             },
         ],
     },
