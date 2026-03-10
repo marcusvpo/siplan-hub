@@ -7,14 +7,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Loader2, History, Search, FilterX } from "lucide-react";
+import { Loader2, History, Search, FilterX, ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
+const ITEMS_PER_PAGE = 6;
+
 const actionLabels: Record<string, string> = {
+  // ... (unchanged labels)
   project_created: "Projeto Criado",
   project_updated: "Projeto Atualizado",
   project_archived: "Projeto Arquivado",
@@ -97,16 +100,14 @@ const formatValue = (value: any): string => {
 
 const formatLogDetails = (log: any) => {
   const details = log.details;
-  if (!details) return "Ação realizada no sistema";
+  if (!details) return "Ação registrada com sucesso";
 
   const parts: string[] = [];
 
-  // Handle specific fields
   if (details.projectName) parts.push(`Projeto: ${details.projectName}`);
   if (details.roleName) parts.push(`Perfil: ${translateValue(details.roleName)}`);
   if (details.targetUserName) parts.push(`Usuário alvo: ${details.targetUserName}`);
   
-  // Handle updates/changes
   if (details.field) {
     const fieldMap: Record<string, string> = {
       status: "Status",
@@ -122,7 +123,6 @@ const formatLogDetails = (log: any) => {
     parts.push(`${fieldLabel}: de "${formatValue(details.oldValue)}" para "${formatValue(details.newValue)}"`);
   }
 
-  // Handle generic 'updates' object
   if (details.updates && typeof details.updates === 'object') {
     const changes = Object.entries(details.updates)
       .map(([key, val]) => `${key}: ${formatValue(val)}`)
@@ -134,7 +134,6 @@ const formatLogDetails = (log: any) => {
   if (details.additionalInfo?.itemLabel) parts.push(`Item: ${details.additionalInfo.itemLabel}`);
 
   if (parts.length === 0) {
-    // Fallback for simple key-value pairs, ignoring technical stuff
     const entries = Object.entries(details)
       .filter(([key, value]) => 
         !['userName', 'timestamp', 'userAgent', 'additionalInfo', 'userId', 'projectId', 'roleId', 'entityId', 'entityType', 'updates'].includes(key) &&
@@ -153,6 +152,12 @@ const formatLogDetails = (log: any) => {
 export default function AuditLogPage() {
   const { logs, isLoading } = useAuditLogs();
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Reset page when search term changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   const filteredLogs = useMemo(() => {
     if (!logs) return [];
@@ -172,6 +177,13 @@ export default function AuditLogPage() {
       );
     });
   }, [logs, searchTerm]);
+
+  const totalPages = Math.ceil(filteredLogs.length / ITEMS_PER_PAGE);
+  
+  const paginatedLogs = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredLogs.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredLogs, currentPage]);
 
   return (
     <div className="space-y-6">
@@ -203,64 +215,97 @@ export default function AuditLogPage() {
         </div>
       </div>
 
-      <div className="border rounded-lg overflow-hidden bg-card shadow-sm transition-all duration-200">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/50">
-              <TableHead className="w-[180px] font-semibold">Data/Hora</TableHead>
-              <TableHead className="w-[200px] font-semibold">Usuário</TableHead>
-              <TableHead className="w-[220px] font-semibold">Ação</TableHead>
-              <TableHead className="font-semibold">Detalhes das Alterações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={4} className="h-64 text-center">
-                  <div className="flex flex-col items-center gap-2">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    <p className="text-sm text-muted-foreground">Carregando histórico...</p>
-                  </div>
-                </TableCell>
+      <div className="space-y-4">
+        <div className="border rounded-lg overflow-hidden bg-card shadow-sm">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50">
+                <TableHead className="w-[180px] font-semibold">Data/Hora</TableHead>
+                <TableHead className="w-[200px] font-semibold">Usuário</TableHead>
+                <TableHead className="w-[220px] font-semibold">Ação</TableHead>
+                <TableHead className="font-semibold">Detalhes das Alterações</TableHead>
               </TableRow>
-            ) : filteredLogs.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={4} className="h-64 text-center">
-                  <div className="flex flex-col items-center gap-2 opacity-60">
-                    <Search className="h-10 w-10 text-muted-foreground mb-2" />
-                    <p className="text-base font-medium">Nenhum registro encontrado</p>
-                    <p className="text-sm text-muted-foreground">Try adjusting your filters or search term.</p>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredLogs.map((log) => (
-                <TableRow key={log.id} className="hover:bg-muted/30 transition-colors group">
-                  <TableCell className="whitespace-nowrap tabular-nums text-xs text-muted-foreground">
-                    {format(new Date(log.created_at), "dd/MM/yyyy HH:mm:ss", {
-                      locale: ptBR,
-                    })}
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="h-64 text-center">
+                    <div className="flex flex-col items-center gap-2">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                      <p className="text-sm text-muted-foreground">Carregando histórico...</p>
+                    </div>
                   </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col">
+                </TableRow>
+              ) : paginatedLogs.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="h-64 text-center">
+                    <div className="flex flex-col items-center gap-2 opacity-60">
+                      <Search className="h-10 w-10 text-muted-foreground mb-2" />
+                      <p className="text-base font-medium">Nenhum registro encontrado</p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                paginatedLogs.map((log) => (
+                  <TableRow key={log.id} className="hover:bg-muted/30 transition-colors group">
+                    <TableCell className="whitespace-nowrap tabular-nums text-xs text-muted-foreground">
+                      {format(new Date(log.created_at), "dd/MM/yyyy HH:mm:ss", {
+                        locale: ptBR,
+                      })}
+                    </TableCell>
+                    <TableCell>
                       <span className="text-sm font-semibold group-hover:text-primary transition-colors">
                         {log.profile?.full_name || "Sistema"}
                       </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <span className="inline-flex items-center rounded-md bg-primary/5 px-2 py-0.5 text-[11px] font-semibold text-primary border border-primary/10">
-                      {actionLabels[log.action] || log.action}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground leading-relaxed py-3">
-                    {formatLogDetails(log)}
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+                    </TableCell>
+                    <TableCell>
+                      <span className="inline-flex items-center rounded-md bg-primary/5 px-2 py-0.5 text-[11px] font-semibold text-primary border border-primary/10">
+                        {actionLabels[log.action] || log.action}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground leading-relaxed py-3">
+                      {formatLogDetails(log)}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-2">
+            <p className="text-sm text-muted-foreground">
+              Mostrando <span className="font-medium">{paginatedLogs.length}</span> de{" "}
+              <span className="font-medium">{filteredLogs.length}</span> registros
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="h-8 px-2"
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Anterior
+              </Button>
+              <div className="flex items-center justify-center text-sm font-medium min-w-[100px]">
+                Página {currentPage} de {totalPages}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="h-8 px-2"
+              >
+                Próximo
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
