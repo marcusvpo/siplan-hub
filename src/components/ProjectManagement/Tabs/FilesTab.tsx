@@ -21,6 +21,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useRef, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -30,11 +31,12 @@ interface TabProps {
 }
 
 export function FilesTab({ project }: TabProps) {
-  const { files, uploadFile, deleteFile, getDownloadUrl, isLoading } =
+  const { files, uploadFile, deleteFile, deleteFiles, getDownloadUrl, isLoading } =
     useProjectFiles(project.id);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
+  const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
   const [uploadProgress, setUploadProgress] = useState({
     current: 0,
     total: 0,
@@ -128,6 +130,7 @@ export function FilesTab({ project }: TabProps) {
           title: "Arquivo excluído",
           description: "O arquivo foi removido com sucesso.",
         });
+        setSelectedFileIds(prev => prev.filter(id => id !== file.id));
       } catch (error) {
         console.error(error);
         toast({
@@ -137,6 +140,45 @@ export function FilesTab({ project }: TabProps) {
         });
       }
     }
+  };
+
+  const handleBulkDelete = async () => {
+    const filesToDelete = files.filter(f => selectedFileIds.includes(f.id));
+    if (filesToDelete.length === 0) return;
+
+    if (confirm(`Tem certeza que deseja excluir ${filesToDelete.length} arquivos selecionados?`)) {
+      try {
+        await deleteFiles.mutateAsync(filesToDelete);
+        toast({
+          title: "Arquivos excluídos",
+          description: "Os arquivos selecionados foram removidos com sucesso.",
+        });
+        setSelectedFileIds([]);
+      } catch (error) {
+        console.error(error);
+        toast({
+          title: "Erro ao excluir",
+          description: "Não foi possível excluir os arquivos selecionados.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedFileIds.length === files.length) {
+      setSelectedFileIds([]);
+    } else {
+      setSelectedFileIds(files.map(f => f.id));
+    }
+  };
+
+  const toggleSelectFile = (fileId: string) => {
+    setSelectedFileIds(prev =>
+      prev.includes(fileId)
+        ? prev.filter(id => id !== fileId)
+        : [...prev, fileId]
+    );
   };
 
   return (
@@ -149,6 +191,15 @@ export function FilesTab({ project }: TabProps) {
           </p>
         </div>
         <div className="flex gap-2">
+          {files.length > 0 && (
+            <Button
+              variant="outline"
+              onClick={toggleSelectAll}
+              className="text-xs font-medium h-9"
+            >
+              {selectedFileIds.length === files.length ? "Desmarcar Todos" : "Selecionar Todos"}
+            </Button>
+          )}
           <input
             type="file"
             ref={fileInputRef}
@@ -156,10 +207,6 @@ export function FilesTab({ project }: TabProps) {
             onChange={handleFileSelect}
             multiple
           />
-          {/* <Button variant="outline">
-            <FolderPlus className="h-4 w-4 mr-2" />
-            Nova Pasta
-          </Button> */}
           <Button
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
@@ -207,10 +254,16 @@ export function FilesTab({ project }: TabProps) {
         )}
 
         {files.map((file) => (
-          <Card key={file.id} className="hover:shadow-sm transition-shadow">
+          <Card key={file.id} className={`hover:shadow-sm transition-shadow ${selectedFileIds.includes(file.id) ? 'border-primary ring-1 ring-primary/20 bg-primary/5' : ''}`}>
             <CardContent className="p-4 flex items-center gap-4">
-              <div className="h-10 w-10 bg-muted rounded-lg flex items-center justify-center">
-                <FileText className="h-5 w-5 text-primary" />
+              <div className="flex items-center gap-3">
+                <Checkbox
+                  checked={selectedFileIds.includes(file.id)}
+                  onCheckedChange={() => toggleSelectFile(file.id)}
+                />
+                <div className="h-10 w-10 bg-muted rounded-lg flex items-center justify-center">
+                  <FileText className="h-5 w-5 text-primary" />
+                </div>
               </div>
 
               <div className="flex-1 min-w-0">
@@ -248,29 +301,55 @@ export function FilesTab({ project }: TabProps) {
                 >
                   <Download className="h-4 w-4" />
                 </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    {/* <DropdownMenuItem>Ver Histórico de Versões</DropdownMenuItem>
-                    <DropdownMenuItem>Renomear</DropdownMenuItem> */}
-                    <DropdownMenuItem
-                      className="text-red-600"
-                      onClick={() => handleDelete(file)}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Excluir
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                  title="Excluir"
+                  onClick={() => handleDelete(file)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
+
+      {/* Barra de Ações em Massa */}
+      {selectedFileIds.length > 0 && (
+        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 bg-white dark:bg-slate-900 border rounded-full shadow-2xl px-6 py-3 flex items-center gap-6 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
+          <div className="flex items-center gap-3">
+            <span className="bg-primary text-primary-foreground text-xs font-bold h-6 w-6 flex items-center justify-center rounded-full">
+              {selectedFileIds.length}
+            </span>
+            <span className="text-sm font-medium">Marcados</span>
+          </div>
+
+          <div className="h-6 w-[1px] bg-slate-200 dark:bg-slate-800" />
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleBulkDelete}
+              className="rounded-full px-4 h-9 shadow-sm"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Excluir Selecionados
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSelectedFileIds([])}
+              className="rounded-full px-4 h-9 text-slate-500"
+            >
+              Cancelar
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
