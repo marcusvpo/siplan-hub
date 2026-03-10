@@ -21,4 +21,9 @@ export interface AuditLog {
 export interface AdminStats {
   totalUsers: number;
   activeProjects: number;
+  onlineUsersCount: number;
+  mostActiveUsers: {
+    userName: string;
+    actionCount: number;
+  }[];
 }
