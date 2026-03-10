@@ -24,6 +24,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 export default function AdminDashboard() {
   const { stats, isLoading } = useAdminStats();
@@ -51,16 +52,16 @@ export default function AdminDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-3">
             <CardTitle className="text-xs font-semibold">
-              Usuários Online
+              Usuários Ativos
             </CardTitle>
-            <UserCheck className="h-3.5 w-3.5 text-blue-500" />
+            <UserCheck className="h-3.5 w-3.5 text-emerald-500" />
           </CardHeader>
           <CardContent className="pb-3">
-            <div className="text-2xl font-bold text-blue-500">
-              {isLoading ? "-" : stats?.onlineUsersCount}
+            <div className="text-2xl font-bold text-emerald-500">
+              {isLoading ? "-" : stats?.activeNowCount}
             </div>
             <p className="text-xs text-muted-foreground">
-              ativos nos últimos 10 min
+              agora na plataforma
             </p>
           </CardContent>
         </Card>
@@ -140,8 +141,8 @@ export default function AdminDashboard() {
               <CardTitle className="text-sm">Usuários Online Agora</CardTitle>
               <CardDescription className="text-[10px]">Atividade nos últimos 10 minutos</CardDescription>
             </div>
-            <Badge variant="outline" className="text-[10px] h-5">
-              {stats?.onlineUsersCount || 0} online
+            <Badge variant="outline" className="text-[10px] h-5 bg-emerald-500/5 text-emerald-600 border-emerald-200">
+              {stats?.onlineUsersCount || 0} ativos agora
             </Badge>
           </CardHeader>
           <CardContent className="px-4 pb-4 flex-1 overflow-auto max-h-[350px]">
@@ -163,7 +164,10 @@ export default function AdminDashboard() {
                         Última ação {formatDistanceToNow(new Date(user.lastAction), { addSuffix: true, locale: ptBR })}
                       </p>
                     </div>
-                    <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <div className={cn(
+                      "h-2 w-2 rounded-full transition-all duration-500",
+                      user.status === 'active' ? "bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-muted-foreground/30"
+                    )} />
                   </div>
                 ))
               ) : (
