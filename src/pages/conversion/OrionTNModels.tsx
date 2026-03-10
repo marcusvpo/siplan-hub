@@ -24,9 +24,9 @@ export default function OrionTNModels() {
   }, [projects]);
 
   const filteredProjects = useMemo(() => {
-    return orionProjects.filter((p) =>
-      p.clientName.toLowerCase().includes(projectSearch.toLowerCase())
-    );
+    return orionProjects
+      .filter((p) => p.clientName.toLowerCase().includes(projectSearch.toLowerCase()))
+      .sort((a, b) => a.clientName.localeCompare(b.clientName, "pt-BR"));
   }, [orionProjects, projectSearch]);
 
   const selectedProject = useMemo(() =>
