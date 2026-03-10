@@ -280,16 +280,18 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
               </CollapsibleContent>
             </Collapsible>
           ) : (
-            <Button
-              variant={
-                isActive("/calendar") || isActive("/agenda-analistas") ? "secondary" : "ghost"
-              }
-              className="w-full justify-center px-0"
-              title="Calendário"
-              onClick={() => { setCollapsed(false); setIsCalendarioOpen(true); }}
-            >
-              <CalendarIcon className="h-5 w-5" />
-            </Button>
+            <Link to="/calendar">
+              <Button
+                variant={
+                  isActive("/calendar") || isActive("/agenda-analistas") ? "secondary" : "ghost"
+                }
+                className="w-full justify-center px-0"
+                title="Calendário (Projetos e Agenda)"
+                onClick={() => setIsCalendarioOpen(true)}
+              >
+                <CalendarIcon className="h-5 w-5" />
+              </Button>
+            </Link>
           )}
         </div>
 
