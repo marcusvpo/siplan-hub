@@ -22,8 +22,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useRef, useState } from "react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { useRef, useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface TabProps {
   project: ProjectV2;
@@ -181,6 +189,80 @@ export function FilesTab({ project }: TabProps) {
     );
   };
 
+  const { modelosEditorFiles, generalFiles } = useMemo(() => {
+    const meFiles = project.stages.modelosEditor;
+    const meIds = new Set([
+      ...(meFiles?.sentFiles?.map(f => f.id) || []),
+      ...(meFiles?.availableFiles?.map(f => f.id) || [])
+    ]);
+
+    return {
+      modelosEditorFiles: files.filter(f => meIds.has(f.id)),
+      generalFiles: files.filter(f => !meIds.has(f.id))
+    };
+  }, [files, project.stages.modelosEditor]);
+
+  const renderFileCard = (file: ProjectFile) => (
+    <Card key={file.id} className={`hover:shadow-sm transition-shadow ${selectedFileIds.includes(file.id) ? 'border-primary ring-1 ring-primary/20 bg-primary/5' : ''}`}>
+      <CardContent className="p-4 flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          <Checkbox
+            checked={selectedFileIds.includes(file.id)}
+            onCheckedChange={() => toggleSelectFile(file.id)}
+          />
+          <div className="h-10 w-10 bg-muted rounded-lg flex items-center justify-center">
+            <FileText className="h-5 w-5 text-primary" />
+          </div>
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <h4 className="font-medium truncate">{file.fileName}</h4>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span>{formatSize(file.fileSize)}</span>
+            <span>•</span>
+            <span>Enviado por {file.uploadedBy}</span>
+            <span>•</span>
+            <span>
+              {format(new Date(file.uploadedAt), "dd/MM/yyyy HH:mm", {
+                locale: ptBR,
+              })}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            title="Visualizar"
+            onClick={() => handleDownload(file)}
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            title="Baixar"
+            onClick={() => handleDownload(file)}
+          >
+            <Download className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-red-500 hover:text-red-600 hover:bg-red-50"
+            title="Excluir"
+            onClick={() => handleDelete(file)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   return (
     <div className="max-w-5xl mx-auto space-y-6 pb-10">
       <div className="flex justify-between items-center">
@@ -253,67 +335,42 @@ export function FilesTab({ project }: TabProps) {
           </Card>
         )}
 
-        {files.map((file) => (
-          <Card key={file.id} className={`hover:shadow-sm transition-shadow ${selectedFileIds.includes(file.id) ? 'border-primary ring-1 ring-primary/20 bg-primary/5' : ''}`}>
-            <CardContent className="p-4 flex items-center gap-4">
-              <div className="flex items-center gap-3">
-                <Checkbox
-                  checked={selectedFileIds.includes(file.id)}
-                  onCheckedChange={() => toggleSelectFile(file.id)}
-                />
-                <div className="h-10 w-10 bg-muted rounded-lg flex items-center justify-center">
-                  <FileText className="h-5 w-5 text-primary" />
-                </div>
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <h4 className="font-medium truncate">{file.fileName}</h4>
-                  {/* <Badge variant="secondary" className="text-[10px] h-5">v{file.versions.length}</Badge> */}
-                </div>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <span>{formatSize(file.fileSize)}</span>
-                  <span>•</span>
-                  <span>Enviado por {file.uploadedBy}</span>
-                  <span>•</span>
-                  <span>
-                    {format(new Date(file.uploadedAt), "dd/MM/yyyy HH:mm", {
-                      locale: ptBR,
-                    })}
+        {/* Seção Modelos Editor (Colapsável) */}
+        {modelosEditorFiles.length > 0 && (
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="modelos-editor" className="border-none">
+              <AccordionTrigger className="hover:no-underline py-2 px-4 bg-muted/30 rounded-lg group">
+                <div className="flex items-center gap-3">
+                  <div className="p-1.5 bg-primary/10 rounded-md">
+                    <FolderPlus className="h-4 w-4 text-primary" />
+                  </div>
+                  <span className="text-sm font-semibold uppercase tracking-wider text-muted-foreground group-hover:text-primary transition-colors">
+                    Modelos Editor ({modelosEditorFiles.length})
                   </span>
                 </div>
-              </div>
+              </AccordionTrigger>
+              <AccordionContent className="pt-4 pb-2 space-y-4">
+                {modelosEditorFiles.map(renderFileCard)}
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        )}
 
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  title="Visualizar"
-                  onClick={() => handleDownload(file)}
-                >
-                  <Eye className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  title="Baixar"
-                  onClick={() => handleDownload(file)}
-                >
-                  <Download className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                  title="Excluir"
-                  onClick={() => handleDelete(file)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+        {/* Seção Arquivos Gerais */}
+        {generalFiles.length > 0 && (
+          <div className="space-y-4">
+            {modelosEditorFiles.length > 0 && (
+              <div className="flex items-center gap-3 px-4 pt-2">
+                <div className="h-[1px] flex-1 bg-border" />
+                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                  Arquivos Gerais
+                </span>
+                <div className="h-[1px] flex-1 bg-border" />
               </div>
-            </CardContent>
-          </Card>
-        ))}
+            )}
+            {generalFiles.map(renderFileCard)}
+          </div>
+        )}
       </div>
 
       {/* Barra de Ações em Massa */}

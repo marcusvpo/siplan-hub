@@ -1071,7 +1071,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
   };
 
   const renderFileRow = (file: AttachedFile, type: 'sent' | 'available', list: AttachedFile[]) => (
-    <div key={file.id} className={cn("flex items-center justify-between p-2 rounded-md bg-white border border-border/50 text-sm transition-all duration-200", file.isDone && "bg-emerald-50/50 border-emerald-200")}>
+    <div key={file.id} className={cn("flex items-center justify-between p-2 rounded-md bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800 text-sm transition-all duration-200", file.isDone && "bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900/50")}>
       <div className="flex items-center gap-3 overflow-hidden">
         <Checkbox
           checked={!!file.isDone}
@@ -1079,16 +1079,16 @@ export function StepsTab({ project, onUpdate }: TabProps) {
           className="data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500 rounded flex-shrink-0"
         />
         <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-        <span className={cn("truncate font-medium transition-colors cursor-pointer hover:text-indigo-600", file.isDone && "text-muted-foreground line-through")} onClick={(e) => { e.preventDefault(); handleFileView(file); }}>{file.name}</span>
+        <span className={cn("truncate font-medium transition-colors cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400", file.isDone && "text-muted-foreground line-through")} onClick={(e) => { e.preventDefault(); handleFileView(file); }}>{file.name}</span>
       </div>
       <div className="flex items-center gap-1 shrink-0">
-        <Button variant="ghost" size="icon" className="h-7 w-7 text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50" title="Visualizar arquivo" onClick={(e) => { e.preventDefault(); handleFileView(file); }}>
+        <Button variant="ghost" size="icon" className="h-7 w-7 text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20" title="Visualizar arquivo" onClick={(e) => { e.preventDefault(); handleFileView(file); }}>
           <Eye className="h-3.5 w-3.5" />
         </Button>
-        <Button variant="ghost" size="icon" className="h-7 w-7 transition-colors hover:text-indigo-600 hover:bg-indigo-50" title="Baixar" onClick={(e) => { e.preventDefault(); handleFileDownload(file); }}>
+        <Button variant="ghost" size="icon" className="h-7 w-7 transition-colors hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20" title="Baixar" onClick={(e) => { e.preventDefault(); handleFileDownload(file); }}>
           <Download className="h-3.5 w-3.5" />
         </Button>
-        <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50" title="Excluir" onClick={(e) => { e.preventDefault(); handleRemoveFile(file, type, list); }}>
+        <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20" title="Excluir" onClick={(e) => { e.preventDefault(); handleRemoveFile(file, type, list); }}>
           <Trash2 className="h-3.5 w-3.5" />
         </Button>
       </div>
@@ -1107,15 +1107,15 @@ export function StepsTab({ project, onUpdate }: TabProps) {
       <div className="col-span-3 space-y-6 pt-2 w-full">
         {/* Progress Bar overall status */}
         {sentCount > 0 && (
-          <div className="w-full space-y-2 bg-white/50 p-4 rounded-xl border border-indigo-100">
-            <div className="flex items-center justify-between text-xs font-bold uppercase tracking-widest text-indigo-700">
+          <div className="w-full space-y-2 bg-white/50 dark:bg-slate-900/50 p-4 rounded-xl border border-indigo-100 dark:border-indigo-900/30">
+            <div className="flex items-center justify-between text-xs font-bold uppercase tracking-widest text-indigo-700 dark:text-indigo-400">
               <span className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4" />
                 Progresso dos Modelos
               </span>
               <span>{doneCount} de {sentCount} ({progressPercent}%)</span>
             </div>
-            <div className="h-2 w-full bg-indigo-100 rounded-full overflow-hidden">
+            <div className="h-2 w-full bg-indigo-100 dark:bg-indigo-900/20 rounded-full overflow-hidden">
               <div
                 className={cn("h-full transition-all duration-500", progressPercent === 100 ? "bg-emerald-500" : "bg-indigo-500")}
                 style={{ width: `${progressPercent}%` }}
@@ -1127,9 +1127,9 @@ export function StepsTab({ project, onUpdate }: TabProps) {
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 w-full">
 
           {/* Modelos Enviados */}
-          <div className="space-y-3 p-4 rounded-xl border border-indigo-100 bg-indigo-50/30">
+          <div className="space-y-3 p-4 rounded-xl border border-indigo-100 dark:border-indigo-900/30 bg-indigo-50/30 dark:bg-indigo-900/10">
             <div className="flex items-center justify-between">
-              <Label className="text-xs font-bold uppercase tracking-widest text-indigo-600 flex items-center gap-2">
+              <Label className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 flex items-center gap-2">
                 <UploadCloud className="h-4 w-4" />
                 Modelos Enviados (Cliente)
               </Label>
@@ -1143,7 +1143,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 text-xs border-indigo-200 text-indigo-700 hover:bg-indigo-100"
+                className="h-8 text-xs border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/30"
                 onClick={(e) => { e.preventDefault(); sentFileInputRef.current?.click(); }}
                 disabled={uploadingType === 'sent'}
               >
@@ -1152,7 +1152,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
               </Button>
             </div>
             {(!s.sentFiles || s.sentFiles.length === 0) && (
-              <div className="text-xs text-muted-foreground text-center py-4 bg-white/50 rounded-lg border border-dashed border-indigo-200">
+              <div className="text-xs text-muted-foreground dark:text-slate-400 text-center py-4 bg-white/50 dark:bg-slate-900/50 rounded-lg border border-dashed border-indigo-200 dark:border-indigo-800/50">
                 Nenhum modelo do cliente anexado.
               </div>
             )}
@@ -1164,9 +1164,9 @@ export function StepsTab({ project, onUpdate }: TabProps) {
           </div>
 
           {/* Modelos Disponíveis */}
-          <div className="space-y-3 p-4 rounded-xl border border-emerald-100 bg-emerald-50/30">
+          <div className="space-y-3 p-4 rounded-xl border border-emerald-100 dark:border-emerald-900/30 bg-emerald-50/30 dark:bg-emerald-900/10">
             <div className="flex items-center justify-between">
-              <Label className="text-xs font-bold uppercase tracking-widest text-emerald-600 flex items-center gap-2">
+              <Label className="text-xs font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
                 <FileText className="h-4 w-4" />
                 Modelos Disponíveis (JSON)
               </Label>
@@ -1181,7 +1181,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 text-xs border-emerald-200 text-emerald-700 hover:bg-emerald-100"
+                className="h-8 text-xs border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30"
                 onClick={(e) => { e.preventDefault(); availableFileInputRef.current?.click(); }}
                 disabled={uploadingType === 'available'}
               >
@@ -1190,7 +1190,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
               </Button>
             </div>
             {(!s.availableFiles || s.availableFiles.length === 0) && (
-              <div className="text-xs text-muted-foreground text-center py-4 bg-white/50 rounded-lg border border-dashed border-emerald-200">
+              <div className="text-xs text-muted-foreground dark:text-slate-400 text-center py-4 bg-white/50 dark:bg-slate-900/50 rounded-lg border border-dashed border-emerald-200 dark:border-emerald-800/50">
                 Nenhum JSON de modelo anexado.
               </div>
             )}
@@ -1236,15 +1236,15 @@ export function StepsTab({ project, onUpdate }: TabProps) {
 
     return (
       <>
-        <Label className={cn("text-xs font-bold uppercase tracking-widest flex items-center gap-2", isOnTrack ? "text-emerald-600" : "text-red-500")}>
+        <Label className={cn("text-xs font-bold uppercase tracking-widest flex items-center gap-2", isOnTrack ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400")}>
           <Calendar className="h-3.5 w-3.5" />
           Média Necessária
         </Label>
         <div className={cn(
           "h-11 flex items-center justify-center px-4 border-2 transition-all duration-300 rounded-md font-bold text-sm shadow-sm",
           isOnTrack
-            ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-            : "border-red-200 bg-red-50 text-red-700 hover:bg-red-100"
+            ? "border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/40"
+            : "border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40"
         )}>
           {avgNeeded} modelo{avgNeeded !== 1 ? 's' : ''} / dia
         </div>
