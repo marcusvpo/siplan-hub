@@ -5,19 +5,11 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Users,
   Activity,
   ShieldCheck,
-  UserCog,
-  LayoutGrid,
-  ClipboardList,
-  Shield,
 } from "lucide-react";
-import UserManagement from "./UserManagement";
-import TeamConfiguration from "./TeamConfiguration";
-import AuditLogPage from "./AuditLog";
 import { useAdminStats } from "@/hooks/useAdminStats";
 import { OverviewChart } from "@/components/Admin/OverviewChart";
 import { RecentActivity } from "@/components/Admin/RecentActivity";
@@ -90,37 +82,11 @@ export default function AdminDashboard() {
             <CardTitle className="text-sm">Atividade Recente</CardTitle>
             <CardDescription className="text-[10px]/snug">Ações realizadas no sistema</CardDescription>
           </CardHeader>
-          <CardContent className="px-4 pb-2 flex-1 overflow-auto max-h-[300px]">
+          <CardContent className="px-4 pb-2 flex-1 overflow-auto max-h-[400px]">
             <RecentActivity />
           </CardContent>
         </Card>
       </div>
-
-      <Tabs defaultValue="users" className="space-y-3">
-        <TabsList className="h-9">
-          <TabsTrigger value="users">
-            <UserCog className="mr-2 h-4 w-4" />
-            Usuários
-          </TabsTrigger>
-          <TabsTrigger value="teams">
-            <LayoutGrid className="mr-2 h-4 w-4" />
-            Equipes
-          </TabsTrigger>
-          <TabsTrigger value="audit">
-            <ClipboardList className="mr-2 h-4 w-4" />
-            Logs
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent value="users" className="space-y-4">
-          <UserManagement />
-        </TabsContent>
-        <TabsContent value="teams" className="space-y-4">
-          <TeamConfiguration />
-        </TabsContent>
-        <TabsContent value="audit" className="space-y-4">
-          <AuditLogPage />
-        </TabsContent>
-      </Tabs>
     </div>
   );
 }
