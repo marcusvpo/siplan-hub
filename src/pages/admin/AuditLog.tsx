@@ -7,9 +7,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Loader2 } from "lucide-react";
+import { Loader2, History, Search, FilterX } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useState, useMemo } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 const actionLabels: Record<string, string> = {
   project_created: "Projeto Criado",
@@ -59,16 +62,51 @@ const actionLabels: Record<string, string> = {
   USER_UPDATED: "Usuário Atualizado",
 };
 
+const translateValue = (value: any): string => {
+  if (value === null || value === undefined) return "vazio";
+  if (typeof value === "boolean") return value ? "Sim" : "Não";
+  
+  const translations: Record<string, string> = {
+    admin: "Administrador",
+    user: "Usuário Padrão",
+    active: "Ativo",
+    inactive: "Inativo",
+    pending: "Pendente",
+    completed: "Concluído",
+  };
+  
+  return translations[String(value).toLowerCase()] || String(value);
+};
+
+const isUUID = (str: string) => {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return typeof str === 'string' && uuidRegex.test(str);
+};
+
+const formatValue = (value: any): string => {
+  if (value === null || value === undefined) return "vazio";
+  if (typeof value === "object") {
+    return Object.entries(value)
+      .filter(([key]) => !isUUID(key) && key !== 'id')
+      .map(([key, val]) => `${key}: ${translateValue(val)}`)
+      .join(", ");
+  }
+  if (isUUID(String(value))) return "atribuído";
+  return translateValue(value);
+};
+
 const formatLogDetails = (log: any) => {
   const details = log.details;
-  if (!details) return "Sem detalhes adicionais";
+  if (!details) return "Ação realizada no sistema";
 
-  const parts = [];
+  const parts: string[] = [];
 
+  // Handle specific fields
   if (details.projectName) parts.push(`Projeto: ${details.projectName}`);
-  if (details.roleName) parts.push(`Perfil: ${details.roleName}`);
-  if (details.targetUserName) parts.push(`Para: ${details.targetUserName}`);
+  if (details.roleName) parts.push(`Perfil: ${translateValue(details.roleName)}`);
+  if (details.targetUserName) parts.push(`Usuário alvo: ${details.targetUserName}`);
   
+  // Handle updates/changes
   if (details.field) {
     const fieldMap: Record<string, string> = {
       status: "Status",
@@ -76,23 +114,37 @@ const formatLogDetails = (log: any) => {
       role: "Papel",
       team: "Equipe",
       name: "Nome",
-      description: "Descrição"
+      description: "Descrição",
+      email: "E-mail",
+      full_name: "Nome Completo"
     };
     const fieldLabel = fieldMap[details.field] || details.field;
-    parts.push(`${fieldLabel}: de "${details.oldValue || 'vazio'}" para "${details.newValue}"`);
+    parts.push(`${fieldLabel}: de "${formatValue(details.oldValue)}" para "${formatValue(details.newValue)}"`);
+  }
+
+  // Handle generic 'updates' object
+  if (details.updates && typeof details.updates === 'object') {
+    const changes = Object.entries(details.updates)
+      .map(([key, val]) => `${key}: ${formatValue(val)}`)
+      .join(" | ");
+    if (changes) parts.push(`Alterações: ${changes}`);
   }
 
   if (details.additionalInfo?.fileName) parts.push(`Arquivo: ${details.additionalInfo.fileName}`);
   if (details.additionalInfo?.itemLabel) parts.push(`Item: ${details.additionalInfo.itemLabel}`);
 
   if (parts.length === 0) {
-    // If we couldn't parse specific fields, show a simplified JSON or common keys
+    // Fallback for simple key-value pairs, ignoring technical stuff
     const entries = Object.entries(details)
-      .filter(([key]) => !['userName', 'timestamp', 'userAgent', 'additionalInfo'].includes(key))
-      .map(([key, value]) => `${key}: ${value}`);
+      .filter(([key, value]) => 
+        !['userName', 'timestamp', 'userAgent', 'additionalInfo', 'userId', 'projectId', 'roleId', 'entityId', 'entityType', 'updates'].includes(key) &&
+        !isUUID(String(value)) &&
+        typeof value !== 'object'
+      )
+      .map(([key, value]) => `${key}: ${translateValue(value)}`);
     
-    if (entries.length > 0) return entries.join(", ");
-    return "Ação realizada no sistema";
+    if (entries.length > 0) return entries.join(" | ");
+    return "Ação registrada com sucesso";
   }
 
   return parts.join(" | ");
@@ -100,59 +152,111 @@ const formatLogDetails = (log: any) => {
 
 export default function AuditLogPage() {
   const { logs, isLoading } = useAuditLogs();
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredLogs = useMemo(() => {
+    if (!logs) return [];
+    if (!searchTerm.trim()) return logs;
+
+    const term = searchTerm.toLowerCase();
+    return logs.filter((log) => {
+      const userName = (log.profile?.full_name || "").toLowerCase();
+      const actionLabel = (actionLabels[log.action] || log.action).toLowerCase();
+      const details = formatLogDetails(log).toLowerCase();
+      
+      return (
+        userName.includes(term) ||
+        actionLabel.includes(term) ||
+        details.includes(term) ||
+        log.user_id.toLowerCase().includes(term)
+      );
+    });
+  }, [logs, searchTerm]);
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Log de Auditoria</h2>
-        <p className="text-muted-foreground">
-          Histórico de atividades importantes no sistema.
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Log de Auditoria</h2>
+          <p className="text-muted-foreground">
+            Histórico detalhado de atividades e alterações no sistema.
+          </p>
+        </div>
+        <div className="relative w-full md:w-80">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por usuário, ação ou detalhe..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9"
+          />
+          {searchTerm && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+              onClick={() => setSearchTerm("")}
+            >
+              <FilterX className="h-3 w-3" />
+            </Button>
+          )}
+        </div>
       </div>
 
-      <div className="border rounded-md overflow-hidden bg-card">
+      <div className="border rounded-lg overflow-hidden bg-card shadow-sm transition-all duration-200">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead className="w-[180px]">Data/Hora</TableHead>
-              <TableHead className="w-[200px]">Usuário</TableHead>
-              <TableHead className="w-[220px]">Ação</TableHead>
-              <TableHead>Detalhes</TableHead>
+            <TableRow className="bg-muted/50">
+              <TableHead className="w-[180px] font-semibold">Data/Hora</TableHead>
+              <TableHead className="w-[200px] font-semibold">Usuário</TableHead>
+              <TableHead className="w-[220px] font-semibold">Ação</TableHead>
+              <TableHead className="font-semibold">Detalhes das Alterações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={4} className="h-24 text-center">
-                  <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
+                <TableCell colSpan={4} className="h-64 text-center">
+                  <div className="flex flex-col items-center gap-2">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <p className="text-sm text-muted-foreground">Carregando histórico...</p>
+                  </div>
                 </TableCell>
               </TableRow>
-            ) : logs?.length === 0 ? (
+            ) : filteredLogs.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
-                  Nenhum registro encontrado.
+                <TableCell colSpan={4} className="h-64 text-center">
+                  <div className="flex flex-col items-center gap-2 opacity-60">
+                    <Search className="h-10 w-10 text-muted-foreground mb-2" />
+                    <p className="text-base font-medium">Nenhum registro encontrado</p>
+                    <p className="text-sm text-muted-foreground">Try adjusting your filters or search term.</p>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (
-              logs?.map((log) => (
-                <TableRow key={log.id} className="hover:bg-muted/50 transition-colors">
-                  <TableCell className="whitespace-nowrap font-medium">
+              filteredLogs.map((log) => (
+                <TableRow key={log.id} className="hover:bg-muted/30 transition-colors group">
+                  <TableCell className="whitespace-nowrap tabular-nums text-xs text-muted-foreground">
                     {format(new Date(log.created_at), "dd/MM/yyyy HH:mm:ss", {
                       locale: ptBR,
                     })}
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col">
-                      <span className="text-sm font-semibold">{log.profile?.full_name || "Sistema"}</span>
-                      <span className="text-[10px] text-muted-foreground truncate">{log.user_id}</span>
+                      <span className="text-sm font-semibold group-hover:text-primary transition-colors">
+                        {log.profile?.full_name || "Sistema"}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground/60 font-mono tracking-tighter">
+                        {log.user_id}
+                      </span>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+                    <span className="inline-flex items-center rounded-md bg-primary/5 px-2 py-0.5 text-[11px] font-semibold text-primary border border-primary/10">
                       {actionLabels[log.action] || log.action}
                     </span>
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
+                  <TableCell className="text-sm text-muted-foreground leading-relaxed py-3">
                     {formatLogDetails(log)}
                   </TableCell>
                 </TableRow>
