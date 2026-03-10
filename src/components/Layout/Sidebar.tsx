@@ -354,20 +354,21 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
               </CollapsibleContent>
             </Collapsible>
           ) : (
-            <Button
-              variant={
-                isActive("/commercial/customers") ||
-                  isActive("/commercial/blockers") ||
-                  isActive("/commercial/contacts")
-                  ? "secondary"
-                  : "ghost"
-              }
-              className="w-full justify-center px-0"
-              title="Comercial"
-              onClick={() => setCollapsed(false)}
-            >
-              <Briefcase className="h-5 w-5" />
-            </Button>
+              <Link to="/commercial/customers">
+                <Button
+                  variant={
+                    isActive("/commercial/customers") ||
+                      isActive("/commercial/blockers") ||
+                      isActive("/commercial/contacts")
+                      ? "secondary"
+                      : "ghost"
+                  }
+                  className="w-full justify-center px-0"
+                  title="Comercial (Painel de Clientes)"
+                >
+                  <Briefcase className="h-5 w-5" />
+                </Button>
+              </Link>
           )}
         </div>
 
