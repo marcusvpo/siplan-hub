@@ -4,15 +4,18 @@ import {
   AdherenceStageV2,
   EnvironmentStageV2,
   ConversionStageV2,
+  ModelosEditorStageV2,
   ImplementationStageV2,
   PostStageV2,
   ImplementationPhase,
   StageStatus,
+  AttachedFile,
 } from "@/types/ProjectV2";
-import { useState } from "react";
-import { format } from "date-fns";
+import { useState, useRef } from "react";
+import { format, differenceInDays } from "date-fns";
 import { useProjectForm } from "@/hooks/useProjectForm";
 import { useConversionQueue } from "@/hooks/useConversionQueue";
+import { useProjectFiles } from "@/hooks/useProjectFiles";
 import { StageCard } from "@/components/ProjectManagement/Forms/StageCard";
 import { Accordion } from "@/components/ui/accordion";
 import { Label } from "@/components/ui/label";
@@ -42,6 +45,13 @@ import {
   ExternalLink,
   Calendar,
   X,
+  FileEdit,
+  UploadCloud,
+  FileText,
+  Trash2,
+  Download,
+  Loader2,
+  Eye,
 } from "lucide-react";
 import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
@@ -80,10 +90,20 @@ export function StepsTab({ project, onUpdate }: TabProps) {
   const [sendingToConversion, setSendingToConversion] = useState(false);
   const { sendToConversion, getItemByProjectId, removeFromQueue } =
     useConversionQueue();
+  const { uploadFile, deleteFile: deleteStorageFile, getDownloadUrl } = useProjectFiles(project.id);
+
+  const [uploadingType, setUploadingType] = useState<'sent' | 'available' | null>(null);
+  const sentFileInputRef = useRef<HTMLInputElement>(null);
+  const availableFileInputRef = useRef<HTMLInputElement>(null);
 
   // Check if project is already in conversion queue
   const conversionItem = getItemByProjectId(project.id);
   const isInConversionQueue = !!conversionItem;
+
+  const isOrionTN =
+    project.systemType === "Orion TN" ||
+    project.products?.includes("Orion TN") ||
+    project.products?.includes("OrionTN");
 
   // Predictability: Calculate stage readiness
   const stageReadiness = getStageReadiness(data);
@@ -221,13 +241,13 @@ export function StepsTab({ project, onUpdate }: TabProps) {
             className={cn(
               "h-11 border-2 font-medium transition-all",
               stage.workstationsStatus === "Adequado" &&
-                "bg-green-50 text-green-800 border-green-300",
+              "bg-green-50 text-green-800 border-green-300",
               stage.workstationsStatus === "Parcialmente Adequado" &&
-                "bg-orange-50 text-orange-800 border-orange-300",
+              "bg-orange-50 text-orange-800 border-orange-300",
               stage.workstationsStatus === "Inadequado" &&
-                "bg-red-50 text-red-800 border-red-300",
+              "bg-red-50 text-red-800 border-red-300",
               stage.workstationsStatus === "Aguardando Adequação" &&
-                "bg-gray-50 text-gray-800 border-gray-300",
+              "bg-gray-50 text-gray-800 border-gray-300",
             )}
           >
             <SelectValue placeholder="Selecione..." />
@@ -281,13 +301,13 @@ export function StepsTab({ project, onUpdate }: TabProps) {
             className={cn(
               "h-11 border-2 font-medium transition-all",
               stage.serverStatus === "Adequado" &&
-                "bg-green-50 text-green-800 border-green-300",
+              "bg-green-50 text-green-800 border-green-300",
               stage.serverStatus === "Parcialmente Adequado" &&
-                "bg-orange-50 text-orange-800 border-orange-300",
+              "bg-orange-50 text-orange-800 border-orange-300",
               stage.serverStatus === "Inadequado" &&
-                "bg-red-50 text-red-800 border-red-300",
+              "bg-red-50 text-red-800 border-red-300",
               stage.serverStatus === "Aguardando Adequação" &&
-                "bg-gray-50 text-gray-800 border-gray-300",
+              "bg-gray-50 text-gray-800 border-gray-300",
             )}
           >
             <SelectValue placeholder="Selecione..." />
@@ -530,13 +550,13 @@ export function StepsTab({ project, onUpdate }: TabProps) {
             className={cn(
               "h-11 border-2 font-medium transition-all",
               stage.homologationStatus === "Adequado" &&
-                "bg-green-50 text-green-800 border-green-300",
+              "bg-green-50 text-green-800 border-green-300",
               stage.homologationStatus === "Parcialmente Adequado" &&
-                "bg-orange-50 text-orange-800 border-orange-300",
+              "bg-orange-50 text-orange-800 border-orange-300",
               stage.homologationStatus === "Inadequado" &&
-                "bg-red-50 text-red-800 border-red-300",
+              "bg-red-50 text-red-800 border-red-300",
               stage.homologationStatus === "Aguardando Adequação" &&
-                "bg-gray-50 text-gray-800 border-gray-300",
+              "bg-gray-50 text-gray-800 border-gray-300",
             )}
           >
             <SelectValue placeholder="Selecione..." />
@@ -599,8 +619,8 @@ export function StepsTab({ project, onUpdate }: TabProps) {
           value={
             stage.homologationFinishedAt
               ? new Date(stage.homologationFinishedAt)
-                  .toISOString()
-                  .split("T")[0]
+                .toISOString()
+                .split("T")[0]
               : ""
           }
           onChange={(e) =>
@@ -687,13 +707,13 @@ export function StepsTab({ project, onUpdate }: TabProps) {
                 className={cn(
                   "h-11 border-2 font-medium transition-all",
                   stage.phase1?.status === "done" &&
-                    "bg-emerald-50 text-emerald-800 border-emerald-300",
+                  "bg-emerald-50 text-emerald-800 border-emerald-300",
                   stage.phase1?.status === "in-progress" &&
-                    "bg-blue-50 text-blue-800 border-blue-300",
+                  "bg-blue-50 text-blue-800 border-blue-300",
                   stage.phase1?.status === "blocked" &&
-                    "bg-amber-50 text-amber-800 border-amber-300",
+                  "bg-amber-50 text-amber-800 border-amber-300",
                   stage.phase1?.status === "todo" &&
-                    "bg-slate-50 text-slate-800 border-slate-300",
+                  "bg-slate-50 text-slate-800 border-slate-300",
                 )}
               >
                 <SelectValue />
@@ -824,13 +844,13 @@ export function StepsTab({ project, onUpdate }: TabProps) {
                 className={cn(
                   "h-11 border-2 font-medium transition-all",
                   stage.phase2?.status === "done" &&
-                    "bg-emerald-50 text-emerald-800 border-emerald-300",
+                  "bg-emerald-50 text-emerald-800 border-emerald-300",
                   stage.phase2?.status === "in-progress" &&
-                    "bg-purple-50 text-purple-800 border-purple-300",
+                  "bg-purple-50 text-purple-800 border-purple-300",
                   stage.phase2?.status === "blocked" &&
-                    "bg-amber-50 text-amber-800 border-amber-300",
+                  "bg-amber-50 text-amber-800 border-amber-300",
                   stage.phase2?.status === "todo" &&
-                    "bg-slate-50 text-slate-800 border-slate-300",
+                  "bg-slate-50 text-slate-800 border-slate-300",
                 )}
               >
                 <SelectValue />
@@ -938,6 +958,300 @@ export function StepsTab({ project, onUpdate }: TabProps) {
     </div>
   );
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'sent' | 'available', currentFiles: AttachedFile[] = []) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setUploadingType(type);
+      try {
+        const filesToUpload = Array.from(e.target.files);
+        const newAttachedFiles: AttachedFile[] = [];
+
+        // Upload files sequentially to avoid overwhelming storage/DB constraints or we could use Promise.all
+        for (const file of filesToUpload) {
+          const result = await uploadFile.mutateAsync({
+            file,
+            uploadedBy: "Admin", // To be replaced with actual user if auth is available
+          });
+
+          newAttachedFiles.push({
+            id: result.id,
+            name: result.file_name,
+            path: result.file_path,
+            size: result.file_size,
+            uploadedAt: result.uploaded_at,
+          });
+        }
+
+        const fieldToUpdate = type === 'sent' ? 'sentFiles' : 'availableFiles';
+        updateStage("modelosEditor", {
+          [fieldToUpdate]: [...currentFiles, ...newAttachedFiles]
+        });
+
+        toast({
+          title: "Sucesso",
+          description: filesToUpload.length > 1 ? `${filesToUpload.length} arquivos enviados com sucesso.` : "Arquivo enviado com sucesso.",
+        });
+      } catch (error) {
+        console.error(error);
+        toast({
+          title: "Erro no upload",
+          description: "Não foi possível enviar os arquivos.",
+          variant: "destructive",
+        });
+      } finally {
+        setUploadingType(null);
+        if (type === 'sent' && sentFileInputRef.current) sentFileInputRef.current.value = "";
+        if (type === 'available' && availableFileInputRef.current) availableFileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleFileDownload = async (file: AttachedFile) => {
+    try {
+      const url = await getDownloadUrl(file.path);
+      window.open(url, "_blank");
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Erro no download",
+        description: "Falha ao gerar o link do arquivo.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRemoveFile = async (file: AttachedFile, type: 'sent' | 'available', currentFiles: AttachedFile[]) => {
+    if (confirm(`Tem certeza que deseja excluir ${file.name}?`)) {
+      try {
+        // Technically it attempts to delete from project_files DB too, but might fail if missing or succeed.
+        // What matters is removing from JSON locally and updating stage.
+        await deleteStorageFile.mutateAsync({ ...file, projectId: project.id, fileType: '', fileUrl: file.path, uploadedBy: '' } as any);
+
+        const fieldToUpdate = type === 'sent' ? 'sentFiles' : 'availableFiles';
+        updateStage("modelosEditor", {
+          [fieldToUpdate]: currentFiles.filter((f) => f.id !== file.id)
+        });
+
+        toast({
+          title: "Sucesso",
+          description: "Arquivo removido.",
+        });
+      } catch (error) {
+        console.error(error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível remover o arquivo.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  const handleFileView = async (file: AttachedFile) => {
+    try {
+      const url = await getDownloadUrl(file.path);
+      window.open(url, '_blank');
+    } catch (error) {
+      console.error("Error generating view URL:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível abrir o arquivo.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleToggleFileDone = (file: AttachedFile, type: 'sent' | 'available', currentFiles: AttachedFile[]) => {
+    const updatedFiles = currentFiles.map(f =>
+      f.id === file.id ? { ...f, isDone: !f.isDone } : f
+    );
+    const fieldToUpdate = type === 'sent' ? 'sentFiles' : 'availableFiles';
+    updateStage("modelosEditor", {
+      [fieldToUpdate]: updatedFiles
+    });
+  };
+
+  const renderFileRow = (file: AttachedFile, type: 'sent' | 'available', list: AttachedFile[]) => (
+    <div key={file.id} className={cn("flex items-center justify-between p-2 rounded-md bg-white border border-border/50 text-sm transition-all duration-200", file.isDone && "bg-emerald-50/50 border-emerald-200")}>
+      <div className="flex items-center gap-3 overflow-hidden">
+        <Checkbox
+          checked={!!file.isDone}
+          onCheckedChange={() => handleToggleFileDone(file, type, list)}
+          className="data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500 rounded flex-shrink-0"
+        />
+        <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+        <span className={cn("truncate font-medium transition-colors cursor-pointer hover:text-indigo-600", file.isDone && "text-muted-foreground line-through")} onClick={(e) => { e.preventDefault(); handleFileView(file); }}>{file.name}</span>
+      </div>
+      <div className="flex items-center gap-1 shrink-0">
+        <Button variant="ghost" size="icon" className="h-7 w-7 text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50" title="Visualizar arquivo" onClick={(e) => { e.preventDefault(); handleFileView(file); }}>
+          <Eye className="h-3.5 w-3.5" />
+        </Button>
+        <Button variant="ghost" size="icon" className="h-7 w-7 transition-colors hover:text-indigo-600 hover:bg-indigo-50" title="Baixar" onClick={(e) => { e.preventDefault(); handleFileDownload(file); }}>
+          <Download className="h-3.5 w-3.5" />
+        </Button>
+        <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50" title="Excluir" onClick={(e) => { e.preventDefault(); handleRemoveFile(file, type, list); }}>
+          <Trash2 className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+    </div>
+  );
+
+  const renderModelosEditorFields = (stage: ModelosEditorStageV2 | undefined) => {
+    const s = stage || ({} as ModelosEditorStageV2);
+
+    // Calculates conclusion percentage based on sentModels checked items
+    const sentCount = s.sentFiles?.length || 0;
+    const doneCount = s.sentFiles?.filter(f => f.isDone).length || 0;
+    const progressPercent = sentCount > 0 ? Math.round((doneCount / sentCount) * 100) : 0;
+
+    return (
+      <div className="col-span-3 space-y-6 pt-2 w-full">
+        {/* Progress Bar overall status */}
+        {sentCount > 0 && (
+          <div className="w-full space-y-2 bg-white/50 p-4 rounded-xl border border-indigo-100">
+            <div className="flex items-center justify-between text-xs font-bold uppercase tracking-widest text-indigo-700">
+              <span className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4" />
+                Progresso dos Modelos
+              </span>
+              <span>{doneCount} de {sentCount} ({progressPercent}%)</span>
+            </div>
+            <div className="h-2 w-full bg-indigo-100 rounded-full overflow-hidden">
+              <div
+                className={cn("h-full transition-all duration-500", progressPercent === 100 ? "bg-emerald-500" : "bg-indigo-500")}
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 w-full">
+
+          {/* Modelos Enviados */}
+          <div className="space-y-3 p-4 rounded-xl border border-indigo-100 bg-indigo-50/30">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-bold uppercase tracking-widest text-indigo-600 flex items-center gap-2">
+                <UploadCloud className="h-4 w-4" />
+                Modelos Enviados (Cliente)
+              </Label>
+              <input
+                type="file"
+                ref={sentFileInputRef}
+                className="hidden"
+                multiple
+                onChange={(e) => handleFileUpload(e, 'sent', s.sentFiles)}
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs border-indigo-200 text-indigo-700 hover:bg-indigo-100"
+                onClick={(e) => { e.preventDefault(); sentFileInputRef.current?.click(); }}
+                disabled={uploadingType === 'sent'}
+              >
+                {uploadingType === 'sent' ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <UploadCloud className="h-3.5 w-3.5 mr-1" />}
+                Anexar
+              </Button>
+            </div>
+            {(!s.sentFiles || s.sentFiles.length === 0) && (
+              <div className="text-xs text-muted-foreground text-center py-4 bg-white/50 rounded-lg border border-dashed border-indigo-200">
+                Nenhum modelo do cliente anexado.
+              </div>
+            )}
+            {s.sentFiles && s.sentFiles.length > 0 && (
+              <div className="space-y-2">
+                {s.sentFiles.map(file => renderFileRow(file, 'sent', s.sentFiles!))}
+              </div>
+            )}
+          </div>
+
+          {/* Modelos Disponíveis */}
+          <div className="space-y-3 p-4 rounded-xl border border-emerald-100 bg-emerald-50/30">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-bold uppercase tracking-widest text-emerald-600 flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Modelos Disponíveis (JSON)
+              </Label>
+              <input
+                type="file"
+                ref={availableFileInputRef}
+                className="hidden"
+                accept=".json"
+                multiple
+                onChange={(e) => handleFileUpload(e, 'available', s.availableFiles)}
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs border-emerald-200 text-emerald-700 hover:bg-emerald-100"
+                onClick={(e) => { e.preventDefault(); availableFileInputRef.current?.click(); }}
+                disabled={uploadingType === 'available'}
+              >
+                {uploadingType === 'available' ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <UploadCloud className="h-3.5 w-3.5 mr-1" />}
+                Anexar JSON
+              </Button>
+            </div>
+            {(!s.availableFiles || s.availableFiles.length === 0) && (
+              <div className="text-xs text-muted-foreground text-center py-4 bg-white/50 rounded-lg border border-dashed border-emerald-200">
+                Nenhum JSON de modelo anexado.
+              </div>
+            )}
+            {s.availableFiles && s.availableFiles.length > 0 && (
+              <div className="space-y-2">
+                {s.availableFiles.map(file => renderFileRow(file, 'available', s.availableFiles!))}
+              </div>
+            )}
+          </div>
+
+        </div>
+      </div>
+    );
+  };
+
+  const renderModelosMetrics = (stage: ModelosEditorStageV2 | undefined) => {
+    if (!stage || !stage.startDate || !stage.endDate || !stage.sentFiles || stage.sentFiles.length === 0) return null;
+
+    const start = new Date(stage.startDate);
+    const end = new Date(stage.endDate);
+    const today = new Date();
+
+    // Calculate total days (inclusive)
+    const totalDays = Math.max(1, differenceInDays(end, start) + 1);
+    const totalModels = stage.sentFiles.length;
+
+    // Daily average needed
+    const avgNeeded = Math.ceil(totalModels / totalDays);
+
+    // Days elapsed so far (capped between 0 and totalDays)
+    let daysElapsed = differenceInDays(today, start) + 1;
+    if (daysElapsed < 0) daysElapsed = 0;
+    if (daysElapsed > totalDays) daysElapsed = totalDays;
+
+    // Expected progress by today
+    const expectedDone = Math.min(totalModels, daysElapsed * avgNeeded);
+
+    // Current progress
+    const actualDone = stage.sentFiles.filter(f => f.isDone).length;
+
+    // Health: Green if starting today or on track. Red if behind.
+    const isOnTrack = daysElapsed === 0 || actualDone >= expectedDone;
+
+    return (
+      <>
+        <Label className={cn("text-xs font-bold uppercase tracking-widest flex items-center gap-2", isOnTrack ? "text-emerald-600" : "text-red-500")}>
+          <Calendar className="h-3.5 w-3.5" />
+          Média Necessária
+        </Label>
+        <div className={cn(
+          "h-11 flex items-center justify-center px-4 border-2 transition-all duration-300 rounded-md font-bold text-sm shadow-sm",
+          isOnTrack
+            ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+            : "border-red-200 bg-red-50 text-red-700 hover:bg-red-100"
+        )}>
+          {avgNeeded} modelo{avgNeeded !== 1 ? 's' : ''} / dia
+        </div>
+      </>
+    );
+  };
+
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-10">
       {/* Feedback Visual do Autosave */}
@@ -1041,9 +1355,27 @@ export function StepsTab({ project, onUpdate }: TabProps) {
           {renderEnvironmentFields(stagesData.environment)}
         </StageCard>
 
+        {isOrionTN && (
+          <StageCard
+            id="modelosEditor"
+            label="5. Modelos Editor"
+            icon={FileEdit}
+            status={stagesData.modelosEditor?.status || "todo"}
+            responsible={stagesData.modelosEditor?.responsible || ""}
+            hideResponsible={true}
+            startDate={stagesData.modelosEditor?.startDate}
+            endDate={stagesData.modelosEditor?.endDate}
+            observations={stagesData.modelosEditor?.observations}
+            onUpdate={(u) => updateStage("modelosEditor", u)}
+            extraHeaderField={renderModelosMetrics(stagesData.modelosEditor)}
+          >
+            {renderModelosEditorFields(stagesData.modelosEditor)}
+          </StageCard>
+        )}
+
         <StageCard
           id="implementation"
-          label="5. Implantação & Treinamento"
+          label={`${isOrionTN ? "6" : "5"}. Implantação & Treinamento`}
           icon={Rocket}
           status={stagesData.implementation.status}
           responsible={stagesData.implementation.responsible || ""}
@@ -1091,7 +1423,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
 
         <StageCard
           id="post"
-          label="6. Pós-Implantação"
+          label={`${isOrionTN ? "7" : "6"}. Pós-Implantação`}
           icon={Power}
           status={stagesData.post.status}
           responsible={stagesData.post.responsible}

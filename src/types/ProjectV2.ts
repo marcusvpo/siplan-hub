@@ -120,6 +120,7 @@ export interface ProjectV2 {
     adherence: AdherenceStageV2;
     environment: EnvironmentStageV2;
     conversion: ConversionStageV2;
+    modelosEditor?: ModelosEditorStageV2;
     implementation: ImplementationStageV2;
     post: PostStageV2;
   };
@@ -190,7 +191,7 @@ export interface ConversionStageV2 {
   responsible?: string;
   startDate?: Date;
   endDate?: Date;
-  
+
   homologationStatus?: "Adequado" | "Parcialmente Adequado" | "Inadequado" | "Aguardando Adequação";
   homologationResponsible?: string;
   homologationFinishedAt?: Date;
@@ -203,6 +204,27 @@ export interface ConversionStageV2 {
   homologationDate?: Date;
   deviations?: string;
   observations?: string;
+  lastUpdatedAt?: Date;
+  lastUpdatedBy?: string;
+}
+
+export interface AttachedFile {
+  id: string;
+  name: string;
+  path: string;
+  size: number;
+  uploadedAt: string;
+  isDone?: boolean;
+}
+
+export interface ModelosEditorStageV2 {
+  status: StageStatus;
+  responsible?: string;
+  startDate?: Date;
+  endDate?: Date;
+  observations?: string;
+  sentFiles?: AttachedFile[];
+  availableFiles?: AttachedFile[];
   lastUpdatedAt?: Date;
   lastUpdatedBy?: string;
 }
@@ -231,7 +253,7 @@ export interface ImplementationStageV2 {
   responsible?: string;
   startDate?: Date;
   endDate?: Date;
-  
+
   phase1: ImplementationPhase;
   phase2: ImplementationPhase;
 
@@ -263,13 +285,13 @@ export interface TimelineEventV2 {
   id: string;
   projectId: string;
   type:
-    | "field_change"
-    | "status_change"
-    | "file_upload"
-    | "comment"
-    | "bulk_edit"
-    | "project_created"
-    | "project_deleted";
+  | "field_change"
+  | "status_change"
+  | "file_upload"
+  | "comment"
+  | "bulk_edit"
+  | "project_created"
+  | "project_deleted";
   timestamp: Date;
   author: string;
   authorName: string;

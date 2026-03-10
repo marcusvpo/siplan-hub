@@ -51,6 +51,14 @@ CREATE TABLE IF NOT EXISTS public.projects (
   implementation_switch_type TEXT,
   implementation_observations TEXT,
   
+  modelos_editor_status TEXT NOT NULL DEFAULT 'todo',
+  modelos_editor_responsible TEXT,
+  modelos_editor_start_date DATE,
+  modelos_editor_end_date DATE,
+  modelos_editor_observations TEXT,
+  modelos_editor_sent_files JSONB DEFAULT '[]'::jsonb,
+  modelos_editor_available_files JSONB DEFAULT '[]'::jsonb,
+
   post_status TEXT NOT NULL DEFAULT 'todo',
   post_responsible TEXT,
   post_start_date DATE,

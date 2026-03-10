@@ -110,7 +110,12 @@ export function ProjectCardV3({
 
   const globalStatusBadge = getGlobalStatusBadge(project.globalStatus);
 
-  const stages = [
+  const isOrionTN =
+    project.systemType === "Orion TN" ||
+    project.products?.includes("Orion TN") ||
+    project.products?.includes("OrionTN");
+
+  const baseStages = [
     { id: "infra", label: "Infra", status: project.stages.infra.status },
     {
       id: "adherence",
@@ -127,6 +132,15 @@ export function ProjectCardV3({
       label: "Ambiente",
       status: project.stages.environment.status,
     },
+  ];
+
+  const orionStages = isOrionTN ? [{
+    id: "modelosEditor",
+    label: "Modelos",
+    status: project.stages.modelosEditor?.status || "todo",
+  }] : [];
+
+  const endStages = [
     {
       id: "implementation",
       label: "Implantação",
@@ -134,6 +148,8 @@ export function ProjectCardV3({
     },
     { id: "post", label: "Pós", status: project.stages.post.status },
   ];
+
+  const stages = [...baseStages, ...orionStages, ...endStages];
 
   return (
     <Card
