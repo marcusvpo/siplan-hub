@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ProjectV2, TimelineEventV2 } from "@/types/ProjectV2";
+import { ProjectV2, TimelineEventV2, StageStatus, InfraStageV2, AdherenceStageV2, EnvironmentStageV2, ConversionStageV2, ModelosEditorStageV2, ImplementationStageV2, PostStageV2, AuditEntry } from "@/types/ProjectV2";
 import { calculateHealthScore } from "@/utils/calculations";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -15,7 +15,7 @@ export const useProjects = () => {
   };
 
   const { data: projects = [], isLoading } = useQuery({
-    queryKey: ["projects"],
+    queryKey: ["projectsV3_with_dates"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("projects")
@@ -28,106 +28,79 @@ export const useProjects = () => {
       return data.map((proj: Record<string, any>) => {
         const timeline: TimelineEventV2[] = [];
 
-        const createStage = <T extends { status: any }>(prefix: string): T => {
+        const createStage = <T extends { status: StageStatus }>(prefix: string): T => {
           const stage = {
-            status: proj[`${prefix}_status`] || 'todo',
-            responsible: proj[`${prefix}_responsible`] || '',
-            startDate: proj[`${prefix}_start_date`] ? new Date(proj[`${prefix}_start_date`]) : undefined,
-            endDate: proj[`${prefix}_end_date`] ? new Date(proj[`${prefix}_end_date`]) : undefined,
-            observations: proj[`${prefix}_observations`] || '',
+            status: (proj[`${prefix}_status`] as StageStatus) || 'todo',
+            responsible: (proj[`${prefix}_responsible`] as string) || '',
+            startDate: proj[`${prefix}_start_date`] ? new Date(proj[`${prefix}_start_date`] as string) : undefined,
+            endDate: proj[`${prefix}_end_date`] ? new Date(proj[`${prefix}_end_date`] as string) : undefined,
+            observations: (proj[`${prefix}_observations`] as string) || '',
             ...Object.keys(proj).reduce((acc, key) => {
               if (key.startsWith(prefix + '_') &&
-                !key.endsWith('_status') &&
-                !key.endsWith('_responsible') &&
-                !key.endsWith('_start_date') &&
-                !key.endsWith('_end_date') &&
-                !key.endsWith('_observations')) {
+                key !== `${prefix}_status` &&
+                key !== `${prefix}_responsible` &&
+                key !== `${prefix}_start_date` &&
+                key !== `${prefix}_end_date` &&
+                key !== `${prefix}_observations`) {
                 const propName = key.replace(prefix + '_', '').replace(/_([a-z])/g, (g) => g[1].toUpperCase());
                 acc[propName] = proj[key];
               }
               return acc;
-            }, {} as Record<string, any>)
+            }, {} as Record<string, unknown>)
           };
           return stage as unknown as T;
         };
 
         const tempProject: ProjectV2 = {
-          id: proj.id,
-          clientName: proj.client_name,
-          ticketNumber: proj.ticket_number,
-          systemType: proj.system_type,
-          projectLeader: proj.project_leader,
-          soldHours: proj.sold_hours,
-          opNumber: proj.op_number,
-          salesOrderNumber: proj.sales_order_number,
-          createdAt: new Date(proj.created_at),
-          lastUpdatedAt: new Date(proj.updated_at),
-          lastUpdatedBy: proj.last_update_by || "Sistema",
-          nextFollowUpDate: proj.next_follow_up_date ? new Date(proj.next_follow_up_date) : undefined,
-
-          // New fields defaults
-          projectType: proj.project_type || "new",
-          implantationType: proj.implantation_type || "new",
-          globalStatus: proj.global_status || "in-progress",
-          overallProgress: proj.overall_progress || 0,
-          isDeleted: proj.is_deleted || false,
-          isArchived: proj.is_archived || false,
-          healthScore: "ok", // Placeholder, calculated below
-          priority: proj.priority || "normal",
-          tags: proj.tags || [],
-
+          id: proj.id as string,
+          clientName: proj.client_name as string,
+          ticketNumber: proj.ticket_number as string,
+          systemType: proj.system_type as string,
+          implantationType: (proj.implantation_type as ProjectV2['implantationType']) || "new",
+          projectType: (proj.project_type as ProjectV2['projectType']) || "new",
+          opNumber: proj.op_number as number | undefined,
+          salesOrderNumber: proj.sales_order_number as number | undefined,
+          soldHours: proj.sold_hours as number | undefined,
+          legacySystem: proj.legacy_system as string | undefined,
+          specialty: proj.specialty as string | undefined,
+          products: (proj.products as string[]) || [],
+          healthScore: calculateHealthScore(proj as any),
+          globalStatus: (proj.global_status as ProjectV2['globalStatus']) || "in-progress",
+          overallProgress: (proj.overall_progress as number) || 0,
+          projectLeader: (proj.project_leader as string) || '',
+          clientPrimaryContact: (proj.client_primary_contact as string) || '',
+          clientEmail: proj.client_email as string,
+          clientPhone: proj.client_phone as string,
+          responsibleInfra: (proj.infra_responsible as string) || '',
+          responsibleAdherence: (proj.adherence_responsible as string) || '',
+          responsibleConversion: (proj.conversion_responsible as string) || '',
+          responsibleImplementation: (proj.implementation_responsible as string) || '',
+          responsiblePost: (proj.post_responsible as string) || '',
+          startDatePlanned: proj.start_date_planned ? new Date(proj.start_date_planned as string) : undefined,
+          endDatePlanned: proj.end_date_planned ? new Date(proj.end_date_planned as string) : undefined,
+          startDateActual: proj.start_date_actual ? new Date(proj.start_date_actual as string) : undefined,
+          endDateActual: proj.end_date_actual ? new Date(proj.end_date_actual as string) : undefined,
+          nextFollowUpDate: proj.next_follow_up_date ? new Date(proj.next_follow_up_date as string) : undefined,
+          createdAt: new Date(proj.created_at as string),
+          lastUpdatedAt: new Date(proj.updated_at as string),
+          lastUpdatedBy: (proj.last_update_by as string) || 'Sistema',
           stages: {
-            infra: {
-              ...createStage('infra'),
-              blockingReason: proj.infra_blocking_reason,
-              workstationsStatus: proj.infra_workstations_status,
-              serverStatus: proj.infra_server_status,
-              workstationsCount: proj.infra_workstations_count,
-            } as any,
-            adherence: {
-              ...createStage('adherence'),
-              hasProductGap: proj.adherence_has_product_gap || false,
-              gapDescription: proj.adherence_gap_description,
-              devTicket: proj.adherence_dev_ticket,
-              devEstimatedDate: proj.adherence_dev_estimated_date ? new Date(proj.adherence_dev_estimated_date) : undefined,
-              gapPriority: proj.adherence_gap_priority,
-              analysisComplete: proj.adherence_analysis_complete || false,
-              conformityStandards: proj.adherence_conformity_standards,
-            } as any,
-            environment: {
-              ...createStage('environment'),
-              realDate: proj.environment_real_date ? new Date(proj.environment_real_date) : undefined,
-              osVersion: proj.environment_os_version,
-              version: proj.environment_version,
-              approvedByInfra: proj.environment_approved_by_infra || false,
-              testAvailable: proj.environment_test_available || false,
-              preparationChecklist: proj.environment_preparation_checklist,
-            } as any,
-            conversion: {
-              ...createStage('conversion'),
-              homologationStatus: proj.conversion_homologation_status,
-              homologationResponsible: proj.conversion_homologation_responsible,
-              sentAt: proj.conversion_sent_at ? new Date(proj.conversion_sent_at) : undefined,
-              finishedAt: proj.conversion_finished_at ? new Date(proj.conversion_finished_at) : undefined,
-              complexity: proj.conversion_complexity,
-              dataVolumeGb: proj.conversion_data_volume_gb,
-              toolUsed: proj.conversion_tool_used,
-              homologationDate: proj.conversion_homologation_date ? new Date(proj.conversion_homologation_date) : undefined,
-              deviations: proj.conversion_deviations,
-            } as any,
-            modelosEditor: createStage('modelos_editor'),
-            implementation: {
-              ...createStage('implementation'),
-              phase1: proj.implementation_phase1 || {},
-              phase2: proj.implementation_phase2 || {},
-            } as any,
-            post: {
-              ...createStage('post'),
-              followupNeeded: proj.post_followup_needed || false,
-              followupDate: proj.post_followup_date ? new Date(proj.post_followup_date) : undefined,
-            } as any,
+            infra: createStage<InfraStageV2>('infra'),
+            adherence: createStage<AdherenceStageV2>('adherence'),
+            environment: createStage<EnvironmentStageV2>('environment'),
+            conversion: createStage<ConversionStageV2>('conversion'),
+            implementation: createStage<ImplementationStageV2>('implementation'),
+            modelosEditor: createStage<ModelosEditorStageV2>('modelos_editor'),
+            post: createStage<PostStageV2>('post'),
           },
-          timeline,
+          timeline: timeline || [],
+          auditLog: [],
+          notes: {} as any,
+          relatedTickets: (proj.related_tickets as { name: string; number: string }[]) || [],
+          tags: (proj.tags as string[]) || [],
+          priority: (proj.priority as ProjectV2['priority']) || "normal",
+          isDeleted: (proj.is_deleted as boolean) || false,
+          isArchived: (proj.is_archived as boolean) || false,
         };
 
         // Calculate health score
@@ -167,7 +140,7 @@ export const useProjects = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      queryClient.invalidateQueries({ queryKey: ["projectsV3_with_dates"] });
     },
   });
 
@@ -190,7 +163,7 @@ export const useProjects = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      queryClient.invalidateQueries({ queryKey: ["projectsV3_with_dates"] });
     },
   });
 
