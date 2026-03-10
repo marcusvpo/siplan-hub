@@ -1,4 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 import { Navigate, Outlet, Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,18 +10,20 @@ import {
   Menu,
   X,
   Palmtree,
+  Shield,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/hooks/use-theme";
 
 export default function AdminLayout() {
-  const { user, role, loading, signOut } = useAuth();
+  const { user, role, loading, permissionsLoaded, signOut } = useAuth();
+  const { canManageUsers } = usePermissions();
   const { theme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const location = useLocation();
 
-  if (loading) {
+  if (loading || !permissionsLoaded) {
     return (
       <div className="h-screen w-full flex items-center justify-center">
         Carregando...
@@ -28,13 +31,14 @@ export default function AdminLayout() {
     );
   }
 
-  if (!user || role !== "admin") {
-    return <Navigate to="/login" replace />;
+  if (!user || (!canManageUsers && role !== "admin")) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   const navItems = [
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/users", label: "Usuários", icon: Users },
+    { href: "/admin/roles", label: "Perfis de Acesso", icon: Shield },
     { href: "/admin/vacations", label: "Férias", icon: Palmtree },
     { href: "/admin/settings", label: "Configurações", icon: Settings },
   ];
@@ -104,12 +108,14 @@ export default function AdminLayout() {
 
           <div className="p-4 border-t">
             <div className="flex items-center gap-3 px-2 mb-4">
-              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
-                AD
+              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs uppercase">
+                {user.email?.substring(0, 2) || "U"}
               </div>
               <div className="flex-1 overflow-hidden">
                 <p className="text-sm font-medium truncate">{user.email}</p>
-                <p className="text-xs text-muted-foreground">Administrador</p>
+                <p className="text-xs text-muted-foreground capitalize">
+                  {role === "admin" ? "Administrador" : role === "user" ? "Usuário Padrão" : role || "Sem Papel"}
+                </p>
               </div>
             </div>
             <Button

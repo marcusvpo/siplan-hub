@@ -13,6 +13,7 @@ import {
   UserCog,
   LayoutGrid,
   ClipboardList,
+  Shield,
 } from "lucide-react";
 import UserManagement from "./UserManagement";
 import TeamConfiguration from "./TeamConfiguration";

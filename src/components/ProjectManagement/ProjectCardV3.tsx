@@ -26,6 +26,7 @@ import {
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { usePermissions } from "@/hooks/usePermissions";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   getStageReadiness,
@@ -52,6 +53,7 @@ export function ProjectCardV3({
   onSelect,
   engineStatus,
 }: ProjectCardV3Props) {
+  const { canDeleteProjects } = usePermissions();
   const isFollowUpOverdue =
     project.nextFollowUpDate && new Date(project.nextFollowUpDate) < new Date();
 
@@ -372,6 +374,7 @@ export function ProjectCardV3({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-32">
+            {canDeleteProjects && (
             <DropdownMenuItem
               onClick={(e) => {
                 e.stopPropagation();
@@ -381,6 +384,7 @@ export function ProjectCardV3({
             >
               Excluir
             </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
