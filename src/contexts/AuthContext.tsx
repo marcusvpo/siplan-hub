@@ -2,14 +2,16 @@ import React, { useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { AuthContext, UserRole } from "./AuthContextValue";
+import { AuthContext, UserRole, Permission } from "./AuthContextValue";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<UserRole>(null);
   const [team, setTeam] = useState<string | null>(null);
+  const [permissions, setPermissions] = useState<Permission[]>([]);
   const [loading, setLoading] = useState(true);
+  const [permissionsLoaded, setPermissionsLoaded] = useState(false);
   const { toast } = useToast();
 
   // Use ref to track loading state for the timeout callback
@@ -142,6 +144,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else {
           setRole(null);
           setTeam(null);
+          setPermissions([]);
           setLoading(false);
         }
       }
@@ -161,6 +164,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       subscription.unsubscribe();
     };
   }, []);
+
+  const fetchPermissions = async (roleName: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("app_roles")
+        .select(`
+          name,
+          app_role_permissions (
+            app_permissions (
+              resource,
+              action
+            )
+          )
+        `)
+        .eq("name", roleName)
+        .single();
+
+      if (error) {
+        console.error("Error fetching permissions:", error);
+        setPermissions([]);
+        return;
+      }
+
+      if (data && data.app_role_permissions) {
+        const perms: Permission[] = data.app_role_permissions
+          .map((rp: any) => rp.app_permissions as unknown as Permission)
+          .filter(Boolean);
+        setPermissions(perms);
+      } else {
+        setPermissions([]);
+      }
+    } catch (error) {
+      console.error("Exception fetching permissions:", error);
+      setPermissions([]);
+    } finally {
+      setPermissionsLoaded(true);
+    }
+  };
 
   const fetchUserRole = async (userId: string) => {
     try {
@@ -185,9 +226,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setRole("user");
       } else {
         setRole(data?.role as UserRole);
-        setTeam(data?.team || null);
-      }
-    } catch (error) {
+          setTeam(data?.team || null);
+          if (data?.role) {
+            // we intentionally wait for permissions to finish if we await fetchPermissions
+            await fetchPermissions(data.role as string);
+          } else {
+            setPermissions([]);
+            setPermissionsLoaded(true);
+          }
+        }
+      } catch (error) {
       // If timeout, try one more time
       if (error instanceof Error && error.message === "Role fetch timeout") {
         console.warn("Role fetch timed out. Retrying once...");
@@ -203,15 +251,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setRole("user");
           } else {
             setRole(data?.role as UserRole);
-            setTeam(data?.team || null);
-          }
-        } catch (retryErr) {
+              setTeam(data?.team || null);
+              if (data?.role) {
+                await fetchPermissions(data.role as string);
+              } else {
+                setPermissions([]);
+                setPermissionsLoaded(true);
+              }
+            }
+          } catch (retryErr) {
           console.error("Error in fetchUserRole (retry):", retryErr);
           setRole("user");
+          setPermissionsLoaded(true);
         }
       } else {
         console.error("Error in fetchUserRole:", error);
         setRole("user");
+        setPermissionsLoaded(true);
       }
     } finally {
       // Ensure loading is set to false regardless of outcome
@@ -236,6 +292,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       setRole(null);
       setTeam(null);
+      setPermissions([]);
 
       // Clear Supabase tokens from local storage
       Object.keys(localStorage).forEach((key) => {
@@ -246,14 +303,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const hasPermission = (resource: string, action: string) => {
+    if (role === "admin") return true; // Falback for superadmin
+    return permissions.some((p) => p.resource === resource && p.action === action);
+  };
+
   const value = {
     session,
     user,
     role,
     team,
+    permissions,
+    permissionsLoaded,
     loading,
     signOut,
     isAdmin: role === "admin",
+    hasPermission,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

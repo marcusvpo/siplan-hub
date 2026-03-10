@@ -40,13 +40,14 @@ interface Profile {
   id: string;
   email: string;
   full_name: string;
-  role: "admin" | "user";
+  role: string;
   team: string | null;
   created_at: string;
 }
 
 export default function UserManagement() {
   const [users, setUsers] = useState<Profile[]>([]);
+  const [roles, setRoles] = useState<{id: string, name: string}[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -58,7 +59,7 @@ export default function UserManagement() {
   const [newUserEmail, setNewUserEmail] = useState("");
   const [newUserPassword, setNewUserPassword] = useState("");
   const [newUserName, setNewUserName] = useState("");
-  const [newUserRole, setNewUserRole] = useState<"admin" | "user">("user");
+  const [newUserRole, setNewUserRole] = useState<string>("user");
   const [newUserTeam, setNewUserTeam] = useState<string>("");
 
   // Edit Form State
@@ -66,7 +67,7 @@ export default function UserManagement() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [editName, setEditName] = useState("");
-  const [editRole, setEditRole] = useState<"admin" | "user">("user");
+  const [editRole, setEditRole] = useState<string>("user");
   const [editTeam, setEditTeam] = useState<string>("");
 
   const fetchUsers = useCallback(async () => {
@@ -79,6 +80,15 @@ export default function UserManagement() {
 
       if (error) throw error;
       setUsers(data as Profile[]);
+
+      const { data: rolesData, error: rolesError } = await supabase
+        .from("app_roles")
+        .select("id, name")
+        .order("name");
+        
+      if (!rolesError && rolesData) {
+        setRoles(rolesData);
+      }
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : "Erro desconhecido";
@@ -339,16 +349,19 @@ export default function UserManagement() {
                   <Label htmlFor="role">Função</Label>
                   <Select
                     value={newUserRole}
-                    onValueChange={(val: "admin" | "user") =>
+                    onValueChange={(val: string) =>
                       setNewUserRole(val)
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue />
+                      <SelectValue placeholder="Selecione..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="user">Usuário Padrão</SelectItem>
-                      <SelectItem value="admin">Administrador</SelectItem>
+                      {roles.map(r => (
+                        <SelectItem key={r.id} value={r.name}>
+                          {r.name === 'admin' ? 'Administrador' : r.name === 'user' ? 'Usuário Padrão' : r.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -416,14 +429,17 @@ export default function UserManagement() {
                 <Label htmlFor="edit-role">Função</Label>
                 <Select
                   value={editRole}
-                  onValueChange={(val: "admin" | "user") => setEditRole(val)}
+                  onValueChange={(val: string) => setEditRole(val)}
                 >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="user">Usuário Padrão</SelectItem>
-                    <SelectItem value="admin">Administrador</SelectItem>
+                    {roles.map(r => (
+                      <SelectItem key={r.id} value={r.name}>
+                        {r.name === 'admin' ? 'Administrador' : r.name === 'user' ? 'Usuário Padrão' : r.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -507,7 +523,7 @@ export default function UserManagement() {
                     <Badge
                       variant={user.role === "admin" ? "default" : "secondary"}
                     >
-                      {user.role === "admin" ? "Administrador" : "Usuário"}
+                      {user.role === "admin" ? "Administrador" : user.role === "user" ? "Usuário Padrão" : user.role}
                     </Badge>
                   </TableCell>
                   <TableCell>

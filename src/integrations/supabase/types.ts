@@ -14,6 +14,56 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_roles: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: { id?: string; name: string; description?: string | null; created_at?: string; updated_at?: string }
+        Update: { id?: string; name?: string; description?: string | null; created_at?: string; updated_at?: string }
+        Relationships: []
+      },
+      app_permissions: {
+        Row: {
+          id: string
+          resource: string
+          action: string
+          description: string | null
+          created_at: string
+        }
+        Insert: { id?: string; resource: string; action: string; description?: string | null; created_at?: string }
+        Update: { id?: string; resource?: string; action?: string; description?: string | null; created_at?: string }
+        Relationships: []
+      },
+      app_role_permissions: {
+        Row: {
+          id: string
+          role_id: string
+          permission_id: string
+          created_at: string
+        }
+        Insert: { id?: string; role_id: string; permission_id: string; created_at?: string }
+        Update: { id?: string; role_id?: string; permission_id?: string; created_at?: string }
+        Relationships: [
+          {
+            foreignKeyName: "app_role_permissions_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "app_roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "app_role_permissions_permission_id_fkey"
+            columns: ["permission_id"]
+            isOneToOne: false
+            referencedRelation: "app_permissions"
+            referencedColumns: ["id"]
+          }
+        ]
+      },
       audit_logs: {
         Row: {
           action: string

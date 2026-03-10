@@ -64,6 +64,7 @@ const OrionTNDashboard = lazy(
 const AdminLayout = lazy(() => import("./layouts/AdminLayout"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const UserManagement = lazy(() => import("./pages/admin/UserManagement"));
+const RolesManagement = lazy(() => import("./pages/admin/RolesManagement"));
 const TeamManagement = lazy(() => import("./pages/admin/TeamManagement"));
 const TeamAreasManagement = lazy(
   () => import("./pages/admin/TeamAreasManagement"),
@@ -130,6 +131,14 @@ const App = () => (
                   element={
                     <Suspense fallback={<PageLoader />}>
                       <UserManagement />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="roles"
+                  element={
+                    <Suspense fallback={<PageLoader />}>
+                      <RolesManagement />
                     </Suspense>
                   }
                 />

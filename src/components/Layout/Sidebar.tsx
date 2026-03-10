@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/use-theme";
 import { useProjects } from "@/hooks/useProjects";
 import { Link, useLocation } from "react-router-dom";
+import { usePermissions } from "@/hooks/usePermissions";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -61,6 +62,13 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
     theme === "dark" ||
     (theme === "system" &&
       window.matchMedia("(prefers-color-scheme: dark)").matches);
+      
+  const { hasPermission } = usePermissions();
+  const canViewImplantacao = hasPermission("menu_implantacao", "view");
+  const canViewCalendario = hasPermission("menu_calendario", "view");
+  const canViewComercial = hasPermission("menu_comercial", "view");
+  const canViewConversao = hasPermission("menu_conversao", "view");
+  const canViewOrion = hasPermission("menu_orion", "view");
   const logoSrc = isDark
     ? "/assets/Siplan_logo_branco.png"
     : "/assets/Siplan_logo.png";
@@ -143,6 +151,7 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
         </div>
 
         {/* Implantação Group */}
+        {canViewImplantacao && (
         <div className="px-2">
           {!collapsed ? (
             <Collapsible
@@ -224,8 +233,10 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
               </Link>
           )}
         </div>
+        )}
 
         {/* Calendário Group */}
+        {canViewCalendario && (
         <div className="px-2">
           {!collapsed ? (
             <Collapsible
@@ -294,8 +305,10 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
             </Link>
           )}
         </div>
+        )}
 
         {/* Commercial Group */}
+        {canViewComercial && (
         <div className="px-2">
           {!collapsed ? (
             <Collapsible className="space-y-1">
@@ -373,8 +386,10 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
               </Link>
           )}
         </div>
+        )}
 
         {/* Conversão Group */}
+        {canViewConversao && (
         <div className="px-2">
           {!collapsed ? (
             <Collapsible className="space-y-1">
@@ -452,8 +467,10 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
             </Link>
           )}
         </div>
+        )}
 
         {/* OrionTN Models */}
+        {canViewOrion && (
         <div className="px-2">
           {!collapsed ? (
             <Collapsible
@@ -546,6 +563,7 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
             </Link>
           )}
         </div>
+        )}
       </div>
 
       <div className="p-2 border-t mt-auto space-y-1">
