@@ -11,6 +11,7 @@ import {
   X,
   Palmtree,
   Shield,
+  History,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -40,6 +41,7 @@ export default function AdminLayout() {
     { href: "/admin/users", label: "Usuários", icon: Users },
     { href: "/admin/roles", label: "Perfis de Acesso", icon: Shield },
     { href: "/admin/vacations", label: "Férias", icon: Palmtree },
+    { href: "/admin/audit", label: "Logs", icon: History },
     { href: "/admin/settings", label: "Configurações", icon: Settings },
   ];
 
