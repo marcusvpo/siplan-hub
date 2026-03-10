@@ -26,6 +26,7 @@ import {
   AlertCircle,
   FileText,
   LayoutGrid,
+  LayoutDashboard,
 } from "lucide-react";
 import {
   Collapsible,
@@ -425,6 +426,16 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                     <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-2">
                       Gestão
                     </span>
+                    <Link to="/orion-tn-models/dashboard">
+                      <Button
+                        variant={isActive("/orion-tn-models/dashboard") ? "secondary" : "ghost"}
+                        size="sm"
+                        className="w-full justify-start gap-3 h-9"
+                      >
+                        <LayoutDashboard className="h-4 w-4" />
+                        <span className="text-xs font-medium">Dashboard</span>
+                      </Button>
+                    </Link>
                     <Link to="/orion-tn-models/projects">
                       <Button
                         variant={isActive("/orion-tn-models/projects") ? "secondary" : "ghost"}
@@ -435,12 +446,29 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                         <span className="text-xs font-medium">Gerenciar Projetos</span>
                       </Button>
                     </Link>
+                    <Link to="/orion-tn-models">
+                      <Button
+                        variant={
+                          location.pathname === "/orion-tn-models" ||
+                          (location.pathname.startsWith("/orion-tn-models/") &&
+                            location.pathname !== "/orion-tn-models/dashboard" &&
+                            location.pathname !== "/orion-tn-models/projects")
+                            ? "secondary"
+                            : "ghost"
+                        }
+                        size="sm"
+                        className="w-full justify-start gap-3 h-9"
+                      >
+                        <FileText className="h-4 w-4" />
+                        <span className="text-xs font-medium">Editor de Modelos</span>
+                      </Button>
+                    </Link>
                   </div>
                 </div>
               </CollapsibleContent>
             </Collapsible>
           ) : (
-            <Link to="/orion-tn-models">
+            <Link to="/orion-tn-models/projects">
               <Button
                 variant={
                   location.pathname.startsWith("/orion-tn-models")
