@@ -54,16 +54,23 @@ export const menuItems: MenuItem[] = [
                 description: "Análise de dados e performance",
             },
             {
-                title: "Calendário",
-                path: "/calendar",
-                icon: Calendar,
-                description: "Cronograma de atividades e prazos",
-            },
-            {
                 title: "Próx. Implantações",
                 path: "/deployments",
                 icon: Rocket,
                 description: "Planejamento de futuras instalações",
+            },
+        ],
+    },
+    {
+        title: "Calendário",
+        icon: Calendar,
+        description: "Visão cronológica de atividades e prazos",
+        subItems: [
+            {
+                title: "Calendário de Projetos",
+                path: "/calendar",
+                icon: Calendar,
+                description: "Cronograma de atividades e prazos",
             },
         ],
     },
