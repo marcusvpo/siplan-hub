@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ProjectV2, RichContent, ContentBlock, StageStatus, InfraStageV2, AdherenceStageV2, EnvironmentStageV2, ConversionStageV2, ImplementationStageV2, PostStageV2, AuditEntry } from "@/types/ProjectV2";
+import { ProjectV2, RichContent, ContentBlock, StageStatus, InfraStageV2, AdherenceStageV2, EnvironmentStageV2, ConversionStageV2, ModelosEditorStageV2, ImplementationStageV2, PostStageV2, AuditEntry } from "@/types/ProjectV2";
 
 export const useProjectDetails = (projectId: string | null) => {
   const { data: project, isLoading, error } = useQuery({
@@ -41,12 +41,12 @@ function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
       endDate: row[`${prefix}_end_date`] ? new Date(row[`${prefix}_end_date`] as string) : undefined,
       observations: (row[`${prefix}_observations`] as string) || '',
       ...Object.keys(row).reduce((acc, key) => {
-        if (key.startsWith(prefix + '_') && 
-            !key.endsWith('_status') && 
-            !key.endsWith('_responsible') && 
-            !key.endsWith('_start_date') && 
-            !key.endsWith('_end_date') && 
-            !key.endsWith('_observations')) {
+        if (key.startsWith(prefix + '_') &&
+          !key.endsWith('_status') &&
+          !key.endsWith('_responsible') &&
+          !key.endsWith('_start_date') &&
+          !key.endsWith('_end_date') &&
+          !key.endsWith('_observations')) {
           const propName = key.replace(prefix + '_', '').replace(/_([a-z])/g, (g) => g[1].toUpperCase());
           acc[propName] = row[key];
         }
@@ -135,18 +135,19 @@ function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
         homologationResponsible: row.conversion_homologation_responsible as string | undefined,
         sentAt: row.conversion_sent_at ? new Date(row.conversion_sent_at as string) : undefined,
         finishedAt: row.conversion_finished_at ? new Date(row.conversion_finished_at as string) : undefined,
-        startDate: row.conversion_sent_at 
-          ? new Date(row.conversion_sent_at as string) 
+        startDate: row.conversion_sent_at
+          ? new Date(row.conversion_sent_at as string)
           : (row.conversion_start_date ? new Date(row.conversion_start_date as string) : undefined),
-        endDate: row.conversion_finished_at 
-          ? new Date(row.conversion_finished_at as string) 
+        endDate: row.conversion_finished_at
+          ? new Date(row.conversion_finished_at as string)
           : (row.conversion_end_date ? new Date(row.conversion_end_date as string) : undefined),
       },
       implementation: createStage<ImplementationStageV2>('implementation'),
+      modelosEditor: createStage<ModelosEditorStageV2>('modelos_editor'),
       post: createStage<PostStageV2>('post'),
     },
-    timeline: [], 
-    auditLog: auditLog, 
+    timeline: [],
+    auditLog: auditLog,
     notes: notes,
     relatedTickets: (row.related_tickets as { name: string; number: string }[]) || [],
     tags: (row.tags as string[]) || [],
