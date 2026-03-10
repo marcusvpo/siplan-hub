@@ -21,6 +21,7 @@ const Analytics = lazy(() => import("./pages/Analytics"));
 const CompareProjects = lazy(() => import("./pages/CompareProjects"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Calendar = lazy(() => import("./pages/Calendar"));
+const AgendaAnalistas = lazy(() => import("./pages/AgendaAnalistas"));
 const NextDeployments = lazy(() => import("./pages/NextDeployments"));
 const RoadmapPage = lazy(() => import("./pages/RoadmapPage"));
 const TeamConfiguration = lazy(() => import("./pages/admin/TeamConfiguration"));
@@ -178,6 +179,7 @@ const App = () => (
                           <Route path="/dashboard" element={<DashboardV2 />} />
                           <Route path="/projects" element={<Index />} />
                           <Route path="/calendar" element={<Calendar />} />
+                          <Route path="/agenda-analistas" element={<AgendaAnalistas />} />
                           <Route
                             path="/compare"
                             element={<CompareProjects />}
