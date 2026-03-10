@@ -10,6 +10,7 @@ import {
   Rocket,
   Power,
   Check,
+  FileEdit,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -25,7 +26,12 @@ export function GeneralInfoTab({ project, onUpdate }: TabProps) {
   // We use useProjectForm mainly for Autosave management of Notes here
   const { data, updateField, saveState } = useProjectForm(project, onUpdate);
 
-  const stages = [
+  const isOrionTN =
+    project.systemType === "Orion TN" ||
+    project.products?.includes("Orion TN") ||
+    project.products?.includes("OrionTN");
+
+  const baseStages = [
     {
       id: "infra",
       label: "Infraestrutura",
@@ -50,6 +56,16 @@ export function GeneralInfoTab({ project, onUpdate }: TabProps) {
       status: data.stages.environment.status,
       icon: Database,
     },
+  ];
+
+  const orionStages = isOrionTN ? [{
+    id: "modelosEditor",
+    label: "Modelos Editor",
+    status: data.stages.modelosEditor?.status || "todo",
+    icon: FileEdit,
+  }] : [];
+
+  const endStages = [
     {
       id: "implementation",
       label: "Implantação",
@@ -63,6 +79,8 @@ export function GeneralInfoTab({ project, onUpdate }: TabProps) {
       icon: Power,
     },
   ];
+
+  const stages = [...baseStages, ...orionStages, ...endStages];
 
   // Local state for editor content
   const [editorContent, setEditorContent] = useState<string | object>(() => {
@@ -166,7 +184,7 @@ export function GeneralInfoTab({ project, onUpdate }: TabProps) {
                     return acc;
                   }, 0) /
                     (stages.length - 1)) *
-                    100
+                  100
                 )
               )}%`,
             }}
@@ -190,12 +208,12 @@ export function GeneralInfoTab({ project, onUpdate }: TabProps) {
                     isDone
                       ? "bg-gradient-to-br from-emerald-500 to-emerald-600 border-emerald-400 text-white shadow-emerald-500/30 rotate-0"
                       : isWaitingAdjustment
-                      ? "bg-gradient-to-br from-orange-500 to-orange-600 border-orange-400 text-white shadow-orange-500/30 scale-105 -rotate-2 ring-4 ring-orange-500/20"
-                      : isBlocked
-                      ? "bg-gradient-to-br from-amber-500 to-amber-600 border-amber-400 text-white shadow-amber-500/30 scale-105"
-                      : isActive
-                      ? "bg-gradient-to-br from-blue-500 to-blue-600 border-blue-400 text-white shadow-blue-500/30 scale-110 -rotate-3 ring-4 ring-blue-500/20"
-                      : "bg-card border-border text-muted-foreground hover:border-primary/50 hover:text-primary"
+                        ? "bg-gradient-to-br from-orange-500 to-orange-600 border-orange-400 text-white shadow-orange-500/30 scale-105 -rotate-2 ring-4 ring-orange-500/20"
+                        : isBlocked
+                          ? "bg-gradient-to-br from-amber-500 to-amber-600 border-amber-400 text-white shadow-amber-500/30 scale-105"
+                          : isActive
+                            ? "bg-gradient-to-br from-blue-500 to-blue-600 border-blue-400 text-white shadow-blue-500/30 scale-110 -rotate-3 ring-4 ring-blue-500/20"
+                            : "bg-card border-border text-muted-foreground hover:border-primary/50 hover:text-primary"
                   )}
                 >
                   {isDone ? (
@@ -211,12 +229,12 @@ export function GeneralInfoTab({ project, onUpdate }: TabProps) {
                       isDone
                         ? "text-emerald-600 dark:text-emerald-400"
                         : isWaitingAdjustment
-                        ? "text-orange-600 dark:text-orange-400"
-                        : isBlocked
-                        ? "text-amber-600 dark:text-amber-400"
-                        : isActive
-                        ? "text-blue-600 dark:text-blue-400"
-                        : "text-muted-foreground"
+                          ? "text-orange-600 dark:text-orange-400"
+                          : isBlocked
+                            ? "text-amber-600 dark:text-amber-400"
+                            : isActive
+                              ? "text-blue-600 dark:text-blue-400"
+                              : "text-muted-foreground"
                     )}
                   >
                     {stage.label}

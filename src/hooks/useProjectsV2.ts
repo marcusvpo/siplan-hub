@@ -1,14 +1,15 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type {TablesInsert } from "@/integrations/supabase/types";
-import { 
-  ProjectV2, 
-  StageStatus, 
-  InfraStageV2, 
-  AdherenceStageV2, 
-  EnvironmentStageV2, 
-  ConversionStageV2, 
-  ImplementationStageV2, 
+import type { TablesInsert } from "@/integrations/supabase/types";
+import {
+  ProjectV2,
+  StageStatus,
+  InfraStageV2,
+  AdherenceStageV2,
+  EnvironmentStageV2,
+  ConversionStageV2,
+  ModelosEditorStageV2,
+  ImplementationStageV2,
   PostStageV2,
   RichContent,
   ContentBlock,
@@ -40,15 +41,15 @@ export const useProjectsV2 = () => {
       // Get current project state for comparison
       const currentProjects = queryClient.getQueryData<ProjectV2[]>(["projectsV3_with_dates"]);
       const currentProject = currentProjects?.find(p => p.id === projectId);
-      
+
       // Ensure the current user's name is recorded
       const updatesWithUser = {
         ...updates,
         lastUpdatedBy: getCurrentUserName(),
       };
-      
+
       const dbUpdates = transformToDB(updatesWithUser, currentProject);
-      
+
       console.log("--- DEBUG: Update Project Payload ---", JSON.stringify(dbUpdates, null, 2));
 
       const { error } = await supabase.from("projects").update(dbUpdates).eq("id", projectId);
@@ -60,100 +61,106 @@ export const useProjectsV2 = () => {
 
       // Generate specific log messages by comparing with current state
       const logMessages: string[] = [];
-      
+
       if (currentProject) {
         // Helper to check if a value changed
         const hasChanged = (newVal: unknown, oldVal: unknown) => {
-           if (newVal === undefined) return false; // Not updated
-           if (newVal === null && oldVal === null) return false;
-           // Simple equality check for primitives
-           if (newVal instanceof Date && oldVal instanceof Date) {
-             return newVal.getTime() !== oldVal.getTime();
-           }
-           return newVal !== oldVal;
+          if (newVal === undefined) return false; // Not updated
+          if (newVal === null && oldVal === null) return false;
+          // Simple equality check for primitives
+          if (newVal instanceof Date && oldVal instanceof Date) {
+            return newVal.getTime() !== oldVal.getTime();
+          }
+          return newVal !== oldVal;
         };
 
         // Stage Status Changes
         if (updates.stages?.infra?.status && hasChanged(updates.stages.infra.status, currentProject.stages.infra.status)) {
-            logMessages.push(`Status de Infraestrutura alterado para ${updates.stages.infra.status}`);
+          logMessages.push(`Status de Infraestrutura alterado para ${updates.stages.infra.status}`);
         }
         if (updates.stages?.adherence?.status && hasChanged(updates.stages.adherence.status, currentProject.stages.adherence.status)) {
-            logMessages.push(`Status de Aderência alterado para ${updates.stages.adherence.status}`);
+          logMessages.push(`Status de Aderência alterado para ${updates.stages.adherence.status}`);
         }
         if (updates.stages?.environment?.status && hasChanged(updates.stages.environment.status, currentProject.stages.environment.status)) {
-            logMessages.push(`Status de Ambiente alterado para ${updates.stages.environment.status}`);
+          logMessages.push(`Status de Ambiente alterado para ${updates.stages.environment.status}`);
         }
         if (updates.stages?.conversion?.status && hasChanged(updates.stages.conversion.status, currentProject.stages.conversion.status)) {
-            logMessages.push(`Status de Conversão alterado para ${updates.stages.conversion.status}`);
+          logMessages.push(`Status de Conversão alterado para ${updates.stages.conversion.status}`);
+        }
+        if (updates.stages?.modelosEditor?.status && currentProject.stages.modelosEditor && hasChanged(updates.stages.modelosEditor.status, currentProject.stages.modelosEditor.status)) {
+          logMessages.push(`Status de Modelos Editor alterado para ${updates.stages.modelosEditor.status}`);
         }
         if (updates.stages?.implementation?.status && hasChanged(updates.stages.implementation.status, currentProject.stages.implementation.status)) {
-            logMessages.push(`Status de Implantação alterado para ${updates.stages.implementation.status}`);
+          logMessages.push(`Status de Implantação alterado para ${updates.stages.implementation.status}`);
         }
         if (updates.stages?.post?.status && hasChanged(updates.stages.post.status, currentProject.stages.post.status)) {
-            logMessages.push(`Status de Pós-Implantação alterado para ${updates.stages.post.status}`);
+          logMessages.push(`Status de Pós-Implantação alterado para ${updates.stages.post.status}`);
         }
 
         // Responsibles
         if (updates.stages?.infra?.responsible && hasChanged(updates.stages.infra.responsible, currentProject.stages.infra.responsible)) {
-            logMessages.push(`Responsável de Infraestrutura definido como ${updates.stages.infra.responsible}`);
+          logMessages.push(`Responsável de Infraestrutura definido como ${updates.stages.infra.responsible}`);
         }
         if (updates.stages?.adherence?.responsible && hasChanged(updates.stages.adherence.responsible, currentProject.stages.adherence.responsible)) {
-            logMessages.push(`Responsável de Aderência definido como ${updates.stages.adherence.responsible}`);
+          logMessages.push(`Responsável de Aderência definido como ${updates.stages.adherence.responsible}`);
         }
         if (updates.stages?.environment?.responsible && hasChanged(updates.stages.environment.responsible, currentProject.stages.environment.responsible)) {
-            logMessages.push(`Responsável de Ambiente definido como ${updates.stages.environment.responsible}`);
+          logMessages.push(`Responsável de Ambiente definido como ${updates.stages.environment.responsible}`);
         }
         if (updates.stages?.conversion?.responsible && hasChanged(updates.stages.conversion.responsible, currentProject.stages.conversion.responsible)) {
-            logMessages.push(`Responsável de Conversão definido como ${updates.stages.conversion.responsible}`);
+          logMessages.push(`Responsável de Conversão definido como ${updates.stages.conversion.responsible}`);
+        }
+        if (updates.stages?.modelosEditor?.responsible && currentProject.stages.modelosEditor && hasChanged(updates.stages.modelosEditor.responsible, currentProject.stages.modelosEditor.responsible)) {
+          logMessages.push(`Responsável de Modelos Editor definido como ${updates.stages.modelosEditor.responsible}`);
         }
         if (updates.stages?.implementation?.responsible && hasChanged(updates.stages.implementation.responsible, currentProject.stages.implementation.responsible)) {
-            logMessages.push(`Responsável de Implantação definido como ${updates.stages.implementation.responsible}`);
+          logMessages.push(`Responsável de Implantação definido como ${updates.stages.implementation.responsible}`);
         }
         if (updates.stages?.post?.responsible && hasChanged(updates.stages.post.responsible, currentProject.stages.post.responsible)) {
-            logMessages.push(`Responsável de Pós-Implantação definido como ${updates.stages.post.responsible}`);
+          logMessages.push(`Responsável de Pós-Implantação definido como ${updates.stages.post.responsible}`);
         }
 
         // Dates (Example for Infra)
         if (updates.stages?.infra?.startDate && hasChanged(updates.stages.infra.startDate, currentProject.stages.infra.startDate)) {
-            logMessages.push("Data de início de Infraestrutura atualizada");
+          logMessages.push("Data de início de Infraestrutura atualizada");
         }
         if (updates.stages?.infra?.endDate && hasChanged(updates.stages.infra.endDate, currentProject.stages.infra.endDate)) {
-            logMessages.push("Data de fim de Infraestrutura atualizada");
+          logMessages.push("Data de fim de Infraestrutura atualizada");
         }
-        
+
         // Global Status
         if (updates.globalStatus && hasChanged(updates.globalStatus, currentProject.globalStatus)) {
-            logMessages.push(`Status Global alterado para ${updates.globalStatus}`);
+          logMessages.push(`Status Global alterado para ${updates.globalStatus}`);
         }
 
         // System & Products
         if (updates.systemType && hasChanged(updates.systemType, currentProject.systemType)) {
-            logMessages.push(`Sistema alterado para ${updates.systemType}`);
+          logMessages.push(`Sistema alterado para ${updates.systemType}`);
         }
-        
+
         if (updates.products) {
-           const oldProducts = currentProject.products || [];
-           const newProducts = updates.products;
-           // Simple array comparison
-           const isDifferent = newProducts.length !== oldProducts.length || 
-                               !newProducts.every(p => oldProducts.includes(p)) ||
-                               !oldProducts.every(p => newProducts.includes(p));
-           
-           if (isDifferent) {
-               logMessages.push(`Produtos atualizados para: ${newProducts.join(", ")}`);
-           }
+          const oldProducts = currentProject.products || [];
+          const newProducts = updates.products;
+          // Simple array comparison
+          const isDifferent = newProducts.length !== oldProducts.length ||
+            !newProducts.every(p => oldProducts.includes(p)) ||
+            !oldProducts.every(p => newProducts.includes(p));
+
+          if (isDifferent) {
+            logMessages.push(`Produtos atualizados para: ${newProducts.join(", ")}`);
+          }
         }
 
       } else {
         // Fallback if current project not found (shouldn't happen often)
         if (dbUpdates.infra_status) logMessages.push(`Status de Infraestrutura alterado para ${dbUpdates.infra_status}`);
         if (logMessages.length === 0 && Object.keys(dbUpdates).length > 1) {
-             logMessages.push("Projeto atualizado");
+          logMessages.push("Projeto atualizado");
         }
       }
-      
+
       if (logMessages.length === 0 && Object.keys(dbUpdates).length > 1 && !currentProject) {
-         logMessages.push("Projeto atualizado");
+        logMessages.push("Projeto atualizado");
       }
 
       // Return messages to be used in onSuccess
@@ -163,7 +170,7 @@ export const useProjectsV2 = () => {
       queryClient.invalidateQueries({ queryKey: ["projectsV3"] });
       queryClient.invalidateQueries({ queryKey: ["projectsList"] }); // Invalidate list
       queryClient.invalidateQueries({ queryKey: ["projectDetails", variables.projectId] }); // Invalidate specific detail
-      
+
       // Create a log entry for each message, or join them
       if (logMessages && logMessages.length > 0) {
         logMessages.forEach(msg => {
@@ -184,7 +191,7 @@ export const useProjectsV2 = () => {
         ...project,
         lastUpdatedBy: getCurrentUserName(),
       };
-      
+
       const dbProject = transformToDB(projectWithUser) as TablesInsert<"projects">;
       const { data, error } = await supabase
         .from("projects")
@@ -238,12 +245,12 @@ function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
       observations: (row[`${prefix}_observations`] as string) || '',
       // Spread other specific fields
       ...Object.keys(row).reduce((acc, key) => {
-        if (key.startsWith(prefix + '_') && 
-            !key.endsWith('_status') && 
-            !key.endsWith('_responsible') && 
-            !key.endsWith('_start_date') && 
-            !key.endsWith('_end_date') && 
-            !key.endsWith('_observations')) {
+        if (key.startsWith(prefix + '_') &&
+          !key.endsWith('_status') &&
+          !key.endsWith('_responsible') &&
+          !key.endsWith('_start_date') &&
+          !key.endsWith('_end_date') &&
+          !key.endsWith('_observations')) {
           // Convert snake_case to camelCase for the property name
           const propName = key.replace(prefix + '_', '').replace(/_([a-z])/g, (g) => g[1].toUpperCase());
           acc[propName] = row[key];
@@ -256,7 +263,7 @@ function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
 
   // Mock Rich Content if not present
   let notesData: { blocks: ContentBlock[], id?: string } | undefined;
-  
+
   if (typeof row.notes === 'string') {
     try {
       notesData = JSON.parse(row.notes);
@@ -281,7 +288,7 @@ function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
   // Map timeline events to AuditEntry
   // Timeline events are no longer fetched in the main query for performance
   // They should be fetched separately using useTimelineEvents hook when needed
-  const auditLog: AuditEntry[] = []; 
+  const auditLog: AuditEntry[] = [];
 
   return {
     id: row.id as string,
@@ -290,7 +297,7 @@ function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
     systemType: row.system_type as string,
     implantationType: (row.implantation_type as ProjectV2['implantationType']) || "new",
     projectType: (row.project_type as ProjectV2['projectType']) || "new",
-    
+
     // New fields
     opNumber: row.op_number as number | undefined,
     salesOrderNumber: row.sales_order_number as number | undefined,
@@ -298,11 +305,11 @@ function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
     legacySystem: row.legacy_system as string | undefined,
     specialty: row.specialty as string | undefined,
     products: (row.products as string[]) || [],
-    
+
     healthScore: calculateHealthScore(row),
     globalStatus: (row.global_status as ProjectV2['globalStatus']) || "in-progress",
     overallProgress: (row.overall_progress as number) || 0,
-    
+
     projectLeader: (row.project_leader as string) || '',
     clientPrimaryContact: (row.client_primary_contact as string) || '',
     clientEmail: row.client_email as string,
@@ -312,7 +319,7 @@ function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
     responsibleConversion: (row.conversion_responsible as string) || '',
     responsibleImplementation: (row.implementation_responsible as string) || '',
     responsiblePost: (row.post_responsible as string) || '',
-    
+
     startDatePlanned: row.start_date_planned ? new Date(row.start_date_planned as string) : undefined,
     endDatePlanned: row.end_date_planned ? new Date(row.end_date_planned as string) : undefined,
     startDateActual: row.start_date_actual ? new Date(row.start_date_actual as string) : undefined,
@@ -321,7 +328,7 @@ function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
     createdAt: new Date(row.created_at as string),
     lastUpdatedAt: new Date(row.updated_at as string),
     lastUpdatedBy: (row.last_update_by as string) || 'Sistema',
-    
+
     stages: {
       infra: {
         status: (row.infra_status as StageStatus) || 'todo',
@@ -364,11 +371,11 @@ function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
       conversion: {
         status: (row.conversion_status as StageStatus) || 'todo',
         responsible: (row.conversion_responsible as string) || undefined,
-        startDate: row.conversion_sent_at 
-          ? new Date(row.conversion_sent_at as string) 
+        startDate: row.conversion_sent_at
+          ? new Date(row.conversion_sent_at as string)
           : (row.conversion_start_date ? new Date(row.conversion_start_date as string) : undefined),
-        endDate: row.conversion_finished_at 
-          ? new Date(row.conversion_finished_at as string) 
+        endDate: row.conversion_finished_at
+          ? new Date(row.conversion_finished_at as string)
           : (row.conversion_end_date ? new Date(row.conversion_end_date as string) : undefined),
         observations: (row.conversion_observations as string) || undefined,
         homologationStatus: row.conversion_homologation_status as ConversionStageV2['homologationStatus'],
@@ -381,21 +388,22 @@ function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
         homologationDate: row.conversion_homologation_date ? new Date(row.conversion_homologation_date as string) : undefined,
         deviations: row.conversion_deviations as string | undefined,
       },
+      modelosEditor: createStage<ModelosEditorStageV2>('modelos_editor'),
       implementation: createStage<ImplementationStageV2>('implementation'),
       post: createStage<PostStageV2>('post'),
     },
-    
+
     timeline: [], // Fetch separately or include if joined
-    auditLog: auditLog, 
-    
+    auditLog: auditLog,
+
     notes: notes,
-    
+
     relatedTickets: (row.related_tickets as { name: string; number: string }[]) || [],
-    
+
     tags: (row.tags as string[]) || [],
     priority: (row.priority as ProjectV2['priority']) || "normal",
     customFields: (row.custom_fields as Record<string, unknown>) || {},
-    
+
     isDeleted: (row.is_deleted as boolean) || false,
     isArchived: (row.is_archived as boolean) || false,
   };
@@ -413,7 +421,7 @@ function transformToDB(project: Partial<ProjectV2>, currentProject?: ProjectV2):
   if (project.projectType) dbRow.project_type = project.projectType;
   if (project.globalStatus) dbRow.global_status = project.globalStatus;
   if (project.overallProgress !== undefined) dbRow.overall_progress = project.overallProgress;
-  
+
   // New fields
   if (project.opNumber) dbRow.op_number = project.opNumber;
   if (project.salesOrderNumber) dbRow.sales_order_number = project.salesOrderNumber;
@@ -431,47 +439,47 @@ function transformToDB(project: Partial<ProjectV2>, currentProject?: ProjectV2):
   if (project.responsibleConversion) dbRow.conversion_responsible = project.responsibleConversion;
   if (project.responsibleImplementation) dbRow.implementation_responsible = project.responsibleImplementation;
   if (project.responsiblePost) dbRow.post_responsible = project.responsiblePost;
-  
+
   if (project.startDatePlanned) dbRow.start_date_planned = project.startDatePlanned;
   if (project.endDatePlanned) dbRow.end_date_planned = project.endDatePlanned;
   if (project.startDateActual) dbRow.start_date_actual = project.startDateActual;
   if (project.endDateActual) dbRow.end_date_actual = project.endDateActual;
   if (project.nextFollowUpDate) dbRow.next_follow_up_date = project.nextFollowUpDate;
-  
+
   if (project.tags) dbRow.tags = project.tags;
   if (project.priority) dbRow.priority = project.priority;
   if (project.customFields) dbRow.custom_fields = project.customFields;
-  
+
   if (project.isDeleted !== undefined) dbRow.is_deleted = project.isDeleted;
   if (project.isArchived !== undefined) dbRow.is_archived = project.isArchived;
 
   // Stages flattening
   if (project.stages) {
     const stages = project.stages;
-    
+
     // Infra
     if (stages.infra) {
       const s = stages.infra;
       const oldStatus = currentProject?.stages?.infra?.status;
       const newStatus = s.status;
-      
+
       dbRow.infra_status = s.status;
       dbRow.infra_responsible = s.responsible;
-      
+
       // Auto-fill startDate if changing to in-progress and no startDate exists
       if (newStatus === 'in-progress' && oldStatus !== 'in-progress' && !s.startDate) {
         dbRow.infra_start_date = new Date().toISOString();
       } else {
         dbRow.infra_start_date = s.startDate || null;
       }
-      
+
       // Auto-fill endDate if changing to done and no endDate exists
       if (newStatus === 'done' && oldStatus !== 'done' && !s.endDate) {
         dbRow.infra_end_date = new Date().toISOString();
       } else {
         dbRow.infra_end_date = s.endDate || null;
       }
-      
+
       dbRow.infra_observations = s.observations;
       dbRow.infra_technical_notes = s.technicalNotes;
       dbRow.infra_workstations_status = s.workstationsStatus;
@@ -484,23 +492,23 @@ function transformToDB(project: Partial<ProjectV2>, currentProject?: ProjectV2):
       const s = stages.adherence;
       const oldStatus = currentProject?.stages?.adherence?.status;
       const newStatus = s.status;
-      
+
       dbRow.adherence_status = s.status;
       dbRow.adherence_responsible = s.responsible;
-      
+
       // Auto-fill dates
       if (newStatus === 'in-progress' && oldStatus !== 'in-progress' && !s.startDate) {
         dbRow.adherence_start_date = new Date().toISOString();
       } else {
         dbRow.adherence_start_date = s.startDate || null;
       }
-      
+
       if (newStatus === 'done' && oldStatus !== 'done' && !s.endDate) {
         dbRow.adherence_end_date = new Date().toISOString();
       } else {
         dbRow.adherence_end_date = s.endDate || null;
       }
-      
+
       dbRow.adherence_observations = s.observations;
       dbRow.adherence_has_product_gap = s.hasProductGap;
       dbRow.adherence_gap_description = s.gapDescription;
@@ -516,23 +524,23 @@ function transformToDB(project: Partial<ProjectV2>, currentProject?: ProjectV2):
       const s = stages.environment;
       const oldStatus = currentProject?.stages?.environment?.status;
       const newStatus = s.status;
-      
+
       dbRow.environment_status = s.status;
       dbRow.environment_responsible = s.responsible;
-      
+
       // Auto-fill dates
       if (newStatus === 'in-progress' && oldStatus !== 'in-progress' && !s.startDate) {
         dbRow.environment_start_date = new Date().toISOString();
       } else {
         dbRow.environment_start_date = s.startDate || null;
       }
-      
+
       if (newStatus === 'done' && oldStatus !== 'done' && !s.endDate) {
         dbRow.environment_end_date = new Date().toISOString();
       } else {
         dbRow.environment_end_date = s.endDate || null;
       }
-      
+
       dbRow.environment_real_date = s.realDate || null;
       dbRow.environment_observations = s.observations;
       dbRow.environment_os_version = s.osVersion;
@@ -553,12 +561,12 @@ function transformToDB(project: Partial<ProjectV2>, currentProject?: ProjectV2):
       dbRow.conversion_tool_used = s.toolUsed;
       dbRow.conversion_homologation_date = s.homologationDate || null;
       dbRow.conversion_deviations = s.deviations;
-      
+
       // New Conversion Fields
       dbRow.conversion_homologation_status = s.homologationStatus;
       dbRow.conversion_homologation_responsible = s.homologationResponsible;
-      dbRow.conversion_sent_at = s.startDate || s.sentAt || null; 
-      dbRow.conversion_finished_at = s.endDate || s.finishedAt || null; 
+      dbRow.conversion_sent_at = s.startDate || s.sentAt || null;
+      dbRow.conversion_finished_at = s.endDate || s.finishedAt || null;
     }
 
     // Implementation
@@ -566,26 +574,56 @@ function transformToDB(project: Partial<ProjectV2>, currentProject?: ProjectV2):
       const s = stages.implementation;
       const oldStatus = currentProject?.stages?.implementation?.status;
       const newStatus = s.status;
-      
+
       dbRow.implementation_status = s.status;
       dbRow.implementation_responsible = s.responsible;
-      
+
       // Auto-fill dates
       if (newStatus === 'in-progress' && oldStatus !== 'in-progress' && !s.startDate) {
         dbRow.implementation_start_date = new Date().toISOString();
       } else {
         dbRow.implementation_start_date = s.startDate || null;
       }
-      
+
       if (newStatus === 'done' && oldStatus !== 'done' && !s.endDate) {
         dbRow.implementation_end_date = new Date().toISOString();
       } else {
         dbRow.implementation_end_date = s.endDate || null;
       }
-      
+
       dbRow.implementation_observations = s.observations;
       dbRow.implementation_phase1 = s.phase1;
       dbRow.implementation_phase2 = s.phase2;
+    }
+
+    // Modelos Editor
+    if (stages.modelosEditor) {
+      const s = stages.modelosEditor;
+      const oldStatus = currentProject?.stages?.modelosEditor?.status;
+      const newStatus = s.status;
+
+      dbRow.modelos_editor_status = s.status;
+      dbRow.modelos_editor_responsible = s.responsible;
+
+      if (newStatus === 'in-progress' && oldStatus !== 'in-progress' && !s.startDate) {
+        dbRow.modelos_editor_start_date = new Date().toISOString();
+      } else {
+        dbRow.modelos_editor_start_date = s.startDate || null;
+      }
+
+      if (newStatus === 'done' && oldStatus !== 'done' && !s.endDate) {
+        dbRow.modelos_editor_end_date = new Date().toISOString();
+      } else {
+        dbRow.modelos_editor_end_date = s.endDate || null;
+      }
+
+      dbRow.modelos_editor_observations = s.observations;
+      if (s.sentFiles !== undefined) {
+        dbRow.modelos_editor_sent_files = s.sentFiles;
+      }
+      if (s.availableFiles !== undefined) {
+        dbRow.modelos_editor_available_files = s.availableFiles;
+      }
     }
 
     // Post
@@ -593,23 +631,23 @@ function transformToDB(project: Partial<ProjectV2>, currentProject?: ProjectV2):
       const s = stages.post;
       const oldStatus = currentProject?.stages?.post?.status;
       const newStatus = s.status;
-      
+
       dbRow.post_status = s.status;
       dbRow.post_responsible = s.responsible;
-      
+
       // Auto-fill dates
       if (newStatus === 'in-progress' && oldStatus !== 'in-progress' && !s.startDate) {
         dbRow.post_start_date = new Date().toISOString();
       } else {
         dbRow.post_start_date = s.startDate || null;
       }
-      
+
       if (newStatus === 'done' && oldStatus !== 'done' && !s.endDate) {
         dbRow.post_end_date = new Date().toISOString();
       } else {
         dbRow.post_end_date = s.endDate || null;
       }
-      
+
       dbRow.post_observations = s.observations;
       dbRow.post_support_period_days = s.supportPeriodDays || null;
       dbRow.post_support_end_date = s.supportEndDate || null;

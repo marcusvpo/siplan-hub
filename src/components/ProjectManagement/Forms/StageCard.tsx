@@ -39,6 +39,9 @@ interface StageCardProps {
   // Predictability features
   isReadyToStart?: boolean;
   readinessReason?: string;
+
+  // Custom injections
+  extraHeaderField?: React.ReactNode;
 }
 
 export function StageCard({
@@ -56,6 +59,7 @@ export function StageCard({
   hideResponsible = false,
   isReadyToStart = false,
   readinessReason = "",
+  extraHeaderField,
 }: StageCardProps) {
   const getStatusColor = (s: StageStatus) => {
     switch (s) {
@@ -105,42 +109,42 @@ export function StageCard({
   const statusOptions =
     id === "adherence" || id === "conversion"
       ? [
-          { value: "todo", label: "Não Iniciado", color: "text-slate-600" },
-          {
-            value: "in-progress",
-            label: id === "adherence" ? "Em Análise" : "Em Andamento",
-            color: "text-blue-600",
-          },
-          {
-            value: "done",
-            label: id === "adherence" ? "Adequado" : "Finalizado",
-            color: "text-emerald-600",
-          },
-          {
-            value: "blocked",
-            label: id === "adherence" ? "Inadequado" : "Bloqueado",
-            color: "text-amber-600",
-          },
-          ...(id === "adherence"
-            ? [
-                {
-                  value: "waiting_adjustment",
-                  label: "Em Adequação",
-                  color: "text-orange-600",
-                },
-              ]
-            : []),
-        ]
+        { value: "todo", label: "Não Iniciado", color: "text-slate-600" },
+        {
+          value: "in-progress",
+          label: id === "adherence" ? "Em Análise" : "Em Andamento",
+          color: "text-blue-600",
+        },
+        {
+          value: "done",
+          label: id === "adherence" ? "Adequado" : "Finalizado",
+          color: "text-emerald-600",
+        },
+        {
+          value: "blocked",
+          label: id === "adherence" ? "Inadequado" : "Bloqueado",
+          color: "text-amber-600",
+        },
+        ...(id === "adherence"
+          ? [
+            {
+              value: "waiting_adjustment",
+              label: "Em Adequação",
+              color: "text-orange-600",
+            },
+          ]
+          : []),
+      ]
       : [
-          { value: "todo", label: "Não Iniciado", color: "text-slate-600" },
-          {
-            value: "in-progress",
-            label: "Em Andamento",
-            color: "text-blue-600",
-          },
-          { value: "done", label: "Finalizado", color: "text-emerald-600" },
-          { value: "blocked", label: "Bloqueado", color: "text-amber-600" },
-        ];
+        { value: "todo", label: "Não Iniciado", color: "text-slate-600" },
+        {
+          value: "in-progress",
+          label: "Em Andamento",
+          color: "text-blue-600",
+        },
+        { value: "done", label: "Finalizado", color: "text-emerald-600" },
+        { value: "blocked", label: "Bloqueado", color: "text-amber-600" },
+      ];
 
   // Helper for Rich Text
   const getEditorContent = (obs?: string) => {
@@ -163,8 +167,8 @@ export function StageCard({
         getStatusBorderColor(status),
         // Add glow effect if ready to start
         isReadyToStart &&
-          status === "todo" &&
-          "animate-glow-green border-emerald-500",
+        status === "todo" &&
+        "animate-glow-green border-emerald-500",
       )}
     >
       <AccordionTrigger className="hover:no-underline py-5 px-5">
@@ -250,15 +254,15 @@ export function StageCard({
                 className={cn(
                   "h-11 font-medium border-2 transition-all duration-200",
                   status === "done" &&
-                    "bg-emerald-50 text-emerald-900 border-emerald-300 hover:border-emerald-400",
+                  "bg-emerald-50 text-emerald-900 border-emerald-300 hover:border-emerald-400",
                   status === "in-progress" &&
-                    "bg-blue-50 text-blue-900 border-blue-300 hover:border-blue-400",
+                  "bg-blue-50 text-blue-900 border-blue-300 hover:border-blue-400",
                   status === "blocked" &&
-                    "bg-amber-50 text-amber-900 border-amber-300 hover:border-amber-400",
+                  "bg-amber-50 text-amber-900 border-amber-300 hover:border-amber-400",
                   status === "waiting_adjustment" &&
-                    "bg-orange-50 text-orange-900 border-orange-300 hover:border-orange-400",
+                  "bg-orange-50 text-orange-900 border-orange-300 hover:border-orange-400",
                   status === "todo" &&
-                    "bg-slate-50 text-slate-900 border-slate-300 hover:border-slate-400",
+                  "bg-slate-50 text-slate-900 border-slate-300 hover:border-slate-400",
                 )}
               >
                 <SelectValue />
@@ -359,6 +363,13 @@ export function StageCard({
                 }
                 className="h-11 border-2 border-rose-200 hover:border-rose-300 focus:border-rose-400 bg-rose-50/50 font-medium"
               />
+            </div>
+          )}
+
+          {/* Extra Custom Component for Grid */}
+          {extraHeaderField && (
+            <div className="space-y-2.5">
+              {extraHeaderField}
             </div>
           )}
         </div>
