@@ -40,13 +40,15 @@ function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
       startDate: row[`${prefix}_start_date`] ? new Date(row[`${prefix}_start_date`] as string) : undefined,
       endDate: row[`${prefix}_end_date`] ? new Date(row[`${prefix}_end_date`] as string) : undefined,
       observations: (row[`${prefix}_observations`] as string) || '',
+      // Spread other specific fields
       ...Object.keys(row).reduce((acc, key) => {
         if (key.startsWith(prefix + '_') &&
-          key !== `${prefix}_status` &&
-          key !== `${prefix}_responsible` &&
-          key !== `${prefix}_start_date` &&
-          key !== `${prefix}_end_date` &&
-          key !== `${prefix}_observations`) {
+          !key.endsWith('_status') &&
+          !key.endsWith('_responsible') &&
+          !key.endsWith('_start_date') &&
+          !key.endsWith('_end_date') &&
+          !key.endsWith('_observations')) {
+          // Convert snake_case to camelCase for the property name
           const propName = key.replace(prefix + '_', '').replace(/_([a-z])/g, (g) => g[1].toUpperCase());
           acc[propName] = row[key];
         }
