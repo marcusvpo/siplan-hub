@@ -206,20 +206,22 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
               </CollapsibleContent>
             </Collapsible>
           ) : (
-            <Button
-              variant={
-                isActive("/projects") ||
-                  isActive("/reports") ||
-                  isActive("/deployments")
-                  ? "secondary"
-                  : "ghost"
-              }
-              className="w-full justify-center px-0"
-              title="Implantação"
-              onClick={() => setCollapsed(false)}
-            >
-              <Layers className="h-5 w-5" />
-            </Button>
+              <Link to="/projects">
+                <Button
+                  variant={
+                    isActive("/projects") ||
+                      isActive("/reports") ||
+                      isActive("/deployments")
+                      ? "secondary"
+                      : "ghost"
+                  }
+                  className="w-full justify-center px-0"
+                  title="Implantação (Gerenciar Projetos)"
+                  onClick={() => setIsImplantacaoOpen(true)}
+                >
+                  <Layers className="h-5 w-5" />
+                </Button>
+              </Link>
           )}
         </div>
 
