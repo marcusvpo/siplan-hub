@@ -119,7 +119,7 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
               )}
               title="Início"
             >
-              <LayoutGrid className="h-5 w-5" />
+              <Home className="h-5 w-5" />
               {!collapsed && <span>Início</span>}
             </Button>
           </Link>
@@ -136,7 +136,7 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
               )}
               title="Dashboard"
             >
-              <Home className="h-5 w-5" />
+              <LayoutGrid className="h-5 w-5" />
               {!collapsed && <span>Dashboard</span>}
             </Button>
           </Link>

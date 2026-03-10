@@ -14,6 +14,7 @@ import {
     Cog,
     FolderClosed,
     FileEdit,
+    LayoutGrid,
 } from "lucide-react";
 
 export interface MenuItem {
@@ -32,7 +33,7 @@ export interface MenuItem {
 export const menuItems: MenuItem[] = [
     {
         title: "Dashboard",
-        icon: Home,
+        icon: LayoutGrid,
         path: "/dashboard",
         description: "Visão geral e indicadores principais",
     },
