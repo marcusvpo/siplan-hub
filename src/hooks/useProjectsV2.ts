@@ -460,13 +460,13 @@ function transformToDB(project: Partial<ProjectV2>, currentProject?: ProjectV2):
       if (newStatus === 'in-progress' && oldStatus !== 'in-progress' && !s.startDate) {
         dbRow.adherence_start_date = new Date().toISOString();
       } else {
-        dbRow.adherence_start_date = s.startDate || null;
+        dbRow.adherence_start_date = s.startDate ? new Date(s.startDate).toISOString() : null;
       }
 
       if (newStatus === 'done' && oldStatus !== 'done' && !s.endDate) {
         dbRow.adherence_end_date = new Date().toISOString();
       } else {
-        dbRow.adherence_end_date = s.endDate || null;
+        dbRow.adherence_end_date = s.endDate ? new Date(s.endDate).toISOString() : null;
       }
 
       dbRow.adherence_observations = s.observations;
@@ -492,16 +492,16 @@ function transformToDB(project: Partial<ProjectV2>, currentProject?: ProjectV2):
       if (newStatus === 'in-progress' && oldStatus !== 'in-progress' && !s.startDate) {
         dbRow.environment_start_date = new Date().toISOString();
       } else {
-        dbRow.environment_start_date = s.startDate || null;
+        dbRow.environment_start_date = s.startDate ? new Date(s.startDate).toISOString() : null;
       }
 
       if (newStatus === 'done' && oldStatus !== 'done' && !s.endDate) {
         dbRow.environment_end_date = new Date().toISOString();
       } else {
-        dbRow.environment_end_date = s.endDate || null;
+        dbRow.environment_end_date = s.endDate ? new Date(s.endDate).toISOString() : null;
       }
 
-      dbRow.environment_real_date = s.realDate || null;
+      dbRow.environment_real_date = s.realDate ? new Date(s.realDate).toISOString() : null;
       dbRow.environment_observations = s.observations;
       dbRow.environment_os_version = s.osVersion;
       dbRow.environment_version = s.version;
@@ -542,13 +542,13 @@ function transformToDB(project: Partial<ProjectV2>, currentProject?: ProjectV2):
       if (newStatus === 'in-progress' && oldStatus !== 'in-progress' && !s.startDate) {
         dbRow.implementation_start_date = new Date().toISOString();
       } else {
-        dbRow.implementation_start_date = s.startDate || null;
+        dbRow.implementation_start_date = s.startDate ? new Date(s.startDate).toISOString() : null;
       }
 
       if (newStatus === 'done' && oldStatus !== 'done' && !s.endDate) {
         dbRow.implementation_end_date = new Date().toISOString();
       } else {
-        dbRow.implementation_end_date = s.endDate || null;
+        dbRow.implementation_end_date = s.endDate ? new Date(s.endDate).toISOString() : null;
       }
 
       dbRow.implementation_observations = s.observations;
@@ -578,6 +578,8 @@ function transformToDB(project: Partial<ProjectV2>, currentProject?: ProjectV2):
       }
 
       dbRow.modelos_editor_observations = s.observations;
+
+      // Ensure specific file fields are handled for JSONB
       if (s.sentFiles !== undefined) {
         dbRow.modelos_editor_sent_files = s.sentFiles;
       }
@@ -599,13 +601,13 @@ function transformToDB(project: Partial<ProjectV2>, currentProject?: ProjectV2):
       if (newStatus === 'in-progress' && oldStatus !== 'in-progress' && !s.startDate) {
         dbRow.post_start_date = new Date().toISOString();
       } else {
-        dbRow.post_start_date = s.startDate || null;
+        dbRow.post_start_date = s.startDate ? new Date(s.startDate).toISOString() : null;
       }
 
       if (newStatus === 'done' && oldStatus !== 'done' && !s.endDate) {
         dbRow.post_end_date = new Date().toISOString();
       } else {
-        dbRow.post_end_date = s.endDate || null;
+        dbRow.post_end_date = s.endDate ? new Date(s.endDate).toISOString() : null;
       }
 
       dbRow.post_observations = s.observations;
