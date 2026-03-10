@@ -1157,7 +1157,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
               </div>
             )}
             {s.sentFiles && s.sentFiles.length > 0 && (
-              <div className="space-y-2">
+              <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-indigo-200 scrollbar-track-transparent hover:scrollbar-thumb-indigo-300 transition-colors">
                 {s.sentFiles.map(file => renderFileRow(file, 'sent', s.sentFiles!))}
               </div>
             )}
@@ -1195,7 +1195,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
               </div>
             )}
             {s.availableFiles && s.availableFiles.length > 0 && (
-              <div className="space-y-2">
+              <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-emerald-200 scrollbar-track-transparent hover:scrollbar-thumb-emerald-300 transition-colors">
                 {s.availableFiles.map(file => renderFileRow(file, 'available', s.availableFiles!))}
               </div>
             )}

@@ -6,18 +6,19 @@
   :root {
     /* Base: Slate (Zinc-like precision) */
     --background: 0 0% 100%;
-    --foreground: 222 47% 11%; /* Slate 900 */
+    --foreground: 222 47% 11%;
+    /* Slate 900 */
 
     /* Cards - White with subtle separation */
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
-    
+
     /* Popovers - crisp white */
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
     /* Primary: Refined Crimson/Red (High Trust, Premium) */
-    --primary: 346 84% 45%; 
+    --primary: 346 84% 45%;
     --primary-foreground: 0 0% 100%;
     --primary-light: 346 84% 96%;
 
@@ -27,7 +28,8 @@
 
     /* Muted: Slate 100/200 mix for less emphasis */
     --muted: 210 40% 96.1%;
-    --muted-foreground: 215 16% 47%; /* Slate 500 */
+    --muted-foreground: 215 16% 47%;
+    /* Slate 500 */
 
     /* Accent: Interactive hover states */
     --accent: 210 40% 96.1%;
@@ -40,7 +42,7 @@
     /* Semantic Status Colors */
     --success: 142 72% 29%;
     --success-foreground: 0 0% 100%;
-    
+
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
@@ -50,16 +52,19 @@
     /* Borders & Inputs: Slate 200 - Crisp, barely there */
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 346 84% 45%; /* Matches primary */
+    --ring: 346 84% 45%;
+    /* Matches primary */
 
-    --radius: 0.5rem; /* 8px - Precision standard */
+    --radius: 0.5rem;
+    /* 8px - Precision standard */
 
     /* Sidebar - Slight off-white or white with border */
-    --sidebar-background: 210 40% 98%; 
+    --sidebar-background: 210 40% 98%;
     --sidebar-foreground: 215 16% 47%;
     --sidebar-primary: 346 84% 45%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 40% 93%; /* Slightly darker than bg */
+    --sidebar-accent: 210 40% 93%;
+    /* Slightly darker than bg */
     --sidebar-accent-foreground: 222 47% 11%;
     --sidebar-border: 214.3 31.8% 91.4%;
     --sidebar-ring: 346 84% 45%;
@@ -74,21 +79,24 @@
 
   .dark {
     /* Dark Mode: Deep Slate/Navy feel - NOT Just Black */
-    --background: 222 47% 4%; /* Very deep slate */
+    --background: 222 47% 4%;
+    /* Very deep slate */
     --foreground: 210 40% 98%;
 
-    --card: 222 47% 6%; /* Slightly lighter than bg */
+    --card: 222 47% 6%;
+    /* Slightly lighter than bg */
     --card-foreground: 210 40% 98%;
 
     --popover: 222 47% 6%;
     --popover-foreground: 210 40% 98%;
 
     /* Primary stays vibrant but readable */
-    --primary: 346 84% 55%; 
+    --primary: 346 84% 55%;
     --primary-foreground: 0 0% 100%;
     --primary-light: 346 84% 20%;
 
-    --secondary: 217 32% 12%; /* Dark slate */
+    --secondary: 217 32% 12%;
+    /* Dark slate */
     --secondary-foreground: 210 40% 98%;
 
     --muted: 217 32% 12%;
@@ -110,11 +118,13 @@
     --critical-foreground: 0 0% 100%;
 
     /* Borders move to darker slates */
-    --border: 217 32% 12%; /* Subtle integration */
+    --border: 217 32% 12%;
+    /* Subtle integration */
     --input: 217 32% 12%;
     --ring: 346 84% 55%;
 
-    --sidebar-background: 222 47% 4%; /* Matches bg for seamless look */
+    --sidebar-background: 222 47% 4%;
+    /* Matches bg for seamless look */
     --sidebar-foreground: 215 20% 65%;
     --sidebar-primary: 346 84% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
@@ -135,22 +145,31 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary transition-colors duration-300 ease-in-out;
-    font-feature-settings: "ss01", "ss02", "cv01", "cv02"; /* Technical font features if available */
+    font-feature-settings: "ss01", "ss02", "cv01", "cv02";
+    /* Technical font features if available */
   }
-  
+
   /* Precision Headers */
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply tracking-tight font-semibold text-foreground;
   }
 }
 
 @layer utilities {
+
   /* Subtle box shadow utility for "Precision" look */
   .shadow-subtle {
     box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   }
+
   .shadow-layered {
     box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   }
@@ -160,9 +179,11 @@
     0% {
       box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7);
     }
+
     50% {
       box-shadow: 0 0 0 8px rgba(220, 38, 38, 0);
     }
+
     100% {
       box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
     }
@@ -174,9 +195,12 @@
 
   /* Glow effect for ready stage cards */
   @keyframes glow-green {
-    0%, 100% {
+
+    0%,
+    100% {
       box-shadow: 0 0 20px rgba(34, 197, 94, 0.3), 0 0 40px rgba(34, 197, 94, 0.1);
     }
+
     50% {
       box-shadow: 0 0 30px rgba(34, 197, 94, 0.5), 0 0 60px rgba(34, 197, 94, 0.2);
     }
@@ -187,13 +211,46 @@
   }
 
   @keyframes gradient-flow {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+    0% {
+      background-position: 0% 50%;
+    }
+
+    50% {
+      background-position: 100% 50%;
+    }
+
+    100% {
+      background-position: 0% 50%;
+    }
   }
 
   .animate-gradient-slow {
     background-size: 200% 200%;
     animation: gradient-flow 15s ease infinite;
+  }
+
+  /* Custom Scrollbar Utilities */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .scrollbar-track-transparent::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thumb-indigo-200::-webkit-scrollbar-thumb {
+    @apply bg-indigo-200 rounded-full border-2 border-transparent bg-clip-padding;
+  }
+
+  .scrollbar-thumb-indigo-300::-webkit-scrollbar-thumb:hover {
+    @apply bg-indigo-300;
+  }
+
+  .scrollbar-thumb-emerald-200::-webkit-scrollbar-thumb {
+    @apply bg-emerald-200 rounded-full border-2 border-transparent bg-clip-padding;
+  }
+
+  .scrollbar-thumb-emerald-300::-webkit-scrollbar-thumb:hover {
+    @apply bg-emerald-300;
   }
 }
