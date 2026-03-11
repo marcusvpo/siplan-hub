@@ -21,9 +21,10 @@ import { usePermissions } from "@/hooks/usePermissions";
 interface TabProps {
   project: ProjectV2;
   onUpdate: (project: ProjectV2) => void;
+  onStageClick?: (stageId: string) => void;
 }
 
-export function GeneralInfoTab({ project, onUpdate }: TabProps) {
+export function GeneralInfoTab({ project, onUpdate, onStageClick }: TabProps) {
   // We use useProjectForm mainly for Autosave management of Notes here
   const { data, updateField, saveState } = useProjectForm(project, onUpdate);
   const { canEditProjects } = usePermissions();
@@ -203,6 +204,7 @@ export function GeneralInfoTab({ project, onUpdate }: TabProps) {
               <div
                 key={stage.id}
                 className="flex flex-col items-center gap-5 group cursor-pointer relative"
+                onClick={() => onStageClick?.(stage.id)}
               >
                 <div
                   className={cn(
