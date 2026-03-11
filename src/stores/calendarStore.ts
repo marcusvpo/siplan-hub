@@ -22,7 +22,7 @@ interface CalendarState {
 
 export const useCalendarStore = create<CalendarState>((set) => ({
   currentDate: startOfDay(new Date()),
-  viewMode: "week",
+  viewMode: "month",
   isInteractiveMode: false,
   interactiveEvents: [],
   realEvents: [],

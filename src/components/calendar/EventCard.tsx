@@ -124,7 +124,7 @@ export function CalendarEventPill({
         touchAction: "none",
       }}
       className={cn(
-        "relative w-full h-full rounded-md text-[10px] font-medium shadow-sm select-none transition-all flex items-center overflow-hidden",
+        "relative w-full h-full rounded-md text-[9px] font-medium shadow-sm select-none transition-all flex items-center overflow-hidden",
         isSpecialType
           ? typeStyles.className
           : cn(typeStyles.className, "shadow-sm"),
@@ -138,7 +138,7 @@ export function CalendarEventPill({
       <div
         {...listeners}
         className={cn(
-          "flex-1 h-full flex items-center px-2 min-w-0 gap-1",
+          "flex-1 h-full flex items-center px-1.5 min-w-0 gap-1",
           isInteractiveMode &&
             !isEditing &&
             !typeStyles.disableDrag &&
@@ -166,7 +166,7 @@ export function CalendarEventPill({
               onBlur={handleSave}
               onKeyDown={handleKeyDown}
               onPointerDown={(e) => e.stopPropagation()}
-              className="w-full bg-transparent border-none outline-none text-[10px] p-0 shadow-none h-full"
+              className="w-full bg-transparent border-none outline-none text-[9px] p-0 shadow-none h-full"
             />
           ) : (
             <span

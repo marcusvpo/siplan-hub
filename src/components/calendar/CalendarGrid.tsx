@@ -38,6 +38,7 @@ interface CalendarGridProps {
 export function CalendarGrid({ onEventClick }: CalendarGridProps) {
   const {
     currentDate,
+    viewMode,
     interactiveEvents,
     realEvents,
     isInteractiveMode,
@@ -79,7 +80,8 @@ export function CalendarGrid({ onEventClick }: CalendarGridProps) {
   }, []);
 
   // Sync Ref with State
-  const currentCellWidth = containerWidth > 0 ? containerWidth / 7 : 0;
+  const daysPerWeek = viewMode === "day" ? 1 : 7;
+  const currentCellWidth = containerWidth > 0 ? containerWidth / daysPerWeek : 0;
 
   // --- Resize Logic ---
   const handleResizeMove = (e: PointerEvent) => {
@@ -94,7 +96,7 @@ export function CalendarGrid({ onEventClick }: CalendarGridProps) {
     const percentMoved = diffX / totalWidth;
 
     // Convert % to Days (7 days = 100%)
-    const rawDays = percentMoved * 7;
+    const rawDays = percentMoved * daysPerWeek;
     const daysToShift = Math.round(rawDays);
 
     // A data final é SEMPRE a data ORIGINAL + o deslocamento (Cálculo Absoluto)
@@ -171,16 +173,28 @@ export function CalendarGrid({ onEventClick }: CalendarGridProps) {
     window.addEventListener("pointerup", handleResizeEnd);
   };
 
-  // Generate Grid Data
-  const monthStart = startOfMonth(currentDate);
-  const monthEnd = endOfMonth(monthStart);
-  const startDate = startOfWeek(monthStart);
-  const endDate = endOfWeek(monthEnd);
-  const days = eachDayOfInterval({ start: startDate, end: endDate });
+  // Generate Grid Data based on ViewMode
+  let startDate: Date, endDate: Date;
+
+  if (viewMode === "month") {
+    const monthStart = startOfMonth(currentDate);
+    const monthEnd = endOfMonth(monthStart);
+    startDate = startOfWeek(monthStart);
+    endDate = endOfWeek(monthEnd);
+  } else if (viewMode === "week") {
+    startDate = startOfWeek(currentDate);
+    endDate = endOfWeek(currentDate);
+  } else {
+    // day
+    startDate = startOfDay(currentDate);
+    endDate = endOfDay(currentDate);
+  }
+
+  const daysArr = eachDayOfInterval({ start: startDate, end: endDate });
 
   const weeks: Date[][] = [];
-  for (let i = 0; i < days.length; i += 7) {
-    weeks.push(days.slice(i, i + 7));
+  for (let i = 0; i < daysArr.length; i += daysPerWeek) {
+    weeks.push(daysArr.slice(i, i + daysPerWeek));
   }
 
   // --- Layout Calculation for Slots ---
@@ -193,14 +207,21 @@ export function CalendarGrid({ onEventClick }: CalendarGridProps) {
     return evt;
   });
 
+  const headerDays = viewMode === "day"
+    ? [format(currentDate, "EEEE", { locale: ptBR })]
+    : ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+
   return (
     <div className="flex flex-col h-full border rounded-lg bg-background shadow-sm select-none overflow-visible">
       {/* Header */}
-      <div className="grid grid-cols-7 border-b bg-muted/40">
-        {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((d) => (
+      <div className={cn(
+        "grid border-b bg-muted/40",
+        viewMode === "day" ? "grid-cols-1" : "grid-cols-7"
+      )}>
+        {headerDays.map((d) => (
           <div
             key={d}
-            className="py-2 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider"
+            className="py-1 text-center text-[10px] font-semibold text-muted-foreground uppercase tracking-wider"
           >
             {d}
           </div>
@@ -230,7 +251,7 @@ export function CalendarGrid({ onEventClick }: CalendarGridProps) {
           });
 
           // Slot logic remains the same
-          const slots: string[][] = Array(7).fill(null).map(() => []);
+          const slots: string[][] = Array(daysPerWeek).fill(null).map(() => []);
           const eventSlots: Record<string, number> = {};
 
           weekEvents.forEach((evt) => {
@@ -240,7 +261,7 @@ export function CalendarGrid({ onEventClick }: CalendarGridProps) {
             let endIndex = differenceInCalendarDays(evtEnd, weekStart);
 
             if (startIndex < 0) startIndex = 0;
-            if (endIndex > 6) endIndex = 6;
+            if (endIndex > daysPerWeek - 1) endIndex = daysPerWeek - 1;
 
             let slotIndex = 0;
             while (true) {
@@ -264,10 +285,13 @@ export function CalendarGrid({ onEventClick }: CalendarGridProps) {
           return (
             <div
               key={weekIndex}
-              className="js-week-row relative w-full min-h-[120px] border-b bg-background overflow-visible"
+              className="js-week-row relative w-full min-h-[80px] border-b bg-background overflow-visible"
             >
               {/* CAMADA 1: GRID DE FUNDO VAZIO (Apenas linhas) */}
-              <div className="absolute inset-0 grid grid-cols-7 w-full h-full z-0 pointer-events-none">
+              <div className={cn(
+                "absolute inset-0 grid w-full h-full z-0 pointer-events-none",
+                viewMode === "day" ? "grid-cols-1" : "grid-cols-7"
+              )}>
                 {week.map((day) => {
                   const isCurrentMonth = isSameMonth(day, currentDate);
                   return (
@@ -280,7 +304,7 @@ export function CalendarGrid({ onEventClick }: CalendarGridProps) {
                     >
                       <span
                         className={cn(
-                          "text-sm font-medium ml-auto w-6 h-6 flex items-center justify-center rounded-full absolute top-2 right-2",
+                          "text-xs font-medium ml-auto w-5 h-5 flex items-center justify-center rounded-full absolute top-1 right-1",
                           isToday(day) && "bg-primary text-primary-foreground"
                         )}
                       >
@@ -293,9 +317,12 @@ export function CalendarGrid({ onEventClick }: CalendarGridProps) {
 
               {/* CAMADA 3: INTERAÇÃO (Drop Targets) - Z-Index 10 */}
               {/* This must be interactable, so z-10. Events will be z-20. */}
-              <div className="absolute inset-0 grid grid-cols-7 w-full h-full z-10">
+              <div className={cn(
+                "absolute inset-0 grid w-full h-full z-10",
+                viewMode === "day" ? "grid-cols-1" : "grid-cols-7"
+              )}>
                 {week.map((day) => (
-                  <div key={day.toISOString()} className="h-full min-h-[120px]">
+                  <div key={day.toISOString()} className="h-full min-h-[80px]">
                     <DayDroppableZone
                       day={day}
                       isInteractiveMode={isInteractiveMode}
@@ -305,7 +332,10 @@ export function CalendarGrid({ onEventClick }: CalendarGridProps) {
               </div>
 
               {/* CAMADA 2: GRID DE EVENTOS (Funcional e Visual) - Z-index 20 */}
-              <div className="absolute inset-0 pt-8 grid grid-cols-7 w-full h-full z-20 pointer-events-none">
+              <div className={cn(
+                "absolute inset-0 pt-6 grid w-full z-20 pointer-events-none auto-rows-[21px]",
+                viewMode === "day" ? "grid-cols-1" : "grid-cols-7"
+              )}>
                 {weekEvents.map((layoutEvt) => {
                   const originalEvt = displayEvents.find((e) => e.id === layoutEvt.id);
                   if (!originalEvt) return null;
@@ -334,8 +364,8 @@ export function CalendarGrid({ onEventClick }: CalendarGridProps) {
                           gridColumnStart: startIndex + 1,
                           gridColumnEnd: `span ${durationDays}`,
                           gridRowStart: slotIndex + 1, // Native Grid Row Stacking
-                          height: "28px",
-                          marginBottom: "4px"
+                          height: "20px",
+                          marginBottom: "1px"
                         }}
                       >
                         <CalendarEventPill

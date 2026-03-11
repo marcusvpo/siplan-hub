@@ -30,13 +30,14 @@ function TrashDroppable() {
     <div
       ref={setNodeRef}
       className={cn(
-        "flex items-center justify-center w-12 h-12 rounded-full border transition-colors ml-auto",
+        "flex items-center justify-center w-10 h-10 rounded-lg border transition-all duration-200 ml-auto",
         isOver
-          ? "bg-red-100 border-red-500 text-red-600 scale-110"
-          : "bg-background border-dashed border-muted-foreground/30 text-muted-foreground hover:bg-muted",
+          ? "bg-red-500 border-red-600 text-white scale-110 shadow-lg z-50"
+          : "bg-muted/50 border-dashed border-muted-foreground/30 text-muted-foreground hover:bg-red-50 hover:text-red-500 hover:border-red-200",
       )}
+      title="Arraste aqui para excluir"
     >
-      <Trash2 className="w-5 h-5" />
+      <Trash2 className={cn("w-5 h-5 transition-transform", isOver && "scale-115 rotate-12")} />
     </div>
   );
 }
@@ -108,76 +109,74 @@ export default function Calendar() {
     };
 
     projects.forEach((project: ProjectV2) => {
+      // Helper to ensure dates are treated as local noon to avoid timezone shifts
+      const toLocalDate = (dateStr: any) => {
+        if (!dateStr) return null;
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return null;
+        // If it's a string from Supabase (yyyy-mm-dd), append noon
+        if (typeof dateStr === 'string' && dateStr.length === 10) {
+          return new Date(dateStr + "T12:00:00");
+        }
+        return d;
+      };
+
       // Implementation Phase 1
-      const implStage = project.stages.implementation;
-      if (
-        implStage?.phase1?.startDate &&
-        isValidDate(implStage.phase1.startDate) &&
-        implStage?.phase1?.endDate &&
-        isValidDate(implStage.phase1.endDate) &&
-        implStage?.phase1?.responsible
-      ) {
-        const responsible = implStage.phase1.responsible;
-        const member = findMember(responsible);
-        const color = member ? member.color : getFallbackColor(responsible);
+      const phase1Start = toLocalDate(project.stages.implementation?.phase1?.startDate);
+      const phase1End = toLocalDate(project.stages.implementation?.phase1?.endDate);
+      const phase1Responsible = project.stages.implementation?.phase1?.responsible;
+
+      if (phase1Start && phase1End && phase1Responsible) {
+        const member = findMember(phase1Responsible);
+        const color = member ? member.color : getFallbackColor(phase1Responsible);
 
         events.push({
           id: `real-${project.id}-p1`,
           resourceId: member?.id || "unknown",
           title: `Implantação: ${project.clientName}`,
           clientName: project.clientName,
-          start: new Date(implStage.phase1.startDate),
-          end: new Date(implStage.phase1.endDate),
+          start: phase1Start,
+          end: phase1End,
           type: "implementation",
           status: "confirmed",
           projectId: project.id,
-          notes: implStage.phase1.observations,
+          notes: project.stages.implementation.phase1.observations,
           color,
         });
       }
 
-      // Implementation Phase 2
-      if (
-        implStage?.phase2?.startDate &&
-        isValidDate(implStage.phase2.startDate) &&
-        implStage?.phase2?.endDate &&
-        isValidDate(implStage.phase2.endDate) &&
-        implStage?.phase2?.responsible
-      ) {
-        const responsible = implStage.phase2.responsible;
-        const member = findMember(responsible);
-        const color = member ? member.color : getFallbackColor(responsible);
+      // Implementation Phase 2 (Treinamento)
+      const phase2Start = toLocalDate(project.stages.implementation?.phase2?.startDate);
+      const phase2End = toLocalDate(project.stages.implementation?.phase2?.endDate);
+      const phase2Responsible = project.stages.implementation?.phase2?.responsible;
+
+      if (phase2Start && phase2End && phase2Responsible) {
+        const member = findMember(phase2Responsible);
+        const color = member ? member.color : getFallbackColor(phase2Responsible);
 
         events.push({
           id: `real-${project.id}-p2`,
           resourceId: member?.id || "unknown",
           title: `Treinamento: ${project.clientName}`,
           clientName: project.clientName,
-          start: new Date(implStage.phase2.startDate),
-          end: new Date(implStage.phase2.endDate),
+          start: phase2Start,
+          end: phase2End,
           type: "training",
           status: "confirmed",
           projectId: project.id,
-          notes: implStage.phase2.observations,
+          notes: project.stages.implementation.phase2.observations,
           color,
         });
       }
 
-      // Adherence Analysis
-      const adherenceStage = project.stages.adherence;
-      if (
-        adherenceStage?.endDate &&
-        isValidDate(adherenceStage.endDate) &&
-        adherenceStage?.responsible
-      ) {
-        const responsible = adherenceStage.responsible;
-        const member = findMember(responsible);
-        const color = member ? member.color : "bg-amber-500";
+      // Adherence
+      const adherenceStart = toLocalDate(project.stages.adherence?.startDate);
+      const adherenceEnd = toLocalDate(project.stages.adherence?.endDate);
+      const adherenceResponsible = project.stages.adherence?.responsible;
 
-        const start = adherenceStage.startDate && isValidDate(adherenceStage.startDate)
-          ? new Date(adherenceStage.startDate)
-          : new Date(adherenceStage.endDate);
-        const end = new Date(adherenceStage.endDate);
+      if (adherenceEnd && adherenceResponsible) {
+        const member = findMember(adherenceResponsible);
+        const start = adherenceStart || adherenceEnd;
 
         events.push({
           id: `real-${project.id}-adherence`,
@@ -185,37 +184,33 @@ export default function Calendar() {
           title: `Aderência: ${project.clientName}`,
           clientName: project.clientName,
           start,
-          end,
+          end: adherenceEnd,
           type: "adherence",
           status: "confirmed",
           projectId: project.id,
-          notes: adherenceStage.observations,
+          notes: project.stages.adherence.observations,
           color: "bg-amber-500",
         });
       }
 
-      // Homologation (Conversion)
-      const conversionStage = project.stages.conversion;
-      if (
-        conversionStage?.finishedAt &&
-        isValidDate(conversionStage.finishedAt) &&
-        conversionStage?.homologationResponsible
-      ) {
-        const responsible = conversionStage.homologationResponsible;
-        const member = findMember(responsible);
-        const date = new Date(conversionStage.finishedAt);
+      // Homologation
+      const homologDate = toLocalDate(project.stages.conversion?.finishedAt);
+      const homologResponsible = project.stages.conversion?.homologationResponsible;
+
+      if (homologDate && homologResponsible) {
+        const member = findMember(homologResponsible);
 
         events.push({
           id: `real-${project.id}-homologation`,
           resourceId: member?.id || "unknown",
           title: `Homologação: ${project.clientName}`,
           clientName: project.clientName,
-          start: date,
-          end: date,
+          start: homologDate,
+          end: homologDate,
           type: "homologation",
           status: "confirmed",
           projectId: project.id,
-          notes: conversionStage.observations,
+          notes: project.stages.conversion.observations,
           color: "bg-violet-500",
         });
       }
@@ -225,8 +220,6 @@ export default function Calendar() {
     if (vacations && Array.isArray(vacations)) {
       vacations.forEach((vacation) => {
         if (!vacation.start_date || !vacation.end_date) return;
-        if (!isValidDate(vacation.start_date) || !isValidDate(vacation.end_date)) return;
-
         const startDate = new Date(vacation.start_date + "T12:00:00");
         const endDate = new Date(vacation.end_date + "T12:00:00");
 
@@ -250,24 +243,19 @@ export default function Calendar() {
     return events;
   }, [projects, isLoading, vacations]);
 
-  // Sync Store when Real Events change
+  // Sync Store when Real Events change - with deep equality check to prevent infinite loops
   useEffect(() => {
-    setRealEvents(realEvents);
+    if (JSON.stringify(realEvents) !== JSON.stringify(useCalendarStore.getState().realEvents)) {
+      setRealEvents(realEvents);
+    }
   }, [realEvents, setRealEvents]);
 
-  const sensors = useMemo(() => [
-    {
-      sensor: PointerSensor,
-      options: {
-        activationConstraint: {
-          distance: 5,
-        },
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
       },
-    },
-  ], []);
-
-  const sensorContext = useSensors(
-    useSensor(PointerSensor, sensors[0].options)
+    })
   );
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -286,8 +274,13 @@ export default function Calendar() {
 
     // Handle Delete Drop
     if (over.id === "trash") {
-      if (active.data.current?.event) {
-        removeInteractiveEvent(active.data.current.event.id);
+      const eventToTrash = active.data.current?.event;
+      if (eventToTrash) {
+        removeInteractiveEvent(eventToTrash.id);
+        toast({
+          title: "Evento removido",
+          description: "O agendamento foi excluído do Playground.",
+        });
       }
       return;
     }
@@ -363,29 +356,27 @@ export default function Calendar() {
       <CalendarControls />
 
       <DndContext
-        sensors={sensorContext}
+        sensors={sensors}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Team Dock (Drag Source) */}
-          {isInteractiveMode && (
-            <div className="flex items-center justify-between gap-4 p-4 bg-muted/20 border-b shrink-0">
-              <div className="flex items-center gap-4">
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mr-2">
-                  Equipe Disponível:
-                </span>
-                {CALENDAR_MEMBERS.map((member) => (
-                  <DraggableTeamMember key={member.id} member={member} />
-                ))}
-              </div>
-
-              <TrashDroppable />
+          {/* Team Dock (Drag Source / Legend) */}
+          <div className="flex items-center justify-between gap-4 p-1 px-4 bg-muted/20 border-b shrink-0">
+            <div className="flex items-center gap-4">
+              <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider mr-2">
+                Equipe Disponível:
+              </span>
+              {CALENDAR_MEMBERS.map((member) => (
+                <DraggableTeamMember key={member.id} member={member} />
+              ))}
             </div>
-          )}
+
+            {isInteractiveMode && <TrashDroppable />}
+          </div>
 
           {/* Main Grid */}
-          <div className="flex-1 p-4 overflow-y-auto">
+          <div className="flex-1 p-2 overflow-y-auto">
             <CalendarGrid onEventClick={(evt) => setSelectedEvent(evt)} />
           </div>
         </div>
