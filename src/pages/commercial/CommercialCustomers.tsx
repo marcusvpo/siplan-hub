@@ -187,24 +187,24 @@ export default function CommercialCustomers() {
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex flex-col gap-4">
+    <div className="space-y-4 animate-in fade-in duration-500">
+      <div className="flex flex-col gap-3">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
+          <h1 className="text-2xl font-bold tracking-tight">
             Painel de Clientes
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Visão geral e saúde da carteira de clientes.
           </p>
         </div>
 
         {/* Filters */}
-        <div className="flex flex-col md:flex-row gap-4 p-4 bg-muted/20 rounded-lg border">
+        <div className="flex flex-col md:flex-row gap-3 p-3 bg-muted/20 rounded-lg border">
           <div className="relative flex-1">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Buscar cliente por nome..."
-              className="pl-8 bg-background"
+              className="pl-8 bg-background h-9"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -253,13 +253,13 @@ export default function CommercialCustomers() {
       <div className="hidden md:block rounded-md border text-left">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead className="w-[300px]">Cliente</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Projetos Ativos</TableHead>
-              <TableHead>Bloqueios</TableHead>
-              <TableHead>Última Atualização UAT</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
+            <TableRow className="h-10">
+              <TableHead className="w-[300px] h-10 py-2">Cliente</TableHead>
+              <TableHead className="h-10 py-2">Status</TableHead>
+              <TableHead className="h-10 py-2">Projetos Ativos</TableHead>
+              <TableHead className="h-10 py-2">Bloqueios</TableHead>
+              <TableHead className="h-10 py-2">Última Atualização UAT</TableHead>
+              <TableHead className="text-right h-10 py-2">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -275,25 +275,25 @@ export default function CommercialCustomers() {
                 return (
                   <TableRow
                     key={client.id}
-                    className="group hover:bg-muted/50 transition-colors"
+                    className="group hover:bg-muted/50 transition-colors h-12"
                   >
-                    <TableCell>
+                    <TableCell className="py-2">
                       <Link
                         to={`/commercial/client/${client.id}`}
-                        className="font-semibold hover:underline text-lg flex items-center gap-2"
+                        className="font-medium hover:underline text-base flex items-center gap-2"
                       >
                         {client.name}
                         {client.tags && client.tags.includes("Key Account") && (
                           <Badge
                             variant="outline"
-                            className="text-[10px] h-5 px-1 bg-yellow-100 text-yellow-800 border-yellow-200"
+                            className="text-[9px] h-4 px-1.5 py-0 bg-yellow-100 text-yellow-800 border-yellow-200"
                           >
                             KA
                           </Badge>
                         )}
                       </Link>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="py-2">
                       <Badge
                         variant="outline"
                         className={`
@@ -330,7 +330,7 @@ export default function CommercialCustomers() {
                           : "Saudável"}
                       </Badge>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="py-2">
                       <div className="flex items-center gap-2">
                         <span className="font-medium">
                           {stats.activeProjects}
@@ -342,11 +342,11 @@ export default function CommercialCustomers() {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="py-2">
                       {stats.blockers > 0 ? (
                         <Badge
                           variant="destructive"
-                          className="bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
+                          className="bg-red-50 text-red-600 border-red-200 hover:bg-red-100 h-5 text-[10px] px-1.5"
                         >
                           {stats.blockers} Bloqueio
                           {stats.blockers > 1 ? "s" : ""}
@@ -355,7 +355,7 @@ export default function CommercialCustomers() {
                         <span className="text-muted-foreground text-sm">-</span>
                       )}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="py-2">
                       <div className="flex items-center text-sm text-muted-foreground">
                         {stats.lastUpdateUAT ? (
                           <>
@@ -367,7 +367,7 @@ export default function CommercialCustomers() {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right py-2">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" className="h-8 w-8 p-0">
@@ -409,7 +409,7 @@ export default function CommercialCustomers() {
       </div>
 
       {/* Mobile Cards */}
-      <div className="grid grid-cols-1 gap-4 md:hidden">
+      <div className="grid grid-cols-1 gap-3 md:hidden">
         {filteredClients.map((client) => {
           const stats = getClientStats(client.id);
           return (
@@ -418,11 +418,11 @@ export default function CommercialCustomers() {
               onClick={() => navigate(`/commercial/client/${client.id}`)}
               className="cursor-pointer active:scale-[0.98] transition-transform"
             >
-              <CardContent className="p-4 space-y-3">
+              <CardContent className="p-3 space-y-2">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="font-semibold text-lg">{client.name}</h3>
-                    <div className="text-xs text-muted-foreground mt-1 flex gap-2">
+                    <h3 className="font-semibold text-base">{client.name}</h3>
+                    <div className="text-[10px] text-muted-foreground mt-0.5 flex gap-1.5">
                       <span>{stats.activeProjects} Projetos</span>
                       <span>•</span>
                       {stats.lastUpdateUAT ? (
@@ -442,20 +442,20 @@ export default function CommercialCustomers() {
                   </div>
                   <Badge
                     variant="outline"
-                    className={`
+                    className={`h-5 text-[10px] px-1.5
                       ${
                         stats.status === "critical"
-                          ? "bg-red-100 text-red-700"
+                          ? "bg-red-100 text-red-700 hover:bg-red-100"
                           : ""
                       }
                       ${
                         stats.status === "attention"
-                          ? "bg-yellow-100 text-yellow-700"
+                          ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-100"
                           : ""
                       }
                       ${
                         stats.status === "healthy"
-                          ? "bg-green-100 text-green-700"
+                          ? "bg-green-100 text-green-700 hover:bg-green-100"
                           : ""
                       }
                     `}
@@ -468,7 +468,7 @@ export default function CommercialCustomers() {
                   </Badge>
                 </div>
                 {stats.blockers > 0 && (
-                  <div className="bg-red-50 text-red-700 text-xs px-2 py-1 rounded inline-block">
+                  <div className="bg-red-50 text-red-700 text-[10px] px-1.5 py-0.5 rounded inline-block">
                     🚨 {stats.blockers} Bloqueios Abertos
                   </div>
                 )}
