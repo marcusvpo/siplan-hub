@@ -1,6 +1,7 @@
 import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, User, Mail, Users } from "lucide-react";
+import { X, User, Mail, Users, Shield, LayoutDashboard } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 interface UserProfileDrawerProps {
   isOpen: boolean;
@@ -9,6 +10,8 @@ interface UserProfileDrawerProps {
 
 export function UserProfileDrawer({ isOpen, onClose }: UserProfileDrawerProps) {
   const { user, team, role } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   // Get user name from metadata
   const userName =
@@ -33,6 +36,17 @@ export function UserProfileDrawer({ isOpen, onClose }: UserProfileDrawerProps) {
     .slice(0, 2)
     .join("")
     .toUpperCase();
+
+  const isAdminRoute = location.pathname.startsWith("/admin");
+
+  const handleToggleAdmin = () => {
+    onClose();
+    if (isAdminRoute) {
+      navigate("/");
+    } else {
+      navigate("/admin");
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -130,6 +144,26 @@ export function UserProfileDrawer({ isOpen, onClose }: UserProfileDrawerProps) {
                     </span>
                   </div>
                 </div>
+              )}
+
+              {/* Admin Toggle Button */}
+              {role === "admin" && (
+                <button
+                  onClick={handleToggleAdmin}
+                  className="w-full mt-2 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 transition-colors shadow-sm font-medium text-sm border border-transparent"
+                >
+                  {isAdminRoute ? (
+                    <>
+                      <LayoutDashboard className="w-4 h-4" />
+                      Acessar Sistema
+                    </>
+                  ) : (
+                    <>
+                      <Shield className="w-4 h-4" />
+                      Painel de Administração
+                    </>
+                  )}
+                </button>
               )}
             </div>
 
