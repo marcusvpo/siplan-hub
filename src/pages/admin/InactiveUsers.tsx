@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Users, Clock, AlertTriangle, UserMinus } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface InactiveUser {
   id: string;
@@ -18,6 +19,16 @@ interface InactiveUser {
 export default function InactiveUsers() {
   const [loading, setLoading] = useState(true);
   const [inactiveUsers, setInactiveUsers] = useState<InactiveUser[]>([]);
+  
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 4;
+  
+  const totalPages = Math.ceil(inactiveUsers.length / itemsPerPage);
+  const currentUsers = inactiveUsers.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   useEffect(() => {
     async function fetchInactiveUsers() {
@@ -127,7 +138,7 @@ export default function InactiveUsers() {
             </div>
           ) : (
             <div className="space-y-4">
-              {inactiveUsers.map((user) => (
+              {currentUsers.map((user) => (
                 <div key={user.id} className="flex items-center justify-between p-4 rounded-xl border bg-card hover:bg-muted/50 transition-colors">
                   <div className="flex items-center gap-4">
                     <Avatar className="h-10 w-10">
@@ -165,6 +176,34 @@ export default function InactiveUsers() {
                   </div>
                 </div>
               ))}
+
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between pt-4 border-t">
+                  <p className="text-xs text-muted-foreground">
+                    Página {currentPage} de {totalPages}
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft className="h-4 w-4 mr-1" />
+                      Anterior
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                    >
+                      Próxima
+                      <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
