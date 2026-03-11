@@ -2,18 +2,25 @@ import { CalendarControls } from "@/components/calendar/CalendarControls";
 import { CalendarGrid } from "@/components/calendar/CalendarGrid";
 import { DraggableTeamMember } from "@/components/calendar/DraggableTeamMember";
 import { useCalendarStore } from "@/stores/calendarStore";
-import {
-  DndContext,
-  DragEndEvent,
-  DragOverlay,
-  useSensor,
-  useSensors,
-  PointerSensor,
-  useDroppable,
+import { 
+  DndContext, 
+  DragEndEvent, 
+  DragOverlay, 
+  useSensor, 
+  useSensors, 
+  PointerSensor, 
+  useDroppable 
 } from "@dnd-kit/core";
 import { useEffect, useState, useMemo } from "react";
 import { CalendarEvent, CALENDAR_MEMBERS } from "@/types/calendar";
-import { startOfDay } from "date-fns";
+import { 
+  startOfDay, 
+  endOfDay, 
+  startOfMonth, 
+  endOfMonth, 
+  startOfWeek, 
+  endOfWeek 
+} from "date-fns";
 import { useProjects } from "@/hooks/useProjects";
 import { ProjectV2 } from "@/types/ProjectV2";
 import { Trash2 } from "lucide-react";
@@ -57,6 +64,10 @@ import { User, Server, Hash, Rocket } from "lucide-react";
 
 export default function Calendar() {
   const isInteractiveMode = useCalendarStore((state) => state.isInteractiveMode);
+  const currentDate = useCalendarStore((state) => state.currentDate);
+  const viewMode = useCalendarStore((state) => state.viewMode);
+  const interactiveEvents = useCalendarStore((state) => state.interactiveEvents);
+
   const addInteractiveEvent = useCalendarStore((state) => state.addInteractiveEvent);
   const updateInteractiveEvent = useCalendarStore((state) => state.updateInteractiveEvent);
   const removeInteractiveEvent = useCalendarStore((state) => state.removeInteractiveEvent);
@@ -243,6 +254,40 @@ export default function Calendar() {
     return events;
   }, [projects, isLoading, vacations]);
 
+  // Legend Filtering: Show only members with events in current view (Real mode only)
+  const activeMembersInLegend = useMemo(() => {
+    // If in Playground mode, show everyone so they can be dragged
+    if (isInteractiveMode) return CALENDAR_MEMBERS;
+
+    // 1. Calculate date range of current view (match CalendarGrid)
+    let start: Date, end: Date;
+    if (viewMode === "month") {
+      const monthStart = startOfMonth(currentDate);
+      const monthEnd = endOfMonth(monthStart);
+      start = startOfWeek(monthStart);
+      end = endOfWeek(monthEnd);
+    } else if (viewMode === "week") {
+      start = startOfWeek(currentDate);
+      end = endOfWeek(currentDate);
+    } else {
+      start = startOfDay(currentDate);
+      end = endOfDay(currentDate);
+    }
+
+    // 2. Find members with events in this range
+    const activeIds = new Set(
+      realEvents
+        .filter((evt) => {
+          const evtStart = startOfDay(new Date(evt.start));
+          const evtEnd = endOfDay(new Date(evt.end));
+          return evtEnd >= start && evtStart <= end;
+        })
+        .map((evt) => evt.resourceId)
+    );
+
+    return CALENDAR_MEMBERS.filter((m) => activeIds.has(m.id));
+  }, [realEvents, isInteractiveMode, viewMode, currentDate]);
+
   // Sync Store when Real Events change - with deep equality check to prevent infinite loops
   useEffect(() => {
     if (JSON.stringify(realEvents) !== JSON.stringify(useCalendarStore.getState().realEvents)) {
@@ -367,7 +412,7 @@ export default function Calendar() {
               <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider mr-2">
                 Equipe Disponível:
               </span>
-              {CALENDAR_MEMBERS.map((member) => (
+              {activeMembersInLegend.map((member) => (
                 <DraggableTeamMember key={member.id} member={member} />
               ))}
             </div>
