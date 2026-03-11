@@ -63,7 +63,7 @@ export default function CommercialCustomers() {
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
   const [itemsPerPageOpen, setItemsPerPageOpen] = useState(false);
 
   // Reset to page 1 when any filter changes
@@ -517,6 +517,7 @@ export default function CommercialCustomers() {
                 <SelectValue placeholder={itemsPerPage.toString()} />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="5">5</SelectItem>
                 <SelectItem value="10">10</SelectItem>
                 <SelectItem value="25">25</SelectItem>
                 <SelectItem value="50">50</SelectItem>
