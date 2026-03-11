@@ -1,5 +1,5 @@
 import { useCommercial } from "@/hooks/useCommercial";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Table,
@@ -22,13 +22,14 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Search,
-  Filter,
   MoreHorizontal,
   AlertCircle,
   CheckCircle2,
   AlertTriangle,
-  User,
   CalendarClock,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsUpDown,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -38,6 +39,18 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 
 export default function CommercialCustomers() {
   const { clients, projectsWithClients, isLoadingClients, allCommercialNotes } =
@@ -47,6 +60,16 @@ export default function CommercialCustomers() {
   const [projectsFilter, setProjectsFilter] = useState("all");
   const [lastActionFilter, setLastActionFilter] = useState("any");
   const navigate = useNavigate();
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPageOpen, setItemsPerPageOpen] = useState(false);
+
+  // Reset to page 1 when any filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, projectsFilter, lastActionFilter, itemsPerPage]);
 
   // Helper to compute client health and stats
   const getClientStats = (clientId: string) => {
@@ -81,9 +104,6 @@ export default function CommercialCustomers() {
       // Check Health Rules (matching useProjectsList.ts logic strictly - ONLY Recency)
       const daysSinceUpdate =
         (new Date().getTime() - uat.getTime()) / (1000 * 3600 * 24);
-
-      // Note: Blockers and FollowUps are tracked but don't affect the "Recency Status" badge to match /projects view
-      // User requested "healthscore according to Last Update"
 
       if (daysSinceUpdate >= 15) {
         hasCritical = true;
@@ -134,12 +154,7 @@ export default function CommercialCustomers() {
         matchesProjects = stats.blockers > 0;
       }
 
-      // Last Action Filter (Using UAT now?)
-      // Keeping logic on lastAction (notes) or switching to UAT?
-      // User only asked to remove column "Ultima Ação" and replace with "Ultima Atualização UAT".
-      // Filters usually rely on displayed data, but let's keep filter on "Last Interaction" (notes) as it might refer to commercial touchpoints.
-      // However, if the user sees "Ultima Atualização UAT", they might expect the filter to work on that.
-      // For now I will leave filter as "Last Interaction" (commercial notes) to distinct from "System Update"
+      // Last Action Filter
       let matchesLastAction = true;
       if (lastActionFilter !== "any") {
         if (!stats.lastAction) {
@@ -153,7 +168,7 @@ export default function CommercialCustomers() {
             matchesLastAction = daysSince <= 15;
           if (lastActionFilter === "30days")
             matchesLastAction = daysSince <= 30;
-          if (lastActionFilter === "never") matchesLastAction = false; // Has action
+          if (lastActionFilter === "never") matchesLastAction = false;
         }
       }
 
@@ -177,6 +192,14 @@ export default function CommercialCustomers() {
     const timeB = statsB.lastUpdateUAT?.getTime() || 0;
     return timeB - timeA;
   });
+
+  // Pagination logic
+  const totalPages = Math.ceil(sortedClients.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedClients = sortedClients.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
 
   if (isLoadingClients) {
     return (
@@ -270,7 +293,7 @@ export default function CommercialCustomers() {
                 </TableCell>
               </TableRow>
             ) : (
-              sortedClients.map((client) => {
+              paginatedClients.map((client) => {
                 const stats = getClientStats(client.id);
                 return (
                   <TableRow
@@ -410,7 +433,7 @@ export default function CommercialCustomers() {
 
       {/* Mobile Cards */}
       <div className="grid grid-cols-1 gap-3 md:hidden">
-        {filteredClients.map((client) => {
+        {paginatedClients.map((client) => {
           const stats = getClientStats(client.id);
           return (
             <Card
@@ -477,6 +500,65 @@ export default function CommercialCustomers() {
           );
         })}
       </div>
+
+      {/* Pagination Controls */}
+      {sortedClients.length > 0 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 px-2">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground w-full sm:w-auto justify-center sm:justify-start">
+            <p>Itens por página:</p>
+            <Select
+              value={itemsPerPage.toString()}
+              onValueChange={(value) => {
+                setItemsPerPage(Number(value));
+                setCurrentPage(1); // Reset to first page when changing page size
+              }}
+            >
+              <SelectTrigger className="h-8 w-[70px]">
+                <SelectValue placeholder={itemsPerPage.toString()} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="25">25</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center gap-4 w-full sm:w-auto justify-center sm:justify-end">
+            <span className="text-sm font-medium">
+              Página {currentPage} de {totalPages}
+              <span className="text-muted-foreground ml-2 font-normal hidden sm:inline">
+                ({sortedClients.length} no total)
+              </span>
+            </span>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                <span className="sr-only">Página anterior</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
+                disabled={currentPage === totalPages}
+              >
+                <ChevronRight className="h-4 w-4" />
+                <span className="sr-only">Próxima página</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
