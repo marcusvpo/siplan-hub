@@ -72,6 +72,7 @@ export default function AdminLayout() {
     { href: "/admin/vacations", label: "Férias", icon: Palmtree },
     { href: "/admin/settings", label: "Saúde dos Projetos", icon: Activity },
     { href: "/admin/storage", label: "Armazenamento", icon: HardDrive },
+    { href: "/admin/audit", label: "Logs", icon: History },
   ];
 
   return (
