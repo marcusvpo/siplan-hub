@@ -42,6 +42,7 @@ interface StageCardProps {
 
   // Custom injections
   extraHeaderField?: React.ReactNode;
+  canEditProjects?: boolean;
 }
 
 export function StageCard({
@@ -60,6 +61,7 @@ export function StageCard({
   isReadyToStart = false,
   readinessReason = "",
   extraHeaderField,
+  canEditProjects = true,
 }: StageCardProps) {
   const getStatusColor = (s: StageStatus) => {
     switch (s) {
@@ -231,7 +233,8 @@ export function StageCard({
               <p className="text-sm text-emerald-700">{readinessReason}</p>
               <button
                 onClick={() => onUpdate({ status: "in-progress" })}
-                className="mt-3 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg transition-colors shadow-md"
+                disabled={!canEditProjects}
+                className="mt-3 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Iniciar {label.split(".")[1]?.trim() || "Esta Etapa"}
               </button>
@@ -249,6 +252,7 @@ export function StageCard({
             <Select
               value={status}
               onValueChange={(v) => onUpdate({ status: v })}
+              disabled={!canEditProjects}
             >
               <SelectTrigger
                 className={cn(
@@ -303,6 +307,7 @@ export function StageCard({
               <AutocompleteInput
                 value={responsible}
                 onChange={(v) => onUpdate({ responsible: v })}
+                disabled={!canEditProjects}
                 className="h-11 border-2 border-violet-200 hover:border-violet-300 focus:border-violet-400 bg-violet-50/50"
               />
             </div>
@@ -333,6 +338,7 @@ export function StageCard({
                       : undefined,
                   })
                 }
+                disabled={!canEditProjects}
                 className="h-11 border-2 border-cyan-200 hover:border-cyan-300 focus:border-cyan-400 bg-cyan-50/50 font-medium"
               />
             </div>
@@ -361,6 +367,7 @@ export function StageCard({
                       : undefined,
                   })
                 }
+                disabled={!canEditProjects}
                 className="h-11 border-2 border-rose-200 hover:border-rose-300 focus:border-rose-400 bg-rose-50/50 font-medium"
               />
             </div>
@@ -398,11 +405,12 @@ export function StageCard({
               Observações & Detalhes
             </Label>
           </div>
-          <div className="rounded-xl border-2 border-amber-200 overflow-hidden bg-amber-50/30">
+          <div className="rounded-xl border-2 border-amber-200 overflow-hidden bg-amber-50/30 w-full">
             <RichTextEditor
               content={getEditorContent(observations)}
               onChange={(content) => onUpdate({ observations: content })}
               placeholder={`Detalhes da etapa de ${label}...`}
+              editable={canEditProjects}
             />
           </div>
         </div>

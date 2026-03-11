@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { ProjectHeaderForm } from "@/components/ProjectManagement/Forms/ProjectHeaderForm";
+import { usePermissions } from "@/hooks/usePermissions";
 
 interface TabProps {
   project: ProjectV2;
@@ -25,6 +26,7 @@ interface TabProps {
 export function GeneralInfoTab({ project, onUpdate }: TabProps) {
   // We use useProjectForm mainly for Autosave management of Notes here
   const { data, updateField, saveState } = useProjectForm(project, onUpdate);
+  const { canEditProjects } = usePermissions();
 
   const isOrionTN =
     project.systemType === "Orion TN" ||
@@ -269,6 +271,7 @@ export function GeneralInfoTab({ project, onUpdate }: TabProps) {
               content={editorContent}
               onChange={updateEditorContent}
               placeholder="Digite suas observações gerais aqui..."
+              editable={canEditProjects}
             />
           </div>
         </div>

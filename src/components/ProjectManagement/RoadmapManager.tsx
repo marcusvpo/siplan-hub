@@ -21,6 +21,7 @@ import {
   Palette,
 } from "lucide-react";
 import { toast } from "sonner";
+import { usePermissions } from "@/hooks/usePermissions";
 
 interface RoadmapManagerProps {
   projectId: string;
@@ -52,6 +53,7 @@ export function RoadmapManager({ projectId }: RoadmapManagerProps) {
   const [roadmap, setRoadmap] = useState<RoadmapSettings | null>(null);
   const [welcomeMessage, setWelcomeMessage] = useState("");
   const [primaryColor, setPrimaryColor] = useState("#800000");
+  const { canEditProjects } = usePermissions();
 
   const fetchRoadmap = useCallback(async () => {
     try {
@@ -191,7 +193,7 @@ export function RoadmapManager({ projectId }: RoadmapManagerProps) {
             id="roadmap-active"
             checked={roadmap?.is_active || false}
             onCheckedChange={handleToggleActive}
-            disabled={saving}
+            disabled={saving || !canEditProjects}
           />
           <Label htmlFor="roadmap-active" className="font-semibold">
             {roadmap?.is_active ? "ATIVO" : "INATIVO"}
@@ -280,6 +282,7 @@ export function RoadmapManager({ projectId }: RoadmapManagerProps) {
                   placeholder="Ex: Bem-vindo ao seu portal de implantação!"
                   value={welcomeMessage}
                   onChange={(e) => setWelcomeMessage(e.target.value)}
+                  disabled={!canEditProjects}
                 />
                 <p className="text-xs text-muted-foreground">
                   Esta mensagem aparecerá no topo da página do cliente.
@@ -299,6 +302,7 @@ export function RoadmapManager({ projectId }: RoadmapManagerProps) {
                     onChange={(e) => setPrimaryColor(e.target.value)}
                     className="flex-1 font-mono"
                     placeholder="#800000"
+                    disabled={!canEditProjects}
                   />
                   <div className="flex gap-2">
                     {["#800000", "#1a1a1a", "#2563eb", "#16a34a"].map(
@@ -306,9 +310,10 @@ export function RoadmapManager({ projectId }: RoadmapManagerProps) {
                         <button
                           key={color}
                           onClick={() => setPrimaryColor(color)}
-                          className="h-6 w-6 rounded-full border border-white/20 shadow-sm transition-transform hover:scale-110"
+                          className="h-6 w-6 rounded-full border border-white/20 shadow-sm transition-transform hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
                           style={{ backgroundColor: color }}
                           title={color}
+                          disabled={!canEditProjects}
                         />
                       ),
                     )}
@@ -318,7 +323,7 @@ export function RoadmapManager({ projectId }: RoadmapManagerProps) {
 
               <Button
                 onClick={handleSaveSettings}
-                disabled={saving}
+                disabled={saving || !canEditProjects}
                 className="w-full bg-[#800000] hover:bg-[#600000]"
               >
                 {saving && <RefreshCw className="mr-2 h-4 w-4 animate-spin" />}
