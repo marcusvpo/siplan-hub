@@ -8,8 +8,12 @@ interface ProjectStatusChartProps {
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   'lead': { label: 'Lead', color: 'bg-blue-500' },
   'negotiation': { label: 'Negociação', color: 'bg-indigo-500' },
+  'todo': { label: 'Na Fila', color: 'bg-cyan-500' },
+  'in-progress': { label: 'Em Andamento', color: 'bg-amber-500' },
   'in_progress': { label: 'Em Andamento', color: 'bg-amber-500' },
+  'blocked': { label: 'Bloqueado', color: 'bg-red-500' },
   'on_hold': { label: 'Pausado', color: 'bg-slate-400' },
+  'canceled': { label: 'Cancelado', color: 'bg-stone-600' },
   'done': { label: 'Concluído', color: 'bg-emerald-500' },
   'archived': { label: 'Arquivado', color: 'bg-red-400' },
   'unknown': { label: 'Outros', color: 'bg-gray-300' }
