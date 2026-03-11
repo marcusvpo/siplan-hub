@@ -1,17 +1,35 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Database, HardDrive, AlertTriangle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { useStorageStats } from "@/hooks/useAdminStats";
 
 export default function SystemStorage() {
-  // Mock data representing Supabase Storage & DB size limits
-  const storageLimit = 50 * 1024; // 50GB in MB
-  const storageUsed = 12 * 1024 + 450; // 12.45 GB used
+  const { data: stats, isLoading } = useStorageStats();
 
-  const dbLimit = 5 * 1024; // 5GB in MB
-  const dbUsed = 1024 * 1.2; // 1.2 GB used
+  // Limits based on user plan (or mock targets for visual reference)
+  const storageLimitMB = 50 * 1024; // 50GB in MB
+  const storageUsedMB = stats?.storageSizeMB || 0;
 
-  const storagePercentage = (storageUsed / storageLimit) * 100;
-  const dbPercentage = (dbUsed / dbLimit) * 100;
+  const dbLimitMB = 5 * 1024; // 5GB in MB
+  const dbUsedMB = stats?.dbSizeMB || 0;
+
+  const storagePercentage = Math.min((storageUsedMB / storageLimitMB) * 100, 100) || 0;
+  const dbPercentage = Math.min((dbUsedMB / dbLimitMB) * 100, 100) || 0;
+
+  const formatSize = (mb: number) => {
+    if (mb > 1024) {
+      return `${(mb / 1024).toFixed(2)} GB`;
+    }
+    return `${mb.toFixed(2)} MB`;
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-20">
+        <div className="animate-spin h-8 w-8 border-b-2 border-primary rounded-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-10">
@@ -39,7 +57,7 @@ export default function SystemStorage() {
           <CardContent className="space-y-4">
             <div className="flex justify-between items-end">
               <div>
-                <p className="text-3xl font-bold">12.45 GB</p>
+                <p className="text-3xl font-bold">{formatSize(storageUsedMB)}</p>
                 <p className="text-sm font-medium text-muted-foreground">de 50 GB contratados</p>
               </div>
               <div className="text-right">
@@ -72,7 +90,7 @@ export default function SystemStorage() {
           <CardContent className="space-y-4">
             <div className="flex justify-between items-end">
               <div>
-                <p className="text-3xl font-bold">1.2 GB</p>
+                <p className="text-3xl font-bold">{formatSize(dbUsedMB)}</p>
                 <p className="text-sm font-medium text-muted-foreground">de 5 GB (Plano Pro)</p>
               </div>
               <div className="text-right">
