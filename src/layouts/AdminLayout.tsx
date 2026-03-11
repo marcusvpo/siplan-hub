@@ -76,11 +76,11 @@ export default function AdminLayout() {
   ];
 
   return (
-    <div className="min-h-screen bg-muted/10 flex">
+    <div className="h-screen bg-muted/10 flex overflow-hidden">
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 bg-card border-r shadow-sm transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-auto",
+          "fixed inset-y-0 left-0 z-50 w-64 bg-card border-r shadow-sm transition-transform duration-300 ease-in-out lg:translate-x-0 lg:relative lg:inset-auto",
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
