@@ -9,17 +9,32 @@ export function useAdminStats() {
       const [
         { count: usersCount, error: usersError },
         { count: projectsCount, error: projectsError },
-        { data: recentLogs, error: logsError }
+        { data: recentLogs, error: logsError },
+        { data: allProjects, error: allProjectsError },
+        { data: dbSize, error: dbSizeError },
+        { data: storageSize, error: storageSizeError }
       ] = await Promise.all([
         supabase.from("profiles").select("*", { count: "exact", head: true }),
         supabase.from("projects").select("*", { count: "exact", head: true }).not("global_status", "in", '("done","archived")'),
         supabase.from("audit_logs").select(`
           user_id,
           profiles:user_id (full_name)
-        `).order('created_at', { ascending: false }).limit(2000)
+        `).order('created_at', { ascending: false }).limit(2000),
+        supabase.from("projects").select("global_status"),
+        supabase.rpc('get_db_size'),
+        supabase.rpc('get_storage_size')
       ]);
 
       if (usersError) throw usersError;
+      
+      const projectDistribution: Record<string, number> = {};
+      allProjects?.forEach((p: any) => {
+        const status = p.global_status || 'unknown';
+        projectDistribution[status] = (projectDistribution[status] || 0) + 1;
+      });
+
+      const dbSizeMB = dbSize ? Number(dbSize) / (1024 * 1024) : 0;
+      const storageSizeMB = storageSize ? Number(storageSize) / (1024 * 1024) : 0;
 
       // Online: distinct users with logs in the last 2 hours
       const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
@@ -53,7 +68,6 @@ export function useAdminStats() {
         new Date(b.lastAction).getTime() - new Date(a.lastAction).getTime()
       );
 
-      // onlineUsersCount should reflect users active in last 15 mins for the badge
       const activeNowCount = onlineUsers.filter(u => u.status === 'active').length;
 
       // Most Active: Aggregate recentLogs (last 2000 actions)
@@ -83,6 +97,11 @@ export function useAdminStats() {
         activeNowCount,
         onlineUsers,
         mostActiveUsers,
+        projectDistribution,
+        storage: {
+          dbSizeMB,
+          storageSizeMB
+        }
       };
     },
   });
@@ -94,19 +113,12 @@ export function useStorageStats() {
   return useQuery({
     queryKey: ["admin-storage-stats"],
     queryFn: async () => {
-      // Fetch DB Size (RPC must be created in Supabase SQL Editor)
       const { data: dbSize, error: dbError } = await supabase.rpc('get_db_size');
-      if (dbError) {
-        console.error("Error fetching get_db_size:", dbError);
-      }
+      if (dbError) console.error("Error fetching get_db_size:", dbError);
 
-      // Fetch Storage Size (RPC must be created in Supabase SQL Editor)
       const { data: storageSize, error: storageError } = await supabase.rpc('get_storage_size');
-      if (storageError) {
-        console.error("Error fetching get_storage_size:", storageError);
-      }
+      if (storageError) console.error("Error fetching get_storage_size:", storageError);
 
-      // Convert from bytes to MB
       const dbSizeMB = dbSize ? Number(dbSize) / (1024 * 1024) : 0;
       const storageSizeMB = storageSize ? Number(storageSize) / (1024 * 1024) : 0;
 
@@ -115,6 +127,6 @@ export function useStorageStats() {
         storageSizeMB,
       };
     },
-    refetchInterval: 5 * 60 * 1000, // Refresh every 5 minutes
+    refetchInterval: 5 * 60 * 1000,
   });
 }

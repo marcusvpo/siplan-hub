@@ -34,4 +34,9 @@ export interface AdminStats {
     userName: string;
     actionCount: number;
   }[];
+  projectDistribution: Record<string, number>;
+  storage: {
+    dbSizeMB: number;
+    storageSizeMB: number;
+  };
 }

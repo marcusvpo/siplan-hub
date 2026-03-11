@@ -25,7 +25,7 @@ export function RecentActivity() {
 
   return (
     <div className="space-y-2.5">
-      {logs.slice(0, 5).map((log) => (
+      {logs.slice(0, 8).map((log) => (
         <div key={log.id} className="flex items-center">
           <Avatar className="h-7 w-7 text-[10px]">
             <AvatarFallback>
