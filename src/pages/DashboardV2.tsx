@@ -11,6 +11,7 @@ import { ModeToggle } from "@/components/mode-toggle";
 
 import { useToast } from "@/components/ui/use-toast";
 import { useEffect } from "react";
+import { ScrollingText } from "@/components/ui/scrolling-text";
 
 export default function DashboardV2() {
   const { projects, isLoading } = useProjectsV2();
@@ -39,22 +40,38 @@ export default function DashboardV2() {
 
   return (
     <div className="min-h-screen bg-background">
-      <main className="container mx-auto px-6 py-8 space-y-6">
+      <main className="container mx-auto px-4 py-6 space-y-4">
         {/* Header Section */}
-        <div>
-          <h2 className="text-2xl font-bold">Visão Geral</h2>
-          <p className="text-muted-foreground">
-            Acompanhe métricas e status dos projetos de implantação
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-black tracking-tight">Visão Geral</h2>
+            <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-widest font-bold opacity-70">
+              Métricas e status dos projetos de implantação
+            </p>
+          </div>
+          <div className="hidden lg:flex items-center gap-2 p-2 bg-muted/30 rounded-lg border border-border/50">
+            <div className="flex flex-col items-center px-3 border-r border-border/50">
+              <span className="text-[9px] font-bold text-muted-foreground uppercase">Storage</span>
+              <span className="text-xs font-black text-primary">Simulado</span>
+            </div>
+            <div className="flex flex-col items-center px-3">
+              <span className="text-[9px] font-bold text-muted-foreground uppercase">Status</span>
+              <span className="text-xs font-black text-emerald-500">Online</span>
+            </div>
+          </div>
         </div>
 
         {/* KPIs */}
         <DashboardKPI />
 
         {/* Gráficos */}
-        <div className="grid gap-6 md:grid-cols-2">
-          <ProjectDistributionChart projects={projects} />
-          <StatusChart projects={projects} />
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="h-[250px] overflow-hidden rounded-xl border bg-card/50">
+            <ProjectDistributionChart projects={projects} />
+          </div>
+          <div className="h-[250px] overflow-hidden rounded-xl border bg-card/50">
+            <StatusChart projects={projects} />
+          </div>
         </div>
 
         {/* Alertas Críticos */}
@@ -67,20 +84,23 @@ export default function DashboardV2() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {criticalAlerts.map((project) => (
                   <div
                     key={project.id}
-                    className="flex items-center justify-between p-3 border border-destructive/20 rounded-lg bg-destructive/5"
+                    className="flex items-center justify-between p-2 border border-destructive/20 rounded-md bg-destructive/5 hover:bg-destructive/10 transition-colors"
                   >
-                    <div className="space-y-1">
-                      <p className="font-medium">{project.clientName}</p>
-                      <p className="text-sm text-muted-foreground">
-                        Ticket: {project.ticketNumber} • Sistema:{" "}
-                        {project.systemType}
+                    <div className="space-y-0.5 min-w-0 flex-1 mr-2 overflow-hidden">
+                      <ScrollingText 
+                        text={project.clientName} 
+                        className="text-xs font-bold"
+                        speed={40}
+                      />
+                      <p className="text-[10px] text-muted-foreground truncate">
+                        TKT: {project.ticketNumber} • {project.systemType}
                       </p>
                     </div>
-                    <Badge variant="destructive">Crítico</Badge>
+                    <Badge variant="destructive" className="h-4 text-[8px] font-black uppercase">Crítico</Badge>
                   </div>
                 ))}
               </div>
