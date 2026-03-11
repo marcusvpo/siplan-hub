@@ -40,13 +40,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+
+// Dimensions for Marquee logic tailored for the w-96 Contacts sidebar
+const TEXT_AREA_PX = 310;
+const CHAR_WIDTH_PX = 6.2;
+
+function getMarqueeStyle(text: string, active: boolean): React.CSSProperties {
+  if (!active) return {};
+  const estimatedWidth = text.length * CHAR_WIDTH_PX;
+  const overflow = estimatedWidth - TEXT_AREA_PX;
+  if (overflow <= 4) return {};
+  const dist = Math.round(overflow + 4);
+  const dur = Math.max(2.5, dist / 30);
+  return {
+    "--scroll-dist": `-${dist}px`,
+    "--scroll-dur": `${dur}s`,
+    animation: `scroll-text ${dur}s ease-in-out infinite`,
+  } as React.CSSProperties;
+}
 
 export default function CommercialContacts() {
 // ... preserving rest of state and handlers from line 46 to 223 ...
@@ -61,6 +74,7 @@ export default function CommercialContacts() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const [hoveredClientId, setHoveredClientId] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [roleFilter, setRoleFilter] = useState("");
@@ -253,32 +267,36 @@ export default function CommercialContacts() {
                 <Users className="h-3.5 w-3.5 mr-2 shrink-0" />
                 Todos os Contatos
               </Button>
-              <TooltipProvider delayDuration={300}>
-                {filteredClients.map((client) => (
-                  <Tooltip key={client.id}>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant={
-                          selectedClientId === client.id ? "secondary" : "ghost"
-                        }
-                        className={`w-full justify-start font-normal truncate text-xs py-1 h-auto ${
-                          selectedClientId === client.id
-                            ? "bg-purple-100 text-purple-900 dark:bg-purple-900/20 dark:text-purple-100 border-l-2 border-purple-500 rounded-l-none"
-                            : ""
-                        }`}
-                        onClick={() => setSelectedClientId(client.id)}
+              {filteredClients.map((client) => {
+                const isSelected = selectedClientId === client.id;
+                const isHovered = hoveredClientId === client.id;
+                const animate = isSelected || isHovered;
+
+                return (
+                  <Button
+                    key={client.id}
+                    variant={isSelected ? "secondary" : "ghost"}
+                    className={cn(
+                      "w-full justify-start font-normal text-xs py-1 h-auto relative overflow-hidden",
+                      isSelected
+                        ? "bg-purple-100 text-purple-900 dark:bg-purple-900/20 dark:text-purple-100 border-l-2 border-purple-500 rounded-l-none"
+                        : ""
+                    )}
+                    onClick={() => setSelectedClientId(client.id)}
+                    onMouseEnter={() => setHoveredClientId(client.id)}
+                    onMouseLeave={() => setHoveredClientId(null)}
+                  >
+                    <div className="flex-1 min-w-0 overflow-hidden text-left pl-5">
+                      <span
+                        className="inline-block whitespace-nowrap leading-tight"
+                        style={getMarqueeStyle(client.name, animate)}
                       >
-                        <span className="truncate ml-5 leading-tight">
-                          {client.name}
-                        </span>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="right" className="max-w-[400px]">
-                      <p>{client.name}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                ))}
-              </TooltipProvider>
+                        {client.name}
+                      </span>
+                    </div>
+                  </Button>
+                );
+              })}
             </div>
           </ScrollArea>
         </Card>
