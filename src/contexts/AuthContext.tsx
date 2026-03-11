@@ -101,12 +101,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               setRole(null);
               setTeam(null);
               setLoading(false);
+              setPermissionsLoaded(true);
             }
             return;
           }
 
           console.error("Error getting session:", error);
-          if (mounted) setLoading(false);
+          if (mounted) {
+            setLoading(false);
+            setPermissionsLoaded(true);
+          }
           return;
         }
 
@@ -120,11 +124,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setLoading(false);
           } else {
             setLoading(false);
+            setPermissionsLoaded(true);
           }
         }
       } catch (error) {
         console.error("Error initializing auth:", error);
-        if (mounted) setLoading(false);
+        if (mounted) {
+          setLoading(false);
+          setPermissionsLoaded(true);
+        }
       }
     }
 
@@ -146,6 +154,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setTeam(null);
           setPermissions([]);
           setLoading(false);
+          setPermissionsLoaded(true);
         }
       }
     });
@@ -163,6 +172,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchPermissions = async (roleName: string) => {
@@ -189,7 +199,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (data && data.app_role_permissions) {
         const perms: Permission[] = data.app_role_permissions
-          .map((rp: any) => rp.app_permissions as unknown as Permission)
+          .map((rp: { app_permissions: unknown }) => rp.app_permissions as unknown as Permission)
           .filter(Boolean);
         setPermissions(perms);
       } else {
