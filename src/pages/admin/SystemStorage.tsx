@@ -16,7 +16,7 @@ export default function SystemStorage() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-10">
       <div className="space-y-1">
-        <h2 className="text-2xl font-bold tracking-tight">Armazenamento (BETA)</h2>
+        <h2 className="text-2xl font-bold tracking-tight">Armazenamento</h2>
         <p className="text-muted-foreground">
           Visão geral simulada do consumo de Storage e Banco de Dados (Supabase).
         </p>
