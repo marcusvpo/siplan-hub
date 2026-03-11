@@ -8,6 +8,7 @@ interface CalendarState {
   isInteractiveMode: boolean;
   interactiveEvents: CalendarEvent[];
   realEvents: CalendarEvent[];
+  hiddenResourceIds: string[];
   
   // Actions
   setCurrentDate: (date: Date) => void;
@@ -17,6 +18,7 @@ interface CalendarState {
   updateInteractiveEvent: (event: CalendarEvent) => void;
   removeInteractiveEvent: (eventId: string) => void;
   setRealEvents: (events: CalendarEvent[]) => void;
+  toggleResourceVisibility: (id: string) => void;
   importRealDataToSandbox: () => void;
 }
 
@@ -26,11 +28,19 @@ export const useCalendarStore = create<CalendarState>((set) => ({
   isInteractiveMode: false,
   interactiveEvents: [],
   realEvents: [],
+  hiddenResourceIds: [],
 
   setCurrentDate: (date) => set({ currentDate: date }),
   setViewMode: (mode) => set({ viewMode: mode }),
   setInteractiveMode: (isInteractive) => set({ isInteractiveMode: isInteractive }),
   
+  toggleResourceVisibility: (id) =>
+    set((state) => ({
+      hiddenResourceIds: state.hiddenResourceIds.includes(id)
+        ? state.hiddenResourceIds.filter((hiddenId) => hiddenId !== id)
+        : [...state.hiddenResourceIds, id],
+    })),
+
   addInteractiveEvent: (event) => 
     set((state) => ({ interactiveEvents: [...state.interactiveEvents, event] })),
     

@@ -45,7 +45,10 @@ export function CalendarGrid({ onEventClick }: CalendarGridProps) {
     updateInteractiveEvent,
   } = useCalendarStore();
 
-  const displayEvents = isInteractiveMode ? interactiveEvents : realEvents;
+  const hiddenResourceIds = useCalendarStore((state) => state.hiddenResourceIds);
+  const displayEvents = (isInteractiveMode ? interactiveEvents : realEvents).filter(
+    (event) => !hiddenResourceIds.includes(event.resourceId)
+  );
 
   // --- Ghost State Implementation ---
   const [resizingEventId, setResizingEventId] = useState<string | null>(null);

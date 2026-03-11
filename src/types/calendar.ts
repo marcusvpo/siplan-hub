@@ -29,4 +29,5 @@ export const CALENDAR_MEMBERS: CalendarMember[] = [
   { id: "bruno-matos", name: "Bruno Matos", role: "Implantador", color: "bg-green-500" },
   { id: "julio-araujo", name: "Julio Araujo", role: "Implantador", color: "bg-orange-500" },
   { id: "rodrigo-mizuno", name: "Rodrigo Mizuno", role: "Implantador", color: "bg-pink-500" },
+  { id: "luan-caldeira", name: "Luan Caldeira", role: "Implantador", color: "bg-cyan-500" },
 ];

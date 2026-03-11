@@ -1,14 +1,18 @@
 import { useDraggable } from "@dnd-kit/core";
 import { CalendarMember } from "@/types/calendar";
 import { cn } from "@/lib/utils";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useCalendarStore } from "@/stores/calendarStore";
 
 interface DraggableTeamMemberProps {
   member: CalendarMember;
 }
 
 export function DraggableTeamMember({ member }: DraggableTeamMemberProps) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } =
+  const hiddenResourceIds = useCalendarStore((state) => state.hiddenResourceIds);
+  const toggleResourceVisibility = useCalendarStore((state) => state.toggleResourceVisibility);
+  const isHidden = hiddenResourceIds.includes(member.id);
+
+  const { attributes, listeners, setNodeRef, isDragging } =
     useDraggable({
       id: `new-event-${member.id}`,
       data: {
@@ -17,27 +21,28 @@ export function DraggableTeamMember({ member }: DraggableTeamMemberProps) {
         title: "Nova Alocação",
         type: "implementation",
       },
+      disabled: isHidden,
     });
-
-  const style = transform
-    ? {
-        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-      }
-    : undefined;
 
   return (
     <div
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      style={style}
+      onClick={(e) => {
+        e.stopPropagation();
+        toggleResourceVisibility(member.id);
+      }}
       className={cn(
-        "flex items-center gap-2 px-3 py-1.5 rounded-full border shadow-sm cursor-grab active:cursor-grabbing hover:brightness-110 transition-all select-none bg-background",
+        "flex items-center gap-1.5 px-2 py-1 rounded-full border shadow-sm transition-all select-none",
+        isHidden
+          ? "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-700 opacity-60 grayscale cursor-pointer"
+          : "bg-background border-input cursor-grab active:cursor-grabbing hover:shadow-md",
         isDragging && "opacity-50 z-50 shadow-xl ring-2 ring-primary"
       )}
     >
-      <div className={cn("w-3 h-3 rounded-full", member.color)} />
-      <span className="text-sm font-medium">{member.name}</span>
+      <div className={cn("w-2 h-2 rounded-full shrink-0", isHidden ? "bg-slate-300 dark:bg-slate-600" : member.color)} />
+      <span className="text-[10px] font-medium truncate">{member.name}</span>
     </div>
   );
 }
