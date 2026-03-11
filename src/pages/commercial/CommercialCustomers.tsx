@@ -254,12 +254,12 @@ export default function CommercialCustomers() {
         <Table>
           <TableHeader>
             <TableRow className="h-10">
-              <TableHead className="w-[300px] h-10 py-2">Cliente</TableHead>
-              <TableHead className="h-10 py-2">Status</TableHead>
-              <TableHead className="h-10 py-2">Projetos Ativos</TableHead>
-              <TableHead className="h-10 py-2">Bloqueios</TableHead>
-              <TableHead className="h-10 py-2">Última Atualização UAT</TableHead>
-              <TableHead className="text-right h-10 py-2">Ações</TableHead>
+              <TableHead className="h-10 py-2">Cliente</TableHead>
+              <TableHead className="w-[120px] h-10 py-2">Status</TableHead>
+              <TableHead className="w-[140px] h-10 py-2">Projetos Ativos</TableHead>
+              <TableHead className="w-[120px] h-10 py-2">Bloqueios</TableHead>
+              <TableHead className="w-[180px] h-10 py-2">Última Atualização UAT</TableHead>
+              <TableHead className="w-[80px] text-right h-10 py-2">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
