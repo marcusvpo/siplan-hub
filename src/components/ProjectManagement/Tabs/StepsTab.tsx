@@ -11,7 +11,7 @@ import {
   StageStatus,
   AttachedFile,
 } from "@/types/ProjectV2";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ModelosEditorWorkspace, ModelosMetrics } from "../ModelosEditor/ModelosEditorWorkspace";
 import { format, differenceInDays } from "date-fns";
 import { useProjectForm } from "@/hooks/useProjectForm";
@@ -77,6 +77,8 @@ import { usePermissions } from "@/hooks/usePermissions";
 interface TabProps {
   project: ProjectV2;
   onUpdate: (project: ProjectV2) => void;
+  activeStepId?: string;
+  onStepClick?: (stepId: string) => void;
 }
 
 type StatusType =
@@ -85,7 +87,12 @@ type StatusType =
   | "Inadequado"
   | "Aguardando Adequação";
 
-export function StepsTab({ project, onUpdate }: TabProps) {
+export function StepsTab({
+  project,
+  onUpdate,
+  activeStepId,
+  onStepClick,
+}: TabProps) {
   const { data, updateStage, saveState } = useProjectForm(project, onUpdate);
   const { toast } = useToast();
   const { canEditProjects } = usePermissions();
@@ -93,6 +100,20 @@ export function StepsTab({ project, onUpdate }: TabProps) {
   const [sendingToConversion, setSendingToConversion] = useState(false);
   const { sendToConversion, getItemByProjectId, removeFromQueue } =
     useConversionQueue();
+
+  // Scroll into view when activeStepId changes
+  useEffect(() => {
+    if (activeStepId) {
+      // Small timeout to ensure the accordion has started expanding
+      const timer = setTimeout(() => {
+        const element = document.querySelector(`[data-stage-id="${activeStepId}"]`);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [activeStepId]);
 
   // Check if project is already in conversion queue
   const conversionItem = getItemByProjectId(project.id);
@@ -996,9 +1017,16 @@ export function StepsTab({ project, onUpdate }: TabProps) {
         )}
       </div>
 
-      <Accordion type="single" collapsible className="w-full space-y-4">
-        <StageCard
-          id="infra"
+      <Accordion
+        type="single"
+        collapsible
+        className="w-full space-y-4"
+        value={activeStepId}
+        onValueChange={onStepClick}
+      >
+        <div data-stage-id="infra">
+          <StageCard
+            id="infra"
           label="1. Análise de Infraestrutura"
           icon={Server}
           status={stagesData.infra.status}
@@ -1017,9 +1045,11 @@ export function StepsTab({ project, onUpdate }: TabProps) {
         >
           {renderInfraFields(stagesData.infra)}
         </StageCard>
+      </div>
 
-        <StageCard
-          id="adherence"
+        <div data-stage-id="adherence">
+          <StageCard
+            id="adherence"
           label="2. Análise de Aderência"
           icon={CheckCircle2}
           status={stagesData.adherence.status}
@@ -1038,9 +1068,11 @@ export function StepsTab({ project, onUpdate }: TabProps) {
         >
           {renderAdherenceFields(stagesData.adherence)}
         </StageCard>
+      </div>
 
-        <StageCard
-          id="conversion"
+        <div data-stage-id="conversion">
+          <StageCard
+            id="conversion"
           label="3. Conversão de Dados"
           icon={RefreshCw}
           status={stagesData.conversion.status}
@@ -1059,9 +1091,11 @@ export function StepsTab({ project, onUpdate }: TabProps) {
         >
           {renderConversionFields(stagesData.conversion)}
         </StageCard>
+      </div>
 
-        <StageCard
-          id="environment"
+        <div data-stage-id="environment">
+          <StageCard
+            id="environment"
           label="4. Preparação de Ambiente"
           icon={Database}
           status={stagesData.environment.status}
@@ -1080,8 +1114,10 @@ export function StepsTab({ project, onUpdate }: TabProps) {
         >
           {renderEnvironmentFields(stagesData.environment)}
         </StageCard>
+      </div>
 
         {isOrionTN && (
+        <div data-stage-id="modelosEditor">
           <StageCard
             id="modelosEditor"
             label="5. Modelos Editor"
@@ -1098,10 +1134,12 @@ export function StepsTab({ project, onUpdate }: TabProps) {
           >
             <ModelosEditorWorkspace project={project} onUpdate={(u) => updateStage("modelosEditor", u)} />
           </StageCard>
+        </div>
         )}
 
-        <StageCard
-          id="implementation"
+        <div data-stage-id="implementation">
+          <StageCard
+            id="implementation"
           label={`${isOrionTN ? "6" : "5"}. Implantação & Treinamento`}
           icon={Rocket}
           status={stagesData.implementation.status}
@@ -1148,9 +1186,11 @@ export function StepsTab({ project, onUpdate }: TabProps) {
         >
           {renderImplementationFields(stagesData.implementation)}
         </StageCard>
+      </div>
 
-        <StageCard
-          id="post"
+        <div data-stage-id="post">
+          <StageCard
+            id="post"
           label={`${isOrionTN ? "7" : "6"}. Pós-Implantação`}
           icon={Power}
           status={stagesData.post.status}
@@ -1167,6 +1207,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
           }
           canEditProjects={canEditProjects}
         />
+      </div>
       </Accordion>
     </div>
   );

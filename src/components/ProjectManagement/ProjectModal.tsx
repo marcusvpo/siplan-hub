@@ -35,6 +35,8 @@ export function ProjectModal({
   onUpdate,
 }: ProjectModalProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const [activeTab, setActiveTab] = useState("general");
+  const [activeStepId, setActiveStepId] = useState<string | undefined>(undefined);
   const { canEditProjects } = usePermissions();
 
   // Always fetch fresh full details
@@ -136,9 +138,12 @@ export function ProjectModal({
           </div>
         ) : (
           <Tabs
-            defaultValue="general"
+            value={activeTab}
+            onValueChange={(val) => {
+              setActiveTab(val);
+              setIsEditing(false);
+            }}
             className="flex-1 flex flex-col overflow-hidden"
-            onValueChange={() => setIsEditing(false)}
           >
             <div className="px-6 border-b bg-muted/30">
               <TabsList className="h-12 bg-transparent p-0 gap-6">
@@ -199,10 +204,22 @@ export function ProjectModal({
               ) : fullProject ? (
                 <>
                   <TabsContent value="general" className="m-0 h-full">
-                    <GeneralInfoTab project={fullProject} onUpdate={onUpdate} />
+                    <GeneralInfoTab 
+                      project={fullProject} 
+                      onUpdate={onUpdate} 
+                      onStageClick={(id) => {
+                        setActiveStepId(id);
+                        setActiveTab("steps");
+                      }}
+                    />
                   </TabsContent>
                   <TabsContent value="steps" className="m-0 h-full">
-                    <StepsTab project={fullProject} onUpdate={onUpdate} />
+                    <StepsTab 
+                      project={fullProject} 
+                      onUpdate={onUpdate} 
+                      activeStepId={activeStepId}
+                      onStepClick={(id) => setActiveStepId(id)}
+                    />
                   </TabsContent>
                   <TabsContent value="files" className="m-0 h-full">
                     <FilesTab project={fullProject} onUpdate={onUpdate} />
