@@ -70,25 +70,25 @@ export const StatusChart = ({ projects }: StatusChartProps) => {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Projetos por Status</CardTitle>
+    <Card className="border-0 shadow-none bg-transparent">
+      <CardHeader className="py-2 px-4 border-b">
+        <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Status Geral</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0">
         <ChartContainer
           config={chartConfig}
-          className="h-[300px] min-h-[300px] w-full"
+          className="h-[180px] w-full"
         >
           <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <BarChart data={data}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis
                 dataKey="name"
-                className="text-xs"
+                className="text-[10px]"
                 tick={{ fill: "hsl(var(--muted-foreground))" }}
               />
               <YAxis
-                className="text-xs"
+                className="text-[10px]"
                 tick={{ fill: "hsl(var(--muted-foreground))" }}
               />
               <ChartTooltip content={<ChartTooltipContent />} />

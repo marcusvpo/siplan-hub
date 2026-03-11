@@ -27,64 +27,62 @@ export const DashboardKPI = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <KPICard
-          title="Total de Projetos"
-          value={kpis.totalProjects}
-          icon={FolderKanban}
-          variant="default"
-        />
-        
-        <KPICard
-          title="Projetos Críticos"
-          value={kpis.criticalProjects}
-          icon={AlertTriangle}
-          variant="critical"
-        />
-        
-        <KPICard
-          title="Projetos Bloqueados"
-          value={kpis.blockedProjects}
-          icon={Ban}
-          variant="critical"
-        />
-        
-        <KPICard
-          title="Em Risco"
-          value={kpis.atRiskProjects}
-          icon={Clock}
-          variant="warning"
-        />
-      </div>
+    <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 xl:grid-cols-8">
+      <KPICard
+        title="Total"
+        value={kpis.totalProjects}
+        icon={FolderKanban}
+        variant="default"
+      />
+      
+      <KPICard
+        title="Críticos"
+        value={kpis.criticalProjects}
+        icon={AlertTriangle}
+        variant="critical"
+      />
+      
+      <KPICard
+        title="Bloqueados"
+        value={kpis.blockedProjects}
+        icon={Ban}
+        variant="critical"
+      />
+      
+      <KPICard
+        title="Em Risco"
+        value={kpis.atRiskProjects}
+        icon={Clock}
+        variant="warning"
+      />
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <KPICard
-          title="Concluídos"
-          value={kpis.completedProjects}
-          icon={CheckCircle2}
-          variant="success"
-        />
-        
-        <KPICard
-          title="Taxa de Conclusão"
-          value={kpis.completionRate}
-          unit="%"
-          icon={TrendingUp}
-          variant={kpis.completionRate >= 50 ? "success" : "warning"}
-        />
-        
-        <KPICard
-          title="Próximos Follow-ups"
-          value={kpis.nextFollowups}
-          icon={Calendar}
-          variant={kpis.nextFollowups > 5 ? "warning" : "default"}
-        />
+      <KPICard
+        title="Concluídos"
+        value={kpis.completedProjects}
+        icon={CheckCircle2}
+        variant="success"
+      />
+      
+      <KPICard
+        title="Taxa"
+        value={kpis.completionRate}
+        unit="%"
+        icon={TrendingUp}
+        variant={kpis.completionRate >= 50 ? "success" : "warning"}
+      />
+      
+      <KPICard
+        title="Follow-ups"
+        value={kpis.nextFollowups}
+        icon={Calendar}
+        variant={kpis.nextFollowups > 5 ? "warning" : "default"}
+      />
 
+      <div className="hidden xl:block">
         <KPICard
-          title="Tempo Médio"
+          title="Média"
           value={kpis.avgTotalTime}
-          unit="dias"
+          unit="d"
           icon={Clock}
           variant="default"
         />

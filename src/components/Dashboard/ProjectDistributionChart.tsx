@@ -77,14 +77,14 @@ export const ProjectDistributionChart = ({
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Distribuição por Etapa</CardTitle>
+    <Card className="border-0 shadow-none bg-transparent">
+      <CardHeader className="py-2 px-4 border-b">
+        <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Etapa Atual</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0">
         <ChartContainer
           config={chartConfig}
-          className="h-[300px] min-h-[300px] w-full"
+          className="h-[180px] w-full"
         >
           <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <PieChart>
@@ -96,7 +96,7 @@ export const ProjectDistributionChart = ({
                 label={({ name, percent }) =>
                   `${name}: ${(percent * 100).toFixed(0)}%`
                 }
-                outerRadius={80}
+                outerRadius={60}
                 dataKey="value"
               >
                 {data.map((entry, index) => (
