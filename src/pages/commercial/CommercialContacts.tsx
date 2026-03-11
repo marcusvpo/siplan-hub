@@ -222,34 +222,34 @@ export default function CommercialContacts() {
 
       <div className="flex gap-6 flex-1 overflow-hidden">
         {/* Sidebar de Clientes */}
-        <Card className="w-80 flex flex-col h-full border-r shrink-0 shadow-sm">
-          <div className="p-4 border-b space-y-3 bg-muted/10">
-            <h3 className="font-semibold text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+        <Card className="w-96 flex flex-col h-full border-r shrink-0 shadow-sm transition-all">
+          <div className="p-3 border-b space-y-2 bg-muted/10">
+            <h3 className="font-semibold text-[11px] text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
               <Building2 className="h-3.5 w-3.5" />
               Filtrar por Cliente
             </h3>
             <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
               <Input
                 placeholder="Buscar cliente..."
-                className="pl-9 bg-background/50"
+                className="pl-8 h-8 text-xs bg-background/50"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
           </div>
           <ScrollArea className="flex-1">
-            <div className="p-2 space-y-1">
+            <div className="p-1.5 space-y-0.5">
               <Button
                 variant={selectedClientId === null ? "secondary" : "ghost"}
-                className={`w-full justify-start font-normal ${
+                className={`w-full justify-start font-normal text-xs py-1.5 h-auto ${
                   selectedClientId === null
                     ? "bg-purple-100 text-purple-900 dark:bg-purple-900/20 dark:text-purple-100"
                     : ""
                 }`}
                 onClick={() => setSelectedClientId(null)}
               >
-                <Users className="h-4 w-4 mr-2" />
+                <Users className="h-3.5 w-3.5 mr-2 shrink-0" />
                 Todos os Contatos
               </Button>
               {filteredClients.map((client) => (
@@ -258,14 +258,14 @@ export default function CommercialContacts() {
                   variant={
                     selectedClientId === client.id ? "secondary" : "ghost"
                   }
-                  className={`w-full justify-start font-normal truncate ${
+                  className={`w-full justify-start font-normal truncate text-xs py-1 h-auto ${
                     selectedClientId === client.id
                       ? "bg-purple-100 text-purple-900 dark:bg-purple-900/20 dark:text-purple-100 border-l-2 border-purple-500 rounded-l-none"
                       : ""
                   }`}
                   onClick={() => setSelectedClientId(client.id)}
                 >
-                  <span className="truncate ml-6">{client.name}</span>
+                  <span className="truncate ml-5 leading-tight">{client.name}</span>
                 </Button>
               ))}
             </div>
