@@ -10,13 +10,67 @@ import { useNavigate } from "react-router-dom";
 import { ModeToggle } from "@/components/mode-toggle";
 
 import { useToast } from "@/components/ui/use-toast";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ScrollingText } from "@/components/ui/scrolling-text";
+import { ProjectDetailsModal } from "@/components/Dashboard/ProjectDetailsModal";
+import { ProjectV2 } from "@/types/ProjectV2";
+import { isAfter, subDays } from "date-fns";
 
 export default function DashboardV2() {
   const { projects, isLoading } = useProjectsV2();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalTitle, setModalTitle] = useState("");
+  const [filteredProjects, setFilteredProjects] = useState<ProjectV2[]>([]);
+
+  const handleCardClick = (category: string) => {
+    let filtered: ProjectV2[] = [];
+    let title = "";
+
+    switch (category) {
+      case "total":
+        filtered = projects;
+        title = "Todos os Projetos";
+        break;
+      case "critical":
+        filtered = projects.filter((p) => p.healthScore === "critical");
+        title = "Projetos Críticos";
+        break;
+      case "blocked":
+        filtered = projects.filter((p) => p.globalStatus === "blocked");
+        title = "Projetos Bloqueados";
+        break;
+      case "at-risk":
+        filtered = projects.filter((p) => p.healthScore === "warning");
+        title = "Projetos em Risco";
+        break;
+      case "completed":
+        filtered = projects.filter((p) => p.globalStatus === "done");
+        title = "Projetos Concluídos";
+        break;
+      case "followups":
+        filtered = projects.filter(
+          (p) => p.nextFollowUpDate && new Date(p.nextFollowUpDate) <= new Date()
+        );
+        title = "Próximos Follow-ups";
+        break;
+      default:
+        filtered = projects;
+        title = "Detalhes";
+    }
+
+    setFilteredProjects(filtered);
+    setModalTitle(title);
+    setIsModalOpen(true);
+  };
+
+  const handleProjectClick = (project: ProjectV2) => {
+    setFilteredProjects([project]);
+    setModalTitle(`Detalhes: ${project.clientName}`);
+    setIsModalOpen(true);
+  };
 
   useEffect(() => {
     if (isLoading) return;
@@ -62,7 +116,7 @@ export default function DashboardV2() {
         </div>
 
         {/* KPIs */}
-        <DashboardKPI />
+        <DashboardKPI onCardClick={handleCardClick} />
 
         {/* Gráficos */}
         <div className="grid gap-4 md:grid-cols-2">
@@ -88,7 +142,8 @@ export default function DashboardV2() {
                 {criticalAlerts.map((project) => (
                   <div
                     key={project.id}
-                    className="flex items-center justify-between p-2 border border-destructive/20 rounded-md bg-destructive/5 hover:bg-destructive/10 transition-colors"
+                    onClick={() => handleProjectClick(project)}
+                    className="flex items-center justify-between p-2 border border-destructive/20 rounded-md bg-destructive/5 hover:bg-destructive/10 transition-colors cursor-pointer group"
                   >
                     <div className="space-y-0.5 min-w-0 flex-1 mr-2 overflow-hidden">
                       <ScrollingText 
@@ -108,6 +163,13 @@ export default function DashboardV2() {
           </Card>
         )}
       </main>
+
+      <ProjectDetailsModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={modalTitle}
+        projects={filteredProjects}
+      />
     </div>
   );
 }

@@ -12,7 +12,11 @@ import {
   Calendar,
 } from "lucide-react";
 
-export const DashboardKPI = () => {
+interface DashboardKPIProps {
+  onCardClick?: (category: string) => void;
+}
+
+export const DashboardKPI: React.FC<DashboardKPIProps> = ({ onCardClick }) => {
   const { projects, isLoading } = useProjectsV2();
   const kpis = useKPIs(projects);
 
@@ -33,6 +37,7 @@ export const DashboardKPI = () => {
         value={kpis.totalProjects}
         icon={FolderKanban}
         variant="default"
+        onClick={() => onCardClick?.("total")}
       />
       
       <KPICard
@@ -40,6 +45,7 @@ export const DashboardKPI = () => {
         value={kpis.criticalProjects}
         icon={AlertTriangle}
         variant="critical"
+        onClick={() => onCardClick?.("critical")}
       />
       
       <KPICard
@@ -47,6 +53,7 @@ export const DashboardKPI = () => {
         value={kpis.blockedProjects}
         icon={Ban}
         variant="critical"
+        onClick={() => onCardClick?.("blocked")}
       />
       
       <KPICard
@@ -54,6 +61,7 @@ export const DashboardKPI = () => {
         value={kpis.atRiskProjects}
         icon={Clock}
         variant="warning"
+        onClick={() => onCardClick?.("at-risk")}
       />
 
       <KPICard
@@ -61,6 +69,7 @@ export const DashboardKPI = () => {
         value={kpis.completedProjects}
         icon={CheckCircle2}
         variant="success"
+        onClick={() => onCardClick?.("completed")}
       />
       
       <KPICard
@@ -69,6 +78,7 @@ export const DashboardKPI = () => {
         unit="%"
         icon={TrendingUp}
         variant={kpis.completionRate >= 50 ? "success" : "warning"}
+        onClick={() => onCardClick?.("rate")}
       />
       
       <KPICard
@@ -76,6 +86,7 @@ export const DashboardKPI = () => {
         value={kpis.nextFollowups}
         icon={Calendar}
         variant={kpis.nextFollowups > 5 ? "warning" : "default"}
+        onClick={() => onCardClick?.("followups")}
       />
 
       <div className="hidden xl:block">
@@ -85,6 +96,7 @@ export const DashboardKPI = () => {
           unit="d"
           icon={Clock}
           variant="default"
+          onClick={() => onCardClick?.("avg")}
         />
       </div>
     </div>
