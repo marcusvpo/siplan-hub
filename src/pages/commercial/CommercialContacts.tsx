@@ -40,9 +40,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 
 export default function CommercialContacts() {
+// ... preserving rest of state and handlers from line 46 to 223 ...
   const {
     clients,
     contacts,
@@ -54,16 +61,11 @@ export default function CommercialContacts() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
-  // Replaced Sheet with Dialog state
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
-
-  // Advanced Filters
   const [roleFilter, setRoleFilter] = useState("");
-
   const { toast } = useToast();
 
-  // Form State
   const [formData, setFormData] = useState({
     name: "",
     role: "",
@@ -180,7 +182,6 @@ export default function CommercialContacts() {
       client.name.toLowerCase().includes(searchTerm.toLowerCase())
     ) || [];
 
-  // Extract unique roles for filter
   const uniqueRoles = Array.from(
     new Set(contacts?.map((c) => c.role).filter(Boolean))
   );
@@ -252,22 +253,32 @@ export default function CommercialContacts() {
                 <Users className="h-3.5 w-3.5 mr-2 shrink-0" />
                 Todos os Contatos
               </Button>
-              {filteredClients.map((client) => (
-                <Button
-                  key={client.id}
-                  variant={
-                    selectedClientId === client.id ? "secondary" : "ghost"
-                  }
-                  className={`w-full justify-start font-normal truncate text-xs py-1 h-auto ${
-                    selectedClientId === client.id
-                      ? "bg-purple-100 text-purple-900 dark:bg-purple-900/20 dark:text-purple-100 border-l-2 border-purple-500 rounded-l-none"
-                      : ""
-                  }`}
-                  onClick={() => setSelectedClientId(client.id)}
-                >
-                  <span className="truncate ml-5 leading-tight">{client.name}</span>
-                </Button>
-              ))}
+              <TooltipProvider delayDuration={300}>
+                {filteredClients.map((client) => (
+                  <Tooltip key={client.id}>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant={
+                          selectedClientId === client.id ? "secondary" : "ghost"
+                        }
+                        className={`w-full justify-start font-normal truncate text-xs py-1 h-auto ${
+                          selectedClientId === client.id
+                            ? "bg-purple-100 text-purple-900 dark:bg-purple-900/20 dark:text-purple-100 border-l-2 border-purple-500 rounded-l-none"
+                            : ""
+                        }`}
+                        onClick={() => setSelectedClientId(client.id)}
+                      >
+                        <span className="truncate ml-5 leading-tight">
+                          {client.name}
+                        </span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="max-w-[400px]">
+                      <p>{client.name}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
+              </TooltipProvider>
             </div>
           </ScrollArea>
         </Card>
