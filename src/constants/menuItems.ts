@@ -36,7 +36,7 @@ export const menuItems: MenuItem[] = [
         icon: LayoutGrid,
         path: "/dashboard",
         description: "Visão geral e indicadores principais",
-        // Dashboard is always visible — no permissionKey required
+        permissionKey: "dashboard",
     },
     {
         title: "Implantação",

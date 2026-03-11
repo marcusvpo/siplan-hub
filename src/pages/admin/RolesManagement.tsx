@@ -46,9 +46,9 @@ const resourceTranslations: Record<string, string> = {
   users: "Usuários (Admin)",
   teams: "Equipes (Admin)",
   roles: "Perfis (Admin)",
-  audit_logs: "Logs de Auditoria (Admin)",
   vacations: "Férias (Admin)",
   settings: "Configurações Globais (Admin)",
+  dashboard: "Dashboard Principal",
 };
 
 const actionTranslations: Record<string, string> = {

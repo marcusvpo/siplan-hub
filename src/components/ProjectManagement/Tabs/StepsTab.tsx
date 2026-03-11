@@ -72,6 +72,7 @@ import {
   getStageReadiness,
   identifyBottleneck,
 } from "@/lib/predictability-utils";
+import { usePermissions } from "@/hooks/usePermissions";
 
 interface TabProps {
   project: ProjectV2;
@@ -87,6 +88,7 @@ type StatusType =
 export function StepsTab({ project, onUpdate }: TabProps) {
   const { data, updateStage, saveState } = useProjectForm(project, onUpdate);
   const { toast } = useToast();
+  const { canEditProjects } = usePermissions();
   const [notifying, setNotifying] = useState(false);
   const [sendingToConversion, setSendingToConversion] = useState(false);
   const { sendToConversion, getItemByProjectId, removeFromQueue } =
@@ -198,7 +200,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
           <AlertDialogTrigger asChild>
             <Button
               variant="destructive"
-              disabled={notifying}
+              disabled={notifying || !canEditProjects}
               className="w-full md:w-auto font-bold shadow-sm"
             >
               <Megaphone className="mr-2 h-4 w-4" />
@@ -232,6 +234,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
           onValueChange={(v) =>
             updateStage("infra", { workstationsStatus: v as StatusType })
           }
+          disabled={!canEditProjects}
         >
           <SelectTrigger
             className={cn(
@@ -292,6 +295,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
           onValueChange={(v) =>
             updateStage("infra", { serverStatus: v as StatusType })
           }
+          disabled={!canEditProjects}
         >
           <SelectTrigger
             className={cn(
@@ -355,6 +359,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
               workstationsCount: parseInt(e.target.value),
             })
           }
+          disabled={!canEditProjects}
           className="h-11 border-2 border-purple-200 hover:border-purple-300 focus:border-purple-400 bg-purple-50/50 font-medium"
         />
       </div>
@@ -370,6 +375,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
           onCheckedChange={(checked) =>
             updateStage("adherence", { hasProductGap: checked === true })
           }
+          disabled={!canEditProjects}
           className="border-amber-400 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
         />
         <Label
@@ -391,6 +397,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
               onChange={(e) =>
                 updateStage("adherence", { gapDescription: e.target.value })
               }
+              disabled={!canEditProjects}
               className="min-h-[100px] border-2 border-red-200 focus:border-red-400 bg-white"
               placeholder="Descreva detalhadamente o gap identificado..."
             />
@@ -411,6 +418,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
         onChange={(e) =>
           updateStage("environment", { osVersion: e.target.value })
         }
+        disabled={!canEditProjects}
         placeholder="Ex: Windows Server 2022"
         className="h-11 border-2 border-emerald-200 hover:border-emerald-300 focus:border-emerald-400 bg-emerald-50/50 font-medium"
       />
@@ -426,7 +434,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
             <AlertDialogTrigger asChild>
               <Button
                 variant={isInConversionQueue ? "outline" : "default"}
-                disabled={sendingToConversion || isInConversionQueue}
+                disabled={sendingToConversion || isInConversionQueue || !canEditProjects}
                 className={cn(
                   "w-full md:w-auto font-bold shadow-sm",
                   isInConversionQueue
@@ -698,6 +706,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
               onValueChange={(v) =>
                 updatePhase("phase1", { status: v as StageStatus })
               }
+              disabled={!canEditProjects}
             >
               <SelectTrigger
                 className={cn(
@@ -750,6 +759,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
             <AutocompleteInput
               value={stage.phase1?.responsible || ""}
               onChange={(v) => updatePhase("phase1", { responsible: v })}
+              disabled={!canEditProjects}
               className="h-11 border-2 border-indigo-200 hover:border-indigo-300 focus:border-indigo-400 bg-white"
             />
           </div>
@@ -772,6 +782,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
                     : undefined,
                 })
               }
+              disabled={!canEditProjects}
               className="h-11 border-2 border-cyan-200 hover:border-cyan-300 focus:border-cyan-400 bg-white font-medium"
             />
           </div>
@@ -794,6 +805,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
                     : undefined,
                 })
               }
+              disabled={!canEditProjects}
               className="h-11 border-2 border-rose-200 hover:border-rose-300 focus:border-rose-400 bg-white font-medium"
             />
           </div>
@@ -810,6 +822,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
               content={getPhaseContent(stage.phase1)}
               onChange={(c) => updatePhase("phase1", { observations: c })}
               placeholder="Detalhes da fase 1..."
+              editable={canEditProjects}
             />
           </div>
         </div>
@@ -835,6 +848,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
               onValueChange={(v) =>
                 updatePhase("phase2", { status: v as StageStatus })
               }
+              disabled={!canEditProjects}
             >
               <SelectTrigger
                 className={cn(
@@ -887,6 +901,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
             <AutocompleteInput
               value={stage.phase2?.responsible || ""}
               onChange={(v) => updatePhase("phase2", { responsible: v })}
+              disabled={!canEditProjects}
               className="h-11 border-2 border-pink-200 hover:border-pink-300 focus:border-pink-400 bg-white"
             />
           </div>
@@ -909,6 +924,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
                     : undefined,
                 })
               }
+              disabled={!canEditProjects}
               className="h-11 border-2 border-cyan-200 hover:border-cyan-300 focus:border-cyan-400 bg-white font-medium"
             />
           </div>
@@ -931,6 +947,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
                     : undefined,
                 })
               }
+              disabled={!canEditProjects}
               className="h-11 border-2 border-rose-200 hover:border-rose-300 focus:border-rose-400 bg-white font-medium"
             />
           </div>
@@ -947,6 +964,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
               content={getPhaseContent(stage.phase2)}
               onChange={(c) => updatePhase("phase2", { observations: c })}
               placeholder="Detalhes da fase 2..."
+              editable={canEditProjects}
             />
           </div>
         </div>
@@ -995,6 +1013,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
           readinessReason={
             stageReadiness.find((r) => r.stageId === "infra")?.reason
           }
+          canEditProjects={canEditProjects}
         >
           {renderInfraFields(stagesData.infra)}
         </StageCard>
@@ -1015,6 +1034,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
           readinessReason={
             stageReadiness.find((r) => r.stageId === "adherence")?.reason
           }
+          canEditProjects={canEditProjects}
         >
           {renderAdherenceFields(stagesData.adherence)}
         </StageCard>
@@ -1035,6 +1055,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
           readinessReason={
             stageReadiness.find((r) => r.stageId === "conversion")?.reason
           }
+          canEditProjects={canEditProjects}
         >
           {renderConversionFields(stagesData.conversion)}
         </StageCard>
@@ -1055,6 +1076,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
           readinessReason={
             stageReadiness.find((r) => r.stageId === "environment")?.reason
           }
+          canEditProjects={canEditProjects}
         >
           {renderEnvironmentFields(stagesData.environment)}
         </StageCard>
@@ -1072,6 +1094,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
             observations={stagesData.modelosEditor?.observations}
             onUpdate={(u) => updateStage("modelosEditor", u)}
             extraHeaderField={<ModelosMetrics stage={stagesData.modelosEditor} />}
+            canEditProjects={canEditProjects}
           >
             <ModelosEditorWorkspace project={project} onUpdate={(u) => updateStage("modelosEditor", u)} />
           </StageCard>
@@ -1121,6 +1144,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
             }
             updateStage("implementation", updates);
           }}
+          canEditProjects={canEditProjects}
         >
           {renderImplementationFields(stagesData.implementation)}
         </StageCard>
@@ -1141,6 +1165,7 @@ export function StepsTab({ project, onUpdate }: TabProps) {
           readinessReason={
             stageReadiness.find((r) => r.stageId === "post")?.reason
           }
+          canEditProjects={canEditProjects}
         />
       </Accordion>
     </div>

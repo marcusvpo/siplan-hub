@@ -22,6 +22,7 @@ interface AutocompleteInputProps {
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
+  disabled?: boolean;
 }
 
 export function AutocompleteInput({
@@ -29,6 +30,7 @@ export function AutocompleteInput({
   onChange,
   placeholder = "Selecione...",
   className,
+  disabled = false,
 }: AutocompleteInputProps) {
   const [open, setOpen] = React.useState(false);
   const { members } = useTeamMembers();
@@ -43,6 +45,7 @@ export function AutocompleteInput({
           variant="outline"
           role="combobox"
           aria-expanded={open}
+          disabled={disabled}
           className={cn(
             "w-full justify-between font-normal",
             !value && "text-muted-foreground",
