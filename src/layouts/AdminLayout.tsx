@@ -15,7 +15,6 @@ import {
   Settings2,
   Activity,
   HardDrive,
-  Webhook,
   UserMinus,
 } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -73,7 +72,6 @@ export default function AdminLayout() {
     { href: "/admin/audit", label: "Logs", icon: History },
     { href: "/admin/settings", label: "Saúde dos Projetos", icon: Activity },
     { href: "/admin/storage", label: "Armazenamento", icon: HardDrive },
-    { href: "/admin/integrations", label: "Integrações (API)", icon: Webhook },
     { href: "/admin/inactive-users", label: "Usuários Inativos", icon: UserMinus },
   ];
 

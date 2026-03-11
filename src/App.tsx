@@ -78,7 +78,6 @@ const VacationManagement = lazy(
   () => import("./pages/admin/VacationManagement"),
 );
 const SystemStorage = lazy(() => import("./pages/admin/SystemStorage"));
-const IntegrationsStatus = lazy(() => import("./pages/admin/IntegrationsStatus"));
 const InactiveUsers = lazy(() => import("./pages/admin/InactiveUsers"));
 
 const queryClient = new QueryClient();
@@ -182,14 +181,6 @@ const App = () => (
                   element={
                     <Suspense fallback={<PageLoader />}>
                       <SystemStorage />
-                    </Suspense>
-                  }
-                />
-                <Route
-                  path="integrations"
-                  element={
-                    <Suspense fallback={<PageLoader />}>
-                      <IntegrationsStatus />
                     </Suspense>
                   }
                 />
