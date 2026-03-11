@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { menuItems, MenuItem } from "@/constants/menuItems";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/hooks/use-theme";
+import { usePermissions } from "@/hooks/usePermissions";
 import {
     Dialog,
     DialogContent,
@@ -19,6 +20,16 @@ export default function Home() {
     const [selectedCategory, setSelectedCategory] = useState<MenuItem | null>(null);
     const navigate = useNavigate();
     const { theme } = useTheme();
+    const { hasPermission, isAdmin } = usePermissions();
+
+    // Filter menu items the user has permission to see
+    const allowedMenuItems = useMemo(() => {
+        return menuItems.filter(item => {
+            if (!item.permissionKey) return true; // No permission required (e.g. Dashboard)
+            if (isAdmin) return true;
+            return hasPermission(item.permissionKey, "view");
+        });
+    }, [hasPermission, isAdmin]);
 
     const isDark =
         theme === "dark" ||
@@ -29,9 +40,9 @@ export default function Home() {
         : "/assets/Siplan_logo.png";
 
     const filteredItems = useMemo(() => {
-        if (!search) return menuItems;
+        if (!search) return allowedMenuItems;
 
-        return menuItems.map(item => {
+        return allowedMenuItems.map(item => {
             const itemMatches =
                 item.title.toLowerCase().includes(search.toLowerCase()) ||
                 item.description?.toLowerCase().includes(search.toLowerCase());
@@ -49,7 +60,7 @@ export default function Home() {
             }
             return null;
         }).filter(Boolean) as MenuItem[];
-    }, [search]);
+    }, [search, allowedMenuItems]);
 
     // Flattened suggestions for direct search
     const searchSuggestions = useMemo(() => {
@@ -60,7 +71,7 @@ export default function Home() {
             parentTitle: string;
         }> = [];
 
-        menuItems.forEach(category => {
+        allowedMenuItems.forEach(category => {
             category.subItems?.forEach(sub => {
                 const matches =
                     sub.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -76,7 +87,7 @@ export default function Home() {
         });
 
         return suggestions;
-    }, [search]);
+    }, [search, allowedMenuItems]);
 
     const handleCardClick = (item: MenuItem) => {
         if (item.path) {

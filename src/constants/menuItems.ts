@@ -12,7 +12,6 @@ import {
     Contact,
     Home,
     Cog,
-    FolderClosed,
     FileEdit,
     LayoutGrid,
 } from "lucide-react";
@@ -22,6 +21,7 @@ export interface MenuItem {
     icon: any;
     path?: string;
     description?: string;
+    permissionKey?: string; // resource key used for permission check (e.g. "menu_implantacao")
     subItems?: {
         title: string;
         path: string;
@@ -36,11 +36,13 @@ export const menuItems: MenuItem[] = [
         icon: LayoutGrid,
         path: "/dashboard",
         description: "Visão geral e indicadores principais",
+        // Dashboard is always visible — no permissionKey required
     },
     {
         title: "Implantação",
         icon: Layers,
         description: "Gestão de projetos, cronogramas e entregas",
+        permissionKey: "menu_implantacao",
         subItems: [
             {
                 title: "Gerenciar Projetos",
@@ -66,6 +68,7 @@ export const menuItems: MenuItem[] = [
         title: "Calendário",
         icon: Calendar,
         description: "Visão cronológica de atividades e prazos",
+        permissionKey: "menu_calendario",
         subItems: [
             {
                 title: "Calendário de Projetos",
@@ -85,6 +88,7 @@ export const menuItems: MenuItem[] = [
         title: "Comercial",
         icon: Briefcase,
         description: "CRM, vendas e gerenciamento de clientes",
+        permissionKey: "menu_comercial",
         subItems: [
             {
                 title: "Painel de Clientes",
@@ -110,6 +114,7 @@ export const menuItems: MenuItem[] = [
         title: "Conversão",
         icon: Database,
         description: "Migração de dados e motores de conversão",
+        permissionKey: "menu_conversao",
         subItems: [
             {
                 title: "Gestão de Atividades",
@@ -135,6 +140,7 @@ export const menuItems: MenuItem[] = [
         title: "Modelos Editor OrionTN",
         icon: FileText,
         description: "Editor de modelos e templates OrionTN",
+        permissionKey: "menu_orion",
         subItems: [
             {
                 title: "Dashboard",

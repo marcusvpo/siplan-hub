@@ -19,6 +19,7 @@ import { Pencil, X } from "lucide-react";
 import { useState } from "react";
 import { useProjectDetails } from "@/hooks/useProjectDetails";
 import { Skeleton } from "@/components/ui/skeleton";
+import { usePermissions } from "@/hooks/usePermissions";
 
 interface ProjectModalProps {
   project: Partial<ProjectV2> | null;
@@ -34,6 +35,7 @@ export function ProjectModal({
   onUpdate,
 }: ProjectModalProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const { canEditProjects } = usePermissions();
 
   // Always fetch fresh full details
   const { project: fullProject, isLoading } = useProjectDetails(
@@ -171,6 +173,7 @@ export function ProjectModal({
                   Roadmap
                 </TabsTrigger>
                 <div className="flex items-center h-full ml-auto">
+                  {canEditProjects && (
                   <Button
                     variant="ghost"
                     size="icon"
@@ -185,6 +188,7 @@ export function ProjectModal({
                       <Pencil className="h-5 w-5" />
                     )}
                   </Button>
+                  )}
                 </div>
               </TabsList>
             </div>

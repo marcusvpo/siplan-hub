@@ -13,9 +13,11 @@ export function usePermissions() {
   // Specific permission checks can be abstracted here as well
   const canManageUsers = context.hasPermission("users", "manage");
   const canCreateProjects = context.hasPermission("projects", "create");
+  const canEditProjects = context.hasPermission("projects", "edit");
   const canDeleteProjects = context.hasPermission("projects", "delete");
   const canUploadFiles = context.hasPermission("files", "upload");
   const canDownloadFiles = context.hasPermission("files", "download");
+  const canDeleteFiles = context.hasPermission("files", "delete");
 
   return {
     permissions: context.permissions,
@@ -24,8 +26,10 @@ export function usePermissions() {
     // Pre-computed permissions
     canManageUsers,
     canCreateProjects,
+    canEditProjects,
     canDeleteProjects,
     canUploadFiles,
-    canDownloadFiles
+    canDownloadFiles,
+    canDeleteFiles
   };
 }
