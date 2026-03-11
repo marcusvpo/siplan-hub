@@ -16,6 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useProjectFiles } from "@/hooks/useProjectFiles";
 import { useToast } from "@/hooks/use-toast";
+import { usePermissions } from "@/hooks/usePermissions";
 import { cn } from "@/lib/utils";
 import { ProjectV2, AttachedFile, ModelosEditorStageV2 } from "@/types/ProjectV2";
 import { differenceInDays, format } from "date-fns";
@@ -66,6 +67,7 @@ export function ModelosMetrics({ stage }: { stage: ModelosEditorStageV2 | undefi
 export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorkspaceProps) {
     const { toast } = useToast();
     const { uploadFile, getDownloadUrl, deleteFile: deleteStorageFile } = useProjectFiles(project.id);
+    const { canUploadFiles, canDeleteFiles, canEditProjects } = usePermissions();
     const [uploadingType, setUploadingType] = useState<'sent' | 'available' | null>(null);
 
     const sentFileInputRef = useRef<HTMLInputElement>(null);
@@ -189,6 +191,7 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
             <div className="flex items-center gap-3 overflow-hidden">
                 <Checkbox
                     checked={!!file.isDone}
+                    disabled={!canEditProjects}
                     onCheckedChange={() => handleToggleFileDone(file, type, list)}
                     className="data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500 rounded flex-shrink-0"
                 />
@@ -202,9 +205,11 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                 <Button variant="ghost" size="icon" className="h-7 w-7 transition-colors hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20" title="Baixar" onClick={(e) => { e.preventDefault(); handleFileDownload(file); }}>
                     <Download className="h-3.5 w-3.5" />
                 </Button>
+                {canDeleteFiles && (
                 <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20" title="Excluir" onClick={(e) => { e.preventDefault(); handleRemoveFile(file, type, list); }}>
                     <Trash2 className="h-3.5 w-3.5" />
                 </Button>
+                )}
             </div>
         </div>
     );
@@ -264,6 +269,7 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
                             </Button>
+                            {canUploadFiles && (
                             <Button
                                 variant="outline"
                                 size="sm"
@@ -274,6 +280,7 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                                 {uploadingType === 'sent' ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <UploadCloud className="h-3.5 w-3.5 mr-1" />}
                                 Anexar
                             </Button>
+                            )}
                         </div>
                     </div>
                     {(!stage.sentFiles || stage.sentFiles.length === 0) && (
@@ -313,6 +320,7 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
                             </Button>
+                            {canUploadFiles && (
                             <Button
                                 variant="outline"
                                 size="sm"
@@ -323,6 +331,7 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                                 {uploadingType === 'available' ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <UploadCloud className="h-3.5 w-3.5 mr-1" />}
                                 Anexar JSON
                             </Button>
+                            )}
                         </div>
                     </div>
                     {(!stage.availableFiles || stage.availableFiles.length === 0) && (

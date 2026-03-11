@@ -37,9 +37,14 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Check, ChevronsUpDown, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { usePermissions } from "@/hooks/usePermissions";
 
 export const NewProjectDialog = () => {
   const [open, setOpen] = useState(false);
+  const { canCreateProjects } = usePermissions();
+
+  // Hide button entirely if user can't create projects
+  if (!canCreateProjects) return null;
 
   // Dados do Projeto
   const [clientName, setClientName] = useState("");

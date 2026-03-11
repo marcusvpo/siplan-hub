@@ -32,6 +32,7 @@ import { useRef, useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { usePermissions } from "@/hooks/usePermissions";
 
 interface TabProps {
   project: ProjectV2;
@@ -43,6 +44,7 @@ export function FilesTab({ project }: TabProps) {
     useProjectFiles(project.id);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const { canUploadFiles, canDeleteFiles, canEditProjects } = usePermissions();
   const [isUploading, setIsUploading] = useState(false);
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
   const [uploadProgress, setUploadProgress] = useState({
@@ -249,6 +251,7 @@ export function FilesTab({ project }: TabProps) {
           >
             <Download className="h-4 w-4" />
           </Button>
+          {canDeleteFiles && (
           <Button
             variant="ghost"
             size="icon"
@@ -258,6 +261,7 @@ export function FilesTab({ project }: TabProps) {
           >
             <Trash2 className="h-4 w-4" />
           </Button>
+          )}
         </div>
       </CardContent>
     </Card>
@@ -289,6 +293,7 @@ export function FilesTab({ project }: TabProps) {
             onChange={handleFileSelect}
             multiple
           />
+          {canUploadFiles && (
           <Button
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
@@ -304,6 +309,7 @@ export function FilesTab({ project }: TabProps) {
                 : "Enviando..."
               : "Upload Arquivos"}
           </Button>
+          )}
         </div>
       </div>
 
@@ -320,17 +326,23 @@ export function FilesTab({ project }: TabProps) {
               <UploadCloud className="h-10 w-10 text-muted-foreground mb-4" />
               <h4 className="text-lg font-medium">Nenhum arquivo enviado</h4>
               <p className="text-sm text-muted-foreground mb-4">
-                Clique no botão de upload para adicionar arquivos.
+                {canUploadFiles 
+                  ? "Clique no botão de upload para adicionar arquivos." 
+                  : "Nenhum documento foi anexado a este projeto ainda."}
               </p>
+              {canUploadFiles && (
               <Button
                 variant="outline"
                 onClick={() => fileInputRef.current?.click()}
               >
                 Selecionar Arquivos
               </Button>
+              )}
+              {canUploadFiles && (
               <p className="text-xs text-muted-foreground mt-2">
                 Você pode selecionar múltiplos arquivos de uma vez.
               </p>
+              )}
             </CardContent>
           </Card>
         )}
@@ -374,7 +386,7 @@ export function FilesTab({ project }: TabProps) {
       </div>
 
       {/* Barra de Ações em Massa */}
-      {selectedFileIds.length > 0 && (
+      {canDeleteFiles && selectedFileIds.length > 0 && (
         <div className="fixed bottom-10 left-1/2 -translate-x-1/2 bg-white dark:bg-slate-900 border rounded-full shadow-2xl px-6 py-3 flex items-center gap-6 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
           <div className="flex items-center gap-3">
             <span className="bg-primary text-primary-foreground text-xs font-bold h-6 w-6 flex items-center justify-center rounded-full">

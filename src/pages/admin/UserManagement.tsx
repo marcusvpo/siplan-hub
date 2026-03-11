@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { createClient } from "@supabase/supabase-js";
 import {
   Table,
   TableBody,
@@ -148,70 +147,35 @@ export default function UserManagement() {
     setCreating(true);
 
     try {
-      const tempSupabase = createClient(
-        import.meta.env.VITE_SUPABASE_URL,
-        import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-        {
-          auth: {
-            storage: undefined,
-            autoRefreshToken: false,
-            persistSession: false,
-            detectSessionInUrl: false,
-          },
-        },
-      );
-
-      const { data, error } = await tempSupabase.auth.signUp({
-        email: newUserEmail,
-        password: newUserPassword,
-        options: {
-          data: {
-            full_name: newUserName,
-            // Pass team in metadata
-            team: newUserTeam || null,
-          },
+      const { data, error } = await supabase.functions.invoke("create-user", {
+        body: {
+          email: newUserEmail,
+          password: newUserPassword,
+          full_name: newUserName,
+          team: newUserTeam || null,
+          role: newUserRole,
         },
       });
 
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
-      if (data.user) {
-        // Explicitly update the profile
-        const { error: profileError } = await supabase
-          .from("profiles")
-          .update({
-            full_name: newUserName,
-            team: newUserTeam || null,
-            role: newUserRole,
-          })
-          .eq("id", data.user.id);
+      logAction.mutate({
+        action: "USER_CREATED",
+        details: { email: newUserEmail, role: newUserRole },
+      });
+      toast({
+        title: "Usuário criado com sucesso",
+        description: `O usuário ${newUserName} foi criado e já pode fazer login.`,
+      });
 
-        if (profileError) {
-          console.error("Error updating profile after signup:", profileError);
-          toast({
-            variant: "destructive",
-            title: "Usuário criado, mas erro ao atualizar perfil",
-            description: profileError.message,
-          });
-        } else {
-          logAction.mutate({
-            action: "USER_CREATED",
-            details: { email: newUserEmail, role: newUserRole },
-          });
-          toast({
-            title: "Usuário criado com sucesso",
-            description: `O usuário ${newUserName} foi criado.`,
-          });
-        }
-
-        setIsCreateOpen(false);
-        setNewUserEmail("");
-        setNewUserPassword("");
-        setNewUserName("");
-        setNewUserRole("user");
-        setNewUserTeam("");
-        fetchUsers();
-      }
+      setIsCreateOpen(false);
+      setNewUserEmail("");
+      setNewUserPassword("");
+      setNewUserName("");
+      setNewUserRole("user");
+      setNewUserTeam("");
+      fetchUsers();
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : "Erro desconhecido";
