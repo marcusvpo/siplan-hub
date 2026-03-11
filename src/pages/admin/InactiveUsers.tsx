@@ -108,7 +108,7 @@ export default function InactiveUsers() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-10">
       <div className="space-y-1">
-        <h2 className="text-2xl font-bold tracking-tight">Usuários Inativos (BETA)</h2>
+        <h2 className="text-2xl font-bold tracking-tight">Usuários Inativos</h2>
         <p className="text-muted-foreground">
           Contas que não registraram nenhuma ação (login ou alteração de dados) nos últimos 30 dias.
         </p>
