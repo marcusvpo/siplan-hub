@@ -89,3 +89,32 @@ export function useAdminStats() {
 
   return { stats, isLoading };
 }
+
+export function useStorageStats() {
+  return useQuery({
+    queryKey: ["admin-storage-stats"],
+    queryFn: async () => {
+      // Fetch DB Size (RPC must be created in Supabase SQL Editor)
+      const { data: dbSize, error: dbError } = await supabase.rpc('get_db_size');
+      if (dbError) {
+        console.error("Error fetching get_db_size:", dbError);
+      }
+
+      // Fetch Storage Size (RPC must be created in Supabase SQL Editor)
+      const { data: storageSize, error: storageError } = await supabase.rpc('get_storage_size');
+      if (storageError) {
+        console.error("Error fetching get_storage_size:", storageError);
+      }
+
+      // Convert from bytes to MB
+      const dbSizeMB = dbSize ? Number(dbSize) / (1024 * 1024) : 0;
+      const storageSizeMB = storageSize ? Number(storageSize) / (1024 * 1024) : 0;
+
+      return {
+        dbSizeMB,
+        storageSizeMB,
+      };
+    },
+    refetchInterval: 5 * 60 * 1000, // Refresh every 5 minutes
+  });
+}
