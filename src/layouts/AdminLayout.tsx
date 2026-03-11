@@ -16,6 +16,7 @@ import {
   Activity,
   HardDrive,
   UserMinus,
+  ArrowLeft,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -138,7 +139,7 @@ export default function AdminLayout() {
             })}
           </div>
 
-          <div className="p-4 border-t">
+          <div className="p-4 border-t space-y-2">
             <div className="flex items-center gap-3 px-2 mb-4">
               <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs uppercase">
                 {user.email?.substring(0, 2) || "U"}
@@ -150,6 +151,17 @@ export default function AdminLayout() {
                 </p>
               </div>
             </div>
+
+            <Link to="/">
+              <Button
+                variant="outline"
+                className="w-full justify-start text-muted-foreground hover:text-foreground"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Acessar Sistema
+              </Button>
+            </Link>
+
             <Button
               variant="outline"
               className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/20"
