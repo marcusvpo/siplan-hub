@@ -67,12 +67,11 @@ export default function AdminLayout() {
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/users", label: "Usuários", icon: Users },
     { href: "/admin/roles", label: "Perfis de Acesso", icon: Shield },
-    { href: "/admin/vacations", label: "Férias", icon: Palmtree },
     { href: "/admin/teams-config", label: "Configurações do Time", icon: Settings2 },
-    { href: "/admin/audit", label: "Logs", icon: History },
+    { href: "/admin/inactive-users", label: "Usuários Inativos", icon: UserMinus },
+    { href: "/admin/vacations", label: "Férias", icon: Palmtree },
     { href: "/admin/settings", label: "Saúde dos Projetos", icon: Activity },
     { href: "/admin/storage", label: "Armazenamento", icon: HardDrive },
-    { href: "/admin/inactive-users", label: "Usuários Inativos", icon: UserMinus },
   ];
 
   return (
