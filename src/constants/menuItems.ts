@@ -14,6 +14,7 @@ import {
     Cog,
     FileEdit,
     LayoutGrid,
+    LayoutDashboard,
 } from "lucide-react";
 
 export interface MenuItem {
@@ -34,9 +35,22 @@ export const menuItems: MenuItem[] = [
     {
         title: "Dashboard",
         icon: LayoutGrid,
-        path: "/dashboard",
         description: "Visão geral e indicadores principais",
         permissionKey: "dashboard",
+        subItems: [
+            {
+                title: "Visão Geral",
+                path: "/dashboard",
+                icon: BarChart3,
+                description: "Métricas e status dos projetos",
+            },
+            {
+                title: "Quadro Kanban",
+                path: "/dashboard/kanban",
+                icon: LayoutDashboard,
+                description: "Acompanhamento visual do fluxo",
+            },
+        ],
     },
     {
         title: "Implantação",
