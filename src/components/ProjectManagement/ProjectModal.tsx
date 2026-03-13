@@ -15,11 +15,12 @@ import { LogsTab } from "./Tabs/LogsTab";
 import { RoadmapManager } from "./RoadmapManager";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Pencil, X } from "lucide-react";
+import { Pencil, X, Maximize2 } from "lucide-react";
 import { useState } from "react";
 import { useProjectDetails } from "@/hooks/useProjectDetails";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useNavigate } from "react-router-dom";
 
 interface ProjectModalProps {
   project: Partial<ProjectV2> | null;
@@ -38,6 +39,7 @@ export function ProjectModal({
   const [activeTab, setActiveTab] = useState("general");
   const [activeStepId, setActiveStepId] = useState<string | undefined>(undefined);
   const { canEditProjects } = usePermissions();
+  const navigate = useNavigate();
 
   // Always fetch fresh full details
   const { project: fullProject, isLoading } = useProjectDetails(
@@ -58,7 +60,7 @@ export function ProjectModal({
     >
       <DialogContent className="max-w-[90vw] w-[90vw] h-[90vh] flex flex-col p-0 gap-0">
         <DialogHeader className="px-6 py-4 border-b shrink-0 flex flex-row items-center justify-between">
-          <div className="flex flex-col gap-1 w-full">
+          <div className="flex flex-col gap-1 w-full mr-12">
             <div className="flex items-center flex-wrap gap-2">
               {isLoading ? (
                 <Skeleton className="h-8 w-64" />
@@ -110,6 +112,23 @@ export function ProjectModal({
             <DialogDescription className="mt-1">
               Detalhes e gerenciamento do projeto.
             </DialogDescription>
+          </div>
+          
+          <div className="flex items-center gap-1 absolute right-12 top-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 text-muted-foreground hover:text-foreground"
+              onClick={() => {
+                if (displayProject?.id) {
+                  navigate(`/projects/${displayProject.id}`);
+                  onOpenChange(false);
+                }
+              }}
+              title="Tela Cheia"
+            >
+              <Maximize2 className="h-4.5 w-4.5" />
+            </Button>
           </div>
         </DialogHeader>
 

@@ -163,14 +163,14 @@ export function GeneralInfoTab({ project, onUpdate, onStageClick }: TabProps) {
       </div>
 
       {/* 1. Pipeline Visual Moderno */}
-      <div className="w-full py-12 px-6 bg-card/50 backdrop-blur-sm rounded-2xl border shadow-sm relative overflow-hidden mb-8">
+      <div className="w-full py-6 px-6 bg-card/50 backdrop-blur-sm rounded-2xl border shadow-sm relative overflow-hidden mb-8">
         <div className="flex items-center justify-between relative z-10 max-w-5xl mx-auto">
           {/* Connecting Line */}
-          <div className="absolute top-10 left-0 right-0 h-1.5 bg-muted -z-10 rounded-full" />
+          <div className="absolute top-[2.15rem] left-0 right-0 h-1 bg-muted -z-10 rounded-full" />
 
           {/* Active Progress Line */}
           <div
-            className="absolute top-10 left-0 h-1.5 bg-gradient-to-r from-emerald-500 to-emerald-400 -z-10 transition-all duration-1000 ease-in-out rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]"
+            className="absolute top-[2.15rem] left-0 h-1 bg-gradient-to-r from-emerald-500 to-emerald-400 -z-10 transition-all duration-1000 ease-in-out rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]"
             style={{
               width: `${Math.min(
                 100,
@@ -203,12 +203,12 @@ export function GeneralInfoTab({ project, onUpdate, onStageClick }: TabProps) {
             return (
               <div
                 key={stage.id}
-                className="flex flex-col items-center gap-5 group cursor-pointer relative"
+                className="flex flex-col items-center gap-3 group cursor-pointer relative"
                 onClick={() => onStageClick?.(stage.id)}
               >
                 <div
                   className={cn(
-                    "h-20 w-20 rounded-2xl rotate-3 flex items-center justify-center transition-all duration-500 border-4 shadow-xl",
+                    "h-14 w-14 rounded-xl rotate-2 flex items-center justify-center transition-all duration-500 border-2 shadow-lg",
                     isDone
                       ? "bg-gradient-to-br from-emerald-500 to-emerald-600 border-emerald-400 text-white shadow-emerald-500/30 rotate-0"
                       : isWaitingAdjustment
@@ -221,15 +221,15 @@ export function GeneralInfoTab({ project, onUpdate, onStageClick }: TabProps) {
                   )}
                 >
                   {isDone ? (
-                    <Check className="h-9 w-9" />
+                    <Check className="h-7 w-7" />
                   ) : (
-                    <Icon className="h-8 w-8" />
+                    <Icon className="h-6 w-6" />
                   )}
                 </div>
-                <div className="text-center space-y-1.5 bg-background/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-transparent group-hover:border-border/50 transition-colors">
+                <div className="text-center space-y-1 bg-background/80 backdrop-blur-md px-2 py-1 rounded-lg border border-transparent group-hover:border-border/50 transition-colors">
                   <p
                     className={cn(
-                      "text-xs font-bold uppercase tracking-widest",
+                      "text-[10px] font-bold uppercase tracking-widest",
                       isDone
                         ? "text-emerald-600 dark:text-emerald-400"
                         : isWaitingAdjustment
@@ -243,7 +243,7 @@ export function GeneralInfoTab({ project, onUpdate, onStageClick }: TabProps) {
                   >
                     {stage.label}
                     {isWaitingAdjustment && (
-                      <span className="block text-[10px] font-medium text-orange-500 dark:text-orange-300 mt-0.5">
+                      <span className="block text-[8px] font-medium text-orange-500 dark:text-orange-300 mt-0.5">
                         Em Adequação
                       </span>
                     )}
