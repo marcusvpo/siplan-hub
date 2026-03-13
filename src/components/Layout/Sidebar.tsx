@@ -72,6 +72,9 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
   const canViewComercial = hasPermission("menu_comercial", "view");
   const canViewConversao = hasPermission("menu_conversao", "view");
   const canViewOrion = hasPermission("menu_orion", "view");
+  const canViewDashboardView = hasPermission("dashboard_view", "view");
+  const canViewKanban = hasPermission("kanban", "view");
+  
   const logoSrc = isDark
     ? "/assets/Siplan_logo_branco.png"
     : "/assets/Siplan_logo.png";
@@ -164,26 +167,30 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
               </CollapsibleTrigger>
               <CollapsibleContent className="space-y-1 pl-4 animate-in slide-in-from-top-2">
                 <div className="pt-1 pb-2">
-                  <Link to="/dashboard">
-                    <Button
-                      variant={isActive("/dashboard") ? "secondary" : "ghost"}
-                      size="sm"
-                      className="w-full justify-start gap-3 h-9"
-                    >
-                      <BarChart3 className="h-4 w-4" />
-                      <span>Visão Geral</span>
-                    </Button>
-                  </Link>
-                  <Link to="/dashboard/kanban">
-                    <Button
-                      variant={isActive("/dashboard/kanban") ? "secondary" : "ghost"}
-                      size="sm"
-                      className="w-full justify-start gap-3 h-9"
-                    >
-                      <LayoutDashboard className="h-4 w-4" />
-                      <span>Quadro Kanban</span>
-                    </Button>
-                  </Link>
+                  {canViewDashboardView && (
+                    <Link to="/dashboard">
+                      <Button
+                        variant={isActive("/dashboard") ? "secondary" : "ghost"}
+                        size="sm"
+                        className="w-full justify-start gap-3 h-9"
+                      >
+                        <BarChart3 className="h-4 w-4" />
+                        <span>Visão Geral</span>
+                      </Button>
+                    </Link>
+                  )}
+                  {canViewKanban && (
+                    <Link to="/dashboard/kanban">
+                      <Button
+                        variant={isActive("/dashboard/kanban") ? "secondary" : "ghost"}
+                        size="sm"
+                        className="w-full justify-start gap-3 h-9"
+                      >
+                        <LayoutDashboard className="h-4 w-4" />
+                        <span>Quadro Kanban</span>
+                      </Button>
+                    </Link>
+                  )}
                 </div>
               </CollapsibleContent>
             </Collapsible>

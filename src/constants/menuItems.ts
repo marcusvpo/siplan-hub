@@ -28,6 +28,7 @@ export interface MenuItem {
         path: string;
         icon: any;
         description?: string;
+        permissionKey?: string;
     }[];
 }
 
@@ -43,12 +44,14 @@ export const menuItems: MenuItem[] = [
                 path: "/dashboard",
                 icon: BarChart3,
                 description: "Métricas e status dos projetos",
+                permissionKey: "dashboard_view",
             },
             {
                 title: "Quadro Kanban",
                 path: "/dashboard/kanban",
                 icon: LayoutDashboard,
                 description: "Acompanhamento visual do fluxo",
+                permissionKey: "kanban",
             },
         ],
     },

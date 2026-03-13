@@ -265,6 +265,10 @@ export default function Home() {
                                 <div className="grid grid-cols-1 gap-2">
                                     {selectedCategory.subItems?.map((sub, idx) => {
                                         const SubIcon = sub.icon;
+                                        if (sub.permissionKey && !isAdmin && !hasPermission(sub.permissionKey, "view")) {
+                                          return null;
+                                        }
+                                        
                                         return (
                                             <motion.button
                                                 key={sub.path}
