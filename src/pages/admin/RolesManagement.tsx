@@ -49,6 +49,8 @@ const resourceTranslations: Record<string, string> = {
   vacations: "Férias (Admin)",
   settings: "Configurações Globais (Admin)",
   dashboard: "Dashboard Principal",
+  dashboard_view: "Dashboard - Visão Geral",
+  kanban: "Dashboard - Quadro Kanban",
 };
 
 const actionTranslations: Record<string, string> = {
@@ -293,9 +295,10 @@ export default function RolesManagement() {
     if (resource.startsWith('calendar_') || resource === 'menu_calendario') return 'Calendário';
     if (resource.startsWith('conversion_') || resource === 'menu_conversao') return 'Conversão';
     if (resource.startsWith('orion_') || resource === 'menu_orion') return 'Modelos Editor OrionTN';
-    if (['users', 'teams', 'roles', 'audit_logs', 'vacations', 'settings'].includes(resource)) return 'Administração';
+    if (['users', 'teams', 'roles', 'audit_logs', 'vacations', 'settings', 'dashboard'].includes(resource)) return 'Administração';
     if (resource === 'projects' || resource === 'menu_implantacao') return 'Implantação & Projetos';
     if (resource === 'files' || resource === 'menu_reports') return 'Relatórios & Arquivos';
+    if (resource === 'kanban' || resource === 'dashboard_view') return 'Dashboard';
     return 'Outros';
   };
 
