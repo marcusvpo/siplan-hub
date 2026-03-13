@@ -80,6 +80,7 @@ const VacationManagement = lazy(
 const SystemStorage = lazy(() => import("./pages/admin/SystemStorage"));
 const InactiveUsers = lazy(() => import("./pages/admin/InactiveUsers"));
 const ProjectDetails = lazy(() => import("./pages/ProjectDetails"));
+const ProjectsKanban = lazy(() => import("./pages/ProjectsKanban"));
 
 const queryClient = new QueryClient();
 
@@ -205,6 +206,7 @@ const App = () => (
                         <Routes>
                           <Route path="/" element={<Home />} />
                           <Route path="/dashboard" element={<DashboardV2 />} />
+                          <Route path="/dashboard/kanban" element={<ProjectsKanban />} />
                           <Route path="/projects" element={<Index />} />
                           <Route path="/projects/:id" element={<ProjectDetails />} />
                           <Route path="/calendar" element={<Calendar />} />

@@ -46,6 +46,9 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
   const { signOut } = useAuth();
   const { theme } = useTheme();
   const { projects } = useProjects();
+  const [isDashboardOpen, setIsDashboardOpen] = useState(
+    location.pathname.startsWith("/dashboard"),
+  );
   const [isImplantacaoOpen, setIsImplantacaoOpen] = useState(false);
   const [isCalendarioOpen, setIsCalendarioOpen] = useState(false);
   const [isOrionTNModelsOpen, setIsOrionTNModelsOpen] = useState(
@@ -133,21 +136,68 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
           </Link>
         </div>
 
-        {/* Dashboard */}
+        {/* Dashboard Group */}
         <div className="px-2">
-          <Link to="/dashboard">
-            <Button
-              variant={isActive("/dashboard") ? "secondary" : "ghost"}
-              className={cn(
-                "w-full justify-start gap-3",
-                collapsed ? "justify-center px-0" : "",
-              )}
-              title="Dashboard"
+          {!collapsed ? (
+            <Collapsible
+              open={isDashboardOpen}
+              onOpenChange={setIsDashboardOpen}
+              className="space-y-1"
             >
-              <LayoutGrid className="h-5 w-5" />
-              {!collapsed && <span>Dashboard</span>}
-            </Button>
-          </Link>
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-between hover:bg-muted/50"
+                  title="Dashboard"
+                >
+                  <div className="flex items-center gap-3">
+                    <LayoutGrid className="h-5 w-5" />
+                    <span>Dashboard</span>
+                  </div>
+                  <ChevronDown
+                    className={cn(
+                      "h-4 w-4 transition-transform",
+                      isDashboardOpen ? "transform rotate-180" : "",
+                    )}
+                  />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-1 pl-4 animate-in slide-in-from-top-2">
+                <div className="pt-1 pb-2">
+                  <Link to="/dashboard">
+                    <Button
+                      variant={isActive("/dashboard") ? "secondary" : "ghost"}
+                      size="sm"
+                      className="w-full justify-start gap-3 h-9"
+                    >
+                      <BarChart3 className="h-4 w-4" />
+                      <span>Visão Geral</span>
+                    </Button>
+                  </Link>
+                  <Link to="/dashboard/kanban">
+                    <Button
+                      variant={isActive("/dashboard/kanban") ? "secondary" : "ghost"}
+                      size="sm"
+                      className="w-full justify-start gap-3 h-9"
+                    >
+                      <LayoutDashboard className="h-4 w-4" />
+                      <span>Quadro Kanban</span>
+                    </Button>
+                  </Link>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          ) : (
+            <Link to="/dashboard">
+              <Button
+                variant={location.pathname.startsWith("/dashboard") ? "secondary" : "ghost"}
+                className="w-full justify-center px-0"
+                title="Dashboard"
+              >
+                <LayoutGrid className="h-5 w-5" />
+              </Button>
+            </Link>
+          )}
         </div>
 
         {/* Implantação Group */}
