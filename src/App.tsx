@@ -79,6 +79,7 @@ const VacationManagement = lazy(
 );
 const SystemStorage = lazy(() => import("./pages/admin/SystemStorage"));
 const InactiveUsers = lazy(() => import("./pages/admin/InactiveUsers"));
+const ProjectDetails = lazy(() => import("./pages/ProjectDetails"));
 
 const queryClient = new QueryClient();
 
@@ -205,6 +206,7 @@ const App = () => (
                           <Route path="/" element={<Home />} />
                           <Route path="/dashboard" element={<DashboardV2 />} />
                           <Route path="/projects" element={<Index />} />
+                          <Route path="/projects/:id" element={<ProjectDetails />} />
                           <Route path="/calendar" element={<Calendar />} />
                           <Route path="/agenda-analistas" element={<AgendaAnalistas />} />
                           <Route
