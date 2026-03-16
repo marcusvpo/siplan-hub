@@ -1,22 +1,35 @@
+import { useState } from "react";
 import { useProjectStore } from "@/stores/projectStore";
 import { useProjectsV2 } from "@/hooks/useProjectsV2";
+import { ProjectV2 } from "@/types/ProjectV2";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { HealthBadge } from "./HealthBadge";
 import { PipelineStatus } from "./PipelineStatus";
-import { Eye, Loader2 } from "lucide-react";
+import { Eye, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { format, isPast } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { getRelativeTime, getDaysSinceUpdate } from "@/utils/calculations";
 import { cn } from "@/lib/utils";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface DashboardTableProps {
   onProjectClick?: (project: ProjectV2) => void;
 }
 
+const PROJECTS_PER_PAGE = 6;
+
 export const DashboardTable = ({ onProjectClick }: DashboardTableProps) => {
   const { setSelectedProject } = useProjectStore();
   const { projects, isLoading } = useProjectsV2();
+  const [currentPage, setCurrentPage] = useState(1);
 
   if (isLoading) {
     return (
@@ -34,87 +47,139 @@ export const DashboardTable = ({ onProjectClick }: DashboardTableProps) => {
     return 0;
   });
 
+  const totalPages = Math.ceil(sortedProjects.length / PROJECTS_PER_PAGE);
+  const startIndex = (currentPage - 1) * PROJECTS_PER_PAGE;
+  const paginatedProjects = sortedProjects.slice(startIndex, startIndex + PROJECTS_PER_PAGE);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   return (
-    <div className="space-y-2">
-      {sortedProjects.map((project) => (
-        <Card
-          key={project.id}
-          className="p-3 hover:bg-muted/30 transition-all cursor-pointer border-muted/20 shadow-none hover:shadow-sm"
-          onClick={() => {
-            setSelectedProject(project);
-            onProjectClick?.(project);
-          }}
-        >
-          <div className="grid grid-cols-[1.5fr_1fr_0.8fr_0.8fr_1fr] gap-4 items-center">
-            <div className="min-w-0">
-              <h3 className="font-bold text-sm tracking-tight truncate leading-tight">
-                {project.clientName}
-              </h3>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="text-[10px] uppercase font-black text-muted-foreground/60 tracking-wider">
-                  {project.systemType}
-                </span>
-                <span className="text-muted-foreground/30">•</span>
-                <span className="text-[10px] font-mono text-muted-foreground/80">
-                  #{project.ticketNumber}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex justify-center">
-              <PipelineStatus project={project} />
-            </div>
-
-            <div className="flex justify-center">
-              <HealthBadge
-                healthScore={project.healthScore!}
-                daysSince={getDaysSinceUpdate(project)}
-              />
-            </div>
-
-            <div className="text-center">
-              {project.nextFollowUpDate ? (
-                <div className="inline-flex flex-col items-center">
-                  <span className={cn(
-                    "text-[11px] font-black tabular-nums",
-                    isPast(project.nextFollowUpDate) ? "text-destructive" : "text-foreground"
-                  )}>
-                    {format(new Date(project.nextFollowUpDate), "dd MMM", { locale: ptBR })}
+    <div className="space-y-4">
+      <div className="space-y-2">
+        {paginatedProjects.map((project) => (
+          <Card
+            key={project.id}
+            className="p-3 hover:bg-muted/30 transition-all cursor-pointer border-muted/20 shadow-none hover:shadow-sm"
+            onClick={() => {
+              setSelectedProject(project);
+              onProjectClick?.(project);
+            }}
+          >
+            <div className="grid grid-cols-[1.5fr_1fr_0.8fr_0.8fr_1fr] gap-4 items-center">
+              <div className="min-w-0">
+                <h3 className="font-bold text-sm tracking-tight truncate leading-tight">
+                  {project.clientName}
+                </h3>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="text-[10px] uppercase font-black text-muted-foreground/60 tracking-wider">
+                    {project.systemType}
                   </span>
-                  <span className="text-[9px] uppercase font-bold text-muted-foreground/50 leading-none mt-0.5">
-                    Follow-up
+                  <span className="text-muted-foreground/30">•</span>
+                  <span className="text-[10px] font-mono text-muted-foreground/80">
+                    #{project.ticketNumber}
                   </span>
                 </div>
-              ) : (
-                <span className="text-[10px] text-muted-foreground/30">—</span>
-              )}
-            </div>
-
-            <div className="flex items-center justify-end gap-3">
-              <div className="text-right hidden sm:block">
-                <div className="text-[10px] font-bold text-muted-foreground/70 leading-tight">
-                  {getRelativeTime(new Date(project.lastUpdatedAt))}
-                </div>
-                <div className="text-[9px] text-muted-foreground/50">
-                  por {project.lastUpdatedBy.split(' ')[0]}
-                </div>
               </div>
-              <Button 
-                size="sm" 
-                variant="ghost" 
-                className="h-8 w-8 p-0 rounded-full hover:bg-primary/10 hover:text-primary"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedProject(project);
-                  onProjectClick?.(project);
-                }}
+
+              <div className="flex justify-center">
+                <PipelineStatus project={project} />
+              </div>
+
+              <div className="flex justify-center">
+                <HealthBadge
+                  healthScore={project.healthScore!}
+                  daysSince={getDaysSinceUpdate(project)}
+                />
+              </div>
+
+              <div className="text-center">
+                {project.nextFollowUpDate ? (
+                  <div className="inline-flex flex-col items-center">
+                    <span className={cn(
+                      "text-[11px] font-black tabular-nums",
+                      isPast(project.nextFollowUpDate) ? "text-destructive" : "text-foreground"
+                    )}>
+                      {format(new Date(project.nextFollowUpDate), "dd MMM", { locale: ptBR })}
+                    </span>
+                    <span className="text-[9px] uppercase font-bold text-muted-foreground/50 leading-none mt-0.5">
+                      Follow-up
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-[10px] text-muted-foreground/30">—</span>
+                )}
+              </div>
+
+              <div className="flex items-center justify-end gap-3">
+                <div className="text-right hidden sm:block">
+                  <div className="text-[10px] font-bold text-muted-foreground/70 leading-tight">
+                    {getRelativeTime(new Date(project.lastUpdatedAt))}
+                  </div>
+                  <div className="text-[9px] text-muted-foreground/50">
+                    por {project.lastUpdatedBy.split(' ')[0]}
+                  </div>
+                </div>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="h-8 w-8 p-0 rounded-full hover:bg-primary/10 hover:text-primary"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedProject(project);
+                    onProjectClick?.(project);
+                  }}
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      {totalPages > 1 && (
+        <Pagination className="justify-center mt-4">
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious 
+                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                className={cn(
+                  "cursor-pointer hover:bg-muted select-none",
+                  currentPage === 1 && "pointer-events-none opacity-50"
+                )}
               >
-                <Eye className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </Card>
-      ))}
+                Anterior
+              </PaginationPrevious>
+            </PaginationItem>
+            
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <PaginationItem key={page} className="hidden sm:inline-block">
+                <PaginationLink
+                  onClick={() => handlePageChange(page)}
+                  isActive={currentPage === page}
+                  className="cursor-pointer"
+                >
+                  {page}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+
+            <PaginationItem>
+              <PaginationNext 
+                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                className={cn(
+                  "cursor-pointer hover:bg-muted select-none",
+                  currentPage === totalPages && "pointer-events-none opacity-50"
+                )}
+              >
+                Próximo
+              </PaginationNext>
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
     </div>
   );
 };
