@@ -48,7 +48,7 @@ export const WorkloadChart = ({ projects }: WorkloadChartProps) => {
       <CardHeader className="py-2 px-4 border-b">
         <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Projetos por Líder</CardTitle>
       </CardHeader>
-      <CardContent className="p-4 h-[calc(100%-40px)]">
+      <CardContent className="p-2 h-[calc(100%-40px)]">
         <ChartContainer
           config={chartConfig}
           className="h-full w-full"
@@ -57,23 +57,23 @@ export const WorkloadChart = ({ projects }: WorkloadChartProps) => {
             <BarChart 
               data={data} 
               layout="vertical" 
-              margin={{ left: 10, right: 40, top: 10, bottom: 10 }}
+              margin={{ left: -20, right: 40, top: 10, bottom: 0 }}
             >
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted/50" horizontal={false} />
+              <CartesianGrid strokeDasharray="3 3" className="stroke-muted/30" horizontal={false} />
               <XAxis type="number" hide />
               <YAxis
                 dataKey="name"
                 type="category"
-                className="text-[11px] font-bold"
+                className="text-[10px] sm:text-[11px] font-black"
                 tick={{ fill: "hsl(var(--foreground))" }}
-                width={120}
+                width={140}
                 axisLine={false}
                 tickLine={false}
               />
               <ChartTooltip content={<ChartTooltipContent />} />
-              <Bar dataKey="value" radius={[0, 10, 10, 0]} barSize={20}>
+              <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={24}>
                 {data.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.fill} fillOpacity={0.8} />
+                  <Cell key={`cell-${index}`} fill={entry.fill} fillOpacity={1} />
                 ))}
               </Bar>
             </BarChart>
