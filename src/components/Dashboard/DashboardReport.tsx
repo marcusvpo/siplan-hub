@@ -23,13 +23,14 @@ export const DashboardReport = ({ projects, kpis }: DashboardReportProps) => {
     >
       {/* 
         Page 1: Summary Section
-        We force this section to be exactly the height of one A4 page (approx 1050px-1100px)
+        We force this section to be exactly the height of one A4 page (297mm)
         to ensure the next section starts on Page 2.
+        padding-bottom: 40mm creates a SAFE ZONE for the footer.
       */}
       <div 
         id="report-summary-section" 
         className="p-12" 
-        style={{ minHeight: '1080px', display: 'flex', flexDirection: 'column' }}
+        style={{ minHeight: '297mm', paddingBottom: '40mm', display: 'flex', flexDirection: 'column' }}
       >
         {/* Header */}
         <div className="flex justify-between items-start border-b-2 border-slate-900 pb-8 mb-10">
@@ -116,8 +117,9 @@ export const DashboardReport = ({ projects, kpis }: DashboardReportProps) => {
 
       {/* 
         Page 2+: Detailed Projects Section
+        Explícitamente adicionamos um padding-top de 40mm para ser uma "SAFE ZONE" contra o cabeçalho.
       */}
-      <div id="report-projects-section" className="p-12 pt-16">
+      <div id="report-projects-section" className="p-12" style={{ paddingTop: '45mm' }}>
         <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 mb-6 flex items-center gap-2">
           <div className="w-4 h-[2px] bg-slate-400" /> Detalhamento de Projetos Ativos
         </h3>

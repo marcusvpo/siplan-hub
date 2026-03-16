@@ -150,23 +150,25 @@ export default function DashboardV2() {
         // Add image slice
         pdf.addImage(imgData, "JPEG", 0, position, pdfWidth, canvasHeightOnPdf, undefined, 'FAST');
         
-        // Footer Overlay (Clean messy cuts)
+        // Footer Overlay (Larger 'Safe Zone' to hide messy cuts)
+        // We cover 30mm at the bottom to ensure no partial rows from bottom are visible
         pdf.setFillColor(255, 255, 255);
-        pdf.rect(0, pdfHeight - 20, pdfWidth, 20, 'F');
+        pdf.rect(0, pdfHeight - 30, pdfWidth, 30, 'F');
         
-        // Footer Content
+        // Footer Content (drawn over the white rectangle)
         pdf.setFontSize(8);
         pdf.setTextColor(150, 150, 150);
-        pdf.text("Siplan HUB © 2026 - Auditoria e Implantação", 15, pdfHeight - 10);
+        pdf.text("Siplan HUB © 2026 - Auditoria e Implantação", 15, pdfHeight - 12);
         
         const pageText = `Página ${i + 1} de ${totalPages}`;
         const textWidth = pdf.getTextWidth(pageText);
-        pdf.text(pageText, pdfWidth - textWidth - 15, pdfHeight - 10);
+        pdf.text(pageText, pdfWidth - textWidth - 15, pdfHeight - 12);
         
-        // Header Cleanup for subsequent pages
+        // Header Cleanup for subsequent pages (Larger cleanup zone)
+        // We cover 15mm at the top to hide the top-half of any cut rows
         if (i > 0) {
           pdf.setFillColor(255, 255, 255);
-          pdf.rect(0, 0, pdfWidth, 10, 'F');
+          pdf.rect(0, 0, pdfWidth, 15, 'F');
         }
       }
       
