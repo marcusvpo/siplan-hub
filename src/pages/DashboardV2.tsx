@@ -136,9 +136,25 @@ export default function DashboardV2() {
 
       const imgProps = pdf.getImageProperties(imgData);
       const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = imgProps.width;
+      const imgHeight = imgProps.height;
+      
+      const canvasHeightOnPdf = (imgHeight * pdfWidth) / imgWidth;
+      let heightLeft = canvasHeightOnPdf;
+      let position = 0;
 
-      pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
+      // First page
+      pdf.addImage(imgData, "JPEG", 0, position, pdfWidth, canvasHeightOnPdf, undefined, 'FAST');
+      heightLeft -= pdfHeight;
+
+      // Additional pages if needed
+      while (heightLeft > 0) {
+        position = heightLeft - canvasHeightOnPdf;
+        pdf.addPage();
+        pdf.addImage(imgData, "JPEG", 0, position, pdfWidth, canvasHeightOnPdf, undefined, 'FAST');
+        heightLeft -= pdfHeight;
+      }
       
       const fileName = `Relatorio_Gestao_Siplan_${format(new Date(), "ddMMyyyy")}.pdf`;
       
