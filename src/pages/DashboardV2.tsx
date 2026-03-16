@@ -140,7 +140,9 @@ export default function DashboardV2() {
       const imgHeight = imgProps.height;
       
       const canvasHeightOnPdf = (imgHeight * pdfWidth) / imgWidth;
-      const totalPages = Math.ceil(canvasHeightOnPdf / pdfHeight);
+      
+      // Use an epsilon (2mm) to prevent tiny overspills from creating a blank last page
+      const totalPages = Math.ceil((canvasHeightOnPdf - 2) / pdfHeight);
       
       for (let i = 0; i < totalPages; i++) {
         if (i > 0) pdf.addPage();
@@ -150,25 +152,23 @@ export default function DashboardV2() {
         // Add image slice
         pdf.addImage(imgData, "JPEG", 0, position, pdfWidth, canvasHeightOnPdf, undefined, 'FAST');
         
-        // Footer Overlay (Larger 'Safe Zone' to hide messy cuts)
-        // We cover 30mm at the bottom to ensure no partial rows from bottom are visible
+        // Footer Overlay (Balanced Safe Zone)
         pdf.setFillColor(255, 255, 255);
-        pdf.rect(0, pdfHeight - 30, pdfWidth, 30, 'F');
+        pdf.rect(0, pdfHeight - 20, pdfWidth, 20, 'F');
         
         // Footer Content (drawn over the white rectangle)
         pdf.setFontSize(8);
         pdf.setTextColor(150, 150, 150);
-        pdf.text("Siplan HUB © 2026 - Auditoria e Implantação", 15, pdfHeight - 12);
+        pdf.text("Siplan HUB © 2026 - Auditoria e Implantação", 15, pdfHeight - 10);
         
         const pageText = `Página ${i + 1} de ${totalPages}`;
         const textWidth = pdf.getTextWidth(pageText);
-        pdf.text(pageText, pdfWidth - textWidth - 15, pdfHeight - 12);
+        pdf.text(pageText, pdfWidth - textWidth - 15, pdfHeight - 10);
         
-        // Header Cleanup for subsequent pages (Larger cleanup zone)
-        // We cover 15mm at the top to hide the top-half of any cut rows
+        // Header Cleanup for subsequent pages (Reduced mask to avoid big gaps)
         if (i > 0) {
           pdf.setFillColor(255, 255, 255);
-          pdf.rect(0, 0, pdfWidth, 15, 'F');
+          pdf.rect(0, 0, pdfWidth, 10, 'F');
         }
       }
       
