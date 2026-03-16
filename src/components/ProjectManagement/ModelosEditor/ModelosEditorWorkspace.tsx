@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useProjectFiles } from "@/hooks/useProjectFiles";
@@ -196,7 +197,14 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                     className="data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500 rounded flex-shrink-0"
                 />
                 <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-                <span className={cn("truncate font-medium transition-colors cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400", file.isDone && "text-muted-foreground line-through")} onClick={(e) => { e.preventDefault(); handleFileView(file); }}>{file.name}</span>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <span className={cn("truncate font-medium transition-colors cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400", file.isDone && "text-muted-foreground line-through")} onClick={(e) => { e.preventDefault(); handleFileView(file); }}>{file.name}</span>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                        <p className="max-w-xs break-all">{file.name}</p>
+                    </TooltipContent>
+                </Tooltip>
             </div>
             <div className="flex items-center gap-1 shrink-0">
                 <Button variant="ghost" size="icon" className="h-7 w-7 text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20" title="Visualizar arquivo" onClick={(e) => { e.preventDefault(); handleFileView(file); }}>
