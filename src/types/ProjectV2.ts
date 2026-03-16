@@ -357,6 +357,13 @@ export interface KPIData {
   completionRate: number;
   avgTotalTime: number;
   nextFollowups: number;
+  successRate?: number;
+  avgStageTime?: {
+    infra: number;
+    adherence: number;
+    conversion: number;
+    implementation: number;
+  };
   trend?: {
     value: number;
     direction: "up" | "down" | "stable";

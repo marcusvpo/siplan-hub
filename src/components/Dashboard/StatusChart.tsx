@@ -84,8 +84,15 @@ export const StatusChart = ({ projects }: StatusChartProps) => {
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis
                 dataKey="name"
-                className="text-[10px]"
-                tick={{ fill: "hsl(var(--muted-foreground))" }}
+                interval={0}
+                tick={{ 
+                  fill: "hsl(var(--muted-foreground))",
+                  fontSize: 9,
+                  fontWeight: 600
+                }}
+                height={40}
+                axisLine={false}
+                tickLine={false}
               />
               <YAxis
                 className="text-[10px]"

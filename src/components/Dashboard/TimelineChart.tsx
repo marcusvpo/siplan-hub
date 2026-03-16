@@ -1,4 +1,5 @@
 import { ProjectV2 } from "@/types/ProjectV2";
+import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { format, differenceInDays, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from "date-fns";
@@ -15,58 +16,99 @@ export const TimelineChart = ({ projects }: TimelineChartProps) => {
   const days = eachDayOfInterval({ start: startDate, end: endDate });
 
   return (
-    <Card className="col-span-2">
-      <CardHeader>
-        <CardTitle>Timeline de Projetos (Próximos 30 dias)</CardTitle>
+    <Card className="col-span-1 lg:col-span-2 shadow-sm border-muted/20">
+      <CardHeader className="py-3 px-4 border-b bg-muted/5">
+        <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center justify-between">
+          Timeline de Projetos
+          <span className="text-[10px] lowercase font-normal opacity-60">Próximos 30 dias</span>
+        </CardTitle>
       </CardHeader>
-      <CardContent>
-        <ScrollArea className="h-[300px] w-full">
-          <div className="min-w-[800px]">
+      <CardContent className="p-0">
+        <ScrollArea className="h-[320px] w-full">
+          <div className="min-w-[1200px] p-4">
             {/* Header */}
-            <div className="flex border-b pb-2 mb-2">
-              <div className="w-48 font-medium text-sm">Projeto</div>
-              <div className="flex-1 flex">
-                {days.map((day, i) => (
-                  <div key={i} className="flex-1 text-[10px] text-center text-muted-foreground border-l">
-                    {format(day, "dd")}
-                  </div>
-                ))}
+            <div className="flex border-b border-muted/30 pb-2 mb-4 sticky top-0 bg-background/50 backdrop-blur-sm z-10">
+              <div className="w-64 font-bold text-[10px] uppercase tracking-wider text-muted-foreground/70">Projeto / Cliente</div>
+              <div className="flex-1 flex items-end">
+                {days.map((day, i) => {
+                  const dayNum = parseInt(format(day, "d"));
+                  const shouldShowLabel = dayNum % 3 === 1 || i === 0 || i === days.length - 1;
+                  return (
+                    <div key={i} className="flex-1 flex flex-col items-center">
+                      {shouldShowLabel && (
+                        <span className="text-[9px] font-bold text-muted-foreground/80 mb-1">
+                          {format(day, "dd/MM")}
+                        </span>
+                      )}
+                      <div className={cn(
+                        "w-px h-2", 
+                        shouldShowLabel ? "bg-muted-foreground/30" : "bg-muted-foreground/10"
+                      )} />
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
             {/* Rows */}
-            <div className="space-y-4">
-              {projects.slice(0, 10).map((project) => {
-                if (!project.startDatePlanned || !project.endDatePlanned) return null;
+            <div className="space-y-3 relative">
+              {/* Vertical Grid Lines */}
+              <div className="absolute inset-0 left-64 flex pointer-events-none">
+                {days.map((_, i) => (
+                  <div key={i} className="flex-1 border-l border-muted/10 h-full" />
+                ))}
+              </div>
+
+              {projects
+                .filter(p => p.globalStatus !== 'archived')
+                .sort((a, b) => {
+                  const dateA = a.startDatePlanned || a.startDateActual || a.createdAt;
+                  const dateB = b.startDatePlanned || b.startDateActual || b.createdAt;
+                  return Math.abs(differenceInDays(new Date(dateA), today)) - Math.abs(differenceInDays(new Date(dateB), today));
+                })
+                .slice(0, 25)
+                .map((project) => {
+                const sDate = project.startDatePlanned || project.startDateActual || project.createdAt;
+                const eDate = project.endDatePlanned || project.endDateActual || addDays(new Date(sDate), 14); // 14 days estimate
                 
-                // Calculate position and width
                 const totalDays = differenceInDays(endDate, startDate) + 1;
-                const startOffset = differenceInDays(new Date(project.startDatePlanned), startDate);
-                const duration = differenceInDays(new Date(project.endDatePlanned), new Date(project.startDatePlanned)) + 1;
+                const startOffset = differenceInDays(new Date(sDate), startDate);
+                const duration = differenceInDays(new Date(eDate), new Date(sDate)) + 1;
                 
-                // Clamp values to visible range
                 const visibleStart = Math.max(0, startOffset);
-                const visibleDuration = Math.min(duration, totalDays - visibleStart);
+                const visibleDuration = Math.max(0.5, Math.min(duration, totalDays - visibleStart));
                 
-                if (visibleDuration <= 0) return null;
+                if (visibleDuration <= 0 && startOffset > totalDays) return null;
 
                 const leftPercent = (visibleStart / totalDays) * 100;
                 const widthPercent = (visibleDuration / totalDays) * 100;
 
                 return (
-                  <div key={project.id} className="flex items-center group">
-                    <div className="w-48 text-sm truncate pr-2" title={project.clientName}>
-                      {project.clientName}
+                  <div key={project.id} className="flex items-center group relative h-9">
+                    <div className="w-64 pr-4 z-10 bg-background/80 backdrop-blur-sm rounded-r-lg">
+                      <p className="text-xs font-bold truncate group-hover:text-primary transition-colors" title={project.clientName}>
+                        {project.clientName}
+                      </p>
+                      <p className="text-[9px] text-muted-foreground font-mono opacity-70">
+                        {project.ticketNumber} • {project.systemType}
+                      </p>
                     </div>
-                    <div className="flex-1 relative h-6 bg-muted/20 rounded">
+                    <div className="flex-1 relative h-full flex items-center">
                       <div
-                        className="absolute h-full rounded bg-primary/80 group-hover:bg-primary transition-colors text-[10px] text-primary-foreground flex items-center justify-center overflow-hidden whitespace-nowrap px-1"
+                        className={cn(
+                          "absolute h-6 rounded-full flex items-center justify-center transition-all overflow-hidden shadow-sm border border-white/10 group-hover:scale-[1.02] cursor-pointer",
+                          project.healthScore === "critical" ? "bg-destructive/90 text-destructive-foreground" :
+                          project.healthScore === "warning" ? "bg-warning/90 text-warning-foreground" :
+                          "bg-primary/80 text-primary-foreground"
+                        )}
                         style={{
                           left: `${leftPercent}%`,
                           width: `${widthPercent}%`,
                         }}
                       >
-                        {project.systemType}
+                        <span className="text-[9px] font-black uppercase px-2 truncate">
+                          {project.globalStatus === "done" ? "✓ " : ""}{project.systemType}
+                        </span>
                       </div>
                     </div>
                   </div>

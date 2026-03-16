@@ -645,6 +645,7 @@ function calculateHealthScore(row: Record<string, unknown>): "ok" | "warning" | 
   const lastUpdate = row.updated_at ? new Date(row.updated_at as string) : new Date();
   const diffDays = (now.getTime() - lastUpdate.getTime()) / (1000 * 3600 * 24);
 
+  if (row.global_status === "done") return "ok";
   if (diffDays > 7) return "critical";
   if (diffDays > 3) return "warning";
   return "ok";
