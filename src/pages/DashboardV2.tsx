@@ -19,7 +19,10 @@ import { DashboardTable } from "@/components/Dashboard/DashboardTable";
 import { TimelineChart } from "@/components/Dashboard/TimelineChart";
 import { WorkloadChart } from "@/components/Dashboard/WorkloadChart";
 import { ProjectV2 } from "@/types/ProjectV2";
-import { isAfter, subDays } from "date-fns";
+import { isAfter, subDays, format } from "date-fns";
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
+import { DashboardReport } from "@/components/Dashboard/DashboardReport";
 
 export default function DashboardV2() {
   const { projects, isLoading } = useProjectsV2();
@@ -97,8 +100,74 @@ export default function DashboardV2() {
     .filter((p) => p.healthScore === "critical" && p.globalStatus !== "blocked")
     .slice(0, 5);
 
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const kpis = useKPIs(projects);
+
+  const handleDownloadPDF = async () => {
+    setIsGeneratingPDF(true);
+    toast({
+      title: "Gerando PDF...",
+      description: "Aguarde enquanto preparamos seu relatório personalizado.",
+    });
+
+    try {
+      // Small delay to ensure the off-screen component is fully layouted if needed
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const element = document.getElementById("dashboard-report");
+      if (!element) throw new Error("Report element not found");
+
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff"
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4"
+      });
+
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`Relatorio_Gestao_Siplan_${format(new Date(), "ddMMyyyy")}.pdf`);
+
+      toast({
+        title: "Relatório Concluído!",
+        description: "Seu PDF profissional foi gerado com sucesso.",
+      });
+    } catch (error) {
+      console.error("Erro ao gerar PDF:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao gerar PDF",
+        description: "Houve um problema ao processar o relatório.",
+      });
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background relative">
+      {/* Hidden professional report for PDF capture */}
+      <DashboardReport 
+        projects={projects} 
+        kpis={{
+          totalProjects: projects.length,
+          successRate: kpis.successRate,
+          criticalAlerts: criticalAlerts.length,
+          activeProjects: projects.filter(p => p.globalStatus !== 'done').length,
+          avgStageTime: kpis.avgStageTime
+        }} 
+      />
+
       {/* Premium Background Elements */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-[-10%] right-[-5%] w-[40%] h-[40%] bg-primary/5 blur-[120px] rounded-full animate-pulse" />
@@ -118,11 +187,21 @@ export default function DashboardV2() {
             <Button 
               variant="outline" 
               size="sm" 
-              onClick={() => window.print()}
+              disabled={isGeneratingPDF}
+              onClick={handleDownloadPDF}
               className="h-9 px-4 gap-2 font-black uppercase tracking-widest text-[10px] bg-background/50 backdrop-blur-sm hover:bg-primary hover:text-primary-foreground transition-all duration-300 print-hide border-primary/20 hover:border-primary shadow-sm"
             >
-              <Printer className="h-3.5 w-3.5" />
-              Gerar PDF
+              {isGeneratingPDF ? (
+                <>
+                  <div className="h-3 w-3 border-2 border-current border-t-transparent animate-spin rounded-full" />
+                  Gerando...
+                </>
+              ) : (
+                <>
+                  <Printer className="h-3.5 w-3.5" />
+                  Gerar PDF
+                </>
+              )}
             </Button>
             <div className="hidden lg:flex items-center gap-2 p-2 bg-muted/30 rounded-lg border border-border/50">
               <div className="flex flex-col items-center px-3 border-r border-border/50">
