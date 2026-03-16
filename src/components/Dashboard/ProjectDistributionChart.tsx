@@ -92,10 +92,21 @@ export const ProjectDistributionChart = ({
                 data={data}
                 cx="50%"
                 cy="50%"
-                labelLine={false}
-                label={({ name, percent }) =>
-                  `${name}: ${(percent * 100).toFixed(0)}%`
-                }
+                label={({ name, percent, x, y, cx }) => (
+                  <text 
+                    x={x} 
+                    y={y} 
+                    fill="hsl(var(--foreground))" 
+                    textAnchor={x > cx ? 'start' : 'end'} 
+                    dominantBaseline="central"
+                    style={{ fontSize: '10px', fontWeight: 'bold', opacity: 0.8 }}
+                  >
+                    {`${name}: ${(percent * 100).toFixed(0)}%`}
+                  </text>
+                )}
+                labelLine={{ stroke: 'hsl(var(--foreground))', strokeWidth: 1, opacity: 0.3 }}
+                stroke="hsl(var(--background))"
+                strokeWidth={2}
                 outerRadius={60}
                 dataKey="value"
               >

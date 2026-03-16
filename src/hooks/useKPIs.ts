@@ -11,6 +11,50 @@ export const useKPIs = (projects: ProjectV2[]): KPIData => {
 
     const completionRate = totalProjects > 0 ? (completedProjects / totalProjects) * 100 : 0;
 
+    // Calcular tempo médio por etapa
+    const getAvgStageTime = (prefix: string) => {
+      const completedStages = projects.filter(
+        (p) => 
+          (p.stages as any)[prefix]?.status === "done" && 
+          (p.stages as any)[prefix]?.startDate && 
+          (p.stages as any)[prefix]?.endDate
+      );
+      
+      if (completedStages.length === 0) return 0;
+      
+      const totalDays = completedStages.reduce((sum, p) => {
+        const stage = (p.stages as any)[prefix];
+        const days = Math.floor(
+          (new Date(stage.endDate).getTime() - new Date(stage.startDate).getTime()) / (1000 * 60 * 60 * 24)
+        );
+        return sum + Math.max(0, days);
+      }, 0);
+      
+      return Math.round(totalDays / completedStages.length);
+    };
+
+    const avgStageTime = {
+      infra: getAvgStageTime("infra"),
+      adherence: getAvgStageTime("adherence"),
+      conversion: getAvgStageTime("conversion"),
+      implementation: getAvgStageTime("implementation"),
+    };
+
+    // Taxa de sucesso: % de projetos que estão "OK" ou "Concluídos"
+    // Mudança: Projetos Concluídos são considerados Sucesso se não estiverem bloqueados ou deletados.
+    // Projetos Ativos são considerados Sucesso se healthScore === 'ok'
+    const activeProjects = projects.filter(p => p.globalStatus !== 'done');
+    const successfulActive = activeProjects.filter(p => p.healthScore === 'ok').length;
+    
+    const successfulDone = completedProjects; // Se concluiu, é sucesso por definição
+    
+    // Taxa = (Ativos OK + Concluidos) / Total
+    const successRateValue = totalProjects > 0 
+      ? Math.round(((successfulActive + successfulDone) / totalProjects) * 100) 
+      : 0;
+    
+    const successRate = Math.min(100, successRateValue);
+
     // Calcular tempo médio (dias entre criação e finalização)
     const completedWithDates = projects.filter(
       (p) => p.globalStatus === "done" && p.createdAt && p.endDateActual
@@ -41,6 +85,8 @@ export const useKPIs = (projects: ProjectV2[]): KPIData => {
       completionRate: Math.round(completionRate),
       avgTotalTime: Math.round(avgTotalTime),
       nextFollowups,
+      successRate,
+      avgStageTime,
     };
   }, [projects]);
 };

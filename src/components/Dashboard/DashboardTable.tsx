@@ -10,7 +10,11 @@ import { ptBR } from "date-fns/locale";
 import { getRelativeTime, getDaysSinceUpdate } from "@/utils/calculations";
 import { cn } from "@/lib/utils";
 
-export const DashboardTable = () => {
+interface DashboardTableProps {
+  onProjectClick?: (project: ProjectV2) => void;
+}
+
+export const DashboardTable = ({ onProjectClick }: DashboardTableProps) => {
   const { setSelectedProject } = useProjectStore();
   const { projects, isLoading } = useProjectsV2();
 
@@ -31,78 +35,81 @@ export const DashboardTable = () => {
   });
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {sortedProjects.map((project) => (
         <Card
           key={project.id}
-          className="p-4 hover:shadow-md transition-shadow cursor-pointer"
-          onClick={() => setSelectedProject(project)}
+          className="p-3 hover:bg-muted/30 transition-all cursor-pointer border-muted/20 shadow-none hover:shadow-sm"
+          onClick={() => {
+            setSelectedProject(project);
+            onProjectClick?.(project);
+          }}
         >
-          <div className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-6 items-center">
-            <div>
-              <div className="flex items-center gap-3">
-                <div>
-                  <h3 className="font-semibold text-base">
-                    {project.clientName}
-                  </h3>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs text-muted-foreground">
-                      {project.systemType}
-                    </span>
-                    <span className="text-xs text-muted-foreground">•</span>
-                    <span className="text-xs text-muted-foreground font-mono">
-                      #{project.ticketNumber}
-                    </span>
-                  </div>
-                </div>
+          <div className="grid grid-cols-[1.5fr_1fr_0.8fr_0.8fr_1fr] gap-4 items-center">
+            <div className="min-w-0">
+              <h3 className="font-bold text-sm tracking-tight truncate leading-tight">
+                {project.clientName}
+              </h3>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="text-[10px] uppercase font-black text-muted-foreground/60 tracking-wider">
+                  {project.systemType}
+                </span>
+                <span className="text-muted-foreground/30">•</span>
+                <span className="text-[10px] font-mono text-muted-foreground/80">
+                  #{project.ticketNumber}
+                </span>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex justify-center">
               <PipelineStatus project={project} />
             </div>
 
-            <div>
+            <div className="flex justify-center">
               <HealthBadge
                 healthScore={project.healthScore!}
                 daysSince={getDaysSinceUpdate(project)}
               />
             </div>
 
-            <div className="text-center min-w-[100px]">
+            <div className="text-center">
               {project.nextFollowUpDate ? (
-                <div>
-                  <div
-                    className={cn(
-                      "text-sm font-medium",
-                      isPast(project.nextFollowUpDate) && "text-critical"
-                    )}
-                  >
-                    {format(new Date(project.nextFollowUpDate), "dd/MM", {
-                      locale: ptBR,
-                    })}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {isPast(project.nextFollowUpDate) ? "Vencido" : "Próximo"}
-                  </div>
+                <div className="inline-flex flex-col items-center">
+                  <span className={cn(
+                    "text-[11px] font-black tabular-nums",
+                    isPast(project.nextFollowUpDate) ? "text-destructive" : "text-foreground"
+                  )}>
+                    {format(new Date(project.nextFollowUpDate), "dd MMM", { locale: ptBR })}
+                  </span>
+                  <span className="text-[9px] uppercase font-bold text-muted-foreground/50 leading-none mt-0.5">
+                    Follow-up
+                  </span>
                 </div>
               ) : (
-                <span className="text-xs text-muted-foreground">—</span>
+                <span className="text-[10px] text-muted-foreground/30">—</span>
               )}
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="text-right min-w-[100px]">
-                <div className="text-xs text-muted-foreground">
+            <div className="flex items-center justify-end gap-3">
+              <div className="text-right hidden sm:block">
+                <div className="text-[10px] font-bold text-muted-foreground/70 leading-tight">
                   {getRelativeTime(new Date(project.lastUpdatedAt))}
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  por {project.lastUpdatedBy}
+                <div className="text-[9px] text-muted-foreground/50">
+                  por {project.lastUpdatedBy.split(' ')[0]}
                 </div>
               </div>
-              <Button size="sm" variant="outline">
-                <Eye className="h-4 w-4 mr-2" />
-                Detalhes
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                className="h-8 w-8 p-0 rounded-full hover:bg-primary/10 hover:text-primary"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedProject(project);
+                  onProjectClick?.(project);
+                }}
+              >
+                <Eye className="h-4 w-4" />
               </Button>
             </div>
           </div>
