@@ -114,19 +114,11 @@ export default function DashboardV2() {
       // Small delay to ensure the off-screen component is fully layouted if needed
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      const element = document.getElementById("dashboard-report");
-      if (!element) throw new Error("Report element not found");
+      const summaryEl = document.getElementById("report-summary-section");
+      const projectsEl = document.getElementById("report-projects-section");
+      
+      if (!summaryEl || !projectsEl) throw new Error("Report sections not found");
 
-      const canvas = await html2canvas(element, {
-        scale: 1.5, // Slightly lower scale for better balance of quality/size
-        useCORS: true,
-        logging: false,
-        backgroundColor: "#ffffff",
-        windowWidth: 800, // Force a specific width for capture consistency
-      });
-
-      // Use JPEG with 0.8 quality to significantly reduce file size (from 20MB to ~1MB)
-      const imgData = canvas.toDataURL("image/jpeg", 0.8);
       const pdf = new jsPDF({
         orientation: "portrait",
         unit: "mm",
@@ -134,41 +126,67 @@ export default function DashboardV2() {
         compress: true
       });
 
-      const imgProps = pdf.getImageProperties(imgData);
+      // 1. Capture and Add Summary
+      const canvasSummary = await html2canvas(summaryEl, {
+        scale: 1.5,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
+        windowWidth: 800,
+      });
+      const imgSummary = canvasSummary.toDataURL("image/jpeg", 0.8);
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = imgProps.width;
-      const imgHeight = imgProps.height;
       
-      const canvasHeightOnPdf = (imgHeight * pdfWidth) / imgWidth;
-      const totalPages = Math.ceil(canvasHeightOnPdf / pdfHeight);
+      pdf.addImage(imgSummary, "JPEG", 0, 0, pdfWidth, (canvasSummary.height * pdfWidth) / canvasSummary.width, undefined, 'FAST');
       
-      for (let i = 0; i < totalPages; i++) {
-        if (i > 0) pdf.addPage();
-        
-        const position = -(i * pdfHeight);
-        
-        // Add the slice
-        pdf.addImage(imgData, "JPEG", 0, position, pdfWidth, canvasHeightOnPdf, undefined, 'FAST');
-        
-        // Clean Footer Area (Hide messy cuts)
+      // 2. Capture Projects Section
+      const canvasProjects = await html2canvas(projectsEl, {
+        scale: 1.5,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
+        windowWidth: 800,
+      });
+      const imgProjects = canvasProjects.toDataURL("image/jpeg", 0.8);
+      const projWidth = pdfWidth;
+      const projHeightOnPdf = (canvasProjects.height * pdfWidth) / canvasProjects.width;
+      
+      // 3. Add Projects starting on New Page
+      const totalProjectPages = Math.ceil(projHeightOnPdf / pdfHeight);
+      const totalTotalPages = 1 + totalProjectPages;
+
+      // Add Footer to Page 1
+      const addFooter = (pageNum: number, total: number) => {
         pdf.setFillColor(255, 255, 255);
         pdf.rect(0, pdfHeight - 20, pdfWidth, 20, 'F');
-        
-        // Draw Formal Footer
         pdf.setFontSize(8);
         pdf.setTextColor(150, 150, 150);
         pdf.text("Siplan HUB © 2026 - Auditoria e Implantação", 15, pdfHeight - 10);
-        
-        // Draw Dynamic Numbering
-        const pageText = `Página ${i + 1} de ${totalPages}`;
+        const pageText = `Página ${pageNum} de ${total}`;
         const textWidth = pdf.getTextWidth(pageText);
         pdf.text(pageText, pdfWidth - textWidth - 15, pdfHeight - 10);
+      };
+
+      addFooter(1, totalTotalPages);
+
+      for (let i = 0; i < totalProjectPages; i++) {
+        pdf.addPage();
+        const position = -(i * pdfHeight);
+        pdf.addImage(imgProjects, "JPEG", 0, position, projWidth, projHeightOnPdf, undefined, 'FAST');
         
-        // Optional: Clean Header Area for subsequent pages (except first)
-        if (i > 0) {
+        // Anti-cut overlay
+        if (i < totalProjectPages - 1) {
+           pdf.setFillColor(255, 255, 255);
+           pdf.rect(0, pdfHeight - 20, pdfWidth, 20, 'F');
+        }
+        
+        addFooter(i + 2, totalTotalPages);
+
+        // Header cleanup for subsequent pages
+        if (i >= 0) {
           pdf.setFillColor(255, 255, 255);
-          pdf.rect(0, 0, pdfWidth, 10, 'F'); // Small top margin to clean top cuts
+          pdf.rect(0, 0, pdfWidth, 10, 'F');
         }
       }
       
