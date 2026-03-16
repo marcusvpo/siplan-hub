@@ -192,9 +192,9 @@ export default function DashboardV2() {
         </div>
 
         {/* Lista de Projetos e Alertas */}
-        <div className="grid gap-6 lg:grid-cols-3 pt-4">
-          <div className="lg:col-span-2 space-y-4">
-            <div className="flex items-center justify-between px-2">
+        <div className="grid gap-6 lg:grid-cols-3 pt-4 min-h-[600px]">
+          <div className="lg:col-span-2 flex flex-col space-y-4">
+            <div className="flex items-center justify-between px-2 shrink-0">
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground/70">Projetos Ativos</h3>
                 <Badge variant="secondary" className="bg-primary/10 text-primary border-none font-bold">{projects.length}</Badge>
@@ -203,21 +203,21 @@ export default function DashboardV2() {
                 Ver Todos <ArrowRight className="h-3 w-3" />
               </Button>
             </div>
-            <div className="max-h-[800px] overflow-y-auto pr-2 custom-scrollbar">
+            <div className="flex-1 min-h-[400px] max-h-[800px] overflow-y-auto pr-2 custom-scrollbar">
               <DashboardTable onProjectClick={handleProjectClick} />
             </div>
           </div>
 
-          <div className="space-y-6">
+          <div className="flex flex-col space-y-6">
             {criticalAlerts.length > 0 && (
-              <Card className="rounded-2xl border-destructive/20 bg-destructive/5 overflow-hidden">
-                <CardHeader className="py-4 px-5 border-b border-destructive/10 bg-destructive/5">
+              <Card className="rounded-2xl border-destructive/20 bg-destructive/5 overflow-hidden flex flex-col h-full border-b-destructive/40">
+                <CardHeader className="py-4 px-5 border-b border-destructive/10 bg-destructive/5 shrink-0">
                   <CardTitle className="flex items-center gap-2 text-destructive text-xs font-black uppercase tracking-widest">
                     <AlertTriangle className="h-4 w-4" />
                     Alertas Críticos
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-4">
+                <CardContent className="p-4 flex-1 overflow-y-auto custom-scrollbar min-h-0">
                   <div className="space-y-3">
                     {criticalAlerts.map((project) => (
                       <div
