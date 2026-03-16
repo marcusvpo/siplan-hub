@@ -30,7 +30,7 @@ export const DashboardReport = ({ projects, kpis }: DashboardReportProps) => {
       <div 
         id="report-summary-section" 
         className="p-12" 
-        style={{ minHeight: '297mm', paddingBottom: '40mm', display: 'flex', flexDirection: 'column' }}
+        style={{ minHeight: '1000px', paddingBottom: '20mm', display: 'flex', flexDirection: 'column' }}
       >
         {/* Header */}
         <div className="flex justify-between items-start border-b-2 border-slate-900 pb-8 mb-10">
@@ -119,7 +119,7 @@ export const DashboardReport = ({ projects, kpis }: DashboardReportProps) => {
         Page 2+: Detailed Projects Section
         Explícitamente adicionamos um padding-top de 40mm para ser uma "SAFE ZONE" contra o cabeçalho.
       */}
-      <div id="report-projects-section" className="p-12" style={{ paddingTop: '45mm' }}>
+      <div id="report-projects-section" className="p-12" style={{ paddingTop: '20mm' }}>
         <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 mb-6 flex items-center gap-2">
           <div className="w-4 h-[2px] bg-slate-400" /> Detalhamento de Projetos Ativos
         </h3>
@@ -161,7 +161,7 @@ export const DashboardReport = ({ projects, kpis }: DashboardReportProps) => {
         )}
         
         {/* Footer clearance for last page */}
-        <div className="h-24" />
+        <div className="h-10" />
       </div>
     </div>
   );
