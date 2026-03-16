@@ -37,7 +37,7 @@ interface Column {
 const COLUMNS: Column[] = [
   { 
     id: "todo", 
-    title: "A Fazer", 
+    title: "Não Iniciado", 
     icon: <Circle className="h-4 w-4" />, 
     color: "text-slate-500 bg-slate-500/10 border-slate-200" 
   },
@@ -112,7 +112,7 @@ export default function ProjectsKanban() {
 
       toast({
         title: "Status Atualizado",
-        description: `O projeto "${project.clientName}" foi movido para ${newStatus === "todo" ? "A Fazer" : newStatus === "in-progress" ? "Em Andamento" : newStatus === "done" ? "Concluído" : "Bloqueado"}.`,
+        description: `O projeto "${project.clientName}" foi movido para ${newStatus === "todo" ? "Não Iniciado" : newStatus === "in-progress" ? "Em Andamento" : newStatus === "done" ? "Concluído" : "Bloqueado"}.`,
       });
     }
   };
