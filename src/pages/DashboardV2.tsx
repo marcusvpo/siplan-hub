@@ -179,7 +179,7 @@ export default function DashboardV2() {
           left: 0, 
           zIndex: -1000, 
           pointerEvents: 'none',
-          visibility: 'hidden' // html2canvas can still capture visibility:hidden in many cases, or we toggle it
+          backgroundColor: '#white' // Force white background for capture
         }}
         id="hide-report-container"
       >
