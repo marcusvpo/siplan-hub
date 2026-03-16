@@ -141,7 +141,17 @@ export default function DashboardV2() {
       pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
       
       const fileName = `Relatorio_Gestao_Siplan_${format(new Date(), "ddMMyyyy")}.pdf`;
-      pdf.save(fileName);
+      
+      // Manual blob download to force filename and extension
+      const pdfBlob = pdf.output('blob');
+      const url = URL.createObjectURL(pdfBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
 
       toast({
         title: "Relatório Concluído!",
