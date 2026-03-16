@@ -60,7 +60,16 @@ export const TimelineChart = ({ projects }: TimelineChartProps) => {
               </div>
 
               {projects
-                .filter(p => p.globalStatus !== 'archived')
+                .filter(p => {
+                  if (p.globalStatus === 'archived') return false;
+                  
+                  // Encontrar a etapa que está "in-progress"
+                  const stages = Object.entries(p.stages);
+                  const currentStage = stages.find(([_, stage]) => stage.status === "in-progress")?.[0];
+                  
+                  // Mostrar apenas se for implantação ou pós
+                  return currentStage === 'implementation' || currentStage === 'post';
+                })
                 .sort((a, b) => {
                   const dateA = a.startDatePlanned || a.startDateActual || a.createdAt;
                   const dateB = b.startDatePlanned || b.startDateActual || b.createdAt;
