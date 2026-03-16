@@ -4,7 +4,7 @@ import { DashboardKPI } from "@/components/Dashboard/DashboardKPI";
 import { ProjectDistributionChart } from "@/components/Dashboard/ProjectDistributionChart";
 import { StatusChart } from "@/components/Dashboard/StatusChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertTriangle, Package, ArrowRight } from "lucide-react";
+import { AlertTriangle, Package, ArrowRight, Printer } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -114,14 +114,25 @@ export default function DashboardV2() {
               Métricas e status dos projetos de implantação
             </p>
           </div>
-          <div className="hidden lg:flex items-center gap-2 p-2 bg-muted/30 rounded-lg border border-border/50">
-            <div className="flex flex-col items-center px-3 border-r border-border/50">
-              <span className="text-[9px] font-bold text-muted-foreground uppercase">Storage</span>
-              <span className="text-xs font-black text-primary">Simulado</span>
-            </div>
-            <div className="flex flex-col items-center px-3">
-              <span className="text-[9px] font-bold text-muted-foreground uppercase">Status</span>
-              <span className="text-xs font-black text-emerald-500">Online</span>
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => window.print()}
+              className="h-9 px-4 gap-2 font-black uppercase tracking-widest text-[10px] bg-background/50 backdrop-blur-sm hover:bg-primary hover:text-primary-foreground transition-all duration-300 print-hide border-primary/20 hover:border-primary shadow-sm"
+            >
+              <Printer className="h-3.5 w-3.5" />
+              Gerar PDF
+            </Button>
+            <div className="hidden lg:flex items-center gap-2 p-2 bg-muted/30 rounded-lg border border-border/50">
+              <div className="flex flex-col items-center px-3 border-r border-border/50">
+                <span className="text-[9px] font-bold text-muted-foreground uppercase">Storage</span>
+                <span className="text-xs font-black text-primary">Simulado</span>
+              </div>
+              <div className="flex flex-col items-center px-3">
+                <span className="text-[9px] font-bold text-muted-foreground uppercase">Status</span>
+                <span className="text-xs font-black text-emerald-500">Online</span>
+              </div>
             </div>
           </div>
         </div>
