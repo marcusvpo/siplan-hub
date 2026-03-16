@@ -118,29 +118,34 @@ export default function DashboardV2() {
       if (!element) throw new Error("Report element not found");
 
       const canvas = await html2canvas(element, {
-        scale: 2,
+        scale: 1.5, // Slightly lower scale for better balance of quality/size
         useCORS: true,
         logging: false,
-        backgroundColor: "#ffffff"
+        backgroundColor: "#ffffff",
+        windowWidth: 800, // Force a specific width for capture consistency
       });
 
-      const imgData = canvas.toDataURL("image/png");
+      // Use JPEG with 0.8 quality to significantly reduce file size (from 20MB to ~1MB)
+      const imgData = canvas.toDataURL("image/jpeg", 0.8);
       const pdf = new jsPDF({
         orientation: "portrait",
         unit: "mm",
-        format: "a4"
+        format: "a4",
+        compress: true
       });
 
       const imgProps = pdf.getImageProperties(imgData);
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
 
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`Relatorio_Gestao_Siplan_${format(new Date(), "ddMMyyyy")}.pdf`);
+      pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
+      
+      const fileName = `Relatorio_Gestao_Siplan_${format(new Date(), "ddMMyyyy")}.pdf`;
+      pdf.save(fileName);
 
       toast({
         title: "Relatório Concluído!",
-        description: "Seu PDF profissional foi gerado com sucesso.",
+        description: `O arquivo "${fileName}" foi gerado com sucesso.`,
       });
     } catch (error) {
       console.error("Erro ao gerar PDF:", error);
@@ -155,18 +160,30 @@ export default function DashboardV2() {
   };
 
   return (
-    <div className="min-h-screen bg-background relative">
-      {/* Hidden professional report for PDF capture */}
-      <DashboardReport 
-        projects={projects} 
-        kpis={{
-          totalProjects: projects.length,
-          successRate: kpis.successRate,
-          criticalAlerts: criticalAlerts.length,
-          activeProjects: projects.filter(p => p.globalStatus !== 'done').length,
-          avgStageTime: kpis.avgStageTime
-        }} 
-      />
+    <div className="min-h-screen bg-background relative overflow-x-hidden">
+      {/* Hidden professional report for PDF capture - Using a container that doesn't affect scroll */}
+      <div 
+        style={{ 
+          position: 'fixed', 
+          top: '-10000px', 
+          left: 0, 
+          zIndex: -1000, 
+          pointerEvents: 'none',
+          visibility: 'hidden' // html2canvas can still capture visibility:hidden in many cases, or we toggle it
+        }}
+        id="hide-report-container"
+      >
+        <DashboardReport 
+          projects={projects} 
+          kpis={{
+            totalProjects: projects.length,
+            successRate: kpis.successRate,
+            criticalAlerts: criticalAlerts.length,
+            activeProjects: projects.filter(p => p.globalStatus !== 'done').length,
+            avgStageTime: kpis.avgStageTime
+          }} 
+        />
+      </div>
 
       {/* Premium Background Elements */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">

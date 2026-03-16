@@ -20,11 +20,6 @@ export const DashboardReport = ({ projects, kpis }: DashboardReportProps) => {
     <div 
       id="dashboard-report" 
       className="p-12 bg-white text-slate-900 w-[794px] min-h-[1123px] font-sans"
-      style={{ 
-        position: 'absolute', 
-        left: '-9999px', // Render off-screen
-        top: '0'
-      }}
     >
       {/* Header */}
       <div className="flex justify-between items-start border-b-2 border-slate-900 pb-8 mb-10">
