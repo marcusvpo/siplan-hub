@@ -118,12 +118,12 @@ export const DashboardReport = ({ projects, kpis }: DashboardReportProps) => {
             </tr>
           </thead>
           <tbody>
-            {projects.slice(0, 15).map((project, i) => {
+            {projects.slice(0, 100).map((project, i) => {
               const stages = Object.entries(project.stages);
               const currentStage = stages.find(([_, stage]) => stage.status === "in-progress")?.[0] || "-";
               
               return (
-                <tr key={i} className="border-b border-slate-100">
+                <tr key={i} className="border-b border-slate-100 pdf-row">
                   <td className="py-4">
                     <p className="text-xs font-bold text-slate-900">{project.clientName}</p>
                     <p className="text-[9px] text-slate-500 font-mono">{project.ticketNumber} • {project.systemType}</p>
@@ -141,16 +141,13 @@ export const DashboardReport = ({ projects, kpis }: DashboardReportProps) => {
             })}
           </tbody>
         </table>
-        {projects.length > 15 && (
-          <p className="text-[9px] italic text-slate-400 mt-4">* Exibindo 15 de {projects.length} projetos ativos no sistema.</p>
+        {projects.length > 100 && (
+          <p className="text-[9px] italic text-slate-400 mt-4">* Exibindo 100 de {projects.length} projetos ativos no sistema.</p>
         )}
       </div>
 
-      {/* Footer / Disclaimer */}
-      <div className="mt-20 pt-8 border-t border-slate-100 flex justify-between items-center text-[8px] text-slate-400 uppercase tracking-widest font-bold">
-        <span>Siplan HUB © 2026 - Auditoria e Implantação</span>
-        <span>Página 1 de 1</span>
-      </div>
+      {/* Page Content padding for footer clearance */}
+      <div className="h-16" />
     </div>
   );
 };
