@@ -350,7 +350,7 @@ export default function DashboardV2() {
                 Ver Todos <ArrowRight className="h-3 w-3" />
               </Button>
             </div>
-            <div className="flex-1 min-h-[400px] max-h-[800px] overflow-y-auto pr-2 custom-scrollbar">
+            <div className="pr-2">
               <DashboardTable onProjectClick={handleProjectClick} />
             </div>
           </div>
@@ -364,7 +364,7 @@ export default function DashboardV2() {
                     Alertas Críticos
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-4 flex-1 overflow-y-auto custom-scrollbar min-h-0">
+                <CardContent className="p-4">
                   <div className="space-y-3">
                     {criticalAlerts.map((project) => (
                       <div
