@@ -203,15 +203,14 @@ export default function DashboardV2() {
 
   return (
     <div className="min-h-screen bg-background relative overflow-x-hidden">
-      {/* Hidden professional report for PDF capture - Using a container that doesn't affect scroll */}
       <div 
         style={{ 
-          position: 'fixed', 
-          top: '-10000px', 
+          position: 'absolute', 
+          top: '-20000px', 
           left: 0, 
           zIndex: -1000, 
           pointerEvents: 'none',
-          backgroundColor: 'white' // Force white background for capture
+          backgroundColor: 'white'
         }}
         id="hide-report-container"
       >
@@ -304,13 +303,13 @@ export default function DashboardV2() {
                 <div className="flex justify-between items-end">
                   <span className="text-sm font-bold opacity-80">Taxa de Sucesso Geral</span>
                   <span className="text-2xl font-black text-emerald-500 transition-all duration-500">
-                    {useKPIs(projects).successRate}%
+                    {kpis.successRate}%
                   </span>
                 </div>
                 <div className="h-2 w-full bg-muted/50 rounded-full overflow-hidden border border-muted/20">
                   <div 
                     className="h-full bg-gradient-to-r from-emerald-500/80 to-emerald-500 transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(16,185,129,0.3)]" 
-                    style={{ width: `${useKPIs(projects).successRate}%` }}
+                    style={{ width: `${kpis.successRate}%` }}
                   />
                 </div>
               </div>
@@ -319,10 +318,10 @@ export default function DashboardV2() {
                 <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Tempo Médio por Etapa</span>
                 <div className="grid grid-cols-2 gap-3">
                   {[
-                    { label: "Infra", value: useKPIs(projects).avgStageTime?.infra, color: "bg-blue-500", glow: "shadow-[0_0_8px_rgba(59,130,246,0.3)]" },
-                    { label: "Aderência", value: useKPIs(projects).avgStageTime?.adherence, color: "bg-purple-500", glow: "shadow-[0_0_8px_rgba(168,85,247,0.3)]" },
-                    { label: "Conversão", value: useKPIs(projects).avgStageTime?.conversion, color: "bg-orange-500", glow: "shadow-[0_0_8px_rgba(249,115,22,0.3)]" },
-                    { label: "Implantação", value: useKPIs(projects).avgStageTime?.implementation, color: "bg-emerald-500", glow: "shadow-[0_0_8px_rgba(16,185,129,0.3)]" }
+                    { label: "Infra", value: kpis.avgStageTime?.infra, color: "bg-blue-500", glow: "shadow-[0_0_8px_rgba(59,130,246,0.3)]" },
+                    { label: "Aderência", value: kpis.avgStageTime?.adherence, color: "bg-purple-500", glow: "shadow-[0_0_8px_rgba(168,85,247,0.3)]" },
+                    { label: "Conversão", value: kpis.avgStageTime?.conversion, color: "bg-orange-500", glow: "shadow-[0_0_8px_rgba(249,115,22,0.3)]" },
+                    { label: "Implantação", value: kpis.avgStageTime?.implementation, color: "bg-emerald-500", glow: "shadow-[0_0_8px_rgba(16,185,129,0.3)]" }
                   ].map((stage) => (
                     <div key={stage.label} className="p-3 border rounded-xl bg-muted/20 hover:bg-muted/40 transition-all border-muted/30 hover:border-muted-foreground/20 group/stage">
                       <div className="flex items-center gap-2 mb-1">
