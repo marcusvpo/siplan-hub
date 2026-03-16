@@ -179,7 +179,7 @@ export default function DashboardV2() {
           left: 0, 
           zIndex: -1000, 
           pointerEvents: 'none',
-          backgroundColor: '#white' // Force white background for capture
+          backgroundColor: 'white' // Force white background for capture
         }}
         id="hide-report-container"
       >
