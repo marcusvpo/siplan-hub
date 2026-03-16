@@ -141,19 +141,35 @@ export default function DashboardV2() {
       const imgHeight = imgProps.height;
       
       const canvasHeightOnPdf = (imgHeight * pdfWidth) / imgWidth;
-      let heightLeft = canvasHeightOnPdf;
-      let position = 0;
-
-      // First page
-      pdf.addImage(imgData, "JPEG", 0, position, pdfWidth, canvasHeightOnPdf, undefined, 'FAST');
-      heightLeft -= pdfHeight;
-
-      // Additional pages if needed
-      while (heightLeft > 0) {
-        position = heightLeft - canvasHeightOnPdf;
-        pdf.addPage();
+      const totalPages = Math.ceil(canvasHeightOnPdf / pdfHeight);
+      
+      for (let i = 0; i < totalPages; i++) {
+        if (i > 0) pdf.addPage();
+        
+        const position = -(i * pdfHeight);
+        
+        // Add the slice
         pdf.addImage(imgData, "JPEG", 0, position, pdfWidth, canvasHeightOnPdf, undefined, 'FAST');
-        heightLeft -= pdfHeight;
+        
+        // Clean Footer Area (Hide messy cuts)
+        pdf.setFillColor(255, 255, 255);
+        pdf.rect(0, pdfHeight - 20, pdfWidth, 20, 'F');
+        
+        // Draw Formal Footer
+        pdf.setFontSize(8);
+        pdf.setTextColor(150, 150, 150);
+        pdf.text("Siplan HUB © 2026 - Auditoria e Implantação", 15, pdfHeight - 10);
+        
+        // Draw Dynamic Numbering
+        const pageText = `Página ${i + 1} de ${totalPages}`;
+        const textWidth = pdf.getTextWidth(pageText);
+        pdf.text(pageText, pdfWidth - textWidth - 15, pdfHeight - 10);
+        
+        // Optional: Clean Header Area for subsequent pages (except first)
+        if (i > 0) {
+          pdf.setFillColor(255, 255, 255);
+          pdf.rect(0, 0, pdfWidth, 10, 'F'); // Small top margin to clean top cuts
+        }
       }
       
       const fileName = `Relatorio_Gestao_Siplan_${format(new Date(), "ddMMyyyy")}.pdf`;
