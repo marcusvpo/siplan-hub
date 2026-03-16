@@ -49,26 +49,26 @@ export function ProjectSelector({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-[350px] justify-between shadow-sm bg-background border-input hover:bg-accent hover:text-accent-foreground"
+          className="w-[350px] justify-between shadow-xl bg-card/50 backdrop-blur-md border-primary/10 hover:border-primary/30 hover:bg-accent/50 transition-all rounded-xl h-10 px-4 group"
         >
           {selectedProject ? (
-            <span className="truncate font-medium">
+            <span className="truncate font-black text-xs uppercase tracking-tight">
               {selectedProject.clientName}
             </span>
           ) : (
-            <span className="text-muted-foreground">
+            <span className="text-muted-foreground/60 text-xs font-bold uppercase tracking-tight">
               Selecione um projeto...
             </span>
           )}
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-30 group-hover:opacity-100 transition-opacity" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[350px] p-0" align="end">
-        <Command>
-          <CommandInput placeholder="Buscar projeto..." />
-          <CommandList>
-            <CommandEmpty>Nenhum projeto encontrado.</CommandEmpty>
-            <CommandGroup heading="Projetos">
+      <PopoverContent className="w-[350px] p-0 border-primary/10 bg-card/95 backdrop-blur-xl shadow-2xl rounded-xl overflow-hidden" align="end">
+        <Command className="bg-transparent">
+          <CommandInput placeholder="Buscar por cliente ou sistema..." className="border-none focus:ring-0 text-xs font-bold uppercase placeholder:text-muted-foreground/40 h-11" />
+          <CommandList className="max-h-[300px] scrollbar-thin">
+            <CommandEmpty className="py-6 text-center text-xs font-bold uppercase text-muted-foreground/40">Nenhum projeto encontrado.</CommandEmpty>
+            <CommandGroup heading={<span className="text-[9px] font-black uppercase tracking-[0.2em] text-primary/40 px-2">Base de Projetos</span>}>
               {sortedProjects.map((project) => (
                 <CommandItem
                   key={project.id}
@@ -77,15 +77,15 @@ export function ProjectSelector({
                     onSelect(project.id);
                     setOpen(false);
                   }}
-                  className="flex items-center justify-between py-2 cursor-pointer"
+                  className="flex items-center justify-between py-3 px-4 cursor-pointer hover:bg-primary/5 transition-colors group/item"
                 >
-                  <div className="flex flex-col gap-1 w-full overflow-hidden">
+                  <div className="flex flex-col gap-0.5 w-full overflow-hidden">
                     <div className="flex items-center gap-2">
                       <span
                         className={cn(
-                          "truncate font-medium",
+                          "truncate text-xs font-black uppercase tracking-tight",
                           project.globalStatus === "done" &&
-                            "text-muted-foreground line-through decoration-slate-400"
+                            "text-muted-foreground/40 line-through decoration-muted-foreground/20"
                         )}
                       >
                         {project.clientName}
@@ -93,24 +93,22 @@ export function ProjectSelector({
                       {project.globalStatus === "done" && (
                         <Badge
                           variant="secondary"
-                          className="text-[10px] h-4 px-1"
+                          className="text-[8px] h-3.5 px-1 font-black uppercase bg-muted/50 text-muted-foreground border-none"
                         >
-                          Concluído
+                          OFF
                         </Badge>
                       )}
                     </div>
-                    <span className="text-xs text-muted-foreground flex items-center gap-1">
-                      {project.systemType || "N/A"}
+                    <span className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-tighter">
+                      {project.systemType || "Sistema Não Definido"}
                     </span>
                   </div>
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4 text-primary",
-                      selectedProjectId === project.id
-                        ? "opacity-100"
-                        : "opacity-0"
-                    )}
-                  />
+                  <div className={cn(
+                    "ml-2 h-4 w-4 rounded-full border border-primary/20 flex items-center justify-center transition-all",
+                    selectedProjectId === project.id ? "bg-primary border-primary" : "opacity-0 group-hover/item:opacity-30"
+                  )}>
+                    <Check className={cn("h-2.5 w-2.5 text-white", selectedProjectId === project.id ? "opacity-100" : "opacity-0")} />
+                  </div>
                 </CommandItem>
               ))}
             </CommandGroup>

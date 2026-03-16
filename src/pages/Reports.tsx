@@ -45,36 +45,49 @@ export default function Reports() {
   });
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="min-h-[calc(100vh-80px)] space-y-8 animate-in fade-in zoom-in-95 duration-700 pb-10">
+      {/* Decorative background element */}
+      <div className="fixed inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-primary/5 -z-10" />
+
       <Tabs
         defaultValue="overview"
-        className="space-y-6"
+        className="space-y-8"
         onValueChange={setActiveTab}
       >
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-4">
-          <div className="space-y-1">
-            <h2 className="text-2xl font-bold tracking-tight">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-primary/10">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="h-6 w-1 bg-primary rounded-full" />
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70">Intelligence Engine</span>
+            </div>
+            <h2 className="text-3xl font-black tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
               Relatórios & Análises
             </h2>
-            <p className="text-muted-foreground">
-              Acompanhe métricas, tendências e performance dos projetos.
+            <p className="text-sm text-muted-foreground font-medium max-w-md">
+              Métricas de performance, tendências de saúde e distribuição de carga em tempo real.
             </p>
           </div>
 
-          <TabsList className="bg-muted p-1 rounded-lg self-start md:self-center">
-            <TabsTrigger value="overview" className="gap-2">
-              <LayoutDashboard className="h-4 w-4" />
+          <TabsList className="bg-muted/50 backdrop-blur-md p-1 border border-primary/5 rounded-xl shadow-sm self-start md:self-center">
+            <TabsTrigger 
+              value="overview" 
+              className="gap-2 px-5 py-2 data-[state=active]:bg-background data-[state=active]:shadow-md transition-all rounded-lg text-xs font-bold uppercase tracking-wider"
+            >
+              <LayoutDashboard className="h-3.5 w-3.5" />
               Visão Geral
             </TabsTrigger>
-            <TabsTrigger value="individual" className="gap-2">
-              <Search className="h-4 w-4" />
+            <TabsTrigger 
+              value="individual" 
+              className="gap-2 px-5 py-2 data-[state=active]:bg-background data-[state=active]:shadow-md transition-all rounded-lg text-xs font-bold uppercase tracking-wider"
+            >
+              <Search className="h-3.5 w-3.5" />
               Análise Individual
             </TabsTrigger>
           </TabsList>
         </div>
 
-        <TabsContent value="overview" className="space-y-6 m-0">
-          <div className="bg-card p-4 rounded-lg border shadow-sm">
+        <TabsContent value="overview" className="space-y-8 m-0 animate-in fade-in slide-in-from-left-4 duration-500">
+          <div className="bg-card/40 backdrop-blur-sm p-5 rounded-2xl border border-primary/10 shadow-sm transition-all hover:bg-card/60">
             <ReportsFilters
               onSystemChange={setSystemFilter}
               onDateChange={setDateFilter}
@@ -85,18 +98,20 @@ export default function Reports() {
           <GlobalMetrics projects={filteredProjects} />
 
           {/* Status and Health Distribution Cards */}
-          <div className="grid gap-6 md:grid-cols-3">
+          <div className="grid gap-8 md:grid-cols-3">
             <StatusDistribution projects={filteredProjects} />
             <HealthDistribution projects={filteredProjects} />
             <AdherenceGapCard projects={filteredProjects} />
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2">
-            <TimePerStageChart projects={filteredProjects} />
+          <div className="grid gap-8 md:grid-cols-2">
+            <div className="transition-all hover:scale-[1.01]">
+              <TimePerStageChart projects={filteredProjects} />
+            </div>
           </div>
         </TabsContent>
 
-        <TabsContent value="individual" className="m-0">
+        <TabsContent value="individual" className="m-0 animate-in fade-in slide-in-from-right-4 duration-500">
           <IndividualProjectReport projects={projects} />
         </TabsContent>
       </Tabs>
