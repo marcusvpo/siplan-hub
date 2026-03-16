@@ -201,7 +201,7 @@ export default function DashboardV2() {
   };
 
   return (
-    <div className="min-h-screen bg-background relative overflow-x-hidden">
+    <div className="bg-background relative overflow-x-hidden">
       <div 
         style={{ 
           position: 'fixed', 
