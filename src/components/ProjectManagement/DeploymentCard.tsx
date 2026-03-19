@@ -1,6 +1,6 @@
 import { ProjectV2 } from "@/types/ProjectV2";
 import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
+import { format, addWeeks, startOfWeek, endOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Calendar, Clock, Monitor, Tag } from "lucide-react";
 import { motion } from "framer-motion";
@@ -49,14 +49,28 @@ export function DeploymentCard({
     return now >= start && now <= end;
   }, [startDate, endDate]);
 
+  const isNextWeek = useMemo(() => {
+    if (!startDate) return false;
+    const now = new Date();
+    const startOfNextWeekDate = startOfWeek(addWeeks(now, 1), { weekStartsOn: 0 });
+    const endOfNextWeekDate = endOfWeek(addWeeks(now, 1), { weekStartsOn: 0 });
+    
+    const start = new Date(startDate);
+    start.setHours(0, 0, 0, 0);
+    
+    return start >= startOfNextWeekDate && start <= endOfNextWeekDate;
+  }, [startDate]);
+
   return (
     <motion.div
       onClick={onClick}
       whileHover={{ y: -5, scale: 1.02 }}
-      className={`group relative w-full min-h-[230px] rounded-2xl bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-900/50 border shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col ${
+      className={`group relative w-full min-h-[230px] rounded-2xl border shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col ${
         isInProgress
-          ? "border-blue-400 dark:border-blue-600 shadow-blue-100 dark:shadow-blue-900/20 ring-1 ring-blue-400 dark:ring-blue-600"
-          : "border-slate-100 dark:border-slate-800"
+          ? "bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-900/50 border-blue-400 dark:border-blue-600 shadow-blue-100 dark:shadow-blue-900/20 ring-1 ring-blue-400 dark:ring-blue-600"
+          : isNextWeek
+          ? "bg-gradient-to-br from-orange-50 to-white dark:from-orange-950/40 dark:to-slate-900/50 border-orange-300 dark:border-orange-500/50 shadow-orange-100 dark:shadow-orange-900/20 ring-1 ring-orange-300 dark:ring-orange-500/50"
+          : "bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-900/50 border-slate-100 dark:border-slate-800"
       } ${onClick ? "cursor-pointer" : ""}`}
     >
       {/* Decorative Gradient Blob - Reduced size */}
@@ -64,6 +78,8 @@ export function DeploymentCard({
         className={`absolute -top-16 -right-16 w-32 h-32 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700 ${
           isInProgress
             ? "bg-gradient-to-br from-blue-400/40 to-blue-600/40"
+            : isNextWeek
+            ? "bg-gradient-to-br from-orange-400/40 to-orange-600/40"
             : "bg-gradient-to-br from-blue-500/20 to-purple-500/20"
         }`}
       />
@@ -86,6 +102,14 @@ export function DeploymentCard({
                 className="bg-blue-500 hover:bg-blue-600 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 border-none shadow-sm animate-pulse"
               >
                 Em Andamento
+              </Badge>
+            )}
+            {!isInProgress && isNextWeek && (
+              <Badge
+                variant="default"
+                className="bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 border-none shadow-sm"
+              >
+                Próxima Semana
               </Badge>
             )}
           </div>

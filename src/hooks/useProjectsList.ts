@@ -7,6 +7,7 @@ import {
   AdherenceStageV2, 
   EnvironmentStageV2, 
   ConversionStageV2, 
+  ModelosEditorStageV2,
   ImplementationStageV2, 
   PostStageV2,
   RichContent,
@@ -46,6 +47,7 @@ export const useProjectsList = (
           adherence_status, adherence_start_date, adherence_end_date, adherence_responsible,
           environment_status, environment_start_date, environment_end_date, environment_responsible,
           conversion_status, conversion_start_date, conversion_end_date, conversion_sent_at, conversion_finished_at, conversion_responsible,
+          modelos_editor_status, modelos_editor_start_date, modelos_editor_end_date, modelos_editor_responsible,
           implementation_status, implementation_start_date, implementation_end_date, implementation_responsible,
           post_status, post_start_date, post_end_date, post_responsible
         `) 
@@ -134,6 +136,7 @@ interface ProjectRow {
     adherence_status?: string;
     environment_status?: string;
     conversion_status?: string;
+    modelos_editor_status?: string;
     implementation_status?: string;
     post_status?: string;
     [key: string]: unknown; // Allow other columns
@@ -196,6 +199,12 @@ function userProjectsListTransform(row: ProjectRow): Partial<ProjectV2> {
                 finishedAt: row.conversion_finished_at ? new Date(row.conversion_finished_at as string) : undefined,
                 responsible: row.conversion_responsible as string | undefined
             } as ConversionStageV2,
+            modelosEditor: {
+                status: row.modelos_editor_status || 'todo',
+                startDate: row.modelos_editor_start_date ? new Date(row.modelos_editor_start_date as string) : undefined,
+                endDate: row.modelos_editor_end_date ? new Date(row.modelos_editor_end_date as string) : undefined,
+                responsible: row.modelos_editor_responsible as string | undefined
+            } as ModelosEditorStageV2,
             implementation: { 
                 status: row.implementation_status || 'todo',
                 startDate: row.implementation_start_date ? new Date(row.implementation_start_date as string) : undefined,
