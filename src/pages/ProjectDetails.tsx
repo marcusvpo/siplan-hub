@@ -13,6 +13,7 @@ import { FilesTab } from "@/components/ProjectManagement/Tabs/FilesTab";
 import { LogsTab } from "@/components/ProjectManagement/Tabs/LogsTab";
 import { RoadmapManager } from "@/components/ProjectManagement/RoadmapManager";
 import { EditProjectTab } from "@/components/ProjectManagement/Tabs/EditProjectTab";
+import { Chamado0800Tab } from "@/components/ProjectManagement/Tabs/Chamado0800Tab"; // Tab 0800
 import { ProjectV2 } from "@/types/ProjectV2";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -63,7 +64,12 @@ export default function ProjectDetails() {
                   {project?.systemType}
                 </Badge>
               </div>
-              <p className="text-sm text-muted-foreground">Gerenciamento completo do projeto</p>
+              {project?.TituloChamado && (
+                <p className="text-[15px] font-medium text-foreground/90 mt-1 mb-0.5">
+                  {project.TituloChamado}
+                </p>
+              )}
+              <p className="text-sm text-muted-foreground">Detalhes e gerenciamento do projeto.</p>
             </div>
           )}
         </div>
@@ -141,6 +147,14 @@ export default function ProjectDetails() {
                   >
                     Roadmap
                   </TabsTrigger>
+                  {project && (project.TituloChamado || project.descricaotramite || project.ResponsavelAtividade || project.EtapasProjeto) && (
+                    <TabsTrigger
+                      value="chamado_0800"
+                      className="h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-2 flex items-center gap-1.5"
+                    >
+                      Chamado 0800
+                    </TabsTrigger>
+                  )}
                 </TabsList>
               </div>
             </div>
@@ -179,6 +193,11 @@ export default function ProjectDetails() {
                   <TabsContent value="roadmap" className="m-0 border-none p-0 outline-none">
                     <RoadmapManager projectId={project.id} />
                   </TabsContent>
+                  {project && (project.TituloChamado || project.descricaotramite || project.ResponsavelAtividade || project.EtapasProjeto) && (
+                    <TabsContent value="chamado_0800" className="m-0 border-none p-0 outline-none">
+                      <Chamado0800Tab project={project} />
+                    </TabsContent>
+                  )}
                 </div>
               ) : null}
             </div>

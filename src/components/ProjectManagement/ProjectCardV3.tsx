@@ -153,6 +153,11 @@ export function ProjectCardV3({
 
   const stages = [...baseStages, ...orionStages, ...endStages];
 
+  const isFromAutomacao = project.TituloChamado || 
+                          project.descricaotramite || 
+                          project.ResponsavelAtividade || 
+                          project.EtapasProjeto;
+
   return (
     <Card
       className="w-full hover:shadow-lg hover:border-primary/20 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer flex flex-col md:flex-row items-center p-2.5 md:p-3 gap-3 md:gap-4 min-h-[5.5rem] h-auto relative overflow-visible group bg-card/50 backdrop-blur-sm"
@@ -166,15 +171,22 @@ export function ProjectCardV3({
         )}
       />
 
-      {/* Project Status Badge - Top Right Corner */}
-      <Badge
-        className={cn(
-          "absolute -top-1.5 -right-1.5 z-10 text-[9px] px-2 py-0.5 font-bold shadow-lg border-2 border-background",
-          globalStatusBadge.className,
+      {/* Project Status Badges - Top Right Corner */}
+      <div className="absolute -top-1.5 -right-1.5 z-10 flex items-center gap-1.5">
+        {isFromAutomacao && (
+          <Badge className="text-[9px] px-2 py-0.5 font-bold shadow-lg border-2 border-background bg-indigo-500 hover:bg-indigo-600 text-white shadow-indigo-500/20">
+            Novo
+          </Badge>
         )}
-      >
-        {globalStatusBadge.label}
-      </Badge>
+        <Badge
+          className={cn(
+            "text-[9px] px-2 py-0.5 font-bold shadow-lg border-2 border-background",
+            globalStatusBadge.className,
+          )}
+        >
+          {globalStatusBadge.label}
+        </Badge>
+      </div>
 
       {/* Selection Checkbox */}
       {onSelect && (
@@ -221,6 +233,19 @@ export function ProjectCardV3({
             #{project.ticketNumber}
           </span>
         </div>
+
+        {project.TituloChamado && (
+          <div className="text-[11px] font-medium text-muted-foreground/90 truncate leading-snug w-full" title={project.TituloChamado}>
+            {project.TituloChamado}
+          </div>
+        )}
+        
+        {project.EtapasProjeto && (
+          <div className="text-[10px] text-muted-foreground/80 truncate flex items-center gap-1.5 w-full bg-muted/40 rounded-md px-1.5 py-0.5 border border-border/30" title={project.EtapasProjeto}>
+            <div className="w-1.5 h-1.5 rounded-full bg-blue-500/80 animate-pulse"></div>
+            0800: <span className="font-medium text-foreground/80">{project.EtapasProjeto}</span>
+          </div>
+        )}
 
         <div className="flex flex-wrap items-center gap-2">
           {/* Follow Up Indicator */}

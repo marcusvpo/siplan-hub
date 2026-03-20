@@ -62,6 +62,12 @@ export interface ProjectV2 {
   clientName: string;
   ticketNumber: string;
 
+  // Integração 0800
+  TituloChamado?: string;
+  descricaotramite?: string;
+  ResponsavelAtividade?: string;
+  EtapasProjeto?: string;
+
   // Dados do Projeto
   opNumber?: number;
   salesOrderNumber?: number;
