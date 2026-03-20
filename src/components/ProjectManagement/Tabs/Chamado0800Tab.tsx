@@ -20,11 +20,11 @@ export function Chamado0800Tab({ project }: Chamado0800TabProps) {
     <div className="space-y-6 pt-4 max-w-4xl mx-auto">
       {/* Profile Header Card */}
       <Card className="overflow-hidden border-none shadow-md bg-card/60 backdrop-blur-sm">
-        <div className="h-24 md:h-32 bg-gradient-to-r from-blue-600 to-indigo-600 w-full relative">
+        <div className="h-12 md:h-16 bg-primary w-full relative">
           <div className="absolute inset-0 bg-black/10"></div>
           {/* Badge for Etapa */}
           {project.EtapasProjeto && (
-             <div className="absolute top-4 right-4 z-10">
+             <div className="absolute top-1/2 -translate-y-1/2 right-4 z-10">
                <Badge className="bg-white/20 hover:bg-white/30 text-white border-white/30 backdrop-blur-md shadow-sm h-7 px-3 flex items-center gap-1.5 transition-all">
                  <GitMerge className="w-3.5 h-3.5" />
                  {project.EtapasProjeto}
@@ -33,17 +33,7 @@ export function Chamado0800Tab({ project }: Chamado0800TabProps) {
           )}
         </div>
         
-        <div className="px-6 md:px-8 pb-6 relative">
-          {/* Avatar overlapped */}
-          <div className="relative -mt-12 md:-mt-16 flex justify-between items-end mb-4">
-            <Avatar className="w-24 h-24 md:w-32 md:h-32 border-4 border-background shadow-lg ring-1 ring-border/20">
-               <AvatarImage src={`https://api.dicebear.com/7.x/notionists/svg?seed=${project.ResponsavelAtividade || '0800'}&backgroundColor=e2e8f0`} />
-               <AvatarFallback className="text-2xl md:text-4xl bg-gradient-to-br from-indigo-500 to-purple-500 text-white font-bold">
-                 {avatarFallback}
-               </AvatarFallback>
-            </Avatar>
-          </div>
-
+        <div className="px-6 md:px-8 py-6 relative">
           <div className="space-y-4">
             <div>
               <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground/90">

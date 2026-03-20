@@ -123,6 +123,14 @@ export default function ProjectDetails() {
                   >
                     Informações Gerais
                   </TabsTrigger>
+                  {project && (project.TituloChamado || project.descricaotramite || project.ResponsavelAtividade || project.EtapasProjeto) && (
+                    <TabsTrigger
+                      value="chamado_0800"
+                      className="h-full rounded-none border-b-2 border-transparent data-[state=active]:border-rose-500 data-[state=active]:text-rose-600 text-rose-500/80 font-medium data-[state=active]:bg-transparent px-2 flex items-center gap-1.5 transition-colors"
+                    >
+                      Chamado 0800
+                    </TabsTrigger>
+                  )}
                   <TabsTrigger
                     value="steps"
                     className="h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-2"
@@ -147,14 +155,6 @@ export default function ProjectDetails() {
                   >
                     Roadmap
                   </TabsTrigger>
-                  {project && (project.TituloChamado || project.descricaotramite || project.ResponsavelAtividade || project.EtapasProjeto) && (
-                    <TabsTrigger
-                      value="chamado_0800"
-                      className="h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-2 flex items-center gap-1.5"
-                    >
-                      Chamado 0800
-                    </TabsTrigger>
-                  )}
                 </TabsList>
               </div>
             </div>
