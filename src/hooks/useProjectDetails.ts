@@ -93,6 +93,12 @@ function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
     legacySystem: row.legacy_system as string | undefined,
     specialty: row.specialty as string | undefined,
     products: (row.products as string[]) || [],
+    
+    // Integração 0800
+    TituloChamado: row.TituloChamado as string | undefined,
+    descricaotramite: row.descricaotramite as string | undefined,
+    ResponsavelAtividade: row.ResponsavelAtividade as string | undefined,
+    EtapasProjeto: row.EtapasProjeto as string | undefined,
     healthScore: calculateHealthScore(row),
     globalStatus: (row.global_status as ProjectV2['globalStatus']) || "in-progress",
     overallProgress: (row.overall_progress as number) || 0,

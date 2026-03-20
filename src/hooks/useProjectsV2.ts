@@ -320,6 +320,12 @@ function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
     specialty: row.specialty as string | undefined,
     products: (row.products as string[]) || [],
 
+    // Integração 0800
+    TituloChamado: row.TituloChamado as string | undefined,
+    descricaotramite: row.descricaotramite as string | undefined,
+    ResponsavelAtividade: row.ResponsavelAtividade as string | undefined,
+    EtapasProjeto: row.EtapasProjeto as string | undefined,
+
     healthScore: calculateHealthScore(row),
     globalStatus: (row.global_status as ProjectV2['globalStatus']) || "in-progress",
     overallProgress: (row.overall_progress as number) || 0,
@@ -412,6 +418,12 @@ function transformToDB(project: Partial<ProjectV2>, currentProject?: ProjectV2):
 
   if (project.isDeleted !== undefined) dbRow.is_deleted = project.isDeleted;
   if (project.isArchived !== undefined) dbRow.is_archived = project.isArchived;
+
+  // Integração 0800
+  if (project.TituloChamado !== undefined) dbRow.TituloChamado = project.TituloChamado;
+  if (project.descricaotramite !== undefined) dbRow.descricaotramite = project.descricaotramite;
+  if (project.ResponsavelAtividade !== undefined) dbRow.ResponsavelAtividade = project.ResponsavelAtividade;
+  if (project.EtapasProjeto !== undefined) dbRow.EtapasProjeto = project.EtapasProjeto;
 
   // Stages flattening
   if (project.stages) {

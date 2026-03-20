@@ -13,6 +13,7 @@ import { StepsTab } from "./Tabs/StepsTab";
 import { FilesTab } from "./Tabs/FilesTab";
 import { LogsTab } from "./Tabs/LogsTab";
 import { RoadmapManager } from "./RoadmapManager";
+import { Chamado0800Tab } from "./Tabs/Chamado0800Tab";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Pencil, X, Maximize2 } from "lucide-react";
@@ -172,6 +173,14 @@ export function ProjectModal({
                 >
                   Informações Gerais
                 </TabsTrigger>
+                {fullProject && (fullProject.TituloChamado || fullProject.descricaotramite || fullProject.ResponsavelAtividade || fullProject.EtapasProjeto) && (
+                  <TabsTrigger
+                    value="chamado_0800"
+                    className="h-full rounded-none border-b-2 border-transparent data-[state=active]:border-rose-500 data-[state=active]:text-rose-600 text-rose-500/80 font-medium data-[state=active]:bg-transparent px-2 flex items-center gap-1.5 transition-colors"
+                  >
+                    Chamado 0800
+                  </TabsTrigger>
+                )}
                 <TabsTrigger
                   value="steps"
                   className="h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-2"
@@ -249,6 +258,11 @@ export function ProjectModal({
                   <TabsContent value="roadmap" className="m-0 h-full">
                     <RoadmapManager projectId={fullProject.id} />
                   </TabsContent>
+                  {fullProject && (fullProject.TituloChamado || fullProject.descricaotramite || fullProject.ResponsavelAtividade || fullProject.EtapasProjeto) && (
+                    <TabsContent value="chamado_0800" className="m-0 h-full">
+                      <Chamado0800Tab project={fullProject} />
+                    </TabsContent>
+                  )}
                 </>
               ) : null}
             </div>
