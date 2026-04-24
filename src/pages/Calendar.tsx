@@ -21,7 +21,7 @@ import {
   startOfWeek, 
   endOfWeek 
 } from "date-fns";
-import { useProjects } from "@/hooks/useProjects";
+import { useProjectsV2 } from "@/hooks/useProjectsV2";
 import { ProjectV2 } from "@/types/ProjectV2";
 import { Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -78,7 +78,7 @@ export default function Calendar() {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
     null,
   );
-  const { projects = [], isLoading } = useProjects();
+  const { projects = [], isLoading } = useProjectsV2();
   const { vacations = [] } = useVacations();
 
   // Memoize Transformation Logic to avoid recalculating on every render
@@ -113,7 +113,7 @@ export default function Calendar() {
       return colors[Math.abs(hash) % colors.length];
     };
 
-    const isValidDate = (date: any) => {
+    const isValidDate = (date: Date | string | null | undefined) => {
       if (!date) return false;
       const d = new Date(date);
       return d instanceof Date && !isNaN(d.getTime());
@@ -121,7 +121,7 @@ export default function Calendar() {
 
     projects.forEach((project: ProjectV2) => {
       // Helper to ensure dates are treated as local noon to avoid timezone shifts
-      const toLocalDate = (dateStr: any) => {
+      const toLocalDate = (dateStr: Date | string | null | undefined) => {
         if (!dateStr) return null;
         const d = new Date(dateStr);
         if (isNaN(d.getTime())) return null;

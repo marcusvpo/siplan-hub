@@ -155,6 +155,9 @@ export interface InfraStageV2 {
   workstationsCount?: number;
   technicalNotes?: string;
   observations?: string;
+  approvedByInfra?: boolean;
+  serverInUse?: string;
+  serverNeeded?: string;
   lastUpdatedAt?: Date;
   lastUpdatedBy?: string;
 }
@@ -210,6 +213,9 @@ export interface ConversionStageV2 {
   homologationDate?: Date;
   deviations?: string;
   observations?: string;
+  homologationComplete?: boolean;
+  homologationWorkflowStatus?: string;
+  recordCount?: number;
   lastUpdatedAt?: Date;
   lastUpdatedBy?: string;
 }
