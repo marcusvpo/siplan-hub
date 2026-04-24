@@ -1,5 +1,6 @@
-import { useProjects } from "@/hooks/useProjects";
+// legacy import removed
 import { useState } from "react";
+import { ProjectV2 } from "@/types/ProjectV2";
 import {
     Card,
     CardContent,
@@ -37,12 +38,11 @@ import {
 import { Link } from "react-router-dom";
 import { ProjectModal } from "@/components/ProjectManagement/ProjectModal";
 import { useProjectsV2 } from "@/hooks/useProjectsV2";
-import { ProjectV2 } from "@/types/ProjectV2";
 
 type MetricType = "total" | "in-progress" | "done" | "blocked" | null;
 
 export default function OrionTNProjects() {
-    const { projects, isLoading } = useProjects();
+    const { projects, isLoading } = useProjectsV2();
     const { updateProject } = useProjectsV2();
     const [selectedMetric, setSelectedMetric] = useState<MetricType>(null);
     const [searchQuery, setSearchQuery] = useState("");
@@ -341,9 +341,9 @@ function ProjectTable({
     hideActionsOnMobile = true,
     onOpenProject
 }: {
-    projects: any[],
+    projects: ProjectV2[],
     hideActionsOnMobile?: boolean,
-    onOpenProject: (project: any) => void
+    onOpenProject: (project: ProjectV2) => void
 }) {
     return (
         <div className="relative w-full overflow-auto">

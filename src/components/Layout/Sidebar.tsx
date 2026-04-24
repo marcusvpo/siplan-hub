@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/use-theme";
-import { useProjects } from "@/hooks/useProjects";
+import { useProjectsV2 } from "@/hooks/useProjectsV2";
 import { Link, useLocation } from "react-router-dom";
 import { usePermissions } from "@/hooks/usePermissions";
 import { cn } from "@/lib/utils";
@@ -45,7 +45,7 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
   const location = useLocation();
   const { signOut } = useAuth();
   const { theme } = useTheme();
-  const { projects } = useProjects();
+  const { projects } = useProjectsV2();
   const [isDashboardOpen, setIsDashboardOpen] = useState(
     location.pathname.startsWith("/dashboard"),
   );

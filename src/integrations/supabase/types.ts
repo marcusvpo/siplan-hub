@@ -14,40 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
-      app_roles: {
-        Row: {
-          id: string
-          name: string
-          description: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: { id?: string; name: string; description?: string | null; created_at?: string; updated_at?: string }
-        Update: { id?: string; name?: string; description?: string | null; created_at?: string; updated_at?: string }
-        Relationships: []
-      },
       app_permissions: {
         Row: {
+          action: string
+          created_at: string
+          description: string | null
           id: string
           resource: string
-          action: string
-          description: string | null
-          created_at: string
         }
-        Insert: { id?: string; resource: string; action: string; description?: string | null; created_at?: string }
-        Update: { id?: string; resource?: string; action?: string; description?: string | null; created_at?: string }
+        Insert: {
+          action: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          resource: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          resource?: string
+        }
         Relationships: []
-      },
+      }
       app_role_permissions: {
         Row: {
-          id: string
-          role_id: string
-          permission_id: string
           created_at: string
+          id: string
+          permission_id: string
+          role_id: string
         }
-        Insert: { id?: string; role_id: string; permission_id: string; created_at?: string }
-        Update: { id?: string; role_id?: string; permission_id?: string; created_at?: string }
+        Insert: {
+          created_at?: string
+          id?: string
+          permission_id: string
+          role_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          permission_id?: string
+          role_id?: string
+        }
         Relationships: [
+          {
+            foreignKeyName: "app_role_permissions_permission_id_fkey"
+            columns: ["permission_id"]
+            isOneToOne: false
+            referencedRelation: "app_permissions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "app_role_permissions_role_id_fkey"
             columns: ["role_id"]
@@ -55,15 +72,32 @@ export type Database = {
             referencedRelation: "app_roles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "app_role_permissions_permission_id_fkey"
-            columns: ["permission_id"]
-            isOneToOne: false
-            referencedRelation: "app_permissions"
-            referencedColumns: ["id"]
-          }
         ]
-      },
+      }
+      app_roles: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -93,9 +127,9 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          }
+          },
         ]
-      },
+      }
       client_contacts: {
         Row: {
           client_id: string
@@ -217,272 +251,93 @@ export type Database = {
           },
         ]
       }
-      notifications: {
+      conversion_activity_log: {
         Row: {
+          action: string
+          created_at: string | null
+          from_value: string | null
           id: string
-          user_id: string | null
-          team: string | null
+          notes: string | null
+          performed_by: string | null
+          performed_by_name: string | null
           project_id: string | null
-          type: string
-          title: string
-          message: string
-          action_url: string | null
-          read: boolean | null
-          created_at: string
-          read_at: string | null
+          queue_id: string | null
+          to_value: string | null
         }
         Insert: {
+          action: string
+          created_at?: string | null
+          from_value?: string | null
           id?: string
-          user_id?: string | null
-          team?: string | null
+          notes?: string | null
+          performed_by?: string | null
+          performed_by_name?: string | null
           project_id?: string | null
-          type: string
-          title: string
-          message: string
-          action_url?: string | null
-          read?: boolean | null
-          created_at?: string
-          read_at?: string | null
+          queue_id?: string | null
+          to_value?: string | null
         }
         Update: {
+          action?: string
+          created_at?: string | null
+          from_value?: string | null
           id?: string
-          user_id?: string | null
-          team?: string | null
+          notes?: string | null
+          performed_by?: string | null
+          performed_by_name?: string | null
           project_id?: string | null
-          type?: string
-          title?: string
-          message?: string
-          action_url?: string | null
-          read?: boolean | null
-          created_at?: string
-          read_at?: string | null
+          queue_id?: string | null
+          to_value?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "notifications_project_id_fkey"
+            foreignKeyName: "conversion_activity_log_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
-        ]
-      }
-      conversion_queue: {
-        Row: {
-          id: string
-          project_id: string
-          sent_by: string | null
-          sent_by_name: string
-          sent_at: string
-          queue_status: string
-          priority: number
-          assigned_to: string | null
-          assigned_to_name: string | null
-          assigned_at: string | null
-          started_at: string | null
-          estimated_completion: string | null
-          completed_at: string | null
-          notes: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          project_id: string
-          sent_by?: string | null
-          sent_by_name: string
-          sent_at?: string
-          queue_status?: string
-          priority?: number
-          assigned_to?: string | null
-          assigned_to_name?: string | null
-          assigned_at?: string | null
-          started_at?: string | null
-          estimated_completion?: string | null
-          completed_at?: string | null
-          notes?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          project_id?: string
-          sent_by?: string | null
-          sent_by_name?: string
-          sent_at?: string
-          queue_status?: string
-          priority?: number
-          assigned_to?: string | null
-          assigned_to_name?: string | null
-          assigned_at?: string | null
-          started_at?: string | null
-          estimated_completion?: string | null
-          completed_at?: string | null
-          notes?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
           {
-            foreignKeyName: "conversion_queue_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: true
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      team_areas: {
-        Row: {
-          id: string
-          name: string
-          label: string
-          color: string | null
-          icon: string | null
-          active: boolean | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          name: string
-          label: string
-          color?: string | null
-          icon?: string | null
-          active?: boolean | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          name?: string
-          label?: string
-          color?: string | null
-          icon?: string | null
-          active?: boolean | null
-          created_at?: string
-        }
-        Relationships: []
-      }
-      conversion_mappings: {
-        Row: {
-          id: string
-          project_id: string
-          source_origin: string
-          origin_table: string
-          destination_table: string
-          field_mappings: Json | null
-          script_snippet: string | null
-          script_url: string | null
-        }
-        Insert: {
-          id?: string
-          project_id: string
-          source_origin: string
-          origin_table: string
-          destination_table: string
-          field_mappings?: Json | null
-          script_snippet?: string | null
-          script_url?: string | null
-        }
-        Update: {
-          id?: string
-          project_id?: string
-          source_origin?: string
-          origin_table?: string
-          destination_table?: string
-          field_mappings?: Json | null
-          script_snippet?: string | null
-          script_url?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "conversion_mappings_project_id_fkey"
-            columns: ["project_id"]
+            foreignKeyName: "conversion_activity_log_queue_id_fkey"
+            columns: ["queue_id"]
             isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      conversion_issues: {
-        Row: {
-          id: string
-          project_id: string
-          title: string
-          description: string | null
-          priority: string
-          status: string
-          reported_by: string | null
-          reported_at: string
-          fixed_by: string | null
-          fixed_at: string | null
-          notes: string | null
-        }
-        Insert: {
-          id?: string
-          project_id: string
-          title: string
-          description?: string | null
-          priority: string
-          status?: string
-          reported_by?: string | null
-          reported_at?: string
-          fixed_by?: string | null
-          fixed_at?: string | null
-          notes?: string | null
-        }
-        Update: {
-          id?: string
-          project_id?: string
-          title?: string
-          description?: string | null
-          priority?: string
-          status?: string
-          reported_by?: string | null
-          reported_at?: string
-          fixed_by?: string | null
-          fixed_at?: string | null
-          notes?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "conversion_issues_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
+            referencedRelation: "conversion_queue"
             referencedColumns: ["id"]
           },
         ]
       }
       conversion_logs: {
         Row: {
+          analyst: string
+          created_at: string
+          created_by: string | null
+          description: string
           id: string
           project_id: string
-          action_type: string
-          details: string | null
-          performed_by: string | null
+          time_spent: number
           timestamp: string
-          old_value: string | null
-          new_value: string | null
+          type: string
         }
         Insert: {
+          analyst: string
+          created_at?: string
+          created_by?: string | null
+          description: string
           id?: string
           project_id: string
-          action_type: string
-          details?: string | null
-          performed_by?: string | null
+          time_spent?: number
           timestamp?: string
-          old_value?: string | null
-          new_value?: string | null
+          type: string
         }
         Update: {
+          analyst?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
           id?: string
           project_id?: string
-          action_type?: string
-          details?: string | null
-          performed_by?: string | null
+          time_spent?: number
           timestamp?: string
-          old_value?: string | null
-          new_value?: string | null
+          type?: string
         }
         Relationships: [
           {
@@ -494,39 +349,238 @@ export type Database = {
           },
         ]
       }
-      homologation_events: {
+      conversion_posts: {
         Row: {
+          author_id: string | null
+          author_name: string
+          content: string
+          created_at: string
           id: string
+          image_urls: string[] | null
+          post_type: string
           project_id: string
-          from_status: string
-          to_status: string
-          performed_by: string | null
-          performed_by_name: string
-          timestamp: string
-          notes: string | null
-          issues_count: number | null
+          queue_id: string | null
+          stage: string | null
+          updated_at: string
         }
         Insert: {
+          author_id?: string | null
+          author_name: string
+          content: string
+          created_at?: string
           id?: string
+          image_urls?: string[] | null
+          post_type?: string
           project_id: string
-          from_status: string
-          to_status: string
-          performed_by?: string | null
-          performed_by_name: string
-          timestamp?: string
-          notes?: string | null
-          issues_count?: number | null
+          queue_id?: string | null
+          stage?: string | null
+          updated_at?: string
         }
         Update: {
+          author_id?: string | null
+          author_name?: string
+          content?: string
+          created_at?: string
           id?: string
+          image_urls?: string[] | null
+          post_type?: string
           project_id?: string
+          queue_id?: string | null
+          stage?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversion_posts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversion_posts_queue_id_fkey"
+            columns: ["queue_id"]
+            isOneToOne: false
+            referencedRelation: "conversion_queue"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversion_queue: {
+        Row: {
+          assigned_at: string | null
+          assigned_to: string | null
+          assigned_to_name: string | null
+          completed_at: string | null
+          created_at: string | null
+          engine_notes: string | null
+          engine_requested_at: string | null
+          engine_requested_by: string | null
+          engine_requested_by_name: string | null
+          engine_status: string | null
+          estimated_completion: string | null
+          homologation_analyst: string | null
+          homologation_analyst_name: string | null
+          homologation_deadline: string | null
+          homologation_sent_at: string | null
+          homologation_status: string | null
+          id: string
+          notes: string | null
+          priority: number | null
+          project_id: string | null
+          queue_status: string | null
+          sent_at: string | null
+          sent_by: string | null
+          sent_by_name: string
+          started_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_to?: string | null
+          assigned_to_name?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          engine_notes?: string | null
+          engine_requested_at?: string | null
+          engine_requested_by?: string | null
+          engine_requested_by_name?: string | null
+          engine_status?: string | null
+          estimated_completion?: string | null
+          homologation_analyst?: string | null
+          homologation_analyst_name?: string | null
+          homologation_deadline?: string | null
+          homologation_sent_at?: string | null
+          homologation_status?: string | null
+          id?: string
+          notes?: string | null
+          priority?: number | null
+          project_id?: string | null
+          queue_status?: string | null
+          sent_at?: string | null
+          sent_by?: string | null
+          sent_by_name: string
+          started_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_to?: string | null
+          assigned_to_name?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          engine_notes?: string | null
+          engine_requested_at?: string | null
+          engine_requested_by?: string | null
+          engine_requested_by_name?: string | null
+          engine_status?: string | null
+          estimated_completion?: string | null
+          homologation_analyst?: string | null
+          homologation_analyst_name?: string | null
+          homologation_deadline?: string | null
+          homologation_sent_at?: string | null
+          homologation_status?: string | null
+          id?: string
+          notes?: string | null
+          priority?: number | null
+          project_id?: string | null
+          queue_status?: string | null
+          sent_at?: string | null
+          sent_by?: string | null
+          sent_by_name?: string
+          started_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversion_queue_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversion_queue_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversion_queue_sent_by_fkey"
+            columns: ["sent_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documentation_layouts: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          fields: Json
+          id: string
+          legacy_system_name: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          fields?: Json
+          id?: string
+          legacy_system_name: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          fields?: Json
+          id?: string
+          legacy_system_name?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      homologation_events: {
+        Row: {
+          from_status: string
+          id: string
+          issues_count: number | null
+          notes: string | null
+          performed_by: string | null
+          performed_by_name: string
+          project_id: string
+          timestamp: string
+          to_status: string
+        }
+        Insert: {
+          from_status: string
+          id?: string
+          issues_count?: number | null
+          notes?: string | null
+          performed_by?: string | null
+          performed_by_name: string
+          project_id: string
+          timestamp?: string
+          to_status: string
+        }
+        Update: {
           from_status?: string
-          to_status?: string
+          id?: string
+          issues_count?: number | null
+          notes?: string | null
           performed_by?: string | null
           performed_by_name?: string
+          project_id?: string
           timestamp?: string
-          notes?: string | null
-          issues_count?: number | null
+          to_status?: string
         }
         Relationships: [
           {
@@ -540,36 +594,36 @@ export type Database = {
       }
       implantador_vacations: {
         Row: {
-          id: string
-          implantador_name: string
-          implantador_id: string | null
-          start_date: string
-          end_date: string
-          description: string | null
-          created_by: string | null
           created_at: string | null
+          created_by: string | null
+          description: string | null
+          end_date: string
+          id: string
+          implantador_id: string | null
+          implantador_name: string
+          start_date: string
           updated_at: string | null
         }
         Insert: {
-          id?: string
-          implantador_name: string
-          implantador_id?: string | null
-          start_date: string
-          end_date: string
-          description?: string | null
-          created_by?: string | null
           created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_date: string
+          id?: string
+          implantador_id?: string | null
+          implantador_name: string
+          start_date: string
           updated_at?: string | null
         }
         Update: {
-          id?: string
-          implantador_name?: string
-          implantador_id?: string | null
-          start_date?: string
-          end_date?: string
-          description?: string | null
-          created_by?: string | null
           created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_date?: string
+          id?: string
+          implantador_id?: string | null
+          implantador_name?: string
+          start_date?: string
           updated_at?: string | null
         }
         Relationships: [
@@ -579,58 +633,59 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
-      profiles: {
+      notifications: {
         Row: {
+          action_url: string | null
+          created_at: string | null
           id: string
-          email: string | null
-          full_name: string | null
-          role: string | null
+          message: string
+          project_id: string | null
+          read: boolean | null
+          read_at: string | null
           team: string | null
-          created_at: string
-        }
-        Insert: {
-          id: string
-          email?: string | null
-          full_name?: string | null
-          role?: string | null
-          team?: string | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          email?: string | null
-          full_name?: string | null
-          role?: string | null
-          team?: string | null
-          created_at?: string
-        }
-        Relationships: []
-      }
-      responsible_name_mapping: {
-        Row: {
-          id: string
-          name: string
+          title: string
+          type: string
           user_id: string | null
-          created_at: string
         }
         Insert: {
+          action_url?: string | null
+          created_at?: string | null
           id?: string
-          name: string
+          message: string
+          project_id?: string | null
+          read?: boolean | null
+          read_at?: string | null
+          team?: string | null
+          title: string
+          type: string
           user_id?: string | null
-          created_at?: string
         }
         Update: {
+          action_url?: string | null
+          created_at?: string | null
           id?: string
-          name?: string
+          message?: string
+          project_id?: string | null
+          read?: boolean | null
+          read_at?: string | null
+          team?: string | null
+          title?: string
+          type?: string
           user_id?: string | null
-          created_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "responsible_name_mapping_user_id_fkey"
+            foreignKeyName: "notifications_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -638,137 +693,33 @@ export type Database = {
           },
         ]
       }
-      roadmaps: {
+      profiles: {
         Row: {
-          id: string
-          project_id: string
-          share_token: string
-          is_active: boolean
-          view_count: number
-          custom_theme: Json | null
-          welcome_message: string | null
-          config: Json | null
           created_at: string
-          updated_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          role: string | null
+          team: string | null
         }
         Insert: {
-          id?: string
-          project_id: string
-          share_token?: string
-          is_active?: boolean
-          view_count?: number
-          custom_theme?: Json | null
-          welcome_message?: string | null
-          config?: Json | null
           created_at?: string
-          updated_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          role?: string | null
+          team?: string | null
         }
         Update: {
-          id?: string
-          project_id?: string
-          share_token?: string
-          is_active?: boolean
-          view_count?: number
-          custom_theme?: Json | null
-          welcome_message?: string | null
-          config?: Json | null
           created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "roadmaps_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      settings: {
-        Row: {
-          key: string
-          value: Json
-          description: string | null
-          updated_at: string
-          updated_by: string | null
-        }
-        Insert: {
-          key: string
-          value: Json
-          description?: string | null
-          updated_at?: string
-          updated_by?: string | null
-        }
-        Update: {
-          key?: string
-          value?: Json
-          description?: string | null
-          updated_at?: string
-          updated_by?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          role?: string | null
+          team?: string | null
         }
         Relationships: []
       }
-      team_members: {
-        Row: {
-          id: string
-          name: string
-          role: string
-          email: string
-          avatar_url: string | null
-          active: boolean | null
-          area: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          name: string
-          role: string
-          email: string
-          avatar_url?: string | null
-          active?: boolean | null
-          area?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          name?: string
-          role?: string
-          email?: string
-          avatar_url?: string | null
-          active?: boolean | null
-          area?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      teams: {
-        Row: {
-          created_at: string
-          description: string | null
-          id: string
-          label: string
-          value: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          label: string
-          value: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          label?: string
-          value?: string
-        }
-        Relationships: []
-      },
       project_checklist: {
         Row: {
           completed: boolean | null
@@ -803,6 +754,51 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "project_checklist_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_documentation_mappings: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          field_mappings: Json
+          id: string
+          layout_id: string
+          project_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          field_mappings?: Json
+          id?: string
+          layout_id: string
+          project_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          field_mappings?: Json
+          id?: string
+          layout_id?: string
+          project_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_documentation_mappings_layout_id_fkey"
+            columns: ["layout_id"]
+            isOneToOne: false
+            referencedRelation: "documentation_layouts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_documentation_mappings_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
@@ -870,30 +866,39 @@ export type Database = {
           client_email: string | null
           client_id: string | null
           client_name: string
-          commercial_notes: string | null
-          go_live_date: string | null
-          health_score: string | null
           client_phone: string | null
           client_primary_contact: string | null
+          commercial_notes: string | null
           contract_value: number | null
+          conversion_approved_at: string | null
+          conversion_approved_by: string | null
           conversion_complexity: string | null
           conversion_data_volume_gb: number | null
           conversion_deviations: string | null
+          conversion_end_date: string | null
           conversion_finished_at: string | null
+          conversion_homologation_complete: boolean | null
           conversion_homologation_date: string | null
           conversion_homologation_responsible: string | null
           conversion_homologation_responsible_id: string | null
           conversion_homologation_status: string | null
+          conversion_homologation_workflow_status: string | null
+          conversion_last_version_sent_at: string | null
+          conversion_last_version_sent_by: string | null
           conversion_observations: string | null
+          conversion_record_count: number | null
           conversion_responsible: string | null
           conversion_responsible_id: string | null
           conversion_sent_at: string | null
+          conversion_source_system: string | null
+          conversion_start_date: string | null
           conversion_status: string
           conversion_tool_used: string | null
           created_at: string
           custom_fields: Json | null
           deleted_at: string | null
           deleted_by: string | null
+          descricaotramite: string | null
           description: string | null
           end_date_actual: string | null
           end_date_planned: string | null
@@ -909,25 +914,41 @@ export type Database = {
           environment_status: string
           environment_test_available: boolean | null
           environment_version: string | null
+          EtapasProjeto: string | null
           external_id: string | null
           global_status: string | null
           id: string
+          implantation_type: string | null
+          implementation_acceptance_status: string | null
+          implementation_client_feedback: string | null
           implementation_end_date: string | null
           implementation_observations: string | null
+          implementation_participants_count: number | null
           implementation_phase1: Json | null
           implementation_phase2: Json | null
+          implementation_remote_install_date: string | null
           implementation_responsible: string | null
           implementation_responsible_id: string | null
           implementation_start_date: string | null
           implementation_status: string
-          implantation_type: string | null
+          implementation_switch_end_time: string | null
+          implementation_switch_start_time: string | null
+          implementation_switch_type: string | null
+          implementation_training_end_date: string | null
+          implementation_training_location: string | null
+          implementation_training_start_date: string | null
+          implementation_training_type: string | null
+          infra_approved_by_infra: boolean | null
           infra_blocking_reason: string | null
           infra_end_date: string | null
           infra_observations: string | null
           infra_responsible: string | null
           infra_responsible_id: string | null
+          infra_server_in_use: string | null
+          infra_server_needed: string | null
           infra_server_status: string | null
           infra_start_date: string | null
+          infra_stations_status: string | null
           infra_status: string
           infra_technical_notes: string | null
           infra_workstations_count: number | null
@@ -936,6 +957,13 @@ export type Database = {
           is_deleted: boolean | null
           last_update_by: string
           legacy_system: string | null
+          modelos_editor_available_files: Json | null
+          modelos_editor_end_date: string | null
+          modelos_editor_observations: string | null
+          modelos_editor_responsible: string | null
+          modelos_editor_sent_files: Json | null
+          modelos_editor_start_date: string | null
+          modelos_editor_status: string
           next_follow_up_date: string | null
           notes: Json | null
           op_number: number | null
@@ -957,10 +985,15 @@ export type Database = {
           post_support_end_date: string | null
           post_support_period_days: number | null
           priority: string | null
+          products: string[] | null
           project_leader: string
           project_leader_id: string | null
           project_type: string | null
           related_tickets: Json | null
+          released_for_conversion: boolean | null
+          released_for_conversion_at: string | null
+          released_for_conversion_by: string | null
+          ResponsavelAtividade: string | null
           responsible_environment: string | null
           sales_order_number: number | null
           sold_hours: number | null
@@ -971,6 +1004,7 @@ export type Database = {
           system_type: string
           tags: string[] | null
           ticket_number: string
+          TituloChamado: string | null
           updated_at: string
         }
         Insert: {
@@ -984,34 +1018,46 @@ export type Database = {
           adherence_has_product_gap?: boolean | null
           adherence_observations?: string | null
           adherence_responsible?: string | null
+          adherence_responsible_id?: string | null
           adherence_start_date?: string | null
           adherence_status?: string
           archived_at?: string | null
           client_email?: string | null
           client_id?: string | null
           client_name: string
-          commercial_notes?: string | null
-          go_live_date?: string | null
-          health_score?: string | null
           client_phone?: string | null
           client_primary_contact?: string | null
+          commercial_notes?: string | null
           contract_value?: number | null
+          conversion_approved_at?: string | null
+          conversion_approved_by?: string | null
           conversion_complexity?: string | null
           conversion_data_volume_gb?: number | null
           conversion_deviations?: string | null
+          conversion_end_date?: string | null
           conversion_finished_at?: string | null
+          conversion_homologation_complete?: boolean | null
           conversion_homologation_date?: string | null
           conversion_homologation_responsible?: string | null
+          conversion_homologation_responsible_id?: string | null
           conversion_homologation_status?: string | null
+          conversion_homologation_workflow_status?: string | null
+          conversion_last_version_sent_at?: string | null
+          conversion_last_version_sent_by?: string | null
           conversion_observations?: string | null
+          conversion_record_count?: number | null
           conversion_responsible?: string | null
+          conversion_responsible_id?: string | null
           conversion_sent_at?: string | null
+          conversion_source_system?: string | null
+          conversion_start_date?: string | null
           conversion_status?: string
           conversion_tool_used?: string | null
           created_at?: string
           custom_fields?: Json | null
           deleted_at?: string | null
           deleted_by?: string | null
+          descricaotramite?: string | null
           description?: string | null
           end_date_actual?: string | null
           end_date_planned?: string | null
@@ -1022,27 +1068,46 @@ export type Database = {
           environment_preparation_checklist?: string | null
           environment_real_date?: string | null
           environment_responsible?: string | null
+          environment_responsible_id?: string | null
           environment_start_date?: string | null
           environment_status?: string
           environment_test_available?: boolean | null
           environment_version?: string | null
+          EtapasProjeto?: string | null
           external_id?: string | null
           global_status?: string | null
           id?: string
+          implantation_type?: string | null
+          implementation_acceptance_status?: string | null
+          implementation_client_feedback?: string | null
           implementation_end_date?: string | null
           implementation_observations?: string | null
+          implementation_participants_count?: number | null
           implementation_phase1?: Json | null
           implementation_phase2?: Json | null
+          implementation_remote_install_date?: string | null
           implementation_responsible?: string | null
+          implementation_responsible_id?: string | null
           implementation_start_date?: string | null
           implementation_status?: string
-          implantation_type?: string | null
+          implementation_switch_end_time?: string | null
+          implementation_switch_start_time?: string | null
+          implementation_switch_type?: string | null
+          implementation_training_end_date?: string | null
+          implementation_training_location?: string | null
+          implementation_training_start_date?: string | null
+          implementation_training_type?: string | null
+          infra_approved_by_infra?: boolean | null
           infra_blocking_reason?: string | null
           infra_end_date?: string | null
           infra_observations?: string | null
           infra_responsible?: string | null
+          infra_responsible_id?: string | null
+          infra_server_in_use?: string | null
+          infra_server_needed?: string | null
           infra_server_status?: string | null
           infra_start_date?: string | null
+          infra_stations_status?: string | null
           infra_status?: string
           infra_technical_notes?: string | null
           infra_workstations_count?: number | null
@@ -1051,6 +1116,13 @@ export type Database = {
           is_deleted?: boolean | null
           last_update_by: string
           legacy_system?: string | null
+          modelos_editor_available_files?: Json | null
+          modelos_editor_end_date?: string | null
+          modelos_editor_observations?: string | null
+          modelos_editor_responsible?: string | null
+          modelos_editor_sent_files?: Json | null
+          modelos_editor_start_date?: string | null
+          modelos_editor_status?: string
           next_follow_up_date?: string | null
           notes?: Json | null
           op_number?: number | null
@@ -1065,16 +1137,22 @@ export type Database = {
           post_observations?: string | null
           post_recommendations?: string | null
           post_responsible?: string | null
+          post_responsible_id?: string | null
           post_roi_estimated?: string | null
           post_start_date?: string | null
           post_status?: string
           post_support_end_date?: string | null
           post_support_period_days?: number | null
           priority?: string | null
-          project_leader?: string
+          products?: string[] | null
+          project_leader: string
           project_leader_id?: string | null
           project_type?: string | null
           related_tickets?: Json | null
+          released_for_conversion?: boolean | null
+          released_for_conversion_at?: string | null
+          released_for_conversion_by?: string | null
+          ResponsavelAtividade?: string | null
           responsible_environment?: string | null
           sales_order_number?: number | null
           sold_hours?: number | null
@@ -1085,6 +1163,7 @@ export type Database = {
           system_type: string
           tags?: string[] | null
           ticket_number: string
+          TituloChamado?: string | null
           updated_at?: string
         }
         Update: {
@@ -1098,34 +1177,46 @@ export type Database = {
           adherence_has_product_gap?: boolean | null
           adherence_observations?: string | null
           adherence_responsible?: string | null
+          adherence_responsible_id?: string | null
           adherence_start_date?: string | null
           adherence_status?: string
           archived_at?: string | null
           client_email?: string | null
           client_id?: string | null
           client_name?: string
-          commercial_notes?: string | null
-          go_live_date?: string | null
-          health_score?: string | null
           client_phone?: string | null
           client_primary_contact?: string | null
+          commercial_notes?: string | null
           contract_value?: number | null
+          conversion_approved_at?: string | null
+          conversion_approved_by?: string | null
           conversion_complexity?: string | null
           conversion_data_volume_gb?: number | null
           conversion_deviations?: string | null
+          conversion_end_date?: string | null
           conversion_finished_at?: string | null
+          conversion_homologation_complete?: boolean | null
           conversion_homologation_date?: string | null
           conversion_homologation_responsible?: string | null
+          conversion_homologation_responsible_id?: string | null
           conversion_homologation_status?: string | null
+          conversion_homologation_workflow_status?: string | null
+          conversion_last_version_sent_at?: string | null
+          conversion_last_version_sent_by?: string | null
           conversion_observations?: string | null
+          conversion_record_count?: number | null
           conversion_responsible?: string | null
+          conversion_responsible_id?: string | null
           conversion_sent_at?: string | null
+          conversion_source_system?: string | null
+          conversion_start_date?: string | null
           conversion_status?: string
           conversion_tool_used?: string | null
           created_at?: string
           custom_fields?: Json | null
           deleted_at?: string | null
           deleted_by?: string | null
+          descricaotramite?: string | null
           description?: string | null
           end_date_actual?: string | null
           end_date_planned?: string | null
@@ -1136,27 +1227,46 @@ export type Database = {
           environment_preparation_checklist?: string | null
           environment_real_date?: string | null
           environment_responsible?: string | null
+          environment_responsible_id?: string | null
           environment_start_date?: string | null
           environment_status?: string
           environment_test_available?: boolean | null
           environment_version?: string | null
+          EtapasProjeto?: string | null
           external_id?: string | null
           global_status?: string | null
           id?: string
+          implantation_type?: string | null
+          implementation_acceptance_status?: string | null
+          implementation_client_feedback?: string | null
           implementation_end_date?: string | null
           implementation_observations?: string | null
+          implementation_participants_count?: number | null
           implementation_phase1?: Json | null
           implementation_phase2?: Json | null
+          implementation_remote_install_date?: string | null
           implementation_responsible?: string | null
+          implementation_responsible_id?: string | null
           implementation_start_date?: string | null
           implementation_status?: string
-          implantation_type?: string | null
+          implementation_switch_end_time?: string | null
+          implementation_switch_start_time?: string | null
+          implementation_switch_type?: string | null
+          implementation_training_end_date?: string | null
+          implementation_training_location?: string | null
+          implementation_training_start_date?: string | null
+          implementation_training_type?: string | null
+          infra_approved_by_infra?: boolean | null
           infra_blocking_reason?: string | null
           infra_end_date?: string | null
           infra_observations?: string | null
           infra_responsible?: string | null
+          infra_responsible_id?: string | null
+          infra_server_in_use?: string | null
+          infra_server_needed?: string | null
           infra_server_status?: string | null
           infra_start_date?: string | null
+          infra_stations_status?: string | null
           infra_status?: string
           infra_technical_notes?: string | null
           infra_workstations_count?: number | null
@@ -1165,6 +1275,13 @@ export type Database = {
           is_deleted?: boolean | null
           last_update_by?: string
           legacy_system?: string | null
+          modelos_editor_available_files?: Json | null
+          modelos_editor_end_date?: string | null
+          modelos_editor_observations?: string | null
+          modelos_editor_responsible?: string | null
+          modelos_editor_sent_files?: Json | null
+          modelos_editor_start_date?: string | null
+          modelos_editor_status?: string
           next_follow_up_date?: string | null
           notes?: Json | null
           op_number?: number | null
@@ -1179,16 +1296,22 @@ export type Database = {
           post_observations?: string | null
           post_recommendations?: string | null
           post_responsible?: string | null
+          post_responsible_id?: string | null
           post_roi_estimated?: string | null
           post_start_date?: string | null
           post_status?: string
           post_support_end_date?: string | null
           post_support_period_days?: number | null
           priority?: string | null
+          products?: string[] | null
           project_leader?: string
           project_leader_id?: string | null
           project_type?: string | null
           related_tickets?: Json | null
+          released_for_conversion?: boolean | null
+          released_for_conversion_at?: string | null
+          released_for_conversion_by?: string | null
+          ResponsavelAtividade?: string | null
           responsible_environment?: string | null
           sales_order_number?: number | null
           sold_hours?: number | null
@@ -1199,6 +1322,7 @@ export type Database = {
           system_type?: string
           tags?: string[] | null
           ticket_number?: string
+          TituloChamado?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -1267,6 +1391,82 @@ export type Database = {
           },
         ]
       }
+      responsible_name_mapping: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "responsible_name_mapping_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roadmaps: {
+        Row: {
+          config: Json | null
+          created_at: string
+          custom_theme: Json | null
+          id: string
+          is_active: boolean
+          project_id: string
+          share_token: string
+          updated_at: string
+          view_count: number
+          welcome_message: string | null
+        }
+        Insert: {
+          config?: Json | null
+          created_at?: string
+          custom_theme?: Json | null
+          id?: string
+          is_active?: boolean
+          project_id: string
+          share_token?: string
+          updated_at?: string
+          view_count?: number
+          welcome_message?: string | null
+        }
+        Update: {
+          config?: Json | null
+          created_at?: string
+          custom_theme?: Json | null
+          id?: string
+          is_active?: boolean
+          project_id?: string
+          share_token?: string
+          updated_at?: string
+          view_count?: number
+          welcome_message?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roadmaps_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       saved_filters: {
         Row: {
           created_at: string | null
@@ -1294,6 +1494,120 @@ export type Database = {
           is_public?: boolean | null
           name?: string
           usage_count?: number | null
+        }
+        Relationships: []
+      }
+      settings: {
+        Row: {
+          description: string | null
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          description?: string | null
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value: Json
+        }
+        Update: {
+          description?: string | null
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
+      team_areas: {
+        Row: {
+          active: boolean | null
+          color: string | null
+          created_at: string | null
+          icon: string | null
+          id: string
+          label: string
+          name: string
+        }
+        Insert: {
+          active?: boolean | null
+          color?: string | null
+          created_at?: string | null
+          icon?: string | null
+          id?: string
+          label: string
+          name: string
+        }
+        Update: {
+          active?: boolean | null
+          color?: string | null
+          created_at?: string | null
+          icon?: string | null
+          id?: string
+          label?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      team_members: {
+        Row: {
+          active: boolean | null
+          area: string | null
+          avatar_url: string | null
+          created_at: string
+          email: string
+          id: string
+          name: string
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean | null
+          area?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          role: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean | null
+          area?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      teams: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          label: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          label: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          label?: string
+          value?: string
         }
         Relationships: []
       }
@@ -1340,7 +1654,60 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_new_user: {
+        Args: {
+          email: string
+          full_name: string
+          password: string
+          role: string
+        }
+        Returns: string
+      }
+      create_notification: {
+        Args: {
+          p_action_url?: string
+          p_message: string
+          p_project_id: string
+          p_team: string
+          p_title: string
+          p_type: string
+          p_user_id: string
+        }
+        Returns: string
+      }
+      get_db_size: { Args: never; Returns: number }
+      get_roadmap_data: { Args: { token_uuid: string }; Returns: Json }
+      get_storage_size: { Args: never; Returns: number }
+      sync_0800_project:
+        | {
+            Args: {
+              p_client_name: string
+              p_descricaotramite: string
+              p_description: string
+              p_etapas_projeto: string
+              p_op_number: number
+              p_responsavel_atividade: string
+              p_sales_order_number: number
+              p_system_type: string
+              p_ticket_number: string
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              p_client_name: string
+              p_descricao_tramite: string
+              p_etapas_projeto: string
+              p_op_number: number
+              p_project_leader: string
+              p_responsavel_atividade: string
+              p_sales_order_number: number
+              p_system_type: string
+              p_ticket_number: string
+              p_titulo_chamado: string
+            }
+            Returns: undefined
+          }
     }
     Enums: {
       [_ in never]: never
