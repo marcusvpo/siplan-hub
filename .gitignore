@@ -32,3 +32,5 @@ dist-ssr
 .env.test
 .env.production
 *.pem
+.vercel
+.env*.local
