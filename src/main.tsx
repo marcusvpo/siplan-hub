@@ -3,3 +3,6 @@ import App from "./App.tsx";
 import "./index.css";
 
 createRoot(document.getElementById("root")!).render(<App />);
+
+// Trigger Vercel deployment after login fix
+
