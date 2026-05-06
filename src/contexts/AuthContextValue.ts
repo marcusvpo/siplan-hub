@@ -11,6 +11,7 @@ export interface Permission {
 export interface AuthContextType {
   session: Session | null;
   user: User | null;
+  fullName: string | null;
   role: UserRole;
   team: string | null;
   permissions: Permission[];

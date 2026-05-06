@@ -7,6 +7,7 @@ import { AuthContext, UserRole, Permission } from "./AuthContextValue";
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [fullName, setFullName] = useState<string | null>(null);
   const [role, setRole] = useState<UserRole>(null);
   const [team, setTeam] = useState<string | null>(null);
   const [permissions, setPermissions] = useState<Permission[]>([]);
@@ -98,6 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (mounted) {
               setSession(null);
               setUser(null);
+              setFullName(null);
               setRole(null);
               setTeam(null);
               setLoading(false);
@@ -151,6 +153,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           fetchUserRole(session.user.id);
         } else {
           setRole(null);
+          setFullName(null);
           setTeam(null);
           setPermissions([]);
           setLoading(false);
@@ -221,7 +224,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       );
       const fetchPromise = supabase
         .from("profiles")
-        .select("role, team")
+        .select("role, team, full_name")
         .eq("id", userId)
         .single();
 
@@ -236,8 +239,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setRole("user");
       } else {
         setRole(data?.role as UserRole);
-          setTeam(data?.team || null);
-          if (data?.role) {
+        setTeam(data?.team || null);
+        setFullName(data?.full_name || null);
+        if (data?.role) {
             // we intentionally wait for permissions to finish if we await fetchPermissions
             await fetchPermissions(data.role as string);
           } else {
@@ -252,7 +256,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           const { data, error: retryError } = await supabase
             .from("profiles")
-            .select("role, team")
+            .select("role, team, full_name")
             .eq("id", userId)
             .single();
 
@@ -261,8 +265,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setRole("user");
           } else {
             setRole(data?.role as UserRole);
-              setTeam(data?.team || null);
-              if (data?.role) {
+            setTeam(data?.team || null);
+            setFullName(data?.full_name || null);
+            if (data?.role) {
                 await fetchPermissions(data.role as string);
               } else {
                 setPermissions([]);
@@ -300,6 +305,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Force clear local state
       setSession(null);
       setUser(null);
+      setFullName(null);
       setRole(null);
       setTeam(null);
       setPermissions([]);
@@ -321,6 +327,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value = {
     session,
     user,
+    fullName,
     role,
     team,
     permissions,
