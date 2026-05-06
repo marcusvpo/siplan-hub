@@ -26,6 +26,7 @@ import {
   Cog,
   AlertCircle,
   FileText,
+  ClipboardList,
   LayoutGrid,
   LayoutDashboard,
 } from "lucide-react";
@@ -422,6 +423,18 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                       <span>Contatos</span>
                     </Button>
                   </Link>
+                  <Link to="/commercial/deployment-forms">
+                    <Button
+                      variant={
+                        isActive("/commercial/deployment-forms") ? "secondary" : "ghost"
+                      }
+                      size="sm"
+                      className="w-full justify-start gap-3 h-9"
+                    >
+                      <ClipboardList className="h-4 w-4" />
+                      <span>Form. Nova Implantação</span>
+                    </Button>
+                  </Link>
                 </div>
               </CollapsibleContent>
             </Collapsible>
@@ -431,7 +444,8 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                   variant={
                     isActive("/commercial/customers") ||
                       isActive("/commercial/blockers") ||
-                      isActive("/commercial/contacts")
+                      isActive("/commercial/contacts") ||
+                      isActive("/commercial/deployment-forms")
                       ? "secondary"
                       : "ghost"
                   }

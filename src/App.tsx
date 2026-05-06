@@ -41,6 +41,9 @@ const CommercialCustomers = lazy(
 const CustomerTimeline = lazy(
   () => import("./pages/commercial/CustomerTimeline"),
 );
+const DeploymentForms = lazy(
+  () => import("./pages/commercial/DeploymentForms"),
+);
 
 // Conversion Pages (lazy)
 const Conversion = lazy(() => import("./pages/conversion/Conversion"));
@@ -240,6 +243,10 @@ const App = () => (
                           <Route
                             path="/commercial/client/:id/timeline"
                             element={<CustomerTimeline />}
+                          />
+                          <Route
+                            path="/commercial/deployment-forms"
+                            element={<DeploymentForms />}
                           />
                           <Route path="/conversion" element={<Conversion />} />
                           <Route

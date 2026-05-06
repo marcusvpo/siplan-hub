@@ -1,0 +1,122 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PASSAGEM DE PROJETO — COMERCIAL → IMPLANTAÇÃO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+■ DADOS ADMINISTRATIVOS
+───────────────────────
+N.º OP: 
+N. Pedido de Venda: 
+Data do Pedido: 
+N.º Contrato (DocuSign): 
+Vendedor responsável: 
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+■ ESCOPO CONTRATADO
+───────────────────────
+Sistema principal: 
+[ ] Orion TN   [ ] Orion PRO   [ ] Orion REG   
+[ ] Outro: ___________
+
+Sistemas / Módulos adicionais contratados:
+[ ] LCW (Livro Caixa Web)
+[ ] On Hand (App Mobile)
+[ ] SGA (Sistema de Gestão de Atendimento)
+[ ] Editor de Modelos (minutas/escrituras)
+[ ] Website
+[ ] Outro: ___________
+
+Horas vendidas — Implantação presencial: _____ h
+Horas vendidas — Implantação remota/cortesia: _____ h
+Modalidade: [ ] Presencial   [ ] Remoto   [ ] Misto
+
+Deslocamento pago pelo cliente: [ ] Sim  [ ] Não
+Hospedagem paga pelo cliente:   [ ] Sim  [ ] Não
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+■ PERFIL DO PROJETO
+───────────────────────
+Tipo de implantação:
+[ ] Migração — sistema Siplan/ControlM legado
+[ ] Migração — sistema de concorrente
+
+Sistema atual do cartório (legado): ___________
+(Ex: SiplanTN, CM TabNot, Outro, etc.)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+■ DATAS E AGENDA
+───────────────────────
+Data desejada pelo cliente: ___________
+Data máxima (prazo limite): ___________
+Restrições de período informadas pelo cliente:
+(Ex: não pode em setembro por correição, prefere 2ª quinzena, etc.)
+___________________________________________
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+■ CONTATOS DO CARTÓRIO
+───────────────────────
+Tabelião / Oficial responsável:
+Nome: _____________________
+Telefone: _________________
+E-mail: ___________________
+
+Responsável pelo TI / Servidor do cartório:
+Nome: _____________________
+Telefone: _________________
+E-mail: ___________________
+
+
+Responsável operacional (Substituto, Escrevente Chefe, etc):
+Nome: _____________________
+Cargo: ____________________
+Telefone: _________________
+E-mail: ___________________
+
+Outros contatos relevantes:
+___________________________________________
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+■ EDITOR DE MODELOS (preencher se contratado)
+───────────────────────
+[ ] Não se aplica (Editor não contratado)
+
+[ ] Contratado — status do envio dos modelos:
+    [ ] Cliente ainda não foi orientado a enviar
+    [ ] Cliente orientado — aguardando envio
+    [ ] Modelos já enviados para equipe de modelos
+    
+
+Prazo combinado com o cliente para envio dos modelos: 
+___________
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+■ CONDIÇÕES ESPECIAIS E OBSERVAÇÕES
+───────────────────────
+Alguma condição especial foi negociada com o cliente
+que a equipe de Implantação precisa saber?
+(Ex: compromissos de  prazo, preferências do tabelião,
+restrições de horário, histórico de relacionamento, etc.)
+
+___________________________________________
+___________________________________________
+___________________________________________
+
+Nível de urgência deste projeto:
+[ ] Normal — seguir fila padrão
+[ ] Alta — cliente com prazo apertado (justificar): 
+    ___________
+[ ] Crítica — aprovada pela diretoria (justificar): 
+    ___________
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Preenchido por: _________________ em: ___/___/______
+
+Ao final das tratativas administrativas, encaminhar 
+este chamado a Implantação para início do projeto.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
