@@ -11,7 +11,7 @@ export const useProjectDetails = (projectId: string | null) => {
 
       const { data, error } = await supabase
         .from("projects")
-        .select("*")
+        .select("*, project_tramites(*)")
         .eq("id", projectId)
         .single();
 

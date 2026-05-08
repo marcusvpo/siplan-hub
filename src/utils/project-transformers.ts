@@ -11,7 +11,8 @@ import {
   PostStageV2,
   RichContent,
   ContentBlock,
-  AuditEntry
+  AuditEntry,
+  ProjectTramite
 } from "@/types/ProjectV2";
 
 export function calculateHealthScore(row: Record<string, unknown>): "ok" | "warning" | "critical" {
@@ -141,6 +142,7 @@ export function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
 
     timeline: [], // Fetch separately or include if joined
     auditLog: auditLog,
+    tramites: (row.project_tramites as ProjectTramite[]) || [],
 
     notes: notes,
 

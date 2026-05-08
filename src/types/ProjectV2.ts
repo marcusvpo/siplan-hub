@@ -55,6 +55,15 @@ export type ConversionComplexity = "low" | "medium" | "high" | "very_high";
 export type GapPriority = "critical" | "high" | "medium" | "low";
 export type ClientSatisfaction = "very_satisfied" | "satisfied" | "neutral" | "dissatisfied";
 
+export interface ProjectTramite {
+  id: string;
+  project_id: string;
+  descricao_tramite: string;
+  responsavel_atividade: string | null;
+  etapa_projeto: string | null;
+  data_tramite: string;
+}
+
 export interface ProjectV2 {
   // Metadados Básicos
   id: string;
@@ -141,6 +150,7 @@ export interface ProjectV2 {
   // Customização
   customFields?: Record<string, unknown>;
   auditLog?: AuditEntry[];
+  tramites?: ProjectTramite[];
   timeline?: TimelineEventV2[];
 }
 
