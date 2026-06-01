@@ -30,6 +30,8 @@ import {
   LayoutGrid,
   LayoutDashboard,
   History,
+  CheckCircle2,
+  BookOpen,
 } from "lucide-react";
 import {
   Collapsible,
@@ -58,6 +60,9 @@ export function Sidebar() {
     location.pathname.startsWith("/orion-tn-models/"),
   );
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isImplantadoresOpen, setIsImplantadoresOpen] = useState(
+    location.pathname.startsWith("/implantadores"),
+  );
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -74,6 +79,7 @@ export function Sidebar() {
   const canViewOrion = hasPermission("menu_orion", "view");
   const canViewDashboardView = hasPermission("dashboard_view", "view");
   const canViewKanban = hasPermission("kanban", "view");
+  const canViewImplantadores = hasPermission("menu_implantadores", "view");
   
   const logoSrc = isDark
     ? "/assets/Siplan_logo_branco.png"
@@ -638,6 +644,100 @@ export function Sidebar() {
                 title="Modelos Editor OrionTN"
               >
                 <FileText className="h-5 w-5" />
+              </Button>
+            </Link>
+          )}
+        </div>
+        )}
+
+        {/* Implantadores Group */}
+        {canViewImplantadores && (
+        <div className="px-2">
+          {!collapsed ? (
+            <Collapsible
+              open={isImplantadoresOpen}
+              onOpenChange={setIsImplantadoresOpen}
+              className="space-y-1"
+            >
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant={
+                    location.pathname.startsWith("/implantadores")
+                      ? "secondary"
+                      : "ghost"
+                  }
+                  className="w-full justify-between hover:bg-muted/50"
+                  title="Implantadores"
+                >
+                  <div className="flex items-center gap-3">
+                    <Users className="h-5 w-5" />
+                    <span>Implantadores</span>
+                  </div>
+                  <ChevronDown
+                    className={cn(
+                      "h-4 w-4 transition-transform",
+                      isImplantadoresOpen ? "transform rotate-180" : "",
+                    )}
+                  />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-1 pl-4 animate-in slide-in-from-top-2">
+                <div className="pt-1 pb-2">
+                  <Link to="/implantadores/aderencia">
+                    <Button
+                      variant={isActive("/implantadores/aderencia") ? "secondary" : "ghost"}
+                      size="sm"
+                      className="w-full justify-start gap-3 h-9"
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                      <span className="text-xs">Editor de Aderência</span>
+                    </Button>
+                  </Link>
+                  <Link to="/implantadores/homologacao">
+                    <Button
+                      variant={isActive("/implantadores/homologacao") ? "secondary" : "ghost"}
+                      size="sm"
+                      className="w-full justify-start gap-3 h-9"
+                    >
+                      <ClipboardList className="h-4 w-4" />
+                      <span className="text-xs">Editor de Checklist</span>
+                    </Button>
+                  </Link>
+                  <Link to="/implantadores/treinamento">
+                    <Button
+                      variant={isActive("/implantadores/treinamento") ? "secondary" : "ghost"}
+                      size="sm"
+                      className="w-full justify-start gap-3 h-9"
+                    >
+                      <BookOpen className="h-4 w-4" />
+                      <span className="text-xs">Roteiro de Treinamento</span>
+                    </Button>
+                  </Link>
+                  <Link to="/implantadores/transicao">
+                    <Button
+                      variant={isActive("/implantadores/transicao") ? "secondary" : "ghost"}
+                      size="sm"
+                      className="w-full justify-start gap-3 h-9"
+                    >
+                      <FileText className="h-4 w-4" />
+                      <span className="text-xs">Documento de Transição</span>
+                    </Button>
+                  </Link>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          ) : (
+            <Link to="/implantadores">
+              <Button
+                variant={
+                  location.pathname.startsWith("/implantadores")
+                    ? "secondary"
+                    : "ghost"
+                }
+                className="w-full justify-center px-0"
+                title="Implantadores"
+              >
+                <Users className="h-5 w-5" />
               </Button>
             </Link>
           )}

@@ -64,7 +64,9 @@ export function ProjectModal({
           <div className="flex flex-col gap-1 w-full mr-12">
             <div className="flex items-center flex-wrap gap-2">
               {isLoading ? (
-                <Skeleton className="h-8 w-64" />
+                <DialogTitle>
+                  <Skeleton className="h-8 w-64" />
+                </DialogTitle>
               ) : (
                 <DialogTitle className="text-xl font-bold flex items-center gap-2 mr-2">
                   {displayProject?.clientName}
