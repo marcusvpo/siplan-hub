@@ -274,7 +274,8 @@ export default function CommercialCustomers() {
 
       {/* Desktop Table */}
       <div className="hidden md:block rounded-md border text-left">
-        <Table>
+        <div className="w-full overflow-x-auto scrollbar-thin">
+          <Table>
           <TableHeader>
             <TableRow className="h-10">
               <TableHead className="h-10 py-2">Cliente</TableHead>
@@ -430,6 +431,7 @@ export default function CommercialCustomers() {
           </TableBody>
         </Table>
       </div>
+    </div>
 
       {/* Mobile Cards */}
       <div className="grid grid-cols-1 gap-3 md:hidden">

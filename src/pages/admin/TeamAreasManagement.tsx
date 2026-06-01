@@ -187,82 +187,84 @@ export default function TeamAreasManagement() {
               <p>Nenhum membro cadastrado</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Membro</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Cargo</TableHead>
-                  <TableHead>Área Atual</TableHead>
-                  <TableHead>Nova Área</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {members.map((member) => {
-                  const currentArea = getMemberCurrentArea(
-                    member.id,
-                    member.area,
-                  );
-                  const hasChange = pendingChanges[member.id] !== undefined;
+            <div className="w-full overflow-x-auto scrollbar-thin">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Membro</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Cargo</TableHead>
+                    <TableHead>Área Atual</TableHead>
+                    <TableHead>Nova Área</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {members.map((member) => {
+                    const currentArea = getMemberCurrentArea(
+                      member.id,
+                      member.area,
+                    );
+                    const hasChange = pendingChanges[member.id] !== undefined;
 
-                  return (
-                    <TableRow
-                      key={member.id}
-                      className={hasChange ? "bg-primary/5" : undefined}
-                    >
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src={member.avatarUrl} />
-                            <AvatarFallback className="text-xs">
-                              {getInitials(member.name)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="font-medium">{member.name}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {member.email}
-                      </TableCell>
-                      <TableCell>{member.role}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={cn(
-                            "border",
-                            AREA_COLORS[member.area],
-                            hasChange && "opacity-50 line-through",
-                          )}
-                        >
-                          {TEAM_AREA_LABELS[member.area]}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Select
-                          value={currentArea}
-                          onValueChange={(v) =>
-                            handleAreaChange(member.id, v as TeamArea)
-                          }
-                        >
-                          <SelectTrigger className="w-40">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {(Object.keys(TEAM_AREA_LABELS) as TeamArea[]).map(
-                              (area) => (
-                                <SelectItem key={area} value={area}>
-                                  {TEAM_AREA_LABELS[area]}
-                                </SelectItem>
-                              ),
+                    return (
+                      <TableRow
+                        key={member.id}
+                        className={hasChange ? "bg-primary/5" : undefined}
+                      >
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src={member.avatarUrl} />
+                              <AvatarFallback className="text-xs">
+                                {getInitials(member.name)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="font-medium">{member.name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {member.email}
+                        </TableCell>
+                        <TableCell>{member.role}</TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "border",
+                              AREA_COLORS[member.area],
+                              hasChange && "opacity-50 line-through",
                             )}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                          >
+                            {TEAM_AREA_LABELS[member.area]}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            value={currentArea}
+                            onValueChange={(v) =>
+                              handleAreaChange(member.id, v as TeamArea)
+                            }
+                          >
+                            <SelectTrigger className="w-40">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {(Object.keys(TEAM_AREA_LABELS) as TeamArea[]).map(
+                                (area) => (
+                                  <SelectItem key={area} value={area}>
+                                    {TEAM_AREA_LABELS[area]}
+                                  </SelectItem>
+                                ),
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>

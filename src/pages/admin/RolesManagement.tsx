@@ -458,76 +458,78 @@ export default function RolesManagement() {
       </div>
 
       <div className="border rounded-md bg-card shadow-sm">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nome e Nível</TableHead>
-              <TableHead>Descrição</TableHead>
-              <TableHead className="text-center">Acessos Liberados</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
+        <div className="w-full overflow-x-auto scrollbar-thin">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={4} className="h-24 text-center">
-                  <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
-                </TableCell>
+                <TableHead>Nome e Nível</TableHead>
+                <TableHead>Descrição</TableHead>
+                <TableHead className="text-center">Acessos Liberados</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
-            ) : roles.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
-                  Nenhum perfil encontrado.
-                </TableCell>
-              </TableRow>
-            ) : (
-              roles.map((role) => (
-                <TableRow key={role.id} className="group hover:bg-muted/20">
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                        <Shield className="h-5 w-5 text-primary" />
-                      </div>
-                      <div className="flex flex-col">
-                        <span>{role.name}</span>
-                        {role.name === 'admin' && <span className="text-[10px] uppercase text-primary font-bold">Default System Admin</span>}
-                        {role.name === 'user' && <span className="text-[10px] uppercase text-muted-foreground font-bold">Default User Role</span>}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{role.description || "Nenhuma descrição informada."}</TableCell>
-                  <TableCell className="text-center">
-                    <span className="inline-flex items-center justify-center bg-secondary text-secondary-foreground text-xs px-2 py-1 rounded-full font-medium">
-                      {rolePermissions[role.id]?.length || 0} permissões
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => openEditForm(role)}
-                        title="Editar Perfil"
-                      >
-                        <Edit className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive/70 hover:text-destructive hover:bg-destructive/10"
-                        onClick={() => handleDeleteRole(role)}
-                        disabled={role.name === 'admin' || role.name === 'user'}
-                        title="Excluir Perfil"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="h-24 text-center">
+                    <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : roles.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+                    Nenhum perfil encontrado.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                roles.map((role) => (
+                  <TableRow key={role.id} className="group hover:bg-muted/20">
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                          <Shield className="h-5 w-5 text-primary" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span>{role.name}</span>
+                          {role.name === 'admin' && <span className="text-[10px] uppercase text-primary font-bold">Default System Admin</span>}
+                          {role.name === 'user' && <span className="text-[10px] uppercase text-muted-foreground font-bold">Default User Role</span>}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{role.description || "Nenhuma descrição informada."}</TableCell>
+                    <TableCell className="text-center">
+                      <span className="inline-flex items-center justify-center bg-secondary text-secondary-foreground text-xs px-2 py-1 rounded-full font-medium">
+                        {rolePermissions[role.id]?.length || 0} permissões
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => openEditForm(role)}
+                          title="Editar Perfil"
+                        >
+                          <Edit className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive/70 hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => handleDeleteRole(role)}
+                          disabled={role.name === 'admin' || role.name === 'user'}
+                          title="Excluir Perfil"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     </div>
   );

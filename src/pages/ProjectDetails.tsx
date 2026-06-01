@@ -45,27 +45,31 @@ export default function ProjectDetails() {
   return (
     <div className="flex flex-col min-h-screen bg-background pb-12">
       {/* Header */}
-      <div className="px-6 py-4 border-b flex items-center justify-between sticky top-0 bg-background z-20">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/projects")}>
+      <div className="px-4 md:px-6 py-4 border-b flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sticky top-0 bg-background z-20">
+        <div className="flex items-center gap-4 min-w-0 w-full sm:w-auto">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/projects")} className="shrink-0">
             <ArrowLeft className="h-5 w-5" />
           </Button>
           
           {isLoading ? (
             <Skeleton className="h-8 w-64" />
           ) : (
-            <div className="flex flex-col">
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl font-bold tracking-tight">{project?.clientName}</h1>
-                <Badge variant="outline" className="text-primary border-primary/20 bg-primary/5">
-                  #{project?.ticketNumber}
-                </Badge>
-                <Badge variant="secondary" className="bg-slate-700 text-white hover:bg-slate-800 ml-2">
-                  {project?.systemType}
-                </Badge>
+            <div className="flex flex-col min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2 min-w-0">
+                <h1 className="text-xl font-bold tracking-tight text-foreground truncate max-w-full" title={project?.clientName}>
+                  {project?.clientName}
+                </h1>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <Badge variant="outline" className="text-primary border-primary/20 bg-primary/5">
+                    #{project?.ticketNumber}
+                  </Badge>
+                  <Badge variant="secondary" className="bg-slate-700 text-white hover:bg-slate-800">
+                    {project?.systemType}
+                  </Badge>
+                </div>
               </div>
               {project?.TituloChamado && (
-                <p className="text-[15px] font-medium text-foreground/90 mt-1 mb-0.5">
+                <p className="text-[15px] font-medium text-foreground/90 mt-1 mb-0.5 truncate max-w-full" title={project.TituloChamado}>
                   {project.TituloChamado}
                 </p>
               )}
@@ -74,7 +78,7 @@ export default function ProjectDetails() {
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
           {canEditProjects && !isLoading && (
             <Button
               variant={isEditing ? "destructive" : "outline"}
@@ -114,9 +118,9 @@ export default function ProjectDetails() {
             }}
             className="flex-1"
           >
-            <div className="px-6 border-b bg-muted/30">
-              <div className="max-w-7xl mx-auto">
-                <TabsList className="h-12 bg-transparent p-0 gap-8">
+            <div className="px-4 md:px-6 border-b bg-muted/30 overflow-x-auto scrollbar-none">
+              <div className="max-w-7xl mx-auto min-w-max">
+                <TabsList className="h-12 bg-transparent p-0 gap-4 md:gap-8 flex-nowrap">
                   <TabsTrigger
                     value="general"
                     className="h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-2"
