@@ -23,6 +23,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const Calendar = lazy(() => import("./pages/Calendar"));
 const AgendaAnalistas = lazy(() => import("./pages/AgendaAnalistas"));
 const NextDeployments = lazy(() => import("./pages/NextDeployments"));
+const LatestDeployments = lazy(() => import("./pages/LatestDeployments"));
 const RoadmapPage = lazy(() => import("./pages/RoadmapPage"));
 const TeamConfiguration = lazy(() => import("./pages/admin/TeamConfiguration"));
 const AuditLogPage = lazy(() => import("./pages/admin/AuditLog"));
@@ -223,6 +224,10 @@ const App = () => (
                           <Route
                             path="/deployments"
                             element={<NextDeployments />}
+                          />
+                          <Route
+                            path="/deployments/latest"
+                            element={<LatestDeployments />}
                           />
                           <Route
                             path="/commercial/blockers"
