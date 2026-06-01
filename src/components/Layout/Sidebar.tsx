@@ -29,6 +29,7 @@ import {
   ClipboardList,
   LayoutGrid,
   LayoutDashboard,
+  History,
 } from "lucide-react";
 import {
   Collapsible,
@@ -269,6 +270,16 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                       <span>Próx. Implantações</span>
                     </Button>
                   </Link>
+                  <Link to="/deployments/latest">
+                    <Button
+                      variant={isActive("/deployments/latest") ? "secondary" : "ghost"}
+                      size="sm"
+                      className="w-full justify-start gap-3 h-9"
+                    >
+                      <History className="h-4 w-4" />
+                      <span>Últimas Implantações</span>
+                    </Button>
+                  </Link>
                 </div>
               </CollapsibleContent>
             </Collapsible>
@@ -278,7 +289,8 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                   variant={
                     isActive("/projects") ||
                       isActive("/reports") ||
-                      isActive("/deployments")
+                      isActive("/deployments") ||
+                      isActive("/deployments/latest")
                       ? "secondary"
                       : "ghost"
                   }
