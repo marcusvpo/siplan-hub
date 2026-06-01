@@ -37,13 +37,11 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { UserProfileDrawer } from "./UserProfileDrawer";
+import { Sidebar as ShadcnSidebar, useSidebar } from "@/components/ui/sidebar";
 
-interface SidebarProps {
-  collapsed: boolean;
-  setCollapsed: (collapsed: boolean) => void;
-}
-
-export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
+export function Sidebar() {
+  const { state, toggleSidebar } = useSidebar();
+  const collapsed = state === "collapsed";
   const location = useLocation();
   const { signOut } = useAuth();
   const { theme } = useTheme();
@@ -86,13 +84,11 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
   );
 
   return (
-    <aside
-      className={cn(
-        "bg-sidebar border-r transition-all duration-300 flex flex-col z-20 shadow-xl shadow-black/5",
-        collapsed ? "w-20" : "w-72",
-      )}
+    <ShadcnSidebar
+      collapsible="icon"
+      className="border-r shadow-xl shadow-black/5"
     >
-      <div className="h-16 flex items-center justify-between px-6 border-b bg-sidebar/50 backdrop-blur-sm">
+      <div className="h-16 flex items-center justify-between px-6 border-b bg-sidebar/50 backdrop-blur-sm shrink-0">
         {!collapsed && (
           <div className="flex items-center gap-2">
             <img
@@ -109,9 +105,9 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setCollapsed(!collapsed)}
+          onClick={toggleSidebar}
           className={cn(
-            "h-8 w-8 rounded-full hover:bg-primary/10 hover:text-primary transition-colors",
+            "h-8 w-8 rounded-full hover:bg-primary/10 hover:text-primary transition-colors hidden md:flex",
             collapsed ? "mx-auto" : "",
           )}
         >
@@ -688,6 +684,6 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
         isOpen={isProfileOpen}
         onClose={() => setIsProfileOpen(false)}
       />
-    </aside>
+    </ShadcnSidebar>
   );
 }

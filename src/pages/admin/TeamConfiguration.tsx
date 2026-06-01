@@ -233,71 +233,73 @@ export default function TeamConfiguration() {
 
       <div className="space-y-3">
         <div className="border rounded-md bg-card">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Identificador</TableHead>
-                <TableHead>Descrição</TableHead>
-                <TableHead className="text-right px-6">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
+          <div className="w-full overflow-x-auto scrollbar-thin">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={4} className="h-24 text-center">
-                    <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
-                  </TableCell>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Identificador</TableHead>
+                  <TableHead>Descrição</TableHead>
+                  <TableHead className="text-right px-6">Ações</TableHead>
                 </TableRow>
-              ) : paginatedTeams.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
-                    <div className="flex flex-col items-center gap-2">
-                      <FilterX className="h-8 w-8 opacity-20" />
-                      <p>Nenhuma equipe encontrada.</p>
-                      {searchTerm && (
-                        <Button variant="link" size="sm" onClick={() => setSearchTerm("")}>
-                          Limpar busca
-                        </Button>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                paginatedTeams.map((team) => (
-                  <TableRow key={team.id} className="hover:bg-muted/50 transition-colors">
-                    <TableCell className="font-medium">{team.label}</TableCell>
-                    <TableCell>
-                      <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono text-muted-foreground">
-                        {team.value}
-                      </code>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="h-24 text-center">
+                      <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
                     </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">{team.description}</TableCell>
-                    <TableCell className="text-right px-6">
-                      <div className="flex justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => handleEdit(team)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => handleDelete(team.id, team.label)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                  </TableRow>
+                ) : paginatedTeams.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+                      <div className="flex flex-col items-center gap-2">
+                        <FilterX className="h-8 w-8 opacity-20" />
+                        <p>Nenhuma equipe encontrada.</p>
+                        {searchTerm && (
+                          <Button variant="link" size="sm" onClick={() => setSearchTerm("")}>
+                            Limpar busca
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : (
+                  paginatedTeams.map((team) => (
+                    <TableRow key={team.id} className="hover:bg-muted/50 transition-colors">
+                      <TableCell className="font-medium">{team.label}</TableCell>
+                      <TableCell>
+                        <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono text-muted-foreground">
+                          {team.value}
+                        </code>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm">{team.description}</TableCell>
+                      <TableCell className="text-right px-6">
+                        <div className="flex justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleEdit(team)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => handleDelete(team.id, team.label)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </div>
 
         {/* Pagination Controls */}

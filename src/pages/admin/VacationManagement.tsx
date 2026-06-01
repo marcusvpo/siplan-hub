@@ -240,86 +240,88 @@ export default function VacationManagement() {
               </p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Implantador</TableHead>
-                  <TableHead>Período</TableHead>
-                  <TableHead>Descrição</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {vacations.map((vacation) => {
-                  const status = getVacationStatus(vacation);
-                  return (
-                    <TableRow key={vacation.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <div
-                            className={cn(
-                              "h-3 w-3 rounded-full",
-                              getMemberColor(vacation.implantador_id),
-                            )}
-                          />
-                          <span className="font-medium">
-                            {vacation.implantador_name}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2 text-sm">
-                          <span>
-                            {format(
-                              parseISO(vacation.start_date),
-                              "dd/MM/yyyy",
-                              { locale: ptBR },
-                            )}
-                          </span>
-                          <span className="text-muted-foreground">até</span>
-                          <span>
-                            {format(parseISO(vacation.end_date), "dd/MM/yyyy", {
-                              locale: ptBR,
-                            })}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="max-w-xs truncate text-muted-foreground">
-                        {vacation.description || "-"}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={status.variant}
-                          className={status.className}
-                        >
-                          {status.label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleOpenEdit(vacation)}
+            <div className="w-full overflow-x-auto scrollbar-thin">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Implantador</TableHead>
+                    <TableHead>Período</TableHead>
+                    <TableHead>Descrição</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {vacations.map((vacation) => {
+                    const status = getVacationStatus(vacation);
+                    return (
+                      <TableRow key={vacation.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <div
+                              className={cn(
+                                "h-3 w-3 rounded-full",
+                                getMemberColor(vacation.implantador_id),
+                              )}
+                            />
+                            <span className="font-medium">
+                              {vacation.implantador_name}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2 text-sm">
+                            <span>
+                              {format(
+                                parseISO(vacation.start_date),
+                                "dd/MM/yyyy",
+                                { locale: ptBR },
+                              )}
+                            </span>
+                            <span className="text-muted-foreground">até</span>
+                            <span>
+                              {format(parseISO(vacation.end_date), "dd/MM/yyyy", {
+                                locale: ptBR,
+                              })}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="max-w-xs truncate text-muted-foreground">
+                          {vacation.description || "-"}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={status.variant}
+                            className={status.className}
                           >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-destructive hover:text-destructive"
-                            onClick={() => handleDeleteClick(vacation.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                            {status.label}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleOpenEdit(vacation)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => handleDeleteClick(vacation.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>

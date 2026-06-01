@@ -54,7 +54,7 @@ export default function AdminLayout() {
 
   if (loading || !permissionsLoaded) {
     return (
-      <div className="h-screen w-full flex items-center justify-center">
+      <div className="min-h-[100dvh] w-full flex items-center justify-center">
         Carregando...
       </div>
     );
@@ -77,7 +77,7 @@ export default function AdminLayout() {
   ];
 
   return (
-    <div className="h-screen bg-muted/10 flex overflow-hidden">
+    <div className="min-h-[100dvh] bg-muted/10 flex overflow-hidden">
       {/* Sidebar */}
       <aside
         className={cn(

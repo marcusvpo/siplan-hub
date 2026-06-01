@@ -217,60 +217,62 @@ export default function AuditLogPage() {
 
       <div className="space-y-4">
         <div className="border rounded-lg overflow-hidden bg-card shadow-sm">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/50">
-                <TableHead className="w-[180px] font-semibold">Data/Hora</TableHead>
-                <TableHead className="w-[200px] font-semibold">Usuário</TableHead>
-                <TableHead className="w-[220px] font-semibold">Ação</TableHead>
-                <TableHead className="font-semibold">Detalhes das Alterações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="h-64 text-center">
-                    <div className="flex flex-col items-center gap-2">
-                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                      <p className="text-sm text-muted-foreground">Carregando histórico...</p>
-                    </div>
-                  </TableCell>
+          <div className="w-full overflow-x-auto scrollbar-thin">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/50">
+                  <TableHead className="w-[180px] font-semibold">Data/Hora</TableHead>
+                  <TableHead className="w-[200px] font-semibold">Usuário</TableHead>
+                  <TableHead className="w-[220px] font-semibold">Ação</TableHead>
+                  <TableHead className="font-semibold">Detalhes das Alterações</TableHead>
                 </TableRow>
-              ) : paginatedLogs.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="h-64 text-center">
-                    <div className="flex flex-col items-center gap-2 opacity-60">
-                      <Search className="h-10 w-10 text-muted-foreground mb-2" />
-                      <p className="text-base font-medium">Nenhum registro encontrado</p>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                paginatedLogs.map((log) => (
-                  <TableRow key={log.id} className="hover:bg-muted/30 transition-colors group">
-                    <TableCell className="whitespace-nowrap tabular-nums text-xs text-muted-foreground">
-                      {format(new Date(log.created_at), "dd/MM/yyyy HH:mm:ss", {
-                        locale: ptBR,
-                      })}
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-sm font-semibold group-hover:text-primary transition-colors">
-                        {log.profile?.full_name || "Sistema"}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="inline-flex items-center rounded-md bg-primary/5 px-2 py-0.5 text-[11px] font-semibold text-primary border border-primary/10">
-                        {actionLabels[log.action] || log.action}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground leading-relaxed py-3">
-                      {formatLogDetails(log)}
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="h-64 text-center">
+                      <div className="flex flex-col items-center gap-2">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        <p className="text-sm text-muted-foreground">Carregando histórico...</p>
+                      </div>
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : paginatedLogs.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="h-64 text-center">
+                      <div className="flex flex-col items-center gap-2 opacity-60">
+                        <Search className="h-10 w-10 text-muted-foreground mb-2" />
+                        <p className="text-base font-medium">Nenhum registro encontrado</p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  paginatedLogs.map((log) => (
+                    <TableRow key={log.id} className="hover:bg-muted/30 transition-colors group">
+                      <TableCell className="whitespace-nowrap tabular-nums text-xs text-muted-foreground">
+                        {format(new Date(log.created_at), "dd/MM/yyyy HH:mm:ss", {
+                          locale: ptBR,
+                        })}
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm font-semibold group-hover:text-primary transition-colors">
+                          {log.profile?.full_name || "Sistema"}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="inline-flex items-center rounded-md bg-primary/5 px-2 py-0.5 text-[11px] font-semibold text-primary border border-primary/10">
+                          {actionLabels[log.action] || log.action}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground leading-relaxed py-3">
+                        {formatLogDetails(log)}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </div>
 
         {totalPages > 1 && (

@@ -277,7 +277,7 @@ export default function DashboardV2() {
         <DashboardKPI onCardClick={handleCardClick} />
 
         {/* Gráficos e KPIs Secundários (Bento Grid) */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           <div className="h-[280px] overflow-hidden rounded-2xl border bg-card/40 backdrop-blur-sm shadow-sm hover:shadow-xl hover:scale-[1.01] hover:bg-card/60 transition-all duration-500 group">
             <ProjectDistributionChart projects={projects} />
           </div>
@@ -290,7 +290,7 @@ export default function DashboardV2() {
         </div>
 
         {/* Timeline e Performance */}
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <TimelineChart projects={projects} />
           
           <Card className="flex flex-col rounded-2xl border bg-card/40 backdrop-blur-sm shadow-sm overflow-hidden hover:shadow-xl hover:scale-[1.01] hover:bg-card/60 transition-all duration-500 group">

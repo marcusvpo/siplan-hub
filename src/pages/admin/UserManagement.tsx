@@ -517,111 +517,113 @@ export default function UserManagement() {
 
       <div className="space-y-3">
         <div className="border rounded-md bg-card">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Time</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Função</TableHead>
-                <TableHead>Perfil de Acesso</TableHead>
-                <TableHead>Criado em</TableHead>
-                <TableHead className="text-right px-6">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
+          <div className="w-full overflow-x-auto scrollbar-thin">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center">
-                    <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
-                  </TableCell>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Time</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Função</TableHead>
+                  <TableHead>Perfil de Acesso</TableHead>
+                  <TableHead>Criado em</TableHead>
+                  <TableHead className="text-right px-6">Ações</TableHead>
                 </TableRow>
-              ) : paginatedUsers.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={7}
-                    className="h-24 text-center text-muted-foreground"
-                  >
-                    <div className="flex flex-col items-center gap-2">
-                      <FilterX className="h-8 w-8 opacity-20" />
-                      <p>Nenhum usuário encontrado com os filtros selecionados.</p>
-                      <Button 
-                        variant="link" 
-                        size="sm" 
-                        onClick={() => {
-                          setSearchTerm("");
-                          setTeamFilter("all");
-                          setRoleFilter("all");
-                        }}
-                      >
-                        Limpar todos os filtros
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                paginatedUsers.map((user) => (
-                  <TableRow key={user.id} className="hover:bg-muted/50 transition-colors">
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        <div className="h-8 w-8 rounded-md bg-primary/5 flex items-center justify-center border border-primary/10">
-                          <UserCog className="h-4 w-4 text-primary" />
-                        </div>
-                        {user.full_name || "Sem nome"}
-                      </div>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="h-24 text-center">
+                      <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
                     </TableCell>
-                    <TableCell>
-                      {user.team ? (
-                        <Badge variant="outline" className="font-normal">{getTeamLabel(user.team)}</Badge>
-                      ) : (
-                        <span className="text-muted-foreground text-xs">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground font-mono text-xs">{user.email}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={user.role === "admin" ? "default" : "secondary"}
-                        className="font-medium"
-                      >
-                        {user.role === "admin" ? "Administrador" : user.role === "user" ? "Usuário Padrão" : user.role}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 capitalize">
-                        {user.role === 'admin' ? 'Administrador' : user.role === 'user' ? 'Usuário Padrão' : user.role || "-"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-xs">
-                      {user.created_at &&
-                        format(new Date(user.created_at), "dd/MM/yyyy", {
-                          locale: ptBR,
-                        })}
-                    </TableCell>
-                    <TableCell className="text-right px-6">
-                      <div className="flex justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => openEditDialog(user)}
+                  </TableRow>
+                ) : paginatedUsers.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={7}
+                      className="h-24 text-center text-muted-foreground"
+                    >
+                      <div className="flex flex-col items-center gap-2">
+                        <FilterX className="h-8 w-8 opacity-20" />
+                        <p>Nenhum usuário encontrado com os filtros selecionados.</p>
+                        <Button 
+                          variant="link" 
+                          size="sm" 
+                          onClick={() => {
+                            setSearchTerm("");
+                            setTeamFilter("all");
+                            setRoleFilter("all");
+                          }}
                         >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => handleDeleteUser(user.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
+                          Limpar todos os filtros
                         </Button>
                       </div>
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : (
+                  paginatedUsers.map((user) => (
+                    <TableRow key={user.id} className="hover:bg-muted/50 transition-colors">
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          <div className="h-8 w-8 rounded-md bg-primary/5 flex items-center justify-center border border-primary/10">
+                            <UserCog className="h-4 w-4 text-primary" />
+                          </div>
+                          {user.full_name || "Sem nome"}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {user.team ? (
+                          <Badge variant="outline" className="font-normal">{getTeamLabel(user.team)}</Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground font-mono text-xs">{user.email}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={user.role === "admin" ? "default" : "secondary"}
+                          className="font-medium"
+                        >
+                          {user.role === "admin" ? "Administrador" : user.role === "user" ? "Usuário Padrão" : user.role}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 capitalize">
+                          {user.role === 'admin' ? 'Administrador' : user.role === 'user' ? 'Usuário Padrão' : user.role || "-"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-xs">
+                        {user.created_at &&
+                          format(new Date(user.created_at), "dd/MM/yyyy", {
+                            locale: ptBR,
+                          })}
+                      </TableCell>
+                      <TableCell className="text-right px-6">
+                        <div className="flex justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => openEditDialog(user)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => handleDeleteUser(user.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </div>
 
         {/* Pagination Controls */}
