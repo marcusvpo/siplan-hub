@@ -17,6 +17,15 @@ export function MainLayout({ children }: MainLayoutProps) {
   const location = useLocation();
 
   const isProjectsPage = location.pathname === "/projects";
+  const isPrintMode = new URLSearchParams(location.search).get("print") === "true";
+
+  if (isPrintMode) {
+    return (
+      <div className="min-h-screen w-full bg-background print:bg-white print:text-black">
+        {children}
+      </div>
+    );
+  }
 
   return (
     <SidebarProvider

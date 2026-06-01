@@ -64,6 +64,21 @@ const OrionTNDashboard = lazy(
   () => import("./pages/conversion/OrionTNDashboard"),
 );
 
+// Implantadores Pages (lazy)
+const Implantadores = lazy(() => import("./pages/implantadores/Implantadores"));
+const ImplantadoresAderencia = lazy(() =>
+  import("./pages/implantadores/EditarFormAderencia"),
+);
+const ImplantadoresHomologacao = lazy(() =>
+  import("./pages/implantadores/EditarChecklistHomologacao"),
+);
+const TreinamentoPlaceholder = lazy(() =>
+  import("./pages/implantadores/TreinamentoPlaceholder"),
+);
+const TransicaoPlaceholder = lazy(() =>
+  import("./pages/implantadores/TransicaoPlaceholder"),
+);
+
 // Admin Pages (lazy)
 const AdminLayout = lazy(() => import("./layouts/AdminLayout"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
@@ -84,6 +99,7 @@ const VacationManagement = lazy(
 const SystemStorage = lazy(() => import("./pages/admin/SystemStorage"));
 const InactiveUsers = lazy(() => import("./pages/admin/InactiveUsers"));
 const ProjectDetails = lazy(() => import("./pages/ProjectDetails"));
+const ProjectAdherenceForm = lazy(() => import("./pages/ProjectAdherenceForm"));
 const ProjectsKanban = lazy(() => import("./pages/ProjectsKanban"));
 
 const queryClient = new QueryClient();
@@ -213,6 +229,7 @@ const App = () => (
                           <Route path="/dashboard/kanban" element={<ProjectsKanban />} />
                           <Route path="/projects" element={<Index />} />
                           <Route path="/projects/:id" element={<ProjectDetails />} />
+                          <Route path="/projects/:id/adherence" element={<ProjectAdherenceForm />} />
                           <Route path="/calendar" element={<Calendar />} />
                           <Route path="/agenda-analistas" element={<AgendaAnalistas />} />
                           <Route
@@ -274,6 +291,13 @@ const App = () => (
                             path="/orion-tn-models/:projectId?"
                             element={<OrionTNModels />}
                           />
+                          <Route path="/implantadores" element={<Implantadores />} />
+                          <Route path="/implantadores/aderencia" element={<ImplantadoresAderencia />} />
+                          <Route path="/implantadores/aderencia/:systemType" element={<ImplantadoresAderencia />} />
+                          <Route path="/implantadores/homologacao" element={<ImplantadoresHomologacao />} />
+                          <Route path="/implantadores/homologacao/:systemType" element={<ImplantadoresHomologacao />} />
+                          <Route path="/implantadores/treinamento" element={<TreinamentoPlaceholder />} />
+                          <Route path="/implantadores/transicao" element={<TransicaoPlaceholder />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </Suspense>

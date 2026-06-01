@@ -1,0 +1,448 @@
+1. Setor de Firmas
+Impressoras/Scaners compatíveis com o sistema:
+Sim (  )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Digitalização de fichas, duts etc.:
+Sim (  )  -  Não (  )
+Possui algum impacto? - [Campo livre para escrever]
+
+Controle e consumo manual de selos de firmas:
+Sim (  )  -  Não (  )
+Possui algum impacto? - [Campo livre para escrever]
+
+Controle e consumo automático de selos de firmas:
+Sim (  )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza impressão dos nomes na ordem ou inverso no reconhecimento:
+Sim (  )  -  Não (  )
+Possui algum impacto? - [Campo livre para escrever]
+
+Usa a biometria (verificar griaule/fingertech):
+Sim (  )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Usa webcam:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza controle de pedidos:
+Sim (  )  -  Não (  )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Certidão dos Termos:
+Sim (   )  -  Não (  )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Exportação das Fichas de Firmas:
+Sim (  )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Controle das Lacunas de Fichas de Firmas:
+Sim (  )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Controle de Notificações para as fichas no Reconhecimento:
+Sim (  )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza controle de Triagem para os Pedidos de Firmas:
+Sim (   )  -  Não (  )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Relatório e Controle de devolução dos Pedidos de Firmas:
+Sim (  )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza controle de Pedidos para Escreventes/Serviços Internos:
+Sim (   )  -  Não (  )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza controle de Mensalistas:
+Sim (  )  -  Não (  )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza controle de Filiais para os Mensalistas:
+Sim (   )  -  Não (  )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Boleto Bancário para cobrança dos Mensalistas:
+Sim (   )  -  Não (  )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Recibo de Pagamento dos Mensalistas:
+Sim (  )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Envio de e-mail para cobrança dos Mensalistas:
+Sim (  )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza impressão do Recibo de Requisição dos Mensalistas no caixa:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Cadastro, Impressão, Reutilização e Cancelamento em Lote dos Termos:
+Sim (  )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Controle de Folhas, lado e posição das etiquetas dos Termos:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Reutilização dos Termos Cancelados:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Busca por partes do campo de Observação do Termo para Termos Antigos:
+Sim (  )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Consulta dos Logs no Firmas:
+Sim (  )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Cadastro do Sinal Público:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Cadastro de Pessoa Jurídica/Grupo de Firmas:
+Sim (  )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Cadastro/Relatório Manual do NFS para as Fichas:
+Sim (   )  -  Não (  )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Consulta de Lacunas para o Cadastro Manual do NFS das Fichas:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Cancelamento/Relatório para o Cadastro Manual do NFS das Fichas:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Consulta do NFS das Certidões do Termo pelo Livro e Folha:
+Sim (  )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Relatório de Fichas Cadastradas:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Cadastro de Fichas eletrônica:
+Sim (  )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Relatório dos Andamentos por Fichas Cadastradas:
+Sim (  )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Relatório dos Termos de Comparecimento:
+Sim (  )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Relatório dos Logs do Firmas:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Relatório do Tempo Médio de Atendimentos:
+Sim (  )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Relatório de Firmas por atendente:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Relatório atos Praticados:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Anexo do comprovante de envio à SEFAZ-Veículos nas remessas:
+Sim (  )  -  Não (  )
+Possui algum impacto? - [Campo livre para escrever]
+
+2. Setor de Escrituras
+Recibo Provisório:
+Sim (   )  -  Não (  )
+Possui algum impacto? - [Campo livre para escrever]
+
+Recibo Definitivo desassociado da geração do Selo Digital:
+Sim (  )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Controle de andamento dos protocolos:
+Sim (   )  -  Não (  )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza controle de Conferência e Liberação do Recibo:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza controle de Conferência e Liberação do Traslado:
+Sim (  )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Controle de envio e Trâmites da escritura ao RI:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza orçamento:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza rotina de Livro de depósito prévio:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Editor:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Impressão de páginas ímpares e pares separadamente no Editor:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Impressão de página por página no Editor:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza modelos no Editor:
+Sim (   )  -  Não (  )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza modelos de Rascunho no Editor para conferência:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Anexo Ato Original para Atos de Revogação/Renúncia e Substabelecimento:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza campos para quem Digita, Lavra e Subscreve:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Certidão Digitada:
+Sim (  )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Certidão Reprográfica:
+Sim (   )  -  Não (  )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Pedido de Certidão:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Pedido de Apostilamento/Carta de Sentença:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Análise de Pendências no Protocolo:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Bloqueio da impressão do Recibo:
+Sim (  )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Consulta do NFS das Certidões e Traslados pelo Livro e Folha:
+Sim (  )  -  Não (  )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Recibo único para Atos de cessão:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Duplicar Processo:
+Sim (  )  -  Não (  )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Controle para o Traslado Digital:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Pré-Cadastro da qualificação dos imóveis:
+Sim (  )  -  Não (  )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Impressão de Recibo só para Valores Extras, ITBI ou Registro:
+Sim (   )  -  Não (  )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Controle de Documentos Arquivados/Classificadores e Docs Digitais:
+Sim (  )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Consulta e geração do hash da indisponibilidade:
+Sim (  )  -  Não (  )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Cadastro Geral de Impedimentos - CGI:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Relatório do Protocolo Diário:
+Sim (  )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Relatório com imóveis Isentos:
+Sim (   )  -  Não (  )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Relatório da Relação dos ITBIs:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Relatório da Remessa para Registro e Andamentos:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Relatório das Folhas Faltantes e Duplicadas por Livro:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Relatório dos Logs do Atos:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Relatório de Pessoas Politicamente Expostas:
+Sim (  )  -  Não (  )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Relatório de Qtd. Atos por parte:
+Sim (  )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Digitalização dos Livros:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Geração do selo Digital para assinaturas faltantes:
+Sim (  )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Relatório de Atos por Natureza da Nota para Comunicar Outros Cartórios:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+3. Financeiro
+Comissões de escreventes Notas/Firmas:
+Sim (  )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Escrituração do Livro Caixa:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Relatórios PEX e Financeiro possuem informações necessárias para o cliente:
+Sim (   )  -  Não (  )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza fluxo de caixa por Contas Corrente:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Caixa/Relatórios unificados para o Firmas e Notas:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Caixa de Firmas por usuário:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Caixa de Notas por usuário:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Devolução Outros Serviços Escreventes:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Importação/Exportação das Receitas de outras especialidades para o Livro Caixa:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Importação automática dos Recolhimentos de outras especialidades:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Relatórios de Resumo do Movimento e Resumo Anual:
+Sim (  )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Relatório do Cruzamento das Contas:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Relatório do Lançamento Analítico por Categoria:
+Sim (  )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Relatório do Movimento diário por Histórico:
+Sim (  )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Relatório/Comunicação para NFE/ISS da Prefeitura:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Conciliação bancária:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Relatório Outros Serviços por Escreventes:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Layout CNAB emitido pelo banco:
+Informe o modelo/layout utilizado (Ex: CNAB 240 / CNAB 400) e o banco correspondente:
+Possui algum impacto? - [Campo livre para escrever]
+
+4. Integrações
+Integração com algum website (exemplo consulta de ficha de firmas, Certidões):
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Possui sistema de senha:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Realiza auditoria de selos:
+Sim (     )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Comunicações para centrais:
+Sim (  )  -  Não (  )
+Possui algum impacto? - [Campo livre para escrever]
+
+Integração com o e-Recepção/CartFlow:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Nota Fiscal Eletrônica (NF-e):
+A serventia utiliza emissor próprio ou nacional? Detalhe o modelo de emissão atual:
+Possui algum impacto? - [Campo livre para escrever]
+
+ONR (Operador Nacional do Serviço Eletrônico de Imóveis):
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Utiliza Controle de algum Indicador:
+Sim (   )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+5. Rotinas Gerais e Infraestrutura / Conversão
+Vinculo por usuário e acesso ao sistema por Certificado Digital:
+Sim (  )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Higienização do Banco de Dados/Cadastros (De/Para):
+Sim (  )  -  Não (   )
+Possui algum impacto? - [Campo livre para escrever]
+
+Espaço em disco para imagens (Origem vs. Destino): 
+Caminho exato (diretório/unidade) onde estão salvas no servidor atual: 
+Possui algum impacto? - [Campo livre para escrever]

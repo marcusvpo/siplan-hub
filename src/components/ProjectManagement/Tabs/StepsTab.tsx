@@ -260,7 +260,7 @@ export function StepsTab({
         type="single"
         collapsible
         className="w-full space-y-4"
-        value={activeStepId}
+        value={activeStepId || ""}
         onValueChange={onStepClick}
       >
         <div data-stage-id="infra">
@@ -305,7 +305,7 @@ export function StepsTab({
           }
           canEditProjects={canEditProjects}
         >
-          <AdherenceStageForm stage={stagesData.adherence} canEditProjects={canEditProjects} onUpdate={(u) => updateStage("adherence", u)} />
+          <AdherenceStageForm projectId={project.id} systemType={project.systemType} stage={stagesData.adherence} canEditProjects={canEditProjects} onUpdate={(u) => updateStage("adherence", u)} />
         </StageCard>
       </div>
 
