@@ -193,6 +193,36 @@
     animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 
+  @keyframes border-blink-orange {
+    0%, 100% {
+      border-color: rgba(249, 115, 22, 0.2);
+      box-shadow: 0 0 0 0 rgba(249, 115, 22, 0);
+    }
+    50% {
+      border-color: rgba(249, 115, 22, 0.9);
+      box-shadow: 0 0 6px 1px rgba(249, 115, 22, 0.35);
+    }
+  }
+
+  .animate-border-blink-orange {
+    animation: border-blink-orange 1.8s ease-in-out infinite;
+  }
+
+  @keyframes border-blink-blue {
+    0%, 100% {
+      border-color: rgba(59, 130, 246, 0.2);
+      box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+    }
+    50% {
+      border-color: rgba(59, 130, 246, 0.9);
+      box-shadow: 0 0 6px 1px rgba(59, 130, 246, 0.35);
+    }
+  }
+
+  .animate-border-blink-blue {
+    animation: border-blink-blue 1.8s ease-in-out infinite;
+  }
+
   /* Glow effect for ready stage cards */
   @keyframes glow-green {
 

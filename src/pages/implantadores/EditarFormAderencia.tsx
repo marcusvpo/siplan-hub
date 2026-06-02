@@ -449,15 +449,15 @@ export default function EditarFormAderencia() {
                           <td className="p-3">
                             <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase ${
                               form.status === "approved"
-                                ? "bg-green-500/10 text-green-600 border-green-500/20"
-                                : form.status === "submitted"
-                                ? "bg-blue-500/10 text-blue-600 border-blue-500/20 animate-pulse"
-                                : "bg-amber-500/10 text-amber-600 border-amber-500/20"
+                                ? (form.data?.finalVerdict === "Totalmente Aderente"
+                                  ? "bg-green-500/10 text-green-600 border-green-500/20"
+                                  : form.data?.finalVerdict === "Aderente com Restrições"
+                                  ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
+                                  : "bg-rose-500/10 text-rose-600 border-rose-500/20")
+                                : "bg-slate-500/10 text-slate-600 border-slate-500/20"
                             }`}>
                               {form.status === "approved"
-                                ? "Aprovado"
-                                : form.status === "submitted"
-                                ? "Em Análise"
+                                ? (form.data?.finalVerdict || "Finalizado")
                                 : "Rascunho"}
                             </span>
                           </td>

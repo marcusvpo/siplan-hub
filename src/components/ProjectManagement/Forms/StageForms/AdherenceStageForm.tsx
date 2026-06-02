@@ -72,7 +72,7 @@ export function AdherenceStageForm({
     );
   }
 
-  const isFormLocked = response?.status === "submitted" || response?.status === "approved" || !canEditProjects;
+  const isFormLocked = response?.status === "approved" || !canEditProjects;
 
   return (
     <div className="col-span-1 md:col-span-2 lg:col-span-3 space-y-6">
@@ -118,15 +118,15 @@ export function AdherenceStageForm({
                 <span className="text-[10px] text-muted-foreground font-semibold">Status:</span>
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider ${
                   response.status === "approved" 
-                    ? "bg-green-500/10 text-green-600 border-green-500/20" 
-                    : response.status === "submitted"
-                    ? "bg-blue-500/10 text-blue-600 border-blue-500/20"
-                    : "bg-amber-500/10 text-amber-600 border-amber-500/20"
+                    ? (response.data?.finalVerdict === "Totalmente Aderente"
+                      ? "bg-green-500/10 text-green-600 border-green-500/20" 
+                      : response.data?.finalVerdict === "Aderente com Restrições"
+                      ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
+                      : "bg-rose-500/10 text-rose-600 border-rose-500/20")
+                    : "bg-slate-500/10 text-slate-600 border-slate-500/20"
                 }`}>
                   {response.status === "approved" 
-                    ? "Aprovado" 
-                    : response.status === "submitted" 
-                    ? "Em Análise" 
+                    ? (response.data?.finalVerdict || "Finalizado") 
                     : "Rascunho"}
                 </span>
               </div>

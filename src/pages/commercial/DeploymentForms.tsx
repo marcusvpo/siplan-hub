@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +21,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { DeploymentFormFields } from "@/components/commercial/DeploymentFormFields";
 import { generateDeploymentTemplate, type DeploymentFormData } from "@/utils/deployment-template";
 import { useToast } from "@/hooks/use-toast";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { cn } from "@/lib/utils";
+import { useProjectsV2 } from "@/hooks/useProjectsV2";
+import { ChevronsUpDown, Check } from "lucide-react";
 
 const EMPTY_FORM: DeploymentFormData = {
   client_name: "",
@@ -89,6 +95,11 @@ function validateForm(data: DeploymentFormData): Set<string> {
 
 export default function DeploymentForms() {
   const { forms, isLoading, createForm, deleteForm } = useDeploymentForms();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const viewParam = searchParams.get("view");
+  const { projects, updateProject } = useProjectsV2();
+  const [selectedProjectId, setSelectedProjectId] = useState<string>("");
+  const [projectComboboxOpen, setProjectComboboxOpen] = useState(false);
   const { fullName } = useAuth();
   const { toast } = useToast();
   const [search, setSearch] = useState("");
@@ -101,6 +112,25 @@ export default function DeploymentForms() {
   const [copied, setCopied] = useState(false);
   const [lastUserSync, setLastUserSync] = useState("");
 
+  const activeProjects = projects.filter(
+    (proj) =>
+      proj.globalStatus === "in-progress" &&
+      proj.stages?.post?.status !== "done" &&
+      proj.stages?.post?.status !== "in-progress"
+  );
+
+  // If there's a ?view=<formId> query parameter, open that form details
+  useEffect(() => {
+    if (viewParam && forms.length > 0) {
+      const found = forms.find((f) => f.id === viewParam);
+      if (found) {
+        const text = generateDeploymentTemplate(found);
+        setOutputText(text);
+        setOutputDialog(true);
+      }
+    }
+  }, [viewParam, forms]);
+
   // Sync current user name once available
   useEffect(() => {
     if (mode === "create" && fullName && fullName !== lastUserSync && !formData.filled_by) {
@@ -111,6 +141,7 @@ export default function DeploymentForms() {
 
   const handleCreate = () => {
     setFormData({ ...EMPTY_FORM, filled_by: fullName || "" });
+    setSelectedProjectId("");
     setMode("create");
     setFieldErrors(new Set());
     setSubmitted(false);
@@ -135,6 +166,46 @@ export default function DeploymentForms() {
     }
     createForm.mutate(formData, {
       onSuccess: () => {
+        // Sync values back to the active project if selected
+        if (selectedProjectId) {
+          const activeProj = activeProjects.find((p) => p.id === selectedProjectId);
+          if (activeProj) {
+            // soldHours updated with hours_presencial
+            const presencialHours = formData.hours_presencial ? parseFloat(formData.hours_presencial) : undefined;
+            const updatedSoldHours = presencialHours !== undefined && !isNaN(presencialHours) ? presencialHours : activeProj.soldHours;
+
+            // products mapping
+            const updatedProducts = [...(activeProj.products || [])];
+            const formProducts: string[] = [];
+            if (formData.module_lcw) formProducts.push("LCW");
+            if (formData.module_sga) formProducts.push("SGA");
+            if (formData.module_on_hand) formProducts.push("On Hand");
+            if (formData.module_website) formProducts.push("Website");
+            if (formData.module_editor_modelos) formProducts.push("Editor de Modelos");
+            if (formData.module_other && formData.module_other_name) {
+              formProducts.push(formData.module_other_name);
+            }
+
+            formProducts.forEach((prod) => {
+              if (!updatedProducts.includes(prod)) {
+                updatedProducts.push(prod);
+              }
+            });
+
+            // legacySystem updated 100% of the time
+            const updatedLegacySystem = formData.legacy_system || activeProj.legacySystem || "";
+
+            updateProject.mutate({
+              projectId: selectedProjectId,
+              updates: {
+                soldHours: updatedSoldHours,
+                products: updatedProducts,
+                legacySystem: updatedLegacySystem,
+              },
+            });
+          }
+        }
+
         const text = generateDeploymentTemplate({ ...formData, filled_at: new Date().toISOString() });
         setOutputText(text);
         setOutputDialog(true);
@@ -153,6 +224,14 @@ export default function DeploymentForms() {
     const text = generateDeploymentTemplate(form);
     setOutputText(text);
     setOutputDialog(true);
+    setSearchParams({ view: form.id });
+  };
+
+  const handleCloseView = (open: boolean) => {
+    setOutputDialog(open);
+    if (!open) {
+      setSearchParams({});
+    }
   };
 
   const handleCopy = async () => {
@@ -204,8 +283,73 @@ export default function DeploymentForms() {
 
         {/* Identificação principal */}
         <Card className={`border-2 transition-colors ${fieldErrors.has("client_name") || fieldErrors.has("contracted_system") ? "border-red-400" : "border-transparent"} bg-gradient-to-br from-indigo-50/50 to-purple-50/50 dark:from-indigo-950/20 dark:to-purple-950/20`}>
-          <CardContent className="pt-4 pb-4">
-            <p className="text-[11px] font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 mb-3">Identificação</p>
+          <CardContent className="pt-4 pb-4 space-y-4">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">Identificação</p>
+
+            {/* SEARCHABLE ACTIVE PROJECT SELECTOR */}
+            <div className="space-y-1.5 flex flex-col max-w-3xl">
+              <Label className="text-[11px] font-semibold uppercase text-muted-foreground tracking-wide">Vincular a um Projeto Ativo (Preenche automaticamente)</Label>
+              <Popover open={projectComboboxOpen} onOpenChange={setProjectComboboxOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={projectComboboxOpen}
+                    className="w-full justify-between font-normal text-left h-auto min-h-10 py-2 border-muted-foreground/30 bg-background whitespace-normal pr-4"
+                  >
+                    {selectedProjectId ? (
+                      (() => {
+                        const proj = activeProjects.find((p) => p.id === selectedProjectId);
+                        return proj ? `${proj.clientName} (#${proj.ticketNumber} - ${proj.systemType})` : "Selecione o projeto...";
+                      })()
+                    ) : (
+                      "Selecione o projeto em andamento..."
+                    )}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[var(--radix-popover-trigger-width)] min-w-[350px] max-w-[90vw] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Pesquisar projeto..." />
+                    <CommandList className="max-h-60 overflow-y-auto">
+                      <CommandEmpty>Nenhum projeto em andamento encontrado.</CommandEmpty>
+                      <CommandGroup>
+                        {activeProjects.map((proj) => (
+                          <CommandItem
+                            key={proj.id}
+                            value={`${proj.clientName} ${proj.ticketNumber} ${proj.systemType}`}
+                            onSelect={() => {
+                              setSelectedProjectId(proj.id);
+                              setProjectComboboxOpen(false);
+                              handleFormChange({
+                                ...formData,
+                                client_name: proj.clientName,
+                                ticket_number: proj.ticketNumber || "",
+                                contracted_system: proj.systemType || "",
+                              });
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4 shrink-0",
+                                selectedProjectId === proj.id ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            <div className="flex flex-col flex-1 min-w-0 pr-2 py-0.5">
+                              <span className="font-semibold text-sm whitespace-normal leading-snug">{proj.clientName}</span>
+                              <span className="text-xs text-muted-foreground font-mono">
+                                #{proj.ticketNumber} • {proj.systemType}
+                              </span>
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="space-y-1 sm:col-span-1">
                 <Label className="text-[11px] font-semibold uppercase text-muted-foreground tracking-wide">Nome do Cliente *</Label>
@@ -280,7 +424,7 @@ export default function DeploymentForms() {
 
         <OutputDialog
           open={outputDialog}
-          onOpenChange={setOutputDialog}
+          onOpenChange={handleCloseView}
           text={outputText}
           onCopy={handleCopy}
           copied={copied}
@@ -431,7 +575,7 @@ export default function DeploymentForms() {
 
       <OutputDialog
         open={outputDialog}
-        onOpenChange={setOutputDialog}
+        onOpenChange={handleCloseView}
         text={outputText}
         onCopy={handleCopy}
         copied={copied}
