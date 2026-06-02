@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface FormTemplate {
   id: string;
-  kind: 'adherence' | 'homologation_checklist';
+  kind: 'adherence' | 'homologation_checklist' | 'commercial_checklist';
   system_type: string;
   version: number;
   schema_json: any;
@@ -18,14 +18,14 @@ export interface FormTemplate {
 }
 
 export interface NewTemplateInput {
-  kind: 'adherence' | 'homologation_checklist';
+  kind: 'adherence' | 'homologation_checklist' | 'commercial_checklist';
   system_type: string;
   schema_json: any;
   ui_json: any;
   notes?: string;
 }
 
-export function useFormTemplates(kind: 'adherence' | 'homologation_checklist', systemType?: string) {
+export function useFormTemplates(kind: 'adherence' | 'homologation_checklist' | 'commercial_checklist', systemType?: string) {
   return useQuery<FormTemplate[], Error>({
     queryKey: ["formTemplates", kind, systemType],
     queryFn: async () => {
@@ -69,7 +69,7 @@ export function useFormTemplates(kind: 'adherence' | 'homologation_checklist', s
   });
 }
 
-export function useActiveTemplate(kind: 'adherence' | 'homologation_checklist', systemType: string) {
+export function useActiveTemplate(kind: 'adherence' | 'homologation_checklist' | 'commercial_checklist', systemType: string) {
   return useQuery<FormTemplate | undefined, Error>({
     queryKey: ["activeTemplate", kind, systemType],
     queryFn: async () => {
