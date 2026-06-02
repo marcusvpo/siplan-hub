@@ -519,30 +519,26 @@ const AdherenceQuestionField = (props: FieldProps) => {
   const valor = formData?.valor ?? "";
   const detalhes = formData?.detalhes ?? "";
   
-  // Logic to determine impact from details text:
-  // Non-empty text that is not "NÃO" / "NAO" represents an impact gap.
-  const hasImpact = (text: string): boolean => {
-    const trimmed = text.trim();
-    if (!trimmed) return false;
-    return trimmed.toUpperCase() !== "NÃO" && trimmed.toUpperCase() !== "NAO";
-  };
-  
-  const impacto = hasImpact(detalhes);
+  // Resolve impact level: defaults to "NÃO". If not present, fall back to "SIM" if currently marked as having impact.
+  const nivel_impacto = formData?.nivel_impacto ?? (formData?.impacto ? "SIM" : "NÃO");
+  const impacto = nivel_impacto === "SIM" || nivel_impacto === "ATENÇÃO";
   const isText = schema.properties && "valor" in schema.properties;
 
-  const handleUpdate = (updatedFields: Partial<{ utiliza: boolean; valor: string; detalhes: string; impacto: boolean }>) => {
+  const handleUpdate = (updatedFields: Partial<{ utiliza: boolean; valor: string; detalhes: string; nivel_impacto: string; impacto: boolean }>) => {
     if (readonly || disabled) return;
     
     const currentUtiliza = "utiliza" in updatedFields ? updatedFields.utiliza : utiliza;
     const currentValor = "valor" in updatedFields ? updatedFields.valor : valor;
     const currentDetalhes = "detalhes" in updatedFields ? updatedFields.detalhes : detalhes;
-    const currentImpacto = hasImpact(currentDetalhes);
+    const currentNivelImpacto = "nivel_impacto" in updatedFields ? updatedFields.nivel_impacto! : nivel_impacto;
+    const currentImpacto = currentNivelImpacto === "SIM" || currentNivelImpacto === "ATENÇÃO";
 
     onChange(
       {
         utiliza: currentUtiliza,
         valor: currentValor,
         detalhes: currentDetalhes,
+        nivel_impacto: currentNivelImpacto,
         impacto: currentImpacto,
       },
       fieldPathId.path
@@ -553,11 +549,13 @@ const AdherenceQuestionField = (props: FieldProps) => {
     <div
       className={cn(
         "p-4 rounded-xl border transition-all duration-200 space-y-4 shadow-sm my-2",
-        impacto
+        nivel_impacto === "SIM"
           ? "bg-rose-50/40 border-rose-200 dark:bg-rose-950/10 dark:border-rose-900/50"
-          : (utiliza || (isText && valor))
-            ? "bg-emerald-50/20 border-emerald-200/60 dark:bg-emerald-950/5 dark:border-emerald-900/30"
-            : "bg-card border-border hover:border-muted-foreground/30"
+          : nivel_impacto === "ATENÇÃO"
+            ? "bg-amber-50/40 border-amber-200 dark:bg-amber-950/10 dark:border-amber-900/50"
+            : (utiliza || (isText && valor))
+              ? "bg-emerald-50/20 border-emerald-200/60 dark:bg-emerald-950/5 dark:border-emerald-900/30"
+              : "bg-card border-border hover:border-muted-foreground/30"
       )}
     >
       {/* Title & Status Badge */}
@@ -567,11 +565,17 @@ const AdherenceQuestionField = (props: FieldProps) => {
         </div>
         <span className={cn(
           "px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0 border",
-          impacto 
-            ? "bg-rose-500/10 text-rose-600 border-rose-500/20" 
-            : "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+          nivel_impacto === "SIM"
+            ? "bg-rose-500/10 text-rose-600 border-rose-500/20"
+            : nivel_impacto === "ATENÇÃO"
+              ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
+              : "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
         )}>
-          {impacto ? "Com Impacto" : "Aderente"}
+          {nivel_impacto === "SIM" 
+            ? "Não Aderente" 
+            : nivel_impacto === "ATENÇÃO" 
+              ? "Ponto de Atenção" 
+              : "Aderente"}
         </span>
       </div>
 
@@ -638,24 +642,90 @@ const AdherenceQuestionField = (props: FieldProps) => {
           )}
         </div>
 
-        {/* Right column: Observations / Impact text */}
-        <div className="space-y-1.5">
-          <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex flex-wrap items-center gap-1">
-            Possui algum impacto?
-            <span className="text-[10px] text-muted-foreground/60 font-normal lowercase italic">(deixe em branco ou digite 'NÃO' se aderente)</span>
-          </Label>
-          <Textarea
-            value={detalhes}
-            onChange={(e) => handleUpdate({ detalhes: e.target.value })}
-            disabled={disabled || readonly}
-            className={cn(
-              "bg-background text-xs min-h-[60px] border transition-colors",
-              impacto 
-                ? "border-rose-300 focus-visible:ring-rose-500 focus-visible:border-rose-500 text-rose-700 dark:text-rose-300 font-medium" 
-                : "border-muted-foreground/20 focus-visible:ring-primary focus-visible:border-primary"
+        {/* Right column: Impact selector and observations */}
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
+              Possui impacto?
+            </Label>
+            {readonly || disabled ? (
+              <span className={cn(
+                "inline-block px-3 py-1 rounded-md text-xs font-semibold uppercase tracking-wider border",
+                nivel_impacto === "SIM"
+                  ? "bg-rose-500/10 text-rose-600 border-rose-500/20"
+                  : nivel_impacto === "ATENÇÃO"
+                    ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
+                    : "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+              )}>
+                {nivel_impacto}
+              </span>
+            ) : (
+              <div className="flex rounded-md overflow-hidden border border-muted-foreground/25 w-fit bg-background">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleUpdate({ nivel_impacto: "NÃO" })}
+                  className={cn(
+                    "h-8 px-4 rounded-none text-xs font-bold transition-colors border-r border-muted-foreground/25",
+                    nivel_impacto === "NÃO"
+                      ? "bg-emerald-600 text-white hover:bg-emerald-600 hover:text-white"
+                      : "bg-background text-muted-foreground hover:bg-muted"
+                  )}
+                >
+                  NÃO
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleUpdate({ nivel_impacto: "SIM" })}
+                  className={cn(
+                    "h-8 px-4 rounded-none text-xs font-bold transition-colors border-r border-muted-foreground/25",
+                    nivel_impacto === "SIM"
+                      ? "bg-rose-600 text-white hover:bg-rose-600 hover:text-white"
+                      : "bg-background text-muted-foreground hover:bg-muted"
+                  )}
+                >
+                  SIM
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleUpdate({ nivel_impacto: "ATENÇÃO" })}
+                  className={cn(
+                    "h-8 px-4 rounded-none text-xs font-bold transition-colors",
+                    nivel_impacto === "ATENÇÃO"
+                      ? "bg-amber-500 text-white hover:bg-amber-500 hover:text-white"
+                      : "bg-background text-muted-foreground hover:bg-muted"
+                  )}
+                >
+                  ATENÇÃO
+                </Button>
+              </div>
             )}
-            placeholder="Ex: NÃO (ou descreva o impacto se houver)"
-          />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
+              Observações / Justificativa
+            </Label>
+            <Textarea
+              value={detalhes}
+              onChange={(e) => handleUpdate({ detalhes: e.target.value })}
+              disabled={disabled || readonly}
+              className={cn(
+                "bg-background text-xs min-h-[60px] border transition-colors",
+                nivel_impacto === "SIM"
+                  ? "border-rose-300 focus-visible:ring-rose-500 focus-visible:border-rose-500 text-rose-700 dark:text-rose-300 font-medium"
+                  : nivel_impacto === "ATENÇÃO"
+                    ? "border-amber-300 focus-visible:ring-amber-500 focus-visible:border-amber-500 text-amber-700 dark:text-amber-300 font-medium"
+                    : "border-muted-foreground/20 focus-visible:ring-primary focus-visible:border-primary"
+              )}
+              placeholder="Descreva as observações ou justificativa..."
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -666,12 +736,14 @@ interface ImpactedItem {
   sectionTitle: string;
   questionTitle: string;
   detalhes: string;
+  nivel_impacto?: string;
 }
 
 interface AdherenceQuestionValue {
   utiliza?: boolean;
   valor?: string;
   detalhes?: string;
+  nivel_impacto?: string;
   impacto?: boolean;
 }
 
@@ -707,6 +779,7 @@ const getImpactedItems = (
           sectionTitle: currentSectionTitle,
           questionTitle: (propSchema.title as string) || "Pergunta",
           detalhes: (propData as AdherenceQuestionValue).detalhes || "Nenhum detalhe informado.",
+          nivel_impacto: (propData as AdherenceQuestionValue).nivel_impacto ?? "SIM",
         });
       }
     });
@@ -762,19 +835,35 @@ const AdherenceImpactSummary = ({ schema, formData }: { schema: Record<string, u
       </div>
 
       <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
-        {impactedItems.map((item, idx) => (
-          <div key={idx} className="space-y-1 border-b border-rose-100 dark:border-rose-950/30 pb-2.5 last:border-0 last:pb-0">
-            <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
-              <span className="font-semibold text-muted-foreground uppercase bg-muted px-1.5 py-0.2 rounded border">
-                {item.sectionTitle}
-              </span>
+        {impactedItems.map((item, idx) => {
+          const isAttention = item.nivel_impacto === "ATENÇÃO";
+          return (
+            <div key={idx} className="space-y-1 border-b border-rose-100 dark:border-rose-950/30 pb-2.5 last:border-0 last:pb-0">
+              <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
+                <span className="font-semibold text-muted-foreground uppercase bg-muted px-1.5 py-0.2 rounded border">
+                  {item.sectionTitle}
+                </span>
+                <span className={cn(
+                  "px-1.5 py-0.2 rounded text-[9px] font-bold uppercase tracking-wider border",
+                  isAttention 
+                    ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
+                    : "bg-rose-500/10 text-rose-600 border-rose-500/20"
+                )}>
+                  {isAttention ? "Ponto de Atenção" : "Não Aderente"}
+                </span>
+              </div>
+              <p className="text-xs font-bold text-foreground/90">{item.questionTitle}</p>
+              <div className={cn(
+                "border-l-4 pl-3 py-1 text-xs font-medium italic rounded-r-md",
+                isAttention 
+                  ? "border-amber-500 bg-amber-500/5 text-amber-700 dark:text-amber-300 font-semibold"
+                  : "border-rose-500 bg-rose-500/5 text-rose-700 dark:text-rose-300 font-semibold"
+              )}>
+                {item.detalhes}
+              </div>
             </div>
-            <p className="text-xs font-bold text-foreground/90">{item.questionTitle}</p>
-            <div className="border-l-4 border-rose-500 pl-3 py-1 bg-rose-500/5 text-xs text-rose-700 dark:text-rose-300 font-medium italic rounded-r-md">
-              {item.detalhes}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

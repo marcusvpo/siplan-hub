@@ -69,8 +69,11 @@ const Implantadores = lazy(() => import("./pages/implantadores/Implantadores"));
 const ImplantadoresAderencia = lazy(() =>
   import("./pages/implantadores/EditarFormAderencia"),
 );
-const ImplantadoresHomologacao = lazy(() =>
-  import("./pages/implantadores/EditarChecklistHomologacao"),
+const CommercialChecklists = lazy(() =>
+  import("./pages/commercial/CommercialChecklists"),
+);
+const PublicChecklist = lazy(() =>
+  import("./pages/public/PublicChecklist"),
 );
 const TreinamentoPlaceholder = lazy(() =>
   import("./pages/implantadores/TreinamentoPlaceholder"),
@@ -129,6 +132,14 @@ const App = () => (
                 element={
                   <Suspense fallback={<PageLoader />}>
                     <RoadmapPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/public/checklist/:id"
+                element={
+                  <Suspense fallback={<PageLoader />}>
+                    <PublicChecklist />
                   </Suspense>
                 }
               />
@@ -270,6 +281,10 @@ const App = () => (
                             path="/commercial/deployment-forms"
                             element={<DeploymentForms />}
                           />
+                          <Route
+                            path="/commercial/checklists"
+                            element={<CommercialChecklists />}
+                          />
                           <Route path="/conversion" element={<Conversion />} />
                           <Route
                             path="/conversion/homologation"
@@ -294,8 +309,6 @@ const App = () => (
                           <Route path="/implantadores" element={<Implantadores />} />
                           <Route path="/implantadores/aderencia" element={<ImplantadoresAderencia />} />
                           <Route path="/implantadores/aderencia/:systemType" element={<ImplantadoresAderencia />} />
-                          <Route path="/implantadores/homologacao" element={<ImplantadoresHomologacao />} />
-                          <Route path="/implantadores/homologacao/:systemType" element={<ImplantadoresHomologacao />} />
                           <Route path="/implantadores/treinamento" element={<TreinamentoPlaceholder />} />
                           <Route path="/implantadores/transicao" element={<TransicaoPlaceholder />} />
                           <Route path="*" element={<NotFound />} />

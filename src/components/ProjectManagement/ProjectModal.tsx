@@ -16,12 +16,14 @@ import { RoadmapManager } from "./RoadmapManager";
 import { Chamado0800Tab } from "./Tabs/Chamado0800Tab";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Pencil, X, Maximize2 } from "lucide-react";
+import { Pencil, X, Maximize2, ClipboardList } from "lucide-react";
 import { useState } from "react";
 import { useProjectDetails } from "@/hooks/useProjectDetails";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ProjectModalProps {
   project: Partial<ProjectV2> | null;
@@ -48,6 +50,38 @@ export function ProjectModal({
   );
 
   const displayProject = fullProject || (initialProject as ProjectV2); // Fallback to initial for header if loading
+
+  const { data: projectChecklist } = useQuery({
+    queryKey: ["project-commercial-checklist", displayProject?.id],
+    queryFn: async () => {
+      if (!displayProject?.id) return null;
+      const { data, error } = await supabase
+        .from("commercial_checklists" as any)
+        .select("*")
+        .eq("project_id", displayProject.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!displayProject?.id && open,
+  });
+
+  const { data: projectDeploymentForm } = useQuery({
+    queryKey: ["project-deployment-form", displayProject?.ticketNumber],
+    queryFn: async () => {
+      if (!displayProject?.ticketNumber) return null;
+      const { data, error } = await supabase
+        .from("deployment_forms" as any)
+        .select("*")
+        .eq("ticket_number", displayProject.ticketNumber)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!displayProject?.ticketNumber && open,
+  });
 
   if (!initialProject && !fullProject) return null;
 
@@ -117,7 +151,21 @@ export function ProjectModal({
             </DialogDescription>
           </div>
           
-          <div className="flex items-center gap-1 absolute right-12 top-4">
+          <div className="flex items-center gap-2.5 absolute right-12 top-4">
+            {displayProject?.id && (
+              <>
+                <ChecklistStatusButton
+                  projectId={displayProject.id}
+                  checklist={projectChecklist}
+                  onCloseModal={() => onOpenChange(false)}
+                />
+                <DeploymentFormStatusButton
+                  projectId={displayProject.id}
+                  deploymentForm={projectDeploymentForm}
+                  onCloseModal={() => onOpenChange(false)}
+                />
+              </>
+            )}
             <Button
               variant="ghost"
               size="icon"
@@ -272,5 +320,107 @@ export function ProjectModal({
         )}
       </DialogContent>
     </Dialog>
+  );
+}
+
+function ChecklistStatusButton({
+  projectId,
+  checklist,
+  onCloseModal,
+}: {
+  projectId: string;
+  checklist: any;
+  onCloseModal: () => void;
+}) {
+  const navigate = useNavigate();
+
+  // If no checklist exists
+  if (!checklist) {
+    return (
+      <Badge
+        variant="outline"
+        className="bg-orange-500/10 text-orange-500 border-orange-500/20 text-[11px] font-semibold px-2 py-0.5 flex items-center gap-1.5 cursor-help shrink-0 animate-border-blink-orange"
+        title="Checklist de implantação ainda não foi gerado pelo comercial."
+      >
+        <div className="h-1.5 w-1.5 rounded-full bg-orange-500" />
+        Checklist: Não Criado
+      </Badge>
+    );
+  }
+
+  // If checklist is pending (sent, awaiting response)
+  if (checklist.status === "pending") {
+    return (
+      <Badge
+        variant="outline"
+        className="bg-blue-500/10 text-blue-500 border-blue-500/20 text-[11px] font-semibold px-2 py-0.5 flex items-center gap-1.5 cursor-help shrink-0 animate-border-blink-blue"
+        title="Link de checklist enviado. Aguardando respostas do cliente."
+      >
+        <div className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
+        Checklist: Enviado
+      </Badge>
+    );
+  }
+
+  // If checklist is submitted (answered)
+  if (checklist.status === "submitted") {
+    return (
+      <Badge
+        variant="outline"
+        className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[11px] font-semibold px-2.5 py-0.5 flex items-center gap-1.5 cursor-pointer hover:bg-emerald-500/20 transition-colors shadow-sm shrink-0"
+        title="Checklist respondido pelo cliente! Clique para ver as respostas."
+        onClick={() => {
+          navigate(`/commercial/checklists?view=${checklist.id}`);
+          onCloseModal();
+        }}
+      >
+        <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+        Checklist: Respondido
+      </Badge>
+    );
+  }
+
+  return null;
+}
+
+function DeploymentFormStatusButton({
+  projectId,
+  deploymentForm,
+  onCloseModal,
+}: {
+  projectId: string;
+  deploymentForm: any;
+  onCloseModal: () => void;
+}) {
+  const navigate = useNavigate();
+
+  // If no deployment form exists
+  if (!deploymentForm) {
+    return (
+      <Badge
+        variant="outline"
+        className="bg-orange-500/10 text-orange-500 border-orange-500/20 text-[11px] font-semibold px-2 py-0.5 flex items-center gap-1.5 cursor-help shrink-0 animate-border-blink-orange"
+        title="Formulário de Nova Implantação pendente (não criado)."
+      >
+        <div className="h-1.5 w-1.5 rounded-full bg-orange-500" />
+        Form: Pendente
+      </Badge>
+    );
+  }
+
+  // If deployment form is preenchido/salvo
+  return (
+    <Badge
+      variant="outline"
+      className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[11px] font-semibold px-2.5 py-0.5 flex items-center gap-1.5 cursor-pointer hover:bg-emerald-500/20 transition-colors shadow-sm shrink-0"
+      title="Formulário preenchido! Clique para ver as informações."
+      onClick={() => {
+        navigate(`/commercial/deployment-forms?view=${deploymentForm.id}`);
+        onCloseModal();
+      }}
+    >
+      <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+      Form: Preenchido
+    </Badge>
   );
 }

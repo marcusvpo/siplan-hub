@@ -31,6 +31,7 @@ interface ImpactedItem {
   sectionTitle: string;
   questionTitle: string;
   detalhes: string;
+  nivel_impacto?: string;
 }
 
 const getImpactedItems = (schema: any, formData: any): ImpactedItem[] => {
@@ -52,6 +53,7 @@ const getImpactedItems = (schema: any, formData: any): ImpactedItem[] => {
           sectionTitle: currentSectionTitle,
           questionTitle: propSchema.title || "Pergunta",
           detalhes: propData.detalhes || "Nenhum detalhe informado.",
+          nivel_impacto: propData.nivel_impacto ?? "SIM",
         });
       }
     });
@@ -68,6 +70,7 @@ interface PrintQuestion {
   utiliza: boolean;
   valor: string;
   detalhes: string;
+  nivel_impacto: string;
   impacto: boolean;
 }
 
@@ -95,12 +98,8 @@ const getPrintSections = (schema: any, formData: any): PrintSection[] => {
       const utiliza = qData.utiliza ?? false;
       const valor = qData.valor ?? "";
       const detalhes = qData.detalhes ?? "";
-      const hasImpact = (text: string): boolean => {
-        const trimmed = text.trim();
-        if (!trimmed) return false;
-        return trimmed.toUpperCase() !== "NÃO" && trimmed.toUpperCase() !== "NAO";
-      };
-      const impacto = hasImpact(detalhes);
+      const nivel_impacto = qData.nivel_impacto ?? (qData.impacto ? "SIM" : "NÃO");
+      const impacto = nivel_impacto === "SIM" || nivel_impacto === "ATENÇÃO";
       
       let generalSection = sections.find(s => s.title === "Geral");
       if (!generalSection) {
@@ -114,6 +113,7 @@ const getPrintSections = (schema: any, formData: any): PrintSection[] => {
         utiliza,
         valor,
         detalhes,
+        nivel_impacto,
         impacto,
       });
     } else {
@@ -130,12 +130,8 @@ const getPrintSections = (schema: any, formData: any): PrintSection[] => {
         const utiliza = qData.utiliza ?? false;
         const valor = qData.valor ?? "";
         const detalhes = qData.detalhes ?? "";
-        const hasImpact = (text: string): boolean => {
-          const trimmed = text.trim();
-          if (!trimmed) return false;
-          return trimmed.toUpperCase() !== "NÃO" && trimmed.toUpperCase() !== "NAO";
-        };
-        const impacto = hasImpact(detalhes);
+        const nivel_impacto = qData.nivel_impacto ?? (qData.impacto ? "SIM" : "NÃO");
+        const impacto = nivel_impacto === "SIM" || nivel_impacto === "ATENÇÃO";
         
         questions.push({
           id: questionKey,
@@ -144,6 +140,7 @@ const getPrintSections = (schema: any, formData: any): PrintSection[] => {
           utiliza,
           valor,
           detalhes,
+          nivel_impacto,
           impacto,
         });
       });
@@ -256,7 +253,7 @@ export default function ProjectAdherenceForm() {
     const hasChanges = JSON.stringify(debouncedFormData) !== JSON.stringify(response.data);
     
     // Only auto-save if form is editable (draft state)
-    const isFormLocked = response.status === "submitted" || response.status === "approved" || !canEditProjects;
+    const isFormLocked = response.status === "approved" || !canEditProjects;
 
     if (hasChanges && !isFormLocked) {
       setIsAutoSaving(true);
@@ -287,7 +284,7 @@ export default function ProjectAdherenceForm() {
     }
   }, [debouncedFormData]);
 
-  const handleSubmitForm = () => {
+  const handleFinalizeForm = () => {
     if (!response || !activeTemplate || !projectId) return;
 
     // Validate that the final verdict and notes are filled
@@ -297,7 +294,7 @@ export default function ProjectAdherenceForm() {
     if (!verdict) {
       toast({
         title: "Parecer obrigatório",
-        description: "Selecione o Parecer Técnico Final antes de enviar para aprovação.",
+        description: "Selecione o Parecer Técnico Final antes de concluir o formulário.",
         variant: "destructive",
       });
       return;
@@ -306,35 +303,11 @@ export default function ProjectAdherenceForm() {
     if (!notes || !notes.trim()) {
       toast({
         title: "Justificativa obrigatória",
-        description: "Descreva a justificativa/parecer técnico antes de enviar para aprovação.",
+        description: "Descreva a justificativa/parecer técnico antes de concluir o formulário.",
         variant: "destructive",
       });
       return;
     }
-
-    upsertMutation.mutate(
-      {
-        project_id: projectId,
-        template_id: activeTemplate.id,
-        stage: "adherence",
-        data: localFormData,
-        status: "submitted",
-      },
-      {
-        onSuccess: () => {
-          toast({
-            title: "Formulário Submetido",
-            description: "Respostas enviadas para aprovação com sucesso.",
-            className: "bg-green-500 text-white border-green-600",
-          });
-          refetchResp();
-        },
-      }
-    );
-  };
-
-  const handleApproveForm = () => {
-    if (!response || !activeTemplate || !projectId) return;
 
     upsertMutation.mutate(
       {
@@ -347,8 +320,8 @@ export default function ProjectAdherenceForm() {
       {
         onSuccess: () => {
           toast({
-            title: "Formulário Aprovado",
-            description: "Aderência homologada e concluída.",
+            title: "Análise Concluída",
+            description: "Formulário de aderência finalizado com sucesso.",
             className: "bg-green-500 text-white border-green-600",
           });
           refetchResp();
@@ -357,7 +330,7 @@ export default function ProjectAdherenceForm() {
     );
   };
 
-  const handleRejectForm = () => {
+  const handleReopenForm = () => {
     if (!response || !activeTemplate || !projectId) return;
 
     upsertMutation.mutate(
@@ -371,8 +344,8 @@ export default function ProjectAdherenceForm() {
       {
         onSuccess: () => {
           toast({
-            title: "Retornado para rascunho",
-            description: "Formulário retornado para edição.",
+            title: "Formulário Reaberto",
+            description: "Formulário retornado para rascunho de edição.",
           });
           refetchResp();
         },
@@ -447,7 +420,7 @@ export default function ProjectAdherenceForm() {
     );
   }
 
-  const isFormLocked = response.status === "submitted" || response.status === "approved" || !canEditProjects;
+  const isFormLocked = response.status === "approved" || !canEditProjects;
 
   if (isPrintMode) {
     const printSections = getPrintSections(activeTemplate.schema_json, localFormData);
@@ -545,15 +518,15 @@ export default function ProjectAdherenceForm() {
               <span className="text-muted-foreground block text-[10px] uppercase font-bold tracking-wider">Status Homologação</span>
               <span className={`inline-block mt-0.5 text-[10px] font-bold px-2 py-0.2 rounded border uppercase tracking-wider ${
                 response.status === "approved" 
-                  ? "bg-green-100 text-green-800 border-green-200" 
-                  : response.status === "submitted"
-                  ? "bg-blue-100 text-blue-800 border-blue-200"
-                  : "bg-amber-100 text-amber-800 border-amber-200"
+                  ? (localFormData.finalVerdict === "Totalmente Aderente"
+                    ? "bg-green-100 text-green-800 border-green-200" 
+                    : localFormData.finalVerdict === "Aderente com Restrições"
+                    ? "bg-amber-100 text-amber-800 border-amber-200"
+                    : "bg-rose-100 text-rose-800 border-rose-200")
+                  : "bg-slate-100 text-slate-800 border-slate-200"
               }`}>
                 {response.status === "approved" 
-                  ? "Aprovado" 
-                  : response.status === "submitted" 
-                  ? "Em Análise" 
+                  ? (localFormData.finalVerdict || "Finalizado") 
                   : "Rascunho"}
               </span>
             </div>
@@ -625,18 +598,35 @@ export default function ProjectAdherenceForm() {
                 </span>
               </div>
               <div className="space-y-3">
-                {impactedItems.map((item, idx) => (
-                  <div key={idx} className="text-xs space-y-1 pb-2 border-b border-rose-100 last:border-0 last:pb-0">
-                    <div className="flex items-center gap-1.5 text-[9px] font-bold text-muted-foreground uppercase">
-                      <span>{item.sectionTitle}</span>
-                      <span>&bull;</span>
-                      <span className="text-rose-700">{item.questionTitle}</span>
+                {impactedItems.map((item, idx) => {
+                  const isAttention = item.nivel_impacto === "ATENÇÃO";
+                  return (
+                    <div key={idx} className="text-xs space-y-1 pb-2 border-b border-rose-100 last:border-0 last:pb-0">
+                      <div className="flex items-center gap-1.5 text-[9px] font-bold text-muted-foreground uppercase flex-wrap">
+                        <span>{item.sectionTitle}</span>
+                        <span>&bull;</span>
+                        <span className={isAttention ? "text-amber-700" : "text-rose-700"}>
+                          {item.questionTitle}
+                        </span>
+                        <span>&bull;</span>
+                        <span className={`px-1.5 py-0.2 rounded text-[8px] font-extrabold uppercase tracking-wider border ${
+                          isAttention 
+                            ? "bg-amber-100 text-amber-800 border-amber-200" 
+                            : "bg-rose-100 text-rose-800 border-rose-200"
+                        }`}>
+                          {isAttention ? "Ponto de Atenção" : "Não Aderente"}
+                        </span>
+                      </div>
+                      <div className={`border-l-4 pl-3 py-1 font-semibold italic rounded-r-md text-xs ${
+                        isAttention 
+                          ? "border-amber-500 bg-amber-500/5 text-amber-700" 
+                          : "border-rose-500 bg-rose-500/5 text-rose-700"
+                      }`}>
+                        Impacto: {item.detalhes}
+                      </div>
                     </div>
-                    <div className="border-l-4 border-rose-500 pl-3 py-1 bg-rose-500/5 text-rose-700 font-semibold italic rounded-r-md">
-                      Impacto: {item.detalhes}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -659,11 +649,13 @@ export default function ProjectAdherenceForm() {
                   <div 
                     key={q.id} 
                     className={`p-4 text-xs transition-colors space-y-2.5 ${
-                      q.impacto 
+                      q.nivel_impacto === "SIM" 
                         ? "bg-rose-50/20" 
-                        : (q.utiliza || (q.isText && q.valor))
-                          ? "bg-emerald-50/10"
-                          : "bg-white"
+                        : q.nivel_impacto === "ATENÇÃO"
+                          ? "bg-amber-50/20"
+                          : (q.utiliza || (q.isText && q.valor))
+                            ? "bg-emerald-50/10"
+                            : "bg-white"
                     }`}
                   >
                     <div className="flex items-start justify-between gap-4">
@@ -671,11 +663,17 @@ export default function ProjectAdherenceForm() {
                         {q.title}
                       </span>
                       <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider shrink-0 border ${
-                        q.impacto 
+                        q.nivel_impacto === "SIM" 
                           ? "bg-rose-100 text-rose-800 border-rose-200" 
-                          : "bg-emerald-100 text-emerald-800 border-emerald-200"
+                          : q.nivel_impacto === "ATENÇÃO"
+                            ? "bg-amber-100 text-amber-800 border-amber-200"
+                            : "bg-emerald-100 text-emerald-800 border-emerald-200"
                       }`}>
-                        {q.impacto ? "Com Impacto" : "Aderente"}
+                        {q.nivel_impacto === "SIM" 
+                          ? "Não Aderente" 
+                          : q.nivel_impacto === "ATENÇÃO"
+                            ? "Ponto de Atenção"
+                            : "Aderente"}
                       </span>
                     </div>
 
@@ -695,10 +693,23 @@ export default function ProjectAdherenceForm() {
                         )}
                       </div>
                       <div>
-                        <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block">Possui Algum Impacto?</span>
-                        <p className={`font-semibold mt-0.5 italic ${q.impacto ? "text-rose-700" : "text-emerald-700"}`}>
-                          {q.detalhes || "NÃO"}
-                        </p>
+                        <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block">Possui Impacto?</span>
+                        <div className="mt-1 flex flex-col gap-1">
+                          <span className={`inline-block px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border w-fit ${
+                            q.nivel_impacto === "SIM"
+                              ? "bg-rose-50 text-rose-700 border-rose-200"
+                              : q.nivel_impacto === "ATENÇÃO"
+                                ? "bg-amber-50 text-amber-700 border-amber-200"
+                                : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                          }`}>
+                            {q.nivel_impacto || "NÃO"}
+                          </span>
+                          {q.detalhes && (
+                            <p className="text-slate-600 font-medium italic mt-0.5 leading-relaxed">
+                              {q.detalhes}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -815,15 +826,15 @@ export default function ProjectAdherenceForm() {
             
             <Badge className={`text-xs font-bold px-3 py-1 border uppercase tracking-wider rounded-full ${
               response.status === "approved" 
-                ? "bg-green-500/10 text-green-600 border-green-500/20" 
-                : response.status === "submitted"
-                ? "bg-blue-500/10 text-blue-600 border-blue-500/20 animate-pulse"
-                : "bg-amber-500/10 text-amber-600 border-amber-500/20"
+                ? (localFormData.finalVerdict === "Totalmente Aderente"
+                  ? "bg-green-500/10 text-green-600 border-green-500/20" 
+                  : localFormData.finalVerdict === "Aderente com Restrições"
+                  ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
+                  : "bg-rose-500/10 text-rose-600 border-rose-500/20")
+                : "bg-slate-500/10 text-slate-600 border-slate-500/20"
             }`}>
               {response.status === "approved" 
-                ? "Aprovado" 
-                : response.status === "submitted" 
-                ? "Em Análise" 
+                ? (localFormData.finalVerdict || "Finalizado") 
                 : "Rascunho"}
             </Badge>
           </div>
@@ -922,56 +933,32 @@ export default function ProjectAdherenceForm() {
           <CardContent className="p-4 flex flex-wrap items-center justify-between gap-3">
             <div className="text-xs text-muted-foreground italic">
               {response.status === "draft" && "As alterações são salvas automaticamente no rascunho."}
-              {response.status === "submitted" && "Aguardando homologação final."}
-              {response.status === "approved" && "Formulário homologado. Alterações travadas."}
+              {response.status === "approved" && `Formulário concluído com parecer: ${response.data?.finalVerdict || ""}. Alterações travadas.`}
             </div>
 
             <div className="flex items-center gap-3 ml-auto">
-              {/* Draft actions: Submit */}
+              {/* Draft actions: Finalize */}
               {response.status === "draft" && (
                 <Button 
-                  onClick={handleSubmitForm} 
+                  onClick={handleFinalizeForm} 
                   disabled={upsertMutation.isPending}
-                  className="text-xs font-semibold gap-1.5"
+                  className="text-xs font-semibold gap-1.5 bg-green-600 hover:bg-green-700 text-white"
                 >
                   <Send className="h-3.5 w-3.5" />
-                  Enviar para Aprovação
+                  Finalizar Formulário
                 </Button>
-              )}
-
-              {/* Submitted actions: Approval */}
-              {response.status === "submitted" && (
-                <div className="flex items-center gap-2">
-                  <Button 
-                    onClick={handleRejectForm} 
-                    variant="outline"
-                    disabled={upsertMutation.isPending}
-                    className="text-xs font-semibold gap-1.5 border-rose-200 text-rose-600 hover:bg-rose-50"
-                  >
-                    <Undo className="h-3.5 w-3.5" />
-                    Retornar para Rascunho
-                  </Button>
-                  <Button 
-                    onClick={handleApproveForm} 
-                    disabled={upsertMutation.isPending}
-                    className="text-xs font-semibold gap-1.5 bg-green-600 hover:bg-green-700 text-white"
-                  >
-                    <ShieldCheck className="h-3.5 w-3.5" />
-                    Aprovar Aderência
-                  </Button>
-                </div>
               )}
 
               {/* Approved actions: Reopen */}
               {response.status === "approved" && (
                 <Button 
-                  onClick={handleRejectForm} 
+                  onClick={handleReopenForm} 
                   variant="outline"
                   disabled={upsertMutation.isPending}
                   className="text-xs font-semibold gap-1.5"
                 >
                   <Undo className="h-3.5 w-3.5" />
-                  Reabrir Aderência
+                  Reabrir para Edição
                 </Button>
               )}
             </div>

@@ -449,6 +449,18 @@ export function Sidebar() {
                       <span>Form. Nova Implantação</span>
                     </Button>
                   </Link>
+                  <Link to="/commercial/checklists">
+                    <Button
+                      variant={
+                        isActive("/commercial/checklists") ? "secondary" : "ghost"
+                      }
+                      size="sm"
+                      className="w-full justify-start gap-3 h-9"
+                    >
+                      <ClipboardList className="h-4 w-4" />
+                      <span>Checklist do Cliente</span>
+                    </Button>
+                  </Link>
                 </div>
               </CollapsibleContent>
             </Collapsible>
@@ -459,7 +471,8 @@ export function Sidebar() {
                     isActive("/commercial/customers") ||
                       isActive("/commercial/blockers") ||
                       isActive("/commercial/contacts") ||
-                      isActive("/commercial/deployment-forms")
+                      isActive("/commercial/deployment-forms") ||
+                      isActive("/commercial/checklists")
                       ? "secondary"
                       : "ghost"
                   }
@@ -693,16 +706,7 @@ export function Sidebar() {
                       <span className="text-xs">Editor de Aderência</span>
                     </Button>
                   </Link>
-                  <Link to="/implantadores/homologacao">
-                    <Button
-                      variant={isActive("/implantadores/homologacao") ? "secondary" : "ghost"}
-                      size="sm"
-                      className="w-full justify-start gap-3 h-9"
-                    >
-                      <ClipboardList className="h-4 w-4" />
-                      <span className="text-xs">Editor de Checklist</span>
-                    </Button>
-                  </Link>
+
                   <Link to="/implantadores/treinamento">
                     <Button
                       variant={isActive("/implantadores/treinamento") ? "secondary" : "ghost"}
