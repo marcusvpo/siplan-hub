@@ -16,18 +16,22 @@ import { Label } from "@/components/ui/label";
 import {
   Plus, Search, FileText, Trash2, Copy, CheckCircle2,
   Building2, User, Clock, Eye, ClipboardCheck, ExternalLink, ShieldCheck,
-  ChevronsUpDown, Check
+  ChevronsUpDown, Check, Settings
 } from "lucide-react";
 import { useCommercialChecklists, type CommercialChecklistRecord } from "@/hooks/useCommercialChecklists";
 import { useProjectsV2 } from "@/hooks/useProjectsV2";
 import { useToast } from "@/hooks/use-toast";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { FormRenderer } from "@/components/FormRenderer/FormRenderer";
 
 export default function CommercialChecklists() {
   const { checklists, isLoading: isLoadingChecklists, createChecklist, deleteChecklist } = useCommercialChecklists();
   const { projects, isLoading: isLoadingProjects } = useProjectsV2();
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   const [search, setSearch] = useState("");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -47,6 +51,22 @@ export default function CommercialChecklists() {
       }
     }
   }, [viewParam, checklists]);
+
+  // Query the template associated with the viewChecklist
+  const { data: viewTemplate, isLoading: isLoadingViewTemplate } = useQuery({
+    queryKey: ["viewChecklistTemplate", viewChecklist?.template_id],
+    queryFn: async () => {
+      if (!viewChecklist?.template_id) return null;
+      const { data, error } = await supabase
+        .from("form_templates")
+        .select("*")
+        .eq("id", viewChecklist.template_id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!viewChecklist?.template_id,
+  });
 
   const handleOpenView = (checklist: CommercialChecklistRecord) => {
     setViewChecklist(checklist);
@@ -125,10 +145,20 @@ export default function CommercialChecklists() {
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">Gerencie e envie checklists estruturais para seus clientes</p>
         </div>
-        <Button onClick={() => setCreateDialogOpen(true)} className="bg-indigo-600 hover:bg-indigo-700 gap-2 shrink-0 shadow-lg shadow-indigo-500/20">
-          <Plus className="h-4 w-4" />
-          Novo Checklist
-        </Button>
+        <div className="flex items-center gap-2 shrink-0">
+          <Button
+            variant="outline"
+            onClick={() => navigate("/commercial/checklists/questions")}
+            className="border-muted-foreground/30 bg-card gap-2"
+          >
+            <Settings className="h-4 w-4" />
+            Editar Perguntas
+          </Button>
+          <Button onClick={() => setCreateDialogOpen(true)} className="bg-indigo-600 hover:bg-indigo-700 gap-2 shadow-lg shadow-indigo-500/20">
+            <Plus className="h-4 w-4" />
+            Novo Checklist
+          </Button>
+        </div>
       </div>
 
       {/* Stats row */}
@@ -401,6 +431,48 @@ export default function CommercialChecklists() {
                   <Button size="sm" variant="secondary" className="gap-1" onClick={(e) => handleCopyLink(viewChecklist.id, e)}>
                     <Copy className="h-3 w-3" /> Copiar
                   </Button>
+                </div>
+              </div>
+            ) : viewChecklist.template_id ? (
+              <div className="space-y-6">
+                {/* IDENTIFICAÇÃO CARD */}
+                <div className="bg-muted/30 rounded-xl p-4 border space-y-3">
+                  <div className="flex items-center gap-2 border-b pb-2 mb-2">
+                    <ShieldCheck className="h-4.5 w-4.5 text-emerald-500" />
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Dados de Identificação</h4>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                    <div>
+                      <span className="text-xs text-muted-foreground block font-medium">Sistema a Implantar</span>
+                      <span className="font-semibold">{viewChecklist.projects?.systemType || "Não cadastrado"}</span>
+                    </div>
+                    <div>
+                      <span className="text-xs text-muted-foreground block font-medium">Nome do Cartório</span>
+                      <span className="font-semibold">{viewChecklist.projects?.clientName || "Não cadastrado"}</span>
+                    </div>
+                    <div>
+                      <span className="text-xs text-muted-foreground block font-medium">Responsável Siplan HUB</span>
+                      <span className="font-semibold">{viewChecklist.created_by_name || "Comercial"}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border rounded-xl p-6 bg-card">
+                  {isLoadingViewTemplate || !viewTemplate ? (
+                    <div className="flex flex-col items-center justify-center p-8 gap-2">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
+                      <span className="text-xs text-muted-foreground">Carregando perguntas dinâmicas...</span>
+                    </div>
+                  ) : (
+                    <FormRenderer
+                      projectId={viewChecklist.project_id}
+                      schema={viewTemplate.schema_json}
+                      uiSchema={viewTemplate.ui_json}
+                      formData={viewChecklist.responses}
+                      readonly={true}
+                      onSubmit={() => {}}
+                    />
+                  )}
                 </div>
               </div>
             ) : (

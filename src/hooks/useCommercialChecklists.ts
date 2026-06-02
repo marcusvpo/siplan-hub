@@ -10,6 +10,7 @@ export interface CommercialChecklistRecord {
   created_by_name?: string;
   status: "pending" | "submitted";
   responses: any;
+  template_id?: string;
   submitted_at?: string;
   created_at: string;
   updated_at: string;
@@ -58,6 +59,28 @@ export function useCommercialChecklists() {
 
   const createChecklist = useMutation({
     mutationFn: async (projectId: string) => {
+      // 1. Fetch project to get its system_type
+      const { data: proj, error: projError } = await supabase
+        .from("projects")
+        .select("system_type")
+        .eq("id", projectId)
+        .single();
+      if (projError) throw projError;
+
+      const systemType = proj?.system_type || "Orion TN";
+
+      // 2. Fetch active template for 'commercial_checklist' and systemType
+      const { data: activeTemplate, error: tplError } = await supabase
+        .from("form_templates")
+        .select("id")
+        .eq("kind", "commercial_checklist")
+        .eq("system_type", systemType)
+        .eq("is_active", true)
+        .maybeSingle();
+
+      const templateId = activeTemplate?.id || null;
+
+      // 3. Insert commercial checklist with template_id
       const { data, error } = await supabase
         .from("commercial_checklists" as any)
         .insert({
@@ -66,6 +89,7 @@ export function useCommercialChecklists() {
           created_by_name: fullName || "Comercial",
           status: "pending",
           responses: {},
+          template_id: templateId,
         } as any)
         .select()
         .single();

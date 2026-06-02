@@ -72,6 +72,9 @@ const ImplantadoresAderencia = lazy(() =>
 const CommercialChecklists = lazy(() =>
   import("./pages/commercial/CommercialChecklists"),
 );
+const EditarChecklistComercial = lazy(() =>
+  import("./pages/commercial/EditarChecklistComercial"),
+);
 const PublicChecklist = lazy(() =>
   import("./pages/public/PublicChecklist"),
 );
@@ -284,6 +287,10 @@ const App = () => (
                           <Route
                             path="/commercial/checklists"
                             element={<CommercialChecklists />}
+                          />
+                          <Route
+                            path="/commercial/checklists/questions"
+                            element={<EditarChecklistComercial />}
                           />
                           <Route path="/conversion" element={<Conversion />} />
                           <Route
