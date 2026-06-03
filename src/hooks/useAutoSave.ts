@@ -5,7 +5,7 @@ export interface AutoSaveConfig {
   debounceMs?: number;
 }
 
-export interface SaveState {
+interface SaveState {
   status: "idle" | "saving" | "success" | "error";
   message?: string;
   lastSavedAt?: Date;

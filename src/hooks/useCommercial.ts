@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
 
-export type Client = Database['public']['Tables']['clients']['Row'];
+type Client = Database['public']['Tables']['clients']['Row'];
 export type Contact = Database['public']['Tables']['client_contacts']['Row'];
 export type Project = Database['public']['Tables']['projects']['Row'] & { commercial_notes?: string | null };
 

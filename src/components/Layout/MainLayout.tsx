@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Sidebar } from "./Sidebar";
+import { AppSidebar } from "./AppSidebar";
 import { Breadcrumbs } from "./Breadcrumbs";
 import { ModeToggle } from "@/components/mode-toggle";
 import { Button } from "@/components/ui/button";
@@ -38,7 +38,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       }
     >
       <div className="flex min-h-[100dvh] w-full bg-muted/10 overflow-hidden">
-        <Sidebar />
+        <AppSidebar />
 
         <div className="flex flex-col flex-1 min-h-[100dvh] overflow-hidden transition-all duration-300 min-w-0">
           <header className="flex h-16 items-center justify-between gap-4 border-b bg-background/80 backdrop-blur-md px-4 md:px-6 shrink-0 z-10 sticky top-0 overflow-hidden">

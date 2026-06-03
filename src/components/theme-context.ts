@@ -7,7 +7,7 @@ export type ThemeProviderState = {
   setTheme: (theme: Theme) => void
 }
 
-export const initialState: ThemeProviderState = {
+const initialState: ThemeProviderState = {
   theme: "system",
   setTheme: () => null,
 }

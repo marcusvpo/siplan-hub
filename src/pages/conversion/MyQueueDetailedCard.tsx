@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,13 +24,8 @@ import {
   Rocket,
   Power,
   ExternalLink,
-  FileText,
-  Building,
   ArrowRight,
-  Eye,
   User,
-  Calendar,
-  Cog,
   Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -44,8 +38,8 @@ import { convertBlocksToTiptap } from "@/lib/editor-utils";
 import { ConversionPostFeed } from "@/components/conversion/ConversionPostFeed";
 import { NewPostForm } from "@/components/conversion/NewPostForm";
 import { useAuth } from "@/hooks/useAuth";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { CompactQueueCard } from "@/components/conversion/CompactQueueCard";
+import { ProjectInfoSection } from "@/components/conversion/ProjectInfoSection";
 
 type StatusType =
   | "Adequado"
@@ -259,124 +253,7 @@ export function MyQueueDetailedCard({
 
   return (
     <>
-      {/* Compact Card */}
-      <Card
-        className="border-2 border-purple-200 bg-gradient-to-br from-purple-50/50 to-fuchsia-50/30 hover:shadow-lg transition-all cursor-pointer"
-        onClick={() => setIsOpen(true)}
-      >
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between gap-4">
-            {/* Left Side - Client Info */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-3 mb-1">
-                <span className="font-bold text-lg text-purple-900 truncate">
-                  {item.clientName}
-                </span>
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    "text-xs shrink-0",
-                    STATUS_COLORS[item.queueStatus],
-                  )}
-                >
-                  {STATUS_LABELS[item.queueStatus] || item.queueStatus}
-                </Badge>
-              </div>
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <span className="font-mono bg-purple-100 px-2 py-0.5 rounded">
-                  #{item.ticketNumber}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Database className="h-3.5 w-3.5" />
-                  {item.systemType}
-                </span>
-                <span className="flex items-center gap-1 text-xs">
-                  📅{" "}
-                  {item.deploymentDate
-                    ? format(new Date(item.deploymentDate), "dd/MM/yyyy", {
-                        locale: ptBR,
-                      })
-                    : "Sem Previsão"}
-                </span>
-              </div>
-              {/* Engine Status Badge - Prominent */}
-              {item.engineStatus && (
-                <div className="mt-2">
-                  <Badge
-                    className={cn(
-                      "text-xs font-semibold gap-1.5 px-3 py-1",
-                      item.engineStatus === "pending_engine" &&
-                        "bg-orange-500 text-white border-orange-600 shadow-sm shadow-orange-200",
-                      item.engineStatus === "engine_in_development" &&
-                        "bg-blue-500 text-white border-blue-600 shadow-sm shadow-blue-200",
-                      item.engineStatus === "engine_ready" &&
-                        "bg-emerald-500 text-white border-emerald-600 shadow-sm shadow-emerald-200",
-                    )}
-                  >
-                    {item.engineStatus === "pending_engine" && (
-                      <>
-                        <Database className="h-3.5 w-3.5" /> Aguardando Extração
-                        da Base
-                      </>
-                    )}
-                    {item.engineStatus === "engine_in_development" && (
-                      <>
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" /> Em
-                        Desenvolvimento
-                      </>
-                    )}
-                    {item.engineStatus === "engine_ready" && (
-                      <>
-                        <CheckCircle2 className="h-3.5 w-3.5" /> Pronto
-                      </>
-                    )}
-                  </Badge>
-                </div>
-              )}
-            </div>
-
-            {/* Right Side - Priority & Actions */}
-            <div className="flex items-center gap-3">
-              <Badge
-                className={cn(
-                  "text-sm font-bold",
-                  item.priority <= 2
-                    ? "bg-red-500 text-white"
-                    : item.priority <= 4
-                      ? "bg-orange-500 text-white"
-                      : "bg-slate-500 text-white",
-                )}
-              >
-                P{item.priority}
-              </Badge>
-              <span
-                className={cn(
-                  "text-sm font-bold px-2 py-1 rounded",
-                  daysInQueue > 5
-                    ? "bg-red-100 text-red-700"
-                    : daysInQueue > 3
-                      ? "bg-orange-100 text-orange-700"
-                      : "bg-gray-100 text-gray-700",
-                )}
-              >
-                {daysInQueue}d
-              </span>
-              <Button
-                size="sm"
-                variant="outline"
-                className="border-purple-300 text-purple-600 hover:bg-purple-50 gap-1"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsOpen(true);
-                }}
-              >
-                <Eye className="h-4 w-4" />
-                Detalhes
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <CompactQueueCard item={item} onClick={() => setIsOpen(true)} />
 
       {/* Detailed Modal */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -470,61 +347,7 @@ export function MyQueueDetailedCard({
             </div>
           ) : (
             <div className="space-y-6 py-4">
-              {/* Project Info Section */}
-              <div className="bg-slate-50 rounded-lg p-4 border">
-                <h3 className="font-bold text-slate-700 flex items-center gap-2 mb-3">
-                  <Building className="h-4 w-4" />
-                  Informações do Projeto
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                  <div>
-                    <span className="text-xs text-muted-foreground block">
-                      Líder do Projeto
-                    </span>
-                    <span className="font-medium">
-                      {projectInfo.projectLeader || "—"}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-xs text-muted-foreground block">
-                      Data Prevista para Implantação
-                    </span>
-                    <span className="font-medium">
-                      {item.deploymentDate
-                        ? format(new Date(item.deploymentDate), "dd/MM/yyyy", {
-                            locale: ptBR,
-                          })
-                        : "Ainda Sem Previsão"}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-xs text-muted-foreground block">
-                      Sistema Legado
-                    </span>
-                    <span className="font-medium">
-                      {projectInfo.legacySystem || "—"}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-xs text-muted-foreground block">
-                      Horas Vendidas
-                    </span>
-                    <span className="font-medium">
-                      {projectInfo.soldHours || "—"}
-                    </span>
-                  </div>
-                  {projectInfo.description && (
-                    <div className="col-span-full">
-                      <span className="text-xs text-muted-foreground block">
-                        Descrição
-                      </span>
-                      <span className="font-medium">
-                        {projectInfo.description}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
+              <ProjectInfoSection projectInfo={projectInfo} item={item} />
 
               {/* Conversion Stage Section */}
               <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">

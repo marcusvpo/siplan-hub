@@ -29,7 +29,7 @@ export interface ConversionQueueItem {
   updatedAt: Date;
 }
 
-export interface ConversionKPIs {
+interface ConversionKPIs {
   totalInQueue: number;
   pending: number;
   inProgress: number;

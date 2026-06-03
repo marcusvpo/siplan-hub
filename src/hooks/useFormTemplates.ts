@@ -17,7 +17,7 @@ export interface FormTemplate {
   } | null;
 }
 
-export interface NewTemplateInput {
+interface NewTemplateInput {
   kind: 'adherence' | 'homologation_checklist' | 'commercial_checklist';
   system_type: string;
   schema_json: any;

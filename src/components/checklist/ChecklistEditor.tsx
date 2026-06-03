@@ -17,65 +17,40 @@ import {
 import { ArrowLeft, Save, History, Settings, Sparkles, FileEdit } from "lucide-react";
 import { Link } from "react-router-dom";
 
-// Predefined systems in Siplan HUB
 const SYSTEM_TYPES = ["Orion TN", "Orion PRO", "Orion REG", "WebRI"];
 
-const DEFAULT_QUESTIONS: VisualQuestion[] = [
-  {
-    id: "balance_verified",
-    title: "Auditoria de Saldos de Contas e Balanço Confere?",
-    type: "boolean",
-    required: true,
-  },
-  {
-    id: "record_count_matches",
-    title: "Quantidade total de registros convertidos bate com a origem?",
-    type: "boolean",
-    required: true,
-  },
-  {
-    id: "sample_size_checked",
-    title: "Tamanho da amostra aleatória auditada (clientes/títulos)",
-    type: "number",
-    required: false,
-  },
-  {
-    id: "modules_validated",
-    title: "Módulos homologados sem inconsistências",
-    type: "checkboxes",
-    required: false,
-    options: ["Contábil", "Financeiro", "Faturamento", "Contratos", "Patrimônio", "Livros Fiscais"],
-  },
-  {
-    id: "printer_photos",
-    title: "Fotos e Imagens das Impressoras do Cliente",
-    type: "images",
-    required: false,
-  },
-  {
-    id: "client_sign_off",
-    title: "Cliente assinou o termo de aceite de homologação?",
-    type: "boolean",
-    required: false,
-  },
-  {
-    id: "homologation_observations",
-    title: "Observações e Divergências Aceitas",
-    type: "textarea",
-    required: false,
-  },
-];
+interface ChecklistEditorProps {
+  kind: 'adherence' | 'commercial_checklist';
+  title: string;
+  description: string;
+  backPath: string;
+  defaultQuestions: VisualQuestion[];
+  schemaTitlePrefix: string;
+  schemaDescriptionDefault: string;
+  extraHeaderButtons?: React.ReactNode;
+  extraDialogs?: React.ReactNode;
+}
 
-export default function EditarChecklistHomologacao() {
+export function ChecklistEditor({
+  kind,
+  title,
+  description,
+  backPath,
+  defaultQuestions,
+  schemaTitlePrefix,
+  schemaDescriptionDefault,
+  extraHeaderButtons,
+  extraDialogs,
+}: ChecklistEditorProps) {
   const { toast } = useToast();
   const [selectedSystem, setSelectedSystem] = useState<string>("Orion TN");
-  const [questions, setQuestions] = useState<VisualQuestion[]>(DEFAULT_QUESTIONS);
+  const [questions, setQuestions] = useState<VisualQuestion[]>(defaultQuestions);
   const [notes, setNotes] = useState<string>("");
   const [previewData, setPreviewData] = useState<any>({});
 
   // Query templates
-  const { data: templates = [], isLoading: isLoadingTemplates } = useFormTemplates("homologation_checklist", selectedSystem);
-  const { data: activeTemplate, isLoading: isLoadingActive } = useActiveTemplate("homologation_checklist", selectedSystem);
+  const { data: templates = [], isLoading: isLoadingTemplates } = useFormTemplates(kind, selectedSystem);
+  const { data: activeTemplate, isLoading: isLoadingActive } = useActiveTemplate(kind, selectedSystem);
 
   // Mutation to publish
   const publishMutation = usePublishTemplate();
@@ -84,20 +59,20 @@ export default function EditarChecklistHomologacao() {
   useEffect(() => {
     if (activeTemplate) {
       const parsed = parseJSONSchemaToVisual(activeTemplate.schema_json, activeTemplate.ui_json);
-      setQuestions(parsed.length > 0 ? parsed : DEFAULT_QUESTIONS);
+      setQuestions(parsed.length > 0 ? parsed : defaultQuestions);
     } else if (!isLoadingActive) {
-      setQuestions(DEFAULT_QUESTIONS);
+      setQuestions(defaultQuestions);
     }
-  }, [activeTemplate, selectedSystem, isLoadingActive]);
+  }, [activeTemplate, selectedSystem, isLoadingActive, defaultQuestions]);
 
   // Round-trip compilation for live preview
   const currentSchema = React.useMemo(() => {
     return convertVisualToJSONSchema(
       questions,
-      `Checklist de Homologação (${selectedSystem})`,
-      "Critérios e itens obrigatórios para validação de dados"
+      `${schemaTitlePrefix} (${selectedSystem})`,
+      schemaDescriptionDefault
     );
-  }, [questions, selectedSystem]);
+  }, [questions, selectedSystem, schemaTitlePrefix, schemaDescriptionDefault]);
 
   const currentUiSchema = React.useMemo(() => {
     return convertVisualToUISchema(questions);
@@ -125,16 +100,16 @@ export default function EditarChecklistHomologacao() {
 
     try {
       await publishMutation.mutateAsync({
-        kind: "homologation_checklist",
+        kind,
         system_type: selectedSystem,
         schema_json: currentSchema,
         ui_json: currentUiSchema,
-        notes: notes || `Checklist de homologação atualizado para ${selectedSystem}`,
+        notes: notes || `Checklist atualizado para ${selectedSystem}`,
       });
 
       toast({
         title: "Sucesso!",
-        description: "Checklist de Homologação publicado e ativado com sucesso.",
+        description: "Checklist publicado e ativado com sucesso.",
         className: "bg-green-500 text-white border-green-600",
       });
       setNotes("");
@@ -148,22 +123,22 @@ export default function EditarChecklistHomologacao() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6 max-w-7xl">
+    <div className="container mx-auto p-6 space-y-6 max-w-7xl animate-in fade-in duration-300">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-5">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Link to="/implantadores">
+            <Link to={backPath}>
               <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             </Link>
             <h1 className="text-2xl font-black tracking-tight text-foreground bg-gradient-to-r from-primary to-orange-500 bg-clip-text text-transparent">
-              Criador de Checklist de Homologação
+              {title}
             </h1>
           </div>
           <p className="text-sm text-muted-foreground pl-10">
-            Adicione e ordene os itens do checklist de homologação de dados e conversão.
+            {description}
           </p>
         </div>
 
@@ -183,6 +158,12 @@ export default function EditarChecklistHomologacao() {
               </SelectContent>
             </Select>
           </div>
+
+          {extraHeaderButtons && (
+            <div className="flex flex-col gap-1 justify-end pt-5">
+              {extraHeaderButtons}
+            </div>
+          )}
         </div>
       </div>
 
@@ -195,10 +176,10 @@ export default function EditarChecklistHomologacao() {
                 <div>
                   <CardTitle className="text-sm font-bold uppercase tracking-wider text-primary flex items-center gap-2">
                     <FileEdit className="h-4 w-4" />
-                    Estrutura de Checklist (Estilo Google Forms)
+                    Perguntas do Checklist (Estilo Google Forms)
                   </CardTitle>
                   <CardDescription className="text-xs mt-1">
-                    Defina os itens e validações que serão auditados na homologação
+                    Defina as perguntas que serão respondidas no formulário.
                   </CardDescription>
                 </div>
                 <div className="text-xs text-muted-foreground font-medium bg-muted px-2.5 py-1 rounded-full border">
@@ -226,7 +207,7 @@ export default function EditarChecklistHomologacao() {
                   id="notes"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Ex: Adicionado controle de fotos de impressoras e aceite formal do cliente."
+                  placeholder="Ex: Adicionado novas perguntas específicas."
                   className="min-h-[70px] border-muted-foreground/30 focus-visible:ring-primary"
                 />
               </div>
@@ -235,7 +216,7 @@ export default function EditarChecklistHomologacao() {
                 <Button
                   onClick={handlePublish}
                   disabled={publishMutation.isPending}
-                  className="px-6 gap-2"
+                  className="px-6 gap-2 bg-indigo-600 hover:bg-indigo-700"
                 >
                   <Save className="h-4 w-4" />
                   Publicar Checklist
@@ -250,7 +231,7 @@ export default function EditarChecklistHomologacao() {
           {/* Live Preview Pane */}
           <Card className="shadow-lg border-muted/50 bg-card flex-1 flex flex-col">
             <CardHeader className="bg-primary/5 pb-3 border-b border-primary/10">
-              <CardTitle className="text-sm font-bold uppercase tracking-wider text-primary flex items-center justify-between">
+              <CardTitle className="text-sm font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 flex items-center justify-between">
                 <span className="flex items-center gap-2">
                   <Sparkles className="h-4 w-4 animate-pulse" />
                   Preview do Checklist
@@ -260,7 +241,7 @@ export default function EditarChecklistHomologacao() {
                 </span>
               </CardTitle>
               <CardDescription className="text-xs">
-                Visualize e interaja com o checklist em tempo real conforme cria as perguntas.
+                Veja como o formulário ficará para preenchimento.
               </CardDescription>
             </CardHeader>
             <CardContent className="p-6 flex-1 overflow-y-auto max-h-[500px]">
@@ -273,7 +254,7 @@ export default function EditarChecklistHomologacao() {
                 onSubmit={() => {
                   toast({
                     title: "Valores válidos no Preview",
-                    description: "O checklist preencheu os requisitos com sucesso.",
+                    description: "O formulário preencheu os requisitos com sucesso.",
                   });
                 }}
                 submitLabel="Testar Envio"
@@ -340,6 +321,8 @@ export default function EditarChecklistHomologacao() {
           </Card>
         </div>
       </div>
+
+      {extraDialogs}
     </div>
   );
 }

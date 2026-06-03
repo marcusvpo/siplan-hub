@@ -8,24 +8,10 @@ import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 
-// Text area width in sidebar item (px): w-80(320) - px-2.5*2(20) - gap(4) - chevron(12) ≈ 284px
-// At font-size 11px bold, ~6.2px per char → threshold ≈ 45 chars
-const TEXT_AREA_PX = 284;
-const CHAR_WIDTH_PX = 6.2;
+import { getMarqueeStyle } from "@/lib/marquee";
 
-function getMarqueeStyle(text: string, active: boolean): React.CSSProperties {
-  if (!active) return {};
-  const estimatedWidth = text.length * CHAR_WIDTH_PX;
-  const overflow = estimatedWidth - TEXT_AREA_PX;
-  if (overflow <= 4) return {};
-  const dist = Math.round(overflow + 4);
-  const dur = Math.max(2.5, dist / 30);
-  return {
-    "--scroll-dist": `-${dist}px`,
-    "--scroll-dur": `${dur}s`,
-    animation: `scroll-text ${dur}s ease-in-out infinite`,
-  } as React.CSSProperties;
-}
+// Text area width in sidebar item (px): w-80(320) - px-2.5*2(20) - gap(4) - chevron(12) ≈ 284px
+const TEXT_AREA_PX = 284;
 
 export default function OrionTNModels() {
   const { projectId } = useParams();
@@ -133,7 +119,7 @@ export default function OrionTNModels() {
                     <div className="flex-1 min-w-0 overflow-hidden">
                       <span
                         className="inline-block whitespace-nowrap font-semibold text-[11px] leading-tight"
-                        style={getMarqueeStyle(p.clientName, animate)}
+                        style={getMarqueeStyle(p.clientName, animate, TEXT_AREA_PX)}
                       >
                         {p.clientName}
                       </span>

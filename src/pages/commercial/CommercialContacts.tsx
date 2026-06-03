@@ -43,23 +43,10 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
+import { getMarqueeStyle } from "@/lib/marquee";
+
 // Dimensions for Marquee logic tailored for the w-96 Contacts sidebar
 const TEXT_AREA_PX = 310;
-const CHAR_WIDTH_PX = 6.2;
-
-function getMarqueeStyle(text: string, active: boolean): React.CSSProperties {
-  if (!active) return {};
-  const estimatedWidth = text.length * CHAR_WIDTH_PX;
-  const overflow = estimatedWidth - TEXT_AREA_PX;
-  if (overflow <= 4) return {};
-  const dist = Math.round(overflow + 4);
-  const dur = Math.max(2.5, dist / 30);
-  return {
-    "--scroll-dist": `-${dist}px`,
-    "--scroll-dur": `${dur}s`,
-    animation: `scroll-text ${dur}s ease-in-out infinite`,
-  } as React.CSSProperties;
-}
 
 export default function CommercialContacts() {
 // ... preserving rest of state and handlers from line 46 to 223 ...
@@ -289,7 +276,7 @@ export default function CommercialContacts() {
                     <div className="flex-1 min-w-0 overflow-hidden text-left pl-5">
                       <span
                         className="inline-block whitespace-nowrap leading-tight"
-                        style={getMarqueeStyle(client.name, animate)}
+                        style={getMarqueeStyle(client.name, animate, TEXT_AREA_PX)}
                       >
                         {client.name}
                       </span>

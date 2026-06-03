@@ -202,6 +202,176 @@ export async function resolveResponsibleIds(dbRow: Record<string, unknown>): Pro
   }
 }
 
+// Helper to resolve stage start/end dates with auto-fill logic
+function resolveStageDates(
+  newStatus: StageStatus | undefined,
+  oldStatus: StageStatus | undefined,
+  startDate: Date | string | null | undefined,
+  endDate: Date | string | null | undefined
+): { startDate: string | null; endDate: string | null } {
+  let finalStart: string | null = null;
+  let finalEnd: string | null = null;
+
+  if (newStatus === 'in-progress' && oldStatus !== 'in-progress' && !startDate) {
+    finalStart = new Date().toISOString();
+  } else {
+    finalStart = formatDateForDB(startDate);
+  }
+
+  if (newStatus === 'done' && oldStatus !== 'done' && !endDate) {
+    finalEnd = new Date().toISOString();
+  } else {
+    finalEnd = formatDateForDB(endDate);
+  }
+
+  return { startDate: finalStart, endDate: finalEnd };
+}
+
+// Stage-specific flattener helpers
+function mapInfraStage(infra: InfraStageV2 | undefined, oldInfra?: InfraStageV2): Record<string, unknown> {
+  if (!infra) return {};
+  const { startDate, endDate } = resolveStageDates(infra.status, oldInfra?.status, infra.startDate, infra.endDate);
+
+  return {
+    infra_status: infra.status,
+    infra_responsible: infra.responsible,
+    infra_start_date: startDate,
+    infra_end_date: endDate,
+    infra_observations: infra.observations,
+    infra_technical_notes: infra.technicalNotes,
+    infra_workstations_status: infra.workstationsStatus,
+    infra_server_status: infra.serverStatus,
+    infra_workstations_count: infra.workstationsCount,
+    infra_blocking_reason: infra.blockingReason,
+    infra_approved_by_infra: infra.approvedByInfra,
+    infra_server_in_use: infra.serverInUse,
+    infra_server_needed: infra.serverNeeded,
+  };
+}
+
+function mapAdherenceStage(adherence: AdherenceStageV2 | undefined, oldAdherence?: AdherenceStageV2): Record<string, unknown> {
+  if (!adherence) return {};
+  const { startDate, endDate } = resolveStageDates(adherence.status, oldAdherence?.status, adherence.startDate, adherence.endDate);
+
+  return {
+    adherence_status: adherence.status,
+    adherence_responsible: adherence.responsible,
+    adherence_start_date: startDate,
+    adherence_end_date: endDate,
+    adherence_observations: adherence.observations,
+    adherence_has_product_gap: adherence.hasProductGap,
+    adherence_gap_description: adherence.gapDescription,
+    adherence_dev_ticket: adherence.devTicket,
+    adherence_dev_estimated_date: formatDateForDB(adherence.devEstimatedDate),
+    adherence_gap_priority: adherence.gapPriority,
+    adherence_analysis_complete: adherence.analysisComplete,
+    adherence_conformity_standards: adherence.conformityStandards,
+  };
+}
+
+function mapEnvironmentStage(environment: EnvironmentStageV2 | undefined, oldEnvironment?: EnvironmentStageV2): Record<string, unknown> {
+  if (!environment) return {};
+  const { startDate, endDate } = resolveStageDates(environment.status, oldEnvironment?.status, environment.startDate, environment.endDate);
+
+  return {
+    environment_status: environment.status,
+    environment_responsible: environment.responsible,
+    environment_start_date: startDate,
+    environment_end_date: endDate,
+    environment_real_date: formatDateForDB(environment.realDate),
+    environment_observations: environment.observations,
+    environment_os_version: environment.osVersion,
+    environment_version: environment.version,
+    environment_test_available: environment.testAvailable,
+    environment_preparation_checklist: environment.preparationChecklist,
+    environment_approved_by_infra: environment.approvedByInfra,
+  };
+}
+
+function mapConversionStage(conversion: ConversionStageV2 | undefined, oldConversion?: ConversionStageV2): Record<string, unknown> {
+  if (!conversion) return {};
+  const { startDate, endDate } = resolveStageDates(conversion.status, oldConversion?.status, conversion.startDate, conversion.endDate);
+
+  return {
+    conversion_status: conversion.status,
+    conversion_responsible: conversion.responsible,
+    conversion_start_date: startDate,
+    conversion_end_date: endDate,
+    conversion_observations: conversion.observations,
+    conversion_complexity: conversion.complexity,
+    conversion_data_volume_gb: conversion.dataVolumeGb ?? null,
+    conversion_tool_used: conversion.toolUsed,
+    conversion_homologation_date: formatDateForDB(conversion.homologationDate),
+    conversion_deviations: conversion.deviations,
+    conversion_homologation_status: conversion.homologationStatus,
+    conversion_homologation_responsible: conversion.homologationResponsible,
+    conversion_sent_at: formatDateForDB(conversion.sentAt),
+    conversion_finished_at: formatDateForDB(conversion.finishedAt),
+    conversion_homologation_complete: conversion.homologationComplete,
+    conversion_homologation_workflow_status: conversion.homologationWorkflowStatus,
+    conversion_record_count: conversion.recordCount,
+  };
+}
+
+function mapImplementationStage(implementation: ImplementationStageV2 | undefined, oldImplementation?: ImplementationStageV2): Record<string, unknown> {
+  if (!implementation) return {};
+  const { startDate, endDate } = resolveStageDates(implementation.status, oldImplementation?.status, implementation.startDate, implementation.endDate);
+
+  return {
+    implementation_status: implementation.status,
+    implementation_responsible: implementation.responsible,
+    implementation_start_date: startDate,
+    implementation_end_date: endDate,
+    implementation_observations: implementation.observations,
+    implementation_phase1: implementation.phase1,
+    implementation_phase2: implementation.phase2,
+  };
+}
+
+function mapModelosEditorStage(modelosEditor: ModelosEditorStageV2 | undefined, oldModelosEditor?: ModelosEditorStageV2): Record<string, unknown> {
+  if (!modelosEditor) return {};
+  const { startDate, endDate } = resolveStageDates(modelosEditor.status, oldModelosEditor?.status, modelosEditor.startDate, modelosEditor.endDate);
+
+  const result: Record<string, unknown> = {
+    modelos_editor_status: modelosEditor.status,
+    modelos_editor_responsible: modelosEditor.responsible,
+    modelos_editor_start_date: startDate,
+    modelos_editor_end_date: endDate,
+    modelos_editor_observations: modelosEditor.observations,
+  };
+
+  if (modelosEditor.sentFiles !== undefined) {
+    result.modelos_editor_sent_files = modelosEditor.sentFiles;
+  }
+  if (modelosEditor.availableFiles !== undefined) {
+    result.modelos_editor_available_files = modelosEditor.availableFiles;
+  }
+
+  return result;
+}
+
+function mapPostStage(post: PostStageV2 | undefined, oldPost?: PostStageV2): Record<string, unknown> {
+  if (!post) return {};
+  const { startDate, endDate } = resolveStageDates(post.status, oldPost?.status, post.startDate, post.endDate);
+
+  return {
+    post_status: post.status,
+    post_responsible: post.responsible,
+    post_start_date: startDate,
+    post_end_date: endDate,
+    post_observations: post.observations,
+    post_support_period_days: post.supportPeriodDays ?? null,
+    post_support_end_date: formatDateForDB(post.supportEndDate),
+    post_benefits_delivered: post.benefitsDelivered,
+    post_challenges_found: post.challengesFound,
+    post_roi_estimated: post.roiEstimated,
+    post_client_satisfaction: post.clientSatisfaction,
+    post_recommendations: post.recommendations,
+    post_followup_needed: post.followupNeeded,
+    post_followup_date: formatDateForDB(post.followupDate),
+  };
+}
+
 // Transform Project V3 to DB row
 export function transformToDB(project: Partial<ProjectV2>, currentProject?: ProjectV2): Record<string, unknown> {
   const dbRow: Record<string, unknown> = {};
@@ -274,233 +444,17 @@ export function transformToDB(project: Partial<ProjectV2>, currentProject?: Proj
   // Stages flattening
   if (project.stages) {
     const stages = project.stages;
+    const oldStages = currentProject?.stages;
 
-    // Infra
-    if (stages.infra) {
-      const s = stages.infra;
-      const oldStatus = currentProject?.stages?.infra?.status;
-      const newStatus = s.status;
-
-      dbRow.infra_status = s.status;
-      dbRow.infra_responsible = s.responsible;
-
-      // Auto-fill startDate if changing to in-progress and no startDate exists
-      if (newStatus === 'in-progress' && oldStatus !== 'in-progress' && !s.startDate) {
-        dbRow.infra_start_date = new Date().toISOString();
-      } else {
-        dbRow.infra_start_date = formatDateForDB(s.startDate);
-      }
-
-      // Auto-fill endDate if changing to done and no endDate exists
-      if (newStatus === 'done' && oldStatus !== 'done' && !s.endDate) {
-        dbRow.infra_end_date = new Date().toISOString();
-      } else {
-        dbRow.infra_end_date = formatDateForDB(s.endDate);
-      }
-
-      dbRow.infra_observations = s.observations;
-      dbRow.infra_technical_notes = s.technicalNotes;
-      dbRow.infra_workstations_status = s.workstationsStatus;
-      dbRow.infra_server_status = s.serverStatus;
-      dbRow.infra_workstations_count = s.workstationsCount;
-      dbRow.infra_blocking_reason = s.blockingReason;
-      dbRow.infra_approved_by_infra = s.approvedByInfra;
-      dbRow.infra_server_in_use = s.serverInUse;
-      dbRow.infra_server_needed = s.serverNeeded;
-    }
-
-    // Adherence
-    if (stages.adherence) {
-      const s = stages.adherence;
-      const oldStatus = currentProject?.stages?.adherence?.status;
-      const newStatus = s.status;
-
-      dbRow.adherence_status = s.status;
-      dbRow.adherence_responsible = s.responsible;
-
-      // Auto-fill dates
-      if (newStatus === 'in-progress' && oldStatus !== 'in-progress' && !s.startDate) {
-        dbRow.adherence_start_date = new Date().toISOString();
-      } else {
-        dbRow.adherence_start_date = formatDateForDB(s.startDate);
-      }
-
-      if (newStatus === 'done' && oldStatus !== 'done' && !s.endDate) {
-        dbRow.adherence_end_date = new Date().toISOString();
-      } else {
-        dbRow.adherence_end_date = formatDateForDB(s.endDate);
-      }
-
-      dbRow.adherence_observations = s.observations;
-      dbRow.adherence_has_product_gap = s.hasProductGap;
-      dbRow.adherence_gap_description = s.gapDescription;
-      dbRow.adherence_dev_ticket = s.devTicket;
-      dbRow.adherence_dev_estimated_date = formatDateForDB(s.devEstimatedDate);
-      dbRow.adherence_gap_priority = s.gapPriority;
-      dbRow.adherence_analysis_complete = s.analysisComplete;
-      dbRow.adherence_conformity_standards = s.conformityStandards;
-    }
-
-    // Environment
-    if (stages.environment) {
-      const s = stages.environment;
-      const oldStatus = currentProject?.stages?.environment?.status;
-      const newStatus = s.status;
-
-      dbRow.environment_status = s.status;
-      dbRow.environment_responsible = s.responsible;
-
-      // Auto-fill dates
-      if (newStatus === 'in-progress' && oldStatus !== 'in-progress' && !s.startDate) {
-        dbRow.environment_start_date = new Date().toISOString();
-      } else {
-        dbRow.environment_start_date = formatDateForDB(s.startDate);
-      }
-
-      if (newStatus === 'done' && oldStatus !== 'done' && !s.endDate) {
-        dbRow.environment_end_date = new Date().toISOString();
-      } else {
-        dbRow.environment_end_date = formatDateForDB(s.endDate);
-      }
-
-      dbRow.environment_real_date = formatDateForDB(s.realDate);
-      dbRow.environment_observations = s.observations;
-      dbRow.environment_os_version = s.osVersion;
-      dbRow.environment_version = s.version;
-      dbRow.environment_test_available = s.testAvailable;
-      dbRow.environment_preparation_checklist = s.preparationChecklist;
-      dbRow.environment_approved_by_infra = s.approvedByInfra;
-    }
-
-    // Conversion
-    if (stages.conversion) {
-      const s = stages.conversion;
-      const oldStatus = currentProject?.stages?.conversion?.status;
-      const newStatus = s.status;
-
-      dbRow.conversion_status = s.status;
-      dbRow.conversion_responsible = s.responsible;
-
-      // FIX: Write to correct columns (conversion_start_date/end_date)
-      if (newStatus === 'in-progress' && oldStatus !== 'in-progress' && !s.startDate) {
-        dbRow.conversion_start_date = new Date().toISOString();
-      } else {
-        dbRow.conversion_start_date = formatDateForDB(s.startDate);
-      }
-
-      if (newStatus === 'done' && oldStatus !== 'done' && !s.endDate) {
-        dbRow.conversion_end_date = new Date().toISOString();
-      } else {
-        dbRow.conversion_end_date = formatDateForDB(s.endDate);
-      }
-
-      dbRow.conversion_observations = s.observations;
-      dbRow.conversion_complexity = s.complexity;
-      dbRow.conversion_data_volume_gb = s.dataVolumeGb ?? null;
-      dbRow.conversion_tool_used = s.toolUsed;
-      dbRow.conversion_homologation_date = formatDateForDB(s.homologationDate);
-      dbRow.conversion_deviations = s.deviations;
-      dbRow.conversion_homologation_status = s.homologationStatus;
-      dbRow.conversion_homologation_responsible = s.homologationResponsible;
-      dbRow.conversion_sent_at = formatDateForDB(s.sentAt);
-      dbRow.conversion_finished_at = formatDateForDB(s.finishedAt);
-      dbRow.conversion_homologation_complete = s.homologationComplete;
-      dbRow.conversion_homologation_workflow_status = s.homologationWorkflowStatus;
-      dbRow.conversion_record_count = s.recordCount;
-    }
-
-    // Implementation
-    if (stages.implementation) {
-      const s = stages.implementation;
-      const oldStatus = currentProject?.stages?.implementation?.status;
-      const newStatus = s.status;
-
-      dbRow.implementation_status = s.status;
-      dbRow.implementation_responsible = s.responsible;
-
-      // Auto-fill dates
-      if (newStatus === 'in-progress' && oldStatus !== 'in-progress' && !s.startDate) {
-        dbRow.implementation_start_date = new Date().toISOString();
-      } else {
-        dbRow.implementation_start_date = formatDateForDB(s.startDate);
-      }
-
-      if (newStatus === 'done' && oldStatus !== 'done' && !s.endDate) {
-        dbRow.implementation_end_date = new Date().toISOString();
-      } else {
-        dbRow.implementation_end_date = formatDateForDB(s.endDate);
-      }
-
-      dbRow.implementation_observations = s.observations;
-      dbRow.implementation_phase1 = s.phase1;
-      dbRow.implementation_phase2 = s.phase2;
-    }
-
-    // Modelos Editor
-    if (stages.modelosEditor) {
-      const s = stages.modelosEditor;
-      const oldStatus = currentProject?.stages?.modelosEditor?.status;
-      const newStatus = s.status;
-
-      dbRow.modelos_editor_status = s.status;
-      dbRow.modelos_editor_responsible = s.responsible;
-
-      if (newStatus === 'in-progress' && oldStatus !== 'in-progress' && !s.startDate) {
-        dbRow.modelos_editor_start_date = new Date().toISOString();
-      } else {
-        dbRow.modelos_editor_start_date = formatDateForDB(s.startDate);
-      }
-
-      if (newStatus === 'done' && oldStatus !== 'done' && !s.endDate) {
-        dbRow.modelos_editor_end_date = new Date().toISOString();
-      } else {
-        dbRow.modelos_editor_end_date = formatDateForDB(s.endDate);
-      }
-
-      dbRow.modelos_editor_observations = s.observations;
-
-      // Ensure specific file fields are handled for JSONB
-      if (s.sentFiles !== undefined) {
-        dbRow.modelos_editor_sent_files = s.sentFiles;
-      }
-      if (s.availableFiles !== undefined) {
-        dbRow.modelos_editor_available_files = s.availableFiles;
-      }
-    }
-
-    // Post
-    if (stages.post) {
-      const s = stages.post;
-      const oldStatus = currentProject?.stages?.post?.status;
-      const newStatus = s.status;
-
-      dbRow.post_status = s.status;
-      dbRow.post_responsible = s.responsible;
-
-      // Auto-fill dates
-      if (newStatus === 'in-progress' && oldStatus !== 'in-progress' && !s.startDate) {
-        dbRow.post_start_date = new Date().toISOString();
-      } else {
-        dbRow.post_start_date = formatDateForDB(s.startDate);
-      }
-
-      if (newStatus === 'done' && oldStatus !== 'done' && !s.endDate) {
-        dbRow.post_end_date = new Date().toISOString();
-      } else {
-        dbRow.post_end_date = formatDateForDB(s.endDate);
-      }
-
-      dbRow.post_observations = s.observations;
-      dbRow.post_support_period_days = s.supportPeriodDays ?? null;
-      dbRow.post_support_end_date = formatDateForDB(s.supportEndDate);
-      dbRow.post_benefits_delivered = s.benefitsDelivered;
-      dbRow.post_challenges_found = s.challengesFound;
-      dbRow.post_roi_estimated = s.roiEstimated;
-      dbRow.post_client_satisfaction = s.clientSatisfaction;
-      dbRow.post_recommendations = s.recommendations;
-      dbRow.post_followup_needed = s.followupNeeded;
-      dbRow.post_followup_date = formatDateForDB(s.followupDate);
-    }
+    Object.assign(dbRow, {
+      ...mapInfraStage(stages.infra, oldStages?.infra),
+      ...mapAdherenceStage(stages.adherence, oldStages?.adherence),
+      ...mapEnvironmentStage(stages.environment, oldStages?.environment),
+      ...mapConversionStage(stages.conversion, oldStages?.conversion),
+      ...mapImplementationStage(stages.implementation, oldStages?.implementation),
+      ...mapModelosEditorStage(stages.modelosEditor, oldStages?.modelosEditor),
+      ...mapPostStage(stages.post, oldStages?.post),
+    });
   }
 
   // Notes
@@ -515,7 +469,7 @@ export function transformToDB(project: Partial<ProjectV2>, currentProject?: Proj
   if (project.lastUpdatedBy) {
     dbRow.last_update_by = project.lastUpdatedBy;
   }
-  // If not provided, caller should ensure it's set before calling
 
   return dbRow;
 }
+

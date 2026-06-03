@@ -152,68 +152,6 @@ export interface ConversionKPIs {
   myQueueCount: number;
 }
 
-// Labels and Colors
-export const QUEUE_STATUS_LABELS: Record<QueueStatus, string> = {
-  pending: 'Pendente',
-  in_progress: 'Em Andamento',
-  awaiting_homologation: 'Aguard. Homologação',
-  homologation_issues: 'Inconsistências',
-  approved: 'Aprovado',
-  done: 'Concluído',
-  cancelled: 'Cancelado',
-};
-
-export const QUEUE_STATUS_COLORS: Record<QueueStatus, string> = {
-  pending: 'bg-slate-100 text-slate-700 border-slate-300',
-  in_progress: 'bg-blue-100 text-blue-700 border-blue-300',
-  awaiting_homologation: 'bg-purple-100 text-purple-700 border-purple-300',
-  homologation_issues: 'bg-orange-100 text-orange-700 border-orange-300',
-  approved: 'bg-emerald-100 text-emerald-700 border-emerald-300',
-  done: 'bg-green-100 text-green-700 border-green-300',
-  cancelled: 'bg-red-100 text-red-700 border-red-300',
-};
-
-export const ISSUE_CATEGORY_LABELS: Record<IssueCategory, string> = {
-  data_mismatch: 'Dados Divergentes',
-  missing_data: 'Dados Faltantes',
-  format_error: 'Formato Incorreto',
-  duplicates: 'Duplicidade',
-  other: 'Outros',
-};
-
-export const ISSUE_SEVERITY_LABELS: Record<IssueSeverity, string> = {
-  critical: 'Crítico',
-  high: 'Alto',
-  medium: 'Médio',
-  low: 'Baixo',
-};
-
-export const ISSUE_SEVERITY_COLORS: Record<IssueSeverity, string> = {
-  critical: 'bg-red-100 text-red-700 border-red-300',
-  high: 'bg-orange-100 text-orange-700 border-orange-300',
-  medium: 'bg-yellow-100 text-yellow-700 border-yellow-300',
-  low: 'bg-slate-100 text-slate-700 border-slate-300',
-};
-
-export const MAPPING_STATUS_LABELS: Record<MappingStatus, string> = {
-  pending: 'Pendente',
-  in_progress: 'Em Andamento',
-  completed: 'Concluído',
-  blocked: 'Bloqueado',
-};
-
-export const MODULE_COMPLEXITY_LABELS: Record<ModuleComplexity, string> = {
-  low: 'Baixa',
-  medium: 'Média',
-  high: 'Alta',
-};
-
-export const DATA_VOLUME_LABELS: Record<DataVolume, string> = {
-  small: 'Pequeno',
-  medium: 'Médio',
-  large: 'Grande',
-};
-
 export const TEAM_AREA_LABELS: Record<TeamArea, string> = {
   implementation: 'Implantação',
   conversion: 'Conversão',
@@ -221,37 +159,3 @@ export const TEAM_AREA_LABELS: Record<TeamArea, string> = {
   support: 'Suporte',
 };
 
-// Common module names for conversion
-export const COMMON_MODULES = [
-  'clientes',
-  'fornecedores',
-  'produtos',
-  'servicos',
-  'contas_pagar',
-  'contas_receber',
-  'estoque',
-  'notas_fiscais',
-  'pedidos',
-  'orcamentos',
-  'usuarios',
-  'plano_contas',
-  'centros_custo',
-  'outros',
-] as const;
-
-export const MODULE_LABELS: Record<string, string> = {
-  clientes: 'Clientes',
-  fornecedores: 'Fornecedores',
-  produtos: 'Produtos',
-  servicos: 'Serviços',
-  contas_pagar: 'Contas a Pagar',
-  contas_receber: 'Contas a Receber',
-  estoque: 'Estoque',
-  notas_fiscais: 'Notas Fiscais',
-  pedidos: 'Pedidos',
-  orcamentos: 'Orçamentos',
-  usuarios: 'Usuários',
-  plano_contas: 'Plano de Contas',
-  centros_custo: 'Centros de Custo',
-  outros: 'Outros',
-};

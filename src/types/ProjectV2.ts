@@ -344,21 +344,6 @@ export interface TimelineEventV2 {
   visibility: "public" | "archived";
 }
 
-export interface SavedFilter {
-  id: string;
-  name: string;
-  filters: FilterCondition[];
-  createdBy: string;
-  createdAt: Date;
-  isPublic: boolean;
-  usageCount: number;
-}
-
-export interface FilterCondition {
-  field: string;
-  operator: "=" | "!=" | ">" | "<" | ">=" | "<=" | "contains" | "in" | "between" | "regex" | "is_null";
-  value: string | number | boolean | null;
-}
 
 export interface ChecklistItem {
   id: string;
