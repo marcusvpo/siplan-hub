@@ -16,7 +16,7 @@ export interface ProjectFormResponse {
   updated_at: string;
 }
 
-export interface UpsertResponseInput {
+interface UpsertResponseInput {
   project_id: string;
   template_id: string;
   stage: 'adherence' | 'conversion';

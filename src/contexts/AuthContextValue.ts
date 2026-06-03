@@ -8,7 +8,7 @@ export interface Permission {
   action: string;
 }
 
-export interface AuthContextType {
+interface AuthContextType {
   session: Session | null;
   user: User | null;
   fullName: string | null;

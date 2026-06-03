@@ -41,7 +41,7 @@ import {
 import { UserProfileDrawer } from "./UserProfileDrawer";
 import { Sidebar as ShadcnSidebar, useSidebar } from "@/components/ui/sidebar";
 
-export function Sidebar() {
+export function AppSidebar() {
   const { state, toggleSidebar } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
