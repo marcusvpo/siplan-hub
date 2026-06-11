@@ -189,7 +189,7 @@ npm run test
 ```
 
 ### Checklist Visual (QA)
-Antes de abrir um pull request, verifique a conformidade visual descrita em [VISUAL_QA.md](file:///d:/AI/siplan-hub/VISUAL_QA.md):
+Antes de abrir um pull request, verifique a conformidade visual descrita em [VISUAL_QA.md](file:///d:/AI/siplan-hub/docs/VISUAL_QA.md):
 * **Tipografia**: Títulos e cabeçalhos devem usar fonte Sans-serif com `tracking-tight`.
 * **Arredondamento (Radius)**: Os cantos de cartões e botões padrão devem usar `0.5rem` (`rounded-lg` / 8px).
 * **Sombras**: Cards padrão devem usar sombras sutis (`shadow-subtle`), reservando sombras em camadas (`shadow-layered`) apenas para diálogos, popovers ou barras flutuantes.
