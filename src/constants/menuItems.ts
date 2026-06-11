@@ -179,4 +179,30 @@ export const menuItems: MenuItem[] = [
             },
         ],
     },
+    {
+        title: "Implantadores",
+        icon: Users,
+        description: "Ferramentas, formulários de aderência e transição",
+        permissionKey: "menu_implantadores",
+        subItems: [
+            {
+                title: "Editor de Aderência",
+                path: "/implantadores/aderencia",
+                icon: FileEdit,
+                description: "Formulários e checklists de aderência",
+            },
+            {
+                title: "Treinamento",
+                path: "/implantadores/treinamento",
+                icon: Rocket,
+                description: "Material de capacitação e treinamentos",
+            },
+            {
+                title: "Transição de Suporte",
+                path: "/implantadores/transicao",
+                icon: Layers,
+                description: "Passagem de bastão para a equipe de suporte",
+            },
+        ],
+    },
 ];
