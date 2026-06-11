@@ -160,9 +160,9 @@ export default function OrionTNModels() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800 scrollbar-track-transparent">
+        <main className="flex-1 overflow-hidden p-4 flex flex-col">
           {selectedProject ? (
-            <div className="max-w-6xl mx-auto space-y-4">
+            <div className="w-full max-w-7xl mx-auto flex-1 flex flex-col min-h-0 space-y-4">
               <ModelosEditorWorkspace
                 project={selectedProject}
                 onUpdate={(u) => updateStage(selectedProject, "modelosEditor", u)}
