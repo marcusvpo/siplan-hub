@@ -25,3 +25,5 @@
     - Panel should have deep `shadow-layered`.
     - **Header Layout & Overlaps**: Avoid placing badges, status indicators, or action buttons in absolutely positioned containers inside headers (e.g. `absolute right-12 top-4`). Keep them in the standard flex flow (`flex flex-row items-start justify-between`) and use right margins (like `mr-8` or `mr-10`) to clear absolute-positioned dialog Close buttons.
     - **Text Truncation & Wraps**: Avoid aggressively truncating critical information like client names or ticket subjects with `truncate` in headers. Use responsive wrapping layouts (`break-words`, `leading-tight`, `flex-wrap`) so text wraps naturally and all details remain visible on all screen sizes.
+- [ ] **Navigation & Menus Sincronization**:
+    - Every newly created screen/route must be added to the primary sidebar in [AppSidebar.tsx](file:///d:/AI/siplan-hub/src/components/Layout/AppSidebar.tsx) and to the dashboard items structure in [menuItems.ts](file:///d:/AI/siplan-hub/src/constants/menuItems.ts) to guarantee access through both the sidebar and the dashboard quick links/modais.

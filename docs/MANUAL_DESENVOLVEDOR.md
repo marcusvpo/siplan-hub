@@ -177,6 +177,10 @@ Ao editar o arquivo `CalendarGrid.tsx` ou implementar lógicas de datas de agend
 * Ao criar ou refatorar listagens que possam conter centenas de elementos, utilize a biblioteca `react-virtuoso` ou `react-window` já configuradas no projeto.
 * Isso garante que o navegador renderize apenas os elementos visíveis no visor (viewport), prevenindo lentidões extremas.
 
+### 4. Sincronização Obrigatória de Novas Telas com o Dashboard Inicial
+* **Regra Importante**: Sempre que uma nova tela ou rota for criada no sistema, ela **DEVE** ser adicionada tanto no componente da barra lateral ([AppSidebar.tsx](file:///d:/AI/siplan-hub/src/components/Layout/AppSidebar.tsx)) quanto na constante central de itens de menu ([menuItems.ts](file:///d:/AI/siplan-hub/src/constants/menuItems.ts)).
+* **Por que isso é necessário**: O dashboard e a tela inicial (`Home.tsx`) consomem a constante `menuItems` para gerar os cards rápidos de navegação e as opções dentro de modais dinâmicos (como o modal do Comercial). Manter ambos sincronizados previne que rotas fiquem inacessíveis a partir do dashboard.
+
 ---
 
 ## 🧪 Testes e Qualidade de Código
