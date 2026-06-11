@@ -142,16 +142,16 @@ export default function OrionTNModels() {
 
       {/* Área Principal */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-16 border-b bg-white dark:bg-slate-900 flex items-center px-6 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="bg-indigo-100 dark:bg-indigo-950/50 p-2 rounded-lg">
-              <FileText className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+        <header className="h-12 border-b bg-white dark:bg-slate-900 flex items-center px-4 shrink-0">
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+            <div className="bg-indigo-100 dark:bg-indigo-950/50 p-1.5 rounded-lg shrink-0">
+              <FileText className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
             </div>
-            <div>
-              <h1 className="font-bold text-lg leading-none">
+            <div className="min-w-0">
+              <h1 className="font-bold text-sm md:text-base leading-none text-foreground truncate max-w-[420px]" title={selectedProject?.clientName || "Modelos Editor"}>
                 {selectedProject ? selectedProject.clientName : "Modelos Editor"}
               </h1>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-[10px] text-muted-foreground mt-0.5">
                 {selectedProject
                   ? `Central de Modelos - ${selectedProject.systemType}`
                   : "Selecione um projeto para gerenciar modelos"}
@@ -160,22 +160,22 @@ export default function OrionTNModels() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800 scrollbar-track-transparent">
+        <main className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800 scrollbar-track-transparent">
           {selectedProject ? (
-            <div className="max-w-6xl mx-auto space-y-6">
+            <div className="max-w-6xl mx-auto space-y-4">
               <ModelosEditorWorkspace
                 project={selectedProject}
                 onUpdate={(u) => updateStage(selectedProject, "modelosEditor", u)}
               />
             </div>
           ) : (
-            <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-4">
-              <div className="bg-white dark:bg-slate-900 p-8 rounded-full border border-dashed border-slate-200 dark:border-slate-800 mb-2">
-                <Layout className="h-12 w-12 text-slate-300 dark:text-slate-700" />
+            <div className="h-full flex flex-col items-center justify-center text-center p-4 space-y-3">
+              <div className="bg-white dark:bg-slate-900 p-6 rounded-full border border-dashed border-slate-200 dark:border-slate-800 mb-1">
+                <Layout className="h-10 w-10 text-slate-300 dark:text-slate-700" />
               </div>
               <div className="max-w-xs">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Nenhum projeto selecionado</h3>
-                <p className="text-sm text-muted-foreground mt-2">
+                <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">Nenhum projeto selecionado</h3>
+                <p className="text-xs text-muted-foreground mt-1.5">
                   Escolha um projeto na barra lateral para começar a configurar os modelos e visualizar o progresso.
                 </p>
               </div>
