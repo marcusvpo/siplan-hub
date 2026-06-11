@@ -17,6 +17,8 @@ export function MainLayout({ children }: MainLayoutProps) {
   const location = useLocation();
 
   const isProjectsPage = location.pathname === "/projects";
+  const isModelsPage = location.pathname.startsWith("/orion-tn-models");
+  const isNoScrollPage = isProjectsPage || isModelsPage;
   const isPrintMode = new URLSearchParams(location.search).get("print") === "true";
 
   if (isPrintMode) {
@@ -74,7 +76,7 @@ export function MainLayout({ children }: MainLayoutProps) {
             </div>
           </header>
 
-          <main className={`flex-1 flex flex-col ${isProjectsPage ? 'overflow-hidden' : 'overflow-auto'} p-4 md:p-6 min-w-0`}>
+          <main className={`flex-1 flex flex-col ${isNoScrollPage ? 'overflow-hidden' : 'overflow-auto'} ${isModelsPage ? 'p-0' : 'p-4 md:p-6'} min-w-0`}>
             {children}
           </main>
         </div>

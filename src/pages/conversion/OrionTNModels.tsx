@@ -73,30 +73,30 @@ export default function OrionTNModels() {
     <div className="flex h-[calc(100vh-4rem)] overflow-hidden bg-slate-50 dark:bg-slate-950/50">
       {/* Sidebar de Projetos */}
       <div className="w-80 border-r bg-white dark:bg-slate-900 flex flex-col shrink-0">
-        <div className="p-4 border-b space-y-4">
+        <div className="p-3 border-b space-y-2.5">
           <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-              <Layout className="h-4 w-4" />
+            <h2 className="font-semibold text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+              <Layout className="h-3.5 w-3.5" />
               Projetos OrionTN
             </h2>
-            <Badge variant="secondary" className="text-[10px]">{orionProjects.length}</Badge>
+            <Badge variant="secondary" className="text-[9px] px-1.5 py-0">{orionProjects.length}</Badge>
           </div>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
               placeholder="Buscar projeto..."
               value={projectSearch}
               onChange={(e) => setProjectSearch(e.target.value)}
-              className="pl-9 h-9 text-sm"
+              className="pl-8.5 h-8 text-xs"
             />
           </div>
         </div>
 
         <ScrollArea className="flex-1">
-          <div className="p-1.5 space-y-0.5">
+          <div className="p-1 space-y-0.5">
             {filteredProjects.length === 0 ? (
-              <div className="p-4 text-center">
-                <p className="text-xs text-muted-foreground">Nenhum projeto encontrado.</p>
+              <div className="p-3 text-center">
+                <p className="text-[11px] text-muted-foreground">Nenhum projeto encontrado.</p>
               </div>
             ) : (
               filteredProjects.map((p) => {
@@ -111,7 +111,7 @@ export default function OrionTNModels() {
                     onMouseEnter={() => setHoveredId(p.id)}
                     onMouseLeave={() => setHoveredId(null)}
                     className={cn(
-                      "w-full text-left px-2.5 py-2 rounded-md transition-all duration-200 flex items-center justify-between gap-1",
+                      "w-full text-left px-2 py-1.5 rounded transition-all duration-200 flex items-center justify-between gap-1",
                       isSelected
                         ? "bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/50"
                         : "hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-400 border border-transparent"
@@ -119,12 +119,12 @@ export default function OrionTNModels() {
                   >
                     <div className="flex-1 min-w-0 overflow-hidden">
                       <span
-                        className="inline-block whitespace-nowrap font-semibold text-[11px] leading-tight"
+                        className="inline-block whitespace-nowrap font-semibold text-[10.5px] leading-tight"
                         style={getMarqueeStyle(p.clientName, animate, TEXT_AREA_PX)}
                       >
                         {p.clientName}
                       </span>
-                      <p className="text-[9px] text-muted-foreground uppercase tracking-wide mt-0.5">
+                      <p className="text-[8.5px] text-muted-foreground uppercase tracking-wide mt-0.5">
                         {p.systemType}
                       </p>
                     </div>
@@ -160,9 +160,9 @@ export default function OrionTNModels() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-hidden p-4 flex flex-col">
+        <main className="flex-1 overflow-hidden p-3 flex flex-col">
           {selectedProject ? (
-            <div className="w-full max-w-7xl mx-auto flex-1 flex flex-col min-h-0 space-y-4">
+            <div className="w-full max-w-7xl mx-auto flex-1 flex flex-col min-h-0 space-y-3">
               <ModelosEditorWorkspace
                 project={selectedProject}
                 onUpdate={(u) => updateStage(selectedProject, "modelosEditor", u)}
