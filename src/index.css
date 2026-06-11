@@ -296,19 +296,19 @@
   }
 
   .scrollbar-thumb-indigo-200::-webkit-scrollbar-thumb {
-    @apply bg-indigo-200 rounded-full border-2 border-transparent bg-clip-padding;
+    @apply bg-indigo-200 dark:bg-indigo-900/40 rounded-full border-2 border-transparent bg-clip-padding;
   }
 
   .scrollbar-thumb-indigo-300::-webkit-scrollbar-thumb:hover {
-    @apply bg-indigo-300;
+    @apply bg-indigo-300 dark:bg-indigo-800/60;
   }
 
   .scrollbar-thumb-emerald-200::-webkit-scrollbar-thumb {
-    @apply bg-emerald-200 rounded-full border-2 border-transparent bg-clip-padding;
+    @apply bg-emerald-200 dark:bg-emerald-900/40 rounded-full border-2 border-transparent bg-clip-padding;
   }
 
   .scrollbar-thumb-emerald-300::-webkit-scrollbar-thumb:hover {
-    @apply bg-emerald-300;
+    @apply bg-emerald-300 dark:bg-emerald-800/60;
   }
 
   /* Marquee / scroll-text animation for long project names */

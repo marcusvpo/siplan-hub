@@ -176,13 +176,13 @@ export default function ProjectsKanban() {
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
                             >
-                              <Card 
-                                className={cn(
-                                  "cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all border-none shadow-md group",
-                                  snapshot.isDragging && "ring-2 ring-primary shadow-xl rotate-2"
-                                )}
-                                onClick={() => setSelectedProject(project)}
-                              >
+                               <Card 
+                                 className={cn(
+                                   "cursor-pointer border border-border/50 dark:border-white/5 hover:border-primary/40 hover:shadow-lg transition-all duration-300 hover:scale-[1.015] hover:-translate-y-0.5 bg-card/75 backdrop-blur-sm shadow-md group",
+                                   snapshot.isDragging && "ring-2 ring-primary shadow-2xl scale-[1.03] rotate-1.5"
+                                 )}
+                                 onClick={() => setSelectedProject(project)}
+                               >
                                 <CardHeader className="p-3 pb-1 space-y-0 flex flex-row items-start justify-between">
                                   <div className="flex-1 min-w-0 mr-2">
                                      <div className="flex items-center gap-1.5 mb-1 flex-wrap">
