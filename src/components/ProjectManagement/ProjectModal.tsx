@@ -94,64 +94,65 @@ export function ProjectModal({
       }}
     >
       <DialogContent className="max-w-[90vw] w-[90vw] h-[90vh] flex flex-col p-0 gap-0">
-        <DialogHeader className="px-6 py-4 border-b shrink-0 flex flex-row items-center justify-between">
-          <div className="flex flex-col gap-1 w-full mr-12">
-            <div className="flex items-center flex-wrap gap-2">
-              {isLoading ? (
-                <DialogTitle>
-                  <Skeleton className="h-8 w-64" />
-                </DialogTitle>
-              ) : (
-                <DialogTitle className="text-xl font-bold flex items-center gap-2 mr-2">
-                  {displayProject?.clientName}
-                  <span className="text-lg font-extrabold text-primary bg-primary/10 px-2 py-0.5 rounded-md border border-primary/20 ml-2">
-                    #{displayProject?.ticketNumber || "..."}
-                  </span>
-                </DialogTitle>
-              )}
+        <DialogHeader className="px-6 py-3 border-b shrink-0 flex flex-row items-start justify-between gap-4">
+          <div className="flex flex-col gap-1 min-w-0 flex-1">
+            {isLoading ? (
+              <DialogTitle>
+                <Skeleton className="h-6 w-64" />
+              </DialogTitle>
+            ) : (
+              <DialogTitle className="text-lg font-bold text-foreground leading-tight break-words">
+                {displayProject?.clientName}
+              </DialogTitle>
+            )}
 
-              <div className="hidden md:block h-6 w-px bg-border mx-2" />
-
-              <Badge
-                variant="default"
-                className="bg-slate-700 hover:bg-slate-800 text-xs shadow-sm"
-              >
-                {displayProject?.systemType || "..."}
-              </Badge>
-
-              {displayProject?.products?.map((product) => (
-                <Badge
-                  key={product}
-                  variant="secondary"
-                  className="border-slate-300 dark:border-slate-800 text-xs shadow-sm"
-                >
-                  {product}
-                </Badge>
-              ))}
-
-              {displayProject?.relatedTickets &&
-                displayProject.relatedTickets.length > 0 && (
-                  <div className="hidden md:block h-6 w-px bg-border mx-2" />
-                )}
-
-              {displayProject?.relatedTickets?.map((ticket, index) => (
-                <span
-                  key={index}
-                  className="text-sm text-muted-foreground flex items-center gap-1 bg-muted/50 px-2 py-0.5 rounded-md border border-border/50"
-                >
-                  <span className="font-medium text-xs uppercase opacity-70">
-                    {ticket.name}:
-                  </span>
-                  <span className="font-semibold">{ticket.number}</span>
+            {!isLoading && (
+              <div className="flex items-center flex-wrap gap-2 text-xs">
+                <span className="text-[11px] font-extrabold text-primary bg-primary/10 px-2 py-0.5 rounded-md border border-primary/20 shrink-0">
+                  #{displayProject?.ticketNumber || "..."}
                 </span>
-              ))}
-            </div>
-            <DialogDescription className="mt-1">
+
+                <Badge
+                  variant="default"
+                  className="bg-slate-700 hover:bg-slate-800 text-xs shadow-sm"
+                >
+                  {displayProject?.systemType || "..."}
+                </Badge>
+
+                {displayProject?.products?.map((product) => (
+                  <Badge
+                    key={product}
+                    variant="secondary"
+                    className="border-slate-300 dark:border-slate-800 text-xs shadow-sm"
+                  >
+                    {product}
+                  </Badge>
+                ))}
+
+                {displayProject?.relatedTickets &&
+                  displayProject.relatedTickets.length > 0 && (
+                    <div className="hidden md:block h-3.5 w-px bg-border mx-0.5" />
+                  )}
+
+                {displayProject?.relatedTickets?.map((ticket, index) => (
+                  <span
+                    key={index}
+                    className="text-[11px] text-muted-foreground flex items-center gap-1 bg-muted/50 px-2 py-0.5 rounded-md border border-border/50"
+                  >
+                    <span className="font-medium uppercase opacity-70">
+                      {ticket.name}:
+                    </span>
+                    <span className="font-semibold">{ticket.number}</span>
+                  </span>
+                ))}
+              </div>
+            )}
+            <DialogDescription className="text-[11px] text-muted-foreground">
               Detalhes e gerenciamento do projeto.
             </DialogDescription>
           </div>
           
-          <div className="flex items-center gap-2.5 absolute right-12 top-4">
+          <div className="flex items-center gap-2 shrink-0 mr-8 mt-0.5">
             {displayProject?.id && (
               <>
                 <ChecklistStatusButton
@@ -169,7 +170,7 @@ export function ProjectModal({
             <Button
               variant="ghost"
               size="icon"
-              className="h-9 w-9 text-muted-foreground hover:text-foreground"
+              className="h-8 w-8 text-muted-foreground hover:text-foreground shrink-0"
               onClick={() => {
                 if (displayProject?.id) {
                   navigate(`/projects/${displayProject.id}`);
@@ -178,7 +179,7 @@ export function ProjectModal({
               }}
               title="Tela Cheia"
             >
-              <Maximize2 className="h-4.5 w-4.5" />
+              <Maximize2 className="h-4 w-4" />
             </Button>
           </div>
         </DialogHeader>

@@ -20,6 +20,8 @@
 - [ ] **Sidebar**:
     - Background should match or be very subtly distinct from the main page.
     - Floating sidebar should have `shadow-layered`.
-- [ ] **Modals/Dialogs**:
+- [ ] **Modals/Dialogs & Page Headers**:
     - Overlay backdrop blur/opacity.
     - Panel should have deep `shadow-layered`.
+    - **Header Layout & Overlaps**: Avoid placing badges, status indicators, or action buttons in absolutely positioned containers inside headers (e.g. `absolute right-12 top-4`). Keep them in the standard flex flow (`flex flex-row items-start justify-between`) and use right margins (like `mr-8` or `mr-10`) to clear absolute-positioned dialog Close buttons.
+    - **Text Truncation & Wraps**: Avoid aggressively truncating critical information like client names or ticket subjects with `truncate` in headers. Use responsive wrapping layouts (`break-words`, `leading-tight`, `flex-wrap`) so text wraps naturally and all details remain visible on all screen sizes.
