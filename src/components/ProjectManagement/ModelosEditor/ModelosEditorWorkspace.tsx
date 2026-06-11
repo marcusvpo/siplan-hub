@@ -188,15 +188,15 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
     };
 
     const renderFileRow = (file: AttachedFile, type: 'sent' | 'available', list: AttachedFile[]) => (
-        <div key={file.id} className={cn("flex items-center justify-between p-2 rounded-md bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800 text-sm transition-all duration-200", file.isDone && "bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900/50")}>
-            <div className="flex items-center gap-3 overflow-hidden">
+        <div key={file.id} className={cn("flex items-center justify-between p-1.5 rounded-md bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800 text-xs transition-all duration-200", file.isDone && "bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900/50")}>
+            <div className="flex items-center gap-2 overflow-hidden">
                 <Checkbox
                     checked={!!file.isDone}
                     disabled={!canEditProjects}
                     onCheckedChange={() => handleToggleFileDone(file, type, list)}
-                    className="data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500 rounded flex-shrink-0"
+                    className="data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500 rounded flex-shrink-0 h-3.5 w-3.5"
                 />
-                <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <span className={cn("truncate font-medium transition-colors cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400", file.isDone && "text-muted-foreground line-through")} onClick={(e) => { e.preventDefault(); handleFileView(file); }}>{file.name}</span>
@@ -206,16 +206,16 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                     </TooltipContent>
                 </Tooltip>
             </div>
-            <div className="flex items-center gap-1 shrink-0">
-                <Button variant="ghost" size="icon" className="h-7 w-7 text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20" title="Visualizar arquivo" onClick={(e) => { e.preventDefault(); handleFileView(file); }}>
-                    <Eye className="h-3.5 w-3.5" />
+            <div className="flex items-center gap-0.5 shrink-0">
+                <Button variant="ghost" size="icon" className="h-6 w-6 text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20" title="Visualizar arquivo" onClick={(e) => { e.preventDefault(); handleFileView(file); }}>
+                    <Eye className="h-3 w-3" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-7 w-7 transition-colors hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20" title="Baixar" onClick={(e) => { e.preventDefault(); handleFileDownload(file); }}>
-                    <Download className="h-3.5 w-3.5" />
+                <Button variant="ghost" size="icon" className="h-6 w-6 transition-colors hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20" title="Baixar" onClick={(e) => { e.preventDefault(); handleFileDownload(file); }}>
+                    <Download className="h-3 w-3" />
                 </Button>
                 {canDeleteFiles && (
-                <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20" title="Excluir" onClick={(e) => { e.preventDefault(); handleRemoveFile(file, type, list); }}>
-                    <Trash2 className="h-3.5 w-3.5" />
+                <Button variant="ghost" size="icon" className="h-6 w-6 text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20" title="Excluir" onClick={(e) => { e.preventDefault(); handleRemoveFile(file, type, list); }}>
+                    <Trash2 className="h-3 w-3" />
                 </Button>
                 )}
             </div>
@@ -229,15 +229,15 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
         const actualDone = stage.sentFiles.filter(f => f.isDone).length;
 
         return (
-            <div className="w-full space-y-2 bg-white/50 dark:bg-slate-900/50 p-4 rounded-xl border border-indigo-100 dark:border-indigo-900/30">
-                <div className="flex items-center justify-between text-xs font-bold uppercase tracking-widest text-indigo-700 dark:text-indigo-400">
-                    <span className="flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4" />
+            <div className="w-full space-y-1.5 bg-white/50 dark:bg-slate-900/50 p-3 rounded-lg border border-indigo-100 dark:border-indigo-900/30">
+                <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-indigo-700 dark:text-indigo-400">
+                    <span className="flex items-center gap-1.5">
+                        <CheckCircle2 className="h-3.5 w-3.5" />
                         Progresso dos Modelos
                     </span>
                     <span>{actualDone} de {totalModels} ({Math.round((actualDone / totalModels) * 100)}%)</span>
                 </div>
-                <div className="h-2 w-full bg-indigo-100 dark:bg-indigo-900/20 rounded-full overflow-hidden">
+                <div className="h-1.5 w-full bg-indigo-100 dark:bg-indigo-900/20 rounded-full overflow-hidden">
                     <div
                         className={cn("h-full transition-all duration-500", actualDone === totalModels ? "bg-emerald-500" : "bg-indigo-500")}
                         style={{ width: `${(actualDone / totalModels) * 100}%` }}
@@ -248,16 +248,16 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
     };
 
     return (
-        <div className="col-span-full w-full space-y-6">
+        <div className="col-span-full w-full space-y-4">
             {renderProgress()}
 
-            {/* Force 2 columns always */ }
-            <div className="grid grid-cols-2 gap-4 w-full">
+            {/* Force 2 columns always */}
+            <div className="grid grid-cols-2 gap-3 w-full">
                 {/* Modelos Enviados */}
-                <div className="space-y-3 p-3 lg:p-4 rounded-xl border border-indigo-100 dark:border-indigo-900/30 bg-indigo-50/30 dark:bg-indigo-900/10">
+                <div className="space-y-2.5 p-3 rounded-lg border border-indigo-100 dark:border-indigo-900/30 bg-indigo-50/30 dark:bg-indigo-900/10">
                     <div className="flex items-center justify-between">
-                        <Label className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 flex items-center gap-2">
-                            <UploadCloud className="h-4 w-4" />
+                        <Label className="text-[10px] font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5">
+                            <UploadCloud className="h-3.5 w-3.5" />
                             Modelos Enviados (Cliente)
                         </Label>
                         <input
@@ -267,47 +267,47 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                             multiple
                             onChange={(e) => handleFileUpload(e, 'sent', stage.sentFiles)}
                         />
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5">
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 text-indigo-500 hover:text-indigo-700 hover:bg-indigo-100 dark:hover:bg-indigo-900/40"
+                                className="h-7 w-7 text-indigo-500 hover:text-indigo-700 hover:bg-indigo-100 dark:hover:bg-indigo-900/40"
                                 title="Ver em tela cheia"
                                 onClick={(e) => { e.preventDefault(); setViewingFullscreen('sent'); }}
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
                             </Button>
                             {canUploadFiles && (
                             <Button
                                 variant="outline"
                                 size="sm"
-                                className="h-8 text-xs border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/30"
+                                className="h-7 px-2 text-[10px] border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/30"
                                 onClick={(e) => { e.preventDefault(); sentFileInputRef.current?.click(); }}
                                 disabled={!!uploadingType}
                             >
-                                {uploadingType === 'sent' ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <UploadCloud className="h-3.5 w-3.5 mr-1" />}
+                                {uploadingType === 'sent' ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <UploadCloud className="h-3 w-3 mr-1" />}
                                 Anexar
                             </Button>
                             )}
                         </div>
                     </div>
                     {(!stage.sentFiles || stage.sentFiles.length === 0) && (
-                        <div className="text-xs text-muted-foreground dark:text-slate-400 text-center py-4 bg-white/50 dark:bg-slate-900/50 rounded-lg border border-dashed border-indigo-200 dark:border-indigo-800/50">
+                        <div className="text-[11px] text-muted-foreground dark:text-slate-400 text-center py-3 bg-white/50 dark:bg-slate-900/50 rounded-lg border border-dashed border-indigo-200 dark:border-indigo-800/50">
                             Nenhum modelo do cliente anexado.
                         </div>
                     )}
                     {stage.sentFiles && stage.sentFiles.length > 0 && (
-                        <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-indigo-200 scrollbar-track-transparent hover:scrollbar-thumb-indigo-300 transition-colors">
+                        <div className="space-y-1.5 max-h-[280px] overflow-y-auto pr-1.5 scrollbar-thin scrollbar-thumb-indigo-200 scrollbar-track-transparent hover:scrollbar-thumb-indigo-300 transition-colors">
                             {stage.sentFiles.map(file => renderFileRow(file, 'sent', stage.sentFiles!))}
                         </div>
                     )}
                 </div>
 
                 {/* Modelos Disponíveis */}
-                <div className="space-y-3 p-3 lg:p-4 rounded-xl border border-emerald-100 dark:border-emerald-900/30 bg-emerald-50/30 dark:bg-emerald-900/10">
+                <div className="space-y-2.5 p-3 rounded-lg border border-emerald-100 dark:border-emerald-900/30 bg-emerald-50/30 dark:bg-emerald-900/10">
                     <div className="flex items-center justify-between">
-                        <Label className="text-xs font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
-                            <FileText className="h-4 w-4" />
+                        <Label className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                            <FileText className="h-3.5 w-3.5" />
                             Modelos Disponíveis (JSON)
                         </Label>
                         <input
@@ -318,37 +318,37 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                             multiple
                             onChange={(e) => handleFileUpload(e, 'available', stage.availableFiles)}
                         />
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5">
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 text-emerald-500 hover:text-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/40"
+                                className="h-7 w-7 text-emerald-500 hover:text-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/40"
                                 title="Ver em tela cheia"
                                 onClick={(e) => { e.preventDefault(); setViewingFullscreen('available'); }}
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
                             </Button>
                             {canUploadFiles && (
                             <Button
                                 variant="outline"
                                 size="sm"
-                                className="h-8 text-xs border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30"
+                                className="h-7 px-2 text-[10px] border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30"
                                 onClick={(e) => { e.preventDefault(); availableFileInputRef.current?.click(); }}
                                 disabled={!!uploadingType}
                             >
-                                {uploadingType === 'available' ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <UploadCloud className="h-3.5 w-3.5 mr-1" />}
+                                {uploadingType === 'available' ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <UploadCloud className="h-3 w-3 mr-1" />}
                                 Anexar JSON
                             </Button>
                             )}
                         </div>
                     </div>
                     {(!stage.availableFiles || stage.availableFiles.length === 0) && (
-                        <div className="text-xs text-muted-foreground dark:text-slate-400 text-center py-4 bg-white/50 dark:bg-slate-900/50 rounded-lg border border-dashed border-emerald-200 dark:border-emerald-800/50">
+                        <div className="text-[11px] text-muted-foreground dark:text-slate-400 text-center py-3 bg-white/50 dark:bg-slate-900/50 rounded-lg border border-dashed border-emerald-200 dark:border-emerald-800/50">
                             Nenhum JSON de modelo anexado.
                         </div>
                     )}
                     {stage.availableFiles && stage.availableFiles.length > 0 && (
-                        <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-emerald-200 scrollbar-track-transparent hover:scrollbar-thumb-emerald-300 transition-colors">
+                        <div className="space-y-1.5 max-h-[280px] overflow-y-auto pr-1.5 scrollbar-thin scrollbar-thumb-emerald-200 scrollbar-track-transparent hover:scrollbar-thumb-emerald-300 transition-colors">
                             {stage.availableFiles.map(file => renderFileRow(file, 'available', stage.availableFiles!))}
                         </div>
                     )}
