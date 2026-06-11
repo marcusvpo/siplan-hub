@@ -224,13 +224,13 @@ export function StageCard({
       <AccordionContent className="px-5 pt-2 pb-6 space-y-6">
         {/* Readiness Indicator */}
         {isReadyToStart && status === "todo" && readinessReason && (
-          <div className="bg-gradient-to-r from-emerald-50 to-green-50  p-4 rounded-lg border-2 border-emerald-200 flex items-start gap-3">
+          <div className="bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-950/20 dark:to-green-950/20 p-4 rounded-lg border-2 border-emerald-200 dark:border-emerald-800/50 flex items-start gap-3">
             <div className="text-2xl">🚀</div>
             <div className="flex-1">
-              <p className="font-bold text-emerald-900 mb-1">
+              <p className="font-bold text-emerald-900 dark:text-emerald-300 mb-1">
                 Pré-requisitos Completos!
               </p>
-              <p className="text-sm text-emerald-700">{readinessReason}</p>
+              <p className="text-sm text-emerald-700 dark:text-emerald-400">{readinessReason}</p>
               <button
                 onClick={() => onUpdate({ status: "in-progress" })}
                 disabled={!canEditProjects}
