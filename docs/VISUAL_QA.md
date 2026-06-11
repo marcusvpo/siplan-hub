@@ -9,6 +9,7 @@
 - [ ] **Dark Mode Color Consistency**:
     - Avoid hardcoding light backgrounds (`bg-slate-50`, `bg-cyan-50`, `bg-emerald-50`, etc.) and border/text colors without `dark:` overrides.
     - When using colored/themed inputs or informative banners/alert blocks (cyan, rose, violet, emerald, etc.), apply matching dark translucent variants (e.g., `dark:bg-cyan-950/20 dark:text-cyan-300 dark:border-cyan-900/50`) to maintain readability and theme cohesion.
+    - **Colored Badges & Status Indicators**: Badges of critical, attention, success, done, or pending statuses must never use fixed light colors. Always define explicit dark mode classes with low-opacity backgrounds (e.g., `dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/50` for red statuses, etc.) to guarantee optimal legibility and standard design compliance.
     - Listbox option items text colors must be legible in both themes. Do not use hardcoded dark colors (e.g. `text-slate-600`) without dark variants (e.g. `dark:text-slate-300`).
     - Colored shadows (e.g., `shadow-blue-200`, `shadow-emerald-200`) must be disabled or overridden in dark mode (e.g., `dark:shadow-black/40`) to prevent glowing halos.
 

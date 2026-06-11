@@ -12,6 +12,7 @@ import {
   AttachedFile,
 } from "@/types/ProjectV2";
 import { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { ModelosEditorWorkspace, ModelosMetrics } from "../ModelosEditor/ModelosEditorWorkspace";
 import { format, differenceInDays } from "date-fns";
 import { useProjectForm } from "@/hooks/useProjectForm";
@@ -241,22 +242,53 @@ export function StepsTab({
     <div className="space-y-6 max-w-5xl mx-auto pb-10">
       {/* Feedback Visual do Autosave */}
       <div className="fixed bottom-4 right-4 z-50">
-        {saveState.status === "saving" && (
-          <Badge variant="secondary" className="animate-pulse">
-            Salvando...
-          </Badge>
-        )}
-        {saveState.status === "success" && (
-          <Badge
-            variant="outline"
-            className="bg-green-50 text-green-700 border-green-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50"
-          >
-            {saveState.message}
-          </Badge>
-        )}
-        {saveState.status === "error" && (
-          <Badge variant="destructive">{saveState.message}</Badge>
-        )}
+        <AnimatePresence mode="wait">
+          {saveState.status === "saving" && (
+            <motion.div
+              key="saving"
+              initial={{ opacity: 0, y: 15, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Badge variant="secondary" className="animate-pulse shadow-md border border-muted/50 backdrop-blur-sm bg-secondary/80 flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full">
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                Salvando...
+              </Badge>
+            </motion.div>
+          )}
+          {saveState.status === "success" && (
+            <motion.div
+              key="success"
+              initial={{ opacity: 0, y: 15, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Badge
+                variant="outline"
+                className="bg-emerald-50/90 text-emerald-700 border-emerald-200 dark:bg-emerald-950/80 dark:text-emerald-300 dark:border-emerald-900/50 shadow-md backdrop-blur-sm flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full"
+              >
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                {saveState.message}
+              </Badge>
+            </motion.div>
+          )}
+          {saveState.status === "error" && (
+            <motion.div
+              key="error"
+              initial={{ opacity: 0, y: 15, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Badge variant="destructive" className="shadow-md backdrop-blur-sm flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full">
+                <X className="h-3.5 w-3.5" />
+                {saveState.message}
+              </Badge>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       <Accordion

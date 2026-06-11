@@ -190,10 +190,11 @@ export default function Home() {
                                 initial={{ opacity: 0, y: 15 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: index * 0.05 }}
-                                whileHover={{ y: -3 }}
+                                whileHover={{ y: -4 }}
+                                whileTap={{ scale: 0.98 }}
                             >
                                 <Card
-                                    className="cursor-pointer overflow-hidden border border-border/60 dark:border-white/5 transition-all hover:border-primary/50 hover:shadow-lg group bg-card/60 backdrop-blur-sm shadow-sm h-full"
+                                    className="cursor-pointer overflow-hidden border border-border/60 dark:border-white/5 transition-all duration-300 hover:scale-[1.02] hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5 dark:hover:shadow-indigo-500/10 group bg-card/60 backdrop-blur-sm shadow-sm h-full"
                                     onClick={() => handleCardClick(item)}
                                 >
                                     <CardContent className="p-4">
@@ -275,11 +276,12 @@ export default function Home() {
                                                 initial={{ opacity: 0, x: -10 }}
                                                 animate={{ opacity: 1, x: 0 }}
                                                 transition={{ delay: idx * 0.05 }}
+                                                whileTap={{ scale: 0.98 }}
                                                 onClick={() => {
                                                     navigate(sub.path);
                                                     setSelectedCategory(null);
                                                 }}
-                                                className="w-full flex items-center gap-4 p-4 rounded-2xl hover:bg-primary/5 hover:text-primary transition-all text-left group border border-transparent hover:border-primary/10"
+                                                className="w-full flex items-center gap-4 p-4 rounded-2xl hover:bg-primary/5 hover:text-primary transition-all text-left group border border-transparent hover:border-primary/10 hover:shadow-sm"
                                             >
                                                 <div className="p-2 rounded-xl bg-muted group-hover:bg-primary group-hover:text-white transition-all duration-300">
                                                     <SubIcon className="h-5 w-5" />
