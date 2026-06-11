@@ -19,7 +19,7 @@ export function Chamado0800Tab({ project }: Chamado0800TabProps) {
   return (
     <div className="space-y-4 pt-2 max-w-4xl mx-auto">
       {/* Profile Header Card */}
-      <Card className="overflow-hidden border-none shadow-md bg-card/60 backdrop-blur-sm">
+      <Card className="overflow-hidden border border-border/50 dark:border-white/10 shadow-md bg-card/60 backdrop-blur-sm">
         <div className="h-8 md:h-10 bg-primary w-full relative">
           <div className="absolute inset-0 bg-black/10"></div>
           {/* Badge for Etapa */}
@@ -67,7 +67,7 @@ export function Chamado0800Tab({ project }: Chamado0800TabProps) {
 
       <div className="space-y-4">
         {project.descricaotramite ? (
-          <Card className="hover:shadow-md transition-all border-l-4 border-l-indigo-500 group bg-card/80">
+          <Card className="hover:shadow-md transition-all border border-border/50 dark:border-white/10 border-l-4 border-l-indigo-500 group bg-card/80">
             <CardHeader className="p-4 pb-2 flex flex-row items-center gap-2.5">
               <Avatar className="w-8 h-8 border shadow-sm group-hover:ring-2 group-hover:ring-indigo-500/30 transition-all">
                 <AvatarFallback className="bg-indigo-100 text-indigo-700 font-bold text-xs">08</AvatarFallback>
