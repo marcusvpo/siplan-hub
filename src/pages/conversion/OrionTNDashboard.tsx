@@ -68,7 +68,7 @@ export default function OrionTNDashboard() {
 
     // Only OrionTN projects
     const orionProjects = useMemo(
-        () => projects.filter((p) => p.systemType === "Orion TN" || p.systemType === "OrionTN"),
+        () => projects.filter((p) => p.systemType === "Orion TN" || p.systemType === "OrionTN" || p.systemType === "Modelos TN"),
         [projects]
     );
 

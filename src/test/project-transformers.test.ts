@@ -39,6 +39,7 @@ describe("project-transformers", () => {
         opNumber: 101,
         salesOrderNumber: 202,
         soldHours: 40,
+        workHours: 25,
         legacySystem: "Siplan",
         specialty: "Fiscal",
         products: ["Prod1", "Prod2"],
@@ -69,6 +70,7 @@ describe("project-transformers", () => {
       expect(result.op_number).toBe(101);
       expect(result.sales_order_number).toBe(202);
       expect(result.sold_hours).toBe(40);
+      expect(result.work_hours).toBe(25);
       expect(result.legacy_system).toBe("Siplan");
       expect(result.specialty).toBe("Fiscal");
       expect(result.products).toEqual(["Prod1", "Prod2"]);
@@ -385,6 +387,7 @@ describe("project-transformers", () => {
         op_number: 101,
         sales_order_number: 202,
         sold_hours: 45,
+        work_hours: 35,
         legacy_system: "Competitor",
         specialty: "Registry",
         products: ["A", "B"],
@@ -438,6 +441,7 @@ describe("project-transformers", () => {
       expect(result.opNumber).toBe(101);
       expect(result.salesOrderNumber).toBe(202);
       expect(result.soldHours).toBe(45);
+      expect(result.workHours).toBe(35);
       expect(result.legacySystem).toBe("Competitor");
       expect(result.specialty).toBe("Registry");
       expect(result.products).toEqual(["A", "B"]);

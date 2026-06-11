@@ -73,6 +73,7 @@ interface ProjectInfo {
   implantationType: string | null;
   legacySystem: string | null;
   soldHours: number | null;
+  workHours?: number | null;
   description: string | null;
 }
 
@@ -148,11 +149,12 @@ export function MyQueueDetailedCard({
             finishedAt: d.conversion_finished_at as string | null,
             observations: d.conversion_observations as string | null,
           });
-          setProjectInfo({
+           setProjectInfo({
             projectLeader: d.project_leader as string | null,
             implantationType: d.implantation_type as string | null,
             legacySystem: d.legacy_system as string | null,
             soldHours: d.sold_hours as number | null,
+            workHours: d.work_hours as number | null,
             description: d.description as string | null,
           });
         }

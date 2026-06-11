@@ -664,11 +664,20 @@ export default function LatestDeployments() {
                               </div>
                             )}
 
-                            {project.soldHours && (
-                              <div>
-                                <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Horas Contratadas</span>
-                                <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 truncate">{project.soldHours} horas</p>
-                              </div>
+                            {project.systemType === "Modelos TN" ? (
+                              project.workHours && (
+                                <div>
+                                  <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Horas de Trabalho</span>
+                                  <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 truncate">{project.workHours} horas</p>
+                                </div>
+                              )
+                            ) : (
+                              project.soldHours && (
+                                <div>
+                                  <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Horas Contratadas</span>
+                                  <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 truncate">{project.soldHours} horas</p>
+                                </div>
+                              )
                             )}
                           </div>
 

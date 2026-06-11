@@ -51,7 +51,7 @@ export default function OrionTNProjects() {
     const [pageSize, setPageSize] = useState(5);
 
     const orionTNProjects = projects.filter(
-        (p) => p.systemType === "Orion TN" || p.systemType === "OrionTN"
+        (p) => p.systemType === "Orion TN" || p.systemType === "OrionTN" || p.systemType === "Modelos TN"
     );
 
     if (isLoading) {

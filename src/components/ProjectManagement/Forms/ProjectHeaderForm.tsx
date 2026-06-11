@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { FileText, User, Clock, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ProjectHeaderFormProps {
   project: ProjectV2;
@@ -13,7 +14,7 @@ export function ProjectHeaderForm({ project }: ProjectHeaderFormProps) {
     <div className="space-y-4">
       <div className="flex items-center gap-2">
          <div className="h-6 w-6 rounded-md bg-primary/10 flex items-center justify-center text-primary">
-           <FileText className="h-3.5 w-3.5" />
+            <FileText className="h-3.5 w-3.5" />
          </div>
          <h3 className="text-lg font-bold text-foreground tracking-tight">Dados do Projeto</h3>
       </div>
@@ -26,8 +27,8 @@ export function ProjectHeaderForm({ project }: ProjectHeaderFormProps) {
                <div className="bg-card hover:bg-accent/50 transition-colors rounded-xl border shadow-sm p-3.5 space-y-1.5 group">
                   <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider group-hover:text-primary transition-colors">Sistema</p>
                   <div className="flex items-center gap-2">
-                    <p className="font-bold text-base">{project.systemType}</p>
-                    <Badge variant="secondary" className="text-[9px] bg-emerald-500/10 text-emerald-600 border-emerald-500/20 h-4 px-1">new</Badge>
+                     <p className="font-bold text-base">{project.systemType}</p>
+                     <Badge variant="secondary" className="text-[9px] bg-emerald-500/10 text-emerald-600 border-emerald-500/20 h-4 px-1">new</Badge>
                   </div>
                </div>
                {/* Chamado */}
@@ -50,19 +51,29 @@ export function ProjectHeaderForm({ project }: ProjectHeaderFormProps) {
                </div>
                {/* Horas */}
                <div className="bg-card hover:bg-accent/50 transition-colors rounded-xl border shadow-sm p-3.5 space-y-1.5 group">
-                  <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider group-hover:text-primary transition-colors">Horas</p>
-                  <p className="font-bold text-base">{project.soldHours || 0}<span className="text-xs text-muted-foreground font-normal ml-1">h</span></p>
+                  <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider group-hover:text-primary transition-colors">
+                    {project.systemType === "Modelos TN" ? "Horas de Trabalho" : "Horas"}
+                  </p>
+                  <p className="font-bold text-base">
+                    {project.systemType === "Modelos TN" ? (project.workHours || 0) : (project.soldHours || 0)}
+                    <span className="text-xs text-muted-foreground font-normal ml-1">h</span>
+                  </p>
                </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
                {/* Legado */}
-               <div className="bg-card hover:bg-accent/50 transition-colors rounded-xl border shadow-sm p-3.5 space-y-1.5 group">
-                  <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider group-hover:text-primary transition-colors">Legado</p>
-                  <p className="font-bold text-base">{project.legacySystem || '-'}</p>
-               </div>
+               {project.systemType !== "Modelos TN" && (
+                 <div className="bg-card hover:bg-accent/50 transition-colors rounded-xl border shadow-sm p-3.5 space-y-1.5 group">
+                    <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider group-hover:text-primary transition-colors">Legado</p>
+                    <p className="font-bold text-base">{project.legacySystem || '-'}</p>
+                 </div>
+               )}
                {/* Próximo Follow-up */}
-               <div className="bg-card hover:bg-accent/50 transition-colors rounded-xl border shadow-sm p-3.5 space-y-1.5 group">
+               <div className={cn(
+                 "bg-card hover:bg-accent/50 transition-colors rounded-xl border shadow-sm p-3.5 space-y-1.5 group",
+                 project.systemType === "Modelos TN" && "col-span-2"
+               )}>
                   <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider group-hover:text-primary transition-colors">Próximo Follow-up</p>
                   <div className="flex items-center gap-2">
                      <Clock className="h-3.5 w-3.5 text-muted-foreground" />

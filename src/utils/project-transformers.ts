@@ -96,6 +96,7 @@ export function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
     opNumber: row.op_number as number | undefined,
     salesOrderNumber: row.sales_order_number as number | undefined,
     soldHours: row.sold_hours as number | undefined,
+    workHours: row.work_hours as number | undefined,
     legacySystem: row.legacy_system as string | undefined,
     specialty: row.specialty as string | undefined,
     products: (row.products as string[]) || [],
@@ -389,6 +390,7 @@ export function transformToDB(project: Partial<ProjectV2>, currentProject?: Proj
   if (project.opNumber !== undefined) dbRow.op_number = project.opNumber;
   if (project.salesOrderNumber !== undefined) dbRow.sales_order_number = project.salesOrderNumber;
   if (project.soldHours !== undefined) dbRow.sold_hours = project.soldHours;
+  if (project.workHours !== undefined) dbRow.work_hours = project.workHours;
   if (project.legacySystem !== undefined) dbRow.legacy_system = project.legacySystem;
   if (project.specialty !== undefined) dbRow.specialty = project.specialty;
   if (project.products !== undefined) dbRow.products = project.products;

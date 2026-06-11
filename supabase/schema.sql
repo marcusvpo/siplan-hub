@@ -241,6 +241,8 @@ ALTER TABLE projects ADD COLUMN IF NOT EXISTS sales_order_number integer;
 ALTER TABLE projects ADD COLUMN IF NOT EXISTS sold_hours numeric;
 ALTER TABLE projects ADD COLUMN IF NOT EXISTS legacy_system text;
 ALTER TABLE projects ADD COLUMN IF NOT EXISTS specialty text;
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS work_hours numeric;
+
 
 -- Criar índices para performance
 CREATE INDEX IF NOT EXISTS idx_projects_priority ON projects(priority);
