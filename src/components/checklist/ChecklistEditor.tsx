@@ -17,7 +17,7 @@ import {
 import { ArrowLeft, Save, History, Settings, Sparkles, FileEdit } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const SYSTEM_TYPES = ["Orion TN", "Orion PRO", "Orion REG", "WebRI"];
+const SYSTEM_TYPES = ["Orion TN", "Orion PRO", "Orion REG", "Modelos TN", "WebRI"];
 
 interface ChecklistEditorProps {
   kind: 'adherence' | 'commercial_checklist';

@@ -46,6 +46,7 @@ BEGIN
       'client_name', project_record.client_name,
       'system_type', project_record.system_type,
       'sold_hours', project_record.sold_hours,
+      'work_hours', project_record.work_hours,
       'overall_progress', project_record.overall_progress,
       'global_status', project_record.global_status,
       'stages', jsonb_build_object(

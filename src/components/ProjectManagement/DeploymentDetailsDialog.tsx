@@ -158,10 +158,12 @@ export function DeploymentDetailsDialog({
                   </div>
                   <div>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Carga Horária
+                      {project.systemType === "Modelos TN" ? "Horas de Trabalho" : "Carga Horária"}
                     </p>
                     <p className="text-sm font-medium text-slate-900 dark:text-slate-200">
-                      {project.soldHours ? `${project.soldHours} horas` : "N/A"}
+                      {project.systemType === "Modelos TN"
+                        ? (project.workHours ? `${project.workHours} horas` : "N/A")
+                        : (project.soldHours ? `${project.soldHours} horas` : "N/A")}
                     </p>
                   </div>
                 </div>

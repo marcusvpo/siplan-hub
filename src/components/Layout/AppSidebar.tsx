@@ -86,7 +86,7 @@ export function AppSidebar() {
     : "/assets/Siplan_logo.png";
 
   const orionTNProjects = projects.filter(
-    (p) => p.systemType === "Orion TN" || p.systemType === "OrionTN",
+    (p) => p.systemType === "Orion TN" || p.systemType === "OrionTN" || p.systemType === "Modelos TN",
   );
 
   return (

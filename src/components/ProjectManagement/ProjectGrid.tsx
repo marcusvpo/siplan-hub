@@ -72,7 +72,7 @@ export function ProjectGrid() {
   }, [projects]);
 
   const uniqueSystemTypes = useMemo(() => {
-    const types = new Set<string>();
+    const types = new Set<string>(["Orion TN", "Orion PRO", "Orion REG", "Modelos TN"]);
     projects.forEach((p) => {
       if (p.systemType) types.add(p.systemType);
     });

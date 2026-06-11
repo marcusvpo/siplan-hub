@@ -114,10 +114,13 @@ export function ProjectCardV3({
 
   const isOrionTN =
     project.systemType === "Orion TN" ||
+    project.systemType === "Modelos TN" ||
     project.products?.includes("Orion TN") ||
     project.products?.includes("OrionTN");
 
-  const baseStages = [
+  const isModelosTN = project.systemType === "Modelos TN";
+
+  const baseStages = isModelosTN ? [] : [
     { id: "infra", label: "Infra", status: project.stages.infra.status },
     {
       id: "adherence",
@@ -148,7 +151,7 @@ export function ProjectCardV3({
       label: "Implantação",
       status: project.stages.implementation.status,
     },
-    { id: "post", label: "Pós", status: project.stages.post.status },
+    ...(isModelosTN ? [] : [{ id: "post", label: "Pós", status: project.stages.post.status }]),
   ];
 
   const stages = [...baseStages, ...orionStages, ...endStages];

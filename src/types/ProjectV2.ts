@@ -81,6 +81,7 @@ export interface ProjectV2 {
   opNumber?: number;
   salesOrderNumber?: number;
   soldHours?: number;
+  workHours?: number;
   legacySystem?: string;
   specialty?: string;
 

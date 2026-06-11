@@ -23,6 +23,7 @@ export default function OrionTNModels() {
   const orionProjects = useMemo(() => {
     return projects.filter((p) =>
       p.systemType === "Orion TN" ||
+      p.systemType === "Modelos TN" ||
       p.products?.includes("Orion TN") ||
       p.products?.includes("OrionTN")
     );
