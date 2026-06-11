@@ -103,8 +103,9 @@ export default function OrionTNDashboard() {
         }
         const avgProgress = withEditor.length > 0 ? Math.round(totalProgress / withEditor.length) : 0;
 
-        // Recent projects sorted by lastUpdatedAt
-        const recentProjects = [...withEditor]
+        // Active/In-progress projects (status not 'done') sorted by lastUpdatedAt
+        const recentProjects = withEditor
+            .filter((p) => p.stages.modelosEditor?.status !== "done")
             .sort((a, b) => new Date(b.lastUpdatedAt).getTime() - new Date(a.lastUpdatedAt).getTime())
             .slice(0, 10);
 
@@ -341,13 +342,13 @@ export default function OrionTNDashboard() {
                 <CardHeader className="p-4 pb-2">
                     <CardTitle className="text-sm font-bold flex items-center gap-2">
                         <FileText className="h-4 w-4 text-primary" />
-                        Projetos Recentes — Modelos Editor
+                        Projetos em Andamento — Modelos Editor
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="p-4 pt-2">
                     {stats.recentProjects.length === 0 ? (
                         <p className="text-xs text-muted-foreground text-center py-8">
-                            Nenhum projeto com estágio de Modelos Editor encontrado.
+                            Nenhum projeto em andamento no Modelos Editor encontrado.
                         </p>
                     ) : (
                         <div className="relative w-full overflow-auto">
