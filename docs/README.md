@@ -18,8 +18,8 @@ Destinado a analistas de implantação, membros da equipe de conversão e admini
 
 ---
 
-## 📌 Outras Referências Úteis (Raiz do Projeto)
+## 📌 Outras Referências Úteis
 * [README.md](file:///d:/AI/siplan-hub/README.md): Visão geral do repositório, stack de tecnologias, portas e comandos locais rápidos.
-* [Architecture.md](file:///d:/AI/siplan-hub/Architecture.md): Descrição complementar e mapa visual sobre o fluxo de dados em projetos e calendário.
-* [CalendarContext.md](file:///d:/AI/siplan-hub/CalendarContext.md): Documento técnico detalhado sobre as três camadas do calendário para prevenir clipping de eventos.
-* [VISUAL_QA.md](file:///d:/AI/siplan-hub/VISUAL_QA.md): Diretrizes e checklist de design system para manter a consistência de cores, bordas, botões e tipografia.
+* [Architecture.md](file:///d:/AI/siplan-hub/docs/Architecture.md): Descrição complementar e mapa visual sobre o fluxo de dados em projetos e calendário.
+* [CalendarContext.md](file:///d:/AI/siplan-hub/docs/CalendarContext.md): Documento técnico detalhado sobre as três camadas do calendário para prevenir clipping de eventos.
+* [VISUAL_QA.md](file:///d:/AI/siplan-hub/docs/VISUAL_QA.md): Diretrizes e checklist de design system para manter a consistência de cores, bordas, botões e tipografia.
