@@ -103,9 +103,12 @@ export default function OrionTNDashboard() {
         }
         const avgProgress = withEditor.length > 0 ? Math.round(totalProgress / withEditor.length) : 0;
 
-        // Active/In-progress projects (status not 'done') sorted by lastUpdatedAt
+        // Projects in progress or not started (status is 'todo' or 'in-progress') sorted by lastUpdatedAt
         const recentProjects = withEditor
-            .filter((p) => p.stages.modelosEditor?.status !== "done")
+            .filter((p) => {
+                const status = p.stages.modelosEditor?.status;
+                return status === "todo" || status === "in-progress";
+            })
             .sort((a, b) => new Date(b.lastUpdatedAt).getTime() - new Date(a.lastUpdatedAt).getTime())
             .slice(0, 10);
 
