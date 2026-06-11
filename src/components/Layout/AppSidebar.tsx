@@ -92,9 +92,9 @@ export function AppSidebar() {
   return (
     <ShadcnSidebar
       collapsible="icon"
-      className="border-r shadow-xl shadow-black/5"
+      className="border-r border-border/40 bg-sidebar/70 backdrop-blur-md shadow-xl shadow-black/5"
     >
-      <div className="h-16 flex items-center justify-between px-6 border-b bg-sidebar/50 backdrop-blur-sm shrink-0">
+      <div className="h-16 flex items-center justify-between px-6 border-b border-border/40 bg-sidebar/50 backdrop-blur-sm shrink-0">
         {!collapsed && (
           <div className="flex items-center gap-2">
             <img

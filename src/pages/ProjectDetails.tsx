@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Pencil, X } from "lucide-react";
+import { motion } from "framer-motion";
 import { GeneralInfoTab } from "@/components/ProjectManagement/Tabs/GeneralInfoTab";
 import { StepsTab } from "@/components/ProjectManagement/Tabs/StepsTab";
 import { FilesTab } from "@/components/ProjectManagement/Tabs/FilesTab";
@@ -173,35 +174,71 @@ export default function ProjectDetails() {
               ) : project ? (
                 <div className="max-w-7xl mx-auto">
                   <TabsContent value="general" className="m-0 border-none p-0 outline-none">
-                    <GeneralInfoTab 
-                      project={project} 
-                      onUpdate={handleUpdate} 
-                      onStageClick={(id) => {
-                        setActiveStepId(id);
-                        setActiveTab("steps");
-                      }}
-                    />
+                    <motion.div
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <GeneralInfoTab 
+                        project={project} 
+                        onUpdate={handleUpdate} 
+                        onStageClick={(id) => {
+                          setActiveStepId(id);
+                          setActiveTab("steps");
+                        }}
+                      />
+                    </motion.div>
                   </TabsContent>
                   <TabsContent value="steps" className="m-0 border-none p-0 outline-none">
-                    <StepsTab 
-                      project={project} 
-                      onUpdate={handleUpdate} 
-                      activeStepId={activeStepId}
-                      onStepClick={(id) => setActiveStepId(id)}
-                    />
+                    <motion.div
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <StepsTab 
+                        project={project} 
+                        onUpdate={handleUpdate} 
+                        activeStepId={activeStepId}
+                        onStepClick={(id) => setActiveStepId(id)}
+                      />
+                    </motion.div>
                   </TabsContent>
                   <TabsContent value="files" className="m-0 border-none p-0 outline-none">
-                    <FilesTab project={project} onUpdate={handleUpdate} />
+                    <motion.div
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <FilesTab project={project} onUpdate={handleUpdate} />
+                    </motion.div>
                   </TabsContent>
                   <TabsContent value="logs" className="m-0 border-none p-0 outline-none">
-                    <LogsTab project={project} />
+                    <motion.div
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <LogsTab project={project} />
+                    </motion.div>
                   </TabsContent>
                   <TabsContent value="roadmap" className="m-0 border-none p-0 outline-none">
-                    <RoadmapManager projectId={project.id} />
+                    <motion.div
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <RoadmapManager projectId={project.id} />
+                    </motion.div>
                   </TabsContent>
                   {project && (project.TituloChamado || project.descricaotramite || project.ResponsavelAtividade || project.EtapasProjeto) && (
                     <TabsContent value="chamado_0800" className="m-0 border-none p-0 outline-none">
-                      <Chamado0800Tab project={project} />
+                      <motion.div
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <Chamado0800Tab project={project} />
+                      </motion.div>
                     </TabsContent>
                   )}
                 </div>

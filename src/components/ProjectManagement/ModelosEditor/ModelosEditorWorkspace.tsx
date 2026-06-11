@@ -188,7 +188,11 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
     };
 
     const renderFileRow = (file: AttachedFile, type: 'sent' | 'available', list: AttachedFile[]) => (
-        <div key={file.id} className={cn("flex items-center justify-between p-1.5 rounded bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800 text-xs transition-all duration-200 shadow-sm", file.isDone && "bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900/50")}>
+        <div key={file.id} className={cn(
+            "flex items-center justify-between p-1.5 rounded bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800 text-xs transition-all duration-300 shadow-sm hover:shadow-md",
+            type === 'sent' ? "hover:border-indigo-300 dark:hover:border-indigo-700/50" : "hover:border-emerald-300 dark:hover:border-emerald-700/50",
+            file.isDone && "bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900/50"
+        )}>
             <div className="flex items-center gap-2 overflow-hidden">
                 <Checkbox
                     checked={!!file.isDone}
@@ -207,15 +211,15 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                 </Tooltip>
             </div>
             <div className="flex items-center gap-0.5 shrink-0">
-                <Button variant="ghost" size="icon" className="h-6.5 w-6.5 text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20" title="Visualizar arquivo" onClick={(e) => { e.preventDefault(); handleFileView(file); }}>
-                    <Eye className="h-3.5 w-3.5" />
+                <Button variant="ghost" size="icon" className="h-6.5 w-6.5 text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 group" title="Visualizar arquivo" onClick={(e) => { e.preventDefault(); handleFileView(file); }}>
+                    <Eye className="h-3.5 w-3.5 transition-transform duration-200 group-hover:scale-120" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-6.5 w-6.5 transition-colors hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20" title="Baixar" onClick={(e) => { e.preventDefault(); handleFileDownload(file); }}>
-                    <Download className="h-3.5 w-3.5" />
+                <Button variant="ghost" size="icon" className="h-6.5 w-6.5 text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 group" title="Baixar" onClick={(e) => { e.preventDefault(); handleFileDownload(file); }}>
+                    <Download className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-y-0.5" />
                 </Button>
                 {canDeleteFiles && (
-                <Button variant="ghost" size="icon" className="h-6.5 w-6.5 text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20" title="Excluir" onClick={(e) => { e.preventDefault(); handleRemoveFile(file, type, list); }}>
-                    <Trash2 className="h-3.5 w-3.5" />
+                <Button variant="ghost" size="icon" className="h-6.5 w-6.5 text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 group" title="Excluir" onClick={(e) => { e.preventDefault(); handleRemoveFile(file, type, list); }}>
+                    <Trash2 className="h-3.5 w-3.5 transition-transform duration-200 group-hover:scale-110 group-hover:rotate-6" />
                 </Button>
                 )}
             </div>

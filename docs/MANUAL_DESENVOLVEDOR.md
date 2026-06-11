@@ -172,6 +172,15 @@ Ao editar o arquivo `CalendarGrid.tsx` ou implementar lógicas de datas de agend
 ### 2. Padrão de Estilização Shadcn + Tailwind
 * Utilize as cores definidas pelo tema da aplicação no [tailwind.config.ts](file:///d:/AI/siplan-hub/tailwind.config.ts) (como `primary`, `secondary`, `accent`, etc.) em vez de classes de cores fixas (como `bg-red-500`), garantindo o suporte dinâmico ao Dark Mode / Light Mode.
 * Use o utilitário `cn(...)` importado de `@/lib/utils` para mesclar condicionalmente classes de estilização Tailwind.
+* **Padronização de Badges, Status e Destaques Coloridos**:
+  - **NUNCA** utilize apenas cores de fundo claras e texto escuro de forma fixa (ex: `bg-red-100 text-red-700`).
+  - Sempre aplique variantes de tema escuro com opacidade reduzida no fundo e texto suave para evitar elementos ofuscantes:
+    * **Crítico / Vermelho**: `bg-red-100 text-red-700 border-red-200 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/50`
+    * **Atenção / Amarelo**: `bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-950/20 dark:text-yellow-400 dark:border-yellow-900/50`
+    * **Saudável / Sucesso / Verde**: `bg-green-100 text-green-700 border-green-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50`
+    * **Informativo / Em Andamento / Azul**: `bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-800`
+    * **Roxo / Homologação / Violeta**: `bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-950/20 dark:text-purple-400 dark:border-purple-800`
+    * **Pendente / Neutro / Cinza**: `bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-950/20 dark:text-slate-400 dark:border-slate-800`
 
 ### 3. Evitar Bloqueios de UI em Listagens (Virtualização)
 * Ao criar ou refatorar listagens que possam conter centenas de elementos, utilize a biblioteca `react-virtuoso` ou `react-window` já configuradas no projeto.

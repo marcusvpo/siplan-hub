@@ -43,7 +43,7 @@ export function MainLayout({ children }: MainLayoutProps) {
         <AppSidebar />
 
         <div className="flex flex-col flex-1 min-h-[100dvh] overflow-hidden transition-all duration-300 min-w-0">
-          <header className="flex h-16 items-center justify-between gap-4 border-b bg-background/80 backdrop-blur-md px-4 md:px-6 shrink-0 z-10 sticky top-0 overflow-hidden">
+          <header className="flex h-16 items-center justify-between gap-4 border-b border-border/40 bg-background/80 backdrop-blur-md px-4 md:px-6 shrink-0 z-10 sticky top-0 overflow-hidden">
             <div className="flex items-center gap-2 min-w-0">
               <SidebarTrigger className="md:hidden shrink-0" />
               <Breadcrumbs />

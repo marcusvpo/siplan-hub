@@ -216,12 +216,12 @@ export function MyQueueDetailedCard({
     : 0;
 
   const STATUS_COLORS: Record<string, string> = {
-    pending: "bg-amber-100 text-amber-700 border-amber-300",
-    in_progress: "bg-blue-100 text-blue-700 border-blue-300",
-    awaiting_homologation: "bg-purple-100 text-purple-700 border-purple-300",
-    homologation: "bg-violet-100 text-violet-700 border-violet-300",
-    approved: "bg-green-100 text-green-700 border-green-300",
-    done: "bg-emerald-100 text-emerald-700 border-emerald-300",
+    pending: "bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/50",
+    in_progress: "bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-800",
+    awaiting_homologation: "bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-950/20 dark:text-purple-400 dark:border-purple-800",
+    homologation: "bg-violet-100 text-violet-700 border-violet-300 dark:bg-violet-950/20 dark:text-violet-400 dark:border-violet-800",
+    approved: "bg-green-100 text-green-700 border-green-300 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50",
+    done: "bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50",
   };
 
   const STATUS_LABELS: Record<string, string> = {
@@ -352,7 +352,7 @@ export function MyQueueDetailedCard({
               <ProjectInfoSection projectInfo={projectInfo} item={item} />
 
               {/* Conversion Stage Section */}
-              <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+              <div className="bg-purple-50 rounded-lg p-4 border border-purple-200 dark:bg-purple-950/10 dark:border-purple-900/30">
                 <h3 className="font-bold text-purple-700 flex items-center gap-2 mb-4">
                   <Database className="h-4 w-4" />
                   3. Conversão de Dados
@@ -375,13 +375,13 @@ export function MyQueueDetailedCard({
                         className={cn(
                           "h-11 font-medium border-2 transition-all duration-200",
                           fields.status === "done" &&
-                            "bg-emerald-50 text-emerald-900 border-emerald-300",
+                            "bg-emerald-50 text-emerald-900 border-emerald-300 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50",
                           fields.status === "in-progress" &&
-                            "bg-blue-50 text-blue-900 border-blue-300",
+                            "bg-blue-50 text-blue-900 border-blue-300 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/50",
                           fields.status === "blocked" &&
-                            "bg-amber-50 text-amber-900 border-amber-300",
+                            "bg-amber-50 text-amber-900 border-amber-300 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/50",
                           fields.status === "todo" &&
-                            "bg-slate-50 text-slate-900 border-slate-300",
+                            "bg-slate-50 text-slate-900 border-slate-300 dark:bg-slate-950/20 dark:text-slate-400 dark:border-slate-800",
                         )}
                       >
                         <SelectValue />
@@ -420,7 +420,7 @@ export function MyQueueDetailedCard({
                     <Input
                       value={fields.responsible || item.assignedToName || "—"}
                       disabled
-                      className="h-11 border-2 border-violet-200 bg-violet-50/50 font-medium text-violet-900"
+                      className="h-11 border-2 border-violet-200 bg-violet-50/50 font-medium text-violet-900 dark:border-violet-900/30 dark:bg-violet-950/10 dark:text-violet-400"
                     />
                   </div>
 
@@ -434,7 +434,7 @@ export function MyQueueDetailedCard({
                       type="date"
                       value={fields.sentAt ? fields.sentAt.split("T")[0] : ""}
                       disabled
-                      className="h-11 border-2 border-cyan-200 bg-cyan-50/50 font-medium text-cyan-900 cursor-not-allowed"
+                      className="h-11 border-2 border-cyan-200 bg-cyan-50/50 font-medium text-cyan-900 dark:border-cyan-900/30 dark:bg-cyan-950/10 dark:text-cyan-400 cursor-not-allowed"
                       title="Este campo só pode ser alterado em /projects"
                     />
                     <p className="text-[10px] text-muted-foreground">
@@ -463,7 +463,7 @@ export function MyQueueDetailedCard({
                           "conversion_finished_at",
                         );
                       }}
-                      className="h-11 border-2 border-rose-200 hover:border-rose-300 focus:border-rose-400 bg-rose-50/50 font-medium"
+                      className="h-11 border-2 border-rose-200 hover:border-rose-300 focus:border-rose-400 bg-rose-50/50 dark:border-rose-900/30 dark:bg-rose-950/10 dark:text-rose-400 font-medium"
                     />
                   </div>
                 </div>
@@ -490,15 +490,15 @@ export function MyQueueDetailedCard({
                         className={cn(
                           "h-11 border-2 font-medium transition-all",
                           fields.homologationStatus === "Adequado" &&
-                            "bg-green-50 text-green-800 border-green-300",
+                            "bg-green-50 text-green-800 border-green-300 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50",
                           fields.homologationStatus ===
                             "Parcialmente Adequado" &&
-                            "bg-orange-50 text-orange-800 border-orange-300",
+                            "bg-orange-50 text-orange-800 border-orange-300 dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-900/50",
                           fields.homologationStatus === "Inadequado" &&
-                            "bg-red-50 text-red-800 border-red-300",
+                            "bg-red-50 text-red-800 border-red-300 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/50",
                           fields.homologationStatus ===
                             "Aguardando Adequação" &&
-                            "bg-gray-50 text-gray-800 border-gray-300",
+                            "bg-gray-50 text-gray-800 border-gray-300 dark:bg-slate-900/30 dark:text-slate-400 dark:border-slate-800",
                         )}
                       >
                         <SelectValue placeholder="Selecione..." />
@@ -560,7 +560,7 @@ export function MyQueueDetailedCard({
                         )
                       }
                       placeholder="Nome do responsável..."
-                      className="h-11 border-2 border-violet-200 hover:border-violet-300 focus:border-violet-400 bg-violet-50/50"
+                      className="h-11 border-2 border-violet-200 hover:border-violet-300 focus:border-violet-400 bg-violet-50/50 dark:border-violet-900/30 dark:bg-violet-950/10 dark:text-violet-400"
                     />
                   </div>
                 </div>
@@ -573,7 +573,7 @@ export function MyQueueDetailedCard({
                       Observações & Detalhes
                     </Label>
                   </div>
-                  <div className="rounded-xl border-2 border-amber-200 overflow-hidden bg-amber-50/30">
+                  <div className="rounded-xl border-2 border-amber-200 overflow-hidden bg-amber-50/30 dark:border-amber-900/30 dark:bg-amber-950/10">
                     <RichTextEditor
                       content={getEditorContent(fields.observations)}
                       onChange={(content) =>
