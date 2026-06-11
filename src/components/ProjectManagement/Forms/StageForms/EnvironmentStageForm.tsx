@@ -25,7 +25,7 @@ export function EnvironmentStageForm({
         onChange={(e) => onUpdate({ osVersion: e.target.value })}
         disabled={!canEditProjects}
         placeholder="Ex: Windows Server 2022"
-        className="h-11 border-2 border-emerald-200 hover:border-emerald-300 focus:border-emerald-400 bg-emerald-50/50 font-medium"
+        className="h-11 border-2 border-emerald-200 hover:border-emerald-300 focus:border-emerald-400 bg-emerald-50/50 dark:border-emerald-900/50 dark:hover:border-emerald-800 dark:focus:border-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-300 font-medium"
       />
     </div>
   );

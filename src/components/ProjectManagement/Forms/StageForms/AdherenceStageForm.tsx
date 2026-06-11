@@ -143,7 +143,7 @@ export function AdherenceStageForm({
 
       {/* 2. Original Product Gap Fields (retained at the bottom) */}
       <div className="border-t pt-5 space-y-4">
-        <div className="flex items-center space-x-3 p-3 bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg border border-amber-200">
+        <div className="flex items-center space-x-3 p-3 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 rounded-lg border border-amber-200 dark:border-amber-900/50">
           <Checkbox
             id="has-gap"
             checked={stage.hasProductGap || false}
@@ -151,17 +151,17 @@ export function AdherenceStageForm({
               onUpdate({ hasProductGap: checked === true })
             }
             disabled={!canEditProjects || response?.status === "approved"}
-            className="border-amber-400 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
+            className="border-amber-400 dark:border-amber-800 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
           />
           <Label
             htmlFor="has-gap"
-            className="text-amber-800 font-semibold cursor-pointer text-xs uppercase tracking-wide"
+            className="text-amber-800 dark:text-amber-300 font-semibold cursor-pointer text-xs uppercase tracking-wide"
           >
             ⚠️ Existe Gap de Produto?
           </Label>
         </div>
         {stage.hasProductGap && (
-          <div className="bg-gradient-to-br from-red-50 to-orange-50 p-5 rounded-xl space-y-4 border-2 border-red-200 shadow-sm">
+          <div className="bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/15 dark:to-orange-950/15 p-5 rounded-xl space-y-4 border-2 border-red-200 dark:border-red-900/50 shadow-sm">
             <div className="space-y-2.5">
               <Label className="text-xs font-bold uppercase tracking-widest text-red-600 flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
@@ -171,7 +171,7 @@ export function AdherenceStageForm({
                 value={stage.gapDescription || ""}
                 onChange={(e) => onUpdate({ gapDescription: e.target.value })}
                 disabled={!canEditProjects || response?.status === "approved"}
-                className="min-h-[100px] border-2 border-red-200 focus:border-red-400 bg-white text-xs"
+                className="min-h-[100px] border-2 border-red-200 focus:border-red-400 bg-white dark:bg-slate-950/20 dark:text-red-300 dark:border-red-900/50 dark:focus:border-red-600 text-xs"
                 placeholder="Descreva detalhadamente o gap identificado..."
               />
             </div>

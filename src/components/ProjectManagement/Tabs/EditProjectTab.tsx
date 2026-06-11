@@ -82,7 +82,7 @@ export function EditProjectTab({ project, onUpdate }: TabProps) {
         {saveState.status === "success" && (
           <Badge
             variant="outline"
-            className="bg-green-50 text-green-700 border-green-200"
+            className="bg-green-50 text-green-700 border-green-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50"
           >
             {saveState.message}
           </Badge>
@@ -502,7 +502,7 @@ export function EditProjectTab({ project, onUpdate }: TabProps) {
               </Label>
               <Input
                 type="date"
-                className="border-red-200 focus:border-red-500"
+                className="border-red-200 focus:border-red-500 dark:border-red-900/50 dark:focus:border-red-500"
                 value={
                   data.nextFollowUpDate
                     ? new Date(data.nextFollowUpDate)

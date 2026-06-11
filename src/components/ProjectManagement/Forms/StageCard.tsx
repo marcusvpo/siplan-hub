@@ -66,15 +66,15 @@ export function StageCard({
   const getStatusColor = (s: StageStatus) => {
     switch (s) {
       case "done":
-        return "bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-emerald-200";
+        return "bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-emerald-200/50 dark:shadow-black/40";
       case "in-progress":
-        return "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-blue-200";
+        return "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-blue-200/50 dark:shadow-black/40";
       case "blocked":
-        return "bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-amber-200";
+        return "bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-amber-200/50 dark:shadow-black/40";
       case "waiting_adjustment":
-        return "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-orange-200";
+        return "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-orange-200/50 dark:shadow-black/40";
       default:
-        return "bg-gradient-to-r from-slate-400 to-slate-500 text-white";
+        return "bg-gradient-to-r from-slate-400 to-slate-500 text-white dark:shadow-black/40";
     }
   };
 
@@ -96,56 +96,56 @@ export function StageCard({
   const getIconBg = (s: StageStatus) => {
     switch (s) {
       case "done":
-        return "bg-gradient-to-br from-emerald-100 to-green-200 text-emerald-700 ring-2 ring-emerald-300";
+        return "bg-gradient-to-br from-emerald-100 to-green-200 text-emerald-700 ring-2 ring-emerald-300 dark:from-emerald-950/40 dark:to-green-900/40 dark:text-emerald-400 dark:ring-emerald-800/50";
       case "in-progress":
-        return "bg-gradient-to-br from-blue-100 to-indigo-200 text-blue-700 ring-2 ring-blue-300";
+        return "bg-gradient-to-br from-blue-100 to-indigo-200 text-blue-700 ring-2 ring-blue-300 dark:from-blue-950/40 dark:to-indigo-900/40 dark:text-blue-400 dark:ring-blue-800/50";
       case "blocked":
-        return "bg-gradient-to-br from-amber-100 to-orange-200 text-amber-700 ring-2 ring-amber-300";
+        return "bg-gradient-to-br from-amber-100 to-orange-200 text-amber-700 ring-2 ring-amber-300 dark:from-amber-950/40 dark:to-orange-900/40 dark:text-amber-400 dark:ring-amber-800/50";
       case "waiting_adjustment":
-        return "bg-gradient-to-br from-orange-100 to-red-200 text-orange-700 ring-2 ring-orange-300";
+        return "bg-gradient-to-br from-orange-100 to-red-200 text-orange-700 ring-2 ring-orange-300 dark:from-orange-950/40 dark:to-red-900/40 dark:text-orange-400 dark:ring-orange-800/50";
       default:
-        return "bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600";
+        return "bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600 dark:from-slate-800/40 dark:to-slate-700/40 dark:text-slate-400 dark:ring-slate-800/50";
     }
   };
 
   const statusOptions =
     id === "adherence" || id === "conversion"
       ? [
-        { value: "todo", label: "Não Iniciado", color: "text-slate-600" },
+        { value: "todo", label: "Não Iniciado", color: "text-slate-600 dark:text-slate-300" },
         {
           value: "in-progress",
           label: id === "adherence" ? "Em Análise" : "Em Andamento",
-          color: "text-blue-600",
+          color: "text-blue-600 dark:text-blue-400",
         },
         {
           value: "done",
           label: id === "adherence" ? "Adequado" : "Finalizado",
-          color: "text-emerald-600",
+          color: "text-emerald-600 dark:text-emerald-400",
         },
         {
           value: "blocked",
           label: id === "adherence" ? "Inadequado" : "Bloqueado",
-          color: "text-amber-600",
+          color: "text-amber-600 dark:text-amber-400",
         },
         ...(id === "adherence"
           ? [
             {
               value: "waiting_adjustment",
               label: "Em Adequação",
-              color: "text-orange-600",
+              color: "text-orange-600 dark:text-orange-400",
             },
           ]
           : []),
       ]
       : [
-        { value: "todo", label: "Não Iniciado", color: "text-slate-600" },
+        { value: "todo", label: "Não Iniciado", color: "text-slate-600 dark:text-slate-300" },
         {
           value: "in-progress",
           label: "Em Andamento",
-          color: "text-blue-600",
+          color: "text-blue-600 dark:text-blue-400",
         },
-        { value: "done", label: "Finalizado", color: "text-emerald-600" },
-        { value: "blocked", label: "Bloqueado", color: "text-amber-600" },
+        { value: "done", label: "Finalizado", color: "text-emerald-600 dark:text-emerald-400" },
+        { value: "blocked", label: "Bloqueado", color: "text-amber-600 dark:text-amber-400" },
       ];
 
   // Helper for Rich Text
@@ -258,15 +258,15 @@ export function StageCard({
                 className={cn(
                   "h-11 font-medium border-2 transition-all duration-200",
                   status === "done" &&
-                  "bg-emerald-50 text-emerald-900 border-emerald-300 hover:border-emerald-400",
+                  "bg-emerald-50 text-emerald-900 border-emerald-300 hover:border-emerald-400 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50 dark:hover:border-emerald-800",
                   status === "in-progress" &&
-                  "bg-blue-50 text-blue-900 border-blue-300 hover:border-blue-400",
+                  "bg-blue-50 text-blue-900 border-blue-300 hover:border-blue-400 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/50 dark:hover:border-blue-800",
                   status === "blocked" &&
-                  "bg-amber-50 text-amber-900 border-amber-300 hover:border-amber-400",
+                  "bg-amber-50 text-amber-900 border-amber-300 hover:border-amber-400 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/50 dark:hover:border-amber-800",
                   status === "waiting_adjustment" &&
-                  "bg-orange-50 text-orange-900 border-orange-300 hover:border-orange-400",
+                  "bg-orange-50 text-orange-900 border-orange-300 hover:border-orange-400 dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-900/50 dark:hover:border-orange-800",
                   status === "todo" &&
-                  "bg-slate-50 text-slate-900 border-slate-300 hover:border-slate-400",
+                  "bg-slate-50 text-slate-900 border-slate-300 hover:border-slate-400 dark:bg-slate-900/50 dark:text-slate-400 dark:border-slate-800/60 dark:hover:border-slate-700",
                 )}
               >
                 <SelectValue />
@@ -308,7 +308,7 @@ export function StageCard({
                 value={responsible}
                 onChange={(v) => onUpdate({ responsible: v })}
                 disabled={!canEditProjects}
-                className="h-11 border-2 border-violet-200 hover:border-violet-300 focus:border-violet-400 bg-violet-50/50"
+                className="h-11 border-2 border-violet-200 hover:border-violet-300 focus:border-violet-400 bg-violet-50/50 dark:border-violet-900/50 dark:hover:border-violet-800 dark:focus:border-violet-650 dark:bg-violet-950/20 dark:text-violet-300"
               />
             </div>
           )}
@@ -339,7 +339,7 @@ export function StageCard({
                   })
                 }
                 disabled={!canEditProjects}
-                className="h-11 border-2 border-cyan-200 hover:border-cyan-300 focus:border-cyan-400 bg-cyan-50/50 font-medium"
+                className="h-11 border-2 border-cyan-200 hover:border-cyan-300 focus:border-cyan-400 bg-cyan-50/50 dark:border-cyan-900/50 dark:hover:border-cyan-800 dark:focus:border-cyan-600 dark:bg-cyan-950/20 dark:text-cyan-300 font-medium"
               />
             </div>
           )}
@@ -368,7 +368,7 @@ export function StageCard({
                   })
                 }
                 disabled={!canEditProjects}
-                className="h-11 border-2 border-rose-200 hover:border-rose-300 focus:border-rose-400 bg-rose-50/50 font-medium"
+                className="h-11 border-2 border-rose-200 hover:border-rose-300 focus:border-rose-400 bg-rose-50/50 dark:border-rose-900/50 dark:hover:border-rose-800 dark:focus:border-rose-600 dark:bg-rose-950/20 dark:text-rose-300 font-medium"
               />
             </div>
           )}
@@ -401,11 +401,11 @@ export function StageCard({
         <div className="space-y-3">
           <div className="flex items-center gap-3">
             <div className="h-1 w-8 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full" />
-            <Label className="text-xs font-bold uppercase tracking-widest text-amber-600">
+            <Label className="text-xs font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400">
               Observações & Detalhes
             </Label>
           </div>
-          <div className="rounded-xl border-2 border-amber-200 overflow-hidden bg-amber-50/30 w-full">
+          <div className="rounded-xl border-2 border-amber-200 dark:border-amber-900/50 overflow-hidden bg-amber-50/30 dark:bg-amber-950/10 w-full">
             <RichTextEditor
               content={getEditorContent(observations)}
               onChange={(content) => onUpdate({ observations: content })}

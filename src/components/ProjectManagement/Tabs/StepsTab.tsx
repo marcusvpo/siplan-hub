@@ -249,7 +249,7 @@ export function StepsTab({
         {saveState.status === "success" && (
           <Badge
             variant="outline"
-            className="bg-green-50 text-green-700 border-green-200"
+            className="bg-green-50 text-green-700 border-green-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50"
           >
             {saveState.message}
           </Badge>

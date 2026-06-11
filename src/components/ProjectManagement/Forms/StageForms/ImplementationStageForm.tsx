@@ -92,10 +92,10 @@ function ImplementationPhaseForm({
             <SelectTrigger
               className={cn(
                 "h-11 border-2 font-medium transition-all",
-                statusColor === "done" && "bg-emerald-50 text-emerald-800 border-emerald-300",
-                statusColor === "in-progress" && (themeColor === "blue" ? "bg-blue-50 text-blue-800 border-blue-300" : "bg-purple-50 text-purple-800 border-purple-300"),
-                statusColor === "blocked" && "bg-amber-50 text-amber-800 border-amber-300",
-                statusColor === "todo" && "bg-slate-50 text-slate-800 border-slate-300",
+                statusColor === "done" && "bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50",
+                statusColor === "in-progress" && (themeColor === "blue" ? "bg-blue-50 text-blue-800 border-blue-300 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/50" : "bg-purple-50 text-purple-800 border-purple-300 dark:bg-purple-950/20 dark:text-purple-400 dark:border-purple-900/50"),
+                statusColor === "blocked" && "bg-amber-50 text-amber-800 border-amber-300 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/50",
+                statusColor === "todo" && "bg-slate-50 text-slate-800 border-slate-300 dark:bg-slate-900/50 dark:text-slate-400 dark:border-slate-800/60",
               )}
             >
               <SelectValue />
@@ -139,8 +139,8 @@ function ImplementationPhaseForm({
             value={phase?.responsible || ""}
             onChange={(v) => onUpdatePhase(phaseKey, { responsible: v })}
             disabled={!canEditProjects}
-            className={cn("h-11 border-2 bg-white",
-              themeColor === "blue" ? "border-indigo-200 hover:border-indigo-300 focus:border-indigo-400" : "border-pink-200 hover:border-pink-300 focus:border-pink-400"
+            className={cn("h-11 border-2 bg-white dark:bg-slate-950/20 dark:text-slate-300",
+              themeColor === "blue" ? "border-indigo-200 hover:border-indigo-300 focus:border-indigo-400 dark:border-indigo-900/50 dark:hover:border-indigo-800 dark:focus:border-indigo-750" : "border-pink-200 hover:border-pink-300 focus:border-pink-400 dark:border-pink-900/50 dark:hover:border-pink-800 dark:focus:border-pink-750"
             )}
           />
         </div>
@@ -164,7 +164,7 @@ function ImplementationPhaseForm({
               })
             }
             disabled={!canEditProjects}
-            className="h-11 border-2 border-cyan-200 hover:border-cyan-300 focus:border-cyan-400 bg-white font-medium"
+            className="h-11 border-2 border-cyan-200 hover:border-cyan-300 focus:border-cyan-400 bg-white dark:bg-cyan-950/20 dark:text-cyan-300 dark:border-cyan-900/50 dark:hover:border-cyan-800 font-medium"
           />
         </div>
         <div className="space-y-2.5">
@@ -187,7 +187,7 @@ function ImplementationPhaseForm({
               })
             }
             disabled={!canEditProjects}
-            className="h-11 border-2 border-rose-200 hover:border-rose-300 focus:border-rose-400 bg-white font-medium"
+            className="h-11 border-2 border-rose-200 hover:border-rose-300 focus:border-rose-400 bg-white dark:bg-rose-950/20 dark:text-rose-300 dark:border-rose-900/50 dark:hover:border-rose-800 font-medium"
           />
         </div>
       </div>
@@ -202,8 +202,8 @@ function ImplementationPhaseForm({
             Observações da {label}
           </Label>
         </div>
-        <div className={cn("rounded-xl border-2 overflow-hidden bg-white",
-          themeColor === "blue" ? "border-blue-200" : "border-purple-200"
+        <div className={cn("rounded-xl border-2 overflow-hidden bg-white dark:bg-slate-900/50",
+          themeColor === "blue" ? "border-blue-200 dark:border-blue-900/50" : "border-purple-200 dark:border-purple-900/50"
         )}>
           <RichTextEditor
             content={getPhaseContent()}
@@ -232,9 +232,9 @@ export function ImplementationStageForm({
         canEditProjects={canEditProjects}
         onUpdatePhase={onUpdatePhase}
         badgeClass="bg-gradient-to-r from-blue-500 to-indigo-600"
-        titleColor="text-blue-900"
-        borderColor="border-blue-200"
-        bgGradient="from-blue-50 via-indigo-50 to-slate-50"
+        titleColor="text-blue-900 dark:text-blue-300"
+        borderColor="border-blue-200 dark:border-blue-900/50"
+        bgGradient="bg-gradient-to-br from-blue-50 via-indigo-50 to-slate-50 dark:from-blue-950/10 dark:via-indigo-950/10 dark:to-slate-900/10"
         glowColor="from-blue-400/10 to-indigo-400/10"
         themeColor="blue"
       />
@@ -247,9 +247,9 @@ export function ImplementationStageForm({
         canEditProjects={canEditProjects}
         onUpdatePhase={onUpdatePhase}
         badgeClass="bg-gradient-to-r from-purple-500 to-pink-600"
-        titleColor="text-purple-900"
-        borderColor="border-purple-200"
-        bgGradient="from-purple-50 via-pink-50 to-slate-50"
+        titleColor="text-purple-900 dark:text-purple-300"
+        borderColor="border-purple-200 dark:border-purple-900/50"
+        bgGradient="bg-gradient-to-br from-purple-50 via-pink-50 to-slate-50 dark:from-purple-950/10 dark:via-pink-950/10 dark:to-slate-900/10"
         glowColor="from-purple-400/10 to-pink-400/10"
         themeColor="purple"
       />

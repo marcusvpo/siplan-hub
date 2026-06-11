@@ -123,7 +123,7 @@ export function ProjectModal({
                 <Badge
                   key={product}
                   variant="secondary"
-                  className="border-slate-300 text-xs shadow-sm"
+                  className="border-slate-300 dark:border-slate-800 text-xs shadow-sm"
                 >
                   {product}
                 </Badge>
