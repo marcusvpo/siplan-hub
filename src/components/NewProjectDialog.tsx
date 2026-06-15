@@ -136,8 +136,8 @@ export const NewProjectDialog = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="lg" className="gap-2">
-          <Plus className="h-5 w-5" />
+        <Button className="gap-1.5 h-9 text-xs">
+          <Plus className="h-4 w-4" />
           Cadastrar Novo Projeto
         </Button>
       </DialogTrigger>

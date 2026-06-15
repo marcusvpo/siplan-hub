@@ -76,7 +76,7 @@ export function MainLayout({ children }: MainLayoutProps) {
             </div>
           </header>
 
-          <main className={`flex-1 flex flex-col ${isNoScrollPage ? 'overflow-hidden' : 'overflow-auto'} ${isModelsPage ? 'p-0' : 'p-4 md:p-6'} min-w-0`}>
+          <main className={`flex-1 flex flex-col ${isNoScrollPage ? 'overflow-hidden' : 'overflow-auto'} ${isModelsPage ? 'p-0' : 'pt-3 md:pt-3 px-4 md:px-6 pb-4 md:pb-6'} min-w-0`}>
             {children}
           </main>
         </div>
