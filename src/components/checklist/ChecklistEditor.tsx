@@ -20,7 +20,7 @@ import { Link } from "react-router-dom";
 const SYSTEM_TYPES = ["Orion TN", "Orion PRO", "Orion REG", "Modelos TN", "WebRI"];
 
 interface ChecklistEditorProps {
-  kind: 'adherence' | 'commercial_checklist';
+  kind: 'adherence' | 'commercial_checklist' | 'homologation_checklist';
   title: string;
   description: string;
   backPath: string;
