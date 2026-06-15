@@ -158,61 +158,56 @@ export function ChecklistEditor({
   return (
     <div className="container mx-auto p-6 space-y-6 max-w-5xl animate-in fade-in duration-300">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-5">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Link to={backPath}>
-              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-            </Link>
-            <h1 className={`text-2xl font-black tracking-tight text-foreground bg-gradient-to-r ${theme.gradient} bg-clip-text text-transparent`}>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-3.5">
+        <div className="flex items-center gap-3">
+          <Link to={backPath}>
+            <Button variant="outline" size="icon" className="h-9 w-9 rounded-full border-muted-foreground/20 hover:bg-muted">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className={`text-xl font-bold tracking-tight text-foreground bg-gradient-to-r ${theme.gradient} bg-clip-text text-transparent`}>
               {title}
             </h1>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {description}
+            </p>
           </div>
-          <p className="text-sm text-muted-foreground pl-10">
-            {description}
-          </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex flex-col gap-1">
-            <Label className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Sistema</Label>
-            <Select value={selectedSystem} onValueChange={setSelectedSystem}>
-              <SelectTrigger className="w-[180px] h-9 border-muted-foreground/30 bg-card font-medium">
-                <SelectValue placeholder="Selecione o Sistema" />
-              </SelectTrigger>
-              <SelectContent>
-                {SYSTEM_TYPES.map((sys) => (
-                  <SelectItem key={sys} value={sys}>
-                    {sys}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Select value={selectedSystem} onValueChange={setSelectedSystem}>
+            <SelectTrigger className="w-[150px] h-9 border-muted-foreground/30 bg-card font-medium text-xs">
+              <SelectValue placeholder="Sistema" />
+            </SelectTrigger>
+            <SelectContent>
+              {SYSTEM_TYPES.map((sys) => (
+                <SelectItem key={sys} value={sys} className="text-xs">
+                  {sys}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-          <div className="flex flex-col gap-1 justify-end pt-5">
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setIsPreviewOpen(true)}
-                className="h-9 gap-1.5 border-muted-foreground/30 bg-card hover:bg-muted"
-              >
-                <Eye className="h-4 w-4" />
-                Visualizar Formulário
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setIsHistoryOpen(true)}
-                className="h-9 gap-1.5 border-muted-foreground/30 bg-card hover:bg-muted"
-              >
-                <History className="h-4 w-4" />
-                Histórico
-              </Button>
-              {extraHeaderButtons}
-            </div>
-          </div>
+          <Button
+            variant="outline"
+            onClick={() => setIsPreviewOpen(true)}
+            className="h-9 gap-1.5 border-muted-foreground/30 bg-card hover:bg-muted text-xs px-3"
+          >
+            <Eye className="h-4 w-4" />
+            Visualizar
+          </Button>
+
+          <Button
+            variant="outline"
+            onClick={() => setIsHistoryOpen(true)}
+            className="h-9 gap-1.5 border-muted-foreground/30 bg-card hover:bg-muted text-xs px-3"
+          >
+            <History className="h-4 w-4" />
+            Histórico
+          </Button>
+
+          {extraHeaderButtons}
         </div>
       </div>
 
