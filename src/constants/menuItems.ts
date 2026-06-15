@@ -214,6 +214,12 @@ export const menuItems: MenuItem[] = [
                 description: "Formulários e checklists de aderência",
             },
             {
+                title: "Editor de Homologação",
+                path: "/implantadores/homologacao",
+                icon: ClipboardList,
+                description: "Roteiros de homologação de dados",
+            },
+            {
                 title: "Roteiro de Treinamento",
                 path: "/implantadores/treinamento",
                 icon: BookOpen,
