@@ -580,9 +580,9 @@ const AdherenceQuestionField = (props: FieldProps) => {
       </div>
 
       {/* Answer Area & Observations Area */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
         {/* Left column: Answer */}
-        <div className="space-y-1.5 md:col-span-2">
+        <div className="space-y-1.5 md:col-span-3">
           {isText ? (
             <div>
               <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Resposta:</Label>
@@ -643,7 +643,7 @@ const AdherenceQuestionField = (props: FieldProps) => {
         </div>
 
         {/* Right column: Impact selector and observations */}
-        <div className="space-y-3 md:col-span-3">
+        <div className="space-y-3 md:col-span-9">
           <div className="space-y-1.5">
             <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
               Possui impacto?
