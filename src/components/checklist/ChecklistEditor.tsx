@@ -65,6 +65,63 @@ export function ChecklistEditor({
     }
   }, [activeTemplate, selectedSystem, isLoadingActive, defaultQuestions]);
 
+  // Round-trip compilation for live preview
+  const currentSchema = React.useMemo(() => {
+    return convertVisualToJSONSchema(
+      questions,
+      `${schemaTitlePrefix} (${selectedSystem})`,
+      schemaDescriptionDefault
+    );
+  }, [questions, selectedSystem, schemaTitlePrefix, schemaDescriptionDefault]);
+
+  const currentUiSchema = React.useMemo(() => {
+    return convertVisualToUISchema(questions);
+  }, [questions]);
+
+  const loadHistoryVersion = (tpl: FormTemplate) => {
+    const parsed = parseJSONSchemaToVisual(tpl.schema_json, tpl.ui_json);
+    setQuestions(parsed);
+    setNotes(`Restaurando configurações da versão v${tpl.version}`);
+    toast({
+      title: "Template carregado",
+      description: `Perguntas da versão v${tpl.version} carregadas no editor.`,
+    });
+  };
+
+  const handlePublish = async () => {
+    if (questions.length === 0) {
+      toast({
+        title: "Erro de Validação",
+        description: "Adicione ao menos uma pergunta ao checklist.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await publishMutation.mutateAsync({
+        kind,
+        system_type: selectedSystem,
+        schema_json: currentSchema,
+        ui_json: currentUiSchema,
+        notes: notes || `Checklist atualizado para ${selectedSystem}`,
+      });
+
+      toast({
+        title: "Sucesso!",
+        description: "Checklist publicado e ativado com sucesso.",
+        className: "bg-green-500 text-white border-green-600",
+      });
+      setNotes("");
+    } catch (err: any) {
+      toast({
+        title: "Erro ao publicar",
+        description: err.message || "Tente novamente mais tarde.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const theme = {
     adherence: {
       text: "text-amber-600 dark:text-amber-400",
