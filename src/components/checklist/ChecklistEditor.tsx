@@ -158,7 +158,7 @@ export function ChecklistEditor({
   return (
     <div className="container mx-auto -mt-3 md:-mt-5 pb-6 px-1 space-y-6 max-w-5xl animate-in fade-in duration-300">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-3.5 min-w-0">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-3.5 min-w-0 flex-wrap">
         <div className="flex items-center gap-3">
           <Link to={backPath}>
             <Button variant="outline" size="icon" className="h-9 w-9 rounded-full border-muted-foreground/20 hover:bg-muted">
@@ -166,7 +166,7 @@ export function ChecklistEditor({
             </Button>
           </Link>
           <div>
-            <h1 className={`text-xl font-bold tracking-tight text-foreground bg-gradient-to-r ${theme.gradient} bg-clip-text text-transparent`}>
+            <h1 className="text-xl font-bold tracking-tight text-foreground whitespace-nowrap">
               {title}
             </h1>
             <p className="text-xs text-muted-foreground mt-0.5">
@@ -195,7 +195,7 @@ export function ChecklistEditor({
             className="h-9 gap-1.5 border-muted-foreground/30 bg-card hover:bg-muted text-xs px-3"
           >
             <Eye className="h-4 w-4" />
-            Visualizar
+            Visualizar Formulário
           </Button>
 
           <Button
