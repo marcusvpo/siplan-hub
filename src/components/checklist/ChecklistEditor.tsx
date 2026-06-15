@@ -65,62 +65,29 @@ export function ChecklistEditor({
     }
   }, [activeTemplate, selectedSystem, isLoadingActive, defaultQuestions]);
 
-  // Round-trip compilation for live preview
-  const currentSchema = React.useMemo(() => {
-    return convertVisualToJSONSchema(
-      questions,
-      `${schemaTitlePrefix} (${selectedSystem})`,
-      schemaDescriptionDefault
-    );
-  }, [questions, selectedSystem, schemaTitlePrefix, schemaDescriptionDefault]);
-
-  const currentUiSchema = React.useMemo(() => {
-    return convertVisualToUISchema(questions);
-  }, [questions]);
-
-  const loadHistoryVersion = (tpl: FormTemplate) => {
-    const parsed = parseJSONSchemaToVisual(tpl.schema_json, tpl.ui_json);
-    setQuestions(parsed);
-    setNotes(`Restaurando configurações da versão v${tpl.version}`);
-    toast({
-      title: "Template carregado",
-      description: `Perguntas da versão v${tpl.version} carregadas no editor.`,
-    });
-  };
-
-  const handlePublish = async () => {
-    if (questions.length === 0) {
-      toast({
-        title: "Erro de Validação",
-        description: "Adicione ao menos uma pergunta ao checklist.",
-        variant: "destructive",
-      });
-      return;
+  const theme = {
+    adherence: {
+      text: "text-amber-600 dark:text-amber-400",
+      bg: "bg-amber-500/5 dark:bg-amber-950/10",
+      border: "border-amber-500/20 dark:border-amber-900/40",
+      gradient: "from-amber-500 to-orange-600",
+      button: "bg-amber-600 hover:bg-amber-700 text-white shadow-md shadow-amber-600/10",
+    },
+    homologation_checklist: {
+      text: "text-indigo-600 dark:text-indigo-400",
+      bg: "bg-indigo-500/5 dark:bg-indigo-950/10",
+      border: "border-indigo-500/20 dark:border-indigo-900/40",
+      gradient: "from-indigo-500 to-blue-600",
+      button: "bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/10",
+    },
+    commercial_checklist: {
+      text: "text-violet-600 dark:text-violet-400",
+      bg: "bg-violet-500/5 dark:bg-violet-950/10",
+      border: "border-violet-500/20 dark:border-violet-900/40",
+      gradient: "from-violet-500 to-purple-600",
+      button: "bg-violet-600 hover:bg-violet-700 text-white shadow-md shadow-violet-600/10",
     }
-
-    try {
-      await publishMutation.mutateAsync({
-        kind,
-        system_type: selectedSystem,
-        schema_json: currentSchema,
-        ui_json: currentUiSchema,
-        notes: notes || `Checklist atualizado para ${selectedSystem}`,
-      });
-
-      toast({
-        title: "Sucesso!",
-        description: "Checklist publicado e ativado com sucesso.",
-        className: "bg-green-500 text-white border-green-600",
-      });
-      setNotes("");
-    } catch (err: any) {
-      toast({
-        title: "Erro ao publicar",
-        description: err.message || "Tente novamente mais tarde.",
-        variant: "destructive",
-      });
-    }
-  };
+  }[kind];
 
   return (
     <div className="container mx-auto p-6 space-y-6 max-w-7xl animate-in fade-in duration-300">
@@ -133,7 +100,7 @@ export function ChecklistEditor({
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             </Link>
-            <h1 className="text-2xl font-black tracking-tight text-foreground bg-gradient-to-r from-primary to-orange-500 bg-clip-text text-transparent">
+            <h1 className={`text-2xl font-black tracking-tight text-foreground bg-gradient-to-r ${theme.gradient} bg-clip-text text-transparent`}>
               {title}
             </h1>
           </div>
@@ -170,13 +137,14 @@ export function ChecklistEditor({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left column: Visual Question Builder (col-span 7) */}
         <div className="lg:col-span-7 flex flex-col space-y-6">
-          <Card className="shadow-lg border-muted/50 overflow-hidden bg-card flex-1 flex flex-col">
+          <Card className="shadow-lg border-muted/50 overflow-hidden bg-card flex-1 flex flex-col relative pt-1">
+            <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${theme.gradient}`} />
             <CardHeader className="bg-muted/30 pb-3 border-b">
               <div className="flex justify-between items-center">
                 <div>
-                  <CardTitle className="text-sm font-bold uppercase tracking-wider text-primary flex items-center gap-2">
+                  <CardTitle className={`text-sm font-bold uppercase tracking-wider ${theme.text} flex items-center gap-2`}>
                     <FileEdit className="h-4 w-4" />
-                    Perguntas do Checklist (Estilo Google Forms)
+                    Campos do Formulário
                   </CardTitle>
                   <CardDescription className="text-xs mt-1">
                     Defina as perguntas que serão respondidas no formulário.
@@ -188,12 +156,13 @@ export function ChecklistEditor({
               </div>
             </CardHeader>
             <CardContent className="p-5 flex-1 overflow-y-auto max-h-[600px] min-h-[400px]">
-              <VisualQuestionBuilder questions={questions} onChange={setQuestions} />
+              <VisualQuestionBuilder questions={questions} onChange={setQuestions} kind={kind} />
             </CardContent>
           </Card>
 
           {/* Publish Action Panel */}
-          <Card className="shadow-lg border-muted/50">
+          <Card className="shadow-lg border-muted/50 relative overflow-hidden pt-1">
+            <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${theme.gradient}`} />
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                 <Settings className="h-4 w-4" />
@@ -216,7 +185,7 @@ export function ChecklistEditor({
                 <Button
                   onClick={handlePublish}
                   disabled={publishMutation.isPending}
-                  className="px-6 gap-2 bg-indigo-600 hover:bg-indigo-700"
+                  className={`px-6 gap-2 ${theme.button}`}
                 >
                   <Save className="h-4 w-4" />
                   Publicar Checklist
@@ -229,12 +198,13 @@ export function ChecklistEditor({
         {/* Right column: Interactive Preview and history (col-span 5) */}
         <div className="lg:col-span-5 flex flex-col space-y-6">
           {/* Live Preview Pane */}
-          <Card className="shadow-lg border-muted/50 bg-card flex-1 flex flex-col">
-            <CardHeader className="bg-primary/5 pb-3 border-b border-primary/10">
-              <CardTitle className="text-sm font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 flex items-center justify-between">
+          <Card className="shadow-lg border-muted/50 bg-card flex-1 flex flex-col relative pt-1">
+            <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${theme.gradient}`} />
+            <CardHeader className={`${theme.bg} pb-3 border-b ${theme.border}`}>
+              <CardTitle className={`text-sm font-bold uppercase tracking-wider ${theme.text} flex items-center justify-between`}>
                 <span className="flex items-center gap-2">
                   <Sparkles className="h-4 w-4 animate-pulse" />
-                  Preview do Checklist
+                  Visualização em Tempo Real
                 </span>
                 <span className="text-[10px] bg-green-500/10 text-green-600 px-2 py-0.5 rounded-full border border-green-500/20 flex items-center gap-1 font-semibold">
                   Ao Vivo
@@ -263,7 +233,8 @@ export function ChecklistEditor({
           </Card>
 
           {/* Version History */}
-          <Card className="shadow-lg border-muted/50">
+          <Card className="shadow-lg border-muted/50 relative overflow-hidden pt-1">
+            <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${theme.gradient}`} />
             <CardHeader className="pb-3 border-b">
               <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                 <History className="h-4 w-4" />
