@@ -215,7 +215,7 @@ export default function EditarFormAderencia() {
   return (
     <ChecklistEditor
       kind="adherence"
-      title="Criador de Formulário de Aderência"
+      title="Criar/Editar Formulários de Aderência"
       description="Adicione e ordene perguntas de forma visual para estruturar a análise de aderência."
       backPath="/implantadores"
       defaultQuestions={DEFAULT_QUESTIONS}
