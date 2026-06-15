@@ -45,49 +45,49 @@ export default function Reports() {
   });
 
   return (
-    <div className="min-h-[calc(100vh-80px)] space-y-8 animate-in fade-in zoom-in-95 duration-700 pb-10">
+    <div className="min-h-[calc(100vh-80px)] space-y-5 animate-in fade-in zoom-in-95 duration-700 pb-10">
       {/* Decorative background element */}
       <div className="fixed inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-primary/5 -z-10" />
 
       <Tabs
         defaultValue="overview"
-        className="space-y-8"
+        className="space-y-5"
         onValueChange={setActiveTab}
       >
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-primary/10">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="h-6 w-1 bg-primary rounded-full" />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70">Intelligence Engine</span>
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4 border-b border-primary/10">
+          <div className="space-y-1">
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <div className="h-4 w-0.75 bg-primary rounded-full" />
+              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-primary/70">Intelligence Engine</span>
             </div>
-            <h2 className="text-3xl font-black tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+            <h2 className="text-xl md:text-2xl font-black tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
               Relatórios & Análises
             </h2>
-            <p className="text-sm text-muted-foreground font-medium max-w-md">
+            <p className="text-xs text-muted-foreground font-medium max-w-md">
               Métricas de performance, tendências de saúde e distribuição de carga em tempo real.
             </p>
           </div>
 
-          <TabsList className="bg-muted/50 backdrop-blur-md p-1 border border-primary/5 rounded-xl shadow-sm self-start md:self-center">
+          <TabsList className="bg-muted/50 backdrop-blur-md p-0.5 border border-primary/5 rounded-lg shadow-sm self-start md:self-center">
             <TabsTrigger 
               value="overview" 
-              className="gap-2 px-5 py-2 data-[state=active]:bg-background data-[state=active]:shadow-md transition-all rounded-lg text-xs font-bold uppercase tracking-wider"
+              className="gap-1.5 px-4 py-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all rounded-md text-[11px] font-bold uppercase tracking-wider"
             >
-              <LayoutDashboard className="h-3.5 w-3.5" />
+              <LayoutDashboard className="h-3 w-3" />
               Visão Geral
             </TabsTrigger>
             <TabsTrigger 
               value="individual" 
-              className="gap-2 px-5 py-2 data-[state=active]:bg-background data-[state=active]:shadow-md transition-all rounded-lg text-xs font-bold uppercase tracking-wider"
+              className="gap-1.5 px-4 py-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all rounded-md text-[11px] font-bold uppercase tracking-wider"
             >
-              <Search className="h-3.5 w-3.5" />
+              <Search className="h-3 w-3" />
               Análise Individual
             </TabsTrigger>
           </TabsList>
         </div>
 
-        <TabsContent value="overview" className="space-y-8 m-0 animate-in fade-in slide-in-from-left-4 duration-500">
-          <div className="bg-card/40 backdrop-blur-sm p-5 rounded-2xl border border-primary/10 shadow-sm transition-all hover:bg-card/60">
+        <TabsContent value="overview" className="space-y-6 m-0 animate-in fade-in slide-in-from-left-4 duration-500">
+          <div className="bg-card/40 backdrop-blur-sm p-2 rounded-xl border border-primary/10 shadow-sm transition-all hover:bg-card/50">
             <ReportsFilters
               onSystemChange={setSystemFilter}
               onDateChange={setDateFilter}

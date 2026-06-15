@@ -37,20 +37,20 @@ export function ReportsFilters({
   };
 
   return (
-    <div className="flex flex-col sm:flex-row gap-4 items-center bg-card p-4 rounded-lg border shadow-sm">
-      <div className="flex items-center gap-2 text-muted-foreground mr-auto">
-        <Filter className="h-4 w-4" />
-        <span className="text-sm font-medium">Filtros:</span>
+    <div className="flex flex-col sm:flex-row gap-3 items-center w-full">
+      <div className="flex items-center gap-1.5 text-muted-foreground mr-auto">
+        <Filter className="h-3.5 w-3.5" />
+        <span className="text-xs font-semibold">Filtros:</span>
       </div>
 
       <Select onValueChange={onSystemChange} defaultValue="all">
-        <SelectTrigger className="w-[180px]">
+        <SelectTrigger className="w-[180px] h-9 text-xs">
           <SelectValue placeholder="Sistema" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">Todos os Sistemas</SelectItem>
+          <SelectItem value="all" className="text-xs">Todos os Sistemas</SelectItem>
           {systems.map((system) => (
-            <SelectItem key={system} value={system}>
+            <SelectItem key={system} value={system} className="text-xs">
               {system}
             </SelectItem>
           ))}
@@ -62,11 +62,11 @@ export function ReportsFilters({
           <Button
             variant={"outline"}
             className={cn(
-              "w-[240px] justify-start text-left font-normal",
+              "w-[200px] h-9 justify-start text-left font-normal text-xs",
               !date && "text-muted-foreground"
             )}
           >
-            <CalendarIcon className="mr-2 h-4 w-4" />
+            <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
             {date ? (
               format(date, "PPP", { locale: ptBR })
             ) : (
