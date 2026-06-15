@@ -14,7 +14,7 @@ import {
   convertVisualToUISchema,
   parseJSONSchemaToVisual,
 } from "@/components/FormRenderer/VisualQuestionBuilder";
-import { ArrowLeft, Save, History, Settings, Sparkles, FileEdit, Eye } from "lucide-react";
+import { ArrowLeft, Save, History, Settings, Sparkles, FileEdit, Eye, Maximize2, Minimize2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   Dialog,
@@ -56,6 +56,7 @@ export function ChecklistEditor({
   const [previewData, setPreviewData] = useState<any>({});
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(false);
 
   // Query templates
   const { data: templates = [], isLoading: isLoadingTemplates } = useFormTemplates(kind, selectedSystem);
@@ -213,9 +214,12 @@ export function ChecklistEditor({
 
       <div className="flex flex-col space-y-6">
         {/* Campos do Formulário */}
-        <Card className="shadow-lg border-muted/50 overflow-hidden bg-card flex flex-col relative pt-1">
-          <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${theme.gradient}`} />
-          <CardHeader className="bg-muted/30 pb-3 border-b">
+        <Card className={isFullScreen 
+          ? "fixed inset-0 z-50 bg-card flex flex-col p-6 rounded-none border-none animate-in fade-in zoom-in-95 duration-200"
+          : "shadow-lg border-muted/50 overflow-hidden bg-card flex flex-col relative pt-1"
+        }>
+          {!isFullScreen && <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${theme.gradient}`} />}
+          <CardHeader className="bg-muted/30 pb-3 border-b shrink-0">
             <div className="flex justify-between items-center">
               <div>
                 <CardTitle className={`text-sm font-bold uppercase tracking-wider ${theme.text} flex items-center gap-2`}>
@@ -226,12 +230,23 @@ export function ChecklistEditor({
                   Defina as perguntas que serão respondidas no formulário.
                 </CardDescription>
               </div>
-              <div className="text-xs text-muted-foreground font-medium bg-muted px-2.5 py-1 rounded-full border">
-                Versão Atual: {activeTemplate ? `v${activeTemplate.version}` : "Nenhuma"}
+              <div className="flex items-center gap-2">
+                <div className="text-xs text-muted-foreground font-medium bg-muted px-2.5 py-1 rounded-full border">
+                  Versão Atual: {activeTemplate ? `v${activeTemplate.version}` : "Nenhuma"}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsFullScreen(!isFullScreen)}
+                  className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
+                  title={isFullScreen ? "Minimizar" : "Tela Cheia"}
+                >
+                  {isFullScreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                </Button>
               </div>
             </div>
           </CardHeader>
-          <CardContent className="p-5 overflow-y-auto max-h-[650px] min-h-[400px]">
+          <CardContent className={`p-5 overflow-y-auto ${isFullScreen ? 'flex-1' : 'max-h-[650px] min-h-[400px]'}`}>
             <VisualQuestionBuilder questions={questions} onChange={setQuestions} kind={kind} />
           </CardContent>
         </Card>
