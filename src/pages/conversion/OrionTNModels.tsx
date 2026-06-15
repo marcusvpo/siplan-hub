@@ -87,7 +87,7 @@ export default function OrionTNModels() {
               placeholder="Buscar projeto..."
               value={projectSearch}
               onChange={(e) => setProjectSearch(e.target.value)}
-              className="pl-8.5 h-8 text-xs"
+              className="pl-8 h-8 text-xs"
             />
           </div>
         </div>
