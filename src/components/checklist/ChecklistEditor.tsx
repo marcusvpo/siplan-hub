@@ -157,7 +157,7 @@ export function ChecklistEditor({
   }[kind];
 
   return (
-    <div className="container mx-auto -mt-3 md:-mt-5 pb-6 px-1 space-y-6 max-w-5xl animate-in fade-in duration-300">
+    <div className="container mx-auto pb-6 px-1 space-y-6 max-w-5xl animate-in fade-in duration-300">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-3.5 min-w-0 flex-wrap">
         <div className="flex items-center gap-3">
