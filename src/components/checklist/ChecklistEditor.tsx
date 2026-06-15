@@ -14,8 +14,15 @@ import {
   convertVisualToUISchema,
   parseJSONSchemaToVisual,
 } from "@/components/FormRenderer/VisualQuestionBuilder";
-import { ArrowLeft, Save, History, Settings, Sparkles, FileEdit } from "lucide-react";
+import { ArrowLeft, Save, History, Settings, Sparkles, FileEdit, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const SYSTEM_TYPES = ["Orion TN", "Orion PRO", "Orion REG", "Modelos TN", "WebRI"];
 
@@ -47,6 +54,7 @@ export function ChecklistEditor({
   const [questions, setQuestions] = useState<VisualQuestion[]>(defaultQuestions);
   const [notes, setNotes] = useState<string>("");
   const [previewData, setPreviewData] = useState<any>({});
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   // Query templates
   const { data: templates = [], isLoading: isLoadingTemplates } = useFormTemplates(kind, selectedSystem);
@@ -183,17 +191,25 @@ export function ChecklistEditor({
             </Select>
           </div>
 
-          {extraHeaderButtons && (
-            <div className="flex flex-col gap-1 justify-end pt-5">
+          <div className="flex flex-col gap-1 justify-end pt-5">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsPreviewOpen(true)}
+                className="h-9 gap-1.5 border-muted-foreground/30 bg-card hover:bg-muted"
+              >
+                <Eye className="h-4 w-4" />
+                Visualizar Formulário
+              </Button>
               {extraHeaderButtons}
             </div>
-          )}
+          </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left column: Visual Question Builder (col-span 7) */}
-        <div className="lg:col-span-7 flex flex-col space-y-6">
+        {/* Left column: Visual Question Builder (col-span 8) */}
+        <div className="lg:col-span-8 flex flex-col space-y-6">
           <Card className="shadow-lg border-muted/50 overflow-hidden bg-card flex-1 flex flex-col relative pt-1">
             <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${theme.gradient}`} />
             <CardHeader className="bg-muted/30 pb-3 border-b">
@@ -252,43 +268,8 @@ export function ChecklistEditor({
           </Card>
         </div>
 
-        {/* Right column: Interactive Preview and history (col-span 5) */}
-        <div className="lg:col-span-5 flex flex-col space-y-6">
-          {/* Live Preview Pane */}
-          <Card className="shadow-lg border-muted/50 bg-card flex-1 flex flex-col relative pt-1">
-            <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${theme.gradient}`} />
-            <CardHeader className={`${theme.bg} pb-3 border-b ${theme.border}`}>
-              <CardTitle className={`text-sm font-bold uppercase tracking-wider ${theme.text} flex items-center justify-between`}>
-                <span className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 animate-pulse" />
-                  Visualização em Tempo Real
-                </span>
-                <span className="text-[10px] bg-green-500/10 text-green-600 px-2 py-0.5 rounded-full border border-green-500/20 flex items-center gap-1 font-semibold">
-                  Ao Vivo
-                </span>
-              </CardTitle>
-              <CardDescription className="text-xs">
-                Veja como o formulário ficará para preenchimento.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-6 flex-1 overflow-y-auto max-h-[500px]">
-              <FormRenderer
-                projectId="preview"
-                schema={currentSchema}
-                uiSchema={currentUiSchema}
-                formData={previewData}
-                onChange={({ formData }) => setPreviewData(formData)}
-                onSubmit={() => {
-                  toast({
-                    title: "Valores válidos no Preview",
-                    description: "O formulário preencheu os requisitos com sucesso.",
-                  });
-                }}
-                submitLabel="Testar Envio"
-              />
-            </CardContent>
-          </Card>
-
+        {/* Right column: Version History (col-span 4) */}
+        <div className="lg:col-span-4 flex flex-col space-y-6">
           {/* Version History */}
           <Card className="shadow-lg border-muted/50 relative overflow-hidden pt-1">
             <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${theme.gradient}`} />
@@ -349,6 +330,45 @@ export function ChecklistEditor({
           </Card>
         </div>
       </div>
+
+      {/* Pop-up de Visualização em Tempo Real (Modal) */}
+      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0 rounded-xl border-muted/50 bg-card">
+          <div className="flex flex-col h-full relative pt-1">
+            <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${theme.gradient}`} />
+            <DialogHeader className={`${theme.bg} p-6 border-b ${theme.border}`}>
+              <DialogTitle className={`text-base font-bold uppercase tracking-wider ${theme.text} flex items-center justify-between`}>
+                <span className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 animate-pulse" />
+                  Visualização em Tempo Real
+                </span>
+                <span className="text-[10px] bg-green-500/10 text-green-600 px-2 py-0.5 rounded-full border border-green-500/20 flex items-center gap-1 font-semibold">
+                  Ao Vivo
+                </span>
+              </DialogTitle>
+              <DialogDescription className="text-xs">
+                Veja e teste como o formulário ficará para preenchimento.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="p-6 overflow-y-auto">
+              <FormRenderer
+                projectId="preview"
+                schema={currentSchema}
+                uiSchema={currentUiSchema}
+                formData={previewData}
+                onChange={({ formData }) => setPreviewData(formData)}
+                onSubmit={() => {
+                  toast({
+                    title: "Valores válidos no Preview",
+                    description: "O formulário preencheu os requisitos com sucesso.",
+                  });
+                }}
+                submitLabel="Testar Envio"
+              />
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {extraDialogs}
     </div>
