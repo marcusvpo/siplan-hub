@@ -55,6 +55,7 @@ export function ChecklistEditor({
   const [notes, setNotes] = useState<string>("");
   const [previewData, setPreviewData] = useState<any>({});
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   // Query templates
   const { data: templates = [], isLoading: isLoadingTemplates } = useFormTemplates(kind, selectedSystem);
@@ -155,7 +156,7 @@ export function ChecklistEditor({
   }[kind];
 
   return (
-    <div className="container mx-auto p-6 space-y-6 max-w-7xl animate-in fade-in duration-300">
+    <div className="container mx-auto p-6 space-y-6 max-w-5xl animate-in fade-in duration-300">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-5">
         <div>
@@ -201,134 +202,78 @@ export function ChecklistEditor({
                 <Eye className="h-4 w-4" />
                 Visualizar Formulário
               </Button>
+              <Button
+                variant="outline"
+                onClick={() => setIsHistoryOpen(true)}
+                className="h-9 gap-1.5 border-muted-foreground/30 bg-card hover:bg-muted"
+              >
+                <History className="h-4 w-4" />
+                Histórico
+              </Button>
               {extraHeaderButtons}
             </div>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left column: Visual Question Builder (col-span 8) */}
-        <div className="lg:col-span-8 flex flex-col space-y-6">
-          <Card className="shadow-lg border-muted/50 overflow-hidden bg-card flex-1 flex flex-col relative pt-1">
-            <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${theme.gradient}`} />
-            <CardHeader className="bg-muted/30 pb-3 border-b">
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle className={`text-sm font-bold uppercase tracking-wider ${theme.text} flex items-center gap-2`}>
-                    <FileEdit className="h-4 w-4" />
-                    Campos do Formulário
-                  </CardTitle>
-                  <CardDescription className="text-xs mt-1">
-                    Defina as perguntas que serão respondidas no formulário.
-                  </CardDescription>
-                </div>
-                <div className="text-xs text-muted-foreground font-medium bg-muted px-2.5 py-1 rounded-full border">
-                  Versão Atual: {activeTemplate ? `v${activeTemplate.version}` : "Nenhuma"}
-                </div>
+      <div className="flex flex-col space-y-6">
+        {/* Campos do Formulário */}
+        <Card className="shadow-lg border-muted/50 overflow-hidden bg-card flex flex-col relative pt-1">
+          <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${theme.gradient}`} />
+          <CardHeader className="bg-muted/30 pb-3 border-b">
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle className={`text-sm font-bold uppercase tracking-wider ${theme.text} flex items-center gap-2`}>
+                  <FileEdit className="h-4 w-4" />
+                  Campos do Formulário
+                </CardTitle>
+                <CardDescription className="text-xs mt-1">
+                  Defina as perguntas que serão respondidas no formulário.
+                </CardDescription>
               </div>
-            </CardHeader>
-            <CardContent className="p-5 flex-1 overflow-y-auto max-h-[600px] min-h-[400px]">
-              <VisualQuestionBuilder questions={questions} onChange={setQuestions} kind={kind} />
-            </CardContent>
-          </Card>
-
-          {/* Publish Action Panel */}
-          <Card className="shadow-lg border-muted/50 relative overflow-hidden pt-1">
-            <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${theme.gradient}`} />
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                <Settings className="h-4 w-4" />
-                Publicar Novo Checklist
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="notes" className="text-xs font-semibold">Notas da Versão / Alterações Efetuadas</Label>
-                <Textarea
-                  id="notes"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Ex: Adicionado novas perguntas específicas."
-                  className="min-h-[70px] border-muted-foreground/30 focus-visible:ring-primary"
-                />
+              <div className="text-xs text-muted-foreground font-medium bg-muted px-2.5 py-1 rounded-full border">
+                Versão Atual: {activeTemplate ? `v${activeTemplate.version}` : "Nenhuma"}
               </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-5 overflow-y-auto max-h-[650px] min-h-[400px]">
+            <VisualQuestionBuilder questions={questions} onChange={setQuestions} kind={kind} />
+          </CardContent>
+        </Card>
 
-              <div className="flex justify-end gap-3">
-                <Button
-                  onClick={handlePublish}
-                  disabled={publishMutation.isPending}
-                  className={`px-6 gap-2 ${theme.button}`}
-                >
-                  <Save className="h-4 w-4" />
-                  Publicar Checklist
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Publish Action Panel */}
+        <Card className="shadow-lg border-muted/50 relative overflow-hidden pt-1">
+          <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${theme.gradient}`} />
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Publicar Novo Checklist
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="notes" className="text-xs font-semibold">Notas da Versão / Alterações Efetuadas</Label>
+              <Textarea
+                id="notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Ex: Adicionado novas perguntas específicas."
+                className="min-h-[70px] border-muted-foreground/30 focus-visible:ring-primary"
+              />
+            </div>
 
-        {/* Right column: Version History (col-span 4) */}
-        <div className="lg:col-span-4 flex flex-col space-y-6">
-          {/* Version History */}
-          <Card className="shadow-lg border-muted/50 relative overflow-hidden pt-1">
-            <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${theme.gradient}`} />
-            <CardHeader className="pb-3 border-b">
-              <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                <History className="h-4 w-4" />
-                Histórico de Versões
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              {isLoadingTemplates ? (
-                <div className="text-center p-6 text-xs text-muted-foreground animate-pulse">
-                  Carregando histórico...
-                </div>
-              ) : templates.length === 0 ? (
-                <div className="text-center p-6 text-xs text-muted-foreground">
-                  Nenhuma versão publicada anteriormente.
-                </div>
-              ) : (
-                <div className="divide-y max-h-[220px] overflow-y-auto">
-                  {templates.map((tpl) => (
-                    <div
-                      key={tpl.id}
-                      className={`p-3.5 flex items-center justify-between gap-4 transition-colors hover:bg-muted/30 ${
-                        tpl.is_active ? "bg-primary/5 hover:bg-primary/10" : ""
-                      }`}
-                    >
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-bold text-xs">Versão v{tpl.version}</span>
-                          {tpl.is_active && (
-                            <span className="text-[9px] bg-green-500/10 text-green-600 px-1.5 py-0.2 rounded-full font-bold border border-green-500/20">
-                              Ativo
-                            </span>
-                          )}
-                          <span className="text-[10px] text-muted-foreground">
-                            {new Date(tpl.created_at).toLocaleDateString()}
-                            {tpl.profiles?.full_name && ` por ${tpl.profiles.full_name}`}
-                          </span>
-                        </div>
-                        <p className="text-xs text-muted-foreground truncate italic">
-                          "{tpl.notes || "Sem notas de versão."}"
-                        </p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => loadHistoryVersion(tpl)}
-                        className="h-7 px-2 text-xs"
-                      >
-                        Carregar
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+            <div className="flex justify-end gap-3">
+              <Button
+                onClick={handlePublish}
+                disabled={publishMutation.isPending}
+                className={`px-6 gap-2 ${theme.button}`}
+              >
+                <Save className="h-4 w-4" />
+                Publicar Checklist
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Pop-up de Visualização em Tempo Real (Modal) */}
@@ -365,6 +310,75 @@ export function ChecklistEditor({
                 }}
                 submitLabel="Testar Envio"
               />
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Pop-up de Histórico de Versões (Modal) */}
+      <Dialog open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto p-0 rounded-xl border-muted/50 bg-card">
+          <div className="flex flex-col h-full relative pt-1">
+            <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${theme.gradient}`} />
+            <DialogHeader className="p-6 border-b pb-4">
+              <DialogTitle className="text-base font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                <History className="h-5 w-5" />
+                Histórico de Versões
+              </DialogTitle>
+              <DialogDescription className="text-xs">
+                Visualize as versões publicadas anteriormente e carregue suas perguntas no editor se necessário.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="p-0 overflow-y-auto max-h-[60vh]">
+              {isLoadingTemplates ? (
+                <div className="text-center p-8 text-xs text-muted-foreground animate-pulse">
+                  Carregando histórico...
+                </div>
+              ) : templates.length === 0 ? (
+                <div className="text-center p-8 text-xs text-muted-foreground">
+                  Nenhuma versão publicada anteriormente.
+                </div>
+              ) : (
+                <div className="divide-y">
+                  {templates.map((tpl) => (
+                    <div
+                      key={tpl.id}
+                      className={`p-4 flex items-center justify-between gap-4 transition-colors hover:bg-muted/30 ${
+                        tpl.is_active ? "bg-primary/5 hover:bg-primary/10" : ""
+                      }`}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-bold text-sm">Versão v{tpl.version}</span>
+                          {tpl.is_active && (
+                            <span className="text-[10px] bg-green-500/10 text-green-600 px-2 py-0.5 rounded-full font-bold border border-green-500/20">
+                              Ativo
+                            </span>
+                          )}
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(tpl.created_at).toLocaleDateString()}
+                            {tpl.profiles?.full_name && ` por ${tpl.profiles.full_name}`}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground truncate italic">
+                          "{tpl.notes || "Sem notas de versão."}"
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          loadHistoryVersion(tpl);
+                          setIsHistoryOpen(false);
+                        }}
+                        className="h-8 px-3 text-xs"
+                      >
+                        Carregar
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </DialogContent>
