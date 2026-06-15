@@ -288,8 +288,8 @@ export function ChecklistEditor({
 
       {/* Pop-up de Visualização em Tempo Real (Modal) */}
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0 rounded-xl border-muted/50 bg-card">
-          <div className="flex flex-col h-full relative pt-1">
+        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0 rounded-xl border-muted/50 bg-card overflow-hidden">
+          <div className="flex flex-col h-full min-h-0 relative pt-1">
             <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${theme.gradient}`} />
             <DialogHeader className={`${theme.bg} p-6 border-b ${theme.border}`}>
               <DialogTitle className={`text-base font-bold uppercase tracking-wider ${theme.text} flex items-center justify-between`}>
@@ -305,7 +305,7 @@ export function ChecklistEditor({
                 Veja e teste como o formulário ficará para preenchimento.
               </DialogDescription>
             </DialogHeader>
-            <div className="p-6 overflow-y-auto">
+            <div className="p-6 overflow-y-auto flex-1 min-h-0">
               <FormRenderer
                 projectId="preview"
                 schema={currentSchema}
@@ -327,8 +327,8 @@ export function ChecklistEditor({
 
       {/* Pop-up de Histórico de Versões (Modal) */}
       <Dialog open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
-        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto p-0 rounded-xl border-muted/50 bg-card">
-          <div className="flex flex-col h-full relative pt-1">
+        <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col p-0 rounded-xl border-muted/50 bg-card overflow-hidden">
+          <div className="flex flex-col h-full min-h-0 relative pt-1">
             <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${theme.gradient}`} />
             <DialogHeader className="p-6 border-b pb-4">
               <DialogTitle className="text-base font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
@@ -339,7 +339,7 @@ export function ChecklistEditor({
                 Visualize as versões publicadas anteriormente e carregue suas perguntas no editor se necessário.
               </DialogDescription>
             </DialogHeader>
-            <div className="p-0 overflow-y-auto max-h-[60vh]">
+            <div className="p-0 overflow-y-auto flex-1 min-h-0">
               {isLoadingTemplates ? (
                 <div className="text-center p-8 text-xs text-muted-foreground animate-pulse">
                   Carregando histórico...
