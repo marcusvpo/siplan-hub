@@ -86,19 +86,19 @@ export function InfraStageForm({
             className={cn(
               "h-11 border-2 font-medium transition-all",
               stage.workstationsStatus === "Adequado" &&
-              "bg-green-50 text-green-800 border-green-300",
+              "bg-green-50 text-green-800 border-green-300 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50",
               stage.workstationsStatus === "Parcialmente Adequado" &&
-              "bg-orange-50 text-orange-800 border-orange-300",
+              "bg-orange-50 text-orange-800 border-orange-300 dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-900/50",
               stage.workstationsStatus === "Inadequado" &&
-              "bg-red-50 text-red-800 border-red-300",
+              "bg-red-50 text-red-800 border-red-300 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/50",
               stage.workstationsStatus === "Aguardando Adequação" &&
-              "bg-gray-50 text-gray-800 border-gray-300",
+              "bg-gray-50 text-gray-800 border-gray-300 dark:bg-slate-900/50 dark:text-slate-400 dark:border-slate-800/60",
             )}
           >
             <SelectValue placeholder="Selecione..." />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="Adequado" className="text-green-600 font-medium">
+            <SelectItem value="Adequado" className="text-green-600 dark:text-emerald-400 font-medium">
               <div className="flex items-center gap-2">
                 <div className="h-2.5 w-2.5 rounded-full bg-green-500" />
                 Adequado
@@ -106,14 +106,14 @@ export function InfraStageForm({
             </SelectItem>
             <SelectItem
               value="Parcialmente Adequado"
-              className="text-orange-600 font-medium"
+              className="text-orange-600 dark:text-orange-400 font-medium"
             >
               <div className="flex items-center gap-2">
                 <div className="h-2.5 w-2.5 rounded-full bg-orange-500" />
                 Parcialmente Adequado
               </div>
             </SelectItem>
-            <SelectItem value="Inadequado" className="text-red-600 font-medium">
+            <SelectItem value="Inadequado" className="text-red-600 dark:text-red-400 font-medium">
               <div className="flex items-center gap-2">
                 <div className="h-2.5 w-2.5 rounded-full bg-red-500" />
                 Inadequado
@@ -121,7 +121,7 @@ export function InfraStageForm({
             </SelectItem>
             <SelectItem
               value="Aguardando Adequação"
-              className="text-gray-600 font-medium"
+              className="text-gray-600 dark:text-slate-400 font-medium"
             >
               <div className="flex items-center gap-2">
                 <div className="h-2.5 w-2.5 rounded-full bg-gray-500" />
@@ -145,19 +145,19 @@ export function InfraStageForm({
             className={cn(
               "h-11 border-2 font-medium transition-all",
               stage.serverStatus === "Adequado" &&
-              "bg-green-50 text-green-800 border-green-300",
+              "bg-green-50 text-green-800 border-green-300 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50",
               stage.serverStatus === "Parcialmente Adequado" &&
-              "bg-orange-50 text-orange-800 border-orange-300",
+              "bg-orange-50 text-orange-800 border-orange-300 dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-900/50",
               stage.serverStatus === "Inadequado" &&
-              "bg-red-50 text-red-800 border-red-300",
+              "bg-red-50 text-red-800 border-red-300 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/50",
               stage.serverStatus === "Aguardando Adequação" &&
-              "bg-gray-50 text-gray-800 border-gray-300",
+              "bg-gray-50 text-gray-800 border-gray-300 dark:bg-slate-900/50 dark:text-slate-400 dark:border-slate-800/60",
             )}
           >
             <SelectValue placeholder="Selecione..." />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="Adequado" className="text-green-600 font-medium">
+            <SelectItem value="Adequado" className="text-green-600 dark:text-emerald-400 font-medium">
               <div className="flex items-center gap-2">
                 <div className="h-2.5 w-2.5 rounded-full bg-green-500" />
                 Adequado
@@ -165,14 +165,14 @@ export function InfraStageForm({
             </SelectItem>
             <SelectItem
               value="Parcialmente Adequado"
-              className="text-orange-600 font-medium"
+              className="text-orange-600 dark:text-orange-400 font-medium"
             >
               <div className="flex items-center gap-2">
                 <div className="h-2.5 w-2.5 rounded-full bg-orange-500" />
                 Parcialmente Adequado
               </div>
             </SelectItem>
-            <SelectItem value="Inadequado" className="text-red-600 font-medium">
+            <SelectItem value="Inadequado" className="text-red-600 dark:text-red-400 font-medium">
               <div className="flex items-center gap-2">
                 <div className="h-2.5 w-2.5 rounded-full bg-red-500" />
                 Inadequado
@@ -180,7 +180,7 @@ export function InfraStageForm({
             </SelectItem>
             <SelectItem
               value="Aguardando Adequação"
-              className="text-gray-600 font-medium"
+              className="text-gray-600 dark:text-slate-400 font-medium"
             >
               <div className="flex items-center gap-2">
                 <div className="h-2.5 w-2.5 rounded-full bg-gray-500" />
@@ -204,7 +204,7 @@ export function InfraStageForm({
             })
           }
           disabled={!canEditProjects}
-          className="h-11 border-2 border-purple-200 hover:border-purple-300 focus:border-purple-400 bg-purple-50/50 font-medium"
+          className="h-11 border-2 border-purple-200 hover:border-purple-300 focus:border-purple-400 bg-purple-50/50 dark:border-purple-900/50 dark:hover:border-purple-800 dark:focus:border-purple-600 dark:bg-purple-950/20 dark:text-purple-300 font-medium"
         />
       </div>
     </>

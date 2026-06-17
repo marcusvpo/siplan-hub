@@ -1,9 +1,11 @@
 import { useLocation, Link } from "react-router-dom";
 import { ChevronRight, Home } from "lucide-react";
+import { useProjectsV2 } from "@/hooks/useProjectsV2";
 
 export function Breadcrumbs() {
   const location = useLocation();
   const pathnames = location.pathname.split("/").filter((x) => x);
+  const { projects } = useProjectsV2();
 
   const breadcrumbMap: Record<string, string> = {
     projects: "Projetos",
@@ -11,9 +13,24 @@ export function Breadcrumbs() {
     engines: "Motores",
     homologation: "Homologação",
     dashboard: "Dashboard",
+    "orion-tn-models": "Modelos Orion TN",
   };
 
-  const getBreadcrumbName = (value: string) => breadcrumbMap[value] || value;
+  const getBreadcrumbName = (value: string) => {
+    if (breadcrumbMap[value]) {
+      return breadcrumbMap[value];
+    }
+    
+    // Check if value is a UUID (length 36, exactly 5 segments separated by hyphens)
+    const isUuid = value.length === 36 && value.split("-").length === 5;
+    if (isUuid) {
+      const foundProject = projects?.find((p) => p.id === value);
+      return foundProject ? foundProject.clientName : "Carregando...";
+    }
+    
+    // Fallback: capitalize first letter and replace hyphens with spaces
+    return value.charAt(0).toUpperCase() + value.slice(1).replace(/-/g, " ");
+  };
 
   return (
     <nav
@@ -36,13 +53,14 @@ export function Breadcrumbs() {
         return (
           <div key={to} className="flex items-center">
             {isLast ? (
-              <span className="font-medium text-foreground capitalize">
+              <span className="font-medium text-foreground max-w-[240px] md:max-w-[360px] truncate" title={name}>
                 {name}
               </span>
             ) : (
               <Link
                 to={to}
-                className="hover:text-foreground transition-colors capitalize"
+                className="hover:text-foreground transition-colors max-w-[200px] truncate"
+                title={name}
               >
                 {name}
               </Link>
@@ -55,11 +73,7 @@ export function Breadcrumbs() {
       {/* Custom Logic for Implantação Parent if needed */}
       {location.pathname === "/projects" && (
         <div className="hidden">
-          {/* This is just a simple path based breadcrumb. 
-                For "Implantação > Projetos" visual, we might need manual overrides if the URL doesn't reflect hierarchy.
-                Since URL is /projects, it shows Home > Projetos. 
-                To show Home > Implantação > Projetos, we'd need to change the logic.
-            */}
+          {/* This is just a simple path based breadcrumb. */}
         </div>
       )}
     </nav>

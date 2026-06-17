@@ -98,28 +98,28 @@ export default function Home() {
     };
 
     return (
-        <div className="container mx-auto py-6 px-6 max-w-6xl space-y-8 animate-in fade-in duration-700">
+        <div className="container mx-auto py-3 px-4 md:px-6 max-w-6xl space-y-5 animate-in fade-in duration-700">
             {/* Header & Search */}
-            <div className="space-y-4 text-center max-w-4xl mx-auto">
-                <div className="flex flex-row items-center justify-center gap-3">
+            <div className="space-y-3 text-center max-w-4xl mx-auto">
+                <div className="flex flex-row items-center justify-center gap-2.5">
                     <img
                         src={logoSrc}
                         alt="Siplan Logo"
-                        className="h-14 w-auto transition-all duration-300 ease-in-out"
+                        className="h-10 md:h-11 w-auto transition-all duration-300 ease-in-out"
                     />
-                    <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl bg-gradient-to-r from-primary to-rose-600 bg-clip-text text-transparent">
+                    <h1 className="text-3xl font-extrabold tracking-tight lg:text-4xl bg-gradient-to-r from-primary to-rose-600 bg-clip-text text-transparent">
                         HUB
                     </h1>
                 </div>
-                <p className="text-muted-foreground text-base">
+                <p className="text-muted-foreground text-xs md:text-sm">
                     Centralize sua gestão e localize ferramentas rapidamente.
                 </p>
 
-                <div className="relative group max-w-lg mx-auto">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                <div className="relative group max-w-md mx-auto">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground group-focus-within:text-primary transition-colors" />
                     <Input
                         placeholder="Encontrar tela..."
-                        className="pl-11 h-12 text-base rounded-2xl border-2 focus-visible:ring-primary/20 transition-all shadow-lg shadow-black/5"
+                        className="pl-10 h-10 text-sm rounded-xl border-2 focus-visible:ring-primary/20 transition-all shadow-md shadow-black/5"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                     />
@@ -173,13 +173,13 @@ export default function Home() {
             </AnimatePresence>
 
             {/* Categories Grid (only show if not searching or if search returns categories) */}
-            <div className="space-y-4">
+            <div className="space-y-3">
                 {search && filteredItems.length > 0 && (
-                    <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground opacity-50 pl-2">
+                    <h2 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-50 pl-2">
                         Categorias Relacionadas
                     </h2>
                 )}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {filteredItems.map((item, index) => {
                         const Icon = item.icon;
 
@@ -187,29 +187,30 @@ export default function Home() {
                             <motion.div
                                 key={item.title}
                                 layout
-                                initial={{ opacity: 0, y: 20 }}
+                                initial={{ opacity: 0, y: 15 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.1 }}
+                                transition={{ delay: index * 0.05 }}
                                 whileHover={{ y: -4 }}
+                                whileTap={{ scale: 0.98 }}
                             >
                                 <Card
-                                    className="cursor-pointer overflow-hidden border-2 transition-all hover:border-primary/50 hover:shadow-xl group border-muted h-full"
+                                    className="cursor-pointer overflow-hidden border border-border/60 dark:border-white/5 transition-all duration-300 hover:scale-[1.02] hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5 dark:hover:shadow-indigo-500/10 group bg-card/60 backdrop-blur-sm shadow-sm h-full"
                                     onClick={() => handleCardClick(item)}
                                 >
-                                    <CardContent className="p-5">
+                                    <CardContent className="p-4">
                                         <div className="flex items-start justify-between">
-                                            <div className="p-2.5 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300">
-                                                <Icon className="h-5 w-5" />
+                                            <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300">
+                                                <Icon className="h-4 w-4" />
                                             </div>
                                             {item.subItems && (
-                                                <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+                                                <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
                                             )}
                                         </div>
 
-                                        <div className="mt-3 space-y-1">
-                                            <h3 className="font-bold text-lg tracking-tight">{item.title}</h3>
+                                        <div className="mt-2.5 space-y-0.5">
+                                            <h3 className="font-bold text-sm tracking-tight">{item.title}</h3>
                                             {item.description && (
-                                                <p className="text-xs text-muted-foreground line-clamp-2">
+                                                <p className="text-[11px] text-muted-foreground line-clamp-2 leading-snug">
                                                     {item.description}
                                                 </p>
                                             )}
@@ -275,11 +276,12 @@ export default function Home() {
                                                 initial={{ opacity: 0, x: -10 }}
                                                 animate={{ opacity: 1, x: 0 }}
                                                 transition={{ delay: idx * 0.05 }}
+                                                whileTap={{ scale: 0.98 }}
                                                 onClick={() => {
                                                     navigate(sub.path);
                                                     setSelectedCategory(null);
                                                 }}
-                                                className="w-full flex items-center gap-4 p-4 rounded-2xl hover:bg-primary/5 hover:text-primary transition-all text-left group border border-transparent hover:border-primary/10"
+                                                className="w-full flex items-center gap-4 p-4 rounded-2xl hover:bg-primary/5 hover:text-primary transition-all text-left group border border-transparent hover:border-primary/10 hover:shadow-sm"
                                             >
                                                 <div className="p-2 rounded-xl bg-muted group-hover:bg-primary group-hover:text-white transition-all duration-300">
                                                     <SubIcon className="h-5 w-5" />

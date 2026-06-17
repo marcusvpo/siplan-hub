@@ -35,6 +35,12 @@
   - Use classes utilitárias do Tailwind.
   - Evite CSS modules ou styled-components, a menos que estritamente necessário para animações complexas.
   - Use `cn()` (`clsx` + `tailwind-merge`) para concatenação condicional de classes.
+  - **Barras de Rolagem (Scrollbars):** Devem seguir o padrão global minimalista definido em [index.css](file:///d:/AI/siplan-hub/src/index.css) (espessura de 8px, trilho transparente e thumb translúcido). Evite redefinir trilhos com cores opacas ou usar scrollbars nativos espessos. Para ocultar, utilize a classe `scrollbar-none`.
+  - **Suporte a Dark Mode:**
+    - Nunca utilize cores fixas de fundo claro (`bg-slate-50`, `bg-blue-50`, etc.) ou contornos e textos sem os respectivos modificadores `dark:`.
+    - Ao estilizar inputs ou banners informativos/alertas temáticos, aplique variantes escuras adequadas (ex: `bg-cyan-50 dark:bg-cyan-950/20 text-slate-900 dark:text-cyan-300 border-cyan-200 dark:border-cyan-900/50`).
+    - Sombras coloridas intensas (ex: `shadow-blue-200`) devem ser anuladas ou substituídas no tema escuro por `dark:shadow-black/40` ou `dark:shadow-none` para evitar auréolas brilhantes.
+    - Garanta que textos em listboxes/popovers/selects tenham cores de texto legíveis em ambos os temas.
 
 ## 3. Regras Críticas (NÃO QUEBRAR)
 

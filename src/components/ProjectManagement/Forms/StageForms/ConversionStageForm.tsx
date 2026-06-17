@@ -178,19 +178,19 @@ export function ConversionStageForm({
             className={cn(
               "h-11 border-2 font-medium transition-all",
               stage.homologationStatus === "Adequado" &&
-              "bg-green-50 text-green-800 border-green-300",
+              "bg-green-50 text-green-800 border-green-300 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50",
               stage.homologationStatus === "Parcialmente Adequado" &&
-              "bg-orange-50 text-orange-800 border-orange-300",
+              "bg-orange-50 text-orange-800 border-orange-300 dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-900/50",
               stage.homologationStatus === "Inadequado" &&
-              "bg-red-50 text-red-800 border-red-300",
+              "bg-red-50 text-red-800 border-red-300 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/50",
               stage.homologationStatus === "Aguardando Adequação" &&
-              "bg-gray-50 text-gray-800 border-gray-300",
+              "bg-gray-50 text-gray-800 border-gray-300 dark:bg-slate-900/50 dark:text-slate-400 dark:border-slate-800/60",
             )}
           >
             <SelectValue placeholder="Selecione..." />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="Adequado" className="text-green-600 font-medium">
+            <SelectItem value="Adequado" className="text-green-600 dark:text-emerald-400 font-medium">
               <div className="flex items-center gap-2">
                 <div className="h-2.5 w-2.5 rounded-full bg-green-500" />
                 Adequado
@@ -198,14 +198,14 @@ export function ConversionStageForm({
             </SelectItem>
             <SelectItem
               value="Parcialmente Adequado"
-              className="text-orange-600 font-medium"
+              className="text-orange-600 dark:text-orange-400 font-medium"
             >
               <div className="flex items-center gap-2">
                 <div className="h-2.5 w-2.5 rounded-full bg-orange-500" />
                 Parcialmente Adequado
               </div>
             </SelectItem>
-            <SelectItem value="Inadequado" className="text-red-600 font-medium">
+            <SelectItem value="Inadequado" className="text-red-600 dark:text-red-400 font-medium">
               <div className="flex items-center gap-2">
                 <div className="h-2.5 w-2.5 rounded-full bg-red-500" />
                 Inadequado
@@ -213,7 +213,7 @@ export function ConversionStageForm({
             </SelectItem>
             <SelectItem
               value="Aguardando Adequação"
-              className="text-gray-600 font-medium"
+              className="text-gray-600 dark:text-slate-400 font-medium"
             >
               <div className="flex items-center gap-2">
                 <div className="h-2.5 w-2.5 rounded-full bg-gray-500" />
@@ -233,7 +233,7 @@ export function ConversionStageForm({
           onChange={(v) =>
             onUpdate({ homologationResponsible: v })
           }
-          className="h-11 border-2 border-violet-200 hover:border-violet-300 focus:border-violet-400 bg-violet-50/50"
+          className="h-11 border-2 border-violet-200 hover:border-violet-300 focus:border-violet-400 bg-violet-50/50 dark:border-violet-900/50 dark:hover:border-violet-800 dark:focus:border-violet-650 dark:bg-violet-950/20 dark:text-violet-300"
         />
       </div>
 
@@ -258,7 +258,7 @@ export function ConversionStageForm({
                 : undefined,
             })
           }
-          className="h-11 border-2 border-rose-200 hover:border-rose-300 focus:border-rose-400 bg-rose-50/50 font-medium"
+          className="h-11 border-2 border-rose-200 hover:border-rose-300 focus:border-rose-400 bg-rose-50/50 dark:border-rose-900/50 dark:hover:border-rose-800 dark:focus:border-rose-600 dark:bg-rose-950/20 dark:text-rose-300 font-medium"
         />
       </div>
     </>

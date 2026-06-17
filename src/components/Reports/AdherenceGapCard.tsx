@@ -34,7 +34,7 @@ export function AdherenceGapCard({ projects }: AdherenceGapCardProps) {
               {projectsWithGap.slice(0, 5).map((p) => (
                 <span
                   key={p.id}
-                  className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full"
+                  className="text-[10px] uppercase font-semibold bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-400 border border-amber-200/50 dark:border-amber-900/40 px-2.5 py-0.5 rounded-full"
                 >
                   {p.clientName}
                 </span>

@@ -5,9 +5,16 @@ import { useProjectsV2 } from "@/hooks/useProjectsV2";
 import { ProjectCardV3 } from "./ProjectCardV3";
 import { ProjectModal } from "./ProjectModal";
 import { ProjectV2 } from "@/types/ProjectV2";
-import { Loader2 } from "lucide-react";
+import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Virtuoso } from "react-virtuoso";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { AdvancedFilters } from "./AdvancedFilters";
 import { useFilterStore } from "@/stores/filterStore";
 import { cn } from "@/lib/utils";
@@ -41,6 +48,25 @@ export function ProjectGrid() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
+  // Pagination State
+  const [pageSize, setPageSize] = useState(3);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Reset to page 1 on filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [
+    searchQuery,
+    viewPreset,
+    healthScore,
+    currentStage,
+    projectLeader,
+    systemType,
+    sortOrder,
+    dateFrom,
+    dateTo,
+  ]);
+
   // Open project from URL if present
   useEffect(() => {
     const projectId = searchParams.get("id");
@@ -72,7 +98,7 @@ export function ProjectGrid() {
   }, [projects]);
 
   const uniqueSystemTypes = useMemo(() => {
-    const types = new Set<string>();
+    const types = new Set<string>(["Orion TN", "Orion PRO", "Orion REG", "Modelos TN"]);
     projects.forEach((p) => {
       if (p.systemType) types.add(p.systemType);
     });
@@ -202,6 +228,17 @@ export function ProjectGrid() {
     dateTo,
   ]);
 
+  const totalItems = filteredAndSortedProjects.length;
+  const totalPages = Math.ceil(totalItems / pageSize);
+
+  const paginatedProjects = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    return filteredAndSortedProjects.slice(
+      startIndex,
+      startIndex + pageSize
+    );
+  }, [filteredAndSortedProjects, currentPage, pageSize]);
+
   const toggleSelection = (id: string, selected: boolean) => {
     if (selected) {
       if (selectedProjectIds.length >= 3) return;
@@ -217,7 +254,7 @@ export function ProjectGrid() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Advanced Filters */}
       <AdvancedFilters
         leaders={uniqueLeaders}
@@ -248,77 +285,141 @@ export function ProjectGrid() {
             )}
           </div>
 
-          {/* Grid with Virtualization */}
-          {filteredAndSortedProjects.length > 0 ? (
-            <div className="flex-1 h-[calc(100vh-210px)]">
-              <Virtuoso
-                data={filteredAndSortedProjects as ProjectV2[]}
-                endReached={() => {
-                  if (hasNextPage) fetchNextPage();
-                }}
-                components={{
-                  Footer: () => {
-                    return (
-                      <div className="flex flex-col">
-                        {isFetchingNextPage && (
-                          <div className="flex justify-center py-4">
-                            <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                          </div>
-                        )}
-                        <div className="h-32" /> {/* Bottom Spacer */}
-                      </div>
-                    );
-                  },
-                }}
-                itemContent={(index, project) => (
-                  <div className={cn("pb-3 pr-2", index === 0 && "pt-4")}>
-                    <ProjectCardV3
-                      key={project.id}
-                      project={project}
-                      onClick={() => setSelectedProject(project)}
-                      selected={selectedProjectIds.includes(project.id)}
-                      onSelect={(selected) =>
-                        toggleSelection(project.id, selected)
-                      }
-                      engineStatus={
-                        getItemByProjectId(project.id)?.engineStatus
-                      }
-                      onAction={(action, project) => {
-                        if (action === "delete") {
-                          if (
-                            confirm(
-                              `Tem certeza que deseja excluir o projeto "${project.clientName}"?\n\nEsta ação é irreversível e apagará TODOS os dados relacionados a este projeto permanentemente.`,
-                            )
-                          ) {
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            (deleteProject as any).mutate(project.id);
-                          }
-                        } else if (action === "removeFromQueue") {
-                          if (
-                            confirm(
-                              `Tem certeza que deseja remover o projeto "${project.clientName}" da fila de conversão?`,
-                            )
-                          ) {
-                            const queueItem = getItemByProjectId(project.id);
-                            if (queueItem) {
-                              removeFromQueue(queueItem.id, project.id);
-                            } else {
-                              console.error(
-                                "Queue item not found for project:",
-                                project.id,
-                              );
-                              // Fallback attempt: just log or inform user
-                              // Or maybe fetch it specifically if not found?
-                              // For now just error out or try to infer queueId? We can't infer queueId easily.
-                              // But if project says it is in conversion, it SHOULD be in queue.
-                            }
+          {/* List of Projects with Pagination */}
+          {paginatedProjects.length > 0 ? (
+            <div className="flex-1 flex flex-col justify-between min-h-0">
+              <div className="space-y-3 pr-2">
+                {paginatedProjects.map((project) => (
+                  <ProjectCardV3
+                    key={project.id}
+                    project={project as ProjectV2}
+                    onClick={() => setSelectedProject(project)}
+                    selected={selectedProjectIds.includes(project.id)}
+                    onSelect={(selected) =>
+                      toggleSelection(project.id, selected)
+                    }
+                    engineStatus={
+                      getItemByProjectId(project.id)?.engineStatus
+                    }
+                    onAction={(action, project) => {
+                      if (action === "delete") {
+                        if (
+                          confirm(
+                            `Tem certeza que deseja excluir o projeto "${project.clientName}"?\n\nEsta ação é irreversível e apagará TODOS os dados relacionados a este projeto permanentemente.`,
+                          )
+                        ) {
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          (deleteProject as any).mutate(project.id);
+                        }
+                      } else if (action === "removeFromQueue") {
+                        if (
+                          confirm(
+                            `Tem certeza que deseja remover o projeto "${project.clientName}" da fila de conversão?`,
+                          )
+                        ) {
+                          const queueItem = getItemByProjectId(project.id);
+                          if (queueItem) {
+                            removeFromQueue(queueItem.id, project.id);
+                          } else {
+                            console.error(
+                              "Queue item not found for project:",
+                              project.id,
+                            );
                           }
                         }
-                      }}
-                    />
+                      }
+                    }}
+                  />
+                ))}
+              </div>
+
+              {/* Pagination Controls */}
+              {totalItems > 0 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t pt-4 mt-6">
+                  <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
+                    <span>
+                      Mostrando <span className="font-medium">{totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1}</span> a{" "}
+                      <span className="font-medium">
+                        {Math.min(currentPage * pageSize, totalItems)}
+                      </span>{" "}
+                      de <span className="font-medium">{totalItems}</span> projetos
+                    </span>
+                    
+                    <div className="flex items-center gap-1.5">
+                      <span>Itens por página:</span>
+                      <Select
+                        value={String(pageSize)}
+                        onValueChange={(val) => {
+                          setPageSize(Number(val));
+                          setCurrentPage(1);
+                        }}
+                      >
+                        <SelectTrigger className="h-7 w-[64px] text-xs">
+                          <SelectValue placeholder={String(pageSize)} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {[3, 5, 10, 50, 100].map((size) => (
+                            <SelectItem key={size} value={String(size)} className="text-xs">
+                              {size}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                )}
-              />
+
+                  {totalPages > 1 && (
+                    <div className="flex items-center gap-1.5">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
+                        className="h-8 w-8 p-0"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      
+                      {Array.from({ length: totalPages }).map((_, idx) => {
+                        const pageNum = idx + 1;
+                        if (
+                          pageNum === 1 ||
+                          pageNum === totalPages ||
+                          (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                        ) {
+                          return (
+                            <Button
+                              key={pageNum}
+                              variant={currentPage === pageNum ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => setCurrentPage(pageNum)}
+                              className="h-8 w-8 text-xs p-0"
+                            >
+                              {pageNum}
+                            </Button>
+                          );
+                        } else if (
+                          pageNum === currentPage - 2 ||
+                          pageNum === currentPage + 2
+                        ) {
+                          return <span key={pageNum} className="px-1 text-xs text-muted-foreground">...</span>;
+                        }
+                        return null;
+                      })}
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                        className="h-8 w-8 p-0"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           ) : (
             <div className="text-center py-20">

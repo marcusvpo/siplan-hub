@@ -34,3 +34,9 @@ dist-ssr
 *.pem
 .vercel
 .env*.local
+
+# TypeScript build info & temp files
+*.tsbuildinfo
+*.tmp
+lint_report.txt
+

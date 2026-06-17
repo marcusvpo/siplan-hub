@@ -31,10 +31,13 @@ export function GeneralInfoTab({ project, onUpdate, onStageClick }: TabProps) {
 
   const isOrionTN =
     project.systemType === "Orion TN" ||
+    project.systemType === "Modelos TN" ||
     project.products?.includes("Orion TN") ||
     project.products?.includes("OrionTN");
 
-  const baseStages = [
+  const isModelosTN = project.systemType === "Modelos TN";
+
+  const baseStages = isModelosTN ? [] : [
     {
       id: "infra",
       label: "Infraestrutura",
@@ -75,12 +78,12 @@ export function GeneralInfoTab({ project, onUpdate, onStageClick }: TabProps) {
       status: data.stages.implementation.status,
       icon: Rocket,
     },
-    {
+    ...(isModelosTN ? [] : [{
       id: "post",
       label: "Pós-Implantação",
       status: data.stages.post.status,
       icon: Power,
-    },
+    }]),
   ];
 
   const stages = [...baseStages, ...orionStages, ...endStages];
@@ -152,7 +155,7 @@ export function GeneralInfoTab({ project, onUpdate, onStageClick }: TabProps) {
         {saveState.status === "success" && (
           <Badge
             variant="outline"
-            className="bg-green-50 text-green-700 border-green-200"
+            className="bg-green-50 text-green-700 border-green-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50"
           >
             {saveState.message}
           </Badge>

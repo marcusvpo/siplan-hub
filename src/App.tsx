@@ -69,6 +69,9 @@ const Implantadores = lazy(() => import("./pages/implantadores/Implantadores"));
 const ImplantadoresAderencia = lazy(() =>
   import("./pages/implantadores/EditarFormAderencia"),
 );
+const ImplantadoresHomologacao = lazy(() =>
+  import("./pages/implantadores/EditarChecklistHomologacao"),
+);
 const CommercialChecklists = lazy(() =>
   import("./pages/commercial/CommercialChecklists"),
 );
@@ -316,6 +319,7 @@ const App = () => (
                           <Route path="/implantadores" element={<Implantadores />} />
                           <Route path="/implantadores/aderencia" element={<ImplantadoresAderencia />} />
                           <Route path="/implantadores/aderencia/:systemType" element={<ImplantadoresAderencia />} />
+                          <Route path="/implantadores/homologacao" element={<ImplantadoresHomologacao />} />
                           <Route path="/implantadores/treinamento" element={<TreinamentoPlaceholder />} />
                           <Route path="/implantadores/transicao" element={<TransicaoPlaceholder />} />
                           <Route path="*" element={<NotFound />} />

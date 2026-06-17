@@ -1,4 +1,4 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   ProjectV2, 
@@ -16,8 +16,6 @@ import {
   Priority
 } from "@/types/ProjectV2";
 
-const ITEMS_PER_PAGE = 20;
-
 import { ViewPreset } from "@/stores/filterStore";
 
 export const useProjectsList = (
@@ -25,18 +23,12 @@ export const useProjectsList = (
   viewPreset: ViewPreset = "active"
 ) => {
   const { 
-    data, 
+    data: projects = [], 
     isLoading, 
-    error,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage 
-  } = useInfiniteQuery({
+    error
+  } = useQuery({
     queryKey: ["projectsList", searchQuery, viewPreset],
-    queryFn: async ({ pageParam = 0 }) => {
-      const from = pageParam * ITEMS_PER_PAGE;
-      const to = from + ITEMS_PER_PAGE - 1;
-
+    queryFn: async () => {
       // Start building the query
       let query = supabase
         .from("projects")
@@ -59,28 +51,13 @@ export const useProjectsList = (
         query = query.or(`client_name.ilike.%${searchQuery}%,ticket_number.ilike.%${searchQuery}%`);
       }
 
-      // Apply View Preset (Server-side filtering for proper pagination)
+      // Apply View Preset (Server-side filtering for proper performance)
       if (viewPreset === "post") {
         query = query.eq("post_status", "in-progress");
       } else if (viewPreset === "active") {
         query = query
           .in("global_status", ["todo", "in-progress"])
-          .not("post_status", "eq", "in-progress"); // Using .not with operator for clearer negation
-          // Note: If post_status is NULL, .not.eq usually excludes it in standard SQL but exact behavior with Supabase filter modifiers:
-          // 'post_status.neq.in-progress' -> 'post_status' != 'in-progress'.
-          // To be safe against NULLS effectively being excluded if we only used neq, 
-          // we rely on the fact that 'not.eq' in Supabase allows NULLs? 
-          // PostgREST: `?post_status=not.eq.in-progress`. 
-          // If this excludes NULLs, we might lose projects. 
-          // BUT, usually a project in 'todo'/'in-progress' global status should have initialized stages.
-          // Let's assume post_status is initialized or safely filters. 
-          // If 'active' projects missing, it means post_status is null.
-          // Correct PostgREST to include nulls: .or(post_status.neq.in-progress,post_status.is.null)
-          // However, chains in Supabase JS SDK are ANDs. 
-          
-          // Let's trust that our projects have defaults or empty strings. 
-          // If we see issues, we will adjust. 
-          // For now, mirroring client logic: !isPostInProgress
+          .not("post_status", "eq", "in-progress");
       } else if (viewPreset === "paused") {
         query = query
           .eq("global_status", "blocked")
@@ -92,33 +69,21 @@ export const useProjectsList = (
       }
       
       const { data, error } = await query
-        .order("updated_at", { ascending: false })
-        .range(from, to);
+        .order("updated_at", { ascending: false });
 
       if (error) throw error;
 
       return ((data as unknown as ProjectRow[]) || []).map(row => userProjectsListTransform(row));
-    },
-    getNextPageParam: (lastPage, allPages) => {
-      // If the last page has fewer items than ITEMS_PER_PAGE, we've reached the end
-      if (lastPage.length < ITEMS_PER_PAGE) {
-        return undefined;
-      }
-      return allPages.length;
-    },
-    initialPageParam: 0,
+    }
   });
-
-  // Flatten the pages into a single array
-  const projects = data?.pages.flatMap(page => page) || [];
 
   return {
     projects,
     isLoading,
     error,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage
+    fetchNextPage: async () => {},
+    hasNextPage: false,
+    isFetchingNextPage: false
   };
 };
 
