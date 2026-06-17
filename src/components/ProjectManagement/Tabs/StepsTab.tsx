@@ -75,6 +75,7 @@ import {
   identifyBottleneck,
 } from "@/lib/predictability-utils";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useAuth } from "@/hooks/useAuth";
 
 interface TabProps {
   project: ProjectV2;
@@ -102,6 +103,10 @@ export function StepsTab({
   const [sendingToConversion, setSendingToConversion] = useState(false);
   const { sendToConversion, getItemByProjectId, removeFromQueue } =
     useConversionQueue();
+  const { user } = useAuth();
+  const currentUserId = user?.id || "";
+  const currentUserName =
+    user?.user_metadata?.full_name || user?.email || "Usuário";
 
   // Scroll into view when activeStepId changes
   useEffect(() => {
@@ -133,7 +138,7 @@ export function StepsTab({
   const stageReadiness = getStageReadiness(data);
   const bottleneck = identifyBottleneck(data);
 
-  const handleSendToConversion = async () => {
+  const handleSendToConversion = async (priority: number) => {
     if (isInConversionQueue) {
       toast({
         title: "Aviso",
@@ -145,16 +150,10 @@ export function StepsTab({
 
     setSendingToConversion(true);
     try {
-      const priority =
-        project.priority === "critical"
-          ? 1
-          : project.priority === "high"
-            ? 2
-            : 3;
       const result = await sendToConversion(
         project.id,
-        project.projectLeader,
-        undefined,
+        currentUserName,
+        currentUserId,
         priority,
       );
 
