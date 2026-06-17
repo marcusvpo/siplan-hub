@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { ChecklistEditor } from "@/components/checklist/ChecklistEditor";
 import { VisualQuestion } from "@/components/FormRenderer/VisualQuestionBuilder";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,15 @@ import {
 import { ClipboardCheck, Eye, Printer, RefreshCw, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { ProjectFormResponse } from "@/hooks/useProjectFormResponse";
+
+interface CompletedFormWithProject extends Omit<ProjectFormResponse, "projects"> {
+  projects: {
+    client_name: string;
+    ticket_number: string | null;
+    system_type: string;
+  } | null;
+}
 
 const DEFAULT_QUESTIONS: VisualQuestion[] = [
   {
@@ -51,10 +60,10 @@ const DEFAULT_QUESTIONS: VisualQuestion[] = [
 export default function EditarFormAderencia() {
   const { toast } = useToast();
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
-  const [completedForms, setCompletedForms] = useState<any[]>([]);
+  const [completedForms, setCompletedForms] = useState<CompletedFormWithProject[]>([]);
   const [isLoadingLibrary, setIsLoadingLibrary] = useState(false);
 
-  const loadCompletedForms = async () => {
+  const loadCompletedForms = useCallback(async () => {
     setIsLoadingLibrary(true);
     try {
       const { data, error } = await supabase
@@ -75,18 +84,18 @@ export default function EditarFormAderencia() {
         .order("updated_at", { ascending: false });
 
       if (error) throw error;
-      setCompletedForms(data || []);
-    } catch (err: any) {
+      setCompletedForms((data as CompletedFormWithProject[]) || []);
+    } catch (err) {
       console.error("Error loading completed forms:", err);
       toast({
         title: "Erro ao carregar biblioteca",
-        description: err.message || "Tente novamente mais tarde.",
+        description: err instanceof Error ? err.message : "Tente novamente mais tarde.",
         variant: "destructive",
       });
     } finally {
       setIsLoadingLibrary(false);
     }
-  };
+  }, [toast]);
 
   const handleDeleteForm = async (formId: string) => {
     if (!window.confirm("Deseja realmente excluir esta resposta de formulário? O status de aderência do projeto correspondente será resetado.")) {
@@ -109,11 +118,11 @@ export default function EditarFormAderencia() {
 
       // Reload the library list
       loadCompletedForms();
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error deleting form:", err);
       toast({
         title: "Erro ao excluir formulário",
-        description: err.message || "Tente novamente mais tarde.",
+        description: err instanceof Error ? err.message : "Tente novamente mais tarde.",
         variant: "destructive",
       });
     }
@@ -123,7 +132,7 @@ export default function EditarFormAderencia() {
     if (isLibraryOpen) {
       loadCompletedForms();
     }
-  }, [isLibraryOpen]);
+  }, [isLibraryOpen, loadCompletedForms]);
 
   const extraHeaderButtons = (
     <Button
