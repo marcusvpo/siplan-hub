@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
-import { UploadCloud, X, Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { UploadCloud, X, Loader2, AlertTriangle, CheckCircle2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 // Custom Field Template to render Shadcn labels and error messages
@@ -805,37 +805,21 @@ const checkHasAdherenceQuestions = (uiSchema: Record<string, unknown> | undefine
   return search(uiSchema);
 };
 
-const AdherenceImpactSummary = ({ schema, formData }: { schema: Record<string, unknown>; formData: Record<string, unknown> }) => {
-  const impactedItems = React.useMemo(() => getImpactedItems(schema, formData), [schema, formData]);
-
-  if (impactedItems.length === 0) {
-    return (
-      <div className="p-4 border-2 border-dashed border-emerald-500/30 bg-emerald-500/5 rounded-xl flex items-start gap-3.5 my-6 animate-in fade-in duration-200">
-        <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
-        <div className="space-y-1">
-          <h4 className="text-sm font-bold text-emerald-800 dark:text-emerald-400">Implantação 100% Aderente!</h4>
-          <p className="text-xs text-emerald-600/90 dark:text-emerald-400/80 leading-relaxed">
-            Nenhum item com impacto na implantação foi identificado para este sistema. O formulário está pronto para ser homologado.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
+const ImpactedItemsList = ({ items }: { items: ImpactedItem[] }) => {
   return (
-    <div className="p-5 border-2 border-rose-200 bg-rose-500/5 dark:border-rose-900/50 dark:bg-rose-950/10 rounded-xl space-y-4 my-6 animate-in fade-in duration-200">
+    <div className="p-5 border-2 border-rose-200 bg-rose-500/5 dark:border-rose-900/50 dark:bg-rose-950/10 rounded-xl space-y-4 animate-in fade-in duration-200">
       <div className="flex items-center gap-2 border-b border-rose-200/50 dark:border-rose-900/30 pb-2.5">
         <AlertTriangle className="h-5 w-5 text-rose-500 shrink-0" />
         <h4 className="text-sm font-extrabold text-rose-800 dark:text-rose-400 uppercase tracking-wide">
           Itens com impacto:
         </h4>
         <span className="text-[10px] font-bold bg-rose-500 text-white px-2 py-0.5 rounded-full ml-1">
-          {impactedItems.length}
+          {items.length}
         </span>
       </div>
 
       <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
-        {impactedItems.map((item, idx) => {
+        {items.map((item, idx) => {
           const isAttention = item.nivel_impacto === "ATENÇÃO";
           return (
             <div key={idx} className="space-y-1 border-b border-rose-100 dark:border-rose-950/30 pb-2.5 last:border-0 last:pb-0">
@@ -865,6 +849,65 @@ const AdherenceImpactSummary = ({ schema, formData }: { schema: Record<string, u
           );
         })}
       </div>
+    </div>
+  );
+};
+
+const AdherenceImpactSummary = ({ schema, formData }: { schema: Record<string, unknown>; formData: Record<string, unknown> }) => {
+  const impactedItems = React.useMemo(() => getImpactedItems(schema, formData), [schema, formData]);
+  const verdict = formData?.finalVerdict as string | undefined;
+
+  if (verdict === "Não Aderente / Impeditivo") {
+    return (
+      <div className="space-y-4 my-6">
+        <div className="p-4 border-2 border-dashed border-rose-500/30 bg-rose-500/5 rounded-xl flex items-start gap-3.5 animate-in fade-in duration-200">
+          <AlertTriangle className="h-5 w-5 text-rose-500 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <h4 className="text-sm font-bold text-rose-800 dark:text-rose-400">Implantação Não Aderente / Impeditivo</h4>
+            <p className="text-xs text-rose-600/90 dark:text-rose-400/80 leading-relaxed">
+              O parecer final indica que este sistema possui impedimentos e não está aderente. O formulário não está pronto para ser homologado.
+            </p>
+          </div>
+        </div>
+        {impactedItems.length > 0 && <ImpactedItemsList items={impactedItems} />}
+      </div>
+    );
+  }
+
+  if (verdict === "Aderente com Restrições") {
+    return (
+      <div className="space-y-4 my-6">
+        <div className="p-4 border-2 border-dashed border-amber-500/30 bg-amber-500/5 rounded-xl flex items-start gap-3.5 animate-in fade-in duration-200">
+          <AlertCircle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <h4 className="text-sm font-bold text-amber-800 dark:text-amber-400">Implantação Aderente com Restrições</h4>
+            <p className="text-xs text-amber-600/90 dark:text-amber-400/80 leading-relaxed">
+              O parecer final indica que o sistema possui restrições para implantação. Revise os pontos críticos antes de homologar.
+            </p>
+          </div>
+        </div>
+        {impactedItems.length > 0 && <ImpactedItemsList items={impactedItems} />}
+      </div>
+    );
+  }
+
+  if (impactedItems.length === 0) {
+    return (
+      <div className="p-4 border-2 border-dashed border-emerald-500/30 bg-emerald-500/5 rounded-xl flex items-start gap-3.5 my-6 animate-in fade-in duration-200">
+        <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
+        <div className="space-y-1">
+          <h4 className="text-sm font-bold text-emerald-800 dark:text-emerald-400">Implantação 100% Aderente!</h4>
+          <p className="text-xs text-emerald-600/90 dark:text-emerald-400/80 leading-relaxed">
+            Nenhum item com impacto na implantação foi identificado para este sistema. O formulário está pronto para ser homologado.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="my-6">
+      <ImpactedItemsList items={impactedItems} />
     </div>
   );
 };

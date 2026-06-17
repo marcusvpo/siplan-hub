@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ClipboardCheck, Eye, Printer, RefreshCw } from "lucide-react";
+import { ClipboardCheck, Eye, Printer, RefreshCw, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -88,6 +88,37 @@ export default function EditarFormAderencia() {
     }
   };
 
+  const handleDeleteForm = async (formId: string) => {
+    if (!window.confirm("Deseja realmente excluir esta resposta de formulário? O status de aderência do projeto correspondente será resetado.")) {
+      return;
+    }
+    
+    try {
+      const { error } = await supabase
+        .from("project_form_responses")
+        .delete()
+        .eq("id", formId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Formulário excluído",
+        description: "A resposta do formulário foi removida com sucesso.",
+        className: "bg-green-500 text-white border-green-600",
+      });
+
+      // Reload the library list
+      loadCompletedForms();
+    } catch (err: any) {
+      console.error("Error deleting form:", err);
+      toast({
+        title: "Erro ao excluir formulário",
+        description: err.message || "Tente novamente mais tarde.",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     if (isLibraryOpen) {
       loadCompletedForms();
@@ -159,19 +190,24 @@ export default function EditarFormAderencia() {
                           </span>
                         </td>
                         <td className="p-3">
-                          <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase ${
-                            form.status === "approved"
-                              ? (form.data?.finalVerdict === "Totalmente Aderente"
-                                ? "bg-green-500/10 text-green-600 border-green-500/20"
-                                : form.data?.finalVerdict === "Aderente com Restrições"
-                                ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
-                                : "bg-rose-500/10 text-rose-600 border-rose-500/20")
-                              : "bg-slate-500/10 text-slate-600 border-slate-500/20"
-                          }`}>
-                            {form.status === "approved"
-                              ? (form.data?.finalVerdict || "Finalizado")
-                              : "Rascunho"}
-                          </span>
+                          {(() => {
+                            const isFinalized = form.status === "approved" || form.status === "approved_with_restrictions" || form.status === "rejected";
+                            return (
+                              <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase ${
+                                isFinalized
+                                  ? (form.data?.finalVerdict === "Totalmente Aderente"
+                                    ? "bg-green-500/10 text-green-600 border-green-500/20"
+                                    : form.data?.finalVerdict === "Aderente com Restrições"
+                                    ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
+                                    : "bg-rose-500/10 text-rose-600 border-rose-500/20")
+                                  : "bg-slate-500/10 text-slate-600 border-slate-500/20"
+                              }`}>
+                                {isFinalized
+                                  ? (form.data?.finalVerdict || "Finalizado")
+                                  : "Rascunho"}
+                              </span>
+                            );
+                          })()}
                         </td>
                         <td className="p-3 text-muted-foreground">
                           {new Date(form.updated_at).toLocaleString()}
@@ -194,6 +230,15 @@ export default function EditarFormAderencia() {
                           >
                             <Printer className="h-3.5 w-3.5" />
                             PDF
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteForm(form.id)}
+                            className="h-7 px-2.5 text-[11px] gap-1 hover:bg-rose-50 text-rose-600 hover:text-rose-700"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            Excluir
                           </Button>
                         </td>
                       </tr>
