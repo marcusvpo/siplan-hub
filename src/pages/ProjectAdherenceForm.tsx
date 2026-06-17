@@ -253,7 +253,7 @@ export default function ProjectAdherenceForm() {
     const hasChanges = JSON.stringify(debouncedFormData) !== JSON.stringify(response.data);
     
     // Only auto-save if form is editable (draft state)
-    const isFormLocked = response.status === "approved" || !canEditProjects;
+    const isFormLocked = response.status === "approved" || response.status === "approved_with_restrictions" || response.status === "rejected" || !canEditProjects;
 
     if (hasChanges && !isFormLocked) {
       setIsAutoSaving(true);
@@ -309,13 +309,21 @@ export default function ProjectAdherenceForm() {
       return;
     }
 
+    // Determine the status to submit based on verdict
+    let statusToSubmit: "approved" | "approved_with_restrictions" | "rejected" = "approved";
+    if (verdict === "Aderente com Restrições") {
+      statusToSubmit = "approved_with_restrictions";
+    } else if (verdict === "Não Aderente / Impeditivo") {
+      statusToSubmit = "rejected";
+    }
+
     upsertMutation.mutate(
       {
         project_id: projectId,
         template_id: activeTemplate.id,
         stage: "adherence",
         data: localFormData,
-        status: "approved",
+        status: statusToSubmit,
       },
       {
         onSuccess: () => {
@@ -420,7 +428,8 @@ export default function ProjectAdherenceForm() {
     );
   }
 
-  const isFormLocked = response.status === "approved" || !canEditProjects;
+  const isFormLocked = response.status === "approved" || response.status === "approved_with_restrictions" || response.status === "rejected" || !canEditProjects;
+  const isFinalized = response.status === "approved" || response.status === "approved_with_restrictions" || response.status === "rejected";
 
   if (isPrintMode) {
     const printSections = getPrintSections(activeTemplate.schema_json, localFormData);
@@ -517,7 +526,7 @@ export default function ProjectAdherenceForm() {
             <div>
               <span className="text-muted-foreground block text-[10px] uppercase font-bold tracking-wider">Status Homologação</span>
               <span className={`inline-block mt-0.5 text-[10px] font-bold px-2 py-0.2 rounded border uppercase tracking-wider ${
-                response.status === "approved" 
+                isFinalized 
                   ? (localFormData.finalVerdict === "Totalmente Aderente"
                     ? "bg-green-100 text-green-800 border-green-200" 
                     : localFormData.finalVerdict === "Aderente com Restrições"
@@ -525,7 +534,7 @@ export default function ProjectAdherenceForm() {
                     : "bg-rose-100 text-rose-800 border-rose-200")
                   : "bg-slate-100 text-slate-800 border-slate-200"
               }`}>
-                {response.status === "approved" 
+                {isFinalized 
                   ? (localFormData.finalVerdict || "Finalizado") 
                   : "Rascunho"}
               </span>
@@ -825,7 +834,7 @@ export default function ProjectAdherenceForm() {
             )}
             
             <Badge className={`text-xs font-bold px-3 py-1 border uppercase tracking-wider rounded-full ${
-              response.status === "approved" 
+              isFinalized 
                 ? (localFormData.finalVerdict === "Totalmente Aderente"
                   ? "bg-green-500/10 text-green-600 border-green-500/20" 
                   : localFormData.finalVerdict === "Aderente com Restrições"
@@ -833,7 +842,7 @@ export default function ProjectAdherenceForm() {
                   : "bg-rose-500/10 text-rose-600 border-rose-500/20")
                 : "bg-slate-500/10 text-slate-600 border-slate-500/20"
             }`}>
-              {response.status === "approved" 
+              {isFinalized 
                 ? (localFormData.finalVerdict || "Finalizado") 
                 : "Rascunho"}
             </Badge>
@@ -933,7 +942,7 @@ export default function ProjectAdherenceForm() {
           <CardContent className="p-4 flex flex-wrap items-center justify-between gap-3">
             <div className="text-xs text-muted-foreground italic">
               {response.status === "draft" && "As alterações são salvas automaticamente no rascunho."}
-              {response.status === "approved" && `Formulário concluído com parecer: ${response.data?.finalVerdict || ""}. Alterações travadas.`}
+              {isFinalized && `Formulário concluído com parecer: ${response.data?.finalVerdict || ""}. Alterações travadas.`}
             </div>
 
             <div className="flex items-center gap-3 ml-auto">
@@ -950,7 +959,7 @@ export default function ProjectAdherenceForm() {
               )}
 
               {/* Approved actions: Reopen */}
-              {response.status === "approved" && (
+              {isFinalized && (
                 <Button 
                   onClick={handleReopenForm} 
                   variant="outline"
