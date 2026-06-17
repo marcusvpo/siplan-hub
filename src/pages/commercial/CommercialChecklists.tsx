@@ -96,7 +96,7 @@ export default function CommercialChecklists() {
     }
 
     createChecklist.mutate(selectedProjectId, {
-      onSuccess: (data: any) => {
+      onSuccess: () => {
         setCreateDialogOpen(false);
         setSelectedProjectId("");
         // Show success notification and scroll to the new card
@@ -330,7 +330,7 @@ export default function CommercialChecklists() {
           <div className="space-y-4 py-4">
             <div className="space-y-2 flex flex-col">
               <Label htmlFor="projectSelect" className="text-xs font-bold uppercase text-muted-foreground mb-1">Projeto Ativo *</Label>
-              <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
+              <Popover open={comboboxOpen} onOpenChange={setComboboxOpen} modal={true}>
                 <PopoverTrigger asChild>
                   <Button
                     id="projectSelect"
@@ -579,7 +579,7 @@ export default function CommercialChecklists() {
                     <span className="text-xs text-muted-foreground block font-medium">Pessoa(s) Chave(s) para comunicação na Serventia</span>
                     {Array.isArray(viewChecklist.responses.key_people) && viewChecklist.responses.key_people.length > 0 ? (
                       <div className="grid gap-2 sm:grid-cols-2">
-                        {viewChecklist.responses.key_people.map((person: any, idx: number) => (
+                        {viewChecklist.responses.key_people.map((person: { name: string; role: string; contact: string }, idx: number) => (
                           <div key={idx} className="bg-muted/40 p-2.5 rounded-lg border text-xs space-y-1">
                             <div><strong className="text-muted-foreground">Nome:</strong> <span className="font-medium text-foreground">{person.name}</span></div>
                             <div><strong className="text-muted-foreground">Cargo:</strong> <span className="font-medium text-foreground">{person.role}</span></div>
