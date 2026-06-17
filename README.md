@@ -60,9 +60,9 @@ Gestão completa do pipeline de conversão de cartórios para os sistemas da Sip
 
 ---
 
-### 📄 Modelos Editor OrionTN
+### 📄 Modelos Editor OrionTN & Modelos TN
 
-Módulo dedicado à gestão do estágio **Modelos Editor** nos projetos OrionTN.
+Módulo dedicado à gestão do estágio **Modelos Editor** nos projetos OrionTN e Modelos TN. O sistema "Modelos TN" funciona com um fluxo simplificado de 2 etapas principais: Modelos Editor e Implantação & Treinamento, ocultando as demais etapas do pipeline padrão.
 
 #### Dashboard (`/orion-tn-models/dashboard`)
 - **5 KPI Cards**: Total c/ Editor, Em Andamento, Concluídos, Não Iniciados, Bloqueados

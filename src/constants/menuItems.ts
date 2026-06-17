@@ -15,6 +15,10 @@ import {
     FileEdit,
     LayoutGrid,
     LayoutDashboard,
+    History,
+    ClipboardList,
+    BookOpen,
+    FolderClosed,
 } from "lucide-react";
 
 export interface MenuItem {
@@ -79,6 +83,12 @@ export const menuItems: MenuItem[] = [
                 icon: Rocket,
                 description: "Planejamento de futuras instalações",
             },
+            {
+                title: "Últimas Implantações",
+                path: "/deployments/latest",
+                icon: History,
+                description: "Histórico de instalações concluídas",
+            },
         ],
     },
     {
@@ -125,6 +135,18 @@ export const menuItems: MenuItem[] = [
                 icon: Contact,
                 description: "Registro de interações comerciais",
             },
+            {
+                title: "Form. Nova Implantação",
+                path: "/commercial/deployment-forms",
+                icon: ClipboardList,
+                description: "Formulários de solicitação de implantação",
+            },
+            {
+                title: "Checklist do Cliente",
+                path: "/commercial/checklists",
+                icon: ClipboardList,
+                description: "Status do checklist comercial dos clientes",
+            },
         ],
     },
     {
@@ -168,14 +190,46 @@ export const menuItems: MenuItem[] = [
             {
                 title: "Gerenciar Projetos",
                 path: "/orion-tn-models/projects",
-                icon: FolderKanban,
+                icon: FolderClosed,
                 description: "Templates específicos por projeto",
             },
             {
-                title: "Editor",
+                title: "Editor de Modelos",
                 path: "/orion-tn-models",
-                icon: FileEdit,
+                icon: FileText,
                 description: "Criador e editor avançado de JSON",
+            },
+        ],
+    },
+    {
+        title: "Implantadores",
+        icon: Users,
+        description: "Ferramentas, formulários de aderência e transição",
+        permissionKey: "menu_implantadores",
+        subItems: [
+            {
+                title: "Editor de Aderência",
+                path: "/implantadores/aderencia",
+                icon: FileEdit,
+                description: "Formulários e checklists de aderência",
+            },
+            {
+                title: "Editor de Homologação",
+                path: "/implantadores/homologacao",
+                icon: ClipboardList,
+                description: "Roteiros de homologação de dados",
+            },
+            {
+                title: "Roteiro de Treinamento",
+                path: "/implantadores/treinamento",
+                icon: BookOpen,
+                description: "Material de capacitação e treinamentos",
+            },
+            {
+                title: "Documento de Transição",
+                path: "/implantadores/transicao",
+                icon: FileText,
+                description: "Passagem de bastão para a equipe de suporte",
             },
         ],
     },

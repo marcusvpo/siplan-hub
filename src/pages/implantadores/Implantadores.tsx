@@ -60,19 +60,19 @@ export default function Implantadores() {
   return (
     <div className="container mx-auto p-6 space-y-8 max-w-6xl">
       {/* Upper Banner */}
-      <div className="relative rounded-2xl overflow-hidden border bg-gradient-to-r from-slate-900 via-slate-950 to-slate-900 text-white p-8 md:p-10 shadow-2xl">
-        <div className="absolute right-0 top-0 bottom-0 opacity-10 flex items-center pr-10">
-          <Layers className="h-64 w-64 text-slate-100" />
+      <div className="relative rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-800 bg-gradient-to-br from-indigo-50/60 via-slate-50 to-amber-50/50 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 p-8 md:p-10 shadow-md dark:shadow-2xl transition-all duration-300">
+        <div className="absolute right-0 top-0 bottom-0 opacity-40 dark:opacity-10 flex items-center pr-10 pointer-events-none">
+          <Layers className="h-64 w-64 text-indigo-500/20 dark:text-slate-100" />
         </div>
         <div className="relative z-10 space-y-4 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/20 border border-primary/30 text-primary text-xs font-semibold">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-primary/20 border border-indigo-100 dark:border-primary/30 text-indigo-600 dark:text-primary text-xs font-semibold">
             <ShieldCheck className="h-3.5 w-3.5" />
             Módulo de Implantadores
           </div>
-          <h1 className="text-3xl md:text-4xl font-black tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+          <h1 className="text-3xl md:text-4xl font-black tracking-tight bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 dark:from-white dark:via-slate-200 dark:to-slate-400 bg-clip-text text-transparent">
             Gestão Operacional de Implantações
           </h1>
-          <p className="text-sm md:text-base text-slate-400 leading-relaxed">
+          <p className="text-sm md:text-base text-slate-600 dark:text-slate-400 leading-relaxed">
             Painel consolidado para gerenciar e customizar formulários de aderência, checklists de homologação,
             capacitações e documentos de transição operacional de sistemas.
           </p>

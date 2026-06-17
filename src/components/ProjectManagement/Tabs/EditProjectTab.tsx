@@ -49,7 +49,7 @@ export function EditProjectTab({ project, onUpdate }: TabProps) {
   const [productsOpen, setProductsOpen] = useState(false);
 
   // Constants
-  const MAIN_SYSTEMS = ["Orion TN", "Orion PRO", "Orion REG"];
+  const MAIN_SYSTEMS = ["Orion TN", "Orion PRO", "Orion REG", "Modelos TN"];
   const AVAILABLE_PRODUCTS = [
     "LCW",
     "SGA",
@@ -82,7 +82,7 @@ export function EditProjectTab({ project, onUpdate }: TabProps) {
         {saveState.status === "success" && (
           <Badge
             variant="outline"
-            className="bg-green-50 text-green-700 border-green-200"
+            className="bg-green-50 text-green-700 border-green-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50"
           >
             {saveState.message}
           </Badge>
@@ -131,65 +131,67 @@ export function EditProjectTab({ project, onUpdate }: TabProps) {
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label>Produtos Adicionais</Label>
-            <Popover open={productsOpen} onOpenChange={setProductsOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={productsOpen}
-                  className="w-full justify-between h-auto min-h-10 py-2 text-left font-normal"
-                >
-                  {currentProducts.length > 0 ? (
-                    <div className="flex flex-wrap gap-1">
-                      {currentProducts.map((product) => (
-                        <Badge
-                          key={product}
-                          variant="secondary"
-                          className="mr-1"
-                        >
-                          {product}
-                        </Badge>
-                      ))}
-                    </div>
-                  ) : (
-                    <span className="text-muted-foreground">
-                      Selecione os produtos...
-                    </span>
-                  )}
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[300px] p-0" align="start">
-                <Command>
-                  <CommandInput placeholder="Buscar produto..." />
-                  <CommandList>
-                    <CommandEmpty>Nenhum produto encontrado.</CommandEmpty>
-                    <CommandGroup>
-                      {AVAILABLE_PRODUCTS.map((product) => (
-                        <CommandItem
-                          key={product}
-                          value={product}
-                          onSelect={() => toggleProduct(product)}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              currentProducts.includes(product)
-                                ? "opacity-100"
-                                : "opacity-0",
-                            )}
-                          />
-                          {product}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-          </div>
+          {data.systemType !== "Modelos TN" && (
+            <div className="space-y-2">
+              <Label>Produtos Adicionais</Label>
+              <Popover open={productsOpen} onOpenChange={setProductsOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={productsOpen}
+                    className="w-full justify-between h-auto min-h-10 py-2 text-left font-normal"
+                  >
+                    {currentProducts.length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {currentProducts.map((product) => (
+                          <Badge
+                            key={product}
+                            variant="secondary"
+                            className="mr-1"
+                          >
+                            {product}
+                          </Badge>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground">
+                        Selecione os produtos...
+                      </span>
+                    )}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[300px] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Buscar produto..." />
+                    <CommandList>
+                      <CommandEmpty>Nenhum produto encontrado.</CommandEmpty>
+                      <CommandGroup>
+                        {AVAILABLE_PRODUCTS.map((product) => (
+                          <CommandItem
+                            key={product}
+                            value={product}
+                            onSelect={() => toggleProduct(product)}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                currentProducts.includes(product)
+                                  ? "opacity-100"
+                                  : "opacity-0",
+                              )}
+                            />
+                            {product}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label>Líder do Projeto</Label>
@@ -207,73 +209,92 @@ export function EditProjectTab({ project, onUpdate }: TabProps) {
               }
             />
           </div>
-          <div className="space-y-2">
-            <Label>N° OP</Label>
-            <Input
-              type="number"
-              value={data.opNumber || ""}
-              onChange={(e) =>
-                handleChange(
-                  "opNumber",
-                  e.target.value ? Number(e.target.value) : undefined,
-                )
-              }
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>N° Pedido de Venda</Label>
-            <Input
-              type="number"
-              value={data.salesOrderNumber || ""}
-              onChange={(e) =>
-                handleChange(
-                  "salesOrderNumber",
-                  e.target.value ? Number(e.target.value) : undefined,
-                )
-              }
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Horas Vendidas</Label>
-            <Input
-              type="number"
-              step="0.5"
-              value={data.soldHours || ""}
-              onChange={(e) =>
-                handleChange(
-                  "soldHours",
-                  e.target.value ? Number(e.target.value) : undefined,
-                )
-              }
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Sistema Legado</Label>
-            <Input
-              value={data.legacySystem || ""}
-              onChange={(e) => handleChange("legacySystem", e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Especialidade</Label>
-            <Select
-              value={data.specialty || ""}
-              onValueChange={(value) => handleChange("specialty", value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="protesto">Protesto</SelectItem>
-                <SelectItem value="notas">Notas</SelectItem>
-                <SelectItem value="registro_civil">Registro Civil</SelectItem>
-                <SelectItem value="registro_imoveis">
-                  Registro de Imóveis
-                </SelectItem>
-                <SelectItem value="tdpj">TDPJ</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          {data.systemType === "Modelos TN" ? (
+            <div className="space-y-2">
+              <Label>Horas de Trabalho</Label>
+              <Input
+                type="number"
+                step="0.5"
+                value={data.workHours || ""}
+                onChange={(e) =>
+                  handleChange(
+                    "workHours",
+                    e.target.value ? Number(e.target.value) : undefined,
+                  )
+                }
+              />
+            </div>
+          ) : (
+            <>
+              <div className="space-y-2">
+                <Label>N° OP</Label>
+                <Input
+                  type="number"
+                  value={data.opNumber || ""}
+                  onChange={(e) =>
+                    handleChange(
+                      "opNumber",
+                      e.target.value ? Number(e.target.value) : undefined,
+                    )
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>N° Pedido de Venda</Label>
+                <Input
+                  type="number"
+                  value={data.salesOrderNumber || ""}
+                  onChange={(e) =>
+                    handleChange(
+                      "salesOrderNumber",
+                      e.target.value ? Number(e.target.value) : undefined,
+                    )
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Horas Vendidas</Label>
+                <Input
+                  type="number"
+                  step="0.5"
+                  value={data.soldHours || ""}
+                  onChange={(e) =>
+                    handleChange(
+                      "soldHours",
+                      e.target.value ? Number(e.target.value) : undefined,
+                    )
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Sistema Legado</Label>
+                <Input
+                  value={data.legacySystem || ""}
+                  onChange={(e) => handleChange("legacySystem", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Especialidade</Label>
+                <Select
+                  value={data.specialty || ""}
+                  onValueChange={(value) => handleChange("specialty", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="protesto">Protesto</SelectItem>
+                    <SelectItem value="notas">Notas</SelectItem>
+                    <SelectItem value="registro_civil">Registro Civil</SelectItem>
+                    <SelectItem value="registro_imoveis">
+                      Registro de Imóveis
+                    </SelectItem>
+                    <SelectItem value="tdpj">TDPJ</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </>
+          )}
           <div className="space-y-2">
             <Label>Tipo de Implantação</Label>
             <Select
@@ -481,7 +502,7 @@ export function EditProjectTab({ project, onUpdate }: TabProps) {
               </Label>
               <Input
                 type="date"
-                className="border-red-200 focus:border-red-500"
+                className="border-red-200 focus:border-red-500 dark:border-red-900/50 dark:focus:border-red-500"
                 value={
                   data.nextFollowUpDate
                     ? new Date(data.nextFollowUpDate)

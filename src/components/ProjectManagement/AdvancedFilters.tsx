@@ -190,17 +190,17 @@ export function AdvancedFilters({
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Main Controls Row */}
-      <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+      <div className="flex flex-col lg:flex-row gap-3 items-start lg:items-center justify-between">
         {/* Left: Search + Quick Views */}
-        <div className="flex flex-col sm:flex-row gap-3 flex-1 w-full lg:w-auto">
+        <div className="flex flex-col sm:flex-row gap-2 flex-1 w-full lg:w-auto">
           {/* Search */}
           <div className="relative flex-1 sm:max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Buscar projetos..."
-              className="pl-10 h-11 bg-background/50 border-2 focus:border-primary"
+              className="pl-9 h-9 bg-background/50 border focus:border-primary text-xs"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -208,10 +208,10 @@ export function AdvancedFilters({
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
                 onClick={() => setSearchQuery("")}
               >
-                <X className="h-4 w-4" />
+                <X className="h-3.5 w-3.5" />
               </Button>
             )}
           </div>
@@ -222,33 +222,33 @@ export function AdvancedFilters({
             onValueChange={(v) => setViewPreset(v as ViewPreset)}
             className="w-full sm:w-auto"
           >
-            <TabsList className="h-11 bg-muted/50 p-1">
+            <TabsList className="h-9 bg-muted/50 p-0.5">
               <TabsTrigger
                 value="active"
-                className="gap-2 data-[state=active]:bg-blue-500 data-[state=active]:text-white"
+                className="h-8 gap-1.5 text-xs data-[state=active]:bg-blue-500 data-[state=active]:text-white"
               >
-                <Play className="h-3.5 w-3.5" />
+                <Play className="h-3 w-3" />
                 Em Andamento
               </TabsTrigger>
               <TabsTrigger
                 value="post"
-                className="gap-2 data-[state=active]:bg-purple-500 data-[state=active]:text-white"
+                className="h-8 gap-1.5 text-xs data-[state=active]:bg-purple-500 data-[state=active]:text-white"
               >
-                <Rocket className="h-3.5 w-3.5" />
+                <Rocket className="h-3 w-3" />
                 Pós
               </TabsTrigger>
               <TabsTrigger
                 value="paused"
-                className="gap-2 data-[state=active]:bg-amber-500 data-[state=active]:text-white"
+                className="h-8 gap-1.5 text-xs data-[state=active]:bg-amber-500 data-[state=active]:text-white"
               >
-                <Pause className="h-3.5 w-3.5" />
+                <Pause className="h-3 w-3" />
                 Pausados
               </TabsTrigger>
               <TabsTrigger
                 value="done"
-                className="gap-2 data-[state=active]:bg-emerald-500 data-[state=active]:text-white"
+                className="h-8 gap-1.5 text-xs data-[state=active]:bg-emerald-500 data-[state=active]:text-white"
               >
-                <CheckCircle2 className="h-3.5 w-3.5" />
+                <CheckCircle2 className="h-3 w-3" />
                 Finalizados
               </TabsTrigger>
             </TabsList>
@@ -256,12 +256,12 @@ export function AdvancedFilters({
         </div>
 
         {/* Right: Controls */}
-        <div className="flex gap-2 items-center flex-wrap">
+        <div className="flex gap-1.5 items-center flex-wrap">
           {/* Sort Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="h-11 gap-2">
-                <ArrowUpDown className="h-4 w-4" />
+              <Button variant="outline" className="h-9 text-xs gap-1.5">
+                <ArrowUpDown className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Ordenar</span>
                 <ChevronDown className="h-3 w-3 opacity-50" />
               </Button>
@@ -286,11 +286,11 @@ export function AdvancedFilters({
           {/* Saved Filters Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="h-11 gap-2">
-                <Bookmark className="h-4 w-4" />
+              <Button variant="outline" className="h-9 text-xs gap-1.5">
+                <Bookmark className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Salvos</span>
                 {savedFilters.length > 0 && (
-                  <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+                  <Badge variant="secondary" className="h-4 px-1 text-[10px]">
                     {savedFilters.length}
                   </Badge>
                 )}
@@ -367,11 +367,11 @@ export function AdvancedFilters({
           {/* Advanced Filters Button */}
           <Sheet open={isFilterPanelOpen} onOpenChange={setFilterPanelOpen}>
             <SheetTrigger asChild>
-              <Button variant="outline" className="h-11 gap-2 relative">
-                <SlidersHorizontal className="h-4 w-4" />
+              <Button variant="outline" className="h-9 text-xs gap-1.5 relative">
+                <SlidersHorizontal className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Filtros</span>
                 {activeFiltersCount > 0 && (
-                  <Badge className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs bg-primary">
+                  <Badge className="absolute -top-1.5 -right-1.5 h-4.5 w-4.5 p-0 flex items-center justify-center text-[10px] bg-primary">
                     {activeFiltersCount}
                   </Badge>
                 )}
@@ -582,7 +582,7 @@ export function AdvancedFilters({
             <Button
               onClick={onCompare}
               disabled={selectedCount < 2}
-              className="h-11 gap-2"
+              className="h-9 text-xs gap-1.5"
             >
               Comparar ({selectedCount})
             </Button>

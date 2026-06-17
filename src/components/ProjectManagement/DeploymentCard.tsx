@@ -127,23 +127,25 @@ export function DeploymentCard({
 
       {/* Body Section */}
       <div className="px-4 space-y-2 z-10 flex-1">
-        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-          <div className="w-6 h-6 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400">
-            <Monitor className="w-3 h-3" />
+        {project.systemType !== "Modelos TN" && (
+          <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+            <div className="w-6 h-6 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400">
+              <Monitor className="w-3 h-3" />
+            </div>
+            <span className="font-medium truncate">
+              {project.specialty || "Módulo Padrão"}
+            </span>
           </div>
-          <span className="font-medium truncate">
-            {project.specialty || "Módulo Padrão"}
-          </span>
-        </div>
+        )}
 
         <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
           <div className="w-6 h-6 rounded-full bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
             <Clock className="w-3 h-3" />
           </div>
           <span className="font-medium">
-            {project.soldHours
-              ? `${project.soldHours}h Contratadas`
-              : "Horas N/A"}
+            {project.systemType === "Modelos TN"
+              ? (project.workHours ? `${project.workHours}h de Trabalho` : "Horas N/A")
+              : (project.soldHours ? `${project.soldHours}h Contratadas` : "Horas N/A")}
           </span>
         </div>
       </div>

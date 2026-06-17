@@ -8,6 +8,7 @@ interface ProjectInfo {
   implantationType: string | null;
   legacySystem: string | null;
   soldHours: number | null;
+  workHours?: number | null;
   description: string | null;
 }
 
@@ -17,6 +18,8 @@ interface ProjectInfoSectionProps {
 }
 
 export function ProjectInfoSection({ projectInfo, item }: ProjectInfoSectionProps) {
+  const isModelosTN = item.systemType === "Modelos TN";
+
   return (
     <div className="bg-slate-50 rounded-lg p-4 border">
       <h3 className="font-bold text-slate-700 flex items-center gap-2 mb-3">
@@ -44,20 +47,22 @@ export function ProjectInfoSection({ projectInfo, item }: ProjectInfoSectionProp
               : "Ainda Sem Previsão"}
           </span>
         </div>
+        {!isModelosTN && (
+          <div>
+            <span className="text-xs text-muted-foreground block">
+              Sistema Legado
+            </span>
+            <span className="font-medium">
+              {projectInfo.legacySystem || "—"}
+            </span>
+          </div>
+        )}
         <div>
           <span className="text-xs text-muted-foreground block">
-            Sistema Legado
+            {isModelosTN ? "Horas de Trabalho" : "Horas Vendidas"}
           </span>
           <span className="font-medium">
-            {projectInfo.legacySystem || "—"}
-          </span>
-        </div>
-        <div>
-          <span className="text-xs text-muted-foreground block">
-            Horas Vendidas
-          </span>
-          <span className="font-medium">
-            {projectInfo.soldHours || "—"}
+            {(isModelosTN ? projectInfo.workHours : projectInfo.soldHours) ?? "—"}
           </span>
         </div>
         {projectInfo.description && (

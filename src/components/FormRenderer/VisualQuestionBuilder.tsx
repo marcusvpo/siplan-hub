@@ -26,12 +26,49 @@ export interface VisualQuestion {
 interface VisualQuestionBuilderProps {
   questions: VisualQuestion[];
   onChange: (questions: VisualQuestion[]) => void;
+  kind?: 'adherence' | 'commercial_checklist' | 'homologation_checklist';
 }
 
 export function VisualQuestionBuilder({
   questions,
   onChange,
+  kind,
 }: VisualQuestionBuilderProps) {
+  const theme = {
+    adherence: {
+      text: "text-amber-600 dark:text-amber-400",
+      bg: "bg-amber-500/5 dark:bg-amber-950/10",
+      border: "border-amber-500/20 dark:border-amber-900/40",
+      accent: "amber",
+      borderLeft: "border-l-amber-500 dark:border-l-amber-600",
+      button: "border-amber-200 text-amber-600 hover:bg-amber-50/50 dark:border-amber-900/40 dark:text-amber-400 dark:hover:bg-amber-950/20",
+      addBtn: "hover:border-amber-500 hover:bg-amber-500/5 text-amber-600 dark:text-amber-400 hover:text-amber-700",
+      inputFocus: "focus-visible:ring-amber-500",
+      bulletBg: "bg-amber-500",
+    },
+    homologation_checklist: {
+      text: "text-indigo-600 dark:text-indigo-400",
+      bg: "bg-indigo-500/5 dark:bg-indigo-950/10",
+      border: "border-indigo-500/20 dark:border-indigo-900/40",
+      accent: "indigo",
+      borderLeft: "border-l-indigo-500 dark:border-l-indigo-600",
+      button: "border-indigo-200 text-indigo-600 hover:bg-indigo-50/50 dark:border-indigo-900/40 dark:text-indigo-400 dark:hover:bg-indigo-950/20",
+      addBtn: "hover:border-indigo-500 hover:bg-indigo-500/5 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700",
+      inputFocus: "focus-visible:ring-indigo-500",
+      bulletBg: "bg-indigo-500",
+    },
+    commercial_checklist: {
+      text: "text-violet-600 dark:text-violet-400",
+      bg: "bg-violet-500/5 dark:bg-violet-950/10",
+      border: "border-violet-500/20 dark:border-violet-900/40",
+      accent: "violet",
+      borderLeft: "border-l-violet-500 dark:border-l-violet-600",
+      button: "border-violet-200 text-violet-600 hover:bg-violet-50/50 dark:border-violet-900/40 dark:text-violet-400 dark:hover:bg-violet-950/20",
+      addBtn: "hover:border-violet-500 hover:bg-violet-500/5 text-violet-600 dark:text-violet-400 hover:text-violet-700",
+      inputFocus: "focus-visible:ring-violet-500",
+      bulletBg: "bg-violet-500",
+    }
+  }[kind || "adherence"];
   
   // Add a new blank question
   const handleAddQuestion = () => {
@@ -129,7 +166,7 @@ export function VisualQuestionBuilder({
   const getIconForType = (type: VisualQuestion["type"]) => {
     switch (type) {
       case "section":
-        return <Settings2 className="h-4 w-4 text-orange-500" />;
+        return <Settings2 className={`h-4 w-4 ${theme.text}`} />;
       case "boolean_adherence":
         return <CheckSquare className="h-4 w-4 text-emerald-500" />;
       case "textarea_adherence":
@@ -143,9 +180,9 @@ export function VisualQuestionBuilder({
       case "boolean":
         return <CheckSquare className="h-4 w-4 text-emerald-500" />;
       case "select":
-        return <ListPlus className="h-4 w-4 text-indigo-500" />;
+        return <ListPlus className={`h-4 w-4 ${theme.text}`} />;
       case "checkboxes":
-        return <ListPlus className="h-4 w-4 text-indigo-500" />;
+        return <ListPlus className={`h-4 w-4 ${theme.text}`} />;
       case "images":
         return <Image className="h-4 w-4 text-rose-500" />;
       default:
@@ -172,8 +209,10 @@ export function VisualQuestionBuilder({
             <Card
               key={q.id}
               className={cn(
-                "border-muted-foreground/20 hover:border-primary/30 shadow-md group overflow-hidden transition-all duration-200",
-                q.type === "section" ? "border-orange-300 bg-orange-500/5 dark:border-orange-900/40 dark:bg-orange-950/10" : ""
+                "border-muted hover:border-muted-foreground/30 shadow-sm hover:shadow group overflow-hidden transition-all duration-200 bg-card/60 relative",
+                q.type === "section"
+                  ? `${theme.border} ${theme.bg} border-l-4 ${theme.borderLeft}`
+                  : "border-l-4 border-l-muted-foreground/25"
               )}
             >
               <CardContent className="p-5 space-y-4">
@@ -189,7 +228,7 @@ export function VisualQuestionBuilder({
                       placeholder={q.type === "section" ? "Título da Seção (Ex: 1. Setor de Firmas)" : "Título da Pergunta"}
                       className={cn(
                         "font-bold text-sm bg-card border-muted-foreground/30 focus-visible:ring-primary h-9 flex-1",
-                        q.type === "section" ? "text-orange-600 dark:text-orange-400 focus-visible:ring-orange-500" : ""
+                        q.type === "section" ? `${theme.text} ${theme.inputFocus}` : ""
                       )}
                     />
                   </div>
@@ -284,19 +323,19 @@ export function VisualQuestionBuilder({
 
                 {/* Options section (renders if type is select or checkboxes) */}
                 {(q.type === "select" || q.type === "checkboxes") && (
-                  <div className="pl-4 border-l-2 border-indigo-500/30 space-y-2">
-                    <Label className="text-xs font-bold text-indigo-600 tracking-wide uppercase flex items-center gap-1">
+                  <div className={`pl-4 border-l-2 ${theme.border} space-y-2`}>
+                    <Label className={`text-xs font-bold ${theme.text} tracking-wide uppercase flex items-center gap-1`}>
                       Opções da Pergunta
                     </Label>
                     <div className="space-y-2 max-w-md">
                       {(q.options || []).map((opt, optIdx) => (
                         <div key={optIdx} className="flex items-center gap-2">
-                          <span className="h-1.5 w-1.5 rounded-full bg-indigo-500/50 shrink-0" />
+                          <span className={cn("h-1.5 w-1.5 rounded-full opacity-50 shrink-0", theme.bulletBg)} />
                           <Input
                             value={opt}
                             onChange={(e) => handleUpdateOption(q.id, optIdx, e.target.value)}
                             placeholder={`Opção ${optIdx + 1}`}
-                            className="h-8 text-xs bg-card border-muted-foreground/20 focus-visible:ring-indigo-500"
+                            className={cn("h-8 text-xs bg-card border-muted-foreground/20", theme.inputFocus)}
                           />
                           <Button
                             type="button"
@@ -316,7 +355,7 @@ export function VisualQuestionBuilder({
                         variant="outline"
                         size="sm"
                         onClick={() => handleAddOption(q.id)}
-                        className="h-8 text-[11px] gap-1 px-3 border-indigo-200 text-indigo-600 hover:bg-indigo-50"
+                        className={cn("h-8 text-[11px] gap-1 px-3 border border-muted hover:bg-muted/50", theme.button)}
                       >
                         <Plus className="h-3.5 w-3.5" />
                         Adicionar Opção
@@ -335,7 +374,7 @@ export function VisualQuestionBuilder({
         type="button"
         variant="outline"
         onClick={handleAddQuestion}
-        className="w-full py-6 border-dashed border-2 hover:border-primary hover:bg-primary/5 transition-all text-xs font-bold gap-2"
+        className={cn("w-full py-6 border-dashed border-2 transition-all text-xs font-bold gap-2 hover:bg-muted/50", theme.addBtn)}
       >
         <Plus className="h-4 w-4" />
         Adicionar Nova Pergunta

@@ -17,6 +17,8 @@ export function MainLayout({ children }: MainLayoutProps) {
   const location = useLocation();
 
   const isProjectsPage = location.pathname === "/projects";
+  const isModelsPage = location.pathname.startsWith("/orion-tn-models");
+  const isNoScrollPage = isProjectsPage || isModelsPage;
   const isPrintMode = new URLSearchParams(location.search).get("print") === "true";
 
   if (isPrintMode) {
@@ -41,7 +43,7 @@ export function MainLayout({ children }: MainLayoutProps) {
         <AppSidebar />
 
         <div className="flex flex-col flex-1 min-h-[100dvh] overflow-hidden transition-all duration-300 min-w-0">
-          <header className="flex h-16 items-center justify-between gap-4 border-b bg-background/80 backdrop-blur-md px-4 md:px-6 shrink-0 z-10 sticky top-0 overflow-hidden">
+          <header className="flex h-16 items-center justify-between gap-4 border-b border-border/40 bg-background/80 backdrop-blur-md px-4 md:px-6 shrink-0 z-10 sticky top-0 overflow-hidden">
             <div className="flex items-center gap-2 min-w-0">
               <SidebarTrigger className="md:hidden shrink-0" />
               <Breadcrumbs />
@@ -74,7 +76,7 @@ export function MainLayout({ children }: MainLayoutProps) {
             </div>
           </header>
 
-          <main className={`flex-1 flex flex-col ${isProjectsPage ? 'overflow-hidden' : 'overflow-auto'} p-4 md:p-6 min-w-0`}>
+          <main className={`flex-1 flex flex-col ${isNoScrollPage ? 'overflow-hidden' : 'overflow-auto'} ${isModelsPage ? 'p-0' : 'pt-3 md:pt-3 px-4 md:px-6 pb-4 md:pb-6'} min-w-0`}>
             {children}
           </main>
         </div>

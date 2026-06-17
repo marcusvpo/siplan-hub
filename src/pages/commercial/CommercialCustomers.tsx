@@ -323,17 +323,17 @@ export default function CommercialCustomers() {
                         className={`
                           ${
                             stats.status === "critical"
-                              ? "bg-red-100 text-red-700 border-red-200 hover:bg-red-100"
+                              ? "bg-red-100 text-red-700 border-red-200 hover:bg-red-100 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/50 dark:hover:bg-red-950/30"
                               : ""
                           }
                           ${
                             stats.status === "attention"
-                              ? "bg-yellow-100 text-yellow-700 border-yellow-200 hover:bg-yellow-100"
+                              ? "bg-yellow-100 text-yellow-700 border-yellow-200 hover:bg-yellow-100 dark:bg-yellow-950/20 dark:text-yellow-400 dark:border-yellow-900/50 dark:hover:bg-yellow-950/30"
                               : ""
                           }
                           ${
                             stats.status === "healthy"
-                              ? "bg-green-100 text-green-700 border-green-200 hover:bg-green-100"
+                              ? "bg-green-100 text-green-700 border-green-200 hover:bg-green-100 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50 dark:hover:bg-emerald-950/30"
                               : ""
                           }
                         `}
@@ -370,7 +370,7 @@ export default function CommercialCustomers() {
                       {stats.blockers > 0 ? (
                         <Badge
                           variant="destructive"
-                          className="bg-red-50 text-red-600 border-red-200 hover:bg-red-100 h-5 text-[10px] px-1.5"
+                          className="bg-red-50 text-red-600 border-red-200 hover:bg-red-100 dark:bg-red-950/30 dark:text-red-400 dark:border-red-900/40 dark:hover:bg-red-950/50 h-5 text-[10px] px-1.5"
                         >
                           {stats.blockers} Bloqueio
                           {stats.blockers > 1 ? "s" : ""}
@@ -470,17 +470,17 @@ export default function CommercialCustomers() {
                     className={`h-5 text-[10px] px-1.5
                       ${
                         stats.status === "critical"
-                          ? "bg-red-100 text-red-700 hover:bg-red-100"
+                          ? "bg-red-100 text-red-700 hover:bg-red-100 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/50 dark:hover:bg-red-950/30"
                           : ""
                       }
                       ${
                         stats.status === "attention"
-                          ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-100"
+                          ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-100 dark:bg-yellow-950/20 dark:text-yellow-400 dark:border-yellow-900/50 dark:hover:bg-yellow-950/30"
                           : ""
                       }
                       ${
                         stats.status === "healthy"
-                          ? "bg-green-100 text-green-700 hover:bg-green-100"
+                          ? "bg-green-100 text-green-700 hover:bg-green-100 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50 dark:hover:bg-emerald-950/30"
                           : ""
                       }
                     `}
@@ -493,7 +493,7 @@ export default function CommercialCustomers() {
                   </Badge>
                 </div>
                 {stats.blockers > 0 && (
-                  <div className="bg-red-50 text-red-700 text-[10px] px-1.5 py-0.5 rounded inline-block">
+                  <div className="bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400 border border-red-200/50 dark:border-red-900/40 text-[10px] px-1.5 py-0.5 rounded inline-block">
                     🚨 {stats.blockers} Bloqueios Abertos
                   </div>
                 )}

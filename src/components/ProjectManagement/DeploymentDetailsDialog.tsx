@@ -76,68 +76,68 @@ export function DeploymentDetailsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <div className="flex items-center gap-3 mb-2">
+      <DialogContent className="max-w-lg p-4 gap-3">
+        <DialogHeader className="space-y-1">
+          <div className="flex items-center gap-1.5 mb-0.5">
             <Badge
               variant="outline"
               className={`${getSystemBadgeColor(
                 project.systemType,
-              )} px-2 py-0.5 text-xs font-bold uppercase tracking-wider`}
+              )} px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider`}
             >
               {project.systemType}
             </Badge>
-            <Badge variant="secondary" className="text-xs font-medium">
-              <Tag className="w-3 h-3 mr-1" />
+            <Badge variant="secondary" className="text-[9px] font-medium px-1.5 py-0.5">
+              <Tag className="w-2.5 h-2.5 mr-1" />
               {project.ticketNumber || "N/A"}
             </Badge>
           </div>
-          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400 bg-clip-text text-transparent">
+          <DialogTitle className="text-base font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400 bg-clip-text text-transparent">
             {customTitle || project.clientName}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-[11px]">
             {customDescription || "Detalhes da Implantação - Fase 1"}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 py-1">
           {/* Coluna 1: Datas e Status */}
-          <div className="space-y-6">
-            <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
-              <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-3 flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-blue-500" />
+          <div className="space-y-3">
+            <div className="bg-slate-50 dark:bg-slate-900/50 p-2.5 rounded-lg border border-slate-100 dark:border-slate-800/60">
+              <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 mb-1.5 flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-blue-500" />
                 Período Agendado
               </h4>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center text-sm">
+              <div className="space-y-1">
+                <div className="flex justify-between items-center text-[11px]">
                   <span className="text-slate-500 dark:text-slate-400">
                     Início:
                   </span>
-                  <span className="font-medium text-slate-900 dark:text-slate-200">
+                  <span className="font-semibold text-slate-900 dark:text-slate-200">
                     {formatDate(displayStartDate)}
                   </span>
                 </div>
-                <div className="flex justify-between items-center text-sm">
+                <div className="flex justify-between items-center text-[11px]">
                   <span className="text-slate-500 dark:text-slate-400">
                     Término:
                   </span>
-                  <span className="font-medium text-slate-900 dark:text-slate-200">
+                  <span className="font-semibold text-slate-900 dark:text-slate-200">
                     {formatDate(displayEndDate)}
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
-              <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-3 flex items-center gap-2">
-                <User className="w-4 h-4 text-emerald-500" />
+            <div className="bg-slate-50 dark:bg-slate-900/50 p-2.5 rounded-lg border border-slate-100 dark:border-slate-800/60">
+              <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 mb-1.5 flex items-center gap-1.5">
+                <User className="w-3.5 h-3.5 text-emerald-500" />
                 Responsável
               </h4>
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-bold text-xs ring-2 ring-white dark:ring-slate-950">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-bold text-[10px] ring-1 ring-white dark:ring-slate-950">
                   {displayResponsible?.substring(0, 2).toUpperCase() || "?"}
                 </div>
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">
                   {displayResponsible || "Não definido"}
                 </span>
               </div>
@@ -145,51 +145,53 @@ export function DeploymentDetailsDialog({
           </div>
 
           {/* Coluna 2: Informações Adicionais */}
-          <div className="space-y-6">
-            <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800 h-full">
-              <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-3 flex items-center gap-2">
-                <Monitor className="w-4 h-4 text-purple-500" />
+          <div className="space-y-3">
+            <div className="bg-slate-50 dark:bg-slate-900/50 p-2.5 rounded-lg border border-slate-100 dark:border-slate-800/60 h-full">
+              <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 mb-1.5 flex items-center gap-1.5">
+                <Monitor className="w-3.5 h-3.5 text-purple-500" />
                 Detalhes do Projeto
               </h4>
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-white dark:bg-slate-800 shadow-sm">
-                    <Clock className="w-4 h-4 text-slate-500" />
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="p-1 rounded bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-800/40">
+                    <Clock className="w-3 h-3 text-slate-500" />
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Carga Horária
+                    <p className="text-[9px] uppercase tracking-wider text-slate-400 font-semibold">
+                      {project.systemType === "Modelos TN" ? "Horas de Trabalho" : "Carga Horária"}
                     </p>
-                    <p className="text-sm font-medium text-slate-900 dark:text-slate-200">
-                      {project.soldHours ? `${project.soldHours} horas` : "N/A"}
+                    <p className="text-[11px] font-bold text-slate-900 dark:text-slate-200">
+                      {project.systemType === "Modelos TN"
+                        ? (project.workHours ? `${project.workHours} horas` : "N/A")
+                        : (project.soldHours ? `${project.soldHours} horas` : "N/A")}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-white dark:bg-slate-800 shadow-sm">
-                    <Tag className="w-4 h-4 text-slate-500" />
+                <div className="flex items-center gap-2">
+                  <div className="p-1 rounded bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-800/40">
+                    <Tag className="w-3 h-3 text-slate-500" />
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                    <p className="text-[9px] uppercase tracking-wider text-slate-400 font-semibold">
                       Especialidade
                     </p>
-                    <p className="text-sm font-medium text-slate-900 dark:text-slate-200">
+                    <p className="text-[11px] font-bold text-slate-900 dark:text-slate-200">
                       {project.specialty || "Módulo Padrão"}
                     </p>
                   </div>
                 </div>
 
                 {phase1.trainingLocation && (
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-lg bg-white dark:bg-slate-800 shadow-sm">
-                      <MapPin className="w-4 h-4 text-slate-500" />
+                  <div className="flex items-center gap-2">
+                    <div className="p-1 rounded bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-800/40">
+                      <MapPin className="w-3 h-3 text-slate-500" />
                     </div>
                     <div>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                      <p className="text-[9px] uppercase tracking-wider text-slate-400 font-semibold">
                         Localização
                       </p>
-                      <p className="text-sm font-medium text-slate-900 dark:text-slate-200">
+                      <p className="text-[11px] font-bold text-slate-900 dark:text-slate-200 truncate max-w-[160px]">
                         {phase1.trainingLocation}
                       </p>
                     </div>
@@ -197,15 +199,15 @@ export function DeploymentDetailsDialog({
                 )}
 
                 {phase1.participantsCount && (
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-lg bg-white dark:bg-slate-800 shadow-sm">
-                      <Users className="w-4 h-4 text-slate-500" />
+                  <div className="flex items-center gap-2">
+                    <div className="p-1 rounded bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-800/40">
+                      <Users className="w-3 h-3 text-slate-500" />
                     </div>
                     <div>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                      <p className="text-[9px] uppercase tracking-wider text-slate-400 font-semibold">
                         Participantes
                       </p>
-                      <p className="text-sm font-medium text-slate-900 dark:text-slate-200">
+                      <p className="text-[11px] font-bold text-slate-900 dark:text-slate-200">
                         {phase1.participantsCount} pessoas
                       </p>
                     </div>
@@ -216,16 +218,17 @@ export function DeploymentDetailsDialog({
           </div>
         </div>
 
-        <DialogFooter className="sm:justify-end gap-2 pt-4 border-t">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="sm:justify-end gap-1.5 pt-2.5 border-t">
+          <Button variant="outline" size="sm" className="h-7 text-xs px-2.5" onClick={() => onOpenChange(false)}>
             Fechar
           </Button>
           <Button
             onClick={handleOpenProject}
-            className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
+            size="sm"
+            className="h-7 text-xs bg-blue-600 hover:bg-blue-700 text-white gap-1 px-2.5"
           >
             Ver Projeto Completo
-            <ArrowRight className="w-4 h-4" />
+            <ArrowRight className="w-3 h-3" />
           </Button>
         </DialogFooter>
       </DialogContent>

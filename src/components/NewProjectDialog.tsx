@@ -54,6 +54,7 @@ export const NewProjectDialog = () => {
   const [opNumber, setOpNumber] = useState("");
   const [salesOrderNumber, setSalesOrderNumber] = useState("");
   const [soldHours, setSoldHours] = useState("");
+  const [workHours, setWorkHours] = useState("");
   const [legacySystem, setLegacySystem] = useState("");
   const [specialty, setSpecialty] = useState<string>("");
 
@@ -61,7 +62,7 @@ export const NewProjectDialog = () => {
   const [productsOpen, setProductsOpen] = useState(false);
 
   // Constants
-  const MAIN_SYSTEMS = ["Orion TN", "Orion PRO", "Orion REG"];
+  const MAIN_SYSTEMS = ["Orion TN", "Orion PRO", "Orion REG", "Modelos TN"];
   const AVAILABLE_PRODUCTS = [
     "LCW",
     "SGA",
@@ -91,13 +92,14 @@ export const NewProjectDialog = () => {
         products, // Including products
         projectLeader,
         // lastUpdatedBy is now set automatically by useProjectsV2
-        opNumber: opNumber ? parseInt(opNumber) : undefined,
-        salesOrderNumber: salesOrderNumber
-          ? parseInt(salesOrderNumber)
-          : undefined,
-        soldHours: soldHours ? parseFloat(soldHours) : undefined,
-        legacySystem: legacySystem || undefined,
-        specialty: specialty || undefined,
+        opNumber: systemType === "Modelos TN" || !opNumber ? undefined : parseInt(opNumber),
+        salesOrderNumber: systemType === "Modelos TN" || !salesOrderNumber
+          ? undefined
+          : parseInt(salesOrderNumber),
+        soldHours: systemType === "Modelos TN" || !soldHours ? undefined : parseFloat(soldHours),
+        workHours: systemType === "Modelos TN" && workHours ? parseFloat(workHours) : undefined,
+        legacySystem: systemType === "Modelos TN" || !legacySystem ? undefined : legacySystem,
+        specialty: systemType === "Modelos TN" || !specialty ? undefined : specialty,
       } as Partial<ProjectV2>,
       {
         onSuccess: () => {
@@ -112,6 +114,7 @@ export const NewProjectDialog = () => {
           setOpNumber("");
           setSalesOrderNumber("");
           setSoldHours("");
+          setWorkHours("");
           setLegacySystem("");
           setSpecialty("");
         },
@@ -133,8 +136,8 @@ export const NewProjectDialog = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="lg" className="gap-2">
-          <Plus className="h-5 w-5" />
+        <Button className="gap-1.5 h-9 text-xs">
+          <Plus className="h-4 w-4" />
           Cadastrar Novo Projeto
         </Button>
       </DialogTrigger>
@@ -200,67 +203,69 @@ export const NewProjectDialog = () => {
                   </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Produtos Adicionais</Label>
-                  <Popover open={productsOpen} onOpenChange={setProductsOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={productsOpen}
-                        className="w-full justify-between h-auto min-h-10 py-2 text-left font-normal"
-                      >
-                        {products.length > 0 ? (
-                          <div className="flex flex-wrap gap-1">
-                            {products.map((product) => (
-                              <Badge
-                                key={product}
-                                variant="secondary"
-                                className="mr-1"
-                              >
-                                {product}
-                              </Badge>
-                            ))}
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground">
-                            Selecione os produtos...
-                          </span>
-                        )}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[300px] p-0" align="start">
-                      <Command>
-                        <CommandInput placeholder="Buscar produto..." />
-                        <CommandList>
-                          <CommandEmpty>
-                            Nenhum produto encontrado.
-                          </CommandEmpty>
-                          <CommandGroup>
-                            {AVAILABLE_PRODUCTS.map((product) => (
-                              <CommandItem
-                                key={product}
-                                value={product}
-                                onSelect={() => toggleProduct(product)}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    products.includes(product)
-                                      ? "opacity-100"
-                                      : "opacity-0",
-                                  )}
-                                />
-                                {product}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                </div>
+                {systemType !== "Modelos TN" && (
+                  <div className="space-y-2">
+                    <Label>Produtos Adicionais</Label>
+                    <Popover open={productsOpen} onOpenChange={setProductsOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={productsOpen}
+                          className="w-full justify-between h-auto min-h-10 py-2 text-left font-normal"
+                        >
+                          {products.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {products.map((product) => (
+                                <Badge
+                                  key={product}
+                                  variant="secondary"
+                                  className="mr-1"
+                                >
+                                  {product}
+                                </Badge>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">
+                              Selecione os produtos...
+                            </span>
+                          )}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[300px] p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="Buscar produto..." />
+                          <CommandList>
+                            <CommandEmpty>
+                              Nenhum produto encontrado.
+                            </CommandEmpty>
+                            <CommandGroup>
+                              {AVAILABLE_PRODUCTS.map((product) => (
+                                <CommandItem
+                                  key={product}
+                                  value={product}
+                                  onSelect={() => toggleProduct(product)}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      products.includes(product)
+                                        ? "opacity-100"
+                                        : "opacity-0",
+                                    )}
+                                  />
+                                  {product}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <Label htmlFor="projectLeader">
@@ -275,69 +280,85 @@ export const NewProjectDialog = () => {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="opNumber">N° OP</Label>
-                  <Input
-                    id="opNumber"
-                    type="number"
-                    placeholder="Ex: 12345"
-                    value={opNumber}
-                    onChange={(e) => setOpNumber(e.target.value)}
-                  />
-                </div>
+                {systemType === "Modelos TN" ? (
+                  <div className="space-y-2 col-span-2">
+                    <Label htmlFor="workHours">Horas de Trabalho</Label>
+                    <Input
+                      id="workHours"
+                      type="number"
+                      step="0.5"
+                      placeholder="Ex: 40"
+                      value={workHours}
+                      onChange={(e) => setWorkHours(e.target.value)}
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="opNumber">N° OP</Label>
+                      <Input
+                        id="opNumber"
+                        type="number"
+                        placeholder="Ex: 12345"
+                        value={opNumber}
+                        onChange={(e) => setOpNumber(e.target.value)}
+                      />
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="salesOrderNumber">N° Pedido de Venda</Label>
-                  <Input
-                    id="salesOrderNumber"
-                    type="number"
-                    placeholder="Ex: 98765"
-                    value={salesOrderNumber}
-                    onChange={(e) => setSalesOrderNumber(e.target.value)}
-                  />
-                </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="salesOrderNumber">N° Pedido de Venda</Label>
+                      <Input
+                        id="salesOrderNumber"
+                        type="number"
+                        placeholder="Ex: 98765"
+                        value={salesOrderNumber}
+                        onChange={(e) => setSalesOrderNumber(e.target.value)}
+                      />
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="soldHours">Horas Vendidas</Label>
-                  <Input
-                    id="soldHours"
-                    type="number"
-                    step="0.5"
-                    placeholder="Ex: 40"
-                    value={soldHours}
-                    onChange={(e) => setSoldHours(e.target.value)}
-                  />
-                </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="soldHours">Horas Vendidas</Label>
+                      <Input
+                        id="soldHours"
+                        type="number"
+                        step="0.5"
+                        placeholder="Ex: 40"
+                        value={soldHours}
+                        onChange={(e) => setSoldHours(e.target.value)}
+                      />
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="legacySystem">Sistema Legado</Label>
-                  <Input
-                    id="legacySystem"
-                    placeholder="Ex: Sistema Antigo"
-                    value={legacySystem}
-                    onChange={(e) => setLegacySystem(e.target.value)}
-                  />
-                </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="legacySystem">Sistema Legado</Label>
+                      <Input
+                        id="legacySystem"
+                        placeholder="Ex: Sistema Antigo"
+                        value={legacySystem}
+                        onChange={(e) => setLegacySystem(e.target.value)}
+                      />
+                    </div>
 
-                <div className="space-y-2 col-span-2">
-                  <Label htmlFor="specialty">Especialidade</Label>
-                  <Select value={specialty} onValueChange={setSpecialty}>
-                    <SelectTrigger id="specialty">
-                      <SelectValue placeholder="Selecione a especialidade" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="protesto">Protesto</SelectItem>
-                      <SelectItem value="notas">Notas</SelectItem>
-                      <SelectItem value="registro_civil">
-                        Registro Civil
-                      </SelectItem>
-                      <SelectItem value="registro_imoveis">
-                        Registro de Imóveis
-                      </SelectItem>
-                      <SelectItem value="tdpj">TDPJ</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                    <div className="space-y-2 col-span-2">
+                      <Label htmlFor="specialty">Especialidade</Label>
+                      <Select value={specialty} onValueChange={setSpecialty}>
+                        <SelectTrigger id="specialty">
+                          <SelectValue placeholder="Selecione a especialidade" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="protesto">Protesto</SelectItem>
+                          <SelectItem value="notas">Notas</SelectItem>
+                          <SelectItem value="registro_civil">
+                            Registro Civil
+                          </SelectItem>
+                          <SelectItem value="registro_imoveis">
+                            Registro de Imóveis
+                          </SelectItem>
+                          <SelectItem value="tdpj">TDPJ</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </>
+                )}
               </div>
             </TabsContent>
           </Tabs>

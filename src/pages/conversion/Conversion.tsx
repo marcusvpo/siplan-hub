@@ -70,11 +70,11 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  pending: "bg-slate-100 text-slate-700 border-slate-300",
-  in_progress: "bg-blue-100 text-blue-700 border-blue-300",
-  awaiting_homologation: "bg-purple-100 text-purple-700 border-purple-300",
-  homologation: "bg-purple-100 text-purple-700 border-purple-300",
-  done: "bg-green-100 text-green-700 border-green-300",
+  pending: "bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-950/20 dark:text-slate-400 dark:border-slate-800",
+  in_progress: "bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-800",
+  awaiting_homologation: "bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-950/20 dark:text-purple-400 dark:border-purple-800",
+  homologation: "bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-950/20 dark:text-purple-400 dark:border-purple-800",
+  done: "bg-green-100 text-green-700 border-green-300 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50",
 };
 
 export default function Conversion() {
@@ -372,14 +372,14 @@ export default function Conversion() {
               {/* Assignment Status - Prominent Display */}
               <div className="mt-3">
                 {item.assignedToName ? (
-                  <Badge className="bg-emerald-100 text-emerald-700 border-emerald-300 gap-1">
+                  <Badge className="bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50 gap-1">
                     <UserCheck className="h-3 w-3" />
                     Assumido por: {item.assignedToName}
                   </Badge>
                 ) : (
                   <Badge
                     variant="outline"
-                    className="bg-amber-50 text-amber-700 border-amber-300 gap-1"
+                    className="bg-amber-50 text-amber-700 border-amber-300 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/50 gap-1"
                   >
                     <Clock className="h-3 w-3" />
                     Não assumido
@@ -391,11 +391,11 @@ export default function Conversion() {
                     className={cn(
                       "gap-1 text-xs",
                       item.engineStatus === "pending_engine" &&
-                        "bg-orange-100 text-orange-700 border-orange-300",
+                        "bg-orange-100 text-orange-700 border-orange-300 dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-900/50",
                       item.engineStatus === "engine_in_development" &&
-                        "bg-blue-100 text-blue-700 border-blue-300",
+                        "bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/50",
                       item.engineStatus === "engine_ready" &&
-                        "bg-green-100 text-green-700 border-green-300",
+                        "bg-green-100 text-green-700 border-green-300 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50",
                     )}
                   >
                     <Cog className="h-3 w-3" />
@@ -434,10 +434,10 @@ export default function Conversion() {
                 className={cn(
                   "text-xs",
                   item.priority <= 2
-                    ? "bg-red-100 text-red-700 border-red-300"
+                    ? "bg-red-100 text-red-700 border-red-300 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/50"
                     : item.priority <= 4
-                      ? "bg-orange-100 text-orange-700 border-orange-300"
-                      : "bg-slate-100 text-slate-700 border-slate-300",
+                      ? "bg-orange-100 text-orange-700 border-orange-300 dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-900/50"
+                      : "bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-950/20 dark:text-slate-400 dark:border-slate-800",
                 )}
               >
                 P{item.priority}
