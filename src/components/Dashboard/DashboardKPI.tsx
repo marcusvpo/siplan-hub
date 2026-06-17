@@ -31,7 +31,7 @@ export const DashboardKPI: React.FC<DashboardKPIProps> = ({ onCardClick }) => {
   }
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 xl:grid-cols-8">
+    <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7">
       <KPICard
         title="Total"
         value={kpis.totalProjects}
@@ -79,14 +79,6 @@ export const DashboardKPI: React.FC<DashboardKPIProps> = ({ onCardClick }) => {
         icon={TrendingUp}
         variant={kpis.completionRate >= 50 ? "success" : "warning"}
         onClick={() => onCardClick?.("rate")}
-      />
-      
-      <KPICard
-        title="Follow-ups"
-        value={kpis.nextFollowups}
-        icon={Calendar}
-        variant={kpis.nextFollowups > 5 ? "warning" : "default"}
-        onClick={() => onCardClick?.("followups")}
       />
 
       <div className="hidden xl:block">

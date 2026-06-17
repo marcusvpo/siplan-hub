@@ -49,7 +49,7 @@ export function ProjectGrid() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Pagination State
-  const [pageSize, setPageSize] = useState(3);
+  const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
   // Reset to page 1 on filter changes

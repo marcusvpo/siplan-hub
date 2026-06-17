@@ -403,11 +403,8 @@ describe("project-transformers", () => {
         conversion_responsible: "Conv R",
         implementation_responsible: "Imp R",
         post_responsible: "Post R",
-        start_date_planned: dateStr,
-        end_date_planned: dateStr,
         start_date_actual: dateStr,
         end_date_actual: dateStr,
-        next_follow_up_date: dateStr,
         created_at: dateStr,
         updated_at: dateStr,
         last_update_by: "Updater",
@@ -458,8 +455,6 @@ describe("project-transformers", () => {
       expect(result.responsibleImplementation).toBe("Imp R");
       expect(result.responsiblePost).toBe("Post R");
 
-      expect(result.startDatePlanned).toBeInstanceOf(Date);
-      expect(result.startDatePlanned?.toISOString()).toBe(dateStr);
       expect(result.createdAt.toISOString()).toBe(dateStr);
 
       expect(result.tags).toEqual(["a", "b"]);

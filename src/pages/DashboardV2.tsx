@@ -58,12 +58,7 @@ export default function DashboardV2() {
         filtered = projects.filter((p) => p.globalStatus === "done");
         title = "Projetos Concluídos";
         break;
-      case "followups":
-        filtered = projects.filter(
-          (p) => p.nextFollowUpDate && new Date(p.nextFollowUpDate) <= new Date()
-        );
-        title = "Próximos Follow-ups";
-        break;
+
       default:
         filtered = projects;
         title = "Detalhes";
@@ -80,21 +75,7 @@ export default function DashboardV2() {
     setIsModalOpen(true);
   };
 
-  useEffect(() => {
-    if (isLoading) return;
 
-    const overdueProjects = projects.filter(
-      (p) => p.nextFollowUpDate && new Date(p.nextFollowUpDate) < new Date()
-    );
-
-    if (overdueProjects.length > 0) {
-      toast({
-        title: "Atenção: Follow-ups Vencidos",
-        description: `Você tem ${overdueProjects.length} projetos com follow-up vencido.`,
-        variant: "destructive",
-      });
-    }
-  }, [projects, isLoading, toast]);
 
   const criticalAlerts = projects
     .filter((p) => p.healthScore === "critical" && p.globalStatus !== "blocked")

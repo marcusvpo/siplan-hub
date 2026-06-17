@@ -69,13 +69,6 @@ export const useKPIs = (projects: ProjectV2[]): KPIData => {
           }, 0) / completedWithDates.length
         : 0;
 
-    // Próximos follow-ups (< 3 dias)
-    const now = new Date();
-    const threeDaysFromNow = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
-    const nextFollowups = projects.filter(
-      (p) => p.nextFollowUpDate && p.nextFollowUpDate >= now && p.nextFollowUpDate <= threeDaysFromNow
-    ).length;
-
     return {
       totalProjects,
       criticalProjects,
@@ -84,7 +77,6 @@ export const useKPIs = (projects: ProjectV2[]): KPIData => {
       completedProjects,
       completionRate: Math.round(completionRate),
       avgTotalTime: Math.round(avgTotalTime),
-      nextFollowups,
       successRate,
       avgStageTime,
     };
