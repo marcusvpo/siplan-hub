@@ -122,11 +122,8 @@ export function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
     responsiblePost: (row.post_responsible as string) || '',
     responsibleEnvironment: (row.environment_responsible as string) || '',
 
-    startDatePlanned: row.start_date_planned ? new Date(row.start_date_planned as string) : undefined,
-    endDatePlanned: row.end_date_planned ? new Date(row.end_date_planned as string) : undefined,
     startDateActual: row.start_date_actual ? new Date(row.start_date_actual as string) : undefined,
     endDateActual: row.end_date_actual ? new Date(row.end_date_actual as string) : undefined,
-    nextFollowUpDate: row.next_follow_up_date ? new Date(row.next_follow_up_date as string) : undefined,
     createdAt: new Date(row.created_at as string),
     lastUpdatedAt: new Date(row.updated_at as string),
     lastUpdatedBy: (row.last_update_by as string) || 'Sistema',
@@ -384,7 +381,28 @@ export function transformToDB(project: Partial<ProjectV2>, currentProject?: Proj
   if (project.systemType !== undefined) dbRow.system_type = project.systemType;
   if (project.implantationType !== undefined) dbRow.implantation_type = project.implantationType;
   if (project.projectType !== undefined) dbRow.project_type = project.projectType;
-  if (project.globalStatus !== undefined) dbRow.global_status = project.globalStatus;
+  // Automated Global Status Calculation
+  let calculatedGlobalStatus = project.globalStatus;
+  if (project.stages !== undefined || project.globalStatus !== undefined || currentProject !== undefined) {
+    const getStageStatus = (stageName: keyof ProjectV2['stages']): string => {
+      return project.stages?.[stageName]?.status 
+        || currentProject?.stages?.[stageName]?.status 
+        || "todo";
+    };
+    
+    const stagesKeys: (keyof ProjectV2['stages'])[] = ["infra", "adherence", "environment", "conversion", "modelosEditor", "implementation", "post"];
+    const hasAnyBlockedStage = stagesKeys.some(key => getStageStatus(key) === "blocked");
+    
+    if (hasAnyBlockedStage) {
+      calculatedGlobalStatus = "blocked";
+    } else if (getStageStatus("post") === "done") {
+      calculatedGlobalStatus = "done";
+    } else {
+      calculatedGlobalStatus = "in-progress";
+    }
+  }
+  if (calculatedGlobalStatus !== undefined) dbRow.global_status = calculatedGlobalStatus;
+
   if (project.overallProgress !== undefined) dbRow.overall_progress = project.overallProgress;
 
   if (project.opNumber !== undefined) dbRow.op_number = project.opNumber;
@@ -410,14 +428,31 @@ export function transformToDB(project: Partial<ProjectV2>, currentProject?: Proj
   if (project.responsibleAdherence !== undefined) dbRow.adherence_responsible = project.responsibleAdherence;
   if (project.responsibleEnvironment !== undefined) dbRow.environment_responsible = project.responsibleEnvironment;
   if (project.responsibleConversion !== undefined) dbRow.conversion_responsible = project.responsibleConversion;
-  if (project.responsibleImplementation !== undefined) dbRow.implementation_responsible = project.responsibleImplementation;
+
+  // Automated Implementation Responsible (Sync with Phase 1)
+  const phase1Resp = project.stages?.implementation?.phase1?.responsible 
+    ?? currentProject?.stages?.implementation?.phase1?.responsible;
+  if (phase1Resp !== undefined) {
+    dbRow.implementation_responsible = phase1Resp;
+  } else if (project.responsibleImplementation !== undefined) {
+    dbRow.implementation_responsible = project.responsibleImplementation;
+  }
+
   if (project.responsiblePost !== undefined) dbRow.post_responsible = project.responsiblePost;
 
-  if (project.startDatePlanned !== undefined) dbRow.start_date_planned = formatDateForDB(project.startDatePlanned);
-  if (project.endDatePlanned !== undefined) dbRow.end_date_planned = formatDateForDB(project.endDatePlanned);
+  // Automated Realized End Date
+  const wasPostDone = currentProject?.stages?.post?.status === "done";
+  const isPostDone = project.stages?.post?.status === "done" || (project.stages?.post?.status === undefined && wasPostDone);
+  
+  let finalEndDateActual = project.endDateActual;
+  if (isPostDone && !wasPostDone) {
+    finalEndDateActual = new Date();
+  } else if (!isPostDone && wasPostDone) {
+    finalEndDateActual = null as any; // clear End Date if Post is no longer done
+  }
+
   if (project.startDateActual !== undefined) dbRow.start_date_actual = formatDateForDB(project.startDateActual);
-  if (project.endDateActual !== undefined) dbRow.end_date_actual = formatDateForDB(project.endDateActual);
-  if (project.nextFollowUpDate !== undefined) dbRow.next_follow_up_date = formatDateForDB(project.nextFollowUpDate);
+  if (finalEndDateActual !== undefined) dbRow.end_date_actual = formatDateForDB(finalEndDateActual);
 
   if (project.tags !== undefined) dbRow.tags = project.tags;
   if (project.priority !== undefined) dbRow.priority = project.priority;

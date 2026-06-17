@@ -67,7 +67,7 @@ export const DashboardTable = ({ onProjectClick }: DashboardTableProps) => {
               onProjectClick?.(project);
             }}
           >
-            <div className="flex flex-col space-y-2 sm:space-y-0 sm:grid sm:grid-cols-[1.5fr_1fr_0.8fr_0.8fr_1fr] gap-2 sm:gap-4 items-stretch sm:items-center">
+            <div className="flex flex-col space-y-2 sm:space-y-0 sm:grid sm:grid-cols-[1.5fr_1.2fr_0.8fr_1fr] gap-2 sm:gap-4 items-stretch sm:items-center">
               <div className="min-w-0">
                 <h3 className="font-bold text-sm tracking-tight truncate leading-tight">
                   {project.clientName}
@@ -96,24 +96,7 @@ export const DashboardTable = ({ onProjectClick }: DashboardTableProps) => {
                 />
               </div>
 
-              <div className="flex items-center justify-between sm:justify-center border-t border-border/40 pt-2 sm:border-0 sm:pt-0">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase sm:hidden">Follow-up</span>
-                {project.nextFollowUpDate ? (
-                  <div className="inline-flex flex-col items-end sm:items-center">
-                    <span className={cn(
-                      "text-[11px] font-black tabular-nums",
-                      isPast(project.nextFollowUpDate) ? "text-destructive" : "text-foreground"
-                    )}>
-                      {format(new Date(project.nextFollowUpDate), "dd MMM", { locale: ptBR })}
-                    </span>
-                    <span className="text-[9px] uppercase font-bold text-muted-foreground/50 leading-none mt-0.5 hidden sm:inline">
-                      Follow-up
-                    </span>
-                  </div>
-                ) : (
-                  <span className="text-[10px] text-muted-foreground/30">—</span>
-                )}
-              </div>
+
 
               <div className="flex items-center justify-between sm:justify-end gap-3 border-t border-border/40 pt-2 sm:border-0 sm:pt-0">
                 <div className="text-left sm:text-right">

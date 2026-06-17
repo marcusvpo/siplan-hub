@@ -54,8 +54,7 @@ export function ProjectCardV3({
   engineStatus,
 }: ProjectCardV3Props) {
   const { canDeleteProjects } = usePermissions();
-  const isFollowUpOverdue =
-    project.nextFollowUpDate && new Date(project.nextFollowUpDate) < new Date();
+
 
   // Predictability: Detect bottleneck(s) and stage readiness
   const bottleneck = identifyBottleneck(project);
@@ -251,24 +250,7 @@ export function ProjectCardV3({
         )}
 
         <div className="flex flex-wrap items-center gap-2">
-          {/* Follow Up Indicator */}
-          {project.nextFollowUpDate && (
-            <div
-              className={cn(
-                "flex items-center gap-1 text-[9px] px-1.5 py-0 rounded-full bg-muted/30 border border-border/50",
-                isFollowUpOverdue
-                  ? "text-destructive bg-destructive/5 border-destructive/20 font-semibold"
-                  : "text-muted-foreground",
-              )}
-            >
-              <Calendar className="h-2.5 w-2.5 shrink-0" />
-              <span className="whitespace-nowrap">
-                {format(new Date(project.nextFollowUpDate), "dd/MM", {
-                  locale: ptBR,
-                })}
-              </span>
-            </div>
-          )}
+
 
           {/* Project Leader */}
           <div

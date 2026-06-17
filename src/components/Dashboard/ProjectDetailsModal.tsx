@@ -68,7 +68,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                         <TableHead className="text-[10px] uppercase font-black tracking-widest text-muted-foreground/70 text-center">Sistema</TableHead>
                         <TableHead className="text-[10px] uppercase font-black tracking-widest text-muted-foreground/70 text-center">Progresso</TableHead>
                         <TableHead className="text-[10px] uppercase font-black tracking-widest text-muted-foreground/70 text-center">Saúde</TableHead>
-                        <TableHead className="text-[10px] uppercase font-black tracking-widest text-muted-foreground/70 text-right">Follow-up</TableHead>
+
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -107,13 +107,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                                project.healthScore === "warning" ? "Alerta" : "OK"}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-[10px] font-black text-right opacity-80">
-                            {project.nextFollowUpDate && !isNaN(new Date(project.nextFollowUpDate).getTime()) ? (
-                              format(new Date(project.nextFollowUpDate), "dd/MM", { locale: ptBR })
-                            ) : (
-                              <span className="text-muted-foreground/20 font-normal">-</span>
-                            )}
-                          </TableCell>
+
                         </TableRow>
                       ))}
                     </TableBody>
