@@ -511,9 +511,17 @@ const customWidgets = {
   imageUpload: CustomImageUploadWidget,
 };
 
+// Helper to format text input as DD/MM/YYYY date mask
+const formatToDateMask = (value: string) => {
+  const digits = value.replace(/\D/g, "").slice(0, 8);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+};
+
 // Custom Adherence Question Field
 const AdherenceQuestionField = (props: FieldProps) => {
-  const { schema, formData, onChange, readonly, disabled, fieldPathId } = props;
+  const { schema, uiSchema, formData, onChange, readonly, disabled, fieldPathId } = props;
 
   const utiliza = formData?.utiliza ?? false;
   const valor = formData?.valor ?? "";
@@ -523,6 +531,8 @@ const AdherenceQuestionField = (props: FieldProps) => {
   const nivel_impacto = formData?.nivel_impacto ?? (formData?.impacto ? "SIM" : "NÃO");
   const impacto = nivel_impacto === "SIM" || nivel_impacto === "ATENÇÃO";
   const isText = schema.properties && "valor" in schema.properties;
+  const isDate = schema.properties && "valor" in schema.properties && 
+    ((schema.properties.valor as Record<string, unknown>).format === "date" || uiSchema?.valor?.["ui:widget"] === "date");
 
   const handleUpdate = (updatedFields: Partial<{ utiliza: boolean; valor: string; detalhes: string; nivel_impacto: string; impacto: boolean }>) => {
     if (readonly || disabled) return;
@@ -586,13 +596,28 @@ const AdherenceQuestionField = (props: FieldProps) => {
           {isText ? (
             <div>
               <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Resposta:</Label>
-              <Textarea
-                value={valor}
-                onChange={(e) => handleUpdate({ valor: e.target.value })}
-                disabled={disabled || readonly}
-                className="bg-background text-xs min-h-[60px] border-muted-foreground/20 focus-visible:ring-primary focus-visible:border-primary"
-                placeholder="Digite a resposta..."
-              />
+              {isDate ? (
+                <Input
+                  type="text"
+                  value={valor}
+                  onChange={(e) => {
+                    const maskedValue = formatToDateMask(e.target.value);
+                    handleUpdate({ valor: maskedValue });
+                  }}
+                  disabled={disabled || readonly}
+                  className="bg-background text-xs h-9 border-muted-foreground/20 focus-visible:ring-primary focus-visible:border-primary"
+                  placeholder="DD/MM/YYYY"
+                  maxLength={10}
+                />
+              ) : (
+                <Textarea
+                  value={valor}
+                  onChange={(e) => handleUpdate({ valor: e.target.value })}
+                  disabled={disabled || readonly}
+                  className="bg-background text-xs min-h-[60px] border-muted-foreground/20 focus-visible:ring-primary focus-visible:border-primary"
+                  placeholder="Digite a resposta..."
+                />
+              )}
             </div>
           ) : (
             <div className="space-y-1.5">

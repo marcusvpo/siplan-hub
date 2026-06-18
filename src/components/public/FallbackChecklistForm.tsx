@@ -12,9 +12,11 @@ import {
 } from "@/components/ui/select";
 import { Building2, Plus, Trash2, ClipboardCheck, ArrowRight } from "lucide-react";
 import { KeyPerson } from "@/hooks/usePublicChecklist";
+import { validateBrazilianPhone } from "@/utils/phone";
+import { type CommercialChecklistRecord } from "@/hooks/useCommercialChecklists";
 
 interface FallbackChecklistFormProps {
-  checklist: any;
+  checklist: CommercialChecklistRecord;
   fullname: string;
   setFullname: (val: string) => void;
   role: string;
@@ -226,7 +228,7 @@ export function FallbackChecklistForm({
                       onChange={(e) => handlePhoneChange(idx, e.target.value)}
                       placeholder="(99) 99999-9999"
                       className={`bg-slate-50/50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-primary ${
-                        formErrors.has("phones") && !phone.trim()
+                        formErrors.has("phones") && !validateBrazilianPhone(phone)
                           ? "border-red-500/80 focus-visible:ring-red-500"
                           : ""
                       }`}

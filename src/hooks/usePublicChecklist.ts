@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSingleCommercialChecklist, useCommercialChecklists } from "@/hooks/useCommercialChecklists";
 import { useToast } from "@/hooks/use-toast";
+import { formatBrazilianPhone, validateBrazilianPhone } from "@/utils/phone";
 
 export interface KeyPerson {
   name: string;
@@ -48,7 +49,7 @@ export function usePublicChecklist() {
     enabled: !!checklist,
   });
 
-  const [dynamicResponses, setDynamicResponses] = useState<any>({});
+  const [dynamicResponses, setDynamicResponses] = useState<Record<string, unknown>>({});
   const [fullname, setFullname] = useState("");
   const [role, setRole] = useState("");
   const [email, setEmail] = useState("");
@@ -82,7 +83,7 @@ export function usePublicChecklist() {
       if (r.fullname) setFullname(r.fullname);
       if (r.role) setRole(r.role);
       if (r.email) setEmail(r.email);
-      if (r.phones) setPhones(r.phones);
+      if (r.phones) setPhones(r.phones.map(formatBrazilianPhone));
       if (r.fill_date) setFillDate(r.fill_date);
       if (r.floors) setFloors(String(r.floors));
       if (r.structure_obs) setStructureObs(r.structure_obs);
@@ -100,7 +101,7 @@ export function usePublicChecklist() {
 
   const handlePhoneChange = (index: number, val: string) => {
     const updated = [...phones];
-    updated[index] = val;
+    updated[index] = formatBrazilianPhone(val);
     setPhones(updated);
   };
 
@@ -137,7 +138,7 @@ export function usePublicChecklist() {
     if (!fullname.trim()) errors.add("fullname");
     if (!role.trim()) errors.add("role");
     if (!email.trim()) errors.add("email");
-    if (phones.some(p => !p.trim())) errors.add("phones");
+    if (phones.some(p => !validateBrazilianPhone(p))) errors.add("phones");
     if (!floors.trim()) errors.add("floors");
     if (!sectors.trim()) errors.add("sectors");
     if (!sectorsDistribution.trim()) errors.add("sectorsDistribution");
@@ -200,7 +201,7 @@ export function usePublicChecklist() {
     });
   };
 
-  const handleDynamicSubmit = (responses: any) => {
+  const handleDynamicSubmit = (responses: Record<string, unknown>) => {
     submitChecklist.mutate({ id: checklist.id, responses }, {
       onSuccess: () => {
         setSubmittedSuccess(true);

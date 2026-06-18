@@ -123,8 +123,7 @@ export function ProjectGrid() {
         matchesPreset = isPostInProgress;
       } else if (viewPreset === "active") {
         matchesPreset =
-          (project.globalStatus === "todo" ||
-            project.globalStatus === "in-progress") &&
+          project.globalStatus === "in-progress" &&
           !isPostInProgress;
       } else if (viewPreset === "paused") {
         matchesPreset = project.globalStatus === "blocked" && !isPostInProgress;
