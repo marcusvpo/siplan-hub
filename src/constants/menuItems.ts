@@ -206,6 +206,7 @@ export const menuItems: MenuItem[] = [
         icon: Users,
         description: "Ferramentas, formulários de aderência e transição",
         permissionKey: "menu_implantadores",
+        path: "/implantadores",
         subItems: [
             {
                 title: "Editor de Aderência",
