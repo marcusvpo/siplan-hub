@@ -56,7 +56,7 @@ export function ProjectModal({
     queryFn: async () => {
       if (!displayProject?.id) return null;
       const { data, error } = await supabase
-        .from("commercial_checklists" as any)
+        .from("commercial_checklists" as never)
         .select("*")
         .eq("project_id", displayProject.id)
         .maybeSingle();
@@ -72,7 +72,7 @@ export function ProjectModal({
     queryFn: async () => {
       if (!displayProject?.ticketNumber) return null;
       const { data, error } = await supabase
-        .from("deployment_forms" as any)
+        .from("deployment_forms" as never)
         .select("*")
         .eq("ticket_number", displayProject.ticketNumber)
         .maybeSingle();
@@ -330,7 +330,7 @@ function ChecklistStatusButton({
   onCloseModal,
 }: {
   projectId: string;
-  checklist: any;
+  checklist: { id: string; status: string } | null | undefined;
   onCloseModal: () => void;
 }) {
   const navigate = useNavigate();
@@ -390,7 +390,7 @@ function DeploymentFormStatusButton({
   onCloseModal,
 }: {
   projectId: string;
-  deploymentForm: any;
+  deploymentForm: { id: string } | null | undefined;
   onCloseModal: () => void;
 }) {
   const navigate = useNavigate();
