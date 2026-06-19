@@ -21,10 +21,24 @@ export default function AderenciasFinalizadas() {
   const [completedForms, setCompletedForms] = useState<CompletedFormWithProject[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [profiles, setProfiles] = useState<Record<string, string>>({});
 
   const loadCompletedForms = useCallback(async () => {
     setIsLoading(true);
     try {
+      // Fetch profiles to map IDs to names
+      const { data: profilesData, error: profilesError } = await supabase
+        .from("profiles")
+        .select("id, full_name");
+
+      if (profilesError) throw profilesError;
+
+      const profileMap: Record<string, string> = {};
+      profilesData?.forEach((p) => {
+        profileMap[p.id] = p.full_name;
+      });
+      setProfiles(profileMap);
+
       const { data, error } = await supabase
         .from("project_form_responses")
         .select(`
@@ -33,6 +47,8 @@ export default function AderenciasFinalizadas() {
           status,
           updated_at,
           data,
+          filled_by,
+          approved_by,
           projects (
             client_name,
             ticket_number,
@@ -101,7 +117,11 @@ export default function AderenciasFinalizadas() {
     const matchesSystem = proj.system_type.toLowerCase().includes(query);
     const matchesTicket = proj.ticket_number ? proj.ticket_number.includes(query) : false;
 
-    return matchesClient || matchesSystem || matchesTicket;
+    const filledByName = form.filled_by ? (profiles[form.filled_by] || "").toLowerCase() : "";
+    const approvedByName = form.approved_by ? (profiles[form.approved_by] || "").toLowerCase() : "";
+    const matchesResponsible = filledByName.includes(query) || approvedByName.includes(query);
+
+    return matchesClient || matchesSystem || matchesTicket || matchesResponsible;
   });
 
   return (
@@ -142,7 +162,7 @@ export default function AderenciasFinalizadas() {
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Buscar por cliente, sistema ou ticket..."
+          placeholder="Buscar por cliente, sistema, ticket ou responsável..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-9 h-10 border-muted-foreground/30 bg-card"
@@ -178,6 +198,7 @@ export default function AderenciasFinalizadas() {
                   <tr className="bg-muted/40 border-b text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
                     <th className="p-4">Cliente / Projeto</th>
                     <th className="p-4">Produto</th>
+                    <th className="p-4">Responsável</th>
                     <th className="p-4">Status / Veredito</th>
                     <th className="p-4">Última Atualização</th>
                     <th className="p-4 text-right">Ações</th>
@@ -200,6 +221,9 @@ export default function AderenciasFinalizadas() {
                           <span className="font-medium bg-slate-700 text-white px-2 py-0.5 rounded text-[10px] whitespace-nowrap">
                             {proj.system_type}
                           </span>
+                        </td>
+                        <td className="p-4 font-medium text-foreground/80 whitespace-nowrap">
+                          {profiles[form.approved_by || ""] || profiles[form.filled_by || ""] || "Não atribuído"}
                         </td>
                         <td className="p-4">
                           {(() => {
