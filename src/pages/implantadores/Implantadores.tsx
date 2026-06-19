@@ -35,10 +35,10 @@ export default function Implantadores() {
       ]
     },
     {
-      title: "Editor de Checklist de Homologação",
-      description: "Edite o roteiro de homologação contendo regras e validações necessárias para conversão de dados.",
+      title: "Homologação de Conversões",
+      description: "Valide conversões finalizadas, registre inconsistências detectadas ou aprove etapas do processo.",
       icon: ClipboardList,
-      link: "/implantadores/homologacao",
+      link: "/implantadores/homologation",
       color: "from-indigo-500 to-blue-600",
       textColor: "text-indigo-500",
       bgLight: "bg-indigo-500/10",

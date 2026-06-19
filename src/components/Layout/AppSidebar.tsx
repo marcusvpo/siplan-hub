@@ -527,20 +527,6 @@ export function AppSidebar() {
                       <span>Motores</span>
                     </Button>
                   </Link>
-                  <Link to="/conversion/homologation">
-                    <Button
-                      variant={
-                        isActive("/conversion/homologation")
-                          ? "secondary"
-                          : "ghost"
-                      }
-                      size="sm"
-                      className="w-full justify-start gap-3 h-9"
-                    >
-                      <BarChart3 className="h-4 w-4" />
-                      <span>Homologação</span>
-                    </Button>
-                  </Link>
                 </div>
               </CollapsibleContent>
             </Collapsible>
