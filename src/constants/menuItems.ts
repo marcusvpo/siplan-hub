@@ -167,12 +167,6 @@ export const menuItems: MenuItem[] = [
                 icon: Cog,
                 description: "Configuração de scripts de migração",
             },
-            {
-                title: "Homologação",
-                path: "/conversion/homologation",
-                icon: BarChart3,
-                description: "Validação de dados convertidos",
-            },
         ],
     },
     {
@@ -215,10 +209,10 @@ export const menuItems: MenuItem[] = [
                 description: "Formulários e checklists de aderência",
             },
             {
-                title: "Editor de Homologação",
-                path: "/implantadores/homologacao",
+                title: "Homologação de Conversões",
+                path: "/implantadores/homologation",
                 icon: ClipboardList,
-                description: "Roteiros de homologação de dados",
+                description: "Validação de conversões, inconsistências e aprovação de etapas",
             },
             {
                 title: "Roteiro de Treinamento",

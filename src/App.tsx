@@ -48,9 +48,6 @@ const DeploymentForms = lazy(
 
 // Conversion Pages (lazy)
 const Conversion = lazy(() => import("./pages/conversion/Conversion"));
-const ConversionHomologation = lazy(
-  () => import("./pages/conversion/ConversionHomologation"),
-);
 const ConversionEngines = lazy(
   () => import("./pages/conversion/ConversionEngines"),
 );
@@ -72,8 +69,8 @@ const ImplantadoresAderencia = lazy(() =>
 const AderenciasFinalizadas = lazy(() =>
   import("./pages/implantadores/AderenciasFinalizadas"),
 );
-const ImplantadoresHomologacao = lazy(() =>
-  import("./pages/implantadores/EditarChecklistHomologacao"),
+const ImplantadoresHomologation = lazy(() =>
+  import("./pages/implantadores/ImplantadoresHomologation"),
 );
 const CommercialChecklists = lazy(() =>
   import("./pages/commercial/CommercialChecklists"),
@@ -300,8 +297,8 @@ const App = () => (
                           />
                           <Route path="/conversion" element={<Conversion />} />
                           <Route
-                            path="/conversion/homologation"
-                            element={<ConversionHomologation />}
+                            path="/implantadores/homologation"
+                            element={<ImplantadoresHomologation />}
                           />
                           <Route
                             path="/conversion/engines"
@@ -323,7 +320,6 @@ const App = () => (
                           <Route path="/implantadores/aderencia" element={<ImplantadoresAderencia />} />
                           <Route path="/implantadores/aderencia/finalizadas" element={<AderenciasFinalizadas />} />
                           <Route path="/implantadores/aderencia/:systemType" element={<ImplantadoresAderencia />} />
-                          <Route path="/implantadores/homologacao" element={<ImplantadoresHomologacao />} />
                           <Route path="/implantadores/treinamento" element={<TreinamentoPlaceholder />} />
                           <Route path="/implantadores/transicao" element={<TransicaoPlaceholder />} />
                           <Route path="*" element={<NotFound />} />
