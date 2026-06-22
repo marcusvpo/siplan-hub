@@ -66,6 +66,7 @@ const STATUS_LABELS: Record<string, string> = {
   in_progress: "Em Andamento",
   awaiting_homologation: "Aguard. Homologação",
   homologation: "Em Homologação",
+  homologation_issues: "Com Inconsistências",
   done: "Concluído",
 };
 
@@ -74,6 +75,7 @@ const STATUS_COLORS: Record<string, string> = {
   in_progress: "bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-800",
   awaiting_homologation: "bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-950/20 dark:text-purple-400 dark:border-purple-800",
   homologation: "bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-950/20 dark:text-purple-400 dark:border-purple-800",
+  homologation_issues: "bg-red-100 text-red-700 border-red-300 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/50",
   done: "bg-green-100 text-green-700 border-green-300 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50",
 };
 
@@ -107,12 +109,26 @@ export default function Conversion() {
     () => members.filter((m) => m.area === "conversion"),
     [members],
   );
+  const implementationMembers = useMemo(
+    () => members.filter((m) => m.area === "implementation"),
+    [members],
+  );
 
   const { requestEngine } = useConversionEngines();
 
   const [activeTab, setActiveTab] = useState("general");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [systemFilter, setSystemFilter] = useState("all");
+  const [drawerDefaultTab, setDrawerDefaultTab] = useState<"posts" | "homologations">("posts");
+
+  const systemTypes = useMemo(() => {
+    const types = new Set<string>();
+    queue.forEach((item) => {
+      if (item.systemType) types.add(item.systemType);
+    });
+    return Array.from(types);
+  }, [queue]);
 
   // Dialog states
   const [transferDialog, setTransferDialog] = useState<{
@@ -130,6 +146,7 @@ export default function Conversion() {
   const [engineNotes, setEngineNotes] = useState("");
   const [selectedNewOwner, setSelectedNewOwner] = useState("");
   const [transferNotes, setTransferNotes] = useState("");
+  const [selectedImplantador, setSelectedImplantador] = useState("");
 
   // Drawer state for post history
   const [drawerItem, setDrawerItem] = useState<ConversionQueueItem | null>(
@@ -159,7 +176,9 @@ export default function Conversion() {
         item.ticketNumber?.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus =
         statusFilter === "all" || item.queueStatus === statusFilter;
-      return matchesSearch && matchesStatus;
+      const matchesSystem =
+        systemFilter === "all" || item.systemType === systemFilter;
+      return matchesSearch && matchesStatus && matchesSystem;
     });
   };
 
@@ -202,11 +221,22 @@ export default function Conversion() {
   const handleSendToHomologation = async () => {
     if (!homologationDialog.item) return;
 
-    const success = await sendToHomologation(homologationDialog.item.id);
+    const analyst = selectedImplantador && selectedImplantador !== "unassigned_open"
+      ? members.find((m) => m.id === selectedImplantador)
+      : null;
+
+    const success = await sendToHomologation(
+      homologationDialog.item.id,
+      homologationDialog.item.projectId,
+      analyst?.id || null,
+      analyst?.name || null,
+      currentUserName
+    );
 
     if (success) {
       toast.success("Enviado para homologação!");
       setHomologationDialog({ open: false });
+      setSelectedImplantador("");
     } else {
       toast.error("Erro ao enviar para homologação");
     }
@@ -237,15 +267,15 @@ export default function Conversion() {
   const renderKPIs = () => (
     <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
       <Card
-        className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/30 dark:to-purple-900/20 border-purple-200 dark:border-purple-800 cursor-pointer hover:shadow-md transition-shadow"
-        onClick={() => openKpiModal("Minha Fila", "purple", myQueue)}
+        className="bg-gradient-to-br from-primary/5 to-primary/10 dark:from-primary/10 dark:to-primary/5 border-primary/20 dark:border-primary/30 cursor-pointer hover:shadow-md transition-shadow"
+        onClick={() => openKpiModal("Minha Fila", "primary", myQueue)}
       >
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-1">
-            <User className="h-4 w-4 text-purple-600" />
-            <span className="text-xs font-medium text-purple-600">Minha Fila</span>
+            <User className="h-4 w-4 text-primary" />
+            <span className="text-xs font-medium text-primary">Minha Fila</span>
           </div>
-          <p className="text-2xl font-bold text-purple-700">{kpis.myQueueCount}</p>
+          <p className="text-2xl font-bold text-primary">{kpis.myQueueCount}</p>
         </CardContent>
       </Card>
 
@@ -315,195 +345,260 @@ export default function Conversion() {
     return (
       <Card
         key={item.id}
-        className="hover:shadow-md transition-shadow cursor-pointer"
-        onClick={() => setDrawerItem(item)}
+        className={cn(
+          "transition-all duration-300 border-l-4 hover:-translate-y-0.5 hover:shadow-md",
+          item.queueStatus === "pending" && "border-l-slate-400 dark:border-l-slate-600",
+          item.queueStatus === "in_progress" && "border-l-blue-500",
+          (item.queueStatus === "awaiting_homologation" || item.queueStatus === "homologation") && "border-l-primary",
+          item.queueStatus === "done" && "border-l-emerald-500"
+        )}
       >
-        <CardContent className="p-4">
-          <div className="flex items-start justify-between gap-4">
-            {/* Engine Dependency Indicator */}
-            {item.engineStatus && (
-              <div
-                className={cn(
-                  "flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-xl",
-                  item.engineStatus === "pending_engine" &&
-                    "bg-orange-100 dark:bg-orange-900/40 ring-2 ring-orange-300 dark:ring-orange-700",
-                  item.engineStatus === "engine_in_development" &&
-                    "bg-blue-100 dark:bg-blue-900/40 ring-2 ring-blue-300 dark:ring-blue-700",
-                  item.engineStatus === "engine_ready" &&
-                    "bg-emerald-100 dark:bg-emerald-900/40 ring-2 ring-emerald-300 dark:ring-emerald-700",
-                )}
-              >
-                <Cog
+        <CardContent className="p-5">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            {/* Left Column: Info & Indicators */}
+            <div className="flex items-start gap-4 min-w-0 flex-1">
+              {/* Engine Dependency Indicator */}
+              {item.engineStatus && (
+                <div
                   className={cn(
-                    "h-7 w-7",
+                    "flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-xl",
                     item.engineStatus === "pending_engine" &&
-                      "text-orange-600 animate-[spin_3s_linear_infinite]",
+                      "bg-orange-100 dark:bg-orange-900/40 ring-2 ring-orange-300 dark:ring-orange-700",
                     item.engineStatus === "engine_in_development" &&
-                      "text-blue-600 animate-spin",
-                    item.engineStatus === "engine_ready" && "text-emerald-600",
-                  )}
-                />
-              </div>
-            )}
-
-            {/* Main Info */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-2">
-                <h3 className="font-bold text-lg truncate">
-                  {item.clientName}
-                </h3>
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    "text-xs",
-                    STATUS_COLORS[item.queueStatus] || "",
+                      "bg-blue-100 dark:bg-blue-900/40 ring-2 ring-blue-300 dark:ring-blue-700",
+                    item.engineStatus === "engine_ready" &&
+                      "bg-emerald-100 dark:bg-emerald-900/40 ring-2 ring-emerald-300 dark:ring-emerald-700",
                   )}
                 >
-                  {STATUS_LABELS[item.queueStatus] || item.queueStatus}
-                </Badge>
-              </div>
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <span className="font-mono">#{item.ticketNumber}</span>
-                <span>{item.systemType}</span>
-                {item.legacySystem && (
-                  <span className="text-xs">← {item.legacySystem}</span>
-                )}
-              </div>
-              {/* Assignment Status - Prominent Display */}
-              <div className="mt-3">
-                {item.assignedToName ? (
-                  <Badge className="bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50 gap-1">
-                    <UserCheck className="h-3 w-3" />
-                    Assumido por: {item.assignedToName}
-                  </Badge>
-                ) : (
-                  <Badge
-                    variant="outline"
-                    className="bg-amber-50 text-amber-700 border-amber-300 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/50 gap-1"
-                  >
-                    <Clock className="h-3 w-3" />
-                    Não assumido
-                  </Badge>
-                )}
-                {item.engineStatus && (
+                  <Cog
+                    className={cn(
+                      "h-7 w-7",
+                      item.engineStatus === "pending_engine" &&
+                        "text-orange-600 animate-[spin_3s_linear_infinite]",
+                      item.engineStatus === "engine_in_development" &&
+                        "text-blue-600 animate-spin",
+                      item.engineStatus === "engine_ready" && "text-emerald-600",
+                    )}
+                  />
+                </div>
+              )}
+
+              {/* Main Info */}
+              <div className="min-w-0 flex-1 space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="font-bold text-lg text-slate-900 dark:text-slate-100 truncate">
+                    {item.clientName}
+                  </h3>
                   <Badge
                     variant="outline"
                     className={cn(
-                      "gap-1 text-xs",
-                      item.engineStatus === "pending_engine" &&
-                        "bg-orange-100 text-orange-700 border-orange-300 dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-900/50",
-                      item.engineStatus === "engine_in_development" &&
-                        "bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/50",
-                      item.engineStatus === "engine_ready" &&
-                        "bg-green-100 text-green-700 border-green-300 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50",
+                      "text-xs font-semibold px-2 py-0.5",
+                      STATUS_COLORS[item.queueStatus] || "",
                     )}
                   >
-                    <Cog className="h-3 w-3" />
-                    {item.engineStatus === "pending_engine" &&
-                      "Aguard. Extração da Base"}
-                    {item.engineStatus === "engine_in_development" &&
-                      "Motor em Dev"}
-                    {item.engineStatus === "engine_ready" && "Motor Pronto"}
+                    {STATUS_LABELS[item.queueStatus] || item.queueStatus}
                   </Badge>
-                )}
-              </div>
-              <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                <span>
-                  Enviado{" "}
-                  {formatDistanceToNow(item.sentAt, {
-                    addSuffix: true,
-                    locale: ptBR,
-                  })}
-                </span>
-                <span className="flex items-center gap-1">
-                  📅 Previsão Implantação:{" "}
-                  <strong>
-                    {item.deploymentDate
-                      ? format(new Date(item.deploymentDate), "dd/MM/yyyy", {
-                          locale: ptBR,
-                        })
-                      : "Ainda Sem Previsão"}
-                  </strong>
-                </span>
+                  <Badge
+                    className={cn(
+                      "text-xs font-bold",
+                      item.priority <= 2
+                        ? "bg-red-100 text-red-700 border-red-300 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/50"
+                        : item.priority <= 4
+                          ? "bg-orange-100 text-orange-700 border-orange-300 dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-900/50"
+                          : "bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-950/20 dark:text-slate-400 dark:border-slate-800",
+                    )}
+                  >
+                    P{item.priority}
+                  </Badge>
+                  <span
+                    className={cn(
+                      "text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800",
+                      daysInQueue > 5
+                        ? "text-red-600 dark:text-red-400 font-semibold"
+                        : daysInQueue > 3
+                          ? "text-orange-600 dark:text-orange-400"
+                          : "text-muted-foreground",
+                    )}
+                  >
+                    {daysInQueue}d na fila
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                  <span className="font-mono bg-muted px-1.5 py-0.5 rounded text-xs">#{item.ticketNumber}</span>
+                  <span>{item.systemType}</span>
+                  {item.legacySystem && (
+                    <span className="text-xs flex items-center gap-1">
+                      <span className="text-muted-foreground/50">←</span> {item.legacySystem}
+                    </span>
+                  )}
+                </div>
+
+                {/* Assignment Status & Deadlines */}
+                <div className="flex flex-wrap items-center gap-3 pt-1">
+                  {item.assignedToName ? (
+                    <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/10 dark:text-emerald-400 dark:border-emerald-900/30 gap-1 text-xs">
+                      <UserCheck className="h-3 w-3" />
+                      Assumido por: {item.assignedToName}
+                    </Badge>
+                  ) : (
+                    <Badge
+                      variant="outline"
+                      className="bg-amber-50/50 text-amber-700 border-amber-200 dark:bg-amber-950/10 dark:text-amber-400 dark:border-amber-900/30 gap-1 text-xs"
+                    >
+                      <Clock className="h-3 w-3" />
+                      Não assumido
+                    </Badge>
+                  )}
+
+                  {item.engineStatus && (
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "gap-1 text-xs",
+                        item.engineStatus === "pending_engine" &&
+                          "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/10 dark:text-orange-400",
+                        item.engineStatus === "engine_in_development" &&
+                          "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/10 dark:text-blue-400",
+                        item.engineStatus === "engine_ready" &&
+                          "bg-green-50 text-green-700 border-green-200 dark:bg-emerald-950/10 dark:text-emerald-400",
+                      )}
+                    >
+                      <Cog className="h-3 w-3" />
+                      {item.engineStatus === "pending_engine" && "Aguard. Extração da Base"}
+                      {item.engineStatus === "engine_in_development" && "Motor em Dev"}
+                      {item.engineStatus === "engine_ready" && "Motor Pronto"}
+                    </Badge>
+                  )}
+
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    📅 Prev. Implantação:{" "}
+                    <strong className="text-slate-700 dark:text-slate-300">
+                      {item.deploymentDate
+                        ? format(new Date(item.deploymentDate), "dd/MM/yyyy", { locale: ptBR })
+                        : "Ainda Sem Previsão"}
+                    </strong>
+                  </span>
+
+                  <span className="text-xs text-muted-foreground">
+                    Enviado {formatDistanceToNow(item.sentAt, { addSuffix: true, locale: ptBR })}
+                  </span>
+                </div>
               </div>
             </div>
 
-            {/* Priority & Days */}
-            <div className="flex flex-col items-end gap-2">
-              <Badge
-                className={cn(
-                  "text-xs",
-                  item.priority <= 2
-                    ? "bg-red-100 text-red-700 border-red-300 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/50"
-                    : item.priority <= 4
-                      ? "bg-orange-100 text-orange-700 border-orange-300 dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-900/50"
-                      : "bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-950/20 dark:text-slate-400 dark:border-slate-800",
-                )}
-              >
-                P{item.priority}
-              </Badge>
-              <span
-                className={cn(
-                  "text-xs font-medium",
-                  daysInQueue > 5
-                    ? "text-red-600"
-                    : daysInQueue > 3
-                      ? "text-orange-600"
-                      : "text-muted-foreground",
-                )}
-              >
-                {daysInQueue}d na fila
-              </span>
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center gap-2">
-              {showAssignButton && isConversionTeam && (
+            {/* Right Column / Actions Panel */}
+            <div className="flex flex-wrap lg:flex-nowrap items-center gap-2 pt-3 lg:pt-0 border-t lg:border-t-0 lg:border-l lg:pl-4 border-slate-100 dark:border-slate-800 shrink-0 w-full lg:w-auto justify-end">
+              {/* Action 1: Assumir (Assign to Me) */}
+              {!item.assignedTo && isConversionTeam && (
                 <Button
                   size="sm"
+                  variant="default"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleAssign(item);
                   }}
-                  className="bg-purple-600 hover:bg-purple-700"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold flex items-center gap-1.5 shadow-sm transition-all duration-200 active:scale-95 text-xs h-9 w-full lg:w-auto justify-center"
                 >
-                  <UserPlus className="h-4 w-4 mr-1" />
+                  <UserPlus className="h-3.5 w-3.5" />
                   Assumir
                 </Button>
               )}
+
+              {/* Action 2: Enviar p/ Homologação */}
+              {item.queueStatus === "in_progress" && (
+                <Button
+                  size="sm"
+                  variant="default"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setHomologationDialog({ open: true, item });
+                  }}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold flex items-center gap-1.5 shadow-sm transition-all duration-200 active:scale-95 text-xs h-9 w-full lg:w-auto justify-center"
+                >
+                  <Send className="h-3.5 w-3.5" />
+                  Enviar p/ Homologação
+                </Button>
+              )}
+
+              {/* Action 3: Ver Parecer de Inconsistências */}
+              {item.queueStatus === "homologation_issues" && (
+                <Button
+                  size="sm"
+                  variant="default"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDrawerDefaultTab("homologations");
+                    setDrawerItem(item);
+                  }}
+                  className="bg-red-600 hover:bg-red-700 text-white font-semibold flex items-center gap-1.5 shadow-sm transition-all duration-200 active:scale-95 text-xs h-9 w-full lg:w-auto justify-center"
+                >
+                  <AlertCircle className="h-3.5 w-3.5" />
+                  Ver Inconsistências
+                </Button>
+              )}
+
+              {/* Action 3b: Ver Parecer Final */}
+              {item.queueStatus === "done" && item.homologationStatus === "approved" && (
+                <Button
+                  size="sm"
+                  variant="default"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDrawerDefaultTab("homologations");
+                    setDrawerItem(item);
+                  }}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold flex items-center gap-1.5 shadow-sm transition-all duration-200 active:scale-95 text-xs h-9 w-full lg:w-auto justify-center"
+                >
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  Ver Parecer Final
+                </Button>
+              )}
+
+              {/* Action 4: Ver Publicações */}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDrawerDefaultTab("posts");
+                  setDrawerItem(item);
+                }}
+                className="border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 flex items-center gap-1.5 transition-colors duration-200 text-xs h-9 w-full lg:w-auto justify-center"
+              >
+                <MessageSquare className="h-3.5 w-3.5 text-primary" />
+                Ver Publicações
+              </Button>
+
+              {/* Action 5: Ver Detalhes */}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (item.projectId) {
+                    window.location.href = `/projects?id=${item.projectId}`;
+                  }
+                }}
+                className="border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 flex items-center gap-1.5 transition-colors duration-200 text-xs h-9 w-full lg:w-auto justify-center"
+              >
+                <AlertCircle className="h-3.5 w-3.5 text-slate-500" />
+                Ver Detalhes
+              </Button>
+
+              {/* Secondary Actions Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={(e) => e.stopPropagation()}
+                    className="hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0 h-9 w-9"
                   >
                     <MoreVertical className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDrawerItem(item);
-                    }}
-                  >
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Ver Publicações
-                  </DropdownMenuItem>
-                  {item.queueStatus === "in_progress" && (
-                    <>
-                      <DropdownMenuItem
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setHomologationDialog({ open: true, item });
-                        }}
-                      >
-                        <Send className="h-4 w-4 mr-2" />
-                        Enviar p/ Homologação
-                      </DropdownMenuItem>
-                    </>
-                  )}
                   {!item.engineStatus && isConversionTeam && (
                     <DropdownMenuItem
                       onClick={(e) => {
@@ -514,23 +609,6 @@ export default function Conversion() {
                       <Cog className="h-4 w-4 mr-2" />
                       Enviar para criação do Conversor
                     </DropdownMenuItem>
-                  )}
-                  <DropdownMenuSeparator />
-                  {(item.queueStatus === "awaiting_homologation" ||
-                    item.queueStatus === "homologation") && (
-                    <>
-                      <DropdownMenuItem
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleApproveHomologation(item);
-                        }}
-                        className="text-green-600"
-                      >
-                        <CheckCircle2 className="h-4 w-4 mr-2" />
-                        Aprovar Homologação
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                    </>
                   )}
                   {isConversionTeam && (
                     <DropdownMenuItem
@@ -543,19 +621,204 @@ export default function Conversion() {
                       Transferir
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuItem
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (item.projectId) {
-                        window.location.href = `/projects?id=${item.projectId}`;
-                      }
-                    }}
-                  >
-                    <AlertCircle className="h-4 w-4 mr-2" />
-                    Ver Detalhes
-                  </DropdownMenuItem>
+                  {isConversionTeam && (
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (
+                          confirm(
+                            `Tem certeza que deseja remover "${item.clientName}" da fila?`
+                          )
+                        ) {
+                          removeFromQueue(item.id, item.projectId);
+                        }
+                      }}
+                      className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/20"
+                    >
+                      <AlertCircle className="h-4 w-4 mr-2" />
+                      Remover da Fila
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  // Dedicated Card for Homologation Items
+  const renderHomologationItem = (item: ConversionQueueItem) => {
+    const daysInQueue = Math.floor(
+      (new Date().getTime() - item.sentAt.getTime()) / (1000 * 60 * 60 * 24),
+    );
+
+    return (
+      <Card
+        key={item.id}
+        className={cn(
+          "transition-all duration-300 border-l-4 hover:-translate-y-0.5 hover:shadow-md border-l-indigo-500 bg-gradient-to-br from-indigo-50/20 via-transparent to-transparent dark:from-indigo-950/10 dark:via-transparent dark:to-transparent"
+        )}
+      >
+        <CardContent className="p-5">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            {/* Left Column: Info & Indicators */}
+            <div className="flex items-start gap-4 min-w-0 flex-1">
+              {/* Distinctive Icon for Homologation */}
+              <div className="flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 ring-2 ring-indigo-300 dark:ring-indigo-700">
+                <CheckCircle2 className="h-7 w-7 text-indigo-600 dark:text-indigo-400" />
+              </div>
+
+              {/* Main Info */}
+              <div className="min-w-0 flex-1 space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[10px] font-bold tracking-wider uppercase bg-indigo-100 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded">
+                    Esteira de Homologação
+                  </span>
+                  <h3 className="font-bold text-lg text-slate-900 dark:text-slate-100 truncate">
+                    {item.clientName}
+                  </h3>
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "text-xs font-semibold px-2 py-0.5",
+                      STATUS_COLORS[item.queueStatus] || "",
+                    )}
+                  >
+                    {STATUS_LABELS[item.queueStatus] || item.queueStatus}
+                  </Badge>
+                  <Badge
+                    className={cn(
+                      "text-xs font-bold",
+                      item.priority <= 2
+                        ? "bg-red-100 text-red-700 border-red-300 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/50"
+                        : item.priority <= 4
+                          ? "bg-orange-100 text-orange-700 border-orange-300 dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-900/50"
+                          : "bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-950/20 dark:text-slate-400 dark:border-slate-800",
+                    )}
+                  >
+                    P{item.priority}
+                  </Badge>
+                  <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-muted-foreground">
+                    {daysInQueue}d na fila
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                  <span className="font-mono bg-muted px-1.5 py-0.5 rounded text-xs">#{item.ticketNumber}</span>
+                  <span>{item.systemType}</span>
+                  {item.legacySystem && (
+                    <span className="text-xs flex items-center gap-1">
+                      <span className="text-muted-foreground/50">←</span> {item.legacySystem}
+                    </span>
+                  )}
+                </div>
+
+                {/* Assignment Status (Converter & Implantador) */}
+                <div className="flex flex-wrap items-center gap-3 pt-1">
+                  {/* Conversor responsável */}
+                  {item.assignedToName && (
+                    <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/10 dark:text-emerald-400 dark:border-emerald-900/30 gap-1 text-xs">
+                      <UserCheck className="h-3 w-3" />
+                      Conversor: {item.assignedToName}
+                    </Badge>
+                  )}
+
+                  {/* Implantador responsável (Aguardando ou Vinculado) */}
+                  {item.homologationAnalystName ? (
+                    <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/10 dark:text-blue-400 dark:border-blue-900/30 gap-1 text-xs font-semibold">
+                      <User className="h-3 w-3" />
+                      Implantador: {item.homologationAnalystName}
+                    </Badge>
+                  ) : (
+                    <Badge
+                      variant="outline"
+                      className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/10 dark:text-amber-400 dark:border-amber-900/30 gap-1 text-xs font-bold animate-pulse"
+                    >
+                      <AlertCircle className="h-3 w-3" />
+                      Fila em Aberto / Pendente
+                    </Badge>
+                  )}
+
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    📅 Prev. Implantação:{" "}
+                    <strong className="text-slate-700 dark:text-slate-300">
+                      {item.deploymentDate
+                        ? format(new Date(item.deploymentDate), "dd/MM/yyyy", { locale: ptBR })
+                        : "Ainda Sem Previsão"}
+                    </strong>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column / Actions Panel */}
+            <div className="flex flex-wrap lg:flex-nowrap items-center gap-2 pt-3 lg:pt-0 border-t lg:border-t-0 lg:border-l lg:pl-4 border-slate-100 dark:border-slate-800 shrink-0 w-full lg:w-auto justify-end">
+              {/* Action 1: Ver Inconsistências */}
+              {item.queueStatus === "homologation_issues" && (
+                <Button
+                  size="sm"
+                  variant="default"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDrawerDefaultTab("homologations");
+                    setDrawerItem(item);
+                  }}
+                  className="bg-red-600 hover:bg-red-700 text-white font-semibold flex items-center gap-1.5 shadow-sm transition-all duration-200 active:scale-95 text-xs h-9 w-full lg:w-auto justify-center"
+                >
+                  <AlertCircle className="h-3.5 w-3.5" />
+                  Ver Inconsistências
+                </Button>
+              )}
+
+              {/* Action 2: Ver Parecer Final */}
+              {item.queueStatus === "done" && item.homologationStatus === "approved" && (
+                <Button
+                  size="sm"
+                  variant="default"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDrawerDefaultTab("homologations");
+                    setDrawerItem(item);
+                  }}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold flex items-center gap-1.5 shadow-sm transition-all duration-200 active:scale-95 text-xs h-9 w-full lg:w-auto justify-center"
+                >
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  Ver Parecer Final
+                </Button>
+              )}
+
+              {/* Action 3: Ver Publicações */}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDrawerDefaultTab("posts");
+                  setDrawerItem(item);
+                }}
+                className="border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 flex items-center gap-1.5 transition-colors duration-200 text-xs h-9 w-full lg:w-auto justify-center"
+              >
+                <MessageSquare className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
+                Ver Publicações
+              </Button>
+
+              {/* Action 4: Ver Detalhes */}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (item.projectId) {
+                    window.location.href = `/projects?id=${item.projectId}`;
+                  }
+                }}
+                className="border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 flex items-center gap-1.5 transition-colors duration-200 text-xs h-9 w-full lg:w-auto justify-center"
+              >
+                <AlertCircle className="h-3.5 w-3.5 text-slate-500" />
+                Ver Detalhes
+              </Button>
             </div>
           </div>
         </CardContent>
@@ -570,8 +833,8 @@ export default function Conversion() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30">
-              <Database className="h-6 w-6 text-purple-600" />
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Database className="h-6 w-6 text-primary" />
             </div>
             <div>
               <h1 className="text-2xl font-bold">Gestão de Atividades</h1>
@@ -587,26 +850,38 @@ export default function Conversion() {
                 onClick={() => setActiveTab("my-queue")}
                 variant={activeTab === "my-queue" ? "default" : "outline"}
                 className={cn(
-                  "gap-2",
+                  "gap-2 relative",
                   activeTab === "my-queue"
-                    ? "bg-purple-600 hover:bg-purple-700"
-                    : "border-purple-300 text-purple-600 hover:bg-purple-50",
+                    ? "bg-primary hover:bg-primary/90 text-primary-foreground"
+                    : "border-primary/30 text-primary hover:bg-primary/5",
                 )}
               >
                 <User className="h-4 w-4" />
                 Minha Fila
                 {myQueue.length > 0 && (
-                  <Badge
-                    variant={activeTab === "my-queue" ? "secondary" : "default"}
-                    className={cn(
-                      "ml-1",
-                      activeTab === "my-queue"
-                        ? "bg-white/20 text-white"
-                        : "bg-purple-600 text-white",
-                    )}
-                  >
-                    {myQueue.length}
-                  </Badge>
+                  <span className="flex items-center gap-1.5">
+                    <Badge
+                      variant={activeTab === "my-queue" ? "secondary" : "default"}
+                      className={cn(
+                        "ml-1",
+                        activeTab === "my-queue"
+                          ? "bg-white/20 text-white"
+                          : "bg-primary text-white",
+                      )}
+                    >
+                      {myQueue.length}
+                    </Badge>
+                    <span className="relative flex h-2 w-2">
+                      <span className={cn(
+                        "animate-ping absolute inline-flex h-full w-full rounded-full opacity-75",
+                        activeTab === "my-queue" ? "bg-white" : "bg-primary"
+                      )}></span>
+                      <span className={cn(
+                        "relative inline-flex rounded-full h-2 w-2",
+                        activeTab === "my-queue" ? "bg-white" : "bg-primary"
+                      )}></span>
+                    </span>
+                  </span>
                 )}
               </Button>
             )}
@@ -646,6 +921,21 @@ export default function Conversion() {
               <SelectItem value="done">Concluídos</SelectItem>
             </SelectContent>
           </Select>
+
+          <Select value={systemFilter} onValueChange={setSystemFilter}>
+            <SelectTrigger className="w-[180px]">
+              <Filter className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="Sistema" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os Sistemas</SelectItem>
+              {systemTypes.map((type) => (
+                <SelectItem key={type} value={type}>
+                  {type}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -656,19 +946,87 @@ export default function Conversion() {
         className="flex-1 flex flex-col overflow-hidden px-6 pt-4"
       >
         <TabsList className="mb-4 flex-shrink-0">
-          <TabsTrigger value="general" className="gap-2">
+          <TabsTrigger value="general" className="gap-2 relative">
             <Users className="h-4 w-4" />
             Fila Geral
             {generalQueue.length > 0 && (
-              <Badge variant="secondary" className="ml-1">
-                {generalQueue.length}
-              </Badge>
+              <span className="flex items-center gap-1.5">
+                <Badge variant="secondary" className="ml-1">
+                  {generalQueue.length}
+                </Badge>
+                {generalQueue.some((item) => !item.assignedTo) && (
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                  </span>
+                )}
+              </span>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="homologations" className="gap-2 relative">
+            <CheckCircle2 className="h-4 w-4" />
+            Homologações
+            {homologationQueue.length > 0 && (
+              <span className="flex items-center gap-1.5">
+                <Badge variant="secondary" className="ml-1">
+                  {homologationQueue.length}
+                </Badge>
+                {homologationQueue.some((item) => item.queueStatus === "homologation_issues") && (
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                  </span>
+                )}
+              </span>
             )}
           </TabsTrigger>
         </TabsList>
 
         {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto pb-6">
+        <div className="flex-1 overflow-y-auto pb-6 space-y-4">
+          {/* Explanation Banner */}
+          <Card className="bg-gradient-to-r from-primary/5 via-primary/[0.02] to-background border border-primary/20 shadow-sm mb-4">
+            <CardContent className="p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+              <div className="space-y-2 max-w-4xl">
+                <h2 className="text-lg font-bold text-primary flex items-center gap-2">
+                  <Database className="h-5 w-5 text-primary animate-pulse" />
+                  Como funciona a Esteira de Conversão?
+                </h2>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Esta tela gerencia a fila de migração de dados dos clientes.
+                  Os projetos entram como <strong className="text-slate-700 dark:text-slate-300">Pendentes</strong>. 
+                  Ao clicar em <strong className="text-primary font-semibold">Assumir</strong>, ele passa para <strong className="text-blue-600 dark:text-blue-400">Em Andamento</strong>. 
+                  Utilize <strong className="text-slate-700 dark:text-slate-300">Ver Publicações</strong> para postar notas de progresso, anexos ou feedbacks.
+                  Finalizado o trabalho, clique em <strong className="text-primary font-semibold">Enviar p/ Homologação</strong>.
+                  Projetos aguardando validação exibem o botão verde <strong className="text-emerald-600 dark:text-emerald-400">Aprovar Homologação</strong> para conclusão definitiva.
+                </p>
+                <div className="flex flex-wrap gap-x-6 gap-y-1.5 text-xs text-muted-foreground pt-1">
+                  <span className="flex items-center gap-1">
+                    <span className="w-2.5 h-2.5 rounded-full bg-slate-400" />
+                    <strong>Pendente:</strong> Aguardando analista.
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                    <strong>Em Andamento:</strong> Sendo trabalhado pelo responsável.
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="w-2.5 h-2.5 rounded-full bg-primary" />
+                    <strong>Aguard. Homologação:</strong> Aguardando validação do implantador.
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                    <strong>Concluído:</strong> Conversão finalizada e homologada.
+                  </span>
+                </div>
+              </div>
+              <div className="hidden lg:flex flex-col items-center justify-center p-3 bg-primary/10 rounded-xl text-center min-w-[150px] border border-primary/20">
+                <span className="text-xs font-semibold text-primary uppercase tracking-wider">Metas de Conversão</span>
+                <span className="text-2xl font-black text-primary mt-1">100%</span>
+                <span className="text-[10px] text-muted-foreground mt-0.5">de adesão e uso</span>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* My Queue Tab - Detailed View */}
           <TabsContent value="my-queue" className="mt-0">
             {loading ? (
@@ -676,9 +1034,9 @@ export default function Conversion() {
                 Carregando...
               </div>
             ) : filterItems(myQueue).length === 0 ? (
-              <Card className="p-12 text-center border-2 border-dashed border-purple-200 bg-purple-50/30">
-                <Database className="h-12 w-12 mx-auto text-purple-400/50 mb-4" />
-                <h3 className="text-lg font-medium mb-2 text-purple-900">
+              <Card className="p-12 text-center border-2 border-dashed border-primary/20 bg-primary/5">
+                <Database className="h-12 w-12 mx-auto text-primary/40 mb-4" />
+                <h3 className="text-lg font-medium mb-2 text-primary">
                   Sua fila está vazia
                 </h3>
                 <p className="text-muted-foreground mb-4">
@@ -686,7 +1044,7 @@ export default function Conversion() {
                 </p>
                 <Button
                   onClick={() => setActiveTab("general")}
-                  className="bg-purple-600 hover:bg-purple-700"
+                  className="bg-primary hover:bg-primary/90"
                 >
                   Ver Fila Geral
                 </Button>
@@ -733,6 +1091,31 @@ export default function Conversion() {
               </div>
             )}
           </TabsContent>
+
+          {/* Homologations Queue Tab */}
+          <TabsContent value="homologations" className="mt-0">
+            {loading ? (
+              <div className="text-center py-12 text-muted-foreground">
+                Carregando...
+              </div>
+            ) : filterItems(homologationQueue).length === 0 ? (
+              <Card className="p-12 text-center border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/20 dark:bg-slate-900/10">
+                <CheckCircle2 className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                <h3 className="text-lg font-medium mb-2">
+                  Nenhuma homologação na fila
+                </h3>
+                <p className="text-muted-foreground">
+                  Não há homologações ativas ou concluídas registradas
+                </p>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {filterItems(homologationQueue).map((item) =>
+                  renderHomologationItem(item),
+                )}
+              </div>
+            )}
+          </TabsContent>
         </div>
       </Tabs>
 
@@ -745,6 +1128,7 @@ export default function Conversion() {
         ticketNumber={drawerItem?.ticketNumber}
         queueStatus={drawerItem?.queueStatus || "pending"}
         assignedToName={drawerItem?.assignedToName}
+        defaultTab={drawerDefaultTab}
       />
 
       {/* Transfer Dialog */}
@@ -830,7 +1214,10 @@ export default function Conversion() {
       {/* Homologation Dialog */}
       <Dialog
         open={homologationDialog.open}
-        onOpenChange={(open) => setHomologationDialog({ open })}
+        onOpenChange={(open) => {
+          setHomologationDialog({ open });
+          if (!open) setSelectedImplantador("");
+        }}
       >
         <DialogContent>
           <DialogHeader>
@@ -840,22 +1227,45 @@ export default function Conversion() {
               validação?
             </DialogDescription>
           </DialogHeader>
-          <div className="p-4 bg-purple-50 dark:bg-purple-950/30 rounded-lg">
-            <p className="text-sm text-purple-700 dark:text-purple-400">
-              O projeto será marcado como "Aguardando Homologação" e poderá ser
-              validado pelo analista responsável.
-            </p>
+          <div className="space-y-4 py-2">
+            <div className="p-4 bg-primary/5 rounded-lg border border-primary/10">
+              <p className="text-sm text-primary dark:text-primary-light">
+                O projeto será marcado como "Aguardando Homologação" e entrará na fila de validação dos implantadores.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold text-muted-foreground uppercase">Vincular Implantador (Opcional)</Label>
+              <Select
+                value={selectedImplantador}
+                onValueChange={setSelectedImplantador}
+              >
+                <SelectTrigger className="w-full border-2">
+                  <SelectValue placeholder="Selecione um implantador ou deixe em aberto..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="unassigned_open">Deixar em Aberto (Fila Geral)</SelectItem>
+                  {implementationMembers.map((member) => (
+                    <SelectItem key={member.id} value={member.id}>
+                      {member.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setHomologationDialog({ open: false })}
+              onClick={() => {
+                setHomologationDialog({ open: false });
+                setSelectedImplantador("");
+              }}
             >
               Cancelar
             </Button>
             <Button
               onClick={handleSendToHomologation}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-primary hover:bg-primary/90"
             >
               Enviar para Homologação
             </Button>

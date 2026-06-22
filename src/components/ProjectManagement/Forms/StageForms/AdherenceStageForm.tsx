@@ -72,7 +72,8 @@ export function AdherenceStageForm({
     );
   }
 
-  const isFormLocked = response?.status === "approved" || !canEditProjects;
+  const isFinalized = response?.status === "approved" || response?.status === "approved_with_restrictions" || response?.status === "rejected";
+  const isFormLocked = isFinalized || !canEditProjects;
 
   return (
     <div className="col-span-1 md:col-span-2 lg:col-span-3 space-y-6">
@@ -117,7 +118,7 @@ export function AdherenceStageForm({
               <div className="flex items-center gap-2 mt-1.5">
                 <span className="text-[10px] text-muted-foreground font-semibold">Status:</span>
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider ${
-                  response.status === "approved" 
+                  isFinalized 
                     ? (response.data?.finalVerdict === "Totalmente Aderente"
                       ? "bg-green-500/10 text-green-600 border-green-500/20" 
                       : response.data?.finalVerdict === "Aderente com Restrições"
@@ -125,7 +126,7 @@ export function AdherenceStageForm({
                       : "bg-rose-500/10 text-rose-600 border-rose-500/20")
                     : "bg-slate-500/10 text-slate-600 border-slate-500/20"
                 }`}>
-                  {response.status === "approved" 
+                  {isFinalized 
                     ? (response.data?.finalVerdict || "Finalizado") 
                     : "Rascunho"}
                 </span>
@@ -150,7 +151,7 @@ export function AdherenceStageForm({
             onCheckedChange={(checked) =>
               onUpdate({ hasProductGap: checked === true })
             }
-            disabled={!canEditProjects || response?.status === "approved"}
+            disabled={!canEditProjects || isFinalized}
             className="border-amber-400 dark:border-amber-800 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
           />
           <Label
@@ -170,7 +171,7 @@ export function AdherenceStageForm({
               <Textarea
                 value={stage.gapDescription || ""}
                 onChange={(e) => onUpdate({ gapDescription: e.target.value })}
-                disabled={!canEditProjects || response?.status === "approved"}
+                disabled={!canEditProjects || isFinalized}
                 className="min-h-[100px] border-2 border-red-200 focus:border-red-400 bg-white dark:bg-slate-950/20 dark:text-red-300 dark:border-red-900/50 dark:focus:border-red-600 text-xs"
                 placeholder="Descreva detalhadamente o gap identificado..."
               />

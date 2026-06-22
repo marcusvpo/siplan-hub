@@ -27,6 +27,10 @@ export interface ConversionQueueItem {
   deploymentDate: string | null;
   createdAt: Date;
   updatedAt: Date;
+  homologationAnalyst?: string | null;
+  homologationAnalystName?: string | null;
+  homologationSentAt?: Date | null;
+  homologationStatus?: string | null;
 }
 
 interface ConversionKPIs {
@@ -101,6 +105,10 @@ export function useConversionQueue(options: UseConversionQueueOptions = {}) {
         })(),
         createdAt: new Date(item.created_at),
         updatedAt: new Date(item.updated_at),
+        homologationAnalyst: item.homologation_analyst,
+        homologationAnalystName: item.homologation_analyst_name,
+        homologationSentAt: item.homologation_sent_at ? new Date(item.homologation_sent_at) : null,
+        homologationStatus: item.homologation_status,
       }));
 
       setQueue(items);
@@ -119,7 +127,15 @@ export function useConversionQueue(options: UseConversionQueueOptions = {}) {
 
   // Computed queues
   const myQueue = useMemo(
-    () => queue.filter((item) => item.assignedTo === userId),
+    () =>
+      queue.filter(
+        (item) =>
+          item.assignedTo === userId &&
+          item.queueStatus !== "done" &&
+          item.queueStatus !== "cancelled" &&
+          item.queueStatus !== "awaiting_homologation" &&
+          item.queueStatus !== "homologation"
+      ),
     [queue, userId]
   );
 
@@ -129,7 +145,10 @@ export function useConversionQueue(options: UseConversionQueueOptions = {}) {
     () =>
       queue.filter(
         (item) =>
-          item.queueStatus !== "done" && item.queueStatus !== "cancelled"
+          item.queueStatus !== "done" &&
+          item.queueStatus !== "cancelled" &&
+          item.queueStatus !== "awaiting_homologation" &&
+          item.queueStatus !== "homologation"
       ),
     [queue]
   );
@@ -140,7 +159,9 @@ export function useConversionQueue(options: UseConversionQueueOptions = {}) {
       queue.filter(
         (item) =>
           item.queueStatus === "homologation" ||
-          item.queueStatus === "awaiting_homologation"
+          item.queueStatus === "awaiting_homologation" ||
+          item.queueStatus === "homologation_issues" ||
+          (item.queueStatus === "done" && item.homologationStatus === "approved")
       ),
     [queue]
   );
@@ -382,10 +403,62 @@ export function useConversionQueue(options: UseConversionQueueOptions = {}) {
 
   // Send to homologation
   const sendToHomologation = useCallback(
-    async (queueId: string) => {
-      return updateQueueStatus(queueId, "awaiting_homologation");
+    async (
+      queueId: string,
+      projectId: string,
+      analystId?: string | null,
+      analystName?: string | null,
+      sentByName?: string
+    ) => {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        // Update conversion queue
+        const { error: queueError } = await supabase
+          .from("conversion_queue")
+          .update({
+            queue_status: "awaiting_homologation",
+            homologation_analyst: analystId || null,
+            homologation_analyst_name: analystName || null,
+            homologation_sent_at: new Date().toISOString(),
+            homologation_status: "pending",
+          })
+          .eq("id", queueId);
+
+        if (queueError) throw queueError;
+
+        // Log the action in homologation_events
+        const { error: logError } = await supabase
+          .from("homologation_events")
+          .insert({
+            project_id: projectId,
+            from_status: "in_progress",
+            to_status: "awaiting_homologation",
+            performed_by: user?.id || null,
+            performed_by_name: sentByName || "Analista de Conversão",
+            notes: analystName
+              ? `Enviado para homologação e atribuído ao implantador ${analystName}.`
+              : "Enviado para homologação (Fila em Aberto).",
+            issues_count: 0,
+          });
+
+        if (logError) {
+          console.error("Error creating homologation log event:", logError);
+        }
+
+        // Create notification for the implantador team or specific analyst removed by request
+
+
+        await fetchQueue();
+        return true;
+      } catch (err) {
+        console.error("Error sending to homologation:", err);
+        return false;
+      }
     },
-    [updateQueueStatus]
+    [fetchQueue]
   );
 
   // Approve homologation

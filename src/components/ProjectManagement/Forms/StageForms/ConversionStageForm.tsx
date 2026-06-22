@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { ConversionStageV2, StageStatus } from "@/types/ProjectV2";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -35,7 +36,7 @@ interface ConversionStageFormProps {
   conversionItem: ConversionQueueItem | undefined;
   projectId: string;
   onUpdate: (updates: Partial<ConversionStageV2>) => void;
-  onSendToConversion: () => void;
+  onSendToConversion: (priority: number) => void;
   onRemoveFromQueue: (itemId: string, projectId: string) => Promise<boolean>;
 }
 
@@ -50,6 +51,8 @@ export function ConversionStageForm({
   onSendToConversion,
   onRemoveFromQueue,
 }: ConversionStageFormProps) {
+  const [selectedPriority, setSelectedPriority] = useState<number>(3); // 3: Normal, 2: Média, 1: Alta
+
   return (
     <>
       <div className="col-span-full mb-4">
@@ -62,8 +65,8 @@ export function ConversionStageForm({
                 className={cn(
                   "w-full md:w-auto font-bold shadow-sm",
                   isInConversionQueue
-                    ? "border-purple-300 text-purple-600"
-                    : "bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-700 hover:to-fuchsia-700",
+                    ? "border-primary/30 text-primary hover:bg-primary/5"
+                    : "bg-primary hover:bg-primary/90 text-primary-foreground",
                 )}
               >
                 {isInConversionQueue ? (
@@ -91,16 +94,36 @@ export function ConversionStageForm({
             {!isInConversionQueue && (
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Confirmar envio</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Deseja enviar este projeto para a fila de conversão? A
-                    equipe de conversão será notificada e o projeto aparecerá no
-                    dashboard deles.
-                  </AlertDialogDescription>
+                  <AlertDialogTitle>Enviar para Conversão</AlertDialogTitle>
+                  <div className="space-y-4 text-sm text-muted-foreground mt-2">
+                    <p>
+                      Deseja enviar este projeto para a fila de conversão? A
+                      equipe de conversão será notificada e o projeto aparecerá no
+                      dashboard deles.
+                    </p>
+                    <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                      <Label className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                        Defina a Prioridade da Conversão:
+                      </Label>
+                      <Select
+                        value={selectedPriority.toString()}
+                        onValueChange={(val) => setSelectedPriority(Number(val))}
+                      >
+                        <SelectTrigger className="w-full h-11 border-2">
+                          <SelectValue placeholder="Selecione a prioridade..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="3">💤 Normal</SelectItem>
+                          <SelectItem value="2">⚡ Média</SelectItem>
+                          <SelectItem value="1">🚨 Alta</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
                 </AlertDialogHeader>
-                <AlertDialogFooter>
+                <AlertDialogFooter className="mt-4">
                   <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction onClick={onSendToConversion}>
+                  <AlertDialogAction onClick={() => onSendToConversion(selectedPriority)}>
                     Confirmar Envio
                   </AlertDialogAction>
                 </AlertDialogFooter>

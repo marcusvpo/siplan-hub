@@ -7,10 +7,7 @@ export function calculateHealthScore(project: ProjectV2): "ok" | "warning" | "cr
   // Verificar se há mais de 5 dias sem update
   if (daysSinceUpdate > 5) return "critical";
   
-  // Verificar follow-up vencido
-  if (project.nextFollowUpDate && isPast(project.nextFollowUpDate)) {
-    return "critical";
-  }
+
   
   // Verificar se há bloqueios ativos
   const hasBlockers = Object.values(project.stages).some(

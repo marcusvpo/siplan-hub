@@ -71,14 +71,14 @@ export const TimelineChart = ({ projects }: TimelineChartProps) => {
                   return currentStage === 'implementation' || currentStage === 'post';
                 })
                 .sort((a, b) => {
-                  const dateA = a.startDatePlanned || a.startDateActual || a.createdAt;
-                  const dateB = b.startDatePlanned || b.startDateActual || b.createdAt;
+                  const dateA = a.startDateActual || a.createdAt;
+                  const dateB = b.startDateActual || b.createdAt;
                   return Math.abs(differenceInDays(new Date(dateA), today)) - Math.abs(differenceInDays(new Date(dateB), today));
                 })
                 .slice(0, 25)
                 .map((project) => {
-                const sDate = project.startDatePlanned || project.startDateActual || project.createdAt;
-                const eDate = project.endDatePlanned || project.endDateActual || addDays(new Date(sDate), 14); // 14 days estimate
+                const sDate = project.startDateActual || project.createdAt;
+                const eDate = project.endDateActual || addDays(new Date(sDate), 14); // 14 days estimate
                 
                 const totalDays = differenceInDays(endDate, startDate) + 1;
                 const startOffset = differenceInDays(new Date(sDate), startDate);

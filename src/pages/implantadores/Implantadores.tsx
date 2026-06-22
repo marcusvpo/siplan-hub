@@ -11,21 +11,34 @@ export default function Implantadores() {
 
   const cards = [
     {
-      title: "Editor de Form. Aderência",
-      description: "Customize o formulário dinâmico de aderência (gaps de produto e riscos) para cada tipo de sistema.",
+      title: "Análise de Aderência",
+      description: "Customize o formulário dinâmico de aderência (gaps de produto e riscos) para cada tipo de sistema ou consulte respostas finalizadas.",
       icon: CheckCircle2,
-      link: "/implantadores/aderencia",
       color: "from-amber-500 to-orange-600",
       textColor: "text-orange-500",
       bgLight: "bg-orange-500/10",
       borderLight: "border-orange-500/20",
       requiresPermission: true,
+      actions: [
+        {
+          label: "Editor Form. Aderência",
+          link: "/implantadores/aderencia",
+          variant: "outline" as const,
+          customColor: "border-rose-500/30 text-rose-600 hover:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/40 dark:hover:bg-rose-500/15 shadow-sm",
+        },
+        {
+          label: "Aderências Finalizadas",
+          link: "/implantadores/aderencia/finalizadas",
+          variant: "outline" as const,
+          customColor: "border-rose-500/30 text-rose-600 hover:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/40 dark:hover:bg-rose-500/15 shadow-sm",
+        }
+      ]
     },
     {
-      title: "Editor de Checklist de Homologação",
-      description: "Edite o roteiro de homologação contendo regras e validações necessárias para conversão de dados.",
+      title: "Homologação de Conversões",
+      description: "Valide conversões finalizadas, registre inconsistências detectadas ou aprove etapas do processo.",
       icon: ClipboardList,
-      link: "/implantadores/homologacao",
+      link: "/implantadores/homologation",
       color: "from-indigo-500 to-blue-600",
       textColor: "text-indigo-500",
       bgLight: "bg-indigo-500/10",
@@ -54,6 +67,8 @@ export default function Implantadores() {
       bgLight: "bg-rose-500/10",
       borderLight: "border-rose-500/20",
       requiresPermission: false,
+      highlighted: true,
+      badge: "Importante",
     },
   ];
 
@@ -87,21 +102,31 @@ export default function Implantadores() {
           return (
             <Card 
               key={idx} 
-              className={`group shadow-lg border-muted/60 relative overflow-hidden transition-all duration-300 ${
-                isDisabled ? "opacity-60" : "hover:shadow-xl hover:border-primary/20 hover:-translate-y-0.5"
+              className={`group shadow-lg relative overflow-hidden transition-all duration-300 ${
+                isDisabled 
+                  ? "opacity-60" 
+                  : card.highlighted
+                    ? "border-rose-500/30 dark:border-rose-500/20 bg-gradient-to-br from-card via-card to-rose-500/5 shadow-rose-500/5 hover:shadow-xl hover:shadow-rose-500/10 hover:border-rose-500/50 hover:-translate-y-0.5"
+                    : "border-muted/60 hover:shadow-xl hover:border-primary/20 hover:-translate-y-0.5"
               }`}
             >
               {/* Colored top line */}
-              <div className={`h-1.5 w-full bg-gradient-to-r ${card.color}`} />
+              <div className={`w-full bg-gradient-to-r ${card.color} ${card.highlighted ? "h-2.5" : "h-1.5"}`} />
               
               <CardHeader className="pb-3 flex flex-row items-start justify-between gap-4">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <CardTitle className="text-lg font-bold group-hover:text-primary transition-colors">
+                    <CardTitle className={`text-lg font-bold transition-colors ${
+                      card.highlighted ? "group-hover:text-rose-500" : "group-hover:text-primary"
+                    }`}>
                       {card.title}
                     </CardTitle>
                     {card.badge && (
-                      <span className="text-[10px] bg-primary/10 text-primary border border-primary/20 font-bold px-2 py-0.5 rounded-full">
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                        card.highlighted
+                          ? "bg-rose-500/10 text-rose-500 border-rose-500/20"
+                          : "bg-primary/10 text-primary border border-primary/20"
+                      }`}>
                         {card.badge}
                       </span>
                     )}
@@ -121,14 +146,41 @@ export default function Implantadores() {
                     <ShieldCheck className="h-3.5 w-3.5" />
                     Requer permissão de Admin
                   </div>
-                ) : (
+                ) : card.actions ? (
+                  <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                    {card.actions.map((act, actIdx) => (
+                      <Link key={actIdx} to={act.link} className="w-full sm:w-auto">
+                        <Button 
+                          variant={act.variant} 
+                          size="sm" 
+                          className={`w-full gap-1 text-xs font-semibold ${
+                            act.customColor 
+                              ? act.customColor 
+                              : "group-hover:text-primary group-hover:bg-primary/5"
+                          }`}
+                        >
+                          {act.label}
+                          <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+                        </Button>
+                      </Link>
+                    ))}
+                  </div>
+                ) : card.link ? (
                   <Link to={card.link} className="w-full sm:w-auto">
-                    <Button variant="ghost" size="sm" className="w-full gap-1 text-xs font-semibold group-hover:text-primary group-hover:bg-primary/5">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className={`w-full gap-1 text-xs font-semibold ${
+                        card.highlighted
+                          ? "group-hover:text-rose-500 group-hover:bg-rose-500/5"
+                          : "group-hover:text-primary group-hover:bg-primary/5"
+                      }`}
+                    >
                       Acessar Área
                       <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
                     </Button>
                   </Link>
-                )}
+                ) : null}
               </CardContent>
             </Card>
           );

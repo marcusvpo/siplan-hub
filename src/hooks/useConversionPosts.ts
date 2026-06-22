@@ -74,8 +74,13 @@ export function useConversionPosts(projectId: string | null) {
   }, [projectId]);
 
   useEffect(() => {
+    if (!projectId) {
+      setPosts([]);
+      setPostCount(0);
+      return;
+    }
     fetchPosts();
-  }, [fetchPosts]);
+  }, [projectId, fetchPosts]);
 
   const createPost = useCallback(
     async (params: {
@@ -143,13 +148,27 @@ export function useConversionPosts(projectId: string | null) {
 
   const uploadImage = useCallback(async (file: File): Promise<string | null> => {
     try {
-      const ext = file.name.split(".").pop();
+      let ext = "png";
+      if (file.name && file.name.includes(".")) {
+        const parts = file.name.split(".");
+        const lastPart = parts.pop();
+        if (lastPart && lastPart.toLowerCase() !== "blob") {
+          ext = lastPart;
+        } else if (file.type) {
+          ext = file.type.split("/").pop() || "png";
+        }
+      } else if (file.type) {
+        ext = file.type.split("/").pop() || "png";
+      }
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
       const filePath = `${projectId}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from("conversion-posts")
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          contentType: file.type || 'image/png',
+          upsert: true
+        });
 
       if (uploadError) throw uploadError;
 

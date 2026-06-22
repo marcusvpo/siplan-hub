@@ -218,7 +218,7 @@ export function MyQueueDetailedCard({
   const STATUS_COLORS: Record<string, string> = {
     pending: "bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/50",
     in_progress: "bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-800",
-    awaiting_homologation: "bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-950/20 dark:text-purple-400 dark:border-purple-800",
+    awaiting_homologation: "bg-primary/10 text-primary border-primary/20 dark:bg-primary/5 dark:text-primary dark:border-primary/10",
     homologation: "bg-violet-100 text-violet-700 border-violet-300 dark:bg-violet-950/20 dark:text-violet-400 dark:border-violet-800",
     approved: "bg-green-100 text-green-700 border-green-300 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50",
     done: "bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50",
@@ -263,7 +263,7 @@ export function MyQueueDetailedCard({
           <DialogHeader className="border-b pb-4">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <DialogTitle className="text-2xl font-bold text-purple-900 flex items-center gap-3">
+                <DialogTitle className="text-2xl font-bold text-primary flex items-center gap-3">
                   {item.clientName}
                   <Badge
                     variant="outline"
@@ -304,7 +304,7 @@ export function MyQueueDetailedCard({
                   )}
                 </DialogTitle>
                 <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
-                  <span className="font-mono bg-purple-100 px-2 py-0.5 rounded">
+                  <span className="font-mono bg-muted px-2 py-0.5 rounded">
                     #{item.ticketNumber}
                   </span>
                   <span className="flex items-center gap-1">
@@ -316,7 +316,7 @@ export function MyQueueDetailedCard({
                   )}
                   <a
                     href={`/projects?id=${item.projectId}`}
-                    className="text-purple-600 hover:underline flex items-center gap-1"
+                    className="text-primary hover:underline flex items-center gap-1"
                     onClick={(e) => e.stopPropagation()}
                   >
                     Ver Projeto <ExternalLink className="h-3 w-3" />
@@ -337,7 +337,7 @@ export function MyQueueDetailedCard({
                   P{item.priority}
                 </Badge>
                 {saving && (
-                  <RefreshCw className="h-4 w-4 animate-spin text-purple-600" />
+                  <RefreshCw className="h-4 w-4 animate-spin text-primary" />
                 )}
               </div>
             </div>
@@ -352,8 +352,8 @@ export function MyQueueDetailedCard({
               <ProjectInfoSection projectInfo={projectInfo} item={item} />
 
               {/* Conversion Stage Section */}
-              <div className="bg-purple-50 rounded-lg p-4 border border-purple-200 dark:bg-purple-950/10 dark:border-purple-900/30">
-                <h3 className="font-bold text-purple-700 flex items-center gap-2 mb-4">
+              <div className="bg-primary/5 rounded-lg p-4 border border-primary/10 dark:bg-primary/5 dark:border-primary/10">
+                <h3 className="font-bold text-primary flex items-center gap-2 mb-4">
                   <Database className="h-4 w-4" />
                   3. Conversão de Dados
                 </h3>
@@ -469,7 +469,7 @@ export function MyQueueDetailedCard({
                 </div>
 
                 {/* Homologation Fields */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-purple-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-primary/10">
                   {/* Status Homologação */}
                   <div className="space-y-2">
                     <Label className="text-xs font-bold uppercase tracking-widest text-fuchsia-600 flex items-center gap-2">
@@ -566,7 +566,7 @@ export function MyQueueDetailedCard({
                 </div>
 
                 {/* Rich Text Observations */}
-                <div className="mt-4 pt-4 border-t border-purple-200 space-y-3">
+                <div className="mt-4 pt-4 border-t border-primary/10 space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="h-1 w-8 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full" />
                     <Label className="text-xs font-bold uppercase tracking-widest text-amber-600">
@@ -589,7 +589,7 @@ export function MyQueueDetailedCard({
                 </div>
 
                 {/* Publication Feed */}
-                <div className="mt-4 pt-4 border-t border-purple-200 space-y-3">
+                <div className="mt-4 pt-4 border-t border-primary/10 space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="h-1 w-8 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full" />
                     <Label className="text-xs font-bold uppercase tracking-widest text-blue-600">
@@ -616,7 +616,7 @@ export function MyQueueDetailedCard({
                 <Button
                   variant="outline"
                   onClick={() => onTransfer(item)}
-                  className="text-purple-600 border-purple-300 hover:bg-purple-50"
+                  className="text-primary border-primary/20 hover:bg-primary/5"
                 >
                   <ArrowRight className="h-4 w-4 mr-1" />
                   Transferir
@@ -627,7 +627,7 @@ export function MyQueueDetailedCard({
                       setIsOpen(false);
                       onSendToHomologation(item);
                     }}
-                    className="bg-purple-600 hover:bg-purple-700"
+                    className="bg-primary hover:bg-primary/90"
                   >
                     <Send className="h-4 w-4 mr-1" />
                     Enviar p/ Homologação

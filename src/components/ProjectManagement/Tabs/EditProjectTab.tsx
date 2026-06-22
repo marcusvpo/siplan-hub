@@ -201,12 +201,11 @@ export function EditProjectTab({ project, onUpdate }: TabProps) {
             />
           </div>
           <div className="space-y-2">
-            <Label>Resp. Implantação</Label>
-            <AutocompleteInput
-              value={data.responsibleImplementation}
-              onChange={(value) =>
-                handleChange("responsibleImplementation", value)
-              }
+            <Label>Resp. Implantação <span className="text-[10px] text-muted-foreground font-normal">(Sincronizado da Fase 1)</span></Label>
+            <Input
+              value={data.stages?.implementation?.phase1?.responsible || data.responsibleImplementation || ""}
+              disabled
+              className="bg-muted text-muted-foreground cursor-not-allowed"
             />
           </div>
           {data.systemType === "Modelos TN" ? (
@@ -317,16 +316,15 @@ export function EditProjectTab({ project, onUpdate }: TabProps) {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Status Global</Label>
+            <Label>Status Global <span className="text-[10px] text-muted-foreground font-normal">(Calculado das etapas)</span></Label>
             <Select
               value={data.globalStatus}
-              onValueChange={(value) => handleChange("globalStatus", value)}
+              disabled
             >
-              <SelectTrigger>
+              <SelectTrigger className="bg-muted text-muted-foreground cursor-not-allowed">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="todo">A Fazer</SelectItem>
                 <SelectItem value="in-progress">Em Andamento</SelectItem>
                 <SelectItem value="done">Concluído</SelectItem>
                 <SelectItem value="blocked">Bloqueado</SelectItem>
@@ -391,135 +389,39 @@ export function EditProjectTab({ project, onUpdate }: TabProps) {
         </CardContent>
       </Card>
 
-      {/* Grupo D: Datas Importantes */}
+      {/* Grupo D: Datas Críticas */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Datas Críticas</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <h4 className="font-medium text-sm text-muted-foreground">
-              Planejado
-            </h4>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-2">
-                <Label>Início Previsto</Label>
-                <Input
-                  type="date"
-                  value={
-                    data.startDatePlanned
-                      ? new Date(data.startDatePlanned)
-                          .toISOString()
-                          .split("T")[0]
-                      : ""
-                  }
-                  onChange={(e) =>
-                    handleChange(
-                      "startDatePlanned",
-                      e.target.value
-                        ? new Date(e.target.value + "T12:00:00")
-                        : undefined,
-                    )
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Fim Previsto</Label>
-                <Input
-                  type="date"
-                  value={
-                    data.endDatePlanned
-                      ? new Date(data.endDatePlanned)
-                          .toISOString()
-                          .split("T")[0]
-                      : ""
-                  }
-                  onChange={(e) =>
-                    handleChange(
-                      "endDatePlanned",
-                      e.target.value
-                        ? new Date(e.target.value + "T12:00:00")
-                        : undefined,
-                    )
-                  }
-                />
-              </div>
-            </div>
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Início Real <span className="text-[10px] text-muted-foreground font-normal">(Automático da criação)</span></Label>
+            <Input
+              type="date"
+              value={
+                data.startDateActual
+                  ? new Date(data.startDateActual)
+                      .toISOString()
+                      .split("T")[0]
+                  : ""
+              }
+              disabled
+              className="bg-muted text-muted-foreground cursor-not-allowed"
+            />
           </div>
-
-          <div className="space-y-4">
-            <h4 className="font-medium text-sm text-muted-foreground">
-              Realizado
-            </h4>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-2">
-                <Label>Início Real</Label>
-                <Input
-                  type="date"
-                  value={
-                    data.startDateActual
-                      ? new Date(data.startDateActual)
-                          .toISOString()
-                          .split("T")[0]
-                      : ""
-                  }
-                  onChange={(e) =>
-                    handleChange(
-                      "startDateActual",
-                      e.target.value
-                        ? new Date(e.target.value + "T12:00:00")
-                        : undefined,
-                    )
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Fim Real</Label>
-                <Input
-                  type="date"
-                  value={
-                    data.endDateActual
-                      ? new Date(data.endDateActual).toISOString().split("T")[0]
-                      : ""
-                  }
-                  onChange={(e) =>
-                    handleChange(
-                      "endDateActual",
-                      e.target.value
-                        ? new Date(e.target.value + "T12:00:00")
-                        : undefined,
-                    )
-                  }
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="col-span-1 md:col-span-2 pt-4 border-t">
-            <div className="flex flex-col space-y-2">
-              <Label className="text-red-600 font-semibold">
-                Próximo Follow-up
-              </Label>
-              <Input
-                type="date"
-                className="border-red-200 focus:border-red-500 dark:border-red-900/50 dark:focus:border-red-500"
-                value={
-                  data.nextFollowUpDate
-                    ? new Date(data.nextFollowUpDate)
-                        .toISOString()
-                        .split("T")[0]
-                    : ""
-                }
-                onChange={(e) =>
-                  handleChange(
-                    "nextFollowUpDate",
-                    e.target.value
-                      ? new Date(e.target.value + "T12:00:00")
-                      : undefined,
-                  )
-                }
-              />
-            </div>
+          <div className="space-y-2">
+            <Label>Fim Real <span className="text-[10px] text-muted-foreground font-normal">(Automático do fim da Etapa 7)</span></Label>
+            <Input
+              type="date"
+              value={
+                data.endDateActual
+                  ? new Date(data.endDateActual).toISOString().split("T")[0]
+                  : ""
+              }
+              disabled
+              className="bg-muted text-muted-foreground cursor-not-allowed"
+            />
           </div>
         </CardContent>
       </Card>
