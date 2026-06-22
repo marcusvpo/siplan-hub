@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useMemo } from "react";
 import {
     FileText,
     UploadCloud,
@@ -8,13 +8,15 @@ import {
     Loader2,
     CheckCircle2,
     Calendar,
-    FileEdit
+    FileEdit,
+    Search
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { useProjectFiles } from "@/hooks/useProjectFiles";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -76,7 +78,20 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
 
     const [viewingFullscreen, setViewingFullscreen] = useState<'sent' | 'available' | null>(null);
 
+    const [sentSearch, setSentSearch] = useState("");
+    const [availableSearch, setAvailableSearch] = useState("");
+
     const stage = project.stages.modelosEditor || ({} as ModelosEditorStageV2);
+
+    const filteredSentFiles = useMemo(() => {
+        if (!stage.sentFiles) return [];
+        return stage.sentFiles.filter(f => f.name.toLowerCase().includes(sentSearch.toLowerCase()));
+    }, [stage.sentFiles, sentSearch]);
+
+    const filteredAvailableFiles = useMemo(() => {
+        if (!stage.availableFiles) return [];
+        return stage.availableFiles.filter(f => f.name.toLowerCase().includes(availableSearch.toLowerCase()));
+    }, [stage.availableFiles, availableSearch]);
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'sent' | 'available', currentFiles: AttachedFile[] = []) => {
         if (e.target.files && e.target.files.length > 0) {
@@ -440,11 +455,28 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                         </div>
                     )}
                     {stage.sentFiles && stage.sentFiles.length > 0 && (
+                        <div className="relative mb-1.5 shrink-0">
+                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-indigo-400" />
+                            <Input
+                                placeholder="Filtrar modelos do cliente..."
+                                value={sentSearch}
+                                onChange={(e) => setSentSearch(e.target.value)}
+                                className="pl-8 h-8 text-[11px] bg-white/70 dark:bg-slate-900/70 border-indigo-100 dark:border-indigo-900/30 focus-visible:ring-indigo-500"
+                            />
+                        </div>
+                    )}
+                    {stage.sentFiles && stage.sentFiles.length > 0 && (
                         <>
-                            {renderSelectionHeader('sent', stage.sentFiles)}
-                            <div className="flex-1 overflow-y-auto pr-1.5 space-y-1 scrollbar-thin scrollbar-thumb-indigo-200 scrollbar-track-transparent hover:scrollbar-thumb-indigo-300 transition-colors">
-                                {stage.sentFiles.map(file => renderFileRow(file, 'sent', stage.sentFiles!))}
-                            </div>
+                            {renderSelectionHeader('sent', filteredSentFiles)}
+                            {filteredSentFiles.length === 0 ? (
+                                <div className="text-xs text-muted-foreground text-center py-4 bg-white/50 dark:bg-slate-900/50 rounded-lg border border-dashed border-indigo-200 dark:border-indigo-800/50 flex-1 flex items-center justify-center">
+                                    Nenhum modelo correspondente encontrado.
+                                </div>
+                            ) : (
+                                <div className="flex-1 overflow-y-auto pr-1.5 space-y-1 scrollbar-thin scrollbar-thumb-indigo-200 scrollbar-track-transparent hover:scrollbar-thumb-indigo-300 transition-colors">
+                                    {filteredSentFiles.map(file => renderFileRow(file, 'sent', stage.sentFiles!))}
+                                </div>
+                            )}
                         </>
                     )}
                 </div>
@@ -494,11 +526,28 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                         </div>
                     )}
                     {stage.availableFiles && stage.availableFiles.length > 0 && (
+                        <div className="relative mb-1.5 shrink-0">
+                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-emerald-400" />
+                            <Input
+                                placeholder="Filtrar modelos JSON..."
+                                value={availableSearch}
+                                onChange={(e) => setAvailableSearch(e.target.value)}
+                                className="pl-8 h-8 text-[11px] bg-white/70 dark:bg-slate-900/70 border-emerald-100 dark:border-emerald-900/30 focus-visible:ring-emerald-500"
+                            />
+                        </div>
+                    )}
+                    {stage.availableFiles && stage.availableFiles.length > 0 && (
                         <>
-                            {renderSelectionHeader('available', stage.availableFiles)}
-                            <div className="flex-1 overflow-y-auto pr-1.5 space-y-1 scrollbar-thin scrollbar-thumb-emerald-200 scrollbar-track-transparent hover:scrollbar-thumb-emerald-300 transition-colors">
-                                {stage.availableFiles.map(file => renderFileRow(file, 'available', stage.availableFiles!))}
-                            </div>
+                            {renderSelectionHeader('available', filteredAvailableFiles)}
+                            {filteredAvailableFiles.length === 0 ? (
+                                <div className="text-xs text-muted-foreground text-center py-4 bg-white/50 dark:bg-slate-900/50 rounded-lg border border-dashed border-emerald-200 dark:border-emerald-800/50 flex-1 flex items-center justify-center">
+                                    Nenhum JSON correspondente encontrado.
+                                </div>
+                            ) : (
+                                <div className="flex-1 overflow-y-auto pr-1.5 space-y-1 scrollbar-thin scrollbar-thumb-emerald-200 scrollbar-track-transparent hover:scrollbar-thumb-emerald-300 transition-colors">
+                                    {filteredAvailableFiles.map(file => renderFileRow(file, 'available', stage.availableFiles!))}
+                                </div>
+                            )}
                         </>
                     )}
                 </div>
@@ -531,8 +580,23 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                                 </div>
                             ) : (
                                 <div className="space-y-3">
-                                    {renderSelectionHeader('sent', stage.sentFiles!)}
-                                    {stage.sentFiles.map(file => renderFileRow(file, 'sent', stage.sentFiles!))}
+                                    <div className="relative mb-2">
+                                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-indigo-400" />
+                                        <Input
+                                            placeholder="Filtrar modelos do cliente..."
+                                            value={sentSearch}
+                                            onChange={(e) => setSentSearch(e.target.value)}
+                                            className="pl-9 h-9 text-xs bg-white/70 dark:bg-slate-900/70 border-indigo-100 dark:border-indigo-900/30 focus-visible:ring-indigo-500"
+                                        />
+                                    </div>
+                                    {renderSelectionHeader('sent', filteredSentFiles)}
+                                    {filteredSentFiles.length === 0 ? (
+                                        <div className="text-xs text-muted-foreground text-center py-8 border border-dashed rounded-lg">
+                                            Nenhum modelo correspondente encontrado.
+                                        </div>
+                                    ) : (
+                                        filteredSentFiles.map(file => renderFileRow(file, 'sent', stage.sentFiles!))
+                                    )}
                                 </div>
                             )
                         )}
@@ -545,8 +609,23 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                                 </div>
                             ) : (
                                 <div className="space-y-3">
-                                    {renderSelectionHeader('available', stage.availableFiles!)}
-                                    {stage.availableFiles.map(file => renderFileRow(file, 'available', stage.availableFiles!))}
+                                    <div className="relative mb-2">
+                                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-400" />
+                                        <Input
+                                            placeholder="Filtrar modelos JSON..."
+                                            value={availableSearch}
+                                            onChange={(e) => setAvailableSearch(e.target.value)}
+                                            className="pl-9 h-9 text-xs bg-white/70 dark:bg-slate-900/70 border-emerald-100 dark:border-emerald-900/30 focus-visible:ring-emerald-500"
+                                        />
+                                    </div>
+                                    {renderSelectionHeader('available', filteredAvailableFiles)}
+                                    {filteredAvailableFiles.length === 0 ? (
+                                        <div className="text-xs text-muted-foreground text-center py-8 border border-dashed rounded-lg">
+                                            Nenhum JSON correspondente encontrado.
+                                        </div>
+                                    ) : (
+                                        filteredAvailableFiles.map(file => renderFileRow(file, 'available', stage.availableFiles!))
+                                    )}
                                 </div>
                             )
                         )}

@@ -1,4 +1,4 @@
-import { FileText, Search, Loader2, ChevronRight, Layout } from "lucide-react";
+import { FileText, Search, Loader2, ChevronRight, Layout, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -7,6 +7,7 @@ import { ModelosEditorWorkspace } from "@/components/ProjectManagement/ModelosEd
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 import { getMarqueeStyle } from "@/lib/marquee";
 
@@ -19,6 +20,7 @@ export default function OrionTNModels() {
   const { projects, isLoading, updateProject } = useProjectsV2();
   const [projectSearch, setProjectSearch] = useState("");
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const orionProjects = useMemo(() => {
     return projects.filter((p) =>
@@ -72,14 +74,28 @@ export default function OrionTNModels() {
   return (
     <div className="flex h-[calc(100vh-4rem)] overflow-hidden bg-slate-50 dark:bg-slate-950/50">
       {/* Sidebar de Projetos */}
-      <div className="w-80 border-r bg-white dark:bg-slate-900 flex flex-col shrink-0">
+      <div className={cn(
+        "w-80 border-r bg-white dark:bg-slate-900 flex flex-col shrink-0 transition-all duration-300 ease-in-out overflow-hidden",
+        !isSidebarOpen && "w-0 border-r-0 opacity-0 pointer-events-none"
+      )}>
         <div className="p-3 border-b space-y-2.5">
           <div className="flex items-center justify-between">
             <h2 className="font-semibold text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
               <Layout className="h-3.5 w-3.5" />
               Projetos OrionTN
             </h2>
-            <Badge variant="secondary" className="text-[9px] px-1.5 py-0">{orionProjects.length}</Badge>
+            <div className="flex items-center gap-1.5">
+              <Badge variant="secondary" className="text-[9px] px-1.5 py-0">{orionProjects.length}</Badge>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 text-muted-foreground hover:text-foreground shrink-0"
+                onClick={() => setIsSidebarOpen(false)}
+                title="Recolher barra lateral"
+              >
+                <PanelLeftClose className="h-3.5 w-3.5" />
+              </Button>
+            </div>
           </div>
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
@@ -144,6 +160,17 @@ export default function OrionTNModels() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="h-12 border-b bg-white dark:bg-slate-900 flex items-center px-4 shrink-0">
           <div className="flex items-center gap-2.5 min-w-0 flex-1">
+            {!isSidebarOpen && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground shrink-0 mr-1"
+                onClick={() => setIsSidebarOpen(true)}
+                title="Expandir barra lateral"
+              >
+                <PanelLeftOpen className="h-4 w-4" />
+              </Button>
+            )}
             <div className="bg-indigo-100 dark:bg-indigo-950/50 p-1.5 rounded-lg shrink-0">
               <FileText className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
             </div>
