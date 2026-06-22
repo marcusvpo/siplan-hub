@@ -3,7 +3,7 @@
 export type ImplantationType = "new" | "migration_siplan" | "migration_competitor" | "upgrade";
 export type Priority = "critical" | "high" | "normal" | "low";
 export type ProjectType = "new" | "migration" | "upgrade" | "maintenance";
-export type GlobalStatus = "todo" | "in-progress" | "done" | "blocked" | "archived";
+export type GlobalStatus = "in-progress" | "done" | "blocked" | "archived";
 export type HealthScore = "ok" | "warning" | "critical";
 export type StageStatus = "todo" | "in-progress" | "done" | "blocked" | "waiting_adjustment";
 export type ProjectStatus = StageStatus;
@@ -122,11 +122,8 @@ export interface ProjectV2 {
 
   // Datas
   createdAt: Date;
-  startDatePlanned?: Date;
-  endDatePlanned?: Date;
   startDateActual?: Date;
   endDateActual?: Date;
-  nextFollowUpDate?: Date;
   lastUpdatedAt: Date;
   lastUpdatedBy: string;
 
@@ -364,7 +361,7 @@ export interface KPIData {
   completedProjects: number;
   completionRate: number;
   avgTotalTime: number;
-  nextFollowups: number;
+
   successRate?: number;
   avgStageTime?: {
     infra: number;

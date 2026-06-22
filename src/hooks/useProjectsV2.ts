@@ -208,6 +208,8 @@ export const useProjectsV2 = () => {
       const projectWithUser = {
         ...project,
         lastUpdatedBy: getCurrentUserName(),
+        startDateActual: new Date(),
+        globalStatus: "in-progress" as const,
       };
 
       const dbProject = transformToDB(projectWithUser) as TablesInsert<"projects">;
@@ -253,4 +255,4 @@ export const useProjectsV2 = () => {
     }),
   };
 };
-
+

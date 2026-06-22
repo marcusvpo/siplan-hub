@@ -215,19 +215,7 @@ export default function ProjectsKanban() {
                                           <span className="truncate">{project.projectLeader || "Sem Líder"}</span>
                                        </div>
                                     </div>
-                                    {project.nextFollowUpDate && (
-                                       <div className={cn(
-                                         "flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full border",
-                                         new Date(project.nextFollowUpDate) < new Date() 
-                                          ? "bg-red-50 text-red-600 border-red-200" 
-                                          : "bg-blue-50 text-blue-600 border-blue-200"
-                                       )}>
-                                          <Calendar className="h-3 w-3" />
-                                          <span className="font-medium">
-                                            {new Date(project.nextFollowUpDate).toLocaleDateString()}
-                                          </span>
-                                       </div>
-                                    )}
+
                                   </div>
                                 </CardContent>
                               </Card>

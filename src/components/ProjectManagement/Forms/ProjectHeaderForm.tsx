@@ -64,24 +64,11 @@ export function ProjectHeaderForm({ project }: ProjectHeaderFormProps) {
             <div className="grid grid-cols-2 gap-3">
                {/* Legado */}
                {project.systemType !== "Modelos TN" && (
-                 <div className="bg-card hover:bg-accent/50 transition-colors rounded-xl border shadow-sm p-3.5 space-y-1.5 group">
+                 <div className="bg-card hover:bg-accent/50 transition-colors rounded-xl border shadow-sm p-3.5 space-y-1.5 group col-span-2">
                     <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider group-hover:text-primary transition-colors">Legado</p>
                     <p className="font-bold text-base">{project.legacySystem || '-'}</p>
                  </div>
                )}
-               {/* Próximo Follow-up */}
-               <div className={cn(
-                 "bg-card hover:bg-accent/50 transition-colors rounded-xl border shadow-sm p-3.5 space-y-1.5 group",
-                 project.systemType === "Modelos TN" && "col-span-2"
-               )}>
-                  <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider group-hover:text-primary transition-colors">Próximo Follow-up</p>
-                  <div className="flex items-center gap-2">
-                     <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                     <p className="font-bold text-base">
-                       {project.nextFollowUpDate ? format(new Date(project.nextFollowUpDate).toISOString().split('T')[0], "dd/MM", { locale: ptBR }) : '-'}
-                     </p>
-                  </div>
-               </div>
             </div>
          </div>
 

@@ -15,7 +15,7 @@ interface CompactQueueCardProps {
 const STATUS_COLORS: Record<string, string> = {
   pending: "bg-amber-100 text-amber-700 border-amber-300",
   in_progress: "bg-blue-100 text-blue-700 border-blue-300",
-  awaiting_homologation: "bg-purple-100 text-purple-700 border-purple-300",
+  awaiting_homologation: "bg-primary/10 text-primary border-primary/20",
   homologation: "bg-violet-100 text-violet-700 border-violet-300",
   approved: "bg-green-100 text-green-700 border-green-300",
   done: "bg-emerald-100 text-emerald-700 border-emerald-300",
@@ -40,7 +40,7 @@ export function CompactQueueCard({ item, onClick }: CompactQueueCardProps) {
 
   return (
     <Card
-      className="border-2 border-purple-200 bg-gradient-to-br from-purple-50/50 to-fuchsia-50/30 hover:shadow-lg transition-all cursor-pointer"
+      className="border border-primary/20 bg-gradient-to-br from-primary/[0.02] to-background hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer"
       onClick={onClick}
     >
       <CardContent className="p-4">
@@ -48,7 +48,7 @@ export function CompactQueueCard({ item, onClick }: CompactQueueCardProps) {
           {/* Left Side - Client Info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 mb-1">
-              <span className="font-bold text-lg text-purple-900 truncate">
+              <span className="font-bold text-lg text-slate-900 dark:text-slate-100 truncate">
                 {item.clientName}
               </span>
               <Badge
@@ -62,7 +62,7 @@ export function CompactQueueCard({ item, onClick }: CompactQueueCardProps) {
               </Badge>
             </div>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <span className="font-mono bg-purple-100 px-2 py-0.5 rounded">
+              <span className="font-mono bg-muted px-2 py-0.5 rounded">
                 #{item.ticketNumber}
               </span>
               <span className="flex items-center gap-1">
@@ -143,7 +143,7 @@ export function CompactQueueCard({ item, onClick }: CompactQueueCardProps) {
             <Button
               size="sm"
               variant="outline"
-              className="border-purple-300 text-purple-600 hover:bg-purple-50 gap-1"
+              className="border-primary/20 text-primary hover:bg-primary/5 gap-1"
               onClick={(e) => {
                 e.stopPropagation();
                 onClick();

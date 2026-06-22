@@ -11,14 +11,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Trash2, Plus, ArrowUp, ArrowDown, Settings2, ListPlus, Image, FileText, Binary, CheckSquare, Type, HelpCircle } from "lucide-react";
+import { Trash2, Plus, ArrowUp, ArrowDown, Settings2, ListPlus, Image, FileText, Binary, CheckSquare, Type, HelpCircle, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Visual representation of a form question
 export interface VisualQuestion {
   id: string;
   title: string;
-  type: "text" | "textarea" | "number" | "boolean" | "select" | "checkboxes" | "images" | "section" | "boolean_adherence" | "textarea_adherence";
+  type: "text" | "textarea" | "number" | "boolean" | "select" | "checkboxes" | "images" | "section" | "boolean_adherence" | "textarea_adherence" | "date_adherence";
   required: boolean;
   options?: string[]; // Used for select or checkboxes
 }
@@ -171,6 +171,8 @@ export function VisualQuestionBuilder({
         return <CheckSquare className="h-4 w-4 text-emerald-500" />;
       case "textarea_adherence":
         return <FileText className="h-4 w-4 text-sky-500" />;
+      case "date_adherence":
+        return <Calendar className="h-4 w-4 text-amber-500" />;
       case "text":
         return <Type className="h-4 w-4 text-sky-500" />;
       case "textarea":
@@ -292,6 +294,7 @@ export function VisualQuestionBuilder({
                         <SelectItem value="section">Cabeçalho de Seção</SelectItem>
                         <SelectItem value="boolean_adherence">Pergunta Aderência (Sim/Não)</SelectItem>
                         <SelectItem value="textarea_adherence">Pergunta Aderência (Texto Livre)</SelectItem>
+                        <SelectItem value="date_adherence">Pergunta Aderência (Data DD/MM/YYYY)</SelectItem>
                         <SelectItem value="text">Texto Curto (Input)</SelectItem>
                         <SelectItem value="textarea">Texto Longo (Textarea)</SelectItem>
                         <SelectItem value="number">Número (Inteiro/Decimal)</SelectItem>
@@ -389,7 +392,7 @@ export function convertVisualToJSONSchema(
   title: string,
   description: string
 ) {
-  const hasAdherence = questions.some(q => q.type === "section" || q.type === "boolean_adherence" || q.type === "textarea_adherence");
+  const hasAdherence = questions.some(q => q.type === "section" || q.type === "boolean_adherence" || q.type === "textarea_adherence" || q.type === "date_adherence");
 
   if (hasAdherence) {
     const properties: Record<string, any> = {};
@@ -415,7 +418,7 @@ export function convertVisualToJSONSchema(
         currentSectionKey = `sec_${sectionCount}`;
         currentSectionTitle = q.title;
         currentSectionProps = {};
-      } else if (q.type === "boolean_adherence" || q.type === "textarea_adherence") {
+      } else if (q.type === "boolean_adherence" || q.type === "textarea_adherence" || q.type === "date_adherence") {
         if (!currentSectionKey) {
           sectionCount++;
           currentSectionKey = `sec_${sectionCount}`;
@@ -424,6 +427,7 @@ export function convertVisualToJSONSchema(
         }
 
         const isText = q.type === "textarea_adherence";
+        const isDate = q.type === "date_adherence";
         let qKey = `q_${sectionCount}_${Object.keys(currentSectionProps).length + 1}`;
 
         if (isText) {
@@ -432,6 +436,16 @@ export function convertVisualToJSONSchema(
             title: q.title,
             properties: {
               valor: { type: "string", title: "Resposta" },
+              impacto: { type: "boolean", title: "Possui algum impacto?", default: false },
+              detalhes: { type: "string", title: "Detalhes do Impacto" }
+            }
+          };
+        } else if (isDate) {
+          currentSectionProps[qKey] = {
+            type: "object",
+            title: q.title,
+            properties: {
+              valor: { type: "string", title: "Resposta", format: "date" },
               impacto: { type: "boolean", title: "Possui algum impacto?", default: false },
               detalhes: { type: "string", title: "Detalhes do Impacto" }
             }
@@ -490,7 +504,7 @@ export function convertVisualToJSONSchema(
 
     const required: string[] = [];
     questions.forEach((q) => {
-      if (q.required && q.type !== "section" && q.type !== "boolean_adherence" && q.type !== "textarea_adherence") {
+      if (q.required && q.type !== "section" && q.type !== "boolean_adherence" && q.type !== "textarea_adherence" && q.type !== "date_adherence") {
         const qKey = q.id.startsWith("q_") ? q.id : `q_${q.id}`;
         required.push(qKey);
       }
@@ -574,7 +588,7 @@ export function convertVisualToJSONSchema(
 }
 
 export function convertVisualToUISchema(questions: VisualQuestion[]) {
-  const hasAdherence = questions.some(q => q.type === "section" || q.type === "boolean_adherence" || q.type === "textarea_adherence");
+  const hasAdherence = questions.some(q => q.type === "section" || q.type === "boolean_adherence" || q.type === "textarea_adherence" || q.type === "date_adherence");
 
   if (hasAdherence) {
     const uiSchema: Record<string, any> = {};
@@ -594,7 +608,7 @@ export function convertVisualToUISchema(questions: VisualQuestion[]) {
         sectionCount++;
         currentSectionKey = `sec_${sectionCount}`;
         currentSectionUi = {};
-      } else if (q.type === "boolean_adherence" || q.type === "textarea_adherence") {
+      } else if (q.type === "boolean_adherence" || q.type === "textarea_adherence" || q.type === "date_adherence") {
         if (!currentSectionKey) {
           sectionCount++;
           currentSectionKey = `sec_${sectionCount}`;
@@ -602,6 +616,7 @@ export function convertVisualToUISchema(questions: VisualQuestion[]) {
         }
 
         const isText = q.type === "textarea_adherence";
+        const isDate = q.type === "date_adherence";
         const qIdx = Object.keys(currentSectionUi).length + 1;
         const qKey = `q_${sectionCount}_${qIdx}`;
 
@@ -620,6 +635,14 @@ export function convertVisualToUISchema(questions: VisualQuestion[]) {
             valor: {
               "ui:widget": "textarea",
               "ui:options": { placeholder }
+            }
+          };
+        } else if (isDate) {
+          currentSectionUi[qKey] = {
+            "ui:field": "adherenceQuestion",
+            valor: {
+              "ui:widget": "date",
+              "ui:options": { placeholder: "DD/MM/YYYY" }
             }
           };
         } else {
@@ -707,10 +730,16 @@ export function parseJSONSchemaToVisual(schema: any, uiSchema: any): VisualQuest
           if (!qProp || !qProp.properties) return;
 
           const isText = "valor" in qProp.properties;
+          let type: VisualQuestion["type"] = "boolean_adherence";
+          if (isText) {
+            const isDate = qProp.properties.valor?.format === "date" || 
+                           uiSchema?.[secKey]?.[qKey]?.valor?.["ui:widget"] === "date";
+            type = isDate ? "date_adherence" : "textarea_adherence";
+          }
           questions.push({
             id: `${secKey}_${qKey}`,
             title: qProp.title || "Pergunta sem título",
-            type: isText ? "textarea_adherence" : "boolean_adherence",
+            type,
             required: false,
           });
         });

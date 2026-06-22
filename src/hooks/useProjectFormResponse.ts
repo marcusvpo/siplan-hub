@@ -7,7 +7,7 @@ export interface ProjectFormResponse {
   template_id: string;
   stage: 'adherence' | 'conversion';
   data: any;
-  status: 'draft' | 'submitted' | 'approved';
+  status: 'draft' | 'submitted' | 'approved' | 'approved_with_restrictions' | 'rejected';
   filled_by?: string;
   submitted_at?: string;
   approved_by?: string;
@@ -21,7 +21,7 @@ interface UpsertResponseInput {
   template_id: string;
   stage: 'adherence' | 'conversion';
   data: any;
-  status?: 'draft' | 'submitted' | 'approved';
+  status?: 'draft' | 'submitted' | 'approved' | 'approved_with_restrictions' | 'rejected';
 }
 
 export function useProjectFormResponse(projectId: string, stage: 'adherence' | 'conversion') {
@@ -83,8 +83,10 @@ export function useUpsertFormResponse() {
           updates.filled_by = userId;
         }
 
-        // If transitioning to approved
-        if (status === 'approved' && existing.status !== 'approved') {
+        // If transitioning to approved/finalized
+        const isNewApproved = (status === 'approved' || status === 'approved_with_restrictions' || status === 'rejected');
+        const wasApproved = (existing.status === 'approved' || existing.status === 'approved_with_restrictions' || existing.status === 'rejected');
+        if (isNewApproved && !wasApproved) {
           updates.approved_at = now;
           updates.approved_by = userId;
         }
@@ -113,7 +115,7 @@ export function useUpsertFormResponse() {
         if (status === 'submitted') {
           inserts.submitted_at = now;
           inserts.filled_by = userId;
-        } else if (status === 'approved') {
+        } else if (status === 'approved' || status === 'approved_with_restrictions' || status === 'rejected') {
           inserts.approved_at = now;
           inserts.approved_by = userId;
         } else {
