@@ -187,6 +187,140 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
         });
     };
 
+    const handleToggleAllFiles = (type: 'sent' | 'available', currentFiles: AttachedFile[], checked: boolean) => {
+        const updatedFiles = currentFiles.map(f => ({ ...f, isDone: checked }));
+        const fieldToUpdate = type === 'sent' ? 'sentFiles' : 'availableFiles';
+        onUpdate({
+            [fieldToUpdate]: updatedFiles
+        });
+    };
+
+    const handleBatchDownload = async (type: 'sent' | 'available', currentFiles: AttachedFile[]) => {
+        const selectedFiles = currentFiles.filter(f => f.isDone);
+        if (selectedFiles.length === 0) return;
+
+        toast({
+            title: "Baixando arquivos",
+            description: `Iniciando o download de ${selectedFiles.length} arquivo(s)...`,
+        });
+
+        for (let i = 0; i < selectedFiles.length; i++) {
+            const file = selectedFiles[i];
+            try {
+                const url = await getDownloadUrl(file.path);
+                const link = document.createElement("a");
+                link.href = url;
+                link.target = "_blank";
+                link.download = file.name;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                await new Promise(resolve => setTimeout(resolve, 300));
+            } catch (error) {
+                console.error(`Erro ao baixar ${file.name}:`, error);
+            }
+        }
+    };
+
+    const handleBatchDelete = async (type: 'sent' | 'available', currentFiles: AttachedFile[]) => {
+        const selectedFiles = currentFiles.filter(f => f.isDone);
+        if (selectedFiles.length === 0) return;
+
+        if (confirm(`Tem certeza que deseja excluir os ${selectedFiles.length} arquivos selecionados?`)) {
+            try {
+                toast({
+                    title: "Excluindo arquivos",
+                    description: `Excluindo ${selectedFiles.length} arquivo(s)...`,
+                });
+
+                for (const file of selectedFiles) {
+                    await deleteStorageFile.mutateAsync({ ...file, projectId: project.id, fileUrl: file.path } as any);
+                }
+
+                const fieldToUpdate = type === 'sent' ? 'sentFiles' : 'availableFiles';
+                const remainingFiles = currentFiles.filter(f => !f.isDone);
+                onUpdate({
+                    [fieldToUpdate]: remainingFiles
+                });
+
+                toast({
+                    title: "Sucesso",
+                    description: `${selectedFiles.length} arquivo(s) excluído(s) com sucesso.`,
+                });
+            } catch (error) {
+                console.error(error);
+                toast({
+                    title: "Erro",
+                    description: "Não foi possível remover alguns arquivos.",
+                    variant: "destructive",
+                });
+            }
+        }
+    };
+
+    const renderSelectionHeader = (type: 'sent' | 'available', list: AttachedFile[]) => {
+        if (!list || list.length === 0) return null;
+        const allChecked = list.every(f => f.isDone);
+        const someChecked = list.some(f => f.isDone);
+        const isSent = type === 'sent';
+
+        return (
+            <div className={cn(
+                "flex items-center justify-between p-1.5 rounded border text-xs shrink-0 mb-1.5 transition-all duration-300",
+                isSent 
+                    ? "bg-indigo-50/50 dark:bg-indigo-950/20 border-indigo-100 dark:border-indigo-900/30" 
+                    : "bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-100 dark:border-emerald-900/30"
+            )}>
+                <div className="flex items-center gap-2">
+                    <Checkbox
+                        checked={allChecked}
+                        disabled={!canEditProjects}
+                        onCheckedChange={(checked) => handleToggleAllFiles(type, list, !!checked)}
+                        className={cn(
+                            "rounded flex-shrink-0 h-3.5 w-3.5",
+                            isSent 
+                                ? "data-[state=checked]:bg-indigo-500 data-[state=checked]:border-indigo-500" 
+                                : "data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
+                        )}
+                    />
+                    <span className={cn(
+                        "font-semibold",
+                        isSent ? "text-indigo-700 dark:text-indigo-400" : "text-emerald-700 dark:text-emerald-400"
+                    )}>
+                        Selecionar Todos
+                    </span>
+                </div>
+                {someChecked && (
+                    <div className="flex items-center gap-1.5">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className={cn(
+                                "h-6 px-2 text-[10px] flex items-center gap-1 hover:bg-slate-100 dark:hover:bg-slate-800",
+                                isSent ? "text-indigo-600 dark:text-indigo-400" : "text-emerald-600 dark:text-emerald-400"
+                            )}
+                            onClick={() => handleBatchDownload(type, list)}
+                        >
+                            <Download className="h-3 w-3" />
+                            Baixar Selecionados
+                        </Button>
+                        {canDeleteFiles && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 px-2 text-[10px] text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-100/50 dark:hover:bg-red-900/20 flex items-center gap-1"
+                                onClick={() => handleBatchDelete(type, list)}
+                            >
+                                <Trash2 className="h-3 w-3" />
+                                Excluir Selecionados
+                            </Button>
+                        )}
+                    </div>
+                )}
+            </div>
+        );
+    };
+
     const renderFileRow = (file: AttachedFile, type: 'sent' | 'available', list: AttachedFile[]) => (
         <div key={file.id} className={cn(
             "flex items-center justify-between p-1.5 rounded bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800 text-xs transition-all duration-300 shadow-sm hover:shadow-md",
@@ -198,7 +332,12 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                     checked={!!file.isDone}
                     disabled={!canEditProjects}
                     onCheckedChange={() => handleToggleFileDone(file, type, list)}
-                    className="data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500 rounded flex-shrink-0 h-3.5 w-3.5"
+                    className={cn(
+                        "rounded flex-shrink-0 h-3.5 w-3.5",
+                        type === 'sent'
+                            ? "data-[state=checked]:bg-indigo-500 data-[state=checked]:border-indigo-500"
+                            : "data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
+                    )}
                 />
                 <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                 <Tooltip>
@@ -301,9 +440,12 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                         </div>
                     )}
                     {stage.sentFiles && stage.sentFiles.length > 0 && (
-                        <div className="flex-1 overflow-y-auto pr-1.5 space-y-1 scrollbar-thin scrollbar-thumb-indigo-200 scrollbar-track-transparent hover:scrollbar-thumb-indigo-300 transition-colors">
-                            {stage.sentFiles.map(file => renderFileRow(file, 'sent', stage.sentFiles!))}
-                        </div>
+                        <>
+                            {renderSelectionHeader('sent', stage.sentFiles)}
+                            <div className="flex-1 overflow-y-auto pr-1.5 space-y-1 scrollbar-thin scrollbar-thumb-indigo-200 scrollbar-track-transparent hover:scrollbar-thumb-indigo-300 transition-colors">
+                                {stage.sentFiles.map(file => renderFileRow(file, 'sent', stage.sentFiles!))}
+                            </div>
+                        </>
                     )}
                 </div>
 
@@ -352,9 +494,12 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                         </div>
                     )}
                     {stage.availableFiles && stage.availableFiles.length > 0 && (
-                        <div className="flex-1 overflow-y-auto pr-1.5 space-y-1 scrollbar-thin scrollbar-thumb-emerald-200 scrollbar-track-transparent hover:scrollbar-thumb-emerald-300 transition-colors">
-                            {stage.availableFiles.map(file => renderFileRow(file, 'available', stage.availableFiles!))}
-                        </div>
+                        <>
+                            {renderSelectionHeader('available', stage.availableFiles)}
+                            <div className="flex-1 overflow-y-auto pr-1.5 space-y-1 scrollbar-thin scrollbar-thumb-emerald-200 scrollbar-track-transparent hover:scrollbar-thumb-emerald-300 transition-colors">
+                                {stage.availableFiles.map(file => renderFileRow(file, 'available', stage.availableFiles!))}
+                            </div>
+                        </>
                     )}
                 </div>
             </div>
@@ -386,6 +531,7 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                                 </div>
                             ) : (
                                 <div className="space-y-3">
+                                    {renderSelectionHeader('sent', stage.sentFiles!)}
                                     {stage.sentFiles.map(file => renderFileRow(file, 'sent', stage.sentFiles!))}
                                 </div>
                             )
@@ -399,6 +545,7 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                                 </div>
                             ) : (
                                 <div className="space-y-3">
+                                    {renderSelectionHeader('available', stage.availableFiles!)}
                                     {stage.availableFiles.map(file => renderFileRow(file, 'available', stage.availableFiles!))}
                                 </div>
                             )
