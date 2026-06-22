@@ -27,7 +27,8 @@ import {
   HelpCircle,
   Activity,
   Check,
-  ClipboardList
+  ClipboardList,
+  Share2
 } from "lucide-react";
 import {
   AlertDialog,
@@ -77,267 +78,16 @@ interface InfraStageFormProps {
   notifying: boolean;
   onUpdate: (updates: Partial<InfraStageV2>) => void;
   onNotifyComercial: () => void;
+  projectId?: string;
 }
 
-// -------------------------------------------------------------
-// HELPER FUNCTIONS FOR REQUIREMENTS PARSING & VALIDATION
-// -------------------------------------------------------------
-
-const extractGeneration = (processor: string): string => {
-  if (!processor) return "";
-  const lower = processor.toLowerCase();
-  
-  // Intel Core i3/i5/i7/i9 matches
-  const intelMatch = lower.match(/i\d[- ](\d{1,2})\d{3}/);
-  if (intelMatch) {
-    const gen = parseInt(intelMatch[1]);
-    return `${gen}ª Geração`;
-  }
-  
-  // Direct gen matches: e.g. "8ª Geração", "8 gen", "10 generation"
-  const directMatch = lower.match(/(\d{1,2})\s*(gen|generation|ª\s*geração|ª\s*gera|ª)/i);
-  if (directMatch) {
-    return `${directMatch[1]}ª Geração`;
-  }
-  
-  // AMD Ryzen matches: e.g. Ryzen 5 3600 -> 3ª Geração
-  if (lower.includes("ryzen")) {
-    const ryzenMatch = lower.match(/ryzen\s+\d\s+(\d)\d{3}/);
-    if (ryzenMatch) {
-      return `${ryzenMatch[1]}ª Geração (Ryzen)`;
-    }
-  }
-  return "";
-};
-
-const checkWorkstationRequirements = (station: WorkstationInfo) => {
-  const issues: string[] = [];
-
-  // Check Processor & Gen
-  if (station.processor) {
-    const gen = station.generation || extractGeneration(station.processor);
-    const genNum = parseInt(gen);
-    const lowerProc = station.processor.toLowerCase();
-    
-    if (lowerProc.includes("celeron") || lowerProc.includes("atom") || lowerProc.includes("core 2")) {
-      issues.push("Processador inadequado (Celeron/Atom/Core 2)");
-    } else if (!isNaN(genNum) && genNum < 6 && (lowerProc.includes("core") || lowerProc.includes("i3") || lowerProc.includes("i5") || lowerProc.includes("i7"))) {
-      issues.push("Processador abaixo da 6ª Geração");
-    }
-  }
-
-  // Check RAM
-  if (station.memory) {
-    const ramMatch = station.memory.match(/(\d+)/);
-    if (ramMatch) {
-      const ram = parseInt(ramMatch[1]);
-      const isFirma = station.sector && (
-        station.sector.toLowerCase().includes("firma") || 
-        station.sector.toLowerCase().includes("balc") ||
-        station.sector.toLowerCase().includes("recep")
-      );
-      const minRam = isFirma ? 8 : 4;
-      if (ram < minRam) {
-        issues.push(`RAM baixa (${ram} GB). Mínimo de ${minRam} GB exigido para o setor.`);
-      }
-    }
-  }
-
-  // Check Disk space
-  if (station.disk) {
-    const freeMatch = station.disk.match(/Livre:\s*(\d+)/i);
-    if (freeMatch) {
-      const free = parseInt(freeMatch[1]);
-      if (free < 10) {
-        issues.push(`Espaço livre insuficiente (${free} GB). Mínimo 10 GB.`);
-      }
-    } else {
-      const sizeMatch = station.disk.match(/(\d+)/);
-      if (sizeMatch) {
-        const size = parseInt(sizeMatch[1]);
-        if (size < 10) {
-          issues.push(`Espaço de disco insuficiente (${size} GB).`);
-        }
-      }
-    }
-  }
-
-  // Check OS
-  if (station.os) {
-    const lowerOs = station.os.toLowerCase();
-    if (lowerOs.includes("windows 7") || lowerOs.includes("windows 8") || lowerOs.includes("windows xp") || lowerOs.includes("win7") || lowerOs.includes("win8")) {
-      issues.push("Sistema Operacional descontinuado (Windows 7/8/XP)");
-    }
-  }
-
-  // Check Antivirus
-  if (station.antivirus) {
-    const lowerAv = station.antivirus.toLowerCase();
-    if (lowerAv.includes("defender") && !lowerAv.includes("bitdefender") && !lowerAv.includes("corporate")) {
-      // Windows Defender is okay but often they prefer corporate
-    }
-  }
-
-  return {
-    meets: issues.length === 0,
-    issues,
-  };
-};
-
-const checkServerRequirements = (server: ServerInfo, workstationsCount: number) => {
-  const issues: string[] = [];
-  const count = workstationsCount || 0;
-
-  // CPU cores check
-  if (server.processor) {
-    const coresMatch = server.processor.match(/(\d+)\s*(nucleo|núcleo|core|thread|cpu)/i);
-    if (coresMatch) {
-      const cores = parseInt(coresMatch[1]);
-      const minCores = count > 15 ? 8 : 6;
-      if (cores < minCores) {
-        issues.push(`Processador com ${cores} núcleos. Mínimo recomendado de ${minCores} núcleos para ${count} estações.`);
-      }
-    }
-  }
-
-  // RAM check
-  if (server.memory) {
-    const ramMatch = server.memory.match(/(\d+)/);
-    if (ramMatch) {
-      const ram = parseInt(ramMatch[1]);
-      let minRam = 20;
-      if (count <= 5) minRam = 20;
-      else if (count <= 10) minRam = 24;
-      else minRam = 48; // > 10 stations requires 48GB as per spreadsheet rules
-
-      if (ram < minRam) {
-        issues.push(`Memória RAM baixa (${ram} GB). Mínimo de ${minRam} GB recomendado para ${count} estações.`);
-      }
-    }
-  }
-
-  // OS check
-  if (server.os) {
-    const lowerOs = server.os.toLowerCase();
-    if (lowerOs.includes("windows server 2012") || lowerOs.includes("windows server 2008") || lowerOs.includes("windows server 2016") || lowerOs.includes("2012 r2")) {
-      issues.push("Sistema Operacional do servidor desatualizado ou não recomendado (requer Server 2019/2022 ou Linux)");
-    }
-  }
-
-  return {
-    meets: issues.length === 0,
-    issues,
-  };
-};
-
-const parseMachineInfo = (text: string) => {
-  const lines = text.split(/\r?\n/).map(l => l.trim());
-  const info: Record<string, string[]> = {};
-  let currentSection = "";
-
-  for (const line of lines) {
-    if (line.startsWith("===")) continue;
-    if (line.startsWith("[")) {
-      currentSection = line.replace("[", "").replace("]", "").trim();
-      info[currentSection] = [];
-    } else if (currentSection && line) {
-      info[currentSection].push(line);
-    }
-  }
-
-  const hostname = info["HOSTNAME"]?.[0] || "";
-  const processor = info["PROCESSADOR"]?.[0] || "";
-  const memory = info["MEMORIA RAM"]?.[0] || "";
-  
-  const diskLines = info["DISCO"] || [];
-  const disk = diskLines.join(" | ");
-
-  const networkLines = info["REDE"] || [];
-  const network = networkLines.join(" | ");
-
-  const os = info["WINDOWS"]?.[0] || "";
-
-  // Setor e Usuários
-  const sector = info["SETOR"]?.[0] || "";
-  const userRaw = info["USUARIOS"]?.[0] || "";
-  
-  let user = "";
-  if (userRaw) {
-    if (userRaw.includes("Atual:")) {
-      const match = userRaw.match(/Atual:\s*([^|]+)/);
-      if (match) {
-        user = match[1].trim();
-        if (user.includes("\\")) {
-          user = user.split("\\").pop() || user;
-        }
-      }
-    } else {
-      user = userRaw;
-    }
-  }
-
-  const generation = extractGeneration(processor);
-
-  return {
-    hostname,
-    processor,
-    generation,
-    memory,
-    disk,
-    network,
-    os,
-    sector,
-    user,
-  };
-};
-
-const parseExcelPastedText = (text: string): WorkstationInfo[] => {
-  const lines = text.split(/\r?\n/);
-  const stations: WorkstationInfo[] = [];
-
-  for (const line of lines) {
-    if (!line.trim()) continue;
-    const cols = line.split("\t").map(c => c.trim());
-    if (cols.length < 2) continue;
-    
-    if (cols[0].toLowerCase() === "item" || cols[1].toLowerCase() === "hostname") {
-      continue;
-    }
-
-    const hostname = cols[1];
-    const sector = cols[2] || "";
-    const user = cols[3] || "";
-    const processor = cols[4] || "";
-    const generation = cols[5] || extractGeneration(processor);
-    const memory = cols[6] || "";
-    const disk = cols[7] || "";
-    const network = cols[8] || "";
-    const os = cols[9] || "";
-    const antivirus = cols[10] || "";
-    const meetsReqs = cols[11];
-
-    let meetsRequirements: "Sim" | "Não" | undefined;
-    if (meetsReqs) {
-      meetsRequirements = (meetsReqs.toLowerCase() === "sim" || meetsReqs.toLowerCase() === "s") ? "Sim" : "Não";
-    }
-
-    stations.push({
-      hostname,
-      sector,
-      user,
-      processor,
-      generation,
-      memory,
-      disk,
-      network,
-      os,
-      antivirus,
-      meetsRequirements
-    });
-  }
-
-  return stations;
-};
+import {
+  extractGeneration,
+  checkWorkstationRequirements,
+  checkServerRequirements,
+  parseMachineInfo,
+  parseExcelPastedText,
+} from "@/utils/infra-validation";
 
 // -------------------------------------------------------------
 // EDITABLE CELL COMPONENT FOR FLAT/FLUID TABLE
@@ -415,6 +165,7 @@ export function InfraStageForm({
   notifying,
   onUpdate,
   onNotifyComercial,
+  projectId,
 }: InfraStageFormProps) {
   const { toast } = useToast();
   const [activeSubTab, setActiveSubTab] = useState<string>("geral");
@@ -749,7 +500,8 @@ export function InfraStageForm({
     <>
       {/* Botões e Status originais no topo */}
       <div className="col-span-full mb-4 flex flex-wrap gap-3 items-center justify-between">
-        <AlertDialog>
+        <div className="flex flex-wrap gap-2.5 items-center">
+          <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button
               variant="destructive"
@@ -775,7 +527,28 @@ export function InfraStageForm({
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
-        </AlertDialog>
+          </AlertDialog>
+
+          {projectId && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                const link = `${window.location.origin}/public/infra-coleta/${projectId}`;
+                navigator.clipboard.writeText(link);
+                toast({
+                  title: "Link de Coleta Copiado",
+                  description: "O link foi copiado para a área de transferência. Envie para o técnico do cartório!",
+                  className: "bg-emerald-500 text-white border-emerald-600",
+                });
+              }}
+              className="font-bold border-indigo-300 hover:bg-indigo-50 dark:border-indigo-900/40 dark:hover:bg-indigo-950/20 text-indigo-700 dark:text-indigo-400 shadow-sm"
+            >
+              <Share2 className="mr-2 h-4 w-4" />
+              Copiar Link do Técnico
+            </Button>
+          )}
+        </div>
 
         {/* Resumo Rápido da Compatibilidade */}
         {workstations.length > 0 && (

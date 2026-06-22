@@ -81,6 +81,9 @@ const EditarChecklistComercial = lazy(() =>
 const PublicChecklist = lazy(() =>
   import("./pages/public/PublicChecklist"),
 );
+const PublicInfraCollection = lazy(() =>
+  import("./pages/public/PublicInfraCollection"),
+);
 const TreinamentoPlaceholder = lazy(() =>
   import("./pages/implantadores/TreinamentoPlaceholder"),
 );
@@ -146,6 +149,14 @@ const App = () => (
                 element={
                   <Suspense fallback={<PageLoader />}>
                     <PublicChecklist />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/public/infra-coleta/:id"
+                element={
+                  <Suspense fallback={<PageLoader />}>
+                    <PublicInfraCollection />
                   </Suspense>
                 }
               />
