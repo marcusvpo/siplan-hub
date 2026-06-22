@@ -1,0 +1,23 @@
+﻿=================== INFORMACOES DA MAQUINA ===================
+
+[HOSTNAME]
+SPCMJ-D0164
+
+[PROCESSADOR]
+Intel(R) Core(TM) i5-8400 CPU @ 2.80GHz
+
+[MEMORIA RAM]
+16 GB
+
+[DISCO]
+C:  Total: 238 GB  Usado: 227 GB  Livre: 11 GB
+D:  Total: 931 GB  Usado: 633 GB  Livre: 298 GB
+
+[REDE]
+Hyper-V Virtual Ethernet Adapter #2: 954 Mbps
+Realtek PCIe GbE Family Controller: velocidade nao reportada
+
+[WINDOWS]
+Microsoft Windows 11 Enterprise - Build 26200
+
+==============================================================
