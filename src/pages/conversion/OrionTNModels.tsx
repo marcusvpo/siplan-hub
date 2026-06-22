@@ -175,7 +175,7 @@ export default function OrionTNModels() {
               <FileText className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
             </div>
             <div className="min-w-0">
-              <h1 className="font-bold text-sm md:text-base leading-none text-foreground truncate max-w-[420px]" title={selectedProject?.clientName || "Modelos Editor"}>
+              <h1 className="font-bold text-sm md:text-base leading-none text-foreground" title={selectedProject?.clientName || "Modelos Editor"}>
                 {selectedProject ? selectedProject.clientName : "Modelos Editor"}
               </h1>
               <p className="text-[10px] text-muted-foreground mt-0.5">

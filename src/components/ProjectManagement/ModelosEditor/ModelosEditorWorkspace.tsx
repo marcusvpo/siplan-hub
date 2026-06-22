@@ -141,15 +141,36 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
 
     const handleFileDownload = async (file: AttachedFile) => {
         try {
+            toast({
+                title: "Baixando arquivo",
+                description: `Iniciando o download de ${file.name}...`,
+            });
             const url = await getDownloadUrl(file.path);
-            window.open(url, "_blank");
+            const response = await fetch(url);
+            if (!response.ok) throw new Error("Erro de rede ao baixar o arquivo");
+            const blob = await response.blob();
+            const blobUrl = URL.createObjectURL(blob);
+
+            const link = document.createElement("a");
+            link.href = blobUrl;
+            link.download = file.name;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(blobUrl);
         } catch (error) {
             console.error(error);
             toast({
                 title: "Erro no download",
-                description: "Falha ao gerar o link do arquivo.",
+                description: "Falha ao baixar diretamente. Tentando abrir em nova aba...",
                 variant: "destructive",
             });
+            try {
+                const url = await getDownloadUrl(file.path);
+                window.open(url, "_blank");
+            } catch (fallbackError) {
+                console.error("Erro no fallback do download:", fallbackError);
+            }
         }
     };
 
@@ -215,25 +236,58 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
         if (selectedFiles.length === 0) return;
 
         toast({
-            title: "Baixando arquivos",
-            description: `Iniciando o download de ${selectedFiles.length} arquivo(s)...`,
+            title: "Preparando download",
+            description: `Comprimindo ${selectedFiles.length} arquivo(s) em um arquivo .zip...`,
         });
 
-        for (let i = 0; i < selectedFiles.length; i++) {
-            const file = selectedFiles[i];
-            try {
-                const url = await getDownloadUrl(file.path);
-                const link = document.createElement("a");
-                link.href = url;
-                link.target = "_blank";
-                link.download = file.name;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                await new Promise(resolve => setTimeout(resolve, 300));
-            } catch (error) {
-                console.error(`Erro ao baixar ${file.name}:`, error);
+        try {
+            const JSZip = (await import("jszip")).default;
+            const zip = new JSZip();
+
+            // Create a subfolder inside the ZIP with the project's name
+            const folderName = project.clientName.trim();
+            const projectFolder = zip.folder(folderName);
+
+            for (const file of selectedFiles) {
+                try {
+                    const url = await getDownloadUrl(file.path);
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error(`Falha ao obter ${file.name}`);
+                    const blob = await response.blob();
+                    
+                    if (projectFolder) {
+                        projectFolder.file(file.name, blob);
+                    } else {
+                        zip.file(file.name, blob);
+                    }
+                } catch (err) {
+                    console.error(`Erro ao adicionar ${file.name} ao zip:`, err);
+                }
             }
+
+            const content = await zip.generateAsync({ type: "blob" });
+            const zipUrl = URL.createObjectURL(content);
+
+            const link = document.createElement("a");
+            link.href = zipUrl;
+            const cleanProjectName = project.clientName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            link.download = `${cleanProjectName}_modelos_${type === 'sent' ? 'cliente' : 'json'}.zip`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(zipUrl);
+
+            toast({
+                title: "Download concluído",
+                description: `O arquivo .zip com os modelos selecionados foi baixado.`,
+            });
+        } catch (error) {
+            console.error("Erro ao gerar arquivo ZIP:", error);
+            toast({
+                title: "Erro no download",
+                description: "Não foi possível gerar o arquivo .zip de modelos.",
+                variant: "destructive",
+            });
         }
     };
 
