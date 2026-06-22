@@ -104,7 +104,7 @@ export default function ProjectDetails() {
       </div>
 
       {isLoading ? (
-        <div className="p-6 space-y-8 max-w-7xl mx-auto w-full">
+        <div className="p-6 space-y-8 max-w-[98%] mx-auto w-full">
           <Skeleton className="h-32 w-full rounded-xl" />
           <div className="grid grid-cols-12 gap-6">
             <Skeleton className="col-span-8 h-[400px] rounded-xl" />
@@ -122,7 +122,7 @@ export default function ProjectDetails() {
             className="flex-1"
           >
             <div className="px-4 md:px-6 border-b bg-muted/30 overflow-x-auto scrollbar-none">
-              <div className="max-w-7xl mx-auto min-w-max">
+              <div className="max-w-[98%] mx-auto min-w-max">
                 <TabsList className="h-12 bg-transparent p-0 gap-4 md:gap-8 flex-nowrap">
                   <TabsTrigger
                     value="general"
@@ -168,11 +168,11 @@ export default function ProjectDetails() {
 
             <div className="p-6">
               {isEditing && project ? (
-                <div className="max-w-7xl mx-auto">
+                <div className="max-w-[98%] mx-auto">
                   <EditProjectTab project={project} onUpdate={handleUpdate} />
                 </div>
               ) : project ? (
-                <div className="max-w-7xl mx-auto">
+                <div className="max-w-[98%] mx-auto">
                   <TabsContent value="general" className="m-0 border-none p-0 outline-none">
                     <motion.div
                       initial={{ opacity: 0, y: 6 }}

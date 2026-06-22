@@ -71,7 +71,7 @@ export function EditProjectTab({ project, onUpdate }: TabProps) {
   };
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto pb-10">
+    <div className="space-y-6 w-full pb-10">
       {/* Feedback Visual do Autosave */}
       <div className="fixed bottom-4 right-4 z-50">
         {saveState.status === "saving" && (

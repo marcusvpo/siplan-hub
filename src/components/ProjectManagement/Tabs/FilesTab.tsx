@@ -268,7 +268,7 @@ export function FilesTab({ project }: TabProps) {
   );
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 pb-10">
+    <div className="w-full space-y-6 pb-10">
       <div className="flex justify-between items-center">
         <div>
           <h3 className="text-lg font-medium">Arquivos do Projeto</h3>

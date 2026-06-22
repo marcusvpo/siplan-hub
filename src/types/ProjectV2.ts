@@ -152,6 +152,36 @@ export interface ProjectV2 {
   timeline?: TimelineEventV2[];
 }
 
+export interface ServerInfo {
+  hostname?: string;
+  brandModel?: string;
+  virtualized?: "Sim" | "Não" | boolean;
+  processor?: string;
+  memory?: string;
+  disk?: string;
+  spaceOrion?: string;
+  os?: string;
+  antivirus?: string;
+  network?: string;
+  backup?: string;
+  observations?: string;
+}
+
+export interface WorkstationInfo {
+  id?: string | number;
+  hostname?: string;
+  sector?: string;
+  user?: string;
+  processor?: string;
+  generation?: string;
+  memory?: string;
+  disk?: string;
+  network?: string;
+  os?: string;
+  antivirus?: string;
+  meetsRequirements?: "Sim" | "Não" | boolean;
+}
+
 export interface InfraStageV2 {
   status: StageStatus;
   responsible?: string;
@@ -168,6 +198,8 @@ export interface InfraStageV2 {
   serverNeeded?: string;
   lastUpdatedAt?: Date;
   lastUpdatedBy?: string;
+  servers?: ServerInfo[];
+  workstations?: WorkstationInfo[];
 }
 
 export interface AdherenceStageV2 {
