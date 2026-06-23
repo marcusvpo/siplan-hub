@@ -663,7 +663,7 @@ export default function PublicInfraCollection() {
         </Card>
 
         {/* Upload Zone & Instructions */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
           {/* Card 1: Instalação e Execução */}
           <Card className="bg-white border-slate-200 shadow-sm col-span-1 p-6 space-y-4">
@@ -704,9 +704,9 @@ export default function PublicInfraCollection() {
               </ol>
             </div>
           </Card>
-
+ 
           {/* Card 2: Upload Files */}
-          <Card className="bg-white border-slate-200 shadow-sm col-span-2 p-6 flex flex-col justify-between space-y-4">
+          <Card className="bg-white border-slate-200 shadow-sm col-span-1 p-6 flex flex-col justify-between space-y-4">
             <div className="space-y-4">
               <h3 className="text-sm font-bold text-emerald-600 flex items-center gap-2 uppercase tracking-wider">
                 <div className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
