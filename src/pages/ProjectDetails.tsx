@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useProjectDetails } from "@/hooks/useProjectDetails";
+import { useProjectsV2 } from "@/hooks/useProjectsV2";
 import { usePermissions } from "@/hooks/usePermissions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ export default function ProjectDetails() {
   const [activeTab, setActiveTab] = useState("general");
   const [activeStepId, setActiveStepId] = useState<string | undefined>(undefined);
   const { canEditProjects } = usePermissions();
+  const { updateProject } = useProjectsV2();
 
   const { project, isLoading, error } = useProjectDetails(id || null);
 
@@ -41,6 +43,10 @@ export default function ProjectDetails() {
   const handleUpdate = (updatedProject: ProjectV2) => {
     // Invalidate and refetch or set local data
     queryClient.setQueryData(["projectDetails", id], updatedProject);
+    updateProject.mutate({
+      projectId: updatedProject.id,
+      updates: updatedProject
+    });
   };
 
   return (
