@@ -425,7 +425,7 @@ export default function PublicInfraCollection() {
     if (txtFiles.length === 0) {
       toast({
         title: "Formato incorreto",
-        description: "Selecione apenas arquivos .txt gerados pelo info-system.ps1.",
+        description: "Selecione apenas arquivos .txt gerados pelo info-system.bat.",
         variant: "destructive"
       });
       return;
@@ -635,24 +635,23 @@ export default function PublicInfraCollection() {
               1. Coletar os Dados
             </h3>
             <p className="text-xs text-slate-400 leading-relaxed">
-              Baixe e execute o script coletor PowerShell (**info-system.ps1**) em seu servidor e em cada estação de trabalho do cartório.
+              Baixe e execute o script coletor (**info-system.bat**) em seu servidor e em cada estação de trabalho do cartório.
             </p>
             <Button
               asChild
               className="w-full bg-[hsl(346,84%,45%)] hover:bg-[hsl(346,84%,40%)] text-white font-bold h-9 text-xs gap-2 shadow-md transition-all duration-200"
             >
-              <a href="/info-system.ps1" download="info-system.ps1">
+              <a href="/info-system.bat" download="info-system.bat">
                 <Download className="h-4 w-4" />
-                Baixar Script Coletor (.ps1)
+                Baixar Script Coletor (.bat)
               </a>
             </Button>
             <div className="p-3 bg-slate-900/60 border border-slate-800/60 rounded-xl space-y-1.5 text-xs text-slate-400">
               <p><strong>Como rodar o script:</strong></p>
               <ol className="list-decimal pl-4 space-y-1">
-                <li>Clique com o botão direito no script.</li>
-                <li>Selecione <strong>"Executar com o PowerShell"</strong>.</li>
-                <li>Digite o Setor correspondente quando solicitado.</li>
-                <li>Ele criará o arquivo **info_maquina.txt** na mesma pasta.</li>
+                <li>Dê um duplo clique no arquivo **info-system.bat**.</li>
+                <li>Digite o Setor correspondente quando solicitado (ex: Protocolo, Registro, Caixa).</li>
+                <li>O script criará o arquivo **info_maquina.txt** na mesma pasta.</li>
               </ol>
             </div>
           </Card>
