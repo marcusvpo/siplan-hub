@@ -28,7 +28,9 @@ import {
   Activity,
   Check,
   ClipboardList,
-  Share2
+  Share2,
+  Lock,
+  Unlock
 } from "lucide-react";
 import {
   AlertDialog,
@@ -610,23 +612,59 @@ export function InfraStageForm({
           </AlertDialog>
 
           {projectId && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                const link = `${window.location.origin}/public/infra-coleta/${projectId}`;
-                navigator.clipboard.writeText(link);
-                toast({
-                  title: "Link de Coleta Copiado",
-                  description: "O link foi copiado para a área de transferência. Envie para o técnico do cartório!",
-                  className: "bg-emerald-500 text-white border-emerald-600",
-                });
-              }}
-              className="font-bold border-indigo-300 hover:bg-indigo-50 dark:border-indigo-900/40 dark:hover:bg-indigo-950/20 text-indigo-700 dark:text-indigo-400 shadow-sm"
-            >
-              <Share2 className="mr-2 h-4 w-4" />
-              Copiar Link do Técnico
-            </Button>
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  const link = `${window.location.origin}/public/infra-coleta/${projectId}`;
+                  navigator.clipboard.writeText(link);
+                  toast({
+                    title: "Link de Coleta Copiado",
+                    description: "O link foi copiado para a área de transferência. Envie para o técnico do cartório!",
+                    className: "bg-emerald-500 text-white border-emerald-600",
+                  });
+                }}
+                disabled={stage.publicLinkClosed === true}
+                className="font-bold border-indigo-300 hover:bg-indigo-50 dark:border-indigo-900/40 dark:hover:bg-indigo-950/20 text-indigo-700 dark:text-indigo-400 shadow-sm"
+              >
+                <Share2 className="mr-2 h-4 w-4" />
+                Copiar Link Público
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  const newClosed = !stage.publicLinkClosed;
+                  onUpdate({ publicLinkClosed: newClosed });
+                  toast({
+                    title: newClosed ? "Link Público Fechado" : "Link Público Reaberto",
+                    description: newClosed 
+                      ? "O link público foi encerrado e não aceitará mais visualizações ou envios." 
+                      : "O link público foi reaberto e está pronto para receber coletas.",
+                    className: newClosed ? "bg-amber-600 text-white border-amber-700" : "bg-emerald-500 text-white border-emerald-600",
+                  });
+                }}
+                disabled={!canEditProjects}
+                className={cn(
+                  "font-bold border-amber-300 hover:bg-amber-50 dark:border-amber-900/40 dark:hover:bg-amber-950/20 text-amber-700 dark:text-amber-400 shadow-sm",
+                  stage.publicLinkClosed && "border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-900/40 text-slate-600 dark:text-slate-400"
+                )}
+              >
+                {stage.publicLinkClosed ? (
+                  <>
+                    <Unlock className="mr-2 h-4 w-4" />
+                    Reabrir Link Público
+                  </>
+                ) : (
+                  <>
+                    <Lock className="mr-2 h-4 w-4" />
+                    Fechar Link Público
+                  </>
+                )}
+              </Button>
+            </>
           )}
         </div>
 

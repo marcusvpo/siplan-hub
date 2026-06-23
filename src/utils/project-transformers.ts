@@ -244,6 +244,7 @@ function mapInfraStage(infra: InfraStageV2 | undefined, oldInfra?: InfraStageV2)
     infra_approved_by_infra: infra.approvedByInfra,
     infra_server_in_use: infra.serverInUse,
     infra_server_needed: infra.serverNeeded,
+    infra_public_link_closed: infra.publicLinkClosed !== undefined ? infra.publicLinkClosed : oldInfra?.publicLinkClosed,
   };
 
   if (infra.servers !== undefined) {
