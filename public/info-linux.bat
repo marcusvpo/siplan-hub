@@ -46,16 +46,27 @@ Write-Host ""
 Write-Host "Conectando ao servidor Linux... Digite a senha do servidor se solicitado." -ForegroundColor Yellow
 Write-Host ""
 
-$sshCmd = "echo '=== INFO ==='; " +
-          "echo '[HOSTNAME]'; hostname; " +
-          "echo '[SETOR]'; echo 'Servidor'; " +
-          "echo '[USUARIOS]'; echo 'Atual: '\$(whoami)' | Locais: '\$(cut -d: -f1 /etc/passwd | tr '\n' ',' | sed 's/,$//'); " +
-          "echo '[PROCESSADOR]'; lscpu | grep 'Model name' | cut -d':' -f2 | xargs || cat /proc/cpuinfo | grep 'model name' | head -n1 | cut -d':' -f2 | xargs; " +
-          "echo '[MEMORIA RAM]'; free -m | awk '/^Mem:/{print int(\$2/1024)\" GB\"}'; " +
-          "echo '[DISCO]'; df -h / | awk 'NR==2{print \"/  Total: \"\$2\"  Usado: \"\$3\"  Livre: \"\$4}'; " +
-          "echo '[REDE]'; ip -o link show | awk -F': ' '{print \$2}' | grep -v 'lo' | tr '\n' ' '; echo ''; " +
-          "echo '[WINDOWS]'; cat /etc/os-release | grep 'PRETTY_NAME' | cut -d'=' -f2 | tr -d '\"'; " +
-          "echo '=========='"
+$sshCmd = @'
+echo '=== INFO ==='
+echo '[HOSTNAME]'
+hostname
+echo '[SETOR]'
+echo 'Servidor'
+echo '[USUARIOS]'
+echo "Atual: $(whoami) | Locais: $(cut -d: -f1 /etc/passwd | tr '\n' ',' | sed 's/,$//')"
+echo '[PROCESSADOR]'
+lscpu | grep 'Model name' | cut -d':' -f2 | xargs || cat /proc/cpuinfo | grep 'model name' | head -n1 | cut -d':' -f2 | xargs
+echo '[MEMORIA RAM]'
+free -m | awk '/^Mem:/{print int($2/1024)" GB"}'
+echo '[DISCO]'
+df -h / | awk 'NR==2{print "/  Total: "$2"  Usado: "$3"  Livre: "$4}'
+echo '[REDE]'
+ip -o link show | awk -F': ' '{print $2}' | grep -v 'lo' | tr '\n' ' '
+echo ''
+echo '[WINDOWS]'
+cat /etc/os-release | grep 'PRETTY_NAME' | cut -d'=' -f2 | tr -d '"'
+echo '=========='
+'@
 
 try {
     $saida = ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 "${sshUser}@${sshHost}" $sshCmd
