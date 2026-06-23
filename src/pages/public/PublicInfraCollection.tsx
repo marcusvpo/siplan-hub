@@ -15,7 +15,6 @@ import {
   CheckCircle2,
   AlertTriangle,
   Upload,
-  FileSpreadsheet,
   Plus,
   Trash2,
   Activity,
@@ -59,7 +58,6 @@ import {
   checkWorkstationRequirements,
   checkServerRequirements,
   parseMachineInfo,
-  parseExcelPastedText,
 } from "@/utils/infra-validation";
 import { ServerInfo, WorkstationInfo } from "@/types/ProjectV2";
 
@@ -128,8 +126,6 @@ export default function PublicInfraCollection() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedSuccess, setSubmittedSuccess] = useState(false);
-  const [excelImportOpen, setExcelImportOpen] = useState(false);
-  const [excelText, setExcelText] = useState("");
   const [dragOver, setDragOver] = useState(false);
 
   const serverFileInputRef = useRef<HTMLInputElement>(null);
@@ -382,46 +378,6 @@ export default function PublicInfraCollection() {
     });
 
     if (workstationFileInputRef.current) workstationFileInputRef.current.value = "";
-  };
-
-  const handleExcelImport = () => {
-    if (!excelText.trim()) return;
-    try {
-      const parsed = parseExcelPastedText(excelText);
-      if (parsed.length === 0) {
-        toast({
-          title: "Erro de formato",
-          description: "Nenhuma linha válida identificada no texto colado.",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      const validated = parsed.map(ws => {
-        if (ws.meetsRequirements !== undefined) return ws;
-        const res = checkWorkstationRequirements(ws);
-        return {
-          ...ws,
-          meetsRequirements: (res.meets ? "Sim" : "Não") as "Sim" | "Não"
-        };
-      });
-
-      handleWorkstationsChange([...workstations, ...validated]);
-      setExcelText("");
-      setExcelImportOpen(false);
-      
-      toast({
-        title: "Importação do Excel Concluída",
-        description: `${validated.length} estações foram importadas com sucesso!`,
-        className: "bg-green-500 text-white border-green-600",
-      });
-    } catch (e) {
-      toast({
-        title: "Erro ao importar",
-        description: "Falha ao processar texto colado. Verifique se copiou a tabela inteira.",
-        variant: "destructive"
-      });
-    }
   };
 
   // Drag and Drop
@@ -793,56 +749,21 @@ export default function PublicInfraCollection() {
                   <Button 
                     type="button"
                     size="sm"
-                    onClick={() => workstationFileInputRef.current?.click()}
-                    className="h-8 text-xs font-bold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 shadow-sm"
-                  >
-                    Selecionar Estações (.txt)
-                  </Button>
-                  <Button 
-                    type="button"
-                    size="sm"
                     onClick={() => serverFileInputRef.current?.click()}
                     className="h-8 text-xs font-bold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 shadow-sm"
                   >
                     Selecionar Servidor (.txt)
                   </Button>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex gap-2 justify-end">
-              <Dialog open={excelImportOpen} onOpenChange={setExcelImportOpen}>
-                <DialogTrigger asChild>
                   <Button 
                     type="button"
-                    variant="ghost"
                     size="sm"
-                    className="text-xs text-slate-500 hover:text-slate-900"
+                    onClick={() => workstationFileInputRef.current?.click()}
+                    className="h-8 text-xs font-bold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 shadow-sm"
                   >
-                    <FileSpreadsheet className="mr-1.5 h-3.5 w-3.5" />
-                    Colar Dados do Excel
+                    Selecionar Estações (.txt)
                   </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-xl bg-white border-slate-200 text-slate-900">
-                  <DialogHeader>
-                    <DialogTitle>Importar do Excel</DialogTitle>
-                    <DialogDescription className="text-slate-500">
-                      Copie as linhas da sua tabela e cole no campo de texto abaixo:
-                    </DialogDescription>
-                  </DialogHeader>
-                  <Textarea 
-                    value={excelText}
-                    onChange={e => setExcelText(e.target.value)}
-                    placeholder="Cole aqui as colunas (Item, Hostname, Setor...)"
-                    rows={10}
-                    className="font-mono text-xs bg-slate-50 border-slate-200 text-slate-800"
-                  />
-                  <DialogFooter>
-                    <Button variant="outline" size="sm" className="border-slate-200" onClick={() => setExcelText("")}>Limpar</Button>
-                    <Button size="sm" onClick={handleExcelImport} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold">Processar Colagem</Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+                </div>
+              </div>
             </div>
           </Card>
 
