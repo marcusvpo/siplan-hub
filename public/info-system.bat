@@ -132,7 +132,7 @@ try {
 }
 
 $linhas += ''
-$linhas += '[WINDOWS]'
+$linhas += '[SO]'
 try {
     $os = Get-CimInstance Win32_OperatingSystem
 } catch {
@@ -155,13 +155,13 @@ try {
 }
 
 $linhas += ''
-$linhas += '[VIRTUALIZADO?]'
+$linhas += '[VIRTUALIZADO]'
 try {
     $system = Get-CimInstance Win32_ComputerSystem
-    $isVM = if ($system.Model -match 'Virtual|VMware|VirtualBox|Xen|KVM|HVM|Hyper-V') { "Sim" } else { "Não" }
+    $isVM = if ($system.Model -match 'Virtual|VMware|VirtualBox|Xen|KVM|HVM|Hyper-V') { "Sim" } else { "Nao" }
     $linhas += $isVM
 } catch {
-    $linhas += "Não"
+    $linhas += "Nao"
 }
 
 $linhas += ''
@@ -180,10 +180,10 @@ try {
 
 $linhas += ''
 $linhas += '[BACKUP]'
-$linhas += "Não identificado"
+$linhas += "Nao identificado"
 
 $linhas += ''
-$linhas += '[ESPAÇO PARA O ORION]'
+$linhas += '[ESPACO ORION]'
 try {
     $freeSpace = Get-CimInstance Win32_LogicalDisk -Filter "DeviceID='C:'" | ForEach-Object { [math]::Round($_.FreeSpace / 1GB) }
     $linhas += "$freeSpace GB"

@@ -65,12 +65,12 @@ df -h -P | grep -vE '^tmpfs|^udev|^devtmpfs|^shm|^loop' | awk 'NR>1 {print $6"  
 echo '[REDE]'
 ip -o link show | awk -F': ' '{print $2}' | grep -v 'lo' | tr '\n' ' '
 echo ''
-echo '[WINDOWS]'
+echo '[SO]'
 cat /etc/os-release | grep 'PRETTY_NAME' | cut -d'=' -f2 | tr -d '"'
 echo '[MARCA/MODELO]'
 dmidecode -s system-product-name 2>/dev/null || cat /sys/devices/virtual/dmi/id/product_name 2>/dev/null || echo 'Generic Linux Server'
-echo '[VIRTUALIZADO?]'
-virt=$(systemd-detect-virt 2>/dev/null); if [ "$virt" = "none" ] || [ -z "$virt" ]; then echo "Não"; else echo "Sim ($virt)"; fi
+echo '[VIRTUALIZADO]'
+virt=$(systemd-detect-virt 2>/dev/null); if [ "$virt" = "none" ] || [ -z "$virt" ]; then echo "Nao"; else echo "Sim ($virt)"; fi
 echo '[ANTI-VIRUS]'
 av=""
 if [ -d /opt/acronis ] || pgrep -f "acronis" >/dev/null; then av="Acronis Cyber Protect"; fi
@@ -83,8 +83,8 @@ backup=""
 if [ -d /opt/acronis ] || pgrep -f "acronis" >/dev/null; then backup="Acronis Backup"; fi
 if pgrep -f "veeam" >/dev/null; then backup="Veeam Agent"; fi
 if crontab -l 2>/dev/null | grep -qE "rsync|rclone|borg|tar|backup"; then backup="Script Customizado (Cron)"; fi
-if [ -z "$backup" ]; then echo "Não identificado"; else echo "$backup"; fi
-echo '[ESPAÇO PARA O ORION]'
+if [ -z "$backup" ]; then echo "Nao identificado"; else echo "$backup"; fi
+echo '[ESPACO ORION]'
 df -h -P / | awk 'NR==2{print $4}'
 echo '=========='
 '@

@@ -164,7 +164,7 @@ export const parseMachineInfo = (text: string) => {
   const networkLines = info["REDE"] || [];
   const network = networkLines.join(" | ");
 
-  const os = info["WINDOWS"]?.[0] || "";
+  const os = info["SO"]?.[0] || info["SISTEMA OPERACIONAL"]?.[0] || info["WINDOWS"]?.[0] || "";
 
   // Setor e Usuários
   const sector = info["SETOR"]?.[0] || "";
@@ -189,10 +189,18 @@ export const parseMachineInfo = (text: string) => {
 
   // Campos extras de servidor
   const brandModel = info["MARCA/MODELO"]?.[0] || info["MARCA MODELO"]?.[0] || "";
-  const virtualized = info["VIRTUALIZADO?"]?.[0] || info["VIRTUALIZADO"]?.[0] || "";
+  let virtualized = info["VIRTUALIZADO"]?.[0] || info["VIRTUALIZADO?"]?.[0] || "";
+  if (virtualized) {
+    const vLower = virtualized.trim().toLowerCase();
+    if (vLower.startsWith("sim")) {
+      virtualized = "Sim";
+    } else if (vLower.startsWith("nao") || vLower.includes("n?o") || vLower.startsWith("não")) {
+      virtualized = "Não";
+    }
+  }
   const antivirus = info["ANTI-VIRUS"]?.[0] || info["ANTIVIRUS"]?.[0] || info["ANTI-VÍRUS"]?.[0] || "";
   const backup = info["BACKUP"]?.[0] || "";
-  const spaceOrion = info["ESPACO ORION"]?.[0] || info["ESPAÇO PARA O ORION"]?.[0] || "";
+  const spaceOrion = info["ESPACO ORION"]?.[0] || info["ESPAÇO PARA O ORION"]?.[0] || info["ESPACO PARA O ORION"]?.[0] || "";
 
   return {
     hostname,
