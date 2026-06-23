@@ -92,7 +92,7 @@ function EditableCell({ value, onChange, placeholder, className }: EditableCellP
           }
         }}
         autoFocus
-        className={cn("h-7 text-[10.5px] px-1.5 w-full bg-slate-900 border-slate-700 text-white", className)}
+        className={cn("h-7 text-[10.5px] px-1.5 w-full bg-white border-slate-200 text-slate-900 shadow-sm", className)}
         placeholder={placeholder}
       />
     );
@@ -102,12 +102,12 @@ function EditableCell({ value, onChange, placeholder, className }: EditableCellP
     <div
       onClick={() => setIsEditing(true)}
       className={cn(
-        "text-[10.5px] px-1.5 py-1 break-all cursor-pointer hover:bg-slate-800 rounded min-h-7 flex items-center transition-colors w-full whitespace-pre-wrap leading-tight text-slate-300",
-        !value && "text-slate-500/50 italic",
+        "text-[10.5px] px-1.5 py-1 break-all cursor-pointer hover:bg-slate-100 rounded min-h-7 flex items-center transition-colors w-full whitespace-pre-wrap leading-tight text-slate-700 border border-transparent hover:border-slate-200",
+        !value && "text-slate-400 italic",
         className
       )}
     >
-      {value || <span className="text-slate-500/50 italic">{placeholder || "-"}</span>}
+      {value || <span className="text-slate-400 italic">{placeholder || "-"}</span>}
     </div>
   );
 }
@@ -127,42 +127,42 @@ export default function PublicInfraCollection() {
   const serverFileInputRef = useRef<HTMLInputElement>(null);
   const workstationFileInputRef = useRef<HTMLInputElement>(null);
 
-  // Force dark mode on document element for clean dark styling and scrollbars
+  // Force light mode on document element for clean light styling and scrollbars
   useEffect(() => {
     const html = document.documentElement;
     const hadDark = html.classList.contains("dark");
-    if (!hadDark) {
-      html.classList.add("dark");
+    if (hadDark) {
+      html.classList.remove("dark");
     }
 
-    // Set custom dark scrollbars for this page
+    // Set custom light scrollbars for this page
     const styleEl = document.createElement("style");
     styleEl.innerHTML = `
-      html.dark::-webkit-scrollbar {
+      html::-webkit-scrollbar {
         width: 10px;
         height: 10px;
       }
-      html.dark::-webkit-scrollbar-track {
-        background: #060608;
+      html::-webkit-scrollbar-track {
+        background: #f1f5f9;
       }
-      html.dark::-webkit-scrollbar-thumb {
-        background: #1e1e24;
+      html::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
         border-radius: 5px;
-        border: 2px solid #060608;
+        border: 2px solid #f1f5f9;
       }
-      html.dark::-webkit-scrollbar-thumb:hover {
-        background: #2d2d39;
+      html::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
       }
-      html.dark {
-        scrollbar-color: #1e1e24 #060608;
+      html {
+        scrollbar-color: #cbd5e1 #f1f5f9;
         scrollbar-width: thin;
       }
     `;
     document.head.appendChild(styleEl);
 
     return () => {
-      if (!hadDark) {
-        html.classList.remove("dark");
+      if (hadDark) {
+        html.classList.add("dark");
       }
       document.head.removeChild(styleEl);
     };
@@ -522,10 +522,10 @@ export default function PublicInfraCollection() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#060608] text-white flex flex-col items-center justify-center p-6">
+      <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col items-center justify-center p-6">
         <div className="flex flex-col items-center gap-3">
           <Activity className="h-10 w-10 text-[hsl(346,84%,45%)] animate-pulse" />
-          <p className="text-sm text-slate-400 font-medium animate-pulse">Carregando painel de coleta...</p>
+          <p className="text-sm text-slate-500 font-medium animate-pulse">Carregando painel de coleta...</p>
         </div>
       </div>
     );
@@ -533,14 +533,14 @@ export default function PublicInfraCollection() {
 
   if (error || !project) {
     return (
-      <div className="min-h-screen bg-[#060608] text-white flex items-center justify-center p-6 text-center">
-        <Card className="max-w-md w-full bg-[#0d0d12] border-slate-800/80 shadow-2xl">
+      <div className="min-h-screen bg-slate-50 text-slate-800 flex items-center justify-center p-6 text-center">
+        <Card className="max-w-md w-full bg-white border-slate-200 shadow-xl">
           <CardContent className="p-8 text-center space-y-4">
-            <div className="mx-auto w-12 h-12 rounded-full bg-red-950/40 text-red-400 flex items-center justify-center border border-red-900/50 mb-2">
+            <div className="mx-auto w-12 h-12 rounded-full bg-red-50 text-red-600 flex items-center justify-center border border-red-100 mb-2">
               <AlertTriangle className="h-6 w-6" />
             </div>
-            <h2 className="text-xl font-bold text-white">Link de Coleta Expirado ou Inválido</h2>
-            <p className="text-sm text-slate-400">
+            <h2 className="text-xl font-bold text-slate-900">Link de Coleta Expirado ou Inválido</h2>
+            <p className="text-sm text-slate-600">
               O link de coleta que você está acessando não existe ou o projeto foi arquivado pelo cartório. 
               Por favor, solicite um novo link ao implantador técnico da Siplan.
             </p>
@@ -552,18 +552,18 @@ export default function PublicInfraCollection() {
 
   if (submittedSuccess) {
     return (
-      <div className="min-h-screen bg-[#060608] text-white flex items-center justify-center p-6">
-        <Card className="max-w-lg w-full bg-[#0d0d12] border-slate-800/80 shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-300">
+      <div className="min-h-screen bg-slate-50 text-slate-800 flex items-center justify-center p-6">
+        <Card className="max-w-lg w-full bg-white border-slate-200 shadow-xl relative overflow-hidden animate-in zoom-in-95 duration-300">
           <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 animate-pulse" />
           <CardContent className="p-8 text-center space-y-5">
-            <div className="mx-auto w-16 h-16 rounded-full bg-emerald-950/40 flex items-center justify-center text-emerald-400 border border-emerald-900/50 mb-4">
+            <div className="mx-auto w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100 mb-4">
               <ShieldCheck className="h-10 w-10" />
             </div>
-            <h2 className="text-2xl font-black text-white tracking-tight">Coleta de Infraestrutura Concluída!</h2>
-            <p className="text-sm text-slate-400 leading-relaxed">
+            <h2 className="text-2xl font-black text-slate-900 tracking-tight">Coleta de Infraestrutura Concluída!</h2>
+            <p className="text-sm text-slate-600 leading-relaxed">
               Obrigado! O inventário dos seus equipamentos (servidores e estações) foi transmitido com sucesso ao time de implantação da Siplan.
             </p>
-            <p className="text-xs text-slate-500 bg-slate-900/80 p-3 rounded-lg border border-slate-800/60 leading-relaxed">
+            <p className="text-xs text-slate-500 bg-slate-50 p-3 rounded-lg border border-slate-100 leading-relaxed">
               A análise dinâmica dos requisitos foi salva no Siplan HUB. Nosso time técnico revisará os dados e informará sobre quaisquer adequações necessárias.
             </p>
           </CardContent>
@@ -573,19 +573,19 @@ export default function PublicInfraCollection() {
   }
 
   return (
-    <div className="min-h-screen bg-[#060608] text-white pb-24 selection:bg-[hsl(346,84%,45%)]/20 selection:text-[hsl(346,84%,45%)] relative overflow-x-hidden font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-800 pb-24 selection:bg-[hsl(346,84%,45%)]/10 selection:text-[hsl(346,84%,45%)] relative overflow-x-hidden font-sans">
       
       {/* Decorative Blur Backgrounds */}
-      <div className="absolute -top-40 -right-40 w-96 h-96 bg-[hsl(346,84%,45%)]/10 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute -top-40 -right-40 w-96 h-96 bg-[hsl(346,84%,45%)]/5 rounded-full blur-[100px] pointer-events-none" />
       <div className="absolute top-1/2 -left-40 w-96 h-96 bg-indigo-500/5 rounded-full blur-[100px] pointer-events-none" />
 
       {/* Header */}
-      <header className="border-b border-slate-900 bg-[#060608]/80 backdrop-blur-md sticky top-0 z-50">
+      <header className="border-b border-slate-200 bg-white/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <img src="/assets/Siplan_logo_branco.png" alt="Siplan" className="h-7 w-auto object-contain opacity-90" />
-            <div className="h-4 w-px bg-slate-800 mx-2" />
-            <span className="text-[10px] text-slate-500 font-bold tracking-widest uppercase">
+            <img src="/assets/Siplan_logo.png" alt="Siplan" className="h-7 w-auto object-contain opacity-95" />
+            <div className="h-4 w-px bg-slate-200 mx-2" />
+            <span className="text-[10px] text-slate-400 font-bold tracking-widest uppercase">
               Inventário Técnico
             </span>
           </div>
@@ -599,26 +599,26 @@ export default function PublicInfraCollection() {
       <main className="max-w-6xl mx-auto px-4 mt-8 space-y-6 relative z-10">
         
         {/* Intro Banner */}
-        <Card className="bg-gradient-to-br from-[#0c0c11] to-[#0a0a0f] border-slate-800/80 shadow-lg relative overflow-hidden">
+        <Card className="bg-white border-slate-200 shadow-sm relative overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[hsl(346,84%,45%)] to-red-600" />
           <CardHeader className="pt-8 px-6 pb-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="space-y-2">
-                <CardTitle className="text-2xl font-black text-white flex items-center gap-2.5 tracking-tight">
+                <CardTitle className="text-2xl font-black text-slate-900 flex items-center gap-2.5 tracking-tight">
                   <Building className="h-6 w-6 text-[hsl(346,84%,45%)]" />
                   {project.client_name || "Cartório"}
                 </CardTitle>
-                <CardDescription className="text-slate-400 text-xs mt-1 leading-relaxed max-w-2xl">
+                <CardDescription className="text-slate-600 text-xs mt-1 leading-relaxed max-w-2xl">
                   Olá! Esta página pública permite que você, técnico ou responsável pela TI, envie diretamente os arquivos gerados pelo script PowerShell do inventário da Siplan. Ao fazer o envio, os dados serão importados automaticamente no Siplan HUB para a análise de infraestrutura da serventia.
                 </CardDescription>
               </div>
 
               {/* Status Indicator */}
-              <div className="bg-[#12121b] border border-slate-800/80 p-4 rounded-2xl flex items-center gap-3 shrink-0">
-                <Clock className="h-5 w-5 text-indigo-400" />
+              <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl flex items-center gap-3 shrink-0">
+                <Clock className="h-5 w-5 text-indigo-600" />
                 <div className="text-left">
-                  <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block">Sistema Pretendido</span>
-                  <span className="text-sm font-semibold text-white">{project.system_type || "Orion TN"}</span>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Sistema Pretendido</span>
+                  <span className="text-sm font-semibold text-slate-900">{project.system_type || "Orion TN"}</span>
                 </div>
               </div>
             </div>
@@ -629,12 +629,12 @@ export default function PublicInfraCollection() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* Card 1: Instalação e Execução */}
-          <Card className="bg-[#0b0b0f] border-slate-900 shadow-sm col-span-1 p-6 space-y-4">
-            <h3 className="text-sm font-bold text-indigo-400 flex items-center gap-2 uppercase tracking-wider">
-              <div className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+          <Card className="bg-white border-slate-200 shadow-sm col-span-1 p-6 space-y-4">
+            <h3 className="text-sm font-bold text-indigo-600 flex items-center gap-2 uppercase tracking-wider">
+              <div className="h-1.5 w-1.5 rounded-full bg-indigo-600" />
               1. Coletar os Dados
             </h3>
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <p className="text-xs text-slate-600 leading-relaxed">
               Baixe e execute o script coletor (**info-system.bat**) em seu servidor e em cada estação de trabalho do cartório.
             </p>
             <Button
@@ -646,7 +646,7 @@ export default function PublicInfraCollection() {
                 Baixar Script Coletor (.bat)
               </a>
             </Button>
-            <div className="p-3 bg-slate-900/60 border border-slate-800/60 rounded-xl space-y-1.5 text-xs text-slate-400">
+            <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl space-y-1.5 text-xs text-slate-600">
               <p><strong>Como rodar o script:</strong></p>
               <ol className="list-decimal pl-4 space-y-1">
                 <li>Dê um duplo clique no arquivo **info-system.bat**.</li>
@@ -657,10 +657,10 @@ export default function PublicInfraCollection() {
           </Card>
 
           {/* Card 2: Upload Files */}
-          <Card className="bg-[#0b0b0f] border-slate-900 shadow-sm col-span-2 p-6 flex flex-col justify-between space-y-4">
+          <Card className="bg-white border-slate-200 shadow-sm col-span-2 p-6 flex flex-col justify-between space-y-4">
             <div className="space-y-4">
-              <h3 className="text-sm font-bold text-emerald-400 flex items-center gap-2 uppercase tracking-wider">
-                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              <h3 className="text-sm font-bold text-emerald-600 flex items-center gap-2 uppercase tracking-wider">
+                <div className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
                 2. Enviar Arquivos de Coleta (.txt)
               </h3>
               
@@ -671,8 +671,8 @@ export default function PublicInfraCollection() {
                 className={cn(
                   "border-2 border-dashed rounded-xl p-8 text-center text-xs transition-all cursor-pointer relative",
                   dragOver 
-                    ? "border-emerald-500 bg-emerald-950/20 text-emerald-300" 
-                    : "border-slate-800 hover:border-slate-700 bg-slate-900/20 hover:bg-slate-900/30"
+                    ? "border-emerald-500 bg-emerald-50 text-emerald-700" 
+                    : "border-slate-200 hover:border-slate-300 bg-slate-50/50 hover:bg-slate-50"
                 )}
               >
                 <input 
@@ -691,9 +691,9 @@ export default function PublicInfraCollection() {
                   className="hidden" 
                 />
 
-                <ClipboardList className="mx-auto h-8 w-8 text-slate-500 mb-3" />
+                <ClipboardList className="mx-auto h-8 w-8 text-slate-400 mb-3" />
                 
-                <p className="font-semibold text-slate-300 mb-1">Arrastar e Soltar arquivos .txt aqui</p>
+                <p className="font-semibold text-slate-700 mb-1">Arrastar e Soltar arquivos .txt aqui</p>
                 <p className="text-slate-500 text-[11px] mb-4">Envie de uma vez só os relatórios das estações e servidores</p>
                 
                 <div className="flex gap-2.5 justify-center">
@@ -701,7 +701,7 @@ export default function PublicInfraCollection() {
                     type="button"
                     size="sm"
                     onClick={() => workstationFileInputRef.current?.click()}
-                    className="h-8 text-xs font-bold border border-slate-800 bg-slate-900 text-slate-200 hover:bg-slate-800 hover:text-white shadow-md"
+                    className="h-8 text-xs font-bold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 shadow-sm"
                   >
                     Selecionar Estações (.txt)
                   </Button>
@@ -709,7 +709,7 @@ export default function PublicInfraCollection() {
                     type="button"
                     size="sm"
                     onClick={() => serverFileInputRef.current?.click()}
-                    className="h-8 text-xs font-bold border border-slate-800 bg-slate-900 text-slate-200 hover:bg-slate-800 hover:text-white shadow-md"
+                    className="h-8 text-xs font-bold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 shadow-sm"
                   >
                     Selecionar Servidor (.txt)
                   </Button>
@@ -724,16 +724,16 @@ export default function PublicInfraCollection() {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="text-xs text-slate-400 hover:text-white"
+                    className="text-xs text-slate-500 hover:text-slate-900"
                   >
                     <FileSpreadsheet className="mr-1.5 h-3.5 w-3.5" />
                     Colar Dados do Excel
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-xl bg-[#0b0b0f] border-slate-800 text-white">
+                <DialogContent className="max-w-xl bg-white border-slate-200 text-slate-900">
                   <DialogHeader>
                     <DialogTitle>Importar do Excel</DialogTitle>
-                    <DialogDescription className="text-slate-400">
+                    <DialogDescription className="text-slate-500">
                       Copie as linhas da sua tabela e cole no campo de texto abaixo:
                     </DialogDescription>
                   </DialogHeader>
@@ -742,10 +742,10 @@ export default function PublicInfraCollection() {
                     onChange={e => setExcelText(e.target.value)}
                     placeholder="Cole aqui as colunas (Item, Hostname, Setor...)"
                     rows={10}
-                    className="font-mono text-xs bg-slate-950 border-slate-800 text-slate-300"
+                    className="font-mono text-xs bg-slate-50 border-slate-200 text-slate-800"
                   />
                   <DialogFooter>
-                    <Button variant="outline" size="sm" className="border-slate-800" onClick={() => setExcelText("")}>Limpar</Button>
+                    <Button variant="outline" size="sm" className="border-slate-200" onClick={() => setExcelText("")}>Limpar</Button>
                     <Button size="sm" onClick={handleExcelImport} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold">Processar Colagem</Button>
                   </DialogFooter>
                 </DialogContent>
@@ -758,25 +758,25 @@ export default function PublicInfraCollection() {
         {/* Servers Title */}
         {servers.length > 0 && (
           <div className="space-y-4">
-            <div className="flex items-center gap-2 border-b border-slate-900 pb-2">
-              <ServerIcon className="h-4.5 w-4.5 text-indigo-400" />
-              <h2 className="text-sm font-bold uppercase tracking-wider text-slate-200">Servidores para Conferência ({servers.length})</h2>
+            <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+              <ServerIcon className="h-4.5 w-4.5 text-indigo-600" />
+              <h2 className="text-sm font-bold uppercase tracking-wider text-slate-800">Servidores para Conferência ({servers.length})</h2>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {servers.map((srv, idx) => {
                 const validation = checkServerRequirements(srv, workstationsCount);
                 return (
-                  <Card key={idx} className="border-slate-900 shadow-sm relative overflow-hidden bg-[#0a0a0e]/50">
+                  <Card key={idx} className="border-slate-200 shadow-sm relative overflow-hidden bg-white">
                     <div className={cn("absolute left-0 top-0 bottom-0 w-1", validation.meets ? "bg-emerald-500" : "bg-rose-500")} />
                     
-                    <CardHeader className="py-3 px-5 flex flex-row items-center justify-between border-b border-slate-900/60 bg-slate-950/20">
+                    <CardHeader className="py-3 px-5 flex flex-row items-center justify-between border-b border-slate-100 bg-slate-50/50">
                       <div className="flex items-center gap-2">
-                        <ServerIcon className="h-4 w-4 text-slate-400" />
-                        <CardTitle className="text-xs font-bold text-slate-200">
+                        <ServerIcon className="h-4 w-4 text-slate-500" />
+                        <CardTitle className="text-xs font-bold text-slate-900">
                           {srv.hostname || `SERVIDOR ${idx + 1}`}
                         </CardTitle>
-                        <Badge variant="outline" className={cn("text-[9px] px-2 py-0.5", validation.meets ? "bg-emerald-950/20 text-emerald-400 border-emerald-800" : "bg-rose-950/20 text-rose-400 border-rose-800")}>
+                        <Badge variant="outline" className={cn("text-[9px] px-2 py-0.5", validation.meets ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-rose-50 text-rose-700 border-rose-200")}>
                           {validation.meets ? "Requisitos Satisfeitos" : "Compatibilidade com Alertas"}
                         </Badge>
                       </div>
@@ -784,14 +784,14 @@ export default function PublicInfraCollection() {
                         variant="ghost" 
                         size="icon" 
                         onClick={() => deleteServer(idx)}
-                        className="h-6 w-6 text-rose-400 hover:text-rose-500 hover:bg-rose-950/20"
+                        className="h-6 w-6 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </CardHeader>
                     <CardContent className="p-5 grid grid-cols-2 md:grid-cols-3 gap-3">
                       <div className="space-y-1">
-                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Hostname</span>
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Hostname</span>
                         <Input 
                           value={srv.hostname || ""} 
                           onChange={e => {
@@ -799,11 +799,11 @@ export default function PublicInfraCollection() {
                             list[idx].hostname = e.target.value;
                             handleServersChange(list);
                           }}
-                          className="h-8 text-xs bg-slate-900/60 border-slate-800 text-white"
+                          className="h-8 text-xs bg-white border-slate-200 text-slate-900"
                         />
                       </div>
                       <div className="space-y-1">
-                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Processador</span>
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Processador</span>
                         <Input 
                           value={srv.processor || ""} 
                           onChange={e => {
@@ -811,11 +811,11 @@ export default function PublicInfraCollection() {
                             list[idx].processor = e.target.value;
                             handleServersChange(list);
                           }}
-                          className="h-8 text-xs bg-slate-900/60 border-slate-800 text-white"
+                          className="h-8 text-xs bg-white border-slate-200 text-slate-900"
                         />
                       </div>
                       <div className="space-y-1">
-                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Memória RAM</span>
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Memória RAM</span>
                         <Input 
                           value={srv.memory || ""} 
                           onChange={e => {
@@ -823,11 +823,11 @@ export default function PublicInfraCollection() {
                             list[idx].memory = e.target.value;
                             handleServersChange(list);
                           }}
-                          className="h-8 text-xs bg-slate-900/60 border-slate-800 text-white"
+                          className="h-8 text-xs bg-white border-slate-200 text-slate-900"
                         />
                       </div>
                       <div className="space-y-1">
-                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Disco</span>
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Disco</span>
                         <Input 
                           value={srv.disk || ""} 
                           onChange={e => {
@@ -835,11 +835,11 @@ export default function PublicInfraCollection() {
                             list[idx].disk = e.target.value;
                             handleServersChange(list);
                           }}
-                          className="h-8 text-xs bg-slate-900/60 border-slate-800 text-white"
+                          className="h-8 text-xs bg-white border-slate-200 text-slate-900"
                         />
                       </div>
                       <div className="space-y-1">
-                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Windows / S.O.</span>
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Windows / S.O.</span>
                         <Input 
                           value={srv.os || ""} 
                           onChange={e => {
@@ -847,11 +847,11 @@ export default function PublicInfraCollection() {
                             list[idx].os = e.target.value;
                             handleServersChange(list);
                           }}
-                          className="h-8 text-xs bg-slate-900/60 border-slate-800 text-white"
+                          className="h-8 text-xs bg-white border-slate-200 text-slate-900"
                         />
                       </div>
                       <div className="space-y-1">
-                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Virtualizado?</span>
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Virtualizado?</span>
                         <Input 
                           value={srv.virtualized || ""} 
                           onChange={e => {
@@ -859,14 +859,14 @@ export default function PublicInfraCollection() {
                             list[idx].virtualized = e.target.value;
                             handleServersChange(list);
                           }}
-                          className="h-8 text-xs bg-slate-900/60 border-slate-800 text-white"
+                          className="h-8 text-xs bg-white border-slate-200 text-slate-900"
                         />
                       </div>
 
                       {validation.issues.length > 0 && (
-                        <div className="col-span-full mt-2 p-2.5 bg-rose-950/20 border border-rose-900/40 rounded-lg flex items-start gap-2">
-                          <AlertTriangle className="h-4 w-4 text-rose-400 mt-0.5 shrink-0" />
-                          <div className="text-[10px] text-rose-300 leading-normal">
+                        <div className="col-span-full mt-2 p-2.5 bg-rose-50 border border-rose-100 rounded-lg flex items-start gap-2">
+                          <AlertTriangle className="h-4 w-4 text-rose-600 mt-0.5 shrink-0" />
+                          <div className="text-[10px] text-rose-700 leading-normal">
                             <p className="font-bold">Avisos do Servidor:</p>
                             <ul className="list-disc pl-3">
                               {validation.issues.map((issue, i) => (
@@ -886,10 +886,10 @@ export default function PublicInfraCollection() {
 
         {/* Workstations Section */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-900 pb-2">
+          <div className="flex items-center justify-between border-b border-slate-200 pb-2">
             <div className="flex items-center gap-2">
-              <Laptop className="h-4.5 w-4.5 text-emerald-400" />
-              <h2 className="text-sm font-bold uppercase tracking-wider text-slate-200">Estações de Trabalho ({workstations.length})</h2>
+              <Laptop className="h-4.5 w-4.5 text-emerald-600" />
+              <h2 className="text-sm font-bold uppercase tracking-wider text-slate-800">Estações de Trabalho ({workstations.length})</h2>
             </div>
 
             <div className="flex gap-2">
@@ -900,14 +900,14 @@ export default function PublicInfraCollection() {
                     variant="outline" 
                     size="sm" 
                     onClick={runAutoValidateAll}
-                    className="h-8 text-xs border-slate-800 hover:bg-slate-900 text-slate-300"
+                    className="h-8 text-xs border-slate-200 hover:bg-slate-50 text-slate-700"
                   >
                     Recalcular Requisitos
                   </Button>
-                  <div className="hidden sm:flex gap-1.5 items-center px-3 border border-slate-800 rounded-lg text-[10px] font-bold text-slate-400 bg-slate-900/20">
-                    <span className="text-emerald-400">{stationsOkCount} OK</span>
-                    <span className="text-slate-700">|</span>
-                    <span className="text-rose-400">{stationsFailCount} Incompatíveis</span>
+                  <div className="hidden sm:flex gap-1.5 items-center px-3 border border-slate-200 rounded-lg text-[10px] font-bold text-slate-500 bg-slate-50">
+                    <span className="text-emerald-600">{stationsOkCount} OK</span>
+                    <span className="text-slate-300">|</span>
+                    <span className="text-rose-600">{stationsFailCount} Incompatíveis</span>
                   </div>
                 </>
               )}
@@ -923,25 +923,25 @@ export default function PublicInfraCollection() {
           </div>
 
           {workstations.length === 0 ? (
-            <div className="text-center py-10 border border-slate-900 rounded-xl bg-slate-950/20">
-              <Laptop className="h-10 w-10 mx-auto text-slate-700 mb-2" />
+            <div className="text-center py-10 border border-slate-200 rounded-xl bg-white shadow-sm">
+              <Laptop className="h-10 w-10 mx-auto text-slate-300 mb-2" />
               <p className="text-xs font-semibold text-slate-500">Nenhum computador carregado para conferência.</p>
-              <p className="text-[11px] text-slate-600 mt-1">Solte arquivos na zona de upload acima.</p>
+              <p className="text-[11px] text-slate-400 mt-1">Solte arquivos na zona de upload acima.</p>
             </div>
           ) : (
-            <div className="border border-slate-900 rounded-xl overflow-x-auto shadow-xl bg-[#0a0a0f]/40 backdrop-blur-md">
+            <div className="border border-slate-200 rounded-xl overflow-x-auto shadow-md bg-white">
               <Table className="w-full table-fixed border-collapse">
-                <TableHeader className="bg-slate-950/50">
-                  <TableRow className="h-9 border-b border-slate-900">
-                    <TableHead className="w-[35px] font-bold text-center text-[10.5px] px-1 py-1 text-slate-400">Item</TableHead>
-                    <TableHead className="w-[11%] font-bold text-[10.5px] px-2 py-1 text-slate-400">Hostname</TableHead>
-                    <TableHead className="w-[9%] font-bold text-[10.5px] px-2 py-1 text-slate-400">Setor</TableHead>
-                    <TableHead className="w-[11%] font-bold text-[10.5px] px-2 py-1 text-slate-400">Usuário</TableHead>
-                    <TableHead className="w-[22%] font-bold text-[10.5px] px-2 py-1 text-slate-400">Processador / Geração</TableHead>
-                    <TableHead className="w-[6%] font-bold text-center text-[10.5px] px-2 py-1 text-slate-400">RAM</TableHead>
-                    <TableHead className="w-[21%] font-bold text-[10.5px] px-2 py-1 text-slate-400">Disco (Espaço Livre)</TableHead>
-                    <TableHead className="w-[13%] font-bold text-[10.5px] px-2 py-1 text-slate-400">S.O.</TableHead>
-                    <TableHead className="w-[7%] font-bold text-[10.5px] px-2 py-1 text-slate-400">Atende?</TableHead>
+                <TableHeader className="bg-slate-50/70">
+                  <TableRow className="h-9 border-b border-slate-200">
+                    <TableHead className="w-[35px] font-bold text-center text-[10.5px] px-1 py-1 text-slate-500">Item</TableHead>
+                    <TableHead className="w-[11%] font-bold text-[10.5px] px-2 py-1 text-slate-500">Hostname</TableHead>
+                    <TableHead className="w-[9%] font-bold text-[10.5px] px-2 py-1 text-slate-500">Setor</TableHead>
+                    <TableHead className="w-[11%] font-bold text-[10.5px] px-2 py-1 text-slate-500">Usuário</TableHead>
+                    <TableHead className="w-[22%] font-bold text-[10.5px] px-2 py-1 text-slate-500">Processador / Geração</TableHead>
+                    <TableHead className="w-[6%] font-bold text-center text-[10.5px] px-2 py-1 text-slate-500">RAM</TableHead>
+                    <TableHead className="w-[21%] font-bold text-[10.5px] px-2 py-1 text-slate-500">Disco (Espaço Livre)</TableHead>
+                    <TableHead className="w-[13%] font-bold text-[10.5px] px-2 py-1 text-slate-500">S.O.</TableHead>
+                    <TableHead className="w-[7%] font-bold text-[10.5px] px-2 py-1 text-slate-500">Atende?</TableHead>
                     <TableHead className="w-[35px] px-1 py-1"></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -949,8 +949,8 @@ export default function PublicInfraCollection() {
                   {workstations.map((ws, idx) => {
                     const validation = checkWorkstationRequirements(ws);
                     return (
-                      <TableRow key={idx} className="hover:bg-slate-900/30 border-b border-slate-900 h-auto">
-                        <TableCell className="font-semibold text-slate-500 text-center py-1.5 px-1 text-[10.5px]">
+                      <TableRow key={idx} className="hover:bg-slate-50/50 border-b border-slate-200 h-auto">
+                        <TableCell className="font-semibold text-slate-400 text-center py-1.5 px-1 text-[10.5px]">
                           {idx + 1}
                         </TableCell>
 
@@ -1004,7 +1004,7 @@ export default function PublicInfraCollection() {
                               className="font-medium"
                             />
                             <div className="pl-1.5 flex items-center">
-                              <span className="text-[9px] text-slate-500 mr-1 select-none font-bold uppercase tracking-wider">Geração:</span>
+                              <span className="text-[9px] text-slate-400 mr-1 select-none font-bold uppercase tracking-wider">Geração:</span>
                               <div className="flex-grow">
                                 <EditableCell
                                   value={ws.generation || ""}
@@ -1014,7 +1014,7 @@ export default function PublicInfraCollection() {
                                     handleWorkstationsChange(list);
                                   }}
                                   placeholder="8ª Geração"
-                                  className="text-slate-400 text-[10px] leading-none py-0.5 min-h-max"
+                                  className="text-slate-600 text-[10px] leading-none py-0.5 min-h-max"
                                 />
                               </div>
                             </div>
@@ -1030,7 +1030,7 @@ export default function PublicInfraCollection() {
                               handleWorkstationsChange(list);
                             }}
                             placeholder="RAM"
-                            className="justify-center text-center text-white"
+                            className="justify-center text-center text-slate-900"
                           />
                         </TableCell>
 
@@ -1062,9 +1062,9 @@ export default function PublicInfraCollection() {
                           <div className="flex items-center gap-1">
                             <div className={cn(
                               "text-[10px] font-bold px-2 py-0.5 rounded text-center w-full shadow-sm",
-                              ws.meetsRequirements === "Sim" && "bg-emerald-950/20 text-emerald-400 border border-emerald-900/50",
-                              ws.meetsRequirements === "Não" && "bg-rose-950/20 text-rose-400 border border-rose-900/50",
-                              !ws.meetsRequirements && "bg-slate-900 text-slate-500 border border-slate-800"
+                              ws.meetsRequirements === "Sim" && "bg-emerald-50 text-emerald-700 border border-emerald-200",
+                              ws.meetsRequirements === "Não" && "bg-rose-50 text-rose-700 border border-rose-200",
+                              !ws.meetsRequirements && "bg-slate-50 text-slate-400 border border-slate-200"
                             )}>
                               {ws.meetsRequirements || "?"}
                             </div>
@@ -1072,15 +1072,15 @@ export default function PublicInfraCollection() {
                             {validation.issues.length > 0 && (
                               <Dialog>
                                 <DialogTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-6 w-6 text-rose-400 hover:text-rose-300 hover:bg-rose-950/20 rounded-full shrink-0">
+                                  <Button variant="ghost" size="icon" className="h-6 w-6 text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-full shrink-0">
                                     <HelpCircle className="h-4.5 w-4.5" />
                                   </Button>
                                 </DialogTrigger>
-                                <DialogContent className="bg-[#0b0b0f] border-slate-800 text-white">
+                                <DialogContent className="bg-white border-slate-200 text-slate-900">
                                   <DialogHeader>
                                     <DialogTitle>Adequações Necessárias: {ws.hostname || `Estação ${idx + 1}`}</DialogTitle>
                                   </DialogHeader>
-                                  <ul className="list-disc pl-5 space-y-1.5 text-xs text-slate-300">
+                                  <ul className="list-disc pl-5 space-y-1.5 text-xs text-slate-700">
                                     {validation.issues.map((iss, i) => (
                                       <li key={i}>{iss}</li>
                                     ))}
@@ -1096,7 +1096,7 @@ export default function PublicInfraCollection() {
                             variant="ghost" 
                             size="icon" 
                             onClick={() => deleteWorkstation(idx)}
-                            className="h-6 w-6 text-rose-400 hover:text-rose-300 hover:bg-rose-950/20"
+                            className="h-6 w-6 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
@@ -1111,15 +1111,15 @@ export default function PublicInfraCollection() {
         </div>
 
         {/* Submit Actions */}
-        <div className="flex justify-between items-center bg-[#0d0d12]/60 border border-slate-900/80 p-5 rounded-2xl">
+        <div className="flex justify-between items-center bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
           <div className="space-y-1 text-left hidden md:block">
-            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Conclusão de Envio</span>
-            <p className="text-xs text-slate-400 leading-normal">Revise as informações de hardware das estações e servidores acima e clique em Enviar.</p>
+            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Conclusão de Envio</span>
+            <p className="text-xs text-slate-600 leading-normal">Revise as informações de hardware das estações e servidores acima e clique em Enviar.</p>
           </div>
           <Button 
             onClick={handleSubmitData}
             disabled={isSubmitting || (workstations.length === 0 && servers.length === 0)}
-            className="w-full md:w-auto font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl flex items-center justify-center gap-2 h-11 px-8 rounded-xl transition-all"
+            className="w-full md:w-auto font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md flex items-center justify-center gap-2 h-11 px-8 rounded-xl transition-all"
           >
             {isSubmitting ? (
               <Activity className="h-4 w-4 animate-pulse" />
