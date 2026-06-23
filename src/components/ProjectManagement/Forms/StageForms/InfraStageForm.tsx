@@ -646,27 +646,25 @@ export function InfraStageForm({
       </div>
 
       <div className="space-y-2.5">
-        <Label className="text-xs font-bold uppercase tracking-widest text-teal-600 flex items-center gap-2">
-          <div className="h-2 w-2 rounded-full bg-teal-500" />
-          Status Estações
+        <Label className="text-xs font-bold uppercase tracking-widest text-sky-600 flex items-center gap-2">
+          <ServerIcon className="h-3.5 w-3.5" />
+          Status Servidor
         </Label>
         <Select
-          value={stage.workstationsStatus || ""}
-          onValueChange={(v) =>
-            onUpdate({ workstationsStatus: v as StatusType })
-          }
+          value={stage.serverStatus || ""}
+          onValueChange={(v) => onUpdate({ serverStatus: v as StatusType })}
           disabled={!canEditProjects}
         >
           <SelectTrigger
             className={cn(
               "h-11 border-2 font-medium transition-all",
-              stage.workstationsStatus === "Adequado" &&
+              stage.serverStatus === "Adequado" &&
               "bg-green-50 text-green-800 border-green-300 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50",
-              stage.workstationsStatus === "Parcialmente Adequado" &&
+              stage.serverStatus === "Parcialmente Adequado" &&
               "bg-orange-50 text-orange-800 border-orange-300 dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-900/50",
-              stage.workstationsStatus === "Inadequado" &&
+              stage.serverStatus === "Inadequado" &&
               "bg-red-50 text-red-800 border-red-300 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/50",
-              stage.workstationsStatus === "Aguardando Adequação" &&
+              stage.serverStatus === "Aguardando Adequação" &&
               "bg-gray-50 text-gray-800 border-gray-300 dark:bg-slate-900/50 dark:text-slate-400 dark:border-slate-800/60",
             )}
           >
@@ -708,25 +706,27 @@ export function InfraStageForm({
       </div>
 
       <div className="space-y-2.5">
-        <Label className="text-xs font-bold uppercase tracking-widest text-sky-600 flex items-center gap-2">
-          <ServerIcon className="h-3.5 w-3.5" />
-          Status Servidor
+        <Label className="text-xs font-bold uppercase tracking-widest text-teal-600 flex items-center gap-2">
+          <div className="h-2 w-2 rounded-full bg-teal-500" />
+          Status Estações
         </Label>
         <Select
-          value={stage.serverStatus || ""}
-          onValueChange={(v) => onUpdate({ serverStatus: v as StatusType })}
+          value={stage.workstationsStatus || ""}
+          onValueChange={(v) =>
+            onUpdate({ workstationsStatus: v as StatusType })
+          }
           disabled={!canEditProjects}
         >
           <SelectTrigger
             className={cn(
               "h-11 border-2 font-medium transition-all",
-              stage.serverStatus === "Adequado" &&
+              stage.workstationsStatus === "Adequado" &&
               "bg-green-50 text-green-800 border-green-300 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50",
-              stage.serverStatus === "Parcialmente Adequado" &&
+              stage.workstationsStatus === "Parcialmente Adequado" &&
               "bg-orange-50 text-orange-800 border-orange-300 dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-900/50",
-              stage.serverStatus === "Inadequado" &&
+              stage.workstationsStatus === "Inadequado" &&
               "bg-red-50 text-red-800 border-red-300 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/50",
-              stage.serverStatus === "Aguardando Adequação" &&
+              stage.workstationsStatus === "Aguardando Adequação" &&
               "bg-gray-50 text-gray-800 border-gray-300 dark:bg-slate-900/50 dark:text-slate-400 dark:border-slate-800/60",
             )}
           >
