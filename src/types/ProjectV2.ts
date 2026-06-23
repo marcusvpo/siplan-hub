@@ -157,6 +157,7 @@ export interface ServerInfo {
   brandModel?: string;
   virtualized?: "Sim" | "Não" | boolean;
   processor?: string;
+  cores?: string;
   memory?: string;
   disk?: string;
   spaceOrion?: string;

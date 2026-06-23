@@ -38,6 +38,13 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -212,6 +219,7 @@ export default function PublicInfraCollection() {
       brandModel: "",
       virtualized: "Não",
       processor: "",
+      cores: "",
       memory: "",
       disk: "",
       os: "",
@@ -281,6 +289,7 @@ export default function PublicInfraCollection() {
         newServers.push({
           hostname: parsed.hostname,
           processor: parsed.processor,
+          cores: parsed.cores || "",
           memory: parsed.memory,
           disk: parsed.disk,
           network: parsed.network,
@@ -296,6 +305,7 @@ export default function PublicInfraCollection() {
           ...newServers[0],
           hostname: parsed.hostname,
           processor: parsed.processor,
+          cores: parsed.cores || newServers[0].cores || "",
           memory: parsed.memory,
           disk: parsed.disk,
           network: parsed.network,
@@ -810,7 +820,7 @@ export default function PublicInfraCollection() {
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </CardHeader>
-                    <CardContent className="p-5 grid grid-cols-2 md:grid-cols-3 gap-3">
+                    <CardContent className="p-5 grid grid-cols-1 md:grid-cols-4 gap-4">
                       <div className="space-y-1">
                         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Hostname</span>
                         <Input 
@@ -824,6 +834,38 @@ export default function PublicInfraCollection() {
                         />
                       </div>
                       <div className="space-y-1">
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Marca/Modelo</span>
+                        <Input 
+                          value={srv.brandModel || ""} 
+                          onChange={e => {
+                            const list = [...servers];
+                            list[idx].brandModel = e.target.value;
+                            handleServersChange(list);
+                          }}
+                          placeholder="Ex: Dell T340"
+                          className="h-8 text-xs bg-white border-slate-200 text-slate-900"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Virtualizado?</span>
+                        <Select
+                          value={srv.virtualized === true || srv.virtualized === "Sim" ? "Sim" : "Não"}
+                          onValueChange={v => {
+                            const list = [...servers];
+                            list[idx].virtualized = v as "Sim" | "Não";
+                            handleServersChange(list);
+                          }}
+                        >
+                          <SelectTrigger className="h-8 text-xs bg-white border-slate-200 text-slate-900">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white text-slate-900">
+                            <SelectItem value="Sim">Sim</SelectItem>
+                            <SelectItem value="Não">Não</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1">
                         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Processador</span>
                         <Input 
                           value={srv.processor || ""} 
@@ -832,6 +874,20 @@ export default function PublicInfraCollection() {
                             list[idx].processor = e.target.value;
                             handleServersChange(list);
                           }}
+                          placeholder="Ex: Intel Xeon E5-2620"
+                          className="h-8 text-xs bg-white border-slate-200 text-slate-900"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Núcleos</span>
+                        <Input 
+                          value={srv.cores || ""} 
+                          onChange={e => {
+                            const list = [...servers];
+                            list[idx].cores = e.target.value;
+                            handleServersChange(list);
+                          }}
+                          placeholder="Ex: 6"
                           className="h-8 text-xs bg-white border-slate-200 text-slate-900"
                         />
                       </div>
@@ -844,11 +900,12 @@ export default function PublicInfraCollection() {
                             list[idx].memory = e.target.value;
                             handleServersChange(list);
                           }}
+                          placeholder="Ex: 32 GB"
                           className="h-8 text-xs bg-white border-slate-200 text-slate-900"
                         />
                       </div>
                       <div className="space-y-1">
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Disco</span>
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Disco (Armazenamento)</span>
                         <Input 
                           value={srv.disk || ""} 
                           onChange={e => {
@@ -856,11 +913,25 @@ export default function PublicInfraCollection() {
                             list[idx].disk = e.target.value;
                             handleServersChange(list);
                           }}
+                          placeholder="Ex: 2 TB SAS RAID 1"
                           className="h-8 text-xs bg-white border-slate-200 text-slate-900"
                         />
                       </div>
                       <div className="space-y-1">
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Windows / S.O.</span>
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Espaço para o Orion</span>
+                        <Input 
+                          value={srv.spaceOrion || ""} 
+                          onChange={e => {
+                            const list = [...servers];
+                            list[idx].spaceOrion = e.target.value;
+                            handleServersChange(list);
+                          }}
+                          placeholder="Ex: 500 GB"
+                          className="h-8 text-xs bg-white border-slate-200 text-slate-900"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Sistema Operacional</span>
                         <Input 
                           value={srv.os || ""} 
                           onChange={e => {
@@ -868,18 +939,59 @@ export default function PublicInfraCollection() {
                             list[idx].os = e.target.value;
                             handleServersChange(list);
                           }}
+                          placeholder="Ex: Windows Server 2022"
                           className="h-8 text-xs bg-white border-slate-200 text-slate-900"
                         />
                       </div>
                       <div className="space-y-1">
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Virtualizado?</span>
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Anti-Vírus</span>
                         <Input 
-                          value={srv.virtualized || ""} 
+                          value={srv.antivirus || ""} 
                           onChange={e => {
                             const list = [...servers];
-                            list[idx].virtualized = e.target.value;
+                            list[idx].antivirus = e.target.value;
                             handleServersChange(list);
                           }}
+                          placeholder="Ex: Bitdefender"
+                          className="h-8 text-xs bg-white border-slate-200 text-slate-900"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Rede</span>
+                        <Input 
+                          value={srv.network || ""} 
+                          onChange={e => {
+                            const list = [...servers];
+                            list[idx].network = e.target.value;
+                            handleServersChange(list);
+                          }}
+                          placeholder="Ex: 1000 Mbps"
+                          className="h-8 text-xs bg-white border-slate-200 text-slate-900"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Backup</span>
+                        <Input 
+                          value={srv.backup || ""} 
+                          onChange={e => {
+                            const list = [...servers];
+                            list[idx].backup = e.target.value;
+                            handleServersChange(list);
+                          }}
+                          placeholder="Ex: Nuvem + HD Externo"
+                          className="h-8 text-xs bg-white border-slate-200 text-slate-900"
+                        />
+                      </div>
+                      <div className="space-y-1 md:col-span-4">
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Observações</span>
+                        <Input 
+                          value={srv.observations || ""} 
+                          onChange={e => {
+                            const list = [...servers];
+                            list[idx].observations = e.target.value;
+                            handleServersChange(list);
+                          }}
+                          placeholder="Detalhes adicionais..."
                           className="h-8 text-xs bg-white border-slate-200 text-slate-900"
                         />
                       </div>
