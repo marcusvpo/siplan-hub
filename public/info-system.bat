@@ -68,9 +68,17 @@ $linhas += "Atual: $current | Locais: $local"
 $linhas += ''
 $linhas += '[PROCESSADOR]'
 try {
-    $linhas += (Get-CimInstance Win32_Processor).Name
+    $cpu = Get-CimInstance Win32_Processor
+    $cores = $cpu.NumberOfCores
+    $linhas += "$($cpu.Name) ($cores cpus)"
 } catch {
-    $linhas += (Get-WmiObject Win32_Processor).Name
+    try {
+        $cpu = Get-WmiObject Win32_Processor
+        $cores = $cpu.NumberOfCores
+        $linhas += "$($cpu.Name) ($cores cpus)"
+    } catch {
+        $linhas += $env:PROCESSOR_IDENTIFIER
+    }
 }
 
 $linhas += ''
@@ -131,6 +139,57 @@ try {
     $os = Get-WmiObject Win32_OperatingSystem
 }
 $linhas += "$($os.Caption) - Build $($os.BuildNumber)"
+
+$linhas += ''
+$linhas += '[MARCA/MODELO]'
+try {
+    $system = Get-CimInstance Win32_ComputerSystem
+    $linhas += "$($system.Manufacturer) $($system.Model)"
+} catch {
+    try {
+        $system = Get-WmiObject Win32_ComputerSystem
+        $linhas += "$($system.Manufacturer) $($system.Model)"
+    } catch {
+        $linhas += "Desconhecido"
+    }
+}
+
+$linhas += ''
+$linhas += '[VIRTUALIZADO?]'
+try {
+    $system = Get-CimInstance Win32_ComputerSystem
+    $isVM = if ($system.Model -match 'Virtual|VMware|VirtualBox|Xen|KVM|HVM|Hyper-V') { "Sim" } else { "Não" }
+    $linhas += $isVM
+} catch {
+    $linhas += "Não"
+}
+
+$linhas += ''
+$linhas += '[ANTI-VIRUS]'
+try {
+    $av = Get-CimInstance -Namespace root/SecurityCenter2 -ClassName AntiVirusProduct -ErrorAction SilentlyContinue | ForEach-Object { $_.displayName }
+    if (-not $av) {
+        if (Get-Process -Name "MsMpEng" -ErrorAction SilentlyContinue) { $av = "Windows Defender" } else { $av = "Nenhum" }
+    } else {
+        $av = $av -join ", "
+    }
+    $linhas += $av
+} catch {
+    if (Get-Process -Name "MsMpEng" -ErrorAction SilentlyContinue) { $linhas += "Windows Defender" } else { $linhas += "Nenhum" }
+}
+
+$linhas += ''
+$linhas += '[BACKUP]'
+$linhas += "Não identificado"
+
+$linhas += ''
+$linhas += '[ESPAÇO PARA O ORION]'
+try {
+    $freeSpace = Get-CimInstance Win32_LogicalDisk -Filter "DeviceID='C:'" | ForEach-Object { [math]::Round($_.FreeSpace / 1GB) }
+    $linhas += "$freeSpace GB"
+} catch {
+    $linhas += "N/A"
+}
 
 $linhas += ''
 $linhas += '=============================================================='

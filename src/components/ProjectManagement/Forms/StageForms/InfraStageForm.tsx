@@ -319,7 +319,11 @@ export function InfraStageForm({
           disk: parsed.disk,
           network: parsed.network,
           os: parsed.os,
-          virtualized: "Não"
+          virtualized: parsed.virtualized || "Não",
+          brandModel: parsed.brandModel || "",
+          antivirus: parsed.antivirus || "",
+          backup: parsed.backup || "",
+          spaceOrion: parsed.spaceOrion || ""
         });
       } else {
         newServers[0] = {
@@ -329,7 +333,12 @@ export function InfraStageForm({
           memory: parsed.memory,
           disk: parsed.disk,
           network: parsed.network,
-          os: parsed.os
+          os: parsed.os,
+          virtualized: parsed.virtualized || newServers[0].virtualized || "Não",
+          brandModel: parsed.brandModel || newServers[0].brandModel || "",
+          antivirus: parsed.antivirus || newServers[0].antivirus || "",
+          backup: parsed.backup || newServers[0].backup || "",
+          spaceOrion: parsed.spaceOrion || newServers[0].spaceOrion || ""
         };
       }
 

@@ -187,6 +187,13 @@ export const parseMachineInfo = (text: string) => {
 
   const generation = extractGeneration(processor);
 
+  // Campos extras de servidor
+  const brandModel = info["MARCA/MODELO"]?.[0] || info["MARCA MODELO"]?.[0] || "";
+  const virtualized = info["VIRTUALIZADO?"]?.[0] || info["VIRTUALIZADO"]?.[0] || "";
+  const antivirus = info["ANTI-VIRUS"]?.[0] || info["ANTIVIRUS"]?.[0] || info["ANTI-VÍRUS"]?.[0] || "";
+  const backup = info["BACKUP"]?.[0] || "";
+  const spaceOrion = info["ESPACO ORION"]?.[0] || info["ESPAÇO PARA O ORION"]?.[0] || "";
+
   return {
     hostname,
     processor,
@@ -197,6 +204,11 @@ export const parseMachineInfo = (text: string) => {
     os,
     sector,
     user,
+    brandModel,
+    virtualized,
+    antivirus,
+    backup,
+    spaceOrion,
   };
 };
 
