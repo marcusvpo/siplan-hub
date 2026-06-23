@@ -1,4 +1,19 @@
-$pasta = Split-Path -Parent $MyInvocation.MyCommand.Path
+# 2>nul & @goto :cmd
+<#
+:cmd
+@echo off
+set "SCRIPT_DIR=%~dp0"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "iex ([System.IO.File]::ReadAllText('%~f0'))"
+exit /b
+#>
+
+$pasta = $env:SCRIPT_DIR
+if (-not $pasta) {
+    $pasta = Split-Path -Parent $MyInvocation.MyCommand.Path
+}
+if (-not $pasta) {
+    $pasta = "."
+}
 $arquivo = "$pasta\info_maquina.txt"
 
 $linhas = @()
