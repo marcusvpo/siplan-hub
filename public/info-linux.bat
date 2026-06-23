@@ -87,7 +87,7 @@ if [ -z "$backup" ]; then echo "Não identificado"; else echo "$backup"; fi
 echo '[ESPAÇO PARA O ORION]'
 df -h -P / | awk 'NR==2{print $4}'
 echo '=========='
-'@
+$sshCmd = $sshCmd -replace "`r", ""
 
 try {
     $saida = ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 "${sshUser}@${sshHost}" $sshCmd
