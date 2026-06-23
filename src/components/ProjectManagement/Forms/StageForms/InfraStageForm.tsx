@@ -168,6 +168,7 @@ export function InfraStageForm({
   onUpdate,
   onNotifyComercial,
   projectId,
+  lastUpdatedBy,
 }: InfraStageFormProps) {
   const { toast } = useToast();
   const [activeSubTab, setActiveSubTab] = useState<string>("geral");
@@ -669,18 +670,35 @@ export function InfraStageForm({
         </div>
 
         {/* Resumo Rápido da Compatibilidade */}
-        {workstations.length > 0 && (
-          <div className="flex gap-2.5 items-center">
-            <Badge variant="outline" className="bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border-emerald-200">
-              {stationsOkCount} Estações OK
+        <div className="flex gap-2.5 items-center flex-wrap">
+          {lastUpdatedBy && (
+            <Badge 
+              variant="secondary" 
+              className={cn(
+                "font-bold text-[10px] px-2 py-0.5 shadow-sm rounded-md border",
+                (lastUpdatedBy === 'Coleta Pública (Técnico)' || lastUpdatedBy.includes('Coleta Pública'))
+                  ? "bg-indigo-50 dark:bg-indigo-950/20 text-indigo-700 dark:text-indigo-400 border-indigo-200 dark:border-indigo-900/50" 
+                  : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700"
+              )}
+            >
+              {(lastUpdatedBy === 'Coleta Pública (Técnico)' || lastUpdatedBy.includes('Coleta Pública')) 
+                ? "Dados enviados pela serventia" 
+                : "Preenchido pela Siplan"}
             </Badge>
-            {stationsFailCount > 0 && (
-              <Badge variant="outline" className="bg-rose-50 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 border-rose-200 animate-pulse">
-                {stationsFailCount} Incompatíveis
+          )}
+          {workstations.length > 0 && (
+            <>
+              <Badge variant="outline" className="bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border-emerald-200">
+                {stationsOkCount} Estações OK
               </Badge>
-            )}
-          </div>
-        )}
+              {stationsFailCount > 0 && (
+                <Badge variant="outline" className="bg-rose-50 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 border-rose-200 animate-pulse">
+                  {stationsFailCount} Incompatíveis
+                </Badge>
+              )}
+            </>
+          )}
+        </div>
       </div>
 
       <div className="space-y-2.5">

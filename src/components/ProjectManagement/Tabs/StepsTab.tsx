@@ -318,7 +318,7 @@ export function StepsTab({
               }
               canEditProjects={canEditProjects}
             >
-              <InfraStageForm stage={stagesData.infra} canEditProjects={canEditProjects} notifying={notifying} onUpdate={(u) => updateStage("infra", u)} onNotifyComercial={handleNotifyComercial} projectId={project.id} />
+              <InfraStageForm stage={stagesData.infra} canEditProjects={canEditProjects} notifying={notifying} onUpdate={(u) => updateStage("infra", u)} onNotifyComercial={handleNotifyComercial} projectId={project.id} lastUpdatedBy={project.lastUpdatedBy} />
             </StageCard>
           </div>
 
