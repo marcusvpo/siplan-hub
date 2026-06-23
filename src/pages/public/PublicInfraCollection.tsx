@@ -689,7 +689,8 @@ export default function PublicInfraCollection() {
                   {project.client_name || "Cartório"}
                 </CardTitle>
                 <CardDescription className="text-slate-600 text-xs mt-1 leading-relaxed max-w-2xl">
-                  Olá! Esta página pública permite que você, técnico ou responsável pela TI, envie diretamente os arquivos gerados pelo script PowerShell do inventário da Siplan. Ao fazer o envio, os dados serão importados automaticamente no Siplan HUB para a análise de infraestrutura da serventia.
+                  Olá! Esta página pública permite que técnicos e responsáveis enviem diretamente à Siplan os arquivos gerados pelo script de coleta de informações do parque de máquinas e do servidor.
+                  Após o envio, os dados serão importados automaticamente para nosso sistema, possibilitando a realização da análise da infraestrutura tecnológica da serventia de forma mais ágil e eficiente.
                 </CardDescription>
               </div>
 
