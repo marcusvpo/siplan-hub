@@ -91,7 +91,7 @@ echo '=========='
 $sshCmd = $sshCmd -replace "`r", ""
 
 try {
-    $saida = ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 "${sshUser}@${sshHost}" $sshCmd
+    $saida = $sshCmd | ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 "${sshUser}@${sshHost}" "bash"
 } catch {
     Write-Host "Erro ao executar conexao SSH: $_" -ForegroundColor Red
     Read-Host "Pressione Enter para fechar"
