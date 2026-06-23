@@ -315,6 +315,7 @@ export function InfraStageForm({
         newServers.push({
           hostname: parsed.hostname,
           processor: parsed.processor,
+          cores: parsed.cores || "",
           memory: parsed.memory,
           disk: parsed.disk,
           network: parsed.network,
@@ -330,6 +331,7 @@ export function InfraStageForm({
           ...newServers[0],
           hostname: parsed.hostname,
           processor: parsed.processor,
+          cores: parsed.cores || newServers[0].cores || "",
           memory: parsed.memory,
           disk: parsed.disk,
           network: parsed.network,
@@ -998,7 +1000,21 @@ export function InfraStageForm({
                                 list[idx].processor = e.target.value;
                                 handleServersChange(list);
                               }}
-                              placeholder="Ex: Xeon 6 núcleos"
+                              placeholder="Ex: Intel Xeon E5-2620"
+                              disabled={!canEditProjects}
+                              className="h-9 border-slate-200 dark:border-slate-800/60"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xxs font-bold uppercase tracking-wider text-muted-foreground">Núcleos</Label>
+                            <Input 
+                              value={srv.cores || ""} 
+                              onChange={e => {
+                                const list = [...servers];
+                                list[idx].cores = e.target.value;
+                                handleServersChange(list);
+                              }}
+                              placeholder="Ex: 6"
                               disabled={!canEditProjects}
                               className="h-9 border-slate-200 dark:border-slate-800/60"
                             />
@@ -1101,7 +1117,7 @@ export function InfraStageForm({
                               className="h-9 border-slate-200 dark:border-slate-800/60"
                             />
                           </div>
-                          <div className="space-y-1 md:col-span-1">
+                          <div className="space-y-1 md:col-span-4">
                             <Label className="text-xxs font-bold uppercase tracking-wider text-muted-foreground">Observações</Label>
                             <Input 
                               value={srv.observations || ""} 

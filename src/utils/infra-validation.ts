@@ -98,14 +98,33 @@ export const checkServerRequirements = (server: ServerInfo, workstationsCount: n
   const count = workstationsCount || 0;
 
   // CPU cores check
-  if (server.processor) {
-    const coresMatch = server.processor.match(/(\d+)\s*(nucleo|núcleo|core|thread|cpu)/i);
+  let cores: number | null = null;
+  if (server.cores) {
+    const cMatch = server.cores.toString().match(/(\d+)/);
+    if (cMatch) {
+      cores = parseInt(cMatch[1]);
+    }
+  }
+  if (cores === null && server.processor) {
+    const coresMatch = server.processor.match(/(\d+)\s*(?:cores|cpus|núcleos|nucleos|threads)/i) || 
+                       server.processor.match(/\((\d+)\s*(?:cpu)/i);
     if (coresMatch) {
-      const cores = parseInt(coresMatch[1]);
-      const minCores = count > 15 ? 8 : 6;
-      if (cores < minCores) {
-        issues.push(`Processador com ${cores} núcleos. Mínimo recomendado de ${minCores} núcleos para ${count} estações.`);
+      cores = parseInt(coresMatch[1]);
+    } else {
+      const fallbackMatch = server.processor.match(/(\d+)\s*(nucleo|núcleo|core|thread|cpu)/i);
+      if (fallbackMatch) {
+        const val = parseInt(fallbackMatch[1]);
+        if (val < 256) {
+          cores = val;
+        }
       }
+    }
+  }
+
+  if (cores !== null) {
+    const minCores = count > 15 ? 8 : 6;
+    if (cores < minCores) {
+      issues.push(`Processador com ${cores} núcleos. Mínimo recomendado de ${minCores} núcleos para ${count} estações.`);
     }
   }
 
@@ -202,6 +221,23 @@ export const parseMachineInfo = (text: string) => {
   const backup = info["BACKUP"]?.[0] || "";
   const spaceOrion = info["ESPACO ORION"]?.[0] || info["ESPAÇO PARA O ORION"]?.[0] || info["ESPACO PARA O ORION"]?.[0] || "";
 
+  let cores = "";
+  if (processor) {
+    const coresMatch = processor.match(/(\d+)\s*(?:cores|cpus|núcleos|nucleos|threads)/i) || 
+                       processor.match(/\((\d+)\s*(?:cpu)/i);
+    if (coresMatch) {
+      cores = coresMatch[1];
+    } else {
+      const fallbackMatch = processor.match(/(\d+)\s*(nucleo|núcleo|core|thread|cpu)/i);
+      if (fallbackMatch) {
+        const val = parseInt(fallbackMatch[1]);
+        if (val < 256) {
+          cores = val.toString();
+        }
+      }
+    }
+  }
+
   return {
     hostname,
     processor,
@@ -217,6 +253,7 @@ export const parseMachineInfo = (text: string) => {
     antivirus,
     backup,
     spaceOrion,
+    cores,
   };
 };
 
