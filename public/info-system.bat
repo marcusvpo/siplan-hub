@@ -14,15 +14,12 @@ if (-not $pasta) {
 if (-not $pasta) {
     $pasta = "."
 }
-$arquivo = "$pasta\info_maquina.txt"
 
 $linhas = @()
 
 $linhas += '=================== INFORMACOES DA MAQUINA ==================='
 
-$linhas += ''
-$linhas += '[HOSTNAME]'
-$linhas += (hostname)
+$hostname = (hostname).Trim()
 
 # Perguntar o setor ao usuario/tecnico
 Write-Host "==========================================================" -ForegroundColor Cyan
@@ -33,6 +30,22 @@ $setor = Read-Host "Digite o Setor desta estacao (ex: Protocolo, Registro, Caixa
 if (-not $setor) {
     $setor = "Geral"
 }
+
+# Limpar o setor de caracteres invalidos e espacos para uso no nome do arquivo
+$setor_clean = $setor -replace '[\\/:*?"<>| ]', '-'
+while ($setor_clean -match '--') {
+    $setor_clean = $setor_clean -replace '--', '-'
+}
+$setor_clean = $setor_clean.Trim('-')
+if (-not $setor_clean) {
+    $setor_clean = "Geral"
+}
+
+$arquivo = "$pasta\$setor_clean-$hostname.txt"
+
+$linhas += ''
+$linhas += '[HOSTNAME]'
+$linhas += $hostname
 
 $linhas += ''
 $linhas += '[SETOR]'
