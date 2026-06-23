@@ -230,7 +230,7 @@ function mapInfraStage(infra: InfraStageV2 | undefined, oldInfra?: InfraStageV2)
   if (!infra) return {};
   const { startDate, endDate } = resolveStageDates(infra.status, oldInfra?.status, infra.startDate, infra.endDate);
 
-  return {
+  const result: Record<string, unknown> = {
     infra_status: infra.status,
     infra_responsible: infra.responsible,
     infra_start_date: startDate,
@@ -244,9 +244,21 @@ function mapInfraStage(infra: InfraStageV2 | undefined, oldInfra?: InfraStageV2)
     infra_approved_by_infra: infra.approvedByInfra,
     infra_server_in_use: infra.serverInUse,
     infra_server_needed: infra.serverNeeded,
-    infra_servers: infra.servers || [],
-    infra_workstations: infra.workstations || [],
   };
+
+  if (infra.servers !== undefined) {
+    result.infra_servers = infra.servers;
+  } else if (oldInfra?.servers !== undefined) {
+    result.infra_servers = oldInfra.servers;
+  }
+
+  if (infra.workstations !== undefined) {
+    result.infra_workstations = infra.workstations;
+  } else if (oldInfra?.workstations !== undefined) {
+    result.infra_workstations = oldInfra.workstations;
+  }
+
+  return result;
 }
 
 function mapAdherenceStage(adherence: AdherenceStageV2 | undefined, oldAdherence?: AdherenceStageV2): Record<string, unknown> {
@@ -317,15 +329,27 @@ function mapImplementationStage(implementation: ImplementationStageV2 | undefine
   if (!implementation) return {};
   const { startDate, endDate } = resolveStageDates(implementation.status, oldImplementation?.status, implementation.startDate, implementation.endDate);
 
-  return {
+  const result: Record<string, unknown> = {
     implementation_status: implementation.status,
     implementation_responsible: implementation.responsible,
     implementation_start_date: startDate,
     implementation_end_date: endDate,
     implementation_observations: implementation.observations,
-    implementation_phase1: implementation.phase1,
-    implementation_phase2: implementation.phase2,
   };
+
+  if (implementation.phase1 !== undefined) {
+    result.implementation_phase1 = implementation.phase1;
+  } else if (oldImplementation?.phase1 !== undefined) {
+    result.implementation_phase1 = oldImplementation.phase1;
+  }
+
+  if (implementation.phase2 !== undefined) {
+    result.implementation_phase2 = implementation.phase2;
+  } else if (oldImplementation?.phase2 !== undefined) {
+    result.implementation_phase2 = oldImplementation.phase2;
+  }
+
+  return result;
 }
 
 function mapModelosEditorStage(modelosEditor: ModelosEditorStageV2 | undefined, oldModelosEditor?: ModelosEditorStageV2): Record<string, unknown> {
@@ -342,9 +366,14 @@ function mapModelosEditorStage(modelosEditor: ModelosEditorStageV2 | undefined, 
 
   if (modelosEditor.sentFiles !== undefined) {
     result.modelos_editor_sent_files = modelosEditor.sentFiles;
+  } else if (oldModelosEditor?.sentFiles !== undefined) {
+    result.modelos_editor_sent_files = oldModelosEditor.sentFiles;
   }
+
   if (modelosEditor.availableFiles !== undefined) {
     result.modelos_editor_available_files = modelosEditor.availableFiles;
+  } else if (oldModelosEditor?.availableFiles !== undefined) {
+    result.modelos_editor_available_files = oldModelosEditor.availableFiles;
   }
 
   return result;

@@ -372,6 +372,130 @@ describe("project-transformers", () => {
       expect(result.adherence_start_date).toBeNull(); // was in-progress, but since we didn't specify start date, it defaults to null or keeps previous logic
       expect(result.adherence_end_date).toBeDefined(); // transitioned to done
     });
+
+    it("should preserve workstations, servers, files and phase objects from oldProject if omitted in the updates (partial updates protection)", () => {
+      const currentProject: ProjectV2 = {
+        id: "p1",
+        clientName: "Client A",
+        ticketNumber: "123",
+        systemType: "ERP",
+        implantationType: "new",
+        projectType: "new",
+        healthScore: "ok",
+        globalStatus: "in-progress",
+        overallProgress: 0,
+        projectLeader: "",
+        clientEmail: "",
+        clientPhone: "",
+        tags: [],
+        priority: "normal",
+        createdAt: new Date(),
+        lastUpdatedAt: new Date(),
+        lastUpdatedBy: "",
+        stages: {
+          infra: {
+            status: "in-progress",
+            servers: [{ hostname: "test-server" }],
+            workstations: [{ id: 1, hostname: "test-station" }]
+          },
+          modelosEditor: {
+            status: "in-progress",
+            sentFiles: [{ name: "sent.pdf" }],
+            availableFiles: [{ name: "avail.pdf" }]
+          },
+          implementation: {
+            status: "in-progress",
+            phase1: { status: "done" },
+            phase2: { status: "todo" }
+          }
+        } as any,
+        isDeleted: false,
+        isArchived: false,
+      };
+
+      const project: Partial<ProjectV2> = {
+        stages: {
+          infra: {
+            status: "done"
+          },
+          modelosEditor: {
+            status: "done"
+          },
+          implementation: {
+            status: "done"
+          }
+        } as any,
+      };
+
+      const result = transformToDB(project, currentProject);
+
+      // Verify that the arrays/objects are preserved from currentProject
+      expect(result.infra_servers).toEqual([{ hostname: "test-server" }]);
+      expect(result.infra_workstations).toEqual([{ id: 1, hostname: "test-station" }]);
+      expect(result.modelos_editor_sent_files).toEqual([{ name: "sent.pdf" }]);
+      expect(result.modelos_editor_available_files).toEqual([{ name: "avail.pdf" }]);
+      expect(result.implementation_phase1).toEqual({ status: "done" });
+      expect(result.implementation_phase2).toEqual({ status: "todo" });
+    });
+
+    it("should allow clearing array fields when explicitly provided as empty arrays in updates", () => {
+      const currentProject: ProjectV2 = {
+        id: "p1",
+        clientName: "Client A",
+        ticketNumber: "123",
+        systemType: "ERP",
+        implantationType: "new",
+        projectType: "new",
+        healthScore: "ok",
+        globalStatus: "in-progress",
+        overallProgress: 0,
+        projectLeader: "",
+        clientEmail: "",
+        clientPhone: "",
+        tags: [],
+        priority: "normal",
+        createdAt: new Date(),
+        lastUpdatedAt: new Date(),
+        lastUpdatedBy: "",
+        stages: {
+          infra: {
+            status: "in-progress",
+            servers: [{ hostname: "test-server" }],
+            workstations: [{ id: 1, hostname: "test-station" }]
+          },
+          modelosEditor: {
+            status: "in-progress",
+            sentFiles: [{ name: "sent.pdf" }],
+            availableFiles: [{ name: "avail.pdf" }]
+          }
+        } as any,
+        isDeleted: false,
+        isArchived: false,
+      };
+
+      const project: Partial<ProjectV2> = {
+        stages: {
+          infra: {
+            status: "done",
+            servers: [],
+            workstations: []
+          },
+          modelosEditor: {
+            status: "done",
+            sentFiles: [],
+            availableFiles: []
+          }
+        } as any,
+      };
+
+      const result = transformToDB(project, currentProject);
+
+      // Verify that they are cleared as requested
+      expect(result.infra_servers).toEqual([]);
+      expect(result.infra_workstations).toEqual([]);
+      expect(result.modelos_editor_sent_files).toEqual([]);
+      expect(result.modelos_editor_available_files).toEqual([]);
+    });
   });
 
   describe("transformToProjectV3", () => {
