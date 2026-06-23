@@ -180,6 +180,75 @@ export function InfraStageForm({
   const workstations: WorkstationInfo[] = stage.workstations || [];
   const workstationsCount = stage.workstationsCount || workstations.length || 0;
 
+  // Auto-calculate statuses when workstations, servers, or workstationsCount changes
+  useEffect(() => {
+    if (!canEditProjects) return;
+
+    let updated = false;
+    const updates: Partial<InfraStageV2> = {};
+
+    // 1. Calculate Workstations Status
+    if (workstations.length > 0) {
+      const okCount = workstations.filter(w => {
+        if (w.meetsRequirements === "Sim") return true;
+        if (w.meetsRequirements === "Não") return false;
+        return checkWorkstationRequirements(w).meets;
+      }).length;
+      const failCount = workstations.length - okCount;
+
+      let calculated: StatusType = "Aguardando Adequação";
+      if (okCount === workstations.length) {
+        calculated = "Adequado";
+      } else if (failCount === workstations.length) {
+        calculated = "Inadequado";
+      } else {
+        calculated = "Parcialmente Adequado";
+      }
+
+      // Preserve "Aguardando Adequação" if already set and calculated is not fully adequate
+      if (stage.workstationsStatus === "Aguardando Adequação" && calculated !== "Adequado") {
+        calculated = "Aguardando Adequação";
+      }
+
+      if (stage.workstationsStatus !== calculated) {
+        updates.workstationsStatus = calculated;
+        updated = true;
+      }
+    }
+
+    // 2. Calculate Server Status
+    if (servers.length > 0) {
+      const okCount = servers.filter(srv => {
+        return checkServerRequirements(srv, workstationsCount).meets;
+      }).length;
+      const failCount = servers.length - okCount;
+
+      let calculated: StatusType = "Aguardando Adequação";
+      if (okCount === servers.length) {
+        calculated = "Adequado";
+      } else if (failCount === servers.length) {
+        calculated = "Inadequado";
+      } else {
+        calculated = "Parcialmente Adequado";
+      }
+
+      // Preserve "Aguardando Adequação" if already set and calculated is not fully adequate
+      if (stage.serverStatus === "Aguardando Adequação" && calculated !== "Adequado") {
+        calculated = "Aguardando Adequação";
+      }
+
+      if (stage.serverStatus !== calculated) {
+        updates.serverStatus = calculated;
+        updated = true;
+      }
+    }
+
+    if (updated) {
+      onUpdate(updates);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workstations, servers, workstationsCount]);
+
   // Sync count on change
   const handleWorkstationsChange = (newWorkstations: WorkstationInfo[]) => {
     onUpdate({

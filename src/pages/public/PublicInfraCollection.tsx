@@ -502,6 +502,42 @@ export default function PublicInfraCollection() {
       return;
     }
 
+    // Calculate final status for workstations
+    let calculatedWorkstationsStatus: string | null = null;
+    if (workstations.length > 0) {
+      const okCount = workstations.filter(w => {
+        if (w.meetsRequirements === "Sim") return true;
+        if (w.meetsRequirements === "Não") return false;
+        return checkWorkstationRequirements(w).meets;
+      }).length;
+      const failCount = workstations.length - okCount;
+
+      if (okCount === workstations.length) {
+        calculatedWorkstationsStatus = "Adequado";
+      } else if (failCount === workstations.length) {
+        calculatedWorkstationsStatus = "Inadequado";
+      } else {
+        calculatedWorkstationsStatus = "Parcialmente Adequado";
+      }
+    }
+
+    // Calculate final status for servers
+    let calculatedServerStatus: string | null = null;
+    if (servers.length > 0) {
+      const okCount = servers.filter(srv => {
+        return checkServerRequirements(srv, workstationsCount).meets;
+      }).length;
+      const failCount = servers.length - okCount;
+
+      if (okCount === servers.length) {
+        calculatedServerStatus = "Adequado";
+      } else if (failCount === servers.length) {
+        calculatedServerStatus = "Inadequado";
+      } else {
+        calculatedServerStatus = "Parcialmente Adequado";
+      }
+    }
+
     setIsSubmitting(true);
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -509,7 +545,9 @@ export default function PublicInfraCollection() {
         p_id: id,
         p_workstations: workstations,
         p_servers: servers,
-        p_workstations_count: workstationsCount
+        p_workstations_count: workstationsCount,
+        p_workstations_status: calculatedWorkstationsStatus,
+        p_server_status: calculatedServerStatus
       });
 
       if (error) throw error;
