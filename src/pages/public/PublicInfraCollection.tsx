@@ -855,7 +855,7 @@ export default function PublicInfraCollection() {
               <h2 className="text-sm font-bold uppercase tracking-wider text-slate-800">Servidores para Conferência ({servers.length})</h2>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               {servers.map((srv, idx) => {
                 const validation = checkServerRequirements(srv, workstationsCount);
                 return (
