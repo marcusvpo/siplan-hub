@@ -396,14 +396,18 @@ export default function RoadmapPage() {
                 </span>
               </div>
 
-              {roadmap.welcome_message && (
-                <div className="mt-8 max-w-2xl mx-auto px-6 py-4 rounded-2xl bg-white/[0.02] border border-white/5 backdrop-blur-sm relative overflow-hidden text-left">
-                  <div className="absolute top-0 left-0 w-1 h-full" style={{ backgroundColor: primaryColor }} />
-                  <p className="text-sm md:text-base text-gray-300 leading-relaxed font-light italic pl-2">
-                    "{roadmap.welcome_message}"
-                  </p>
-                </div>
-              )}
+              {(() => {
+                const welcomeMsg = roadmap.welcome_message?.trim() || 
+                  "Seja bem-vindo ao seu portal de acompanhamento de implantação! Acompanhe aqui, em tempo real, cada etapa da modernização e evolução tecnológica da sua serventia.";
+                return (
+                  <div className="mt-8 max-w-2xl mx-auto px-6 py-4 rounded-2xl bg-white/[0.02] border border-white/5 backdrop-blur-sm relative overflow-hidden text-left">
+                    <div className="absolute top-0 left-0 w-1 h-full" style={{ backgroundColor: primaryColor }} />
+                    <p className="text-sm md:text-base text-gray-300 leading-relaxed font-light italic pl-2">
+                      "{welcomeMsg}"
+                    </p>
+                  </div>
+                );
+              })()}
             </motion.div>
 
             {/* Epic Progress Widget - Glassmorphism Redesigned */}
