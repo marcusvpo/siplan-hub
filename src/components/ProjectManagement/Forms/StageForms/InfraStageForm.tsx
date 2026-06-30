@@ -95,6 +95,7 @@ import {
   parseExcelPastedText,
   formatDiskFreeSpace,
   formatNetworkSpeed,
+  getNetworkSpeedShort,
 } from "@/utils/infra-validation";
 
 // -------------------------------------------------------------
@@ -559,11 +560,12 @@ export function InfraStageForm({
         pdf.setTextColor(71, 85, 105);
         pdf.text("Item", margin + 2, posY + 5);
         pdf.text("Hostname", margin + 9, posY + 5);
-        pdf.text("Setor", margin + 32, posY + 5);
-        pdf.text("Usuário", margin + 55, posY + 5);
-        pdf.text("Processador / Geração", margin + 78, posY + 5);
-        pdf.text("RAM", margin + 120, posY + 5);
-        pdf.text("Armazenamento", margin + 135, posY + 5);
+        pdf.text("Setor", margin + 31, posY + 5);
+        pdf.text("Usuário", margin + 53, posY + 5);
+        pdf.text("Processador / Geração", margin + 75, posY + 5);
+        pdf.text("RAM", margin + 107, posY + 5);
+        pdf.text("Armazenamento", margin + 118, posY + 5);
+        pdf.text("Rede", margin + 146, posY + 5);
         pdf.text("Atende?", margin + 168, posY + 5);
 
         posY += 7.5;
@@ -587,23 +589,26 @@ export function InfraStageForm({
           
           const wsSector = ws.sector || "-";
           const wsSectorTrunc = wsSector.length > 15 ? wsSector.substring(0, 15) + "..." : wsSector;
-          pdf.text(wsSectorTrunc, margin + 32, posY + 4.2);
+          pdf.text(wsSectorTrunc, margin + 31, posY + 4.2);
           
           const wsUser = ws.user || "-";
           const wsUserTrunc = wsUser.length > 15 ? wsUser.substring(0, 15) + "..." : wsUser;
-          pdf.text(wsUserTrunc, margin + 55, posY + 4.2);
+          pdf.text(wsUserTrunc, margin + 53, posY + 4.2);
 
           const cpuVal = ws.processor || "-";
           const cpuTrunc = cpuVal.length > 25 ? cpuVal.substring(0, 25) + "..." : cpuVal;
-          pdf.text(cpuTrunc, margin + 78, posY + 4.2);
+          pdf.text(cpuTrunc, margin + 75, posY + 4.2);
           
           const wsMemory = ws.memory || "-";
           const wsMemoryTrunc = wsMemory.length > 10 ? wsMemory.substring(0, 10) + "..." : wsMemory;
-          pdf.text(wsMemoryTrunc, margin + 120, posY + 4.2);
+          pdf.text(wsMemoryTrunc, margin + 107, posY + 4.2);
 
           const diskFormatted = formatDiskFreeSpace(ws.disk || "");
           const diskTrunc = diskFormatted.length > 20 ? diskFormatted.substring(0, 20) + "..." : diskFormatted;
-          pdf.text(diskTrunc, margin + 135, posY + 4.2);
+          pdf.text(diskTrunc, margin + 118, posY + 4.2);
+
+          const wsNetworkSpeed = getNetworkSpeedShort(ws.network || "");
+          pdf.text(wsNetworkSpeed, margin + 146, posY + 4.2);
 
           pdf.setFont("helvetica", "bold");
           if (validation.meets) {
