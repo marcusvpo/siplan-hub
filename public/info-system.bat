@@ -25,9 +25,25 @@ Write-Host "==========================================================" -Foregro
 Write-Host "   COLETOR DE INFORMACOES DE INFRAESTRUTURA - SIPLAN HUB  " -ForegroundColor Cyan
 Write-Host "==========================================================" -ForegroundColor Cyan
 Write-Host ""
-$setor = Read-Host "Digite o Setor desta estacao (ex: Protocolo, Registro, Caixa)"
+$setor = Read-Host "Digite o Setor desta estacao (ex: Servidor, Protocolo, Caixa)"
 if (-not $setor) {
     $setor = "Geral"
+}
+
+$ambiente = "Local"
+$failover = "Nao"
+if ($setor.ToLower().Contains("servidor") -or $hostname.ToLower().Contains("server")) {
+    Write-Host ""
+    Write-Host "--- PERGUNTAS ADICIONAIS PARA SERVIDORES ---" -ForegroundColor Yellow
+    $ambInput = Read-Host "Este servidor e [L]ocal ou esta na [N]uvem? (L/N)"
+    if ($ambInput -eq 'N' -or $ambInput -eq 'n' -or $ambInput.ToLower().StartsWith("nuv")) {
+        $ambiente = "Nuvem"
+    }
+    
+    $failInput = Read-Host "A rede deste servidor possui failover/redundancia de internet? (S/N)"
+    if ($failInput -eq 'S' -or $failInput -eq 's' -or $failInput.ToLower().StartsWith("sim")) {
+        $failover = "Sim"
+    }
 }
 
 # Limpar o setor de caracteres invalidos e espacos para uso no nome do arquivo
@@ -190,6 +206,14 @@ try {
 } catch {
     $linhas += "N/A"
 }
+
+$linhas += ''
+$linhas += '[AMBIENTE]'
+$linhas += $ambiente
+
+$linhas += ''
+$linhas += '[REDE FAILOVER]'
+$linhas += $failover
 
 $linhas += ''
 $linhas += '=============================================================='

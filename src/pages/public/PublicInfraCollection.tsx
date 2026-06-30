@@ -295,7 +295,9 @@ export default function PublicInfraCollection() {
           brandModel: parsed.brandModel || "",
           antivirus: parsed.antivirus || "",
           backup: parsed.backup || "",
-          spaceOrion: parsed.spaceOrion || ""
+          spaceOrion: parsed.spaceOrion || "",
+          environment: parsed.environment || "Local",
+          networkFailover: parsed.networkFailover || "Não"
         });
       } else {
         newServers[0] = {
@@ -311,7 +313,9 @@ export default function PublicInfraCollection() {
           brandModel: parsed.brandModel || newServers[0].brandModel || "",
           antivirus: parsed.antivirus || newServers[0].antivirus || "",
           backup: parsed.backup || newServers[0].backup || "",
-          spaceOrion: parsed.spaceOrion || newServers[0].spaceOrion || ""
+          spaceOrion: parsed.spaceOrion || newServers[0].spaceOrion || "",
+          environment: parsed.environment || newServers[0].environment || "Local",
+          networkFailover: parsed.networkFailover || newServers[0].networkFailover || "Não"
         };
       }
 
@@ -964,6 +968,44 @@ export default function PublicInfraCollection() {
                           placeholder="Ex: Nuvem + HD Externo"
                           className="h-8 text-xs bg-white border-slate-200 text-slate-900"
                         />
+                      </div>
+                      <div className="space-y-1 col-span-1 sm:col-span-1 md:col-span-6">
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Ambiente (Servidor)</span>
+                        <Select
+                          value={srv.environment || "Local"}
+                          onValueChange={v => {
+                            const list = [...servers];
+                            list[idx].environment = v;
+                            handleServersChange(list);
+                          }}
+                        >
+                          <SelectTrigger className="h-8 text-xs bg-white border-slate-200 text-slate-900">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white text-slate-900">
+                            <SelectItem value="Local">Local</SelectItem>
+                            <SelectItem value="Nuvem">Nuvem</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1 col-span-1 sm:col-span-1 md:col-span-6">
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Rede Failover?</span>
+                        <Select
+                          value={srv.networkFailover || "Não"}
+                          onValueChange={v => {
+                            const list = [...servers];
+                            list[idx].networkFailover = v;
+                            handleServersChange(list);
+                          }}
+                        >
+                          <SelectTrigger className="h-8 text-xs bg-white border-slate-200 text-slate-900">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white text-slate-900">
+                            <SelectItem value="Sim">Sim</SelectItem>
+                            <SelectItem value="Não">Não</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div className="space-y-1 col-span-1 sm:col-span-2 md:col-span-12">
                         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Observações</span>

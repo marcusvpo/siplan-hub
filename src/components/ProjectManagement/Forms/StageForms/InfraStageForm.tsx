@@ -322,7 +322,7 @@ export function InfraStageForm({
       } else {
         servers.forEach((srv, idx) => {
           const validation = checkServerRequirements(srv, workstationsCount);
-          checkAddPage(85);
+          checkAddPage(96);
 
           // Inline spec validations for red text highlights
           let coresVal: number | null = null;
@@ -364,10 +364,10 @@ export function InfraStageForm({
             }
           }
 
-          // Card Background (height increased to 81)
+          // Card Background (height increased to 92)
           pdf.setFillColor(255, 255, 255);
           pdf.setDrawColor(226, 232, 240);
-          pdf.roundedRect(margin, posY, pageWidth - 2 * margin, 81, 1, 1, "FD");
+          pdf.roundedRect(margin, posY, pageWidth - 2 * margin, 92, 1, 1, "FD");
 
           // Card Header Bar
           pdf.setFillColor(248, 250, 252);
@@ -497,17 +497,33 @@ export function InfraStageForm({
           const backupTrunc = srv.backup && srv.backup.length > 70 ? srv.backup.substring(0, 70) + "..." : (srv.backup || "-");
           pdf.text(backupTrunc, valX, posY + 68);
 
-          // Row 12: Observações
+          // Row 12: Ambiente
           pdf.setFont("helvetica", "normal");
           pdf.setTextColor(100, 116, 139);
-          pdf.text("Observações:", labelX, posY + 73.5);
+          pdf.text("Ambiente:", labelX, posY + 73.5);
+          pdf.setFont("helvetica", "bold");
+          pdf.setTextColor(15, 23, 42);
+          pdf.text(srv.environment || "Local", valX, posY + 73.5);
+
+          // Row 13: Rede Failover
+          pdf.setFont("helvetica", "normal");
+          pdf.setTextColor(100, 116, 139);
+          pdf.text("Rede Failover:", labelX, posY + 79);
+          pdf.setFont("helvetica", "bold");
+          pdf.setTextColor(15, 23, 42);
+          pdf.text(srv.networkFailover || "Não", valX, posY + 79);
+
+          // Row 14: Observações
+          pdf.setFont("helvetica", "normal");
+          pdf.setTextColor(100, 116, 139);
+          pdf.text("Observações:", labelX, posY + 84.5);
           pdf.setFont("helvetica", "normal");
           pdf.setTextColor(71, 85, 105);
           const obsVal = srv.observations || "Nenhuma observação cadastrada.";
           const obsTrunc = obsVal.length > 85 ? obsVal.substring(0, 85) + "..." : obsVal;
-          pdf.text(obsTrunc, valX, posY + 73.5);
+          pdf.text(obsTrunc, valX, posY + 84.5);
 
-          posY += 85;
+          posY += 96;
 
           if (validation.issues.length > 0) {
             checkAddPage(validation.issues.length * 4.5 + 8);
@@ -934,7 +950,9 @@ export function InfraStageForm({
           brandModel: parsed.brandModel || "",
           antivirus: parsed.antivirus || "",
           backup: parsed.backup || "",
-          spaceOrion: parsed.spaceOrion || ""
+          spaceOrion: parsed.spaceOrion || "",
+          environment: parsed.environment || "Local",
+          networkFailover: parsed.networkFailover || "Não"
         });
       } else {
         newServers[0] = {
@@ -950,7 +968,9 @@ export function InfraStageForm({
           brandModel: parsed.brandModel || newServers[0].brandModel || "",
           antivirus: parsed.antivirus || newServers[0].antivirus || "",
           backup: parsed.backup || newServers[0].backup || "",
-          spaceOrion: parsed.spaceOrion || newServers[0].spaceOrion || ""
+          spaceOrion: parsed.spaceOrion || newServers[0].spaceOrion || "",
+          environment: parsed.environment || newServers[0].environment || "Local",
+          networkFailover: parsed.networkFailover || newServers[0].networkFailover || "Não"
         };
       }
 
@@ -1791,6 +1811,46 @@ export function InfraStageForm({
                               disabled={!canEditProjects}
                               className="h-8 text-xs border-slate-200 dark:border-slate-800/60"
                             />
+                          </div>
+                          <div className="space-y-0.5 col-span-1 sm:col-span-1 md:col-span-6">
+                            <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Ambiente (Servidor)</Label>
+                            <Select
+                              value={srv.environment || "Local"}
+                              onValueChange={v => {
+                                const list = [...servers];
+                                list[idx].environment = v;
+                                handleServersChange(list);
+                              }}
+                              disabled={!canEditProjects}
+                            >
+                              <SelectTrigger className="h-8 text-xs border-slate-200 dark:border-slate-800/60">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+                                <SelectItem value="Local">Local</SelectItem>
+                                <SelectItem value="Nuvem">Nuvem</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-0.5 col-span-1 sm:col-span-1 md:col-span-6">
+                            <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Rede Failover?</Label>
+                            <Select
+                              value={srv.networkFailover || "Não"}
+                              onValueChange={v => {
+                                const list = [...servers];
+                                list[idx].networkFailover = v;
+                                handleServersChange(list);
+                              }}
+                              disabled={!canEditProjects}
+                            >
+                              <SelectTrigger className="h-8 text-xs border-slate-200 dark:border-slate-800/60">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+                                <SelectItem value="Sim">Sim</SelectItem>
+                                <SelectItem value="Não">Não</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </div>
                           <div className="space-y-0.5 col-span-1 sm:col-span-2 md:col-span-12">
                             <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Observações</Label>

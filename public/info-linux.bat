@@ -43,6 +43,20 @@ if (-not $sshUser) {
 }
 
 Write-Host ""
+Write-Host "--- PERGUNTAS ADICIONAIS PARA O SERVIDOR LINUX ---" -ForegroundColor Yellow
+$ambiente = "Local"
+$failover = "Nao"
+$ambInput = Read-Host "Este servidor Linux e [L]ocal ou esta na [N]uvem? (L/N)"
+if ($ambInput -eq 'N' -or $ambInput -eq 'n' -or $ambInput.ToLower().StartsWith("nuv")) {
+    $ambiente = "Nuvem"
+}
+
+$failInput = Read-Host "A rede deste servidor Linux possui failover/redundancia de internet? (S/N)"
+if ($failInput -eq 'S' -or $failInput -eq 's' -or $failInput.ToLower().StartsWith("sim")) {
+    $failover = "Sim"
+}
+
+Write-Host ""
 Write-Host "Conectando ao servidor Linux... Digite a senha do servidor se solicitado." -ForegroundColor Yellow
 Write-Host ""
 
@@ -116,6 +130,14 @@ foreach ($linha in $saida) {
         $linhas += $linha
     }
 }
+
+# Append the server-only questions locally
+$linhas += ""
+$linhas += "[AMBIENTE]"
+$linhas += $ambiente
+$linhas += ""
+$linhas += "[REDE FAILOVER]"
+$linhas += $failover
 
 if ($linhas.Count -le 2) {
     Write-Host "Erro: Nenhuma informacao foi coletada do servidor. Verifique a conexao e credenciais." -ForegroundColor Red
