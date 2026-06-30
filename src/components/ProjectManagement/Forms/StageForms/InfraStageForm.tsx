@@ -695,7 +695,7 @@ export function InfraStageForm({
       pdf.text("Notas e Parecer de Viabilidade da Siplan:", margin, posY);
       posY += 5.5;
 
-      const techNotes = stage.observations || "Nenhum parecer técnico ou notas registradas.";
+      const techNotes = stage.technicalNotes || "Nenhum parecer técnico ou notas registradas.";
       pdf.setFont("helvetica", "normal");
       pdf.setFontSize(8.5);
       pdf.setTextColor(71, 85, 105);
