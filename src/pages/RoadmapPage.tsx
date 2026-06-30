@@ -41,6 +41,8 @@ import {
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 // --- Types ---
 interface StageData {
@@ -152,6 +154,7 @@ export default function RoadmapPage() {
   const [error, setError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
 
   useEffect(() => {
     async function fetchData() {
@@ -183,7 +186,13 @@ export default function RoadmapPage() {
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-    const onScroll = () => setShowScrollTop(el.scrollTop > 400);
+    const onScroll = () => {
+      setShowScrollTop(el.scrollTop > 400);
+      const totalScroll = el.scrollHeight - el.clientHeight;
+      if (totalScroll > 0) {
+        setScrollProgress((el.scrollTop / totalScroll) * 100);
+      }
+    };
     el.addEventListener("scroll", onScroll);
     return () => el.removeEventListener("scroll", onScroll);
   }, [loading]); // re-run when loading resolves so containerRef.current is populated
@@ -293,6 +302,16 @@ export default function RoadmapPage() {
 
   return (
     <div ref={containerRef} className="roadmap-page h-screen overflow-y-auto overflow-x-hidden bg-[#000000] text-gray-100 selection:bg-white/20 font-sans">
+      {/* Reading Progress Bar */}
+      <div
+        className="fixed top-0 left-0 h-[3px] z-[100] transition-all duration-100"
+        style={{
+          width: `${scrollProgress}%`,
+          backgroundColor: primaryColor,
+          boxShadow: `0 0 10px ${primaryColor}, 0 0 5px ${primaryColor}`,
+        }}
+      />
+
       {/* Dynamic Background with Animation - Enhanced */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         {/* Deep Space Background */}
@@ -372,10 +391,19 @@ export default function RoadmapPage() {
               </h1>
 
               <div className="flex flex-col md:flex-row items-center justify-center gap-4 text-lg md:text-xl text-gray-400 font-light">
-                <span className="bg-gradient-to-r from-gray-200 to-gray-500 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-gray-200 to-gray-500 bg-clip-text text-transparent font-medium">
                   Sistema {project.system_type}
                 </span>
               </div>
+
+              {roadmap.welcome_message && (
+                <div className="mt-8 max-w-2xl mx-auto px-6 py-4 rounded-2xl bg-white/[0.02] border border-white/5 backdrop-blur-sm relative overflow-hidden text-left">
+                  <div className="absolute top-0 left-0 w-1 h-full" style={{ backgroundColor: primaryColor }} />
+                  <p className="text-sm md:text-base text-gray-300 leading-relaxed font-light italic pl-2">
+                    "{roadmap.welcome_message}"
+                  </p>
+                </div>
+              )}
             </motion.div>
 
             {/* Epic Progress Widget - Glassmorphism Redesigned */}
@@ -457,26 +485,59 @@ export default function RoadmapPage() {
                     </p>
                   </div>
 
-                  <div className="inline-flex items-center gap-4 px-5 py-3 rounded-xl bg-white/5 border border-white/5 shadow-inner">
-                    <div className="relative">
-                      <div
-                        className="w-3 h-3 rounded-full animate-ping absolute inset-0 opacity-75"
-                        style={{ backgroundColor: primaryColor }}
-                      />
-                      <div
-                        className="w-3 h-3 rounded-full relative z-10"
-                        style={{ backgroundColor: primaryColor }}
-                      />
+                  <div className="flex flex-wrap gap-4 mt-4">
+                    {/* Fase Atual */}
+                    <div className="inline-flex items-center gap-4 px-4 py-2.5 rounded-xl bg-white/5 border border-white/5 shadow-inner">
+                      <div className="relative">
+                        <div
+                          className="w-3 h-3 rounded-full animate-ping absolute inset-0 opacity-75"
+                          style={{ backgroundColor: primaryColor }}
+                        />
+                        <div
+                          className="w-3 h-3 rounded-full relative z-10"
+                          style={{ backgroundColor: primaryColor }}
+                        />
+                      </div>
+
+                      <div className="flex flex-col text-left">
+                        <span className="text-[10px] uppercase tracking-widest text-gray-500 font-semibold">
+                          Fase Atual
+                        </span>
+                        <span className="text-xs md:text-sm font-medium text-white shadow-black drop-shadow-sm">
+                          {currentPhaseLabel}
+                        </span>
+                      </div>
                     </div>
 
-                    <div className="flex flex-col">
-                      <span className="text-[10px] uppercase tracking-widest text-gray-500 font-semibold">
-                        Fase Atual
-                      </span>
-                      <span className="text-sm md:text-base font-medium text-white shadow-black drop-shadow-sm">
-                        {currentPhaseLabel}
-                      </span>
-                    </div>
+                    {/* Horas Contratadas */}
+                    {project.sold_hours > 0 && (
+                      <div className="inline-flex items-center gap-3 px-4 py-2.5 rounded-xl bg-white/5 border border-white/5 shadow-inner">
+                        <Clock className="w-4 h-4 text-gray-400" />
+                        <div className="flex flex-col text-left">
+                          <span className="text-[10px] uppercase tracking-widest text-gray-500 font-semibold">
+                            Horas Contratadas
+                          </span>
+                          <span className="text-xs md:text-sm font-medium text-white">
+                            {project.sold_hours}h
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Última Atualização */}
+                    {project.last_update && (
+                      <div className="inline-flex items-center gap-3 px-4 py-2.5 rounded-xl bg-white/5 border border-white/5 shadow-inner">
+                        <CalendarDays className="w-4 h-4 text-gray-400" />
+                        <div className="flex flex-col text-left">
+                          <span className="text-[10px] uppercase tracking-widest text-gray-500 font-semibold">
+                            Última Atualização
+                          </span>
+                          <span className="text-xs md:text-sm font-medium text-white">
+                            {format(new Date(project.last_update), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
