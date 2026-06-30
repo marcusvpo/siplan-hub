@@ -803,8 +803,8 @@ export default function PublicInfraCollection() {
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </CardHeader>
-                    <CardContent className="p-5 grid grid-cols-1 md:grid-cols-4 gap-4">
-                      <div className="space-y-1">
+                    <CardContent className="p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-3">
+                      <div className="space-y-1 col-span-1 sm:col-span-1 md:col-span-3">
                         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Hostname</span>
                         <Input 
                           value={srv.hostname || ""} 
@@ -816,7 +816,7 @@ export default function PublicInfraCollection() {
                           className="h-8 text-xs bg-white border-slate-200 text-slate-900"
                         />
                       </div>
-                      <div className="space-y-1">
+                      <div className="space-y-1 col-span-1 sm:col-span-1 md:col-span-3">
                         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Marca/Modelo</span>
                         <Input 
                           value={srv.brandModel || ""} 
@@ -829,7 +829,7 @@ export default function PublicInfraCollection() {
                           className="h-8 text-xs bg-white border-slate-200 text-slate-900"
                         />
                       </div>
-                      <div className="space-y-1">
+                      <div className="space-y-1 col-span-1 sm:col-span-1 md:col-span-2">
                         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Virtualizado?</span>
                         <Select
                           value={srv.virtualized === true || srv.virtualized === "Sim" ? "Sim" : "Não"}
@@ -848,7 +848,7 @@ export default function PublicInfraCollection() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="space-y-1">
+                      <div className="space-y-1 col-span-1 sm:col-span-1 md:col-span-4">
                         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Processador</span>
                         <Input 
                           value={srv.processor || ""} 
@@ -861,7 +861,7 @@ export default function PublicInfraCollection() {
                           className="h-8 text-xs bg-white border-slate-200 text-slate-900"
                         />
                       </div>
-                      <div className="space-y-1">
+                      <div className="space-y-1 col-span-1 sm:col-span-1 md:col-span-2">
                         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Núcleos</span>
                         <Input 
                           value={srv.cores || ""} 
@@ -874,7 +874,7 @@ export default function PublicInfraCollection() {
                           className="h-8 text-xs bg-white border-slate-200 text-slate-900"
                         />
                       </div>
-                      <div className="space-y-1">
+                      <div className="space-y-1 col-span-1 sm:col-span-1 md:col-span-2">
                         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Memória RAM</span>
                         <Input 
                           value={srv.memory || ""} 
@@ -887,7 +887,7 @@ export default function PublicInfraCollection() {
                           className="h-8 text-xs bg-white border-slate-200 text-slate-900"
                         />
                       </div>
-                      <div className="space-y-1">
+                      <div className="space-y-1 col-span-1 sm:col-span-1 md:col-span-3">
                         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Disco (Armazenamento)</span>
                         <Input 
                           value={srv.disk || ""} 
@@ -900,7 +900,7 @@ export default function PublicInfraCollection() {
                           className="h-8 text-xs bg-white border-slate-200 text-slate-900"
                         />
                       </div>
-                      <div className="space-y-1">
+                      <div className="space-y-1 col-span-1 sm:col-span-1 md:col-span-2">
                         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Espaço para o Orion</span>
                         <Input 
                           value={srv.spaceOrion || ""} 
@@ -913,7 +913,7 @@ export default function PublicInfraCollection() {
                           className="h-8 text-xs bg-white border-slate-200 text-slate-900"
                         />
                       </div>
-                      <div className="space-y-1">
+                      <div className="space-y-1 col-span-1 sm:col-span-2 md:col-span-3">
                         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Sistema Operacional</span>
                         <Input 
                           value={srv.os || ""} 
@@ -926,7 +926,7 @@ export default function PublicInfraCollection() {
                           className="h-8 text-xs bg-white border-slate-200 text-slate-900"
                         />
                       </div>
-                      <div className="space-y-1">
+                      <div className="space-y-1 col-span-1 sm:col-span-1 md:col-span-4">
                         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Anti-Vírus</span>
                         <Input 
                           value={srv.antivirus || ""} 
@@ -939,7 +939,7 @@ export default function PublicInfraCollection() {
                           className="h-8 text-xs bg-white border-slate-200 text-slate-900"
                         />
                       </div>
-                      <div className="space-y-1">
+                      <div className="space-y-1 col-span-1 sm:col-span-1 md:col-span-4">
                         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Rede</span>
                         <Input 
                           value={srv.network || ""} 
@@ -952,7 +952,7 @@ export default function PublicInfraCollection() {
                           className="h-8 text-xs bg-white border-slate-200 text-slate-900"
                         />
                       </div>
-                      <div className="space-y-1">
+                      <div className="space-y-1 col-span-1 sm:col-span-2 md:col-span-4">
                         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Backup</span>
                         <Input 
                           value={srv.backup || ""} 
@@ -965,7 +965,7 @@ export default function PublicInfraCollection() {
                           className="h-8 text-xs bg-white border-slate-200 text-slate-900"
                         />
                       </div>
-                      <div className="space-y-1 md:col-span-4">
+                      <div className="space-y-1 col-span-1 sm:col-span-2 md:col-span-12">
                         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Observações</span>
                         <Input 
                           value={srv.observations || ""} 
