@@ -55,15 +55,16 @@ export function ConversionStageForm({
 
   return (
     <>
-      <div className="col-span-full mb-4">
+      <div className="col-span-full mb-2.5">
         <div className="flex items-center gap-2">
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button
                 variant={isInConversionQueue ? "outline" : "default"}
+                size="sm"
                 disabled={sendingToConversion || isInConversionQueue || !canEditProjects}
                 className={cn(
-                  "w-full md:w-auto font-bold shadow-sm h-9 text-xs",
+                  "w-full md:w-auto font-bold shadow-sm h-8 text-xs",
                   isInConversionQueue
                     ? "border-primary/30 text-primary hover:bg-primary/5"
                     : "bg-primary hover:bg-primary/90 text-primary-foreground",
@@ -71,7 +72,7 @@ export function ConversionStageForm({
               >
                 {isInConversionQueue ? (
                   <>
-                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                    <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
                     Na Fila de Conversão
                     <a
                       href="/conversion"
@@ -83,7 +84,7 @@ export function ConversionStageForm({
                   </>
                 ) : (
                   <>
-                    <Send className="mr-2 h-4 w-4" />
+                    <Send className="mr-1.5 h-3.5 w-3.5" />
                     {sendingToConversion
                       ? "Enviando..."
                       : "Enviar para Conversão"}
@@ -109,7 +110,7 @@ export function ConversionStageForm({
                         value={selectedPriority.toString()}
                         onValueChange={(val) => setSelectedPriority(Number(val))}
                       >
-                        <SelectTrigger className="w-full h-9 border text-xs">
+                        <SelectTrigger className="w-full h-8 border text-xs">
                           <SelectValue placeholder="Selecione a prioridade..." />
                         </SelectTrigger>
                         <SelectContent>
@@ -134,8 +135,8 @@ export function ConversionStageForm({
           {isInConversionQueue && conversionItem && (
             <Button
               variant="outline"
-              size="icon"
-              className="h-9 w-9 border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors"
+              size="sm"
+              className="h-8 w-8 p-0 border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors"
               title="Remover da fila de conversão"
               onClick={async (e) => {
                 e.stopPropagation();
@@ -159,7 +160,7 @@ export function ConversionStageForm({
                 }
               }}
             >
-              <X className="h-4 w-4" />
+              <X className="h-3.5 w-3.5" />
             </Button>
           )}
         </div>
