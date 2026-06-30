@@ -20,20 +20,38 @@ $linhas += '=================== INFORMACOES DA MAQUINA ==================='
 
 $hostname = (hostname).Trim()
 
-# Perguntar o setor ao usuario/tecnico
 Write-Host "==========================================================" -ForegroundColor Cyan
 Write-Host "   COLETOR DE INFORMACOES DE INFRAESTRUTURA - SIPLAN HUB  " -ForegroundColor Cyan
 Write-Host "==========================================================" -ForegroundColor Cyan
 Write-Host ""
-$setor = Read-Host "Digite o Setor desta estacao (ex: Servidor, Protocolo, Caixa)"
-if (-not $setor) {
-    $setor = "Geral"
+
+# Detectar se o sistema operacional e Windows Server
+$isServerOS = $false
+try {
+    $osInfo = Get-CimInstance Win32_OperatingSystem -ErrorAction SilentlyContinue
+    if (-not $osInfo) {
+        $osInfo = Get-WmiObject Win32_OperatingSystem -ErrorAction SilentlyContinue
+    }
+    if ($osInfo -and ($osInfo.ProductType -eq 2 -or $osInfo.ProductType -eq 3)) {
+        $isServerOS = $true
+    }
+} catch {
+    $caption = (Get-CimInstance Win32_OperatingSystem -ErrorAction SilentlyContinue).Caption
+    if (-not $caption) {
+        $caption = (Get-WmiObject Win32_OperatingSystem -ErrorAction SilentlyContinue).Caption
+    }
+    if ($caption -and $caption -like "*Server*") {
+        $isServerOS = $true
+    }
 }
 
 $ambiente = "Local"
 $failover = "Nao"
-if ($setor.ToLower().Contains("servidor") -or $hostname.ToLower().Contains("server")) {
+
+if ($isServerOS) {
+    $setor = "Servidor"
     Write-Host ""
+    Write-Host "--- DETECTADO SISTEMA OPERACIONAL WINDOWS SERVER ---" -ForegroundColor Green
     Write-Host "--- PERGUNTAS ADICIONAIS PARA SERVIDORES ---" -ForegroundColor Yellow
     $ambInput = Read-Host "Este servidor e [L]ocal ou esta na [N]uvem? (L/N)"
     if ($ambInput -eq 'N' -or $ambInput -eq 'n' -or $ambInput.ToLower().StartsWith("nuv")) {
@@ -43,6 +61,11 @@ if ($setor.ToLower().Contains("servidor") -or $hostname.ToLower().Contains("serv
     $failInput = Read-Host "A rede deste servidor possui failover/redundancia de internet? (S/N)"
     if ($failInput -eq 'S' -or $failInput -eq 's' -or $failInput.ToLower().StartsWith("sim")) {
         $failover = "Sim"
+    }
+} else {
+    $setor = Read-Host "Digite o Setor desta estacao (ex: Protocolo, Registro, Caixa)"
+    if (-not $setor) {
+        $setor = "Geral"
     }
 }
 
