@@ -304,3 +304,167 @@ export const parseExcelPastedText = (text: string): WorkstationInfo[] => {
 
   return stations;
 };
+
+export const formatDiskFreeSpace = (diskStr: string): string => {
+  if (!diskStr) return "-";
+  
+  // If the diskStr has '|', split and process each partition
+  if (diskStr.includes("|")) {
+    const parts = diskStr.split("|").map(p => p.trim());
+    const formattedParts: string[] = [];
+
+    for (const part of parts) {
+      if (!part) continue;
+
+      let mount = "";
+      let free = "";
+
+      // Match patterns like "C: Total: 238 GB Livre: 150 GB" or "/ Total: 53G Livre: 35G"
+      const pattern1 = part.match(/^([^:]+):?\s*Total:.*?(?:Livre|Free):\s*([\d.,]+\s*[A-Z]*B?)/i);
+      const pattern2 = part.match(/^([^:]+):?\s*(?:Livre|Free):\s*([\d.,]+\s*[A-Z]*B?)/i);
+      
+      if (pattern1) {
+        mount = pattern1[1].trim();
+        free = pattern1[2].trim();
+      } else if (pattern2) {
+        mount = pattern2[1].trim();
+        free = pattern2[2].trim();
+      } else {
+        // Fallback: search for any "Livre: X" in this part
+        const searchFree = part.match(/(?:Livre|Free):\s*([\d.,]+\s*[A-Z]*B?)/i);
+        if (searchFree) {
+          free = searchFree[1].trim();
+          const mountMatch = part.match(/^([^:\s]+:?)/);
+          if (mountMatch) {
+            mount = mountMatch[1].replace(":", "").trim();
+          }
+        }
+      }
+
+      if (!free) {
+        const totalMatch = part.match(/Total:\s*([\d.,]+\s*[A-Z]*B?)/i);
+        if (totalMatch) {
+          free = totalMatch[1].trim();
+        } else if (part.length < 20) {
+          free = part;
+        }
+      }
+
+      if (free) {
+        // Skip Linux system filesystems (e.g. /sys/, loop, etc.)
+        if (mount) {
+          const mLower = mount.toLowerCase();
+          if (
+            mLower.includes("/sys/") || 
+            mLower.includes("loop") || 
+            mLower.includes("tmpfs") || 
+            mLower.includes("devtmpfs") || 
+            mLower.includes("overlay") || 
+            mLower.includes("udev") || 
+            mLower.includes("shm") || 
+            mLower.includes("/run") ||
+            mLower.includes("efivars")
+          ) {
+            continue;
+          }
+        }
+
+        // Skip tiny KB/MB partitions unless they are the only ones
+        const freeLower = free.toLowerCase();
+        if (freeLower.endsWith("k") || freeLower.endsWith("kb") || freeLower.endsWith("m") || freeLower.endsWith("mb")) {
+          continue;
+        }
+
+        const formattedLabel = mount ? `${mount}: ${free} livre` : `${free} livre`;
+        formattedParts.push(formattedLabel);
+      }
+    }
+
+    if (formattedParts.length > 0) {
+      return formattedParts.join(", ");
+    }
+    
+    // Fallback: if all were filtered out, just format the first part
+    const firstPart = parts[0];
+    const freeMatch = firstPart.match(/(?:Livre|Free):\s*([\d.,]+\s*[A-Z]*B?)/i);
+    const mountMatch = firstPart.match(/^([^:\s]+:?)/);
+    const mount = mountMatch ? mountMatch[1].trim() : "";
+    const free = freeMatch ? freeMatch[1].trim() : firstPart;
+    return mount ? `${mount} ${free} livre` : `${free} livre`;
+  }
+
+  // If there's no '|', process it as a single string
+  const freeMatch = diskStr.match(/(?:Livre|Free):\s*([\d.,]+\s*[A-Z]*B?)/i);
+  if (freeMatch) {
+    const space = freeMatch[1].trim();
+    return `${space} livre`;
+  }
+
+  const rawSizeMatch = diskStr.match(/^([\d.,]+\s*[A-Z]*B?)$/i);
+  if (rawSizeMatch) {
+    return `${rawSizeMatch[1].trim()} livre`;
+  }
+
+  const totalMatch = diskStr.match(/Total:\s*([\d.,]+\s*[A-Z]*B?)/i);
+  if (totalMatch) {
+    return `${totalMatch[1].trim()}`;
+  }
+
+  return diskStr.length > 25 ? diskStr.substring(0, 22) + "..." : diskStr;
+};
+
+export const formatNetworkSpeed = (netStr: string): string => {
+  if (!netStr) return "-";
+  
+  // Clean up virtual/local/docker interfaces to avoid extremely long lines
+  const parts = netStr.split(/[\s,|]+/).map(p => p.trim()).filter(Boolean);
+  
+  // Filter out loopback, docker, virtual interfaces, veth container links, etc.
+  let filteredParts = parts.filter(p => {
+    const lower = p.toLowerCase();
+    return !(
+      lower === "lo" ||
+      lower.includes("docker") ||
+      lower.includes("veth") ||
+      lower.includes("br-") ||
+      lower.includes("virbr") ||
+      lower.includes("vbox") ||
+      lower.includes("tap") ||
+      lower.includes("dummy") ||
+      lower.includes("loopback") ||
+      lower.includes("npcap")
+    );
+  });
+
+  // If we filtered out everything, fallback to the original parts
+  if (filteredParts.length === 0) {
+    filteredParts = parts;
+  }
+
+  // Join back the cleaned list
+  const cleanedNetStr = filteredParts.join(" ");
+  const lower = cleanedNetStr.toLowerCase();
+  
+  // 1. Detect explicit speeds
+  if (lower.includes("10000 mbps") || lower.includes("10 gbps") || lower.includes("10gbps")) {
+    return `10 Gbps - ${cleanedNetStr}`;
+  }
+  if (lower.includes("1000 mbps") || lower.includes("1000mbps") || lower.includes("1 gbps") || lower.includes("1gbps") || lower.includes("gigabit") || lower.includes("gbe")) {
+    return `1000 Mbps - ${cleanedNetStr}`;
+  }
+  if (lower.includes("100 mbps") || lower.includes("100mbps") || lower.includes("fast ethernet")) {
+    return `100 Mbps - ${cleanedNetStr}`;
+  }
+  if (lower.includes("10 mbps") || lower.includes("10mbps")) {
+    return `10 Mbps - ${cleanedNetStr}`;
+  }
+
+  // 2. Guess based on common adapter names/interfaces if no speed is explicitly written
+  // If it's a physical Ethernet port on a modern server (like eno1, eth0, enp3s0)
+  if (lower.includes("eno") || lower.includes("eth") || lower.includes("enp") || lower.includes("intel") || lower.includes("realtek")) {
+    return `1000 Mbps (Gigabit) - ${cleanedNetStr}`;
+  }
+  
+  return cleanedNetStr;
+};
+

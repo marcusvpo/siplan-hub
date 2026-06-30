@@ -73,6 +73,8 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useState, useRef, useEffect } from "react";
 import { StatusType } from "./types";
+import { jsPDF } from "jspdf";
+import { format } from "date-fns";
 
 interface InfraStageFormProps {
   stage: InfraStageV2;
@@ -81,6 +83,8 @@ interface InfraStageFormProps {
   onUpdate: (updates: Partial<InfraStageV2>) => void;
   onNotifyComercial: () => void;
   projectId?: string;
+  lastUpdatedBy?: string;
+  clientName?: string;
 }
 
 import {
@@ -89,6 +93,8 @@ import {
   checkServerRequirements,
   parseMachineInfo,
   parseExcelPastedText,
+  formatDiskFreeSpace,
+  formatNetworkSpeed,
 } from "@/utils/infra-validation";
 
 // -------------------------------------------------------------
@@ -169,6 +175,7 @@ export function InfraStageForm({
   onNotifyComercial,
   projectId,
   lastUpdatedBy,
+  clientName,
 }: InfraStageFormProps) {
   const { toast } = useToast();
   const [activeSubTab, setActiveSubTab] = useState<string>("geral");
@@ -182,6 +189,521 @@ export function InfraStageForm({
   const servers: ServerInfo[] = stage.servers || [];
   const workstations: WorkstationInfo[] = stage.workstations || [];
   const workstationsCount = stage.workstationsCount || workstations.length || 0;
+
+  const handleGenerateAnalyticalReport = () => {
+    try {
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 15;
+      let posY = 20;
+
+      const drawHeader = () => {
+        pdf.setFillColor(141, 12, 45); // Dark Burgundy top bar
+        pdf.rect(0, 0, pageWidth, 4, "F");
+
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(8);
+        pdf.setTextColor(100, 116, 139);
+        pdf.text("SIPLAN HUB - ECOSSISTEMA DE GESTÃO", margin, 11);
+
+        pdf.setFont("helvetica", "normal");
+        pdf.text(`Gerado em: ${format(new Date(), "dd/MM/yyyy HH:mm")}`, pageWidth - margin - 45, 11);
+
+        pdf.setDrawColor(226, 232, 240);
+        pdf.line(margin, 13, pageWidth - margin, 13);
+      };
+
+      const drawFooter = (pageNum: number, totalPages: number) => {
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(7.5);
+        pdf.setTextColor(148, 163, 184);
+        pdf.text("Siplan HUB © 2026 - Auditoria e Implantação de Infraestrutura", margin, pageHeight - 10);
+
+        const pageText = `Página ${pageNum} de ${totalPages}`;
+        const textWidth = pdf.getTextWidth(pageText);
+        pdf.text(pageText, pageWidth - margin - textWidth, pageHeight - 10);
+      };
+
+      const checkAddPage = (neededHeight: number) => {
+        if (posY + neededHeight > pageHeight - margin - 15) {
+          pdf.addPage();
+          posY = 25;
+          return true;
+        }
+        return false;
+      };
+
+      // Document Content
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(15);
+      pdf.setTextColor(15, 23, 42);
+      pdf.text("RELATÓRIO DE INFRAESTRUTURA TÉCNICA", margin, posY);
+      posY += 6;
+
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(9.5);
+      pdf.setTextColor(71, 85, 105);
+      pdf.text(`Serventia/Cartório: ${clientName || "Não identificada"}`, margin, posY);
+      posY += 5;
+
+
+      posY += 4;
+
+      checkAddPage(32);
+      pdf.setFillColor(248, 250, 252);
+      pdf.setDrawColor(226, 232, 240);
+      pdf.roundedRect(margin, posY, pageWidth - 2 * margin, 26, 2, 2, "FD");
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(9.5);
+      pdf.setTextColor(15, 23, 42);
+      pdf.text("Resumo de Compatibilidade da Infraestrutura", margin + 5, posY + 6);
+
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(8.5);
+      pdf.setTextColor(71, 85, 105);
+      pdf.text("Status Geral do Servidor:", margin + 5, posY + 13);
+      
+      const srvStatus = stage.serverStatus || "Não Avaliado";
+      pdf.setFont("helvetica", "bold");
+      if (srvStatus === "Adequado") {
+        pdf.setTextColor(16, 185, 129);
+      } else {
+        pdf.setTextColor(239, 68, 68);
+      }
+      pdf.text(srvStatus, margin + 42, posY + 13);
+
+      pdf.setFont("helvetica", "normal");
+      pdf.setTextColor(71, 85, 105);
+      pdf.text("Status das Estações:", margin + 5, posY + 19);
+
+      const wsStatus = stage.workstationsStatus || "Não Avaliado";
+      pdf.setFont("helvetica", "bold");
+      if (wsStatus === "Adequado") {
+        pdf.setTextColor(16, 185, 129);
+      } else {
+        pdf.setTextColor(239, 68, 68);
+      }
+      pdf.text(wsStatus, margin + 42, posY + 19);
+
+      const stationsOk = workstations.filter(w => checkWorkstationRequirements(w).meets).length;
+      const stationsFail = workstations.length - stationsOk;
+
+      pdf.setFont("helvetica", "normal");
+      pdf.setTextColor(71, 85, 105);
+      pdf.text(`Estações de Trabalho: ${workstations.length} total (${stationsOk} OK, ${stationsFail} Incompatíveis)`, margin + 85, posY + 13);
+      pdf.text(`Estações declaradas comercialmente: ${workstationsCount}`, margin + 85, posY + 19);
+
+      posY += 32;
+
+      checkAddPage(20);
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(11);
+      pdf.setTextColor(141, 12, 45);
+      pdf.text("SERVIDORES DETECTADOS / ANALISADOS", margin, posY);
+      posY += 3;
+      pdf.setDrawColor(141, 12, 45);
+      pdf.line(margin, posY, pageWidth - margin, posY);
+      posY += 6;
+
+      if (servers.length === 0) {
+        pdf.setFont("helvetica", "italic");
+        pdf.setFontSize(8.5);
+        pdf.setTextColor(148, 163, 184);
+        pdf.text("Nenhum servidor cadastrado para esta serventia.", margin, posY);
+        posY += 8;
+      } else {
+        servers.forEach((srv, idx) => {
+          const validation = checkServerRequirements(srv, workstationsCount);
+          checkAddPage(85);
+
+          // Inline spec validations for red text highlights
+          let coresVal: number | null = null;
+          if (srv.cores) {
+            const cMatch = srv.cores.toString().match(/(\d+)/);
+            if (cMatch) coresVal = parseInt(cMatch[1]);
+          }
+          if (coresVal === null && srv.processor) {
+            const coresMatch = srv.processor.match(/(\d+)\s*(?:cores|cpus|núcleos|nucleos|threads)/i) || 
+                               srv.processor.match(/\((\d+)\s*(?:cpu)/i);
+            if (coresMatch) {
+              coresVal = parseInt(coresMatch[1]);
+            } else {
+              const fallbackMatch = srv.processor.match(/(\d+)\s*(nucleo|núcleo|core|thread|cpu)/i);
+              if (fallbackMatch) {
+                const val = parseInt(fallbackMatch[1]);
+                if (val < 256) coresVal = val;
+              }
+            }
+          }
+          const minCores = workstationsCount > 15 ? 8 : 6;
+          const cpuInconsistent = coresVal !== null && coresVal < minCores;
+
+          let ramInconsistent = false;
+          if (srv.memory) {
+            const ramMatch = srv.memory.match(/(\d+)/);
+            if (ramMatch) {
+              const ram = parseInt(ramMatch[1]);
+              const minRam = workstationsCount <= 5 ? 20 : (workstationsCount <= 10 ? 24 : 48);
+              if (ram < minRam) ramInconsistent = true;
+            }
+          }
+
+          let osInconsistent = false;
+          if (srv.os) {
+            const lowerOs = srv.os.toLowerCase();
+            if (lowerOs.includes("windows server 2012") || lowerOs.includes("windows server 2008") || lowerOs.includes("windows server 2016") || lowerOs.includes("2012 r2")) {
+              osInconsistent = true;
+            }
+          }
+
+          // Card Background (height increased to 81)
+          pdf.setFillColor(255, 255, 255);
+          pdf.setDrawColor(226, 232, 240);
+          pdf.roundedRect(margin, posY, pageWidth - 2 * margin, 81, 1, 1, "FD");
+
+          // Card Header Bar
+          pdf.setFillColor(248, 250, 252);
+          pdf.rect(margin, posY, pageWidth - 2 * margin, 7.5, "F");
+          pdf.setDrawColor(226, 232, 240);
+          pdf.line(margin, posY + 7.5, pageWidth - margin, posY + 7.5);
+
+          // Server Header Title & Status Badge
+          pdf.setFont("helvetica", "bold");
+          pdf.setFontSize(8.5);
+          pdf.setTextColor(15, 23, 42);
+          pdf.text(srv.hostname || `SERVIDOR ${idx + 1}`, margin + 4, posY + 5);
+
+          const meetsLabel = validation.meets ? "REQUISITOS SATISFEITOS" : "COMPATIBILIDADE COM ALERTAS";
+          pdf.setFont("helvetica", "bold");
+          pdf.setFontSize(7.5);
+          if (validation.meets) {
+            pdf.setTextColor(16, 185, 129);
+          } else {
+            pdf.setTextColor(239, 68, 68);
+          }
+          const badgeWidth = pdf.getTextWidth(meetsLabel);
+          pdf.text(meetsLabel, pageWidth - margin - badgeWidth - 4, posY + 5);
+
+          // Spec details (Helvetica Normal 7.5pt)
+          pdf.setFontSize(7.5);
+          pdf.setTextColor(100, 116, 139);
+          pdf.setFont("helvetica", "normal");
+          
+          const labelX = margin + 4;
+          const valX = margin + 34;
+
+          // Row 1: Marca/Modelo
+          pdf.text("Marca/Modelo:", labelX, posY + 13);
+          pdf.setFont("helvetica", "bold");
+          pdf.setTextColor(15, 23, 42);
+          const brandTrunc = srv.brandModel && srv.brandModel.length > 80 ? srv.brandModel.substring(0, 80) + "..." : (srv.brandModel || "-");
+          pdf.text(brandTrunc, valX, posY + 13);
+
+          // Row 2: Virtualizado
+          pdf.setFont("helvetica", "normal");
+          pdf.setTextColor(100, 116, 139);
+          pdf.text("Virtualizado:", labelX, posY + 18.5);
+          pdf.setFont("helvetica", "bold");
+          pdf.setTextColor(15, 23, 42);
+          pdf.text(srv.virtualized === true || srv.virtualized === "Sim" ? "Sim" : "Não", valX, posY + 18.5);
+
+          // Row 3: Processador
+          pdf.setFont("helvetica", "normal");
+          pdf.setTextColor(100, 116, 139);
+          pdf.text("Processador:", labelX, posY + 24);
+          pdf.setFont("helvetica", "bold");
+          pdf.setTextColor(cpuInconsistent ? 220 : 15, cpuInconsistent ? 38 : 23, cpuInconsistent ? 38 : 42);
+          const cpuTrunc = srv.processor && srv.processor.length > 80 ? srv.processor.substring(0, 80) + "..." : (srv.processor || "-");
+          pdf.text(cpuTrunc, valX, posY + 24);
+
+          // Row 4: Núcleos
+          pdf.setFont("helvetica", "normal");
+          pdf.setTextColor(100, 116, 139);
+          pdf.text("Núcleos:", labelX, posY + 29.5);
+          pdf.setFont("helvetica", "bold");
+          pdf.setTextColor(cpuInconsistent ? 220 : 15, cpuInconsistent ? 38 : 23, cpuInconsistent ? 38 : 42);
+          pdf.text(String(srv.cores || "-"), valX, posY + 29.5);
+
+          // Row 5: Memória RAM
+          pdf.setFont("helvetica", "normal");
+          pdf.setTextColor(100, 116, 139);
+          pdf.text("Memória RAM:", labelX, posY + 35);
+          pdf.setFont("helvetica", "bold");
+          pdf.setTextColor(ramInconsistent ? 220 : 15, ramInconsistent ? 38 : 23, ramInconsistent ? 38 : 42);
+          const ramTrunc = srv.memory && srv.memory.length > 50 ? srv.memory.substring(0, 50) + "..." : (srv.memory || "-");
+          pdf.text(ramTrunc, valX, posY + 35);
+
+          // Row 6: Disco (Espaço)
+          pdf.setFont("helvetica", "normal");
+          pdf.setTextColor(100, 116, 139);
+          pdf.text("Disco (Espaço):", labelX, posY + 40.5);
+          pdf.setFont("helvetica", "bold");
+          pdf.setTextColor(15, 23, 42);
+          const diskFormatted = formatDiskFreeSpace(srv.disk || "");
+          const diskTrunc = diskFormatted.length > 80 ? diskFormatted.substring(0, 80) + "..." : diskFormatted;
+          pdf.text(diskTrunc, valX, posY + 40.5);
+
+          // Row 7: Espaço p/ Orion
+          pdf.setFont("helvetica", "normal");
+          pdf.setTextColor(100, 116, 139);
+          pdf.text("Espaço p/ Orion:", labelX, posY + 46);
+          pdf.setFont("helvetica", "bold");
+          pdf.setTextColor(15, 23, 42);
+          const spaceTrunc = srv.spaceOrion && srv.spaceOrion.length > 50 ? srv.spaceOrion.substring(0, 50) + "..." : (srv.spaceOrion || "-");
+          pdf.text(spaceTrunc, valX, posY + 46);
+
+          // Row 8: Sistema Op.
+          pdf.setFont("helvetica", "normal");
+          pdf.setTextColor(100, 116, 139);
+          pdf.text("Sistema Op.:", labelX, posY + 51.5);
+          pdf.setFont("helvetica", "bold");
+          pdf.setTextColor(osInconsistent ? 220 : 15, osInconsistent ? 38 : 23, osInconsistent ? 38 : 42);
+          const osTrunc = srv.os && srv.os.length > 70 ? srv.os.substring(0, 70) + "..." : (srv.os || "-");
+          pdf.text(osTrunc, valX, posY + 51.5);
+
+          // Row 9: Rede
+          pdf.setFont("helvetica", "normal");
+          pdf.setTextColor(100, 116, 139);
+          pdf.text("Rede:", labelX, posY + 57);
+          pdf.setFont("helvetica", "bold");
+          pdf.setTextColor(15, 23, 42);
+          const netFormatted = formatNetworkSpeed(srv.network || "");
+          const netTrunc = netFormatted.length > 110 ? netFormatted.substring(0, 110) + "..." : netFormatted;
+          pdf.text(netTrunc, valX, posY + 57);
+
+          // Row 10: Anti-Vírus
+          pdf.setFont("helvetica", "normal");
+          pdf.setTextColor(100, 116, 139);
+          pdf.text("Anti-Vírus:", labelX, posY + 62.5);
+          pdf.setFont("helvetica", "bold");
+          pdf.setTextColor(15, 23, 42);
+          const antivirusTrunc = srv.antivirus && srv.antivirus.length > 60 ? srv.antivirus.substring(0, 60) + "..." : (srv.antivirus || "-");
+          pdf.text(antivirusTrunc, valX, posY + 62.5);
+
+          // Row 11: Backup
+          pdf.setFont("helvetica", "normal");
+          pdf.setTextColor(100, 116, 139);
+          pdf.text("Backup:", labelX, posY + 68);
+          pdf.setFont("helvetica", "bold");
+          pdf.setTextColor(15, 23, 42);
+          const backupTrunc = srv.backup && srv.backup.length > 70 ? srv.backup.substring(0, 70) + "..." : (srv.backup || "-");
+          pdf.text(backupTrunc, valX, posY + 68);
+
+          // Row 12: Observações
+          pdf.setFont("helvetica", "normal");
+          pdf.setTextColor(100, 116, 139);
+          pdf.text("Observações:", labelX, posY + 73.5);
+          pdf.setFont("helvetica", "normal");
+          pdf.setTextColor(71, 85, 105);
+          const obsVal = srv.observations || "Nenhuma observação cadastrada.";
+          const obsTrunc = obsVal.length > 85 ? obsVal.substring(0, 85) + "..." : obsVal;
+          pdf.text(obsTrunc, valX, posY + 73.5);
+
+          posY += 85;
+
+          if (validation.issues.length > 0) {
+            checkAddPage(validation.issues.length * 4.5 + 8);
+            pdf.setFillColor(254, 242, 242);
+            pdf.setDrawColor(254, 226, 226);
+            const alertHeight = validation.issues.length * 4 + 4;
+            pdf.roundedRect(margin, posY - 2, pageWidth - 2 * margin, alertHeight, 1, 1, "FD");
+
+            pdf.setFont("helvetica", "bold");
+            pdf.setFontSize(7);
+            pdf.setTextColor(220, 38, 38);
+            pdf.text("Alertas do Servidor:", margin + 4, posY + 1.5);
+
+            pdf.setFont("helvetica", "normal");
+            validation.issues.forEach((issue, issueIdx) => {
+              pdf.text(`• ${issue}`, margin + 6, posY + 5 + (issueIdx * 4));
+            });
+
+            posY += alertHeight + 5;
+          }
+        });
+      }
+
+      posY += 2;
+
+      checkAddPage(25);
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(11);
+      pdf.setTextColor(141, 12, 45);
+      pdf.text("PARQUE DE MÁQUINAS (ESTAÇÕES DE TRABALHO)", margin, posY);
+      posY += 3;
+      pdf.setDrawColor(141, 12, 45);
+      pdf.line(margin, posY, pageWidth - margin, posY);
+      posY += 6;
+
+      if (workstations.length === 0) {
+        pdf.setFont("helvetica", "italic");
+        pdf.setFontSize(8.5);
+        pdf.setTextColor(148, 163, 184);
+        pdf.text("Nenhuma estação cadastrada para esta serventia.", margin, posY);
+        posY += 8;
+      } else {
+        pdf.setFillColor(248, 250, 252);
+        pdf.rect(margin, posY, pageWidth - 2 * margin, 7.5, "F");
+        pdf.setDrawColor(226, 232, 240);
+        pdf.rect(margin, posY, pageWidth - 2 * margin, 7.5, "D");
+
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(7.5);
+        pdf.setTextColor(71, 85, 105);
+        pdf.text("Item", margin + 2, posY + 5);
+        pdf.text("Hostname", margin + 9, posY + 5);
+        pdf.text("Setor", margin + 32, posY + 5);
+        pdf.text("Usuário", margin + 55, posY + 5);
+        pdf.text("Processador / Geração", margin + 78, posY + 5);
+        pdf.text("RAM", margin + 120, posY + 5);
+        pdf.text("Armazenamento", margin + 135, posY + 5);
+        pdf.text("Atende?", margin + 168, posY + 5);
+
+        posY += 7.5;
+
+        workstations.forEach((ws, idx) => {
+          const validation = checkWorkstationRequirements(ws);
+          checkAddPage(7.5);
+
+          pdf.setFillColor(255, 255, 255);
+          pdf.setDrawColor(226, 232, 240);
+          pdf.rect(margin, posY, pageWidth - 2 * margin, 6.5, "FD");
+
+          pdf.setFont("helvetica", "normal");
+          pdf.setFontSize(7);
+          pdf.setTextColor(71, 85, 105);
+          pdf.text(String(idx + 1), margin + 2, posY + 4.2);
+          
+          const wsHostname = ws.hostname || "-";
+          const wsHostnameTrunc = wsHostname.length > 15 ? wsHostname.substring(0, 15) + "..." : wsHostname;
+          pdf.text(wsHostnameTrunc, margin + 9, posY + 4.2);
+          
+          const wsSector = ws.sector || "-";
+          const wsSectorTrunc = wsSector.length > 15 ? wsSector.substring(0, 15) + "..." : wsSector;
+          pdf.text(wsSectorTrunc, margin + 32, posY + 4.2);
+          
+          const wsUser = ws.user || "-";
+          const wsUserTrunc = wsUser.length > 15 ? wsUser.substring(0, 15) + "..." : wsUser;
+          pdf.text(wsUserTrunc, margin + 55, posY + 4.2);
+
+          const cpuVal = ws.processor || "-";
+          const cpuTrunc = cpuVal.length > 25 ? cpuVal.substring(0, 25) + "..." : cpuVal;
+          pdf.text(cpuTrunc, margin + 78, posY + 4.2);
+          
+          const wsMemory = ws.memory || "-";
+          const wsMemoryTrunc = wsMemory.length > 10 ? wsMemory.substring(0, 10) + "..." : wsMemory;
+          pdf.text(wsMemoryTrunc, margin + 120, posY + 4.2);
+
+          const diskFormatted = formatDiskFreeSpace(ws.disk || "");
+          const diskTrunc = diskFormatted.length > 20 ? diskFormatted.substring(0, 20) + "..." : diskFormatted;
+          pdf.text(diskTrunc, margin + 135, posY + 4.2);
+
+          pdf.setFont("helvetica", "bold");
+          if (validation.meets) {
+            pdf.setTextColor(16, 185, 129);
+            pdf.text("Sim", margin + 168, posY + 4.2);
+          } else {
+            pdf.setTextColor(239, 68, 68);
+            pdf.text("Não", margin + 168, posY + 4.2);
+          }
+
+          posY += 6.5;
+
+          if (!validation.meets && validation.issues.length > 0) {
+            checkAddPage(5.5);
+            pdf.setFillColor(254, 242, 242);
+            pdf.rect(margin, posY, pageWidth - 2 * margin, 5, "FD");
+            pdf.setFont("helvetica", "italic");
+            pdf.setFontSize(6.5);
+            pdf.setTextColor(220, 38, 38);
+            pdf.text(`Alertas: ${validation.issues.join(" | ")}`, margin + 10, posY + 3.5);
+            posY += 5;
+          }
+        });
+      }
+
+      posY += 5;
+
+      checkAddPage(30);
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(11);
+      pdf.setTextColor(141, 12, 45);
+      pdf.text("PARECER DE VIABILIDADE TÉCNICA", margin, posY);
+      posY += 3;
+      pdf.setDrawColor(141, 12, 45);
+      pdf.line(margin, posY, pageWidth - margin, posY);
+      posY += 6;
+
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(8.5);
+      pdf.setTextColor(100, 116, 139);
+      pdf.text("Servidor em uso atual:", margin, posY);
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(15, 23, 42);
+      pdf.text(stage.serverInUse || "Não informado", margin + 45, posY);
+      posY += 5;
+
+      pdf.setFont("helvetica", "normal");
+      pdf.setTextColor(100, 116, 139);
+      pdf.text("Servidor cotado/necessário:", margin, posY);
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(15, 23, 42);
+      pdf.text(stage.serverNeeded || "Não cotado", margin + 45, posY);
+      posY += 7;
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(15, 23, 42);
+      pdf.text("Notas e Parecer de Viabilidade da Siplan:", margin, posY);
+      posY += 5.5;
+
+      const techNotes = stage.observations || "Nenhum parecer técnico ou notas registradas.";
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(8.5);
+      pdf.setTextColor(71, 85, 105);
+
+      const wrappedNotes = pdf.splitTextToSize(techNotes, pageWidth - 2 * margin);
+      wrappedNotes.forEach((line: string) => {
+        checkAddPage(5);
+        pdf.text(line, margin, posY);
+        posY += 4.5;
+      });
+
+      const totalPages = pdf.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);
+        drawHeader();
+        drawFooter(i, totalPages);
+      }
+
+      const formattedDate = format(new Date(), "ddMMyyyy");
+      const clientSanitized = (clientName || "Serventia")
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "_")
+        .substring(0, 20);
+      
+      pdf.save(`relatorio_infra_${clientSanitized}_${formattedDate}.pdf`);
+
+      toast({
+        title: "Relatório Gerado com Sucesso",
+        description: "O PDF do relatório analítico foi gerado e baixado no seu dispositivo.",
+        className: "bg-emerald-500 text-white border-emerald-600",
+      });
+    } catch (err) {
+      console.error("Erro ao gerar PDF:", err);
+      toast({
+        title: "Erro ao Gerar Relatório",
+        description: "Ocorreu um erro ao processar e exportar o relatório para PDF.",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Auto-calculate statuses when workstations, servers, or workstationsCount changes
   useEffect(() => {
@@ -668,6 +1190,17 @@ export function InfraStageForm({
                   </>
                 )}
               </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleGenerateAnalyticalReport}
+                className="font-bold border-rose-200 hover:bg-rose-50 dark:border-rose-900/40 dark:hover:bg-rose-950/20 text-[hsl(346,84%,45%)] hover:text-[hsl(346,84%,40%)] shadow-sm h-8 text-xs"
+              >
+                <FileText className="mr-1.5 h-3.5 w-3.5" />
+                Gerar Relatório Analítico
+              </Button>
             </>
           )}
         </div>
@@ -1069,8 +1602,8 @@ export function InfraStageForm({
                         )}
                       </CardHeader>
                       <CardContent className="p-3 pt-2">
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-2 text-xs">
-                          <div className="space-y-0.5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-2 text-xs">
+                          <div className="space-y-0.5 col-span-1 sm:col-span-1 md:col-span-3">
                             <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Hostname</Label>
                             <Input 
                               value={srv.hostname || ""} 
@@ -1083,7 +1616,7 @@ export function InfraStageForm({
                               className="h-8 text-xs border-slate-200 dark:border-slate-800/60"
                             />
                           </div>
-                          <div className="space-y-0.5">
+                          <div className="space-y-0.5 col-span-1 sm:col-span-1 md:col-span-3">
                             <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Marca/Modelo</Label>
                             <Input 
                               value={srv.brandModel || ""} 
@@ -1097,7 +1630,7 @@ export function InfraStageForm({
                               className="h-8 text-xs border-slate-200 dark:border-slate-800/60"
                             />
                           </div>
-                          <div className="space-y-0.5">
+                          <div className="space-y-0.5 col-span-1 sm:col-span-1 md:col-span-2">
                             <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Virtualizado?</Label>
                             <Select
                               value={srv.virtualized === true || srv.virtualized === "Sim" ? "Sim" : "Não"}
@@ -1117,7 +1650,7 @@ export function InfraStageForm({
                               </SelectContent>
                             </Select>
                           </div>
-                          <div className="space-y-0.5">
+                          <div className="space-y-0.5 col-span-1 sm:col-span-1 md:col-span-4">
                             <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Processador</Label>
                             <Input 
                               value={srv.processor || ""} 
@@ -1131,7 +1664,7 @@ export function InfraStageForm({
                               className="h-8 text-xs border-slate-200 dark:border-slate-800/60"
                             />
                           </div>
-                          <div className="space-y-0.5">
+                          <div className="space-y-0.5 col-span-1 sm:col-span-1 md:col-span-2">
                             <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Núcleos</Label>
                             <Input 
                               value={srv.cores || ""} 
@@ -1145,7 +1678,7 @@ export function InfraStageForm({
                               className="h-8 text-xs border-slate-200 dark:border-slate-800/60"
                             />
                           </div>
-                          <div className="space-y-0.5">
+                          <div className="space-y-0.5 col-span-1 sm:col-span-1 md:col-span-2">
                             <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Memória RAM</Label>
                             <Input 
                               value={srv.memory || ""} 
@@ -1159,7 +1692,7 @@ export function InfraStageForm({
                               className="h-8 text-xs border-slate-200 dark:border-slate-800/60"
                             />
                           </div>
-                          <div className="space-y-0.5">
+                          <div className="space-y-0.5 col-span-1 sm:col-span-1 md:col-span-3">
                             <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Disco (Armazenamento)</Label>
                             <Input 
                               value={srv.disk || ""} 
@@ -1173,7 +1706,7 @@ export function InfraStageForm({
                               className="h-8 text-xs border-slate-200 dark:border-slate-800/60"
                             />
                           </div>
-                          <div className="space-y-0.5">
+                          <div className="space-y-0.5 col-span-1 sm:col-span-1 md:col-span-2">
                             <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Espaço para o Orion</Label>
                             <Input 
                               value={srv.spaceOrion || ""} 
@@ -1187,7 +1720,7 @@ export function InfraStageForm({
                               className="h-8 text-xs border-slate-200 dark:border-slate-800/60"
                             />
                           </div>
-                          <div className="space-y-0.5">
+                          <div className="space-y-0.5 col-span-1 sm:col-span-2 md:col-span-3">
                             <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Sistema Operacional</Label>
                             <Input 
                               value={srv.os || ""} 
@@ -1201,7 +1734,7 @@ export function InfraStageForm({
                               className="h-8 text-xs border-slate-200 dark:border-slate-800/60"
                             />
                           </div>
-                          <div className="space-y-0.5">
+                          <div className="space-y-0.5 col-span-1 sm:col-span-1 md:col-span-4">
                             <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Anti-Vírus</Label>
                             <Input 
                               value={srv.antivirus || ""} 
@@ -1215,7 +1748,7 @@ export function InfraStageForm({
                               className="h-8 text-xs border-slate-200 dark:border-slate-800/60"
                             />
                           </div>
-                          <div className="space-y-0.5">
+                          <div className="space-y-0.5 col-span-1 sm:col-span-1 md:col-span-4">
                             <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Rede</Label>
                             <Input 
                               value={srv.network || ""} 
@@ -1229,7 +1762,7 @@ export function InfraStageForm({
                               className="h-8 text-xs border-slate-200 dark:border-slate-800/60"
                             />
                           </div>
-                          <div className="space-y-0.5">
+                          <div className="space-y-0.5 col-span-1 sm:col-span-2 md:col-span-4">
                             <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Backup</Label>
                             <Input 
                               value={srv.backup || ""} 
@@ -1243,7 +1776,7 @@ export function InfraStageForm({
                               className="h-8 text-xs border-slate-200 dark:border-slate-800/60"
                             />
                           </div>
-                          <div className="space-y-0.5 md:col-span-4">
+                          <div className="space-y-0.5 col-span-1 sm:col-span-2 md:col-span-12">
                             <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Observações</Label>
                             <Input 
                               value={srv.observations || ""} 
