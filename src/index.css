@@ -329,30 +329,30 @@
     scrollbar-color: rgba(255,255,255,0.12) transparent;
   }
 
-  .roadmap-page ::-webkit-scrollbar {
+  .roadmap-page::-webkit-scrollbar {
     width: 5px;
     height: 5px;
   }
 
-  .roadmap-page ::-webkit-scrollbar-track {
+  .roadmap-page::-webkit-scrollbar-track {
     background: transparent;
   }
 
-  .roadmap-page ::-webkit-scrollbar-thumb {
+  .roadmap-page::-webkit-scrollbar-thumb {
     background: rgba(255,255,255,0.12);
     border-radius: 9999px;
     transition: background 0.2s ease;
   }
 
-  .roadmap-page ::-webkit-scrollbar-thumb:hover {
+  .roadmap-page::-webkit-scrollbar-thumb:hover {
     background: rgba(255,255,255,0.28);
   }
 
-  .roadmap-page ::-webkit-scrollbar-thumb:active {
+  .roadmap-page::-webkit-scrollbar-thumb:active {
     background: rgba(255,255,255,0.42);
   }
 
-  .roadmap-page ::-webkit-scrollbar-corner {
+  .roadmap-page::-webkit-scrollbar-corner {
     background: transparent;
   }
   /* ──────────────────────────────────────────────────────────────────── */
