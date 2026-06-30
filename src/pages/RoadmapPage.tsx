@@ -186,7 +186,7 @@ export default function RoadmapPage() {
     const onScroll = () => setShowScrollTop(el.scrollTop > 400);
     el.addEventListener("scroll", onScroll);
     return () => el.removeEventListener("scroll", onScroll);
-  }, []);
+  }, [loading]); // re-run when loading resolves so containerRef.current is populated
 
   const scrollToTop = () =>
     containerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
