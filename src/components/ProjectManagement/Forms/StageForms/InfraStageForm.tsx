@@ -713,7 +713,7 @@ export function InfraStageForm({
         >
           <SelectTrigger
             className={cn(
-              "h-11 border-2 font-medium transition-all",
+              "h-9 border font-medium transition-all text-xs",
               stage.serverStatus === "Adequado" &&
               "bg-green-50 text-green-800 border-green-300 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50",
               stage.serverStatus === "Parcialmente Adequado" &&
@@ -775,7 +775,7 @@ export function InfraStageForm({
         >
           <SelectTrigger
             className={cn(
-              "h-11 border-2 font-medium transition-all",
+              "h-9 border font-medium transition-all text-xs",
               stage.workstationsStatus === "Adequado" &&
               "bg-green-50 text-green-800 border-green-300 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50",
               stage.workstationsStatus === "Parcialmente Adequado" &&
@@ -837,7 +837,7 @@ export function InfraStageForm({
             })
           }
           disabled={!canEditProjects}
-          className="h-11 border-2 border-purple-200 hover:border-purple-300 focus:border-purple-400 bg-purple-50/50 dark:border-purple-900/50 dark:hover:border-purple-800 dark:focus:border-purple-600 dark:bg-purple-950/20 dark:text-purple-300 font-medium"
+          className="h-9 border border-purple-200 hover:border-purple-300 focus:border-purple-400 bg-purple-50/50 dark:border-purple-900/50 dark:hover:border-purple-800 dark:focus:border-purple-600 dark:bg-purple-950/20 dark:text-purple-300 font-medium text-xs"
         />
       </div>
 

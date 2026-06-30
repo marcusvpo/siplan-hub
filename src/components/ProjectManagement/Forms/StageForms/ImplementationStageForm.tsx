@@ -62,22 +62,22 @@ function ImplementationPhaseForm({
   const statusColor = phase?.status || "todo";
 
   return (
-    <div className={cn("relative overflow-hidden rounded-xl border-2 p-5 shadow-sm", borderColor, bgGradient)}>
+    <div className={cn("relative overflow-hidden rounded-xl border p-4 shadow-sm", borderColor, bgGradient)}>
       <div className={cn("absolute top-0 right-0 w-32 h-32 rounded-full -mr-16 -mt-16", glowColor)} />
-      <h4 className="font-bold mb-5 flex items-center gap-3 relative text-left">
-        <Badge className={cn("text-white px-3 py-1 shadow-md", badgeClass)}>
+      <h4 className="font-bold mb-3 flex items-center gap-2 relative text-left">
+        <Badge className={cn("text-white px-2 py-0.5 text-[10px] shadow-md", badgeClass)}>
           {phaseKey === "phase1" ? "🚀" : "🎓"} {label}
         </Badge>
-        <span className={cn("text-lg font-bold", titleColor)}>
+        <span className={cn("text-base font-bold", titleColor)}>
           {phaseKey === "phase1" ? "Treinamento & Acompanhamento" : "Possível Retorno"}
         </span>
       </h4>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-5 relative text-left">
-        <div className="space-y-2.5">
-          <Label className={cn("text-xs font-bold uppercase tracking-widest flex items-center gap-2", 
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3.5 mb-3.5 relative text-left">
+        <div className="space-y-1.5">
+          <Label className={cn("text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5", 
             themeColor === "blue" ? "text-blue-600" : "text-purple-600"
           )}>
-            <div className={cn("h-2 w-2 rounded-full animate-pulse", 
+            <div className={cn("h-1.5 w-1.5 rounded-full animate-pulse", 
               themeColor === "blue" ? "bg-blue-500" : "bg-purple-500"
             )} />
             Status
@@ -91,62 +91,62 @@ function ImplementationPhaseForm({
           >
             <SelectTrigger
               className={cn(
-                "h-11 border-2 font-medium transition-all",
-                statusColor === "done" && "bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50",
-                statusColor === "in-progress" && (themeColor === "blue" ? "bg-blue-50 text-blue-800 border-blue-300 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/50" : "bg-purple-50 text-purple-800 border-purple-300 dark:bg-purple-950/20 dark:text-purple-400 dark:border-purple-900/50"),
-                statusColor === "blocked" && "bg-amber-50 text-amber-800 border-amber-300 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/50",
-                statusColor === "todo" && "bg-slate-50 text-slate-800 border-slate-300 dark:bg-slate-900/50 dark:text-slate-400 dark:border-slate-800/60",
+                "h-9 border font-medium transition-all text-xs",
+                statusColor === "done" && "bg-emerald-50/50 text-emerald-800 border-emerald-250 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50",
+                statusColor === "in-progress" && (themeColor === "blue" ? "bg-blue-50/50 text-blue-800 border-blue-250 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/50" : "bg-purple-50/50 text-purple-800 border-purple-250 dark:bg-purple-950/20 dark:text-purple-400 dark:border-purple-900/50"),
+                statusColor === "blocked" && "bg-amber-50/50 text-amber-800 border-amber-250 dark:bg-amber-950/20 dark:text-amber-400 dark:border-emerald-900/50",
+                statusColor === "todo" && "bg-slate-50/50 text-slate-800 border-slate-205 dark:bg-slate-900/50 dark:text-slate-400 dark:border-slate-800/60",
               )}
             >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="todo">
+              <SelectItem value="todo" className="text-xs">
                 <div className="flex items-center gap-2">
-                  <div className="h-2.5 w-2.5 rounded-full bg-slate-400" />
+                  <div className="h-2 w-2 rounded-full bg-slate-400" />
                   Não Iniciado
                 </div>
               </SelectItem>
-              <SelectItem value="in-progress">
+              <SelectItem value="in-progress" className="text-xs">
                 <div className="flex items-center gap-2">
-                  <div className={cn("h-2.5 w-2.5 rounded-full", themeColor === "blue" ? "bg-blue-500" : "bg-purple-500")} />
+                  <div className={cn("h-2 w-2 rounded-full", themeColor === "blue" ? "bg-blue-500" : "bg-purple-500")} />
                   Em Andamento
                 </div>
               </SelectItem>
-              <SelectItem value="done">
+              <SelectItem value="done" className="text-xs">
                 <div className="flex items-center gap-2">
-                  <div className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                  <div className="h-2 w-2 rounded-full bg-emerald-500" />
                   Finalizado
                 </div>
               </SelectItem>
-              <SelectItem value="blocked">
+              <SelectItem value="blocked" className="text-xs">
                 <div className="flex items-center gap-2">
-                  <div className="h-2.5 w-2.5 rounded-full bg-amber-500" />
+                  <div className="h-2 w-2 rounded-full bg-amber-500" />
                   Bloqueado
                 </div>
               </SelectItem>
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-2.5">
-          <Label className={cn("text-xs font-bold uppercase tracking-widest flex items-center gap-2",
+        <div className="space-y-1.5">
+          <Label className={cn("text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5",
             themeColor === "blue" ? "text-indigo-600" : "text-pink-600"
           )}>
-            <Rocket className="h-3.5 w-3.5" />
+            <Rocket className="h-3 w-3" />
             Responsável
           </Label>
           <AutocompleteInput
             value={phase?.responsible || ""}
             onChange={(v) => onUpdatePhase(phaseKey, { responsible: v })}
             disabled={!canEditProjects}
-            className={cn("h-11 border-2 bg-white dark:bg-slate-950/20 dark:text-slate-300",
+            className={cn("h-9 border bg-white dark:bg-slate-950/20 dark:text-slate-300 text-xs",
               themeColor === "blue" ? "border-indigo-200 hover:border-indigo-300 focus:border-indigo-400 dark:border-indigo-900/50 dark:hover:border-indigo-800 dark:focus:border-indigo-750" : "border-pink-200 hover:border-pink-300 focus:border-pink-400 dark:border-pink-900/50 dark:hover:border-pink-800 dark:focus:border-pink-750"
             )}
           />
         </div>
-        <div className="space-y-2.5">
-          <Label className="text-xs font-bold uppercase tracking-widest text-cyan-600 flex items-center gap-2">
-            <CheckCircle2 className="h-3.5 w-3.5" />
+        <div className="space-y-1.5">
+          <Label className="text-[10px] font-bold uppercase tracking-widest text-cyan-600 flex items-center gap-1.5">
+            <CheckCircle2 className="h-3 w-3" />
             Início
           </Label>
           <Input
@@ -164,12 +164,12 @@ function ImplementationPhaseForm({
               })
             }
             disabled={!canEditProjects}
-            className="h-11 border-2 border-cyan-200 hover:border-cyan-300 focus:border-cyan-400 bg-white dark:bg-cyan-950/20 dark:text-cyan-300 dark:border-cyan-900/50 dark:hover:border-cyan-800 font-medium"
+            className="h-9 border border-cyan-200 hover:border-cyan-300 focus:border-cyan-400 bg-white dark:bg-cyan-950/20 dark:text-cyan-300 dark:border-cyan-900/50 dark:hover:border-cyan-800 font-medium text-xs"
           />
         </div>
-        <div className="space-y-2.5">
-          <Label className="text-xs font-bold uppercase tracking-widest text-rose-600 flex items-center gap-2">
-            <Power className="h-3.5 w-3.5" />
+        <div className="space-y-1.5">
+          <Label className="text-[10px] font-bold uppercase tracking-widest text-rose-600 flex items-center gap-1.5">
+            <Power className="h-3 w-3" />
             Término
           </Label>
           <Input
@@ -187,22 +187,22 @@ function ImplementationPhaseForm({
               })
             }
             disabled={!canEditProjects}
-            className="h-11 border-2 border-rose-200 hover:border-rose-300 focus:border-rose-400 bg-white dark:bg-rose-950/20 dark:text-rose-300 dark:border-rose-900/50 dark:hover:border-rose-800 font-medium"
+            className="h-9 border border-rose-200 hover:border-rose-300 focus:border-rose-400 bg-white dark:bg-rose-950/20 dark:text-rose-300 dark:border-rose-900/50 dark:hover:border-rose-800 font-medium text-xs"
           />
         </div>
       </div>
-      <div className="space-y-3 relative text-left">
-        <div className="flex items-center gap-3">
-          <div className={cn("h-1 w-8 rounded-full",
+      <div className="space-y-2 relative text-left">
+        <div className="flex items-center gap-2">
+          <div className={cn("h-0.5 w-6 rounded-full",
             themeColor === "blue" ? "bg-gradient-to-r from-blue-500 to-indigo-500" : "bg-gradient-to-r from-purple-500 to-pink-500"
           )} />
-          <Label className={cn("text-xs font-bold uppercase tracking-widest",
+          <Label className={cn("text-[10px] font-bold uppercase tracking-widest",
             themeColor === "blue" ? "text-blue-600" : "text-purple-600"
           )}>
             Observações da {label}
           </Label>
         </div>
-        <div className={cn("rounded-xl border-2 overflow-hidden bg-white dark:bg-slate-900/50",
+        <div className={cn("rounded-lg border overflow-hidden bg-white dark:bg-slate-900/50",
           themeColor === "blue" ? "border-blue-200 dark:border-blue-900/50" : "border-purple-200 dark:border-purple-900/50"
         )}>
           <RichTextEditor

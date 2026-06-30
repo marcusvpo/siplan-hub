@@ -293,7 +293,7 @@ export function StepsTab({
       <Accordion
         type="single"
         collapsible
-        className="w-full space-y-4"
+        className="w-full space-y-2.5"
         value={activeStepId || ""}
         onValueChange={onStepClick}
       >

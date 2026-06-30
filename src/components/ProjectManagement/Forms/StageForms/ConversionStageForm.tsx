@@ -63,7 +63,7 @@ export function ConversionStageForm({
                 variant={isInConversionQueue ? "outline" : "default"}
                 disabled={sendingToConversion || isInConversionQueue || !canEditProjects}
                 className={cn(
-                  "w-full md:w-auto font-bold shadow-sm",
+                  "w-full md:w-auto font-bold shadow-sm h-9 text-xs",
                   isInConversionQueue
                     ? "border-primary/30 text-primary hover:bg-primary/5"
                     : "bg-primary hover:bg-primary/90 text-primary-foreground",
@@ -109,7 +109,7 @@ export function ConversionStageForm({
                         value={selectedPriority.toString()}
                         onValueChange={(val) => setSelectedPriority(Number(val))}
                       >
-                        <SelectTrigger className="w-full h-11 border-2">
+                        <SelectTrigger className="w-full h-9 border text-xs">
                           <SelectValue placeholder="Selecione a prioridade..." />
                         </SelectTrigger>
                         <SelectContent>
@@ -135,7 +135,7 @@ export function ConversionStageForm({
             <Button
               variant="outline"
               size="icon"
-              className="h-10 w-10 border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors"
+              className="h-9 w-9 border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors"
               title="Remover da fila de conversão"
               onClick={async (e) => {
                 e.stopPropagation();
@@ -199,7 +199,7 @@ export function ConversionStageForm({
         >
           <SelectTrigger
             className={cn(
-              "h-11 border-2 font-medium transition-all",
+              "h-9 border font-medium transition-all text-xs",
               stage.homologationStatus === "Adequado" &&
               "bg-green-50 text-green-800 border-green-300 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50",
               stage.homologationStatus === "Parcialmente Adequado" &&
@@ -256,7 +256,7 @@ export function ConversionStageForm({
           onChange={(v) =>
             onUpdate({ homologationResponsible: v })
           }
-          className="h-11 border-2 border-violet-200 hover:border-violet-300 focus:border-violet-400 bg-violet-50/50 dark:border-violet-900/50 dark:hover:border-violet-800 dark:focus:border-violet-650 dark:bg-violet-950/20 dark:text-violet-300"
+          className="h-9 border border-violet-200 hover:border-violet-300 focus:border-violet-400 bg-violet-50/50 dark:border-violet-900/50 dark:hover:border-violet-800 dark:focus:border-violet-650 dark:bg-violet-950/20 dark:text-violet-300 text-xs"
         />
       </div>
 
@@ -281,7 +281,7 @@ export function ConversionStageForm({
                 : undefined,
             })
           }
-          className="h-11 border-2 border-rose-200 hover:border-rose-300 focus:border-rose-400 bg-rose-50/50 dark:border-rose-900/50 dark:hover:border-rose-800 dark:focus:border-rose-600 dark:bg-rose-950/20 dark:text-rose-300 font-medium"
+          className="h-9 border border-rose-200 hover:border-rose-300 focus:border-rose-400 bg-rose-50/50 dark:border-rose-900/50 dark:hover:border-rose-800 dark:focus:border-rose-600 dark:bg-rose-950/20 dark:text-rose-300 font-medium text-xs"
         />
       </div>
     </>
