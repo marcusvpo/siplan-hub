@@ -316,6 +316,13 @@ export function StageCard({
             </div>
           )}
 
+          {/* Extra Custom Component for Grid */}
+          {extraHeaderField && (
+            <div className="space-y-1.5">
+              {extraHeaderField}
+            </div>
+          )}
+
           {/* Start Date Field - Hidden when hideDates is true */}
           {!hideDates && (
             <div className="space-y-1.5">
@@ -376,12 +383,6 @@ export function StageCard({
             </div>
           )}
 
-          {/* Extra Custom Component for Grid */}
-          {extraHeaderField && (
-            <div className="space-y-1.5">
-              {extraHeaderField}
-            </div>
-          )}
         </div>
 
         {/* Specific Fields (Children) */}
