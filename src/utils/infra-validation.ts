@@ -238,6 +238,9 @@ export const parseMachineInfo = (text: string) => {
     }
   }
 
+  const environment = info["AMBIENTE"]?.[0] || "";
+  const networkFailover = info["REDE FAILOVER"]?.[0] || "";
+
   return {
     hostname,
     processor,
@@ -254,6 +257,8 @@ export const parseMachineInfo = (text: string) => {
     backup,
     spaceOrion,
     cores,
+    environment,
+    networkFailover,
   };
 };
 

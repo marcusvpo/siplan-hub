@@ -166,6 +166,8 @@ export interface ServerInfo {
   network?: string;
   backup?: string;
   observations?: string;
+  environment?: string;
+  networkFailover?: string;
 }
 
 export interface WorkstationInfo {
