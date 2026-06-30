@@ -76,48 +76,49 @@ export function AdherenceStageForm({
   const isFormLocked = isFinalized || !canEditProjects;
 
   return (
-    <div className="col-span-1 md:col-span-2 lg:col-span-3 space-y-6">
+    <div className="col-span-1 md:col-span-2 lg:col-span-3 space-y-4">
       {/* 1. Dynamic template form link */}
       {!activeTemplate ? (
-        <div className="p-4 border border-amber-300/40 bg-amber-500/5 rounded-xl flex items-start gap-3">
-          <FileWarning className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
-          <div className="space-y-1">
-            <h4 className="text-sm font-bold text-amber-600">Sem Template de Aderência</h4>
-            <p className="text-xs text-muted-foreground leading-relaxed">
+        <div className="p-3 border border-amber-300/40 bg-amber-500/5 rounded-lg flex items-start gap-2">
+          <FileWarning className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+          <div className="space-y-0.5">
+            <h4 className="text-xs font-bold text-amber-600">Sem Template de Aderência</h4>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
               Não há um template de aderência ativo publicado para o sistema <strong>{systemType}</strong>. 
               Entre em contato com um administrador para publicar um template em <strong>Implantadores &gt; Editor de Aderência</strong>.
             </p>
           </div>
         </div>
       ) : !response ? (
-        <div className="p-6 border border-dashed rounded-xl flex flex-col items-center justify-center text-center space-y-4 bg-muted/10">
-          <div className="space-y-1">
-            <h4 className="text-sm font-bold">Formulário de Aderência Pendente</h4>
-            <p className="text-xs text-muted-foreground max-w-sm">
+        <div className="p-4 border border-dashed rounded-lg flex flex-col items-center justify-center text-center space-y-3 bg-muted/10">
+          <div className="space-y-0.5">
+            <h4 className="text-xs font-bold">Formulário de Aderência Pendente</h4>
+            <p className="text-[11px] text-muted-foreground max-w-sm">
               Gere o questionário técnico de aderência para o sistema <strong>{systemType}</strong> para verificar gaps operacionais do projeto.
             </p>
           </div>
           <Button 
             onClick={handleGenerateForm} 
             disabled={!canEditProjects || upsertMutation.isPending}
-            className="px-5 text-xs font-semibold gap-2"
+            size="sm"
+            className="px-4 h-8 text-xs font-semibold gap-1.5"
           >
-            <CheckCircle className="h-4 w-4" />
+            <CheckCircle className="h-3.5 w-3.5" />
             Gerar Formulário de Aderência ({systemType})
           </Button>
         </div>
       ) : (
-        <div className="p-5 border border-primary/20 bg-primary/5 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <ClipboardCheck className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-            <div className="space-y-1">
-              <h4 className="text-sm font-bold text-foreground">Formulário de Aderência Inicializado</h4>
-              <p className="text-xs text-muted-foreground leading-relaxed">
+        <div className="p-3 border border-primary/20 bg-primary/5 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-start gap-2.5">
+            <ClipboardCheck className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+            <div className="space-y-0.5">
+              <h4 className="text-xs font-bold text-foreground">Formulário de Aderência Inicializado</h4>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
                 O questionário técnico para verificar os gaps operacionais do sistema <strong>{systemType}</strong> está pronto.
               </p>
-              <div className="flex items-center gap-2 mt-1.5">
-                <span className="text-[10px] text-muted-foreground font-semibold">Status:</span>
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider ${
+              <div className="flex items-center gap-1.5 mt-1">
+                <span className="text-[9px] text-muted-foreground font-semibold">Status:</span>
+                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border uppercase tracking-wider ${
                   isFinalized 
                     ? (response.data?.finalVerdict === "Totalmente Aderente"
                       ? "bg-green-500/10 text-green-600 border-green-500/20" 
@@ -134,7 +135,7 @@ export function AdherenceStageForm({
             </div>
           </div>
           <Link to={`/projects/${projectId}/adherence`} className="shrink-0">
-            <Button className="text-xs font-semibold gap-1.5 h-9">
+            <Button size="sm" className="text-xs font-semibold gap-1.5 h-8 px-3">
               Acessar Formulário
               <ArrowUpRight className="h-3.5 w-3.5" />
             </Button>
@@ -142,9 +143,8 @@ export function AdherenceStageForm({
         </div>
       )}
 
-      {/* 2. Original Product Gap Fields (retained at the bottom) */}
-      <div className="border-t pt-5 space-y-4">
-        <div className="flex items-center space-x-3 p-3 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 rounded-lg border border-amber-200 dark:border-amber-900/50">
+      <div className="border-t pt-3 space-y-2.5">
+        <div className="flex items-center space-x-2 p-2 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 rounded-lg border border-amber-200 dark:border-amber-900/50">
           <Checkbox
             id="has-gap"
             checked={stage.hasProductGap || false}
@@ -156,7 +156,7 @@ export function AdherenceStageForm({
           />
           <Label
             htmlFor="has-gap"
-            className="text-amber-800 dark:text-amber-300 font-semibold cursor-pointer text-xs uppercase tracking-wide"
+            className="text-amber-800 dark:text-amber-300 font-bold cursor-pointer text-[10px] uppercase tracking-wider"
           >
             ⚠️ Existe Gap de Produto?
           </Label>
