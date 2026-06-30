@@ -204,6 +204,7 @@ export interface InfraStageV2 {
   servers?: ServerInfo[];
   workstations?: WorkstationInfo[];
   publicLinkClosed?: boolean;
+  clientResponsible?: string;
 }
 
 export interface AdherenceStageV2 {
