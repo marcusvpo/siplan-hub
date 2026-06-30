@@ -55,6 +55,7 @@ import {
   Download,
   Loader2,
   Eye,
+  User,
 } from "lucide-react";
 import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
@@ -317,6 +318,21 @@ export function StepsTab({
                 stageReadiness.find((r) => r.stageId === "infra")?.reason
               }
               canEditProjects={canEditProjects}
+              extraHeaderField={
+                <div className="space-y-1.5">
+                  <Label className="text-[10px] font-bold uppercase tracking-widest text-violet-600 flex items-center gap-1.5">
+                    <User className="h-3 w-3" />
+                    Responsável Serventia
+                  </Label>
+                  <Input
+                    value={stagesData.infra.clientResponsible || ""}
+                    onChange={(e) => updateStage("infra", { clientResponsible: e.target.value })}
+                    disabled={!canEditProjects}
+                    placeholder="Nome do responsável..."
+                    className="h-9 border border-violet-200 hover:border-violet-300 focus:border-violet-400 bg-violet-50/50 dark:border-violet-900/50 dark:hover:border-violet-800 dark:focus:border-violet-600 dark:bg-violet-950/20 dark:text-violet-300 text-xs"
+                  />
+                </div>
+              }
             >
               <InfraStageForm stage={stagesData.infra} canEditProjects={canEditProjects} notifying={notifying} onUpdate={(u) => updateStage("infra", u)} onNotifyComercial={handleNotifyComercial} projectId={project.id} lastUpdatedBy={project.lastUpdatedBy} clientName={project.clientName} />
             </StageCard>
