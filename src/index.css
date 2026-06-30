@@ -323,6 +323,40 @@
     will-change: transform;
   }
 
+  /* ── Roadmap Public Page – Custom Dark Scrollbar ────────────────────── */
+  .roadmap-page {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.12) transparent;
+  }
+
+  .roadmap-page ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  .roadmap-page ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .roadmap-page ::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.12);
+    border-radius: 9999px;
+    transition: background 0.2s ease;
+  }
+
+  .roadmap-page ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255,255,255,0.28);
+  }
+
+  .roadmap-page ::-webkit-scrollbar-thumb:active {
+    background: rgba(255,255,255,0.42);
+  }
+
+  .roadmap-page ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+  /* ──────────────────────────────────────────────────────────────────── */
+
   /* Contenteditable placeholder support */
   div[contenteditable][data-placeholder]:empty::before {
     content: attr(data-placeholder);
