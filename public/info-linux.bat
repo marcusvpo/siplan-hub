@@ -51,6 +51,9 @@ if ($ambInput -eq 'N' -or $ambInput -eq 'n' -or $ambInput.ToLower().StartsWith("
     $ambiente = "Nuvem"
 }
 
+Write-Host ""
+Write-Host "Nota: O failover/redundancia ocorre quando o cartorio possui dois links (operadoras)" -ForegroundColor Gray
+Write-Host "de internet ativos. Se o link principal cair, o segundo assume automaticamente." -ForegroundColor Gray
 $failInput = Read-Host "A rede deste servidor Linux possui failover/redundancia de internet? (S/N)"
 if ($failInput -eq 'S' -or $failInput -eq 's' -or $failInput.ToLower().StartsWith("sim")) {
     $failover = "Sim"
