@@ -144,7 +144,7 @@ export function GeneralInfoTab({ project, onUpdate, onStageClick }: TabProps) {
   };
 
   return (
-    <div className="space-y-8 w-full pb-10">
+    <div className="space-y-5 w-full pb-4">
       {/* Feedback Visual do Autosave */}
       <div className="fixed bottom-4 right-4 z-50">
         {saveState.status === "saving" && (
@@ -166,7 +166,7 @@ export function GeneralInfoTab({ project, onUpdate, onStageClick }: TabProps) {
       </div>
 
       {/* 1. Pipeline Visual Moderno */}
-      <div className="w-full py-6 px-6 bg-card/50 backdrop-blur-sm rounded-2xl border shadow-sm relative overflow-hidden mb-8">
+      <div className="w-full py-3 px-4 bg-card/50 backdrop-blur-sm rounded-2xl border shadow-sm relative overflow-hidden">
         <div className="flex items-center justify-between relative z-10 max-w-5xl mx-auto">
           {/* Connecting Line */}
           <div className="absolute top-[2.15rem] left-0 right-0 h-1 bg-muted -z-10 rounded-full" />
@@ -262,16 +262,16 @@ export function GeneralInfoTab({ project, onUpdate, onStageClick }: TabProps) {
       <ProjectHeaderForm project={data} />
 
       {/* 3. Observações Gerais (Rich Editor) */}
-      <div className="space-y-4 pt-4">
+      <div className="space-y-2 pt-2">
         <div className="flex items-center gap-2">
-          <FileText className="h-5 w-5 text-muted-foreground" />
-          <h3 className="text-lg font-semibold text-muted-foreground">
+          <FileText className="h-4 w-4 text-muted-foreground" />
+          <h3 className="text-sm font-semibold text-muted-foreground">
             Observações Gerais
           </h3>
         </div>
 
         <div className="bg-white dark:bg-card rounded-xl border shadow-sm overflow-hidden">
-          <div className="p-4">
+          <div className="p-3">
             <RichTextEditor
               content={editorContent}
               onChange={updateEditorContent}
