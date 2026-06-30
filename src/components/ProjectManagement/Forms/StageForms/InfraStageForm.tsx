@@ -572,11 +572,24 @@ export function InfraStageForm({
 
         workstations.forEach((ws, idx) => {
           const validation = checkWorkstationRequirements(ws);
-          checkAddPage(7.5);
+          
+          // Split the wrapped columns dynamically
+          const cpuVal = ws.processor || "-";
+          const cpuLines = pdf.splitTextToSize(cpuVal, 30);
+          
+          const diskFormatted = formatDiskFreeSpace(ws.disk || "");
+          const diskLines = pdf.splitTextToSize(diskFormatted, 25);
+          
+          const maxLines = Math.max(cpuLines.length, diskLines.length, 1);
+          const rowHeight = 3.5 + maxLines * 3; // 6.5mm for 1 line, 9.5mm for 2 lines
+
+          // Verify if page break is needed
+          const alertHeight = (!validation.meets && validation.issues.length > 0) ? 5 : 0;
+          checkAddPage(rowHeight + alertHeight);
 
           pdf.setFillColor(255, 255, 255);
           pdf.setDrawColor(226, 232, 240);
-          pdf.rect(margin, posY, pageWidth - 2 * margin, 6.5, "FD");
+          pdf.rect(margin, posY, pageWidth - 2 * margin, rowHeight, "FD");
 
           pdf.setFont("helvetica", "normal");
           pdf.setFontSize(7);
@@ -595,17 +608,15 @@ export function InfraStageForm({
           const wsUserTrunc = wsUser.length > 15 ? wsUser.substring(0, 15) + "..." : wsUser;
           pdf.text(wsUserTrunc, margin + 53, posY + 4.2);
 
-          const cpuVal = ws.processor || "-";
-          const cpuTrunc = cpuVal.length > 25 ? cpuVal.substring(0, 25) + "..." : cpuVal;
-          pdf.text(cpuTrunc, margin + 75, posY + 4.2);
+          // Wrapped Processador Geração column
+          pdf.text(cpuLines, margin + 75, posY + 4.2);
           
           const wsMemory = ws.memory || "-";
           const wsMemoryTrunc = wsMemory.length > 10 ? wsMemory.substring(0, 10) + "..." : wsMemory;
           pdf.text(wsMemoryTrunc, margin + 107, posY + 4.2);
 
-          const diskFormatted = formatDiskFreeSpace(ws.disk || "");
-          const diskTrunc = diskFormatted.length > 20 ? diskFormatted.substring(0, 20) + "..." : diskFormatted;
-          pdf.text(diskTrunc, margin + 118, posY + 4.2);
+          // Wrapped Armazenamento column
+          pdf.text(diskLines, margin + 118, posY + 4.2);
 
           const wsNetworkSpeed = getNetworkSpeedShort(ws.network || "");
           pdf.text(wsNetworkSpeed, margin + 146, posY + 4.2);
@@ -619,7 +630,7 @@ export function InfraStageForm({
             pdf.text("Não", margin + 168, posY + 4.2);
           }
 
-          posY += 6.5;
+          posY += rowHeight;
 
           if (!validation.meets && validation.issues.length > 0) {
             checkAddPage(5.5);
