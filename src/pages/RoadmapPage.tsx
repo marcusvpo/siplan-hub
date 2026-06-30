@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -22,6 +22,22 @@ import {
   Loader2,
   Sparkles,
   Zap,
+  ArrowUp,
+  Server,
+  ShieldCheck,
+  ClipboardList,
+  Map,
+  Search,
+  CalendarDays,
+  HardDrive,
+  Shield,
+  RefreshCw,
+  Wrench,
+  SlidersHorizontal,
+  UserCog,
+  GraduationCap,
+  Trophy,
+  Rocket,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { cn } from "@/lib/utils";
@@ -67,10 +83,10 @@ interface StageConfig {
   label: string;
   icon: LucideIcon;
   description: string;
-  details?: string[];
+  details?: { icon: LucideIcon; text: string }[];
 }
 
-// Configuração das etapas com Emojis e Novos Textos
+// Configuração das etapas com ícones profissionais
 const STAGES_CONFIG: StageConfig[] = [
   {
     id: "infra",
@@ -78,9 +94,9 @@ const STAGES_CONFIG: StageConfig[] = [
     icon: Cpu,
     description: "Preparando o terreno para a inovação.",
     details: [
-      "🖥️ Validação de Servidores e Hardware",
-      "🔒 Verificação de Segurança e Rede",
-      "✅ Conferência de Pré-requisitos",
+      { icon: Server,       text: "Validação de Servidores e Hardware" },
+      { icon: ShieldCheck,  text: "Verificação de Segurança e Rede" },
+      { icon: ClipboardList, text: "Conferência de Pré-requisitos" },
     ],
   },
   {
@@ -89,9 +105,9 @@ const STAGES_CONFIG: StageConfig[] = [
     icon: Settings,
     description: "Desenhando o futuro da operação.",
     details: [
-      "🗺️ Mapeamento de Processos Críticos",
-      "🔍 Análise de Gaps Operacionais",
-      "📅 Estudo das principais rotinas do seu cartório",
+      { icon: Map,         text: "Mapeamento de Processos Críticos" },
+      { icon: Search,      text: "Análise de Gaps Operacionais" },
+      { icon: CalendarDays, text: "Estudo das principais rotinas do seu cartório" },
     ],
   },
   {
@@ -100,9 +116,9 @@ const STAGES_CONFIG: StageConfig[] = [
     icon: Truck,
     description: "Migração inteligente do legado.",
     details: [
-      "💾 Preparação para Conversão da Base de Dados",
-      "🛡️ Extração Segura de Dados",
-      "🔄 Primeira Carga em Homologação",
+      { icon: HardDrive, text: "Preparação para Conversão da Base de Dados" },
+      { icon: Shield,    text: "Extração Segura de Dados" },
+      { icon: RefreshCw, text: "Primeira Carga em Homologação" },
     ],
   },
   {
@@ -111,9 +127,9 @@ const STAGES_CONFIG: StageConfig[] = [
     icon: Database,
     description: "O sistema, do seu jeito.",
     details: [
-      "🛠️ Instalação dos Sistemas Siplan",
-      "⚙️ Parametrização de Regras de Negócio",
-      "👤 Setup de Perfis e Permissões",
+      { icon: Wrench,           text: "Instalação dos Sistemas Siplan" },
+      { icon: SlidersHorizontal, text: "Parametrização de Regras de Negócio" },
+      { icon: UserCog,          text: "Setup de Perfis e Permissões" },
     ],
   },
   {
@@ -122,9 +138,9 @@ const STAGES_CONFIG: StageConfig[] = [
     icon: Archive,
     description: "A reta final para a transformação.",
     details: [
-      "🎓 Treinamentos Coletivos por Setor",
-      "🏆 Validação Final pela Serventia",
-      "🚀 GO-LIVE: Entrada Oficial em Produção",
+      { icon: GraduationCap, text: "Treinamentos Coletivos por Setor" },
+      { icon: Trophy,        text: "Validação Final pela Serventia" },
+      { icon: Rocket,        text: "GO-LIVE: Entrada Oficial em Produção" },
     ],
   },
 ];
@@ -134,6 +150,8 @@ export default function RoadmapPage() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<RoadmapData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -161,6 +179,17 @@ export default function RoadmapPage() {
 
     fetchData();
   }, [token]);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const onScroll = () => setShowScrollTop(el.scrollTop > 400);
+    el.addEventListener("scroll", onScroll);
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const scrollToTop = () =>
+    containerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
 
   // Recalcular progresso no frontend se necessário
   // waiting_adjustment counts as partial progress (analysis done, dev working)
@@ -263,7 +292,7 @@ export default function RoadmapPage() {
   const primaryColor = roadmap.custom_theme?.primary || "#800000";
 
   return (
-    <div className="roadmap-page h-screen overflow-y-auto overflow-x-hidden bg-[#000000] text-gray-100 selection:bg-white/20 font-sans">
+    <div ref={containerRef} className="roadmap-page h-screen overflow-y-auto overflow-x-hidden bg-[#000000] text-gray-100 selection:bg-white/20 font-sans">
       {/* Dynamic Background with Animation - Enhanced */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         {/* Deep Space Background */}
@@ -501,6 +530,23 @@ export default function RoadmapPage() {
 
         {/* Footer */}
         <RealtimeFooter />
+
+        {/* Back to Top */}
+        <AnimatePresence>
+          {showScrollTop && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: 10 }}
+              transition={{ duration: 0.2 }}
+              onClick={scrollToTop}
+              title="Voltar ao início"
+              className="fixed bottom-8 right-8 z-50 w-11 h-11 rounded-full bg-white/8 hover:bg-white/15 border border-white/10 hover:border-white/25 flex items-center justify-center backdrop-blur-md shadow-xl transition-all duration-200 cursor-pointer group"
+            >
+              <ArrowUp className="w-4 h-4 text-white/60 group-hover:text-white transition-colors" />
+            </motion.button>
+          )}
+        </AnimatePresence>
       </main>
     </div>
   );
@@ -522,7 +568,7 @@ function ButtonScrollDown() {
     >
       <motion.button
         onClick={() =>
-          window.scrollTo({ top: window.innerHeight, behavior: "smooth" })
+          document.querySelector(".roadmap-page")?.scrollTo({ top: window.innerHeight, behavior: "smooth" })
         }
         whileHover={{ scale: 1.05, y: -2 }}
         whileTap={{ scale: 0.98 }}
@@ -722,39 +768,48 @@ function TimelineItem({
                 "flex flex-col",
               )}
             >
-              {stage.details.map((detail, i) => (
-                <motion.li
-                  key={i}
-                  variants={itemVariants}
-                  className="flex items-center gap-3 group/item"
-                >
-                  {!isLeft &&
-                    (isDone ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500/50" />
-                    ) : (
-                      <div className="w-1.5 h-1.5 rounded-full bg-white/20 group-hover/item:bg-white transition-colors" />
-                    ))}
-
-                  <span
-                    className={cn(
-                      "text-[15px] transition-colors duration-300",
-                      // CHANGED: No strike-through, just dimmed opacity for done
-                      isDone
-                        ? "text-gray-500"
-                        : "text-gray-400 group-hover/item:text-gray-200",
-                    )}
+              {stage.details.map((detail, i) => {
+                const DetailIcon = detail.icon;
+                return (
+                  <motion.li
+                    key={i}
+                    variants={itemVariants}
+                    className="flex items-center gap-3 group/item"
                   >
-                    {detail}
-                  </span>
+                    {!isLeft &&
+                      (isDone ? (
+                        <CheckCircle2 className="w-4 h-4 text-emerald-500/50" />
+                      ) : (
+                        <div className="w-1.5 h-1.5 rounded-full bg-white/20 group-hover/item:bg-white transition-colors" />
+                      ))}
 
-                  {isLeft &&
-                    (isDone ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500/50" />
-                    ) : (
-                      <div className="w-1.5 h-1.5 rounded-full bg-white/20 group-hover/item:bg-white transition-colors" />
-                    ))}
-                </motion.li>
-              ))}
+                    <DetailIcon
+                      className={cn(
+                        "w-3.5 h-3.5 flex-shrink-0",
+                        isDone ? "text-gray-600" : "text-gray-500 group-hover/item:text-gray-300",
+                      )}
+                    />
+
+                    <span
+                      className={cn(
+                        "text-[15px] transition-colors duration-300",
+                        isDone
+                          ? "text-gray-500"
+                          : "text-gray-400 group-hover/item:text-gray-200",
+                      )}
+                    >
+                      {detail.text}
+                    </span>
+
+                    {isLeft &&
+                      (isDone ? (
+                        <CheckCircle2 className="w-4 h-4 text-emerald-500/50" />
+                      ) : (
+                        <div className="w-1.5 h-1.5 rounded-full bg-white/20 group-hover/item:bg-white transition-colors" />
+                      ))}
+                  </motion.li>
+                );
+              })}
             </motion.ul>
           )}
         </motion.div>
