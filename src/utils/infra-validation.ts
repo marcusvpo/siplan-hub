@@ -238,8 +238,23 @@ export const parseMachineInfo = (text: string) => {
     }
   }
 
-  const environment = info["AMBIENTE"]?.[0] || "";
-  const networkFailover = info["REDE FAILOVER"]?.[0] || "";
+  let environment = info["AMBIENTE"]?.[0] || "";
+  if (environment) {
+    const envLower = environment.toLowerCase().trim();
+    if (envLower.startsWith("loc")) environment = "Local";
+    else if (envLower.startsWith("nuv") || envLower.includes("cloud")) environment = "Nuvem";
+  } else {
+    environment = "Local";
+  }
+
+  let networkFailover = info["REDE FAILOVER"]?.[0] || "";
+  if (networkFailover) {
+    const netLower = networkFailover.toLowerCase().trim();
+    if (netLower.startsWith("s") || netLower === "yes" || netLower === "y") networkFailover = "Sim";
+    else if (netLower.startsWith("n")) networkFailover = "Não";
+  } else {
+    networkFailover = "Não";
+  }
 
   return {
     hostname,
