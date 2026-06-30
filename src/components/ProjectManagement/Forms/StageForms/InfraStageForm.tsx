@@ -1039,7 +1039,7 @@ export function InfraStageForm({
                 <p className="text-xs text-muted-foreground mt-1">Adicione manualmente ou importe do script PowerShell.</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-2.5">
                 {servers.map((srv, idx) => {
                   const validation = checkServerRequirements(srv, workstationsCount);
                   return (
@@ -1047,13 +1047,13 @@ export function InfraStageForm({
                       {/* Indicador lateral de status de compatibilidade */}
                       <div className={cn("absolute left-0 top-0 bottom-0 w-1.5", validation.meets ? "bg-emerald-500" : "bg-rose-500")} />
                       
-                      <CardHeader className="py-3 px-5 flex flex-row items-center justify-between border-b dark:border-slate-800/50">
+                      <CardHeader className="py-2 px-4 flex flex-row items-center justify-between border-b dark:border-slate-800/50">
                         <div className="flex items-center gap-2">
-                          <ServerIcon className="h-4.5 w-4.5 text-slate-400" />
-                          <CardTitle className="text-sm font-bold tracking-tight">
+                          <ServerIcon className="h-4 w-4 text-slate-400" />
+                          <CardTitle className="text-xs font-bold tracking-tight">
                             {srv.hostname || `SERVIDOR ${idx + 1}`}
                           </CardTitle>
-                          <Badge variant="outline" className={cn("text-xxs px-2 py-0.5", validation.meets ? "bg-emerald-50/50 text-emerald-700 dark:bg-emerald-950/20" : "bg-rose-50/50 text-rose-700 dark:bg-rose-950/20")}>
+                          <Badge variant="outline" className={cn("text-[9px] px-1.5 py-0.5", validation.meets ? "bg-emerald-50/50 text-emerald-700 dark:bg-emerald-950/20" : "bg-rose-50/50 text-rose-700 dark:bg-rose-950/20")}>
                             {validation.meets ? "Requisitos OK" : "Incompatível"}
                           </Badge>
                         </div>
@@ -1062,16 +1062,16 @@ export function InfraStageForm({
                             variant="ghost" 
                             size="icon" 
                             onClick={() => deleteServer(idx)}
-                            className="h-7 w-7 text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/20"
+                            className="h-6 w-6 text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/20"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-3.5 w-3.5" />
                           </Button>
                         )}
                       </CardHeader>
-                      <CardContent className="p-5">
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                          <div className="space-y-1">
-                            <Label className="text-xxs font-bold uppercase tracking-wider text-muted-foreground">Hostname</Label>
+                      <CardContent className="p-3 pt-2">
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-2 text-xs">
+                          <div className="space-y-0.5">
+                            <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Hostname</Label>
                             <Input 
                               value={srv.hostname || ""} 
                               onChange={e => {
@@ -1080,11 +1080,11 @@ export function InfraStageForm({
                                 handleServersChange(list);
                               }}
                               disabled={!canEditProjects}
-                              className="h-9 border-slate-200 dark:border-slate-800/60"
+                              className="h-8 text-xs border-slate-200 dark:border-slate-800/60"
                             />
                           </div>
-                          <div className="space-y-1">
-                            <Label className="text-xxs font-bold uppercase tracking-wider text-muted-foreground">Marca/Modelo</Label>
+                          <div className="space-y-0.5">
+                            <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Marca/Modelo</Label>
                             <Input 
                               value={srv.brandModel || ""} 
                               onChange={e => {
@@ -1094,11 +1094,11 @@ export function InfraStageForm({
                               }}
                               placeholder="Ex: Dell T340"
                               disabled={!canEditProjects}
-                              className="h-9 border-slate-200 dark:border-slate-800/60"
+                              className="h-8 text-xs border-slate-200 dark:border-slate-800/60"
                             />
                           </div>
-                          <div className="space-y-1">
-                            <Label className="text-xxs font-bold uppercase tracking-wider text-muted-foreground">Virtualizado?</Label>
+                          <div className="space-y-0.5">
+                            <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Virtualizado?</Label>
                             <Select
                               value={srv.virtualized === true || srv.virtualized === "Sim" ? "Sim" : "Não"}
                               onValueChange={v => {
@@ -1108,7 +1108,7 @@ export function InfraStageForm({
                               }}
                               disabled={!canEditProjects}
                             >
-                              <SelectTrigger className="h-9 border-slate-200 dark:border-slate-800/60">
+                              <SelectTrigger className="h-8 text-xs border-slate-200 dark:border-slate-800/60">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -1117,8 +1117,8 @@ export function InfraStageForm({
                               </SelectContent>
                             </Select>
                           </div>
-                          <div className="space-y-1">
-                            <Label className="text-xxs font-bold uppercase tracking-wider text-muted-foreground">Processador</Label>
+                          <div className="space-y-0.5">
+                            <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Processador</Label>
                             <Input 
                               value={srv.processor || ""} 
                               onChange={e => {
@@ -1128,11 +1128,11 @@ export function InfraStageForm({
                               }}
                               placeholder="Ex: Intel Xeon E5-2620"
                               disabled={!canEditProjects}
-                              className="h-9 border-slate-200 dark:border-slate-800/60"
+                              className="h-8 text-xs border-slate-200 dark:border-slate-800/60"
                             />
                           </div>
-                          <div className="space-y-1">
-                            <Label className="text-xxs font-bold uppercase tracking-wider text-muted-foreground">Núcleos</Label>
+                          <div className="space-y-0.5">
+                            <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Núcleos</Label>
                             <Input 
                               value={srv.cores || ""} 
                               onChange={e => {
@@ -1142,11 +1142,11 @@ export function InfraStageForm({
                               }}
                               placeholder="Ex: 6"
                               disabled={!canEditProjects}
-                              className="h-9 border-slate-200 dark:border-slate-800/60"
+                              className="h-8 text-xs border-slate-200 dark:border-slate-800/60"
                             />
                           </div>
-                          <div className="space-y-1">
-                            <Label className="text-xxs font-bold uppercase tracking-wider text-muted-foreground">Memória RAM</Label>
+                          <div className="space-y-0.5">
+                            <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Memória RAM</Label>
                             <Input 
                               value={srv.memory || ""} 
                               onChange={e => {
@@ -1156,11 +1156,11 @@ export function InfraStageForm({
                               }}
                               placeholder="Ex: 32 GB"
                               disabled={!canEditProjects}
-                              className="h-9 border-slate-200 dark:border-slate-800/60"
+                              className="h-8 text-xs border-slate-200 dark:border-slate-800/60"
                             />
                           </div>
-                          <div className="space-y-1">
-                            <Label className="text-xxs font-bold uppercase tracking-wider text-muted-foreground">Disco (Armazenamento)</Label>
+                          <div className="space-y-0.5">
+                            <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Disco (Armazenamento)</Label>
                             <Input 
                               value={srv.disk || ""} 
                               onChange={e => {
@@ -1170,11 +1170,11 @@ export function InfraStageForm({
                               }}
                               placeholder="Ex: 2 TB SAS RAID 1"
                               disabled={!canEditProjects}
-                              className="h-9 border-slate-200 dark:border-slate-800/60"
+                              className="h-8 text-xs border-slate-200 dark:border-slate-800/60"
                             />
                           </div>
-                          <div className="space-y-1">
-                            <Label className="text-xxs font-bold uppercase tracking-wider text-muted-foreground">Espaço para o Orion</Label>
+                          <div className="space-y-0.5">
+                            <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Espaço para o Orion</Label>
                             <Input 
                               value={srv.spaceOrion || ""} 
                               onChange={e => {
@@ -1184,11 +1184,11 @@ export function InfraStageForm({
                               }}
                               placeholder="Ex: 500 GB"
                               disabled={!canEditProjects}
-                              className="h-9 border-slate-200 dark:border-slate-800/60"
+                              className="h-8 text-xs border-slate-200 dark:border-slate-800/60"
                             />
                           </div>
-                          <div className="space-y-1">
-                            <Label className="text-xxs font-bold uppercase tracking-wider text-muted-foreground">Sistema Operacional</Label>
+                          <div className="space-y-0.5">
+                            <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Sistema Operacional</Label>
                             <Input 
                               value={srv.os || ""} 
                               onChange={e => {
@@ -1198,11 +1198,11 @@ export function InfraStageForm({
                               }}
                               placeholder="Ex: Windows Server 2022"
                               disabled={!canEditProjects}
-                              className="h-9 border-slate-200 dark:border-slate-800/60"
+                              className="h-8 text-xs border-slate-200 dark:border-slate-800/60"
                             />
                           </div>
-                          <div className="space-y-1">
-                            <Label className="text-xxs font-bold uppercase tracking-wider text-muted-foreground">Anti-Vírus</Label>
+                          <div className="space-y-0.5">
+                            <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Anti-Vírus</Label>
                             <Input 
                               value={srv.antivirus || ""} 
                               onChange={e => {
@@ -1212,11 +1212,11 @@ export function InfraStageForm({
                               }}
                               placeholder="Ex: Bitdefender"
                               disabled={!canEditProjects}
-                              className="h-9 border-slate-200 dark:border-slate-800/60"
+                              className="h-8 text-xs border-slate-200 dark:border-slate-800/60"
                             />
                           </div>
-                          <div className="space-y-1">
-                            <Label className="text-xxs font-bold uppercase tracking-wider text-muted-foreground">Rede</Label>
+                          <div className="space-y-0.5">
+                            <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Rede</Label>
                             <Input 
                               value={srv.network || ""} 
                               onChange={e => {
@@ -1226,11 +1226,11 @@ export function InfraStageForm({
                               }}
                               placeholder="Ex: 1000 Mbps"
                               disabled={!canEditProjects}
-                              className="h-9 border-slate-200 dark:border-slate-800/60"
+                              className="h-8 text-xs border-slate-200 dark:border-slate-800/60"
                             />
                           </div>
-                          <div className="space-y-1">
-                            <Label className="text-xxs font-bold uppercase tracking-wider text-muted-foreground">Backup</Label>
+                          <div className="space-y-0.5">
+                            <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Backup</Label>
                             <Input 
                               value={srv.backup || ""} 
                               onChange={e => {
@@ -1240,11 +1240,11 @@ export function InfraStageForm({
                               }}
                               placeholder="Ex: Nuvem + HD Externo"
                               disabled={!canEditProjects}
-                              className="h-9 border-slate-200 dark:border-slate-800/60"
+                              className="h-8 text-xs border-slate-200 dark:border-slate-800/60"
                             />
                           </div>
-                          <div className="space-y-1 md:col-span-4">
-                            <Label className="text-xxs font-bold uppercase tracking-wider text-muted-foreground">Observações</Label>
+                          <div className="space-y-0.5 md:col-span-4">
+                            <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Observações</Label>
                             <Input 
                               value={srv.observations || ""} 
                               onChange={e => {
@@ -1254,14 +1254,14 @@ export function InfraStageForm({
                               }}
                               placeholder="Detalhes adicionais..."
                               disabled={!canEditProjects}
-                              className="h-9 border-slate-200 dark:border-slate-800/60"
+                              className="h-8 text-xs border-slate-200 dark:border-slate-800/60"
                             />
                           </div>
                         </div>
-
+ 
                         {/* Listar erros ou avisos se existirem */}
                         {validation.issues.length > 0 && (
-                          <div className="mt-4 p-3 bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/40 rounded-lg flex items-start gap-2.5">
+                          <div className="mt-2.5 p-2 bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/40 rounded-lg flex items-start gap-2.5">
                             <AlertTriangle className="h-4 w-4 text-rose-600 dark:text-rose-400 mt-0.5 shrink-0" />
                             <div className="text-xs text-rose-800 dark:text-rose-300">
                               <p className="font-bold mb-1">Alertas de Compatibilidade:</p>
