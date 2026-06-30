@@ -468,3 +468,25 @@ export const formatNetworkSpeed = (netStr: string): string => {
   return cleanedNetStr;
 };
 
+export const getNetworkSpeedShort = (netStr: string): string => {
+  if (!netStr) return "-";
+  const lower = netStr.toLowerCase();
+  if (lower.includes("10000 mbps") || lower.includes("10 gbps") || lower.includes("10gbps")) {
+    return "/10000";
+  }
+  if (lower.includes("1000 mbps") || lower.includes("1000mbps") || lower.includes("1 gbps") || lower.includes("1gbps") || lower.includes("gigabit") || lower.includes("gbe")) {
+    return "/1000";
+  }
+  if (lower.includes("100 mbps") || lower.includes("100mbps") || lower.includes("fast ethernet")) {
+    return "/100";
+  }
+  if (lower.includes("10 mbps") || lower.includes("10mbps")) {
+    return "/10";
+  }
+  // Guess based on common adapter names
+  if (lower.includes("eno") || lower.includes("eth") || lower.includes("enp") || lower.includes("intel") || lower.includes("realtek")) {
+    return "/1000";
+  }
+  return "-";
+};
+
