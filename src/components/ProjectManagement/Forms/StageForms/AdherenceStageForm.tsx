@@ -162,17 +162,17 @@ export function AdherenceStageForm({
           </Label>
         </div>
         {stage.hasProductGap && (
-          <div className="bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/15 dark:to-orange-950/15 p-5 rounded-xl space-y-4 border-2 border-red-200 dark:border-red-900/50 shadow-sm">
-            <div className="space-y-2.5">
-              <Label className="text-xs font-bold uppercase tracking-widest text-red-600 flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+          <div className="bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/15 dark:to-orange-950/15 p-3 rounded-lg space-y-2 border border-red-200 dark:border-red-900/50 shadow-sm">
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-red-600 flex items-center gap-1.5">
+                <div className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
                 Descrição do Gap
               </Label>
               <Textarea
                 value={stage.gapDescription || ""}
                 onChange={(e) => onUpdate({ gapDescription: e.target.value })}
                 disabled={!canEditProjects || isFinalized}
-                className="min-h-[100px] border-2 border-red-200 focus:border-red-400 bg-white dark:bg-slate-950/20 dark:text-red-300 dark:border-red-900/50 dark:focus:border-red-600 text-xs"
+                className="min-h-[70px] border border-red-200 focus:border-red-450 bg-white dark:bg-slate-950/20 dark:text-red-300 dark:border-red-900/50 dark:focus:border-red-600 text-xs py-1"
                 placeholder="Descreva detalhadamente o gap identificado..."
               />
             </div>

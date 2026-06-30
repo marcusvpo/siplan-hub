@@ -582,16 +582,17 @@ export function InfraStageForm({
   return (
     <>
       {/* Botões e Status originais no topo */}
-      <div className="col-span-full mb-4 flex flex-wrap gap-3 items-center justify-between">
-        <div className="flex flex-wrap gap-2.5 items-center">
+      <div className="col-span-full mb-2.5 flex flex-wrap gap-2 items-center justify-between">
+        <div className="flex flex-wrap gap-2 items-center">
           <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button
               variant="destructive"
+              size="sm"
               disabled={notifying || !canEditProjects}
-              className="font-bold shadow-sm bg-gradient-to-r from-rose-600 to-red-700 hover:from-rose-700 hover:to-red-800 transition-all duration-300"
+              className="font-bold shadow-sm bg-gradient-to-r from-rose-600 to-red-700 hover:from-rose-700 hover:to-red-800 transition-all duration-300 h-8 text-xs"
             >
-              <Megaphone className="mr-2 h-4 w-4" />
+              <Megaphone className="mr-1.5 h-3.5 w-3.5" />
               {notifying ? "Notificando..." : "Notificar Comercial"}
             </Button>
           </AlertDialogTrigger>
@@ -617,6 +618,7 @@ export function InfraStageForm({
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
                 onClick={() => {
                   const link = `${window.location.origin}/public/infra-coleta/${projectId}`;
                   navigator.clipboard.writeText(link);
@@ -627,15 +629,16 @@ export function InfraStageForm({
                   });
                 }}
                 disabled={stage.publicLinkClosed === true}
-                className="font-bold border-indigo-300 hover:bg-indigo-50 dark:border-indigo-900/40 dark:hover:bg-indigo-950/20 text-indigo-700 dark:text-indigo-400 shadow-sm"
+                className="font-bold border-indigo-300 hover:bg-indigo-50 dark:border-indigo-900/40 dark:hover:bg-indigo-950/20 text-indigo-700 dark:text-indigo-400 shadow-sm h-8 text-xs"
               >
-                <Share2 className="mr-2 h-4 w-4" />
+                <Share2 className="mr-1.5 h-3.5 w-3.5" />
                 Copiar Link Público
               </Button>
 
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
                 onClick={() => {
                   const newClosed = !stage.publicLinkClosed;
                   onUpdate({ publicLinkClosed: newClosed });
@@ -649,18 +652,18 @@ export function InfraStageForm({
                 }}
                 disabled={!canEditProjects}
                 className={cn(
-                  "font-bold border-amber-300 hover:bg-amber-50 dark:border-amber-900/40 dark:hover:bg-amber-950/20 text-amber-700 dark:text-amber-400 shadow-sm",
+                  "font-bold border-amber-300 hover:bg-amber-50 dark:border-amber-900/40 dark:hover:bg-amber-950/20 text-amber-700 dark:text-amber-400 shadow-sm h-8 text-xs",
                   stage.publicLinkClosed && "border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-900/40 text-slate-600 dark:text-slate-400"
                 )}
               >
                 {stage.publicLinkClosed ? (
                   <>
-                    <Unlock className="mr-2 h-4 w-4" />
+                    <Unlock className="mr-1.5 h-3.5 w-3.5" />
                     Reabrir Link Público
                   </>
                 ) : (
                   <>
-                    <Lock className="mr-2 h-4 w-4" />
+                    <Lock className="mr-1.5 h-3.5 w-3.5" />
                     Fechar Link Público
                   </>
                 )}
@@ -841,64 +844,62 @@ export function InfraStageForm({
         />
       </div>
 
-      {/* -------------------------------------------------------------
-          ABAS DE DETALHES DE INFRAESTRUTURA (COL-SPAN-FULL)
-          ------------------------------------------------------------- */}
-      <div className="col-span-full border-t border-slate-100 dark:border-slate-800/80 pt-6 mt-4">
+      {/* ABAS DE DETALHES DE INFRAESTRUTURA (COL-SPAN-FULL) */}
+      <div className="col-span-full border-t border-slate-100 dark:border-slate-800/80 pt-3 mt-2">
         <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="w-full">
-          <TabsList className="bg-slate-100/80 dark:bg-slate-950/40 p-1 border dark:border-slate-800/60 rounded-lg flex flex-wrap h-auto gap-1">
+          <TabsList className="bg-slate-100/80 dark:bg-slate-950/40 p-0.5 border dark:border-slate-800/60 rounded-lg flex flex-wrap h-auto gap-0.5">
             <TabsTrigger 
               value="geral" 
-              className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 py-2.5 font-bold data-[state=active]:text-[hsl(346,84%,45%)] flex items-center gap-2"
+              className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 py-1.5 px-3 font-bold data-[state=active]:text-[hsl(346,84%,45%)] flex items-center gap-1.5 text-xs text-[11px]"
             >
-              <Activity className="h-4 w-4" />
+              <Activity className="h-3.5 w-3.5" />
               Visão Geral
             </TabsTrigger>
             <TabsTrigger 
               value="servidores" 
-              className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 py-2.5 font-bold data-[state=active]:text-[hsl(346,84%,45%)] flex items-center gap-2"
+              className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 py-1.5 px-3 font-bold data-[state=active]:text-[hsl(346,84%,45%)] flex items-center gap-1.5 text-xs text-[11px]"
             >
-              <ServerIcon className="h-4 w-4" />
+              <ServerIcon className="h-3.5 w-3.5" />
               Servidores ({servers.length})
             </TabsTrigger>
             <TabsTrigger 
               value="estacoes" 
-              className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 py-2.5 font-bold data-[state=active]:text-[hsl(346,84%,45%)] flex items-center gap-2"
+              className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 py-1.5 px-3 font-bold data-[state=active]:text-[hsl(346,84%,45%)] flex items-center gap-1.5 text-xs text-[11px]"
             >
-              <Laptop className="h-4 w-4" />
+              <Laptop className="h-3.5 w-3.5" />
               Estações ({workstations.length})
             </TabsTrigger>
             <TabsTrigger 
               value="manual" 
-              className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 py-2.5 font-bold data-[state=active]:text-[hsl(346,84%,45%)] flex items-center gap-2"
+              className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 py-1.5 px-3 font-bold data-[state=active]:text-[hsl(346,84%,45%)] flex items-center gap-1.5 text-xs text-[11px]"
             >
-              <BookOpen className="h-4 w-4" />
+              <BookOpen className="h-3.5 w-3.5" />
               Manual Técnico
             </TabsTrigger>
           </TabsList>
 
           {/* TAB 1: VISÃO GERAL */}
-          <TabsContent value="geral" className="pt-4 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="bg-slate-50/50 dark:bg-slate-950/10 border dark:border-slate-800/60 shadow-sm">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+          <TabsContent value="geral" className="pt-2 space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <Card className="bg-slate-50/50 dark:bg-slate-950/10 border dark:border-slate-800/60 shadow-sm rounded-lg">
+                <CardHeader className="p-3 pb-1">
+                  <CardTitle className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
                     Servidor(es)
-                    <ServerIcon className="h-4 w-4 text-sky-500" />
+                    <ServerIcon className="h-3.5 w-3.5 text-sky-500" />
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-3 pt-0">
                   {servers.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">Nenhum cadastrado</p>
+                    <p className="text-xs text-muted-foreground">Nenhum cadastrado</p>
                   ) : (
-                    <div className="space-y-2">
-                      <div className="text-2xl font-bold">{servers.length} Servidor(es)</div>
+                    <div className="space-y-1">
+                      <div className="text-lg font-bold">{servers.length} Servidor(es)</div>
                       <div className="flex gap-2">
-                        <Badge variant="outline" className={cn(serversFailCount > 0 ? "bg-red-50 text-red-700 dark:bg-red-950/20" : "bg-green-50 text-green-700 dark:bg-emerald-950/20")}>
+                        <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0.5", serversFailCount > 0 ? "bg-red-50 text-red-700 dark:bg-red-950/20" : "bg-green-50 text-green-700 dark:bg-emerald-950/20")}>
                           {serversOkCount} OK
                         </Badge>
                         {serversFailCount > 0 && (
-                          <Badge variant="destructive">{serversFailCount} Avisos</Badge>
+                          <Badge variant="destructive" className="text-[10px] px-1.5 py-0.5">{serversFailCount} Avisos</Badge>
                         )}
                       </div>
                     </div>
@@ -906,32 +907,32 @@ export function InfraStageForm({
                 </CardContent>
               </Card>
 
-              <Card className="bg-slate-50/50 dark:bg-slate-950/10 border dark:border-slate-800/60 shadow-sm">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+              <Card className="bg-slate-50/50 dark:bg-slate-950/10 border dark:border-slate-800/60 shadow-sm rounded-lg">
+                <CardHeader className="p-3 pb-1">
+                  <CardTitle className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
                     Estações Cadastradas
-                    <Laptop className="h-4 w-4 text-purple-500" />
+                    <Laptop className="h-3.5 w-3.5 text-purple-500" />
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{workstations.length} / {workstationsCount}</div>
-                  <p className="text-xs text-muted-foreground mt-1">Computadores identificados de acordo com a quantidade total declarada.</p>
+                <CardContent className="p-3 pt-0">
+                  <div className="text-lg font-bold">{workstations.length} / {workstationsCount}</div>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Computadores de acordo com a quantidade total declarada.</p>
                 </CardContent>
               </Card>
 
-              <Card className="bg-slate-50/50 dark:bg-slate-950/10 border dark:border-slate-800/60 shadow-sm">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+              <Card className="bg-slate-50/50 dark:bg-slate-950/10 border dark:border-slate-800/60 shadow-sm rounded-lg">
+                <CardHeader className="p-3 pb-1">
+                  <CardTitle className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
                     Compatibilidade Estações
-                    <CheckCircle2 className="h-4 w-4 text-teal-500" />
+                    <CheckCircle2 className="h-3.5 w-3.5 text-teal-500" />
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-3 pt-0">
                   {workstations.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">Sem dados de estações</p>
+                    <p className="text-xs text-muted-foreground">Sem dados de estações</p>
                   ) : (
-                    <div className="space-y-1.5">
-                      <div className="w-full bg-slate-200 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden flex">
+                    <div className="space-y-1">
+                      <div className="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden flex">
                         <div 
                           className="bg-emerald-500 h-full transition-all duration-300"
                           style={{ width: `${(stationsOkCount / workstations.length) * 100}%` }}
@@ -941,7 +942,7 @@ export function InfraStageForm({
                           style={{ width: `${(stationsFailCount / workstations.length) * 100}%` }}
                         />
                       </div>
-                      <div className="flex justify-between text-xs font-semibold mt-1">
+                      <div className="flex justify-between text-[10px] font-semibold mt-0.5">
                         <span className="text-emerald-600 dark:text-emerald-400">{stationsOkCount} OK ({( (stationsOkCount / workstations.length) * 100 ).toFixed(0)}%)</span>
                         <span className="text-rose-600 dark:text-rose-400">{stationsFailCount} Inc ({( (stationsFailCount / workstations.length) * 100 ).toFixed(0)}%)</span>
                       </div>
@@ -951,44 +952,44 @@ export function InfraStageForm({
               </Card>
             </div>
 
-            <div className="bg-slate-50/50 dark:bg-slate-950/10 border dark:border-slate-800/60 p-4 rounded-xl space-y-3">
-              <h4 className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                <Info className="h-4 w-4 text-indigo-500" />
+            <div className="bg-slate-50/50 dark:bg-slate-950/10 border dark:border-slate-800/60 p-3 rounded-lg space-y-2">
+              <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <Info className="h-3.5 w-3.5 text-indigo-500" />
                 Notas Técnicas e Observações
               </h4>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-xs font-semibold text-muted-foreground uppercase">Servidor em Uso Atual</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-bold text-muted-foreground uppercase">Servidor em Uso Atual</Label>
                   <Input 
                     value={stage.serverInUse || ""} 
                     onChange={e => onUpdate({ serverInUse: e.target.value })}
                     placeholder="Ex: Servidor HP ProLiant antigo, Xeon 4 cores, 16GB"
                     disabled={!canEditProjects}
-                    className="border-slate-200 dark:border-slate-800/60"
+                    className="border-slate-200 dark:border-slate-800/60 h-8 text-xs"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-semibold text-muted-foreground uppercase">Servidor Necessário/Cotado</Label>
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-bold text-muted-foreground uppercase">Servidor Necessário/Cotado</Label>
                   <Input 
                     value={stage.serverNeeded || ""} 
                     onChange={e => onUpdate({ serverNeeded: e.target.value })}
                     placeholder="Ex: Novo Servidor Dell PowerEdge T350 cotado comercialmente"
                     disabled={!canEditProjects}
-                    className="border-slate-200 dark:border-slate-800/60"
+                    className="border-slate-200 dark:border-slate-800/60 h-8 text-xs"
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-xs font-semibold text-muted-foreground uppercase">Notas de Viabilidade e Parecer Técnico</Label>
+              <div className="space-y-1">
+                <Label className="text-[10px] font-bold text-muted-foreground uppercase">Notas de Viabilidade e Parecer Técnico</Label>
                 <Textarea 
                   value={stage.technicalNotes || ""} 
                   onChange={e => onUpdate({ technicalNotes: e.target.value })}
                   placeholder="Descreva detalhes da viabilidade da infraestrutura, bloqueios específicos encontrados, se há necessidade de upgrades rápidos..."
                   disabled={!canEditProjects}
-                  rows={3}
-                  className="border-slate-200 dark:border-slate-800/60"
+                  rows={2}
+                  className="border-slate-200 dark:border-slate-800/60 text-xs py-1"
                 />
               </div>
             </div>
