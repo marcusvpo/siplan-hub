@@ -173,29 +173,29 @@ export function StageCard({
         "animate-glow-green border-emerald-500",
       )}
     >
-      <AccordionTrigger className="hover:no-underline py-5 px-5">
-        <div className="flex items-center gap-4 w-full">
+      <AccordionTrigger className="hover:no-underline py-2.5 px-4">
+        <div className="flex items-center gap-3 w-full">
           {/* Icon with gradient background */}
           <div
             className={cn(
-              "p-3 rounded-xl transition-all duration-300 shadow-md",
+              "p-1.5 rounded-lg transition-all duration-300 shadow-sm",
               getIconBg(status),
             )}
           >
             {Icon ? (
-              <Icon className="h-6 w-6" />
+              <Icon className="h-5 w-5" />
             ) : (
-              <Check className="h-6 w-6" />
+              <Check className="h-5 w-5" />
             )}
           </div>
 
           {/* Title */}
           <div className="flex-1 text-left">
-            <span className="font-bold text-lg tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+            <span className="font-bold text-[15px] tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
               {label}
             </span>
             {!hideResponsible && responsible && (
-              <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
+              <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0">
                 <User className="h-3 w-3" />
                 {responsible}
               </p>
@@ -204,7 +204,7 @@ export function StageCard({
 
           {/* Ready to Start Badge */}
           {isReadyToStart && status === "todo" && (
-            <Badge className="px-3 py-1 text-xs font-bold bg-emerald-500 text-white shadow-md animate-pulse mr-2">
+            <Badge className="px-2 py-0.5 text-[10px] font-bold bg-emerald-500 text-white shadow-sm animate-pulse mr-2">
               ✨ Pronto para Iniciar
             </Badge>
           )}
@@ -212,7 +212,7 @@ export function StageCard({
           {/* Status Badge with gradient */}
           <Badge
             className={cn(
-              "px-4 py-1.5 text-sm font-semibold shadow-lg transition-all duration-300",
+              "px-2.5 py-1 text-xs font-semibold shadow-md transition-all duration-300 mr-5",
               getStatusColor(status),
             )}
           >
@@ -221,20 +221,20 @@ export function StageCard({
         </div>
       </AccordionTrigger>
 
-      <AccordionContent className="px-5 pt-2 pb-6 space-y-6">
+      <AccordionContent className="px-4 pt-1.5 pb-4 space-y-4">
         {/* Readiness Indicator */}
         {isReadyToStart && status === "todo" && readinessReason && (
-          <div className="bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-950/20 dark:to-green-950/20 p-4 rounded-lg border-2 border-emerald-200 dark:border-emerald-800/50 flex items-start gap-3">
-            <div className="text-2xl">🚀</div>
+          <div className="bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-950/20 dark:to-green-950/20 p-3 rounded-lg border border-emerald-200 dark:border-emerald-800/50 flex items-start gap-2.5">
+            <div className="text-xl">🚀</div>
             <div className="flex-1">
-              <p className="font-bold text-emerald-900 dark:text-emerald-300 mb-1">
+              <p className="font-bold text-emerald-900 dark:text-emerald-300 text-xs mb-0.5">
                 Pré-requisitos Completos!
               </p>
-              <p className="text-sm text-emerald-700 dark:text-emerald-400">{readinessReason}</p>
+              <p className="text-xs text-emerald-700 dark:text-emerald-400">{readinessReason}</p>
               <button
                 onClick={() => onUpdate({ status: "in-progress" })}
                 disabled={!canEditProjects}
-                className="mt-3 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                className="mt-2.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Iniciar {label.split(".")[1]?.trim() || "Esta Etapa"}
               </button>
@@ -242,11 +242,11 @@ export function StageCard({
           </div>
         )}
         {/* Main Controls Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Status Field */}
-          <div className="space-y-2.5">
-            <Label className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+          <div className="space-y-1.5">
+            <Label className="text-[10px] font-bold uppercase tracking-widest text-primary flex items-center gap-1.5">
+              <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
               Status
             </Label>
             <Select
@@ -256,17 +256,17 @@ export function StageCard({
             >
               <SelectTrigger
                 className={cn(
-                  "h-11 font-medium border-2 transition-all duration-200",
+                  "h-9 border text-xs font-medium transition-all duration-200",
                   status === "done" &&
-                  "bg-emerald-50 text-emerald-900 border-emerald-300 hover:border-emerald-400 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50 dark:hover:border-emerald-800",
+                  "bg-emerald-50/50 text-emerald-900 border-emerald-200 hover:border-emerald-350 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50 dark:hover:border-emerald-800",
                   status === "in-progress" &&
-                  "bg-blue-50 text-blue-900 border-blue-300 hover:border-blue-400 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/50 dark:hover:border-blue-800",
+                  "bg-blue-50/50 text-blue-900 border-blue-200 hover:border-blue-350 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/50 dark:hover:border-blue-800",
                   status === "blocked" &&
-                  "bg-amber-50 text-amber-900 border-amber-300 hover:border-amber-400 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/50 dark:hover:border-amber-800",
+                  "bg-amber-50/50 text-amber-900 border-amber-200 hover:border-amber-350 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/50 dark:hover:border-emerald-800",
                   status === "waiting_adjustment" &&
-                  "bg-orange-50 text-orange-900 border-orange-300 hover:border-orange-400 dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-900/50 dark:hover:border-orange-800",
+                  "bg-orange-50/50 text-orange-900 border-orange-200 hover:border-orange-350 dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-900/50 dark:hover:border-orange-800",
                   status === "todo" &&
-                  "bg-slate-50 text-slate-900 border-slate-300 hover:border-slate-400 dark:bg-slate-900/50 dark:text-slate-400 dark:border-slate-800/60 dark:hover:border-slate-700",
+                  "bg-slate-50/50 text-slate-900 border-slate-200 hover:border-slate-300 dark:bg-slate-900/50 dark:text-slate-400 dark:border-slate-800/60 dark:hover:border-slate-700",
                 )}
               >
                 <SelectValue />
@@ -276,12 +276,12 @@ export function StageCard({
                   <SelectItem
                     key={opt.value}
                     value={opt.value}
-                    className={cn("font-medium", opt.color)}
+                    className={cn("font-medium text-xs", opt.color)}
                   >
                     <div className="flex items-center gap-2">
                       <div
                         className={cn(
-                          "h-2.5 w-2.5 rounded-full",
+                          "h-2 w-2 rounded-full",
                           opt.value === "done" && "bg-emerald-500",
                           opt.value === "in-progress" && "bg-blue-500",
                           opt.value === "blocked" && "bg-amber-500",
@@ -299,25 +299,25 @@ export function StageCard({
 
           {/* Responsible Field */}
           {!hideResponsible && (
-            <div className="space-y-2.5">
-              <Label className="text-xs font-bold uppercase tracking-widest text-violet-600 flex items-center gap-2">
-                <User className="h-3.5 w-3.5" />
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-violet-605 flex items-center gap-1.5">
+                <User className="h-3 w-3" />
                 Responsável
               </Label>
               <AutocompleteInput
                 value={responsible}
                 onChange={(v) => onUpdate({ responsible: v })}
                 disabled={!canEditProjects}
-                className="h-11 border-2 border-violet-200 hover:border-violet-300 focus:border-violet-400 bg-violet-50/50 dark:border-violet-900/50 dark:hover:border-violet-800 dark:focus:border-violet-650 dark:bg-violet-950/20 dark:text-violet-300"
+                className="h-9 border border-violet-200 hover:border-violet-300 focus:border-violet-400 bg-violet-50/50 dark:border-violet-900/50 dark:hover:border-violet-800 dark:focus:border-violet-650 dark:bg-violet-950/20 dark:text-violet-300 text-xs"
               />
             </div>
           )}
 
           {/* Start Date Field - Hidden when hideDates is true */}
           {!hideDates && (
-            <div className="space-y-2.5">
-              <Label className="text-xs font-bold uppercase tracking-widest text-cyan-600 flex items-center gap-2">
-                <Calendar className="h-3.5 w-3.5" />
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-cyan-600 flex items-center gap-1.5">
+                <Calendar className="h-3 w-3" />
                 {["infra", "adherence", "environment", "conversion"].includes(
                   id,
                 )
@@ -339,16 +339,16 @@ export function StageCard({
                   })
                 }
                 disabled={!canEditProjects}
-                className="h-11 border-2 border-cyan-200 hover:border-cyan-300 focus:border-cyan-400 bg-cyan-50/50 dark:border-cyan-900/50 dark:hover:border-cyan-800 dark:focus:border-cyan-600 dark:bg-cyan-950/20 dark:text-cyan-300 font-medium"
+                className="h-9 border border-cyan-200 hover:border-cyan-300 focus:border-cyan-400 bg-cyan-50/50 dark:border-cyan-900/50 dark:hover:border-cyan-800 dark:focus:border-cyan-600 dark:bg-cyan-950/20 dark:text-cyan-300 font-medium text-xs"
               />
             </div>
           )}
 
           {/* End Date Field - Hidden when hideDates is true */}
           {!hideDates && (
-            <div className="space-y-2.5">
-              <Label className="text-xs font-bold uppercase tracking-widest text-rose-600 flex items-center gap-2">
-                <Calendar className="h-3.5 w-3.5" />
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-rose-600 flex items-center gap-1.5">
+                <Calendar className="h-3 w-3" />
                 {id === "adherence"
                   ? "Agendado Para"
                   : ["infra", "environment", "conversion"].includes(id)
@@ -368,14 +368,14 @@ export function StageCard({
                   })
                 }
                 disabled={!canEditProjects}
-                className="h-11 border-2 border-rose-200 hover:border-rose-300 focus:border-rose-400 bg-rose-50/50 dark:border-rose-900/50 dark:hover:border-rose-800 dark:focus:border-rose-600 dark:bg-rose-950/20 dark:text-rose-300 font-medium"
+                className="h-9 border border-rose-200 hover:border-rose-300 focus:border-rose-400 bg-rose-50/50 dark:border-rose-900/50 dark:hover:border-rose-800 dark:focus:border-rose-600 dark:bg-rose-950/20 dark:text-rose-300 font-medium text-xs"
               />
             </div>
           )}
 
           {/* Extra Custom Component for Grid */}
           {extraHeaderField && (
-            <div className="space-y-2.5">
+            <div className="space-y-1.5">
               {extraHeaderField}
             </div>
           )}
@@ -384,11 +384,11 @@ export function StageCard({
         {/* Specific Fields (Children) */}
         {children && (
           <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 via-purple-500/5 to-pink-500/5 rounded-xl" />
-            <div className="relative bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm p-5 rounded-xl border-2 border-dashed border-indigo-200 dark:border-indigo-800 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              <div className="col-span-full mb-2">
-                <h4 className="text-xs font-bold uppercase tracking-widest text-indigo-600 flex items-center gap-2">
-                  <div className="h-1.5 w-6 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full" />
+            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 via-purple-500/5 to-pink-500/5 rounded-lg" />
+            <div className="relative bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm p-4 rounded-lg border border-dashed border-indigo-200 dark:border-indigo-800 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="col-span-full mb-1">
+                <h4 className="text-[10px] font-bold uppercase tracking-widest text-indigo-600 flex items-center gap-1.5">
+                  <div className="h-1 w-4 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full" />
                   Campos Específicos
                 </h4>
               </div>
@@ -398,14 +398,14 @@ export function StageCard({
         )}
 
         {/* Rich Text Editor */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-3">
-            <div className="h-1 w-8 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full" />
-            <Label className="text-xs font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <div className="h-0.5 w-6 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full" />
+            <Label className="text-[10px] font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400">
               Observações & Detalhes
             </Label>
           </div>
-          <div className="rounded-xl border-2 border-amber-200 dark:border-amber-900/50 overflow-hidden bg-amber-50/30 dark:bg-amber-950/10 w-full">
+          <div className="rounded-lg border border-amber-200 dark:border-amber-900/50 overflow-hidden bg-amber-50/30 dark:bg-amber-950/10 w-full">
             <RichTextEditor
               content={getEditorContent(observations)}
               onChange={(content) => onUpdate({ observations: content })}
