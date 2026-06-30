@@ -50,7 +50,7 @@ export default function ProjectDetails() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background pb-12">
+    <div className="flex flex-col flex-1 bg-background">
       {/* Header */}
       <div className="px-4 md:px-6 py-2.5 border-b flex flex-row items-start justify-between gap-4 sticky top-0 bg-background z-20">
         <div className="flex items-start gap-3 min-w-0 flex-1">

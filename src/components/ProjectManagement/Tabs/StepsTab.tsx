@@ -238,7 +238,7 @@ export function StepsTab({
   // Modelos Editor logic moved to @/components/ProjectManagement/ModelosEditor/ModelosEditorWorkspace.tsx
 
   return (
-    <div className="space-y-6 w-full pb-10">
+    <div className="space-y-4 w-full">
       {/* Feedback Visual do Autosave */}
       <div className="fixed bottom-4 right-4 z-50">
         <AnimatePresence mode="wait">
