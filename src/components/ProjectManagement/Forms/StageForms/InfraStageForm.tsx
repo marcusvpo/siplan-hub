@@ -253,6 +253,8 @@ export function InfraStageForm({
       pdf.text(`Serventia/Cartório: ${clientName || "Não identificada"}`, margin, posY);
       posY += 5;
 
+      pdf.text(`Responsável: ${stage.responsible || "Não informado"}`, margin, posY);
+      posY += 5;
 
       posY += 4;
 
