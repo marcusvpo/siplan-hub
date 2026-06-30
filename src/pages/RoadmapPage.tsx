@@ -263,7 +263,7 @@ export default function RoadmapPage() {
   const primaryColor = roadmap.custom_theme?.primary || "#800000";
 
   return (
-    <div className="roadmap-page min-h-screen bg-[#000000] text-gray-100 selection:bg-white/20 overflow-x-hidden font-sans">
+    <div className="roadmap-page h-screen overflow-y-auto overflow-x-hidden bg-[#000000] text-gray-100 selection:bg-white/20 font-sans">
       {/* Dynamic Background with Animation - Enhanced */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         {/* Deep Space Background */}
