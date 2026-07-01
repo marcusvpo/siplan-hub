@@ -425,14 +425,14 @@ export default function TransicaoPlaceholder() {
     
     // Add primary contact if name is filled
     if (localDtc.clientResponsible) {
-      vcardText += `BEGIN:VCARD\nVERSION:3.0\nFN:${groupName} - ${localDtc.clientResponsible}\nTEL;TYPE=CELL,VOICE:${localDtc.clientResponsiblePhone || ""}\nEND:VCARD\n`;
+      vcardText += `BEGIN:VCARD\r\nVERSION:3.0\r\nFN:${groupName} - ${localDtc.clientResponsible}\r\nTEL;TYPE=CELL,VOICE:${localDtc.clientResponsiblePhone || ""}\r\nEND:VCARD\r\n`;
     }
 
     // Add other key users
     if (localDtc.keyUsersList && localDtc.keyUsersList.length > 0) {
       localDtc.keyUsersList.forEach(u => {
         if (u.name) {
-          vcardText += `BEGIN:VCARD\nVERSION:3.0\nFN:${groupName} - ${u.name}\nTEL;TYPE=CELL,VOICE:${u.phone || ""}\nEND:VCARD\n`;
+          vcardText += `BEGIN:VCARD\r\nVERSION:3.0\r\nFN:${groupName} - ${u.name}\r\nTEL;TYPE=CELL,VOICE:${u.phone || ""}\r\nEND:VCARD\r\n`;
         }
       });
     }
@@ -457,26 +457,26 @@ export default function TransicaoPlaceholder() {
   const handleCopyPhones = () => {
     if (!localDtc) return;
 
-    const phones: string[] = [];
-    if (localDtc.clientResponsiblePhone) {
-      phones.push(localDtc.clientResponsiblePhone);
+    const lines: string[] = [];
+    if (localDtc.clientResponsible && localDtc.clientResponsiblePhone) {
+      lines.push(`${localDtc.clientResponsible} - ${localDtc.clientResponsiblePhone}`);
     }
     if (localDtc.keyUsersList) {
       localDtc.keyUsersList.forEach(u => {
-        if (u.phone) {
-          phones.push(u.phone);
+        if (u.name && u.phone) {
+          lines.push(`${u.name} - ${u.phone}`);
         }
       });
     }
 
-    if (phones.length === 0) {
-      toast.error("Nenhum telefone cadastrado para copiar.");
+    if (lines.length === 0) {
+      toast.error("Nenhum contato com telefone cadastrado para copiar.");
       return;
     }
 
-    const copyText = phones.join("; ");
+    const copyText = lines.join("\n");
     navigator.clipboard.writeText(copyText);
-    toast.success(`${phones.length} telefone(s) copiado(s) para a área de transferência!`);
+    toast.success(`${lines.length} contato(s) copiado(s) para a área de transferência!`);
   };
 
   const handleOpenWhatsappShare = () => {
