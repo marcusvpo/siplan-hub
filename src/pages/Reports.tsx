@@ -46,15 +46,12 @@ export default function Reports() {
 
   return (
     <div className="min-h-[calc(100vh-80px)] space-y-5 animate-in fade-in zoom-in-95 duration-700 pb-10">
-      {/* Decorative background element */}
-      <div className="fixed inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-primary/5 -z-10" />
-
       <Tabs
         defaultValue="overview"
         className="space-y-5"
         onValueChange={setActiveTab}
       >
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4 border-b border-primary/10">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4 border-b border-border">
           <div className="space-y-1">
             <div className="flex items-center gap-1.5 mb-0.5">
               <div className="h-4 w-0.75 bg-primary rounded-full" />
@@ -68,7 +65,7 @@ export default function Reports() {
             </p>
           </div>
 
-          <TabsList className="bg-muted/50 backdrop-blur-md p-0.5 border border-primary/5 rounded-lg shadow-sm self-start md:self-center">
+          <TabsList className="bg-muted/50 backdrop-blur-md p-0.5 border border-border rounded-lg shadow-sm self-start md:self-center">
             <TabsTrigger 
               value="overview" 
               className="gap-1.5 px-4 py-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all rounded-md text-[11px] font-bold uppercase tracking-wider"
@@ -87,7 +84,7 @@ export default function Reports() {
         </div>
 
         <TabsContent value="overview" className="space-y-6 m-0 animate-in fade-in slide-in-from-left-4 duration-500">
-          <div className="bg-card/40 backdrop-blur-sm p-2 rounded-xl border border-primary/10 shadow-sm transition-all hover:bg-card/50">
+          <div className="bg-card/40 backdrop-blur-sm p-2 rounded-xl border border-border shadow-sm transition-all hover:bg-card/50">
             <ReportsFilters
               onSystemChange={setSystemFilter}
               onDateChange={setDateFilter}
