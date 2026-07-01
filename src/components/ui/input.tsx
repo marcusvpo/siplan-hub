@@ -3,7 +3,64 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
-  ({ className, type, ...props }, ref) => {
+  ({ className, type, onKeyDown, ...props }, ref) => {
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (type === "date") {
+        const key = e.key.toLowerCase();
+        if (["o", "h", "a", "d"].includes(key)) {
+          e.preventDefault();
+          const target = e.currentTarget;
+          let dateStr = "";
+
+          const getLocalDateString = (date: Date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, "0");
+            const day = String(date.getDate()).padStart(2, "0");
+            return `${year}-${month}-${day}`;
+          };
+
+          if (key === "h") {
+            dateStr = getLocalDateString(new Date());
+          } else if (key === "o") {
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            dateStr = getLocalDateString(yesterday);
+          } else if (key === "a") {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            dateStr = getLocalDateString(tomorrow);
+          } else if (key === "d") {
+            if (typeof target.showPicker === "function") {
+              try {
+                target.showPicker();
+              } catch (err) {
+                console.error("Failed to show picker: ", err);
+              }
+            }
+            return;
+          }
+
+          if (dateStr) {
+            const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+              window.HTMLInputElement.prototype,
+              "value"
+            )?.set;
+            if (nativeInputValueSetter) {
+              nativeInputValueSetter.call(target, dateStr);
+              target.dispatchEvent(new Event("input", { bubbles: true }));
+              target.dispatchEvent(new Event("change", { bubbles: true }));
+            } else {
+              target.value = dateStr;
+            }
+          }
+        }
+      }
+
+      if (onKeyDown) {
+        onKeyDown(e);
+      }
+    };
+
     return (
       <input
         type={type}
@@ -12,6 +69,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
           className
         )}
         ref={ref}
+        onKeyDown={handleKeyDown}
         {...props}
       />
     );
