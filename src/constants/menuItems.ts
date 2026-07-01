@@ -200,8 +200,13 @@ export const menuItems: MenuItem[] = [
         icon: Users,
         description: "Ferramentas, formulários de aderência e transição",
         permissionKey: "menu_implantadores",
-        path: "/implantadores",
         subItems: [
+            {
+                title: "Visão Geral",
+                path: "/implantadores",
+                icon: LayoutDashboard,
+                description: "Painel geral do módulo de implantadores",
+            },
             {
                 title: "Editor de Aderência",
                 path: "/implantadores/aderencia",
