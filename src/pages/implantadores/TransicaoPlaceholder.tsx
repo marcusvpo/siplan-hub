@@ -2004,39 +2004,44 @@ export default function TransicaoPlaceholder() {
                               Nenhum relato diário cadastrado. Clique em Adicionar Relato por Data.
                             </p>
                           ) : (
-                            <div className="space-y-2">
+                            <div className="space-y-3">
                               {localDtc.implantationProcessLogs.map((log, idx) => (
-                                <div key={idx} className="flex items-start gap-1.5 bg-background p-1.5 border rounded-md shadow-2xs">
-                                  {/* Date Input */}
-                                  <Input
-                                    type="date"
-                                    value={log.date}
-                                    onChange={(e) => updateImplantationLog(idx, "date", e.target.value)}
-                                    disabled={isFormDisabled}
-                                    className="border-muted/80 h-7 text-xs w-32 shrink-0"
-                                  />
+                                <div key={idx} className="bg-background p-3 border rounded-md shadow-2xs space-y-2 relative">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <Label className="text-[10px] font-bold text-muted-foreground uppercase">Data da Atividade:</Label>
+                                      <Input
+                                        type="date"
+                                        value={log.date}
+                                        onChange={(e) => updateImplantationLog(idx, "date", e.target.value)}
+                                        disabled={isFormDisabled}
+                                        className="border-muted/80 h-7 text-xs w-36"
+                                      />
+                                    </div>
+                                    <Button
+                                      type="button"
+                                      onClick={() => removeImplantationLog(idx)}
+                                      disabled={isFormDisabled}
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-6 w-6 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-full"
+                                      title="Remover este relato"
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </div>
 
-                                  {/* Description Textarea */}
-                                  <Textarea
-                                    value={log.description}
-                                    onChange={(e) => updateImplantationLog(idx, "description", e.target.value)}
-                                    disabled={isFormDisabled}
-                                    placeholder="O que foi feito neste dia?"
-                                    className="border-muted/80 text-xs min-h-[50px] flex-1 py-1 px-2"
-                                    rows={2}
-                                  />
-
-                                  {/* Remove Button */}
-                                  <Button
-                                    type="button"
-                                    onClick={() => removeImplantationLog(idx)}
-                                    disabled={isFormDisabled}
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-7 w-7 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-full shrink-0 mt-0.5"
-                                  >
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                  </Button>
+                                  <div className="space-y-1">
+                                    <Label className="text-[10px] font-bold text-muted-foreground uppercase">Atividades Realizadas:</Label>
+                                    <Textarea
+                                      value={log.description}
+                                      onChange={(e) => updateImplantationLog(idx, "description", e.target.value)}
+                                      disabled={isFormDisabled}
+                                      placeholder="Descreva detalhadamente o que foi realizado nesta data..."
+                                      className="border-muted/80 text-xs min-h-[50px] w-full py-1.5 px-2.5 resize-y"
+                                      rows={2}
+                                    />
+                                  </div>
                                 </div>
                               ))}
                             </div>
