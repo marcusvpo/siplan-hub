@@ -2246,104 +2246,120 @@ export default function TransicaoPlaceholder() {
                           <div className="space-y-3 mt-1.5">
                             {localDtc.implantationPendingList.map((pending, idx) => (
                               <div key={idx} className="bg-background p-3 border rounded-md shadow-2xs space-y-2 relative">
-                                <div className="flex items-center gap-2">
-                                  {/* Title Input */}
-                                  <Input
-                                    value={pending.title}
-                                    onChange={(e) => updateImplantationPending(idx, "title", e.target.value)}
-                                    disabled={isFormDisabled}
-                                    placeholder="Título da Pendência"
-                                    className="border-muted/80 h-7 text-xs flex-1"
-                                  />
+                                <div className="space-y-2">
+                                  {/* Title Input (Full line) */}
+                                  <div className="w-full">
+                                    <Input
+                                      value={pending.title}
+                                      onChange={(e) => updateImplantationPending(idx, "title", e.target.value)}
+                                      disabled={isFormDisabled}
+                                      placeholder="Título da Pendência (ex: Configurar selo digital)"
+                                      className="border-muted/80 h-8 text-xs w-full font-medium"
+                                    />
+                                  </div>
 
-                                  {/* Product Select dropdown */}
-                                  <Select
-                                    value={pending.product}
-                                    onValueChange={(val) => updateImplantationPending(idx, "product", val)}
-                                    disabled={isFormDisabled}
-                                  >
-                                    <SelectTrigger className="w-28 h-7 text-[10px] border-muted/80 shrink-0">
-                                      <SelectValue placeholder="Produto" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="OrionTN" className="text-xs">OrionTN</SelectItem>
-                                      <SelectItem value="LCW" className="text-xs">LCW</SelectItem>
-                                      <SelectItem value="Ambos" className="text-xs">Ambos</SelectItem>
-                                      <SelectItem value="Outro" className="text-xs">Outro</SelectItem>
-                                    </SelectContent>
-                                  </Select>
+                                  {/* Controls Row (Product, Sector, Status, Responsibility, Delete) */}
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    {/* Product Select dropdown */}
+                                    <Select
+                                      value={pending.product}
+                                      onValueChange={(val) => updateImplantationPending(idx, "product", val)}
+                                      disabled={isFormDisabled}
+                                    >
+                                      <SelectTrigger className="w-40 h-8 text-[11px] border-muted/80 shrink-0">
+                                        <SelectValue placeholder="Produto" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {/* Sistemas Principais */}
+                                        <SelectItem value="Orion TN" className="text-xs">Orion TN</SelectItem>
+                                        <SelectItem value="Orion PRO" className="text-xs">Orion PRO</SelectItem>
+                                        <SelectItem value="Orion REG" className="text-xs">Orion REG</SelectItem>
+                                        <SelectItem value="Modelos TN" className="text-xs">Modelos TN</SelectItem>
+                                        {/* Produtos Adicionais */}
+                                        <SelectItem value="LCW" className="text-xs">LCW</SelectItem>
+                                        <SelectItem value="SGA" className="text-xs">SGA</SelectItem>
+                                        <SelectItem value="On Hand" className="text-xs">On Hand</SelectItem>
+                                        <SelectItem value="Orion GED" className="text-xs">Orion GED</SelectItem>
+                                        <SelectItem value="Library" className="text-xs">Library</SelectItem>
+                                        <SelectItem value="e-Recepção" className="text-xs">e-Recepção</SelectItem>
+                                        <SelectItem value="e-Qualificação" className="text-xs">e-Qualificação</SelectItem>
+                                        <SelectItem value="Cartflow" className="text-xs">Cartflow</SelectItem>
+                                        <SelectItem value="Outro" className="text-xs">Outro</SelectItem>
+                                      </SelectContent>
+                                    </Select>
 
-                                  {/* Department (Setor) Select dropdown */}
-                                  <Select
-                                    value={pending.department}
-                                    onValueChange={(val) => updateImplantationPending(idx, "department", val)}
-                                    disabled={isFormDisabled}
-                                  >
-                                    <SelectTrigger className="w-28 h-7 text-[10px] border-muted/80 shrink-0">
-                                      <SelectValue placeholder="Setor" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="Notas" className="text-xs">Notas</SelectItem>
-                                      <SelectItem value="Firmas" className="text-xs">Firmas</SelectItem>
-                                      <SelectItem value="Recepção / Triagem" className="text-xs">Recepção/Triagem</SelectItem>
-                                      <SelectItem value="Protesto" className="text-xs">Protesto</SelectItem>
-                                      <SelectItem value="Registro Civil" className="text-xs">R. Civil</SelectItem>
-                                      <SelectItem value="Registro de Imóveis" className="text-xs">R. Imóveis</SelectItem>
-                                      <SelectItem value="RTD / PJ" className="text-xs">RTD/PJ</SelectItem>
-                                      <SelectItem value="Administrativo" className="text-xs">Adm</SelectItem>
-                                      <SelectItem value="Financeiro" className="text-xs">Financeiro</SelectItem>
-                                      <SelectItem value="TI / Suporte" className="text-xs">TI</SelectItem>
-                                      <SelectItem value="Outro" className="text-xs">Outro</SelectItem>
-                                    </SelectContent>
-                                  </Select>
+                                    {/* Department (Setor) Select dropdown */}
+                                    <Select
+                                      value={pending.department}
+                                      onValueChange={(val) => updateImplantationPending(idx, "department", val)}
+                                      disabled={isFormDisabled}
+                                    >
+                                      <SelectTrigger className="w-36 h-8 text-[11px] border-muted/80 shrink-0">
+                                        <SelectValue placeholder="Setor" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="Notas" className="text-xs">Notas</SelectItem>
+                                        <SelectItem value="Firmas" className="text-xs">Firmas</SelectItem>
+                                        <SelectItem value="Recepção / Triagem" className="text-xs">Recepção/Triagem</SelectItem>
+                                        <SelectItem value="Protesto" className="text-xs">Protesto</SelectItem>
+                                        <SelectItem value="Registro Civil" className="text-xs">R. Civil</SelectItem>
+                                        <SelectItem value="Registro de Imóveis" className="text-xs">R. Imóveis</SelectItem>
+                                        <SelectItem value="RTD / PJ" className="text-xs">RTD/PJ</SelectItem>
+                                        <SelectItem value="Administrativo" className="text-xs">Adm</SelectItem>
+                                        <SelectItem value="Financeiro" className="text-xs">Financeiro</SelectItem>
+                                        <SelectItem value="TI / Suporte" className="text-xs">TI</SelectItem>
+                                        <SelectItem value="Outro" className="text-xs">Outro</SelectItem>
+                                      </SelectContent>
+                                    </Select>
 
-                                  {/* Status Select dropdown */}
-                                  <Select
-                                    value={pending.status}
-                                    onValueChange={(val) => updateImplantationPending(idx, "status", val)}
-                                    disabled={isFormDisabled}
-                                  >
-                                    <SelectTrigger className="w-28 h-7 text-[10px] border-muted/80 shrink-0">
-                                      <SelectValue placeholder="Status" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="Pendente" className="text-xs">Pendente</SelectItem>
-                                      <SelectItem value="Em andamento" className="text-xs">Em andamento</SelectItem>
-                                      <SelectItem value="Resolvido" className="text-xs">Resolvido</SelectItem>
-                                      <SelectItem value="Cancelado" className="text-xs">Cancelado</SelectItem>
-                                    </SelectContent>
-                                  </Select>
+                                    {/* Status Select dropdown */}
+                                    <Select
+                                      value={pending.status}
+                                      onValueChange={(val) => updateImplantationPending(idx, "status", val)}
+                                      disabled={isFormDisabled}
+                                    >
+                                      <SelectTrigger className="w-32 h-8 text-[11px] border-muted/80 shrink-0">
+                                        <SelectValue placeholder="Status" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="Pendente" className="text-xs">Pendente</SelectItem>
+                                        <SelectItem value="Em andamento" className="text-xs">Em andamento</SelectItem>
+                                        <SelectItem value="Resolvido" className="text-xs">Resolvido</SelectItem>
+                                        <SelectItem value="Cancelado" className="text-xs">Cancelado</SelectItem>
+                                      </SelectContent>
+                                    </Select>
 
-                                  {/* Assigned Analyst Select dropdown */}
-                                  <Select
-                                    value={pending.assignedTo || "none"}
-                                    onValueChange={(val) => updateImplantationPending(idx, "assignedTo", val === "none" ? "" : val)}
-                                    disabled={isFormDisabled}
-                                  >
-                                    <SelectTrigger className="w-36 h-7 text-[10px] border-muted/80 shrink-0">
-                                      <SelectValue placeholder="Responsável" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="none" className="text-xs">Não atribuído</SelectItem>
-                                      {members.map((m) => (
-                                        <SelectItem key={m.id} value={m.name} className="text-xs">
-                                          {m.name}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
+                                    {/* Assigned Analyst Select dropdown */}
+                                    <Select
+                                      value={pending.assignedTo || "none"}
+                                      onValueChange={(val) => updateImplantationPending(idx, "assignedTo", val === "none" ? "" : val)}
+                                      disabled={isFormDisabled}
+                                    >
+                                      <SelectTrigger className="w-48 h-8 text-[11px] border-muted/80 shrink-0">
+                                        <SelectValue placeholder="Responsável" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="none" className="text-xs">Não atribuído</SelectItem>
+                                        {members.map((m) => (
+                                          <SelectItem key={m.id} value={m.name} className="text-xs">
+                                            {m.name}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
 
-                                  {/* Remove Button */}
-                                  <Button
-                                    type="button"
-                                    onClick={() => removeImplantationPending(idx)}
-                                    disabled={isFormDisabled}
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-7 w-7 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-full shrink-0"
-                                  >
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                  </Button>
+                                    {/* Remove Button */}
+                                    <Button
+                                      type="button"
+                                      onClick={() => removeImplantationPending(idx)}
+                                      disabled={isFormDisabled}
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-full shrink-0 ml-auto"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
                                 </div>
 
                                 <div className="space-y-1">
