@@ -119,6 +119,13 @@ interface ImplantationSuggestionItem {
   description: string;
 }
 
+interface ImplantationGainItem {
+  title: string;
+  product?: string;
+  department: string;
+  description: string;
+}
+
 // Complete DTC data model
 interface DTCData {
   responsible: string;
@@ -143,6 +150,7 @@ interface DTCData {
   supportCallNumber: string;
   implantationProcess: string;
   implantationProcessLogs?: ImplantationLogItem[];
+  implantationGainsList?: ImplantationGainItem[];
   implantationPendingList?: ImplantationPendingItem[];
   implantationSuggestionsList?: ImplantationSuggestionItem[];
   postImplantationProcess: string;
@@ -293,6 +301,7 @@ export default function TransicaoPlaceholder() {
     "infra-conversao": true,
     "processo-implantacao": true,
     "processo-colaboradores": true,
+    "processo-ganhos": true,
     "processo-pendencias": true,
     "processo-sugestoes": true,
     "processo-consideracoes": true,
@@ -353,6 +362,7 @@ export default function TransicaoPlaceholder() {
       supportCallNumber: project.ticketNumber || "",
       implantationProcess: "",
       implantationProcessLogs: [],
+      implantationGainsList: [],
       implantationPendingList: [],
       implantationSuggestionsList: [],
       postImplantationProcess: "",
@@ -789,6 +799,30 @@ export default function TransicaoPlaceholder() {
       [key]: val
     };
     handleFieldChange("implantationPendingList", updated);
+  };
+
+  const addImplantationGain = () => {
+    if (!localDtc) return;
+    const currentList = localDtc.implantationGainsList || [];
+    handleFieldChange("implantationGainsList", [
+      ...currentList,
+      { title: "", product: "", department: "", description: "" }
+    ]);
+  };
+
+  const removeImplantationGain = (idx: number) => {
+    if (!localDtc || !localDtc.implantationGainsList) return;
+    handleFieldChange(
+      "implantationGainsList",
+      localDtc.implantationGainsList.filter((_, i) => i !== idx)
+    );
+  };
+
+  const updateImplantationGain = (idx: number, key: keyof ImplantationGainItem, val: string) => {
+    if (!localDtc || !localDtc.implantationGainsList) return;
+    const updated = [...localDtc.implantationGainsList];
+    updated[idx] = { ...updated[idx], [key]: val };
+    handleFieldChange("implantationGainsList", updated);
   };
 
   const addImplantationSuggestion = () => {
@@ -2239,14 +2273,145 @@ export default function TransicaoPlaceholder() {
                     )}
                   </div>
 
-                  {/* Sub-seção 3: Pendências da Implantação */}
+                  {/* Sub-seção 3: Ganhos Operacionais */}
+                  <div className="space-y-3">
+                    <div
+                      className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors"
+                      onClick={() => toggleSection("processo-ganhos")}
+                    >
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">
+                        3. Ganhos Operacionais
+                      </span>
+                      <Button type="button" variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
+                        {collapsedSections["processo-ganhos"] ? (
+                          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
+                        ) : (
+                          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
+                        )}
+                      </Button>
+                    </div>
+
+                    {!collapsedSections["processo-ganhos"] && (
+                      <div className="space-y-2 border p-3 rounded-lg bg-muted/10 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label className="text-[11px] font-bold">Ganhos operacionais implementados</Label>
+                            <p className="text-[9px] text-muted-foreground">Registre os ganhos e melhorias operacionais que foram implementados durante a implantação.</p>
+                          </div>
+                          <Button
+                            type="button"
+                            onClick={addImplantationGain}
+                            disabled={isFormDisabled}
+                            variant="outline"
+                            size="sm"
+                            className="h-6.5 text-[10px] gap-1 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 font-bold"
+                          >
+                            <Plus className="h-3 w-3" />
+                            Adicionar Ganho
+                          </Button>
+                        </div>
+
+                        {(!localDtc.implantationGainsList || localDtc.implantationGainsList.length === 0) ? (
+                          <p className="text-[11px] text-muted-foreground italic py-1.5 text-center bg-background/50 border border-dashed rounded-md mt-1">
+                            Nenhum ganho cadastrado. Clique em Adicionar Ganho.
+                          </p>
+                        ) : (
+                          <div className="space-y-3 mt-1.5">
+                            {localDtc.implantationGainsList.map((gain, idx) => (
+                              <div key={idx} className="bg-background p-3 border rounded-md shadow-2xs space-y-2">
+                                {/* Linha 1: Título */}
+                                <Input
+                                  value={gain.title}
+                                  onChange={(e) => updateImplantationGain(idx, "title", e.target.value)}
+                                  disabled={isFormDisabled}
+                                  placeholder="Título do ganho (ex: Automação de protocolo de entrada)"
+                                  className="border-muted/80 h-8 text-xs w-full font-medium"
+                                />
+                                {/* Linha 2: Produto + Setor + Delete */}
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <Select
+                                    value={gain.product || ""}
+                                    onValueChange={(val) => updateImplantationGain(idx, "product", val)}
+                                    disabled={isFormDisabled}
+                                  >
+                                    <SelectTrigger className="w-40 h-8 text-[11px] border-muted/80 shrink-0">
+                                      <SelectValue placeholder="Produto" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="Orion TN" className="text-xs">Orion TN</SelectItem>
+                                      <SelectItem value="Orion PRO" className="text-xs">Orion PRO</SelectItem>
+                                      <SelectItem value="Orion REG" className="text-xs">Orion REG</SelectItem>
+                                      <SelectItem value="Modelos TN" className="text-xs">Modelos TN</SelectItem>
+                                      <SelectItem value="LCW" className="text-xs">LCW</SelectItem>
+                                      <SelectItem value="SGA" className="text-xs">SGA</SelectItem>
+                                      <SelectItem value="On Hand" className="text-xs">On Hand</SelectItem>
+                                      <SelectItem value="Orion GED" className="text-xs">Orion GED</SelectItem>
+                                      <SelectItem value="Library" className="text-xs">Library</SelectItem>
+                                      <SelectItem value="e-Recepção" className="text-xs">e-Recepção</SelectItem>
+                                      <SelectItem value="e-Qualificação" className="text-xs">e-Qualificação</SelectItem>
+                                      <SelectItem value="Cartflow" className="text-xs">Cartflow</SelectItem>
+                                      <SelectItem value="Outro" className="text-xs">Outro</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+
+                                  <Select
+                                    value={gain.department}
+                                    onValueChange={(val) => updateImplantationGain(idx, "department", val)}
+                                    disabled={isFormDisabled}
+                                  >
+                                    <SelectTrigger className="w-36 h-8 text-[11px] border-muted/80 shrink-0">
+                                      <SelectValue placeholder="Setor" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="Notas" className="text-xs">Notas</SelectItem>
+                                      <SelectItem value="Firmas" className="text-xs">Firmas</SelectItem>
+                                      <SelectItem value="Recepção / Triagem" className="text-xs">Recepção/Triagem</SelectItem>
+                                      <SelectItem value="Protesto" className="text-xs">Protesto</SelectItem>
+                                      <SelectItem value="Registro Civil" className="text-xs">R. Civil</SelectItem>
+                                      <SelectItem value="Registro de Imóveis" className="text-xs">R. Imóveis</SelectItem>
+                                      <SelectItem value="RTD / PJ" className="text-xs">RTD/PJ</SelectItem>
+                                      <SelectItem value="Administrativo" className="text-xs">Adm</SelectItem>
+                                      <SelectItem value="Financeiro" className="text-xs">Financeiro</SelectItem>
+                                      <SelectItem value="TI / Suporte" className="text-xs">TI</SelectItem>
+                                      <SelectItem value="Outro" className="text-xs">Outro</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+
+                                  <Button
+                                    type="button"
+                                    onClick={() => removeImplantationGain(idx)}
+                                    disabled={isFormDisabled}
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-full shrink-0 ml-auto"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+
+                                {/* Linha 3: Descrição com RichTextEditor */}
+                                <RichTextEditor
+                                  content={gain.description}
+                                  onChange={(c) => updateImplantationGain(idx, "description", c)}
+                                  placeholder="Descreva o ganho operacional implementado..."
+                                  editable={!isFormDisabled}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Sub-seção 4: Pendências da Implantação */}
                   <div className="space-y-3">
                     <div 
                       className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors"
                       onClick={() => toggleSection("processo-pendencias")}
                     >
                       <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">
-                        3. Pendências da Implantação
+                        4. Pendências da Implantação
                       </span>
                       <Button type="button" variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
                         {collapsedSections["processo-pendencias"] ? (
@@ -2424,7 +2589,7 @@ export default function TransicaoPlaceholder() {
                       onClick={() => toggleSection("processo-sugestoes")}
                     >
                       <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">
-                        4. Sugestões de Melhorias
+                        5. Sugestões de Melhorias
                       </span>
                       <Button type="button" variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
                         {collapsedSections["processo-sugestoes"] ? (
@@ -2602,7 +2767,7 @@ export default function TransicaoPlaceholder() {
                       onClick={() => toggleSection("processo-consideracoes")}
                     >
                       <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">
-                        5. Considerações Finais
+                        6. Considerações Finais
                       </span>
                       <Button type="button" variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
                         {collapsedSections["processo-consideracoes"] ? (
@@ -2840,6 +3005,25 @@ export default function TransicaoPlaceholder() {
                           </div>
                         </div>
 
+                        {localDtc.implantationGainsList && localDtc.implantationGainsList.length > 0 && (
+                          <div>
+                            <strong className="block mb-1 text-sm uppercase">Ganhos Operacionais:</strong>
+                            <div className="pl-2 border-l-2 border-gray-300 space-y-2 mb-2">
+                              {localDtc.implantationGainsList.map((gain, idx) => (
+                                <div key={idx} className="text-xs">
+                                  <span className="font-bold text-gray-800">
+                                    {gain.product ? `[${gain.product}] ` : ""}
+                                    {gain.title || "(Sem título)"}
+                                    {gain.department ? ` - ${gain.department}` : ""}
+                                  </span>
+                                  <div className="text-gray-600 mt-0.5 pl-1 italic">
+                                    <LexicalRenderer jsonStr={gain.description} fallback="(Sem descrição)" />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                         {localDtc.implantationPendingList && localDtc.implantationPendingList.length > 0 && (
                           <div>
                             <strong className="block mb-1 text-sm uppercase">Pendências da Implantação:</strong>
@@ -3060,6 +3244,25 @@ export default function TransicaoPlaceholder() {
                 </div>
               </div>
 
+              {localDtc.implantationGainsList && localDtc.implantationGainsList.length > 0 && (
+                <div>
+                  <strong className="block mb-1 text-sm uppercase">Ganhos Operacionais:</strong>
+                  <div className="pl-2 border-l-2 border-gray-400 space-y-2 mb-2">
+                    {localDtc.implantationGainsList.map((gain, idx) => (
+                      <div key={idx} className="text-xs">
+                        <span className="font-bold text-gray-800">
+                          {gain.product ? `[${gain.product}] ` : ""}
+                          {gain.title || "(Sem título)"}
+                          {gain.department ? ` - ${gain.department}` : ""}
+                        </span>
+                        <div className="text-gray-700 mt-0.5 pl-1 italic">
+                          <LexicalRenderer jsonStr={gain.description} fallback="(Sem descrição)" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               {localDtc.implantationPendingList && localDtc.implantationPendingList.length > 0 && (
                 <div>
                   <strong className="block mb-1 text-sm uppercase">Pendências da Implantação:</strong>
