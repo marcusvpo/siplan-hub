@@ -103,6 +103,7 @@ interface ImplantationLogItem {
 interface ImplantationPendingItem {
   title: string;
   status: string;
+  department: string;
   description: string;
 }
 
@@ -752,7 +753,7 @@ export default function TransicaoPlaceholder() {
     const currentList = localDtc.implantationPendingList || [];
     handleFieldChange("implantationPendingList", [
       ...currentList,
-      { title: "", status: "Pendente", description: "" }
+      { title: "", status: "Pendente", department: "", description: "" }
     ]);
   };
 
@@ -2250,13 +2251,36 @@ export default function TransicaoPlaceholder() {
                                     className="border-muted/80 h-7 text-xs flex-1"
                                   />
 
+                                  {/* Department (Setor) Select dropdown */}
+                                  <Select
+                                    value={pending.department}
+                                    onValueChange={(val) => updateImplantationPending(idx, "department", val)}
+                                    disabled={isFormDisabled}
+                                  >
+                                    <SelectTrigger className="w-28 h-7 text-[10px] border-muted/80 shrink-0">
+                                      <SelectValue placeholder="Setor" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="Notas" className="text-xs">Notas</SelectItem>
+                                      <SelectItem value="Firmas" className="text-xs">Firmas</SelectItem>
+                                      <SelectItem value="Recepção / Triagem" className="text-xs">Recepção/Triagem</SelectItem>
+                                      <SelectItem value="Protesto" className="text-xs">Protesto</SelectItem>
+                                      <SelectItem value="Registro Civil" className="text-xs">R. Civil</SelectItem>
+                                      <SelectItem value="Registro de Imóveis" className="text-xs">R. Imóveis</SelectItem>
+                                      <SelectItem value="RTD / PJ" className="text-xs">RTD/PJ</SelectItem>
+                                      <SelectItem value="Administrativo" className="text-xs">Adm</SelectItem>
+                                      <SelectItem value="TI / Suporte" className="text-xs">TI</SelectItem>
+                                      <SelectItem value="Outro" className="text-xs">Outro</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+
                                   {/* Status Select dropdown */}
                                   <Select
                                     value={pending.status}
                                     onValueChange={(val) => updateImplantationPending(idx, "status", val)}
                                     disabled={isFormDisabled}
                                   >
-                                    <SelectTrigger className="w-32 h-7 text-[10px] border-muted/80 shrink-0">
+                                    <SelectTrigger className="w-28 h-7 text-[10px] border-muted/80 shrink-0">
                                       <SelectValue placeholder="Status" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -2281,13 +2305,11 @@ export default function TransicaoPlaceholder() {
                                 </div>
 
                                 <div className="space-y-1">
-                                  <Textarea
-                                    value={pending.description}
-                                    onChange={(e) => updateImplantationPending(idx, "description", e.target.value)}
-                                    disabled={isFormDisabled}
+                                  <RichTextEditor
+                                    content={pending.description}
+                                    onChange={(c) => updateImplantationPending(idx, "description", c)}
                                     placeholder="Descrição detalhada da pendência..."
-                                    className="border-muted/80 text-xs min-h-[50px] w-full py-1.5 px-2.5 resize-y"
-                                    rows={2}
+                                    editable={!isFormDisabled}
                                   />
                                 </div>
                               </div>
@@ -2550,7 +2572,10 @@ export default function TransicaoPlaceholder() {
                               {localDtc.implantationPendingList.map((pending, idx) => (
                                 <div key={idx} className="text-xs">
                                   <div className="flex items-center justify-between">
-                                    <span className="font-bold text-gray-800">{pending.title || "(Sem título)"}</span>
+                                    <span className="font-bold text-gray-800">
+                                      {pending.title || "(Sem título)"}
+                                      {pending.department ? ` - ${pending.department}` : ""}
+                                    </span>
                                     <span className={cn(
                                       "px-1.5 py-0.5 rounded-sm text-[9px] font-bold uppercase",
                                       pending.status === "Resolvido" && "bg-emerald-100 text-emerald-800",
@@ -2561,7 +2586,9 @@ export default function TransicaoPlaceholder() {
                                       {pending.status}
                                     </span>
                                   </div>
-                                  <p className="text-gray-600 mt-0.5 pl-1 italic">{pending.description || "(Sem descrição)"}</p>
+                                  <div className="text-gray-600 mt-0.5 pl-1 italic">
+                                    <LexicalRenderer jsonStr={pending.description} fallback="(Sem descrição)" />
+                                  </div>
                                 </div>
                               ))}
                             </div>
@@ -2732,7 +2759,10 @@ export default function TransicaoPlaceholder() {
                     {localDtc.implantationPendingList.map((pending, idx) => (
                       <div key={idx} className="text-xs">
                         <div className="flex items-center justify-between">
-                          <span className="font-bold text-gray-800">{pending.title || "(Sem título)"}</span>
+                          <span className="font-bold text-gray-800">
+                            {pending.title || "(Sem título)"}
+                            {pending.department ? ` - ${pending.department}` : ""}
+                          </span>
                           <span className={cn(
                             "px-1.5 py-0.5 rounded-sm text-[9px] font-bold uppercase",
                             pending.status === "Resolvido" && "bg-emerald-100 text-emerald-800",
@@ -2743,7 +2773,9 @@ export default function TransicaoPlaceholder() {
                             {pending.status}
                           </span>
                         </div>
-                        <p className="text-gray-700 mt-0.5 pl-1 italic">{pending.description || "(Sem descrição)"}</p>
+                        <div className="text-gray-700 mt-0.5 pl-1 italic">
+                          <LexicalRenderer jsonStr={pending.description} fallback="(Sem descrição)" />
+                        </div>
                       </div>
                     ))}
                   </div>
