@@ -100,6 +100,12 @@ interface ImplantationLogItem {
   description: string;
 }
 
+interface ImplantationPendingItem {
+  title: string;
+  status: string;
+  description: string;
+}
+
 // Complete DTC data model
 interface DTCData {
   responsible: string;
@@ -124,6 +130,7 @@ interface DTCData {
   supportCallNumber: string;
   implantationProcess: string;
   implantationProcessLogs?: ImplantationLogItem[];
+  implantationPendingList?: ImplantationPendingItem[];
   postImplantationProcess: string;
   employees: string;
   employeesList?: EmployeeItem[];
@@ -271,6 +278,7 @@ export default function TransicaoPlaceholder() {
     "infra-conversao": true,
     "processo-implantacao": true,
     "processo-colaboradores": true,
+    "processo-pendencias": true,
     "processo-consideracoes": true,
   });
 
@@ -329,6 +337,7 @@ export default function TransicaoPlaceholder() {
       supportCallNumber: project.ticketNumber || "",
       implantationProcess: "",
       implantationProcessLogs: [],
+      implantationPendingList: [],
       postImplantationProcess: "",
       employees: "",
       employeesList: [],
@@ -736,6 +745,33 @@ export default function TransicaoPlaceholder() {
       [key]: val
     };
     handleFieldChange("implantationProcessLogs", updated);
+  };
+
+  const addImplantationPending = () => {
+    if (!localDtc) return;
+    const currentList = localDtc.implantationPendingList || [];
+    handleFieldChange("implantationPendingList", [
+      ...currentList,
+      { title: "", status: "Pendente", description: "" }
+    ]);
+  };
+
+  const removeImplantationPending = (idx: number) => {
+    if (!localDtc || !localDtc.implantationPendingList) return;
+    handleFieldChange(
+      "implantationPendingList",
+      localDtc.implantationPendingList.filter((_, i) => i !== idx)
+    );
+  };
+
+  const updateImplantationPending = (idx: number, key: keyof ImplantationPendingItem, val: string) => {
+    if (!localDtc || !localDtc.implantationPendingList) return;
+    const updated = [...localDtc.implantationPendingList];
+    updated[idx] = {
+      ...updated[idx],
+      [key]: val
+    };
+    handleFieldChange("implantationPendingList", updated);
   };
 
   const getIpValidationMessage = (val: string) => {
@@ -2119,6 +2155,7 @@ export default function TransicaoPlaceholder() {
                                   <SelectContent>
                                     <SelectItem value="Notas" className="text-xs">Notas</SelectItem>
                                     <SelectItem value="Firmas" className="text-xs">Firmas</SelectItem>
+                                    <SelectItem value="Recepção / Triagem" className="text-xs">Recepção/Triagem</SelectItem>
                                     <SelectItem value="Protesto" className="text-xs">Protesto</SelectItem>
                                     <SelectItem value="Registro Civil" className="text-xs">R. Civil</SelectItem>
                                     <SelectItem value="Registro de Imóveis" className="text-xs">R. Imóveis</SelectItem>
@@ -2157,14 +2194,118 @@ export default function TransicaoPlaceholder() {
                     )}
                   </div>
 
-                  {/* Sub-seção 3: Considerações Finais */}
+                  {/* Sub-seção 3: Pendências da Implantação */}
+                  <div className="space-y-3">
+                    <div 
+                      className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors"
+                      onClick={() => toggleSection("processo-pendencias")}
+                    >
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">
+                        3. Pendências da Implantação
+                      </span>
+                      <Button type="button" variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
+                        {collapsedSections["processo-pendencias"] ? (
+                          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
+                        ) : (
+                          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
+                        )}
+                      </Button>
+                    </div>
+                    
+                    {!collapsedSections["processo-pendencias"] && (
+                      <div className="space-y-2 border p-3 rounded-lg bg-muted/10 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label className="text-[11px] font-bold">Pendências registradas na implantação</Label>
+                            <p className="text-[9px] text-muted-foreground">Cadastre pendências internas identificadas durante o processo.</p>
+                          </div>
+                          <Button
+                            type="button"
+                            onClick={addImplantationPending}
+                            disabled={isFormDisabled}
+                            variant="outline"
+                            size="sm"
+                            className="h-6.5 text-[10px] gap-1 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 font-bold"
+                          >
+                            <Plus className="h-3 w-3" />
+                            Adicionar Pendência
+                          </Button>
+                        </div>
+
+                        {(!localDtc.implantationPendingList || localDtc.implantationPendingList.length === 0) ? (
+                          <p className="text-[11px] text-muted-foreground italic py-1.5 text-center bg-background/50 border border-dashed rounded-md mt-1">
+                            Nenhuma pendência cadastrada. Clique em Adicionar Pendência.
+                          </p>
+                        ) : (
+                          <div className="space-y-3 mt-1.5">
+                            {localDtc.implantationPendingList.map((pending, idx) => (
+                              <div key={idx} className="bg-background p-3 border rounded-md shadow-2xs space-y-2 relative">
+                                <div className="flex items-center gap-2">
+                                  {/* Title Input */}
+                                  <Input
+                                    value={pending.title}
+                                    onChange={(e) => updateImplantationPending(idx, "title", e.target.value)}
+                                    disabled={isFormDisabled}
+                                    placeholder="Título da Pendência"
+                                    className="border-muted/80 h-7 text-xs flex-1"
+                                  />
+
+                                  {/* Status Select dropdown */}
+                                  <Select
+                                    value={pending.status}
+                                    onValueChange={(val) => updateImplantationPending(idx, "status", val)}
+                                    disabled={isFormDisabled}
+                                  >
+                                    <SelectTrigger className="w-32 h-7 text-[10px] border-muted/80 shrink-0">
+                                      <SelectValue placeholder="Status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="Pendente" className="text-xs">Pendente</SelectItem>
+                                      <SelectItem value="Em andamento" className="text-xs">Em andamento</SelectItem>
+                                      <SelectItem value="Resolvido" className="text-xs">Resolvido</SelectItem>
+                                      <SelectItem value="Cancelado" className="text-xs">Cancelado</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+
+                                  {/* Remove Button */}
+                                  <Button
+                                    type="button"
+                                    onClick={() => removeImplantationPending(idx)}
+                                    disabled={isFormDisabled}
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-full shrink-0"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
+
+                                <div className="space-y-1">
+                                  <Textarea
+                                    value={pending.description}
+                                    onChange={(e) => updateImplantationPending(idx, "description", e.target.value)}
+                                    disabled={isFormDisabled}
+                                    placeholder="Descrição detalhada da pendência..."
+                                    className="border-muted/80 text-xs min-h-[50px] w-full py-1.5 px-2.5 resize-y"
+                                    rows={2}
+                                  />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Sub-seção 4: Considerações Finais */}
                   <div className="space-y-3">
                     <div 
                       className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors"
                       onClick={() => toggleSection("processo-consideracoes")}
                     >
                       <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">
-                        3. Considerações Finais
+                        4. Considerações Finais
                       </span>
                       <Button type="button" variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
                         {collapsedSections["processo-consideracoes"] ? (
@@ -2402,6 +2543,31 @@ export default function TransicaoPlaceholder() {
                           </div>
                         </div>
 
+                        {localDtc.implantationPendingList && localDtc.implantationPendingList.length > 0 && (
+                          <div>
+                            <strong className="block mb-1 text-sm uppercase">Pendências da Implantação:</strong>
+                            <div className="pl-2 border-l-2 border-gray-300 space-y-2 mb-2">
+                              {localDtc.implantationPendingList.map((pending, idx) => (
+                                <div key={idx} className="text-xs">
+                                  <div className="flex items-center justify-between">
+                                    <span className="font-bold text-gray-800">{pending.title || "(Sem título)"}</span>
+                                    <span className={cn(
+                                      "px-1.5 py-0.5 rounded-sm text-[9px] font-bold uppercase",
+                                      pending.status === "Resolvido" && "bg-emerald-100 text-emerald-800",
+                                      pending.status === "Em andamento" && "bg-blue-100 text-blue-800",
+                                      pending.status === "Pendente" && "bg-amber-100 text-amber-800",
+                                      pending.status === "Cancelado" && "bg-gray-100 text-gray-800"
+                                    )}>
+                                      {pending.status}
+                                    </span>
+                                  </div>
+                                  <p className="text-gray-600 mt-0.5 pl-1 italic">{pending.description || "(Sem descrição)"}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
                         <div>
                           <strong className="block mb-1 text-sm uppercase">Considerações Finais:</strong>
                           <div className="whitespace-pre-wrap min-h-12 pl-2 border-l-2 border-gray-300 italic">
@@ -2558,6 +2724,31 @@ export default function TransicaoPlaceholder() {
                   )}
                 </div>
               </div>
+
+              {localDtc.implantationPendingList && localDtc.implantationPendingList.length > 0 && (
+                <div>
+                  <strong className="block mb-1 text-sm uppercase">Pendências da Implantação:</strong>
+                  <div className="pl-2 border-l-2 border-gray-400 space-y-2 mb-2">
+                    {localDtc.implantationPendingList.map((pending, idx) => (
+                      <div key={idx} className="text-xs">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-gray-800">{pending.title || "(Sem título)"}</span>
+                          <span className={cn(
+                            "px-1.5 py-0.5 rounded-sm text-[9px] font-bold uppercase",
+                            pending.status === "Resolvido" && "bg-emerald-100 text-emerald-800",
+                            pending.status === "Em andamento" && "bg-blue-100 text-blue-800",
+                            pending.status === "Pendente" && "bg-amber-100 text-amber-800",
+                            pending.status === "Cancelado" && "bg-gray-100 text-gray-800"
+                          )}>
+                            {pending.status}
+                          </span>
+                        </div>
+                        <p className="text-gray-700 mt-0.5 pl-1 italic">{pending.description || "(Sem descrição)"}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div>
                 <strong className="block mb-1 text-sm uppercase">Considerações Finais:</strong>
