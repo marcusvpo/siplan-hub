@@ -106,6 +106,7 @@ interface ImplantationPendingItem {
   status: string;
   department: string;
   assignedTo?: string;
+  product?: string;
   description: string;
 }
 
@@ -756,7 +757,7 @@ export default function TransicaoPlaceholder() {
     const currentList = localDtc.implantationPendingList || [];
     handleFieldChange("implantationPendingList", [
       ...currentList,
-      { title: "", status: "Pendente", department: "", assignedTo: "", description: "" }
+      { title: "", status: "Pendente", department: "", assignedTo: "", product: "", description: "" }
     ]);
   };
 
@@ -2255,6 +2256,23 @@ export default function TransicaoPlaceholder() {
                                     className="border-muted/80 h-7 text-xs flex-1"
                                   />
 
+                                  {/* Product Select dropdown */}
+                                  <Select
+                                    value={pending.product}
+                                    onValueChange={(val) => updateImplantationPending(idx, "product", val)}
+                                    disabled={isFormDisabled}
+                                  >
+                                    <SelectTrigger className="w-28 h-7 text-[10px] border-muted/80 shrink-0">
+                                      <SelectValue placeholder="Produto" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="OrionTN" className="text-xs">OrionTN</SelectItem>
+                                      <SelectItem value="LCW" className="text-xs">LCW</SelectItem>
+                                      <SelectItem value="Ambos" className="text-xs">Ambos</SelectItem>
+                                      <SelectItem value="Outro" className="text-xs">Outro</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+
                                   {/* Department (Setor) Select dropdown */}
                                   <Select
                                     value={pending.department}
@@ -2597,6 +2615,7 @@ export default function TransicaoPlaceholder() {
                                 <div key={idx} className="text-xs">
                                   <div className="flex items-center justify-between">
                                     <span className="font-bold text-gray-800">
+                                      {pending.product ? `[${pending.product}] ` : ""}
                                       {pending.title || "(Sem título)"}
                                       {pending.department ? ` - ${pending.department}` : ""}
                                       {pending.assignedTo ? ` (Responsável: ${pending.assignedTo})` : ""}
@@ -2785,6 +2804,7 @@ export default function TransicaoPlaceholder() {
                       <div key={idx} className="text-xs">
                         <div className="flex items-center justify-between">
                           <span className="font-bold text-gray-800">
+                            {pending.product ? `[${pending.product}] ` : ""}
                             {pending.title || "(Sem título)"}
                             {pending.department ? ` - ${pending.department}` : ""}
                             {pending.assignedTo ? ` (Responsável: ${pending.assignedTo})` : ""}
