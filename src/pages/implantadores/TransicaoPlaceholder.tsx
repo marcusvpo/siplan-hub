@@ -52,7 +52,9 @@ import {
   Copy,
   Download,
   Eye,
-  EyeOff
+  EyeOff,
+  ChevronDown,
+  ChevronRight
 } from "lucide-react";
 
 interface KeyUserItem {
@@ -161,6 +163,21 @@ export default function TransicaoPlaceholder() {
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [showPgAccess, setShowPgAccess] = useState(false);
   const [showRemoteAccess, setShowRemoteAccess] = useState(false);
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
+    "ident-cartorio": true,
+    "ident-equipe": true,
+    "infra-chamados": true,
+    "infra-banco": true,
+    "infra-sistemas": true,
+    "infra-conversao": true,
+  });
+
+  const toggleSection = (sectionKey: string) => {
+    setCollapsedSections(prev => ({
+      ...prev,
+      [sectionKey]: !prev[sectionKey]
+    }));
+  };
 
   // 1. Fetch lightweight project list for selection dropdown
   const { data: projectsList = [], isLoading: isLoadingList } = useQuery({
@@ -1085,252 +1102,280 @@ export default function TransicaoPlaceholder() {
                 <CardContent className="space-y-6">
                   {/* Sub-seção 1: Dados do Cartório */}
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2 border-b pb-1.5">
-                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80">1. Dados do Cartório</span>
+                    <div 
+                      className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors"
+                      onClick={() => toggleSection("ident-cartorio")}
+                    >
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">
+                        1. Dados do Cartório
+                      </span>
+                      <Button type="button" variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
+                        {collapsedSections["ident-cartorio"] ? (
+                          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
+                        ) : (
+                          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
+                        )}
+                      </Button>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <Label htmlFor="serventia" className="text-[11px] font-bold">Serventia (Cartório)</Label>
-                        <Input
-                          id="serventia"
-                          value={localDtc.serventia}
-                          onChange={(e) => handleFieldChange("serventia", e.target.value)}
-                          disabled={isFormDisabled}
-                          className="border-muted/80 h-8 text-xs font-semibold"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label htmlFor="oficial" className="text-[11px] font-bold">Oficial do Cartório</Label>
-                        <Input
-                          id="oficial"
-                          value={localDtc.oficial}
-                          onChange={(e) => handleFieldChange("oficial", e.target.value)}
-                          disabled={isFormDisabled}
-                          className="border-muted/80 h-8 text-xs"
-                          placeholder="Nome do Oficial / Titular"
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <Label htmlFor="clientPhone" className="text-[11px] font-bold">Telefone Serventia</Label>
-                        <div className="relative flex items-center">
+                    {!collapsedSections["ident-cartorio"] && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <div className="space-y-1">
+                          <Label htmlFor="serventia" className="text-[11px] font-bold">Serventia (Cartório)</Label>
                           <Input
-                            id="clientPhone"
-                            value={localDtc.clientPhone}
-                            onChange={(e) => handleFieldChange("clientPhone", formatPhoneNumber(e.target.value))}
+                            id="serventia"
+                            value={localDtc.serventia}
+                            onChange={(e) => handleFieldChange("serventia", e.target.value)}
                             disabled={isFormDisabled}
-                            className="border-muted/80 h-8 text-xs pr-8"
-                            placeholder="(00) 00000-0000"
+                            className="border-muted/80 h-8 text-xs font-semibold"
                           />
-                          {localDtc.clientPhone && (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleOpenDirectChat(localDtc.clientPhone)}
-                              className="absolute right-1 h-6 w-6 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10 rounded-full"
-                              title="Abrir conversa no WhatsApp"
-                            >
-                              <MessageSquare className="h-3.5 w-3.5" />
-                            </Button>
+                        </div>
+                        <div className="space-y-1">
+                          <Label htmlFor="oficial" className="text-[11px] font-bold">Oficial do Cartório</Label>
+                          <Input
+                            id="oficial"
+                            value={localDtc.oficial}
+                            onChange={(e) => handleFieldChange("oficial", e.target.value)}
+                            disabled={isFormDisabled}
+                            className="border-muted/80 h-8 text-xs"
+                            placeholder="Nome do Oficial / Titular"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label htmlFor="clientPhone" className="text-[11px] font-bold">Telefone Serventia</Label>
+                          <div className="relative flex items-center">
+                            <Input
+                              id="clientPhone"
+                              value={localDtc.clientPhone}
+                              onChange={(e) => handleFieldChange("clientPhone", formatPhoneNumber(e.target.value))}
+                              disabled={isFormDisabled}
+                              className="border-muted/80 h-8 text-xs pr-8"
+                              placeholder="(00) 00000-0000"
+                            />
+                            {localDtc.clientPhone && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleOpenDirectChat(localDtc.clientPhone)}
+                                className="absolute right-1 h-6 w-6 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10 rounded-full"
+                                title="Abrir conversa no WhatsApp"
+                              >
+                                <MessageSquare className="h-3.5 w-3.5" />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <Label htmlFor="clientEmail" className="text-[11px] font-bold">E-mail Serventia</Label>
+                          <Input
+                            id="clientEmail"
+                            type="email"
+                            value={localDtc.clientEmail}
+                            onChange={(e) => handleFieldChange("clientEmail", e.target.value)}
+                            disabled={isFormDisabled}
+                            className={cn(
+                              "border-muted/80 h-8 text-xs",
+                              localDtc.clientEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(localDtc.clientEmail) && "border-rose-500 focus-visible:ring-rose-500"
+                            )}
+                            placeholder="contato@cartorio.com.br"
+                          />
+                          {localDtc.clientEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(localDtc.clientEmail) && (
+                            <p className="text-[10px] text-rose-500 mt-0.5">Formato de e-mail inválido.</p>
                           )}
                         </div>
                       </div>
-                      <div className="space-y-1">
-                        <Label htmlFor="clientEmail" className="text-[11px] font-bold">E-mail Serventia</Label>
-                        <Input
-                          id="clientEmail"
-                          type="email"
-                          value={localDtc.clientEmail}
-                          onChange={(e) => handleFieldChange("clientEmail", e.target.value)}
-                          disabled={isFormDisabled}
-                          className={cn(
-                            "border-muted/80 h-8 text-xs",
-                            localDtc.clientEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(localDtc.clientEmail) && "border-rose-500 focus-visible:ring-rose-500"
-                          )}
-                          placeholder="contato@cartorio.com.br"
-                        />
-                        {localDtc.clientEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(localDtc.clientEmail) && (
-                          <p className="text-[10px] text-rose-500 mt-0.5">Formato de e-mail inválido.</p>
-                        )}
-                      </div>
-                    </div>
+                    )}
                   </div>
 
                   {/* Sub-seção 2: Equipe & Contatos */}
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2 border-b pb-1.5">
-                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80">2. Equipe de Transição & Contatos-Chave</span>
+                    <div 
+                      className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors"
+                      onClick={() => toggleSection("ident-equipe")}
+                    >
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">
+                        2. Equipe de Transição & Contatos-Chave
+                      </span>
+                      <Button type="button" variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
+                        {collapsedSections["ident-equipe"] ? (
+                          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
+                        ) : (
+                          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
+                        )}
+                      </Button>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div className="space-y-1 flex flex-col justify-end">
-                        <Label htmlFor="responsible" className="text-[11px] font-bold mb-1">Implantador Responsável (DTC)</Label>
-                        <AutocompleteInput
-                          value={localDtc.responsible}
-                          onChange={(val) => handleFieldChange("responsible", val)}
-                          disabled={isFormDisabled}
-                          placeholder="Selecione o implantador..."
-                          className="border-muted/80 h-8 text-xs"
-                        />
-                      </div>
-                      <div className="space-y-1 flex flex-col justify-end">
-                        <Label htmlFor="analystResponsible" className="text-[11px] font-bold mb-1">Responsável pelo pós implantação</Label>
-                        <AutocompleteInput
-                          value={localDtc.analystResponsible}
-                          onChange={(val) => handleFieldChange("analystResponsible", val)}
-                          disabled={isFormDisabled}
-                          placeholder="Selecione o analista..."
-                          className="border-muted/80 h-8 text-xs"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <Label htmlFor="clientResponsible" className="text-[11px] font-bold">Responsável / Contato Principal (Cliente)</Label>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <Input
-                          id="clientResponsible"
-                          value={localDtc.clientResponsible}
-                          onChange={(e) => handleFieldChange("clientResponsible", e.target.value)}
-                          disabled={isFormDisabled}
-                          className="border-muted/80 h-8 text-xs"
-                          placeholder="Nome do contato principal"
-                        />
-                        <div className="relative flex items-center">
-                          <Input
-                            id="clientResponsiblePhone"
-                            value={localDtc.clientResponsiblePhone || ""}
-                            onChange={(e) => handleFieldChange("clientResponsiblePhone", formatPhoneNumber(e.target.value))}
-                            disabled={isFormDisabled}
-                            className="border-muted/80 h-8 text-xs font-semibold pr-8"
-                            placeholder="Celular/Telefone do Responsável"
-                          />
-                          {localDtc.clientResponsiblePhone && (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleOpenDirectChat(localDtc.clientResponsiblePhone)}
-                              className="absolute right-1 h-6 w-6 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10 rounded-full"
-                              title="Abrir conversa no WhatsApp"
-                            >
-                              <MessageSquare className="h-3.5 w-3.5" />
-                            </Button>
-                          )}
+                    {!collapsedSections["ident-equipe"] && (
+                      <div className="space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div className="space-y-1 flex flex-col justify-end">
+                            <Label htmlFor="responsible" className="text-[11px] font-bold mb-1">Implantador Responsável (DTC)</Label>
+                            <AutocompleteInput
+                              value={localDtc.responsible}
+                              onChange={(val) => handleFieldChange("responsible", val)}
+                              disabled={isFormDisabled}
+                              placeholder="Selecione o implantador..."
+                              className="border-muted/80 h-8 text-xs"
+                            />
+                          </div>
+                          <div className="space-y-1 flex flex-col justify-end">
+                            <Label htmlFor="analystResponsible" className="text-[11px] font-bold mb-1">Responsável pelo pós implantação</Label>
+                            <AutocompleteInput
+                              value={localDtc.analystResponsible}
+                              onChange={(val) => handleFieldChange("analystResponsible", val)}
+                              disabled={isFormDisabled}
+                              placeholder="Selecione o analista..."
+                              className="border-muted/80 h-8 text-xs"
+                            />
+                          </div>
                         </div>
-                      </div>
-                    </div>
 
-                    {/* Dynamic Key Users Section */}
-                    <div className="space-y-2 border p-3 rounded-lg bg-muted/10 mt-1">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                        <div className="space-y-0.5">
-                          <Label className="text-[11px] font-bold">Key Users (Outros contatos-chave)</Label>
-                          <p className="text-[9px] text-muted-foreground">Adicione outros contatos importantes da serventia.</p>
-                        </div>
-                        <div className="flex items-center gap-1.5 self-end sm:self-auto">
-                          {/* WhatsApp & Contacts dropdown */}
-                          {localDtc && (
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
+                        <div className="space-y-1">
+                          <Label htmlFor="clientResponsible" className="text-[11px] font-bold">Responsável / Contato Principal (Cliente)</Label>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <Input
+                              id="clientResponsible"
+                              value={localDtc.clientResponsible}
+                              onChange={(e) => handleFieldChange("clientResponsible", e.target.value)}
+                              disabled={isFormDisabled}
+                              className="border-muted/80 h-8 text-xs"
+                              placeholder="Nome do contato principal"
+                            />
+                            <div className="relative flex items-center">
+                              <Input
+                                id="clientResponsiblePhone"
+                                value={localDtc.clientResponsiblePhone || ""}
+                                onChange={(e) => handleFieldChange("clientResponsiblePhone", formatPhoneNumber(e.target.value))}
+                                disabled={isFormDisabled}
+                                className="border-muted/80 h-8 text-xs font-semibold pr-8"
+                                placeholder="Celular/Telefone do Responsável"
+                              />
+                              {localDtc.clientResponsiblePhone && (
                                 <Button
                                   type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-6.5 text-[10px] gap-1 border-emerald-500/20 text-emerald-600 hover:bg-emerald-500/10 font-bold"
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleOpenDirectChat(localDtc.clientResponsiblePhone)}
+                                  className="absolute right-1 h-6 w-6 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10 rounded-full"
+                                  title="Abrir conversa no WhatsApp"
                                 >
-                                  <MessageSquare className="h-3 w-3" />
-                                  Ações WhatsApp
+                                  <MessageSquare className="h-3.5 w-3.5" />
                                 </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="text-xs">
-                                <DropdownMenuLabel>Ações de Contatos</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={handleExportVcf} className="cursor-pointer gap-1.5">
-                                  <Download className="h-3.5 w-3.5 text-primary" />
-                                  Baixar Arquivo Único (.vcf para Celular)
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={handleExportZip} className="cursor-pointer gap-1.5">
-                                  <Download className="h-3.5 w-3.5 text-primary" />
-                                  Baixar Contatos Separados (.zip para PC)
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={handleCopyPhones} className="cursor-pointer gap-1.5">
-                                  <Copy className="h-3.5 w-3.5 text-primary" />
-                                  Copiar Lista de Telefones
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={handleOpenWhatsappShare} className="cursor-pointer gap-1.5">
-                                  <Share2 className="h-3.5 w-3.5 text-primary" />
-                                  Enviar Lista no WhatsApp
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          )}
-                          <Button
-                            type="button"
-                            onClick={addKeyUser}
-                            disabled={isFormDisabled}
-                            variant="outline"
-                            size="sm"
-                            className="h-6.5 text-[10px] gap-1 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 font-bold"
-                          >
-                            <Plus className="h-3 w-3" />
-                            Adicionar Contato
-                          </Button>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                      </div>
 
-                      {(!localDtc.keyUsersList || localDtc.keyUsersList.length === 0) ? (
-                        <p className="text-[11px] text-muted-foreground italic py-1.5 text-center bg-background/50 border border-dashed rounded-md">
-                          Nenhum contato-chave adicional. Clique em Adicionar Contato.
-                        </p>
-                      ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1.5">
-                          {localDtc.keyUsersList.map((user, idx) => (
-                            <div key={idx} className="flex items-center gap-1.5 bg-background p-1.5 border rounded-md shadow-2xs">
-                              <Input
-                                value={user.name}
-                                onChange={(e) => updateKeyUser(idx, "name", e.target.value)}
-                                disabled={isFormDisabled}
-                                placeholder="Nome"
-                                className="border-muted/80 h-7 text-xs flex-1"
-                              />
-                              <div className="relative flex items-center flex-1">
-                                <Input
-                                  value={user.phone}
-                                  onChange={(e) => updateKeyUser(idx, "phone", formatPhoneNumber(e.target.value))}
-                                  disabled={isFormDisabled}
-                                  placeholder="Telefone"
-                                  className="border-muted/80 h-7 text-xs font-semibold pr-7 flex-1"
-                                />
-                                {user.phone && (
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => handleOpenDirectChat(user.phone)}
-                                    className="absolute right-0.5 h-5 w-5 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10 rounded-full"
-                                    title="WhatsApp"
-                                  >
-                                    <MessageSquare className="h-3 w-3" />
-                                  </Button>
-                                )}
-                              </div>
+                        {/* Dynamic Key Users Section */}
+                        <div className="space-y-2 border p-3 rounded-lg bg-muted/10 mt-1">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div className="space-y-0.5">
+                              <Label className="text-[11px] font-bold">Key Users (Outros contatos-chave)</Label>
+                              <p className="text-[9px] text-muted-foreground">Adicione outros contatos importantes da serventia.</p>
+                            </div>
+                            <div className="flex items-center gap-1.5 self-end sm:self-auto">
+                              {/* WhatsApp & Contacts dropdown */}
+                              {localDtc && (
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-6.5 text-[10px] gap-1 border-emerald-500/20 text-emerald-600 hover:bg-emerald-500/10 font-bold"
+                                    >
+                                      <MessageSquare className="h-3 w-3" />
+                                      Ações WhatsApp
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="text-xs">
+                                    <DropdownMenuLabel>Ações de Contatos</DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={handleExportVcf} className="cursor-pointer gap-1.5">
+                                      <Download className="h-3.5 w-3.5 text-primary" />
+                                      Baixar Arquivo Único (.vcf para Celular)
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={handleExportZip} className="cursor-pointer gap-1.5">
+                                      <Download className="h-3.5 w-3.5 text-primary" />
+                                      Baixar Contatos Separados (.zip para PC)
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={handleCopyPhones} className="cursor-pointer gap-1.5">
+                                      <Copy className="h-3.5 w-3.5 text-primary" />
+                                      Copiar Lista de Telefones
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={handleOpenWhatsappShare} className="cursor-pointer gap-1.5">
+                                      <Share2 className="h-3.5 w-3.5 text-primary" />
+                                      Enviar Lista no WhatsApp
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              )}
                               <Button
                                 type="button"
-                                onClick={() => removeKeyUser(idx)}
+                                onClick={addKeyUser}
                                 disabled={isFormDisabled}
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-full shrink-0"
+                                variant="outline"
+                                size="sm"
+                                className="h-6.5 text-[10px] gap-1 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 font-bold"
                               >
-                                <Trash2 className="h-3.5 w-3.5" />
+                                <Plus className="h-3 w-3" />
+                                Adicionar Contato
                               </Button>
                             </div>
-                          ))}
+                          </div>
+
+                          {(!localDtc.keyUsersList || localDtc.keyUsersList.length === 0) ? (
+                            <p className="text-[11px] text-muted-foreground italic py-1.5 text-center bg-background/50 border border-dashed rounded-md">
+                              Nenhum contato-chave adicional. Clique em Adicionar Contato.
+                            </p>
+                          ) : (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1.5">
+                              {localDtc.keyUsersList.map((user, idx) => (
+                                <div key={idx} className="flex items-center gap-1.5 bg-background p-1.5 border rounded-md shadow-2xs">
+                                  <Input
+                                    value={user.name}
+                                    onChange={(e) => updateKeyUser(idx, "name", e.target.value)}
+                                    disabled={isFormDisabled}
+                                    placeholder="Nome"
+                                    className="border-muted/80 h-7 text-xs flex-1"
+                                  />
+                                  <div className="relative flex items-center flex-1">
+                                    <Input
+                                      value={user.phone}
+                                      onChange={(e) => updateKeyUser(idx, "phone", formatPhoneNumber(e.target.value))}
+                                      disabled={isFormDisabled}
+                                      placeholder="Telefone"
+                                      className="border-muted/80 h-7 text-xs font-semibold pr-7 flex-1"
+                                    />
+                                    {user.phone && (
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleOpenDirectChat(user.phone)}
+                                        className="absolute right-0.5 h-5 w-5 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10 rounded-full"
+                                        title="WhatsApp"
+                                      >
+                                        <MessageSquare className="h-3.5 w-3.5" />
+                                      </Button>
+                                    )}
+                                  </div>
+                                  <Button
+                                    type="button"
+                                    onClick={() => removeKeyUser(idx)}
+                                    disabled={isFormDisabled}
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-full shrink-0"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -1347,348 +1392,405 @@ export default function TransicaoPlaceholder() {
                   
                   {/* Sub-seção 1: Controle de Chamados & Acessos Remotos */}
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2 border-b pb-1.5">
-                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80">1. Controle de Chamados & Acessos Remotos</span>
+                    <div 
+                      className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors"
+                      onClick={() => toggleSection("infra-chamados")}
+                    >
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">
+                        1. Controle de Chamados & Acessos Remotos
+                      </span>
+                      <Button type="button" variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
+                        {collapsedSections["infra-chamados"] ? (
+                          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
+                        ) : (
+                          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
+                        )}
+                      </Button>
                     </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-                      <div className="space-y-1.5">
-                        <Label htmlFor="supportCallNumber" className="text-[11px] font-bold">Número do Chamado Principal no 0800</Label>
-                        <Input
-                          id="supportCallNumber"
-                          value={localDtc.supportCallNumber}
-                          onChange={(e) => handleFieldChange("supportCallNumber", e.target.value)}
-                          disabled={isFormDisabled}
-                          className="border-muted/80 h-8 text-xs font-semibold"
-                          placeholder="Ex: #58129"
-                        />
-                      </div>
-                      
-                      {/* Status & Downloads Panel */}
-                      <div className="space-y-1.5 border p-2.5 rounded-lg bg-muted/20 flex flex-col justify-between min-h-[76px] self-stretch">
-                        <div>
-                          <Label className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground block">
-                            Status & Downloads de TI
-                          </Label>
-                          <div className="flex items-center gap-1.5 mt-1">
-                            <div className={cn(
-                              "h-2 w-2 rounded-full animate-pulse",
-                              localDtc.postgresAccessData && (localDtc.remoteAccessList?.length || 0) > 0
-                                ? "bg-emerald-500"
-                                : "bg-amber-500"
-                            )} />
-                            <span className="text-[11px] font-bold text-foreground">
-                              {localDtc.postgresAccessData && (localDtc.remoteAccessList?.length || 0) > 0
-                                ? "Estrutura Pronta para Acesso"
-                                : "Pendente: Preencha Acesso e Banco"}
-                            </span>
+                    {!collapsedSections["infra-chamados"] && (
+                      <div className="space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                          <div className="space-y-1.5">
+                            <Label htmlFor="supportCallNumber" className="text-[11px] font-bold">Número do Chamado Principal no 0800</Label>
+                            <Input
+                              id="supportCallNumber"
+                              value={localDtc.supportCallNumber}
+                              onChange={(e) => handleFieldChange("supportCallNumber", e.target.value)}
+                              disabled={isFormDisabled}
+                              className="border-muted/80 h-8 text-xs font-semibold"
+                              placeholder="Ex: #58129"
+                            />
+                          </div>
+                          
+                          {/* Status & Downloads Panel */}
+                          <div className="space-y-1.5 border p-2.5 rounded-lg bg-muted/20 flex flex-col justify-between min-h-[76px] self-stretch">
+                            <div>
+                              <Label className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground block">
+                                Status & Downloads de TI
+                              </Label>
+                              <div className="flex items-center gap-1.5 mt-1">
+                                <div className={cn(
+                                  "h-2 w-2 rounded-full animate-pulse",
+                                  localDtc.postgresAccessData && (localDtc.remoteAccessList?.length || 0) > 0
+                                    ? "bg-emerald-500"
+                                    : "bg-amber-500"
+                                )} />
+                                <span className="text-[11px] font-bold text-foreground">
+                                  {localDtc.postgresAccessData && (localDtc.remoteAccessList?.length || 0) > 0
+                                    ? "Estrutura Pronta para Acesso"
+                                    : "Pendente: Preencha Acesso e Banco"}
+                                </span>
+                              </div>
+                            </div>
+                            
+                            <div className="flex flex-wrap gap-1 items-center mt-2 border-t pt-2">
+                              <span className="text-[9px] text-muted-foreground mr-1">Utilitários:</span>
+                              <a href="https://anydesk.com/download" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 text-[9px] font-bold text-primary hover:underline bg-background border px-1.5 py-0.5 rounded shadow-2xs">
+                                AnyDesk <ExternalLink className="h-2 w-2" />
+                              </a>
+                              <a href="https://rustdesk.com" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 text-[9px] font-bold text-primary hover:underline bg-background border px-1.5 py-0.5 rounded shadow-2xs">
+                                RustDesk <ExternalLink className="h-2 w-2" />
+                              </a>
+                              <a href="https://www.teamviewer.com" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 text-[9px] font-bold text-primary hover:underline bg-background border px-1.5 py-0.5 rounded shadow-2xs">
+                                TeamViewer <ExternalLink className="h-2 w-2" />
+                              </a>
+                              <a href="https://www.pgadmin.org/download/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 text-[9px] font-bold text-primary hover:underline bg-background border px-1.5 py-0.5 rounded shadow-2xs">
+                                pgAdmin <ExternalLink className="h-2 w-2" />
+                              </a>
+                            </div>
                           </div>
                         </div>
-                        
-                        <div className="flex flex-wrap gap-1 items-center mt-2 border-t pt-2">
-                          <span className="text-[9px] text-muted-foreground mr-1">Utilitários:</span>
-                          <a href="https://anydesk.com/download" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 text-[9px] font-bold text-primary hover:underline bg-background border px-1.5 py-0.5 rounded shadow-2xs">
-                            AnyDesk <ExternalLink className="h-2 w-2" />
-                          </a>
-                          <a href="https://rustdesk.com" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 text-[9px] font-bold text-primary hover:underline bg-background border px-1.5 py-0.5 rounded shadow-2xs">
-                            RustDesk <ExternalLink className="h-2 w-2" />
-                          </a>
-                          <a href="https://www.teamviewer.com" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 text-[9px] font-bold text-primary hover:underline bg-background border px-1.5 py-0.5 rounded shadow-2xs">
-                            TeamViewer <ExternalLink className="h-2 w-2" />
-                          </a>
-                          <a href="https://www.pgadmin.org/download/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 text-[9px] font-bold text-primary hover:underline bg-background border px-1.5 py-0.5 rounded shadow-2xs">
-                            pgAdmin <ExternalLink className="h-2 w-2" />
-                          </a>
-                        </div>
-                      </div>
-                    </div>
 
-                    {/* Remote Access Connections Section */}
-                    <div className="space-y-2 border p-3 rounded-lg bg-muted/10">
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <Label className="text-[11px] font-bold">Acessos Remotos (AnyDesk / TeamViewer)</Label>
-                          <p className="text-[9px] text-muted-foreground">Cadastre um ou mais acessos para a serventia.</p>
-                        </div>
-                        <Button
-                          type="button"
-                          onClick={addRemoteAccess}
-                          disabled={isFormDisabled}
-                          variant="outline"
-                          size="sm"
-                          className="h-6.5 text-[10px] gap-1 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 font-bold"
-                        >
-                          <Plus className="h-3 w-3" />
-                          Adicionar Acesso
-                        </Button>
-                      </div>
+                        {/* Remote Access Connections Section */}
+                        <div className="space-y-2 border p-3 rounded-lg bg-muted/10">
+                          <div className="flex items-center justify-between">
+                            <div className="space-y-0.5">
+                              <Label className="text-[11px] font-bold">Acessos Remotos (AnyDesk / TeamViewer)</Label>
+                              <p className="text-[9px] text-muted-foreground">Cadastre um ou mais acessos para a serventia.</p>
+                            </div>
+                            <Button
+                              type="button"
+                              onClick={addRemoteAccess}
+                              disabled={isFormDisabled}
+                              variant="outline"
+                              size="sm"
+                              className="h-6.5 text-[10px] gap-1 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 font-bold"
+                            >
+                              <Plus className="h-3 w-3" />
+                              Adicionar Acesso
+                            </Button>
+                          </div>
 
-                      {(!localDtc.remoteAccessList || localDtc.remoteAccessList.length === 0) ? (
-                        <p className="text-[11px] text-muted-foreground italic py-1.5 text-center bg-background/50 border border-dashed rounded-md">
-                          Nenhum acesso remoto cadastrado. Clique em Adicionar Acesso.
-                        </p>
-                      ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1.5">
-                          {localDtc.remoteAccessList.map((access, idx) => (
-                            <div key={idx} className="flex items-center gap-1.5 bg-background p-1.5 border rounded-md shadow-2xs">
-                              {/* System Select */}
-                              <Select
-                                value={access.system}
-                                onValueChange={(val: any) => updateRemoteAccess(idx, "system", val)}
-                                disabled={isFormDisabled}
-                              >
-                                <SelectTrigger className="w-28 h-7 text-xs border-muted/80 shrink-0">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="AnyDesk" className="text-xs">AnyDesk</SelectItem>
-                                  <SelectItem value="TeamViewer" className="text-xs">TeamViewer</SelectItem>
-                                  <SelectItem value="RustDesk" className="text-xs">RustDesk</SelectItem>
-                                  <SelectItem value="Outro" className="text-xs">Outro</SelectItem>
-                                </SelectContent>
-                              </Select>
+                          {(!localDtc.remoteAccessList || localDtc.remoteAccessList.length === 0) ? (
+                            <p className="text-[11px] text-muted-foreground italic py-1.5 text-center bg-background/50 border border-dashed rounded-md">
+                              Nenhum acesso remoto cadastrado. Clique em Adicionar Acesso.
+                            </p>
+                          ) : (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1.5">
+                              {localDtc.remoteAccessList.map((access, idx) => (
+                                <div key={idx} className="flex items-center gap-1.5 bg-background p-1.5 border rounded-md shadow-2xs">
+                                  {/* System Select */}
+                                  <Select
+                                    value={access.system}
+                                    onValueChange={(val: any) => updateRemoteAccess(idx, "system", val)}
+                                    disabled={isFormDisabled}
+                                  >
+                                    <SelectTrigger className="w-28 h-7 text-xs border-muted/80 shrink-0">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="AnyDesk" className="text-xs">AnyDesk</SelectItem>
+                                      <SelectItem value="TeamViewer" className="text-xs">TeamViewer</SelectItem>
+                                      <SelectItem value="RustDesk" className="text-xs">RustDesk</SelectItem>
+                                      <SelectItem value="Outro" className="text-xs">Outro</SelectItem>
+                                    </SelectContent>
+                                  </Select>
 
-                              {/* ID Input */}
-                              <Input
-                                value={access.id}
-                                onChange={(e) => updateRemoteAccess(idx, "id", e.target.value)}
-                                disabled={isFormDisabled}
-                                placeholder="ID"
-                                className="border-muted/80 h-7 text-xs flex-1"
-                              />
+                                  {/* ID Input */}
+                                  <Input
+                                    value={access.id}
+                                    onChange={(e) => updateRemoteAccess(idx, "id", e.target.value)}
+                                    disabled={isFormDisabled}
+                                    placeholder="ID"
+                                    className="border-muted/80 h-7 text-xs flex-1"
+                                  />
 
-                              {/* Password Input with inline Copy */}
-                              <div className="relative flex items-center flex-1">
-                                <Input
-                                  value={access.password || ""}
-                                  onChange={(e) => updateRemoteAccess(idx, "password", e.target.value)}
-                                  disabled={isFormDisabled}
-                                  placeholder="Senha"
-                                  className="border-muted/80 h-7 text-xs pr-7 flex-1"
-                                />
-                                {access.password && (
+                                  {/* Password Input with inline Copy */}
+                                  <div className="relative flex items-center flex-1">
+                                    <Input
+                                      value={access.password || ""}
+                                      onChange={(e) => updateRemoteAccess(idx, "password", e.target.value)}
+                                      disabled={isFormDisabled}
+                                      placeholder="Senha"
+                                      className="border-muted/80 h-7 text-xs pr-7 flex-1"
+                                    />
+                                    {access.password && (
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleCopyText(access.password || "", "Senha")}
+                                        className="absolute right-0.5 h-5 w-5 text-muted-foreground hover:text-foreground rounded-full"
+                                        title="Copiar senha"
+                                      >
+                                        <Copy className="h-3 w-3" />
+                                      </Button>
+                                    )}
+                                  </div>
+
+                                  {/* Remove Button */}
                                   <Button
                                     type="button"
+                                    onClick={() => removeRemoteAccess(idx)}
+                                    disabled={isFormDisabled}
                                     variant="ghost"
                                     size="icon"
-                                    onClick={() => handleCopyText(access.password || "", "Senha")}
-                                    className="absolute right-0.5 h-5 w-5 text-muted-foreground hover:text-foreground rounded-full"
-                                    title="Copiar senha"
+                                    className="h-7 w-7 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-full shrink-0"
                                   >
-                                    <Copy className="h-3 w-3" />
+                                    <Trash2 className="h-3.5 w-3.5" />
                                   </Button>
-                                )}
-                              </div>
-
-                              {/* Remove Button */}
-                              <Button
-                                type="button"
-                                onClick={() => removeRemoteAccess(idx)}
-                                disabled={isFormDisabled}
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-full shrink-0"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </Button>
+                                </div>
+                              ))}
                             </div>
-                          ))}
+                          )}
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Sub-seção 2: Banco de Dados PostgreSQL */}
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2 border-b pb-1.5">
-                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80">2. Banco de Dados PostgreSQL</span>
+                    <div 
+                      className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors"
+                      onClick={() => toggleSection("infra-banco")}
+                    >
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">
+                        2. Banco de Dados PostgreSQL
+                      </span>
+                      <Button type="button" variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
+                        {collapsedSections["infra-banco"] ? (
+                          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
+                        ) : (
+                          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
+                        )}
+                      </Button>
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-                      <div className="space-y-1.5">
-                        <Label htmlFor="postgresVersion" className="text-[11px] font-bold">Versão do PostgreSQL</Label>
-                        <Input
-                          id="postgresVersion"
-                          value={localDtc.postgresVersion}
-                          onChange={(e) => handleFieldChange("postgresVersion", e.target.value)}
-                          disabled={isFormDisabled}
-                          className="border-muted/80 h-8 text-xs"
-                          placeholder="Ex: PostgreSQL 17"
-                        />
-                      </div>
-                      
-                      <div className="space-y-1.5">
-                        <Label htmlFor="postgresAccessData" className="text-[11px] font-bold">Dados de Acesso PostgreSQL (IP, Porta, User)</Label>
-                        <div className="relative flex items-center">
+                    {!collapsedSections["infra-banco"] && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start animate-in fade-in slide-in-from-top-1 duration-200">
+                        <div className="space-y-1.5">
+                          <Label htmlFor="postgresVersion" className="text-[11px] font-bold">Versão do PostgreSQL</Label>
                           <Input
-                            id="postgresAccessData"
-                            type={showPgAccess ? "text" : "password"}
-                            autoComplete="new-password"
-                            value={localDtc.postgresAccessData}
-                            onChange={(e) => handleFieldChange("postgresAccessData", e.target.value)}
+                            id="postgresVersion"
+                            value={localDtc.postgresVersion}
+                            onChange={(e) => handleFieldChange("postgresVersion", e.target.value)}
                             disabled={isFormDisabled}
-                            className="border-muted/80 h-8 text-xs pr-16"
-                            placeholder="IP, Porta, User, Senha..."
+                            className="border-muted/80 h-8 text-xs"
+                            placeholder="Ex: PostgreSQL 17"
                           />
-                          <div className="absolute right-1 flex items-center gap-0.5">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setShowPgAccess(!showPgAccess)}
-                              className="h-6 w-6 text-muted-foreground hover:text-foreground rounded-full"
-                              title={showPgAccess ? "Ocultar senha" : "Ver senha"}
-                            >
-                              {showPgAccess ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleCopyText(localDtc.postgresAccessData || "", "Acesso PostgreSQL")}
-                              className="h-6 w-6 text-muted-foreground hover:text-foreground rounded-full"
-                              title="Copiar dados"
-                            >
-                              <Copy className="h-3.5 w-3.5" />
-                            </Button>
-                          </div>
                         </div>
-                        {(() => {
-                          const validation = getIpValidationMessage(localDtc.postgresAccessData || "");
-                          if (!validation) return null;
-                          return (
-                            <span className={cn(
-                              "text-[10px] font-semibold mt-1 block",
-                              validation.isWarning ? "text-amber-500" : "text-emerald-600"
-                            )}>
-                              {validation.isWarning ? "⚠ " : "✓ "}{validation.msg}
-                            </span>
-                          );
-                        })()}
+                        
+                        <div className="space-y-1.5">
+                          <Label htmlFor="postgresAccessData" className="text-[11px] font-bold">Dados de Acesso PostgreSQL (IP, Porta, User)</Label>
+                          <div className="relative flex items-center">
+                            <Input
+                              id="postgresAccessData"
+                              type={showPgAccess ? "text" : "password"}
+                              autoComplete="new-password"
+                              value={localDtc.postgresAccessData}
+                              onChange={(e) => handleFieldChange("postgresAccessData", e.target.value)}
+                              disabled={isFormDisabled}
+                              className="border-muted/80 h-8 text-xs pr-16"
+                              placeholder="IP, Porta, User, Senha..."
+                            />
+                            <div className="absolute right-1 flex items-center gap-0.5">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setShowPgAccess(!showPgAccess)}
+                                className="h-6 w-6 text-muted-foreground hover:text-foreground rounded-full"
+                                title={showPgAccess ? "Ocultar senha" : "Ver senha"}
+                              >
+                                {showPgAccess ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleCopyText(localDtc.postgresAccessData || "", "Acesso PostgreSQL")}
+                                className="h-6 w-6 text-muted-foreground hover:text-foreground rounded-full"
+                                title="Copiar dados"
+                              >
+                                <Copy className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          </div>
+                          {(() => {
+                            const validation = getIpValidationMessage(localDtc.postgresAccessData || "");
+                            if (!validation) return null;
+                            return (
+                              <span className={cn(
+                                "text-[10px] font-semibold mt-1 block",
+                                validation.isWarning ? "text-amber-500" : "text-emerald-600"
+                              )}>
+                                {validation.isWarning ? "⚠ " : "✓ "}{validation.msg}
+                              </span>
+                            );
+                          })()}
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
 
                   {/* Sub-seção 3: Sistemas Instalados & Versões */}
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2 border-b pb-1.5">
-                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80">3. Sistemas Instalados & Versões</span>
+                    <div 
+                      className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors"
+                      onClick={() => toggleSection("infra-sistemas")}
+                    >
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">
+                        3. Sistemas Instalados & Versões
+                      </span>
+                      <Button type="button" variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
+                        {collapsedSections["infra-sistemas"] ? (
+                          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
+                        ) : (
+                          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
+                        )}
+                      </Button>
                     </div>
                     
-                    <div className="space-y-3">
-                      {/* Systems Installed (Badge pills select) */}
-                      <div className="space-y-1.5">
-                        <Label htmlFor="systemsInstalled" className="text-[11px] font-bold">Sistemas Instalados</Label>
-                        <Input
-                          id="systemsInstalled"
-                          value={localDtc.systemsInstalled}
-                          onChange={(e) => handleFieldChange("systemsInstalled", e.target.value)}
-                          disabled={isFormDisabled}
-                          className="border-muted/80 h-8 text-xs font-semibold"
-                          placeholder="Ex: Orion TN, LCW, SGA"
-                        />
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {ALL_SYSTEMS.map(sys => {
-                            const isSelected = localDtc.systemsInstalled
-                              ? localDtc.systemsInstalled.split(",").map(s => s.trim()).includes(sys)
-                              : false;
-                            return (
-                              <Badge
-                                key={sys}
-                                variant={isSelected ? "default" : "outline"}
-                                className={cn(
-                                  "cursor-pointer text-[10px] px-2 py-0.5 select-none transition-all",
-                                  isSelected 
-                                    ? "bg-primary text-primary-foreground hover:bg-primary/95" 
-                                    : "border-muted-foreground/30 text-muted-foreground hover:bg-muted"
-                                )}
-                                onClick={() => !isFormDisabled && toggleSystemInstalled(sys)}
-                              >
-                                {sys}
-                              </Badge>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      {/* Dynamic System Versions Grid */}
-                      {(() => {
-                        const selectedSystemsList = localDtc.systemsInstalled
-                          ? localDtc.systemsInstalled.split(",").map(s => s.trim()).filter(Boolean)
-                          : [];
-                        if (selectedSystemsList.length === 0) return null;
-                        return (
-                          <div className="border p-3 rounded-lg bg-muted/5 space-y-2 mt-1 animate-in fade-in slide-in-from-top-1 duration-200">
-                            <div className="border-b pb-1">
-                              <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">Versões dos Sistemas Selecionados</span>
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                              {selectedSystemsList.map((sys) => {
-                                const currentVersion = localDtc.systemVersionsList?.[sys] || "";
-                                return (
-                                  <div key={sys} className="space-y-1">
-                                    <Label htmlFor={`version-${sys}`} className="text-[10px] font-bold text-muted-foreground">
-                                      Versão do {sys}
-                                    </Label>
-                                    <Input
-                                      id={`version-${sys}`}
-                                      value={currentVersion}
-                                      onChange={(e) => handleSystemVersionChange(sys, e.target.value)}
-                                      disabled={isFormDisabled}
-                                      className="border-muted/80 h-7.5 text-xs bg-background"
-                                      placeholder="Ex: 05.92.01"
-                                    />
-                                  </div>
-                                );
-                              })}
-                            </div>
+                    {!collapsedSections["infra-sistemas"] && (
+                      <div className="space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
+                        {/* Systems Installed (Badge pills select) */}
+                        <div className="space-y-1.5">
+                          <Label htmlFor="systemsInstalled" className="text-[11px] font-bold">Sistemas Instalados</Label>
+                          <Input
+                            id="systemsInstalled"
+                            value={localDtc.systemsInstalled}
+                            onChange={(e) => handleFieldChange("systemsInstalled", e.target.value)}
+                            disabled={isFormDisabled}
+                            className="border-muted/80 h-8 text-xs font-semibold"
+                            placeholder="Ex: Orion TN, LCW, SGA"
+                          />
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {ALL_SYSTEMS.map(sys => {
+                              const isSelected = localDtc.systemsInstalled
+                                ? localDtc.systemsInstalled.split(",").map(s => s.trim()).includes(sys)
+                                : false;
+                              return (
+                                <Badge
+                                  key={sys}
+                                  variant={isSelected ? "default" : "outline"}
+                                  className={cn(
+                                    "cursor-pointer text-[10px] px-2 py-0.5 select-none transition-all",
+                                    isSelected 
+                                      ? "bg-primary text-primary-foreground hover:bg-primary/95" 
+                                      : "border-muted-foreground/30 text-muted-foreground hover:bg-muted"
+                                  )}
+                                  onClick={() => !isFormDisabled && toggleSystemInstalled(sys)}
+                                >
+                                  {sys}
+                                </Badge>
+                              );
+                            })}
                           </div>
-                        );
-                      })()}
-                    </div>
+                        </div>
+
+                        {/* Dynamic System Versions Grid */}
+                        {(() => {
+                          const selectedSystemsList = localDtc.systemsInstalled
+                            ? localDtc.systemsInstalled.split(",").map(s => s.trim()).filter(Boolean)
+                            : [];
+                          if (selectedSystemsList.length === 0) return null;
+                          return (
+                            <div className="border p-3 rounded-lg bg-muted/5 space-y-2 mt-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                              <div className="border-b pb-1">
+                                <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">Versões dos Sistemas Selecionados</span>
+                              </div>
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                {selectedSystemsList.map((sys) => {
+                                  const currentVersion = localDtc.systemVersionsList?.[sys] || "";
+                                  return (
+                                    <div key={sys} className="space-y-1">
+                                      <Label htmlFor={`version-${sys}`} className="text-[10px] font-bold text-muted-foreground">
+                                        Versão do {sys}
+                                      </Label>
+                                      <Input
+                                        id={`version-${sys}`}
+                                        value={currentVersion}
+                                        onChange={(e) => handleSystemVersionChange(sys, e.target.value)}
+                                        disabled={isFormDisabled}
+                                        className="border-muted/80 h-7.5 text-xs bg-background"
+                                        placeholder="Ex: 05.92.01"
+                                      />
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    )}
                   </div>
 
                   {/* Sub-seção 4: Conversão de Dados */}
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2 border-b pb-1.5">
-                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80">4. Conversão de Dados</span>
+                    <div 
+                      className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors"
+                      onClick={() => toggleSection("infra-conversao")}
+                    >
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">
+                        4. Conversão de Dados
+                      </span>
+                      <Button type="button" variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
+                        {collapsedSections["infra-conversao"] ? (
+                          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
+                        ) : (
+                          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
+                        )}
+                      </Button>
                     </div>
                     
-                    <div className="border p-3 rounded-lg bg-muted/20 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <Label className="text-[11px] font-bold">Houve Conversão de Dados?</Label>
-                          <p className="text-[10px] text-muted-foreground">Marque se os dados de sistemas anteriores foram convertidos.</p>
-                        </div>
-                        <Select
-                          value={localDtc.hadConversion ? "yes" : "no"}
-                          onValueChange={(val) => handleFieldChange("hadConversion", val === "yes")}
-                          disabled={isFormDisabled}
-                        >
-                          <SelectTrigger className="w-24 h-7 text-xs border-muted/80">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="yes" className="text-xs">Sim</SelectItem>
-                            <SelectItem value="no" className="text-xs">Não</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {localDtc.hadConversion && (
-                        <div className="space-y-1 animate-in fade-in slide-in-from-top-1 duration-200">
-                          <Label htmlFor="convertedData" className="text-[11px] font-bold">Dados Convertidos (Tabelas / Escopos)</Label>
-                          <Textarea
-                            id="convertedData"
-                            value={localDtc.convertedData}
-                            onChange={(e) => handleFieldChange("convertedData", e.target.value)}
+                    {!collapsedSections["infra-conversao"] && (
+                      <div className="border p-3 rounded-lg bg-muted/20 space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label className="text-[11px] font-bold">Houve Conversão de Dados?</Label>
+                            <p className="text-[10px] text-muted-foreground">Marque se os dados de sistemas anteriores foram convertidos.</p>
+                          </div>
+                          <Select
+                            value={localDtc.hadConversion ? "yes" : "no"}
+                            onValueChange={(val) => handleFieldChange("hadConversion", val === "yes")}
                             disabled={isFormDisabled}
-                            className="border-muted/80 text-xs min-h-[60px] resize-y"
-                            placeholder="Especifique o histórico migrado (ex: Livros de Notas de 2010 a 2025, Procurações...)"
-                          />
+                          >
+                            <SelectTrigger className="w-24 h-7 text-xs border-muted/80">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="yes" className="text-xs">Sim</SelectItem>
+                              <SelectItem value="no" className="text-xs">Não</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
-                      )}
-                    </div>
+
+                        {localDtc.hadConversion && (
+                          <div className="space-y-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                            <Label htmlFor="convertedData" className="text-[11px] font-bold">Dados Convertidos (Tabelas / Escopos)</Label>
+                            <Textarea
+                              id="convertedData"
+                              value={localDtc.convertedData}
+                              onChange={(e) => handleFieldChange("convertedData", e.target.value)}
+                              disabled={isFormDisabled}
+                              className="border-muted/80 text-xs min-h-[60px] resize-y"
+                              placeholder="Especifique o histórico migrado (ex: Livros de Notas de 2010 a 2025, Procurações...)"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
