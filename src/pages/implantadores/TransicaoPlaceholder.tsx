@@ -95,6 +95,11 @@ interface EmployeeItem {
   role: string;
 }
 
+interface ImplantationLogItem {
+  date: string;
+  description: string;
+}
+
 // Complete DTC data model
 interface DTCData {
   responsible: string;
@@ -118,6 +123,7 @@ interface DTCData {
   remoteAccessList?: RemoteAccessItem[];
   supportCallNumber: string;
   implantationProcess: string;
+  implantationProcessLogs?: ImplantationLogItem[];
   postImplantationProcess: string;
   employees: string;
   employeesList?: EmployeeItem[];
@@ -322,6 +328,7 @@ export default function TransicaoPlaceholder() {
       remoteAccessList: [],
       supportCallNumber: project.ticketNumber || "",
       implantationProcess: "",
+      implantationProcessLogs: [],
       postImplantationProcess: "",
       employees: "",
       employeesList: [],
@@ -700,6 +707,35 @@ export default function TransicaoPlaceholder() {
       employeesList: updated,
       employees: joinedStr
     });
+  };
+
+  const addImplantationLog = () => {
+    if (!localDtc) return;
+    const currentList = localDtc.implantationProcessLogs || [];
+    // Default to current local date
+    const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
+    handleFieldChange("implantationProcessLogs", [
+      ...currentList,
+      { date: today, description: "" }
+    ]);
+  };
+
+  const removeImplantationLog = (idx: number) => {
+    if (!localDtc || !localDtc.implantationProcessLogs) return;
+    handleFieldChange(
+      "implantationProcessLogs",
+      localDtc.implantationProcessLogs.filter((_, i) => i !== idx)
+    );
+  };
+
+  const updateImplantationLog = (idx: number, key: keyof ImplantationLogItem, val: string) => {
+    if (!localDtc || !localDtc.implantationProcessLogs) return;
+    const updated = [...localDtc.implantationProcessLogs];
+    updated[idx] = {
+      ...updated[idx],
+      [key]: val
+    };
+    handleFieldChange("implantationProcessLogs", updated);
   };
 
   const getIpValidationMessage = (val: string) => {
@@ -1920,26 +1956,92 @@ export default function TransicaoPlaceholder() {
                     </div>
                     
                     {!collapsedSections["processo-implantacao"] && (
-                      <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
-                        <Label htmlFor="implantationProcess" className="text-xs font-bold text-muted-foreground">Relato do Processo de Implantação</Label>
-                        <RichTextEditor
-                          content={localDtc.implantationProcess}
-                          onChange={(c) => handleFieldChange("implantationProcess", c)}
-                          placeholder="Relate como ocorreu o processo de implantação, infraestrutura instalada, treinamento dos usuários e aceitação inicial..."
-                          editable={!isFormDisabled}
-                        />
-                        {(() => {
-                          const count = getLexicalTextLength(localDtc.implantationProcess || "");
-                          const isValid = count >= 50;
-                          return (
-                            <div className="flex justify-between items-center text-[10px] mt-0.5">
-                              <span className={cn("font-semibold", isValid ? "text-emerald-600" : "text-amber-500")}>
-                                {isValid ? "✓ Relato completo" : "⚠ Relato muito curto (mínimo 50 caracteres)"}
-                              </span>
-                              <span className="text-muted-foreground">{count} caracteres</span>
+                      <div className="space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <div className="space-y-1.5">
+                          <Label htmlFor="implantationProcess" className="text-xs font-bold text-muted-foreground">Relato Geral do Processo de Implantação</Label>
+                          <RichTextEditor
+                            content={localDtc.implantationProcess}
+                            onChange={(c) => handleFieldChange("implantationProcess", c)}
+                            placeholder="Relate como ocorreu o processo de implantação, infraestrutura instalada, treinamento dos usuários e aceitação inicial..."
+                            editable={!isFormDisabled}
+                          />
+                          {(() => {
+                            const count = getLexicalTextLength(localDtc.implantationProcess || "");
+                            const isValid = count >= 50;
+                            return (
+                              <div className="flex justify-between items-center text-[10px] mt-0.5 pb-2">
+                                <span className={cn("font-semibold", isValid ? "text-emerald-600" : "text-amber-500")}>
+                                  {isValid ? "✓ Relato completo" : "⚠ Relato muito curto (mínimo 50 caracteres)"}
+                                </span>
+                                <span className="text-muted-foreground">{count} caracteres</span>
+                              </div>
+                            );
+                          })()}
+                        </div>
+
+                        {/* Daily Activity Logs */}
+                        <div className="pt-3 border-t space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="space-y-0.5">
+                              <Label className="text-[11px] font-bold text-muted-foreground">Relatos Diários de Atividades</Label>
+                              <p className="text-[9px] text-muted-foreground">Registre o que foi feito em datas específicas da implantação.</p>
                             </div>
-                          );
-                        })()}
+                            <Button
+                              type="button"
+                              onClick={addImplantationLog}
+                              disabled={isFormDisabled}
+                              variant="outline"
+                              size="sm"
+                              className="h-6.5 text-[10px] gap-1 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 font-bold"
+                            >
+                              <Plus className="h-3 w-3" />
+                              Adicionar Relato por Data
+                            </Button>
+                          </div>
+
+                          {(!localDtc.implantationProcessLogs || localDtc.implantationProcessLogs.length === 0) ? (
+                            <p className="text-[11px] text-muted-foreground italic py-1.5 text-center bg-background/50 border border-dashed rounded-md">
+                              Nenhum relato diário cadastrado. Clique em Adicionar Relato por Data.
+                            </p>
+                          ) : (
+                            <div className="space-y-2">
+                              {localDtc.implantationProcessLogs.map((log, idx) => (
+                                <div key={idx} className="flex items-start gap-1.5 bg-background p-1.5 border rounded-md shadow-2xs">
+                                  {/* Date Input */}
+                                  <Input
+                                    type="date"
+                                    value={log.date}
+                                    onChange={(e) => updateImplantationLog(idx, "date", e.target.value)}
+                                    disabled={isFormDisabled}
+                                    className="border-muted/80 h-7 text-xs w-32 shrink-0"
+                                  />
+
+                                  {/* Description Textarea */}
+                                  <Textarea
+                                    value={log.description}
+                                    onChange={(e) => updateImplantationLog(idx, "description", e.target.value)}
+                                    disabled={isFormDisabled}
+                                    placeholder="O que foi feito neste dia?"
+                                    className="border-muted/80 text-xs min-h-[50px] flex-1 py-1 px-2"
+                                    rows={2}
+                                  />
+
+                                  {/* Remove Button */}
+                                  <Button
+                                    type="button"
+                                    onClick={() => removeImplantationLog(idx)}
+                                    disabled={isFormDisabled}
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-full shrink-0 mt-0.5"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -2260,12 +2362,26 @@ export default function TransicaoPlaceholder() {
                       <div className="border-b-2 border-black pb-4 text-xs space-y-3">
                         <div>
                           <strong className="block mb-1 text-sm uppercase">Processo de Implantação:</strong>
-                          <div className="whitespace-pre-wrap min-h-16 pl-2 border-l-2 border-gray-300 italic">
+                          <div className="whitespace-pre-wrap min-h-16 pl-2 border-l-2 border-gray-300 italic mb-2">
                             <LexicalRenderer 
                               jsonStr={localDtc.implantationProcess} 
                               fallback="(Nenhum relato técnico de implantação registrado)" 
                             />
                           </div>
+
+                          {localDtc.implantationProcessLogs && localDtc.implantationProcessLogs.length > 0 && (
+                            <div className="mt-2 pl-2 border-l-2 border-gray-300 space-y-1">
+                              <strong className="block text-[10px] uppercase tracking-wider text-gray-700 font-bold">Relatórios Diários:</strong>
+                              {localDtc.implantationProcessLogs.map((log, idx) => (
+                                <div key={idx} className="text-[11px] leading-relaxed">
+                                  <span className="font-semibold text-gray-800 mr-1.5">
+                                    {log.date ? new Date(log.date + "T00:00:00").toLocaleDateString("pt-BR") : ""}:
+                                  </span>
+                                  <span className="text-gray-700">{log.description || "(Sem descrição)"}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
 
 
@@ -2403,12 +2519,26 @@ export default function TransicaoPlaceholder() {
             <div className="border-b-2 border-black pb-4 text-xs space-y-4">
               <div>
                 <strong className="block mb-1 text-sm uppercase">Processo de Implantação:</strong>
-                <div className="whitespace-pre-wrap min-h-20 pl-2 border-l-2 border-gray-400 italic">
+                <div className="whitespace-pre-wrap min-h-20 pl-2 border-l-2 border-gray-400 italic mb-2">
                   <LexicalRenderer 
                     jsonStr={localDtc.implantationProcess} 
                     fallback="(Nenhum relato técnico registrado)" 
                   />
                 </div>
+
+                {localDtc.implantationProcessLogs && localDtc.implantationProcessLogs.length > 0 && (
+                  <div className="mt-2 pl-2 border-l-2 border-gray-400 space-y-1">
+                    <strong className="block text-[10px] uppercase tracking-wider text-gray-700 font-bold">Relatórios Diários:</strong>
+                    {localDtc.implantationProcessLogs.map((log, idx) => (
+                      <div key={idx} className="text-[11px] leading-relaxed">
+                        <span className="font-semibold text-gray-800 mr-1.5">
+                          {log.date ? new Date(log.date + "T00:00:00").toLocaleDateString("pt-BR") : ""}:
+                        </span>
+                        <span className="text-gray-700">{log.description || "(Sem descrição)"}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
 
