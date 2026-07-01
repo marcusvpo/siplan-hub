@@ -1906,7 +1906,7 @@ export default function TransicaoPlaceholder() {
                                   onChange={(e) => updateEmployee(idx, "name", e.target.value)}
                                   disabled={isFormDisabled}
                                   placeholder="Nome do Colaborador"
-                                  className="border-muted/80 h-7 text-xs flex-1"
+                                  className="border-muted/80 h-7 text-xs flex-[2]"
                                 
                                 />
 
@@ -1921,6 +1921,7 @@ export default function TransicaoPlaceholder() {
                                   </SelectTrigger>
                                   <SelectContent>
                                     <SelectItem value="Notas" className="text-xs">Notas</SelectItem>
+                                    <SelectItem value="Firmas" className="text-xs">Firmas</SelectItem>
                                     <SelectItem value="Protesto" className="text-xs">Protesto</SelectItem>
                                     <SelectItem value="Registro Civil" className="text-xs">R. Civil</SelectItem>
                                     <SelectItem value="Registro de Imóveis" className="text-xs">R. Imóveis</SelectItem>
