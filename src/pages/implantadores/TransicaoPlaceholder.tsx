@@ -17,6 +17,14 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   ArrowLeft,
   FileText,
   Printer,
@@ -36,7 +44,11 @@ import {
   ExternalLink,
   ShieldCheck,
   Send,
-  RefreshCw
+  RefreshCw,
+  MessageSquare,
+  Share2,
+  Copy,
+  Download
 } from "lucide-react";
 
 interface KeyUserItem {
@@ -398,6 +410,100 @@ export default function TransicaoPlaceholder() {
     handleFieldChange("keyUsersList", updated);
   };
 
+  // WhatsApp suite helper functions
+  const handleExportVcf = () => {
+    if (!localDtc) return;
+
+    const groupName = prompt(
+      "Digite o nome do grupo do WhatsApp (para prefixar os contatos):",
+      `DTC - ${localDtc.serventia}`
+    );
+    if (groupName === null) return;
+
+    let vcardText = "";
+    
+    // Add primary contact if name is filled
+    if (localDtc.clientResponsible) {
+      vcardText += `BEGIN:VCARD\nVERSION:3.0\nFN:${groupName} - ${localDtc.clientResponsible}\nTEL;TYPE=CELL,VOICE:${localDtc.clientResponsiblePhone || ""}\nEND:VCARD\n`;
+    }
+
+    // Add other key users
+    if (localDtc.keyUsersList && localDtc.keyUsersList.length > 0) {
+      localDtc.keyUsersList.forEach(u => {
+        if (u.name) {
+          vcardText += `BEGIN:VCARD\nVERSION:3.0\nFN:${groupName} - ${u.name}\nTEL;TYPE=CELL,VOICE:${u.phone || ""}\nEND:VCARD\n`;
+        }
+      });
+    }
+
+    if (!vcardText) {
+      toast.error("Nenhum contato com nome cadastrado para exportar.");
+      return;
+    }
+
+    const blob = new Blob([vcardText], { type: "text/vcard;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `contatos_grupo_${groupName.replace(/\s+/g, "_").toLowerCase()}.vcf`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast.success("Arquivo de contatos (.vcf) baixado! Abra-o no celular ou computador para importar todos.");
+  };
+
+  const handleCopyPhones = () => {
+    if (!localDtc) return;
+
+    const phones: string[] = [];
+    if (localDtc.clientResponsiblePhone) {
+      phones.push(localDtc.clientResponsiblePhone);
+    }
+    if (localDtc.keyUsersList) {
+      localDtc.keyUsersList.forEach(u => {
+        if (u.phone) {
+          phones.push(u.phone);
+        }
+      });
+    }
+
+    if (phones.length === 0) {
+      toast.error("Nenhum telefone cadastrado para copiar.");
+      return;
+    }
+
+    const copyText = phones.join("; ");
+    navigator.clipboard.writeText(copyText);
+    toast.success(`${phones.length} telefone(s) copiado(s) para a área de transferência!`);
+  };
+
+  const handleOpenWhatsappShare = () => {
+    if (!localDtc) return;
+
+    const groupName = prompt(
+      "Confirme o nome do grupo do WhatsApp:",
+      `DTC - ${localDtc.serventia}`
+    );
+    if (groupName === null) return;
+
+    let msg = `*Grupo do WhatsApp:* ${groupName}\n\n`;
+    msg += `*Contatos cadastrados no DTC:*\n`;
+    if (localDtc.clientResponsible) {
+      msg += `• *${localDtc.clientResponsible}* (Responsável): ${localDtc.clientResponsiblePhone || "Sem telefone"}\n`;
+    }
+    if (localDtc.keyUsersList) {
+      localDtc.keyUsersList.forEach(u => {
+        if (u.name) {
+          msg += `• *${u.name}*: ${u.phone || "Sem telefone"}\n`;
+        }
+      });
+    }
+
+    const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+    window.open(url, "_blank");
+  };
+
   const getStatusBadge = (status: DTCData["status"]) => {
     switch (status) {
       case "approved":
@@ -700,22 +806,56 @@ export default function TransicaoPlaceholder() {
 
                   {/* Dynamic Key Users Section */}
                   <div className="space-y-2 border p-4 rounded-lg bg-muted/10">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <div className="space-y-0.5">
                         <Label className="text-xs font-bold">Key Users (Outros contatos-chave)</Label>
                         <p className="text-[10px] text-muted-foreground">Adicione outros contatos importantes da serventia.</p>
                       </div>
-                      <Button
-                        type="button"
-                        onClick={addKeyUser}
-                        disabled={isFormDisabled}
-                        variant="outline"
-                        size="sm"
-                        className="h-7 text-xs gap-1 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 font-bold"
-                      >
-                        <Plus className="h-3 w-3" />
-                        Adicionar Contato
-                      </Button>
+                      <div className="flex items-center gap-1.5 self-end sm:self-auto">
+                        {/* WhatsApp & Contacts dropdown */}
+                        {localDtc && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-7 text-xs gap-1 border-emerald-500/20 text-emerald-600 hover:bg-emerald-500/10 font-bold"
+                              >
+                                <MessageSquare className="h-3 w-3" />
+                                Ações WhatsApp
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="text-xs">
+                              <DropdownMenuLabel>Ações de Contatos</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={handleExportVcf} className="cursor-pointer gap-1.5">
+                                <Download className="h-3.5 w-3.5 text-primary" />
+                                Baixar Contatos (Arquivo .vcf)
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={handleCopyPhones} className="cursor-pointer gap-1.5">
+                                <Copy className="h-3.5 w-3.5 text-primary" />
+                                Copiar Lista de Telefones
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={handleOpenWhatsappShare} className="cursor-pointer gap-1.5">
+                                <Share2 className="h-3.5 w-3.5 text-primary" />
+                                Enviar Lista no WhatsApp
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+                        <Button
+                          type="button"
+                          onClick={addKeyUser}
+                          disabled={isFormDisabled}
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-xs gap-1 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 font-bold"
+                        >
+                          <Plus className="h-3 w-3" />
+                          Adicionar Contato
+                        </Button>
+                      </div>
                     </div>
 
                     {(!localDtc.keyUsersList || localDtc.keyUsersList.length === 0) ? (
