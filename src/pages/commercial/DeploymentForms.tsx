@@ -237,7 +237,7 @@ export default function DeploymentForms() {
   const handleCopy = async () => {
     await navigator.clipboard.writeText(outputText);
     setCopied(true);
-    toast({ title: "✅ Copiado!", description: "Texto copiado para a área de transferência." });
+    toast({ title: "Copiado!", description: "Texto copiado para a área de transferência." });
     setTimeout(() => setCopied(false), 2500);
   };
 

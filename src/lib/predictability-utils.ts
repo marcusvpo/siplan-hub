@@ -28,7 +28,7 @@ export function getStageReadiness(project: ProjectV2): StageReadiness[] {
       stageId: "adherence",
       isReady: stages.adherence.status === "todo" && stages.infra.status === "done",
       reason: stages.infra.status === "done" 
-        ? "✅ Infraestrutura concluída. Pode iniciar análise de aderência."
+        ? "Infraestrutura concluída. Pode iniciar análise de aderência."
         : "Aguardando conclusão da Infraestrutura",
       prerequisitesMet: stages.infra.status === "done",
     },
@@ -40,7 +40,7 @@ export function getStageReadiness(project: ProjectV2): StageReadiness[] {
         stages.adherence.status === "done",
       reason: 
         stages.infra.status === "done" && stages.adherence.status === "done"
-          ? "✅ Infra e Aderência concluídas. Pode criar ambiente."
+          ? "Infra e Aderência concluídas. Pode criar ambiente."
           : "Aguardando conclusão de Infra e Aderência",
       prerequisitesMet: stages.infra.status === "done" && stages.adherence.status === "done",
     },
@@ -52,7 +52,7 @@ export function getStageReadiness(project: ProjectV2): StageReadiness[] {
         stages.adherence.status === "done",
       reason: 
         stages.infra.status === "done" && stages.adherence.status === "done"
-          ? "✅ Pré-requisitos completos. Pode avançar para Conversão."
+          ? "Pré-requisitos completos. Pode avançar para Conversão."
           : "Aguardando conclusão de Infra e Aderência",
       prerequisitesMet: stages.infra.status === "done" && stages.adherence.status === "done",
     },
@@ -64,7 +64,7 @@ export function getStageReadiness(project: ProjectV2): StageReadiness[] {
         (stages.environment.approvedByInfra === true),
       reason: 
         stages.conversion.status === "done" && stages.environment.approvedByInfra
-          ? "✅ Conversão finalizada e Ambiente aprovado. Pronto para Implantação."
+          ? "Conversão finalizada e Ambiente aprovado. Pronto para Implantação."
           : !stages.environment.approvedByInfra
           ? "Aguardando aprovação do Ambiente pela Infra"
           : "Aguardando conclusão da Conversão",
@@ -79,7 +79,7 @@ export function getStageReadiness(project: ProjectV2): StageReadiness[] {
         stages.implementation.status === "done",
       reason: 
         stages.implementation.status === "done"
-          ? "✅ Implantação concluída. Pode iniciar Pós-Implantação."
+          ? "Implantação concluída. Pode iniciar Pós-Implantação."
           : "Aguardando conclusão da Implantação",
       prerequisitesMet: stages.implementation.status === "done",
     },
