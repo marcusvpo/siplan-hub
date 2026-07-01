@@ -152,18 +152,18 @@ export function StageAnalysisTimeline({
   };
 
   return (
-    <Card className="col-span-2 border-primary/5 bg-card/40 backdrop-blur-sm hover:shadow-lg transition-all overflow-hidden group">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
+    <Card className="col-span-2 border border-border bg-card/40 backdrop-blur-sm hover:shadow-md transition-all overflow-hidden group">
+      <CardHeader className="p-3.5 pb-2 flex flex-row items-center justify-between">
         <div className="space-y-1">
           <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/70">Fluxo de Retenção</CardTitle>
           <h3 className="text-sm font-bold">Comparativo de Duração por Etapa</h3>
         </div>
-        <div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center">
-            <Activity className="h-4 w-4 text-blue-600" />
+        <div className="h-7 w-7 rounded-md bg-blue-500/10 flex items-center justify-center shrink-0">
+            <Activity className="h-3.5 w-3.5 text-blue-600" />
         </div>
       </CardHeader>
-      <CardContent className="pt-4 pr-6">
-        <div className="h-[350px]">
+      <CardContent className="p-3.5 pt-0 pr-6">
+        <div className="h-[250px]">
           <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <BarChart 
               data={data} 
@@ -210,7 +210,7 @@ export function StageAnalysisTimeline({
             </BarChart>
           </ResponsiveContainer>
         </div>
-        <div className="flex items-center justify-center gap-6 mt-6 p-3 bg-muted/20 rounded-xl border border-primary/5">
+        <div className="flex items-center justify-center gap-6 mt-4 p-2 bg-muted/20 rounded-lg border border-border">
           <div className="flex items-center gap-2">
             <div className="h-2.5 w-6 rounded-full bg-blue-500" />
             <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/80">Este Projeto</span>

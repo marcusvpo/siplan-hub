@@ -108,9 +108,9 @@ export function IndividualProjectReport({
   const p1End = selectedProject.stages.implementation.phase1.endDate;
 
   return (
-    <div className="space-y-6 animate-in slide-in-from-bottom duration-500">
+    <div className="space-y-4 animate-in slide-in-from-bottom duration-500">
       <div className="flex items-center justify-between">
-        <h3 className="text-xl font-bold tracking-tight text-primary">
+        <h3 className="text-lg font-bold tracking-tight text-primary">
           Análise Detalhada: {selectedProject.clientName}
         </h3>
         <ProjectSelector
@@ -122,27 +122,27 @@ export function IndividualProjectReport({
 
       <ProjectHeaderStats project={selectedProject} />
 
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-3">
         <StageAnalysisTimeline
           project={selectedProject}
           allProjects={projects}
         />
 
-        <div className="space-y-6">
-          <Card className="bg-card/50 backdrop-blur-sm border-primary/10 shadow-xl overflow-hidden group">
+        <div className="space-y-4">
+          <Card className="bg-card/50 backdrop-blur-sm border border-border shadow-md rounded-xl overflow-hidden group">
             <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
-            <CardHeader className="pb-2">
+            <CardHeader className="p-3.5 pb-2">
               <CardTitle className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">
                 <Lightbulb className="h-4 w-4 text-amber-500 animate-pulse" />
                 Inteligência de Projeto
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="p-3.5 pt-0 space-y-2.5">
               {insights.map((insight, idx) => (
                 <div
                   key={idx}
                   className={cn(
-                    "flex gap-4 items-start p-4 rounded-xl transition-all hover:scale-[1.02] border",
+                    "flex gap-3 items-start p-3 rounded-lg transition-all hover:scale-[1.01] border",
                     insight.type === "warning" ? "bg-red-500/5 border-red-500/20 shadow-[0_0_15px_-5px_rgba(239,68,68,0.1)]" : 
                     insight.type === "positive" ? "bg-emerald-500/5 border-emerald-500/20 shadow-[0_0_15px_-5px_rgba(16,185,129,0.1)]" :
                     insight.type === "info" ? "bg-blue-500/5 border-blue-500/20 shadow-[0_0_15px_-5px_rgba(59,130,246,0.1)]" :
@@ -150,25 +150,25 @@ export function IndividualProjectReport({
                   )}
                 >
                   <div className={cn(
-                    "p-2 rounded-lg shrink-0",
+                    "p-1.5 rounded-md shrink-0",
                     insight.type === "warning" ? "bg-red-500/10 text-red-600" : 
                     insight.type === "positive" ? "bg-emerald-500/10 text-emerald-600" :
                     insight.type === "info" ? "bg-blue-500/10 text-blue-600" :
                     "bg-muted-foreground/10 text-muted-foreground"
                   )}>
                     {insight.type === "warning" ? (
-                      <TrendingDown className="h-4 w-4" />
+                      <TrendingDown className="h-3.5 w-3.5" />
                     ) : insight.type === "positive" ? (
-                      <CheckCircle className="h-4 w-4" />
+                      <CheckCircle className="h-3.5 w-3.5" />
                     ) : insight.type === "info" ? (
-                      <TrendingDown className="h-4 w-4 rotate-90" />
+                      <TrendingDown className="h-3.5 w-3.5 rotate-90" />
                     ) : (
-                      <TrendingUp className="h-4 w-4" />
+                      <TrendingUp className="h-3.5 w-3.5" />
                     )}
                   </div>
-                  <div className="space-y-1">
-                    <h4 className="font-black text-xs uppercase tracking-tight">{insight.title}</h4>
-                    <p className="text-[11px] leading-relaxed text-muted-foreground font-medium italic">
+                  <div className="space-y-0.5">
+                    <h4 className="font-black text-[10px] uppercase tracking-tight">{insight.title}</h4>
+                    <p className="text-[10px] leading-relaxed text-muted-foreground font-medium italic">
                       {insight.desc}
                     </p>
                   </div>
@@ -177,32 +177,32 @@ export function IndividualProjectReport({
             </CardContent>
           </Card>
 
-          <Card className="bg-card/50 backdrop-blur-sm border-primary/5 shadow-xl group hover:shadow-2xl transition-all duration-500 rounded-2xl overflow-hidden">
-            <CardHeader className="pb-2 border-b border-primary/5 bg-muted/20">
+          <Card className="bg-card/50 backdrop-blur-sm border border-border shadow-md group hover:shadow-lg transition-all duration-500 rounded-xl overflow-hidden">
+            <CardHeader className="p-3.5 pb-2 border-b border-border bg-muted/20">
               <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/70 flex items-center gap-2">
                 <Server className="h-3.5 w-3.5 text-blue-500" />
                 Especificações Técnicas
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-6 space-y-6">
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-2 group/spec">
-                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider">
+            <CardContent className="p-3.5 pt-3 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1 group/spec">
+                  <div className="flex items-center gap-1.5 text-[9px] font-bold text-muted-foreground/60 uppercase tracking-wider">
                     <Monitor className="h-3 w-3" /> Estações
                   </div>
                   <p
-                    className="text-sm font-black text-foreground truncate pl-1 border-l-2 border-emerald-500/30 group-hover/spec:border-emerald-500 transition-colors"
+                    className="text-xs font-black text-foreground truncate pl-1 border-l-2 border-emerald-500/30 group-hover/spec:border-emerald-500 transition-colors"
                     title={selectedProject.stages.infra.workstationsStatus || "N/A"}
                   >
                     {selectedProject.stages.infra.workstationsStatus || "-"}
                   </p>
                 </div>
-                <div className="space-y-2 group/spec">
-                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider">
+                <div className="space-y-1 group/spec">
+                  <div className="flex items-center gap-1.5 text-[9px] font-bold text-muted-foreground/60 uppercase tracking-wider">
                     <Server className="h-3 w-3" /> Servidor
                   </div>
                   <p
-                    className="text-sm font-black text-foreground truncate pl-1 border-l-2 border-blue-500/30 group-hover/spec:border-blue-500 transition-colors"
+                    className="text-xs font-black text-foreground truncate pl-1 border-l-2 border-blue-500/30 group-hover/spec:border-blue-500 transition-colors"
                     title={selectedProject.stages.infra.serverStatus || "N/A"}
                   >
                     {selectedProject.stages.infra.serverStatus || "-"}
@@ -210,25 +210,25 @@ export function IndividualProjectReport({
                 </div>
               </div>
 
-              <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 relative overflow-hidden group/phase">
+              <div className="p-3 rounded-lg bg-primary/5 border border-primary/10 relative overflow-hidden group/phase">
                 <div className="absolute top-0 right-0 p-2 opacity-5 group-hover/phase:scale-125 transition-transform">
-                   <TrendingUp className="h-8 w-8 text-primary" />
+                   <TrendingUp className="h-7 w-7 text-primary" />
                 </div>
-                <div className="text-[10px] font-black text-primary uppercase tracking-widest mb-3 flex items-center gap-2">
+                <div className="text-[9px] font-black text-primary uppercase tracking-widest mb-2 flex items-center gap-2">
                    Implantação <span className="text-[8px] opacity-60">(Fase 1)</span>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-0.5">
                     <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-60">Início</span>
-                    <p className="text-sm font-black">
+                    <p className="text-xs font-black">
                       {p1Start
                         ? format(p1Start, "dd/MM/yyyy", { locale: ptBR })
                         : "-"}
                     </p>
                   </div>
-                  <div className="space-y-1">
+                  <div className="space-y-0.5">
                     <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-60">Fim Estimado</span>
-                    <p className="text-sm font-black text-emerald-600">
+                    <p className="text-xs font-black text-emerald-600">
                       {p1End
                         ? format(p1End, "dd/MM/yyyy", { locale: ptBR })
                         : "-"}
@@ -237,26 +237,26 @@ export function IndividualProjectReport({
                 </div>
               </div>
 
-              <div className="space-y-3">
-                <div className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] flex items-center gap-2">
+              <div className="space-y-2">
+                <div className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.15em] flex items-center gap-2">
                    Chamados Relacionados
                    <div className="h-px flex-1 bg-muted-foreground/10" />
                 </div>
                 {selectedProject.relatedTickets &&
                 selectedProject.relatedTickets.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-1.5">
                     {selectedProject.relatedTickets.map((t, i) => (
                       <Badge
                         key={i}
                         variant="outline"
-                        className="bg-background/50 border-primary/10 hover:bg-primary/10 hover:border-primary/30 transition-all font-black text-[10px] py-0.5"
+                        className="bg-background/50 border-primary/10 hover:bg-primary/10 hover:border-primary/30 transition-all font-black text-[9px] py-0 px-2"
                       >
                         #{t.number}
                       </Badge>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-[11px] text-muted-foreground/50 italic font-medium">
+                  <div className="text-[10px] text-muted-foreground/50 italic font-medium">
                     Nenhum chamado vinculado.
                   </div>
                 )}
