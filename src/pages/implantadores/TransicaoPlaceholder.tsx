@@ -130,6 +130,8 @@ interface DTCData {
   approvedBy?: string;
 }
 
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
+
 // Helper to format phone number to Brazilian standard masks (landline or mobile)
 const formatPhoneNumber = (value: string) => {
   if (!value) return "";
@@ -141,6 +143,97 @@ const formatPhoneNumber = (value: string) => {
     return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6, 10)}`;
   }
   return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`;
+};
+
+const getLexicalTextLength = (jsonStr: string): number => {
+  if (!jsonStr) return 0;
+  try {
+    const parsed = JSON.parse(jsonStr);
+    if (parsed.root && parsed.root.children) {
+      const getTextFromNodes = (nodes: any[]): string => {
+        return nodes.map(node => {
+          if (node.text) return node.text;
+          if (node.children) return getTextFromNodes(node.children);
+          return "";
+        }).join("");
+      };
+      return getTextFromNodes(parsed.root.children).length;
+    }
+  } catch {
+    // If parsing fails, it is plain text (legacy)
+    return jsonStr.length;
+  }
+  return jsonStr.length;
+};
+
+const LexicalRenderer = ({ jsonStr, fallback }: { jsonStr: string; fallback: string }) => {
+  if (!jsonStr) return <span>{fallback}</span>;
+  try {
+    const parsed = JSON.parse(jsonStr);
+    if (!parsed.root || !parsed.root.children) {
+      return <span>{jsonStr}</span>;
+    }
+
+    const renderNode = (node: any, index: number): React.ReactNode => {
+      if (node.type === "text") {
+        let element: React.ReactNode = node.text;
+        if (node.format & 1) { // Bold
+          element = <strong key={index}>{element}</strong>;
+        }
+        if (node.format & 2) { // Italic
+          element = <em key={index}>{element}</em>;
+        }
+        if (node.format & 4) { // Underline
+          element = <span key={index} style={{ textDecoration: "underline" }}>{element}</span>;
+        }
+        return <span key={index}>{element}</span>;
+      }
+
+      if (node.type === "paragraph") {
+        return (
+          <p key={index} className="mb-1 last:mb-0">
+            {node.children ? node.children.map((child: any, idx: number) => renderNode(child, idx)) : null}
+          </p>
+        );
+      }
+
+      if (node.type === "list") {
+        const Tag = node.tag === "ol" ? "ol" : "ul";
+        return (
+          <Tag key={index} className={cn("pl-4 mb-1", node.tag === "ol" ? "list-decimal" : "list-disc")}>
+            {node.children ? node.children.map((child: any, idx: number) => renderNode(child, idx)) : null}
+          </Tag>
+        );
+      }
+
+      if (node.type === "listitem") {
+        return (
+          <li key={index}>
+            {node.children ? node.children.map((child: any, idx: number) => renderNode(child, idx)) : null}
+          </li>
+        );
+      }
+
+      if (node.children) {
+        return (
+          <div key={index}>
+            {node.children.map((child: any, idx: number) => renderNode(child, idx))}
+          </div>
+        );
+      }
+
+      return null;
+    };
+
+    return (
+      <div className="space-y-0.5">
+        {parsed.root.children.map((child: any, idx: number) => renderNode(child, idx))}
+      </div>
+    );
+  } catch {
+    // If JSON parsing fails, it's legacy plain text
+    return <span className="whitespace-pre-wrap">{jsonStr}</span>;
+  }
 };
 
 // Stage mapping helper
@@ -1829,17 +1922,14 @@ export default function TransicaoPlaceholder() {
                     {!collapsedSections["processo-implantacao"] && (
                       <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
                         <Label htmlFor="implantationProcess" className="text-xs font-bold text-muted-foreground">Relato do Processo de Implantação</Label>
-                        <Textarea
-                          id="implantationProcess"
-                          value={localDtc.implantationProcess}
-                          onChange={(e) => handleFieldChange("implantationProcess", e.target.value)}
-                          disabled={isFormDisabled}
-                          rows={4}
-                          className="border-muted/80 text-xs"
+                        <RichTextEditor
+                          content={localDtc.implantationProcess}
+                          onChange={(c) => handleFieldChange("implantationProcess", c)}
                           placeholder="Relate como ocorreu o processo de implantação, infraestrutura instalada, treinamento dos usuários e aceitação inicial..."
+                          editable={!isFormDisabled}
                         />
                         {(() => {
-                          const count = (localDtc.implantationProcess || "").length;
+                          const count = getLexicalTextLength(localDtc.implantationProcess || "");
                           const isValid = count >= 50;
                           return (
                             <div className="flex justify-between items-center text-[10px] mt-0.5">
@@ -1981,14 +2071,11 @@ export default function TransicaoPlaceholder() {
                     {!collapsedSections["processo-consideracoes"] && (
                       <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
                         <Label htmlFor="finalConsiderations" className="text-xs font-bold text-muted-foreground">Notas de Encerramento do Projeto</Label>
-                        <Textarea
-                          id="finalConsiderations"
-                          value={localDtc.finalConsiderations}
-                          onChange={(e) => handleFieldChange("finalConsiderations", e.target.value)}
-                          disabled={isFormDisabled}
-                          rows={3}
-                          className="border-muted/80 text-xs"
-                          placeholder="Considerações adicionais ou notes de encerramento do projeto de transição..."
+                        <RichTextEditor
+                          content={localDtc.finalConsiderations}
+                          onChange={(c) => handleFieldChange("finalConsiderations", c)}
+                          placeholder="Considerações adicionais ou notas de encerramento do projeto de transição..."
+                          editable={!isFormDisabled}
                         />
                       </div>
                     )}
@@ -2174,7 +2261,10 @@ export default function TransicaoPlaceholder() {
                         <div>
                           <strong className="block mb-1 text-sm uppercase">Processo de Implantação:</strong>
                           <div className="whitespace-pre-wrap min-h-16 pl-2 border-l-2 border-gray-300 italic">
-                            {localDtc.implantationProcess || "(Nenhum relato técnico de implantação registrado)"}
+                            <LexicalRenderer 
+                              jsonStr={localDtc.implantationProcess} 
+                              fallback="(Nenhum relato técnico de implantação registrado)" 
+                            />
                           </div>
                         </div>
 
@@ -2194,7 +2284,10 @@ export default function TransicaoPlaceholder() {
                         <div>
                           <strong className="block mb-1 text-sm uppercase">Considerações Finais:</strong>
                           <div className="whitespace-pre-wrap min-h-12 pl-2 border-l-2 border-gray-300 italic">
-                            {localDtc.finalConsiderations || "(Sem considerações finais registradas)"}
+                            <LexicalRenderer 
+                              jsonStr={localDtc.finalConsiderations} 
+                              fallback="(Sem considerações finais registradas)" 
+                            />
                           </div>
                         </div>
                       </div>
@@ -2311,7 +2404,10 @@ export default function TransicaoPlaceholder() {
               <div>
                 <strong className="block mb-1 text-sm uppercase">Processo de Implantação:</strong>
                 <div className="whitespace-pre-wrap min-h-20 pl-2 border-l-2 border-gray-400 italic">
-                  {localDtc.implantationProcess || "(Nenhum relato técnico registrado)"}
+                  <LexicalRenderer 
+                    jsonStr={localDtc.implantationProcess} 
+                    fallback="(Nenhum relato técnico registrado)" 
+                  />
                 </div>
               </div>
 
@@ -2331,7 +2427,10 @@ export default function TransicaoPlaceholder() {
               <div>
                 <strong className="block mb-1 text-sm uppercase">Considerações Finais:</strong>
                 <div className="whitespace-pre-wrap min-h-16 pl-2 border-l-2 border-gray-400 italic">
-                  {localDtc.finalConsiderations || "(Nenhuma consideração adicional)"}
+                  <LexicalRenderer 
+                    jsonStr={localDtc.finalConsiderations} 
+                    fallback="(Nenhuma consideração adicional)" 
+                  />
                 </div>
               </div>
             </div>
