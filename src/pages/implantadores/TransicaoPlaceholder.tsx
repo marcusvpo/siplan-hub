@@ -1861,7 +1861,7 @@ export default function TransicaoPlaceholder() {
                       onClick={() => toggleSection("processo-colaboradores")}
                     >
                       <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">
-                        2. Funcionários & Colaboradores da Serventia
+                        2. Principais colaboradores da serventia
                       </span>
                       <Button type="button" variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
                         {collapsedSections["processo-colaboradores"] ? (
