@@ -337,7 +337,20 @@ export default function TransicaoPlaceholder() {
   const getInitialDtc = (): DTCData | null => {
     if (!project) return null;
     const existingDtc = project.customFields?.dtc as DTCData | undefined;
-    if (existingDtc) return existingDtc;
+    if (existingDtc) return {
+      // defaults for new fields added after initial save (retrocompatibility)
+      implantationProcessLogs: [],
+      implantationGainsList: [],
+      implantationPendingList: [],
+      implantationSuggestionsList: [],
+      keyUsersList: [],
+      systemVersionsList: {},
+      remoteAccessList: [],
+      employeesList: [],
+      tickets: [],
+      // spread existing data last — overrides defaults with whatever was already saved
+      ...existingDtc,
+    };
 
     return {
       responsible: project.responsiblePost || project.projectLeader || fullName || "",
