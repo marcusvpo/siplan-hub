@@ -152,20 +152,20 @@ export function TimePerStageChart({ projects }: TimePerStageChartProps) {
   };
 
   return (
-    <Card className="col-span-1 border-primary/5 bg-card/50 backdrop-blur-sm hover:shadow-lg transition-all overflow-hidden group">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
+    <Card className="col-span-1 border border-border bg-card/50 backdrop-blur-sm hover:shadow-md transition-all overflow-hidden group">
+      <CardHeader className="p-3.5 pb-2 flex flex-row items-center justify-between">
         <div className="space-y-1">
            <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/70">Performance por Etapa</CardTitle>
            <h4 className="text-sm font-bold">Tempo Médio de Retenção (Dias)</h4>
         </div>
-        <div className="h-8 w-8 rounded-full bg-primary/5 flex items-center justify-center">
-            <TrendingUp className="h-4 w-4 text-primary" />
+        <div className="h-7 w-7 rounded-md bg-primary/5 flex items-center justify-center shrink-0">
+            <TrendingUp className="h-3.5 w-3.5 text-primary" />
         </div>
       </CardHeader>
-      <CardContent className="pt-4 pr-6 pl-2">
-        <div className="h-[300px] w-full min-w-0">
+      <CardContent className="p-3.5 pt-0 pr-6 pl-2">
+        <div className="h-[200px] w-full min-w-0">
           <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-            <BarChart data={data} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+            <BarChart data={data} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
               <defs>
                 <linearGradient id="barGradientDone" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.8}/>
@@ -201,7 +201,7 @@ export function TimePerStageChart({ projects }: TimePerStageChartProps) {
                 content={<CustomTooltip />}
                 cursor={{ fill: "rgba(0, 0, 0, 0.04)", radius: 8 }}
               />
-              <Bar dataKey="days" radius={[6, 6, 0, 0]} barSize={40}>
+              <Bar dataKey="days" radius={[4, 4, 0, 0]} barSize={32}>
                 {data.map((entry, index) => (
                   <Cell
                     key={`cell-${index}`}
@@ -216,7 +216,7 @@ export function TimePerStageChart({ projects }: TimePerStageChartProps) {
             </BarChart>
           </ResponsiveContainer>
         </div>
-        <div className="flex items-center justify-center gap-6 mt-8 p-3 bg-muted/30 rounded-xl border border-primary/5">
+        <div className="flex items-center justify-center gap-6 mt-4 p-2 bg-muted/20 rounded-lg border border-border">
           <div className="flex items-center gap-2">
             <div className="h-3 w-3 rounded-full bg-blue-500/80" />
             <span className="text-[10px] font-bold uppercase tracking-wider opacity-60">Ideal</span>
