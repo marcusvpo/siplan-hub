@@ -110,6 +110,15 @@ interface ImplantationPendingItem {
   description: string;
 }
 
+interface ImplantationSuggestionItem {
+  title: string;
+  status: string;
+  department: string;
+  assignedTo?: string;
+  product?: string;
+  description: string;
+}
+
 // Complete DTC data model
 interface DTCData {
   responsible: string;
@@ -135,6 +144,7 @@ interface DTCData {
   implantationProcess: string;
   implantationProcessLogs?: ImplantationLogItem[];
   implantationPendingList?: ImplantationPendingItem[];
+  implantationSuggestionsList?: ImplantationSuggestionItem[];
   postImplantationProcess: string;
   employees: string;
   employeesList?: EmployeeItem[];
@@ -284,6 +294,7 @@ export default function TransicaoPlaceholder() {
     "processo-implantacao": true,
     "processo-colaboradores": true,
     "processo-pendencias": true,
+    "processo-sugestoes": true,
     "processo-consideracoes": true,
   });
 
@@ -343,6 +354,7 @@ export default function TransicaoPlaceholder() {
       implantationProcess: "",
       implantationProcessLogs: [],
       implantationPendingList: [],
+      implantationSuggestionsList: [],
       postImplantationProcess: "",
       employees: "",
       employeesList: [],
@@ -777,6 +789,33 @@ export default function TransicaoPlaceholder() {
       [key]: val
     };
     handleFieldChange("implantationPendingList", updated);
+  };
+
+  const addImplantationSuggestion = () => {
+    if (!localDtc) return;
+    const currentList = localDtc.implantationSuggestionsList || [];
+    handleFieldChange("implantationSuggestionsList", [
+      ...currentList,
+      { title: "", status: "Pendente", department: "", assignedTo: "", product: "", description: "" }
+    ]);
+  };
+
+  const removeImplantationSuggestion = (idx: number) => {
+    if (!localDtc || !localDtc.implantationSuggestionsList) return;
+    handleFieldChange(
+      "implantationSuggestionsList",
+      localDtc.implantationSuggestionsList.filter((_, i) => i !== idx)
+    );
+  };
+
+  const updateImplantationSuggestion = (idx: number, key: keyof ImplantationSuggestionItem, val: string) => {
+    if (!localDtc || !localDtc.implantationSuggestionsList) return;
+    const updated = [...localDtc.implantationSuggestionsList];
+    updated[idx] = {
+      ...updated[idx],
+      [key]: val
+    };
+    handleFieldChange("implantationSuggestionsList", updated);
   };
 
   const getIpValidationMessage = (val: string) => {
@@ -2378,14 +2417,192 @@ export default function TransicaoPlaceholder() {
                     )}
                   </div>
 
-                  {/* Sub-seção 4: Considerações Finais */}
+                  {/* Sub-seção 4: Sugestões de Melhorias */}
+                  <div className="space-y-3">
+                    <div 
+                      className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors"
+                      onClick={() => toggleSection("processo-sugestoes")}
+                    >
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">
+                        4. Sugestões de Melhorias
+                      </span>
+                      <Button type="button" variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
+                        {collapsedSections["processo-sugestoes"] ? (
+                          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
+                        ) : (
+                          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
+                        )}
+                      </Button>
+                    </div>
+                    
+                    {!collapsedSections["processo-sugestoes"] && (
+                      <div className="space-y-2 border p-3 rounded-lg bg-muted/10 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label className="text-[11px] font-bold">Sugestões de melhorias cadastradas</Label>
+                            <p className="text-[9px] text-muted-foreground">Cadastre sugestões de melhorias identificadas para o cliente ou produto.</p>
+                          </div>
+                          <Button
+                            type="button"
+                            onClick={addImplantationSuggestion}
+                            disabled={isFormDisabled}
+                            variant="outline"
+                            size="sm"
+                            className="h-6.5 text-[10px] gap-1 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 font-bold"
+                          >
+                            <Plus className="h-3 w-3" />
+                            Adicionar Sugestão
+                          </Button>
+                        </div>
+
+                        {(!localDtc.implantationSuggestionsList || localDtc.implantationSuggestionsList.length === 0) ? (
+                          <p className="text-[11px] text-muted-foreground italic py-1.5 text-center bg-background/50 border border-dashed rounded-md mt-1">
+                            Nenhuma sugestão cadastrada. Clique em Adicionar Sugestão.
+                          </p>
+                        ) : (
+                          <div className="space-y-3 mt-1.5">
+                            {localDtc.implantationSuggestionsList.map((suggestion, idx) => (
+                              <div key={idx} className="bg-background p-3 border rounded-md shadow-2xs space-y-2 relative">
+                                <div className="space-y-2">
+                                  {/* Title Input (Full line) */}
+                                  <div className="w-full">
+                                    <Input
+                                      value={suggestion.title}
+                                      onChange={(e) => updateImplantationSuggestion(idx, "title", e.target.value)}
+                                      disabled={isFormDisabled}
+                                      placeholder="Título da Sugestão (ex: Novo relatório financeiro)"
+                                      className="border-muted/80 h-8 text-xs w-full font-medium"
+                                    />
+                                  </div>
+
+                                  {/* Controls Row (Product, Sector, Status, Responsibility, Delete) */}
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    {/* Product Select dropdown */}
+                                    <Select
+                                      value={suggestion.product}
+                                      onValueChange={(val) => updateImplantationSuggestion(idx, "product", val)}
+                                      disabled={isFormDisabled}
+                                    >
+                                      <SelectTrigger className="w-40 h-8 text-[11px] border-muted/80 shrink-0">
+                                        <SelectValue placeholder="Produto" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {/* Sistemas Principais */}
+                                        <SelectItem value="Orion TN" className="text-xs">Orion TN</SelectItem>
+                                        <SelectItem value="Orion PRO" className="text-xs">Orion PRO</SelectItem>
+                                        <SelectItem value="Orion REG" className="text-xs">Orion REG</SelectItem>
+                                        <SelectItem value="Modelos TN" className="text-xs">Modelos TN</SelectItem>
+                                        {/* Produtos Adicionais */}
+                                        <SelectItem value="LCW" className="text-xs">LCW</SelectItem>
+                                        <SelectItem value="SGA" className="text-xs">SGA</SelectItem>
+                                        <SelectItem value="On Hand" className="text-xs">On Hand</SelectItem>
+                                        <SelectItem value="Orion GED" className="text-xs">Orion GED</SelectItem>
+                                        <SelectItem value="Library" className="text-xs">Library</SelectItem>
+                                        <SelectItem value="e-Recepção" className="text-xs">e-Recepção</SelectItem>
+                                        <SelectItem value="e-Qualificação" className="text-xs">e-Qualificação</SelectItem>
+                                        <SelectItem value="Cartflow" className="text-xs">Cartflow</SelectItem>
+                                        <SelectItem value="Outro" className="text-xs">Outro</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+
+                                    {/* Department (Setor) Select dropdown */}
+                                    <Select
+                                      value={suggestion.department}
+                                      onValueChange={(val) => updateImplantationSuggestion(idx, "department", val)}
+                                      disabled={isFormDisabled}
+                                    >
+                                      <SelectTrigger className="w-36 h-8 text-[11px] border-muted/80 shrink-0">
+                                        <SelectValue placeholder="Setor" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="Notas" className="text-xs">Notas</SelectItem>
+                                        <SelectItem value="Firmas" className="text-xs">Firmas</SelectItem>
+                                        <SelectItem value="Recepção / Triagem" className="text-xs">Recepção/Triagem</SelectItem>
+                                        <SelectItem value="Protesto" className="text-xs">Protesto</SelectItem>
+                                        <SelectItem value="Registro Civil" className="text-xs">R. Civil</SelectItem>
+                                        <SelectItem value="Registro de Imóveis" className="text-xs">R. Imóveis</SelectItem>
+                                        <SelectItem value="RTD / PJ" className="text-xs">RTD/PJ</SelectItem>
+                                        <SelectItem value="Administrativo" className="text-xs">Adm</SelectItem>
+                                        <SelectItem value="Financeiro" className="text-xs">Financeiro</SelectItem>
+                                        <SelectItem value="TI / Suporte" className="text-xs">TI</SelectItem>
+                                        <SelectItem value="Outro" className="text-xs">Outro</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+
+                                    {/* Status Select dropdown */}
+                                    <Select
+                                      value={suggestion.status}
+                                      onValueChange={(val) => updateImplantationSuggestion(idx, "status", val)}
+                                      disabled={isFormDisabled}
+                                    >
+                                      <SelectTrigger className="w-32 h-8 text-[11px] border-muted/80 shrink-0">
+                                        <SelectValue placeholder="Status" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="Pendente" className="text-xs">Pendente</SelectItem>
+                                        <SelectItem value="Em andamento" className="text-xs">Em andamento</SelectItem>
+                                        <SelectItem value="Resolvido" className="text-xs">Resolvido</SelectItem>
+                                        <SelectItem value="Cancelado" className="text-xs">Cancelado</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+
+                                    {/* Assigned Analyst Select dropdown */}
+                                    <Select
+                                      value={suggestion.assignedTo || "none"}
+                                      onValueChange={(val) => updateImplantationSuggestion(idx, "assignedTo", val === "none" ? "" : val)}
+                                      disabled={isFormDisabled}
+                                    >
+                                      <SelectTrigger className="w-48 h-8 text-[11px] border-muted/80 shrink-0">
+                                        <SelectValue placeholder="Responsável" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="none" className="text-xs">Não atribuído</SelectItem>
+                                        {members.map((m) => (
+                                          <SelectItem key={m.id} value={m.name} className="text-xs">
+                                            {m.name}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+
+                                    {/* Remove Button */}
+                                    <Button
+                                      type="button"
+                                      onClick={() => removeImplantationSuggestion(idx)}
+                                      disabled={isFormDisabled}
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-full shrink-0 ml-auto"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+
+                                <div className="space-y-1">
+                                  <RichTextEditor
+                                    content={suggestion.description}
+                                    onChange={(c) => updateImplantationSuggestion(idx, "description", c)}
+                                    placeholder="Descrição detalhada da sugestão..."
+                                    editable={!isFormDisabled}
+                                  />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Sub-seção 5: Considerações Finais */}
                   <div className="space-y-3">
                     <div 
                       className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors"
                       onClick={() => toggleSection("processo-consideracoes")}
                     >
                       <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">
-                        4. Considerações Finais
+                        5. Considerações Finais
                       </span>
                       <Button type="button" variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
                         {collapsedSections["processo-consideracoes"] ? (
@@ -2654,6 +2871,37 @@ export default function TransicaoPlaceholder() {
                             </div>
                           </div>
                         )}
+                        {localDtc.implantationSuggestionsList && localDtc.implantationSuggestionsList.length > 0 && (
+                          <div>
+                            <strong className="block mb-1 text-sm uppercase">Sugestões de Melhorias:</strong>
+                            <div className="pl-2 border-l-2 border-gray-300 space-y-2 mb-2">
+                              {localDtc.implantationSuggestionsList.map((suggestion, idx) => (
+                                <div key={idx} className="text-xs">
+                                  <div className="flex items-center justify-between">
+                                    <span className="font-bold text-gray-800">
+                                      {suggestion.product ? `[${suggestion.product}] ` : ""}
+                                      {suggestion.title || "(Sem título)"}
+                                      {suggestion.department ? ` - ${suggestion.department}` : ""}
+                                      {suggestion.assignedTo ? ` (Responsável: ${suggestion.assignedTo})` : ""}
+                                    </span>
+                                    <span className={cn(
+                                      "px-1.5 py-0.5 rounded-sm text-[9px] font-bold uppercase",
+                                      suggestion.status === "Resolvido" && "bg-emerald-100 text-emerald-800",
+                                      suggestion.status === "Em andamento" && "bg-blue-100 text-blue-800",
+                                      suggestion.status === "Pendente" && "bg-amber-100 text-amber-800",
+                                      suggestion.status === "Cancelado" && "bg-gray-100 text-gray-800"
+                                    )}>
+                                      {suggestion.status}
+                                    </span>
+                                  </div>
+                                  <div className="text-gray-600 mt-0.5 pl-1 italic">
+                                    <LexicalRenderer jsonStr={suggestion.description} fallback="(Sem descrição)" />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
 
                         <div>
                           <strong className="block mb-1 text-sm uppercase">Considerações Finais:</strong>
@@ -2837,6 +3085,37 @@ export default function TransicaoPlaceholder() {
                         </div>
                         <div className="text-gray-700 mt-0.5 pl-1 italic">
                           <LexicalRenderer jsonStr={pending.description} fallback="(Sem descrição)" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {localDtc.implantationSuggestionsList && localDtc.implantationSuggestionsList.length > 0 && (
+                <div>
+                  <strong className="block mb-1 text-sm uppercase">Sugestões de Melhorias:</strong>
+                  <div className="pl-2 border-l-2 border-gray-400 space-y-2 mb-2">
+                    {localDtc.implantationSuggestionsList.map((suggestion, idx) => (
+                      <div key={idx} className="text-xs">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-gray-800">
+                            {suggestion.product ? `[${suggestion.product}] ` : ""}
+                            {suggestion.title || "(Sem título)"}
+                            {suggestion.department ? ` - ${suggestion.department}` : ""}
+                            {suggestion.assignedTo ? ` (Responsável: ${suggestion.assignedTo})` : ""}
+                          </span>
+                          <span className={cn(
+                            "px-1.5 py-0.5 rounded-sm text-[9px] font-bold uppercase",
+                            suggestion.status === "Resolvido" && "bg-emerald-100 text-emerald-800",
+                            suggestion.status === "Em andamento" && "bg-blue-100 text-blue-800",
+                            suggestion.status === "Pendente" && "bg-amber-100 text-amber-800",
+                            suggestion.status === "Cancelado" && "bg-gray-100 text-gray-800"
+                          )}>
+                            {suggestion.status}
+                          </span>
+                        </div>
+                        <div className="text-gray-700 mt-0.5 pl-1 italic">
+                          <LexicalRenderer jsonStr={suggestion.description} fallback="(Sem descrição)" />
                         </div>
                       </div>
                     ))}
