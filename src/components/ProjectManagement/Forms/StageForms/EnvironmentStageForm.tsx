@@ -16,8 +16,8 @@ export function EnvironmentStageForm({
 }: EnvironmentStageFormProps) {
   return (
     <div className="space-y-2.5">
-      <Label className="text-xs font-bold uppercase tracking-widest text-emerald-600 flex items-center gap-2">
-        <Database className="h-3.5 w-3.5" />
+      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+        <Database className="h-3.5 w-3.5 text-muted-foreground" />
         Sistema Operacional
       </Label>
       <Input
@@ -25,7 +25,7 @@ export function EnvironmentStageForm({
         onChange={(e) => onUpdate({ osVersion: e.target.value })}
         disabled={!canEditProjects}
         placeholder="Ex: Windows Server 2022"
-        className="h-9 border border-emerald-200 hover:border-emerald-300 focus:border-emerald-400 bg-emerald-50/50 dark:border-emerald-900/50 dark:hover:border-emerald-800 dark:focus:border-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-300 font-medium text-xs"
+        className="h-9 border border-input bg-background text-foreground hover:bg-slate-50/50 dark:hover:bg-slate-900/50 focus-visible:ring-1 focus-visible:ring-ring font-medium text-xs"
       />
     </div>
   );

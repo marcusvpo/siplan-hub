@@ -1,4 +1,4 @@
-import { LucideIcon, Check, Calendar, User } from "lucide-react";
+import { LucideIcon, Check, Calendar, User, Sparkles, Rocket } from "lucide-react";
 import {
   AccordionItem,
   AccordionTrigger,
@@ -204,8 +204,9 @@ export function StageCard({
 
           {/* Ready to Start Badge */}
           {isReadyToStart && status === "todo" && (
-            <Badge className="px-2 py-0.5 text-[10px] font-bold bg-emerald-500 text-white shadow-sm animate-pulse mr-2">
-              ✨ Pronto para Iniciar
+            <Badge className="px-2 py-0.5 text-[10px] font-bold bg-emerald-500 text-white shadow-sm animate-pulse mr-2 flex items-center gap-1">
+              <Sparkles className="h-3 w-3 shrink-0" />
+              <span>Pronto para Iniciar</span>
             </Badge>
           )}
 
@@ -222,10 +223,9 @@ export function StageCard({
       </AccordionTrigger>
 
       <AccordionContent className="px-4 pt-1.5 pb-4 space-y-4">
-        {/* Readiness Indicator */}
         {isReadyToStart && status === "todo" && readinessReason && (
           <div className="bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-950/20 dark:to-green-950/20 p-3 rounded-lg border border-emerald-200 dark:border-emerald-800/50 flex items-start gap-2.5">
-            <div className="text-xl">🚀</div>
+            <Rocket className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
             <div className="flex-1">
               <p className="font-bold text-emerald-900 dark:text-emerald-300 text-xs mb-0.5">
                 Pré-requisitos Completos!
@@ -248,8 +248,8 @@ export function StageCard({
         )}>
           {/* Status Field */}
           <div className="space-y-1.5">
-            <Label className="text-[10px] font-bold uppercase tracking-widest text-primary flex items-center gap-1.5">
-              <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+              <div className="h-1.5 w-1.5 rounded-full bg-slate-400 dark:bg-slate-650" />
               Status
             </Label>
             <Select
@@ -258,19 +258,7 @@ export function StageCard({
               disabled={!canEditProjects}
             >
               <SelectTrigger
-                className={cn(
-                  "h-9 border text-xs font-medium transition-all duration-200",
-                  status === "done" &&
-                  "bg-emerald-50/50 text-emerald-900 border-emerald-200 hover:border-emerald-350 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50 dark:hover:border-emerald-800",
-                  status === "in-progress" &&
-                  "bg-blue-50/50 text-blue-900 border-blue-200 hover:border-blue-350 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/50 dark:hover:border-blue-800",
-                  status === "blocked" &&
-                  "bg-amber-50/50 text-amber-900 border-amber-200 hover:border-amber-350 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/50 dark:hover:border-emerald-800",
-                  status === "waiting_adjustment" &&
-                  "bg-orange-50/50 text-orange-900 border-orange-200 hover:border-orange-350 dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-900/50 dark:hover:border-orange-800",
-                  status === "todo" &&
-                  "bg-slate-50/50 text-slate-900 border-slate-200 hover:border-slate-300 dark:bg-slate-900/50 dark:text-slate-400 dark:border-slate-800/60 dark:hover:border-slate-700",
-                )}
+                className="h-9 border border-input bg-background text-xs font-medium text-foreground hover:bg-slate-50/50 dark:hover:bg-slate-900/50 transition-all duration-200"
               >
                 <SelectValue />
               </SelectTrigger>
@@ -303,15 +291,15 @@ export function StageCard({
           {/* Responsible Field */}
           {!hideResponsible && (
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-bold uppercase tracking-widest text-violet-605 flex items-center gap-1.5">
-                <User className="h-3 w-3" />
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                <User className="h-3 w-3 text-muted-foreground" />
                 Responsável
               </Label>
               <AutocompleteInput
                 value={responsible}
                 onChange={(v) => onUpdate({ responsible: v })}
                 disabled={!canEditProjects}
-                className="h-9 border border-violet-200 hover:border-violet-300 focus:border-violet-400 bg-violet-50/50 dark:border-violet-900/50 dark:hover:border-violet-800 dark:focus:border-violet-650 dark:bg-violet-950/20 dark:text-violet-300 text-xs"
+                className="h-9 border border-input bg-background text-foreground hover:bg-slate-50/50 dark:hover:bg-slate-900/50 focus-visible:ring-1 focus-visible:ring-ring text-xs"
               />
             </div>
           )}
@@ -326,8 +314,8 @@ export function StageCard({
           {/* Start Date Field - Hidden when hideDates is true */}
           {!hideDates && (
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-bold uppercase tracking-widest text-cyan-600 flex items-center gap-1.5">
-                <Calendar className="h-3 w-3" />
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                <Calendar className="h-3 w-3 text-muted-foreground" />
                 {["infra", "adherence", "environment", "conversion"].includes(
                   id,
                 )
@@ -349,7 +337,7 @@ export function StageCard({
                   })
                 }
                 disabled={!canEditProjects}
-                className="h-9 border border-cyan-200 hover:border-cyan-300 focus:border-cyan-400 bg-cyan-50/50 dark:border-cyan-900/50 dark:hover:border-cyan-800 dark:focus:border-cyan-600 dark:bg-cyan-950/20 dark:text-cyan-300 font-medium text-xs"
+                className="h-9 border border-input bg-background text-foreground hover:bg-slate-50/50 dark:hover:bg-slate-900/50 focus-visible:ring-1 focus-visible:ring-ring font-medium text-xs"
               />
             </div>
           )}
@@ -357,8 +345,8 @@ export function StageCard({
           {/* End Date Field - Hidden when hideDates is true */}
           {!hideDates && (
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-bold uppercase tracking-widest text-rose-600 flex items-center gap-1.5">
-                <Calendar className="h-3 w-3" />
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                <Calendar className="h-3 w-3 text-muted-foreground" />
                 {id === "adherence"
                   ? "Agendado Para"
                   : ["infra", "environment", "conversion"].includes(id)
@@ -378,7 +366,7 @@ export function StageCard({
                   })
                 }
                 disabled={!canEditProjects}
-                className="h-9 border border-rose-200 hover:border-rose-300 focus:border-rose-400 bg-rose-50/50 dark:border-rose-900/50 dark:hover:border-rose-800 dark:focus:border-rose-600 dark:bg-rose-950/20 dark:text-rose-300 font-medium text-xs"
+                className="h-9 border border-input bg-background text-foreground hover:bg-slate-50/50 dark:hover:bg-slate-900/50 focus-visible:ring-1 focus-visible:ring-ring font-medium text-xs"
               />
             </div>
           )}
@@ -388,11 +376,10 @@ export function StageCard({
         {/* Specific Fields (Children) */}
         {children && (
           <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 via-purple-500/5 to-pink-500/5 rounded-lg" />
-            <div className="relative bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm p-4 rounded-lg border border-dashed border-indigo-200 dark:border-indigo-800 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="relative bg-slate-50/30 dark:bg-slate-950/20 p-4 rounded-lg border border-dashed border-slate-200 dark:border-slate-800 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="col-span-full mb-1">
-                <h4 className="text-[10px] font-bold uppercase tracking-widest text-indigo-600 flex items-center gap-1.5">
-                  <div className="h-1 w-4 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full" />
+                <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                  <div className="h-1 w-4 bg-slate-400 dark:bg-slate-650 rounded-full" />
                   Campos Específicos
                 </h4>
               </div>
@@ -404,12 +391,12 @@ export function StageCard({
         {/* Rich Text Editor */}
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <div className="h-0.5 w-6 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full" />
-            <Label className="text-[10px] font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400">
+            <div className="h-0.5 w-6 bg-slate-300 dark:bg-slate-700 rounded-full" />
+            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
               Observações & Detalhes
             </Label>
           </div>
-          <div className="rounded-lg border border-amber-200 dark:border-amber-900/50 overflow-hidden bg-amber-50/30 dark:bg-amber-950/10 w-full">
+          <div className="rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden bg-slate-50/10 dark:bg-slate-950/5 w-full">
             <RichTextEditor
               content={getEditorContent(observations)}
               onChange={(content) => onUpdate({ observations: content })}

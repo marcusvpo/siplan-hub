@@ -1153,7 +1153,7 @@ export function InfraStageForm({
               variant="destructive"
               size="sm"
               disabled={notifying || !canEditProjects}
-              className="font-bold shadow-sm bg-gradient-to-r from-rose-600 to-red-700 hover:from-rose-700 hover:to-red-800 transition-all duration-300 h-8 text-xs"
+              className="font-bold shadow-sm h-8 text-xs"
             >
               <Megaphone className="mr-1.5 h-3.5 w-3.5" />
               {notifying ? "Notificando..." : "Notificar Comercial"}
@@ -1192,7 +1192,7 @@ export function InfraStageForm({
                   });
                 }}
                 disabled={stage.publicLinkClosed === true}
-                className="font-bold border-indigo-300 hover:bg-indigo-50 dark:border-indigo-900/40 dark:hover:bg-indigo-950/20 text-indigo-700 dark:text-indigo-400 shadow-sm h-8 text-xs"
+                className="font-bold border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900/50 shadow-sm h-8 text-xs"
               >
                 <Share2 className="mr-1.5 h-3.5 w-3.5" />
                 Copiar Link Público
@@ -1215,8 +1215,8 @@ export function InfraStageForm({
                 }}
                 disabled={!canEditProjects}
                 className={cn(
-                  "font-bold border-amber-300 hover:bg-amber-50 dark:border-amber-900/40 dark:hover:bg-amber-950/20 text-amber-700 dark:text-amber-400 shadow-sm h-8 text-xs",
-                  stage.publicLinkClosed && "border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-900/40 text-slate-600 dark:text-slate-400"
+                  "font-bold border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900/50 shadow-sm h-8 text-xs",
+                  stage.publicLinkClosed && "border-slate-200 text-slate-500 bg-slate-50/50 hover:bg-slate-100/50 dark:border-slate-800 dark:text-slate-400 dark:bg-slate-900/30"
                 )}
               >
                 {stage.publicLinkClosed ? (
@@ -1237,7 +1237,7 @@ export function InfraStageForm({
                 variant="outline"
                 size="sm"
                 onClick={handleGenerateAnalyticalReport}
-                className="font-bold border-rose-200 hover:bg-rose-50 dark:border-rose-900/40 dark:hover:bg-rose-950/20 text-[hsl(346,84%,45%)] hover:text-[hsl(346,84%,40%)] shadow-sm h-8 text-xs"
+                className="font-bold border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900/50 shadow-sm h-8 text-xs"
               >
                 <FileText className="mr-1.5 h-3.5 w-3.5" />
                 Gerar Relatório Analítico
@@ -1279,7 +1279,7 @@ export function InfraStageForm({
       </div>
 
       <div className="space-y-2.5">
-        <Label className="text-xs font-bold uppercase tracking-widest text-sky-600 flex items-center gap-2">
+        <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
           <ServerIcon className="h-3.5 w-3.5" />
           Status Servidor
         </Label>
@@ -1289,17 +1289,7 @@ export function InfraStageForm({
           disabled={!canEditProjects}
         >
           <SelectTrigger
-            className={cn(
-              "h-9 border font-medium transition-all text-xs",
-              stage.serverStatus === "Adequado" &&
-              "bg-green-50 text-green-800 border-green-300 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50",
-              stage.serverStatus === "Parcialmente Adequado" &&
-              "bg-orange-50 text-orange-800 border-orange-300 dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-900/50",
-              stage.serverStatus === "Inadequado" &&
-              "bg-red-50 text-red-800 border-red-300 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/50",
-              stage.serverStatus === "Aguardando Adequação" &&
-              "bg-gray-50 text-gray-800 border-gray-300 dark:bg-slate-900/50 dark:text-slate-400 dark:border-slate-800/60",
-            )}
+            className="h-9 border border-input bg-background font-medium text-xs text-foreground hover:bg-slate-50/50 dark:hover:bg-slate-900/50 transition-all duration-200"
           >
             <SelectValue placeholder="Selecione..." />
           </SelectTrigger>
@@ -1339,8 +1329,8 @@ export function InfraStageForm({
       </div>
 
       <div className="space-y-2.5">
-        <Label className="text-xs font-bold uppercase tracking-widest text-teal-600 flex items-center gap-2">
-          <div className="h-2 w-2 rounded-full bg-teal-500" />
+        <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+          <div className="h-2 w-2 rounded-full bg-slate-400 dark:bg-slate-600" />
           Status Estações
         </Label>
         <Select
@@ -1351,17 +1341,7 @@ export function InfraStageForm({
           disabled={!canEditProjects}
         >
           <SelectTrigger
-            className={cn(
-              "h-9 border font-medium transition-all text-xs",
-              stage.workstationsStatus === "Adequado" &&
-              "bg-green-50 text-green-800 border-green-300 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50",
-              stage.workstationsStatus === "Parcialmente Adequado" &&
-              "bg-orange-50 text-orange-800 border-orange-300 dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-900/50",
-              stage.workstationsStatus === "Inadequado" &&
-              "bg-red-50 text-red-800 border-red-300 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/50",
-              stage.workstationsStatus === "Aguardando Adequação" &&
-              "bg-gray-50 text-gray-800 border-gray-300 dark:bg-slate-900/50 dark:text-slate-400 dark:border-slate-800/60",
-            )}
+            className="h-9 border border-input bg-background font-medium text-xs text-foreground hover:bg-slate-50/50 dark:hover:bg-slate-900/50 transition-all duration-200"
           >
             <SelectValue placeholder="Selecione..." />
           </SelectTrigger>
@@ -1401,8 +1381,8 @@ export function InfraStageForm({
       </div>
 
       <div className="space-y-2.5">
-        <Label className="text-xs font-bold uppercase tracking-widest text-purple-600 flex items-center gap-2">
-          <div className="h-2 w-2 rounded-full bg-purple-500" />
+        <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+          <div className="h-2 w-2 rounded-full bg-slate-400 dark:bg-slate-600" />
           Qtd. de Estações
         </Label>
         <Input
@@ -1414,7 +1394,7 @@ export function InfraStageForm({
             })
           }
           disabled={!canEditProjects}
-          className="h-9 border border-purple-200 hover:border-purple-300 focus:border-purple-400 bg-purple-50/50 dark:border-purple-900/50 dark:hover:border-purple-800 dark:focus:border-purple-600 dark:bg-purple-950/20 dark:text-purple-300 font-medium text-xs"
+          className="h-9 border border-input bg-background text-foreground hover:bg-slate-50/50 dark:hover:bg-slate-900/50 focus-visible:ring-1 focus-visible:ring-ring font-medium text-xs"
         />
       </div>
 

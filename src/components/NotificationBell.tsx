@@ -1,4 +1,5 @@
-import { Bell, CheckCheck } from "lucide-react";
+import { Bell, CheckCheck, Inbox, User, RefreshCw, AlertTriangle, MessageSquare, CheckCircle2, PartyPopper, Megaphone, Folder, Pin } from "lucide-react";
+import { ComponentType } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -18,16 +19,16 @@ import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import type { TeamArea } from "@/types/conversion";
 
-const NOTIFICATION_TYPE_ICONS: Record<string, string> = {
-  new_demand: "📥",
-  assignment: "👤",
-  status_change: "🔄",
-  issue_reported: "⚠️",
-  client_response: "💬",
-  conversion_complete: "✅",
-  homologation_approved: "🎉",
-  homologation_issues: "⚠️",
-  mention: "📢",
+const NOTIFICATION_TYPE_ICONS: Record<string, ComponentType<any>> = {
+  new_demand: Inbox,
+  assignment: User,
+  status_change: RefreshCw,
+  issue_reported: AlertTriangle,
+  client_response: MessageSquare,
+  conversion_complete: CheckCircle2,
+  homologation_approved: PartyPopper,
+  homologation_issues: AlertTriangle,
+  mention: Megaphone,
 };
 
 export function NotificationBell() {
@@ -116,8 +117,11 @@ export function NotificationBell() {
               >
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center gap-2">
-                    <span className="text-base">
-                      {NOTIFICATION_TYPE_ICONS[notification.type] || "📌"}
+                    <span className="text-base text-muted-foreground shrink-0">
+                      {(() => {
+                        const Icon = NOTIFICATION_TYPE_ICONS[notification.type] || Pin;
+                        return <Icon className="h-4 w-4" />;
+                      })()}
                     </span>
                     <span className="font-semibold text-sm">
                       {notification.title}
@@ -134,8 +138,9 @@ export function NotificationBell() {
                   {notification.message}
                 </p>
                 {notification.projectName && (
-                  <span className="text-[10px] text-primary/80 pl-7">
-                    📁 {notification.projectName}
+                  <span className="text-[10px] text-primary/80 pl-7 flex items-center gap-1">
+                    <Folder className="h-3 w-3 shrink-0" />
+                    {notification.projectName}
                   </span>
                 )}
               </DropdownMenuItem>

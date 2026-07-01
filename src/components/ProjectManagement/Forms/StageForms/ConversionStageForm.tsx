@@ -188,8 +188,8 @@ export function ConversionStageForm({
       </div>
 
       <div className="space-y-2.5">
-        <Label className="text-xs font-bold uppercase tracking-widest text-fuchsia-600 flex items-center gap-2">
-          <RefreshCw className="h-3.5 w-3.5" />
+        <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+          <RefreshCw className="h-3.5 w-3.5 text-muted-foreground" />
           Status Homologação
         </Label>
         <Select
@@ -199,17 +199,7 @@ export function ConversionStageForm({
           }
         >
           <SelectTrigger
-            className={cn(
-              "h-9 border font-medium transition-all text-xs",
-              stage.homologationStatus === "Adequado" &&
-              "bg-green-50 text-green-800 border-green-300 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50",
-              stage.homologationStatus === "Parcialmente Adequado" &&
-              "bg-orange-50 text-orange-800 border-orange-300 dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-900/50",
-              stage.homologationStatus === "Inadequado" &&
-              "bg-red-50 text-red-800 border-red-300 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/50",
-              stage.homologationStatus === "Aguardando Adequação" &&
-              "bg-gray-50 text-gray-800 border-gray-300 dark:bg-slate-900/50 dark:text-slate-400 dark:border-slate-800/60",
-            )}
+            className="h-9 border border-input bg-background text-xs font-medium text-foreground hover:bg-slate-50/50 dark:hover:bg-slate-900/50 transition-all duration-200"
           >
             <SelectValue placeholder="Selecione..." />
           </SelectTrigger>
@@ -248,8 +238,8 @@ export function ConversionStageForm({
         </Select>
       </div>
       <div className="space-y-2.5">
-        <Label className="text-xs font-bold uppercase tracking-widest text-violet-600 flex items-center gap-2">
-          <CheckCircle2 className="h-3.5 w-3.5" />
+        <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+          <CheckCircle2 className="h-3.5 w-3.5 text-muted-foreground" />
           Responsável Homolog.
         </Label>
         <AutocompleteInput
@@ -257,13 +247,13 @@ export function ConversionStageForm({
           onChange={(v) =>
             onUpdate({ homologationResponsible: v })
           }
-          className="h-9 border border-violet-200 hover:border-violet-300 focus:border-violet-400 bg-violet-50/50 dark:border-violet-900/50 dark:hover:border-violet-800 dark:focus:border-violet-650 dark:bg-violet-950/20 dark:text-violet-300 text-xs"
+          className="h-9 border border-input bg-background text-foreground hover:bg-slate-50/50 dark:hover:bg-slate-900/50 focus-visible:ring-1 focus-visible:ring-ring text-xs"
         />
       </div>
 
       <div className="space-y-2.5">
-        <Label className="text-xs font-bold uppercase tracking-widest text-rose-600 flex items-center gap-2">
-          <Calendar className="h-3.5 w-3.5" />
+        <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+          <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
           Agendado Para (Homolog.)
         </Label>
         <Input
@@ -282,7 +272,7 @@ export function ConversionStageForm({
                 : undefined,
             })
           }
-          className="h-9 border border-rose-200 hover:border-rose-300 focus:border-rose-400 bg-rose-50/50 dark:border-rose-900/50 dark:hover:border-rose-800 dark:focus:border-rose-600 dark:bg-rose-950/20 dark:text-rose-300 font-medium text-xs"
+          className="h-9 border border-input bg-background text-foreground hover:bg-slate-50/50 dark:hover:bg-slate-900/50 focus-visible:ring-1 focus-visible:ring-ring font-medium text-xs"
         />
       </div>
     </>

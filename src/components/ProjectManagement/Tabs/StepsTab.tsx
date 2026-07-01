@@ -320,8 +320,8 @@ export function StepsTab({
               canEditProjects={canEditProjects}
               extraHeaderField={
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest text-violet-600 flex items-center gap-1.5">
-                    <User className="h-3 w-3" />
+                  <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                    <User className="h-3 w-3 text-muted-foreground" />
                     Responsável Serventia
                   </Label>
                   <Input
@@ -329,7 +329,7 @@ export function StepsTab({
                     onChange={(e) => updateStage("infra", { clientResponsible: e.target.value })}
                     disabled={!canEditProjects}
                     placeholder="Nome do responsável..."
-                    className="h-9 border border-violet-200 hover:border-violet-300 focus:border-violet-400 bg-violet-50/50 dark:border-violet-900/50 dark:hover:border-violet-800 dark:focus:border-violet-600 dark:bg-violet-950/20 dark:text-violet-300 text-xs"
+                    className="h-9 border border-input bg-background text-foreground hover:bg-slate-50/50 dark:hover:bg-slate-900/50 focus-visible:ring-1 focus-visible:ring-ring text-xs"
                   />
                 </div>
               }

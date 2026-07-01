@@ -11,7 +11,7 @@ import {
   ReferenceLine,
 } from "recharts";
 import { cn } from "@/lib/utils";
-import { Activity } from "lucide-react";
+import { Activity, Zap, Sparkles } from "lucide-react";
 
 interface StageAnalysisTimelineProps {
   project: ProjectV2;
@@ -131,9 +131,19 @@ export function StageAnalysisTimeline({
               ? "bg-red-500/10 text-red-500 border-red-500/20" 
               : "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
           )}>
-            {dev > 0 
-              ? `⚡ +${dev} dias acima da média` 
-              : `✨ ${Math.abs(dev)} dias abaixo da média`}
+            <div className="flex items-center justify-center gap-1.5 font-bold">
+              {dev > 0 ? (
+                <>
+                  <Zap className="h-3.5 w-3.5 shrink-0" />
+                  <span>+{dev} dias acima da média</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-3.5 w-3.5 shrink-0" />
+                  <span>{Math.abs(dev)} dias abaixo da média</span>
+                </>
+              )}
+            </div>
           </div>
         </div>
       );
