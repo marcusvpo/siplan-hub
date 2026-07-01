@@ -170,6 +170,10 @@ export default function TransicaoPlaceholder() {
     "infra-banco": true,
     "infra-sistemas": true,
     "infra-conversao": true,
+    "processo-implantacao": true,
+    "processo-pos": true,
+    "processo-colaboradores": true,
+    "processo-consideracoes": true,
   });
 
   const toggleSection = (sectionKey: string) => {
@@ -1803,152 +1807,236 @@ export default function TransicaoPlaceholder() {
                   <CardTitle className="text-base font-bold text-primary">Relato do Processo & Colaboradores</CardTitle>
                   <CardDescription className="text-xs">Observações sobre como ocorreu o treinamento, implantação e detalhes operacionais importantes.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="implantationProcess" className="text-xs font-bold">Processo de Implantação</Label>
-                    <Textarea
-                      id="implantationProcess"
-                      value={localDtc.implantationProcess}
-                      onChange={(e) => handleFieldChange("implantationProcess", e.target.value)}
-                      disabled={isFormDisabled}
-                      rows={4}
-                      className="border-muted/80 text-xs"
-                      placeholder="Relate como ocorreu o processo de implantação, infraestrutura instalada, treinamento dos usuários e aceitação inicial..."
-                    />
-                    {(() => {
-                      const count = (localDtc.implantationProcess || "").length;
-                      const isValid = count >= 50;
-                      return (
-                        <div className="flex justify-between items-center text-[10px] mt-0.5">
-                          <span className={cn("font-semibold", isValid ? "text-emerald-600" : "text-amber-500")}>
-                            {isValid ? "✓ Relato completo" : "⚠ Relato muito curto (mínimo 50 caracteres)"}
-                          </span>
-                          <span className="text-muted-foreground">{count} caracteres</span>
-                        </div>
-                      );
-                    })()}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="postImplantationProcess" className="text-xs font-bold">Processo de Pós-Implantação / Regras Específicas do Cliente</Label>
-                    <Textarea
-                      id="postImplantationProcess"
-                      value={localDtc.postImplantationProcess}
-                      onChange={(e) => handleFieldChange("postImplantationProcess", e.target.value)}
-                      disabled={isFormDisabled}
-                      rows={4}
-                      className="border-muted/80 text-xs"
-                      placeholder="Informe regras operacionais acordadas, particularidades do fluxo de trabalho do cartório que o suporte deve conhecer..."
-                    />
-                    {(() => {
-                      const count = (localDtc.postImplantationProcess || "").length;
-                      const isValid = count >= 50;
-                      return (
-                        <div className="flex justify-between items-center text-[10px] mt-0.5">
-                          <span className={cn("font-semibold", isValid ? "text-emerald-600" : "text-amber-500")}>
-                            {isValid ? "✓ Relato completo" : "⚠ Relato muito curto (mínimo 50 caracteres)"}
-                          </span>
-                          <span className="text-muted-foreground">{count} caracteres</span>
-                        </div>
-                      );
-                    })()}
-                  </div>
-
-                  {/* Dynamic Employees List Table */}
-                  <div className="space-y-2 border p-3 rounded-lg bg-muted/10">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label className="text-[11px] font-bold">Funcionários da Serventia (Principais colaboradores)</Label>
-                        <p className="text-[9px] text-muted-foreground">Cadastre os principais contatos operacionais por setor.</p>
-                      </div>
-                      <Button
-                        type="button"
-                        onClick={addEmployee}
-                        disabled={isFormDisabled}
-                        variant="outline"
-                        size="sm"
-                        className="h-6.5 text-[10px] gap-1 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 font-bold"
-                      >
-                        <Plus className="h-3 w-3" />
-                        Adicionar Funcionário
+                <CardContent className="space-y-6">
+                  
+                  {/* Sub-seção 1: Processo de Implantação */}
+                  <div className="space-y-3">
+                    <div 
+                      className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors"
+                      onClick={() => toggleSection("processo-implantacao")}
+                    >
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">
+                        1. Processo de Implantação
+                      </span>
+                      <Button type="button" variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
+                        {collapsedSections["processo-implantacao"] ? (
+                          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
+                        ) : (
+                          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
+                        )}
                       </Button>
                     </div>
-
-                    {(!localDtc.employeesList || localDtc.employeesList.length === 0) ? (
-                      <p className="text-[11px] text-muted-foreground italic py-1.5 text-center bg-background/50 border border-dashed rounded-md">
-                        Nenhum colaborador cadastrado. Clique em Adicionar Funcionário.
-                      </p>
-                    ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1.5">
-                        {localDtc.employeesList.map((emp, idx) => (
-                          <div key={idx} className="flex items-center gap-1.5 bg-background p-1.5 border rounded-md shadow-2xs">
-                            {/* Name Input */}
-                            <Input
-                              value={emp.name}
-                              onChange={(e) => updateEmployee(idx, "name", e.target.value)}
-                              disabled={isFormDisabled}
-                              placeholder="Nome do Colaborador"
-                              className="border-muted/80 h-7 text-xs flex-1"
-                            />
-
-                            {/* Department Select dropdown */}
-                            <Select
-                              value={emp.department}
-                              onValueChange={(val) => updateEmployee(idx, "department", val)}
-                              disabled={isFormDisabled}
-                            >
-                              <SelectTrigger className="w-24 h-7 text-[10px] border-muted/80 shrink-0">
-                                <SelectValue placeholder="Setor" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="Notas" className="text-xs">Notas</SelectItem>
-                                <SelectItem value="Protesto" className="text-xs">Protesto</SelectItem>
-                                <SelectItem value="Registro Civil" className="text-xs">R. Civil</SelectItem>
-                                <SelectItem value="Registro de Imóveis" className="text-xs">R. Imóveis</SelectItem>
-                                <SelectItem value="RTD / PJ" className="text-xs">RTD/PJ</SelectItem>
-                                <SelectItem value="Administrativo" className="text-xs">Adm</SelectItem>
-                                <SelectItem value="TI / Suporte" className="text-xs">TI</SelectItem>
-                                <SelectItem value="Outro" className="text-xs">Outro</SelectItem>
-                              </SelectContent>
-                            </Select>
-
-                            {/* Role / Office Input */}
-                            <Input
-                              value={emp.role}
-                              onChange={(e) => updateEmployee(idx, "role", e.target.value)}
-                              disabled={isFormDisabled}
-                              placeholder="Função (Ex: Escrevente)"
-                              className="border-muted/80 h-7 text-xs flex-1"
-                            />
-
-                            {/* Remove Button */}
-                            <Button
-                              type="button"
-                              onClick={() => removeEmployee(idx)}
-                              disabled={isFormDisabled}
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-full shrink-0"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          </div>
-                        ))}
+                    
+                    {!collapsedSections["processo-implantacao"] && (
+                      <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <Label htmlFor="implantationProcess" className="text-xs font-bold text-muted-foreground">Relato do Processo de Implantação</Label>
+                        <Textarea
+                          id="implantationProcess"
+                          value={localDtc.implantationProcess}
+                          onChange={(e) => handleFieldChange("implantationProcess", e.target.value)}
+                          disabled={isFormDisabled}
+                          rows={4}
+                          className="border-muted/80 text-xs"
+                          placeholder="Relate como ocorreu o processo de implantação, infraestrutura instalada, treinamento dos usuários e aceitação inicial..."
+                        />
+                        {(() => {
+                          const count = (localDtc.implantationProcess || "").length;
+                          const isValid = count >= 50;
+                          return (
+                            <div className="flex justify-between items-center text-[10px] mt-0.5">
+                              <span className={cn("font-semibold", isValid ? "text-emerald-600" : "text-amber-500")}>
+                                {isValid ? "✓ Relato completo" : "⚠ Relato muito curto (mínimo 50 caracteres)"}
+                              </span>
+                              <span className="text-muted-foreground">{count} caracteres</span>
+                            </div>
+                          );
+                        })()}
                       </div>
                     )}
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="finalConsiderations" className="text-xs font-bold">Considerações Finais</Label>
-                    <Textarea
-                      id="finalConsiderations"
-                      value={localDtc.finalConsiderations}
-                      onChange={(e) => handleFieldChange("finalConsiderations", e.target.value)}
-                      disabled={isFormDisabled}
-                      rows={3}
-                      className="border-muted/80 text-xs"
-                      placeholder="Considerações adicionais ou notas de encerramento do projeto de transição..."
-                    />
+                  {/* Sub-seção 2: Processo de Pós-Implantação */}
+                  <div className="space-y-3">
+                    <div 
+                      className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors"
+                      onClick={() => toggleSection("processo-pos")}
+                    >
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">
+                        2. Processo de Pós-Implantação & Regras do Cliente
+                      </span>
+                      <Button type="button" variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
+                        {collapsedSections["processo-pos"] ? (
+                          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
+                        ) : (
+                          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
+                        )}
+                      </Button>
+                    </div>
+                    
+                    {!collapsedSections["processo-pos"] && (
+                      <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <Label htmlFor="postImplantationProcess" className="text-xs font-bold text-muted-foreground">Relato Pós-Implantação / Particularidades</Label>
+                        <Textarea
+                          id="postImplantationProcess"
+                          value={localDtc.postImplantationProcess}
+                          onChange={(e) => handleFieldChange("postImplantationProcess", e.target.value)}
+                          disabled={isFormDisabled}
+                          rows={4}
+                          className="border-muted/80 text-xs"
+                          placeholder="Informe regras operacionais acordadas, particularidades do fluxo de trabalho do cartório que o suporte deve conhecer..."
+                        />
+                        {(() => {
+                          const count = (localDtc.postImplantationProcess || "").length;
+                          const isValid = count >= 50;
+                          return (
+                            <div className="flex justify-between items-center text-[10px] mt-0.5">
+                              <span className={cn("font-semibold", isValid ? "text-emerald-600" : "text-amber-500")}>
+                                {isValid ? "✓ Relato completo" : "⚠ Relato muito curto (mínimo 50 caracteres)"}
+                              </span>
+                              <span className="text-muted-foreground">{count} caracteres</span>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Sub-seção 3: Colaboradores da Serventia */}
+                  <div className="space-y-3">
+                    <div 
+                      className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors"
+                      onClick={() => toggleSection("processo-colaboradores")}
+                    >
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">
+                        3. Funcionários & Colaboradores da Serventia
+                      </span>
+                      <Button type="button" variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
+                        {collapsedSections["processo-colaboradores"] ? (
+                          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
+                        ) : (
+                          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
+                        )}
+                      </Button>
+                    </div>
+                    
+                    {!collapsedSections["processo-colaboradores"] && (
+                      <div className="space-y-2 border p-3 rounded-lg bg-muted/10 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label className="text-[11px] font-bold">Principais colaboradores cadastrados</Label>
+                            <p className="text-[9px] text-muted-foreground">Cadastre os principais contatos operacionais por setor.</p>
+                          </div>
+                          <Button
+                            type="button"
+                            onClick={addEmployee}
+                            disabled={isFormDisabled}
+                            variant="outline"
+                            size="sm"
+                            className="h-6.5 text-[10px] gap-1 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 font-bold"
+                          >
+                            <Plus className="h-3 w-3" />
+                            Adicionar Funcionário
+                          </Button>
+                        </div>
+
+                        {(!localDtc.employeesList || localDtc.employeesList.length === 0) ? (
+                          <p className="text-[11px] text-muted-foreground italic py-1.5 text-center bg-background/50 border border-dashed rounded-md mt-1">
+                            Nenhum colaborador cadastrado. Clique em Adicionar Funcionário.
+                          </p>
+                        ) : (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1.5">
+                            {localDtc.employeesList.map((emp, idx) => (
+                              <div key={idx} className="flex items-center gap-1.5 bg-background p-1.5 border rounded-md shadow-2xs">
+                                {/* Name Input */}
+                                <Input
+                                  value={emp.name}
+                                  onChange={(e) => updateEmployee(idx, "name", e.target.value)}
+                                  disabled={isFormDisabled}
+                                  placeholder="Nome do Colaborador"
+                                  className="border-muted/80 h-7 text-xs flex-1"
+                                />
+
+                                {/* Department Select dropdown */}
+                                <Select
+                                  value={emp.department}
+                                  onValueChange={(val) => updateEmployee(idx, "department", val)}
+                                  disabled={isFormDisabled}
+                                >
+                                  <SelectTrigger className="w-24 h-7 text-[10px] border-muted/80 shrink-0">
+                                    <SelectValue placeholder="Setor" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="Notas" className="text-xs">Notas</SelectItem>
+                                    <SelectItem value="Protesto" className="text-xs">Protesto</SelectItem>
+                                    <SelectItem value="Registro Civil" className="text-xs">R. Civil</SelectItem>
+                                    <SelectItem value="Registro de Imóveis" className="text-xs">R. Imóveis</SelectItem>
+                                    <SelectItem value="RTD / PJ" className="text-xs">RTD/PJ</SelectItem>
+                                    <SelectItem value="Administrativo" className="text-xs">Adm</SelectItem>
+                                    <SelectItem value="TI / Suporte" className="text-xs">TI</SelectItem>
+                                    <SelectItem value="Outro" className="text-xs">Outro</SelectItem>
+                                  </SelectContent>
+                                </Select>
+
+                                {/* Role / Office Input */}
+                                <Input
+                                  value={emp.role}
+                                  onChange={(e) => updateEmployee(idx, "role", e.target.value)}
+                                  disabled={isFormDisabled}
+                                  placeholder="Função (Ex: Escrevente)"
+                                  className="border-muted/80 h-7 text-xs flex-1"
+                                />
+
+                                {/* Remove Button */}
+                                <Button
+                                  type="button"
+                                  onClick={() => removeEmployee(idx)}
+                                  disabled={isFormDisabled}
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-full shrink-0"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Sub-seção 4: Considerações Finais */}
+                  <div className="space-y-3">
+                    <div 
+                      className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors"
+                      onClick={() => toggleSection("processo-consideracoes")}
+                    >
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">
+                        4. Considerações Finais
+                      </span>
+                      <Button type="button" variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
+                        {collapsedSections["processo-consideracoes"] ? (
+                          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
+                        ) : (
+                          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
+                        )}
+                      </Button>
+                    </div>
+                    
+                    {!collapsedSections["processo-consideracoes"] && (
+                      <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <Label htmlFor="finalConsiderations" className="text-xs font-bold text-muted-foreground">Notas de Encerramento do Projeto</Label>
+                        <Textarea
+                          id="finalConsiderations"
+                          value={localDtc.finalConsiderations}
+                          onChange={(e) => handleFieldChange("finalConsiderations", e.target.value)}
+                          disabled={isFormDisabled}
+                          rows={3}
+                          className="border-muted/80 text-xs"
+                          placeholder="Considerações adicionais ou notes de encerramento do projeto de transição..."
+                        />
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
