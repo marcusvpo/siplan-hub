@@ -39,6 +39,11 @@ import {
   RefreshCw
 } from "lucide-react";
 
+interface KeyUserItem {
+  name: string;
+  phone: string;
+}
+
 // Ticket structure inside DTC
 interface DTCTicket {
   number: string;
@@ -53,7 +58,9 @@ interface DTCData {
   serventia: string;
   oficial: string;
   clientResponsible: string;
+  clientResponsiblePhone?: string;
   keyUsers: string;
+  keyUsersList?: KeyUserItem[];
   clientPhone: string;
   clientEmail: string;
   systemsInstalled: string;
@@ -75,6 +82,19 @@ interface DTCData {
   approvedAt?: string;
   approvedBy?: string;
 }
+
+// Helper to format phone number to Brazilian standard masks (landline or mobile)
+const formatPhoneNumber = (value: string) => {
+  if (!value) return "";
+  const digits = value.replace(/\D/g, "");
+  if (digits.length === 0) return "";
+  if (digits.length <= 2) return `(${digits}`;
+  if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  if (digits.length <= 10) {
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6, 10)}`;
+  }
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`;
+};
 
 // Stage mapping helper
 const dtcStatusToStageStatus = (status: DTCData["status"]) => {
@@ -131,8 +151,10 @@ export default function TransicaoPlaceholder() {
           serventia: project.clientName || "",
           oficial: "",
           clientResponsible: project.clientPrimaryContact || "",
+          clientResponsiblePhone: "",
           keyUsers: "",
-          clientPhone: project.clientPhone || "",
+          keyUsersList: [],
+          clientPhone: formatPhoneNumber(project.clientPhone || ""),
           clientEmail: project.clientEmail || "",
           systemsInstalled: project.systemType || "",
           systemVersions: "",
@@ -155,6 +177,27 @@ export default function TransicaoPlaceholder() {
       setLocalDtc(null);
     }
   }, [project, fullName]);
+
+  // Migrate older keyUsers string to keyUsersList array on the fly
+  useEffect(() => {
+    if (localDtc && !localDtc.keyUsersList) {
+      const migratedList: KeyUserItem[] = [];
+      if (localDtc.keyUsers) {
+        const names = localDtc.keyUsers.split(",").map(n => n.trim()).filter(Boolean);
+        names.forEach(name => {
+          migratedList.push({ name, phone: "" });
+        });
+      }
+      setLocalDtc(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          keyUsersList: migratedList,
+          clientResponsiblePhone: prev.clientResponsiblePhone || ""
+        };
+      });
+    }
+  }, [localDtc]);
 
   // 3. Connect to auto-save logic (only runs when localDtc has data)
   const { saveState } = useAutoSave<DTCData | null>(
@@ -339,6 +382,34 @@ export default function TransicaoPlaceholder() {
       [key]: val
     };
     handleFieldChange("tickets", updated);
+  };
+
+  // Key Users helper functions
+  const addKeyUser = () => {
+    if (!localDtc) return;
+    const currentList = localDtc.keyUsersList || [];
+    handleFieldChange("keyUsersList", [
+      ...currentList,
+      { name: "", phone: "" }
+    ]);
+  };
+
+  const removeKeyUser = (idx: number) => {
+    if (!localDtc || !localDtc.keyUsersList) return;
+    handleFieldChange(
+      "keyUsersList",
+      localDtc.keyUsersList.filter((_, i) => i !== idx)
+    );
+  };
+
+  const updateKeyUser = (idx: number, key: keyof KeyUserItem, val: any) => {
+    if (!localDtc || !localDtc.keyUsersList) return;
+    const updated = [...localDtc.keyUsersList];
+    updated[idx] = {
+      ...updated[idx],
+      [key]: val
+    };
+    handleFieldChange("keyUsersList", updated);
   };
 
   const getStatusBadge = (status: DTCData["status"]) => {
@@ -620,27 +691,83 @@ export default function TransicaoPlaceholder() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="clientResponsible" className="text-xs font-bold">Responsável / Contato Principal</Label>
-                      <Input
-                        id="clientResponsible"
-                        value={localDtc.clientResponsible}
-                        onChange={(e) => handleFieldChange("clientResponsible", e.target.value)}
-                        disabled={isFormDisabled}
-                        className="border-muted/80 h-9 text-sm"
-                        placeholder="Key User responsável no cartório"
-                      />
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <Input
+                          id="clientResponsible"
+                          value={localDtc.clientResponsible}
+                          onChange={(e) => handleFieldChange("clientResponsible", e.target.value)}
+                          disabled={isFormDisabled}
+                          className="border-muted/80 h-9 text-sm"
+                          placeholder="Nome do Key User principal"
+                        />
+                        <Input
+                          id="clientResponsiblePhone"
+                          value={localDtc.clientResponsiblePhone || ""}
+                          onChange={(e) => handleFieldChange("clientResponsiblePhone", formatPhoneNumber(e.target.value))}
+                          disabled={isFormDisabled}
+                          className="border-muted/80 h-9 text-sm font-semibold"
+                          placeholder="Celular/Telefone do Responsável"
+                        />
+                      </div>
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="keyUsers" className="text-xs font-bold">Key Users (Outros contatos-chave)</Label>
-                    <Input
-                      id="keyUsers"
-                      value={localDtc.keyUsers}
-                      onChange={(e) => handleFieldChange("keyUsers", e.target.value)}
-                      disabled={isFormDisabled}
-                      className="border-muted/80 h-9 text-sm"
-                      placeholder="Ex: Maria (Financeiro), José (Escrivão)"
-                    />
+                  {/* Dynamic Key Users Section */}
+                  <div className="space-y-2 border p-4 rounded-lg bg-muted/10">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label className="text-xs font-bold">Key Users (Outros contatos-chave)</Label>
+                        <p className="text-[10px] text-muted-foreground">Adicione outros contatos importantes da serventia.</p>
+                      </div>
+                      <Button
+                        type="button"
+                        onClick={addKeyUser}
+                        disabled={isFormDisabled}
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs gap-1 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 font-bold"
+                      >
+                        <Plus className="h-3 w-3" />
+                        Adicionar Contato
+                      </Button>
+                    </div>
+
+                    {(!localDtc.keyUsersList || localDtc.keyUsersList.length === 0) ? (
+                      <p className="text-xs text-muted-foreground italic py-2 text-center bg-background/50 border border-dashed rounded-md">
+                        Nenhum contato-chave adicional. Clique em Adicionar Contato.
+                      </p>
+                    ) : (
+                      <div className="space-y-2 mt-2">
+                        {localDtc.keyUsersList.map((user, idx) => (
+                          <div key={idx} className="flex items-center gap-2">
+                            <Input
+                              value={user.name}
+                              onChange={(e) => updateKeyUser(idx, "name", e.target.value)}
+                              disabled={isFormDisabled}
+                              placeholder="Nome do contato"
+                              className="border-muted/85 h-8 text-xs flex-1"
+                            />
+                            <Input
+                              value={user.phone}
+                              onChange={(e) => updateKeyUser(idx, "phone", formatPhoneNumber(e.target.value))}
+                              disabled={isFormDisabled}
+                              placeholder="Celular / Telefone"
+                              className="border-muted/85 h-8 text-xs flex-1 font-semibold"
+                            />
+                            <Button
+                              type="button"
+                              onClick={() => removeKeyUser(idx)}
+                              disabled={isFormDisabled}
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-full shrink-0"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -649,7 +776,7 @@ export default function TransicaoPlaceholder() {
                       <Input
                         id="clientPhone"
                         value={localDtc.clientPhone}
-                        onChange={(e) => handleFieldChange("clientPhone", e.target.value)}
+                        onChange={(e) => handleFieldChange("clientPhone", formatPhoneNumber(e.target.value))}
                         disabled={isFormDisabled}
                         className="border-muted/80 h-9 text-sm"
                         placeholder="(00) 00000-0000"
@@ -988,8 +1115,13 @@ export default function TransicaoPlaceholder() {
                         <div><strong>Analista Suporte:</strong> {localDtc.analystResponsible || "__________________________"}</div>
                         <div className="col-span-2"><strong>Serventia (Cartório):</strong> {localDtc.serventia || "__________________________"}</div>
                         <div><strong>Oficial Titular:</strong> {localDtc.oficial || "__________________________"}</div>
-                        <div><strong>Responsável Cartório:</strong> {localDtc.clientResponsible || "__________________________"}</div>
-                        <div className="col-span-2"><strong>Key Users:</strong> {localDtc.keyUsers || "Nenhum informado"}</div>
+                        <div><strong>Responsável Cartório:</strong> {localDtc.clientResponsible || "__________________________"}{localDtc.clientResponsiblePhone ? ` (${localDtc.clientResponsiblePhone})` : ""}</div>
+                        <div className="col-span-2">
+                          <strong>Key Users:</strong>{" "}
+                          {localDtc.keyUsersList && localDtc.keyUsersList.length > 0
+                            ? localDtc.keyUsersList.map(u => `${u.name}${u.phone ? ` (${u.phone})` : ""}`).join(", ")
+                            : "Nenhum informado"}
+                        </div>
                         <div><strong>Telefone:</strong> {localDtc.clientPhone || "__________________________"}</div>
                         <div><strong>E-mail:</strong> {localDtc.clientEmail || "__________________________"}</div>
                       </div>
@@ -1116,8 +1248,13 @@ export default function TransicaoPlaceholder() {
               <div><strong>Analista Suporte:</strong> {localDtc.analystResponsible || "__________________________"}</div>
               <div className="col-span-2"><strong>Serventia (Cartório):</strong> {localDtc.serventia || "__________________________"}</div>
               <div><strong>Oficial Titular:</strong> {localDtc.oficial || "__________________________"}</div>
-              <div><strong>Responsável Cartório:</strong> {localDtc.clientResponsible || "__________________________"}</div>
-              <div className="col-span-2"><strong>Key Users:</strong> {localDtc.keyUsers || "Nenhum informado"}</div>
+              <div><strong>Responsável Cartório:</strong> {localDtc.clientResponsible || "__________________________"}{localDtc.clientResponsiblePhone ? ` (${localDtc.clientResponsiblePhone})` : ""}</div>
+              <div className="col-span-2">
+                <strong>Key Users:</strong>{" "}
+                {localDtc.keyUsersList && localDtc.keyUsersList.length > 0
+                  ? localDtc.keyUsersList.map(u => `${u.name}${u.phone ? ` (${u.phone})` : ""}`).join(", ")
+                  : "Nenhum informado"}
+              </div>
               <div><strong>Telefone:</strong> {localDtc.clientPhone || "__________________________"}</div>
               <div><strong>E-mail:</strong> {localDtc.clientEmail || "__________________________"}</div>
             </div>
