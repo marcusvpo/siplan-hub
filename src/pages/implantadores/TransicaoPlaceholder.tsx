@@ -81,6 +81,18 @@ interface DTCTicket {
   status: "open" | "in_progress" | "closed";
 }
 
+interface RemoteAccessItem {
+  system: "AnyDesk" | "TeamViewer" | "RustDesk" | "Outro";
+  id: string;
+  password?: string;
+}
+
+interface EmployeeItem {
+  name: string;
+  department: string;
+  role: string;
+}
+
 // Complete DTC data model
 interface DTCData {
   responsible: string;
@@ -95,15 +107,18 @@ interface DTCData {
   clientEmail: string;
   systemsInstalled: string;
   systemVersions: string;
+  systemVersionsList?: Record<string, string>;
   postgresVersion: string;
   postgresAccessData: string;
   hadConversion: boolean;
   convertedData: string;
   remoteAccessData: string;
+  remoteAccessList?: RemoteAccessItem[];
   supportCallNumber: string;
   implantationProcess: string;
   postImplantationProcess: string;
   employees: string;
+  employeesList?: EmployeeItem[];
   finalConsiderations: string;
   tickets: DTCTicket[];
   status: "draft" | "submitted" | "approved";
@@ -185,15 +200,18 @@ export default function TransicaoPlaceholder() {
       clientEmail: project.clientEmail || "",
       systemsInstalled: project.systemType || "",
       systemVersions: "",
+      systemVersionsList: {},
       postgresVersion: "",
       postgresAccessData: "",
       hadConversion: false,
       convertedData: "",
       remoteAccessData: "",
-      supportCallNumber: "",
+      remoteAccessList: [],
+      supportCallNumber: project.ticketNumber || "",
       implantationProcess: "",
       postImplantationProcess: "",
       employees: "",
+      employeesList: [],
       finalConsiderations: "",
       tickets: [],
       status: "draft"
@@ -224,9 +242,20 @@ export default function TransicaoPlaceholder() {
     { debounceMs: 1000 }
   );
 
-  // Migrate older keyUsers string to keyUsersList array on the fly
+  // Migrate older keyUsers string and remoteAccessData to lists on the fly
   useEffect(() => {
-    if (localDtc && !localDtc.keyUsersList) {
+    if (!localDtc) return;
+
+    let needsUpdate = false;
+    const updatedDtc = { ...localDtc };
+
+    // Auto-fill ticket number if empty and project has one
+    if (project?.ticketNumber && !localDtc.supportCallNumber) {
+      updatedDtc.supportCallNumber = project.ticketNumber;
+      needsUpdate = true;
+    }
+
+    if (!localDtc.keyUsersList) {
       const migratedList: KeyUserItem[] = [];
       if (localDtc.keyUsers) {
         const names = localDtc.keyUsers.split(",").map(n => n.trim()).filter(Boolean);
@@ -234,11 +263,71 @@ export default function TransicaoPlaceholder() {
           migratedList.push({ name, phone: "" });
         });
       }
-      setLocalDtc({
-        ...localDtc,
-        keyUsersList: migratedList,
-        clientResponsiblePhone: localDtc.clientResponsiblePhone || ""
-      });
+      updatedDtc.keyUsersList = migratedList;
+      updatedDtc.clientResponsiblePhone = localDtc.clientResponsiblePhone || "";
+      needsUpdate = true;
+    }
+
+    if (!localDtc.remoteAccessList) {
+      const migratedList: RemoteAccessItem[] = [];
+      if (localDtc.remoteAccessData) {
+        const lower = localDtc.remoteAccessData.toLowerCase();
+        let sys: RemoteAccessItem["system"] = "AnyDesk";
+        if (lower.includes("teamviewer") || lower.includes("tv")) {
+          sys = "TeamViewer";
+        } else if (lower.includes("rustdesk")) {
+          sys = "RustDesk";
+        }
+        migratedList.push({
+          system: sys,
+          id: localDtc.remoteAccessData,
+          password: ""
+        });
+      }
+      updatedDtc.remoteAccessList = migratedList;
+      needsUpdate = true;
+    }
+
+    if (localDtc.systemsInstalled && !localDtc.systemVersionsList) {
+      const selectedSystems = localDtc.systemsInstalled.split(",").map(s => s.trim()).filter(Boolean);
+      const versionsObj: Record<string, string> = {};
+      
+      if (selectedSystems.length === 1) {
+        versionsObj[selectedSystems[0]] = localDtc.systemVersions || "";
+      } else {
+        selectedSystems.forEach(sys => {
+          const regex = new RegExp(`${sys.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\s*\\(v?([^)]+)\\)`);
+          const match = localDtc.systemVersions?.match(regex);
+          if (match) {
+            versionsObj[sys] = match[1];
+          } else {
+            versionsObj[sys] = "";
+          }
+        });
+      }
+      updatedDtc.systemVersionsList = versionsObj;
+      needsUpdate = true;
+    }
+
+    if (localDtc.employees !== undefined && !localDtc.employeesList) {
+      const migratedList: EmployeeItem[] = [];
+      if (localDtc.employees) {
+        const items = localDtc.employees.split(",").map(i => i.trim()).filter(Boolean);
+        items.forEach(item => {
+          const parts = item.split("-").map(p => p.trim());
+          if (parts.length >= 2) {
+            migratedList.push({ name: parts[0], department: parts[1], role: parts[2] || "" });
+          } else {
+            migratedList.push({ name: item, department: "", role: "" });
+          }
+        });
+      }
+      updatedDtc.employeesList = migratedList;
+      needsUpdate = true;
+    }
+
+    if (needsUpdate) {
+      setLocalDtc(updatedDtc);
     }
   }, [localDtc, setLocalDtc]);
 
@@ -430,6 +519,113 @@ export default function TransicaoPlaceholder() {
     handleFieldChange("keyUsersList", updated);
   };
 
+  // Remote Access helper functions
+  const addRemoteAccess = () => {
+    if (!localDtc) return;
+    const currentList = localDtc.remoteAccessList || [];
+    handleFieldChange("remoteAccessList", [
+      ...currentList,
+      { system: "AnyDesk", id: "", password: "" }
+    ]);
+  };
+
+  const removeRemoteAccess = (idx: number) => {
+    if (!localDtc || !localDtc.remoteAccessList) return;
+    handleFieldChange(
+      "remoteAccessList",
+      localDtc.remoteAccessList.filter((_, i) => i !== idx)
+    );
+  };
+
+  const updateRemoteAccess = (idx: number, key: keyof RemoteAccessItem, val: any) => {
+    if (!localDtc || !localDtc.remoteAccessList) return;
+    const updated = [...localDtc.remoteAccessList];
+    updated[idx] = {
+      ...updated[idx],
+      [key]: val
+    };
+    handleFieldChange("remoteAccessList", updated);
+  };
+
+  const addEmployee = () => {
+    if (!localDtc) return;
+    const currentList = localDtc.employeesList || [];
+    handleFieldChange("employeesList", [
+      ...currentList,
+      { name: "", department: "", role: "" }
+    ]);
+  };
+
+  const removeEmployee = (idx: number) => {
+    if (!localDtc || !localDtc.employeesList) return;
+    handleFieldChange(
+      "employeesList",
+      localDtc.employeesList.filter((_, i) => i !== idx)
+    );
+  };
+
+  const updateEmployee = (idx: number, key: keyof EmployeeItem, val: any) => {
+    if (!localDtc || !localDtc.employeesList) return;
+    const updated = [...localDtc.employeesList];
+    updated[idx] = {
+      ...updated[idx],
+      [key]: val
+    };
+    
+    // Automatically rebuild the employees text string for backwards compatibility
+    const joinedStr = updated
+      .map(emp => {
+        const parts = [emp.name];
+        if (emp.department) parts.push(emp.department);
+        if (emp.role) parts.push(emp.role);
+        return parts.join(" - ");
+      })
+      .join(", ");
+    
+    setLocalDtc({
+      ...localDtc,
+      employeesList: updated,
+      employees: joinedStr
+    });
+  };
+
+  const getIpValidationMessage = (val: string) => {
+    if (!val) return null;
+    
+    // Check if it contains an IP address (IPv4)
+    const ipRegex = /\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/;
+    const ipMatch = val.match(ipRegex);
+    
+    // Check if it contains a port (e.g. :5432 or :1433)
+    const portRegex = /:([0-9]{2,5})\b/;
+    const portMatch = val.match(portRegex);
+    
+    const defaultPort = "5432";
+    let msg = "";
+    let isWarning = false;
+    
+    if (ipMatch) {
+      msg = `IP ${ipMatch[0]} detectado. `;
+      if (portMatch) {
+        const port = portMatch[1];
+        if (port === defaultPort) {
+          msg += `Porta padrão (${port}) correta.`;
+        } else {
+          msg += `Porta customizada (${port}) detectada (Padrão: ${defaultPort}).`;
+          isWarning = true;
+        }
+      } else {
+        msg += `Atenção: Porta não especificada (Padrão: ${defaultPort}).`;
+        isWarning = true;
+      }
+    } else {
+      msg = "Atenção: Nenhum endereço de IP válido detectado no formato.";
+      isWarning = true;
+    }
+    
+    return { msg, isWarning };
+  };
+
   const toggleSystemInstalled = (system: string) => {
     if (!localDtc) return;
     const current = localDtc.systemsInstalled 
@@ -440,7 +636,54 @@ export default function TransicaoPlaceholder() {
       ? current.filter(s => s !== system)
       : [...current, system];
     
-    handleFieldChange("systemsInstalled", next.join(", "));
+    const nextStr = next.join(", ");
+    
+    // Clean up version of removed system
+    const currentList = localDtc.systemVersionsList || {};
+    const updatedList = { ...currentList };
+    if (current.includes(system)) {
+      delete updatedList[system];
+    }
+    
+    const joinedVersions = next
+      .map(s => {
+        const v = updatedList[s];
+        return v ? `${s} (v${v})` : s;
+      })
+      .join(", ");
+
+    setLocalDtc({
+      ...localDtc,
+      systemsInstalled: nextStr,
+      systemVersionsList: updatedList,
+      systemVersions: joinedVersions
+    });
+  };
+
+  const handleSystemVersionChange = (sys: string, version: string) => {
+    if (!localDtc) return;
+    const currentList = localDtc.systemVersionsList || {};
+    const updatedList = {
+      ...currentList,
+      [sys]: version
+    };
+    
+    const selectedSystems = localDtc.systemsInstalled
+      ? localDtc.systemsInstalled.split(",").map(s => s.trim()).filter(Boolean)
+      : [];
+    
+    const joinedVersions = selectedSystems
+      .map(s => {
+        const v = updatedList[s];
+        return v ? `${s} (v${v})` : s;
+      })
+      .join(", ");
+
+    setLocalDtc({
+      ...localDtc,
+      systemVersionsList: updatedList,
+      systemVersions: joinedVersions
+    });
   };
 
   const handleCopyText = (text: string, label: string) => {
@@ -1100,189 +1343,351 @@ export default function TransicaoPlaceholder() {
                   <CardTitle className="text-base font-bold text-primary">Infraestrutura, Bancos & Acesso Remoto</CardTitle>
                   <CardDescription className="text-xs">Informações sobre servidores, bancos de dados, conexões de acesso e chamados.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="systemsInstalled" className="text-[11px] font-bold">Sistemas Instalados</Label>
-                      <Input
-                        id="systemsInstalled"
-                        value={localDtc.systemsInstalled}
-                        onChange={(e) => handleFieldChange("systemsInstalled", e.target.value)}
-                        disabled={isFormDisabled}
-                        className="border-muted/80 h-8 text-xs font-semibold"
-                        placeholder="Ex: Orion TN, LCW, SGA"
-                      />
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {ALL_SYSTEMS.map(sys => {
-                          const isSelected = localDtc.systemsInstalled
-                            ? localDtc.systemsInstalled.split(",").map(s => s.trim()).includes(sys)
-                            : false;
-                          return (
-                            <Badge
-                              key={sys}
-                              variant={isSelected ? "default" : "outline"}
-                              className={cn(
-                                "cursor-pointer text-[10px] px-2 py-0.5 select-none transition-all",
-                                isSelected 
-                                  ? "bg-primary text-primary-foreground hover:bg-primary/95" 
-                                  : "border-muted-foreground/30 text-muted-foreground hover:bg-muted"
-                              )}
-                              onClick={() => !isFormDisabled && toggleSystemInstalled(sys)}
+                <CardContent className="space-y-6">
+                  
+                  {/* Sub-seção 1: Controle de Chamados & Acessos Remotos */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 border-b pb-1.5">
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80">1. Controle de Chamados & Acessos Remotos</span>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="supportCallNumber" className="text-[11px] font-bold">Número do Chamado Principal no 0800</Label>
+                        <Input
+                          id="supportCallNumber"
+                          value={localDtc.supportCallNumber}
+                          onChange={(e) => handleFieldChange("supportCallNumber", e.target.value)}
+                          disabled={isFormDisabled}
+                          className="border-muted/80 h-8 text-xs font-semibold"
+                          placeholder="Ex: #58129"
+                        />
+                      </div>
+                      
+                      {/* Status & Downloads Panel */}
+                      <div className="space-y-1.5 border p-2.5 rounded-lg bg-muted/20 flex flex-col justify-between min-h-[76px] self-stretch">
+                        <div>
+                          <Label className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground block">
+                            Status & Downloads de TI
+                          </Label>
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <div className={cn(
+                              "h-2 w-2 rounded-full animate-pulse",
+                              localDtc.postgresAccessData && (localDtc.remoteAccessList?.length || 0) > 0
+                                ? "bg-emerald-500"
+                                : "bg-amber-500"
+                            )} />
+                            <span className="text-[11px] font-bold text-foreground">
+                              {localDtc.postgresAccessData && (localDtc.remoteAccessList?.length || 0) > 0
+                                ? "Estrutura Pronta para Acesso"
+                                : "Pendente: Preencha Acesso e Banco"}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <div className="flex flex-wrap gap-1 items-center mt-2 border-t pt-2">
+                          <span className="text-[9px] text-muted-foreground mr-1">Utilitários:</span>
+                          <a href="https://anydesk.com/download" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 text-[9px] font-bold text-primary hover:underline bg-background border px-1.5 py-0.5 rounded shadow-2xs">
+                            AnyDesk <ExternalLink className="h-2 w-2" />
+                          </a>
+                          <a href="https://rustdesk.com" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 text-[9px] font-bold text-primary hover:underline bg-background border px-1.5 py-0.5 rounded shadow-2xs">
+                            RustDesk <ExternalLink className="h-2 w-2" />
+                          </a>
+                          <a href="https://www.teamviewer.com" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 text-[9px] font-bold text-primary hover:underline bg-background border px-1.5 py-0.5 rounded shadow-2xs">
+                            TeamViewer <ExternalLink className="h-2 w-2" />
+                          </a>
+                          <a href="https://www.pgadmin.org/download/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 text-[9px] font-bold text-primary hover:underline bg-background border px-1.5 py-0.5 rounded shadow-2xs">
+                            pgAdmin <ExternalLink className="h-2 w-2" />
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Remote Access Connections Section */}
+                    <div className="space-y-2 border p-3 rounded-lg bg-muted/10">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label className="text-[11px] font-bold">Acessos Remotos (AnyDesk / TeamViewer)</Label>
+                          <p className="text-[9px] text-muted-foreground">Cadastre um ou mais acessos para a serventia.</p>
+                        </div>
+                        <Button
+                          type="button"
+                          onClick={addRemoteAccess}
+                          disabled={isFormDisabled}
+                          variant="outline"
+                          size="sm"
+                          className="h-6.5 text-[10px] gap-1 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 font-bold"
+                        >
+                          <Plus className="h-3 w-3" />
+                          Adicionar Acesso
+                        </Button>
+                      </div>
+
+                      {(!localDtc.remoteAccessList || localDtc.remoteAccessList.length === 0) ? (
+                        <p className="text-[11px] text-muted-foreground italic py-1.5 text-center bg-background/50 border border-dashed rounded-md">
+                          Nenhum acesso remoto cadastrado. Clique em Adicionar Acesso.
+                        </p>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1.5">
+                          {localDtc.remoteAccessList.map((access, idx) => (
+                            <div key={idx} className="flex items-center gap-1.5 bg-background p-1.5 border rounded-md shadow-2xs">
+                              {/* System Select */}
+                              <Select
+                                value={access.system}
+                                onValueChange={(val: any) => updateRemoteAccess(idx, "system", val)}
+                                disabled={isFormDisabled}
+                              >
+                                <SelectTrigger className="w-28 h-7 text-xs border-muted/80 shrink-0">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="AnyDesk" className="text-xs">AnyDesk</SelectItem>
+                                  <SelectItem value="TeamViewer" className="text-xs">TeamViewer</SelectItem>
+                                  <SelectItem value="RustDesk" className="text-xs">RustDesk</SelectItem>
+                                  <SelectItem value="Outro" className="text-xs">Outro</SelectItem>
+                                </SelectContent>
+                              </Select>
+
+                              {/* ID Input */}
+                              <Input
+                                value={access.id}
+                                onChange={(e) => updateRemoteAccess(idx, "id", e.target.value)}
+                                disabled={isFormDisabled}
+                                placeholder="ID"
+                                className="border-muted/80 h-7 text-xs flex-1"
+                              />
+
+                              {/* Password Input with inline Copy */}
+                              <div className="relative flex items-center flex-1">
+                                <Input
+                                  value={access.password || ""}
+                                  onChange={(e) => updateRemoteAccess(idx, "password", e.target.value)}
+                                  disabled={isFormDisabled}
+                                  placeholder="Senha"
+                                  className="border-muted/80 h-7 text-xs pr-7 flex-1"
+                                />
+                                {access.password && (
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleCopyText(access.password || "", "Senha")}
+                                    className="absolute right-0.5 h-5 w-5 text-muted-foreground hover:text-foreground rounded-full"
+                                    title="Copiar senha"
+                                  >
+                                    <Copy className="h-3 w-3" />
+                                  </Button>
+                                )}
+                              </div>
+
+                              {/* Remove Button */}
+                              <Button
+                                type="button"
+                                onClick={() => removeRemoteAccess(idx)}
+                                disabled={isFormDisabled}
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-full shrink-0"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Sub-seção 2: Banco de Dados PostgreSQL */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 border-b pb-1.5">
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80">2. Banco de Dados PostgreSQL</span>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="postgresVersion" className="text-[11px] font-bold">Versão do PostgreSQL</Label>
+                        <Input
+                          id="postgresVersion"
+                          value={localDtc.postgresVersion}
+                          onChange={(e) => handleFieldChange("postgresVersion", e.target.value)}
+                          disabled={isFormDisabled}
+                          className="border-muted/80 h-8 text-xs"
+                          placeholder="Ex: PostgreSQL 17"
+                        />
+                      </div>
+                      
+                      <div className="space-y-1.5">
+                        <Label htmlFor="postgresAccessData" className="text-[11px] font-bold">Dados de Acesso PostgreSQL (IP, Porta, User)</Label>
+                        <div className="relative flex items-center">
+                          <Input
+                            id="postgresAccessData"
+                            type={showPgAccess ? "text" : "password"}
+                            autoComplete="new-password"
+                            value={localDtc.postgresAccessData}
+                            onChange={(e) => handleFieldChange("postgresAccessData", e.target.value)}
+                            disabled={isFormDisabled}
+                            className="border-muted/80 h-8 text-xs pr-16"
+                            placeholder="IP, Porta, User, Senha..."
+                          />
+                          <div className="absolute right-1 flex items-center gap-0.5">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setShowPgAccess(!showPgAccess)}
+                              className="h-6 w-6 text-muted-foreground hover:text-foreground rounded-full"
+                              title={showPgAccess ? "Ocultar senha" : "Ver senha"}
                             >
-                              {sys}
-                            </Badge>
+                              {showPgAccess ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleCopyText(localDtc.postgresAccessData || "", "Acesso PostgreSQL")}
+                              className="h-6 w-6 text-muted-foreground hover:text-foreground rounded-full"
+                              title="Copiar dados"
+                            >
+                              <Copy className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                        {(() => {
+                          const validation = getIpValidationMessage(localDtc.postgresAccessData || "");
+                          if (!validation) return null;
+                          return (
+                            <span className={cn(
+                              "text-[10px] font-semibold mt-1 block",
+                              validation.isWarning ? "text-amber-500" : "text-emerald-600"
+                            )}>
+                              {validation.isWarning ? "⚠ " : "✓ "}{validation.msg}
+                            </span>
                           );
-                        })}
+                        })()}
                       </div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="systemVersions" className="text-[11px] font-bold">Versões dos Sistemas</Label>
-                      <Input
-                        id="systemVersions"
-                        value={localDtc.systemVersions}
-                        onChange={(e) => handleFieldChange("systemVersions", e.target.value)}
-                        disabled={isFormDisabled}
-                        className="border-muted/80 h-8 text-xs"
-                        placeholder="Ex: Orion v12.4.2, LCW v3.1"
-                      />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="postgresVersion" className="text-[11px] font-bold">Versão do PostgreSQL</Label>
-                      <Input
-                        id="postgresVersion"
-                        value={localDtc.postgresVersion}
-                        onChange={(e) => handleFieldChange("postgresVersion", e.target.value)}
-                        disabled={isFormDisabled}
-                        className="border-muted/80 h-8 text-xs"
-                        placeholder="Ex: PostgreSQL 15.2"
-                      />
+                  {/* Sub-seção 3: Sistemas Instalados & Versões */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 border-b pb-1.5">
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80">3. Sistemas Instalados & Versões</span>
                     </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="postgresAccessData" className="text-[11px] font-bold">Dados de Acesso PostgreSQL (IP, Porta, User)</Label>
-                      <div className="relative flex items-center">
+                    
+                    <div className="space-y-3">
+                      {/* Systems Installed (Badge pills select) */}
+                      <div className="space-y-1.5">
+                        <Label htmlFor="systemsInstalled" className="text-[11px] font-bold">Sistemas Instalados</Label>
                         <Input
-                          id="postgresAccessData"
-                          type={showPgAccess ? "text" : "password"}
-                          autoComplete="new-password"
-                          value={localDtc.postgresAccessData}
-                          onChange={(e) => handleFieldChange("postgresAccessData", e.target.value)}
+                          id="systemsInstalled"
+                          value={localDtc.systemsInstalled}
+                          onChange={(e) => handleFieldChange("systemsInstalled", e.target.value)}
                           disabled={isFormDisabled}
-                          className="border-muted/80 h-8 text-xs pr-16"
-                          placeholder="IP, Porta, User, Senha..."
+                          className="border-muted/80 h-8 text-xs font-semibold"
+                          placeholder="Ex: Orion TN, LCW, SGA"
                         />
-                        <div className="absolute right-1 flex items-center gap-0.5">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setShowPgAccess(!showPgAccess)}
-                            className="h-6 w-6 text-muted-foreground hover:text-foreground rounded-full"
-                            title={showPgAccess ? "Ocultar senha" : "Ver senha"}
-                          >
-                            {showPgAccess ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleCopyText(localDtc.postgresAccessData || "", "Acesso PostgreSQL")}
-                            className="h-6 w-6 text-muted-foreground hover:text-foreground rounded-full"
-                            title="Copiar dados"
-                          >
-                            <Copy className="h-3.5 w-3.5" />
-                          </Button>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {ALL_SYSTEMS.map(sys => {
+                            const isSelected = localDtc.systemsInstalled
+                              ? localDtc.systemsInstalled.split(",").map(s => s.trim()).includes(sys)
+                              : false;
+                            return (
+                              <Badge
+                                key={sys}
+                                variant={isSelected ? "default" : "outline"}
+                                className={cn(
+                                  "cursor-pointer text-[10px] px-2 py-0.5 select-none transition-all",
+                                  isSelected 
+                                    ? "bg-primary text-primary-foreground hover:bg-primary/95" 
+                                    : "border-muted-foreground/30 text-muted-foreground hover:bg-muted"
+                                )}
+                                onClick={() => !isFormDisabled && toggleSystemInstalled(sys)}
+                              >
+                                {sys}
+                              </Badge>
+                            );
+                          })}
                         </div>
                       </div>
+
+                      {/* Dynamic System Versions Grid */}
+                      {(() => {
+                        const selectedSystemsList = localDtc.systemsInstalled
+                          ? localDtc.systemsInstalled.split(",").map(s => s.trim()).filter(Boolean)
+                          : [];
+                        if (selectedSystemsList.length === 0) return null;
+                        return (
+                          <div className="border p-3 rounded-lg bg-muted/5 space-y-2 mt-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                            <div className="border-b pb-1">
+                              <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">Versões dos Sistemas Selecionados</span>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                              {selectedSystemsList.map((sys) => {
+                                const currentVersion = localDtc.systemVersionsList?.[sys] || "";
+                                return (
+                                  <div key={sys} className="space-y-1">
+                                    <Label htmlFor={`version-${sys}`} className="text-[10px] font-bold text-muted-foreground">
+                                      Versão do {sys}
+                                    </Label>
+                                    <Input
+                                      id={`version-${sys}`}
+                                      value={currentVersion}
+                                      onChange={(e) => handleSystemVersionChange(sys, e.target.value)}
+                                      disabled={isFormDisabled}
+                                      className="border-muted/80 h-7.5 text-xs bg-background"
+                                      placeholder="Ex: 05.92.01"
+                                    />
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
 
-                  <div className="border p-3 rounded-lg bg-muted/20 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label className="text-[11px] font-bold">Houve Conversão de Dados?</Label>
-                        <p className="text-[10px] text-muted-foreground">Marque se os dados de sistemas anteriores foram convertidos.</p>
-                      </div>
-                      <Select
-                        value={localDtc.hadConversion ? "yes" : "no"}
-                        onValueChange={(val) => handleFieldChange("hadConversion", val === "yes")}
-                        disabled={isFormDisabled}
-                      >
-                        <SelectTrigger className="w-24 h-7 text-xs border-muted/80">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="yes" className="text-xs">Sim</SelectItem>
-                          <SelectItem value="no" className="text-xs">Não</SelectItem>
-                        </SelectContent>
-                      </Select>
+                  {/* Sub-seção 4: Conversão de Dados */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 border-b pb-1.5">
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80">4. Conversão de Dados</span>
                     </div>
-
-                    {localDtc.hadConversion && (
-                      <div className="space-y-1 animate-in fade-in slide-in-from-top-1 duration-200">
-                        <Label htmlFor="convertedData" className="text-[11px] font-bold">Dados Convertidos (Tabelas / Escopos)</Label>
-                        <Textarea
-                          id="convertedData"
-                          value={localDtc.convertedData}
-                          onChange={(e) => handleFieldChange("convertedData", e.target.value)}
-                          disabled={isFormDisabled}
-                          className="border-muted/80 text-xs min-h-[60px] resize-y"
-                          placeholder="Especifique o histórico migrado (ex: Livros de Notas de 2010 a 2025, Procurações...)"
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="remoteAccessData" className="text-[11px] font-bold">Dados de Acesso Remoto (AnyDesk / RustDesk / TeamViewer)</Label>
-                      <div className="relative flex items-center">
-                        <Input
-                          id="remoteAccessData"
-                          type={showRemoteAccess ? "text" : "password"}
-                          autoComplete="new-password"
-                          value={localDtc.remoteAccessData}
-                          onChange={(e) => handleFieldChange("remoteAccessData", e.target.value)}
-                          disabled={isFormDisabled}
-                          className="border-muted/80 h-8 text-xs pr-16"
-                          placeholder="AnyDesk ID e Senha..."
-                        />
-                        <div className="absolute right-1 flex items-center gap-0.5">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setShowRemoteAccess(!showRemoteAccess)}
-                            className="h-6 w-6 text-muted-foreground hover:text-foreground rounded-full"
-                            title={showRemoteAccess ? "Ocultar senha" : "Ver senha"}
-                          >
-                            {showRemoteAccess ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleCopyText(localDtc.remoteAccessData || "", "Acesso Remoto")}
-                            className="h-6 w-6 text-muted-foreground hover:text-foreground rounded-full"
-                            title="Copiar dados"
-                          >
-                            <Copy className="h-3.5 w-3.5" />
-                          </Button>
+                    
+                    <div className="border p-3 rounded-lg bg-muted/20 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label className="text-[11px] font-bold">Houve Conversão de Dados?</Label>
+                          <p className="text-[10px] text-muted-foreground">Marque se os dados de sistemas anteriores foram convertidos.</p>
                         </div>
+                        <Select
+                          value={localDtc.hadConversion ? "yes" : "no"}
+                          onValueChange={(val) => handleFieldChange("hadConversion", val === "yes")}
+                          disabled={isFormDisabled}
+                        >
+                          <SelectTrigger className="w-24 h-7 text-xs border-muted/80">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="yes" className="text-xs">Sim</SelectItem>
+                            <SelectItem value="no" className="text-xs">Não</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="supportCallNumber" className="text-[11px] font-bold">Número do Chamado Principal no 0800</Label>
-                      <Input
-                        id="supportCallNumber"
-                        value={localDtc.supportCallNumber}
-                        onChange={(e) => handleFieldChange("supportCallNumber", e.target.value)}
-                        disabled={isFormDisabled}
-                        className="border-muted/80 h-8 text-xs"
-                        placeholder="Ex: #58129"
-                      />
+
+                      {localDtc.hadConversion && (
+                        <div className="space-y-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                          <Label htmlFor="convertedData" className="text-[11px] font-bold">Dados Convertidos (Tabelas / Escopos)</Label>
+                          <Textarea
+                            id="convertedData"
+                            value={localDtc.convertedData}
+                            onChange={(e) => handleFieldChange("convertedData", e.target.value)}
+                            disabled={isFormDisabled}
+                            className="border-muted/80 text-xs min-h-[60px] resize-y"
+                            placeholder="Especifique o histórico migrado (ex: Livros de Notas de 2010 a 2025, Procurações...)"
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -1308,6 +1713,18 @@ export default function TransicaoPlaceholder() {
                       className="border-muted/80 text-xs"
                       placeholder="Relate como ocorreu o processo de implantação, infraestrutura instalada, treinamento dos usuários e aceitação inicial..."
                     />
+                    {(() => {
+                      const count = (localDtc.implantationProcess || "").length;
+                      const isValid = count >= 50;
+                      return (
+                        <div className="flex justify-between items-center text-[10px] mt-0.5">
+                          <span className={cn("font-semibold", isValid ? "text-emerald-600" : "text-amber-500")}>
+                            {isValid ? "✓ Relato completo" : "⚠ Relato muito curto (mínimo 50 caracteres)"}
+                          </span>
+                          <span className="text-muted-foreground">{count} caracteres</span>
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   <div className="space-y-2">
@@ -1321,33 +1738,115 @@ export default function TransicaoPlaceholder() {
                       className="border-muted/80 text-xs"
                       placeholder="Informe regras operacionais acordadas, particularidades do fluxo de trabalho do cartório que o suporte deve conhecer..."
                     />
+                    {(() => {
+                      const count = (localDtc.postImplantationProcess || "").length;
+                      const isValid = count >= 50;
+                      return (
+                        <div className="flex justify-between items-center text-[10px] mt-0.5">
+                          <span className={cn("font-semibold", isValid ? "text-emerald-600" : "text-amber-500")}>
+                            {isValid ? "✓ Relato completo" : "⚠ Relato muito curto (mínimo 50 caracteres)"}
+                          </span>
+                          <span className="text-muted-foreground">{count} caracteres</span>
+                        </div>
+                      );
+                    })()}
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="employees" className="text-xs font-bold">Funcionários da Serventia (Principais colaboradores)</Label>
-                      <Textarea
-                        id="employees"
-                        value={localDtc.employees}
-                        onChange={(e) => handleFieldChange("employees", e.target.value)}
+                  {/* Dynamic Employees List Table */}
+                  <div className="space-y-2 border p-3 rounded-lg bg-muted/10">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label className="text-[11px] font-bold">Funcionários da Serventia (Principais colaboradores)</Label>
+                        <p className="text-[9px] text-muted-foreground">Cadastre os principais contatos operacionais por setor.</p>
+                      </div>
+                      <Button
+                        type="button"
+                        onClick={addEmployee}
                         disabled={isFormDisabled}
-                        rows={4}
-                        className="border-muted/80 text-xs"
-                        placeholder="Nomes dos colaboradores e suas respectivas funções na serventia (Ex: João - Notas, Maria - R.C.)"
-                      />
+                        variant="outline"
+                        size="sm"
+                        className="h-6.5 text-[10px] gap-1 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 font-bold"
+                      >
+                        <Plus className="h-3 w-3" />
+                        Adicionar Funcionário
+                      </Button>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="finalConsiderations" className="text-xs font-bold">Considerações Finais</Label>
-                      <Textarea
-                        id="finalConsiderations"
-                        value={localDtc.finalConsiderations}
-                        onChange={(e) => handleFieldChange("finalConsiderations", e.target.value)}
-                        disabled={isFormDisabled}
-                        rows={4}
-                        className="border-muted/80 text-xs"
-                        placeholder="Considerações adicionais ou notas de encerramento do projeto de transição..."
-                      />
-                    </div>
+
+                    {(!localDtc.employeesList || localDtc.employeesList.length === 0) ? (
+                      <p className="text-[11px] text-muted-foreground italic py-1.5 text-center bg-background/50 border border-dashed rounded-md">
+                        Nenhum colaborador cadastrado. Clique em Adicionar Funcionário.
+                      </p>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1.5">
+                        {localDtc.employeesList.map((emp, idx) => (
+                          <div key={idx} className="flex items-center gap-1.5 bg-background p-1.5 border rounded-md shadow-2xs">
+                            {/* Name Input */}
+                            <Input
+                              value={emp.name}
+                              onChange={(e) => updateEmployee(idx, "name", e.target.value)}
+                              disabled={isFormDisabled}
+                              placeholder="Nome do Colaborador"
+                              className="border-muted/80 h-7 text-xs flex-1"
+                            />
+
+                            {/* Department Select dropdown */}
+                            <Select
+                              value={emp.department}
+                              onValueChange={(val) => updateEmployee(idx, "department", val)}
+                              disabled={isFormDisabled}
+                            >
+                              <SelectTrigger className="w-24 h-7 text-[10px] border-muted/80 shrink-0">
+                                <SelectValue placeholder="Setor" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Notas" className="text-xs">Notas</SelectItem>
+                                <SelectItem value="Protesto" className="text-xs">Protesto</SelectItem>
+                                <SelectItem value="Registro Civil" className="text-xs">R. Civil</SelectItem>
+                                <SelectItem value="Registro de Imóveis" className="text-xs">R. Imóveis</SelectItem>
+                                <SelectItem value="RTD / PJ" className="text-xs">RTD/PJ</SelectItem>
+                                <SelectItem value="Administrativo" className="text-xs">Adm</SelectItem>
+                                <SelectItem value="TI / Suporte" className="text-xs">TI</SelectItem>
+                                <SelectItem value="Outro" className="text-xs">Outro</SelectItem>
+                              </SelectContent>
+                            </Select>
+
+                            {/* Role / Office Input */}
+                            <Input
+                              value={emp.role}
+                              onChange={(e) => updateEmployee(idx, "role", e.target.value)}
+                              disabled={isFormDisabled}
+                              placeholder="Função (Ex: Escrevente)"
+                              className="border-muted/80 h-7 text-xs flex-1"
+                            />
+
+                            {/* Remove Button */}
+                            <Button
+                              type="button"
+                              onClick={() => removeEmployee(idx)}
+                              disabled={isFormDisabled}
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-full shrink-0"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="finalConsiderations" className="text-xs font-bold">Considerações Finais</Label>
+                    <Textarea
+                      id="finalConsiderations"
+                      value={localDtc.finalConsiderations}
+                      onChange={(e) => handleFieldChange("finalConsiderations", e.target.value)}
+                      disabled={isFormDisabled}
+                      rows={3}
+                      className="border-muted/80 text-xs"
+                      placeholder="Considerações adicionais ou notas de encerramento do projeto de transição..."
+                    />
                   </div>
                 </CardContent>
               </Card>
@@ -1413,16 +1912,21 @@ export default function TransicaoPlaceholder() {
                               <td className="p-2.5">
                                 <Select
                                   value={t.status}
-                                  onValueChange={(val) => updateTicket(idx, "status", val)}
+                                  onValueChange={(val: any) => updateTicket(idx, "status", val)}
                                   disabled={isFormDisabled}
                                 >
-                                  <SelectTrigger className="border-muted h-8 text-xs">
+                                  <SelectTrigger className={cn(
+                                    "border-muted h-8 text-xs font-semibold",
+                                    t.status === "open" && "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/50",
+                                    t.status === "in_progress" && "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/50",
+                                    t.status === "closed" && "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50"
+                                  )}>
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="open">Aberto (Não iniciado)</SelectItem>
-                                    <SelectItem value="in_progress">Em Tratativa</SelectItem>
-                                    <SelectItem value="closed">Concluído / Resolvido</SelectItem>
+                                    <SelectItem value="open" className="text-xs">Aberto (Não iniciado)</SelectItem>
+                                    <SelectItem value="in_progress" className="text-xs">Em Tratativa</SelectItem>
+                                    <SelectItem value="closed" className="text-xs">Concluído / Resolvido</SelectItem>
                                   </SelectContent>
                                 </Select>
                               </td>
@@ -1503,7 +2007,12 @@ export default function TransicaoPlaceholder() {
                           <div><strong>Acesso PostgreSQL:</strong> {localDtc.postgresAccessData || "__________________________"}</div>
                         </div>
                         <div className="mt-2">
-                          <strong>Dados de Acesso Remoto:</strong> {localDtc.remoteAccessData || "__________________________"}
+                          <strong>Dados de Acesso Remoto:</strong>{" "}
+                          {!localDtc.remoteAccessList || localDtc.remoteAccessList.length === 0 ? (
+                            localDtc.remoteAccessData || "__________________________"
+                          ) : (
+                            localDtc.remoteAccessList.map(a => `${a.system} (ID: ${a.id}${a.password ? `, Senha: ${a.password}` : ""})`).join(" | ")
+                          )}
                         </div>
                         <div className="mt-2">
                           <strong>Houve Conversão de Dados:</strong> {localDtc.hadConversion ? "Sim" : "Não"}
@@ -1534,7 +2043,11 @@ export default function TransicaoPlaceholder() {
                         <div>
                           <strong className="block mb-1 text-sm uppercase">Funcionários da Serventia:</strong>
                           <div className="whitespace-pre-wrap min-h-12 pl-2 border-l-2 border-gray-300 italic">
-                            {localDtc.employees || "(Nenhum colaborador listado)"}
+                            {!localDtc.employeesList || localDtc.employeesList.length === 0 ? (
+                              localDtc.employees || "(Nenhum colaborador listado)"
+                            ) : (
+                              localDtc.employeesList.map(e => `${e.name}${e.department ? ` (${e.department}${e.role ? ` - ${e.role}` : ""})` : ""}`).join(", ")
+                            )}
                           </div>
                         </div>
 
@@ -1633,10 +2146,15 @@ export default function TransicaoPlaceholder() {
                 <div><strong>Sistemas Instalados:</strong> {localDtc.systemsInstalled || "__________________________"}</div>
                 <div><strong>Versões dos Sistemas:</strong> {localDtc.systemVersions || "__________________________"}</div>
                 <div><strong>Versão PostgreSQL:</strong> {localDtc.postgresVersion || "__________________________"}</div>
-                <div><strong>Acesso PostgreSQL:</strong> {localDtc.postgresAccessData || "__________________________"}</div>
+                <div className="col-span-2"><strong>Acesso PostgreSQL:</strong> {localDtc.postgresAccessData || "__________________________"}</div>
               </div>
               <div>
-                <strong>Dados de Acesso Remoto:</strong> {localDtc.remoteAccessData || "__________________________"}
+                <strong>Dados de Acesso Remoto:</strong>{" "}
+                {!localDtc.remoteAccessList || localDtc.remoteAccessList.length === 0 ? (
+                  localDtc.remoteAccessData || "__________________________"
+                ) : (
+                  localDtc.remoteAccessList.map(a => `${a.system} (ID: ${a.id}${a.password ? `, Senha: ${a.password}` : ""})`).join(" | ")
+                )}
               </div>
               <div>
                 <strong>Houve Conversão de Dados:</strong> {localDtc.hadConversion ? "Sim" : "Não"}
@@ -1667,7 +2185,11 @@ export default function TransicaoPlaceholder() {
               <div>
                 <strong className="block mb-1 text-sm uppercase">Funcionários da Serventia:</strong>
                 <div className="whitespace-pre-wrap min-h-16 pl-2 border-l-2 border-gray-400 italic">
-                  {localDtc.employees || "(Nenhum colaborador listado)"}
+                  {!localDtc.employeesList || localDtc.employeesList.length === 0 ? (
+                    localDtc.employees || "(Nenhum colaborador listado)"
+                  ) : (
+                    localDtc.employeesList.map(e => `${e.name}${e.department ? ` (${e.department}${e.role ? ` - ${e.role}` : ""})` : ""}`).join(", ")
+                  )}
                 </div>
               </div>
 
