@@ -88,28 +88,28 @@ export function GlobalMetrics({ projects }: GlobalMetricsProps) {
   const bottleneck = stageStats[0];
 
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       {/* 1. TEMPO MÉDIO TOTAL */}
       <Dialog>
         <DialogTrigger asChild>
-          <Card className="relative overflow-hidden group hover:scale-[1.02] transition-all duration-300 border-primary/10 hover:border-primary/30 hover:shadow-xl bg-card/50 backdrop-blur-sm cursor-pointer">
-            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:scale-150 transition-transform duration-500">
-              <Clock className="h-12 w-12 text-primary" />
+          <Card className="relative overflow-hidden group hover:scale-[1.01] transition-all duration-300 border-border hover:border-primary/30 hover:shadow-md bg-card/50 backdrop-blur-sm cursor-pointer">
+            <div className="absolute top-0 right-0 p-2 opacity-5 group-hover:scale-125 transition-transform duration-500">
+              <Clock className="h-10 w-10 text-primary" />
             </div>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3.5 pb-2">
+              <CardTitle className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/85">
                 Tempo Médio Total
               </CardTitle>
-              <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary group-hover:text-primary-foreground transition-colors shadow-[0_0_15px_-5px_rgba(var(--primary),0.4)]">
-                <Clock className="h-4 w-4" />
+              <div className="p-1.5 bg-primary/10 rounded-md group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                <Clock className="h-3.5 w-3.5" />
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-black tracking-tight mb-1">{averageTime} dias</div>
-              <p className="text-[10px] font-bold text-muted-foreground/60 uppercase">
+            <CardContent className="p-3.5 pt-0">
+              <div className="text-2xl font-black tracking-tight mb-0.5">{averageTime} dias</div>
+              <p className="text-[9px] font-bold text-muted-foreground/60 uppercase">
                 Média de projetos concluídos
               </p>
-              <div className="mt-4 h-1 w-full bg-muted rounded-full overflow-hidden">
+              <div className="mt-2.5 h-1 w-full bg-muted rounded-full overflow-hidden">
                 <div className="h-full bg-primary w-[70%] rounded-full animate-in slide-in-from-left duration-1000" />
               </div>
             </CardContent>
@@ -153,24 +153,24 @@ export function GlobalMetrics({ projects }: GlobalMetricsProps) {
       {/* 2. TAXA DE CONCLUSÃO */}
       <Dialog>
         <DialogTrigger asChild>
-          <Card className="relative overflow-hidden group hover:scale-[1.02] transition-all duration-300 border-emerald-500/10 hover:border-emerald-500/30 hover:shadow-xl bg-card/50 backdrop-blur-sm cursor-pointer">
-            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:scale-150 transition-transform duration-500">
-              <CheckCircle2 className="h-12 w-12 text-emerald-500" />
+          <Card className="relative overflow-hidden group hover:scale-[1.01] transition-all duration-300 border-border hover:border-emerald-500/30 hover:shadow-md bg-card/50 backdrop-blur-sm cursor-pointer">
+            <div className="absolute top-0 right-0 p-2 opacity-5 group-hover:scale-125 transition-transform duration-500">
+              <CheckCircle2 className="h-10 w-10 text-emerald-500" />
             </div>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3.5 pb-2">
+              <CardTitle className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/85">
                 Taxa de Conclusão
               </CardTitle>
-              <div className="p-2 bg-emerald-500/10 text-emerald-600 rounded-lg group-hover:bg-emerald-500 group-hover:text-white transition-colors shadow-[0_0_15px_-5px_rgba(16,185,129,0.4)]">
-                <CheckCircle2 className="h-4 w-4" />
+              <div className="p-1.5 bg-emerald-500/10 text-emerald-600 rounded-md group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                <CheckCircle2 className="h-3.5 w-3.5" />
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-black tracking-tight text-emerald-600 mb-1">{completionRate}%</div>
-              <p className="text-[10px] font-bold text-muted-foreground/60 uppercase">
-                {completedProjects} de {totalProjects} projetos entregues
+            <CardContent className="p-3.5 pt-0">
+              <div className="text-2xl font-black tracking-tight text-emerald-600 mb-0.5">{completionRate}%</div>
+              <p className="text-[9px] font-bold text-muted-foreground/60 uppercase">
+                {completedProjects} de {totalProjects} entregues
               </p>
-              <div className="mt-4 h-1 w-full bg-muted rounded-full overflow-hidden">
+              <div className="mt-2.5 h-1 w-full bg-muted rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-emerald-500 rounded-full animate-in slide-in-from-left duration-1000" 
                   style={{ width: `${completionRate}%` }}
@@ -227,32 +227,31 @@ export function GlobalMetrics({ projects }: GlobalMetricsProps) {
       {/* 3. FILA DE PRODUÇÃO */}
       <Dialog>
         <DialogTrigger asChild>
-          <Card className="relative overflow-hidden group hover:scale-[1.02] transition-all duration-300 border-blue-500/10 hover:border-blue-500/30 hover:shadow-xl bg-card/50 backdrop-blur-sm cursor-pointer">
-            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:scale-150 transition-transform duration-500">
-              <TrendingUp className="h-12 w-12 text-blue-500" />
+          <Card className="relative overflow-hidden group hover:scale-[1.01] transition-all duration-300 border-border hover:border-blue-500/30 hover:shadow-md bg-card/50 backdrop-blur-sm cursor-pointer">
+            <div className="absolute top-0 right-0 p-2 opacity-5 group-hover:scale-125 transition-transform duration-500">
+              <TrendingUp className="h-10 w-10 text-blue-500" />
             </div>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3.5 pb-2">
+              <CardTitle className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/85">
                 Fila de Produção
               </CardTitle>
-              <div className="p-2 bg-blue-500/10 text-blue-600 rounded-lg group-hover:bg-blue-500 group-hover:text-white transition-colors shadow-[0_0_15px_-5px_rgba(59,130,246,0.4)]">
-                <TrendingUp className="h-4 w-4" />
+              <div className="p-1.5 bg-blue-500/10 text-blue-600 rounded-md group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                <TrendingUp className="h-3.5 w-3.5" />
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-black tracking-tight text-blue-600 mb-1">
+            <CardContent className="p-3.5 pt-0">
+              <div className="text-2xl font-black tracking-tight text-blue-600 mb-0.5">
                 {inProgressProjects.length}
               </div>
-              <p className="text-[10px] font-bold text-muted-foreground/60 uppercase">
-                {blockedProjects.length}{" "}
-                bloqueados aguardando
+              <p className="text-[9px] font-bold text-muted-foreground/60 uppercase">
+                {blockedProjects.length} bloqueados aguardando
               </p>
-              <div className="mt-4 flex gap-1">
+              <div className="mt-2.5 flex gap-1">
                 {Array.from({ length: 12 }).map((_, i) => (
                   <div 
                     key={i} 
                     className={cn(
-                       "h-1.5 flex-1 rounded-full",
+                       "h-1 flex-1 rounded-full",
                        i < 8 ? "bg-blue-500" : "bg-muted"
                     )} 
                   />
@@ -302,30 +301,30 @@ export function GlobalMetrics({ projects }: GlobalMetricsProps) {
       {/* 4. MAIOR GARGALO */}
       <Dialog>
         <DialogTrigger asChild>
-          <Card className="relative overflow-hidden group hover:scale-[1.02] transition-all duration-300 border-destructive/10 hover:border-destructive/30 hover:shadow-xl bg-card/50 backdrop-blur-sm cursor-pointer">
-            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:scale-150 transition-transform duration-500">
-              <AlertTriangle className="h-12 w-12 text-destructive" />
+          <Card className="relative overflow-hidden group hover:scale-[1.01] transition-all duration-300 border-border hover:border-destructive/30 hover:shadow-md bg-card/50 backdrop-blur-sm cursor-pointer">
+            <div className="absolute top-0 right-0 p-2 opacity-5 group-hover:scale-125 transition-transform duration-500">
+              <AlertTriangle className="h-10 w-10 text-destructive" />
             </div>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3.5 pb-2">
+              <CardTitle className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/85">
                 Maior Gargalo
               </CardTitle>
-              <div className="p-2 bg-destructive/10 text-destructive rounded-lg group-hover:bg-destructive group-hover:text-white transition-colors shadow-[0_0_15px_-5px_rgba(239,68,68,0.4)]">
-                <AlertTriangle className="h-4 w-4" />
+              <div className="p-1.5 bg-destructive/10 text-destructive rounded-md group-hover:bg-destructive group-hover:text-white transition-colors">
+                <AlertTriangle className="h-3.5 w-3.5" />
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-black tracking-tight text-destructive mb-1">
+            <CardContent className="p-3.5 pt-0">
+              <div className="text-2xl font-black tracking-tight text-destructive mb-0.5">
                 {bottleneck.label}
               </div>
-              <p className="text-[10px] font-bold text-muted-foreground/60 uppercase">
+              <p className="text-[9px] font-bold text-muted-foreground/60 uppercase">
                 Retenção média de {bottleneck.avg} dias
               </p>
-              <div className="mt-4 flex items-center gap-2">
-                <div className="flex-1 h-3 bg-destructive/10 rounded-full border border-destructive/20 relative overflow-hidden">
+              <div className="mt-2.5 flex items-center gap-2">
+                <div className="flex-1 h-2 bg-destructive/10 rounded-full border border-destructive/20 relative overflow-hidden">
                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] animate-[shimmer_2s_infinite]" />
                 </div>
-                <span className="text-[10px] font-black text-destructive italic">CRÍTICO</span>
+                <span className="text-[9px] font-black text-destructive italic">CRÍTICO</span>
               </div>
             </CardContent>
           </Card>

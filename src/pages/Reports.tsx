@@ -45,22 +45,22 @@ export default function Reports() {
   });
 
   return (
-    <div className="min-h-[calc(100vh-80px)] space-y-5 animate-in fade-in zoom-in-95 duration-700 pb-10">
+    <div className="min-h-[calc(100vh-80px)] space-y-3.5 animate-in fade-in zoom-in-95 duration-700 pb-6">
       <Tabs
         defaultValue="overview"
-        className="space-y-5"
+        className="space-y-4"
         onValueChange={setActiveTab}
       >
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4 border-b border-border">
-          <div className="space-y-1">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 pb-3 border-b border-border">
+          <div className="space-y-0.5">
             <div className="flex items-center gap-1.5 mb-0.5">
-              <div className="h-4 w-0.75 bg-primary rounded-full" />
-              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-primary/70">Intelligence Engine</span>
+              <div className="h-3.5 w-0.75 bg-primary rounded-full" />
+              <span className="text-[8px] font-black uppercase tracking-[0.2em] text-primary/70">Intelligence Engine</span>
             </div>
-            <h2 className="text-xl md:text-2xl font-black tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+            <h2 className="text-lg md:text-xl font-black tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
               Relatórios & Análises
             </h2>
-            <p className="text-xs text-muted-foreground font-medium max-w-md">
+            <p className="text-[10px] text-muted-foreground font-medium max-w-md">
               Métricas de performance, tendências de saúde e distribuição de carga em tempo real.
             </p>
           </div>
@@ -68,14 +68,14 @@ export default function Reports() {
           <TabsList className="bg-muted/50 backdrop-blur-md p-0.5 border border-border rounded-lg shadow-sm self-start md:self-center">
             <TabsTrigger 
               value="overview" 
-              className="gap-1.5 px-4 py-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all rounded-md text-[11px] font-bold uppercase tracking-wider"
+              className="gap-1.5 px-3 py-1 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all rounded-md text-[10px] font-bold uppercase tracking-wider"
             >
               <LayoutDashboard className="h-3 w-3" />
               Visão Geral
             </TabsTrigger>
             <TabsTrigger 
               value="individual" 
-              className="gap-1.5 px-4 py-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all rounded-md text-[11px] font-bold uppercase tracking-wider"
+              className="gap-1.5 px-3 py-1 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all rounded-md text-[10px] font-bold uppercase tracking-wider"
             >
               <Search className="h-3 w-3" />
               Análise Individual
@@ -83,8 +83,8 @@ export default function Reports() {
           </TabsList>
         </div>
 
-        <TabsContent value="overview" className="space-y-6 m-0 animate-in fade-in slide-in-from-left-4 duration-500">
-          <div className="bg-card/40 backdrop-blur-sm p-2 rounded-xl border border-border shadow-sm transition-all hover:bg-card/50">
+        <TabsContent value="overview" className="space-y-4 m-0 animate-in fade-in slide-in-from-left-4 duration-500">
+          <div className="bg-card/40 backdrop-blur-sm p-1.5 rounded-lg border border-border shadow-sm transition-all hover:bg-card/50">
             <ReportsFilters
               onSystemChange={setSystemFilter}
               onDateChange={setDateFilter}
@@ -95,13 +95,13 @@ export default function Reports() {
           <GlobalMetrics projects={filteredProjects} />
 
           {/* Status and Health Distribution Cards */}
-          <div className="grid gap-8 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-3">
             <StatusDistribution projects={filteredProjects} />
             <HealthDistribution projects={filteredProjects} />
             <AdherenceGapCard projects={filteredProjects} />
           </div>
 
-          <div className="grid gap-8 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2">
             <div className="transition-all hover:scale-[1.01]">
               <TimePerStageChart projects={filteredProjects} />
             </div>
