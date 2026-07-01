@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -411,6 +412,13 @@ export default function TransicaoPlaceholder() {
     handleFieldChange("keyUsersList", updated);
   };
 
+  const handleOpenDirectChat = (phone: string) => {
+    if (!phone) return;
+    const cleanPhone = phone.replace(/\D/g, "");
+    const formattedPhone = cleanPhone.length <= 11 ? `55${cleanPhone}` : cleanPhone;
+    window.open(`https://wa.me/${formattedPhone}`, "_blank");
+  };
+
   // WhatsApp suite helper functions
   const handleExportVcf = () => {
     if (!localDtc) return;
@@ -794,195 +802,254 @@ export default function TransicaoPlaceholder() {
                   <CardTitle className="text-base font-bold text-primary">Identificação do Cartório & Responsáveis</CardTitle>
                   <CardDescription className="text-xs">Dados de contato da serventia e equipe técnica envolvida na transição.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2 flex flex-col justify-end">
-                      <Label htmlFor="responsible" className="text-xs font-bold mb-1">Implantador Responsável (DTC)</Label>
-                      <AutocompleteInput
-                        value={localDtc.responsible}
-                        onChange={(val) => handleFieldChange("responsible", val)}
-                        disabled={isFormDisabled}
-                        placeholder="Selecione o implantador..."
-                        className="border-muted/80 h-9 text-sm"
-                      />
+                <CardContent className="space-y-6">
+                  {/* Sub-seção 1: Dados do Cartório */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 border-b pb-1.5">
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80">1. Dados do Cartório</span>
                     </div>
-                    <div className="space-y-2 flex flex-col justify-end">
-                      <Label htmlFor="analystResponsible" className="text-xs font-bold mb-1">Responsável pelo pós implantação</Label>
-                      <AutocompleteInput
-                        value={localDtc.analystResponsible}
-                        onChange={(val) => handleFieldChange("analystResponsible", val)}
-                        disabled={isFormDisabled}
-                        placeholder="Selecione o analista..."
-                        className="border-muted/80 h-9 text-sm"
-                      />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label htmlFor="serventia" className="text-[11px] font-bold">Serventia (Cartório)</Label>
+                        <Input
+                          id="serventia"
+                          value={localDtc.serventia}
+                          onChange={(e) => handleFieldChange("serventia", e.target.value)}
+                          disabled={isFormDisabled}
+                          className="border-muted/80 h-8 text-xs font-semibold"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="oficial" className="text-[11px] font-bold">Oficial do Cartório</Label>
+                        <Input
+                          id="oficial"
+                          value={localDtc.oficial}
+                          onChange={(e) => handleFieldChange("oficial", e.target.value)}
+                          disabled={isFormDisabled}
+                          className="border-muted/80 h-8 text-xs"
+                          placeholder="Nome do Oficial / Titular"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label htmlFor="clientPhone" className="text-[11px] font-bold">Telefone Serventia</Label>
+                        <div className="relative flex items-center">
+                          <Input
+                            id="clientPhone"
+                            value={localDtc.clientPhone}
+                            onChange={(e) => handleFieldChange("clientPhone", formatPhoneNumber(e.target.value))}
+                            disabled={isFormDisabled}
+                            className="border-muted/80 h-8 text-xs pr-8"
+                            placeholder="(00) 00000-0000"
+                          />
+                          {localDtc.clientPhone && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleOpenDirectChat(localDtc.clientPhone)}
+                              className="absolute right-1 h-6 w-6 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10 rounded-full"
+                              title="Abrir conversa no WhatsApp"
+                            >
+                              <MessageSquare className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="clientEmail" className="text-[11px] font-bold">E-mail Serventia</Label>
+                        <Input
+                          id="clientEmail"
+                          type="email"
+                          value={localDtc.clientEmail}
+                          onChange={(e) => handleFieldChange("clientEmail", e.target.value)}
+                          disabled={isFormDisabled}
+                          className={cn(
+                            "border-muted/80 h-8 text-xs",
+                            localDtc.clientEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(localDtc.clientEmail) && "border-rose-500 focus-visible:ring-rose-500"
+                          )}
+                          placeholder="contato@cartorio.com.br"
+                        />
+                        {localDtc.clientEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(localDtc.clientEmail) && (
+                          <p className="text-[10px] text-rose-500 mt-0.5">Formato de e-mail inválido.</p>
+                        )}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="serventia" className="text-xs font-bold">Serventia (Cartório)</Label>
-                    <Input
-                      id="serventia"
-                      value={localDtc.serventia}
-                      onChange={(e) => handleFieldChange("serventia", e.target.value)}
-                      disabled={isFormDisabled}
-                      className="border-muted/80 h-9 text-sm font-semibold"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="oficial" className="text-xs font-bold">Oficial do Cartório</Label>
-                      <Input
-                        id="oficial"
-                        value={localDtc.oficial}
-                        onChange={(e) => handleFieldChange("oficial", e.target.value)}
-                        disabled={isFormDisabled}
-                        className="border-muted/80 h-9 text-sm"
-                        placeholder="Nome do Oficial / Titular"
-                      />
+                  {/* Sub-seção 2: Equipe & Contatos */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 border-b pb-1.5">
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80">2. Equipe de Transição & Contatos-Chave</span>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="clientResponsible" className="text-xs font-bold">Responsável / Contato Principal</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="space-y-1 flex flex-col justify-end">
+                        <Label htmlFor="responsible" className="text-[11px] font-bold mb-1">Implantador Responsável (DTC)</Label>
+                        <AutocompleteInput
+                          value={localDtc.responsible}
+                          onChange={(val) => handleFieldChange("responsible", val)}
+                          disabled={isFormDisabled}
+                          placeholder="Selecione o implantador..."
+                          className="border-muted/80 h-8 text-xs"
+                        />
+                      </div>
+                      <div className="space-y-1 flex flex-col justify-end">
+                        <Label htmlFor="analystResponsible" className="text-[11px] font-bold mb-1">Responsável pelo pós implantação</Label>
+                        <AutocompleteInput
+                          value={localDtc.analystResponsible}
+                          onChange={(val) => handleFieldChange("analystResponsible", val)}
+                          disabled={isFormDisabled}
+                          placeholder="Selecione o analista..."
+                          className="border-muted/80 h-8 text-xs"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label htmlFor="clientResponsible" className="text-[11px] font-bold">Responsável / Contato Principal (Cliente)</Label>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <Input
                           id="clientResponsible"
                           value={localDtc.clientResponsible}
                           onChange={(e) => handleFieldChange("clientResponsible", e.target.value)}
                           disabled={isFormDisabled}
-                          className="border-muted/80 h-9 text-sm"
-                          placeholder="Nome do Key User principal"
+                          className="border-muted/80 h-8 text-xs"
+                          placeholder="Nome do contato principal"
                         />
-                        <Input
-                          id="clientResponsiblePhone"
-                          value={localDtc.clientResponsiblePhone || ""}
-                          onChange={(e) => handleFieldChange("clientResponsiblePhone", formatPhoneNumber(e.target.value))}
-                          disabled={isFormDisabled}
-                          className="border-muted/80 h-9 text-sm font-semibold"
-                          placeholder="Celular/Telefone do Responsável"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Dynamic Key Users Section */}
-                  <div className="space-y-2 border p-4 rounded-lg bg-muted/10">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      <div className="space-y-0.5">
-                        <Label className="text-xs font-bold">Key Users (Outros contatos-chave)</Label>
-                        <p className="text-[10px] text-muted-foreground">Adicione outros contatos importantes da serventia.</p>
-                      </div>
-                      <div className="flex items-center gap-1.5 self-end sm:self-auto">
-                        {/* WhatsApp & Contacts dropdown */}
-                        {localDtc && (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                className="h-7 text-xs gap-1 border-emerald-500/20 text-emerald-600 hover:bg-emerald-500/10 font-bold"
-                              >
-                                <MessageSquare className="h-3 w-3" />
-                                Ações WhatsApp
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="text-xs">
-                              <DropdownMenuLabel>Ações de Contatos</DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={handleExportVcf} className="cursor-pointer gap-1.5">
-                                <Download className="h-3.5 w-3.5 text-primary" />
-                                Baixar Arquivo Único (.vcf para Celular)
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={handleExportZip} className="cursor-pointer gap-1.5">
-                                <Download className="h-3.5 w-3.5 text-primary" />
-                                Baixar Contatos Separados (.zip para PC)
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={handleCopyPhones} className="cursor-pointer gap-1.5">
-                                <Copy className="h-3.5 w-3.5 text-primary" />
-                                Copiar Lista de Telefones
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={handleOpenWhatsappShare} className="cursor-pointer gap-1.5">
-                                <Share2 className="h-3.5 w-3.5 text-primary" />
-                                Enviar Lista no WhatsApp
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        )}
-                        <Button
-                          type="button"
-                          onClick={addKeyUser}
-                          disabled={isFormDisabled}
-                          variant="outline"
-                          size="sm"
-                          className="h-7 text-xs gap-1 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 font-bold"
-                        >
-                          <Plus className="h-3 w-3" />
-                          Adicionar Contato
-                        </Button>
-                      </div>
-                    </div>
-
-                    {(!localDtc.keyUsersList || localDtc.keyUsersList.length === 0) ? (
-                      <p className="text-xs text-muted-foreground italic py-2 text-center bg-background/50 border border-dashed rounded-md">
-                        Nenhum contato-chave adicional. Clique em Adicionar Contato.
-                      </p>
-                    ) : (
-                      <div className="space-y-2 mt-2">
-                        {localDtc.keyUsersList.map((user, idx) => (
-                          <div key={idx} className="flex items-center gap-2">
-                            <Input
-                              value={user.name}
-                              onChange={(e) => updateKeyUser(idx, "name", e.target.value)}
-                              disabled={isFormDisabled}
-                              placeholder="Nome do contato"
-                              className="border-muted/85 h-8 text-xs flex-1"
-                            />
-                            <Input
-                              value={user.phone}
-                              onChange={(e) => updateKeyUser(idx, "phone", formatPhoneNumber(e.target.value))}
-                              disabled={isFormDisabled}
-                              placeholder="Celular / Telefone"
-                              className="border-muted/85 h-8 text-xs flex-1 font-semibold"
-                            />
+                        <div className="relative flex items-center">
+                          <Input
+                            id="clientResponsiblePhone"
+                            value={localDtc.clientResponsiblePhone || ""}
+                            onChange={(e) => handleFieldChange("clientResponsiblePhone", formatPhoneNumber(e.target.value))}
+                            disabled={isFormDisabled}
+                            className="border-muted/80 h-8 text-xs font-semibold pr-8"
+                            placeholder="Celular/Telefone do Responsável"
+                          />
+                          {localDtc.clientResponsiblePhone && (
                             <Button
                               type="button"
-                              onClick={() => removeKeyUser(idx)}
-                              disabled={isFormDisabled}
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-full shrink-0"
+                              onClick={() => handleOpenDirectChat(localDtc.clientResponsiblePhone)}
+                              className="absolute right-1 h-6 w-6 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10 rounded-full"
+                              title="Abrir conversa no WhatsApp"
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <MessageSquare className="h-3.5 w-3.5" />
                             </Button>
-                          </div>
-                        ))}
+                          )}
+                        </div>
                       </div>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="clientPhone" className="text-xs font-bold">Telefone Serventia</Label>
-                      <Input
-                        id="clientPhone"
-                        value={localDtc.clientPhone}
-                        onChange={(e) => handleFieldChange("clientPhone", formatPhoneNumber(e.target.value))}
-                        disabled={isFormDisabled}
-                        className="border-muted/80 h-9 text-sm"
-                        placeholder="(00) 00000-0000"
-                      />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="clientEmail" className="text-xs font-bold">E-mail Serventia</Label>
-                      <Input
-                        id="clientEmail"
-                        type="email"
-                        value={localDtc.clientEmail}
-                        onChange={(e) => handleFieldChange("clientEmail", e.target.value)}
-                        disabled={isFormDisabled}
-                        className="border-muted/80 h-9 text-sm"
-                        placeholder="contato@cartorio.com.br"
-                      />
+
+                    {/* Dynamic Key Users Section */}
+                    <div className="space-y-2 border p-3 rounded-lg bg-muted/10 mt-1">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div className="space-y-0.5">
+                          <Label className="text-[11px] font-bold">Key Users (Outros contatos-chave)</Label>
+                          <p className="text-[9px] text-muted-foreground">Adicione outros contatos importantes da serventia.</p>
+                        </div>
+                        <div className="flex items-center gap-1.5 self-end sm:self-auto">
+                          {/* WhatsApp & Contacts dropdown */}
+                          {localDtc && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-6.5 text-[10px] gap-1 border-emerald-500/20 text-emerald-600 hover:bg-emerald-500/10 font-bold"
+                                >
+                                  <MessageSquare className="h-3 w-3" />
+                                  Ações WhatsApp
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="text-xs">
+                                <DropdownMenuLabel>Ações de Contatos</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={handleExportVcf} className="cursor-pointer gap-1.5">
+                                  <Download className="h-3.5 w-3.5 text-primary" />
+                                  Baixar Arquivo Único (.vcf para Celular)
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={handleExportZip} className="cursor-pointer gap-1.5">
+                                  <Download className="h-3.5 w-3.5 text-primary" />
+                                  Baixar Contatos Separados (.zip para PC)
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={handleCopyPhones} className="cursor-pointer gap-1.5">
+                                  <Copy className="h-3.5 w-3.5 text-primary" />
+                                  Copiar Lista de Telefones
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={handleOpenWhatsappShare} className="cursor-pointer gap-1.5">
+                                  <Share2 className="h-3.5 w-3.5 text-primary" />
+                                  Enviar Lista no WhatsApp
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
+                          <Button
+                            type="button"
+                            onClick={addKeyUser}
+                            disabled={isFormDisabled}
+                            variant="outline"
+                            size="sm"
+                            className="h-6.5 text-[10px] gap-1 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 font-bold"
+                          >
+                            <Plus className="h-3 w-3" />
+                            Adicionar Contato
+                          </Button>
+                        </div>
+                      </div>
+
+                      {(!localDtc.keyUsersList || localDtc.keyUsersList.length === 0) ? (
+                        <p className="text-[11px] text-muted-foreground italic py-1.5 text-center bg-background/50 border border-dashed rounded-md">
+                          Nenhum contato-chave adicional. Clique em Adicionar Contato.
+                        </p>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1.5">
+                          {localDtc.keyUsersList.map((user, idx) => (
+                            <div key={idx} className="flex items-center gap-1.5 bg-background p-1.5 border rounded-md shadow-2xs">
+                              <Input
+                                value={user.name}
+                                onChange={(e) => updateKeyUser(idx, "name", e.target.value)}
+                                disabled={isFormDisabled}
+                                placeholder="Nome"
+                                className="border-muted/80 h-7 text-xs flex-1"
+                              />
+                              <div className="relative flex items-center flex-1">
+                                <Input
+                                  value={user.phone}
+                                  onChange={(e) => updateKeyUser(idx, "phone", formatPhoneNumber(e.target.value))}
+                                  disabled={isFormDisabled}
+                                  placeholder="Telefone"
+                                  className="border-muted/80 h-7 text-xs font-semibold pr-7 flex-1"
+                                />
+                                {user.phone && (
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleOpenDirectChat(user.phone)}
+                                    className="absolute right-0.5 h-5 w-5 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10 rounded-full"
+                                    title="WhatsApp"
+                                  >
+                                    <MessageSquare className="h-3 w-3" />
+                                  </Button>
+                                )}
+                              </div>
+                              <Button
+                                type="button"
+                                onClick={() => removeKeyUser(idx)}
+                                disabled={isFormDisabled}
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-full shrink-0"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>
