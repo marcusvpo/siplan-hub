@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProjectDetails } from "@/hooks/useProjectDetails";
 import { useProjectsV2 } from "@/hooks/useProjectsV2";
 import { useAutoSave } from "@/hooks/useAutoSave";
+import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -735,25 +736,24 @@ export default function TransicaoPlaceholder() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="responsible" className="text-xs font-bold">Implantador Responsável (DTC)</Label>
-                      <Input
-                        id="responsible"
+                    <div className="space-y-2 flex flex-col justify-end">
+                      <Label htmlFor="responsible" className="text-xs font-bold mb-1">Implantador Responsável (DTC)</Label>
+                      <AutocompleteInput
                         value={localDtc.responsible}
-                        onChange={(e) => handleFieldChange("responsible", e.target.value)}
+                        onChange={(val) => handleFieldChange("responsible", val)}
                         disabled={isFormDisabled}
+                        placeholder="Selecione o implantador..."
                         className="border-muted/80 h-9 text-sm"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="analystResponsible" className="text-xs font-bold">Responsável pelo pós implantação</Label>
-                      <Input
-                        id="analystResponsible"
+                    <div className="space-y-2 flex flex-col justify-end">
+                      <Label htmlFor="analystResponsible" className="text-xs font-bold mb-1">Responsável pelo pós implantação</Label>
+                      <AutocompleteInput
                         value={localDtc.analystResponsible}
-                        onChange={(e) => handleFieldChange("analystResponsible", e.target.value)}
+                        onChange={(val) => handleFieldChange("analystResponsible", val)}
                         disabled={isFormDisabled}
+                        placeholder="Selecione o analista..."
                         className="border-muted/80 h-9 text-sm"
-                        placeholder="Nome do analista que receberá o projeto"
                       />
                     </div>
                   </div>
