@@ -1897,7 +1897,7 @@ export default function TransicaoPlaceholder() {
                             Nenhum colaborador cadastrado. Clique em Adicionar Funcionário.
                           </p>
                         ) : (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1.5">
+                          <div className="grid grid-cols-1 gap-2 mt-1.5">
                             {localDtc.employeesList.map((emp, idx) => (
                               <div key={idx} className="flex items-center gap-1.5 bg-background p-1.5 border rounded-md shadow-2xs">
                                 {/* Name Input */}
@@ -1906,7 +1906,7 @@ export default function TransicaoPlaceholder() {
                                   onChange={(e) => updateEmployee(idx, "name", e.target.value)}
                                   disabled={isFormDisabled}
                                   placeholder="Nome do Colaborador"
-                                  className="border-muted/80 h-7 text-xs flex-[3]"
+                                  className="border-muted/80 h-7 text-xs flex-[4]"
                                 
                                 />
 
