@@ -30,6 +30,8 @@ import {
   LayoutGrid,
   LayoutDashboard,
   History,
+  FileEdit,
+  BookOpen,
 } from "lucide-react";
 import {
   Collapsible,
@@ -58,6 +60,9 @@ export function AppSidebar() {
     location.pathname.startsWith("/orion-tn-models/"),
   );
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isImplantadoresOpen, setIsImplantadoresOpen] = useState(
+    location.pathname.startsWith("/implantadores"),
+  );
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -647,26 +652,109 @@ export function AppSidebar() {
         {/* Implantadores Group */}
         {canViewImplantadores && (
         <div className="px-2">
-          <Link to="/implantadores">
-            <Button
-              variant={
-                location.pathname.startsWith("/implantadores")
-                  ? "default"
-                  : "ghost"
-              }
-              className={cn(
-                "w-full gap-3 transition-all duration-200",
-                collapsed ? "justify-center px-0" : "justify-start",
-                location.pathname.startsWith("/implantadores")
-                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:bg-primary/95"
-                  : "text-rose-600 dark:text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 dark:bg-rose-500/15 dark:hover:bg-rose-500/25 border border-rose-500/20 font-semibold shadow-sm"
-              )}
-              title="Implantadores"
+          {!collapsed ? (
+            <Collapsible
+              open={isImplantadoresOpen}
+              onOpenChange={setIsImplantadoresOpen}
+              className="space-y-1"
             >
-              <Users className="h-5 w-5" />
-              {!collapsed && <span>Implantadores</span>}
-            </Button>
-          </Link>
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant={
+                    location.pathname.startsWith("/implantadores")
+                      ? "secondary"
+                      : "ghost"
+                  }
+                  className="w-full justify-between hover:bg-muted/50"
+                  title="Implantadores"
+                >
+                  <div className="flex items-center gap-3">
+                    <Users className="h-5 w-5" />
+                    <span>Implantadores</span>
+                  </div>
+                  <ChevronDown
+                    className={cn(
+                      "h-4 w-4 transition-transform",
+                      isImplantadoresOpen ? "transform rotate-180" : "",
+                    )}
+                  />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-1 pl-4 animate-in slide-in-from-top-2">
+                <div className="pt-1 pb-1">
+                  <div className="px-4 py-2">
+                    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-2">
+                      Operacional
+                    </span>
+                    <Link to="/implantadores">
+                      <Button
+                        variant={isActive("/implantadores") ? "secondary" : "ghost"}
+                        size="sm"
+                        className="w-full justify-start gap-3 h-9"
+                      >
+                        <LayoutDashboard className="h-4 w-4" />
+                        <span className="text-xs font-medium">Visão Geral</span>
+                      </Button>
+                    </Link>
+                    <Link to="/implantadores/aderencia">
+                      <Button
+                        variant={isActive("/implantadores/aderencia") ? "secondary" : "ghost"}
+                        size="sm"
+                        className="w-full justify-start gap-3 h-9"
+                      >
+                        <FileEdit className="h-4 w-4" />
+                        <span className="text-xs font-medium">Editor de Aderência</span>
+                      </Button>
+                    </Link>
+                    <Link to="/implantadores/homologation">
+                      <Button
+                        variant={isActive("/implantadores/homologation") ? "secondary" : "ghost"}
+                        size="sm"
+                        className="w-full justify-start gap-3 h-9"
+                      >
+                        <ClipboardList className="h-4 w-4" />
+                        <span className="text-xs font-medium">Homologação de Conversões</span>
+                      </Button>
+                    </Link>
+                    <Link to="/implantadores/treinamento">
+                      <Button
+                        variant={isActive("/implantadores/treinamento") ? "secondary" : "ghost"}
+                        size="sm"
+                        className="w-full justify-start gap-3 h-9"
+                      >
+                        <BookOpen className="h-4 w-4" />
+                        <span className="text-xs font-medium">Roteiro de Treinamento</span>
+                      </Button>
+                    </Link>
+                    <Link to="/implantadores/transicao">
+                      <Button
+                        variant={isActive("/implantadores/transicao") ? "secondary" : "ghost"}
+                        size="sm"
+                        className="w-full justify-start gap-3 h-9"
+                      >
+                        <FileText className="h-4 w-4" />
+                        <span className="text-xs font-medium">Documento de Transição</span>
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          ) : (
+            <Link to="/implantadores">
+              <Button
+                variant={
+                  location.pathname.startsWith("/implantadores")
+                    ? "secondary"
+                    : "ghost"
+                }
+                className="w-full justify-center px-0"
+                title="Implantadores"
+              >
+                <Users className="h-5 w-5" />
+              </Button>
+            </Link>
+          )}
         </div>
         )}
       </div>
