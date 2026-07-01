@@ -1906,7 +1906,7 @@ export default function TransicaoPlaceholder() {
                                   onChange={(e) => updateEmployee(idx, "name", e.target.value)}
                                   disabled={isFormDisabled}
                                   placeholder="Nome do Colaborador"
-                                  className="border-muted/80 h-7 text-xs flex-[2]"
+                                  className="border-muted/80 h-7 text-xs flex-[3]"
                                 
                                 />
 
