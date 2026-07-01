@@ -1085,7 +1085,7 @@ export default function TransicaoPlaceholder() {
               <TabsTrigger value="geral" className="text-xs font-bold">Identificação</TabsTrigger>
               <TabsTrigger value="infra" className="text-xs font-bold">Infra & Acesso</TabsTrigger>
               <TabsTrigger value="processo" className="text-xs font-bold">Relato Técnico</TabsTrigger>
-              <TabsTrigger value="chamados" className="text-xs font-bold">Pendências (Suporte)</TabsTrigger>
+              <TabsTrigger value="chamados" className="text-xs font-bold">Chamados pendentes</TabsTrigger>
               <TabsTrigger value="visualizar" className="text-xs font-bold flex items-center gap-1">
                 <Printer className="h-3.5 w-3.5 text-primary" />
                 Visualizar DTC
