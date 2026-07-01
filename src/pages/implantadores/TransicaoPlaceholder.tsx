@@ -454,6 +454,66 @@ export default function TransicaoPlaceholder() {
     toast.success("Arquivo de contatos (.vcf) baixado! Abra-o no celular ou computador para importar todos.");
   };
 
+  const handleExportZip = async () => {
+    if (!localDtc) return;
+
+    const groupName = prompt(
+      "Digite o nome do grupo do WhatsApp (para prefixar os contatos):",
+      `DTC - ${localDtc.serventia}`
+    );
+    if (groupName === null) return;
+
+    const JSZip = (await import("jszip")).default;
+    const zip = new JSZip();
+    let hasContacts = false;
+
+    // Helper to generate vCard string for a single contact
+    const makeVcard = (name: string, phone: string) => {
+      return `BEGIN:VCARD\r\nVERSION:3.0\r\nFN:${groupName} - ${name}\r\nTEL;TYPE=CELL,VOICE:${phone}\r\nEND:VCARD\r\n`;
+    };
+
+    // 1. Primary contact
+    if (localDtc.clientResponsible) {
+      const filename = `${groupName} - ${localDtc.clientResponsible}.vcf`.replace(/[\\/:*?"<>|]/g, "_");
+      zip.file(filename, makeVcard(localDtc.clientResponsible, localDtc.clientResponsiblePhone || ""));
+      hasContacts = true;
+    }
+
+    // 2. Key users
+    if (localDtc.keyUsersList && localDtc.keyUsersList.length > 0) {
+      localDtc.keyUsersList.forEach(u => {
+        if (u.name) {
+          const filename = `${groupName} - ${u.name}.vcf`.replace(/[\\/:*?"<>|]/g, "_");
+          zip.file(filename, makeVcard(u.name, u.phone || ""));
+          hasContacts = true;
+        }
+      });
+    }
+
+    if (!hasContacts) {
+      toast.error("Nenhum contato com nome cadastrado para exportar.");
+      return;
+    }
+
+    toast.loading("Gerando arquivo ZIP...");
+    try {
+      const content = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(content);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `contatos_${groupName.replace(/\s+/g, "_").toLowerCase()}.zip`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.dismiss();
+      toast.success("Arquivo ZIP de contatos baixado! Extraia-o e abra cada arquivo para salvar no PC.");
+    } catch (err) {
+      toast.dismiss();
+      toast.error("Erro ao gerar o arquivo ZIP.");
+      console.error(err);
+    }
+  };
+
   const handleCopyPhones = () => {
     if (!localDtc) return;
 
@@ -831,7 +891,11 @@ export default function TransicaoPlaceholder() {
                               <DropdownMenuSeparator />
                               <DropdownMenuItem onClick={handleExportVcf} className="cursor-pointer gap-1.5">
                                 <Download className="h-3.5 w-3.5 text-primary" />
-                                Baixar Contatos (Arquivo .vcf)
+                                Baixar Arquivo Único (.vcf para Celular)
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={handleExportZip} className="cursor-pointer gap-1.5">
+                                <Download className="h-3.5 w-3.5 text-primary" />
+                                Baixar Contatos Separados (.zip para PC)
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={handleCopyPhones} className="cursor-pointer gap-1.5">
                                 <Copy className="h-3.5 w-3.5 text-primary" />
