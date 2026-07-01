@@ -61,6 +61,7 @@ import { formatDistanceToNow, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useConversionPosts } from "@/hooks/useConversionPosts";
 import { useHomologationEvents } from "@/hooks/useHomologationEvents";
+import { ProjectTramite } from "@/types/ProjectV2";
 
 interface ConversionQueueItem {
   id: string;
@@ -98,7 +99,7 @@ export default function ImplantadoresHomologation() {
   const { posts, loading: postsLoading } = useConversionPosts(selectedItem?.projectId || null);
   const { events, loading: eventsLoading } = useHomologationEvents(selectedItem?.projectId || null);
 
-  const [tramites, setTramites] = useState<any[]>([]);
+  const [tramites, setTramites] = useState<ProjectTramite[]>([]);
   const [tramitesLoading, setTramitesLoading] = useState(false);
 
   useEffect(() => {

@@ -56,7 +56,7 @@ export const useProjectsList = (
         query = query.eq("post_status", "in-progress");
       } else if (viewPreset === "active") {
         query = query
-          .in("global_status", ["todo", "in-progress"])
+          .eq("global_status", "in-progress")
           .not("post_status", "eq", "in-progress");
       } else if (viewPreset === "paused") {
         query = query
