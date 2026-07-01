@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProjectDetails } from "@/hooks/useProjectDetails";
 import { useProjectsV2 } from "@/hooks/useProjectsV2";
 import { useAutoSave } from "@/hooks/useAutoSave";
+import { useTeamMembers } from "@/hooks/useTeamMembers";
 import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -104,6 +105,7 @@ interface ImplantationPendingItem {
   title: string;
   status: string;
   department: string;
+  assignedTo?: string;
   description: string;
 }
 
@@ -267,6 +269,7 @@ export default function TransicaoPlaceholder() {
   const { fullName, isAdmin } = useAuth();
   const { updateProject } = useProjectsV2();
   const queryClient = useQueryClient();
+  const { members = [] } = useTeamMembers();
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [showPgAccess, setShowPgAccess] = useState(false);
   const [showRemoteAccess, setShowRemoteAccess] = useState(false);
@@ -753,7 +756,7 @@ export default function TransicaoPlaceholder() {
     const currentList = localDtc.implantationPendingList || [];
     handleFieldChange("implantationPendingList", [
       ...currentList,
-      { title: "", status: "Pendente", department: "", description: "" }
+      { title: "", status: "Pendente", department: "", assignedTo: "", description: "" }
     ]);
   };
 
@@ -2162,6 +2165,7 @@ export default function TransicaoPlaceholder() {
                                     <SelectItem value="Registro de Imóveis" className="text-xs">R. Imóveis</SelectItem>
                                     <SelectItem value="RTD / PJ" className="text-xs">RTD/PJ</SelectItem>
                                     <SelectItem value="Administrativo" className="text-xs">Adm</SelectItem>
+                                    <SelectItem value="Financeiro" className="text-xs">Financeiro</SelectItem>
                                     <SelectItem value="TI / Suporte" className="text-xs">TI</SelectItem>
                                     <SelectItem value="Outro" className="text-xs">Outro</SelectItem>
                                   </SelectContent>
@@ -2269,6 +2273,7 @@ export default function TransicaoPlaceholder() {
                                       <SelectItem value="Registro de Imóveis" className="text-xs">R. Imóveis</SelectItem>
                                       <SelectItem value="RTD / PJ" className="text-xs">RTD/PJ</SelectItem>
                                       <SelectItem value="Administrativo" className="text-xs">Adm</SelectItem>
+                                      <SelectItem value="Financeiro" className="text-xs">Financeiro</SelectItem>
                                       <SelectItem value="TI / Suporte" className="text-xs">TI</SelectItem>
                                       <SelectItem value="Outro" className="text-xs">Outro</SelectItem>
                                     </SelectContent>
@@ -2288,6 +2293,25 @@ export default function TransicaoPlaceholder() {
                                       <SelectItem value="Em andamento" className="text-xs">Em andamento</SelectItem>
                                       <SelectItem value="Resolvido" className="text-xs">Resolvido</SelectItem>
                                       <SelectItem value="Cancelado" className="text-xs">Cancelado</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+
+                                  {/* Assigned Analyst Select dropdown */}
+                                  <Select
+                                    value={pending.assignedTo || "none"}
+                                    onValueChange={(val) => updateImplantationPending(idx, "assignedTo", val === "none" ? "" : val)}
+                                    disabled={isFormDisabled}
+                                  >
+                                    <SelectTrigger className="w-36 h-7 text-[10px] border-muted/80 shrink-0">
+                                      <SelectValue placeholder="Responsável" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="none" className="text-xs">Não atribuído</SelectItem>
+                                      {members.map((m) => (
+                                        <SelectItem key={m.id} value={m.name} className="text-xs">
+                                          {m.name}
+                                        </SelectItem>
+                                      ))}
                                     </SelectContent>
                                   </Select>
 
@@ -2575,6 +2599,7 @@ export default function TransicaoPlaceholder() {
                                     <span className="font-bold text-gray-800">
                                       {pending.title || "(Sem título)"}
                                       {pending.department ? ` - ${pending.department}` : ""}
+                                      {pending.assignedTo ? ` (Responsável: ${pending.assignedTo})` : ""}
                                     </span>
                                     <span className={cn(
                                       "px-1.5 py-0.5 rounded-sm text-[9px] font-bold uppercase",
@@ -2762,6 +2787,7 @@ export default function TransicaoPlaceholder() {
                           <span className="font-bold text-gray-800">
                             {pending.title || "(Sem título)"}
                             {pending.department ? ` - ${pending.department}` : ""}
+                            {pending.assignedTo ? ` (Responsável: ${pending.assignedTo})` : ""}
                           </span>
                           <span className={cn(
                             "px-1.5 py-0.5 rounded-sm text-[9px] font-bold uppercase",
