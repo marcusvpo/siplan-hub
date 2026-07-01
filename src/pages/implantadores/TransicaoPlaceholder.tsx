@@ -171,7 +171,6 @@ export default function TransicaoPlaceholder() {
     "infra-sistemas": true,
     "infra-conversao": true,
     "processo-implantacao": true,
-    "processo-pos": true,
     "processo-colaboradores": true,
     "processo-consideracoes": true,
   });
@@ -1855,60 +1854,14 @@ export default function TransicaoPlaceholder() {
                     )}
                   </div>
 
-                  {/* Sub-seção 2: Processo de Pós-Implantação */}
-                  <div className="space-y-3">
-                    <div 
-                      className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors"
-                      onClick={() => toggleSection("processo-pos")}
-                    >
-                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">
-                        2. Processo de Pós-Implantação & Regras do Cliente
-                      </span>
-                      <Button type="button" variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
-                        {collapsedSections["processo-pos"] ? (
-                          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
-                        ) : (
-                          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
-                        )}
-                      </Button>
-                    </div>
-                    
-                    {!collapsedSections["processo-pos"] && (
-                      <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
-                        <Label htmlFor="postImplantationProcess" className="text-xs font-bold text-muted-foreground">Relato Pós-Implantação / Particularidades</Label>
-                        <Textarea
-                          id="postImplantationProcess"
-                          value={localDtc.postImplantationProcess}
-                          onChange={(e) => handleFieldChange("postImplantationProcess", e.target.value)}
-                          disabled={isFormDisabled}
-                          rows={4}
-                          className="border-muted/80 text-xs"
-                          placeholder="Informe regras operacionais acordadas, particularidades do fluxo de trabalho do cartório que o suporte deve conhecer..."
-                        />
-                        {(() => {
-                          const count = (localDtc.postImplantationProcess || "").length;
-                          const isValid = count >= 50;
-                          return (
-                            <div className="flex justify-between items-center text-[10px] mt-0.5">
-                              <span className={cn("font-semibold", isValid ? "text-emerald-600" : "text-amber-500")}>
-                                {isValid ? "✓ Relato completo" : "⚠ Relato muito curto (mínimo 50 caracteres)"}
-                              </span>
-                              <span className="text-muted-foreground">{count} caracteres</span>
-                            </div>
-                          );
-                        })()}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Sub-seção 3: Colaboradores da Serventia */}
+                  {/* Sub-seção 2: Colaboradores da Serventia */}
                   <div className="space-y-3">
                     <div 
                       className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors"
                       onClick={() => toggleSection("processo-colaboradores")}
                     >
                       <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">
-                        3. Funcionários & Colaboradores da Serventia
+                        2. Funcionários & Colaboradores da Serventia
                       </span>
                       <Button type="button" variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
                         {collapsedSections["processo-colaboradores"] ? (
@@ -1954,6 +1907,7 @@ export default function TransicaoPlaceholder() {
                                   disabled={isFormDisabled}
                                   placeholder="Nome do Colaborador"
                                   className="border-muted/80 h-7 text-xs flex-1"
+                                
                                 />
 
                                 {/* Department Select dropdown */}
@@ -2005,14 +1959,14 @@ export default function TransicaoPlaceholder() {
                     )}
                   </div>
 
-                  {/* Sub-seção 4: Considerações Finais */}
+                  {/* Sub-seção 3: Considerações Finais */}
                   <div className="space-y-3">
                     <div 
                       className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors"
                       onClick={() => toggleSection("processo-consideracoes")}
                     >
                       <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">
-                        4. Considerações Finais
+                        3. Considerações Finais
                       </span>
                       <Button type="button" variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
                         {collapsedSections["processo-consideracoes"] ? (
@@ -2223,12 +2177,7 @@ export default function TransicaoPlaceholder() {
                           </div>
                         </div>
 
-                        <div>
-                          <strong className="block mb-1 text-sm uppercase">Processo de Pós-Implantação (Suporte):</strong>
-                          <div className="whitespace-pre-wrap min-h-16 pl-2 border-l-2 border-gray-300 italic">
-                            {localDtc.postImplantationProcess || "(Nenhuma regra de pós-implantação cadastrada)"}
-                          </div>
-                        </div>
+
 
                         <div>
                           <strong className="block mb-1 text-sm uppercase">Funcionários da Serventia:</strong>
@@ -2365,12 +2314,7 @@ export default function TransicaoPlaceholder() {
                 </div>
               </div>
 
-              <div>
-                <strong className="block mb-1 text-sm uppercase">Processo de Pós-Implantação (Suporte):</strong>
-                <div className="whitespace-pre-wrap min-h-20 pl-2 border-l-2 border-gray-400 italic">
-                  {localDtc.postImplantationProcess || "(Nenhuma regra de pós-implantação acordada)"}
-                </div>
-              </div>
+
 
               <div>
                 <strong className="block mb-1 text-sm uppercase">Funcionários da Serventia:</strong>
