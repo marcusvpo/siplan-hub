@@ -134,74 +134,42 @@ export default function TransicaoPlaceholder() {
     selectedProjectId || null
   );
 
-  // Local state to bind fields
-  const [localDtc, setLocalDtc] = useState<DTCData | null>(null);
+  // 3. Connect to auto-save logic (only runs when we have an active project)
+  const getInitialDtc = (): DTCData | null => {
+    if (!project) return null;
+    const existingDtc = project.customFields?.dtc as DTCData | undefined;
+    if (existingDtc) return existingDtc;
 
-  // Initialize form state when the selected project changes
-  useEffect(() => {
-    if (project) {
-      const existingDtc = project.customFields?.dtc as DTCData | undefined;
-      if (existingDtc) {
-        setLocalDtc(existingDtc);
-      } else {
-        // Build initial blank template pre-filled with project details
-        const initialDtc: DTCData = {
-          responsible: project.responsiblePost || project.projectLeader || fullName || "",
-          analystResponsible: project.responsiblePost || "",
-          serventia: project.clientName || "",
-          oficial: "",
-          clientResponsible: project.clientPrimaryContact || "",
-          clientResponsiblePhone: "",
-          keyUsers: "",
-          keyUsersList: [],
-          clientPhone: formatPhoneNumber(project.clientPhone || ""),
-          clientEmail: project.clientEmail || "",
-          systemsInstalled: project.systemType || "",
-          systemVersions: "",
-          postgresVersion: "",
-          postgresAccessData: "",
-          hadConversion: false,
-          convertedData: "",
-          remoteAccessData: "",
-          supportCallNumber: "",
-          implantationProcess: "",
-          postImplantationProcess: "",
-          employees: "",
-          finalConsiderations: "",
-          tickets: [],
-          status: "draft"
-        };
-        setLocalDtc(initialDtc);
-      }
-    } else {
-      setLocalDtc(null);
-    }
-  }, [project, fullName]);
+    return {
+      responsible: project.responsiblePost || project.projectLeader || fullName || "",
+      analystResponsible: project.responsiblePost || "",
+      serventia: project.clientName || "",
+      oficial: "",
+      clientResponsible: project.clientPrimaryContact || "",
+      clientResponsiblePhone: "",
+      keyUsers: "",
+      keyUsersList: [],
+      clientPhone: formatPhoneNumber(project.clientPhone || ""),
+      clientEmail: project.clientEmail || "",
+      systemsInstalled: project.systemType || "",
+      systemVersions: "",
+      postgresVersion: "",
+      postgresAccessData: "",
+      hadConversion: false,
+      convertedData: "",
+      remoteAccessData: "",
+      supportCallNumber: "",
+      implantationProcess: "",
+      postImplantationProcess: "",
+      employees: "",
+      finalConsiderations: "",
+      tickets: [],
+      status: "draft"
+    };
+  };
 
-  // Migrate older keyUsers string to keyUsersList array on the fly
-  useEffect(() => {
-    if (localDtc && !localDtc.keyUsersList) {
-      const migratedList: KeyUserItem[] = [];
-      if (localDtc.keyUsers) {
-        const names = localDtc.keyUsers.split(",").map(n => n.trim()).filter(Boolean);
-        names.forEach(name => {
-          migratedList.push({ name, phone: "" });
-        });
-      }
-      setLocalDtc(prev => {
-        if (!prev) return null;
-        return {
-          ...prev,
-          keyUsersList: migratedList,
-          clientResponsiblePhone: prev.clientResponsiblePhone || ""
-        };
-      });
-    }
-  }, [localDtc]);
-
-  // 3. Connect to auto-save logic (only runs when localDtc has data)
-  const { saveState } = useAutoSave<DTCData | null>(
-    localDtc,
+  const { data: localDtc, updateData: setLocalDtc, saveState } = useAutoSave<DTCData | null>(
+    project ? (project.customFields?.dtc as DTCData | null) || getInitialDtc() : null,
     async (newData) => {
       if (!selectedProjectId || !newData || !project) return;
 
@@ -223,6 +191,24 @@ export default function TransicaoPlaceholder() {
     },
     { debounceMs: 1000 }
   );
+
+  // Migrate older keyUsers string to keyUsersList array on the fly
+  useEffect(() => {
+    if (localDtc && !localDtc.keyUsersList) {
+      const migratedList: KeyUserItem[] = [];
+      if (localDtc.keyUsers) {
+        const names = localDtc.keyUsers.split(",").map(n => n.trim()).filter(Boolean);
+        names.forEach(name => {
+          migratedList.push({ name, phone: "" });
+        });
+      }
+      setLocalDtc({
+        ...localDtc,
+        keyUsersList: migratedList,
+        clientResponsiblePhone: localDtc.clientResponsiblePhone || ""
+      });
+    }
+  }, [localDtc, setLocalDtc]);
 
   // Helper to send system notifications to all project participants and the designated analyst
   const sendNotificationsToParticipants = async (
