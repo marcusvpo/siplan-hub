@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -82,7 +82,10 @@ import {
   Lightbulb,
   Users,
   BarChart3,
-  FileDown
+  FileDown,
+  ZoomIn,
+  ZoomOut,
+  Maximize2
 } from "lucide-react";
 
 interface KeyUserItem {
@@ -349,6 +352,7 @@ export default function TransicaoPlaceholder() {
   const queryClient = useQueryClient();
   const { members = [] } = useTeamMembers();
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
+  const [zoom, setZoom] = useState(100);
   const [showPgAccess, setShowPgAccess] = useState(false);
   const [showSoPassword, setShowSoPassword] = useState(false);
   const [showRemoteAccess, setShowRemoteAccess] = useState(false);
@@ -3415,10 +3419,68 @@ export default function TransicaoPlaceholder() {
                     </Button>
                   </div>
                 </CardHeader>
+                {/* PDF Toolbar */}
+                <div className="bg-[#323639] text-white px-4 py-1.5 flex items-center justify-between border-b select-none no-print">
+                  <div className="flex items-center gap-2 text-xs font-semibold">
+                    <span className="text-gray-300 font-normal">Modo de Visualização</span>
+                  </div>
+                  {/* Zoom controls */}
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setZoom(prev => Math.max(50, prev - 10))}
+                      disabled={zoom <= 50}
+                      className="h-8 w-8 text-gray-300 hover:text-white hover:bg-white/10"
+                    >
+                      <ZoomOut className="h-4 w-4" />
+                    </Button>
+                    <span className="text-xs font-mono w-10 text-center font-bold">{zoom}%</span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setZoom(prev => Math.min(150, prev + 10))}
+                      disabled={zoom >= 150}
+                      className="h-8 w-8 text-gray-300 hover:text-white hover:bg-white/10"
+                    >
+                      <ZoomIn className="h-4 w-4" />
+                    </Button>
+                    <div className="h-4 w-[1px] bg-white/20 mx-1" />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setZoom(100)}
+                      className="text-xs text-gray-300 hover:text-white hover:bg-white/10 px-2 h-7 gap-1"
+                    >
+                      <Maximize2 className="h-3.5 w-3.5" />
+                      100%
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setZoom(80)}
+                      className="text-xs text-gray-300 hover:text-white hover:bg-white/10 px-2 h-7"
+                    >
+                      Ajustar Largura
+                    </Button>
+                  </div>
+                  <div className="text-xs text-gray-400 font-mono">
+                    A4 Simulado
+                  </div>
+                </div>
+
                 {/* PDF Viewer shell — dark background like Adobe Reader */}
                 <div className="overflow-y-auto" style={{ background: '#404040', minHeight: '600px', maxHeight: '85vh', padding: '32px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                   {/* A4 paper: 794px wide × 1122px per page at 96dpi */}
-                  <div className="dtc-document-font text-black relative" style={{ width: '794px', minHeight: '1122px', background: 'white', boxShadow: '0 4px 32px rgba(0,0,0,0.55)', backgroundImage: "repeating-linear-gradient(to bottom, transparent 0px, transparent calc(1122px - 3px), #bbb calc(1122px - 3px), #bbb 1122px, white 1122px)", backgroundSize: '100% 1122px' }}>
+                  <div className="dtc-document-font text-black relative" style={{
+                    width: '794px',
+                    minHeight: '1122px',
+                    background: 'white',
+                    boxShadow: '0 4px 32px rgba(0,0,0,0.55)',
+                    backgroundImage: "repeating-linear-gradient(to bottom, transparent 0px, transparent calc(1122px - 3px), #bbb calc(1122px - 3px), #bbb 1122px, white 1122px)",
+                    backgroundSize: '100% 1122px',
+                    zoom: zoom / 100
+                  }}>
                     {/* RASCUNHO diagonal watermark */}
                     {localDtc.status === 'draft' && (
                       <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
