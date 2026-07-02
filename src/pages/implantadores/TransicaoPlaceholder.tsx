@@ -1363,7 +1363,7 @@ function TransicaoPlaceholder() {
       parts.push(`Implantador responsável: ${localDtc.responsible || "Não informado"}.`);
       parts.push(`Analista de suporte: ${localDtc.analystResponsible || "Não informado"}.`);
       parts.push(`Serventia: ${localDtc.serventia || "Não informada"}.`);
-      parts.push(`Oficial titular: ${localDtc.oficial || "Não informado"}.`);
+      parts.push(`Tabelião ou Oficial titular: ${localDtc.oficial || "Não informado"}.`);
       parts.push(`Responsável pelo Cartório: ${localDtc.clientResponsible || "Não informado"}.`);
       if (localDtc.supportCallNumber) {
         parts.push(`Chamado de origem: ${localDtc.supportCallNumber}.`);
@@ -3688,7 +3688,7 @@ function TransicaoPlaceholder() {
                             </tr>
                             <tr>
                               <td className="border border-gray-300 p-2">
-                                <strong>Oficial Titular:</strong> {renderVal(localDtc.oficial)}
+                                <strong>Tabelião/Oficial Titular:</strong> {renderVal(localDtc.oficial)}
                               </td>
                               <td className="border border-gray-300 p-2">
                                 <strong>Responsável Cartório:</strong>{" "}
@@ -4075,7 +4075,7 @@ function TransicaoPlaceholder() {
               <div><strong>Implantador Responsável:</strong> {localDtc.responsible || "__________________________"}</div>
               <div><strong>Analista Suporte:</strong> {localDtc.analystResponsible || "__________________________"}</div>
               <div className="col-span-2"><strong>Serventia (Cartório):</strong> {localDtc.serventia || "__________________________"}</div>
-              <div><strong>Oficial Titular:</strong> {localDtc.oficial || "__________________________"}</div>
+              <div><strong>Tabelião/Oficial Titular:</strong> {localDtc.oficial || "__________________________"}</div>
               <div><strong>Responsável Cartório:</strong> {localDtc.clientResponsible || "__________________________"}{localDtc.clientResponsiblePhone ? ` (${localDtc.clientResponsiblePhone})` : ""}</div>
               <div className="col-span-2">
                 <strong>Key Users:</strong>{" "}
