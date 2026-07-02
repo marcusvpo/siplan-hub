@@ -1331,19 +1331,19 @@ export default function TransicaoPlaceholder() {
       toast.loading("Gerando PDF...", { id: "pdf-export" });
       const html2canvas = (await import("html2canvas")).default;
       const { jsPDF } = await import("jspdf");
-      
+
       const element = printRef.current;
       element.classList.remove("hidden");
-      
+
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
         backgroundColor: "#ffffff",
         logging: false,
       });
-      
+
       element.classList.add("hidden");
-      
+
       const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
       const pageWidth = pdf.internal.pageSize.getWidth();
@@ -1352,20 +1352,54 @@ export default function TransicaoPlaceholder() {
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       let heightLeft = imgHeight;
       let position = 0;
+      let page = 1;
+      const totalPages = Math.ceil(imgHeight / pageHeight);
+
+      const addPageNumber = (p: number) => {
+        pdf.setFontSize(8);
+        pdf.setTextColor(150);
+        pdf.text(`Pág. ${p} de ${totalPages}`, pageWidth - 15, pageHeight - 5, { align: "right" });
+        pdf.setTextColor(0);
+      };
+
+      // RASCUNHO watermark for draft status
+      const addWatermark = () => {
+        if (localDtc?.status !== "draft") return;
+        pdf.saveGraphicsState();
+        pdf.setFontSize(72);
+        pdf.setTextColor(220, 220, 220);
+        pdf.setGState(new (pdf as any).GState({ opacity: 0.25 }));
+        pdf.text("RASCUNHO", pageWidth / 2, pageHeight / 2, {
+          align: "center",
+          angle: 45,
+        });
+        pdf.restoreGraphicsState();
+        pdf.setTextColor(0);
+      };
+
       pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+      addWatermark();
+      addPageNumber(page);
       heightLeft -= pageHeight;
+
       while (heightLeft > 0) {
         position -= pageHeight;
+        page++;
         pdf.addPage();
         pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+        addWatermark();
+        addPageNumber(page);
         heightLeft -= pageHeight;
       }
-      const fileName = `DTC_${localDtc?.serventia?.replace(/\s+/g, "_") || "Cartorio"}_${new Date().toLocaleDateString("pt-BR").replace(/\//g, "-")}.pdf`;
+
+      const now = new Date();
+      const dateStr = now.toLocaleDateString("pt-BR").replace(/\//g, "-");
+      const fileName = `DTC_${localDtc?.serventia?.replace(/[^a-zA-Z0-9]/g, "_").replace(/_+/g, "_") || "Cartorio"}_${dateStr}.pdf`;
       pdf.save(fileName);
       toast.success("PDF exportado com sucesso!", { id: "pdf-export" });
     } catch (err) {
       console.error(err);
-          toast.error("Erro ao gerar PDF.", { id: "pdf-export" });
+      toast.error("Erro ao gerar PDF.", { id: "pdf-export" });
     }
   }, [localDtc]);
 
@@ -1376,13 +1410,10 @@ export default function TransicaoPlaceholder() {
         .dtc-document-font, .dtc-document-font * {
           font-family: 'Segoe UI', Calibri, Arial, sans-serif !important;
         }
+        .dtc-section { page-break-inside: avoid; }
         @media print {
-          body * {
-            visibility: hidden;
-          }
-          #dtc-print-area, #dtc-print-area * {
-            visibility: visible;
-          }
+          body * { visibility: hidden; }
+          #dtc-print-area, #dtc-print-area * { visibility: visible; }
           #dtc-print-area {
             position: absolute;
             left: 0;
@@ -1390,12 +1421,20 @@ export default function TransicaoPlaceholder() {
             width: 100%;
             background: white !important;
             color: black !important;
-            padding: 40px !important;
+            padding: 32px !important;
             border: none !important;
             box-shadow: none !important;
           }
-          .no-print {
-            display: none !important;
+          .dtc-section { page-break-inside: avoid; }
+          .no-print { display: none !important; }
+          @page {
+            size: A4;
+            margin: 12mm 12mm 20mm 12mm;
+            @bottom-right {
+              content: "Pág. " counter(page) " de " counter(pages);
+              font-size: 8pt;
+              color: #999;
+            }
           }
         }
       `}</style>
@@ -3366,18 +3405,46 @@ export default function TransicaoPlaceholder() {
                 <CardContent className="py-6">
                   {/* Clean preview card resembling A4 paper */}
                   <div className="bg-white text-black p-8 border rounded-md shadow-inner max-w-[800px] mx-auto text-sm leading-relaxed dtc-document-font">
-                    <div className="border-2 border-black p-5 space-y-5">
+                    <div className="border-2 border-black p-5 space-y-5" style={{ position: "relative" }}>
+                      {/* RASCUNHO watermark overlay */}
+                      {localDtc.status === "draft" && (
+                        <div style={{
+                          position: "absolute", top: 0, left: 0, width: "100%", height: "100%",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          pointerEvents: "none", zIndex: 0, overflow: "hidden",
+                        }}>
+                          <span style={{
+                            fontSize: "90px", fontWeight: 900, color: "rgba(0,0,0,0.05)",
+                            transform: "rotate(-40deg)", letterSpacing: "0.05em", userSelect: "none",
+                            whiteSpace: "nowrap",
+                          }}>RASCUNHO</span>
+                        </div>
+                      )}
                       {/* Document Header */}
-                      <div className="text-center border-b-2 border-black pb-4">
-                        <h2 className="text-xl font-bold tracking-tight uppercase">Documento de Transição de Conhecimento</h2>
-                        <h3 className="text-base font-semibold text-gray-700">Implantação / Service Desk</h3>
-                        {localDtc.supportCallNumber && (
-                          <p className="text-xs font-bold text-gray-600 mt-1">Chamado de Origem: {localDtc.supportCallNumber}</p>
-                        )}
+                      <div className="dtc-section border-b-2 border-black pb-4" style={{ position: "relative", zIndex: 1 }}>
+                        <div className="flex items-center justify-between">
+                          <img src="/assets/Siplan_logo.png" alt="Siplan" style={{ height: "36px", objectFit: "contain" }} />
+                          <div className="text-right">
+                            <span className="text-[9px] text-gray-400">Gerado em: {new Date().toLocaleDateString("pt-BR")} às {new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
+                            {localDtc.status === "draft" && (
+                              <span className="ml-2 text-[8px] font-bold uppercase bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">Rascunho</span>
+                            )}
+                            {localDtc.status === "approved" && (
+                              <span className="ml-2 text-[8px] font-bold uppercase bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded">Aprovado</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-center mt-2">
+                          <h2 className="text-xl font-bold tracking-tight uppercase">Documento de Transição de Conhecimento</h2>
+                          <h3 className="text-base font-semibold text-gray-700">Implantação / Service Desk</h3>
+                          {localDtc.supportCallNumber && (
+                            <p className="text-xs font-bold text-gray-600 mt-1">Chamado de Origem: {localDtc.supportCallNumber}</p>
+                          )}
+                        </div>
                       </div>
 
                       {/* 1. IDENTIFICAÇÃO DA SERVENTIA */}
-                      <div className="space-y-2">
+                      <div className="dtc-section space-y-2" style={{ position: "relative", zIndex: 1 }}>
                         <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 border-l-2 border-black pl-2">
                           1. Identificação da Serventia &amp; Responsáveis
                         </h4>
@@ -3770,14 +3837,42 @@ export default function TransicaoPlaceholder() {
       {/* RENDER-ONLY PRINT PREVIEW TARGET */}
       {selectedProjectId && localDtc && (
         <div id="dtc-print-area" ref={printRef} className="hidden print:block bg-white text-black p-8 text-sm dtc-document-font">
-          <div className="border-2 border-black p-6 space-y-6">
+          {/* RASCUNHO watermark - only in draft */}
+          {localDtc.status === "draft" && (
+            <div style={{
+              position: "absolute", top: 0, left: 0, width: "100%", height: "100%",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              pointerEvents: "none", zIndex: 0, overflow: "hidden",
+            }}>
+              <span style={{
+                fontSize: "120px", fontWeight: 900, color: "rgba(0,0,0,0.055)",
+                transform: "rotate(-40deg)", letterSpacing: "0.05em", userSelect: "none",
+                whiteSpace: "nowrap",
+              }}>RASCUNHO</span>
+            </div>
+          )}
+          <div className="border-2 border-black p-6 space-y-5" style={{ position: "relative", zIndex: 1 }}>
             {/* Header */}
-            <div className="text-center border-b-2 border-black pb-4">
-              <h2 className="text-2xl font-bold tracking-tight uppercase">Documento de Transição de Conhecimento</h2>
-              <h3 className="text-lg font-semibold text-gray-700">Módulo Implantação / Service Desk</h3>
-              {localDtc.supportCallNumber && (
-                <p className="text-sm font-bold text-gray-600 mt-1">Chamado no 0800: {localDtc.supportCallNumber}</p>
-              )}
+            <div className="dtc-section border-b-2 border-black pb-4">
+              <div className="flex items-center justify-between">
+                <img src="/assets/Siplan_logo.png" alt="Siplan" style={{ height: "40px", objectFit: "contain" }} />
+                <div className="text-right">
+                  <span className="text-[10px] text-gray-500">Gerado em: {new Date().toLocaleDateString("pt-BR")} às {new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
+                  {localDtc.status === "draft" && (
+                    <span className="ml-2 text-[9px] font-bold uppercase bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">Rascunho</span>
+                  )}
+                  {localDtc.status === "approved" && (
+                    <span className="ml-2 text-[9px] font-bold uppercase bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded">Aprovado</span>
+                  )}
+                </div>
+              </div>
+              <div className="text-center mt-3">
+                <h2 className="text-2xl font-bold tracking-tight uppercase">Documento de Transição de Conhecimento</h2>
+                <h3 className="text-lg font-semibold text-gray-700">Módulo Implantação / Service Desk</h3>
+                {localDtc.supportCallNumber && (
+                  <p className="text-sm font-bold text-gray-600 mt-1">Chamado de Origem: {localDtc.supportCallNumber}</p>
+                )}
+              </div>
             </div>
 
             {/* Grid */}
@@ -4005,7 +4100,7 @@ export default function TransicaoPlaceholder() {
             </div>
 
             {/* Signatures */}
-            <div className="grid grid-cols-2 gap-12 text-center text-xs pt-16">
+            <div className="dtc-section grid grid-cols-2 gap-12 text-center text-xs pt-16">
               <div className="space-y-1">
                 <p className="border-t border-black pt-2 font-bold">{localDtc.responsible || "Implantador Responsável"}</p>
                 <p className="text-[10px] text-gray-500">Implantador de Sistemas</p>
@@ -4014,6 +4109,12 @@ export default function TransicaoPlaceholder() {
                 <p className="border-t border-black pt-2 font-bold">{localDtc.analystResponsible || "Analista de Suporte"}</p>
                 <p className="text-[10px] text-gray-500">Service Desk / Suporte</p>
               </div>
+            </div>
+
+            {/* Footer */}
+            <div className="border-t border-gray-200 pt-3 mt-4 flex items-center justify-between text-[9px] text-gray-400">
+              <span>Siplan Sistemas — Documento de Transição de Conhecimento</span>
+              <span>Gerado em {new Date().toLocaleDateString("pt-BR")} às {new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
             </div>
           </div>
         </div>
