@@ -1300,22 +1300,41 @@ export default function TransicaoPlaceholder() {
   // Speech TTS State
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [speechUtterance, setSpeechUtterance] = useState<SpeechSynthesisUtterance | null>(null);
+  const [speechRate, setSpeechRate] = useState(1.0);
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [selectedVoiceURI, setSelectedVoiceURI] = useState<string>("");
+
+  // Load available voices on mount/onvoiceschanged
+  useEffect(() => {
+    const loadVoices = () => {
+      if (typeof window === "undefined" || !window.speechSynthesis) return;
+      const voices = window.speechSynthesis.getVoices();
+      // Filter pt-BR / Portuguese voices
+      const ptVoices = voices.filter(v => v.lang.toLowerCase().includes("pt"));
+      setAvailableVoices(ptVoices);
+      if (ptVoices.length > 0 && !selectedVoiceURI) {
+        const defaultVoice = ptVoices.find(v => v.default) || ptVoices[0];
+        setSelectedVoiceURI(defaultVoice.voiceURI);
+      }
+    };
+
+    loadVoices();
+    if (typeof window !== "undefined" && window.speechSynthesis && window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+  }, [selectedVoiceURI]);
 
   // Cleanup speech synthesis on unmount
   useEffect(() => {
     return () => {
-      window.speechSynthesis.cancel();
+      if (typeof window !== "undefined" && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
     };
   }, []);
 
-  const toggleSpeech = useCallback(() => {
-    if (isSpeaking) {
-      window.speechSynthesis.cancel();
-      setIsSpeaking(false);
-      return;
-    }
-
-    if (!localDtc) return;
+  const startSpeaking = useCallback(() => {
+    if (!localDtc || typeof window === "undefined" || !window.speechSynthesis) return;
 
     // Helper to get text from Lexical format
     const getLexicalText = (jsonStr: string, fallback = "") => {
@@ -1412,11 +1431,18 @@ export default function TransicaoPlaceholder() {
     const fullText = parts.join(" ");
     const utterance = new SpeechSynthesisUtterance(fullText);
     utterance.lang = "pt-BR";
+    utterance.rate = speechRate;
     
-    const voices = window.speechSynthesis.getVoices();
-    const ptVoice = voices.find(v => v.lang.startsWith("pt"));
-    if (ptVoice) {
-      utterance.voice = ptVoice;
+    if (selectedVoiceURI) {
+      const activeVoice = availableVoices.find(v => v.voiceURI === selectedVoiceURI);
+      if (activeVoice) {
+        utterance.voice = activeVoice;
+      }
+    } else {
+      const ptVoice = availableVoices.find(v => v.lang.startsWith("pt"));
+      if (ptVoice) {
+        utterance.voice = ptVoice;
+      }
     }
 
     utterance.onend = () => {
@@ -1427,9 +1453,30 @@ export default function TransicaoPlaceholder() {
     };
 
     setSpeechUtterance(utterance);
-    setIsSpeaking(true);
     window.speechSynthesis.speak(utterance);
-  }, [isSpeaking, localDtc]);
+  }, [localDtc, speechRate, selectedVoiceURI, availableVoices]);
+
+  const toggleSpeech = useCallback(() => {
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      return;
+    }
+    setIsSpeaking(true);
+    startSpeaking();
+  }, [isSpeaking, startSpeaking]);
+
+  // Restart speech if voice or rate changes while active
+  useEffect(() => {
+    if (isSpeaking && typeof window !== "undefined" && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      const timer = setTimeout(() => {
+        startSpeaking();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedVoiceURI, speechRate]);
 
   // ② DTC Progress: count filled sections out of 10
   const dtcProgress = useMemo(() => {
@@ -3490,11 +3537,48 @@ export default function TransicaoPlaceholder() {
                     <CardTitle className="text-base font-bold text-foreground">Visualização de Impressão (DTC Oficial)</CardTitle>
                     <CardDescription className="text-xs">Visualize e formate o documento A4 exatamente como será impresso ou exportado para PDF.</CardDescription>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* Controls */}
+                    <div className="flex items-center gap-2 border rounded-md px-2 py-1 bg-background text-[11px] h-9">
+                      {availableVoices.length > 0 && (
+                        <div className="flex items-center gap-1">
+                          <span className="text-muted-foreground font-medium text-[10px] uppercase tracking-wider">Voz:</span>
+                          <select
+                            value={selectedVoiceURI}
+                            onChange={(e) => setSelectedVoiceURI(e.target.value)}
+                            className="bg-transparent border-none outline-none font-semibold text-foreground max-w-[120px] cursor-pointer text-[11px]"
+                          >
+                            {availableVoices.map((v, i) => (
+                              <option key={i} value={v.voiceURI} className="text-black bg-white">
+                                {v.name.replace("Microsoft", "").replace("Google", "").replace("Desktop", "").trim()}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                      
+                      {availableVoices.length > 0 && <div className="w-[1px] h-3 bg-border" />}
+
+                      <div className="flex items-center gap-1">
+                        <span className="text-muted-foreground font-medium text-[10px] uppercase tracking-wider">Velocidade:</span>
+                        <select
+                          value={speechRate}
+                          onChange={(e) => setSpeechRate(parseFloat(e.target.value))}
+                          className="bg-transparent border-none outline-none font-semibold text-foreground cursor-pointer text-[11px]"
+                        >
+                          <option value="0.75" className="text-black bg-white">0.75x</option>
+                          <option value="1.0" className="text-black bg-white">1.0x</option>
+                          <option value="1.25" className="text-black bg-white">1.25x</option>
+                          <option value="1.5" className="text-black bg-white">1.5x</option>
+                          <option value="2.0" className="text-black bg-white">2.0x</option>
+                        </select>
+                      </div>
+                    </div>
+
                     <Button
                       onClick={toggleSpeech}
                       variant={isSpeaking ? "destructive" : "outline"}
-                      className="font-bold gap-1.5 text-xs shadow"
+                      className="font-bold gap-1.5 text-xs shadow h-9"
                       size="sm"
                     >
                       {isSpeaking ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
@@ -3502,7 +3586,7 @@ export default function TransicaoPlaceholder() {
                     </Button>
                     <Button
                       onClick={() => window.print()}
-                      className="bg-primary hover:bg-primary/95 text-primary-foreground font-bold gap-1.5 text-xs shadow"
+                      className="bg-primary hover:bg-primary/95 text-primary-foreground font-bold gap-1.5 text-xs shadow h-9"
                       size="sm"
                     >
                       <Printer className="h-4 w-4" />
