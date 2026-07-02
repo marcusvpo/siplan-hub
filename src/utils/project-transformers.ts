@@ -138,6 +138,8 @@ export function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
         soLogin: (row.custom_fields as any)?.environment_so_login || "",
         soPassword: (row.custom_fields as any)?.environment_so_password || "",
         remoteAccessList: (row.custom_fields as any)?.environment_remote_access_list || [],
+        postgresVersion: (row.custom_fields as any)?.environment_postgres_version || "",
+        postgresAccessData: (row.custom_fields as any)?.environment_postgres_access_data || "",
       },
       conversion: createStage<ConversionStageV2>('conversion'),
       implementation: createStage<ImplementationStageV2>('implementation'),
@@ -540,6 +542,8 @@ export function transformToDB(project: Partial<ProjectV2>, currentProject?: Proj
       const soLogin = stages.environment.soLogin;
       const soPassword = stages.environment.soPassword;
       const remoteAccessList = stages.environment.remoteAccessList;
+      const postgresVersion = stages.environment.postgresVersion;
+      const postgresAccessData = stages.environment.postgresAccessData;
 
       dbRow.custom_fields = {
         ...(currentCustomFields as any),
@@ -548,6 +552,8 @@ export function transformToDB(project: Partial<ProjectV2>, currentProject?: Proj
         ...(soLogin !== undefined ? { environment_so_login: soLogin } : {}),
         ...(soPassword !== undefined ? { environment_so_password: soPassword } : {}),
         ...(remoteAccessList !== undefined ? { environment_remote_access_list: remoteAccessList } : {}),
+        ...(postgresVersion !== undefined ? { environment_postgres_version: postgresVersion } : {}),
+        ...(postgresAccessData !== undefined ? { environment_postgres_access_data: postgresAccessData } : {}),
       };
     }
   }

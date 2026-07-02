@@ -249,6 +249,8 @@ export interface EnvironmentStageV2 {
   soLogin?: string;
   soPassword?: string;
   remoteAccessList?: RemoteAccessItem[];
+  postgresVersion?: string;
+  postgresAccessData?: string;
 }
 
 export interface ConversionStageV2 {

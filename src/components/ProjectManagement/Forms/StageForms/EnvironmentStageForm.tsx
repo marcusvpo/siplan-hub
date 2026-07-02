@@ -26,6 +26,7 @@ export function EnvironmentStageForm({
 }: EnvironmentStageFormProps) {
   const { toast } = useToast();
   const [showSoPassword, setShowSoPassword] = useState(false);
+  const [showPgAccess, setShowPgAccess] = useState(false);
 
   const handleCopyText = (text: string, label: string) => {
     if (!text) return;
@@ -223,6 +224,64 @@ export function EnvironmentStageForm({
                     onClick={() => handleCopyText(stage.soPassword || "", "Senha do SO")}
                     className="h-6 w-6 text-muted-foreground hover:text-foreground rounded-full"
                     title="Copiar senha"
+                  >
+                    <Copy className="h-3.5 w-3.5" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* PostgreSQL Database Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-200 dark:border-slate-800 pt-4 mt-2">
+          {/* Postgres Version */}
+          <div className="space-y-1.5">
+            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Versão do PostgreSQL
+            </Label>
+            <Input
+              value={stage.postgresVersion || ""}
+              onChange={(e) => onUpdate({ postgresVersion: e.target.value })}
+              disabled={!canEditProjects}
+              placeholder="Ex: PostgreSQL 17"
+              className="h-8 text-xs border border-muted/80 bg-background"
+            />
+          </div>
+
+          {/* Postgres Access Data */}
+          <div className="space-y-1.5">
+            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Dados de Acesso PostgreSQL (IP, Porta, User)
+            </Label>
+            <div className="relative flex items-center">
+              <Input
+                type={showPgAccess ? "text" : "password"}
+                value={stage.postgresAccessData || ""}
+                onChange={(e) => onUpdate({ postgresAccessData: e.target.value })}
+                disabled={!canEditProjects}
+                placeholder="IP, Porta, User, Senha..."
+                className="h-8 text-xs border border-muted/80 bg-background pr-16"
+              />
+              <div className="absolute right-0.5 flex items-center gap-0.5">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowPgAccess(!showPgAccess)}
+                  className="h-6 w-6 text-muted-foreground hover:text-foreground rounded-full"
+                  title={showPgAccess ? "Ocultar senha" : "Ver senha"}
+                >
+                  {showPgAccess ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                </Button>
+                {stage.postgresAccessData && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleCopyText(stage.postgresAccessData || "", "Acesso PostgreSQL")}
+                    className="h-6 w-6 text-muted-foreground hover:text-foreground rounded-full"
+                    title="Copiar dados"
                   >
                     <Copy className="h-3.5 w-3.5" />
                   </Button>
