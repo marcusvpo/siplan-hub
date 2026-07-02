@@ -170,6 +170,9 @@ interface DTCData {
   systemVersionsList?: Record<string, string>;
   postgresVersion: string;
   postgresAccessData: string;
+  postgresHost?: string;
+  postgresUser?: string;
+  postgresPassword?: string;
   hadConversion: boolean;
   convertedData: string;
   remoteAccessData: string;
@@ -416,6 +419,9 @@ export default function TransicaoPlaceholder() {
       systemVersionsList: {},
       postgresVersion: project.stages?.environment?.postgresVersion || "",
       postgresAccessData: project.stages?.environment?.postgresAccessData || "",
+      postgresHost: project.stages?.environment?.postgresHost || "",
+      postgresUser: project.stages?.environment?.postgresUser || "",
+      postgresPassword: project.stages?.environment?.postgresPassword || "",
       hadConversion: false,
       convertedData: "",
       remoteAccessData: "",
@@ -452,6 +458,9 @@ export default function TransicaoPlaceholder() {
       soPassword: envStage?.soPassword || dtc.soPassword || "",
       postgresVersion: envStage?.postgresVersion || dtc.postgresVersion || "",
       postgresAccessData: envStage?.postgresAccessData || dtc.postgresAccessData || "",
+      postgresHost: envStage?.postgresHost || dtc.postgresHost || "",
+      postgresUser: envStage?.postgresUser || dtc.postgresUser || "",
+      postgresPassword: envStage?.postgresPassword || dtc.postgresPassword || "",
     };
   }, [project]);
 
@@ -478,6 +487,9 @@ export default function TransicaoPlaceholder() {
               soPassword: newData.soPassword,
               postgresVersion: newData.postgresVersion,
               postgresAccessData: newData.postgresAccessData,
+              postgresHost: newData.postgresHost,
+              postgresUser: newData.postgresUser,
+              postgresPassword: newData.postgresPassword,
             }
           }
         }
@@ -2164,17 +2176,53 @@ export default function TransicaoPlaceholder() {
                         </div>
                         
                         <div className="space-y-1.5">
-                          <Label htmlFor="postgresAccessData" className="text-[11px] font-bold">Dados de Acesso PostgreSQL (IP, Porta, User)</Label>
+                          <Label htmlFor="postgresHost" className="text-[11px] font-bold">Local de Instalação (IP / Porta)</Label>
+                          <Input
+                            id="postgresHost"
+                            value={localDtc.postgresHost || ""}
+                            onChange={(e) => handleFieldChange("postgresHost", e.target.value)}
+                            disabled={isFormDisabled}
+                            className="border-muted/80 h-8 text-xs"
+                            placeholder="Ex: 192.168.1.10:5432"
+                          />
+                          {(() => {
+                            const validation = getIpValidationMessage(localDtc.postgresHost || "");
+                            if (!validation) return null;
+                            return (
+                              <span className={cn(
+                                "text-[10px] font-semibold mt-1 block",
+                                validation.isWarning ? "text-amber-500" : "text-emerald-600"
+                              )}>
+                                {validation.isWarning ? "⚠ " : "✓ "}{validation.msg}
+                              </span>
+                            );
+                          })()}
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <Label htmlFor="postgresUser" className="text-[11px] font-bold">Usuário do Banco</Label>
+                          <Input
+                            id="postgresUser"
+                            value={localDtc.postgresUser || ""}
+                            onChange={(e) => handleFieldChange("postgresUser", e.target.value)}
+                            disabled={isFormDisabled}
+                            className="border-muted/80 h-8 text-xs"
+                            placeholder="Ex: postgres"
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <Label htmlFor="postgresPassword" className="text-[11px] font-bold">Senha do Banco</Label>
                           <div className="relative flex items-center">
                             <Input
-                              id="postgresAccessData"
+                              id="postgresPassword"
                               type={showPgAccess ? "text" : "password"}
                               autoComplete="new-password"
-                              value={localDtc.postgresAccessData}
-                              onChange={(e) => handleFieldChange("postgresAccessData", e.target.value)}
+                              value={localDtc.postgresPassword || ""}
+                              onChange={(e) => handleFieldChange("postgresPassword", e.target.value)}
                               disabled={isFormDisabled}
                               className="border-muted/80 h-8 text-xs pr-16"
-                              placeholder="IP, Porta, User, Senha..."
+                              placeholder="Senha..."
                             />
                             <div className="absolute right-1 flex items-center gap-0.5">
                               <Button
@@ -2191,7 +2239,7 @@ export default function TransicaoPlaceholder() {
                                 type="button"
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => handleCopyText(localDtc.postgresAccessData || "", "Acesso PostgreSQL")}
+                                onClick={() => handleCopyText(localDtc.postgresPassword || "", "Senha do PostgreSQL")}
                                 className="h-6 w-6 text-muted-foreground hover:text-foreground rounded-full"
                                 title="Copiar dados"
                               >
@@ -2199,18 +2247,6 @@ export default function TransicaoPlaceholder() {
                               </Button>
                             </div>
                           </div>
-                          {(() => {
-                            const validation = getIpValidationMessage(localDtc.postgresAccessData || "");
-                            if (!validation) return null;
-                            return (
-                              <span className={cn(
-                                "text-[10px] font-semibold mt-1 block",
-                                validation.isWarning ? "text-amber-500" : "text-emerald-600"
-                              )}>
-                                {validation.isWarning ? "⚠ " : "✓ "}{validation.msg}
-                              </span>
-                            );
-                          })()}
                         </div>
                       </div>
                     )}
@@ -3352,7 +3388,8 @@ export default function TransicaoPlaceholder() {
                           <div><strong>Sistemas Instalados:</strong> {localDtc.systemsInstalled || "__________________________"}</div>
                           <div><strong>Versões dos Sistemas:</strong> {localDtc.systemVersions || "__________________________"}</div>
                           <div><strong>Versão PostgreSQL:</strong> {localDtc.postgresVersion || "__________________________"}</div>
-                          <div><strong>Acesso PostgreSQL:</strong> {localDtc.postgresAccessData || "__________________________"}</div>
+                          <div><strong>Local Instalação PG:</strong> {localDtc.postgresHost || "__________________________"}</div>
+                          <div className="col-span-2"><strong>Acesso Banco PG:</strong> Usuário: {localDtc.postgresUser || "_____"} | Senha: {localDtc.postgresPassword || "_____"}</div>
                         </div>
                         <div className="mt-2">
                           <strong>Dados de Acesso Remoto:</strong>{" "}
@@ -3618,7 +3655,8 @@ export default function TransicaoPlaceholder() {
                 <div><strong>Sistemas Instalados:</strong> {localDtc.systemsInstalled || "__________________________"}</div>
                 <div><strong>Versões dos Sistemas:</strong> {localDtc.systemVersions || "__________________________"}</div>
                 <div><strong>Versão PostgreSQL:</strong> {localDtc.postgresVersion || "__________________________"}</div>
-                <div className="col-span-2"><strong>Acesso PostgreSQL:</strong> {localDtc.postgresAccessData || "__________________________"}</div>
+                <div><strong>Local Instalação PG:</strong> {localDtc.postgresHost || "__________________________"}</div>
+                <div className="col-span-2"><strong>Acesso Banco PG:</strong> Usuário: {localDtc.postgresUser || "_____"} | Senha: {localDtc.postgresPassword || "_____"}</div>
               </div>
               <div>
                 <strong>Dados de Acesso Remoto:</strong>{" "}

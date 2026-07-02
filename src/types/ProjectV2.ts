@@ -251,6 +251,9 @@ export interface EnvironmentStageV2 {
   remoteAccessList?: RemoteAccessItem[];
   postgresVersion?: string;
   postgresAccessData?: string;
+  postgresHost?: string;
+  postgresUser?: string;
+  postgresPassword?: string;
 }
 
 export interface ConversionStageV2 {
