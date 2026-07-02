@@ -3626,10 +3626,10 @@ function TransicaoPlaceholder() {
                           className="bg-transparent border-none outline-none font-bold text-foreground cursor-pointer text-[10px]"
                         >
                           <option value="0.75" className="text-black bg-white">0.75x</option>
-                          <option value="1.0" className="text-black bg-white">1.0x</option>
+                          <option value="1" className="text-black bg-white">1.0x</option>
                           <option value="1.25" className="text-black bg-white">1.25x</option>
                           <option value="1.5" className="text-black bg-white">1.5x</option>
-                          <option value="2.0" className="text-black bg-white">2.0x</option>
+                          <option value="2" className="text-black bg-white">2.0x</option>
                         </select>
                       </div>
                     </div>
