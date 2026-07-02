@@ -195,6 +195,8 @@ interface DTCData {
   approvedAt?: string;
   soLogin?: string;
   soPassword?: string;
+  osType?: string;
+  osVersion?: string;
   approvedBy?: string;
 }
 
@@ -422,6 +424,8 @@ export default function TransicaoPlaceholder() {
       postgresHost: project.stages?.environment?.postgresHost || "",
       postgresUser: project.stages?.environment?.postgresUser || "",
       postgresPassword: project.stages?.environment?.postgresPassword || "",
+      osType: project.stages?.environment?.osType || "",
+      osVersion: project.stages?.environment?.osVersion || "",
       hadConversion: false,
       convertedData: "",
       remoteAccessData: "",
@@ -461,6 +465,8 @@ export default function TransicaoPlaceholder() {
       postgresHost: envStage?.postgresHost || dtc.postgresHost || "",
       postgresUser: envStage?.postgresUser || dtc.postgresUser || "",
       postgresPassword: envStage?.postgresPassword || dtc.postgresPassword || "",
+      osType: envStage?.osType || dtc.osType || "",
+      osVersion: envStage?.osVersion || dtc.osVersion || "",
     };
   }, [project]);
 
@@ -490,6 +496,8 @@ export default function TransicaoPlaceholder() {
               postgresHost: newData.postgresHost,
               postgresUser: newData.postgresUser,
               postgresPassword: newData.postgresPassword,
+              osType: newData.osType,
+              osVersion: newData.osVersion,
             }
           }
         }

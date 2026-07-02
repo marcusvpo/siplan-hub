@@ -67,18 +67,37 @@ export function EnvironmentStageForm({
   return (
     <div className="space-y-4 col-span-full">
       {/* Sistema Operacional */}
-      <div className="space-y-2.5 max-w-sm">
+      <div className="space-y-2.5">
         <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
           <Database className="h-3.5 w-3.5 text-muted-foreground" />
           Sistema Operacional
         </Label>
-        <Input
-          value={stage.osVersion || ""}
-          onChange={(e) => onUpdate({ osVersion: e.target.value })}
-          disabled={!canEditProjects}
-          placeholder="Ex: Windows Server 2022"
-          className="h-9 border border-input bg-background text-foreground hover:bg-slate-50/50 dark:hover:bg-slate-900/50 focus-visible:ring-1 focus-visible:ring-ring font-medium text-xs"
-        />
+        
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 max-w-xl">
+          {/* OS Type Selector */}
+          <Select
+            value={stage.osType || ""}
+            onValueChange={(val) => onUpdate({ osType: val })}
+            disabled={!canEditProjects}
+          >
+            <SelectTrigger className="w-full sm:w-44 h-9 text-xs border-muted/80 bg-background">
+              <SelectValue placeholder="Selecione o SO..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Windows" className="text-xs">Windows</SelectItem>
+              <SelectItem value="Linux" className="text-xs">Linux</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* OS Version Input */}
+          <Input
+            value={stage.osVersion || ""}
+            onChange={(e) => onUpdate({ osVersion: e.target.value })}
+            disabled={!canEditProjects}
+            placeholder={stage.osType === "Linux" ? "Ex: Ubuntu 22.04" : "Ex: Server 2022"}
+            className="h-9 border border-input bg-background text-foreground hover:bg-slate-50/50 dark:hover:bg-slate-900/50 focus-visible:ring-1 focus-visible:ring-ring font-medium text-xs flex-1 min-w-[150px]"
+          />
+        </div>
       </div>
 
       {/* Acessos Remotos */}
