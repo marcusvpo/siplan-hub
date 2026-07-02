@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -50,6 +50,8 @@ import {
   ArrowLeft,
   FileText,
   Printer,
+  Volume2,
+  VolumeX,
   Plus,
   Trash2,
   Save,
@@ -82,10 +84,7 @@ import {
   Lightbulb,
   Users,
   BarChart3,
-  FileDown,
-  ZoomIn,
-  ZoomOut,
-  Maximize2
+  FileDown
 } from "lucide-react";
 
 interface KeyUserItem {
@@ -352,7 +351,6 @@ export default function TransicaoPlaceholder() {
   const queryClient = useQueryClient();
   const { members = [] } = useTeamMembers();
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
-  const [zoom, setZoom] = useState(100);
   const [showPgAccess, setShowPgAccess] = useState(false);
   const [showSoPassword, setShowSoPassword] = useState(false);
   const [showRemoteAccess, setShowRemoteAccess] = useState(false);
@@ -1299,6 +1297,140 @@ export default function TransicaoPlaceholder() {
   // Ref for PDF export
   const printRef = useRef<HTMLDivElement>(null);
 
+  // Speech TTS State
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [speechUtterance, setSpeechUtterance] = useState<SpeechSynthesisUtterance | null>(null);
+
+  // Cleanup speech synthesis on unmount
+  useEffect(() => {
+    return () => {
+      window.speechSynthesis.cancel();
+    };
+  }, []);
+
+  const toggleSpeech = useCallback(() => {
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      return;
+    }
+
+    if (!localDtc) return;
+
+    // Helper to get text from Lexical format
+    const getLexicalText = (jsonStr: string, fallback = "") => {
+      if (!jsonStr) return fallback;
+      try {
+        const parsed = JSON.parse(jsonStr);
+        if (!parsed.root || !parsed.root.children) {
+          return jsonStr;
+        }
+        const extractText = (node: any): string => {
+          if (node.type === "text") return node.text || "";
+          if (node.children) return node.children.map(extractText).join(" ");
+          return "";
+        };
+        return parsed.root.children.map(extractText).join(" ");
+      } catch {
+        return jsonStr;
+      }
+    };
+
+    const parts: string[] = [];
+    parts.push("Iniciando a leitura do Documento de Transição de Conhecimento.");
+    
+    if (localDtc.supportCallNumber) {
+      parts.push(`Chamado de origem: ${localDtc.supportCallNumber}.`);
+    }
+
+    parts.push("Identificação da Serventia.");
+    parts.push(`Implantador responsável: ${localDtc.responsible || "Não informado"}.`);
+    parts.push(`Analista de suporte: ${localDtc.analystResponsible || "Não informado"}.`);
+    parts.push(`Serventia: ${localDtc.serventia || "Não informada"}.`);
+    parts.push(`Oficial titular: ${localDtc.oficial || "Não informado"}.`);
+    parts.push(`Responsável pelo Cartório: ${localDtc.clientResponsible || "Não informado"}.`);
+
+    parts.push("Infraestrutura e acessos.");
+    parts.push(`Sistemas instalados: ${localDtc.systemsInstalled || "Não informado"}.`);
+    parts.push(`Versões dos sistemas: ${localDtc.systemVersions || "Não informado"}.`);
+    parts.push(`Versão do PostgreSQL: ${localDtc.postgresVersion || "Não informada"}.`);
+    parts.push(`Local de instalação do banco: ${localDtc.postgresHost || "Não informado"}.`);
+
+    if (localDtc.remoteAccessList && localDtc.remoteAccessList.length > 0) {
+      parts.push("Acessos remotos disponibilizados:");
+      localDtc.remoteAccessList.forEach(a => {
+        parts.push(`${a.system}. Identificador ${a.id}.`);
+      });
+    }
+
+    if (localDtc.osType || localDtc.osVersion) {
+      parts.push(`Sistema operacional do servidor: ${localDtc.osType || ""} ${localDtc.osVersion || ""}.`);
+    }
+
+    parts.push("Conversão de Banco de Dados.");
+    if (localDtc.hadConversion) {
+      parts.push(`Houve conversão de banco de dados.`);
+      if (localDtc.convertedData) {
+        parts.push(`Dados convertidos: ${localDtc.convertedData}.`);
+      }
+    } else {
+      parts.push("Não houve conversão.");
+    }
+
+    parts.push("Relato Técnico.");
+    const processText = getLexicalText(localDtc.implantationProcess);
+    if (processText) {
+      parts.push(`Relato do processo: ${processText}`);
+    }
+
+    if (localDtc.employeesList && localDtc.employeesList.length > 0) {
+      parts.push("Funcionários capacitados:");
+      parts.push(localDtc.employeesList.map(e => e.name).join(", "));
+    }
+
+    if (localDtc.implantationGainsList && localDtc.implantationGainsList.length > 0) {
+      parts.push("Ganhos operacionais obtidos:");
+      localDtc.implantationGainsList.forEach(g => {
+        parts.push(`${g.title || ""}: ${getLexicalText(g.description)}`);
+      });
+    }
+
+    if (localDtc.implantationPendingList && localDtc.implantationPendingList.length > 0) {
+      parts.push("Pendências da implantação:");
+      localDtc.implantationPendingList.forEach(p => {
+        parts.push(`${p.title || ""}. Status: ${p.status}.`);
+      });
+    }
+
+    if (localDtc.clientSatisfactionScore) {
+      const scores = ["", "Ruim", "Regular", "Bom", "Muito bom", "Excelente"];
+      parts.push(`Satisfação do cliente: ${scores[localDtc.clientSatisfactionScore]}.`);
+    }
+
+    parts.push("Leitura concluída.");
+
+    const fullText = parts.join(" ");
+    const utterance = new SpeechSynthesisUtterance(fullText);
+    utterance.lang = "pt-BR";
+    
+    const voices = window.speechSynthesis.getVoices();
+    const ptVoice = voices.find(v => v.lang.startsWith("pt"));
+    if (ptVoice) {
+      utterance.voice = ptVoice;
+    }
+
+    utterance.onend = () => {
+      setIsSpeaking(false);
+    };
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+    };
+
+    setSpeechUtterance(utterance);
+    setIsSpeaking(true);
+    window.speechSynthesis.speak(utterance);
+  }, [isSpeaking, localDtc]);
+
   // ② DTC Progress: count filled sections out of 10
   const dtcProgress = useMemo(() => {
     if (!localDtc) return 0;
@@ -1335,19 +1467,19 @@ export default function TransicaoPlaceholder() {
       toast.loading("Gerando PDF...", { id: "pdf-export" });
       const html2canvas = (await import("html2canvas")).default;
       const { jsPDF } = await import("jspdf");
-
+      
       const element = printRef.current;
       element.classList.remove("hidden");
-
+      
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
         backgroundColor: "#ffffff",
         logging: false,
       });
-
+      
       element.classList.add("hidden");
-
+      
       const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
       const pageWidth = pdf.internal.pageSize.getWidth();
@@ -1356,54 +1488,20 @@ export default function TransicaoPlaceholder() {
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       let heightLeft = imgHeight;
       let position = 0;
-      let page = 1;
-      const totalPages = Math.ceil(imgHeight / pageHeight);
-
-      const addPageNumber = (p: number) => {
-        pdf.setFontSize(8);
-        pdf.setTextColor(150);
-        pdf.text(`Pág. ${p} de ${totalPages}`, pageWidth - 15, pageHeight - 5, { align: "right" });
-        pdf.setTextColor(0);
-      };
-
-      // RASCUNHO watermark for draft status
-      const addWatermark = () => {
-        if (localDtc?.status !== "draft") return;
-        pdf.saveGraphicsState();
-        pdf.setFontSize(72);
-        pdf.setTextColor(220, 220, 220);
-        pdf.setGState(new (pdf as any).GState({ opacity: 0.25 }));
-        pdf.text("RASCUNHO", pageWidth / 2, pageHeight / 2, {
-          align: "center",
-          angle: 45,
-        });
-        pdf.restoreGraphicsState();
-        pdf.setTextColor(0);
-      };
-
       pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-      addWatermark();
-      addPageNumber(page);
       heightLeft -= pageHeight;
-
       while (heightLeft > 0) {
         position -= pageHeight;
-        page++;
         pdf.addPage();
         pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-        addWatermark();
-        addPageNumber(page);
         heightLeft -= pageHeight;
       }
-
-      const now = new Date();
-      const dateStr = now.toLocaleDateString("pt-BR").replace(/\//g, "-");
-      const fileName = `DTC_${localDtc?.serventia?.replace(/[^a-zA-Z0-9]/g, "_").replace(/_+/g, "_") || "Cartorio"}_${dateStr}.pdf`;
+      const fileName = `DTC_${localDtc?.serventia?.replace(/\s+/g, "_") || "Cartorio"}_${new Date().toLocaleDateString("pt-BR").replace(/\//g, "-")}.pdf`;
       pdf.save(fileName);
       toast.success("PDF exportado com sucesso!", { id: "pdf-export" });
     } catch (err) {
       console.error(err);
-      toast.error("Erro ao gerar PDF.", { id: "pdf-export" });
+          toast.error("Erro ao gerar PDF.", { id: "pdf-export" });
     }
   }, [localDtc]);
 
@@ -1413,21 +1511,14 @@ export default function TransicaoPlaceholder() {
       <style>{`
         .dtc-document-font, .dtc-document-font * {
           font-family: 'Segoe UI', Calibri, Arial, sans-serif !important;
-          text-align: justify !important;
-          hyphens: auto !important;
         }
-        .dtc-document-font h1,
-        .dtc-document-font h2,
-        .dtc-document-font h3,
-        .dtc-document-font h4,
-        .dtc-document-font th,
-        .dtc-document-font .text-center {
-          text-align: center !important;
-        }
-        .dtc-section { page-break-inside: avoid; }
         @media print {
-          body * { visibility: hidden; }
-          #dtc-print-area, #dtc-print-area * { visibility: visible; }
+          body * {
+            visibility: hidden;
+          }
+          #dtc-print-area, #dtc-print-area * {
+            visibility: visible;
+          }
           #dtc-print-area {
             position: absolute;
             left: 0;
@@ -1435,20 +1526,12 @@ export default function TransicaoPlaceholder() {
             width: 100%;
             background: white !important;
             color: black !important;
-            padding: 32px !important;
+            padding: 40px !important;
             border: none !important;
             box-shadow: none !important;
           }
-          .dtc-section { page-break-inside: avoid; }
-          .no-print { display: none !important; }
-          @page {
-            size: A4;
-            margin: 12mm 12mm 20mm 12mm;
-            @bottom-right {
-              content: "Pág. " counter(page) " de " counter(pages);
-              font-size: 8pt;
-              color: #999;
-            }
+          .no-print {
+            display: none !important;
           }
         }
       `}</style>
@@ -3400,351 +3483,179 @@ export default function TransicaoPlaceholder() {
             </TabsContent>
 
             {/* TAB 5: REPORT PRINT PREVIEW */}
-            {/* TAB 5: REPORT PRINT PREVIEW */}
-            {/* TAB 5: REPORT PRINT PREVIEW */}
-            {/* TAB 5: REPORT PRINT PREVIEW */}
             <TabsContent value="visualizar">
-              <Card className="border-muted/60 shadow-md overflow-hidden">
-                <CardHeader className="border-b flex flex-row items-center justify-between py-3 bg-muted/20">
+              <Card className="border-muted/60 shadow-md">
+                <CardHeader className="border-b flex flex-row items-center justify-between py-4 bg-muted/20">
                   <div>
                     <CardTitle className="text-base font-bold text-foreground">Visualização de Impressão (DTC Oficial)</CardTitle>
-                    <CardDescription className="text-xs">Pré-visualização paginada em A4 — exatamente como será impresso ou exportado para PDF.</CardDescription>
+                    <CardDescription className="text-xs">Visualize e formate o documento A4 exatamente como será impresso ou exportado para PDF.</CardDescription>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Button onClick={exportToPdf} variant="outline" size="sm" className="gap-1.5 text-xs font-bold border-primary text-primary hover:bg-primary hover:text-primary-foreground">
-                      <FileDown className="h-3.5 w-3.5" />
-                      Exportar PDF
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={toggleSpeech}
+                      variant={isSpeaking ? "destructive" : "outline"}
+                      className="font-bold gap-1.5 text-xs shadow"
+                      size="sm"
+                    >
+                      {isSpeaking ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                      {isSpeaking ? "Parar Leitura" : "Ouvir Relatório"}
                     </Button>
-                    <Button onClick={() => window.print()} className="bg-primary hover:bg-primary/95 text-primary-foreground font-bold gap-1.5 text-xs shadow" size="sm">
-                      <Printer className="h-3.5 w-3.5" />
-                      Imprimir
+                    <Button
+                      onClick={() => window.print()}
+                      className="bg-primary hover:bg-primary/95 text-primary-foreground font-bold gap-1.5 text-xs shadow"
+                      size="sm"
+                    >
+                      <Printer className="h-4 w-4" />
+                      Imprimir / Exportar PDF
                     </Button>
                   </div>
                 </CardHeader>
-                {/* PDF Toolbar */}
-                <div className="bg-[#323639] text-white px-4 py-1.5 flex items-center justify-between border-b select-none no-print">
-                  <div className="flex items-center gap-2 text-xs font-semibold">
-                    <span className="text-gray-300 font-normal">Modo de Visualização</span>
-                  </div>
-                  {/* Zoom controls */}
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setZoom(prev => Math.max(50, prev - 10))}
-                      disabled={zoom <= 50}
-                      className="h-8 w-8 text-gray-300 hover:text-white hover:bg-white/10"
-                    >
-                      <ZoomOut className="h-4 w-4" />
-                    </Button>
-                    <span className="text-xs font-mono w-10 text-center font-bold">{zoom}%</span>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setZoom(prev => Math.min(150, prev + 10))}
-                      disabled={zoom >= 150}
-                      className="h-8 w-8 text-gray-300 hover:text-white hover:bg-white/10"
-                    >
-                      <ZoomIn className="h-4 w-4" />
-                    </Button>
-                    <div className="h-4 w-[1px] bg-white/20 mx-1" />
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setZoom(100)}
-                      className="text-xs text-gray-300 hover:text-white hover:bg-white/10 px-2 h-7 gap-1"
-                    >
-                      <Maximize2 className="h-3.5 w-3.5" />
-                      100%
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setZoom(80)}
-                      className="text-xs text-gray-300 hover:text-white hover:bg-white/10 px-2 h-7"
-                    >
-                      Ajustar Largura
-                    </Button>
-                  </div>
-                  <div className="text-xs text-gray-400 font-mono">
-                    Visualizador de Páginas
-                  </div>
-                </div>
-
-                {/* PDF Viewer shell — dark background like Adobe Reader */}
-                <div className="overflow-y-auto" style={{ background: '#404040', minHeight: '600px', maxHeight: '85vh', padding: '32px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px' }}>
-                  
-                  {/* PÁGINA 1 */}
-                  <div className="dtc-document-font text-black relative" style={{
-                    width: '794px',
-                    minHeight: '1122px',
-                    height: 'auto',
-                    background: 'white',
-                    boxShadow: '0 4px 16px rgba(0,0,0,0.45)',
-                    zoom: zoom / 100
-                  }}>
-                    {localDtc.status === 'draft' && (
-                      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
-                        <span style={{ fontSize: '110px', fontWeight: 900, color: 'rgba(0,0,0,0.045)', transform: 'rotate(-40deg)', letterSpacing: '0.05em', userSelect: 'none', whiteSpace: 'nowrap' }}>RASCUNHO</span>
-                      </div>
-                    )}
-                    <div style={{ padding: '56px 72px 32px 72px', minHeight: '1122px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
-                      <div className="space-y-4">
-                        {/* CABEÇALHO */}
-                        <div className="dtc-section" style={{ borderBottom: '2px solid black', paddingBottom: '14px', marginBottom: '16px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-                            <img src="/assets/Siplan_logo.png" alt="Siplan" style={{ height: '36px', objectFit: 'contain' }} />
-                            <div style={{ textAlign: 'right' }}>
-                              <div style={{ fontSize: '8px', color: '#999' }}>Gerado em: {new Date().toLocaleDateString('pt-BR')} às {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</div>
-                              {localDtc.status === 'draft' && <span style={{ fontSize: '8px', fontWeight: 700, background: '#FEF3C7', color: '#92400E', padding: '1px 6px', borderRadius: '3px', display: 'inline-block', marginTop: '2px' }}>RASCUNHO</span>}
-                              {localDtc.status === 'approved' && <span style={{ fontSize: '8px', fontWeight: 700, background: '#D1FAE5', color: '#065F46', padding: '1px 6px', borderRadius: '3px', display: 'inline-block', marginTop: '2px' }}>APROVADO</span>}
-                            </div>
-                          </div>
-                          <div style={{ textAlign: 'center' }}>
-                            <div style={{ fontSize: '16px', fontWeight: 900, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Documento de Transição de Conhecimento</div>
-                            <div style={{ fontSize: '12px', fontWeight: 600, color: '#444', marginTop: '2px' }}>Módulo Implantação / Service Desk</div>
-                            {localDtc.supportCallNumber && <div style={{ fontSize: '10px', fontWeight: 700, color: '#666', marginTop: '3px' }}>Chamado de Origem: {localDtc.supportCallNumber}</div>}
-                          </div>
-                        </div>
-
-                        {/* 1. IDENTIFICAÇÃO */}
-                        <div className="dtc-section" style={{ marginBottom: '14px' }}>
-                          <div style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#1e293b', borderLeft: '3px solid black', paddingLeft: '6px', marginBottom: '5px' }}>1. Identificação da Serventia &amp; Responsáveis</div>
-                          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10.5px' }}>
-                            <tbody>
-                              <tr>
-                                <td style={{ border: '1px solid #cbd5e1', padding: '5px 7px', width: '50%', background: '#f8fafc' }}><strong>Implantador Responsável:</strong> {renderVal(localDtc.responsible)}</td>
-                                <td style={{ border: '1px solid #cbd5e1', padding: '5px 7px', background: '#f8fafc' }}><strong>Analista Suporte:</strong> {renderVal(localDtc.analystResponsible)}</td>
-                              </tr>
-                              <tr><td colSpan={2} style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}><strong>Serventia (Cartório):</strong> {renderVal(localDtc.serventia)}</td></tr>
-                              <tr>
-                                <td style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}><strong>Oficial Titular:</strong> {renderVal(localDtc.oficial)}</td>
-                                <td style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}><strong>Responsável Cartório:</strong> {localDtc.clientResponsible ? `${localDtc.clientResponsible}${localDtc.clientResponsiblePhone ? ` (${localDtc.clientResponsiblePhone})` : ''}` : renderVal(null)}</td>
-                              </tr>
-                              <tr><td colSpan={2} style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}><strong>Key Users:</strong> {localDtc.keyUsersList && localDtc.keyUsersList.length > 0 ? localDtc.keyUsersList.map(u => `${u.name}${u.phone ? ` (${u.phone})` : ''}`).join(' · ') : renderVal(null, 'Nenhum informado')}</td></tr>
-                              <tr>
-                                <td style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}><strong>Telefone:</strong> {renderVal(localDtc.clientPhone)}</td>
-                                <td style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}><strong>E-mail:</strong> {renderVal(localDtc.clientEmail)}</td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </div>
-
-                        {/* 2. INFRAESTRUTURA */}
-                        <div className="dtc-section" style={{ marginBottom: '14px' }}>
-                          <div style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#1e293b', borderLeft: '3px solid black', paddingLeft: '6px', marginBottom: '5px' }}>2. Infraestrutura, Banco de Dados &amp; Acessos</div>
-                          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10.5px' }}>
-                            <tbody>
-                              <tr>
-                                <td style={{ border: '1px solid #cbd5e1', padding: '5px 7px', width: '50%' }}><strong>Sistemas Instalados:</strong> {renderVal(localDtc.systemsInstalled)}</td>
-                                <td style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}><strong>Versões:</strong> {renderVal(localDtc.systemVersions)}</td>
-                              </tr>
-                              <tr>
-                                <td style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}><strong>Versão PostgreSQL:</strong> {renderVal(localDtc.postgresVersion)}</td>
-                                <td style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}><strong>Local Instalação PG:</strong> {renderVal(localDtc.postgresHost)}</td>
-                              </tr>
-                              <tr>
-                                <td colSpan={2} style={{ border: '1px solid #cbd5e1', padding: '5px 7px', background: '#f8fafc' }}>
-                                  <strong>Acesso Banco PG:</strong>
-                                  <span style={{ fontFamily: 'monospace', background: 'white', border: '1px solid #e2e8f0', padding: '1px 5px', borderRadius: '3px', marginLeft: '6px' }}>Usuário: {localDtc.postgresUser || 'N/A'}</span>
-                                  <span style={{ fontFamily: 'monospace', background: 'white', border: '1px solid #e2e8f0', padding: '1px 5px', borderRadius: '3px', marginLeft: '6px' }}>Senha: {localDtc.postgresPassword || 'N/A'}</span>
-                                </td>
-                              </tr>
-                              <tr>
-                                <td colSpan={2} style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}>
-                                  <strong>Acessos Remotos:</strong>{' '}
-                                  {!localDtc.remoteAccessList || localDtc.remoteAccessList.length === 0
-                                    ? renderVal(localDtc.remoteAccessData, 'Nenhum informado')
-                                    : localDtc.remoteAccessList.map((a, i) => (
-                                      <span key={i} style={{ display: 'inline-block', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '3px', padding: '1px 6px', marginRight: '4px', fontFamily: 'monospace', fontSize: '10px' }}>
-                                        {a.system} · ID: {a.id}{a.password ? ` · Senha: ${a.password}` : ''}
-                                      </span>
-                                    ))
-                                  }
-                                </td>
-                              </tr>
-                              {(localDtc.soLogin || localDtc.soPassword || localDtc.osType || localDtc.osVersion) && (
-                                <tr>
-                                  <td colSpan={2} style={{ border: '1px solid #cbd5e1', padding: '5px 7px', background: '#f8fafc' }}>
-                                    <strong>Acesso SO:</strong> {localDtc.osType}{localDtc.osVersion ? ` (${localDtc.osVersion})` : ''}
-                                    <span style={{ fontFamily: 'monospace', background: 'white', border: '1px solid #e2e8f0', padding: '1px 5px', borderRadius: '3px', marginLeft: '6px' }}>Usuário: {localDtc.soLogin || 'N/A'}</span>
-                                    <span style={{ fontFamily: 'monospace', background: 'white', border: '1px solid #e2e8f0', padding: '1px 5px', borderRadius: '3px', marginLeft: '6px' }}>Senha: {localDtc.soPassword || 'N/A'}</span>
-                                  </td>
-                                </tr>
-                              )}
-                            </tbody>
-                          </table>
-                        </div>
-
-                        {/* 3. CONVERSÃO */}
-                        <div className="dtc-section" style={{ marginBottom: '14px' }}>
-                          <div style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#1e293b', borderLeft: '3px solid black', paddingLeft: '6px', marginBottom: '5px' }}>3. Conversão de Banco de Dados</div>
-                          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10.5px' }}>
-                            <tbody>
-                              <tr>
-                                <td style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}>
-                                  <strong>Houve Conversão:</strong>{' '}
-                                  <span style={{ display: 'inline-block', padding: '1px 8px', borderRadius: '3px', fontWeight: 700, fontSize: '9px', textTransform: 'uppercase', background: localDtc.hadConversion ? '#d1fae5' : '#f1f5f9', color: localDtc.hadConversion ? '#065f46' : '#475569' }}>
-                                    {localDtc.hadConversion ? 'Sim' : 'Não'}
-                                  </span>
-                                  {localDtc.hadConversion && localDtc.convertedData && (
-                                    <div style={{ marginTop: '5px', background: '#f8fafc', border: '1px solid #e2e8f0', padding: '5px 8px', borderRadius: '3px' }}>{localDtc.convertedData}</div>
-                                  )}
-                                </td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </div>
+                <CardContent className="py-6">
+                  {/* Clean preview card resembling A4 paper */}
+                  <div className="bg-white text-black p-8 border rounded-md shadow-inner max-w-[800px] mx-auto text-sm leading-relaxed dtc-document-font">
+                    <div className="border-2 border-black p-5 space-y-5">
+                      {/* Document Header */}
+                      <div className="text-center border-b-2 border-black pb-4">
+                        <h2 className="text-xl font-bold tracking-tight uppercase">Documento de Transição de Conhecimento</h2>
+                        <h3 className="text-base font-semibold text-gray-700">Implantação / Service Desk</h3>
+                        {localDtc.supportCallNumber && (
+                          <p className="text-xs font-bold text-gray-600 mt-1">Chamado de Origem: {localDtc.supportCallNumber}</p>
+                        )}
                       </div>
 
-                      {/* RODAPÉ PÁGINA 1 */}
-                      <div style={{ borderTop: '1px solid #cbd5e1', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', fontSize: '8px', color: '#94a3b8', marginTop: '16px' }}>
-                        <span>Siplan Sistemas — Documento de Transição de Conhecimento</span>
-                        <span>Página 1 de 4</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* PÁGINA 2 */}
-                  <div className="dtc-document-font text-black relative" style={{
-                    width: '794px',
-                    minHeight: '1122px',
-                    height: 'auto',
-                    background: 'white',
-                    boxShadow: '0 4px 16px rgba(0,0,0,0.45)',
-                    zoom: zoom / 100
-                  }}>
-                    {localDtc.status === 'draft' && (
-                      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
-                        <span style={{ fontSize: '110px', fontWeight: 900, color: 'rgba(0,0,0,0.045)', transform: 'rotate(-40deg)', letterSpacing: '0.05em', userSelect: 'none', whiteSpace: 'nowrap' }}>RASCUNHO</span>
-                      </div>
-                    )}
-                    <div style={{ padding: '56px 72px 32px 72px', minHeight: '1122px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
-                      <div>
-                        {/* 4. RELATO TÉCNICO */}
-                        <div className="dtc-section" style={{ marginBottom: '14px' }}>
-                          <div style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#1e293b', borderLeft: '3px solid black', paddingLeft: '6px', marginBottom: '5px' }}>4. Relato Técnico &amp; Processo de Implantação</div>
-                          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10.5px' }}>
-                            <tbody>
-                              <tr>
-                                <td style={{ border: '1px solid #cbd5e1', padding: '7px 9px' }}>
-                                  <strong style={{ display: 'block', fontSize: '9px', textTransform: 'uppercase', color: '#334155', marginBottom: '4px' }}>Processo de Implantação:</strong>
-                                  <div style={{ borderLeft: '2px solid #cbd5e1', paddingLeft: '8px', fontStyle: 'italic', color: '#374151' }}>
-                                    <LexicalRenderer jsonStr={localDtc.implantationProcess} fallback="(Nenhum relato registrado)" />
-                                  </div>
-                                  {localDtc.implantationProcessLogs && localDtc.implantationProcessLogs.length > 0 && (
-                                    <div style={{ marginTop: '8px', background: '#f8fafc', padding: '6px 8px', borderRadius: '3px', borderLeft: '2px solid #94a3b8' }}>
-                                      <strong style={{ display: 'block', fontSize: '8.5px', textTransform: 'uppercase', color: '#64748b', marginBottom: '4px' }}>Acompanhamento Diário:</strong>
-                                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                        {localDtc.implantationProcessLogs.map((log, idx) => (
-                                          <div key={idx} style={{ display: 'flex', gap: '6px', fontSize: '10px' }}>
-                                            <span style={{ fontWeight: 700, color: '#475569', minWidth: '70px' }}>{log.date ? new Date(log.date + 'T00:00:00').toLocaleDateString('pt-BR') : ''}:</span>
-                                            <span>{log.description || '(Sem descrição)'}</span>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    </div>
-                                  )}
-                                </td>
-                              </tr>
-                              <tr>
-                                <td style={{ border: '1px solid #cbd5e1', padding: '7px 9px' }}>
-                                  <strong style={{ display: 'block', fontSize: '9px', textTransform: 'uppercase', color: '#334155', marginBottom: '4px' }}>Funcionários da Serventia:</strong>
-                                  {!localDtc.employeesList || localDtc.employeesList.length === 0
-                                    ? <span>{renderVal(localDtc.employees, '(Nenhum colaborador listado)')}</span>
-                                    : <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                                        {localDtc.employeesList.map((e, i) => (
-                                          <span key={i} style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', padding: '2px 7px', borderRadius: '3px', fontSize: '10px' }}>
-                                            {e.name}{e.department ? <span style={{ color: '#64748b' }}> ({e.department}{e.role ? ` - ${e.role}` : ''})</span> : null}
-                                          </span>
-                                        ))}
-                                      </div>
-                                  }
-                                </td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-
-                      {/* RODAPÉ PÁGINA 2 */}
-                      <div style={{ borderTop: '1px solid #cbd5e1', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', fontSize: '8px', color: '#94a3b8', marginTop: '16px' }}>
-                        <span>Siplan Sistemas — Documento de Transição de Conhecimento</span>
-                        <span>Página 2 de 4</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* PÁGINA 3 */}
-                  <div className="dtc-document-font text-black relative" style={{
-                    width: '794px',
-                    minHeight: '1122px',
-                    height: 'auto',
-                    background: 'white',
-                    boxShadow: '0 4px 16px rgba(0,0,0,0.45)',
-                    zoom: zoom / 100
-                  }}>
-                    {localDtc.status === 'draft' && (
-                      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
-                        <span style={{ fontSize: '110px', fontWeight: 900, color: 'rgba(0,0,0,0.045)', transform: 'rotate(-40deg)', letterSpacing: '0.05em', userSelect: 'none', whiteSpace: 'nowrap' }}>RASCUNHO</span>
-                      </div>
-                    )}
-                    <div style={{ padding: '56px 72px 32px 72px', minHeight: '1122px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
-                      <div>
-                        <div style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#1e293b', borderLeft: '3px solid black', paddingLeft: '6px', marginBottom: '5px' }}>4. Relato Técnico &amp; Processo (Continuação)</div>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10.5px' }}>
+                      {/* 1. IDENTIFICAÇÃO DA SERVENTIA */}
+                      <div className="space-y-2">
+                        <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 border-l-2 border-black pl-2">
+                          1. Identificação da Serventia &amp; Responsáveis
+                        </h4>
+                        <table className="w-full border-collapse border border-gray-300 text-xs">
                           <tbody>
-                            {localDtc.implantationGainsList && localDtc.implantationGainsList.length > 0 && (
-                              <tr>
-                                <td style={{ border: '1px solid #cbd5e1', padding: '7px 9px' }}>
-                                  <strong style={{ display: 'block', fontSize: '9px', textTransform: 'uppercase', color: '#334155', marginBottom: '4px' }}>Ganhos Operacionais:</strong>
-                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                    {localDtc.implantationGainsList.map((gain, idx) => (
-                                      <div key={idx} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '5px 8px', borderRadius: '3px' }}>
-                                        <div style={{ fontWeight: 700, fontSize: '10px' }}>{gain.product ? `[${gain.product}] ` : ''}{gain.title || '(Sem título)'}{gain.department ? ` — ${gain.department}` : ''}</div>
-                                        <div style={{ fontStyle: 'italic', color: '#475569', marginTop: '2px' }}><LexicalRenderer jsonStr={gain.description} fallback="(Sem descrição)" /></div>
-                                      </div>
+                            <tr>
+                              <td className="border border-gray-300 p-2 w-1/2 bg-slate-50">
+                                <strong>Implantador Responsável:</strong> {renderVal(localDtc.responsible)}
+                              </td>
+                              <td className="border border-gray-300 p-2 w-1/2 bg-slate-50">
+                                <strong>Analista Suporte:</strong> {renderVal(localDtc.analystResponsible)}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td colSpan={2} className="border border-gray-300 p-2">
+                                <strong>Serventia (Cartório):</strong> {renderVal(localDtc.serventia)}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="border border-gray-300 p-2">
+                                <strong>Oficial Titular:</strong> {renderVal(localDtc.oficial)}
+                              </td>
+                              <td className="border border-gray-300 p-2">
+                                <strong>Responsável Cartório:</strong>{" "}
+                                {localDtc.clientResponsible
+                                  ? `${localDtc.clientResponsible}${localDtc.clientResponsiblePhone ? ` (${localDtc.clientResponsiblePhone})` : ""}`
+                                  : renderVal(null)}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td colSpan={2} className="border border-gray-300 p-2">
+                                <strong>Key Users (Pontos de Contato):</strong>{" "}
+                                {localDtc.keyUsersList && localDtc.keyUsersList.length > 0 ? (
+                                  <div className="flex flex-wrap gap-2 mt-1">
+                                    {localDtc.keyUsersList.map((u, i) => (
+                                      <span key={i} className="bg-slate-100 px-1.5 py-0.5 rounded text-[11px] font-medium text-gray-700">
+                                        {u.name}{u.phone ? ` (${u.phone})` : ""}
+                                      </span>
                                     ))}
                                   </div>
-                                </td>
-                              </tr>
-                            )}
-                            {localDtc.implantationSuggestionsList && localDtc.implantationSuggestionsList.length > 0 && (
-                              <tr>
-                                <td style={{ border: '1px solid #cbd5e1', padding: '7px 9px' }}>
-                                  <strong style={{ display: 'block', fontSize: '9px', textTransform: 'uppercase', color: '#334155', marginBottom: '4px' }}>Sugestões de Melhorias:</strong>
-                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                    {localDtc.implantationSuggestionsList.map((s, idx) => (
-                                      <div key={idx} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '5px 8px', borderRadius: '3px' }}>
-                                        <div style={{ fontWeight: 700, fontSize: '10px' }}>{s.product ? `[${s.product}] ` : ''}{s.title || '(Sem título)'}{s.department ? ` — ${s.department}` : ''}</div>
-                                        <div style={{ fontStyle: 'italic', color: '#475569', marginTop: '2px' }}><LexicalRenderer jsonStr={s.description} fallback="(Sem descrição)" /></div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </td>
-                              </tr>
-                            )}
-                            {localDtc.clientSatisfactionScore ? (
-                              <tr>
-                                <td style={{ border: '1px solid #cbd5e1', padding: '7px 9px' }}>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <strong style={{ fontSize: '9px', textTransform: 'uppercase', color: '#334155' }}>Grau de Satisfação:</strong>
-                                    <div style={{ display: 'flex', gap: '2px' }}>
-                                      {Array.from({ length: 5 }).map((_, i) => (
-                                        <Star key={i} className={cn('h-3.5 w-3.5', i < (localDtc.clientSatisfactionScore ?? 0) ? 'fill-amber-400 text-amber-400' : 'fill-none text-gray-300')} />
-                                      ))}
+                                ) : renderVal(null, "Nenhum informado")}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="border border-gray-300 p-2">
+                                <strong>Telefone:</strong> {renderVal(localDtc.clientPhone)}
+                              </td>
+                              <td className="border border-gray-300 p-2">
+                                <strong>E-mail:</strong> {renderVal(localDtc.clientEmail)}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* 2. INFRAESTRUTURA & ACESSOS */}
+                      <div className="space-y-2">
+                        <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 border-l-2 border-black pl-2">
+                          2. Infraestrutura, Banco de Dados &amp; Acessos
+                        </h4>
+                        <table className="w-full border-collapse border border-gray-300 text-xs">
+                          <tbody>
+                            <tr>
+                              <td className="border border-gray-300 p-2 w-1/2">
+                                <strong>Sistemas Instalados:</strong> {renderVal(localDtc.systemsInstalled)}
+                              </td>
+                              <td className="border border-gray-300 p-2 w-1/2">
+                                <strong>Versões dos Sistemas:</strong> {renderVal(localDtc.systemVersions)}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="border border-gray-300 p-2">
+                                <strong>Versão PostgreSQL:</strong> {renderVal(localDtc.postgresVersion)}
+                              </td>
+                              <td className="border border-gray-300 p-2">
+                                <strong>Local Instalação PG:</strong> {renderVal(localDtc.postgresHost)}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td colSpan={2} className="border border-gray-300 p-2 bg-slate-50">
+                                <div className="flex flex-wrap gap-x-6 gap-y-1 items-center">
+                                  <strong>Acesso Banco PG:</strong>
+                                  <div className="flex gap-4 text-[11px]">
+                                    <div>
+                                      <span className="text-gray-500 font-medium">Usuário:</span>{" "}
+                                      <code className="bg-white border border-gray-200 px-1.5 py-0.5 rounded font-mono text-black font-semibold">{localDtc.postgresUser || "N/A"}</code>
                                     </div>
-                                    <span style={{ fontWeight: 700, color: '#d97706', fontSize: '10px' }}>{['', 'Ruim', 'Regular', 'Bom', 'Muito bom', 'Excelente'][localDtc.clientSatisfactionScore ?? 0]}</span>
+                                    <div>
+                                      <span className="text-gray-500 font-medium">Senha:</span>{" "}
+                                      <code className="bg-white border border-gray-200 px-1.5 py-0.5 rounded font-mono text-black font-semibold">{localDtc.postgresPassword || "N/A"}</code>
+                                    </div>
                                   </div>
-                                </td>
-                              </tr>
-                            ) : null}
-                            {localDtc.finalConsiderations && (
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td colSpan={2} className="border border-gray-300 p-2">
+                                <strong>Acessos Remotos Disponibilizados:</strong>
+                                <div className="flex flex-wrap gap-2 mt-1.5">
+                                  {!localDtc.remoteAccessList || localDtc.remoteAccessList.length === 0 ? (
+                                    renderVal(localDtc.remoteAccessData, "Nenhum informado")
+                                  ) : (
+                                    localDtc.remoteAccessList.map((a, i) => (
+                                      <div key={i} className="border border-slate-200 bg-slate-50 px-2 py-1 rounded flex gap-3 text-[11px]">
+                                        <span className="font-semibold text-gray-700">{a.system}</span>
+                                        <span><span className="text-gray-500">ID:</span> <code className="font-mono bg-white border border-gray-200 px-1 rounded text-black font-semibold">{a.id}</code></span>
+                                        {a.password && (
+                                          <span><span className="text-gray-500">Senha:</span> <code className="font-mono bg-white border border-gray-200 px-1 rounded text-black font-semibold">{a.password}</code></span>
+                                        )}
+                                      </div>
+                                    ))
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                            {(localDtc.soLogin || localDtc.soPassword || localDtc.osType || localDtc.osVersion) && (
                               <tr>
-                                <td style={{ border: '1px solid #cbd5e1', padding: '7px 9px' }}>
-                                  <strong style={{ display: 'block', fontSize: '9px', textTransform: 'uppercase', color: '#334155', marginBottom: '4px' }}>Considerações Finais:</strong>
-                                  <div style={{ borderLeft: '2px solid #cbd5e1', paddingLeft: '8px', fontStyle: 'italic', color: '#374151' }}>
-                                    <LexicalRenderer jsonStr={localDtc.finalConsiderations} fallback="(Sem considerações finais)" />
+                                <td colSpan={2} className="border border-gray-300 p-2 bg-slate-50">
+                                  <div className="flex flex-wrap gap-x-6 gap-y-1 items-center">
+                                    <strong>Acesso SO Servidor:</strong>{" "}
+                                    <span>{localDtc.osType || ""}{localDtc.osVersion ? ` (${localDtc.osVersion})` : ""}</span>
+                                    <div className="flex gap-4 text-[11px]">
+                                      <div>
+                                        <span className="text-gray-500 font-medium">Usuário:</span>{" "}
+                                        <code className="bg-white border border-gray-200 px-1.5 py-0.5 rounded font-mono text-black font-semibold">{localDtc.soLogin || "N/A"}</code>
+                                      </div>
+                                      <div>
+                                        <span className="text-gray-500 font-medium">Senha:</span>{" "}
+                                        <code className="bg-white border border-gray-200 px-1.5 py-0.5 rounded font-mono text-black font-semibold">{localDtc.soPassword || "N/A"}</code>
+                                      </div>
+                                    </div>
                                   </div>
                                 </td>
                               </tr>
@@ -3753,86 +3664,251 @@ export default function TransicaoPlaceholder() {
                         </table>
                       </div>
 
-                      {/* RODAPÉ PÁGINA 3 */}
-                      <div style={{ borderTop: '1px solid #cbd5e1', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', fontSize: '8px', color: '#94a3b8', marginTop: '16px' }}>
-                        <span>Siplan Sistemas — Documento de Transição de Conhecimento</span>
-                        <span>Página 3 de 4</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* PÁGINA 4 */}
-                  <div className="dtc-document-font text-black relative" style={{
-                    width: '794px',
-                    minHeight: '1122px',
-                    height: 'auto',
-                    background: 'white',
-                    boxShadow: '0 4px 16px rgba(0,0,0,0.45)',
-                    zoom: zoom / 100
-                  }}>
-                    {localDtc.status === 'draft' && (
-                      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
-                        <span style={{ fontSize: '110px', fontWeight: 900, color: 'rgba(0,0,0,0.045)', transform: 'rotate(-40deg)', letterSpacing: '0.05em', userSelect: 'none', whiteSpace: 'nowrap' }}>RASCUNHO</span>
-                      </div>
-                    )}
-                    <div style={{ padding: '56px 72px 32px 72px', minHeight: '1122px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
-                      <div>
-                        {/* 5. PENDÊNCIAS */}
-                        <div className="dtc-section" style={{ marginBottom: '14px' }}>
-                          <div style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#1e293b', borderLeft: '3px solid black', paddingLeft: '6px', marginBottom: '5px' }}>5. Pendências &amp; Chamados de Suporte (0800)</div>
-                          {localDtc.implantationPendingList && localDtc.implantationPendingList.length > 0 && (
-                            <div style={{ marginBottom: '8px' }}>
-                              <div style={{ fontSize: '8.5px', fontWeight: 700, textTransform: 'uppercase', color: '#64748b', marginBottom: '4px' }}>Pendências da Implantação:</div>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                {localDtc.implantationPendingList.map((p, idx) => (
-                                  <div key={idx} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '5px 8px', borderRadius: '3px', display: 'flex', justifyContent: 'space-between', gap: '8px' }}>
-                                    <div style={{ flex: 1 }}>
-                                      <div style={{ fontWeight: 700, fontSize: '10px' }}>{p.product ? `[${p.product}] ` : ''}{p.title || '(Sem título)'}{p.department ? ` — ${p.department}` : ''}</div>
-                                      <div style={{ fontStyle: 'italic', color: '#475569', fontSize: '10px' }}><LexicalRenderer jsonStr={p.description} fallback="(Sem descrição)" /></div>
-                                    </div>
-                                    <span style={{ flexShrink: 0, fontSize: '8px', fontWeight: 700, textTransform: 'uppercase', padding: '2px 6px', borderRadius: '3px', background: p.status === 'Resolvido' ? '#d1fae5' : p.status === 'Em andamento' ? '#dbeafe' : p.status === 'Cancelado' ? '#f1f5f9' : '#fef3c7', color: p.status === 'Resolvido' ? '#065f46' : p.status === 'Em andamento' ? '#1e40af' : p.status === 'Cancelado' ? '#475569' : '#92400e' }}>{p.status}</span>
+                      {/* 3. CONVERSÃO DE DADOS */}
+                      <div className="space-y-2">
+                        <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 border-l-2 border-black pl-2">
+                          3. Conversão de Banco de Dados
+                        </h4>
+                        <table className="w-full border-collapse border border-gray-300 text-xs">
+                          <tbody>
+                            <tr>
+                              <td className="border border-gray-300 p-2">
+                                <div className="flex items-center gap-2">
+                                  <strong>Houve Conversão de Dados:</strong>
+                                  <span className={cn(
+                                    "px-2 py-0.5 rounded text-[10px] font-bold uppercase",
+                                    localDtc.hadConversion ? "bg-emerald-100 text-emerald-800" : "bg-gray-100 text-gray-700"
+                                  )}>
+                                    {localDtc.hadConversion ? "Sim" : "Não"}
+                                  </span>
+                                </div>
+                                {localDtc.hadConversion && localDtc.convertedData && (
+                                  <div className="bg-slate-50 border border-slate-200 p-2.5 mt-2 rounded whitespace-pre-wrap leading-relaxed text-gray-700">
+                                    <strong>Dados Convertidos:</strong> {localDtc.convertedData}
                                   </div>
-                                ))}
-                              </div>
+                                )}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* 4. RELATO TÉCNICO */}
+                      <div className="space-y-2">
+                        <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 border-l-2 border-black pl-2">
+                          4. Relato Técnico &amp; Processo de Implantação
+                        </h4>
+                        <table className="w-full border-collapse border border-gray-300 text-xs">
+                          <tbody>
+                            <tr>
+                              <td className="border border-gray-300 p-3">
+                                <strong className="block text-[11px] uppercase tracking-wider text-slate-800 mb-1">Processo de Implantação (Resumo):</strong>
+                                <div className="pl-2 border-l-2 border-gray-300 italic text-gray-700 leading-relaxed">
+                                  <LexicalRenderer
+                                    jsonStr={localDtc.implantationProcess}
+                                    fallback="(Nenhum relato técnico de implantação registrado)"
+                                  />
+                                </div>
+                                {localDtc.implantationProcessLogs && localDtc.implantationProcessLogs.length > 0 && (
+                                  <div className="mt-2.5 pl-2 border-l-2 border-slate-300 space-y-1.5 bg-slate-50 p-2.5 rounded">
+                                    <strong className="block text-[9px] uppercase tracking-wider text-gray-600 font-bold mb-1">Acompanhamento Diário:</strong>
+                                    {localDtc.implantationProcessLogs.map((log, idx) => (
+                                      <div key={idx} className="text-[11px] leading-relaxed flex items-start gap-2">
+                                        <span className="font-semibold text-gray-700 shrink-0">
+                                          {log.date ? new Date(log.date + "T00:00:00").toLocaleDateString("pt-BR") : ""}:
+                                        </span>
+                                        <span className="text-gray-700">{log.description || "(Sem descrição)"}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="border border-gray-300 p-3">
+                                <strong className="block text-[11px] uppercase tracking-wider text-slate-800 mb-1">Funcionários da Serventia:</strong>
+                                {!localDtc.employeesList || localDtc.employeesList.length === 0 ? (
+                                  <div className="text-gray-700">{renderVal(localDtc.employees, "(Nenhum colaborador listado)")}</div>
+                                ) : (
+                                  <div className="flex flex-wrap gap-1.5 mt-1">
+                                    {localDtc.employeesList.map((e, i) => (
+                                      <div key={i} className="bg-slate-100 border border-slate-200 px-2 py-0.5 rounded text-[11px] font-medium text-gray-700">
+                                        {e.name}
+                                        {e.department && <span className="text-gray-500 font-normal"> ({e.department}{e.role ? ` - ${e.role}` : ""})</span>}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </td>
+                            </tr>
+                            {localDtc.implantationGainsList && localDtc.implantationGainsList.length > 0 && (
+                              <tr>
+                                <td className="border border-gray-300 p-3">
+                                  <strong className="block text-[11px] uppercase tracking-wider text-slate-800 mb-1">Ganhos Operacionais Obtidos:</strong>
+                                  <div className="space-y-2">
+                                    {localDtc.implantationGainsList.map((gain, idx) => (
+                                      <div key={idx} className="bg-slate-50 border border-slate-100 p-2 rounded">
+                                        <span className="font-bold text-gray-800">
+                                          {gain.product ? `[${gain.product}] ` : ""}
+                                          {gain.title || "(Sem título)"}
+                                          {gain.department ? ` - ${gain.department}` : ""}
+                                        </span>
+                                        <div className="text-gray-600 mt-1 pl-1 italic">
+                                          <LexicalRenderer jsonStr={gain.description} fallback="(Sem descrição)" />
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                            {localDtc.implantationSuggestionsList && localDtc.implantationSuggestionsList.length > 0 && (
+                              <tr>
+                                <td className="border border-gray-300 p-3">
+                                  <strong className="block text-[11px] uppercase tracking-wider text-slate-800 mb-1">Sugestões de Melhorias Cadastradas:</strong>
+                                  <div className="space-y-2">
+                                    {localDtc.implantationSuggestionsList.map((suggestion, idx) => (
+                                      <div key={idx} className="bg-slate-50 border border-slate-100 p-2 rounded">
+                                        <span className="font-bold text-gray-800">
+                                          {suggestion.product ? `[${suggestion.product}] ` : ""}
+                                          {suggestion.title || "(Sem título)"}
+                                          {suggestion.department ? ` - ${suggestion.department}` : ""}
+                                        </span>
+                                        <div className="text-gray-600 mt-1 pl-1 italic">
+                                          <LexicalRenderer jsonStr={suggestion.description} fallback="(Sem descrição)" />
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                            {localDtc.clientSatisfactionScore ? (
+                              <tr>
+                                <td className="border border-gray-300 p-3">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <strong className="text-[11px] uppercase tracking-wider text-slate-800">Grau de Satisfação do Cliente:</strong>
+                                    <div className="flex items-center gap-0.5">
+                                      {Array.from({ length: 5 }).map((_, i) => (
+                                        <Star
+                                          key={i}
+                                          className={cn(
+                                            "h-3.5 w-3.5",
+                                            i < (localDtc.clientSatisfactionScore ?? 0)
+                                              ? "fill-amber-400 text-amber-400"
+                                              : "fill-none text-gray-300"
+                                          )}
+                                        />
+                                      ))}
+                                    </div>
+                                    <span className="font-bold text-amber-600 text-xs">
+                                      {["", "Ruim", "Regular", "Bom", "Muito bom", "Excelente"][localDtc.clientSatisfactionScore ?? 0]}
+                                    </span>
+                                  </div>
+                                </td>
+                              </tr>
+                            ) : null}
+                            {localDtc.finalConsiderations && (
+                              <tr>
+                                <td className="border border-gray-300 p-3">
+                                  <strong className="block text-[11px] uppercase tracking-wider text-slate-800 mb-1">Considerações Finais:</strong>
+                                  <div className="text-gray-700 pl-1.5 border-l-2 border-slate-300 italic">
+                                    <LexicalRenderer
+                                      jsonStr={localDtc.finalConsiderations}
+                                      fallback="(Sem considerações finais registradas)"
+                                    />
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* 5. PENDÊNCIAS & CHAMADOS */}
+                      <div className="space-y-2">
+                        <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 border-l-2 border-black pl-2">
+                          5. Pendências &amp; Chamados de Suporte (0800)
+                        </h4>
+                        {localDtc.implantationPendingList && localDtc.implantationPendingList.length > 0 && (
+                          <div className="mb-3">
+                            <strong className="block text-[10px] uppercase text-gray-600 mb-1.5">Pendências da Implantação:</strong>
+                            <div className="space-y-2">
+                              {localDtc.implantationPendingList.map((pending, idx) => (
+                                <div key={idx} className="bg-slate-50 border border-slate-200 p-2 rounded text-xs space-y-1">
+                                  <div className="flex items-center justify-between gap-2">
+                                    <span className="font-bold text-gray-800">
+                                      {pending.product ? `[${pending.product}] ` : ""}
+                                      {pending.title || "(Sem título)"}
+                                      {pending.department ? ` - ${pending.department}` : ""}
+                                      {pending.assignedTo ? ` (Responsável: ${pending.assignedTo})` : ""}
+                                    </span>
+                                    <span className={cn(
+                                      "px-1.5 py-0.5 rounded text-[9px] font-bold uppercase shrink-0",
+                                      pending.status === "Resolvido" && "bg-emerald-100 text-emerald-800",
+                                      pending.status === "Em andamento" && "bg-blue-100 text-blue-800",
+                                      pending.status === "Pendente" && "bg-amber-100 text-amber-800",
+                                      pending.status === "Cancelado" && "bg-gray-100 text-gray-800"
+                                    )}>
+                                      {pending.status}
+                                    </span>
+                                  </div>
+                                  <div className="text-gray-600 pl-1 italic">
+                                    <LexicalRenderer jsonStr={pending.description} fallback="(Sem descrição)" />
+                                  </div>
+                                </div>
+                              ))}
                             </div>
-                          )}
+                          </div>
+                        )}
+                        <div className="border border-gray-300 rounded overflow-hidden">
                           {localDtc.tickets.length === 0 ? (
-                            <div style={{ textAlign: 'center', padding: '10px', color: '#94a3b8', fontStyle: 'italic', fontSize: '10px', border: '1px solid #e2e8f0', borderRadius: '3px' }}>Nenhum chamado de suporte registrado.</div>
+                            <div className="p-3 text-center text-gray-500 italic text-xs bg-slate-50">
+                              Nenhuma pendência ou chamado registrado para transição no 0800.
+                            </div>
                           ) : (
-                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10.5px' }}>
-                              <thead><tr style={{ background: '#f1f5f9' }}><th style={{ border: '1px solid #cbd5e1', padding: '5px 7px', textAlign: 'left', width: '25%' }}>Chamado / N°</th><th style={{ border: '1px solid #cbd5e1', padding: '5px 7px', textAlign: 'left', width: '50%' }}>Descrição</th><th style={{ border: '1px solid #cbd5e1', padding: '5px 7px', textAlign: 'left', width: '25%' }}>Status</th></tr></thead>
-                              <tbody>{localDtc.tickets.map((t, idx) => (<tr key={idx} style={{ background: idx % 2 === 1 ? '#f8fafc' : 'white' }}><td style={{ border: '1px solid #cbd5e1', padding: '5px 7px', fontWeight: 700 }}>{t.number || 'N/A'}</td><td style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}>{t.description || 'Sem descrição'}</td><td style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}>{t.status === 'open' && <span style={{ color: '#d97706', fontWeight: 600 }}>Aberto</span>}{t.status === 'in_progress' && <span style={{ color: '#2563eb', fontWeight: 600 }}>Em Tratativa</span>}{t.status === 'closed' && <span style={{ color: '#059669', fontWeight: 600 }}>Resolvido</span>}</td></tr>))}</tbody>
+                            <table className="w-full border-collapse text-xs">
+                              <thead>
+                                <tr className="bg-slate-100">
+                                  <th className="border-b border-r border-gray-300 p-2 text-left w-1/4 font-semibold text-gray-700">Chamado / N°</th>
+                                  <th className="border-b border-r border-gray-300 p-2 text-left w-1/2 font-semibold text-gray-700">Descrição da Pendência</th>
+                                  <th className="border-b border-gray-300 p-2 text-left w-1/4 font-semibold text-gray-700">Status</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {localDtc.tickets.map((t, idx) => (
+                                  <tr key={idx} className="even:bg-slate-50/50">
+                                    <td className="border-b border-r border-gray-300 p-2 font-bold">{t.number || "N/A"}</td>
+                                    <td className="border-b border-r border-gray-300 p-2">{t.description || "Sem descrição"}</td>
+                                    <td className="border-b border-gray-300 p-2">
+                                      {t.status === "open" && <span className="text-amber-600 font-semibold">Aberto</span>}
+                                      {t.status === "in_progress" && <span className="text-blue-600 font-semibold">Em Tratativa</span>}
+                                      {t.status === "closed" && <span className="text-emerald-600 font-semibold">Resolvido</span>}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
                             </table>
                           )}
                         </div>
-
-                        {/* ASSINATURAS */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '48px', textAlign: 'center', paddingTop: '40px' }}>
-                          <div>
-                            <div style={{ borderTop: '1px solid black', paddingTop: '6px', fontWeight: 700, fontSize: '10.5px' }}>{localDtc.responsible || 'Implantador Responsável'}</div>
-                            <div style={{ fontSize: '9px', color: '#64748b' }}>Implantador de Sistemas</div>
-                          </div>
-                          <div>
-                            <div style={{ borderTop: '1px solid black', paddingTop: '6px', fontWeight: 700, fontSize: '10.5px' }}>{localDtc.analystResponsible || 'Analista de Suporte'}</div>
-                            <div style={{ fontSize: '9px', color: '#64748b' }}>Service Desk / Suporte</div>
-                          </div>
-                        </div>
                       </div>
 
-                      {/* RODAPÉ PÁGINA 4 */}
-                      <div style={{ borderTop: '1px solid #cbd5e1', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', fontSize: '8px', color: '#94a3b8', marginTop: '16px' }}>
-                        <span>Siplan Sistemas — Documento de Transição de Conhecimento</span>
-                        <span>Página 4 de 4</span>
+                      {/* Assinaturas */}
+                      <div className="grid grid-cols-2 gap-12 text-center text-xs pt-12">
+                        <div className="space-y-1">
+                          <p className="border-t border-black pt-2 font-bold">{localDtc.responsible || "Implantador Responsável"}</p>
+                          <p className="text-[10px] text-gray-500">Implantador de Sistemas</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="border-t border-black pt-2 font-bold">{localDtc.analystResponsible || "Analista de Suporte"}</p>
+                          <p className="text-[10px] text-gray-500">Service Desk / Suporte</p>
+                        </div>
                       </div>
                     </div>
                   </div>
-
-                </div>
+                </CardContent>
               </Card>
             </TabsContent>
-
-
-
 
           </Tabs>
         </div>
@@ -3841,42 +3917,14 @@ export default function TransicaoPlaceholder() {
       {/* RENDER-ONLY PRINT PREVIEW TARGET */}
       {selectedProjectId && localDtc && (
         <div id="dtc-print-area" ref={printRef} className="hidden print:block bg-white text-black p-8 text-sm dtc-document-font">
-          {/* RASCUNHO watermark - only in draft */}
-          {localDtc.status === "draft" && (
-            <div style={{
-              position: "absolute", top: 0, left: 0, width: "100%", height: "100%",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              pointerEvents: "none", zIndex: 0, overflow: "hidden",
-            }}>
-              <span style={{
-                fontSize: "120px", fontWeight: 900, color: "rgba(0,0,0,0.055)",
-                transform: "rotate(-40deg)", letterSpacing: "0.05em", userSelect: "none",
-                whiteSpace: "nowrap",
-              }}>RASCUNHO</span>
-            </div>
-          )}
-          <div className="border-2 border-black p-6 space-y-5" style={{ position: "relative", zIndex: 1 }}>
+          <div className="border-2 border-black p-6 space-y-6">
             {/* Header */}
-            <div className="dtc-section border-b-2 border-black pb-4">
-              <div className="flex items-center justify-between">
-                <img src="/assets/Siplan_logo.png" alt="Siplan" style={{ height: "40px", objectFit: "contain" }} />
-                <div className="text-right">
-                  <span className="text-[10px] text-gray-500">Gerado em: {new Date().toLocaleDateString("pt-BR")} às {new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
-                  {localDtc.status === "draft" && (
-                    <span className="ml-2 text-[9px] font-bold uppercase bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">Rascunho</span>
-                  )}
-                  {localDtc.status === "approved" && (
-                    <span className="ml-2 text-[9px] font-bold uppercase bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded">Aprovado</span>
-                  )}
-                </div>
-              </div>
-              <div className="text-center mt-3">
-                <h2 className="text-2xl font-bold tracking-tight uppercase">Documento de Transição de Conhecimento</h2>
-                <h3 className="text-lg font-semibold text-gray-700">Módulo Implantação / Service Desk</h3>
-                {localDtc.supportCallNumber && (
-                  <p className="text-sm font-bold text-gray-600 mt-1">Chamado de Origem: {localDtc.supportCallNumber}</p>
-                )}
-              </div>
+            <div className="text-center border-b-2 border-black pb-4">
+              <h2 className="text-2xl font-bold tracking-tight uppercase">Documento de Transição de Conhecimento</h2>
+              <h3 className="text-lg font-semibold text-gray-700">Módulo Implantação / Service Desk</h3>
+              {localDtc.supportCallNumber && (
+                <p className="text-sm font-bold text-gray-600 mt-1">Chamado no 0800: {localDtc.supportCallNumber}</p>
+              )}
             </div>
 
             {/* Grid */}
@@ -4104,7 +4152,7 @@ export default function TransicaoPlaceholder() {
             </div>
 
             {/* Signatures */}
-            <div className="dtc-section grid grid-cols-2 gap-12 text-center text-xs pt-16">
+            <div className="grid grid-cols-2 gap-12 text-center text-xs pt-16">
               <div className="space-y-1">
                 <p className="border-t border-black pt-2 font-bold">{localDtc.responsible || "Implantador Responsável"}</p>
                 <p className="text-[10px] text-gray-500">Implantador de Sistemas</p>
@@ -4114,15 +4162,10 @@ export default function TransicaoPlaceholder() {
                 <p className="text-[10px] text-gray-500">Service Desk / Suporte</p>
               </div>
             </div>
-
-            {/* Footer */}
-            <div className="border-t border-gray-200 pt-3 mt-4 flex items-center justify-between text-[9px] text-gray-400">
-              <span>Siplan Sistemas — Documento de Transição de Conhecimento</span>
-              <span>Gerado em {new Date().toLocaleDateString("pt-BR")} às {new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
-            </div>
           </div>
         </div>
       )}
     </div>
   );
 }
+
