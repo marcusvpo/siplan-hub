@@ -344,7 +344,7 @@ function SortableItem({ id, children }: { id: string; children: (dragHandleProps
   );
 }
 
-export default function TransicaoPlaceholder() {
+function TransicaoPlaceholder() {
   const { fullName, isAdmin } = useAuth();
   const { updateProject } = useProjectsV2();
   const { addAutoLog } = useTimeline();
@@ -4252,4 +4252,6 @@ export default function TransicaoPlaceholder() {
     </div>
   );
 }
+
+export default TransicaoPlaceholder;
 
