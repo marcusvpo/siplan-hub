@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -17,6 +17,25 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { activityLogger } from "@/services/activityLogger";
+import { useTimeline } from "@/hooks/useTimeline";
+import { LogsTab } from "@/components/ProjectManagement/Tabs/LogsTab";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
 import {
@@ -55,7 +74,15 @@ import {
   Eye,
   EyeOff,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Star,
+  GripVertical,
+  TrendingUp,
+  ListChecks,
+  Lightbulb,
+  Users,
+  BarChart3,
+  FileDown
 } from "lucide-react";
 
 interface KeyUserItem {
@@ -153,6 +180,7 @@ interface DTCData {
   implantationGainsList?: ImplantationGainItem[];
   implantationPendingList?: ImplantationPendingItem[];
   implantationSuggestionsList?: ImplantationSuggestionItem[];
+  clientSatisfactionScore?: number;
   postImplantationProcess: string;
   employees: string;
   employeesList?: EmployeeItem[];
@@ -284,9 +312,26 @@ const dtcStatusToStageStatus = (status: DTCData["status"]) => {
   }
 };
 
+// ⑥ Sortable item wrapper for drag & drop lists
+function SortableItem({ id, children }: { id: string; children: (dragHandleProps: React.HTMLAttributes<HTMLSpanElement>) => React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 50 : undefined,
+  };
+  return (
+    <div ref={setNodeRef} style={style}>
+      {children({ ...attributes, ...listeners })}
+    </div>
+  );
+}
+
 export default function TransicaoPlaceholder() {
   const { fullName, isAdmin } = useAuth();
   const { updateProject } = useProjectsV2();
+  const { addAutoLog } = useTimeline();
   const queryClient = useQueryClient();
   const { members = [] } = useTeamMembers();
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
@@ -588,6 +633,26 @@ export default function TransicaoPlaceholder() {
       }).then(async () => {
         // Reforce details query refresh
         queryClient.invalidateQueries({ queryKey: ["projectDetails", selectedProjectId] });
+
+        // Log timeline event
+        let logMsg = "";
+        if (newStatus === "submitted") {
+          logMsg = `DTC enviado para validação por ${fullName || "Implantador"}.`;
+        } else if (newStatus === "approved") {
+          logMsg = `DTC homologado e aprovado por ${fullName || "Suporte/Gestor"}.`;
+        } else if (newStatus === "draft") {
+          logMsg = `DTC reaberto e retornado para rascunho por ${fullName || "Usuário"}.`;
+        }
+        if (logMsg) {
+          await addAutoLog.mutateAsync({
+            projectId: selectedProjectId,
+            message: logMsg,
+            metadata: {
+              action: "dtc_status_change",
+              status: newStatus
+            }
+          }).catch(err => console.error("Error logging timeline event:", err));
+        }
 
         // Trigger notifications to participants
         let title = "";
@@ -1143,6 +1208,110 @@ export default function TransicaoPlaceholder() {
 
   const isFormDisabled = localDtc?.status === "approved";
 
+  // ⑥ Drag & Drop sensors
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+  const handleGainDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id || !localDtc?.implantationGainsList) return;
+    const oldIndex = localDtc.implantationGainsList.findIndex((_, i) => `gain-${i}` === active.id);
+    const newIndex = localDtc.implantationGainsList.findIndex((_, i) => `gain-${i}` === over.id);
+    handleFieldChange("implantationGainsList", arrayMove(localDtc.implantationGainsList, oldIndex, newIndex));
+  };
+
+  const handlePendingDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id || !localDtc?.implantationPendingList) return;
+    const oldIndex = localDtc.implantationPendingList.findIndex((_, i) => `pend-${i}` === active.id);
+    const newIndex = localDtc.implantationPendingList.findIndex((_, i) => `pend-${i}` === over.id);
+    handleFieldChange("implantationPendingList", arrayMove(localDtc.implantationPendingList, oldIndex, newIndex));
+  };
+
+  const handleSuggestionDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id || !localDtc?.implantationSuggestionsList) return;
+    const oldIndex = localDtc.implantationSuggestionsList.findIndex((_, i) => `sugg-${i}` === active.id);
+    const newIndex = localDtc.implantationSuggestionsList.findIndex((_, i) => `sugg-${i}` === over.id);
+    handleFieldChange("implantationSuggestionsList", arrayMove(localDtc.implantationSuggestionsList, oldIndex, newIndex));
+  };
+
+  // Ref for PDF export
+  const printRef = useRef<HTMLDivElement>(null);
+
+  // ② DTC Progress: count filled sections out of 10
+  const dtcProgress = useMemo(() => {
+    if (!localDtc) return 0;
+    const checks = [
+      !!localDtc.serventia?.trim(),
+      !!localDtc.responsible?.trim(),
+      !!localDtc.clientResponsible?.trim(),
+      !!localDtc.systemsInstalled?.trim(),
+      (localDtc.remoteAccessList?.length ?? 0) > 0 || !!localDtc.remoteAccessData?.trim(),
+      !!localDtc.implantationProcess?.trim() || (localDtc.implantationProcessLogs?.length ?? 0) > 0,
+      (localDtc.employeesList?.length ?? 0) > 0 || !!localDtc.employees?.trim(),
+      (localDtc.implantationGainsList?.length ?? 0) > 0,
+      (localDtc.implantationPendingList?.length ?? 0) > 0 || (localDtc.implantationSuggestionsList?.length ?? 0) > 0,
+      !!localDtc.finalConsiderations?.trim(),
+    ];
+    return Math.round((checks.filter(Boolean).length / checks.length) * 100);
+  }, [localDtc]);
+
+  // ③ Executive summary counters
+  const execSummary = useMemo(() => {
+    if (!localDtc) return { openPending: 0, gains: 0, suggestions: 0, employees: 0 };
+    return {
+      openPending: (localDtc.implantationPendingList ?? []).filter(p => p.status !== "Resolvido" && p.status !== "Cancelado").length,
+      gains: (localDtc.implantationGainsList ?? []).length,
+      suggestions: (localDtc.implantationSuggestionsList ?? []).length,
+      employees: (localDtc.employeesList ?? []).length,
+    };
+  }, [localDtc]);
+
+  // ⑦ Export to PDF using html2canvas + jsPDF
+  const exportToPdf = useCallback(async () => {
+    if (!printRef.current) return;
+    try {
+      toast.loading("Gerando PDF...", { id: "pdf-export" });
+      const html2canvas = (await import("html2canvas")).default;
+      const { jsPDF } = await import("jspdf");
+      
+      const element = printRef.current;
+      element.classList.remove("hidden");
+      
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+      });
+      
+      element.classList.add("hidden");
+      
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = pageWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+      while (heightLeft > 0) {
+        position -= pageHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+      const fileName = `DTC_${localDtc?.serventia?.replace(/\s+/g, "_") || "Cartorio"}_${new Date().toLocaleDateString("pt-BR").replace(/\//g, "-")}.pdf`;
+      pdf.save(fileName);
+      toast.success("PDF exportado com sucesso!", { id: "pdf-export" });
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro ao gerar PDF.", { id: "pdf-export" });
+    }
+  }, [localDtc]);
+
   return (
     <div className="container mx-auto pt-0 px-6 pb-6 space-y-6 max-w-7xl -mt-6">
       {/* CSS overrides for print layout */}
@@ -1304,6 +1473,15 @@ export default function TransicaoPlaceholder() {
                       Reabrir (Editar)
                     </Button>
                     <Button
+                      onClick={exportToPdf}
+                      variant="outline"
+                      className="border-rose-500/20 text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/20 font-bold gap-1 text-[11px] h-7 px-2.5"
+                      size="sm"
+                    >
+                      <FileDown className="h-3 w-3" />
+                      Exportar PDF
+                    </Button>
+                    <Button
                       onClick={() => window.print()}
                       className="bg-primary hover:bg-primary/95 text-primary-foreground font-bold gap-1 text-[11px] h-7 px-2.5 shadow"
                       size="sm"
@@ -1338,13 +1516,64 @@ export default function TransicaoPlaceholder() {
       ) : (
         <div className="space-y-6">
 
+          {/* ② Progress Bar */}
+          <div className="no-print space-y-1.5">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-bold text-muted-foreground uppercase tracking-wider">Completude do DTC</span>
+              <span className={cn(
+                "font-extrabold tabular-nums",
+                dtcProgress === 100 ? "text-emerald-500" : dtcProgress >= 50 ? "text-amber-500" : "text-rose-500"
+              )}>{dtcProgress}%</span>
+            </div>
+            <Progress
+              value={dtcProgress}
+              className="h-2 bg-muted/60"
+            />
+          </div>
+
+          {/* ③ Executive Summary */}
+          <div className="no-print grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="flex items-center gap-3 bg-amber-500/10 border border-amber-500/20 rounded-xl p-3">
+              <ListChecks className="h-5 w-5 text-amber-500 shrink-0" />
+              <div>
+                <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">Pendências abertas</p>
+                <p className="text-xl font-black text-amber-600 dark:text-amber-400 leading-tight">{execSummary.openPending}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3">
+              <TrendingUp className="h-5 w-5 text-emerald-500 shrink-0" />
+              <div>
+                <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">Ganhos registrados</p>
+                <p className="text-xl font-black text-emerald-600 dark:text-emerald-400 leading-tight">{execSummary.gains}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 bg-blue-500/10 border border-blue-500/20 rounded-xl p-3">
+              <Lightbulb className="h-5 w-5 text-blue-500 shrink-0" />
+              <div>
+                <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">Sugestões</p>
+                <p className="text-xl font-black text-blue-600 dark:text-blue-400 leading-tight">{execSummary.suggestions}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 bg-purple-500/10 border border-purple-500/20 rounded-xl p-3">
+              <Users className="h-5 w-5 text-purple-500 shrink-0" />
+              <div>
+                <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">Colaboradores</p>
+                <p className="text-xl font-black text-purple-600 dark:text-purple-400 leading-tight">{execSummary.employees}</p>
+              </div>
+            </div>
+          </div>
+
           {/* Form Tabs */}
           <Tabs defaultValue="geral" className="no-print w-full space-y-4">
-            <TabsList className="grid grid-cols-5 w-full h-11 bg-muted/60 p-1 border">
+            <TabsList className="grid grid-cols-6 w-full h-11 bg-muted/60 p-1 border">
               <TabsTrigger value="geral" className="text-xs font-bold">Identificação</TabsTrigger>
               <TabsTrigger value="infra" className="text-xs font-bold">Infra & Acesso</TabsTrigger>
               <TabsTrigger value="processo" className="text-xs font-bold">Relato Técnico</TabsTrigger>
               <TabsTrigger value="chamados" className="text-xs font-bold">Chamados pendentes</TabsTrigger>
+              <TabsTrigger value="historico" className="text-xs font-bold flex items-center gap-1">
+                <History className="h-3.5 w-3.5 text-primary" />
+                Histórico
+              </TabsTrigger>
               <TabsTrigger value="visualizar" className="text-xs font-bold flex items-center gap-1">
                 <Printer className="h-3.5 w-3.5 text-primary" />
                 Visualizar DTC
@@ -1365,9 +1594,11 @@ export default function TransicaoPlaceholder() {
                       className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors"
                       onClick={() => toggleSection("ident-cartorio")}
                     >
-                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">
-                        1. Dados do Cartório
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">
+                          1. Dados do Cartório
+                        </span>
+                      </div>
                       <Button type="button" variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
                         {collapsedSections["ident-cartorio"] ? (
                           <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
@@ -2329,17 +2560,26 @@ export default function TransicaoPlaceholder() {
                             Nenhum ganho cadastrado. Clique em Adicionar Ganho.
                           </p>
                         ) : (
-                          <div className="space-y-3 mt-1.5">
-                            {localDtc.implantationGainsList.map((gain, idx) => (
-                              <div key={idx} className="bg-background p-3 border rounded-md shadow-2xs space-y-2">
-                                {/* Linha 1: Título */}
-                                <Input
-                                  value={gain.title}
-                                  onChange={(e) => updateImplantationGain(idx, "title", e.target.value)}
-                                  disabled={isFormDisabled}
-                                  placeholder="Título do ganho (ex: Automação de protocolo de entrada)"
-                                  className="border-muted/80 h-8 text-xs w-full font-medium"
-                                />
+                          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleGainDragEnd}>
+                            <SortableContext items={(localDtc.implantationGainsList ?? []).map((_, i) => `gain-${i}`)} strategy={verticalListSortingStrategy}>
+                              <div className="space-y-3 mt-1.5">
+                                {localDtc.implantationGainsList.map((gain, idx) => (
+                                  <SortableItem key={`gain-${idx}`} id={`gain-${idx}`}>
+                                    {(dragHandleProps) => (
+                                      <div className="bg-background p-3 border rounded-md shadow-2xs space-y-2">
+                                        {/* Linha 1: Título + drag handle */}
+                                        <div className="flex items-center gap-2">
+                                          <span {...dragHandleProps} className="cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground shrink-0 touch-none">
+                                            <GripVertical className="h-4 w-4" />
+                                          </span>
+                                          <Input
+                                            value={gain.title}
+                                            onChange={(e) => updateImplantationGain(idx, "title", e.target.value)}
+                                            disabled={isFormDisabled}
+                                            placeholder="Título do ganho (ex: Automação de protocolo de entrada)"
+                                            className="border-muted/80 h-8 text-xs w-full font-medium"
+                                          />
+                                        </div>
                                 {/* Linha 2: Produto + Setor + Delete */}
                                 <div className="flex flex-wrap items-center gap-2">
                                   <Select
@@ -2402,16 +2642,20 @@ export default function TransicaoPlaceholder() {
                                   </Button>
                                 </div>
 
-                                {/* Linha 3: Descrição com RichTextEditor */}
-                                <RichTextEditor
-                                  content={gain.description}
-                                  onChange={(c) => updateImplantationGain(idx, "description", c)}
-                                  placeholder="Descreva o ganho operacional implementado..."
-                                  editable={!isFormDisabled}
-                                />
+                                        {/* Linha 3: Descrição com RichTextEditor */}
+                                        <RichTextEditor
+                                          content={gain.description}
+                                          onChange={(c) => updateImplantationGain(idx, "description", c)}
+                                          placeholder="Descreva o ganho operacional implementado..."
+                                          editable={!isFormDisabled}
+                                        />
+                                      </div>
+                                    )}
+                                  </SortableItem>
+                                ))}
                               </div>
-                            ))}
-                          </div>
+                            </SortableContext>
+                          </DndContext>
                         )}
                       </div>
                     )}
@@ -2460,142 +2704,151 @@ export default function TransicaoPlaceholder() {
                             Nenhuma pendência cadastrada. Clique em Adicionar Pendência.
                           </p>
                         ) : (
-                          <div className="space-y-3 mt-1.5">
-                            {localDtc.implantationPendingList.map((pending, idx) => (
-                              <div key={idx} className="bg-background p-3 border rounded-md shadow-2xs space-y-2 relative">
-                                <div className="space-y-2">
-                                  {/* Title Input (Full line) */}
-                                  <div className="w-full">
-                                    <Input
-                                      value={pending.title}
-                                      onChange={(e) => updateImplantationPending(idx, "title", e.target.value)}
-                                      disabled={isFormDisabled}
-                                      placeholder="Título da Pendência (ex: Configurar selo digital)"
-                                      className="border-muted/80 h-8 text-xs w-full font-medium"
-                                    />
-                                  </div>
+                          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handlePendingDragEnd}>
+                            <SortableContext items={(localDtc.implantationPendingList ?? []).map((_, i) => `pend-${i}`)} strategy={verticalListSortingStrategy}>
+                              <div className="space-y-3 mt-1.5">
+                                {localDtc.implantationPendingList.map((pending, idx) => (
+                                  <SortableItem key={`pend-${idx}`} id={`pend-${idx}`}>
+                                    {(dragHandleProps) => (
+                                      <div className="bg-background p-3 border rounded-md shadow-2xs space-y-2 relative">
+                                        <div className="space-y-2">
+                                          {/* Title Input with drag handle */}
+                                          <div className="flex items-center gap-2 w-full">
+                                            <span {...dragHandleProps} className="cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground shrink-0 touch-none">
+                                              <GripVertical className="h-4 w-4" />
+                                            </span>
+                                            <Input
+                                              value={pending.title}
+                                              onChange={(e) => updateImplantationPending(idx, "title", e.target.value)}
+                                              disabled={isFormDisabled}
+                                              placeholder="Título da Pendência (ex: Configurar selo digital)"
+                                              className="border-muted/80 h-8 text-xs w-full font-medium"
+                                            />
+                                          </div>
+                                        </div>
 
-                                  {/* Controls Row (Product, Sector, Status, Responsibility, Delete) */}
-                                  <div className="flex flex-wrap items-center gap-2">
-                                    {/* Product Select dropdown */}
-                                    <Select
-                                      value={pending.product}
-                                      onValueChange={(val) => updateImplantationPending(idx, "product", val)}
-                                      disabled={isFormDisabled}
-                                    >
-                                      <SelectTrigger className="w-40 h-8 text-[11px] border-muted/80 shrink-0">
-                                        <SelectValue placeholder="Produto" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        {/* Sistemas Principais */}
-                                        <SelectItem value="Orion TN" className="text-xs">Orion TN</SelectItem>
-                                        <SelectItem value="Orion PRO" className="text-xs">Orion PRO</SelectItem>
-                                        <SelectItem value="Orion REG" className="text-xs">Orion REG</SelectItem>
-                                        <SelectItem value="Modelos TN" className="text-xs">Modelos TN</SelectItem>
-                                        {/* Produtos Adicionais */}
-                                        <SelectItem value="LCW" className="text-xs">LCW</SelectItem>
-                                        <SelectItem value="SGA" className="text-xs">SGA</SelectItem>
-                                        <SelectItem value="On Hand" className="text-xs">On Hand</SelectItem>
-                                        <SelectItem value="Orion GED" className="text-xs">Orion GED</SelectItem>
-                                        <SelectItem value="Library" className="text-xs">Library</SelectItem>
-                                        <SelectItem value="e-Recepção" className="text-xs">e-Recepção</SelectItem>
-                                        <SelectItem value="e-Qualificação" className="text-xs">e-Qualificação</SelectItem>
-                                        <SelectItem value="Cartflow" className="text-xs">Cartflow</SelectItem>
-                                        <SelectItem value="Outro" className="text-xs">Outro</SelectItem>
-                                      </SelectContent>
-                                    </Select>
+                                        {/* Controls Row (Product, Sector, Status, Responsibility, Delete) */}
+                                        <div className="flex flex-wrap items-center gap-2">
+                                          {/* Product Select dropdown */}
+                                          <Select
+                                            value={pending.product}
+                                            onValueChange={(val) => updateImplantationPending(idx, "product", val)}
+                                            disabled={isFormDisabled}
+                                          >
+                                            <SelectTrigger className="w-40 h-8 text-[11px] border-muted/80 shrink-0">
+                                              <SelectValue placeholder="Produto" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="Orion TN" className="text-xs">Orion TN</SelectItem>
+                                              <SelectItem value="Orion PRO" className="text-xs">Orion PRO</SelectItem>
+                                              <SelectItem value="Orion REG" className="text-xs">Orion REG</SelectItem>
+                                              <SelectItem value="Modelos TN" className="text-xs">Modelos TN</SelectItem>
+                                              <SelectItem value="LCW" className="text-xs">LCW</SelectItem>
+                                              <SelectItem value="SGA" className="text-xs">SGA</SelectItem>
+                                              <SelectItem value="On Hand" className="text-xs">On Hand</SelectItem>
+                                              <SelectItem value="Orion GED" className="text-xs">Orion GED</SelectItem>
+                                              <SelectItem value="Library" className="text-xs">Library</SelectItem>
+                                              <SelectItem value="e-Recepção" className="text-xs">e-Recepção</SelectItem>
+                                              <SelectItem value="e-Qualificação" className="text-xs">e-Qualificação</SelectItem>
+                                              <SelectItem value="Cartflow" className="text-xs">Cartflow</SelectItem>
+                                              <SelectItem value="Outro" className="text-xs">Outro</SelectItem>
+                                            </SelectContent>
+                                          </Select>
 
-                                    {/* Department (Setor) Select dropdown */}
-                                    <Select
-                                      value={pending.department}
-                                      onValueChange={(val) => updateImplantationPending(idx, "department", val)}
-                                      disabled={isFormDisabled}
-                                    >
-                                      <SelectTrigger className="w-36 h-8 text-[11px] border-muted/80 shrink-0">
-                                        <SelectValue placeholder="Setor" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="Notas" className="text-xs">Notas</SelectItem>
-                                        <SelectItem value="Firmas" className="text-xs">Firmas</SelectItem>
-                                        <SelectItem value="Recepção / Triagem" className="text-xs">Recepção/Triagem</SelectItem>
-                                        <SelectItem value="Protesto" className="text-xs">Protesto</SelectItem>
-                                        <SelectItem value="Registro Civil" className="text-xs">R. Civil</SelectItem>
-                                        <SelectItem value="Registro de Imóveis" className="text-xs">R. Imóveis</SelectItem>
-                                        <SelectItem value="RTD / PJ" className="text-xs">RTD/PJ</SelectItem>
-                                        <SelectItem value="Administrativo" className="text-xs">Adm</SelectItem>
-                                        <SelectItem value="Financeiro" className="text-xs">Financeiro</SelectItem>
-                                        <SelectItem value="TI / Suporte" className="text-xs">TI</SelectItem>
-                                        <SelectItem value="Outro" className="text-xs">Outro</SelectItem>
-                                      </SelectContent>
-                                    </Select>
+                                          {/* Department (Setor) Select dropdown */}
+                                          <Select
+                                            value={pending.department}
+                                            onValueChange={(val) => updateImplantationPending(idx, "department", val)}
+                                            disabled={isFormDisabled}
+                                          >
+                                            <SelectTrigger className="w-36 h-8 text-[11px] border-muted/80 shrink-0">
+                                              <SelectValue placeholder="Setor" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="Notas" className="text-xs">Notas</SelectItem>
+                                              <SelectItem value="Firmas" className="text-xs">Firmas</SelectItem>
+                                              <SelectItem value="Recepção / Triagem" className="text-xs">Recepção/Triagem</SelectItem>
+                                              <SelectItem value="Protesto" className="text-xs">Protesto</SelectItem>
+                                              <SelectItem value="Registro Civil" className="text-xs">R. Civil</SelectItem>
+                                              <SelectItem value="Registro de Imóveis" className="text-xs">R. Imóveis</SelectItem>
+                                              <SelectItem value="RTD / PJ" className="text-xs">RTD/PJ</SelectItem>
+                                              <SelectItem value="Administrativo" className="text-xs">Adm</SelectItem>
+                                              <SelectItem value="Financeiro" className="text-xs">Financeiro</SelectItem>
+                                              <SelectItem value="TI / Suporte" className="text-xs">TI</SelectItem>
+                                              <SelectItem value="Outro" className="text-xs">Outro</SelectItem>
+                                            </SelectContent>
+                                          </Select>
 
-                                    {/* Status Select dropdown */}
-                                    <Select
-                                      value={pending.status}
-                                      onValueChange={(val) => updateImplantationPending(idx, "status", val)}
-                                      disabled={isFormDisabled}
-                                    >
-                                      <SelectTrigger className="w-32 h-8 text-[11px] border-muted/80 shrink-0">
-                                        <SelectValue placeholder="Status" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="Pendente" className="text-xs">Pendente</SelectItem>
-                                        <SelectItem value="Em andamento" className="text-xs">Em andamento</SelectItem>
-                                        <SelectItem value="Resolvido" className="text-xs">Resolvido</SelectItem>
-                                        <SelectItem value="Cancelado" className="text-xs">Cancelado</SelectItem>
-                                      </SelectContent>
-                                    </Select>
+                                          {/* Status Select dropdown */}
+                                          <Select
+                                            value={pending.status}
+                                            onValueChange={(val) => updateImplantationPending(idx, "status", val)}
+                                            disabled={isFormDisabled}
+                                          >
+                                            <SelectTrigger className="w-32 h-8 text-[11px] border-muted/80 shrink-0">
+                                              <SelectValue placeholder="Status" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="Pendente" className="text-xs">Pendente</SelectItem>
+                                              <SelectItem value="Em andamento" className="text-xs">Em andamento</SelectItem>
+                                              <SelectItem value="Resolvido" className="text-xs">Resolvido</SelectItem>
+                                              <SelectItem value="Cancelado" className="text-xs">Cancelado</SelectItem>
+                                            </SelectContent>
+                                          </Select>
 
-                                    {/* Assigned Analyst Select dropdown */}
-                                    <Select
-                                      value={pending.assignedTo || "none"}
-                                      onValueChange={(val) => updateImplantationPending(idx, "assignedTo", val === "none" ? "" : val)}
-                                      disabled={isFormDisabled}
-                                    >
-                                      <SelectTrigger className="w-48 h-8 text-[11px] border-muted/80 shrink-0">
-                                        <SelectValue placeholder="Responsável" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="none" className="text-xs">Não atribuído</SelectItem>
-                                        {members.map((m) => (
-                                          <SelectItem key={m.id} value={m.name} className="text-xs">
-                                            {m.name}
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
+                                          {/* Assigned Analyst Select dropdown */}
+                                          <Select
+                                            value={pending.assignedTo || "none"}
+                                            onValueChange={(val) => updateImplantationPending(idx, "assignedTo", val === "none" ? "" : val)}
+                                            disabled={isFormDisabled}
+                                          >
+                                            <SelectTrigger className="w-48 h-8 text-[11px] border-muted/80 shrink-0">
+                                              <SelectValue placeholder="Responsável" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="none" className="text-xs">Não atribuído</SelectItem>
+                                              {members.map((m) => (
+                                                <SelectItem key={m.id} value={m.name} className="text-xs">
+                                                  {m.name}
+                                                </SelectItem>
+                                              ))}
+                                            </SelectContent>
+                                          </Select>
 
-                                    {/* Remove Button */}
-                                    <Button
-                                      type="button"
-                                      onClick={() => removeImplantationPending(idx)}
-                                      disabled={isFormDisabled}
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-full shrink-0 ml-auto"
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  </div>
-                                </div>
+                                          {/* Remove Button */}
+                                          <Button
+                                            type="button"
+                                            onClick={() => removeImplantationPending(idx)}
+                                            disabled={isFormDisabled}
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-full shrink-0 ml-auto"
+                                          >
+                                            <Trash2 className="h-4 w-4" />
+                                          </Button>
+                                        </div>
 
-                                <div className="space-y-1">
-                                  <RichTextEditor
-                                    content={pending.description}
-                                    onChange={(c) => updateImplantationPending(idx, "description", c)}
-                                    placeholder="Descrição detalhada da pendência..."
-                                    editable={!isFormDisabled}
-                                  />
-                                </div>
+                                        <div className="space-y-1">
+                                          <RichTextEditor
+                                            content={pending.description}
+                                            onChange={(c) => updateImplantationPending(idx, "description", c)}
+                                            placeholder="Descrição detalhada da pendência..."
+                                            editable={!isFormDisabled}
+                                          />
+                                        </div>
+                                      </div>
+                                    )}
+                                  </SortableItem>
+                                ))}
                               </div>
-                            ))}
-                          </div>
+                            </SortableContext>
+                          </DndContext>
                         )}
                       </div>
                     )}
                   </div>
 
-                  {/* Sub-seção 4: Sugestões de Melhorias */}
+                  {/* Sub-seção 5: Sugestões de Melhorias */}
                   <div className="space-y-3">
                     <div 
                       className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors"
@@ -2638,136 +2891,147 @@ export default function TransicaoPlaceholder() {
                             Nenhuma sugestão cadastrada. Clique em Adicionar Sugestão.
                           </p>
                         ) : (
-                          <div className="space-y-3 mt-1.5">
-                            {localDtc.implantationSuggestionsList.map((suggestion, idx) => (
-                              <div key={idx} className="bg-background p-3 border rounded-md shadow-2xs space-y-2 relative">
-                                <div className="space-y-2">
-                                  {/* Title Input (Full line) */}
-                                  <div className="w-full">
-                                    <Input
-                                      value={suggestion.title}
-                                      onChange={(e) => updateImplantationSuggestion(idx, "title", e.target.value)}
-                                      disabled={isFormDisabled}
-                                      placeholder="Título da Sugestão (ex: Novo relatório financeiro)"
-                                      className="border-muted/80 h-8 text-xs w-full font-medium"
-                                    />
-                                  </div>
+                          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleSuggestionDragEnd}>
+                            <SortableContext items={(localDtc.implantationSuggestionsList ?? []).map((_, i) => `sugg-${i}`)} strategy={verticalListSortingStrategy}>
+                              <div className="space-y-3 mt-1.5">
+                                {localDtc.implantationSuggestionsList.map((suggestion, idx) => (
+                                  <SortableItem key={`sugg-${idx}`} id={`sugg-${idx}`}>
+                                    {(dragHandleProps) => (
+                                      <div className="bg-background p-3 border rounded-md shadow-2xs space-y-2 relative">
+                                        <div className="space-y-2">
+                                          {/* Title Input with drag handle */}
+                                          <div className="flex items-center gap-2 w-full">
+                                            <span {...dragHandleProps} className="cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground shrink-0 touch-none">
+                                              <GripVertical className="h-4 w-4" />
+                                            </span>
+                                            <Input
+                                              value={suggestion.title}
+                                              onChange={(e) => updateImplantationSuggestion(idx, "title", e.target.value)}
+                                              disabled={isFormDisabled}
+                                              placeholder="Título da Sugestão (ex: Novo relatório financeiro)"
+                                              className="border-muted/80 h-8 text-xs w-full font-medium"
+                                            />
+                                          </div>
+                                        </div>
 
-                                  {/* Controls Row (Product, Sector, Status, Responsibility, Delete) */}
-                                  <div className="flex flex-wrap items-center gap-2">
-                                    {/* Product Select dropdown */}
-                                    <Select
-                                      value={suggestion.product}
-                                      onValueChange={(val) => updateImplantationSuggestion(idx, "product", val)}
-                                      disabled={isFormDisabled}
-                                    >
-                                      <SelectTrigger className="w-40 h-8 text-[11px] border-muted/80 shrink-0">
-                                        <SelectValue placeholder="Produto" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        {/* Sistemas Principais */}
-                                        <SelectItem value="Orion TN" className="text-xs">Orion TN</SelectItem>
-                                        <SelectItem value="Orion PRO" className="text-xs">Orion PRO</SelectItem>
-                                        <SelectItem value="Orion REG" className="text-xs">Orion REG</SelectItem>
-                                        <SelectItem value="Modelos TN" className="text-xs">Modelos TN</SelectItem>
-                                        {/* Produtos Adicionais */}
-                                        <SelectItem value="LCW" className="text-xs">LCW</SelectItem>
-                                        <SelectItem value="SGA" className="text-xs">SGA</SelectItem>
-                                        <SelectItem value="On Hand" className="text-xs">On Hand</SelectItem>
-                                        <SelectItem value="Orion GED" className="text-xs">Orion GED</SelectItem>
-                                        <SelectItem value="Library" className="text-xs">Library</SelectItem>
-                                        <SelectItem value="e-Recepção" className="text-xs">e-Recepção</SelectItem>
-                                        <SelectItem value="e-Qualificação" className="text-xs">e-Qualificação</SelectItem>
-                                        <SelectItem value="Cartflow" className="text-xs">Cartflow</SelectItem>
-                                        <SelectItem value="Outro" className="text-xs">Outro</SelectItem>
-                                      </SelectContent>
-                                    </Select>
+                                        {/* Controls Row (Product, Sector, Status, Responsibility, Delete) */}
+                                        <div className="flex flex-wrap items-center gap-2">
+                                          {/* Product Select dropdown */}
+                                          <Select
+                                            value={suggestion.product}
+                                            onValueChange={(val) => updateImplantationSuggestion(idx, "product", val)}
+                                            disabled={isFormDisabled}
+                                          >
+                                            <SelectTrigger className="w-40 h-8 text-[11px] border-muted/80 shrink-0">
+                                              <SelectValue placeholder="Produto" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              {/* Sistemas Principais */}
+                                              <SelectItem value="Orion TN" className="text-xs">Orion TN</SelectItem>
+                                              <SelectItem value="Orion PRO" className="text-xs">Orion PRO</SelectItem>
+                                              <SelectItem value="Orion REG" className="text-xs">Orion REG</SelectItem>
+                                              <SelectItem value="Modelos TN" className="text-xs">Modelos TN</SelectItem>
+                                              {/* Produtos Adicionais */}
+                                              <SelectItem value="LCW" className="text-xs">LCW</SelectItem>
+                                              <SelectItem value="SGA" className="text-xs">SGA</SelectItem>
+                                              <SelectItem value="On Hand" className="text-xs">On Hand</SelectItem>
+                                              <SelectItem value="Orion GED" className="text-xs">Orion GED</SelectItem>
+                                              <SelectItem value="Library" className="text-xs">Library</SelectItem>
+                                              <SelectItem value="e-Recepção" className="text-xs">e-Recepção</SelectItem>
+                                              <SelectItem value="e-Qualificação" className="text-xs">e-Qualificação</SelectItem>
+                                              <SelectItem value="Cartflow" className="text-xs">Cartflow</SelectItem>
+                                              <SelectItem value="Outro" className="text-xs">Outro</SelectItem>
+                                            </SelectContent>
+                                          </Select>
 
-                                    {/* Department (Setor) Select dropdown */}
-                                    <Select
-                                      value={suggestion.department}
-                                      onValueChange={(val) => updateImplantationSuggestion(idx, "department", val)}
-                                      disabled={isFormDisabled}
-                                    >
-                                      <SelectTrigger className="w-36 h-8 text-[11px] border-muted/80 shrink-0">
-                                        <SelectValue placeholder="Setor" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="Notas" className="text-xs">Notas</SelectItem>
-                                        <SelectItem value="Firmas" className="text-xs">Firmas</SelectItem>
-                                        <SelectItem value="Recepção / Triagem" className="text-xs">Recepção/Triagem</SelectItem>
-                                        <SelectItem value="Protesto" className="text-xs">Protesto</SelectItem>
-                                        <SelectItem value="Registro Civil" className="text-xs">R. Civil</SelectItem>
-                                        <SelectItem value="Registro de Imóveis" className="text-xs">R. Imóveis</SelectItem>
-                                        <SelectItem value="RTD / PJ" className="text-xs">RTD/PJ</SelectItem>
-                                        <SelectItem value="Administrativo" className="text-xs">Adm</SelectItem>
-                                        <SelectItem value="Financeiro" className="text-xs">Financeiro</SelectItem>
-                                        <SelectItem value="TI / Suporte" className="text-xs">TI</SelectItem>
-                                        <SelectItem value="Outro" className="text-xs">Outro</SelectItem>
-                                      </SelectContent>
-                                    </Select>
+                                          {/* Department (Setor) Select dropdown */}
+                                          <Select
+                                            value={suggestion.department}
+                                            onValueChange={(val) => updateImplantationSuggestion(idx, "department", val)}
+                                            disabled={isFormDisabled}
+                                          >
+                                            <SelectTrigger className="w-36 h-8 text-[11px] border-muted/80 shrink-0">
+                                              <SelectValue placeholder="Setor" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="Notas" className="text-xs">Notas</SelectItem>
+                                              <SelectItem value="Firmas" className="text-xs">Firmas</SelectItem>
+                                              <SelectItem value="Recepção / Triagem" className="text-xs">Recepção/Triagem</SelectItem>
+                                              <SelectItem value="Protesto" className="text-xs">Protesto</SelectItem>
+                                              <SelectItem value="Registro Civil" className="text-xs">R. Civil</SelectItem>
+                                              <SelectItem value="Registro de Imóveis" className="text-xs">R. Imóveis</SelectItem>
+                                              <SelectItem value="RTD / PJ" className="text-xs">RTD/PJ</SelectItem>
+                                              <SelectItem value="Administrativo" className="text-xs">Adm</SelectItem>
+                                              <SelectItem value="Financeiro" className="text-xs">Financeiro</SelectItem>
+                                              <SelectItem value="TI / Suporte" className="text-xs">TI</SelectItem>
+                                              <SelectItem value="Outro" className="text-xs">Outro</SelectItem>
+                                            </SelectContent>
+                                          </Select>
 
-                                    {/* Status Select dropdown */}
-                                    <Select
-                                      value={suggestion.status}
-                                      onValueChange={(val) => updateImplantationSuggestion(idx, "status", val)}
-                                      disabled={isFormDisabled}
-                                    >
-                                      <SelectTrigger className="w-32 h-8 text-[11px] border-muted/80 shrink-0">
-                                        <SelectValue placeholder="Status" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="Pendente" className="text-xs">Pendente</SelectItem>
-                                        <SelectItem value="Em andamento" className="text-xs">Em andamento</SelectItem>
-                                        <SelectItem value="Resolvido" className="text-xs">Resolvido</SelectItem>
-                                        <SelectItem value="Cancelado" className="text-xs">Cancelado</SelectItem>
-                                      </SelectContent>
-                                    </Select>
+                                          {/* Status Select dropdown */}
+                                          <Select
+                                            value={suggestion.status}
+                                            onValueChange={(val) => updateImplantationSuggestion(idx, "status", val)}
+                                            disabled={isFormDisabled}
+                                          >
+                                            <SelectTrigger className="w-32 h-8 text-[11px] border-muted/80 shrink-0">
+                                              <SelectValue placeholder="Status" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="Pendente" className="text-xs">Pendente</SelectItem>
+                                              <SelectItem value="Em andamento" className="text-xs">Em andamento</SelectItem>
+                                              <SelectItem value="Resolvido" className="text-xs">Resolvido</SelectItem>
+                                              <SelectItem value="Cancelado" className="text-xs">Cancelado</SelectItem>
+                                            </SelectContent>
+                                          </Select>
 
-                                    {/* Assigned Analyst Select dropdown */}
-                                    <Select
-                                      value={suggestion.assignedTo || "none"}
-                                      onValueChange={(val) => updateImplantationSuggestion(idx, "assignedTo", val === "none" ? "" : val)}
-                                      disabled={isFormDisabled}
-                                    >
-                                      <SelectTrigger className="w-48 h-8 text-[11px] border-muted/80 shrink-0">
-                                        <SelectValue placeholder="Responsável" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="none" className="text-xs">Não atribuído</SelectItem>
-                                        {members.map((m) => (
-                                          <SelectItem key={m.id} value={m.name} className="text-xs">
-                                            {m.name}
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
+                                          {/* Assigned Analyst Select dropdown */}
+                                          <Select
+                                            value={suggestion.assignedTo || "none"}
+                                            onValueChange={(val) => updateImplantationSuggestion(idx, "assignedTo", val === "none" ? "" : val)}
+                                            disabled={isFormDisabled}
+                                          >
+                                            <SelectTrigger className="w-48 h-8 text-[11px] border-muted/80 shrink-0">
+                                              <SelectValue placeholder="Responsável" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="none" className="text-xs">Não atribuído</SelectItem>
+                                              {members.map((m) => (
+                                                <SelectItem key={m.id} value={m.name} className="text-xs">
+                                                  {m.name}
+                                                </SelectItem>
+                                              ))}
+                                            </SelectContent>
+                                          </Select>
 
-                                    {/* Remove Button */}
-                                    <Button
-                                      type="button"
-                                      onClick={() => removeImplantationSuggestion(idx)}
-                                      disabled={isFormDisabled}
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-full shrink-0 ml-auto"
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  </div>
-                                </div>
+                                          {/* Remove Button */}
+                                          <Button
+                                            type="button"
+                                            onClick={() => removeImplantationSuggestion(idx)}
+                                            disabled={isFormDisabled}
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-full shrink-0 ml-auto"
+                                          >
+                                            <Trash2 className="h-4 w-4" />
+                                          </Button>
+                                        </div>
 
-                                <div className="space-y-1">
-                                  <RichTextEditor
-                                    content={suggestion.description}
-                                    onChange={(c) => updateImplantationSuggestion(idx, "description", c)}
-                                    placeholder="Descrição detalhada da sugestão..."
-                                    editable={!isFormDisabled}
-                                  />
-                                </div>
+                                        <div className="space-y-1">
+                                          <RichTextEditor
+                                            content={suggestion.description}
+                                            onChange={(c) => updateImplantationSuggestion(idx, "description", c)}
+                                            placeholder="Descrição detalhada da sugestão..."
+                                            editable={!isFormDisabled}
+                                          />
+                                        </div>
+                                      </div>
+                                    )}
+                                  </SortableItem>
+                                ))}
                               </div>
-                            ))}
-                          </div>
+                            </SortableContext>
+                          </DndContext>
                         )}
                       </div>
                     )}
@@ -2793,6 +3057,41 @@ export default function TransicaoPlaceholder() {
                     
                     {!collapsedSections["processo-consideracoes"] && (
                       <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                        {/* ⑤ NPS / Avaliação do Cliente */}
+                        <div className="flex items-center justify-between bg-muted/30 border rounded-lg p-3 mb-2">
+                          <div>
+                            <Label className="text-xs font-bold text-muted-foreground">Satisfação do Cliente</Label>
+                            <p className="text-[9px] text-muted-foreground mt-0.5">Avalie a recepção do cliente durante a implantação</p>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <button
+                                key={star}
+                                type="button"
+                                disabled={isFormDisabled}
+                                onClick={() => handleFieldChange("clientSatisfactionScore", star === localDtc.clientSatisfactionScore ? 0 : star)}
+                                className={cn(
+                                  "transition-all duration-150 hover:scale-110 disabled:cursor-not-allowed disabled:opacity-60",
+                                  "focus:outline-none"
+                                )}
+                              >
+                                <Star
+                                  className={cn(
+                                    "h-6 w-6 transition-colors",
+                                    (localDtc.clientSatisfactionScore ?? 0) >= star
+                                      ? "fill-amber-400 text-amber-400"
+                                      : "fill-none text-muted-foreground/40 hover:text-amber-300"
+                                  )}
+                                />
+                              </button>
+                            ))}
+                            {(localDtc.clientSatisfactionScore ?? 0) > 0 && (
+                              <span className="ml-2 text-xs font-bold text-amber-500">
+                                {["", "Ruim", "Regular", "Bom", "Muito bom", "Excelente"][localDtc.clientSatisfactionScore ?? 0]}
+                              </span>
+                            )}
+                          </div>
+                        </div>
                         <Label htmlFor="finalConsiderations" className="text-xs font-bold text-muted-foreground">Notas de Encerramento do Projeto</Label>
                         <RichTextEditor
                           content={localDtc.finalConsiderations}
@@ -2902,6 +3201,17 @@ export default function TransicaoPlaceholder() {
                       </table>
                     </div>
                   )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* TAB 4.5: HISTORICO */}
+            <TabsContent value="historico">
+              <Card className="border-muted/60 shadow-sm">
+                <CardContent className="p-4">
+                  <div className="h-[600px] flex flex-col">
+                    <LogsTab project={project as any} />
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -3164,7 +3474,7 @@ export default function TransicaoPlaceholder() {
 
       {/* RENDER-ONLY PRINT PREVIEW TARGET */}
       {selectedProjectId && localDtc && (
-        <div id="dtc-print-area" className="hidden print:block bg-white text-black p-8 text-sm font-serif">
+        <div id="dtc-print-area" ref={printRef} className="hidden print:block bg-white text-black p-8 text-sm font-serif">
           <div className="border-2 border-black p-6 space-y-6">
             {/* Header */}
             <div className="text-center border-b-2 border-black pb-4">
