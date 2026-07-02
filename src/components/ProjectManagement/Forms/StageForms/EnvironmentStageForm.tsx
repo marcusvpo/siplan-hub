@@ -64,9 +64,9 @@ export function EnvironmentStageForm({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 col-span-full">
       {/* Sistema Operacional */}
-      <div className="space-y-2.5">
+      <div className="space-y-2.5 max-w-sm">
         <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
           <Database className="h-3.5 w-3.5 text-muted-foreground" />
           Sistema Operacional
