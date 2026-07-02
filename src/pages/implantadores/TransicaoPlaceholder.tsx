@@ -3355,7 +3355,7 @@ export default function TransicaoPlaceholder() {
                 </CardHeader>
                 <CardContent className="py-6">
                   {/* Clean preview card resembling A4 paper */}
-                  <div className="bg-white text-black p-8 border rounded-md shadow-inner max-w-[800px] mx-auto text-sm leading-relaxed font-serif">
+                  <div className="bg-white text-black p-8 border rounded-md shadow-inner max-w-[800px] mx-auto text-sm leading-relaxed" style={{ fontFamily: "Arial, Helvetica, sans-serif" }}>
                     <div className="border-2 border-black p-4 space-y-4">
                       {/* Document Header */}
                       <div className="text-center border-b-2 border-black pb-4">
@@ -3622,7 +3622,7 @@ export default function TransicaoPlaceholder() {
 
       {/* RENDER-ONLY PRINT PREVIEW TARGET */}
       {selectedProjectId && localDtc && (
-        <div id="dtc-print-area" ref={printRef} className="hidden print:block bg-white text-black p-8 text-sm font-serif">
+        <div id="dtc-print-area" ref={printRef} className="hidden print:block bg-white text-black p-8 text-sm" style={{ fontFamily: "Arial, Helvetica, sans-serif" }}>
           <div className="border-2 border-black p-6 space-y-6">
             {/* Header */}
             <div className="text-center border-b-2 border-black pb-4">
