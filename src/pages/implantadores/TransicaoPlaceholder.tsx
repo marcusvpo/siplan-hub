@@ -3410,6 +3410,28 @@ export default function TransicaoPlaceholder() {
                           </div>
                         )}
 
+                        {localDtc.clientSatisfactionScore ? (
+                          <div className="mb-2">
+                            <strong className="block mb-1 text-sm uppercase">Satisfação do Cliente:</strong>
+                            <div className="pl-2 border-l-2 border-gray-300 flex items-center gap-1 text-xs mb-3">
+                              {Array.from({ length: 5 }).map((_, i) => (
+                                <Star
+                                  key={i}
+                                  className={cn(
+                                    "h-4 w-4",
+                                    i < (localDtc.clientSatisfactionScore ?? 0)
+                                      ? "fill-amber-400 text-amber-400"
+                                      : "fill-none text-gray-300"
+                                  )}
+                                />
+                              ))}
+                              <span className="ml-1.5 font-bold text-amber-600">
+                                {["", "Ruim", "Regular", "Bom", "Muito bom", "Excelente"][localDtc.clientSatisfactionScore ?? 0]}
+                              </span>
+                            </div>
+                          </div>
+                        ) : null}
+
                         <div>
                           <strong className="block mb-1 text-sm uppercase">Considerações Finais:</strong>
                           <div className="whitespace-pre-wrap min-h-12 pl-2 border-l-2 border-gray-300 italic">
@@ -3648,6 +3670,28 @@ export default function TransicaoPlaceholder() {
                   </div>
                 </div>
               )}
+
+              {localDtc.clientSatisfactionScore ? (
+                <div className="mb-2">
+                  <strong className="block mb-1 text-sm uppercase">Satisfação do Cliente:</strong>
+                  <div className="pl-2 border-l-2 border-gray-400 flex items-center gap-1 text-xs mb-3">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star
+                        key={i}
+                        className={cn(
+                          "h-4 w-4",
+                          i < (localDtc.clientSatisfactionScore ?? 0)
+                            ? "fill-amber-400 text-amber-400"
+                            : "fill-none text-gray-300"
+                        )}
+                      />
+                    ))}
+                    <span className="ml-1.5 font-bold text-amber-600">
+                      {["", "Ruim", "Regular", "Bom", "Muito bom", "Excelente"][localDtc.clientSatisfactionScore ?? 0]}
+                    </span>
+                  </div>
+                </div>
+              ) : null}
 
               <div>
                 <strong className="block mb-1 text-sm uppercase">Considerações Finais:</strong>
