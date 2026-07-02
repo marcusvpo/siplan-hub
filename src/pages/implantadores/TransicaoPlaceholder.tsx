@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+﻿import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -3401,12 +3401,13 @@ export default function TransicaoPlaceholder() {
 
             {/* TAB 5: REPORT PRINT PREVIEW */}
             {/* TAB 5: REPORT PRINT PREVIEW */}
+            {/* TAB 5: REPORT PRINT PREVIEW */}
             <TabsContent value="visualizar">
               <Card className="border-muted/60 shadow-md overflow-hidden">
                 <CardHeader className="border-b flex flex-row items-center justify-between py-3 bg-muted/20">
                   <div>
                     <CardTitle className="text-base font-bold text-foreground">Visualização de Impressão (DTC Oficial)</CardTitle>
-                    <CardDescription className="text-xs">Pré-visualização A4 com paginação real — exatamente como será impresso ou exportado para PDF.</CardDescription>
+                    <CardDescription className="text-xs">Pré-visualização paginada em A4 — exatamente como será impresso ou exportado para PDF.</CardDescription>
                   </div>
                   <div className="flex items-center gap-2">
                     <Button onClick={exportToPdf} variant="outline" size="sm" className="gap-1.5 text-xs font-bold border-primary text-primary hover:bg-primary hover:text-primary-foreground">
@@ -3465,181 +3466,235 @@ export default function TransicaoPlaceholder() {
                     </Button>
                   </div>
                   <div className="text-xs text-gray-400 font-mono">
-                    A4 Simulado
+                    Visualizador de Páginas
                   </div>
                 </div>
 
                 {/* PDF Viewer shell — dark background like Adobe Reader */}
-                <div className="overflow-y-auto" style={{ background: '#404040', minHeight: '600px', maxHeight: '85vh', padding: '32px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  {/* A4 paper: 794px wide × 1122px per page at 96dpi */}
+                <div className="overflow-y-auto" style={{ background: '#404040', minHeight: '600px', maxHeight: '85vh', padding: '32px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px' }}>
+                  
+                  {/* PÁGINA 1 */}
                   <div className="dtc-document-font text-black relative" style={{
                     width: '794px',
                     minHeight: '1122px',
                     background: 'white',
-                    boxShadow: '0 4px 32px rgba(0,0,0,0.55)',
-                    backgroundImage: "repeating-linear-gradient(to bottom, transparent 0px, transparent calc(1122px - 3px), #bbb calc(1122px - 3px), #bbb 1122px, white 1122px)",
-                    backgroundSize: '100% 1122px',
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.45)',
                     zoom: zoom / 100
                   }}>
-                    {/* RASCUNHO diagonal watermark */}
                     {localDtc.status === 'draft' && (
                       <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
                         <span style={{ fontSize: '110px', fontWeight: 900, color: 'rgba(0,0,0,0.045)', transform: 'rotate(-40deg)', letterSpacing: '0.05em', userSelect: 'none', whiteSpace: 'nowrap' }}>RASCUNHO</span>
                       </div>
                     )}
-                    {/* A4 content with standard 19mm margins */}
-                    <div style={{ padding: '56px 72px', position: 'relative', zIndex: 1 }}>
-
-                      {/* CABEÇALHO */}
-                      <div className="dtc-section" style={{ borderBottom: '2px solid black', paddingBottom: '14px', marginBottom: '16px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-                          <img src="/assets/Siplan_logo.png" alt="Siplan" style={{ height: '36px', objectFit: 'contain' }} />
-                          <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: '8px', color: '#999' }}>Gerado em: {new Date().toLocaleDateString('pt-BR')} às {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</div>
-                            {localDtc.status === 'draft' && <span style={{ fontSize: '8px', fontWeight: 700, background: '#FEF3C7', color: '#92400E', padding: '1px 6px', borderRadius: '3px', display: 'inline-block', marginTop: '2px' }}>RASCUNHO</span>}
-                            {localDtc.status === 'approved' && <span style={{ fontSize: '8px', fontWeight: 700, background: '#D1FAE5', color: '#065F46', padding: '1px 6px', borderRadius: '3px', display: 'inline-block', marginTop: '2px' }}>APROVADO</span>}
+                    <div style={{ padding: '56px 72px', height: '1122px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
+                      <div>
+                        {/* CABEÇALHO */}
+                        <div className="dtc-section" style={{ borderBottom: '2px solid black', paddingBottom: '14px', marginBottom: '16px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                            <img src="/assets/Siplan_logo.png" alt="Siplan" style={{ height: '36px', objectFit: 'contain' }} />
+                            <div style={{ textAlign: 'right' }}>
+                              <div style={{ fontSize: '8px', color: '#999' }}>Gerado em: {new Date().toLocaleDateString('pt-BR')} às {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</div>
+                              {localDtc.status === 'draft' && <span style={{ fontSize: '8px', fontWeight: 700, background: '#FEF3C7', color: '#92400E', padding: '1px 6px', borderRadius: '3px', display: 'inline-block', marginTop: '2px' }}>RASCUNHO</span>}
+                              {localDtc.status === 'approved' && <span style={{ fontSize: '8px', fontWeight: 700, background: '#D1FAE5', color: '#065F46', padding: '1px 6px', borderRadius: '3px', display: 'inline-block', marginTop: '2px' }}>APROVADO</span>}
+                            </div>
+                          </div>
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ fontSize: '16px', fontWeight: 900, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Documento de Transição de Conhecimento</div>
+                            <div style={{ fontSize: '12px', fontWeight: 600, color: '#444', marginTop: '2px' }}>Módulo Implantação / Service Desk</div>
+                            {localDtc.supportCallNumber && <div style={{ fontSize: '10px', fontWeight: 700, color: '#666', marginTop: '3px' }}>Chamado de Origem: {localDtc.supportCallNumber}</div>}
                           </div>
                         </div>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ fontSize: '16px', fontWeight: 900, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Documento de Transição de Conhecimento</div>
-                          <div style={{ fontSize: '12px', fontWeight: 600, color: '#444', marginTop: '2px' }}>Módulo Implantação / Service Desk</div>
-                          {localDtc.supportCallNumber && <div style={{ fontSize: '10px', fontWeight: 700, color: '#666', marginTop: '3px' }}>Chamado de Origem: {localDtc.supportCallNumber}</div>}
+
+                        {/* 1. IDENTIFICAÇÃO */}
+                        <div className="dtc-section" style={{ marginBottom: '14px' }}>
+                          <div style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#1e293b', borderLeft: '3px solid black', paddingLeft: '6px', marginBottom: '5px' }}>1. Identificação da Serventia &amp; Responsáveis</div>
+                          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10.5px' }}>
+                            <tbody>
+                              <tr>
+                                <td style={{ border: '1px solid #cbd5e1', padding: '5px 7px', width: '50%', background: '#f8fafc' }}><strong>Implantador Responsável:</strong> {renderVal(localDtc.responsible)}</td>
+                                <td style={{ border: '1px solid #cbd5e1', padding: '5px 7px', background: '#f8fafc' }}><strong>Analista Suporte:</strong> {renderVal(localDtc.analystResponsible)}</td>
+                              </tr>
+                              <tr><td colSpan={2} style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}><strong>Serventia (Cartório):</strong> {renderVal(localDtc.serventia)}</td></tr>
+                              <tr>
+                                <td style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}><strong>Oficial Titular:</strong> {renderVal(localDtc.oficial)}</td>
+                                <td style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}><strong>Responsável Cartório:</strong> {localDtc.clientResponsible ? `${localDtc.clientResponsible}${localDtc.clientResponsiblePhone ? ` (${localDtc.clientResponsiblePhone})` : ''}` : renderVal(null)}</td>
+                              </tr>
+                              <tr><td colSpan={2} style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}><strong>Key Users:</strong> {localDtc.keyUsersList && localDtc.keyUsersList.length > 0 ? localDtc.keyUsersList.map(u => `${u.name}${u.phone ? ` (${u.phone})` : ''}`).join(' · ') : renderVal(null, 'Nenhum informado')}</td></tr>
+                              <tr>
+                                <td style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}><strong>Telefone:</strong> {renderVal(localDtc.clientPhone)}</td>
+                                <td style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}><strong>E-mail:</strong> {renderVal(localDtc.clientEmail)}</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+
+                        {/* 2. INFRAESTRUTURA */}
+                        <div className="dtc-section" style={{ marginBottom: '14px' }}>
+                          <div style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#1e293b', borderLeft: '3px solid black', paddingLeft: '6px', marginBottom: '5px' }}>2. Infraestrutura, Banco de Dados &amp; Acessos</div>
+                          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10.5px' }}>
+                            <tbody>
+                              <tr>
+                                <td style={{ border: '1px solid #cbd5e1', padding: '5px 7px', width: '50%' }}><strong>Sistemas Instalados:</strong> {renderVal(localDtc.systemsInstalled)}</td>
+                                <td style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}><strong>Versões:</strong> {renderVal(localDtc.systemVersions)}</td>
+                              </tr>
+                              <tr>
+                                <td style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}><strong>Versão PostgreSQL:</strong> {renderVal(localDtc.postgresVersion)}</td>
+                                <td style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}><strong>Local Instalação PG:</strong> {renderVal(localDtc.postgresHost)}</td>
+                              </tr>
+                              <tr>
+                                <td colSpan={2} style={{ border: '1px solid #cbd5e1', padding: '5px 7px', background: '#f8fafc' }}>
+                                  <strong>Acesso Banco PG:</strong>
+                                  <span style={{ fontFamily: 'monospace', background: 'white', border: '1px solid #e2e8f0', padding: '1px 5px', borderRadius: '3px', marginLeft: '6px' }}>Usuário: {localDtc.postgresUser || 'N/A'}</span>
+                                  <span style={{ fontFamily: 'monospace', background: 'white', border: '1px solid #e2e8f0', padding: '1px 5px', borderRadius: '3px', marginLeft: '6px' }}>Senha: {localDtc.postgresPassword || 'N/A'}</span>
+                                </td>
+                              </tr>
+                              <tr>
+                                <td colSpan={2} style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}>
+                                  <strong>Acessos Remotos:</strong>{' '}
+                                  {!localDtc.remoteAccessList || localDtc.remoteAccessList.length === 0
+                                    ? renderVal(localDtc.remoteAccessData, 'Nenhum informado')
+                                    : localDtc.remoteAccessList.map((a, i) => (
+                                      <span key={i} style={{ display: 'inline-block', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '3px', padding: '1px 6px', marginRight: '4px', fontFamily: 'monospace', fontSize: '10px' }}>
+                                        {a.system} · ID: {a.id}{a.password ? ` · Senha: ${a.password}` : ''}
+                                      </span>
+                                    ))
+                                  }
+                                </td>
+                              </tr>
+                              {(localDtc.soLogin || localDtc.soPassword || localDtc.osType || localDtc.osVersion) && (
+                                <tr>
+                                  <td colSpan={2} style={{ border: '1px solid #cbd5e1', padding: '5px 7px', background: '#f8fafc' }}>
+                                    <strong>Acesso SO:</strong> {localDtc.osType}{localDtc.osVersion ? ` (${localDtc.osVersion})` : ''}
+                                    <span style={{ fontFamily: 'monospace', background: 'white', border: '1px solid #e2e8f0', padding: '1px 5px', borderRadius: '3px', marginLeft: '6px' }}>Usuário: {localDtc.soLogin || 'N/A'}</span>
+                                    <span style={{ fontFamily: 'monospace', background: 'white', border: '1px solid #e2e8f0', padding: '1px 5px', borderRadius: '3px', marginLeft: '6px' }}>Senha: {localDtc.soPassword || 'N/A'}</span>
+                                  </td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        {/* 3. CONVERSÃO */}
+                        <div className="dtc-section" style={{ marginBottom: '14px' }}>
+                          <div style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#1e293b', borderLeft: '3px solid black', paddingLeft: '6px', marginBottom: '5px' }}>3. Conversão de Banco de Dados</div>
+                          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10.5px' }}>
+                            <tbody>
+                              <tr>
+                                <td style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}>
+                                  <strong>Houve Conversão:</strong>{' '}
+                                  <span style={{ display: 'inline-block', padding: '1px 8px', borderRadius: '3px', fontWeight: 700, fontSize: '9px', textTransform: 'uppercase', background: localDtc.hadConversion ? '#d1fae5' : '#f1f5f9', color: localDtc.hadConversion ? '#065f46' : '#475569' }}>
+                                    {localDtc.hadConversion ? 'Sim' : 'Não'}
+                                  </span>
+                                  {localDtc.hadConversion && localDtc.convertedData && (
+                                    <div style={{ marginTop: '5px', background: '#f8fafc', border: '1px solid #e2e8f0', padding: '5px 8px', borderRadius: '3px' }}>{localDtc.convertedData}</div>
+                                  )}
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
                         </div>
                       </div>
 
-                      {/* 1. IDENTIFICAÇÃO */}
-                      <div className="dtc-section" style={{ marginBottom: '14px' }}>
-                        <div style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#1e293b', borderLeft: '3px solid black', paddingLeft: '6px', marginBottom: '5px' }}>1. Identificação da Serventia &amp; Responsáveis</div>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10.5px' }}>
-                          <tbody>
-                            <tr>
-                              <td style={{ border: '1px solid #cbd5e1', padding: '5px 7px', width: '50%', background: '#f8fafc' }}><strong>Implantador Responsável:</strong> {renderVal(localDtc.responsible)}</td>
-                              <td style={{ border: '1px solid #cbd5e1', padding: '5px 7px', background: '#f8fafc' }}><strong>Analista Suporte:</strong> {renderVal(localDtc.analystResponsible)}</td>
-                            </tr>
-                            <tr><td colSpan={2} style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}><strong>Serventia (Cartório):</strong> {renderVal(localDtc.serventia)}</td></tr>
-                            <tr>
-                              <td style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}><strong>Oficial Titular:</strong> {renderVal(localDtc.oficial)}</td>
-                              <td style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}><strong>Responsável Cartório:</strong> {localDtc.clientResponsible ? `${localDtc.clientResponsible}${localDtc.clientResponsiblePhone ? ` (${localDtc.clientResponsiblePhone})` : ''}` : renderVal(null)}</td>
-                            </tr>
-                            <tr><td colSpan={2} style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}><strong>Key Users:</strong> {localDtc.keyUsersList && localDtc.keyUsersList.length > 0 ? localDtc.keyUsersList.map(u => `${u.name}${u.phone ? ` (${u.phone})` : ''}`).join(' · ') : renderVal(null, 'Nenhum informado')}</td></tr>
-                            <tr>
-                              <td style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}><strong>Telefone:</strong> {renderVal(localDtc.clientPhone)}</td>
-                              <td style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}><strong>E-mail:</strong> {renderVal(localDtc.clientEmail)}</td>
-                            </tr>
-                          </tbody>
-                        </table>
+                      {/* RODAPÉ PÁGINA 1 */}
+                      <div style={{ borderTop: '1px solid #cbd5e1', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', fontSize: '8px', color: '#94a3b8' }}>
+                        <span>Siplan Sistemas — Documento de Transição de Conhecimento</span>
+                        <span>Página 1 de 4</span>
                       </div>
+                    </div>
+                  </div>
 
-                      {/* 2. INFRAESTRUTURA */}
-                      <div className="dtc-section" style={{ marginBottom: '14px' }}>
-                        <div style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#1e293b', borderLeft: '3px solid black', paddingLeft: '6px', marginBottom: '5px' }}>2. Infraestrutura, Banco de Dados &amp; Acessos</div>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10.5px' }}>
-                          <tbody>
-                            <tr>
-                              <td style={{ border: '1px solid #cbd5e1', padding: '5px 7px', width: '50%' }}><strong>Sistemas Instalados:</strong> {renderVal(localDtc.systemsInstalled)}</td>
-                              <td style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}><strong>Versões:</strong> {renderVal(localDtc.systemVersions)}</td>
-                            </tr>
-                            <tr>
-                              <td style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}><strong>Versão PostgreSQL:</strong> {renderVal(localDtc.postgresVersion)}</td>
-                              <td style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}><strong>Local Instalação PG:</strong> {renderVal(localDtc.postgresHost)}</td>
-                            </tr>
-                            <tr>
-                              <td colSpan={2} style={{ border: '1px solid #cbd5e1', padding: '5px 7px', background: '#f8fafc' }}>
-                                <strong>Acesso Banco PG:</strong>
-                                <span style={{ fontFamily: 'monospace', background: 'white', border: '1px solid #e2e8f0', padding: '1px 5px', borderRadius: '3px', marginLeft: '6px' }}>Usuário: {localDtc.postgresUser || 'N/A'}</span>
-                                <span style={{ fontFamily: 'monospace', background: 'white', border: '1px solid #e2e8f0', padding: '1px 5px', borderRadius: '3px', marginLeft: '6px' }}>Senha: {localDtc.postgresPassword || 'N/A'}</span>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td colSpan={2} style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}>
-                                <strong>Acessos Remotos:</strong>{' '}
-                                {!localDtc.remoteAccessList || localDtc.remoteAccessList.length === 0
-                                  ? renderVal(localDtc.remoteAccessData, 'Nenhum informado')
-                                  : localDtc.remoteAccessList.map((a, i) => (
-                                    <span key={i} style={{ display: 'inline-block', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '3px', padding: '1px 6px', marginRight: '4px', fontFamily: 'monospace', fontSize: '10px' }}>
-                                      {a.system} · ID: {a.id}{a.password ? ` · Senha: ${a.password}` : ''}
-                                    </span>
-                                  ))
-                                }
-                              </td>
-                            </tr>
-                            {(localDtc.soLogin || localDtc.soPassword || localDtc.osType || localDtc.osVersion) && (
+                  {/* PÁGINA 2 */}
+                  <div className="dtc-document-font text-black relative" style={{
+                    width: '794px',
+                    minHeight: '1122px',
+                    background: 'white',
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.45)',
+                    zoom: zoom / 100
+                  }}>
+                    {localDtc.status === 'draft' && (
+                      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
+                        <span style={{ fontSize: '110px', fontWeight: 900, color: 'rgba(0,0,0,0.045)', transform: 'rotate(-40deg)', letterSpacing: '0.05em', userSelect: 'none', whiteSpace: 'nowrap' }}>RASCUNHO</span>
+                      </div>
+                    )}
+                    <div style={{ padding: '56px 72px', height: '1122px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
+                      <div>
+                        {/* 4. RELATO TÉCNICO */}
+                        <div className="dtc-section" style={{ marginBottom: '14px' }}>
+                          <div style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#1e293b', borderLeft: '3px solid black', paddingLeft: '6px', marginBottom: '5px' }}>4. Relato Técnico &amp; Processo de Implantação</div>
+                          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10.5px' }}>
+                            <tbody>
                               <tr>
-                                <td colSpan={2} style={{ border: '1px solid #cbd5e1', padding: '5px 7px', background: '#f8fafc' }}>
-                                  <strong>Acesso SO:</strong> {localDtc.osType}{localDtc.osVersion ? ` (${localDtc.osVersion})` : ''}
-                                  <span style={{ fontFamily: 'monospace', background: 'white', border: '1px solid #e2e8f0', padding: '1px 5px', borderRadius: '3px', marginLeft: '6px' }}>Usuário: {localDtc.soLogin || 'N/A'}</span>
-                                  <span style={{ fontFamily: 'monospace', background: 'white', border: '1px solid #e2e8f0', padding: '1px 5px', borderRadius: '3px', marginLeft: '6px' }}>Senha: {localDtc.soPassword || 'N/A'}</span>
+                                <td style={{ border: '1px solid #cbd5e1', padding: '7px 9px' }}>
+                                  <strong style={{ display: 'block', fontSize: '9px', textTransform: 'uppercase', color: '#334155', marginBottom: '4px' }}>Processo de Implantação:</strong>
+                                  <div style={{ borderLeft: '2px solid #cbd5e1', paddingLeft: '8px', fontStyle: 'italic', color: '#374151' }}>
+                                    <LexicalRenderer jsonStr={localDtc.implantationProcess} fallback="(Nenhum relato registrado)" />
+                                  </div>
+                                  {localDtc.implantationProcessLogs && localDtc.implantationProcessLogs.length > 0 && (
+                                    <div style={{ marginTop: '8px', background: '#f8fafc', padding: '6px 8px', borderRadius: '3px', borderLeft: '2px solid #94a3b8' }}>
+                                      <strong style={{ display: 'block', fontSize: '8.5px', textTransform: 'uppercase', color: '#64748b', marginBottom: '4px' }}>Acompanhamento Diário:</strong>
+                                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', maxHeight: '400px', overflowY: 'auto' }}>
+                                        {localDtc.implantationProcessLogs.map((log, idx) => (
+                                          <div key={idx} style={{ display: 'flex', gap: '6px', fontSize: '10px' }}>
+                                            <span style={{ fontWeight: 700, color: '#475569', minWidth: '70px' }}>{log.date ? new Date(log.date + 'T00:00:00').toLocaleDateString('pt-BR') : ''}:</span>
+                                            <span>{log.description || '(Sem descrição)'}</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
                                 </td>
                               </tr>
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-
-                      {/* 3. CONVERSÃO */}
-                      <div className="dtc-section" style={{ marginBottom: '14px' }}>
-                        <div style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#1e293b', borderLeft: '3px solid black', paddingLeft: '6px', marginBottom: '5px' }}>3. Conversão de Banco de Dados</div>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10.5px' }}>
-                          <tbody>
-                            <tr>
-                              <td style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}>
-                                <strong>Houve Conversão:</strong>{' '}
-                                <span style={{ display: 'inline-block', padding: '1px 8px', borderRadius: '3px', fontWeight: 700, fontSize: '9px', textTransform: 'uppercase', background: localDtc.hadConversion ? '#d1fae5' : '#f1f5f9', color: localDtc.hadConversion ? '#065f46' : '#475569' }}>
-                                  {localDtc.hadConversion ? 'Sim' : 'Não'}
-                                </span>
-                                {localDtc.hadConversion && localDtc.convertedData && (
-                                  <div style={{ marginTop: '5px', background: '#f8fafc', border: '1px solid #e2e8f0', padding: '5px 8px', borderRadius: '3px' }}>{localDtc.convertedData}</div>
-                                )}
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-
-                      {/* 4. RELATO TÉCNICO */}
-                      <div className="dtc-section" style={{ marginBottom: '14px' }}>
-                        <div style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#1e293b', borderLeft: '3px solid black', paddingLeft: '6px', marginBottom: '5px' }}>4. Relato Técnico &amp; Processo de Implantação</div>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10.5px' }}>
-                          <tbody>
-                            <tr>
-                              <td style={{ border: '1px solid #cbd5e1', padding: '7px 9px' }}>
-                                <strong style={{ display: 'block', fontSize: '9px', textTransform: 'uppercase', color: '#334155', marginBottom: '4px' }}>Processo de Implantação:</strong>
-                                <div style={{ borderLeft: '2px solid #cbd5e1', paddingLeft: '8px', fontStyle: 'italic', color: '#374151' }}>
-                                  <LexicalRenderer jsonStr={localDtc.implantationProcess} fallback="(Nenhum relato registrado)" />
-                                </div>
-                                {localDtc.implantationProcessLogs && localDtc.implantationProcessLogs.length > 0 && (
-                                  <div style={{ marginTop: '8px', background: '#f8fafc', padding: '6px 8px', borderRadius: '3px', borderLeft: '2px solid #94a3b8' }}>
-                                    <strong style={{ display: 'block', fontSize: '8.5px', textTransform: 'uppercase', color: '#64748b', marginBottom: '4px' }}>Acompanhamento Diário:</strong>
-                                    {localDtc.implantationProcessLogs.map((log, idx) => (
-                                      <div key={idx} style={{ display: 'flex', gap: '6px', marginBottom: '2px', fontSize: '10px' }}>
-                                        <span style={{ fontWeight: 700, color: '#475569', minWidth: '70px' }}>{log.date ? new Date(log.date + 'T00:00:00').toLocaleDateString('pt-BR') : ''}:</span>
-                                        <span>{log.description || '(Sem descrição)'}</span>
+                              <tr>
+                                <td style={{ border: '1px solid #cbd5e1', padding: '7px 9px' }}>
+                                  <strong style={{ display: 'block', fontSize: '9px', textTransform: 'uppercase', color: '#334155', marginBottom: '4px' }}>Funcionários da Serventia:</strong>
+                                  {!localDtc.employeesList || localDtc.employeesList.length === 0
+                                    ? <span>{renderVal(localDtc.employees, '(Nenhum colaborador listado)')}</span>
+                                    : <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                                        {localDtc.employeesList.map((e, i) => (
+                                          <span key={i} style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', padding: '2px 7px', borderRadius: '3px', fontSize: '10px' }}>
+                                            {e.name}{e.department ? <span style={{ color: '#64748b' }}> ({e.department}{e.role ? ` - ${e.role}` : ''})</span> : null}
+                                          </span>
+                                        ))}
                                       </div>
-                                    ))}
-                                  </div>
-                                )}
-                              </td>
-                            </tr>
-                            <tr>
-                              <td style={{ border: '1px solid #cbd5e1', padding: '7px 9px' }}>
-                                <strong style={{ display: 'block', fontSize: '9px', textTransform: 'uppercase', color: '#334155', marginBottom: '4px' }}>Funcionários da Serventia:</strong>
-                                {!localDtc.employeesList || localDtc.employeesList.length === 0
-                                  ? <span>{renderVal(localDtc.employees, '(Nenhum colaborador listado)')}</span>
-                                  : <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                                      {localDtc.employeesList.map((e, i) => (
-                                        <span key={i} style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', padding: '2px 7px', borderRadius: '3px', fontSize: '10px' }}>
-                                          {e.name}{e.department ? <span style={{ color: '#64748b' }}> ({e.department}{e.role ? ` - ${e.role}` : ''})</span> : null}
-                                        </span>
-                                      ))}
-                                    </div>
-                                }
-                              </td>
-                            </tr>
+                                  }
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      {/* RODAPÉ PÁGINA 2 */}
+                      <div style={{ borderTop: '1px solid #cbd5e1', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', fontSize: '8px', color: '#94a3b8' }}>
+                        <span>Siplan Sistemas — Documento de Transição de Conhecimento</span>
+                        <span>Página 2 de 4</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* PÁGINA 3 */}
+                  <div className="dtc-document-font text-black relative" style={{
+                    width: '794px',
+                    minHeight: '1122px',
+                    background: 'white',
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.45)',
+                    zoom: zoom / 100
+                  }}>
+                    {localDtc.status === 'draft' && (
+                      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
+                        <span style={{ fontSize: '110px', fontWeight: 900, color: 'rgba(0,0,0,0.045)', transform: 'rotate(-40deg)', letterSpacing: '0.05em', userSelect: 'none', whiteSpace: 'nowrap' }}>RASCUNHO</span>
+                      </div>
+                    )}
+                    <div style={{ padding: '56px 72px', height: '1122px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
+                      <div>
+                        <div style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#1e293b', borderLeft: '3px solid black', paddingLeft: '6px', marginBottom: '5px' }}>4. Relato Técnico &amp; Processo (Continuação)</div>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10.5px' }}>
+                          <tbody>
                             {localDtc.implantationGainsList && localDtc.implantationGainsList.length > 0 && (
                               <tr>
                                 <td style={{ border: '1px solid #cbd5e1', padding: '7px 9px' }}>
                                   <strong style={{ display: 'block', fontSize: '9px', textTransform: 'uppercase', color: '#334155', marginBottom: '4px' }}>Ganhos Operacionais:</strong>
-                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '350px', overflowY: 'auto' }}>
                                     {localDtc.implantationGainsList.map((gain, idx) => (
                                       <div key={idx} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '5px 8px', borderRadius: '3px' }}>
                                         <div style={{ fontWeight: 700, fontSize: '10px' }}>{gain.product ? `[${gain.product}] ` : ''}{gain.title || '(Sem título)'}{gain.department ? ` — ${gain.department}` : ''}</div>
@@ -3654,7 +3709,7 @@ export default function TransicaoPlaceholder() {
                               <tr>
                                 <td style={{ border: '1px solid #cbd5e1', padding: '7px 9px' }}>
                                   <strong style={{ display: 'block', fontSize: '9px', textTransform: 'uppercase', color: '#334155', marginBottom: '4px' }}>Sugestões de Melhorias:</strong>
-                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '350px', overflowY: 'auto' }}>
                                     {localDtc.implantationSuggestionsList.map((s, idx) => (
                                       <div key={idx} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '5px 8px', borderRadius: '3px' }}>
                                         <div style={{ fontWeight: 700, fontSize: '10px' }}>{s.product ? `[${s.product}] ` : ''}{s.title || '(Sem título)'}{s.department ? ` — ${s.department}` : ''}</div>
@@ -3694,75 +3749,83 @@ export default function TransicaoPlaceholder() {
                         </table>
                       </div>
 
-                      {/* 5. PENDÊNCIAS */}
-                      <div className="dtc-section" style={{ marginBottom: '20px' }}>
-                        <div style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#1e293b', borderLeft: '3px solid black', paddingLeft: '6px', marginBottom: '5px' }}>5. Pendências &amp; Chamados de Suporte (0800)</div>
-                        {localDtc.implantationPendingList && localDtc.implantationPendingList.length > 0 && (
-                          <div style={{ marginBottom: '8px' }}>
-                            <div style={{ fontSize: '8.5px', fontWeight: 700, textTransform: 'uppercase', color: '#64748b', marginBottom: '4px' }}>Pendências da Implantação:</div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                              {localDtc.implantationPendingList.map((p, idx) => (
-                                <div key={idx} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '5px 8px', borderRadius: '3px', display: 'flex', justifyContent: 'space-between', gap: '8px' }}>
-                                  <div style={{ flex: 1 }}>
-                                    <div style={{ fontWeight: 700, fontSize: '10px' }}>{p.product ? `[${p.product}] ` : ''}{p.title || '(Sem título)'}{p.department ? ` — ${p.department}` : ''}</div>
-                                    <div style={{ fontStyle: 'italic', color: '#475569', fontSize: '10px' }}><LexicalRenderer jsonStr={p.description} fallback="(Sem descrição)" /></div>
-                                  </div>
-                                  <span style={{ flexShrink: 0, fontSize: '8px', fontWeight: 700, textTransform: 'uppercase', padding: '2px 6px', borderRadius: '3px', background: p.status === 'Resolvido' ? '#d1fae5' : p.status === 'Em andamento' ? '#dbeafe' : p.status === 'Cancelado' ? '#f1f5f9' : '#fef3c7', color: p.status === 'Resolvido' ? '#065f46' : p.status === 'Em andamento' ? '#1e40af' : p.status === 'Cancelado' ? '#475569' : '#92400e' }}>{p.status}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        {localDtc.tickets.length === 0 ? (
-                          <div style={{ textAlign: 'center', padding: '10px', color: '#94a3b8', fontStyle: 'italic', fontSize: '10px', border: '1px solid #e2e8f0', borderRadius: '3px' }}>Nenhum chamado de suporte registrado.</div>
-                        ) : (
-                          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10.5px' }}>
-                            <thead>
-                              <tr style={{ background: '#f1f5f9' }}>
-                                <th style={{ border: '1px solid #cbd5e1', padding: '5px 7px', textAlign: 'left', width: '25%' }}>Chamado / N°</th>
-                                <th style={{ border: '1px solid #cbd5e1', padding: '5px 7px', textAlign: 'left', width: '50%' }}>Descrição</th>
-                                <th style={{ border: '1px solid #cbd5e1', padding: '5px 7px', textAlign: 'left', width: '25%' }}>Status</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {localDtc.tickets.map((t, idx) => (
-                                <tr key={idx} style={{ background: idx % 2 === 1 ? '#f8fafc' : 'white' }}>
-                                  <td style={{ border: '1px solid #cbd5e1', padding: '5px 7px', fontWeight: 700 }}>{t.number || 'N/A'}</td>
-                                  <td style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}>{t.description || 'Sem descrição'}</td>
-                                  <td style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}>
-                                    {t.status === 'open' && <span style={{ color: '#d97706', fontWeight: 600 }}>Aberto</span>}
-                                    {t.status === 'in_progress' && <span style={{ color: '#2563eb', fontWeight: 600 }}>Em Tratativa</span>}
-                                    {t.status === 'closed' && <span style={{ color: '#059669', fontWeight: 600 }}>Resolvido</span>}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        )}
-                      </div>
-
-                      {/* ASSINATURAS */}
-                      <div className="dtc-section" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '48px', textAlign: 'center', paddingTop: '48px', marginBottom: '8px' }}>
-                        <div>
-                          <div style={{ borderTop: '1px solid black', paddingTop: '6px', fontWeight: 700, fontSize: '10.5px' }}>{localDtc.responsible || 'Implantador Responsável'}</div>
-                          <div style={{ fontSize: '9px', color: '#64748b' }}>Implantador de Sistemas</div>
-                        </div>
-                        <div>
-                          <div style={{ borderTop: '1px solid black', paddingTop: '6px', fontWeight: 700, fontSize: '10.5px' }}>{localDtc.analystResponsible || 'Analista de Suporte'}</div>
-                          <div style={{ fontSize: '9px', color: '#64748b' }}>Service Desk / Suporte</div>
-                        </div>
-                      </div>
-
-                      {/* RODAPÉ */}
-                      <div style={{ borderTop: '1px solid #e2e8f0', marginTop: '16px', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', fontSize: '8px', color: '#94a3b8' }}>
+                      {/* RODAPÉ PÁGINA 3 */}
+                      <div style={{ borderTop: '1px solid #cbd5e1', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', fontSize: '8px', color: '#94a3b8' }}>
                         <span>Siplan Sistemas — Documento de Transição de Conhecimento</span>
-                        <span>Gerado em {new Date().toLocaleDateString('pt-BR')} às {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+                        <span>Página 3 de 4</span>
                       </div>
                     </div>
                   </div>
+
+                  {/* PÁGINA 4 */}
+                  <div className="dtc-document-font text-black relative" style={{
+                    width: '794px',
+                    minHeight: '1122px',
+                    background: 'white',
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.45)',
+                    zoom: zoom / 100
+                  }}>
+                    {localDtc.status === 'draft' && (
+                      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
+                        <span style={{ fontSize: '110px', fontWeight: 900, color: 'rgba(0,0,0,0.045)', transform: 'rotate(-40deg)', letterSpacing: '0.05em', userSelect: 'none', whiteSpace: 'nowrap' }}>RASCUNHO</span>
+                      </div>
+                    )}
+                    <div style={{ padding: '56px 72px', height: '1122px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
+                      <div>
+                        {/* 5. PENDÊNCIAS */}
+                        <div className="dtc-section" style={{ marginBottom: '14px' }}>
+                          <div style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#1e293b', borderLeft: '3px solid black', paddingLeft: '6px', marginBottom: '5px' }}>5. Pendências &amp; Chamados de Suporte (0800)</div>
+                          {localDtc.implantationPendingList && localDtc.implantationPendingList.length > 0 && (
+                            <div style={{ marginBottom: '8px' }}>
+                              <div style={{ fontSize: '8.5px', fontWeight: 700, textTransform: 'uppercase', color: '#64748b', marginBottom: '4px' }}>Pendências da Implantação:</div>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '250px', overflowY: 'auto' }}>
+                                {localDtc.implantationPendingList.map((p, idx) => (
+                                  <div key={idx} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '5px 8px', borderRadius: '3px', display: 'flex', justifyContent: 'space-between', gap: '8px' }}>
+                                    <div style={{ flex: 1 }}>
+                                      <div style={{ fontWeight: 700, fontSize: '10px' }}>{p.product ? `[${p.product}] ` : ''}{p.title || '(Sem título)'}{p.department ? ` — ${p.department}` : ''}</div>
+                                      <div style={{ fontStyle: 'italic', color: '#475569', fontSize: '10px' }}><LexicalRenderer jsonStr={p.description} fallback="(Sem descrição)" /></div>
+                                    </div>
+                                    <span style={{ flexShrink: 0, fontSize: '8px', fontWeight: 700, textTransform: 'uppercase', padding: '2px 6px', borderRadius: '3px', background: p.status === 'Resolvido' ? '#d1fae5' : p.status === 'Em andamento' ? '#dbeafe' : p.status === 'Cancelado' ? '#f1f5f9' : '#fef3c7', color: p.status === 'Resolvido' ? '#065f46' : p.status === 'Em andamento' ? '#1e40af' : p.status === 'Cancelado' ? '#475569' : '#92400e' }}>{p.status}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {localDtc.tickets.length === 0 ? (
+                            <div style={{ textAlign: 'center', padding: '10px', color: '#94a3b8', fontStyle: 'italic', fontSize: '10px', border: '1px solid #e2e8f0', borderRadius: '3px' }}>Nenhum chamado de suporte registrado.</div>
+                          ) : (
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10.5px' }}>
+                              <thead><tr style={{ background: '#f1f5f9' }}><th style={{ border: '1px solid #cbd5e1', padding: '5px 7px', textAlign: 'left', width: '25%' }}>Chamado / N°</th><th style={{ border: '1px solid #cbd5e1', padding: '5px 7px', textAlign: 'left', width: '50%' }}>Descrição</th><th style={{ border: '1px solid #cbd5e1', padding: '5px 7px', textAlign: 'left', width: '25%' }}>Status</th></tr></thead>
+                              <tbody>{localDtc.tickets.map((t, idx) => (<tr key={idx} style={{ background: idx % 2 === 1 ? '#f8fafc' : 'white' }}><td style={{ border: '1px solid #cbd5e1', padding: '5px 7px', fontWeight: 700 }}>{t.number || 'N/A'}</td><td style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}>{t.description || 'Sem descrição'}</td><td style={{ border: '1px solid #cbd5e1', padding: '5px 7px' }}>{t.status === 'open' && <span style={{ color: '#d97706', fontWeight: 600 }}>Aberto</span>}{t.status === 'in_progress' && <span style={{ color: '#2563eb', fontWeight: 600 }}>Em Tratativa</span>}{t.status === 'closed' && <span style={{ color: '#059669', fontWeight: 600 }}>Resolvido</span>}</td></tr>))}</tbody>
+                            </table>
+                          )}
+                        </div>
+
+                        {/* ASSINATURAS */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '48px', textAlign: 'center', paddingTop: '40px' }}>
+                          <div>
+                            <div style={{ borderTop: '1px solid black', paddingTop: '6px', fontWeight: 700, fontSize: '10.5px' }}>{localDtc.responsible || 'Implantador Responsável'}</div>
+                            <div style={{ fontSize: '9px', color: '#64748b' }}>Implantador de Sistemas</div>
+                          </div>
+                          <div>
+                            <div style={{ borderTop: '1px solid black', paddingTop: '6px', fontWeight: 700, fontSize: '10.5px' }}>{localDtc.analystResponsible || 'Analista de Suporte'}</div>
+                            <div style={{ fontSize: '9px', color: '#64748b' }}>Service Desk / Suporte</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* RODAPÉ PÁGINA 4 */}
+                      <div style={{ borderTop: '1px solid #cbd5e1', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', fontSize: '8px', color: '#94a3b8' }}>
+                        <span>Siplan Sistemas — Documento de Transição de Conhecimento</span>
+                        <span>Página 4 de 4</span>
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
               </Card>
             </TabsContent>
+
 
 
           </Tabs>
