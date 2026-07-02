@@ -403,7 +403,12 @@ export function StepsTab({
                 }
                 canEditProjects={canEditProjects}
               >
-                <EnvironmentStageForm stage={stagesData.environment} canEditProjects={canEditProjects} onUpdate={(u) => updateStage("environment", u)} />
+                <EnvironmentStageForm 
+                  stage={stagesData.environment} 
+                  canEditProjects={canEditProjects} 
+                  onUpdate={(u) => updateStage("environment", u)} 
+                  infraServers={data.stages.infra?.servers} 
+                />
               </StageCard>
             </div>
           </>

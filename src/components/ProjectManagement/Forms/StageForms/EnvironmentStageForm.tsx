@@ -10,23 +10,57 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Database, Server, Plus, Trash2, Copy, Eye, EyeOff } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 interface EnvironmentStageFormProps {
   stage: EnvironmentStageV2;
   canEditProjects: boolean;
   onUpdate: (updates: Partial<EnvironmentStageV2>) => void;
+  infraServers?: any[];
 }
 
 export function EnvironmentStageForm({
   stage,
   canEditProjects,
   onUpdate,
+  infraServers,
 }: EnvironmentStageFormProps) {
   const { toast } = useToast();
   const [showSoPassword, setShowSoPassword] = useState(false);
   const [showPgAccess, setShowPgAccess] = useState(false);
+
+  const autoFillAttempted = useRef(false);
+
+  useEffect(() => {
+    if (autoFillAttempted.current) return;
+    if (stage.osType || stage.osVersion) {
+      autoFillAttempted.current = true;
+      return;
+    }
+
+    if (infraServers && infraServers.length > 0) {
+      const serverWithOs = infraServers.find(s => s.os && s.os.trim() !== "");
+      if (serverWithOs) {
+        autoFillAttempted.current = true;
+        const osString = serverWithOs.os.trim();
+        const lower = osString.toLowerCase();
+        let detectedType = "";
+        let detectedVersion = osString;
+
+        if (lower.includes("windows") || lower.includes("win")) {
+          detectedType = "Windows";
+        } else if (lower.includes("linux") || lower.includes("ubuntu") || lower.includes("debian") || lower.includes("centos") || lower.includes("redhat") || lower.includes("suse")) {
+          detectedType = "Linux";
+        }
+
+        onUpdate({
+          osType: detectedType,
+          osVersion: detectedVersion
+        });
+      }
+    }
+  }, [infraServers, stage.osType, stage.osVersion, onUpdate]);
 
   const handleCopyText = (text: string, label: string) => {
     if (!text) return;
