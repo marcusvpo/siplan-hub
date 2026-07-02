@@ -1303,6 +1303,7 @@ function TransicaoPlaceholder() {
   const [speechRate, setSpeechRate] = useState(1.0);
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoiceURI, setSelectedVoiceURI] = useState<string>("");
+  const [speechSection, setSpeechSection] = useState<string>("all");
 
   // Load available voices on mount/onvoiceschanged
   useEffect(() => {
@@ -1356,77 +1357,116 @@ function TransicaoPlaceholder() {
     };
 
     const parts: string[] = [];
-    parts.push("Iniciando a leitura do Documento de Transição de Conhecimento.");
-    
-    if (localDtc.supportCallNumber) {
-      parts.push(`Chamado de origem: ${localDtc.supportCallNumber}.`);
-    }
 
-    parts.push("Identificação da Serventia.");
-    parts.push(`Implantador responsável: ${localDtc.responsible || "Não informado"}.`);
-    parts.push(`Analista de suporte: ${localDtc.analystResponsible || "Não informado"}.`);
-    parts.push(`Serventia: ${localDtc.serventia || "Não informada"}.`);
-    parts.push(`Oficial titular: ${localDtc.oficial || "Não informado"}.`);
-    parts.push(`Responsável pelo Cartório: ${localDtc.clientResponsible || "Não informado"}.`);
-
-    parts.push("Infraestrutura e acessos.");
-    parts.push(`Sistemas instalados: ${localDtc.systemsInstalled || "Não informado"}.`);
-    parts.push(`Versões dos sistemas: ${localDtc.systemVersions || "Não informado"}.`);
-    parts.push(`Versão do PostgreSQL: ${localDtc.postgresVersion || "Não informada"}.`);
-    parts.push(`Local de instalação do banco: ${localDtc.postgresHost || "Não informado"}.`);
-
-    if (localDtc.remoteAccessList && localDtc.remoteAccessList.length > 0) {
-      parts.push("Acessos remotos disponibilizados:");
-      localDtc.remoteAccessList.forEach(a => {
-        parts.push(`${a.system}. Identificador ${a.id}.`);
-      });
-    }
-
-    if (localDtc.osType || localDtc.osVersion) {
-      parts.push(`Sistema operacional do servidor: ${localDtc.osType || ""} ${localDtc.osVersion || ""}.`);
-    }
-
-    parts.push("Conversão de Banco de Dados.");
-    if (localDtc.hadConversion) {
-      parts.push(`Houve conversão de banco de dados.`);
-      if (localDtc.convertedData) {
-        parts.push(`Dados convertidos: ${localDtc.convertedData}.`);
+    const addSection1 = () => {
+      parts.push("Seção 1. Identificação da Serventia e Responsáveis.");
+      parts.push(`Implantador responsável: ${localDtc.responsible || "Não informado"}.`);
+      parts.push(`Analista de suporte: ${localDtc.analystResponsible || "Não informado"}.`);
+      parts.push(`Serventia: ${localDtc.serventia || "Não informada"}.`);
+      parts.push(`Oficial titular: ${localDtc.oficial || "Não informado"}.`);
+      parts.push(`Responsável pelo Cartório: ${localDtc.clientResponsible || "Não informado"}.`);
+      if (localDtc.supportCallNumber) {
+        parts.push(`Chamado de origem: ${localDtc.supportCallNumber}.`);
       }
-    } else {
-      parts.push("Não houve conversão.");
-    }
+    };
 
-    parts.push("Relato Técnico.");
-    const processText = getLexicalText(localDtc.implantationProcess);
-    if (processText) {
-      parts.push(`Relato do processo: ${processText}`);
-    }
+    const addSection2 = () => {
+      parts.push("Seção 2. Infraestrutura, Banco de Dados e Acessos.");
+      parts.push(`Sistemas instalados: ${localDtc.systemsInstalled || "Não informado"}.`);
+      parts.push(`Versões dos sistemas: ${localDtc.systemVersions || "Não informado"}.`);
+      parts.push(`Versão do PostgreSQL: ${localDtc.postgresVersion || "Não informada"}.`);
+      parts.push(`Local de instalação do banco: ${localDtc.postgresHost || "Não informado"}.`);
 
-    if (localDtc.employeesList && localDtc.employeesList.length > 0) {
-      parts.push("Funcionários capacitados:");
-      parts.push(localDtc.employeesList.map(e => e.name).join(", "));
-    }
+      if (localDtc.remoteAccessList && localDtc.remoteAccessList.length > 0) {
+        parts.push("Acessos remotos disponibilizados:");
+        localDtc.remoteAccessList.forEach(a => {
+          parts.push(`${a.system}. Identificador ${a.id}.`);
+        });
+      }
 
-    if (localDtc.implantationGainsList && localDtc.implantationGainsList.length > 0) {
-      parts.push("Ganhos operacionais obtidos:");
-      localDtc.implantationGainsList.forEach(g => {
-        parts.push(`${g.title || ""}: ${getLexicalText(g.description)}`);
-      });
-    }
+      if (localDtc.osType || localDtc.osVersion) {
+        parts.push(`Sistema operacional do servidor: ${localDtc.osType || ""} ${localDtc.osVersion || ""}.`);
+      }
+    };
 
-    if (localDtc.implantationPendingList && localDtc.implantationPendingList.length > 0) {
-      parts.push("Pendências da implantação:");
-      localDtc.implantationPendingList.forEach(p => {
-        parts.push(`${p.title || ""}. Status: ${p.status}.`);
-      });
-    }
+    const addSection3 = () => {
+      parts.push("Seção 3. Conversão de Banco de Dados.");
+      if (localDtc.hadConversion) {
+        parts.push(`Houve conversão de banco de dados.`);
+        if (localDtc.convertedData) {
+          parts.push(`Dados convertidos: ${localDtc.convertedData}.`);
+        }
+      } else {
+        parts.push("Não houve conversão.");
+      }
+    };
 
-    if (localDtc.clientSatisfactionScore) {
-      const scores = ["", "Ruim", "Regular", "Bom", "Muito bom", "Excelente"];
-      parts.push(`Satisfação do cliente: ${scores[localDtc.clientSatisfactionScore]}.`);
-    }
+    const addSection4 = () => {
+      parts.push("Seção 4. Relato Técnico e Processo de Implantação.");
+      const processText = getLexicalText(localDtc.implantationProcess);
+      if (processText) {
+        parts.push(`Relato do processo: ${processText}`);
+      }
 
-    parts.push("Leitura concluída.");
+      if (localDtc.employeesList && localDtc.employeesList.length > 0) {
+        parts.push("Funcionários capacitados:");
+        parts.push(localDtc.employeesList.map(e => e.name).join(", "));
+      }
+
+      if (localDtc.implantationGainsList && localDtc.implantationGainsList.length > 0) {
+        parts.push("Ganhos operacionais obtidos:");
+        localDtc.implantationGainsList.forEach(g => {
+          parts.push(`${g.title || ""}: ${getLexicalText(g.description)}`);
+        });
+      }
+    };
+
+    const addSection5 = () => {
+      parts.push("Seção 5. Pendências e Chamados de Suporte 0800.");
+      if (localDtc.implantationPendingList && localDtc.implantationPendingList.length > 0) {
+        parts.push("Pendências da implantação:");
+        localDtc.implantationPendingList.forEach(p => {
+          parts.push(`${p.title || ""}. Status: ${p.status}.`);
+        });
+      } else {
+        parts.push("Nenhuma pendência ou chamado registrado para transição.");
+      }
+
+      if (localDtc.clientSatisfactionScore) {
+        const scores = ["", "Ruim", "Regular", "Bom", "Muito bom", "Excelente"];
+        parts.push(`Satisfação do cliente: ${scores[localDtc.clientSatisfactionScore]}.`);
+      }
+    };
+
+    if (speechSection === "all") {
+      parts.push("Iniciando a leitura completa do Documento de Transição de Conhecimento.");
+      addSection1();
+      addSection2();
+      addSection3();
+      addSection4();
+      addSection5();
+      parts.push("Leitura de todo o documento concluída.");
+    } else if (speechSection === "1") {
+      parts.push("Iniciando a leitura da Seção 1.");
+      addSection1();
+      parts.push("Fim da leitura da Seção 1.");
+    } else if (speechSection === "2") {
+      parts.push("Iniciando a leitura da Seção 2.");
+      addSection2();
+      parts.push("Fim da leitura da Seção 2.");
+    } else if (speechSection === "3") {
+      parts.push("Iniciando a leitura da Seção 3.");
+      addSection3();
+      parts.push("Fim da leitura da Seção 3.");
+    } else if (speechSection === "4") {
+      parts.push("Iniciando a leitura da Seção 4.");
+      addSection4();
+      parts.push("Fim da leitura da Seção 4.");
+    } else if (speechSection === "5") {
+      parts.push("Iniciando a leitura da Seção 5.");
+      addSection5();
+      parts.push("Fim da leitura da Seção 5.");
+    }
 
     const fullText = parts.join(" ");
     const utterance = new SpeechSynthesisUtterance(fullText);
@@ -1454,7 +1494,7 @@ function TransicaoPlaceholder() {
 
     setSpeechUtterance(utterance);
     window.speechSynthesis.speak(utterance);
-  }, [localDtc, speechRate, selectedVoiceURI, availableVoices]);
+  }, [localDtc, speechRate, selectedVoiceURI, availableVoices, speechSection]);
 
   const toggleSpeech = useCallback(() => {
     if (typeof window === "undefined" || !window.speechSynthesis) return;
@@ -1467,7 +1507,7 @@ function TransicaoPlaceholder() {
     startSpeaking();
   }, [isSpeaking, startSpeaking]);
 
-  // Restart speech if voice or rate changes while active
+  // Restart speech if voice, rate or section changes while active
   useEffect(() => {
     if (isSpeaking && typeof window !== "undefined" && window.speechSynthesis) {
       window.speechSynthesis.cancel();
@@ -1476,7 +1516,7 @@ function TransicaoPlaceholder() {
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [selectedVoiceURI, speechRate]);
+  }, [selectedVoiceURI, speechRate, speechSection]);
 
   // ② DTC Progress: count filled sections out of 10
   const dtcProgress = useMemo(() => {
@@ -3532,28 +3572,51 @@ function TransicaoPlaceholder() {
             {/* TAB 5: REPORT PRINT PREVIEW */}
             <TabsContent value="visualizar">
               <Card className="border-muted/60 shadow-md">
-                <CardHeader className="border-b flex flex-row items-center justify-between py-4 bg-muted/20">
-                   <div className="flex items-center gap-1.5 flex-shrink-0 flex-nowrap">
+                <CardHeader className="border-b flex flex-row items-center justify-between py-4 bg-muted/20 gap-4">
+                  <div>
+                    <CardTitle className="text-base font-bold text-foreground">Visualização de Impressão (DTC Oficial)</CardTitle>
+                    <CardDescription className="text-xs text-muted-foreground">Visualize e formate o documento A4 exatamente como será impresso ou exportado para PDF.</CardDescription>
+                  </div>
+                  <div className="flex items-center gap-1.5 flex-shrink-0 flex-nowrap">
                     {/* Controls */}
                     <div className="flex items-center gap-1.5 border rounded-md px-2 bg-background text-[10px] h-8">
+                      <div className="flex items-center gap-1">
+                        <span className="text-muted-foreground font-semibold text-[9px] uppercase tracking-wider">Leitura:</span>
+                        <select
+                          value={speechSection}
+                          onChange={(e) => setSpeechSection(e.target.value)}
+                          className="bg-transparent border-none outline-none font-bold text-foreground max-w-[120px] cursor-pointer text-[10px] pr-0.5"
+                        >
+                          <option value="all" className="text-black bg-white">Tudo (Completo)</option>
+                          <option value="1" className="text-black bg-white">1. Identificação</option>
+                          <option value="2" className="text-black bg-white">2. Infra & Acessos</option>
+                          <option value="3" className="text-black bg-white">3. Conversão</option>
+                          <option value="4" className="text-black bg-white">4. Relato Técnico</option>
+                          <option value="5" className="text-black bg-white">5. Pendências</option>
+                        </select>
+                      </div>
+
+                      <div className="w-[1px] h-3 bg-border" />
+
                       {availableVoices.length > 0 && (
-                        <div className="flex items-center gap-1">
-                          <span className="text-muted-foreground font-semibold text-[9px] uppercase tracking-wider">Voz:</span>
-                          <select
-                            value={selectedVoiceURI}
-                            onChange={(e) => setSelectedVoiceURI(e.target.value)}
-                            className="bg-transparent border-none outline-none font-bold text-foreground max-w-[150px] cursor-pointer text-[10px] pr-0.5"
-                          >
-                            {availableVoices.map((v, i) => (
-                              <option key={i} value={v.voiceURI} className="text-black bg-white">
-                                {v.name.replace("Microsoft", "").replace("Google", "").replace("Desktop", "").trim()}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
+                        <>
+                          <div className="flex items-center gap-1">
+                            <span className="text-muted-foreground font-semibold text-[9px] uppercase tracking-wider">Voz:</span>
+                            <select
+                              value={selectedVoiceURI}
+                              onChange={(e) => setSelectedVoiceURI(e.target.value)}
+                              className="bg-transparent border-none outline-none font-bold text-foreground max-w-[150px] cursor-pointer text-[10px] pr-0.5"
+                            >
+                              {availableVoices.map((v, i) => (
+                                <option key={i} value={v.voiceURI} className="text-black bg-white">
+                                  {v.name.replace("Microsoft", "").replace("Google", "").replace("Desktop", "").trim()}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="w-[1px] h-3 bg-border" />
+                        </>
                       )}
-                      
-                      {availableVoices.length > 0 && <div className="w-[1px] h-3 bg-border" />}
  
                       <div className="flex items-center gap-1">
                         <span className="text-muted-foreground font-semibold text-[9px] uppercase tracking-wider">Velocidade:</span>
