@@ -3542,7 +3542,7 @@ function TransicaoPlaceholder() {
                           <select
                             value={selectedVoiceURI}
                             onChange={(e) => setSelectedVoiceURI(e.target.value)}
-                            className="bg-transparent border-none outline-none font-bold text-foreground max-w-[115px] cursor-pointer text-[10px] pr-0.5"
+                            className="bg-transparent border-none outline-none font-bold text-foreground max-w-[150px] cursor-pointer text-[10px] pr-0.5"
                           >
                             {availableVoices.map((v, i) => (
                               <option key={i} value={v.voiceURI} className="text-black bg-white">
