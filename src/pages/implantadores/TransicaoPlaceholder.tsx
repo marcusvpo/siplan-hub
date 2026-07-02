@@ -414,8 +414,8 @@ export default function TransicaoPlaceholder() {
       systemsInstalled: project.systemType || "",
       systemVersions: "",
       systemVersionsList: {},
-      postgresVersion: "",
-      postgresAccessData: "",
+      postgresVersion: project.stages?.environment?.postgresVersion || "",
+      postgresAccessData: project.stages?.environment?.postgresAccessData || "",
       hadConversion: false,
       convertedData: "",
       remoteAccessData: "",
@@ -441,7 +441,7 @@ export default function TransicaoPlaceholder() {
     if (!project) return null;
     const dtc = (project.customFields?.dtc as DTCData | null) || getInitialDtc();
     
-    // Sync environment accesses and OS credentials from project's environment stage
+    // Sync environment accesses, OS credentials and postgres details from project's environment stage
     const envStage = project.stages?.environment;
     return {
       ...dtc,
@@ -450,6 +450,8 @@ export default function TransicaoPlaceholder() {
         : dtc.remoteAccessList || [],
       soLogin: envStage?.soLogin || dtc.soLogin || "",
       soPassword: envStage?.soPassword || dtc.soPassword || "",
+      postgresVersion: envStage?.postgresVersion || dtc.postgresVersion || "",
+      postgresAccessData: envStage?.postgresAccessData || dtc.postgresAccessData || "",
     };
   }, [project]);
 
@@ -474,6 +476,8 @@ export default function TransicaoPlaceholder() {
               remoteAccessList: newData.remoteAccessList,
               soLogin: newData.soLogin,
               soPassword: newData.soPassword,
+              postgresVersion: newData.postgresVersion,
+              postgresAccessData: newData.postgresAccessData,
             }
           }
         }
