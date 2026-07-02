@@ -3367,9 +3367,7 @@ export default function TransicaoPlaceholder() {
             <TabsContent value="historico">
               <Card className="border-muted/60 shadow-sm">
                 <CardContent className="p-4">
-                  <div className="h-[600px] flex flex-col">
-                    <LogsTab project={project as any} />
-                  </div>
+                  <LogsTab project={project as any} />
                 </CardContent>
               </Card>
             </TabsContent>
