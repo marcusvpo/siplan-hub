@@ -3126,42 +3126,6 @@ export default function TransicaoPlaceholder() {
                                             </SelectContent>
                                           </Select>
 
-                                          {/* Status Select dropdown */}
-                                          <Select
-                                            value={suggestion.status}
-                                            onValueChange={(val) => updateImplantationSuggestion(idx, "status", val)}
-                                            disabled={isFormDisabled}
-                                          >
-                                            <SelectTrigger className="w-32 h-8 text-[11px] border-muted/80 shrink-0">
-                                              <SelectValue placeholder="Status" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                              <SelectItem value="Pendente" className="text-xs">Pendente</SelectItem>
-                                              <SelectItem value="Em andamento" className="text-xs">Em andamento</SelectItem>
-                                              <SelectItem value="Resolvido" className="text-xs">Resolvido</SelectItem>
-                                              <SelectItem value="Cancelado" className="text-xs">Cancelado</SelectItem>
-                                            </SelectContent>
-                                          </Select>
-
-                                          {/* Assigned Analyst Select dropdown */}
-                                          <Select
-                                            value={suggestion.assignedTo || "none"}
-                                            onValueChange={(val) => updateImplantationSuggestion(idx, "assignedTo", val === "none" ? "" : val)}
-                                            disabled={isFormDisabled}
-                                          >
-                                            <SelectTrigger className="w-48 h-8 text-[11px] border-muted/80 shrink-0">
-                                              <SelectValue placeholder="Responsável" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                              <SelectItem value="none" className="text-xs">Não atribuído</SelectItem>
-                                              {members.map((m) => (
-                                                <SelectItem key={m.id} value={m.name} className="text-xs">
-                                                  {m.name}
-                                                </SelectItem>
-                                              ))}
-                                            </SelectContent>
-                                          </Select>
-
                                           {/* Remove Button */}
                                           <Button
                                             type="button"
@@ -3818,16 +3782,6 @@ export default function TransicaoPlaceholder() {
                             {suggestion.product ? `[${suggestion.product}] ` : ""}
                             {suggestion.title || "(Sem título)"}
                             {suggestion.department ? ` - ${suggestion.department}` : ""}
-                            {suggestion.assignedTo ? ` (Responsável: ${suggestion.assignedTo})` : ""}
-                          </span>
-                          <span className={cn(
-                            "px-1.5 py-0.5 rounded-sm text-[9px] font-bold uppercase",
-                            suggestion.status === "Resolvido" && "bg-emerald-100 text-emerald-800",
-                            suggestion.status === "Em andamento" && "bg-blue-100 text-blue-800",
-                            suggestion.status === "Pendente" && "bg-amber-100 text-amber-800",
-                            suggestion.status === "Cancelado" && "bg-gray-100 text-gray-800"
-                          )}>
-                            {suggestion.status}
                           </span>
                         </div>
                         <div className="text-gray-700 mt-0.5 pl-1 italic">
