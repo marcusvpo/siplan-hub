@@ -202,6 +202,13 @@ interface DTCData {
 
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 
+const renderVal = (val?: string | number | null, fallback = "Não informado") => {
+  if (val !== undefined && val !== null && String(val).trim() !== "") {
+    return String(val);
+  }
+  return <span className="text-gray-400 italic font-normal">{fallback}</span>;
+};
+
 // Helper to format phone number to Brazilian standard masks (landline or mobile)
 const formatPhoneNumber = (value: string) => {
   if (!value) return "";
@@ -3359,7 +3366,7 @@ export default function TransicaoPlaceholder() {
                 <CardContent className="py-6">
                   {/* Clean preview card resembling A4 paper */}
                   <div className="bg-white text-black p-8 border rounded-md shadow-inner max-w-[800px] mx-auto text-sm leading-relaxed dtc-document-font">
-                    <div className="border-2 border-black p-4 space-y-4">
+                    <div className="border-2 border-black p-5 space-y-5">
                       {/* Document Header */}
                       <div className="text-center border-b-2 border-black pb-4">
                         <h2 className="text-xl font-bold tracking-tight uppercase">Documento de Transição de Conhecimento</h2>
@@ -3369,120 +3376,320 @@ export default function TransicaoPlaceholder() {
                         )}
                       </div>
 
-                      {/* Main Grid */}
-                      <div className="grid grid-cols-2 border-b-2 border-black pb-4 text-xs gap-y-2 gap-x-4">
-                        <div><strong>Implantador Responsável:</strong> {localDtc.responsible || "__________________________"}</div>
-                        <div><strong>Analista Suporte:</strong> {localDtc.analystResponsible || "__________________________"}</div>
-                        <div className="col-span-2"><strong>Serventia (Cartório):</strong> {localDtc.serventia || "__________________________"}</div>
-                        <div><strong>Oficial Titular:</strong> {localDtc.oficial || "__________________________"}</div>
-                        <div><strong>Responsável Cartório:</strong> {localDtc.clientResponsible || "__________________________"}{localDtc.clientResponsiblePhone ? ` (${localDtc.clientResponsiblePhone})` : ""}</div>
-                        <div className="col-span-2">
-                          <strong>Key Users:</strong>{" "}
-                          {localDtc.keyUsersList && localDtc.keyUsersList.length > 0
-                            ? localDtc.keyUsersList.map(u => `${u.name}${u.phone ? ` (${u.phone})` : ""}`).join(", ")
-                            : "Nenhum informado"}
-                        </div>
-                        <div><strong>Telefone:</strong> {localDtc.clientPhone || "__________________________"}</div>
-                        <div><strong>E-mail:</strong> {localDtc.clientEmail || "__________________________"}</div>
+                      {/* 1. IDENTIFICAÇÃO DA SERVENTIA */}
+                      <div className="space-y-2">
+                        <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 border-l-2 border-black pl-2">
+                          1. Identificação da Serventia &amp; Responsáveis
+                        </h4>
+                        <table className="w-full border-collapse border border-gray-300 text-xs">
+                          <tbody>
+                            <tr>
+                              <td className="border border-gray-300 p-2 w-1/2 bg-slate-50">
+                                <strong>Implantador Responsável:</strong> {renderVal(localDtc.responsible)}
+                              </td>
+                              <td className="border border-gray-300 p-2 w-1/2 bg-slate-50">
+                                <strong>Analista Suporte:</strong> {renderVal(localDtc.analystResponsible)}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td colSpan={2} className="border border-gray-300 p-2">
+                                <strong>Serventia (Cartório):</strong> {renderVal(localDtc.serventia)}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="border border-gray-300 p-2">
+                                <strong>Oficial Titular:</strong> {renderVal(localDtc.oficial)}
+                              </td>
+                              <td className="border border-gray-300 p-2">
+                                <strong>Responsável Cartório:</strong>{" "}
+                                {localDtc.clientResponsible
+                                  ? `${localDtc.clientResponsible}${localDtc.clientResponsiblePhone ? ` (${localDtc.clientResponsiblePhone})` : ""}`
+                                  : renderVal(null)}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td colSpan={2} className="border border-gray-300 p-2">
+                                <strong>Key Users (Pontos de Contato):</strong>{" "}
+                                {localDtc.keyUsersList && localDtc.keyUsersList.length > 0 ? (
+                                  <div className="flex flex-wrap gap-2 mt-1">
+                                    {localDtc.keyUsersList.map((u, i) => (
+                                      <span key={i} className="bg-slate-100 px-1.5 py-0.5 rounded text-[11px] font-medium text-gray-700">
+                                        {u.name}{u.phone ? ` (${u.phone})` : ""}
+                                      </span>
+                                    ))}
+                                  </div>
+                                ) : renderVal(null, "Nenhum informado")}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="border border-gray-300 p-2">
+                                <strong>Telefone:</strong> {renderVal(localDtc.clientPhone)}
+                              </td>
+                              <td className="border border-gray-300 p-2">
+                                <strong>E-mail:</strong> {renderVal(localDtc.clientEmail)}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
 
-                      {/* Systems and database */}
-                      <div className="border-b-2 border-black pb-4 text-xs space-y-2">
-                        <div className="grid grid-cols-2 gap-2">
-                          <div><strong>Sistemas Instalados:</strong> {localDtc.systemsInstalled || "__________________________"}</div>
-                          <div><strong>Versões dos Sistemas:</strong> {localDtc.systemVersions || "__________________________"}</div>
-                          <div><strong>Versão PostgreSQL:</strong> {localDtc.postgresVersion || "__________________________"}</div>
-                          <div><strong>Local Instalação PG:</strong> {localDtc.postgresHost || "__________________________"}</div>
-                          <div className="col-span-2"><strong>Acesso Banco PG:</strong> Usuário: {localDtc.postgresUser || "_____"} | Senha: {localDtc.postgresPassword || "_____"}</div>
-                        </div>
-                        <div className="mt-2">
-                          <strong>Dados de Acesso Remoto:</strong>{" "}
-                          {!localDtc.remoteAccessList || localDtc.remoteAccessList.length === 0 ? (
-                            localDtc.remoteAccessData || "__________________________"
-                          ) : (
-                            localDtc.remoteAccessList.map(a => `${a.system} (ID: ${a.id}${a.password ? `, Senha: ${a.password}` : ""})`).join(" | ")
-                          )}
-                        </div>
-                        {(localDtc.soLogin || localDtc.soPassword || localDtc.osType || localDtc.osVersion) && (
-                          <div className="mt-1">
-                            <strong>Acesso SO Servidor:</strong> {localDtc.osType && `${localDtc.osType} `}{localDtc.osVersion && `(${localDtc.osVersion})`} | Usuário: {localDtc.soLogin || "_____"} | Senha: {localDtc.soPassword || "_____"}
-                          </div>
-                        )}
-                        <div className="mt-2">
-                          <strong>Houve Conversão de Dados:</strong> {localDtc.hadConversion ? "Sim" : "Não"}
-                        </div>
-                        {localDtc.hadConversion && (
-                          <div className="bg-gray-50 border p-2 mt-1 whitespace-pre-wrap">
-                            <strong>Dados Convertidos:</strong> {localDtc.convertedData}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Process narrative text */}
-                      <div className="border-b-2 border-black pb-4 text-xs space-y-3">
-                        <div>
-                          <strong className="block mb-1 text-sm uppercase">Processo de Implantação:</strong>
-                          <div className="whitespace-pre-wrap min-h-16 pl-2 border-l-2 border-gray-300 italic mb-2">
-                            <LexicalRenderer 
-                              jsonStr={localDtc.implantationProcess} 
-                              fallback="(Nenhum relato técnico de implantação registrado)" 
-                            />
-                          </div>
-
-                          {localDtc.implantationProcessLogs && localDtc.implantationProcessLogs.length > 0 && (
-                            <div className="mt-2 pl-2 border-l-2 border-gray-300 space-y-1">
-                              <strong className="block text-[10px] uppercase tracking-wider text-gray-700 font-bold">Relatórios Diários:</strong>
-                              {localDtc.implantationProcessLogs.map((log, idx) => (
-                                <div key={idx} className="text-[11px] leading-relaxed">
-                                  <span className="font-semibold text-gray-800 mr-1.5">
-                                    {log.date ? new Date(log.date + "T00:00:00").toLocaleDateString("pt-BR") : ""}:
-                                  </span>
-                                  <span className="text-gray-700">{log.description || "(Sem descrição)"}</span>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-
-
-
-                        <div>
-                          <strong className="block mb-1 text-sm uppercase">Funcionários da Serventia:</strong>
-                          <div className="whitespace-pre-wrap min-h-12 pl-2 border-l-2 border-gray-300 italic">
-                            {!localDtc.employeesList || localDtc.employeesList.length === 0 ? (
-                              localDtc.employees || "(Nenhum colaborador listado)"
-                            ) : (
-                              localDtc.employeesList.map(e => `${e.name}${e.department ? ` (${e.department}${e.role ? ` - ${e.role}` : ""})` : ""}`).join(", ")
-                            )}
-                          </div>
-                        </div>
-
-                        {localDtc.implantationGainsList && localDtc.implantationGainsList.length > 0 && (
-                          <div>
-                            <strong className="block mb-1 text-sm uppercase">Ganhos Operacionais:</strong>
-                            <div className="pl-2 border-l-2 border-gray-300 space-y-2 mb-2">
-                              {localDtc.implantationGainsList.map((gain, idx) => (
-                                <div key={idx} className="text-xs">
-                                  <span className="font-bold text-gray-800">
-                                    {gain.product ? `[${gain.product}] ` : ""}
-                                    {gain.title || "(Sem título)"}
-                                    {gain.department ? ` - ${gain.department}` : ""}
-                                  </span>
-                                  <div className="text-gray-600 mt-0.5 pl-1 italic">
-                                    <LexicalRenderer jsonStr={gain.description} fallback="(Sem descrição)" />
+                      {/* 2. INFRAESTRUTURA & ACESSOS */}
+                      <div className="space-y-2">
+                        <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 border-l-2 border-black pl-2">
+                          2. Infraestrutura, Banco de Dados &amp; Acessos
+                        </h4>
+                        <table className="w-full border-collapse border border-gray-300 text-xs">
+                          <tbody>
+                            <tr>
+                              <td className="border border-gray-300 p-2 w-1/2">
+                                <strong>Sistemas Instalados:</strong> {renderVal(localDtc.systemsInstalled)}
+                              </td>
+                              <td className="border border-gray-300 p-2 w-1/2">
+                                <strong>Versões dos Sistemas:</strong> {renderVal(localDtc.systemVersions)}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="border border-gray-300 p-2">
+                                <strong>Versão PostgreSQL:</strong> {renderVal(localDtc.postgresVersion)}
+                              </td>
+                              <td className="border border-gray-300 p-2">
+                                <strong>Local Instalação PG:</strong> {renderVal(localDtc.postgresHost)}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td colSpan={2} className="border border-gray-300 p-2 bg-slate-50">
+                                <div className="flex flex-wrap gap-x-6 gap-y-1 items-center">
+                                  <strong>Acesso Banco PG:</strong>
+                                  <div className="flex gap-4 text-[11px]">
+                                    <div>
+                                      <span className="text-gray-500 font-medium">Usuário:</span>{" "}
+                                      <code className="bg-white border border-gray-200 px-1.5 py-0.5 rounded font-mono text-black font-semibold">{localDtc.postgresUser || "N/A"}</code>
+                                    </div>
+                                    <div>
+                                      <span className="text-gray-500 font-medium">Senha:</span>{" "}
+                                      <code className="bg-white border border-gray-200 px-1.5 py-0.5 rounded font-mono text-black font-semibold">{localDtc.postgresPassword || "N/A"}</code>
+                                    </div>
                                   </div>
                                 </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td colSpan={2} className="border border-gray-300 p-2">
+                                <strong>Acessos Remotos Disponibilizados:</strong>
+                                <div className="flex flex-wrap gap-2 mt-1.5">
+                                  {!localDtc.remoteAccessList || localDtc.remoteAccessList.length === 0 ? (
+                                    renderVal(localDtc.remoteAccessData, "Nenhum informado")
+                                  ) : (
+                                    localDtc.remoteAccessList.map((a, i) => (
+                                      <div key={i} className="border border-slate-200 bg-slate-50 px-2 py-1 rounded flex gap-3 text-[11px]">
+                                        <span className="font-semibold text-gray-700">{a.system}</span>
+                                        <span><span className="text-gray-500">ID:</span> <code className="font-mono bg-white border border-gray-200 px-1 rounded text-black font-semibold">{a.id}</code></span>
+                                        {a.password && (
+                                          <span><span className="text-gray-500">Senha:</span> <code className="font-mono bg-white border border-gray-200 px-1 rounded text-black font-semibold">{a.password}</code></span>
+                                        )}
+                                      </div>
+                                    ))
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                            {(localDtc.soLogin || localDtc.soPassword || localDtc.osType || localDtc.osVersion) && (
+                              <tr>
+                                <td colSpan={2} className="border border-gray-300 p-2 bg-slate-50">
+                                  <div className="flex flex-wrap gap-x-6 gap-y-1 items-center">
+                                    <strong>Acesso SO Servidor:</strong>{" "}
+                                    <span>{localDtc.osType || ""}{localDtc.osVersion ? ` (${localDtc.osVersion})` : ""}</span>
+                                    <div className="flex gap-4 text-[11px]">
+                                      <div>
+                                        <span className="text-gray-500 font-medium">Usuário:</span>{" "}
+                                        <code className="bg-white border border-gray-200 px-1.5 py-0.5 rounded font-mono text-black font-semibold">{localDtc.soLogin || "N/A"}</code>
+                                      </div>
+                                      <div>
+                                        <span className="text-gray-500 font-medium">Senha:</span>{" "}
+                                        <code className="bg-white border border-gray-200 px-1.5 py-0.5 rounded font-mono text-black font-semibold">{localDtc.soPassword || "N/A"}</code>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* 3. CONVERSÃO DE DADOS */}
+                      <div className="space-y-2">
+                        <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 border-l-2 border-black pl-2">
+                          3. Conversão de Banco de Dados
+                        </h4>
+                        <table className="w-full border-collapse border border-gray-300 text-xs">
+                          <tbody>
+                            <tr>
+                              <td className="border border-gray-300 p-2">
+                                <div className="flex items-center gap-2">
+                                  <strong>Houve Conversão de Dados:</strong>
+                                  <span className={cn(
+                                    "px-2 py-0.5 rounded text-[10px] font-bold uppercase",
+                                    localDtc.hadConversion ? "bg-emerald-100 text-emerald-800" : "bg-gray-100 text-gray-700"
+                                  )}>
+                                    {localDtc.hadConversion ? "Sim" : "Não"}
+                                  </span>
+                                </div>
+                                {localDtc.hadConversion && localDtc.convertedData && (
+                                  <div className="bg-slate-50 border border-slate-200 p-2.5 mt-2 rounded whitespace-pre-wrap leading-relaxed text-gray-700">
+                                    <strong>Dados Convertidos:</strong> {localDtc.convertedData}
+                                  </div>
+                                )}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* 4. RELATO TÉCNICO */}
+                      <div className="space-y-2">
+                        <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 border-l-2 border-black pl-2">
+                          4. Relato Técnico &amp; Processo de Implantação
+                        </h4>
+                        <table className="w-full border-collapse border border-gray-300 text-xs">
+                          <tbody>
+                            <tr>
+                              <td className="border border-gray-300 p-3">
+                                <strong className="block text-[11px] uppercase tracking-wider text-slate-800 mb-1">Processo de Implantação (Resumo):</strong>
+                                <div className="pl-2 border-l-2 border-gray-300 italic text-gray-700 leading-relaxed">
+                                  <LexicalRenderer
+                                    jsonStr={localDtc.implantationProcess}
+                                    fallback="(Nenhum relato técnico de implantação registrado)"
+                                  />
+                                </div>
+                                {localDtc.implantationProcessLogs && localDtc.implantationProcessLogs.length > 0 && (
+                                  <div className="mt-2.5 pl-2 border-l-2 border-slate-300 space-y-1.5 bg-slate-50 p-2.5 rounded">
+                                    <strong className="block text-[9px] uppercase tracking-wider text-gray-600 font-bold mb-1">Acompanhamento Diário:</strong>
+                                    {localDtc.implantationProcessLogs.map((log, idx) => (
+                                      <div key={idx} className="text-[11px] leading-relaxed flex items-start gap-2">
+                                        <span className="font-semibold text-gray-700 shrink-0">
+                                          {log.date ? new Date(log.date + "T00:00:00").toLocaleDateString("pt-BR") : ""}:
+                                        </span>
+                                        <span className="text-gray-700">{log.description || "(Sem descrição)"}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="border border-gray-300 p-3">
+                                <strong className="block text-[11px] uppercase tracking-wider text-slate-800 mb-1">Funcionários da Serventia:</strong>
+                                {!localDtc.employeesList || localDtc.employeesList.length === 0 ? (
+                                  <div className="text-gray-700">{renderVal(localDtc.employees, "(Nenhum colaborador listado)")}</div>
+                                ) : (
+                                  <div className="flex flex-wrap gap-1.5 mt-1">
+                                    {localDtc.employeesList.map((e, i) => (
+                                      <div key={i} className="bg-slate-100 border border-slate-200 px-2 py-0.5 rounded text-[11px] font-medium text-gray-700">
+                                        {e.name}
+                                        {e.department && <span className="text-gray-500 font-normal"> ({e.department}{e.role ? ` - ${e.role}` : ""})</span>}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </td>
+                            </tr>
+                            {localDtc.implantationGainsList && localDtc.implantationGainsList.length > 0 && (
+                              <tr>
+                                <td className="border border-gray-300 p-3">
+                                  <strong className="block text-[11px] uppercase tracking-wider text-slate-800 mb-1">Ganhos Operacionais Obtidos:</strong>
+                                  <div className="space-y-2">
+                                    {localDtc.implantationGainsList.map((gain, idx) => (
+                                      <div key={idx} className="bg-slate-50 border border-slate-100 p-2 rounded">
+                                        <span className="font-bold text-gray-800">
+                                          {gain.product ? `[${gain.product}] ` : ""}
+                                          {gain.title || "(Sem título)"}
+                                          {gain.department ? ` - ${gain.department}` : ""}
+                                        </span>
+                                        <div className="text-gray-600 mt-1 pl-1 italic">
+                                          <LexicalRenderer jsonStr={gain.description} fallback="(Sem descrição)" />
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                            {localDtc.implantationSuggestionsList && localDtc.implantationSuggestionsList.length > 0 && (
+                              <tr>
+                                <td className="border border-gray-300 p-3">
+                                  <strong className="block text-[11px] uppercase tracking-wider text-slate-800 mb-1">Sugestões de Melhorias Cadastradas:</strong>
+                                  <div className="space-y-2">
+                                    {localDtc.implantationSuggestionsList.map((suggestion, idx) => (
+                                      <div key={idx} className="bg-slate-50 border border-slate-100 p-2 rounded">
+                                        <span className="font-bold text-gray-800">
+                                          {suggestion.product ? `[${suggestion.product}] ` : ""}
+                                          {suggestion.title || "(Sem título)"}
+                                          {suggestion.department ? ` - ${suggestion.department}` : ""}
+                                        </span>
+                                        <div className="text-gray-600 mt-1 pl-1 italic">
+                                          <LexicalRenderer jsonStr={suggestion.description} fallback="(Sem descrição)" />
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                            {localDtc.clientSatisfactionScore ? (
+                              <tr>
+                                <td className="border border-gray-300 p-3">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <strong className="text-[11px] uppercase tracking-wider text-slate-800">Grau de Satisfação do Cliente:</strong>
+                                    <div className="flex items-center gap-0.5">
+                                      {Array.from({ length: 5 }).map((_, i) => (
+                                        <Star
+                                          key={i}
+                                          className={cn(
+                                            "h-3.5 w-3.5",
+                                            i < (localDtc.clientSatisfactionScore ?? 0)
+                                              ? "fill-amber-400 text-amber-400"
+                                              : "fill-none text-gray-300"
+                                          )}
+                                        />
+                                      ))}
+                                    </div>
+                                    <span className="font-bold text-amber-600 text-xs">
+                                      {["", "Ruim", "Regular", "Bom", "Muito bom", "Excelente"][localDtc.clientSatisfactionScore ?? 0]}
+                                    </span>
+                                  </div>
+                                </td>
+                              </tr>
+                            ) : null}
+                            {localDtc.finalConsiderations && (
+                              <tr>
+                                <td className="border border-gray-300 p-3">
+                                  <strong className="block text-[11px] uppercase tracking-wider text-slate-800 mb-1">Considerações Finais:</strong>
+                                  <div className="text-gray-700 pl-1.5 border-l-2 border-slate-300 italic">
+                                    <LexicalRenderer
+                                      jsonStr={localDtc.finalConsiderations}
+                                      fallback="(Sem considerações finais registradas)"
+                                    />
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* 5. PENDÊNCIAS & CHAMADOS */}
+                      <div className="space-y-2">
+                        <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 border-l-2 border-black pl-2">
+                          5. Pendências &amp; Chamados de Suporte (0800)
+                        </h4>
                         {localDtc.implantationPendingList && localDtc.implantationPendingList.length > 0 && (
-                          <div>
-                            <strong className="block mb-1 text-sm uppercase">Pendências da Implantação:</strong>
-                            <div className="pl-2 border-l-2 border-gray-300 space-y-2 mb-2">
+                          <div className="mb-3">
+                            <strong className="block text-[10px] uppercase text-gray-600 mb-1.5">Pendências da Implantação:</strong>
+                            <div className="space-y-2">
                               {localDtc.implantationPendingList.map((pending, idx) => (
-                                <div key={idx} className="text-xs">
-                                  <div className="flex items-center justify-between">
+                                <div key={idx} className="bg-slate-50 border border-slate-200 p-2 rounded text-xs space-y-1">
+                                  <div className="flex items-center justify-between gap-2">
                                     <span className="font-bold text-gray-800">
                                       {pending.product ? `[${pending.product}] ` : ""}
                                       {pending.title || "(Sem título)"}
@@ -3490,7 +3697,7 @@ export default function TransicaoPlaceholder() {
                                       {pending.assignedTo ? ` (Responsável: ${pending.assignedTo})` : ""}
                                     </span>
                                     <span className={cn(
-                                      "px-1.5 py-0.5 rounded-sm text-[9px] font-bold uppercase",
+                                      "px-1.5 py-0.5 rounded text-[9px] font-bold uppercase shrink-0",
                                       pending.status === "Resolvido" && "bg-emerald-100 text-emerald-800",
                                       pending.status === "Em andamento" && "bg-blue-100 text-blue-800",
                                       pending.status === "Pendente" && "bg-amber-100 text-amber-800",
@@ -3499,7 +3706,7 @@ export default function TransicaoPlaceholder() {
                                       {pending.status}
                                     </span>
                                   </div>
-                                  <div className="text-gray-600 mt-0.5 pl-1 italic">
+                                  <div className="text-gray-600 pl-1 italic">
                                     <LexicalRenderer jsonStr={pending.description} fallback="(Sem descrição)" />
                                   </div>
                                 </div>
@@ -3507,104 +3714,40 @@ export default function TransicaoPlaceholder() {
                             </div>
                           </div>
                         )}
-                        {localDtc.implantationSuggestionsList && localDtc.implantationSuggestionsList.length > 0 && (
-                          <div>
-                            <strong className="block mb-1 text-sm uppercase">Sugestões de Melhorias:</strong>
-                            <div className="pl-2 border-l-2 border-gray-300 space-y-2 mb-2">
-                              {localDtc.implantationSuggestionsList.map((suggestion, idx) => (
-                                <div key={idx} className="text-xs">
-                                  <div className="flex items-center justify-between">
-                                    <span className="font-bold text-gray-800">
-                                      {suggestion.product ? `[${suggestion.product}] ` : ""}
-                                      {suggestion.title || "(Sem título)"}
-                                      {suggestion.department ? ` - ${suggestion.department}` : ""}
-                                      {suggestion.assignedTo ? ` (Responsável: ${suggestion.assignedTo})` : ""}
-                                    </span>
-                                    <span className={cn(
-                                      "px-1.5 py-0.5 rounded-sm text-[9px] font-bold uppercase",
-                                      suggestion.status === "Resolvido" && "bg-emerald-100 text-emerald-800",
-                                      suggestion.status === "Em andamento" && "bg-blue-100 text-blue-800",
-                                      suggestion.status === "Pendente" && "bg-amber-100 text-amber-800",
-                                      suggestion.status === "Cancelado" && "bg-gray-100 text-gray-800"
-                                    )}>
-                                      {suggestion.status}
-                                    </span>
-                                  </div>
-                                  <div className="text-gray-600 mt-0.5 pl-1 italic">
-                                    <LexicalRenderer jsonStr={suggestion.description} fallback="(Sem descrição)" />
-                                  </div>
-                                </div>
-                              ))}
+                        <div className="border border-gray-300 rounded overflow-hidden">
+                          {localDtc.tickets.length === 0 ? (
+                            <div className="p-3 text-center text-gray-500 italic text-xs bg-slate-50">
+                              Nenhuma pendência ou chamado registrado para transição no 0800.
                             </div>
-                          </div>
-                        )}
-
-                        {localDtc.clientSatisfactionScore ? (
-                          <div className="mb-2">
-                            <strong className="block mb-1 text-sm uppercase">Satisfação do Cliente:</strong>
-                            <div className="pl-2 border-l-2 border-gray-300 flex items-center gap-1 text-xs mb-3">
-                              {Array.from({ length: 5 }).map((_, i) => (
-                                <Star
-                                  key={i}
-                                  className={cn(
-                                    "h-4 w-4",
-                                    i < (localDtc.clientSatisfactionScore ?? 0)
-                                      ? "fill-amber-400 text-amber-400"
-                                      : "fill-none text-gray-300"
-                                  )}
-                                />
-                              ))}
-                              <span className="ml-1.5 font-bold text-amber-600">
-                                {["", "Ruim", "Regular", "Bom", "Muito bom", "Excelente"][localDtc.clientSatisfactionScore ?? 0]}
-                              </span>
-                            </div>
-                          </div>
-                        ) : null}
-
-                        <div>
-                          <strong className="block mb-1 text-sm uppercase">Considerações Finais:</strong>
-                          <div className="whitespace-pre-wrap min-h-12 pl-2 border-l-2 border-gray-300 italic">
-                            <LexicalRenderer 
-                              jsonStr={localDtc.finalConsiderations} 
-                              fallback="(Sem considerações finais registradas)" 
-                            />
-                          </div>
+                          ) : (
+                            <table className="w-full border-collapse text-xs">
+                              <thead>
+                                <tr className="bg-slate-100">
+                                  <th className="border-b border-r border-gray-300 p-2 text-left w-1/4 font-semibold text-gray-700">Chamado / N°</th>
+                                  <th className="border-b border-r border-gray-300 p-2 text-left w-1/2 font-semibold text-gray-700">Descrição da Pendência</th>
+                                  <th className="border-b border-gray-300 p-2 text-left w-1/4 font-semibold text-gray-700">Status</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {localDtc.tickets.map((t, idx) => (
+                                  <tr key={idx} className="even:bg-slate-50/50">
+                                    <td className="border-b border-r border-gray-300 p-2 font-bold">{t.number || "N/A"}</td>
+                                    <td className="border-b border-r border-gray-300 p-2">{t.description || "Sem descrição"}</td>
+                                    <td className="border-b border-gray-300 p-2">
+                                      {t.status === "open" && <span className="text-amber-600 font-semibold">Aberto</span>}
+                                      {t.status === "in_progress" && <span className="text-blue-600 font-semibold">Em Tratativa</span>}
+                                      {t.status === "closed" && <span className="text-emerald-600 font-semibold">Resolvido</span>}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          )}
                         </div>
                       </div>
 
-                      {/* Open tickets table */}
-                      <div className="border-b-2 border-black pb-4 text-xs space-y-2">
-                        <strong className="block text-sm uppercase">Pendências & Chamados de Suporte (0800):</strong>
-                        {localDtc.tickets.length === 0 ? (
-                          <p className="text-gray-500 italic">Nenhum chamado pendente registrado para transição.</p>
-                        ) : (
-                          <table className="w-full border-collapse border border-gray-400 text-xs">
-                            <thead>
-                              <tr className="bg-gray-100">
-                                <th className="border border-gray-400 p-2 text-left w-1/4">Chamado / N°</th>
-                                <th className="border border-gray-400 p-2 text-left w-1/2">Descrição da Pendência</th>
-                                <th className="border border-gray-400 p-2 text-left w-1/4">Status</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {localDtc.tickets.map((t, idx) => (
-                                <tr key={idx}>
-                                  <td className="border border-gray-400 p-2 font-bold">{t.number || "N/A"}</td>
-                                  <td className="border border-gray-400 p-2">{t.description || "Sem descrição"}</td>
-                                  <td className="border border-gray-400 p-2 capitalize">
-                                    {t.status === "open" && "Aberto"}
-                                    {t.status === "in_progress" && "Em Tratativa"}
-                                    {t.status === "closed" && "Resolvido"}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        )}
-                      </div>
-
-                      {/* Signatures */}
-                      <div className="grid grid-cols-2 gap-8 text-center text-xs pt-10">
+                      {/* Assinaturas */}
+                      <div className="grid grid-cols-2 gap-12 text-center text-xs pt-12">
                         <div className="space-y-1">
                           <p className="border-t border-black pt-2 font-bold">{localDtc.responsible || "Implantador Responsável"}</p>
                           <p className="text-[10px] text-gray-500">Implantador de Sistemas</p>
@@ -3619,6 +3762,7 @@ export default function TransicaoPlaceholder() {
                 </CardContent>
               </Card>
             </TabsContent>
+
           </Tabs>
         </div>
       )}
@@ -3877,3 +4021,4 @@ export default function TransicaoPlaceholder() {
     </div>
   );
 }
+
