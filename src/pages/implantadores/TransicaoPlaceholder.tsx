@@ -3402,6 +3402,7 @@ export default function TransicaoPlaceholder() {
             {/* TAB 5: REPORT PRINT PREVIEW */}
             {/* TAB 5: REPORT PRINT PREVIEW */}
             {/* TAB 5: REPORT PRINT PREVIEW */}
+            {/* TAB 5: REPORT PRINT PREVIEW */}
             <TabsContent value="visualizar">
               <Card className="border-muted/60 shadow-md overflow-hidden">
                 <CardHeader className="border-b flex flex-row items-center justify-between py-3 bg-muted/20">
@@ -3477,6 +3478,7 @@ export default function TransicaoPlaceholder() {
                   <div className="dtc-document-font text-black relative" style={{
                     width: '794px',
                     minHeight: '1122px',
+                    height: 'auto',
                     background: 'white',
                     boxShadow: '0 4px 16px rgba(0,0,0,0.45)',
                     zoom: zoom / 100
@@ -3486,8 +3488,8 @@ export default function TransicaoPlaceholder() {
                         <span style={{ fontSize: '110px', fontWeight: 900, color: 'rgba(0,0,0,0.045)', transform: 'rotate(-40deg)', letterSpacing: '0.05em', userSelect: 'none', whiteSpace: 'nowrap' }}>RASCUNHO</span>
                       </div>
                     )}
-                    <div style={{ padding: '56px 72px', height: '1122px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
-                      <div>
+                    <div style={{ padding: '56px 72px 32px 72px', minHeight: '1122px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
+                      <div className="space-y-4">
                         {/* CABEÇALHO */}
                         <div className="dtc-section" style={{ borderBottom: '2px solid black', paddingBottom: '14px', marginBottom: '16px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
@@ -3596,7 +3598,7 @@ export default function TransicaoPlaceholder() {
                       </div>
 
                       {/* RODAPÉ PÁGINA 1 */}
-                      <div style={{ borderTop: '1px solid #cbd5e1', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', fontSize: '8px', color: '#94a3b8' }}>
+                      <div style={{ borderTop: '1px solid #cbd5e1', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', fontSize: '8px', color: '#94a3b8', marginTop: '16px' }}>
                         <span>Siplan Sistemas — Documento de Transição de Conhecimento</span>
                         <span>Página 1 de 4</span>
                       </div>
@@ -3607,6 +3609,7 @@ export default function TransicaoPlaceholder() {
                   <div className="dtc-document-font text-black relative" style={{
                     width: '794px',
                     minHeight: '1122px',
+                    height: 'auto',
                     background: 'white',
                     boxShadow: '0 4px 16px rgba(0,0,0,0.45)',
                     zoom: zoom / 100
@@ -3616,7 +3619,7 @@ export default function TransicaoPlaceholder() {
                         <span style={{ fontSize: '110px', fontWeight: 900, color: 'rgba(0,0,0,0.045)', transform: 'rotate(-40deg)', letterSpacing: '0.05em', userSelect: 'none', whiteSpace: 'nowrap' }}>RASCUNHO</span>
                       </div>
                     )}
-                    <div style={{ padding: '56px 72px', height: '1122px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
+                    <div style={{ padding: '56px 72px 32px 72px', minHeight: '1122px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
                       <div>
                         {/* 4. RELATO TÉCNICO */}
                         <div className="dtc-section" style={{ marginBottom: '14px' }}>
@@ -3632,7 +3635,7 @@ export default function TransicaoPlaceholder() {
                                   {localDtc.implantationProcessLogs && localDtc.implantationProcessLogs.length > 0 && (
                                     <div style={{ marginTop: '8px', background: '#f8fafc', padding: '6px 8px', borderRadius: '3px', borderLeft: '2px solid #94a3b8' }}>
                                       <strong style={{ display: 'block', fontSize: '8.5px', textTransform: 'uppercase', color: '#64748b', marginBottom: '4px' }}>Acompanhamento Diário:</strong>
-                                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', maxHeight: '400px', overflowY: 'auto' }}>
+                                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                                         {localDtc.implantationProcessLogs.map((log, idx) => (
                                           <div key={idx} style={{ display: 'flex', gap: '6px', fontSize: '10px' }}>
                                             <span style={{ fontWeight: 700, color: '#475569', minWidth: '70px' }}>{log.date ? new Date(log.date + 'T00:00:00').toLocaleDateString('pt-BR') : ''}:</span>
@@ -3665,7 +3668,7 @@ export default function TransicaoPlaceholder() {
                       </div>
 
                       {/* RODAPÉ PÁGINA 2 */}
-                      <div style={{ borderTop: '1px solid #cbd5e1', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', fontSize: '8px', color: '#94a3b8' }}>
+                      <div style={{ borderTop: '1px solid #cbd5e1', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', fontSize: '8px', color: '#94a3b8', marginTop: '16px' }}>
                         <span>Siplan Sistemas — Documento de Transição de Conhecimento</span>
                         <span>Página 2 de 4</span>
                       </div>
@@ -3676,6 +3679,7 @@ export default function TransicaoPlaceholder() {
                   <div className="dtc-document-font text-black relative" style={{
                     width: '794px',
                     minHeight: '1122px',
+                    height: 'auto',
                     background: 'white',
                     boxShadow: '0 4px 16px rgba(0,0,0,0.45)',
                     zoom: zoom / 100
@@ -3685,7 +3689,7 @@ export default function TransicaoPlaceholder() {
                         <span style={{ fontSize: '110px', fontWeight: 900, color: 'rgba(0,0,0,0.045)', transform: 'rotate(-40deg)', letterSpacing: '0.05em', userSelect: 'none', whiteSpace: 'nowrap' }}>RASCUNHO</span>
                       </div>
                     )}
-                    <div style={{ padding: '56px 72px', height: '1122px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
+                    <div style={{ padding: '56px 72px 32px 72px', minHeight: '1122px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
                       <div>
                         <div style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#1e293b', borderLeft: '3px solid black', paddingLeft: '6px', marginBottom: '5px' }}>4. Relato Técnico &amp; Processo (Continuação)</div>
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10.5px' }}>
@@ -3694,7 +3698,7 @@ export default function TransicaoPlaceholder() {
                               <tr>
                                 <td style={{ border: '1px solid #cbd5e1', padding: '7px 9px' }}>
                                   <strong style={{ display: 'block', fontSize: '9px', textTransform: 'uppercase', color: '#334155', marginBottom: '4px' }}>Ganhos Operacionais:</strong>
-                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '350px', overflowY: 'auto' }}>
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     {localDtc.implantationGainsList.map((gain, idx) => (
                                       <div key={idx} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '5px 8px', borderRadius: '3px' }}>
                                         <div style={{ fontWeight: 700, fontSize: '10px' }}>{gain.product ? `[${gain.product}] ` : ''}{gain.title || '(Sem título)'}{gain.department ? ` — ${gain.department}` : ''}</div>
@@ -3709,7 +3713,7 @@ export default function TransicaoPlaceholder() {
                               <tr>
                                 <td style={{ border: '1px solid #cbd5e1', padding: '7px 9px' }}>
                                   <strong style={{ display: 'block', fontSize: '9px', textTransform: 'uppercase', color: '#334155', marginBottom: '4px' }}>Sugestões de Melhorias:</strong>
-                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '350px', overflowY: 'auto' }}>
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     {localDtc.implantationSuggestionsList.map((s, idx) => (
                                       <div key={idx} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '5px 8px', borderRadius: '3px' }}>
                                         <div style={{ fontWeight: 700, fontSize: '10px' }}>{s.product ? `[${s.product}] ` : ''}{s.title || '(Sem título)'}{s.department ? ` — ${s.department}` : ''}</div>
@@ -3750,7 +3754,7 @@ export default function TransicaoPlaceholder() {
                       </div>
 
                       {/* RODAPÉ PÁGINA 3 */}
-                      <div style={{ borderTop: '1px solid #cbd5e1', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', fontSize: '8px', color: '#94a3b8' }}>
+                      <div style={{ borderTop: '1px solid #cbd5e1', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', fontSize: '8px', color: '#94a3b8', marginTop: '16px' }}>
                         <span>Siplan Sistemas — Documento de Transição de Conhecimento</span>
                         <span>Página 3 de 4</span>
                       </div>
@@ -3761,6 +3765,7 @@ export default function TransicaoPlaceholder() {
                   <div className="dtc-document-font text-black relative" style={{
                     width: '794px',
                     minHeight: '1122px',
+                    height: 'auto',
                     background: 'white',
                     boxShadow: '0 4px 16px rgba(0,0,0,0.45)',
                     zoom: zoom / 100
@@ -3770,7 +3775,7 @@ export default function TransicaoPlaceholder() {
                         <span style={{ fontSize: '110px', fontWeight: 900, color: 'rgba(0,0,0,0.045)', transform: 'rotate(-40deg)', letterSpacing: '0.05em', userSelect: 'none', whiteSpace: 'nowrap' }}>RASCUNHO</span>
                       </div>
                     )}
-                    <div style={{ padding: '56px 72px', height: '1122px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
+                    <div style={{ padding: '56px 72px 32px 72px', minHeight: '1122px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
                       <div>
                         {/* 5. PENDÊNCIAS */}
                         <div className="dtc-section" style={{ marginBottom: '14px' }}>
@@ -3778,7 +3783,7 @@ export default function TransicaoPlaceholder() {
                           {localDtc.implantationPendingList && localDtc.implantationPendingList.length > 0 && (
                             <div style={{ marginBottom: '8px' }}>
                               <div style={{ fontSize: '8.5px', fontWeight: 700, textTransform: 'uppercase', color: '#64748b', marginBottom: '4px' }}>Pendências da Implantação:</div>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '250px', overflowY: 'auto' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                 {localDtc.implantationPendingList.map((p, idx) => (
                                   <div key={idx} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '5px 8px', borderRadius: '3px', display: 'flex', justifyContent: 'space-between', gap: '8px' }}>
                                     <div style={{ flex: 1 }}>
@@ -3815,7 +3820,7 @@ export default function TransicaoPlaceholder() {
                       </div>
 
                       {/* RODAPÉ PÁGINA 4 */}
-                      <div style={{ borderTop: '1px solid #cbd5e1', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', fontSize: '8px', color: '#94a3b8' }}>
+                      <div style={{ borderTop: '1px solid #cbd5e1', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', fontSize: '8px', color: '#94a3b8', marginTop: '16px' }}>
                         <span>Siplan Sistemas — Documento de Transição de Conhecimento</span>
                         <span>Página 4 de 4</span>
                       </div>
@@ -3825,6 +3830,7 @@ export default function TransicaoPlaceholder() {
                 </div>
               </Card>
             </TabsContent>
+
 
 
 
