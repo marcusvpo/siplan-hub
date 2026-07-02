@@ -224,6 +224,12 @@ export interface AdherenceStageV2 {
   lastUpdatedBy?: string;
 }
 
+export interface RemoteAccessItem {
+  system: "AnyDesk" | "TeamViewer" | "RustDesk" | "Outro";
+  id: string;
+  password?: string;
+}
+
 export interface EnvironmentStageV2 {
   status: StageStatus;
   responsible?: string;
@@ -242,6 +248,7 @@ export interface EnvironmentStageV2 {
   anydeskPassword?: string;
   soLogin?: string;
   soPassword?: string;
+  remoteAccessList?: RemoteAccessItem[];
 }
 
 export interface ConversionStageV2 {

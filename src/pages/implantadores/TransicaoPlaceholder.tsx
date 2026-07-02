@@ -190,6 +190,8 @@ interface DTCData {
   submittedAt?: string;
   submittedBy?: string;
   approvedAt?: string;
+  soLogin?: string;
+  soPassword?: string;
   approvedBy?: string;
 }
 
@@ -336,6 +338,7 @@ export default function TransicaoPlaceholder() {
   const { members = [] } = useTeamMembers();
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [showPgAccess, setShowPgAccess] = useState(false);
+  const [showSoPassword, setShowSoPassword] = useState(false);
   const [showRemoteAccess, setShowRemoteAccess] = useState(false);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
     "ident-cartorio": true,
@@ -416,7 +419,9 @@ export default function TransicaoPlaceholder() {
       hadConversion: false,
       convertedData: "",
       remoteAccessData: "",
-      remoteAccessList: [],
+      remoteAccessList: project.stages?.environment?.remoteAccessList || [],
+      soLogin: project.stages?.environment?.soLogin || "",
+      soPassword: project.stages?.environment?.soPassword || "",
       supportCallNumber: project.ticketNumber || "",
       implantationProcess: "",
       implantationProcessLogs: [],
@@ -432,8 +437,24 @@ export default function TransicaoPlaceholder() {
     };
   };
 
+  const initialDtcValue = useMemo(() => {
+    if (!project) return null;
+    const dtc = (project.customFields?.dtc as DTCData | null) || getInitialDtc();
+    
+    // Sync environment accesses and OS credentials from project's environment stage
+    const envStage = project.stages?.environment;
+    return {
+      ...dtc,
+      remoteAccessList: envStage?.remoteAccessList && envStage.remoteAccessList.length > 0
+        ? envStage.remoteAccessList
+        : dtc.remoteAccessList || [],
+      soLogin: envStage?.soLogin || dtc.soLogin || "",
+      soPassword: envStage?.soPassword || dtc.soPassword || "",
+    };
+  }, [project]);
+
   const { data: localDtc, updateData: setLocalDtc, saveState } = useAutoSave<DTCData | null>(
-    project ? (project.customFields?.dtc as DTCData | null) || getInitialDtc() : null,
+    initialDtcValue,
     async (newData) => {
       if (!selectedProjectId || !newData || !project) return;
 
@@ -448,6 +469,11 @@ export default function TransicaoPlaceholder() {
             post: {
               status: dtcStatusToStageStatus(newData.status),
               responsible: newData.analystResponsible || project.responsiblePost || undefined
+            },
+            environment: {
+              remoteAccessList: newData.remoteAccessList,
+              soLogin: newData.soLogin,
+              soPassword: newData.soPassword,
             }
           }
         }
@@ -2044,6 +2070,59 @@ export default function TransicaoPlaceholder() {
                             </div>
                           )}
                         </div>
+
+                        {/* OS Credentials Section */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border p-3 rounded-lg bg-muted/10 mt-3 col-span-1 md:col-span-2">
+                          <div className="space-y-1.5">
+                            <Label htmlFor="dtcSoLogin" className="text-[11px] font-bold">Usuário do Sistema Operacional (SO)</Label>
+                            <Input
+                              id="dtcSoLogin"
+                              value={localDtc.soLogin || ""}
+                              onChange={(e) => handleFieldChange("soLogin", e.target.value)}
+                              disabled={isFormDisabled}
+                              className="border-muted/80 h-8 text-xs bg-background"
+                              placeholder="Ex: Administrator"
+                            />
+                          </div>
+                          
+                          <div className="space-y-1.5">
+                            <Label htmlFor="dtcSoPassword" className="text-[11px] font-bold">Senha do Sistema Operacional (SO)</Label>
+                            <div className="relative flex items-center">
+                              <Input
+                                id="dtcSoPassword"
+                                type={showSoPassword ? "text" : "password"}
+                                autoComplete="new-password"
+                                value={localDtc.soPassword || ""}
+                                onChange={(e) => handleFieldChange("soPassword", e.target.value)}
+                                disabled={isFormDisabled}
+                                className="border-muted/80 h-8 text-xs pr-16 bg-background"
+                                placeholder="Senha do SO..."
+                              />
+                              <div className="absolute right-1 flex items-center gap-0.5">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => setShowSoPassword(!showSoPassword)}
+                                  className="h-6 w-6 text-muted-foreground hover:text-foreground rounded-full"
+                                  title={showSoPassword ? "Ocultar senha" : "Ver senha"}
+                                >
+                                  {showSoPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleCopyText(localDtc.soPassword || "", "Senha do SO")}
+                                  className="h-6 w-6 text-muted-foreground hover:text-foreground rounded-full"
+                                  title="Copiar senha"
+                                >
+                                  <Copy className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -3279,6 +3358,11 @@ export default function TransicaoPlaceholder() {
                             localDtc.remoteAccessList.map(a => `${a.system} (ID: ${a.id}${a.password ? `, Senha: ${a.password}` : ""})`).join(" | ")
                           )}
                         </div>
+                        {(localDtc.soLogin || localDtc.soPassword) && (
+                          <div className="mt-1">
+                            <strong>Acesso SO Servidor:</strong> Usuário: {localDtc.soLogin || "_____"} | Senha: {localDtc.soPassword || "_____"}
+                          </div>
+                        )}
                         <div className="mt-2">
                           <strong>Houve Conversão de Dados:</strong> {localDtc.hadConversion ? "Sim" : "Não"}
                         </div>
@@ -3540,6 +3624,11 @@ export default function TransicaoPlaceholder() {
                   localDtc.remoteAccessList.map(a => `${a.system} (ID: ${a.id}${a.password ? `, Senha: ${a.password}` : ""})`).join(" | ")
                 )}
               </div>
+              {(localDtc.soLogin || localDtc.soPassword) && (
+                <div className="mt-1">
+                  <strong>Acesso SO Servidor:</strong> Usuário: {localDtc.soLogin || "_____"} | Senha: {localDtc.soPassword || "_____"}
+                </div>
+              )}
               <div>
                 <strong>Houve Conversão de Dados:</strong> {localDtc.hadConversion ? "Sim" : "Não"}
               </div>

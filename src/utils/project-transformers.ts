@@ -137,6 +137,7 @@ export function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
         anydeskPassword: (row.custom_fields as any)?.environment_anydesk_password || "",
         soLogin: (row.custom_fields as any)?.environment_so_login || "",
         soPassword: (row.custom_fields as any)?.environment_so_password || "",
+        remoteAccessList: (row.custom_fields as any)?.environment_remote_access_list || [],
       },
       conversion: createStage<ConversionStageV2>('conversion'),
       implementation: createStage<ImplementationStageV2>('implementation'),
@@ -538,6 +539,7 @@ export function transformToDB(project: Partial<ProjectV2>, currentProject?: Proj
       const anydeskPassword = stages.environment.anydeskPassword;
       const soLogin = stages.environment.soLogin;
       const soPassword = stages.environment.soPassword;
+      const remoteAccessList = stages.environment.remoteAccessList;
 
       dbRow.custom_fields = {
         ...(currentCustomFields as any),
@@ -545,6 +547,7 @@ export function transformToDB(project: Partial<ProjectV2>, currentProject?: Proj
         ...(anydeskPassword !== undefined ? { environment_anydesk_password: anydeskPassword } : {}),
         ...(soLogin !== undefined ? { environment_so_login: soLogin } : {}),
         ...(soPassword !== undefined ? { environment_so_password: soPassword } : {}),
+        ...(remoteAccessList !== undefined ? { environment_remote_access_list: remoteAccessList } : {}),
       };
     }
   }
