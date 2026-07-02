@@ -1358,7 +1358,7 @@ export default function TransicaoPlaceholder() {
       toast.success("PDF exportado com sucesso!", { id: "pdf-export" });
     } catch (err) {
       console.error(err);
-      toast.error("Erro ao gerar PDF.", { id: "pdf-export" });
+          toast.error("Erro ao gerar PDF.", { id: "pdf-export" });
     }
   }, [localDtc]);
 
@@ -1366,6 +1366,9 @@ export default function TransicaoPlaceholder() {
     <div className="container mx-auto pt-0 px-6 pb-6 space-y-6 max-w-7xl -mt-6">
       {/* CSS overrides for print layout */}
       <style>{`
+        .dtc-document-font, .dtc-document-font * {
+          font-family: 'Segoe UI', Calibri, Arial, sans-serif !important;
+        }
         @media print {
           body * {
             visibility: hidden;
@@ -3355,7 +3358,7 @@ export default function TransicaoPlaceholder() {
                 </CardHeader>
                 <CardContent className="py-6">
                   {/* Clean preview card resembling A4 paper */}
-                  <div className="bg-white text-black p-8 border rounded-md shadow-inner max-w-[800px] mx-auto text-sm leading-relaxed" style={{ fontFamily: "Arial, Helvetica, sans-serif" }}>
+                  <div className="bg-white text-black p-8 border rounded-md shadow-inner max-w-[800px] mx-auto text-sm leading-relaxed dtc-document-font">
                     <div className="border-2 border-black p-4 space-y-4">
                       {/* Document Header */}
                       <div className="text-center border-b-2 border-black pb-4">
@@ -3622,7 +3625,7 @@ export default function TransicaoPlaceholder() {
 
       {/* RENDER-ONLY PRINT PREVIEW TARGET */}
       {selectedProjectId && localDtc && (
-        <div id="dtc-print-area" ref={printRef} className="hidden print:block bg-white text-black p-8 text-sm" style={{ fontFamily: "Arial, Helvetica, sans-serif" }}>
+        <div id="dtc-print-area" ref={printRef} className="hidden print:block bg-white text-black p-8 text-sm dtc-document-font">
           <div className="border-2 border-black p-6 space-y-6">
             {/* Header */}
             <div className="text-center border-b-2 border-black pb-4">
