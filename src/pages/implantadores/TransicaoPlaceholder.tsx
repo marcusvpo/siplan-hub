@@ -3533,20 +3533,16 @@ function TransicaoPlaceholder() {
             <TabsContent value="visualizar">
               <Card className="border-muted/60 shadow-md">
                 <CardHeader className="border-b flex flex-row items-center justify-between py-4 bg-muted/20">
-                  <div>
-                    <CardTitle className="text-base font-bold text-foreground">Visualização de Impressão (DTC Oficial)</CardTitle>
-                    <CardDescription className="text-xs">Visualize e formate o documento A4 exatamente como será impresso ou exportado para PDF.</CardDescription>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
+                   <div className="flex items-center gap-1.5 flex-shrink-0 flex-nowrap">
                     {/* Controls */}
-                    <div className="flex items-center gap-2 border rounded-md px-2 py-1 bg-background text-[11px] h-9">
+                    <div className="flex items-center gap-1.5 border rounded-md px-2 bg-background text-[10px] h-8">
                       {availableVoices.length > 0 && (
                         <div className="flex items-center gap-1">
-                          <span className="text-muted-foreground font-medium text-[10px] uppercase tracking-wider">Voz:</span>
+                          <span className="text-muted-foreground font-semibold text-[9px] uppercase tracking-wider">Voz:</span>
                           <select
                             value={selectedVoiceURI}
                             onChange={(e) => setSelectedVoiceURI(e.target.value)}
-                            className="bg-transparent border-none outline-none font-semibold text-foreground max-w-[120px] cursor-pointer text-[11px]"
+                            className="bg-transparent border-none outline-none font-bold text-foreground max-w-[115px] cursor-pointer text-[10px] pr-0.5"
                           >
                             {availableVoices.map((v, i) => (
                               <option key={i} value={v.voiceURI} className="text-black bg-white">
@@ -3558,13 +3554,13 @@ function TransicaoPlaceholder() {
                       )}
                       
                       {availableVoices.length > 0 && <div className="w-[1px] h-3 bg-border" />}
-
+ 
                       <div className="flex items-center gap-1">
-                        <span className="text-muted-foreground font-medium text-[10px] uppercase tracking-wider">Velocidade:</span>
+                        <span className="text-muted-foreground font-semibold text-[9px] uppercase tracking-wider">Velocidade:</span>
                         <select
                           value={speechRate}
                           onChange={(e) => setSpeechRate(parseFloat(e.target.value))}
-                          className="bg-transparent border-none outline-none font-semibold text-foreground cursor-pointer text-[11px]"
+                          className="bg-transparent border-none outline-none font-bold text-foreground cursor-pointer text-[10px]"
                         >
                           <option value="0.75" className="text-black bg-white">0.75x</option>
                           <option value="1.0" className="text-black bg-white">1.0x</option>
@@ -3574,23 +3570,23 @@ function TransicaoPlaceholder() {
                         </select>
                       </div>
                     </div>
-
+ 
                     <Button
                       onClick={toggleSpeech}
                       variant={isSpeaking ? "destructive" : "outline"}
-                      className="font-bold gap-1.5 text-xs shadow h-9"
+                      className="font-bold gap-1 text-[11px] shadow h-8 px-2.5"
                       size="sm"
                     >
-                      {isSpeaking ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-                      {isSpeaking ? "Parar Leitura" : "Ouvir Relatório"}
+                      {isSpeaking ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
+                      {isSpeaking ? "Parar" : "Ouvir"}
                     </Button>
                     <Button
                       onClick={() => window.print()}
-                      className="bg-primary hover:bg-primary/95 text-primary-foreground font-bold gap-1.5 text-xs shadow h-9"
+                      className="bg-primary hover:bg-primary/95 text-primary-foreground font-bold gap-1 text-[11px] shadow h-8 px-2.5"
                       size="sm"
                     >
-                      <Printer className="h-4 w-4" />
-                      Imprimir / Exportar PDF
+                      <Printer className="h-3.5 w-3.5" />
+                      Imprimir PDF
                     </Button>
                   </div>
                 </CardHeader>
