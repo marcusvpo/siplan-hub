@@ -249,18 +249,46 @@ export function EnvironmentStageForm({
             />
           </div>
 
-          {/* Postgres Access Data */}
+          {/* Local de Instalação (IP / Porta) */}
           <div className="space-y-1.5">
             <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-              Dados de Acesso PostgreSQL (IP, Porta, User)
+              Local de Instalação (IP / Porta)
+            </Label>
+            <Input
+              value={stage.postgresHost || ""}
+              onChange={(e) => onUpdate({ postgresHost: e.target.value })}
+              disabled={!canEditProjects}
+              placeholder="Ex: 192.168.1.10:5432"
+              className="h-8 text-xs border border-muted/80 bg-background"
+            />
+          </div>
+
+          {/* Usuário do Banco */}
+          <div className="space-y-1.5">
+            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Usuário do Banco
+            </Label>
+            <Input
+              value={stage.postgresUser || ""}
+              onChange={(e) => onUpdate({ postgresUser: e.target.value })}
+              disabled={!canEditProjects}
+              placeholder="Ex: postgres"
+              className="h-8 text-xs border border-muted/80 bg-background"
+            />
+          </div>
+
+          {/* Senha do Banco */}
+          <div className="space-y-1.5">
+            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Senha do Banco
             </Label>
             <div className="relative flex items-center">
               <Input
                 type={showPgAccess ? "text" : "password"}
-                value={stage.postgresAccessData || ""}
-                onChange={(e) => onUpdate({ postgresAccessData: e.target.value })}
+                value={stage.postgresPassword || ""}
+                onChange={(e) => onUpdate({ postgresPassword: e.target.value })}
                 disabled={!canEditProjects}
-                placeholder="IP, Porta, User, Senha..."
+                placeholder="Senha..."
                 className="h-8 text-xs border border-muted/80 bg-background pr-16"
               />
               <div className="absolute right-0.5 flex items-center gap-0.5">
@@ -274,14 +302,14 @@ export function EnvironmentStageForm({
                 >
                   {showPgAccess ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                 </Button>
-                {stage.postgresAccessData && (
+                {stage.postgresPassword && (
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleCopyText(stage.postgresAccessData || "", "Acesso PostgreSQL")}
+                    onClick={() => handleCopyText(stage.postgresPassword || "", "Senha do PostgreSQL")}
                     className="h-6 w-6 text-muted-foreground hover:text-foreground rounded-full"
-                    title="Copiar dados"
+                    title="Copiar senha"
                   >
                     <Copy className="h-3.5 w-3.5" />
                   </Button>
