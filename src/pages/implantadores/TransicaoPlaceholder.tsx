@@ -2146,6 +2146,37 @@ export default function TransicaoPlaceholder() {
                               </div>
                             </div>
                           </div>
+
+                          {/* Tipo de SO */}
+                          <div className="space-y-1.5">
+                            <Label className="text-[11px] font-bold">Sistema Operacional (SO)</Label>
+                            <Select
+                              value={localDtc.osType || ""}
+                              onValueChange={(val) => handleFieldChange("osType", val)}
+                              disabled={isFormDisabled}
+                            >
+                              <SelectTrigger className="w-full h-8 text-xs border-muted/80 bg-background">
+                                <SelectValue placeholder="Selecione o SO..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Windows" className="text-xs">Windows</SelectItem>
+                                <SelectItem value="Linux" className="text-xs">Linux</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {/* Versão do SO */}
+                          <div className="space-y-1.5">
+                            <Label htmlFor="dtcOsVersion" className="text-[11px] font-bold">Versão do Sistema Operacional</Label>
+                            <Input
+                              id="dtcOsVersion"
+                              value={localDtc.osVersion || ""}
+                              onChange={(e) => handleFieldChange("osVersion", e.target.value)}
+                              disabled={isFormDisabled}
+                              className="border-muted/80 h-8 text-xs bg-background"
+                              placeholder={localDtc.osType === "Linux" ? "Ex: Ubuntu 22.04" : "Ex: Windows Server 2022"}
+                            />
+                          </div>
                         </div>
                       </div>
                     )}
@@ -3407,9 +3438,9 @@ export default function TransicaoPlaceholder() {
                             localDtc.remoteAccessList.map(a => `${a.system} (ID: ${a.id}${a.password ? `, Senha: ${a.password}` : ""})`).join(" | ")
                           )}
                         </div>
-                        {(localDtc.soLogin || localDtc.soPassword) && (
+                        {(localDtc.soLogin || localDtc.soPassword || localDtc.osType || localDtc.osVersion) && (
                           <div className="mt-1">
-                            <strong>Acesso SO Servidor:</strong> Usuário: {localDtc.soLogin || "_____"} | Senha: {localDtc.soPassword || "_____"}
+                            <strong>Acesso SO Servidor:</strong> {localDtc.osType && `${localDtc.osType} `}{localDtc.osVersion && `(${localDtc.osVersion})`} | Usuário: {localDtc.soLogin || "_____"} | Senha: {localDtc.soPassword || "_____"}
                           </div>
                         )}
                         <div className="mt-2">
@@ -3674,9 +3705,9 @@ export default function TransicaoPlaceholder() {
                   localDtc.remoteAccessList.map(a => `${a.system} (ID: ${a.id}${a.password ? `, Senha: ${a.password}` : ""})`).join(" | ")
                 )}
               </div>
-              {(localDtc.soLogin || localDtc.soPassword) && (
+              {(localDtc.soLogin || localDtc.soPassword || localDtc.osType || localDtc.osVersion) && (
                 <div className="mt-1">
-                  <strong>Acesso SO Servidor:</strong> Usuário: {localDtc.soLogin || "_____"} | Senha: {localDtc.soPassword || "_____"}
+                  <strong>Acesso SO Servidor:</strong> {localDtc.osType && `${localDtc.osType} `}{localDtc.osVersion && `(${localDtc.osVersion})`} | Usuário: {localDtc.soLogin || "_____"} | Senha: {localDtc.soPassword || "_____"}
                 </div>
               )}
               <div>
