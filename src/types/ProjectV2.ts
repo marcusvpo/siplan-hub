@@ -236,6 +236,7 @@ export interface EnvironmentStageV2 {
   startDate?: Date;
   endDate?: Date;
   osVersion?: string;
+  osType?: string;
   version?: string;
   realDate?: Date;
   approvedByInfra: boolean;
