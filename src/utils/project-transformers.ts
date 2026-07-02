@@ -131,7 +131,13 @@ export function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
     stages: {
       infra: createStage<InfraStageV2>('infra'),
       adherence: createStage<AdherenceStageV2>('adherence'),
-      environment: createStage<EnvironmentStageV2>('environment'),
+      environment: {
+        ...createStage<EnvironmentStageV2>('environment'),
+        anydeskId: (row.custom_fields as any)?.environment_anydesk_id || "",
+        anydeskPassword: (row.custom_fields as any)?.environment_anydesk_password || "",
+        soLogin: (row.custom_fields as any)?.environment_so_login || "",
+        soPassword: (row.custom_fields as any)?.environment_so_password || "",
+      },
       conversion: createStage<ConversionStageV2>('conversion'),
       implementation: createStage<ImplementationStageV2>('implementation'),
       modelosEditor: createStage<ModelosEditorStageV2>('modelos_editor'),
@@ -525,6 +531,22 @@ export function transformToDB(project: Partial<ProjectV2>, currentProject?: Proj
       ...mapModelosEditorStage(stages.modelosEditor, oldStages?.modelosEditor),
       ...mapPostStage(stages.post, oldStages?.post),
     });
+
+    if (stages.environment) {
+      const currentCustomFields = (dbRow.custom_fields !== undefined ? dbRow.custom_fields : project.customFields !== undefined ? project.customFields : currentProject?.customFields) || {};
+      const anydeskId = stages.environment.anydeskId;
+      const anydeskPassword = stages.environment.anydeskPassword;
+      const soLogin = stages.environment.soLogin;
+      const soPassword = stages.environment.soPassword;
+
+      dbRow.custom_fields = {
+        ...(currentCustomFields as any),
+        ...(anydeskId !== undefined ? { environment_anydesk_id: anydeskId } : {}),
+        ...(anydeskPassword !== undefined ? { environment_anydesk_password: anydeskPassword } : {}),
+        ...(soLogin !== undefined ? { environment_so_login: soLogin } : {}),
+        ...(soPassword !== undefined ? { environment_so_password: soPassword } : {}),
+      };
+    }
   }
 
   // Notes

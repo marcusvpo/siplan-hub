@@ -238,6 +238,10 @@ export interface EnvironmentStageV2 {
   observations?: string;
   lastUpdatedAt?: Date;
   lastUpdatedBy?: string;
+  anydeskId?: string;
+  anydeskPassword?: string;
+  soLogin?: string;
+  soPassword?: string;
 }
 
 export interface ConversionStageV2 {
