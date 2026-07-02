@@ -81,10 +81,10 @@ export function EnvironmentStageForm({
       </div>
 
       {/* Acessos Remotos */}
-      <div className="border border-rose-500/10 rounded-lg p-3.5 bg-rose-500/5 space-y-4">
-        <div className="flex items-center justify-between border-b border-rose-500/10 pb-2">
-          <h4 className="text-[11px] font-bold uppercase tracking-wider text-rose-700 dark:text-rose-400 flex items-center gap-1.5">
-            <Server className="h-3.5 w-3.5" />
+      <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-3.5 bg-slate-50/30 dark:bg-slate-900/10 space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+          <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-350 flex items-center gap-1.5">
+            <Server className="h-3.5 w-3.5 text-muted-foreground" />
             Dados do Servidor & Acessos Remotos
           </h4>
           <Button
@@ -93,7 +93,7 @@ export function EnvironmentStageForm({
             disabled={!canEditProjects}
             variant="outline"
             size="sm"
-            className="h-6.5 text-[10px] gap-1 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 font-bold bg-background"
+            className="h-6.5 text-[10px] gap-1 border-slate-200 dark:border-slate-800 text-foreground hover:bg-slate-100 dark:hover:bg-slate-900 font-bold bg-background"
           >
             <Plus className="h-3 w-3" />
             Adicionar Acesso
@@ -175,7 +175,7 @@ export function EnvironmentStageForm({
         )}
 
         {/* Credentials OS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-rose-500/10 pt-4 mt-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-200 dark:border-slate-800 pt-4 mt-2">
           {/* OS Login */}
           <div className="space-y-1.5">
             <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
