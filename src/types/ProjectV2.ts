@@ -224,12 +224,19 @@ export interface AdherenceStageV2 {
   lastUpdatedBy?: string;
 }
 
+export interface RemoteAccessItem {
+  system: "AnyDesk" | "TeamViewer" | "RustDesk" | "Outro";
+  id: string;
+  password?: string;
+}
+
 export interface EnvironmentStageV2 {
   status: StageStatus;
   responsible?: string;
   startDate?: Date;
   endDate?: Date;
   osVersion?: string;
+  osType?: string;
   version?: string;
   realDate?: Date;
   approvedByInfra: boolean;
@@ -238,6 +245,16 @@ export interface EnvironmentStageV2 {
   observations?: string;
   lastUpdatedAt?: Date;
   lastUpdatedBy?: string;
+  anydeskId?: string;
+  anydeskPassword?: string;
+  soLogin?: string;
+  soPassword?: string;
+  remoteAccessList?: RemoteAccessItem[];
+  postgresVersion?: string;
+  postgresAccessData?: string;
+  postgresHost?: string;
+  postgresUser?: string;
+  postgresPassword?: string;
 }
 
 export interface ConversionStageV2 {

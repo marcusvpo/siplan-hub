@@ -407,7 +407,12 @@ export function StepsTab({
                 canEditProjects={canEditProjects}
                 automationNotice="Automação Ativa: Um e-mail de notificação foi enviado solicitando a preparação deste ambiente."
               >
-                <EnvironmentStageForm stage={stagesData.environment} canEditProjects={canEditProjects} onUpdate={(u) => updateStage("environment", u)} />
+                <EnvironmentStageForm 
+                  stage={stagesData.environment} 
+                  canEditProjects={canEditProjects} 
+                  onUpdate={(u) => updateStage("environment", u)} 
+                  infraServers={data.stages.infra?.servers} 
+                />
               </StageCard>
             </div>
           </>

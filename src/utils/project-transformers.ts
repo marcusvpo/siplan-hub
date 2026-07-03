@@ -131,7 +131,20 @@ export function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
     stages: {
       infra: createStage<InfraStageV2>('infra'),
       adherence: createStage<AdherenceStageV2>('adherence'),
-      environment: createStage<EnvironmentStageV2>('environment'),
+      environment: {
+        ...createStage<EnvironmentStageV2>('environment'),
+        anydeskId: (row.custom_fields as any)?.environment_anydesk_id || "",
+        anydeskPassword: (row.custom_fields as any)?.environment_anydesk_password || "",
+        soLogin: (row.custom_fields as any)?.environment_so_login || "",
+        soPassword: (row.custom_fields as any)?.environment_so_password || "",
+        osType: (row.custom_fields as any)?.environment_os_type || "",
+        remoteAccessList: (row.custom_fields as any)?.environment_remote_access_list || [],
+        postgresVersion: (row.custom_fields as any)?.environment_postgres_version || "",
+        postgresAccessData: (row.custom_fields as any)?.environment_postgres_access_data || "",
+        postgresHost: (row.custom_fields as any)?.environment_postgres_host || "",
+        postgresUser: (row.custom_fields as any)?.environment_postgres_user || "",
+        postgresPassword: (row.custom_fields as any)?.environment_postgres_password || "",
+      },
       conversion: createStage<ConversionStageV2>('conversion'),
       implementation: createStage<ImplementationStageV2>('implementation'),
       modelosEditor: createStage<ModelosEditorStageV2>('modelos_editor'),
@@ -525,6 +538,36 @@ export function transformToDB(project: Partial<ProjectV2>, currentProject?: Proj
       ...mapModelosEditorStage(stages.modelosEditor, oldStages?.modelosEditor),
       ...mapPostStage(stages.post, oldStages?.post),
     });
+
+    if (stages.environment) {
+      const currentCustomFields = (dbRow.custom_fields !== undefined ? dbRow.custom_fields : project.customFields !== undefined ? project.customFields : currentProject?.customFields) || {};
+      const anydeskId = stages.environment.anydeskId;
+      const anydeskPassword = stages.environment.anydeskPassword;
+      const soLogin = stages.environment.soLogin;
+      const soPassword = stages.environment.soPassword;
+      const osType = stages.environment.osType;
+      const remoteAccessList = stages.environment.remoteAccessList;
+      const postgresVersion = stages.environment.postgresVersion;
+      const postgresAccessData = stages.environment.postgresAccessData;
+      const postgresHost = stages.environment.postgresHost;
+      const postgresUser = stages.environment.postgresUser;
+      const postgresPassword = stages.environment.postgresPassword;
+
+      dbRow.custom_fields = {
+        ...(currentCustomFields as any),
+        ...(anydeskId !== undefined ? { environment_anydesk_id: anydeskId } : {}),
+        ...(anydeskPassword !== undefined ? { environment_anydesk_password: anydeskPassword } : {}),
+        ...(soLogin !== undefined ? { environment_so_login: soLogin } : {}),
+        ...(soPassword !== undefined ? { environment_so_password: soPassword } : {}),
+        ...(osType !== undefined ? { environment_os_type: osType } : {}),
+        ...(remoteAccessList !== undefined ? { environment_remote_access_list: remoteAccessList } : {}),
+        ...(postgresVersion !== undefined ? { environment_postgres_version: postgresVersion } : {}),
+        ...(postgresAccessData !== undefined ? { environment_postgres_access_data: postgresAccessData } : {}),
+        ...(postgresHost !== undefined ? { environment_postgres_host: postgresHost } : {}),
+        ...(postgresUser !== undefined ? { environment_postgres_user: postgresUser } : {}),
+        ...(postgresPassword !== undefined ? { environment_postgres_password: postgresPassword } : {}),
+      };
+    }
   }
 
   // Notes
