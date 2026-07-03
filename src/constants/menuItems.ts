@@ -19,6 +19,7 @@ import {
     ClipboardList,
     BookOpen,
     FolderClosed,
+    FileCheck,
 } from "lucide-react";
 
 export interface MenuItem {
@@ -212,6 +213,12 @@ export const menuItems: MenuItem[] = [
                 path: "/implantadores/aderencia",
                 icon: FileEdit,
                 description: "Formulários e checklists de aderência",
+            },
+            {
+                title: "Aderências Finalizadas",
+                path: "/implantadores/aderencia/finalizadas",
+                icon: FileCheck,
+                description: "Listagem de checklists de aderência concluídos",
             },
             {
                 title: "Homologação de Conversões",

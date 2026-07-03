@@ -32,6 +32,7 @@ import {
   History,
   FileEdit,
   BookOpen,
+  FileCheck,
 } from "lucide-react";
 import {
   Collapsible,
@@ -704,6 +705,16 @@ export function AppSidebar() {
                       >
                         <FileEdit className="h-4 w-4" />
                         <span className="text-xs font-medium">Editor de Aderência</span>
+                      </Button>
+                    </Link>
+                    <Link to="/implantadores/aderencia/finalizadas">
+                      <Button
+                        variant={isActive("/implantadores/aderencia/finalizadas") ? "secondary" : "ghost"}
+                        size="sm"
+                        className="w-full justify-start gap-3 h-9"
+                      >
+                        <FileCheck className="h-4 w-4" />
+                        <span className="text-xs font-medium">Aderências Finalizadas</span>
                       </Button>
                     </Link>
                     <Link to="/implantadores/homologation">
