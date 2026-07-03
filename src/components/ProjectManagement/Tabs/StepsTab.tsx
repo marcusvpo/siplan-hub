@@ -318,6 +318,7 @@ export function StepsTab({
                 stageReadiness.find((r) => r.stageId === "infra")?.reason
               }
               canEditProjects={canEditProjects}
+              automationNotice="Automação Ativa: Um e-mail de notificação foi enviado solicitando o início desta análise de infraestrutura."
               extraHeaderField={
                 <div className="space-y-1.5">
                   <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
@@ -356,6 +357,7 @@ export function StepsTab({
                 stageReadiness.find((r) => r.stageId === "adherence")?.reason
               }
               canEditProjects={canEditProjects}
+              automationNotice="Automação Ativa: Um e-mail de notificação foi enviado solicitando o início desta análise de aderência."
             >
               <AdherenceStageForm projectId={project.id} systemType={project.systemType} stage={stagesData.adherence} canEditProjects={canEditProjects} onUpdate={(u) => updateStage("adherence", u)} />
             </StageCard>
@@ -379,6 +381,7 @@ export function StepsTab({
                 stageReadiness.find((r) => r.stageId === "conversion")?.reason
               }
               canEditProjects={canEditProjects}
+              automationNotice="Automação Ativa: Projeto adicionado automaticamente à fila de conversão e e-mail de início enviado."
             >
               <ConversionStageForm stage={stagesData.conversion} canEditProjects={canEditProjects} isInConversionQueue={isInConversionQueue} sendingToConversion={sendingToConversion} conversionItem={conversionItem} projectId={project.id} onUpdate={(u) => updateStage("conversion", u)} onSendToConversion={handleSendToConversion} onRemoveFromQueue={removeFromQueue} />
             </StageCard>
@@ -402,6 +405,7 @@ export function StepsTab({
                   stageReadiness.find((r) => r.stageId === "environment")?.reason
                 }
                 canEditProjects={canEditProjects}
+                automationNotice="Automação Ativa: Um e-mail de notificação foi enviado solicitando a preparação deste ambiente."
               >
                 <EnvironmentStageForm stage={stagesData.environment} canEditProjects={canEditProjects} onUpdate={(u) => updateStage("environment", u)} />
               </StageCard>

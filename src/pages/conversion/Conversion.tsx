@@ -16,6 +16,7 @@ import {
   UserCheck,
   MessageSquare,
   Cog,
+  HelpCircle,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
@@ -59,6 +60,8 @@ import { ptBR } from "date-fns/locale";
 import { MyQueueDetailedCard } from "./MyQueueDetailedCard";
 import { ConversionPostDrawer } from "@/components/conversion/ConversionPostDrawer";
 import { useConversionEngines } from "@/hooks/useConversionEngines";
+import { useConversionIssues } from "@/hooks/useConversionIssues";
+import { ConversionIssuesTab } from "@/components/conversion/ConversionIssuesTab";
 
 // Status labels and colors
 const STATUS_LABELS: Record<string, string> = {
@@ -104,6 +107,12 @@ export default function Conversion() {
     refetch,
   } = useConversionQueue({ userId: currentUserId });
 
+  const { issues } = useConversionIssues();
+  const activeIssuesCount = useMemo(
+    () => issues.filter((i) => i.status === "open" || i.status === "in_progress").length,
+    [issues]
+  );
+
   const { members } = useTeamAreas();
   const conversionMembers = useMemo(
     () => members.filter((m) => m.area === "conversion"),
@@ -121,6 +130,7 @@ export default function Conversion() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [systemFilter, setSystemFilter] = useState("all");
   const [drawerDefaultTab, setDrawerDefaultTab] = useState<"posts" | "homologations">("posts");
+  const [helpOpen, setHelpOpen] = useState(false);
 
   const systemTypes = useMemo(() => {
     const types = new Set<string>();
@@ -129,6 +139,8 @@ export default function Conversion() {
     });
     return Array.from(types);
   }, [queue]);
+
+
 
   // Dialog states
   const [transferDialog, setTransferDialog] = useState<{
@@ -180,6 +192,258 @@ export default function Conversion() {
         systemFilter === "all" || item.systemType === systemFilter;
       return matchesSearch && matchesStatus && matchesSystem;
     });
+  };
+
+  // Filter queue items for Kanban (ignoring statusFilter)
+  const filterKanbanItems = (items: ConversionQueueItem[]) => {
+    return items.filter((item) => {
+      const matchesSearch =
+        !searchQuery ||
+        item.clientName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.ticketNumber?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSystem =
+        systemFilter === "all" || item.systemType === systemFilter;
+      return matchesSearch && matchesSystem;
+    });
+  };
+
+  // Render Kanban Card (Compact version)
+  const renderKanbanCard = (item: ConversionQueueItem) => {
+    const daysInQueue = Math.floor(
+      (new Date().getTime() - item.sentAt.getTime()) / (1000 * 60 * 60 * 24),
+    );
+
+    const statusVisual = queueStatusConfig[item.queueStatus] || queueStatusConfig.pending;
+    const StatusIcon = statusVisual.icon;
+
+    return (
+      <Card
+        key={item.id}
+        className={cn(
+          "transition-all duration-300 border-l-[5px] hover:shadow-md bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 relative group",
+          statusVisual.borderColor
+        )}
+      >
+        <CardContent className="p-3.5 space-y-2">
+          {/* Card Header */}
+          <div className="flex items-start justify-between gap-1">
+            <h4 className="font-bold text-xs text-slate-900 dark:text-slate-100 leading-tight group-hover:text-primary transition-colors duration-200 line-clamp-2">
+              {item.clientName}
+            </h4>
+            
+            {/* Action Dropdown Menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <MoreVertical className="h-3.5 w-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="text-xs">
+                {!item.engineStatus && isConversionTeam && (
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEngineDialog({ open: true, item });
+                    }}
+                  >
+                    <Cog className="h-3.5 w-3.5 mr-1.5" />
+                    Enviar p/ Conversor
+                  </DropdownMenuItem>
+                )}
+                {isConversionTeam && (
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setTransferDialog({ open: true, item });
+                    }}
+                  >
+                    <ArrowRight className="h-3.5 w-3.5 mr-1.5" />
+                    Transferir
+                  </DropdownMenuItem>
+                )}
+                {isConversionTeam && (
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm(`Remover "${item.clientName}"?`)) {
+                        removeFromQueue(item.id, item.projectId);
+                      }
+                    }}
+                    className="text-red-600 focus:text-red-600"
+                  >
+                    <AlertCircle className="h-3.5 w-3.5 mr-1.5" />
+                    Remover da Fila
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          {/* Badges Info */}
+          <div className="flex flex-wrap items-center gap-1">
+            <Badge
+              className={cn(
+                "text-[10px] font-bold py-0 px-1.5",
+                item.priority <= 2
+                  ? "bg-red-100 text-red-700 border-red-200 dark:bg-red-950/20 dark:text-red-400"
+                  : item.priority <= 4
+                    ? "bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-950/20 dark:text-orange-400"
+                    : "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-900 dark:text-slate-400",
+              )}
+            >
+              P{item.priority}
+            </Badge>
+            <span
+              className={cn(
+                "text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800",
+                daysInQueue > 5
+                  ? "text-red-600 dark:text-red-400 font-semibold"
+                  : daysInQueue > 3
+                    ? "text-orange-600 dark:text-orange-400"
+                    : "text-muted-foreground",
+              )}
+            >
+              {daysInQueue}d na fila
+            </span>
+            {item.engineStatus && (
+              <Badge
+                variant="outline"
+                className={cn(
+                  "py-0 px-1.5 text-[9px] gap-0.5",
+                  item.engineStatus === "pending_engine" && "bg-orange-50 text-orange-700 border-orange-200",
+                  item.engineStatus === "engine_in_development" && "bg-blue-50 text-blue-700 border-blue-200",
+                  item.engineStatus === "engine_ready" && "bg-green-50 text-green-700 border-green-200",
+                )}
+              >
+                <Cog className="h-2.5 w-2.5" />
+                {item.engineStatus === "pending_engine" && "Aguard. Base"}
+                {item.engineStatus === "engine_in_development" && "Motor em Dev"}
+                {item.engineStatus === "engine_ready" && "Motor Pronto"}
+              </Badge>
+            )}
+          </div>
+
+          {/* Ticket and Systems */}
+          <div className="flex flex-wrap items-center gap-x-2 text-[11px] text-muted-foreground font-medium">
+            <span className="font-mono bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 px-1 py-0.2 rounded text-[10px]">
+              #{item.ticketNumber}
+            </span>
+            <span>{item.systemType}</span>
+            {item.legacySystem && (
+              <span className="truncate max-w-[120px] text-slate-400">
+                ← {item.legacySystem}
+              </span>
+            )}
+          </div>
+
+          {/* Responsável / Previsão */}
+          <div className="text-[11px] text-muted-foreground pt-1 border-t border-dashed border-slate-100 dark:border-slate-800 space-y-1">
+            {item.assignedToName ? (
+              <div className="flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-450">
+                <UserCheck className="h-3 w-3" />
+                <span>Ad: {item.assignedToName}</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1 text-amber-600 dark:text-amber-450 font-semibold">
+                <Clock className="h-3 w-3" />
+                <span>Aguardando analista</span>
+              </div>
+            )}
+            
+            <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+              <span>Impl: {item.deploymentDate ? format(new Date(item.deploymentDate), "dd/MM/yyyy") : "Sem prev."}</span>
+              <span>Env: {formatDistanceToNow(item.sentAt, { addSuffix: true, locale: ptBR })}</span>
+            </div>
+          </div>
+
+          {/* Ações Rápidas do Card */}
+          <div className="flex gap-1.5 pt-1.5">
+            {/* Botão Assumir */}
+            {!item.assignedTo && isConversionTeam && (
+              <Button
+                size="sm"
+                className="w-full bg-primary hover:bg-primary/95 text-primary-foreground font-semibold flex items-center justify-center gap-1 text-[10px] h-7"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAssign(item);
+                }}
+              >
+                <UserPlus className="h-3 w-3" />
+                Assumir
+              </Button>
+            )}
+
+            {/* Botão Enviar p/ Homologação */}
+            {item.queueStatus === "in_progress" && (
+              <Button
+                size="sm"
+                className="w-full bg-primary hover:bg-primary/95 text-primary-foreground font-semibold flex items-center justify-center gap-1 text-[10px] h-7"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setHomologationDialog({ open: true, item });
+                }}
+              >
+                <Send className="h-3 w-3" />
+                Homologar
+              </Button>
+            )}
+
+            {/* Botão Ver Inconsistências */}
+            {item.queueStatus === "homologation_issues" && (
+              <Button
+                size="sm"
+                className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold flex items-center justify-center gap-1 text-[10px] h-7"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDrawerDefaultTab("homologations");
+                  setDrawerItem(item);
+                }}
+              >
+                <AlertCircle className="h-3 w-3" />
+                Inconsistências
+              </Button>
+            )}
+
+            {/* Botão Ver Parecer Final */}
+            {item.queueStatus === "done" && item.homologationStatus === "approved" && (
+              <Button
+                size="sm"
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold flex items-center justify-center gap-1 text-[10px] h-7"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDrawerDefaultTab("homologations");
+                  setDrawerItem(item);
+                }}
+              >
+                <CheckCircle2 className="h-3 w-3" />
+                Parecer Final
+              </Button>
+            )}
+
+            {/* Botão Ver Publicações */}
+            <Button
+              size="sm"
+              variant="outline"
+              className="px-2 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 flex items-center justify-center text-[10px] h-7 grow"
+              onClick={(e) => {
+                e.stopPropagation();
+                setDrawerDefaultTab("posts");
+                setDrawerItem(item);
+              }}
+              title="Ver publicações e posts"
+            >
+              <MessageSquare className="h-3 w-3 text-primary mr-1" />
+              Feed
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
   };
 
   const handleAssign = async (item: ConversionQueueItem) => {
@@ -333,6 +597,40 @@ export default function Conversion() {
     </div>
   );
 
+  // Configuração visual de status da fila
+  const queueStatusConfig: Record<string, { icon: any; bgColor: string; borderColor: string }> = {
+    pending: {
+      icon: Clock,
+      bgColor: "bg-slate-50 text-slate-500 border-slate-200 dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-800",
+      borderColor: "border-l-slate-400 dark:border-l-slate-600",
+    },
+    in_progress: {
+      icon: RefreshCw,
+      bgColor: "bg-blue-50 text-blue-600 border-blue-100 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/30",
+      borderColor: "border-l-blue-500",
+    },
+    awaiting_homologation: {
+      icon: Database,
+      bgColor: "bg-purple-50 text-purple-650 border-purple-100 dark:bg-purple-950/20 dark:text-purple-400 dark:border-purple-900/30",
+      borderColor: "border-l-primary",
+    },
+    homologation: {
+      icon: Database,
+      bgColor: "bg-purple-50 text-purple-650 border-purple-100 dark:bg-purple-950/20 dark:text-purple-400 dark:border-purple-900/30",
+      borderColor: "border-l-primary",
+    },
+    homologation_issues: {
+      icon: AlertCircle,
+      bgColor: "bg-red-50 text-red-650 border-red-100 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/30",
+      borderColor: "border-l-red-500",
+    },
+    done: {
+      icon: CheckCircle2,
+      bgColor: "bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/30",
+      borderColor: "border-l-emerald-500",
+    },
+  };
+
   // Queue Item Card
   const renderQueueItem = (
     item: ConversionQueueItem,
@@ -342,21 +640,31 @@ export default function Conversion() {
       (new Date().getTime() - item.sentAt.getTime()) / (1000 * 60 * 60 * 24),
     );
 
+    const statusVisual = queueStatusConfig[item.queueStatus] || queueStatusConfig.pending;
+    const StatusIcon = statusVisual.icon;
+
     return (
       <Card
         key={item.id}
         className={cn(
-          "transition-all duration-300 border-l-4 hover:-translate-y-0.5 hover:shadow-md",
-          item.queueStatus === "pending" && "border-l-slate-400 dark:border-l-slate-600",
-          item.queueStatus === "in_progress" && "border-l-blue-500",
-          (item.queueStatus === "awaiting_homologation" || item.queueStatus === "homologation") && "border-l-primary",
-          item.queueStatus === "done" && "border-l-emerald-500"
+          "transition-all duration-300 border-l-8 hover:-translate-y-0.5 hover:shadow-md",
+          statusVisual.borderColor
         )}
       >
         <CardContent className="p-5">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             {/* Left Column: Info & Indicators */}
             <div className="flex items-start gap-4 min-w-0 flex-1">
+              {/* Status Icon Badge */}
+              <div className={cn(
+                "flex-shrink-0 flex items-center justify-center w-11 h-11 rounded-xl border shadow-sm",
+                statusVisual.bgColor
+              )}>
+                <StatusIcon className={cn(
+                  "h-5 w-5",
+                  item.queueStatus === "in_progress" && "animate-[spin_4s_linear_infinite]"
+                )} />
+              </div>
               {/* Engine Dependency Indicator */}
               {item.engineStatus && (
                 <div
@@ -885,6 +1193,10 @@ export default function Conversion() {
                 )}
               </Button>
             )}
+            <Button onClick={() => setHelpOpen(true)} variant="outline" size="sm" className="border-primary/20 text-primary hover:bg-primary/5 gap-1.5">
+              <HelpCircle className="h-4 w-4" />
+              Ajuda / Tutorial
+            </Button>
             <Button onClick={refetch} variant="outline" size="sm">
               <RefreshCw className="h-4 w-4 mr-2" />
               Atualizar
@@ -906,21 +1218,23 @@ export default function Conversion() {
               className="pl-10"
             />
           </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[180px]">
-              <Filter className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os status</SelectItem>
-              <SelectItem value="pending">Pendentes</SelectItem>
-              <SelectItem value="in_progress">Em Andamento</SelectItem>
-              <SelectItem value="awaiting_homologation">
-                Aguard. Homolog.
-              </SelectItem>
-              <SelectItem value="done">Concluídos</SelectItem>
-            </SelectContent>
-          </Select>
+          {activeTab !== "general" && (
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[180px]">
+                <Filter className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os status</SelectItem>
+                <SelectItem value="pending">Pendentes</SelectItem>
+                <SelectItem value="in_progress">Em Andamento</SelectItem>
+                <SelectItem value="awaiting_homologation">
+                  Aguard. Homolog.
+                </SelectItem>
+                <SelectItem value="done">Concluídos</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
 
           <Select value={systemFilter} onValueChange={setSystemFilter}>
             <SelectTrigger className="w-[180px]">
@@ -980,53 +1294,21 @@ export default function Conversion() {
               </span>
             )}
           </TabsTrigger>
+          <TabsTrigger value="issues" className="gap-2 relative">
+            <AlertCircle className="h-4 w-4" />
+            Pendências
+            {activeIssuesCount > 0 && (
+              <span className="flex items-center gap-1.5">
+                <Badge variant="destructive" className="ml-1 animate-pulse px-1.5 py-0 text-[10px]">
+                  {activeIssuesCount}
+                </Badge>
+              </span>
+            )}
+          </TabsTrigger>
         </TabsList>
 
         {/* Scrollable Content Area */}
         <div className="flex-1 overflow-y-auto pb-6 space-y-4">
-          {/* Explanation Banner */}
-          <Card className="bg-gradient-to-r from-primary/5 via-primary/[0.02] to-background border border-primary/20 shadow-sm mb-4">
-            <CardContent className="p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-              <div className="space-y-2 max-w-4xl">
-                <h2 className="text-lg font-bold text-primary flex items-center gap-2">
-                  <Database className="h-5 w-5 text-primary animate-pulse" />
-                  Como funciona a Esteira de Conversão?
-                </h2>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Esta tela gerencia a fila de migração de dados dos clientes.
-                  Os projetos entram como <strong className="text-slate-700 dark:text-slate-300">Pendentes</strong>. 
-                  Ao clicar em <strong className="text-primary font-semibold">Assumir</strong>, ele passa para <strong className="text-blue-600 dark:text-blue-400">Em Andamento</strong>. 
-                  Utilize <strong className="text-slate-700 dark:text-slate-300">Ver Publicações</strong> para postar notas de progresso, anexos ou feedbacks.
-                  Finalizado o trabalho, clique em <strong className="text-primary font-semibold">Enviar p/ Homologação</strong>.
-                  Projetos aguardando validação exibem o botão verde <strong className="text-emerald-600 dark:text-emerald-400">Aprovar Homologação</strong> para conclusão definitiva.
-                </p>
-                <div className="flex flex-wrap gap-x-6 gap-y-1.5 text-xs text-muted-foreground pt-1">
-                  <span className="flex items-center gap-1">
-                    <span className="w-2.5 h-2.5 rounded-full bg-slate-400" />
-                    <strong>Pendente:</strong> Aguardando analista.
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-                    <strong>Em Andamento:</strong> Sendo trabalhado pelo responsável.
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className="w-2.5 h-2.5 rounded-full bg-primary" />
-                    <strong>Aguard. Homologação:</strong> Aguardando validação do implantador.
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                    <strong>Concluído:</strong> Conversão finalizada e homologada.
-                  </span>
-                </div>
-              </div>
-              <div className="hidden lg:flex flex-col items-center justify-center p-3 bg-primary/10 rounded-xl text-center min-w-[150px] border border-primary/20">
-                <span className="text-xs font-semibold text-primary uppercase tracking-wider">Metas de Conversão</span>
-                <span className="text-2xl font-black text-primary mt-1">100%</span>
-                <span className="text-[10px] text-muted-foreground mt-0.5">de adesão e uso</span>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* My Queue Tab - Detailed View */}
           <TabsContent value="my-queue" className="mt-0">
             {loading ? (
@@ -1068,26 +1350,141 @@ export default function Conversion() {
           </TabsContent>
 
           {/* General Queue Tab */}
-          <TabsContent value="general" className="mt-0">
+          {/* General Queue Tab - Kanban Layout */}
+          <TabsContent value="general" className="mt-0 overflow-hidden flex-1 flex flex-col">
             {loading ? (
-              <div className="text-center py-12 text-muted-foreground">
-                Carregando...
+              <div className="text-center py-12 text-muted-foreground flex-grow flex items-center justify-center min-h-[300px]">
+                <div className="space-y-2">
+                  <RefreshCw className="h-8 w-8 mx-auto animate-spin text-primary" />
+                  <p className="text-xs">Carregando quadro Kanban...</p>
+                </div>
               </div>
-            ) : filterItems(generalQueue).length === 0 ? (
-              <Card className="p-12 text-center">
-                <CheckCircle2 className="h-12 w-12 mx-auto text-green-500/50 mb-4" />
-                <h3 className="text-lg font-medium mb-2">
-                  Nenhuma conversão na fila
-                </h3>
-                <p className="text-muted-foreground">
-                  Não há conversões ativas no momento
-                </p>
-              </Card>
             ) : (
-              <div className="space-y-3">
-                {filterItems(generalQueue).map((item) =>
-                  renderQueueItem(item, !item.assignedTo),
-                )}
+              <div className="flex gap-4 overflow-x-auto pb-4 pt-1 flex-1 items-stretch select-none h-[calc(100vh-290px)] min-h-[500px]">
+                {/* 1. Pendentes Column */}
+                <div className="w-[300px] shrink-0 bg-slate-50/70 dark:bg-slate-900/30 rounded-xl p-3 border border-slate-150 dark:border-slate-800/80 flex flex-col h-full shadow-inner">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-200/50 dark:border-slate-850">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 rounded-full bg-slate-400 dark:bg-slate-600 animate-pulse" />
+                      <span className="font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                        Pendentes
+                      </span>
+                    </div>
+                    <Badge variant="secondary" className="text-[10px] font-bold px-1.5 py-0">
+                      {filterKanbanItems(queue.filter((i) => i.queueStatus === "pending")).length}
+                    </Badge>
+                  </div>
+                  
+                  <div className="flex-1 overflow-y-auto space-y-2.5 mt-3 pr-1 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
+                    {filterKanbanItems(queue.filter((i) => i.queueStatus === "pending")).length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground text-xs bg-white dark:bg-slate-950/20 border border-dashed border-slate-200 dark:border-slate-800/50 rounded-lg p-4">
+                        Nenhuma pendente
+                      </div>
+                    ) : (
+                      filterKanbanItems(queue.filter((i) => i.queueStatus === "pending")).map(renderKanbanCard)
+                    )}
+                  </div>
+                </div>
+
+                {/* 2. Em Andamento Column */}
+                <div className="w-[300px] shrink-0 bg-slate-50/70 dark:bg-slate-900/30 rounded-xl p-3 border border-slate-150 dark:border-slate-800/80 flex flex-col h-full shadow-inner">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-200/50 dark:border-slate-850">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                      <span className="font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                        Em Andamento
+                      </span>
+                    </div>
+                    <Badge variant="secondary" className="text-[10px] font-bold px-1.5 py-0">
+                      {filterKanbanItems(queue.filter((i) => i.queueStatus === "in_progress")).length}
+                    </Badge>
+                  </div>
+                  
+                  <div className="flex-1 overflow-y-auto space-y-2.5 mt-3 pr-1 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
+                    {filterKanbanItems(queue.filter((i) => i.queueStatus === "in_progress")).length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground text-xs bg-white dark:bg-slate-950/20 border border-dashed border-slate-200 dark:border-slate-800/50 rounded-lg p-4">
+                        Nenhuma em andamento
+                      </div>
+                    ) : (
+                      filterKanbanItems(queue.filter((i) => i.queueStatus === "in_progress")).map(renderKanbanCard)
+                    )}
+                  </div>
+                </div>
+
+                {/* 3. Em Homologação Column */}
+                <div className="w-[300px] shrink-0 bg-slate-50/70 dark:bg-slate-900/30 rounded-xl p-3 border border-slate-150 dark:border-slate-800/80 flex flex-col h-full shadow-inner">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-200/50 dark:border-slate-850">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 rounded-full bg-purple-500" />
+                      <span className="font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                        Homologação
+                      </span>
+                    </div>
+                    <Badge variant="secondary" className="text-[10px] font-bold px-1.5 py-0">
+                      {filterKanbanItems(queue.filter((i) => i.queueStatus === "awaiting_homologation" || i.queueStatus === "homologation")).length}
+                    </Badge>
+                  </div>
+                  
+                  <div className="flex-1 overflow-y-auto space-y-2.5 mt-3 pr-1 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
+                    {filterKanbanItems(queue.filter((i) => i.queueStatus === "awaiting_homologation" || i.queueStatus === "homologation")).length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground text-xs bg-white dark:bg-slate-950/20 border border-dashed border-slate-200 dark:border-slate-800/50 rounded-lg p-4">
+                        Nenhuma em homologação
+                      </div>
+                    ) : (
+                      filterKanbanItems(queue.filter((i) => i.queueStatus === "awaiting_homologation" || i.queueStatus === "homologation")).map(renderKanbanCard)
+                    )}
+                  </div>
+                </div>
+
+                {/* 4. Com Inconsistências Column */}
+                <div className="w-[300px] shrink-0 bg-slate-50/70 dark:bg-slate-900/30 rounded-xl p-3 border border-slate-150 dark:border-slate-800/80 flex flex-col h-full shadow-inner">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-200/50 dark:border-slate-850">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+                      <span className="font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                        Inconsistências
+                      </span>
+                    </div>
+                    <Badge variant="secondary" className="text-[10px] font-bold px-1.5 py-0">
+                      {filterKanbanItems(queue.filter((i) => i.queueStatus === "homologation_issues")).length}
+                    </Badge>
+                  </div>
+                  
+                  <div className="flex-1 overflow-y-auto space-y-2.5 mt-3 pr-1 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
+                    {filterKanbanItems(queue.filter((i) => i.queueStatus === "homologation_issues")).length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground text-xs bg-white dark:bg-slate-950/20 border border-dashed border-slate-200 dark:border-slate-800/50 rounded-lg p-4">
+                        Nenhuma inconsistência
+                      </div>
+                    ) : (
+                      filterKanbanItems(queue.filter((i) => i.queueStatus === "homologation_issues")).map(renderKanbanCard)
+                    )}
+                  </div>
+                </div>
+
+                {/* 5. Concluídos Column */}
+                <div className="w-[300px] shrink-0 bg-slate-50/70 dark:bg-slate-900/30 rounded-xl p-3 border border-slate-150 dark:border-slate-800/80 flex flex-col h-full shadow-inner">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-200/50 dark:border-slate-850">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                      <span className="font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                        Concluídos
+                      </span>
+                    </div>
+                    <Badge variant="secondary" className="text-[10px] font-bold px-1.5 py-0">
+                      {filterKanbanItems(queue.filter((i) => i.queueStatus === "done")).length}
+                    </Badge>
+                  </div>
+                  
+                  <div className="flex-1 overflow-y-auto space-y-2.5 mt-3 pr-1 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
+                    {filterKanbanItems(queue.filter((i) => i.queueStatus === "done")).length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground text-xs bg-white dark:bg-slate-950/20 border border-dashed border-slate-200 dark:border-slate-800/50 rounded-lg p-4">
+                        Nenhum concluído
+                      </div>
+                    ) : (
+                      filterKanbanItems(queue.filter((i) => i.queueStatus === "done")).map(renderKanbanCard)
+                    )}
+                  </div>
+                </div>
               </div>
             )}
           </TabsContent>
@@ -1115,6 +1512,15 @@ export default function Conversion() {
                 )}
               </div>
             )}
+          </TabsContent>
+
+          {/* Issues Tab */}
+          <TabsContent value="issues" className="mt-0">
+            <ConversionIssuesTab
+              currentUserId={currentUserId}
+              currentUserName={currentUserName}
+              isConversionTeam={isConversionTeam}
+            />
           </TabsContent>
         </div>
       </Tabs>
@@ -1409,6 +1815,94 @@ export default function Conversion() {
                 );
               })
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Tutorial / Ajuda da Esteira */}
+      <Dialog open={helpOpen} onOpenChange={setHelpOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold flex items-center gap-2 text-primary border-b border-slate-100 dark:border-slate-800 pb-2">
+              <Database className="h-5 w-5 text-primary animate-pulse" />
+              Manual da Esteira de Conversão & Pendências
+            </DialogTitle>
+            <DialogDescription className="text-[11px]">
+              Guia rápido sobre o fluxo de migração de dados e o reporte de pendências pós-entrega.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 pt-2 text-xs leading-relaxed text-slate-700 dark:text-slate-350">
+            {/* Fluxo de Etapas */}
+            <div className="space-y-2.5">
+              <h3 className="font-bold text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                🔄 Esteira Principal (Passo a Passo)
+              </h3>
+              
+              <div className="grid grid-cols-1 gap-2.5">
+                {/* Passo 1 */}
+                <div className="flex gap-3 items-start p-2.5 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/10">
+                  <div className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">1</div>
+                  <div className="flex-1 space-y-1">
+                    <p className="font-bold text-xs text-foreground">Fila de Entrada (Aguardando Analista)</p>
+                    <p className="text-muted-foreground leading-normal">
+                      Os novos projetos iniciam com o status <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-300 dark:bg-slate-950/20 dark:text-slate-400 dark:border-slate-800 text-[10px] py-0 px-1.5">Pendente</Badge>. Vá na aba <strong>Fila Geral</strong> e clique no botão <strong className="text-primary font-semibold">Assumir</strong> para trazer o projeto para sua fila.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Passo 2 */}
+                <div className="flex gap-3 items-start p-2.5 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/10">
+                  <div className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950/30 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">2</div>
+                  <div className="flex-1 space-y-1">
+                    <p className="font-bold text-xs text-foreground">Execução da Conversão</p>
+                    <p className="text-muted-foreground leading-normal">
+                      O projeto passa para <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-[10px] py-0 px-1.5">Em Andamento</Badge> na aba <strong>Minha Fila</strong>. Utilize o botão <strong className="text-foreground font-semibold">Ver Publicações</strong> no canto do card para postar logs de progresso, observações e anexar arquivos.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Passo 3 */}
+                <div className="flex gap-3 items-start p-2.5 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/10">
+                  <div className="w-5 h-5 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-950/30 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">3</div>
+                  <div className="flex-1 space-y-1">
+                    <p className="font-bold text-xs text-foreground">Envio para Homologação</p>
+                    <p className="text-muted-foreground leading-normal">
+                      Ao finalizar a importação/validação primária, clique no botão <strong className="text-primary font-semibold">Enviar p/ Homologação</strong>. O status muda para <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 text-[10px] py-0 px-1.5">Aguard. Homologação</Badge>, notificando o implantador responsável.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Passo 4 */}
+                <div className="flex gap-3 items-start p-2.5 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/10">
+                  <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">4</div>
+                  <div className="flex-1 space-y-1">
+                    <p className="font-bold text-xs text-foreground">Homologação e Conclusão</p>
+                    <p className="text-muted-foreground leading-normal">
+                      O implantador valida os dados. Se aprovado, ele clica em <strong className="text-emerald-600 font-semibold">Aprovar Homologação</strong> mudando o status para <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-[10px] py-0 px-1.5">Concluído</Badge>. Se houver falhas, muda para <Badge variant="outline" className="bg-red-50 text-red-750 border-red-200 text-[10px] py-0 px-1.5">Com Inconsistências</Badge> e o projeto retorna para o analista.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Pendências de Conversão */}
+            <div className="space-y-2.5 border-t border-slate-100 dark:border-slate-800 pt-3">
+              <h3 className="font-bold text-xs uppercase tracking-wider text-red-600 dark:text-red-400 flex items-center gap-1.5">
+                <AlertCircle className="h-4 w-4 text-red-500 animate-pulse" />
+                ⚠️ Pendências de Conversão (Erros no uso prático)
+              </h3>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Quando a conversão e implantação já foram finalizadas há tempos, mas o cliente detecta erros de saldo ou divergências de dados ao usar o sistema no dia a dia:
+              </p>
+              
+              <ul className="list-disc pl-5 text-xs text-muted-foreground space-y-1.5">
+                <li><strong>Onde Reportar:</strong> As pendências são registradas diretamente pelo time de conversão clicando no botão <strong className="text-primary font-semibold">Relatar Pendência</strong> no topo da aba de <strong>Pendências</strong> nesta tela.</li>
+                <li><strong>Acompanhamento Centralizado:</strong> O time de conversão monitora e gerencia as pendências criadas na aba <strong>Pendências</strong> desta tela.</li>
+                <li><strong>Fluxo de Resolução:</strong> Analistas podem assumir a pendência, delegá-la para outro colega ou marcá-la como resolvida fornecendo notas de solução.</li>
+                <li><strong>Timeline do Cliente:</strong> O cadastro e a resolução de pendências inserem eventos automaticamente na linha do tempo geral do cliente para fins de auditoria histórica.</li>
+              </ul>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
