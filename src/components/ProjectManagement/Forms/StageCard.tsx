@@ -43,6 +43,7 @@ interface StageCardProps {
   // Custom injections
   extraHeaderField?: React.ReactNode;
   canEditProjects?: boolean;
+  automationNotice?: string;
 }
 
 export function StageCard({
@@ -62,6 +63,7 @@ export function StageCard({
   readinessReason = "",
   extraHeaderField,
   canEditProjects = true,
+  automationNotice,
 }: StageCardProps) {
   const getStatusColor = (s: StageStatus) => {
     switch (s) {
@@ -241,6 +243,16 @@ export function StageCard({
             </div>
           </div>
         )}
+        
+        {status === "in-progress" && automationNotice && (
+          <div className="bg-gradient-to-r from-blue-50/50 to-indigo-50/50 dark:from-blue-950/10 dark:to-indigo-950/10 p-2.5 rounded-lg border border-blue-100 dark:border-blue-900/30 flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-blue-500 shrink-0 animate-pulse" />
+            <p className="text-xs text-blue-700 dark:text-blue-400 font-medium">
+              {automationNotice}
+            </p>
+          </div>
+        )}
+
         {/* Main Controls Grid */}
         <div className={cn(
           "grid grid-cols-1 md:grid-cols-2 gap-4",
