@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
   CheckCircle2,
@@ -11,6 +12,7 @@ import {
   AlertTriangle,
   UserCheck,
   UserPlus,
+  UserMinus,
   BookOpen,
   Bold,
   Italic,
@@ -19,6 +21,7 @@ import {
   ChevronRight,
   Upload,
   ArrowLeft,
+  ExternalLink,
   History,
   Underline,
   Strikethrough,
@@ -85,10 +88,12 @@ interface ConversionQueueItem {
 }
 
 export default function ImplantadoresHomologation() {
-  const { user } = useAuth();
+  const { user, team } = useAuth();
+  const isImplantador = team === "implementation" || team === "implementer";
   const currentUserId = user?.id || "";
   const currentUserName =
     user?.user_metadata?.full_name || user?.email || "Implantador";
+  const navigate = useNavigate();
 
   const [queue, setQueue] = useState<ConversionQueueItem[]>([]);
   
@@ -213,7 +218,7 @@ export default function ImplantadoresHomologation() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [systemFilter, setSystemFilter] = useState("all");
-  const [activeTab, setActiveTab] = useState("my-queue");
+  const [activeTab, setActiveTab] = useState("general-queue");
 
   const [verdictModalOpen, setVerdictModalOpen] = useState(false);
   const [verdictType, setVerdictType] = useState<"approve" | "issues" | null>(null);
@@ -370,6 +375,43 @@ export default function ImplantadoresHomologation() {
     } catch (err) {
       console.error("Error assuming homologation:", err);
       toast.error("Erro ao assumir homologação");
+    }
+  };
+
+  // Action: Release homologation back to queue
+  const handleRelease = async (item: ConversionQueueItem) => {
+    try {
+      const { error: queueError } = await supabase
+        .from("conversion_queue")
+        .update({
+          homologation_analyst: null,
+          homologation_analyst_name: null,
+          queue_status: "awaiting_homologation",
+        })
+        .eq("id", item.id);
+
+      if (queueError) throw queueError;
+
+      // Log to homologation_events
+      const { error: logError } = await supabase
+        .from("homologation_events")
+        .insert({
+          project_id: item.projectId,
+          from_status: item.queueStatus,
+          to_status: "awaiting_homologation",
+          performed_by: currentUserId,
+          performed_by_name: currentUserName,
+          notes: "Homologação devolvida para a fila geral.",
+          issues_count: 0,
+        });
+
+      if (logError) console.error("Error logging event:", logError);
+
+      toast.success("Homologação devolvida para a fila geral.");
+      fetchQueue();
+    } catch (err) {
+      console.error("Error releasing homologation:", err);
+      toast.error("Erro ao devolver homologação");
     }
   };
 
@@ -666,7 +708,7 @@ export default function ImplantadoresHomologation() {
   };
 
   // Render Queue Cards
-  const renderItemCard = (item: ConversionQueueItem) => {
+  const renderItemCard = (item: ConversionQueueItem, mode: "action" | "readonly" = "action") => {
     const isMine = item.homologationAnalyst === currentUserId;
     const isUnassigned = !item.homologationAnalyst;
     const daysInQueue = Math.floor(
@@ -678,9 +720,17 @@ export default function ImplantadoresHomologation() {
         key={item.id}
         className={cn(
           "transition-all duration-300 border-l-4 hover:shadow-md",
-          isUnassigned && "border-l-amber-500",
-          isMine && "border-l-primary",
-          !isMine && !isUnassigned && "border-l-slate-350 dark:border-l-slate-800"
+          mode === "action"
+            ? cn(
+                isUnassigned && "border-l-amber-500",
+                isMine && "border-l-primary",
+                !isMine && !isUnassigned && "border-l-slate-350 dark:border-l-slate-800"
+              )
+            : cn(
+                isUnassigned && "border-l-amber-500/60",
+                isMine && "border-l-primary/60",
+                !isMine && !isUnassigned && "border-l-slate-300 dark:border-l-slate-800"
+              )
         )}
       >
         <CardContent className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -734,33 +784,65 @@ export default function ImplantadoresHomologation() {
           <div className="flex items-center justify-end gap-2 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 md:border-l md:pl-4 border-slate-100 dark:border-slate-800">
             <span className="text-xs text-muted-foreground mr-2 font-medium">{daysInQueue}d na fila</span>
             
-            {isUnassigned ? (
-              <Button
-                size="sm"
-                onClick={() => handleAssume(item)}
-                className="bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs h-9 flex items-center gap-1.5"
-              >
-                <UserPlus className="h-3.5 w-3.5" />
-                Assumir
-              </Button>
-            ) : isMine ? (
-              <Button
-                size="sm"
-                onClick={() => setSelectedItem(item)}
-                className="bg-primary hover:bg-primary/95 text-primary-foreground font-semibold text-xs h-9 flex items-center gap-1.5"
-              >
-                <BookOpen className="h-3.5 w-3.5" />
-                Validar
-              </Button>
-            ) : (
-              <Button
-                size="sm"
-                variant="outline"
-                disabled
-                className="text-xs h-9"
-              >
-                Atribuído a {item.homologationAnalystName?.split(" ")[0]}
-              </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => navigate(`/projects/${item.projectId}`)}
+              className="text-xs h-9 flex items-center gap-1.5 text-muted-foreground hover:text-foreground"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              Detalhes
+            </Button>
+
+            {mode === "action" && (
+              <>
+                {isUnassigned ? (
+                  isImplantador ? (
+                    <Button
+                      size="sm"
+                      onClick={() => handleAssume(item)}
+                      className="bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs h-9 flex items-center gap-1.5"
+                    >
+                      <UserPlus className="h-3.5 w-3.5" />
+                      Assumir
+                    </Button>
+                  ) : (
+                    <Badge variant="outline" className="text-xs h-9 flex items-center gap-1.5 px-3 bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/10 dark:text-amber-400">
+                      <Clock className="h-3.5 w-3.5" />
+                      Aguardando Implantador
+                    </Badge>
+                  )
+                ) : isMine ? (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleRelease(item)}
+                      className="text-xs h-9 flex items-center gap-1.5 border-slate-300 text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
+                    >
+                      <UserMinus className="h-3.5 w-3.5" />
+                      Devolver
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => setSelectedItem(item)}
+                      className="bg-primary hover:bg-primary/95 text-primary-foreground font-semibold text-xs h-9 flex items-center gap-1.5"
+                    >
+                      <BookOpen className="h-3.5 w-3.5" />
+                      Validar
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled
+                    className="text-xs h-9"
+                  >
+                    Atribuído a {item.homologationAnalystName?.split(" ")[0]}
+                  </Button>
+                )}
+              </>
             )}
           </div>
         </CardContent>
@@ -1143,20 +1225,22 @@ export default function ImplantadoresHomologation() {
             className="flex-1 flex flex-col overflow-hidden px-6 pt-4"
           >
             <TabsList className="mb-4 flex-shrink-0">
-              <TabsTrigger value="my-queue" className="gap-2 relative">
-                Minha Fila
-                {myQueue.length > 0 && (
-                  <span className="flex items-center gap-1.5">
-                    <Badge variant="secondary" className="ml-1 bg-primary text-white hover:bg-primary">
-                      {myQueue.length}
-                    </Badge>
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+              {isImplantador && (
+                <TabsTrigger value="my-queue" className="gap-2 relative">
+                  Minha Fila
+                  {myQueue.length > 0 && (
+                    <span className="flex items-center gap-1.5">
+                      <Badge variant="secondary" className="ml-1 bg-primary text-white hover:bg-primary">
+                        {myQueue.length}
+                      </Badge>
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                      </span>
                     </span>
-                  </span>
-                )}
-              </TabsTrigger>
+                  )}
+                </TabsTrigger>
+              )}
               <TabsTrigger value="general-queue" className="gap-2 relative">
                 Fila Geral (Todos)
                 {generalQueue.length > 0 && (
@@ -1194,7 +1278,7 @@ export default function ImplantadoresHomologation() {
                     </p>
                   </Card>
                 ) : (
-                  myQueue.map(renderItemCard)
+                  myQueue.map((item) => renderItemCard(item, "action"))
                 )}
               </TabsContent>
 
@@ -1215,7 +1299,7 @@ export default function ImplantadoresHomologation() {
                     </p>
                   </Card>
                 ) : (
-                  generalQueue.map(renderItemCard)
+                  generalQueue.map((item) => renderItemCard(item, "readonly"))
                 )}
               </TabsContent>
             </div>
