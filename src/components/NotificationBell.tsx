@@ -52,10 +52,7 @@ export function NotificationBell() {
 
   const handleOpenChange = (open: boolean) => {
     if (open && unreadCount > 0) {
-      // Show toast only when there are many unread
-      if (unreadCount >= 5) {
-        toast.info(`Você tem ${unreadCount} notificações não lidas`);
-      }
+      markAllAsRead();
     }
   };
 
