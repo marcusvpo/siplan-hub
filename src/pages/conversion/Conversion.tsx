@@ -118,9 +118,20 @@ export default function Conversion() {
     () => members.filter((m) => m.area === "conversion"),
     [members],
   );
+  const IMPLANTADORES_NOMES = useMemo(() => [
+    "Rodrigo Brites",
+    "Bruno Matos",
+    "Ricardo Vieira",
+    "Rodrigo Mizuno",
+    "Julio Araujo",
+    "Fernando Cruz"
+  ], []);
+
   const implementationMembers = useMemo(
-    () => members.filter((m) => m.area === "implementation"),
-    [members],
+    () => members.filter((m) =>
+      IMPLANTADORES_NOMES.some(nome => m.name.toLowerCase().trim() === nome.toLowerCase().trim())
+    ),
+    [members, IMPLANTADORES_NOMES],
   );
 
   const { requestEngine } = useConversionEngines();
@@ -635,6 +646,7 @@ export default function Conversion() {
   const renderQueueItem = (
     item: ConversionQueueItem,
     showAssignButton = false,
+    isKanban = false,
   ) => {
     const daysInQueue = Math.floor(
       (new Date().getTime() - item.sentAt.getTime()) / (1000 * 60 * 60 * 24),
@@ -647,12 +659,268 @@ export default function Conversion() {
       <Card
         key={item.id}
         className={cn(
-          "transition-all duration-300 border-l-8 hover:-translate-y-0.5 hover:shadow-md",
+          "transition-all duration-300 border-l-[6px] hover:shadow-md bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800/80 relative overflow-hidden",
           statusVisual.borderColor
         )}
       >
-        <CardContent className="p-5">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <CardContent className={cn("p-5", isKanban ? "py-4 px-3.5 space-y-3" : "")}>
+          {isKanban ? (
+            // DESIGN KANBAN COMPACTO
+            <div className="flex flex-col gap-3">
+              {/* Linha 1: Cliente e Status */}
+              <div className="flex items-start justify-between gap-2">
+                <div className="space-y-0.5 min-w-0 flex-1">
+                  <h4 className="font-bold text-sm text-slate-850 dark:text-slate-200 leading-tight tracking-tight truncate hover:text-primary transition-colors duration-200" title={item.clientName}>
+                    {item.clientName}
+                  </h4>
+                  <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground flex-wrap font-medium">
+                    <span className="font-mono bg-slate-100 dark:bg-slate-900 border border-slate-150 dark:border-slate-800 px-1 py-0.2 rounded font-semibold text-slate-700 dark:text-slate-300">
+                      #{item.ticketNumber}
+                    </span>
+                    <span className="font-semibold text-slate-600 dark:text-slate-350">{item.systemType}</span>
+                    {item.legacySystem && (
+                      <span className="truncate max-w-[110px] text-slate-400 dark:text-slate-550 font-normal">
+                        ← {item.legacySystem}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Status Indicator Icon */}
+                <div className={cn(
+                  "flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-lg border shadow-sm",
+                  statusVisual.bgColor
+                )}>
+                  <StatusIcon className={cn(
+                    "h-3.5 w-3.5",
+                    item.queueStatus === "in_progress" && "animate-[spin_4s_linear_infinite]"
+                  )} />
+                </div>
+              </div>
+
+              {/* Linha 2: Badges (Prioridade, Status de Fila, Motor) */}
+              <div className="flex flex-wrap items-center gap-1 font-medium">
+                <Badge
+                  className={cn(
+                    "text-[9px] font-bold py-0 px-1.5 rounded-sm tracking-wider",
+                    item.priority <= 2
+                      ? "bg-red-500 text-red-50 hover:bg-red-500"
+                      : item.priority <= 4
+                        ? "bg-orange-500 text-orange-50 hover:bg-orange-500"
+                        : "bg-slate-500 text-slate-50 hover:bg-slate-500",
+                  )}
+                >
+                  P{item.priority}
+                </Badge>
+                
+                <span
+                  className={cn(
+                    "text-[9px] font-medium px-1.5 py-0.2 rounded-sm bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-150 dark:border-slate-800",
+                    daysInQueue > 5
+                      ? "text-red-650 dark:text-red-400 font-bold bg-red-50/20"
+                      : daysInQueue > 3
+                        ? "text-orange-655 dark:text-orange-455"
+                        : "",
+                  )}
+                >
+                  {daysInQueue}d na fila
+                </span>
+
+                {item.engineStatus && (
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "py-0 px-1.5 text-[9px] gap-0.5 rounded-sm border-dashed font-semibold",
+                      item.engineStatus === "pending_engine" && "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/20",
+                      item.engineStatus === "engine_in_development" && "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/20",
+                      item.engineStatus === "engine_ready" && "bg-emerald-50 text-emerald-700 border-emerald-250 dark:bg-emerald-950/20",
+                    )}
+                  >
+                    <Cog className="h-2.5 w-2.5" />
+                    {item.engineStatus === "pending_engine" && "Aguard. Extração"}
+                    {item.engineStatus === "engine_in_development" && "Motor em Dev"}
+                    {item.engineStatus === "engine_ready" && "Motor Pronto"}
+                  </Badge>
+                )}
+              </div>
+
+              {/* Linha 3: Pessoas Envolvidas (Conversor, Implantador, Remetente) */}
+              <div className="text-[10px] text-slate-500 dark:text-slate-400 space-y-0.5 pt-1.5 border-t border-dashed border-slate-150 dark:border-slate-800/80 font-medium">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {item.assignedToName ? (
+                    <span className="flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-semibold" title={`Conversor: ${item.assignedToName}`}>
+                      <UserCheck className="h-3 w-3 shrink-0 text-emerald-600" />
+                      <span>Conv: <span className="text-slate-800 dark:text-slate-200 font-semibold">{item.assignedToName}</span></span>
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-amber-600 dark:text-amber-500 font-bold animate-pulse">
+                      <Clock className="h-3 w-3 shrink-0 text-amber-500" />
+                      <span>Fila aberta (Sem analista)</span>
+                    </span>
+                  )}
+
+                  {item.homologationAnalystName && (
+                    <span className="flex items-center gap-1 text-blue-700 dark:text-blue-450 font-semibold" title={`Implantador: ${item.homologationAnalystName}`}>
+                      <User className="h-3 w-3 shrink-0 text-blue-600" />
+                      <span>Impl: <span className="text-slate-800 dark:text-slate-200 font-semibold">{item.homologationAnalystName}</span></span>
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between gap-2 pt-0.5 text-[9px] text-slate-500 dark:text-slate-400 font-medium">
+                  <span className="truncate">
+                    Enviado por: <span className="text-slate-700 dark:text-slate-300 font-semibold">{item.sentByName || "Sistema"}</span> ({formatDistanceToNow(item.sentAt, { addSuffix: false, locale: ptBR })})
+                  </span>
+                  <span className="shrink-0">
+                    Prev: <span className="text-slate-750 dark:text-slate-250 font-semibold">{item.deploymentDate ? format(new Date(item.deploymentDate), "dd/MM/yy") : "Sem prev."}</span>
+                  </span>
+                </div>
+              </div>
+
+              {/* Linha 4: Botões de Ação na base */}
+              <div className="flex gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-905 w-full">
+                {/* Action 1: Assumir (Assign to Me) */}
+                {!item.assignedTo && isConversionTeam && (
+                  <Button
+                    size="sm"
+                    className="flex-1 bg-primary hover:bg-primary/95 text-primary-foreground font-semibold flex items-center justify-center gap-1 text-[10px] h-7.5 px-2 rounded shadow-sm transition-all duration-200 active:scale-95"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAssign(item);
+                    }}
+                  >
+                    <UserPlus className="h-3 w-3" />
+                    Assumir
+                  </Button>
+                )}
+
+                {item.queueStatus === "in_progress" && (
+                  <Button
+                    size="sm"
+                    className="flex-1 bg-primary hover:bg-primary/95 text-primary-foreground font-semibold flex items-center justify-center gap-1 text-[10px] h-7.5 px-2 rounded shadow-sm transition-all duration-200 active:scale-95"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setHomologationDialog({ open: true, item });
+                    }}
+                  >
+                    <Send className="h-3 w-3" />
+                    Enviar Homologação
+                  </Button>
+                )}
+
+                {item.queueStatus === "homologation_issues" && (
+                  <Button
+                    size="sm"
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold flex items-center justify-center gap-1 text-[10px] h-7.5 px-2 rounded shadow-sm transition-all duration-200 active:scale-95"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDrawerDefaultTab("homologations");
+                      setDrawerItem(item);
+                    }}
+                  >
+                    <AlertCircle className="h-3 w-3" />
+                    Inconsistências
+                  </Button>
+                )}
+
+                {item.queueStatus === "done" && item.homologationStatus === "approved" && (
+                  <Button
+                    size="sm"
+                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold flex items-center justify-center gap-1 text-[10px] h-7.5 px-2 rounded shadow-sm transition-all duration-200 active:scale-95"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDrawerDefaultTab("homologations");
+                      setDrawerItem(item);
+                    }}
+                  >
+                    <CheckCircle2 className="h-3 w-3" />
+                    Parecer Final
+                  </Button>
+                )}
+
+                {/* Feed Button */}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className={cn(
+                    "border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 flex items-center justify-center text-[10px] h-7.5 rounded shadow-sm font-semibold",
+                    (!item.assignedTo && isConversionTeam) || 
+                    (item.queueStatus === "in_progress") || 
+                    (item.queueStatus === "homologation_issues") || 
+                    (item.queueStatus === "done" && item.homologationStatus === "approved")
+                      ? "w-8 px-0 shrink-0" 
+                      : "flex-1 px-2"
+                  )}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDrawerDefaultTab("posts");
+                    setDrawerItem(item);
+                  }}
+                  title="Ver publicações e posts"
+                >
+                  <MessageSquare className="h-3.5 w-3.5 text-primary" />
+                  {(!item.assignedTo && isConversionTeam) || 
+                  (item.queueStatus === "in_progress") || 
+                  (item.queueStatus === "homologation_issues") || 
+                  (item.queueStatus === "done" && item.homologationStatus === "approved")
+                    ? "" 
+                    : <span className="ml-1">Feed</span>
+                  }
+                </Button>
+
+                {/* Dropdown de Mais Opções no Kanban */}
+                {isConversionTeam && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7.5 w-8 px-0 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 rounded shrink-0"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <MoreVertical className="h-3.5 w-3.5 text-muted-foreground" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="text-xs">
+                      {!item.engineStatus && (
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEngineDialog({ open: true, item });
+                          }}
+                        >
+                          <Cog className="h-3.5 w-3.5 mr-1.5" />
+                          Enviar p/ Conversor
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setTransferDialog({ open: true, item });
+                        }}
+                      >
+                        <ArrowRight className="h-3.5 w-3.5 mr-1.5" />
+                        Transferir
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm(`Remover "${item.clientName}"?`)) {
+                            removeFromQueue(item.id, item.projectId);
+                          }
+                        }}
+                        className="text-red-655 focus:text-red-655 focus:bg-red-50 dark:focus:bg-red-950/20"
+                      >
+                        <AlertCircle className="h-3.5 w-3.5 mr-1.5" />
+                        Remover da Fila
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             {/* Left Column: Info & Indicators */}
             <div className="flex items-start gap-4 min-w-0 flex-1">
               {/* Status Icon Badge */}
@@ -951,6 +1219,7 @@ export default function Conversion() {
               </DropdownMenu>
             </div>
           </div>
+          )}
         </CardContent>
       </Card>
     );
@@ -1360,128 +1629,143 @@ export default function Conversion() {
                 </div>
               </div>
             ) : (
-              <div className="flex gap-4 overflow-x-auto pb-4 pt-1 flex-1 items-stretch select-none h-[calc(100vh-290px)] min-h-[500px]">
-                {/* 1. Pendentes Column */}
-                <div className="w-[300px] shrink-0 bg-slate-50/70 dark:bg-slate-900/30 rounded-xl p-3 border border-slate-150 dark:border-slate-800/80 flex flex-col h-full shadow-inner">
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-200/50 dark:border-slate-850">
+              <div className="space-y-6 pb-6 overflow-y-auto flex-1 pr-1 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
+                {/* 1. Pendentes Section */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-slate-800">
                     <div className="flex items-center gap-2">
                       <div className="w-2.5 h-2.5 rounded-full bg-slate-400 dark:bg-slate-600 animate-pulse" />
-                      <span className="font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                        Pendentes
+                      <span className="font-extrabold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                        1. Pendentes
                       </span>
+                      <Badge variant="outline" className="text-[10px] font-bold px-1.5 py-0 bg-slate-55 text-slate-600 border-slate-200 dark:bg-slate-900 dark:text-slate-400">
+                        {filterKanbanItems(queue.filter((i) => i.queueStatus === "pending")).length}
+                      </Badge>
                     </div>
-                    <Badge variant="secondary" className="text-[10px] font-bold px-1.5 py-0">
-                      {filterKanbanItems(queue.filter((i) => i.queueStatus === "pending")).length}
-                    </Badge>
                   </div>
-                  
-                  <div className="flex-1 overflow-y-auto space-y-2.5 mt-3 pr-1 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
+                  <div className="flex gap-4 overflow-x-auto pb-3 pt-1 w-full scrollbar-thin scrollbar-thumb-slate-250 dark:scrollbar-thumb-slate-800">
                     {filterKanbanItems(queue.filter((i) => i.queueStatus === "pending")).length === 0 ? (
-                      <div className="text-center py-8 text-muted-foreground text-xs bg-white dark:bg-slate-950/20 border border-dashed border-slate-200 dark:border-slate-800/50 rounded-lg p-4">
-                        Nenhuma pendente
+                      <div className="text-center py-6 text-muted-foreground text-xs bg-slate-50/30 dark:bg-slate-900/10 border border-dashed border-slate-200 dark:border-slate-800/50 rounded-lg w-full p-4 flex items-center justify-center min-h-[80px]">
+                        Nenhuma demanda pendente
                       </div>
                     ) : (
-                      filterKanbanItems(queue.filter((i) => i.queueStatus === "pending")).map(renderKanbanCard)
+                      filterKanbanItems(queue.filter((i) => i.queueStatus === "pending")).map((item) => (
+                        <div key={item.id} className="w-[380px] shrink-0">
+                          {renderQueueItem(item, !item.assignedTo, true)}
+                        </div>
+                      ))
                     )}
                   </div>
                 </div>
 
-                {/* 2. Em Andamento Column */}
-                <div className="w-[300px] shrink-0 bg-slate-50/70 dark:bg-slate-900/30 rounded-xl p-3 border border-slate-150 dark:border-slate-800/80 flex flex-col h-full shadow-inner">
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-200/50 dark:border-slate-850">
+                {/* 2. Em Andamento Section */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-slate-800">
                     <div className="flex items-center gap-2">
                       <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-                      <span className="font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                        Em Andamento
+                      <span className="font-extrabold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                        2. Em Andamento
                       </span>
+                      <Badge variant="outline" className="text-[10px] font-bold px-1.5 py-0 bg-blue-50 text-blue-650 border-blue-200 dark:bg-blue-950/20 dark:text-blue-400">
+                        {filterKanbanItems(queue.filter((i) => i.queueStatus === "in_progress")).length}
+                      </Badge>
                     </div>
-                    <Badge variant="secondary" className="text-[10px] font-bold px-1.5 py-0">
-                      {filterKanbanItems(queue.filter((i) => i.queueStatus === "in_progress")).length}
-                    </Badge>
                   </div>
-                  
-                  <div className="flex-1 overflow-y-auto space-y-2.5 mt-3 pr-1 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
+                  <div className="flex gap-4 overflow-x-auto pb-3 pt-1 w-full scrollbar-thin scrollbar-thumb-slate-250 dark:scrollbar-thumb-slate-800">
                     {filterKanbanItems(queue.filter((i) => i.queueStatus === "in_progress")).length === 0 ? (
-                      <div className="text-center py-8 text-muted-foreground text-xs bg-white dark:bg-slate-950/20 border border-dashed border-slate-200 dark:border-slate-800/50 rounded-lg p-4">
-                        Nenhuma em andamento
+                      <div className="text-center py-6 text-muted-foreground text-xs bg-slate-50/30 dark:bg-slate-900/10 border border-dashed border-slate-200 dark:border-slate-800/50 rounded-lg w-full p-4 flex items-center justify-center min-h-[80px]">
+                        Nenhuma conversão em andamento
                       </div>
                     ) : (
-                      filterKanbanItems(queue.filter((i) => i.queueStatus === "in_progress")).map(renderKanbanCard)
+                      filterKanbanItems(queue.filter((i) => i.queueStatus === "in_progress")).map((item) => (
+                        <div key={item.id} className="w-[380px] shrink-0">
+                          {renderQueueItem(item, !item.assignedTo, true)}
+                        </div>
+                      ))
                     )}
                   </div>
                 </div>
 
-                {/* 3. Em Homologação Column */}
-                <div className="w-[300px] shrink-0 bg-slate-50/70 dark:bg-slate-900/30 rounded-xl p-3 border border-slate-150 dark:border-slate-800/80 flex flex-col h-full shadow-inner">
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-200/50 dark:border-slate-850">
+                {/* 3. Em Homologação Section */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-slate-800">
                     <div className="flex items-center gap-2">
                       <div className="w-2.5 h-2.5 rounded-full bg-purple-500" />
-                      <span className="font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                        Homologação
+                      <span className="font-extrabold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                        3. Em Homologação
                       </span>
+                      <Badge variant="outline" className="text-[10px] font-bold px-1.5 py-0 bg-purple-50 text-purple-650 border-purple-200 dark:bg-purple-950/20 dark:text-purple-400">
+                        {filterKanbanItems(queue.filter((i) => i.queueStatus === "awaiting_homologation" || i.queueStatus === "homologation")).length}
+                      </Badge>
                     </div>
-                    <Badge variant="secondary" className="text-[10px] font-bold px-1.5 py-0">
-                      {filterKanbanItems(queue.filter((i) => i.queueStatus === "awaiting_homologation" || i.queueStatus === "homologation")).length}
-                    </Badge>
                   </div>
-                  
-                  <div className="flex-1 overflow-y-auto space-y-2.5 mt-3 pr-1 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
+                  <div className="flex gap-4 overflow-x-auto pb-3 pt-1 w-full scrollbar-thin scrollbar-thumb-slate-250 dark:scrollbar-thumb-slate-800">
                     {filterKanbanItems(queue.filter((i) => i.queueStatus === "awaiting_homologation" || i.queueStatus === "homologation")).length === 0 ? (
-                      <div className="text-center py-8 text-muted-foreground text-xs bg-white dark:bg-slate-950/20 border border-dashed border-slate-200 dark:border-slate-800/50 rounded-lg p-4">
-                        Nenhuma em homologação
+                      <div className="text-center py-6 text-muted-foreground text-xs bg-slate-50/30 dark:bg-slate-900/10 border border-dashed border-slate-200 dark:border-slate-800/50 rounded-lg w-full p-4 flex items-center justify-center min-h-[80px]">
+                        Nenhum projeto em homologação
                       </div>
                     ) : (
-                      filterKanbanItems(queue.filter((i) => i.queueStatus === "awaiting_homologation" || i.queueStatus === "homologation")).map(renderKanbanCard)
+                      filterKanbanItems(queue.filter((i) => i.queueStatus === "awaiting_homologation" || i.queueStatus === "homologation")).map((item) => (
+                        <div key={item.id} className="w-[380px] shrink-0">
+                          {renderQueueItem(item, !item.assignedTo, true)}
+                        </div>
+                      ))
                     )}
                   </div>
                 </div>
 
-                {/* 4. Com Inconsistências Column */}
-                <div className="w-[300px] shrink-0 bg-slate-50/70 dark:bg-slate-900/30 rounded-xl p-3 border border-slate-150 dark:border-slate-800/80 flex flex-col h-full shadow-inner">
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-200/50 dark:border-slate-850">
+                {/* 4. Com Inconsistências Section */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-slate-800">
                     <div className="flex items-center gap-2">
                       <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
-                      <span className="font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                        Inconsistências
+                      <span className="font-extrabold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                        4. Com Inconsistências
                       </span>
+                      <Badge variant="outline" className="text-[10px] font-bold px-1.5 py-0 bg-red-50 text-red-655 border-red-205 dark:bg-red-950/20 dark:text-red-400">
+                        {filterKanbanItems(queue.filter((i) => i.queueStatus === "homologation_issues")).length}
+                      </Badge>
                     </div>
-                    <Badge variant="secondary" className="text-[10px] font-bold px-1.5 py-0">
-                      {filterKanbanItems(queue.filter((i) => i.queueStatus === "homologation_issues")).length}
-                    </Badge>
                   </div>
-                  
-                  <div className="flex-1 overflow-y-auto space-y-2.5 mt-3 pr-1 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
+                  <div className="flex gap-4 overflow-x-auto pb-3 pt-1 w-full scrollbar-thin scrollbar-thumb-slate-250 dark:scrollbar-thumb-slate-800">
                     {filterKanbanItems(queue.filter((i) => i.queueStatus === "homologation_issues")).length === 0 ? (
-                      <div className="text-center py-8 text-muted-foreground text-xs bg-white dark:bg-slate-950/20 border border-dashed border-slate-200 dark:border-slate-800/50 rounded-lg p-4">
-                        Nenhuma inconsistência
+                      <div className="text-center py-6 text-muted-foreground text-xs bg-slate-50/30 dark:bg-slate-900/10 border border-dashed border-slate-200 dark:border-slate-800/50 rounded-lg w-full p-4 flex items-center justify-center min-h-[80px]">
+                        Nenhum projeto com inconsistências
                       </div>
                     ) : (
-                      filterKanbanItems(queue.filter((i) => i.queueStatus === "homologation_issues")).map(renderKanbanCard)
+                      filterKanbanItems(queue.filter((i) => i.queueStatus === "homologation_issues")).map((item) => (
+                        <div key={item.id} className="w-[380px] shrink-0">
+                          {renderQueueItem(item, !item.assignedTo, true)}
+                        </div>
+                      ))
                     )}
                   </div>
                 </div>
 
-                {/* 5. Concluídos Column */}
-                <div className="w-[300px] shrink-0 bg-slate-50/70 dark:bg-slate-900/30 rounded-xl p-3 border border-slate-150 dark:border-slate-800/80 flex flex-col h-full shadow-inner">
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-200/50 dark:border-slate-850">
+                {/* 5. Concluídos Section */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-slate-800">
                     <div className="flex items-center gap-2">
                       <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                      <span className="font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                        Concluídos
+                      <span className="font-extrabold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                        5. Concluídos
                       </span>
+                      <Badge variant="outline" className="text-[10px] font-bold px-1.5 py-0 bg-emerald-50 text-emerald-650 border-emerald-250 dark:bg-emerald-950/20 dark:text-emerald-400">
+                        {filterKanbanItems(queue.filter((i) => i.queueStatus === "done")).length}
+                      </Badge>
                     </div>
-                    <Badge variant="secondary" className="text-[10px] font-bold px-1.5 py-0">
-                      {filterKanbanItems(queue.filter((i) => i.queueStatus === "done")).length}
-                    </Badge>
                   </div>
-                  
-                  <div className="flex-1 overflow-y-auto space-y-2.5 mt-3 pr-1 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
+                  <div className="flex gap-4 overflow-x-auto pb-3 pt-1 w-full scrollbar-thin scrollbar-thumb-slate-250 dark:scrollbar-thumb-slate-800">
                     {filterKanbanItems(queue.filter((i) => i.queueStatus === "done")).length === 0 ? (
-                      <div className="text-center py-8 text-muted-foreground text-xs bg-white dark:bg-slate-950/20 border border-dashed border-slate-200 dark:border-slate-800/50 rounded-lg p-4">
-                        Nenhum concluído
+                      <div className="text-center py-6 text-muted-foreground text-xs bg-slate-50/30 dark:bg-slate-900/10 border border-dashed border-slate-200 dark:border-slate-800/50 rounded-lg w-full p-4 flex items-center justify-center min-h-[80px]">
+                        Nenhuma conversão finalizada
                       </div>
                     ) : (
-                      filterKanbanItems(queue.filter((i) => i.queueStatus === "done")).map(renderKanbanCard)
+                      filterKanbanItems(queue.filter((i) => i.queueStatus === "done")).map((item) => (
+                        <div key={item.id} className="w-[380px] shrink-0">
+                          {renderQueueItem(item, !item.assignedTo, true)}
+                        </div>
+                      ))
                     )}
                   </div>
                 </div>
@@ -1584,13 +1868,13 @@ export default function Conversion() {
             {transferDialog.item && (
               <Button
                 variant="ghost"
-                className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                className="text-red-550 hover:text-red-650 hover:bg-red-50 dark:hover:bg-red-900/20 font-semibold"
                 onClick={() => {
-                  if (
-                    confirm(
-                      `Tem certeza que deseja remover "${transferDialog.item?.clientName}" da fila?`,
-                    )
-                  ) {
+                  const isAssigned = !!transferDialog.item?.assignedTo;
+                  const confirmMsg = isAssigned
+                    ? `Deseja desassumir "${transferDialog.item?.clientName}" e devolvê-lo para a fila de Pendentes?`
+                    : `Tem certeza que deseja remover "${transferDialog.item?.clientName}" da fila?`;
+                  if (confirm(confirmMsg)) {
                     removeFromQueue(
                       transferDialog.item.id,
                       transferDialog.item.projectId,
@@ -1599,7 +1883,7 @@ export default function Conversion() {
                   }
                 }}
               >
-                Remover da Fila
+                {transferDialog.item?.assignedTo ? "Devolver para Pendentes" : "Remover da Fila"}
               </Button>
             )}
             <div className="flex gap-2">

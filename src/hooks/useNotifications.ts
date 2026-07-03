@@ -19,6 +19,9 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
     try {
       setLoading(true);
       
+      const twoWeeksAgo = new Date();
+      twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+      
       // Build OR filter for user_id and team
       // Users should see: their own notifications OR team-wide notifications for their team
       const orFilters: string[] = [];
@@ -45,6 +48,7 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
           read_at,
           projects(client_name)
         `)
+        .gte('created_at', twoWeeksAgo.toISOString())
         .order('created_at', { ascending: false })
         .limit(limit);
 
@@ -104,19 +108,22 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
 
   const markAllAsRead = useCallback(async () => {
     try {
-      let query = supabase
-        .from('notifications')
-        .update({ read: true, read_at: new Date().toISOString() })
-        .eq('read', false);
-
+      const orFilters: string[] = [];
       if (userId) {
-        query = query.eq('user_id', userId);
+        orFilters.push(`user_id.eq.${userId}`);
       }
       if (team) {
-        query = query.eq('team', team);
+        orFilters.push(`team.eq.${team}`);
       }
 
-      const { error: updateError } = await query;
+      if (orFilters.length === 0) return;
+
+      const { error: updateError } = await supabase
+        .from('notifications')
+        .update({ read: true, read_at: new Date().toISOString() })
+        .eq('read', false)
+        .or(orFilters.join(','));
+
       if (updateError) throw updateError;
 
       setNotifications((prev) =>
@@ -176,10 +183,16 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
           event: 'INSERT',
           schema: 'public',
           table: 'notifications',
-          filter: team ? `team=eq.${team}` : undefined,
         },
         (payload) => {
           const newNotif = payload.new as Record<string, unknown>;
+          
+          // Verify if the notification is for the current user or team
+          const belongsToUser = userId && newNotif.user_id === userId;
+          const belongsToTeam = team && newNotif.team === team;
+          
+          if (!belongsToUser && !belongsToTeam) return;
+
           const mapped: Notification = {
             id: newNotif.id as string,
             userId: newNotif.user_id as string | undefined,
@@ -201,7 +214,7 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [fetchNotifications, team]);
+  }, [fetchNotifications, userId, team]);
 
   return {
     notifications,

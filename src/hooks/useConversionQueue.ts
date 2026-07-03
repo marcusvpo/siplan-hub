@@ -477,53 +477,95 @@ export function useConversionQueue(options: UseConversionQueueOptions = {}) {
     [queue]
   );
 
-  // Remove from queue
+  // Remove or unassign from queue
   const removeFromQueue = useCallback(
     async (queueId: string, projectId: string) => {
       try {
-        // Delete from conversion_queue
-        const { error: deleteError } = await supabase
+        // Fetch current item to check if it's assigned
+        const { data: queueItem } = await supabase
           .from("conversion_queue")
-          .delete()
-          .eq("id", queueId);
+          .select("assigned_to, queue_status")
+          .eq("id", queueId)
+          .single();
 
-        if (deleteError) throw deleteError;
+        if (queueItem && queueItem.assigned_to) {
+          // If assigned, we return it to the Pending state (unassign)
+          const { error: queueError } = await supabase
+            .from("conversion_queue")
+            .update({
+              assigned_to: null,
+              assigned_to_name: null,
+              assigned_at: null,
+              started_at: null,
+              queue_status: "pending",
+            })
+            .eq("id", queueId);
 
-        // Update project to reset conversion state
-        // We set conversion_status back to 'todo' or keep it as is?
-        // Usually if we remove from queue, we are cancelling the process, so 'todo' makes sense.
-        const { error: projectError } = await supabase
-          .from("projects")
-          .update({
-            conversion_sent_at: null,
-            conversion_status: "todo",
-            conversion_responsible: null,
-            conversion_start_date: null,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", projectId);
+          if (queueError) throw queueError;
 
-        if (projectError) {
-          console.error(
-            "Error updating project on removal from queue:",
-            projectError
+          // Update project to remove the responsible person but keep it in-progress
+          const { error: projectError } = await supabase
+            .from("projects")
+            .update({
+              conversion_responsible: null,
+              conversion_start_date: null,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", projectId);
+
+          if (projectError) {
+            console.error("Error updating project on queue reset:", projectError);
+          }
+
+          activityLogger.logConversionAction(
+            "conversion_queue_unassigned",
+            projectId,
+            "",
+            { queueId }
           );
+
+          await fetchQueue();
+          toast.success("Conversão devolvida para a fila de Pendentes");
+          return true;
+        } else {
+          // If not assigned, delete completely from queue
+          const { error: deleteError } = await supabase
+            .from("conversion_queue")
+            .delete()
+            .eq("id", queueId);
+
+          if (deleteError) throw deleteError;
+
+          // Update project to reset conversion state
+          const { error: projectError } = await supabase
+            .from("projects")
+            .update({
+              conversion_sent_at: null,
+              conversion_status: "todo",
+              conversion_responsible: null,
+              conversion_start_date: null,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", projectId);
+
+          if (projectError) {
+            console.error("Error updating project on removal from queue:", projectError);
+          }
+
+          activityLogger.logConversionAction(
+            "conversion_queue_removed",
+            projectId,
+            "",
+            { queueId }
+          );
+
+          await fetchQueue();
+          toast.success("Removido da fila com sucesso");
+          return true;
         }
-
-        // Log the action
-        activityLogger.logConversionAction(
-          "conversion_queue_removed",
-          projectId,
-          "",
-          { queueId }
-        );
-
-        await fetchQueue();
-        toast.success("Removido da fila com sucesso");
-        return true;
       } catch (err) {
-        console.error("Error removing from queue:", err);
-        toast.error("Erro ao remover da fila");
+        console.error("Error updating queue item:", err);
+        toast.error("Erro ao atualizar fila de conversão");
         return false;
       }
     },
