@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -362,6 +362,7 @@ function TransicaoPlaceholder() {
   const queryClient = useQueryClient();
   const { members = [] } = useTeamMembers();
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
+  const [searchParams] = useSearchParams();
   const [projectSelectOpen, setProjectSelectOpen] = useState(false);
   const [showPgAccess, setShowPgAccess] = useState(false);
   const [showSoPassword, setShowSoPassword] = useState(false);
@@ -387,6 +388,14 @@ function TransicaoPlaceholder() {
       [sectionKey]: !prev[sectionKey]
     }));
   };
+
+  // Pre-select project when deep-linked via ?project=<id> (e.g. from the project detail shortcut)
+  useEffect(() => {
+    const pid = searchParams.get("project");
+    if (pid && !selectedProjectId) {
+      setSelectedProjectId(pid);
+    }
+  }, [searchParams, selectedProjectId]);
 
   // 1. Fetch lightweight project list for selection dropdown
   const { data: projectsList = [], isLoading: isLoadingList } = useQuery({
