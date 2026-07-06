@@ -282,6 +282,19 @@ export interface ConversionStageV2 {
   lastUpdatedBy?: string;
 }
 
+export type ModelType =
+  | 'minutas'
+  | 'qualificacao_partes'
+  | 'qualificacao_imovel'
+  | 'clausulas';
+
+export const MODEL_TYPES: { value: ModelType; label: string }[] = [
+  { value: 'minutas', label: 'Minutas' },
+  { value: 'qualificacao_partes', label: 'Qualificação de Partes' },
+  { value: 'qualificacao_imovel', label: 'Qualificação de Imóvel' },
+  { value: 'clausulas', label: 'Cláusulas' },
+];
+
 export interface AttachedFile {
   id: string;
   name: string;
@@ -289,6 +302,7 @@ export interface AttachedFile {
   size: number;
   uploadedAt: string;
   isDone?: boolean;
+  modelType?: ModelType;
 }
 
 export interface ModelosEditorStageV2 {

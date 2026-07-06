@@ -21,7 +21,7 @@ import { useProjectFiles } from "@/hooks/useProjectFiles";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 import { cn } from "@/lib/utils";
-import { ProjectV2, AttachedFile, ModelosEditorStageV2 } from "@/types/ProjectV2";
+import { ProjectV2, AttachedFile, ModelosEditorStageV2, ModelType, MODEL_TYPES } from "@/types/ProjectV2";
 import { differenceInDays, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -72,9 +72,16 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
     const { uploadFile, getDownloadUrl, deleteFile: deleteStorageFile } = useProjectFiles(project.id);
     const { canUploadFiles, canDeleteFiles, canEditProjects } = usePermissions();
     const [uploadingType, setUploadingType] = useState<'sent' | 'available' | null>(null);
+    const [pendingUpload, setPendingUpload] = useState<{ type: 'sent' | 'available'; modelType: ModelType } | null>(null);
 
     const sentFileInputRef = useRef<HTMLInputElement>(null);
     const availableFileInputRef = useRef<HTMLInputElement>(null);
+
+    const triggerUpload = (type: 'sent' | 'available', modelType: ModelType) => {
+        setPendingUpload({ type, modelType });
+        const ref = type === 'sent' ? sentFileInputRef : availableFileInputRef;
+        ref.current?.click();
+    };
 
     const [viewingFullscreen, setViewingFullscreen] = useState<'sent' | 'available' | null>(null);
 
@@ -96,6 +103,7 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'sent' | 'available', currentFiles: AttachedFile[] = []) => {
         if (e.target.files && e.target.files.length > 0) {
             setUploadingType(type);
+            const modelType = pendingUpload?.modelType;
             try {
                 const filesToUpload = Array.from(e.target.files);
                 const newAttachedFiles: AttachedFile[] = [];
@@ -112,6 +120,7 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                         path: result.file_path,
                         size: result.file_size,
                         uploadedAt: result.uploaded_at,
+                        ...(modelType ? { modelType } : {}),
                     });
                 }
 
@@ -133,6 +142,7 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                 });
             } finally {
                 setUploadingType(null);
+                setPendingUpload(null);
                 if (type === 'sent' && sentFileInputRef.current) sentFileInputRef.current.value = "";
                 if (type === 'available' && availableFileInputRef.current) availableFileInputRef.current.value = "";
             }
@@ -434,6 +444,86 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
         </div>
     );
 
+    const renderCategoryBlock = (
+        type: 'sent' | 'available',
+        modelType: ModelType | null,
+        label: string,
+        catFiles: AttachedFile[],
+        allList: AttachedFile[]
+    ) => {
+        const isSent = type === 'sent';
+        return (
+            <div key={label} className={cn(
+                "rounded-md border p-2 space-y-1.5",
+                isSent
+                    ? "border-indigo-100 dark:border-indigo-900/30 bg-white/50 dark:bg-slate-900/40"
+                    : "border-emerald-100 dark:border-emerald-900/30 bg-white/50 dark:bg-slate-900/40"
+            )}>
+                <div className="flex items-center justify-between gap-2">
+                    <span className={cn(
+                        "text-[10px] font-bold uppercase tracking-wider flex items-center gap-1",
+                        isSent ? "text-indigo-600 dark:text-indigo-400" : "text-emerald-600 dark:text-emerald-400"
+                    )}>
+                        {label}
+                        <span className="opacity-60 font-semibold">({catFiles.length})</span>
+                    </span>
+                    {modelType && canUploadFiles && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className={cn(
+                                "h-6 px-1.5 text-[10px]",
+                                isSent
+                                    ? "text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/40"
+                                    : "text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/40"
+                            )}
+                            onClick={(e) => { e.preventDefault(); triggerUpload(type, modelType); }}
+                            disabled={!!uploadingType}
+                        >
+                            {uploadingType === type && pendingUpload?.modelType === modelType
+                                ? <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                                : <UploadCloud className="h-3 w-3 mr-1" />}
+                            Anexar
+                        </Button>
+                    )}
+                </div>
+                {catFiles.length === 0 ? (
+                    <div className={cn(
+                        "text-[10px] text-muted-foreground text-center py-1.5 rounded border border-dashed",
+                        isSent ? "border-indigo-200/60 dark:border-indigo-800/40" : "border-emerald-200/60 dark:border-emerald-800/40"
+                    )}>
+                        Nenhum modelo nesta categoria.
+                    </div>
+                ) : (
+                    <div className="space-y-1">
+                        {catFiles.map(file => renderFileRow(file, type, allList))}
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    const renderCategorizedFiles = (type: 'sent' | 'available', filteredList: AttachedFile[], allList: AttachedFile[]) => {
+        const uncategorized = filteredList.filter(
+            f => !f.modelType || !MODEL_TYPES.some(m => m.value === f.modelType)
+        );
+        return (
+            <div className="space-y-2">
+                {MODEL_TYPES.map(cat =>
+                    renderCategoryBlock(
+                        type,
+                        cat.value,
+                        cat.label,
+                        filteredList.filter(f => f.modelType === cat.value),
+                        allList
+                    )
+                )}
+                {uncategorized.length > 0 &&
+                    renderCategoryBlock(type, null, 'Sem categoria', uncategorized, allList)}
+            </div>
+        );
+    };
+
     const renderProgress = () => {
         if (!stage.sentFiles || stage.sentFiles.length === 0) return null;
 
@@ -489,25 +579,8 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
                             </Button>
-                            {canUploadFiles && (
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-7.5 text-[11px] border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/30"
-                                onClick={(e) => { e.preventDefault(); sentFileInputRef.current?.click(); }}
-                                disabled={!!uploadingType}
-                            >
-                                {uploadingType === 'sent' ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <UploadCloud className="h-3 w-3 mr-1" />}
-                                Anexar
-                            </Button>
-                            )}
                         </div>
                     </div>
-                    {(!stage.sentFiles || stage.sentFiles.length === 0) && (
-                        <div className="text-xs text-muted-foreground dark:text-slate-400 text-center py-4 bg-white/50 dark:bg-slate-900/50 rounded-lg border border-dashed border-indigo-200 dark:border-indigo-800/50 flex-1 flex items-center justify-center">
-                            Nenhum modelo do cliente anexado.
-                        </div>
-                    )}
                     {stage.sentFiles && stage.sentFiles.length > 0 && (
                         <div className="relative mb-1.5 shrink-0">
                             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-indigo-400" />
@@ -519,20 +592,10 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                             />
                         </div>
                     )}
-                    {stage.sentFiles && stage.sentFiles.length > 0 && (
-                        <>
-                            {renderSelectionHeader('sent', filteredSentFiles)}
-                            {filteredSentFiles.length === 0 ? (
-                                <div className="text-xs text-muted-foreground text-center py-4 bg-white/50 dark:bg-slate-900/50 rounded-lg border border-dashed border-indigo-200 dark:border-indigo-800/50 flex-1 flex items-center justify-center">
-                                    Nenhum modelo correspondente encontrado.
-                                </div>
-                            ) : (
-                                <div className="flex-1 overflow-y-auto pr-1.5 space-y-1 scrollbar-thin scrollbar-thumb-indigo-200 scrollbar-track-transparent hover:scrollbar-thumb-indigo-300 transition-colors">
-                                    {filteredSentFiles.map(file => renderFileRow(file, 'sent', stage.sentFiles!))}
-                                </div>
-                            )}
-                        </>
-                    )}
+                    {renderSelectionHeader('sent', filteredSentFiles)}
+                    <div className="flex-1 overflow-y-auto pr-1.5 scrollbar-thin scrollbar-thumb-indigo-200 scrollbar-track-transparent hover:scrollbar-thumb-indigo-300 transition-colors">
+                        {renderCategorizedFiles('sent', filteredSentFiles, stage.sentFiles || [])}
+                    </div>
                 </div>
 
                 {/* Modelos Disponíveis */}
@@ -560,25 +623,8 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
                             </Button>
-                            {canUploadFiles && (
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-7.5 text-[11px] border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30"
-                                onClick={(e) => { e.preventDefault(); availableFileInputRef.current?.click(); }}
-                                disabled={!!uploadingType}
-                            >
-                                {uploadingType === 'available' ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <UploadCloud className="h-3 w-3 mr-1" />}
-                                Anexar JSON
-                            </Button>
-                            )}
                         </div>
                     </div>
-                    {(!stage.availableFiles || stage.availableFiles.length === 0) && (
-                        <div className="text-xs text-muted-foreground dark:text-slate-400 text-center py-4 bg-white/50 dark:bg-slate-900/50 rounded-lg border border-dashed border-emerald-200 dark:border-emerald-800/50 flex-1 flex items-center justify-center">
-                            Nenhum JSON de modelo anexado.
-                        </div>
-                    )}
                     {stage.availableFiles && stage.availableFiles.length > 0 && (
                         <div className="relative mb-1.5 shrink-0">
                             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-emerald-400" />
@@ -590,20 +636,10 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                             />
                         </div>
                     )}
-                    {stage.availableFiles && stage.availableFiles.length > 0 && (
-                        <>
-                            {renderSelectionHeader('available', filteredAvailableFiles)}
-                            {filteredAvailableFiles.length === 0 ? (
-                                <div className="text-xs text-muted-foreground text-center py-4 bg-white/50 dark:bg-slate-900/50 rounded-lg border border-dashed border-emerald-200 dark:border-emerald-800/50 flex-1 flex items-center justify-center">
-                                    Nenhum JSON correspondente encontrado.
-                                </div>
-                            ) : (
-                                <div className="flex-1 overflow-y-auto pr-1.5 space-y-1 scrollbar-thin scrollbar-thumb-emerald-200 scrollbar-track-transparent hover:scrollbar-thumb-emerald-300 transition-colors">
-                                    {filteredAvailableFiles.map(file => renderFileRow(file, 'available', stage.availableFiles!))}
-                                </div>
-                            )}
-                        </>
-                    )}
+                    {renderSelectionHeader('available', filteredAvailableFiles)}
+                    <div className="flex-1 overflow-y-auto pr-1.5 scrollbar-thin scrollbar-thumb-emerald-200 scrollbar-track-transparent hover:scrollbar-thumb-emerald-300 transition-colors">
+                        {renderCategorizedFiles('available', filteredAvailableFiles, stage.availableFiles || [])}
+                    </div>
                 </div>
             </div>
 
@@ -627,61 +663,35 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
 
                     <div className="flex-1 overflow-y-auto mt-4 pr-2">
                         {viewingFullscreen === 'sent' && (
-                            (!stage.sentFiles || stage.sentFiles.length === 0) ? (
-                                <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-                                    <UploadCloud className="h-12 w-12 mb-4 opacity-20" />
-                                    Nenhum modelo do cliente anexado.
+                            <div className="space-y-3">
+                                <div className="relative mb-2">
+                                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-indigo-400" />
+                                    <Input
+                                        placeholder="Filtrar modelos do cliente..."
+                                        value={sentSearch}
+                                        onChange={(e) => setSentSearch(e.target.value)}
+                                        className="pl-9 h-9 text-xs bg-white/70 dark:bg-slate-900/70 border-indigo-100 dark:border-indigo-900/30 focus-visible:ring-indigo-500"
+                                    />
                                 </div>
-                            ) : (
-                                <div className="space-y-3">
-                                    <div className="relative mb-2">
-                                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-indigo-400" />
-                                        <Input
-                                            placeholder="Filtrar modelos do cliente..."
-                                            value={sentSearch}
-                                            onChange={(e) => setSentSearch(e.target.value)}
-                                            className="pl-9 h-9 text-xs bg-white/70 dark:bg-slate-900/70 border-indigo-100 dark:border-indigo-900/30 focus-visible:ring-indigo-500"
-                                        />
-                                    </div>
-                                    {renderSelectionHeader('sent', filteredSentFiles)}
-                                    {filteredSentFiles.length === 0 ? (
-                                        <div className="text-xs text-muted-foreground text-center py-8 border border-dashed rounded-lg">
-                                            Nenhum modelo correspondente encontrado.
-                                        </div>
-                                    ) : (
-                                        filteredSentFiles.map(file => renderFileRow(file, 'sent', stage.sentFiles!))
-                                    )}
-                                </div>
-                            )
+                                {renderSelectionHeader('sent', filteredSentFiles)}
+                                {renderCategorizedFiles('sent', filteredSentFiles, stage.sentFiles || [])}
+                            </div>
                         )}
 
                         {viewingFullscreen === 'available' && (
-                            (!stage.availableFiles || stage.availableFiles.length === 0) ? (
-                                <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-                                    <FileText className="h-12 w-12 mb-4 opacity-20" />
-                                    Nenhum JSON de modelo anexado.
+                            <div className="space-y-3">
+                                <div className="relative mb-2">
+                                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-400" />
+                                    <Input
+                                        placeholder="Filtrar modelos JSON..."
+                                        value={availableSearch}
+                                        onChange={(e) => setAvailableSearch(e.target.value)}
+                                        className="pl-9 h-9 text-xs bg-white/70 dark:bg-slate-900/70 border-emerald-100 dark:border-emerald-900/30 focus-visible:ring-emerald-500"
+                                    />
                                 </div>
-                            ) : (
-                                <div className="space-y-3">
-                                    <div className="relative mb-2">
-                                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-400" />
-                                        <Input
-                                            placeholder="Filtrar modelos JSON..."
-                                            value={availableSearch}
-                                            onChange={(e) => setAvailableSearch(e.target.value)}
-                                            className="pl-9 h-9 text-xs bg-white/70 dark:bg-slate-900/70 border-emerald-100 dark:border-emerald-900/30 focus-visible:ring-emerald-500"
-                                        />
-                                    </div>
-                                    {renderSelectionHeader('available', filteredAvailableFiles)}
-                                    {filteredAvailableFiles.length === 0 ? (
-                                        <div className="text-xs text-muted-foreground text-center py-8 border border-dashed rounded-lg">
-                                            Nenhum JSON correspondente encontrado.
-                                        </div>
-                                    ) : (
-                                        filteredAvailableFiles.map(file => renderFileRow(file, 'available', stage.availableFiles!))
-                                    )}
-                                </div>
-                            )
+                                {renderSelectionHeader('available', filteredAvailableFiles)}
+                                {renderCategorizedFiles('available', filteredAvailableFiles, stage.availableFiles || [])}
+                            </div>
                         )}
                     </div>
                 </DialogContent>
