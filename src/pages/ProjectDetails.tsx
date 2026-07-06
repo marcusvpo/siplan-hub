@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Pencil, X } from "lucide-react";
+import { ArrowLeft, Pencil, X, ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
 import { GeneralInfoTab } from "@/components/ProjectManagement/Tabs/GeneralInfoTab";
 import { StepsTab } from "@/components/ProjectManagement/Tabs/StepsTab";
@@ -168,6 +168,15 @@ export default function ProjectDetails() {
                   >
                     Roadmap
                   </TabsTrigger>
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/implantadores/transicao?project=${id}`)}
+                    className="h-full rounded-none border-b-2 border-transparent px-2 text-muted-foreground hover:text-primary/80 hover:border-border/50 transition-all duration-200 flex items-center gap-1.5 whitespace-nowrap text-sm font-medium"
+                    title="Abrir a Transição (DTC) deste projeto"
+                  >
+                    Transição
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </button>
                 </TabsList>
               </div>
             </div>
