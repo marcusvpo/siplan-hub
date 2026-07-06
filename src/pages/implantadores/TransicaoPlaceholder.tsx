@@ -14,6 +14,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -77,6 +86,8 @@ import {
   EyeOff,
   ChevronDown,
   ChevronRight,
+  ChevronsUpDown,
+  Check,
   Star,
   GripVertical,
   TrendingUp,
@@ -351,6 +362,7 @@ function TransicaoPlaceholder() {
   const queryClient = useQueryClient();
   const { members = [] } = useTeamMembers();
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
+  const [projectSelectOpen, setProjectSelectOpen] = useState(false);
   const [showPgAccess, setShowPgAccess] = useState(false);
   const [showSoPassword, setShowSoPassword] = useState(false);
   const [showRemoteAccess, setShowRemoteAccess] = useState(false);
@@ -1666,27 +1678,78 @@ function TransicaoPlaceholder() {
 
             {/* Project Select Dropdown */}
             <div className="flex items-center gap-1.5 w-full sm:w-auto shrink-0 justify-end">
-              <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
-                <SelectTrigger className="w-full sm:w-64 h-8 text-xs border-muted/80">
-                  <SelectValue placeholder="Selecione um projeto..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {isLoadingList ? (
-                    <div className="p-2 text-xs text-muted-foreground text-center flex items-center justify-center gap-2">
-                      <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
-                      Carregando...
-                    </div>
-                  ) : projectsList.length === 0 ? (
-                    <div className="p-2 text-xs text-muted-foreground text-center">Nenhum projeto encontrado</div>
-                  ) : (
-                    projectsList.map(proj => (
-                      <SelectItem key={proj.id} value={proj.id}>
-                        {proj.client_name} {proj.ticket_number ? `(${proj.ticket_number})` : ""}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
+              <Popover open={projectSelectOpen} onOpenChange={setProjectSelectOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={projectSelectOpen}
+                    className="w-full sm:w-[40rem] h-8 text-xs border-muted/80 justify-between font-normal"
+                  >
+                    {selectedProjectId ? (
+                      <span className="truncate">
+                        {(() => {
+                          const proj = projectsList.find(p => p.id === selectedProjectId);
+                          if (!proj) return "Selecione um projeto...";
+                          return `${proj.client_name}${proj.ticket_number ? ` (${proj.ticket_number})` : ""}`;
+                        })()}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">Selecione um projeto...</span>
+                    )}
+                    <ChevronsUpDown className="ml-2 h-3.5 w-3.5 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] min-w-[18rem] p-0" align="end">
+                  <Command
+                    filter={(value, search) =>
+                      value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0
+                    }
+                  >
+                    <CommandInput placeholder="Buscar cartório ou nº do ticket..." className="h-9 text-xs" />
+                    <CommandList className="max-h-[300px]">
+                      {isLoadingList ? (
+                        <div className="p-3 text-xs text-muted-foreground text-center flex items-center justify-center gap-2">
+                          <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                          Carregando...
+                        </div>
+                      ) : (
+                        <>
+                          <CommandEmpty className="py-4 text-center text-xs text-muted-foreground">
+                            Nenhum projeto encontrado.
+                          </CommandEmpty>
+                          <CommandGroup>
+                            {projectsList.map(proj => (
+                              <CommandItem
+                                key={proj.id}
+                                value={`${proj.client_name} ${proj.ticket_number || ""}`}
+                                onSelect={() => {
+                                  setSelectedProjectId(proj.id);
+                                  setProjectSelectOpen(false);
+                                }}
+                                className="flex items-center gap-2 text-xs cursor-pointer"
+                              >
+                                <Check
+                                  className={cn(
+                                    "h-3.5 w-3.5 shrink-0 text-primary",
+                                    selectedProjectId === proj.id ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                <span className="truncate flex-1">{proj.client_name}</span>
+                                {proj.ticket_number && (
+                                  <span className="text-[10px] text-muted-foreground shrink-0 tabular-nums">
+                                    {proj.ticket_number}
+                                  </span>
+                                )}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </>
+                      )}
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
               {selectedProjectId && (
                 <Link to={`/projects/${selectedProjectId}`}>
                   <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" title="Ver Ficha do Projeto">
