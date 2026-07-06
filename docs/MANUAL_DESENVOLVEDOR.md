@@ -207,3 +207,17 @@ Antes de abrir um pull request, verifique a conformidade visual descrita em [VIS
 * **Arredondamento (Radius)**: Os cantos de cartões e botões padrão devem usar `0.5rem` (`rounded-lg` / 8px).
 * **Sombras**: Cards padrão devem usar sombras sutis (`shadow-subtle`), reservando sombras em camadas (`shadow-layered`) apenas para diálogos, popovers ou barras flutuantes.
 * **Componentes de Ação**: Botões de contorno (outline) e secundários não devem ter fundo cinza por padrão.
+
+---
+
+## 📚 Documentação Relacionada
+
+Ao dar manutenção ou implementar novas funcionalidades, consulte também:
+
+* **[Documentação por Tela](file:///d:/AI/siplan-hub/docs/telas/README.md)**: referência técnica de todas as 48 telas (rota, arquivo-fonte, hooks, componentes, fluxos, regras de negócio e pontos de manutenção). É o melhor ponto de partida ao mexer em uma tela específica.
+* **[Modelo de Dados (Supabase)](file:///d:/AI/siplan-hub/docs/MODELO_DE_DADOS.md)**: tabelas, RPCs, RLS/RBAC e buckets de Storage.
+* **[Referência de Hooks](file:///d:/AI/siplan-hub/docs/REFERENCIA_HOOKS.md)**: catálogo dos hooks, stores Zustand e contexto de autenticação.
+* **[Architecture.md](file:///d:/AI/siplan-hub/docs/Architecture.md)** e **[CalendarContext.md](file:///d:/AI/siplan-hub/docs/CalendarContext.md)**: fluxo de dados e detalhes do calendário.
+
+> [!NOTE]
+> **Pendência conhecida:** `src/integrations/supabase/types.ts` está vazio, o que deixa o data-layer sem tipagem e gera erros de `tsc`. Regenere com `npx supabase gen types typescript --project-id <ref> > src/integrations/supabase/types.ts`. Detalhes em [MODELO_DE_DADOS.md](file:///d:/AI/siplan-hub/docs/MODELO_DE_DADOS.md).
