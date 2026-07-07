@@ -3,10 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { plainTextToLexicalJson } from "@/lib/lexical";
+import { cn } from "@/lib/utils";
 import { useImproveTextJobs } from "@/hooks/useImproveTextJobs";
 import { useModelWorkerStatus } from "@/hooks/useModelGenerationJobs";
 import { DtcAiJob } from "@/types/ProjectV2";
-import { Plus, Trash2, Sparkles, Loader2, Wand2, FileText } from "lucide-react";
+import { Plus, Trash2, Sparkles, Loader2, Wand2, FileText, ChevronDown, ChevronRight } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -184,6 +185,10 @@ export function PostObservations({
   const [aiTarget, setAiTarget] = useState<AiTarget | null>(null);
   const [pending, setPending] = useState<{ target: AiTarget; generated: string } | null>(null);
 
+  // Colapsar/expandir cada secao (recolhidas por padrao)
+  const [obsOpen, setObsOpen] = useState(false);
+  const [summaryOpen, setSummaryOpen] = useState(false);
+
   const onResult = useCallback((job: DtcAiJob) => {
     const text = (job.resultText || "").trim();
     const target = aiTargetRef.current;
@@ -252,9 +257,18 @@ export function PostObservations({
       {/* ===== Observações & Detalhes (multi-bloco) ===== */}
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <div className="h-0.5 w-6 bg-slate-300 dark:bg-slate-700 rounded-full" />
-            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          <button
+            type="button"
+            onClick={() => setObsOpen((v) => !v)}
+            className="flex items-center gap-1.5 group"
+            title={obsOpen ? "Recolher" : "Expandir"}
+          >
+            {obsOpen ? (
+              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+            ) : (
+              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+            )}
+            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground cursor-pointer group-hover:text-foreground transition-colors">
               Observações & Detalhes
             </Label>
             {blocks.length > 1 && (
@@ -262,8 +276,8 @@ export function PostObservations({
                 ({blocks.length} blocos)
               </span>
             )}
-          </div>
-          {canEdit && (
+          </button>
+          {canEdit && obsOpen && (
             <Button
               type="button"
               variant="outline"
@@ -277,13 +291,13 @@ export function PostObservations({
           )}
         </div>
 
-        {blocks.length === 0 && (
+        {obsOpen && blocks.length === 0 && (
           <p className="text-xs text-muted-foreground italic px-1">
             Nenhum bloco. Clique em "Adicionar bloco" para incluir observações.
           </p>
         )}
 
-        <div className="space-y-3">
+        <div className={cn("space-y-3", !obsOpen && "hidden")}>
           {blocks.map((block, idx) => {
             const generating = aiTarget?.kind === "block" && aiTarget.id === block.id;
             const canImprove = canEdit && !aiRunning && online && blockTextLen(block.content) >= 3;
@@ -354,14 +368,23 @@ export function PostObservations({
       {/* ===== Resumo Geral ===== */}
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <div className="h-0.5 w-6 bg-indigo-300 dark:bg-indigo-800 rounded-full" />
-            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setSummaryOpen((v) => !v)}
+            className="flex items-center gap-1.5 group"
+            title={summaryOpen ? "Recolher" : "Expandir"}
+          >
+            {summaryOpen ? (
+              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+            ) : (
+              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+            )}
+            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5 cursor-pointer group-hover:text-foreground transition-colors">
               <FileText className="h-3 w-3 text-indigo-500" />
               Resumo Geral
             </Label>
-          </div>
-          {canEdit && (
+          </button>
+          {canEdit && summaryOpen && (
             <Button
               type="button"
               variant="outline"
@@ -380,17 +403,19 @@ export function PostObservations({
             </Button>
           )}
         </div>
-        <p className="text-[11px] text-muted-foreground px-1">
-          Consolida todos os blocos de Observações & Detalhes. Digite manualmente ou gere com IA.
-        </p>
-        <div className="rounded-lg border border-indigo-100 dark:border-indigo-900/40 overflow-hidden bg-indigo-50/20 dark:bg-indigo-950/10">
-          <RichTextEditor
-            key={`${summary.id}:${summary.editorKey}`}
-            content={summary.content}
-            onChange={updateSummary}
-            placeholder="Resumo geral da pós-implantação..."
-            editable={canEdit}
-          />
+        <div className={cn("space-y-2", !summaryOpen && "hidden")}>
+          <p className="text-[11px] text-muted-foreground px-1">
+            Consolida todos os blocos de Observações & Detalhes. Digite manualmente ou gere com IA.
+          </p>
+          <div className="rounded-lg border border-indigo-100 dark:border-indigo-900/40 overflow-hidden bg-indigo-50/20 dark:bg-indigo-950/10">
+            <RichTextEditor
+              key={`${summary.id}:${summary.editorKey}`}
+              content={summary.content}
+              onChange={updateSummary}
+              placeholder="Resumo geral da pós-implantação..."
+              editable={canEdit}
+            />
+          </div>
         </div>
       </div>
 
