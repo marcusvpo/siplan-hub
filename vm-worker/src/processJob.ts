@@ -3,7 +3,12 @@ import { mkdir, readFile, writeFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 import { supabase } from "./supabase.js";
 import { config, Job } from "./config.js";
-import { runSkill } from "./runSkill.js";
+import { runSkill, ProgressStep } from "./runSkill.js";
+
+// Mantem apenas os ultimos N passos no banco (evita payloads gigantes no Realtime).
+const MAX_LOG_STEPS = 80;
+// Intervalo minimo entre gravacoes de progresso (throttle).
+const PROGRESS_FLUSH_MS = 2500;
 
 // Mesma sanitizacao do frontend (useProjectFiles.ts) para chaves validas no Storage.
 function sanitize(name: string): string {
@@ -57,6 +62,41 @@ NAO execute git add/commit/push - apenas gere os artefatos (modelo.rtf/odt/json)
  * Lanca em qualquer falha; o loop principal marca o job como 'error'.
  */
 export async function processJob(job: Job): Promise<void> {
+  // --- Andamento ao vivo: acumula passos e grava no job (com throttle) ---
+  const steps: ProgressStep[] = [];
+  let currentText = "";
+  let lastFlush = 0;
+
+  const flushProgress = async (force = false): Promise<void> => {
+    const now = Date.now();
+    if (!force && now - lastFlush < PROGRESS_FLUSH_MS) return;
+    lastFlush = now;
+    try {
+      await supabase
+        .from("model_generation_jobs")
+        .update({
+          progress: currentText || null,
+          progress_log: steps.slice(-MAX_LOG_STEPS),
+          progress_updated_at: new Date().toISOString(),
+        })
+        .eq("id", job.id);
+    } catch {
+      /* best-effort: nunca deixa o progresso derrubar o job */
+    }
+  };
+
+  const record = (step: ProgressStep): void => {
+    currentText = step.text;
+    steps.push(step);
+    void flushProgress(false);
+  };
+
+  const pushStep = (text: string, kind: ProgressStep["kind"] = "system"): void =>
+    record({ at: new Date().toISOString(), text, kind });
+
+  pushStep("Preparando geracao...");
+  await flushProgress(true);
+
   // 0. Metadados a partir do projeto (nome do cliente = cartorio)
   const { data: proj } = await supabase
     .from("projects")
@@ -67,6 +107,7 @@ export async function processJob(job: Job): Promise<void> {
   const cartorioSlug = (sanitize(cliente).toLowerCase().replace(/_/g, "-") || "cartorio");
 
   // 1. Baixar o documento de origem para a pasta de entrada da VM
+  pushStep("Baixando o documento do cliente...");
   const jobDir = path.join(config.entradaDir, job.id);
   await mkdir(jobDir, { recursive: true });
   const { data: blob, error: dlError } = await supabase.storage
@@ -77,19 +118,24 @@ export async function processJob(job: Job): Promise<void> {
   const inputPath = path.join(jobDir, sanitize(job.source_file_name) || "documento");
   await writeFile(inputPath, Buffer.from(await blob.arrayBuffer()));
 
-  // 2. Rodar a skill de forma autonoma
+  // 2. Rodar a skill de forma autonoma, transmitindo cada passo ao vivo
   const baseName = path.basename(job.source_file_name, path.extname(job.source_file_name));
   const startTime = Date.now();
   const prompt = buildPrompt(inputPath, cartorioSlug, baseName, cliente);
-  const { stdout, stderr, code } = await runSkill(prompt);
+  pushStep("Iniciando o Claude para gerar o modelo...");
+  await flushProgress(true);
+  const { transcript, resultText, code, stderr } = await runSkill(prompt, (step) => record(step));
+  await flushProgress(true);
   if (code !== 0) {
-    const tail = (stderr || stdout || "").slice(-1200);
+    const tail = (stderr || transcript || "").slice(-1200);
     throw new Error(`Claude encerrou com codigo ${code}. Fim da saida: ${tail}`);
   }
 
   // 3. Localizar o modelo.json gerado (via marcador JSON_GERADO= ou por mtime)
+  pushStep("Localizando o modelo gerado...");
+  const haystack = `${resultText}\n${transcript}`;
   let jsonPath: string | undefined;
-  const marker = stdout.match(/JSON_GERADO=([^\r\n]+)/);
+  const marker = haystack.match(/JSON_GERADO=([^\r\n]+)/);
   if (marker) {
     const p = marker[1].trim();
     try { await stat(p); jsonPath = p; } catch { /* cai no fallback */ }
@@ -99,10 +145,12 @@ export async function processJob(job: Job): Promise<void> {
     jsonPath = found.find((f) => path.basename(f) === "modelo.json") || found[0];
   }
   if (!jsonPath) {
-    throw new Error(`Nenhum modelo.json gerado. Fim da saida: ${stdout.slice(-800)}`);
+    throw new Error(`Nenhum modelo.json gerado. Fim da saida: ${haystack.slice(-800)}`);
   }
 
   // 4. Validar que e JSON valido
+  pushStep("Validando e enviando o JSON para o SiplanHUB...");
+  await flushProgress(true);
   const jsonBuffer = await readFile(jsonPath);
   try {
     JSON.parse(jsonBuffer.toString("utf-8"));
@@ -149,6 +197,8 @@ export async function processJob(job: Job): Promise<void> {
   if (appendError) throw new Error(`Falha no append do modelo: ${appendError.message}`);
 
   // 8. Concluir job
+  pushStep("Concluido! Modelo disponivel na coluna JSON.", "result");
+  await flushProgress(true);
   const { error: doneError } = await supabase
     .from("model_generation_jobs")
     .update({
