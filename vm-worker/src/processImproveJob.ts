@@ -33,6 +33,32 @@ ${text}
 === FIM DO TEXTO ORIGINAL ===`;
 }
 
+// Prompt de resumo: sintetiza TODOS os blocos de Observacoes & Detalhes da etapa 7
+// (Pos-Implantacao) em um texto unico, rico e bem estruturado.
+function buildSummaryPrompt(text: string): string {
+  return `Voce e um analista de implantacao redigindo o "Resumo Geral" da etapa de Pos-Implantacao de um projeto para cartorio/serventia.
+
+Abaixo estao TODOS os blocos de "Observacoes & Detalhes" registrados nesta etapa (cada bloco pode tratar de um assunto diferente: chamados, ajustes, treinamentos complementares, pendencias, feedback do cliente etc.).
+
+Com base APENAS nesses blocos, escreva um resumo consolidado, coeso, rico e bem estruturado de tudo o que foi registrado. Organize por assunto quando fizer sentido, destaque o que foi resolvido e o que ficou pendente, e mantenha um tom formal e profissional.
+
+REGRAS:
+- Preserve os fatos, nomes, datas e numeros exatamente como aparecem. NAO invente nem contradiga os blocos.
+- Se houver pendencias ou itens em aberto, mencione-os EXPLICITAMENTE.
+- Portugues do Brasil. Nao adicione preambulo, titulo geral, nem comentarios sobre o que voce fez.
+
+FORMATACAO (Markdown leve, com moderacao):
+- **negrito** para termos-chave. __sublinhado__ para enfase critica. *italico* para observacoes secundarias.
+- Listas com "- " para enumerar itens; "1." para itens com ordem.
+Nao use titulos com "#", nem tabelas, nem blocos de codigo.
+
+Responda SOMENTE com o texto do resumo, sem aspas e sem qualquer texto adicional.
+
+=== BLOCOS DE OBSERVACOES & DETALHES ===
+${text}
+=== FIM DOS BLOCOS ===`;
+}
+
 /**
  * Pipeline de um job 'improve_text' (ja marcado 'processing' pelo claim):
  * le o texto de entrada (input_text) -> roda o Claude para reescrever ->
@@ -70,18 +96,24 @@ export async function processImproveJob(job: DtcJob): Promise<void> {
   const pushStep = (text: string, kind: ProgressStep["kind"] = "system"): void =>
     record({ at: new Date().toISOString(), text, kind });
 
-  pushStep("Lendo o texto para melhorar...");
+  const isSummary = job.job_type === "summary_blocks";
+
+  pushStep(isSummary ? "Lendo os blocos de observacoes..." : "Lendo o texto para melhorar...");
   await flushProgress(true);
 
   // 1. Texto de entrada: pode vir como JSON do Lexical ou texto puro.
   const raw = job.input_text || "";
   const text = (lexToText(raw) || raw).trim();
   if (text.replace(/[^a-zA-Z0-9]/g, "").length < 10) {
-    throw new Error("O texto e muito curto para ser melhorado.");
+    throw new Error(
+      isSummary
+        ? "Nao ha texto suficiente nos blocos para gerar um resumo."
+        : "O texto e muito curto para ser melhorado."
+    );
   }
 
-  // 2. Rodar o Claude para reescrever
-  pushStep("Melhorando o texto com IA...");
+  // 2. Rodar o Claude para reescrever/resumir
+  pushStep(isSummary ? "Gerando o resumo com IA..." : "Melhorando o texto com IA...");
   await flushProgress(true);
 
   const shouldCancel = async (): Promise<boolean> => {
@@ -93,7 +125,7 @@ export async function processImproveJob(job: DtcJob): Promise<void> {
     return !!data?.cancel_requested;
   };
 
-  const prompt = buildImprovePrompt(text);
+  const prompt = isSummary ? buildSummaryPrompt(text) : buildImprovePrompt(text);
   let { resultText, transcript, code, stderr, cancelled } = await runSkill(
     prompt,
     (step) => record(step),
@@ -151,8 +183,11 @@ export async function processImproveJob(job: DtcJob): Promise<void> {
     throw new Error(`O Claude nao retornou texto. Fim da saida: ${(transcript || "").slice(-800)}`);
   }
 
-  // 3. Concluir job com o texto melhorado
-  pushStep("Texto pronto! Revise antes de aplicar.", "result");
+  // 3. Concluir job com o texto gerado
+  pushStep(
+    isSummary ? "Resumo pronto! Revise antes de aplicar." : "Texto pronto! Revise antes de aplicar.",
+    "result"
+  );
   await flushProgress(true);
   const { error: doneError } = await supabase
     .from("dtc_ai_jobs")
@@ -164,5 +199,5 @@ export async function processImproveJob(job: DtcJob): Promise<void> {
     .eq("id", job.id);
   if (doneError) throw new Error(`Falha ao concluir job: ${doneError.message}`);
 
-  console.log(`[improve ${job.id}] concluido (${improved.length} chars)`);
+  console.log(`[${isSummary ? "summary" : "improve"} ${job.id}] concluido (${improved.length} chars)`);
 }
