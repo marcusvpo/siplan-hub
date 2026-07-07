@@ -237,5 +237,14 @@ export async function processJob(job: Job): Promise<void> {
     .eq("id", job.id);
   if (doneError) throw new Error(`Falha ao concluir job: ${doneError.message}`);
 
+  // Marca o modelo ENVIADO (cliente) como concluido -> a barra de progresso da
+  // aba "Modelos Enviados" preenche sozinha. Best-effort (nao derruba o job).
+  const { error: sentDoneError } = await supabase.rpc("set_sent_model_done", {
+    p_project_id: job.project_id,
+    p_source_path: job.source_file_path,
+    p_is_done: true,
+  });
+  if (sentDoneError) console.error(`[job ${job.id}] falha ao marcar enviado como concluido:`, sentDoneError.message);
+
   console.log(`[job ${job.id}] concluido -> ${storagePath} (origem: ${jsonPath})`);
 }
