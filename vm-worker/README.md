@@ -58,7 +58,9 @@ devolve o `modelo.json` gerado direto para a coluna "Modelos Disponíveis (JSON)
 - Claude Code instalado e autenticado para o `administrator`.
 - Ambiente da skill saudavel: `cd /opt/Orion.Modelos && python3 tools/onboard_check.py` deve passar
   (LibreOffice, API Orion `http://10.0.10.61:8702`, tools).
-- Chave service_role do Supabase (so no `.env`, nunca commitada).
+- Chave secreta do Supabase (so no `.env`, nunca commitada). Use a chave nova, revogavel,
+  `sb_secret_...` (Project Settings -> API Keys). Serve tambem o service_role legado, mas ele
+  nao e revogavel individualmente — prefira a `sb_secret_...`.
 
 </details>
 
@@ -67,7 +69,7 @@ devolve o `modelo.json` gerado direto para a coluna "Modelos Disponíveis (JSON)
 
 ```bash
 cd vm-worker
-cp .env.example .env      # preencha SUPABASE_SERVICE_ROLE_KEY e confira CLAUDE_BIN
+cp .env.example .env      # preencha SUPABASE_SECRET_KEY (sb_secret_...) e confira CLAUDE_BIN
 npm install               # com o Node 22 (nvm use 22)
 ```
 
@@ -111,7 +113,7 @@ sudo journalctl -u siplan-model-worker -f
 
 1. Copiar os arquivos atualizados de `vm-worker/` para `/home/administrator/vm-worker/`.
 2. `cd /home/administrator/vm-worker && nvm use 22 && npm install` (se mudaram deps).
-3. Conferir o `.env` (SERVICE_ROLE_KEY, CLAUDE_BIN, ORION_PROJECT_DIR, ENTRADA_DIR).
+3. Conferir o `.env` (SUPABASE_SECRET_KEY, CLAUDE_BIN, ORION_PROJECT_DIR, ENTRADA_DIR).
 4. `sudo systemctl restart siplan-model-worker` e acompanhar `journalctl -u siplan-model-worker -f`.
    - No log de saude deve aparecer: `SiplanHUB VM worker iniciado`, `Realtime: SUBSCRIBED`, e 0 erros ocioso.
 
@@ -123,7 +125,8 @@ sudo journalctl -u siplan-model-worker -f
 | Variavel | Descricao |
 |---|---|
 | `SUPABASE_URL` | URL do projeto (mesma do frontend). |
-| `SUPABASE_SERVICE_ROLE_KEY` | Chave service_role (ignora RLS). So na VM. |
+| `SUPABASE_SECRET_KEY` | Chave secreta nova, revogavel (`sb_secret_...`). Ignora RLS. So na VM. |
+| `SUPABASE_SERVICE_ROLE_KEY` | (Compat) service_role legado; usado se `SUPABASE_SECRET_KEY` estiver ausente. |
 | `STORAGE_BUCKET` | Bucket de arquivos (padrao `project-files`). |
 | `WORKER_ID` | Identificador deste worker. |
 | `POLL_INTERVAL_MS` | Intervalo do polling de fallback (padrao 15000). |
@@ -160,8 +163,9 @@ for suficiente, da para migrar para o modo semi-automatico (humano no volante).
 <details>
 <summary><b>Seguranca</b></summary>
 
-- `SUPABASE_SERVICE_ROLE_KEY` so no `.env` da VM (perm `600`, dono `administrator`). Ignora RLS.
-- O frontend usa so a chave `anon` (enfileira o job e le status via RLS).
+- A chave secreta (`SUPABASE_SECRET_KEY` = `sb_secret_...`) so no `.env` da VM (perm `600`, dono
+  `administrator`). Ignora RLS. Se vazar, revogue-a e gere outra no painel — sem tocar no resto.
+- O frontend usa so a chave publishable/`anon` (enfileira o job e le status via RLS).
 - O worker roda um agente com `--dangerously-skip-permissions` — sem supervisao, com escrita no
   projeto. Mantenha a VM e o `.env` restritos.
 
