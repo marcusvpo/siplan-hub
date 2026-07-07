@@ -23,37 +23,33 @@ const mapJob = (item: any): DtcAiJob => ({
 });
 
 /**
- * Fila de geracao com IA das "Consideracoes finais" (aba Relato Tecnico, item 6).
- * O frontend apenas enfileira o job; o mesmo worker da VM que gera modelos le o DTC,
- * roda o Claude e devolve o texto em result_text. Quando o job vira 'done', o
- * callback onResult recebe o texto para o componente injetar no editor (revisao).
+ * Fila "Melhorar texto com IA" (botao nas Observacoes & Detalhes da etapa 7 -
+ * Pos-Implantacao). Reusa a tabela dtc_ai_jobs com job_type='improve_text': o
+ * frontend enfileira o texto do bloco em input_text; o worker da VM roda o Claude
+ * para reescrever e devolve em result_text. Quando o job vira 'done', o callback
+ * onResult recebe o job (o componente mostra manter/substituir antes de aplicar).
  */
-export function useDtcAiJobs(
+export function useImproveTextJobs(
   projectId?: string,
   onResult?: (job: DtcAiJob) => void
 ) {
   const queryClient = useQueryClient();
-  // Id do job que o usuario acabou de disparar; aplicamos o resultado quando ELE
-  // ficar 'done' (via realtime OU refetch), sem depender da transicao de status.
   const awaitingRef = useRef<string | null>(null);
+  const queryKey = ["improveTextJobs", projectId];
 
-  const { data: jobs = [], isLoading } = useQuery({
-    queryKey: ["dtcAiJobs", projectId],
+  const { data: jobs = [] } = useQuery({
+    queryKey,
     enabled: !!projectId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("dtc_ai_jobs")
         .select("*")
         .eq("project_id", projectId as string)
-        // Este hook cuida so do resumo das "Consideracoes finais" (dtc_summary).
-        // Jobs 'improve_text' (Observacoes & Detalhes) tem hook proprio.
-        .eq("job_type", "dtc_summary")
+        .eq("job_type", "improve_text")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data || []).map(mapJob);
     },
-    // Enquanto houver job ativo, faz polling leve (rede de seguranca caso um
-    // evento realtime se perca). Para sozinho quando nao ha mais job em andamento.
     refetchInterval: (query) => {
       const data = query.state.data as DtcAiJob[] | undefined;
       const active = data?.some((j) => j.status === "pending" || j.status === "processing");
@@ -62,12 +58,14 @@ export function useDtcAiJobs(
   });
 
   const enqueueJob = useMutation({
-    mutationFn: async (input: { requestedBy?: string }) => {
+    mutationFn: async (input: { inputText: string; requestedBy?: string }) => {
       const { data, error } = await supabase
         .from("dtc_ai_jobs")
         .insert({
           project_id: projectId,
-          target_field: "finalConsiderations",
+          job_type: "improve_text",
+          target_field: "observations",
+          input_text: input.inputText,
           requested_by: input.requestedBy,
         })
         .select()
@@ -77,12 +75,12 @@ export function useDtcAiJobs(
     },
     onSuccess: (data) => {
       awaitingRef.current = (data?.id as string) || null;
-      queryClient.invalidateQueries({ queryKey: ["dtcAiJobs", projectId] });
-      toast.success("Gerando resumo com IA. Isso pode levar alguns minutos.");
+      queryClient.invalidateQueries({ queryKey });
+      toast.success("Melhorando o texto com IA. Isso pode levar alguns instantes.");
     },
     onError: (err) => {
-      console.error("Erro ao enfileirar geração com IA:", err);
-      toast.error("Não foi possível iniciar a geração com IA.");
+      console.error("Erro ao enfileirar melhoria com IA:", err);
+      toast.error("Não foi possível iniciar a melhoria com IA.");
     },
   });
 
@@ -90,7 +88,7 @@ export function useDtcAiJobs(
     if (!projectId) return;
 
     const channel = supabase
-      .channel(`dtc-ai-jobs-${projectId}`)
+      .channel(`improve-text-jobs-${projectId}`)
       .on(
         "postgres_changes",
         {
@@ -103,14 +101,10 @@ export function useDtcAiJobs(
           const raw = payload.new as Record<string, unknown> | null;
           const oldRaw = payload.old as Record<string, unknown> | null;
 
-          // Ignora jobs de outro tipo (ex.: improve_text) que compartilham a tabela.
-          if (raw && raw.job_type && raw.job_type !== "dtc_summary") return;
+          // So trata jobs de melhoria de texto (a tabela e compartilhada com o DTC).
+          if (raw && raw.job_type !== "improve_text") return;
 
-          const prevList =
-            queryClient.getQueryData<DtcAiJob[]>(["dtcAiJobs", projectId]) || [];
-          const prevJob = raw?.id ? prevList.find((j) => j.id === raw.id) : undefined;
-
-          queryClient.setQueryData<DtcAiJob[]>(["dtcAiJobs", projectId], (prev = []) => {
+          queryClient.setQueryData<DtcAiJob[]>(queryKey, (prev = []) => {
             if (payload.eventType === "DELETE") {
               return prev.filter((j) => j.id !== (oldRaw?.id as string));
             }
@@ -125,23 +119,18 @@ export function useDtcAiJobs(
 
           const newStatus = raw?.status as string | undefined;
           const id = raw?.id as string | undefined;
-          const changed = !!prevJob && prevJob.status !== newStatus;
 
-          // Aplica o resultado do job que o usuario disparou, quando ELE concluir.
           if (id && awaitingRef.current && id === awaitingRef.current) {
             if (newStatus === "done") {
               awaitingRef.current = null;
               onResult?.(mapJob(raw));
-              toast.success("Resumo gerado. Revise o texto antes de salvar.");
             } else if (newStatus === "error") {
               awaitingRef.current = null;
-              toast.error(`Falha ao gerar o resumo: ${(raw?.error_message as string) || "erro desconhecido"}`);
+              toast.error(`Falha ao melhorar o texto: ${(raw?.error_message as string) || "erro desconhecido"}`);
             } else if (newStatus === "cancelled") {
               awaitingRef.current = null;
-              toast.info("Geração de resumo cancelada.");
+              toast.info("Melhoria de texto cancelada.");
             }
-          } else if (changed && newStatus === "error") {
-            toast.error(`Falha ao gerar o resumo: ${(raw?.error_message as string) || "erro desconhecido"}`);
           }
         }
       )
@@ -152,15 +141,14 @@ export function useDtcAiJobs(
     };
   }, [projectId, queryClient, onResult]);
 
-  // Fallback: se o evento realtime de 'done' se perder, aplicamos assim que o job
-  // aguardado aparecer concluido na lista (a query tambem invalida/refaz).
+  // Fallback: se o evento realtime de 'done' se perder, aplica quando o job
+  // aguardado aparecer concluido na lista (a query tambem refaz sozinha).
   useEffect(() => {
     if (!awaitingRef.current) return;
     const j = jobs.find((x) => x.id === awaitingRef.current);
     if (j && j.status === "done" && j.resultText) {
       awaitingRef.current = null;
       onResult?.(j);
-      toast.success("Resumo gerado. Revise o texto antes de salvar.");
     } else if (j && (j.status === "error" || j.status === "cancelled")) {
       awaitingRef.current = null;
     }
@@ -181,13 +169,12 @@ export function useDtcAiJobs(
         toast.info("Cancelamento solicitado.");
       }
     } catch (err) {
-      console.error("Erro ao cancelar job de IA:", err);
-      toast.error("Não foi possível cancelar a geração.");
+      console.error("Erro ao cancelar melhoria com IA:", err);
+      toast.error("Não foi possível cancelar a melhoria.");
     }
   };
 
-  // Job ativo mais recente (processing > pending), para o botao mostrar andamento.
   const activeJob = jobs.find((j) => j.status === "processing" || j.status === "pending");
 
-  return { jobs, isLoading, enqueueJob, cancelJob, activeJob };
+  return { jobs, enqueueJob, cancelJob, activeJob };
 }

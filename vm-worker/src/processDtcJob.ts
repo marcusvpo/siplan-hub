@@ -10,7 +10,7 @@ const PROGRESS_FLUSH_MS = 2500;
 type AnyObj = any;
 
 // Extrai texto puro de um campo Lexical (JSON com root/children) ou string legada.
-function lexToText(val: unknown): string {
+export function lexToText(val: unknown): string {
   if (val == null) return "";
   if (typeof val !== "string") return "";
   const s = val.trim();

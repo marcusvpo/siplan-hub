@@ -44,6 +44,10 @@ interface StageCardProps {
   extraHeaderField?: React.ReactNode;
   canEditProjects?: boolean;
   automationNotice?: string;
+
+  // Quando fornecido, substitui o editor unico de "Observacoes & Detalhes" por um
+  // conteudo customizado (ex.: multiplos blocos + IA na etapa 7 - Pos-Implantacao).
+  observationsSlot?: React.ReactNode;
 }
 
 export function StageCard({
@@ -64,6 +68,7 @@ export function StageCard({
   extraHeaderField,
   canEditProjects = true,
   automationNotice,
+  observationsSlot,
 }: StageCardProps) {
   const getStatusColor = (s: StageStatus) => {
     switch (s) {
@@ -400,23 +405,27 @@ export function StageCard({
           </div>
         )}
 
-        {/* Rich Text Editor */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <div className="h-0.5 w-6 bg-slate-300 dark:bg-slate-700 rounded-full" />
-            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-              Observações & Detalhes
-            </Label>
+        {/* Rich Text Editor (ou slot customizado, ex.: multiplos blocos + IA) */}
+        {observationsSlot ? (
+          observationsSlot
+        ) : (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="h-0.5 w-6 bg-slate-300 dark:bg-slate-700 rounded-full" />
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                Observações & Detalhes
+              </Label>
+            </div>
+            <div className="rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden bg-slate-50/10 dark:bg-slate-950/5 w-full">
+              <RichTextEditor
+                content={getEditorContent(observations)}
+                onChange={(content) => onUpdate({ observations: content })}
+                placeholder={`Detalhes da etapa de ${label}...`}
+                editable={canEditProjects}
+              />
+            </div>
           </div>
-          <div className="rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden bg-slate-50/10 dark:bg-slate-950/5 w-full">
-            <RichTextEditor
-              content={getEditorContent(observations)}
-              onChange={(content) => onUpdate({ observations: content })}
-              placeholder={`Detalhes da etapa de ${label}...`}
-              editable={canEditProjects}
-            />
-          </div>
-        </div>
+        )}
       </AccordionContent>
     </AccordionItem>
   );
