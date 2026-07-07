@@ -71,8 +71,24 @@ function listToText(arr: unknown): string {
   return out.join("\n");
 }
 
+interface ProjectMeta {
+  clientName: string;
+  ticket?: string;
+  implStart?: string;
+  implEnd?: string;
+  postStart?: string;
+  postEnd?: string;
+}
+
+// Formata data ISO/date (YYYY-MM-DD...) para dd/mm/aaaa; vazio se ausente.
+function fmtDate(v?: string): string {
+  if (!v) return "";
+  const m = String(v).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : String(v);
+}
+
 // Monta o bloco de contexto com apenas o que for pertinente ao resumo do processo.
-function buildContext(dtc: AnyObj, clientName: string): string {
+function buildContext(dtc: AnyObj, meta: ProjectMeta): string {
   const seg = (title: string, body: string): string =>
     body && body.trim() ? `\n## ${title}\n${body.trim()}\n` : "";
 
@@ -87,9 +103,15 @@ function buildContext(dtc: AnyObj, clientName: string): string {
     ? `${dtc.clientSatisfactionScore}/5 (${["", "Ruim", "Regular", "Bom", "Muito bom", "Excelente"][dtc.clientSatisfactionScore] || ""})`
     : "";
 
-  let ctx = `Cliente/Cartorio: ${clientName || "-"}`;
+  const periodo = [fmtDate(meta.implStart), fmtDate(meta.implEnd)].filter(Boolean).join(" a ");
+  const posPeriodo = [fmtDate(meta.postStart), fmtDate(meta.postEnd)].filter(Boolean).join(" a ");
+
+  let ctx = `Cliente/Cartorio: ${meta.clientName || "-"}`;
+  if (meta.ticket) ctx += ` | Chamado/Ticket: ${meta.ticket}`;
   ctx += `\nServentia: ${dtc?.serventia || "-"} | Oficial: ${dtc?.oficial || "-"}`;
   ctx += `\nResponsavel do cliente: ${dtc?.clientResponsible || "-"} | Analista: ${dtc?.analystResponsible || dtc?.responsible || "-"}`;
+  if (periodo) ctx += `\nPeriodo da implantacao: ${periodo}`;
+  if (posPeriodo) ctx += `\nPeriodo de pos-implantacao: ${posPeriodo}`;
   ctx += "\n";
   ctx += seg("Sistemas instalados", lexToText(dtc?.systemsInstalled));
   ctx += seg("Versoes dos sistemas", versions);
@@ -170,10 +192,10 @@ export async function processDtcJob(job: DtcJob): Promise<void> {
   pushStep("Lendo os dados da transicao...");
   await flushProgress(true);
 
-  // 1. Ler o projeto (custom_fields.dtc + nome do cliente)
+  // 1. Ler o projeto (custom_fields.dtc + metadados uteis ao resumo)
   const { data: proj, error: projErr } = await supabase
     .from("projects")
-    .select("client_name, custom_fields")
+    .select("client_name, custom_fields, ticket_number, implementation_start_date, implementation_end_date, post_start_date, post_end_date")
     .eq("id", job.project_id)
     .single();
   if (projErr || !proj) throw new Error(`Falha ao ler o projeto: ${projErr?.message || "vazio"}`);
@@ -181,7 +203,14 @@ export async function processDtcJob(job: DtcJob): Promise<void> {
   const dtc = (proj.custom_fields as AnyObj)?.dtc;
   if (!dtc) throw new Error("Este projeto ainda nao possui dados de transicao (DTC) preenchidos.");
 
-  const context = buildContext(dtc, (proj.client_name as string) || "");
+  const context = buildContext(dtc, {
+    clientName: (proj.client_name as string) || "",
+    ticket: (proj.ticket_number as string) || undefined,
+    implStart: (proj.implementation_start_date as string) || undefined,
+    implEnd: (proj.implementation_end_date as string) || undefined,
+    postStart: (proj.post_start_date as string) || undefined,
+    postEnd: (proj.post_end_date as string) || undefined,
+  });
   if (context.replace(/[^a-zA-Z0-9]/g, "").length < 40) {
     throw new Error("Nao ha informacoes suficientes preenchidas para gerar um resumo.");
   }
@@ -199,8 +228,9 @@ export async function processDtcJob(job: DtcJob): Promise<void> {
     return !!data?.cancel_requested;
   };
 
-  const { resultText, transcript, code, stderr, cancelled } = await runSkill(
-    buildPrompt(context),
+  const prompt = buildPrompt(context);
+  let { resultText, transcript, code, stderr, cancelled } = await runSkill(
+    prompt,
     (step) => record(step),
     shouldCancel,
     { model: config.dtcModel || undefined }
@@ -218,7 +248,36 @@ export async function processDtcJob(job: DtcJob): Promise<void> {
     return;
   }
 
+  // Fallback: se bateu o limite de sessao da assinatura e ha uma API key configurada,
+  // tenta de novo cobrando via API (ANTHROPIC_API_KEY) em vez da assinatura.
+  const hitSessionLimit = /(session|usage) limit|hit your (session|usage) limit|limite de sess/i.test(
+    `${stderr}\n${transcript}\n${resultText}`
+  );
+  if (code !== 0 && hitSessionLimit && config.fallbackApiKey) {
+    pushStep("Limite de sessao atingido. Tentando novamente via API...", "system");
+    await flushProgress(true);
+    ({ resultText, transcript, code, stderr, cancelled } = await runSkill(
+      prompt,
+      (step) => record(step),
+      shouldCancel,
+      { model: config.dtcModel || undefined, env: { ANTHROPIC_API_KEY: config.fallbackApiKey } }
+    ));
+    await flushProgress(true);
+    if (cancelled) {
+      await supabase
+        .from("dtc_ai_jobs")
+        .update({ status: "cancelled", finished_at: new Date().toISOString(), cancel_requested: false })
+        .eq("id", job.id);
+      return;
+    }
+  }
+
   if (code !== 0) {
+    if (hitSessionLimit && !config.fallbackApiKey) {
+      throw new Error(
+        "Limite de sessao do Claude atingido na VM. Aguarde o reset ou configure DTC_FALLBACK_API_KEY no .env para cobrar via API."
+      );
+    }
     const tail = (stderr || transcript || "").slice(-1200);
     throw new Error(`Claude encerrou com codigo ${code}. Fim da saida: ${tail}`);
   }
