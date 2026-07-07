@@ -433,7 +433,9 @@ describe("project-transformers", () => {
       expect(result.infra_servers).toEqual([{ hostname: "test-server" }]);
       expect(result.infra_workstations).toEqual([{ id: 1, hostname: "test-station" }]);
       expect(result.modelos_editor_sent_files).toEqual([{ name: "sent.pdf" }]);
-      expect(result.modelos_editor_available_files).toEqual([{ name: "avail.pdf" }]);
+      // available_files e co-gerenciado com o worker: NAO e reescrito quando ausente
+      // do update (evita lost-update). A coluna fica intacta no banco.
+      expect(result.modelos_editor_available_files).toBeUndefined();
       expect(result.implementation_phase1).toEqual({ status: "done" });
       expect(result.implementation_phase2).toEqual({ status: "todo" });
     });
