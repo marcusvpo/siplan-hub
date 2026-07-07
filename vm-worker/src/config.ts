@@ -9,12 +9,24 @@ function required(name: string): string {
   return value;
 }
 
+// Chave secreta do Supabase (ignora RLS). Preferimos a nova, revogavel (sb_secret_...),
+// via SUPABASE_SECRET_KEY; aceitamos SUPABASE_SERVICE_ROLE_KEY por compatibilidade.
+function secretKey(): string {
+  const value = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!value) {
+    throw new Error(
+      "Variavel de ambiente obrigatoria ausente: SUPABASE_SECRET_KEY (ou SUPABASE_SERVICE_ROLE_KEY). Veja o .env.example."
+    );
+  }
+  return value;
+}
+
 const orionProjectDir = process.env.ORION_PROJECT_DIR || "/opt/Orion.Modelos";
 
 export const config = {
   // Supabase
   supabaseUrl: required("SUPABASE_URL"),
-  serviceRoleKey: required("SUPABASE_SERVICE_ROLE_KEY"),
+  secretKey: secretKey(),
   bucket: process.env.STORAGE_BUCKET || "project-files",
 
   // Operacional

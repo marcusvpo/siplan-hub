@@ -246,6 +246,7 @@ Espaço de trabalho para produzir e gerenciar os **modelos** (documentos) de um 
 - **`ModelosEditorWorkspace`** consome:
   - **`useProjectFiles(project.id)`** — `uploadFile`, `getDownloadUrl`, `deleteFile` (Supabase Storage).
   - **`usePermissions()`** — gate de upload/delete/edição.
+  - **`useModelGenerationJobs(project.id)`** ([src/hooks/useModelGenerationJobs.ts](../../src/hooks/useModelGenerationJobs.ts)) — fila de geração automática de modelos: `enqueueJob` (insere um job `pending`), `getLatestJobFor(sourcePath)` (status por arquivo) e assinatura **Realtime** que atualiza os badges e, ao concluir, recarrega os `availableFiles`.
 
 ### Componentes principais
 - **Sidebar de projetos** (colapsável — `isSidebarOpen`) com busca, contador (`Badge`) e itens com efeito marquee (`getMarqueeStyle`).
@@ -263,6 +264,18 @@ Espaço de trabalho para produzir e gerenciar os **modelos** (documentos) de um 
 - Marcar arquivo como concluído (`isDone`) → atualiza array e recalcula progresso.
 - Download individual (fetch + blob) com fallback para nova aba; download em lote gera `.zip`.
 - Exclusão remove do Storage e do array do estágio (com `confirm`).
+
+### Geração automática de modelos (worker na VM)
+
+Cada modelo do cliente na coluna **"Enviados"** que tenha uma **categoria** definida (`modelType`) exibe o botão **"Gerar modelo automático"** (`Wand2`). Ao clicar, o SiplanHUB **enfileira um job** — não gera na hora, pois o processamento leva **10 a 20 min**.
+
+- **Categorias (`MODEL_TYPES` em [ProjectV2.ts](../../src/types/ProjectV2.ts)):** Minutas, Traslado, Livro, Qualificação de Partes, Qualificação de Imóvel, Cláusulas.
+- **Arquitetura (fila de trabalho):** o botão faz `INSERT` em `model_generation_jobs` (status `pending`). Um **worker na VM Linux da empresa** ([vm-worker/](../../vm-worker/README.md)) puxa o job por **conexão de saída** (Realtime + polling — sem túnel nem porta aberta), roda a skill `criar-modelo-mesclado` do Claude Code em modo headless autônomo dentro de `/opt/Orion.Modelos`, e devolve o `modelo.json` para o bucket `project-files` + `project_files` + `modelos_editor_available_files`. O JSON **aparece sozinho** na coluna "Disponíveis" da mesma categoria (via Realtime).
+- **Badges de status** (por arquivo, via `getLatestJobFor`): **Na fila** (`Clock`) → **Gerando…** (`Loader2` girando) → **Pronto** ou **Erro** (`AlertCircle`) com **"Tentar novamente"** (`RotateCw`, que enfileira um novo job).
+- **Concorrência/robustez:** `claim_model_generation_job` usa `FOR UPDATE SKIP LOCKED` (um worker por job); um **reaper** (`requeue_stuck_model_jobs`) devolve à fila jobs travados respeitando `MAX_ATTEMPTS`; o append usa a RPC atômica `append_available_model` (evita lost-update com o auto-save da tela).
+- **Observação de qualidade:** o modo headless decide sozinho as escolhas que a skill normalmente pergunta — o resultado é um **rascunho**; o analista deve revisar o JSON antes de usar em produção.
+
+> **Backend/infra:** migration `supabase/migrations/20260707120000_create_model_generation_jobs.sql` (tabela + RLS + Realtime + as 3 RPCs) e `20260707140000_add_model_types_traslado_livro.sql` (categorias Traslado/Livro). Setup do worker, systemd e segurança em [vm-worker/README.md](../../vm-worker/README.md).
 
 ### Regras de Negócio e Estados
 
