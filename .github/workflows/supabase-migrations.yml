@@ -1,0 +1,38 @@
+name: Aplicar migrations do Supabase
+
+# Aplica automaticamente as migrations novas quando um push em main mexe em
+# supabase/migrations/. Tambem pode ser rodado manualmente (workflow_dispatch).
+#
+# ATENCAO (baseline unico antes do primeiro uso): migrations ja aplicadas na mao
+# (via SQL editor) NAO estao no historico do Supabase. Sem baseline, o "db push"
+# tentaria re-aplica-las e falharia (ex.: CREATE POLICY / ALTER PUBLICATION).
+# Antes de habilitar, marque as ja aplicadas como aplicadas:
+#   supabase link --project-ref <ref>
+#   supabase migration list                     # veja o que consta como remoto
+#   supabase migration repair --status applied <VERSAO>   # para cada uma ja aplicada
+# Depois disso, novas migrations passam a ser aplicadas sozinhas por este workflow.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "supabase/migrations/**"
+  workflow_dispatch:
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link ao projeto
+        run: supabase link --project-ref "${{ secrets.SUPABASE_PROJECT_ID }}" --password "${{ secrets.SUPABASE_DB_PASSWORD }}"
+
+      - name: Aplicar migrations pendentes
+        run: supabase db push --password "${{ secrets.SUPABASE_DB_PASSWORD }}"
