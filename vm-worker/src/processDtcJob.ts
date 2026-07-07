@@ -112,7 +112,16 @@ function buildContext(dtc: AnyObj, clientName: string): string {
 function buildPrompt(context: string): string {
   return `Voce e um analista de implantacao redigindo as "Consideracoes finais" do relatorio de transicao de conhecimento de uma implantacao de sistema para cartorio/serventia.
 
-Com base APENAS nas informacoes abaixo, escreva um resumo profissional, coeso e objetivo do processo de implantacao realizado: o que foi feito, sistemas e conversao, principais ganhos entregues, pendencias em aberto e uma conclusao/encerramento. Use portugues do Brasil, tom formal e claro. De 2 a 5 paragrafos curtos. Pode usar marcadores com "- " para listar ganhos ou pendencias quando fizer sentido. NAO invente dados que nao estejam no contexto. NAO use titulos em markdown (#) nem tabelas.
+Com base APENAS nas informacoes abaixo, escreva um resumo profissional, coeso e objetivo do processo de implantacao realizado: o que foi feito, sistemas e conversao, principais ganhos entregues, pendencias em aberto e uma conclusao/encerramento. Use portugues do Brasil, tom formal e claro. De 2 a 5 paragrafos curtos.
+
+FORMATACAO (Markdown leve, use com moderacao e apenas quando agregar clareza):
+- **negrito** para destacar termos-chave (ex.: nomes de sistemas, datas marcantes, o rotulo de um topico).
+- __sublinhado__ para enfase pontual em algo critico (ex.: uma pendencia importante).
+- *italico* para observacoes secundarias.
+- Listas com marcadores usando "- " no inicio da linha para enumerar ganhos ou pendencias.
+Nao exagere: a maior parte do texto deve ser texto normal. NAO use titulos com "#", NAO use tabelas, NAO use blocos de codigo.
+
+NAO invente dados que nao estejam no contexto.
 
 Responda SOMENTE com o texto final das consideracoes finais, sem preambulo, sem aspas e sem comentarios adicionais.
 
