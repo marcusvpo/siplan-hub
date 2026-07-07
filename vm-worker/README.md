@@ -186,6 +186,28 @@ for suficiente, da para migrar para o modo semi-automatico (humano no volante).
 </details>
 
 <details>
+<summary><b>Auto-deploy (atualizacao automatica do worker)</b></summary>
+
+Como a VM nao tem git, o `scripts/auto-deploy.sh` roda no **cron do root** a cada 5 min: baixa
+os fontes mais novos de `vm-worker/src` (branch `main`) via API publica do GitHub e reinicia o
+servico **somente se algum arquivo mudou**. Assim, todo `push` que chega em `main` vira deploy do
+worker sozinho — sem tocar na VM.
+
+Instalacao (uma vez, como root):
+
+```bash
+sudo curl -fsSL https://raw.githubusercontent.com/marcusvpo/siplan-hub/main/vm-worker/scripts/auto-deploy.sh -o /usr/local/bin/siplan-worker-autodeploy.sh
+sudo chmod +x /usr/local/bin/siplan-worker-autodeploy.sh
+( sudo crontab -l 2>/dev/null | grep -v siplan-worker-autodeploy ; echo '*/5 * * * * /usr/local/bin/siplan-worker-autodeploy.sh >> /var/log/siplan-worker-autodeploy.log 2>&1' ) | sudo crontab -
+```
+
+- Log das atualizacoes: `/var/log/siplan-worker-autodeploy.log`.
+- Usa API publica (sem token); 12 execucoes/h ficam bem dentro do limite de 60/h por IP.
+- So mexe em arquivos `.ts` de `vm-worker/src`. Novas migrations do Supabase continuam manuais.
+
+</details>
+
+<details>
 <summary><b>Seguranca</b></summary>
 
 - A chave secreta (`SUPABASE_SECRET_KEY` = `sb_secret_...`) so no `.env` da VM (perm `600`, dono
