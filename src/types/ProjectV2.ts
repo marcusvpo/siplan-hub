@@ -350,6 +350,24 @@ export interface ModelGenerationJob {
   progressUpdatedAt?: string;
 }
 
+// Geracao com IA das "Consideracoes finais" da Transicao (mesmo worker na VM)
+export interface DtcAiJob {
+  id: string;
+  projectId: string;
+  targetField: string;
+  status: ModelJobStatus;
+  resultText?: string;
+  errorMessage?: string;
+  attempts: number;
+  requestedBy?: string;
+  createdAt: string;
+  startedAt?: string;
+  cancelRequested?: boolean;
+  progress?: string;
+  progressLog?: ModelProgressStep[];
+  progressUpdatedAt?: string;
+}
+
 // Heartbeat do worker na VM (online/offline + ocupado)
 export type ModelWorkerState = 'idle' | 'busy' | 'stopping';
 
