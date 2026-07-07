@@ -124,8 +124,35 @@ export async function processJob(job: Job): Promise<void> {
   const prompt = buildPrompt(inputPath, cartorioSlug, baseName, cliente);
   pushStep("Iniciando o Claude para gerar o modelo...");
   await flushProgress(true);
-  const { transcript, resultText, code, stderr } = await runSkill(prompt, (step) => record(step));
+
+  // Checagem de cancelamento (o frontend liga cancel_requested)
+  const shouldCancel = async (): Promise<boolean> => {
+    const { data } = await supabase
+      .from("model_generation_jobs")
+      .select("cancel_requested")
+      .eq("id", job.id)
+      .single();
+    return !!data?.cancel_requested;
+  };
+
+  const { transcript, resultText, code, stderr, cancelled } = await runSkill(
+    prompt,
+    (step) => record(step),
+    shouldCancel
+  );
   await flushProgress(true);
+
+  if (cancelled) {
+    pushStep("Geracao cancelada pelo usuario.", "system");
+    await flushProgress(true);
+    await supabase
+      .from("model_generation_jobs")
+      .update({ status: "cancelled", finished_at: new Date().toISOString(), cancel_requested: false })
+      .eq("id", job.id);
+    console.log(`[job ${job.id}] cancelado pelo usuario`);
+    return;
+  }
+
   if (code !== 0) {
     const tail = (stderr || transcript || "").slice(-1200);
     throw new Error(`Claude encerrou com codigo ${code}. Fim da saida: ${tail}`);

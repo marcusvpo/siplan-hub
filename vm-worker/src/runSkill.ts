@@ -37,8 +37,9 @@ function describeTool(name: string, input: AnyObj): string {
  */
 export function runSkill(
   prompt: string,
-  onProgress?: (step: ProgressStep) => void
-): Promise<{ transcript: string; resultText: string; code: number; stderr: string }> {
+  onProgress?: (step: ProgressStep) => void,
+  shouldCancel?: () => Promise<boolean>
+): Promise<{ transcript: string; resultText: string; code: number; stderr: string; cancelled: boolean }> {
   return new Promise((resolve, reject) => {
     const child = spawn(
       config.claudeBin,
@@ -53,6 +54,26 @@ export function runSkill(
     let transcript = "";
     let resultText = "";
     let buf = "";
+    let cancelled = false;
+
+    // Poll de cancelamento: se o usuario pediu cancelar, mata o Claude.
+    let cancelChecking = false;
+    const cancelTimer = shouldCancel
+      ? setInterval(async () => {
+          if (cancelChecking || cancelled) return;
+          cancelChecking = true;
+          try {
+            if (await shouldCancel()) {
+              cancelled = true;
+              child.kill("SIGKILL");
+            }
+          } catch {
+            /* ignora erro de checagem */
+          } finally {
+            cancelChecking = false;
+          }
+        }, 5000)
+      : undefined;
 
     const emit = (text: string, kind: ProgressStep["kind"]) => {
       if (!text) return;
@@ -104,18 +125,24 @@ export function runSkill(
     child.stdout.on("data", onData);
     child.stderr.on("data", (d) => { stderr += d.toString(); });
 
+    const cleanup = () => {
+      clearTimeout(timer);
+      if (cancelTimer) clearInterval(cancelTimer);
+    };
+
     const timer = setTimeout(() => {
+      cleanup();
       child.kill("SIGKILL");
       reject(new Error(`Timeout: a geracao excedeu ${config.jobTimeoutMs} ms`));
     }, config.jobTimeoutMs);
 
-    child.on("error", (err) => { clearTimeout(timer); reject(err); });
+    child.on("error", (err) => { cleanup(); reject(err); });
 
     child.on("close", (code) => {
-      clearTimeout(timer);
+      cleanup();
       const rest = buf.trim();
       if (rest) { try { handleEvent(JSON.parse(rest)); } catch { /* ignore */ } }
-      resolve({ transcript, resultText, code: code ?? -1, stderr });
+      resolve({ transcript, resultText, code: code ?? -1, stderr, cancelled });
     });
   });
 }
