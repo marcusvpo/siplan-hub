@@ -165,6 +165,8 @@ A skill salva em `modelos_criados/<codigo>/<cartorio>/modelo.json` (nome do cart
   SIGTERM, marca `stopping` para o selo cair na hora.
 - **Recuperacao no boot:** ao iniciar, qualquer job preso em `processing` deste worker (orfao de um
   restart) volta para a fila imediatamente, sem esperar o timeout do reaper.
+- **Cancelamento:** durante a geracao o worker checa `cancel_requested` do job a cada ~5s; se o
+  usuario cancelou pela tela, mata o Claude e marca o job como `cancelled`.
 - **Watchdog:** `scripts/worker-watchdog.sh` (cron do root, a cada 2 min) reinicia o servico se ele
   estiver totalmente parado. Complementa o `Restart=always` do systemd (que cobre crashes).
   Instalacao: ver o cabecalho do proprio script.
