@@ -95,6 +95,31 @@ const STAGES: [string, string][] = [
   ["implementation", "6. Implantacao e Treinamento"],
 ];
 
+// Coluna pode vir como objeto (jsonb) ou string JSON; normaliza para objeto.
+function parseMaybeJson(v: unknown): AnyObj | null {
+  if (!v) return null;
+  if (typeof v === "object") return v as AnyObj;
+  if (typeof v === "string") {
+    try { return JSON.parse(v); } catch { return null; }
+  }
+  return null;
+}
+
+// Descreve uma sub-fase (implementation_phase1/2) em uma linha indentada.
+function phaseBlock(label: string, ph: AnyObj | null): string | null {
+  if (!ph) return null;
+  const meta: string[] = [];
+  if (ph.status) meta.push(`status: ${ph.status}`);
+  if (ph.responsible) meta.push(`responsavel: ${ph.responsible}`);
+  const per = [fmtDate(ph.startDate), fmtDate(ph.endDate)].filter(Boolean).join(" a ");
+  if (per) meta.push(`periodo: ${per}`);
+  const obs = lexToText(ph.observations);
+  if (meta.length === 0 && !obs) return null;
+  let block = `  - ${label}` + (meta.length ? ` (${meta.join(" | ")})` : "");
+  if (obs) block += `\n    ${obs.replace(/\n/g, "\n    ")}`;
+  return block;
+}
+
 // Monta o bloco das etapas do projeto a partir da linha da tabela projects.
 function buildStagesSection(proj: AnyObj): string {
   const parts: string[] = [];
@@ -107,10 +132,20 @@ function buildStagesSection(proj: AnyObj): string {
     if (status) meta.push(`status: ${status}`);
     if (resp) meta.push(`responsavel: ${resp}`);
     if (periodo) meta.push(`periodo: ${periodo}`);
-    // So inclui a etapa se tiver algo util
-    if (meta.length === 0 && !obs) continue;
+
+    // Sub-fases da etapa 6 (Implantacao): phase1 (Treinamento) e phase2 (Retorno).
+    const subs: string[] = [];
+    if (prefix === "implementation") {
+      const p1 = phaseBlock("Fase 1 - Treinamento & Acompanhamento", parseMaybeJson(proj.implementation_phase1));
+      const p2 = phaseBlock("Fase 2 - Possivel Retorno", parseMaybeJson(proj.implementation_phase2));
+      if (p1) subs.push(p1);
+      if (p2) subs.push(p2);
+    }
+
+    if (meta.length === 0 && !obs && subs.length === 0) continue;
     let block = `- ${label}` + (meta.length ? ` (${meta.join(" | ")})` : "");
     if (obs) block += `\n  ${obs.replace(/\n/g, "\n  ")}`;
+    if (subs.length) block += `\n${subs.join("\n")}`;
     parts.push(block);
   }
   return parts.join("\n");
@@ -132,13 +167,22 @@ function buildContext(dtc: AnyObj, meta: ProjectMeta, proj: AnyObj): string {
     ? `${dtc.clientSatisfactionScore}/5 (${["", "Ruim", "Regular", "Bom", "Muito bom", "Excelente"][dtc.clientSatisfactionScore] || ""})`
     : "";
 
-  // Periodo e analista vem da ETAPA 6 (Implantacao) do projeto - fonte da verdade.
-  // NAO usar o responsavel da etapa 7 (pos-implantacao): e outra pessoa/fase.
-  const periodo = [fmtDate(proj?.implementation_start_date), fmtDate(proj?.implementation_end_date)]
+  // Periodo e analista vem da ETAPA 6 (Implantacao). A fonte da verdade e a sub-fase
+  // phase1 (Treinamento & Acompanhamento); depois a coluna espelhada; depois o DTC.
+  // NUNCA a etapa 7 (pos-implantacao): e outra pessoa/fase.
+  const impl1 = parseMaybeJson(proj?.implementation_phase1);
+  const analista =
+    (impl1?.responsible as string) ||
+    (proj?.implementation_responsible as string) ||
+    dtc?.analystResponsible ||
+    dtc?.responsible ||
+    "-";
+  const periodo = [
+    fmtDate(impl1?.startDate || proj?.implementation_start_date),
+    fmtDate(impl1?.endDate || proj?.implementation_end_date),
+  ]
     .filter(Boolean)
     .join(" a ");
-  const analista =
-    (proj?.implementation_responsible as string) || dtc?.analystResponsible || dtc?.responsible || "-";
 
   let ctx = `Cliente/Cartorio: ${meta.clientName || "-"}`;
   if (meta.ticket) ctx += ` | Chamado/Ticket: ${meta.ticket}`;
