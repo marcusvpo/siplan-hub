@@ -1,6 +1,7 @@
 import { supabase } from "./supabase.js";
-import { config, Job } from "./config.js";
+import { config, Job, DtcJob } from "./config.js";
 import { processJob } from "./processJob.js";
+import { processDtcJob } from "./processDtcJob.js";
 
 let busy = false;
 
@@ -46,51 +47,102 @@ async function recoverOwnStuckJobs(): Promise<void> {
     .eq("worker_id", config.workerId)
     .gte("attempts", config.maxAttempts);
   if (errErr) console.error("Erro ao marcar jobs orfaos como erro:", errErr.message);
+
+  // Mesma recuperacao para os jobs de resumo com IA (dtc_ai_jobs)
+  const { error: dtcReqErr } = await supabase
+    .from("dtc_ai_jobs")
+    .update({ status: "pending", worker_id: null, started_at: null })
+    .eq("status", "processing")
+    .eq("worker_id", config.workerId)
+    .lt("attempts", config.maxAttempts);
+  if (dtcReqErr) console.error("Erro ao recuperar jobs DTC orfaos (requeue):", dtcReqErr.message);
+
+  const { error: dtcErrErr } = await supabase
+    .from("dtc_ai_jobs")
+    .update({
+      status: "error",
+      error_message: "Worker reiniciado durante a geracao (tentativas esgotadas).",
+      finished_at: new Date().toISOString(),
+    })
+    .eq("status", "processing")
+    .eq("worker_id", config.workerId)
+    .gte("attempts", config.maxAttempts);
+  if (dtcErrErr) console.error("Erro ao marcar jobs DTC orfaos como erro:", dtcErrErr.message);
 }
 
-async function markError(job: Job, message: string) {
+async function markError(table: "model_generation_jobs" | "dtc_ai_jobs", id: string, message: string) {
   await supabase
-    .from("model_generation_jobs")
+    .from(table)
     .update({
       status: "error",
       error_message: message.slice(0, 2000),
       finished_at: new Date().toISOString(),
     })
-    .eq("id", job.id)
+    .eq("id", id)
     .then(undefined, (e) => console.error("Falha ao marcar erro:", e));
 }
 
+// Reivindica e processa UM job de modelo. Retorna true se pegou algum.
+async function claimOneModelJob(): Promise<boolean> {
+  const { data: job, error } = await supabase.rpc("claim_model_generation_job", {
+    p_worker_id: config.workerId,
+  });
+  if (error) {
+    console.error("Erro no claim (modelo):", error.message);
+    return false;
+  }
+  // Sem job pendente o PostgREST devolve null OU objeto com campos null.
+  const typedJob = job as Job | null;
+  if (!typedJob || !typedJob.id) return false;
+  console.log(`[job ${typedJob.id}] iniciado (${typedJob.model_type}, tentativa ${typedJob.attempts})`);
+  try {
+    await processJob(typedJob);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`[job ${typedJob.id}] erro:`, msg);
+    await markError("model_generation_jobs", typedJob.id, msg);
+  }
+  return true;
+}
+
+// Reivindica e processa UM job de resumo com IA (DTC). Retorna true se pegou algum.
+async function claimOneDtcJob(): Promise<boolean> {
+  const { data: job, error } = await supabase.rpc("claim_dtc_ai_job", {
+    p_worker_id: config.workerId,
+  });
+  if (error) {
+    console.error("Erro no claim (dtc):", error.message);
+    return false;
+  }
+  const typedJob = job as DtcJob | null;
+  if (!typedJob || !typedJob.id) return false;
+  console.log(`[dtc ${typedJob.id}] iniciado (tentativa ${typedJob.attempts})`);
+  try {
+    await processDtcJob(typedJob);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`[dtc ${typedJob.id}] erro:`, msg);
+    await markError("dtc_ai_jobs", typedJob.id, msg);
+  }
+  return true;
+}
+
 /**
- * Reivindica UM job pendente de forma atomica (FOR UPDATE SKIP LOCKED no banco)
- * e o processa. Nunca dois workers pegam o mesmo job.
+ * Drena as filas de forma atomica (FOR UPDATE SKIP LOCKED no banco), um job por
+ * vez, sob o mesmo flag `busy` (so um Claude roda por vez). Prioriza modelos e
+ * intercala com jobs de resumo (DTC) ate ambas as filas esvaziarem.
  */
 async function claimAndProcess(): Promise<void> {
   if (busy) return;
   busy = true;
   void sendHeartbeat("busy");
   try {
-    // Loop enquanto houver jobs pendentes
     // eslint-disable-next-line no-constant-condition
     while (true) {
-      const { data: job, error } = await supabase.rpc("claim_model_generation_job", {
-        p_worker_id: config.workerId,
-      });
-      if (error) {
-        console.error("Erro no claim:", error.message);
-        return;
-      }
-      // A RPC retorna um composite; sem job pendente o PostgREST devolve
-      // null OU um objeto com todos os campos null. Tratamos os dois casos.
-      const typedJob = job as Job | null;
-      if (!typedJob || !typedJob.id) return;
-      console.log(`[job ${typedJob.id}] iniciado (${typedJob.model_type}, tentativa ${typedJob.attempts})`);
-      try {
-        await processJob(typedJob);
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        console.error(`[job ${typedJob.id}] erro:`, msg);
-        await markError(typedJob, msg);
-      }
+      const gotModel = await claimOneModelJob();
+      if (gotModel) continue;
+      const gotDtc = await claimOneDtcJob();
+      if (!gotDtc) return; // ambas as filas vazias
     }
   } finally {
     busy = false;
@@ -108,6 +160,12 @@ async function reapStuckJobs(): Promise<void> {
     p_max_attempts: config.maxAttempts,
   });
   if (error) console.error("Erro no reaper:", error.message);
+
+  const { error: dtcError } = await supabase.rpc("requeue_stuck_dtc_ai_jobs", {
+    p_timeout_seconds: Math.ceil(config.jobTimeoutMs / 1000),
+    p_max_attempts: config.maxAttempts,
+  });
+  if (dtcError) console.error("Erro no reaper (dtc):", dtcError.message);
 }
 
 // Encerramento limpo: marca o heartbeat como 'stopping' para o selo virar offline na hora.
@@ -141,6 +199,11 @@ async function main() {
     .on(
       "postgres_changes",
       { event: "INSERT", schema: "public", table: "model_generation_jobs" },
+      () => { void claimAndProcess(); }
+    )
+    .on(
+      "postgres_changes",
+      { event: "INSERT", schema: "public", table: "dtc_ai_jobs" },
       () => { void claimAndProcess(); }
     )
     .subscribe((status) => console.log("Realtime:", status));
