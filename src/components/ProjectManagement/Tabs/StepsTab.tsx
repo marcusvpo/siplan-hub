@@ -19,6 +19,7 @@ import { useProjectForm } from "@/hooks/useProjectForm";
 import { useConversionQueue } from "@/hooks/useConversionQueue";
 import { useProjectFiles } from "@/hooks/useProjectFiles";
 import { StageCard } from "@/components/ProjectManagement/Forms/StageCard";
+import { PostObservations } from "@/components/ProjectManagement/Forms/PostObservations";
 import { InfraStageForm, AdherenceStageForm, EnvironmentStageForm, ConversionStageForm, ImplementationStageForm } from "../Forms/StageForms";
 import { Accordion } from "@/components/ui/accordion";
 import { Label } from "@/components/ui/label";
@@ -509,6 +510,15 @@ export function StepsTab({
               stageReadiness.find((r) => r.stageId === "post")?.reason
             }
             canEditProjects={canEditProjects}
+            observationsSlot={
+              <PostObservations
+                observations={stagesData.post.observations}
+                onChange={(obs) => updateStage("post", { observations: obs })}
+                canEdit={canEditProjects}
+                projectId={project.id}
+                requestedBy={currentUserName}
+              />
+            }
           />
         </div>
         )}

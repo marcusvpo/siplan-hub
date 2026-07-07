@@ -96,10 +96,15 @@ export interface Job {
 }
 
 // Job de geracao com IA das "Consideracoes finais" da Transicao (DTC).
+// job_type distingue 'dtc_summary' (padrao) de 'improve_text' (melhorar um texto
+// avulso, ex.: Observacoes & Detalhes da etapa 7). input_text carrega o texto de
+// entrada nos jobs 'improve_text'.
 export interface DtcJob {
   id: string;
   project_id: string;
   target_field: string;
   status: string;
   attempts: number;
+  job_type?: string;
+  input_text?: string | null;
 }
