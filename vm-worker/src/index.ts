@@ -124,6 +124,7 @@ function installShutdownHandlers() {
 async function main() {
   console.log(`SiplanHUB VM worker iniciado (worker_id=${config.workerId}).`);
   console.log(`Bucket=${config.bucket} | poll=${config.pollIntervalMs}ms | timeout=${config.jobTimeoutMs}ms`);
+  console.log(`Claude bin: ${config.claudeBin}`);
 
   installShutdownHandlers();
 
