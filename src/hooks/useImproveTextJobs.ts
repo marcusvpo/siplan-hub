@@ -22,12 +22,16 @@ const mapJob = (item: any): DtcAiJob => ({
   progressUpdatedAt: item.progress_updated_at ?? undefined,
 });
 
+// Tipos de job de texto avulso tratados por este hook (todos passam pelo mesmo
+// pipeline no worker): melhorar um bloco e gerar o resumo geral da etapa 7.
+const TEXT_JOB_TYPES = ["improve_text", "summary_blocks"];
+
 /**
- * Fila "Melhorar texto com IA" (botao nas Observacoes & Detalhes da etapa 7 -
- * Pos-Implantacao). Reusa a tabela dtc_ai_jobs com job_type='improve_text': o
- * frontend enfileira o texto do bloco em input_text; o worker da VM roda o Claude
- * para reescrever e devolve em result_text. Quando o job vira 'done', o callback
- * onResult recebe o job (o componente mostra manter/substituir antes de aplicar).
+ * Fila de IA de texto da etapa 7 (Pos-Implantacao): "Melhorar texto com IA" por
+ * bloco (job_type='improve_text') e "Gerar resumo com IA" (job_type='summary_blocks').
+ * O frontend enfileira o texto em input_text; o worker da VM roda o Claude e devolve
+ * em result_text. Quando o job vira 'done', onResult recebe o job (o componente
+ * mostra manter/substituir antes de aplicar).
  */
 export function useImproveTextJobs(
   projectId?: string,
@@ -45,7 +49,7 @@ export function useImproveTextJobs(
         .from("dtc_ai_jobs")
         .select("*")
         .eq("project_id", projectId as string)
-        .eq("job_type", "improve_text")
+        .in("job_type", TEXT_JOB_TYPES)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data || []).map(mapJob);
@@ -58,13 +62,18 @@ export function useImproveTextJobs(
   });
 
   const enqueueJob = useMutation({
-    mutationFn: async (input: { inputText: string; requestedBy?: string }) => {
+    mutationFn: async (input: {
+      inputText: string;
+      requestedBy?: string;
+      jobType?: string;
+    }) => {
+      const jobType = input.jobType || "improve_text";
       const { data, error } = await supabase
         .from("dtc_ai_jobs")
         .insert({
           project_id: projectId,
-          job_type: "improve_text",
-          target_field: "observations",
+          job_type: jobType,
+          target_field: jobType === "summary_blocks" ? "summary" : "observations",
           input_text: input.inputText,
           requested_by: input.requestedBy,
         })
@@ -76,7 +85,12 @@ export function useImproveTextJobs(
     onSuccess: (data) => {
       awaitingRef.current = (data?.id as string) || null;
       queryClient.invalidateQueries({ queryKey });
-      toast.success("Melhorando o texto com IA. Isso pode levar alguns instantes.");
+      const isSummary = (data?.job_type as string) === "summary_blocks";
+      toast.success(
+        isSummary
+          ? "Gerando o resumo com IA. Isso pode levar alguns instantes."
+          : "Melhorando o texto com IA. Isso pode levar alguns instantes."
+      );
     },
     onError: (err) => {
       console.error("Erro ao enfileirar melhoria com IA:", err);
@@ -101,8 +115,8 @@ export function useImproveTextJobs(
           const raw = payload.new as Record<string, unknown> | null;
           const oldRaw = payload.old as Record<string, unknown> | null;
 
-          // So trata jobs de melhoria de texto (a tabela e compartilhada com o DTC).
-          if (raw && raw.job_type !== "improve_text") return;
+          // So trata jobs de texto da etapa 7 (a tabela e compartilhada com o DTC).
+          if (raw && !TEXT_JOB_TYPES.includes(raw.job_type as string)) return;
 
           queryClient.setQueryData<DtcAiJob[]>(queryKey, (prev = []) => {
             if (payload.eventType === "DELETE") {
