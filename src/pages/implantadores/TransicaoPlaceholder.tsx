@@ -3580,6 +3580,15 @@ function TransicaoPlaceholder() {
                         {!aiWorkerOnline && !aiRunning && (
                           <p className="text-[10px] text-amber-500">Gerador da IA offline — a geração automática ficará indisponível até religar o worker.</p>
                         )}
+                        {aiEditorKey > 0 && !aiRunning && (
+                          <div className="flex items-start gap-2 rounded-md border border-amber-400/40 bg-amber-400/10 px-3 py-2 text-[11px] text-amber-700 dark:text-amber-300">
+                            <Sparkles className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                            <span>
+                              <strong>Texto gerado por IA.</strong> É um rascunho a partir dos campos preenchidos — revise
+                              todo o conteúdo, corrija o que for necessário e complete o que faltar antes de salvar.
+                            </span>
+                          </div>
+                        )}
                         <RichTextEditor
                           key={`final-considerations-${aiEditorKey}`}
                           content={localDtc.finalConsiderations}
