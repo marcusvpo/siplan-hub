@@ -7,7 +7,8 @@ import { cn } from "@/lib/utils";
 import { useImproveTextJobs } from "@/hooks/useImproveTextJobs";
 import { useModelWorkerStatus } from "@/hooks/useModelGenerationJobs";
 import { DtcAiJob } from "@/types/ProjectV2";
-import { Plus, Trash2, Sparkles, Loader2, Wand2, FileText, ChevronDown, ChevronRight } from "lucide-react";
+import { toast } from "sonner";
+import { Plus, Trash2, Sparkles, Loader2, Wand2, FileText, ChevronDown, ChevronRight, FileDown } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -131,12 +132,89 @@ function blockToPlain(content: string): string {
   }
 }
 
+// --- Lexical -> HTML (para o PDF do Resumo Geral) ---
+const FMT_BOLD = 1, FMT_ITALIC = 2, FMT_STRIKE = 4, FMT_UNDERLINE = 8;
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function inlineHtml(nodes: any[]): string {
+  return (nodes || [])
+    .map((n) => {
+      if (n?.type === "text" && typeof n.text === "string") {
+        let t = escapeHtml(n.text);
+        const f = n.format || 0;
+        if (f & FMT_BOLD) t = `<strong>${t}</strong>`;
+        if (f & FMT_ITALIC) t = `<em>${t}</em>`;
+        if (f & FMT_UNDERLINE) t = `<u>${t}</u>`;
+        if (f & FMT_STRIKE) t = `<s>${t}</s>`;
+        return t;
+      }
+      if (Array.isArray(n?.children)) return inlineHtml(n.children);
+      return "";
+    })
+    .join("");
+}
+function lexToHtml(content: string): string {
+  if (!content || !content.trim()) return "";
+  let parsed: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    return `<p>${escapeHtml(content)}</p>`;
+  }
+  if (!parsed?.root?.children) return `<p>${escapeHtml(content)}</p>`;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const render = (node: any): string => {
+    const type = node?.type;
+    if (type === "heading") {
+      const tag = /^h[1-3]$/.test(node.tag) ? node.tag : "h3";
+      return `<${tag}>${inlineHtml(node.children || [])}</${tag}>`;
+    }
+    if (type === "list") {
+      const tag = node.listType === "number" ? "ol" : "ul";
+      const items = (node.children || [])
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .map((li: any) => `<li>${inlineHtml(li.children || [])}</li>`)
+        .join("");
+      return `<${tag}>${items}</${tag}>`;
+    }
+    if (type === "paragraph") {
+      const inner = inlineHtml(node.children || []);
+      return inner ? `<p>${inner}</p>` : "<p>&nbsp;</p>";
+    }
+    if (Array.isArray(node?.children)) return node.children.map(render).join("");
+    return "";
+  };
+  return parsed.root.children.map(render).join("");
+}
+
+function fmtDate(d?: Date): string {
+  if (!d) return "";
+  try {
+    return new Date(d).toLocaleDateString("pt-BR");
+  } catch {
+    return "";
+  }
+}
+
+export interface PostReportMeta {
+  clientName?: string;
+  ticket?: string;
+  systemType?: string;
+  responsible?: string;
+  status?: string;
+  startDate?: Date;
+  endDate?: Date;
+}
+
 interface PostObservationsProps {
   observations?: string;
   onChange: (obs: string) => void;
   canEdit: boolean;
   projectId?: string;
   requestedBy?: string;
+  reportMeta?: PostReportMeta;
 }
 
 export function PostObservations({
@@ -145,6 +223,7 @@ export function PostObservations({
   canEdit,
   projectId,
   requestedBy,
+  reportMeta,
 }: PostObservationsProps) {
   const initial = parseState(observations);
   const [blocks, setBlocks] = useState<Block[]>(initial.blocks);
@@ -244,6 +323,88 @@ export function PostObservations({
 
   const summaryGenerating = aiTarget?.kind === "summary";
   const canSummarize = canEdit && !aiRunning && online && hasBlockText;
+  const summaryHasText = blockTextLen(summary.content) >= 3;
+
+  // --- Exportar relatorio (PDF do Resumo Geral) ---
+  const [exporting, setExporting] = useState(false);
+  const exportPdf = async () => {
+    if (!summaryHasText || exporting) return;
+    setExporting(true);
+    toast.loading("Gerando PDF...", { id: "post-report-pdf" });
+    const holder = document.createElement("div");
+    try {
+      const html2canvas = (await import("html2canvas")).default;
+      const { jsPDF } = await import("jspdf");
+
+      const m = reportMeta || {};
+      const rows: string[] = [];
+      const addRow = (k: string, v?: string) => {
+        if (v && v.trim()) rows.push(`<tr><td class="k">${escapeHtml(k)}</td><td>${escapeHtml(v)}</td></tr>`);
+      };
+      addRow("Cliente/Cartório", m.clientName);
+      addRow("Chamado/Ticket", m.ticket);
+      addRow("Sistema", m.systemType);
+      addRow("Responsável", m.responsible);
+      const periodo = [fmtDate(m.startDate), fmtDate(m.endDate)].filter(Boolean).join(" a ");
+      addRow("Período", periodo);
+      addRow("Emitido em", new Date().toLocaleDateString("pt-BR"));
+
+      const summaryHtml = lexToHtml(summary.content) || "<p>&nbsp;</p>";
+
+      holder.style.cssText = "position:fixed;left:-99999px;top:0;width:794px;background:#ffffff;";
+      holder.innerHTML = `
+        <div style="width:794px;padding:48px 56px;box-sizing:border-box;background:#ffffff;color:#0f172a;font-family:'Segoe UI',Calibri,Arial,sans-serif;">
+          <div style="border-bottom:3px solid #4f46e5;padding-bottom:14px;margin-bottom:20px;">
+            <div style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#6366f1;font-weight:700;">Relatório de Pós-Implantação</div>
+            <div style="font-size:22px;font-weight:700;margin-top:4px;">Resumo Geral</div>
+          </div>
+          <table style="width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:24px;">
+            <style>td{padding:4px 8px;vertical-align:top;border-bottom:1px solid #eef2f7;} td.k{color:#64748b;font-weight:600;width:170px;white-space:nowrap;}</style>
+            ${rows.join("")}
+          </table>
+          <div style="font-size:14px;line-height:1.6;color:#1e293b;">${summaryHtml}</div>
+          <div style="margin-top:36px;padding-top:12px;border-top:1px solid #e2e8f0;font-size:10.5px;color:#94a3b8;text-align:center;">
+            Gerado pelo SiplanHUB${m.clientName ? " — " + escapeHtml(m.clientName) : ""}
+          </div>
+        </div>`;
+      document.body.appendChild(holder);
+
+      const canvas = await html2canvas(holder.firstElementChild as HTMLElement, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = pageWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+      while (heightLeft > 0) {
+        position -= pageHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+      const cli = (m.clientName || "Cartorio").replace(/\s+/g, "_").replace(/[^\w-]/g, "");
+      const dt = new Date().toLocaleDateString("pt-BR").replace(/\//g, "-");
+      pdf.save(`Relatorio_Pos-Implantacao_${cli}_${dt}.pdf`);
+      toast.success("PDF gerado com sucesso!", { id: "post-report-pdf" });
+    } catch (err) {
+      console.error("Erro ao gerar PDF do resumo:", err);
+      toast.error("Erro ao gerar o PDF.", { id: "post-report-pdf" });
+    } finally {
+      if (holder.parentNode) holder.parentNode.removeChild(holder);
+      setExporting(false);
+    }
+  };
+
   const summaryTitle = !online
     ? "O gerador da IA está offline no momento"
     : !hasBlockText
@@ -384,23 +545,47 @@ export function PostObservations({
               Resumo Geral
             </Label>
           </button>
-          {canEdit && summaryOpen && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={generateSummary}
-              disabled={!canSummarize}
-              title={summaryTitle}
-              className="h-7 gap-1 text-xs text-indigo-600 border-indigo-200 hover:text-indigo-700 hover:bg-indigo-50 dark:text-indigo-400 dark:border-indigo-900/50 dark:hover:bg-indigo-950/30"
-            >
-              {summaryGenerating ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Sparkles className="h-3.5 w-3.5" />
+          {summaryOpen && (
+            <div className="flex items-center gap-1.5">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={exportPdf}
+                disabled={!summaryHasText || exporting}
+                title={
+                  !summaryHasText
+                    ? "Preencha ou gere o Resumo Geral antes de exportar"
+                    : "Exporta o Resumo Geral em PDF para enviar por e-mail"
+                }
+                className="h-7 gap-1 text-xs"
+              >
+                {exporting ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <FileDown className="h-3.5 w-3.5" />
+                )}
+                {exporting ? "Gerando…" : "Exportar PDF"}
+              </Button>
+              {canEdit && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={generateSummary}
+                  disabled={!canSummarize}
+                  title={summaryTitle}
+                  className="h-7 gap-1 text-xs text-indigo-600 border-indigo-200 hover:text-indigo-700 hover:bg-indigo-50 dark:text-indigo-400 dark:border-indigo-900/50 dark:hover:bg-indigo-950/30"
+                >
+                  {summaryGenerating ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-3.5 w-3.5" />
+                  )}
+                  {summaryGenerating ? "Gerando…" : "Gerar resumo com IA"}
+                </Button>
               )}
-              {summaryGenerating ? "Gerando…" : "Gerar resumo com IA"}
-            </Button>
+            </div>
           )}
         </div>
         <div className={cn("space-y-2", !summaryOpen && "hidden")}>
