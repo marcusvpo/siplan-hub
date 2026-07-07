@@ -55,8 +55,32 @@ for f in data:
 sys.exit(10 if changed else 0)
 PY
 rc=$?
+changed_src=0
+[ "$rc" -eq 10 ] && changed_src=1
 
-if [ "$rc" -eq 10 ]; then
+# Sincroniza package.json / package-lock.json; se mudarem, roda npm install.
+WORK_DIR="/home/administrator/vm-worker"
+need_install=0
+for pf in package.json package-lock.json; do
+  tmp=$(mktemp)
+  if curl -fsSL "https://raw.githubusercontent.com/${REPO}/${BRANCH}/vm-worker/${pf}" -o "$tmp"; then
+    if ! cmp -s "$tmp" "${WORK_DIR}/${pf}"; then
+      cp "$tmp" "${WORK_DIR}/${pf}"
+      chown "$OWNER":"$OWNER" "${WORK_DIR}/${pf}" 2>/dev/null || true
+      need_install=1
+      echo "atualizado: $pf"
+    fi
+  fi
+  rm -f "$tmp"
+done
+
+if [ "$need_install" -eq 1 ]; then
+  NODE_BIN=$(ls -d /home/administrator/.nvm/versions/node/*/bin 2>/dev/null | sort -V | tail -1)
+  echo "package mudou -> npm install"
+  sudo -u "$OWNER" env PATH="${NODE_BIN}:${PATH}" npm install --prefix "$WORK_DIR" --no-audit --no-fund || echo "npm install falhou (verifique manualmente)"
+fi
+
+if [ "$changed_src" -eq 1 ] || [ "$need_install" -eq 1 ]; then
   chown -R "$OWNER":"$OWNER" "$SRC_DIR" 2>/dev/null || true
   systemctl restart "$SERVICE"
   echo "$(date '+%F %T') worker atualizado e reiniciado"

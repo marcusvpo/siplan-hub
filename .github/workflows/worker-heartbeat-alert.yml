@@ -1,0 +1,64 @@
+name: Alerta do worker (heartbeat)
+
+# A cada 10 min le o ultimo heartbeat do worker no Supabase. Se estiver velho
+# (> STALE_MIN) ou o worker sinalizou "stopping", manda um aviso no Teams.
+# Roda fora da VM (GitHub) -> detecta ate quando a VM inteira cai.
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+      TEAMS_WEBHOOK: ${{ secrets.TEAMS_WEBHOOK }}
+      STALE_MIN: "15"
+    steps:
+      - name: Checar heartbeat e alertar
+        run: |
+          python3 - <<'PY'
+          import os, json, urllib.request, datetime
+
+          url = os.environ.get("SUPABASE_URL", "").rstrip("/")
+          key = os.environ.get("SUPABASE_ANON_KEY", "")
+          hook = os.environ.get("TEAMS_WEBHOOK", "")
+          stale_min = int(os.environ.get("STALE_MIN", "15"))
+
+          # Sem secrets configurados ainda: no-op limpo (nao falha o workflow).
+          if not url or not key:
+              print("SUPABASE_URL/ANON_KEY nao configurados; pulando.")
+              raise SystemExit(0)
+
+          q = f"{url}/rest/v1/model_worker_heartbeat?select=worker_id,status,last_seen&order=last_seen.desc&limit=1"
+          req = urllib.request.Request(q, headers={"apikey": key, "Authorization": f"Bearer {key}"})
+          rows = json.load(urllib.request.urlopen(req, timeout=30))
+
+          now = datetime.datetime.now(datetime.timezone.utc)
+          problem = None
+          if not rows:
+              problem = "Nenhum heartbeat encontrado (worker nunca subiu?)."
+          else:
+              r = rows[0]
+              last = datetime.datetime.fromisoformat(r["last_seen"].replace("Z", "+00:00"))
+              age_min = (now - last).total_seconds() / 60
+              if r.get("status") == "stopping":
+                  problem = f"Worker '{r['worker_id']}' sinalizou parada (stopping)."
+              elif age_min > stale_min:
+                  problem = f"Worker '{r['worker_id']}' sem sinal ha {age_min:.0f} min (ultimo: {r['last_seen']})."
+
+          if not problem:
+              print("Worker OK.")
+              raise SystemExit(0)
+
+          print("ALERTA:", problem)
+          if hook:
+              body = json.dumps({"text": f"⚠️ SiplanHUB — gerador de IA/modelos offline: {problem}"}).encode()
+              urllib.request.urlopen(urllib.request.Request(hook, data=body, headers={"Content-Type": "application/json"}), timeout=30)
+              print("Aviso enviado ao Teams.")
+          else:
+              print("TEAMS_WEBHOOK nao configurado; alerta so no log.")
+          PY
