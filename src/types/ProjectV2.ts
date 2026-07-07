@@ -324,6 +324,13 @@ export interface ModelosEditorStageV2 {
 // Geracao automatica de modelos JSON via worker na VM (fila de trabalho)
 export type ModelJobStatus = 'pending' | 'processing' | 'done' | 'error';
 
+// Um passo do andamento ao vivo (o que o Claude esta fazendo na VM)
+export interface ModelProgressStep {
+  at: string; // ISO timestamp
+  text: string;
+  kind?: 'system' | 'text' | 'tool' | 'result';
+}
+
 export interface ModelGenerationJob {
   id: string;
   projectId: string;
@@ -336,6 +343,19 @@ export interface ModelGenerationJob {
   attempts: number;
   requestedBy?: string;
   createdAt: string;
+  progress?: string; // passo atual (texto)
+  progressLog?: ModelProgressStep[]; // historico dos ultimos passos
+  progressUpdatedAt?: string;
+}
+
+// Heartbeat do worker na VM (online/offline + ocupado)
+export type ModelWorkerState = 'idle' | 'busy' | 'stopping';
+
+export interface ModelWorkerStatus {
+  workerId: string;
+  status: ModelWorkerState;
+  lastSeen: string;
+  note?: string;
 }
 
 export interface ImplementationPhase {
