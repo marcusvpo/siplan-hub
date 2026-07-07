@@ -86,3 +86,12 @@ export interface Job {
   status: string;
   attempts: number;
 }
+
+// Job de geracao com IA das "Consideracoes finais" da Transicao (DTC).
+export interface DtcJob {
+  id: string;
+  project_id: string;
+  target_field: string;
+  status: string;
+  attempts: number;
+}
