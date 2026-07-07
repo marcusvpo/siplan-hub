@@ -385,10 +385,13 @@ function mapModelosEditorStage(modelosEditor: ModelosEditorStageV2 | undefined, 
     result.modelos_editor_sent_files = oldModelosEditor.sentFiles;
   }
 
+  // IMPORTANTE: modelos_editor_available_files e co-gerenciado com o worker da VM
+  // (que faz append atomico do JSON gerado via RPC). Por isso NAO reescrevemos a
+  // coluna em todo save - so quando availableFiles vem EXPLICITO no update. Isso
+  // evita sobrescrever/apagar modelos gerados pelo worker (lost-update). Deletes e
+  // uploads manuais passam por RPCs atomicos (remove_available_model / append_available_model).
   if (modelosEditor.availableFiles !== undefined) {
     result.modelos_editor_available_files = modelosEditor.availableFiles;
-  } else if (oldModelosEditor?.availableFiles !== undefined) {
-    result.modelos_editor_available_files = oldModelosEditor.availableFiles;
   }
 
   return result;
