@@ -284,12 +284,16 @@ export interface ConversionStageV2 {
 
 export type ModelType =
   | 'minutas'
+  | 'traslado'
+  | 'livro'
   | 'qualificacao_partes'
   | 'qualificacao_imovel'
   | 'clausulas';
 
 export const MODEL_TYPES: { value: ModelType; label: string }[] = [
   { value: 'minutas', label: 'Minutas' },
+  { value: 'traslado', label: 'Traslado' },
+  { value: 'livro', label: 'Livro' },
   { value: 'qualificacao_partes', label: 'Qualificação de Partes' },
   { value: 'qualificacao_imovel', label: 'Qualificação de Imóvel' },
   { value: 'clausulas', label: 'Cláusulas' },

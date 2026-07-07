@@ -30,7 +30,7 @@ export const config = {
   entradaDir: process.env.ENTRADA_DIR || "/home/administrator/siplan_entrada",
 };
 
-export type ModelType = "minutas" | "qualificacao_partes" | "qualificacao_imovel" | "clausulas";
+export type ModelType = "minutas" | "traslado" | "livro" | "qualificacao_partes" | "qualificacao_imovel" | "clausulas";
 
 export interface Job {
   id: string;
