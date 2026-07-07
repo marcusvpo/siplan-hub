@@ -4,6 +4,50 @@ import { processJob } from "./processJob.js";
 
 let busy = false;
 
+/**
+ * Heartbeat: o frontend le model_worker_heartbeat para mostrar "Gerador online/offline".
+ * Upsert periodico + nas transicoes de ocupado/ocioso. Best-effort (nunca lanca).
+ */
+async function sendHeartbeat(status: "idle" | "busy" | "stopping", note?: string): Promise<void> {
+  try {
+    await supabase.from("model_worker_heartbeat").upsert({
+      worker_id: config.workerId,
+      status,
+      last_seen: new Date().toISOString(),
+      note: note ?? null,
+    });
+  } catch {
+    /* best-effort */
+  }
+}
+
+/**
+ * Recuperacao no boot: como so existe um worker, qualquer job em 'processing'
+ * apos um restart esta orfao (o Claude foi morto junto). Devolve para a fila
+ * imediatamente (sem esperar o timeout de 30 min do reaper), respeitando MAX_ATTEMPTS.
+ */
+async function recoverOwnStuckJobs(): Promise<void> {
+  const { error: reqErr } = await supabase
+    .from("model_generation_jobs")
+    .update({ status: "pending", worker_id: null, started_at: null })
+    .eq("status", "processing")
+    .eq("worker_id", config.workerId)
+    .lt("attempts", config.maxAttempts);
+  if (reqErr) console.error("Erro ao recuperar jobs orfaos (requeue):", reqErr.message);
+
+  const { error: errErr } = await supabase
+    .from("model_generation_jobs")
+    .update({
+      status: "error",
+      error_message: "Worker reiniciado durante a geracao (tentativas esgotadas).",
+      finished_at: new Date().toISOString(),
+    })
+    .eq("status", "processing")
+    .eq("worker_id", config.workerId)
+    .gte("attempts", config.maxAttempts);
+  if (errErr) console.error("Erro ao marcar jobs orfaos como erro:", errErr.message);
+}
+
 async function markError(job: Job, message: string) {
   await supabase
     .from("model_generation_jobs")
@@ -23,6 +67,7 @@ async function markError(job: Job, message: string) {
 async function claimAndProcess(): Promise<void> {
   if (busy) return;
   busy = true;
+  void sendHeartbeat("busy");
   try {
     // Loop enquanto houver jobs pendentes
     // eslint-disable-next-line no-constant-condition
@@ -49,6 +94,7 @@ async function claimAndProcess(): Promise<void> {
     }
   } finally {
     busy = false;
+    void sendHeartbeat("idle");
   }
 }
 
@@ -64,9 +110,29 @@ async function reapStuckJobs(): Promise<void> {
   if (error) console.error("Erro no reaper:", error.message);
 }
 
-function main() {
+// Encerramento limpo: marca o heartbeat como 'stopping' para o selo virar offline na hora.
+function installShutdownHandlers() {
+  const shutdown = async (sig: string) => {
+    console.log(`Recebido ${sig}, encerrando...`);
+    await sendHeartbeat("stopping", "Worker encerrando");
+    process.exit(0);
+  };
+  process.on("SIGTERM", () => { void shutdown("SIGTERM"); });
+  process.on("SIGINT", () => { void shutdown("SIGINT"); });
+}
+
+async function main() {
   console.log(`SiplanHUB VM worker iniciado (worker_id=${config.workerId}).`);
   console.log(`Bucket=${config.bucket} | poll=${config.pollIntervalMs}ms | timeout=${config.jobTimeoutMs}ms`);
+
+  installShutdownHandlers();
+
+  // 0. Heartbeat imediato + periodico (o frontend mostra online/offline)
+  await sendHeartbeat("idle", "Worker iniciado");
+  setInterval(() => { void sendHeartbeat(busy ? "busy" : "idle"); }, config.heartbeatIntervalMs);
+
+  // 0b. Recupera jobs que ficaram presos em 'processing' de um restart anterior
+  await recoverOwnStuckJobs();
 
   // 1. Realtime: acorda o worker assim que um job e inserido (conexao de SAIDA, sem tunel)
   supabase
@@ -87,4 +153,4 @@ function main() {
   setInterval(() => { void tick(); }, config.pollIntervalMs);
 }
 
-main();
+void main();

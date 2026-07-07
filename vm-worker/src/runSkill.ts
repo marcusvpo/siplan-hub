@@ -1,26 +1,107 @@
 import { spawn } from "node:child_process";
 import { config } from "./config.js";
 
+export interface ProgressStep {
+  at: string; // ISO timestamp
+  text: string; // frase curta e amigavel
+  kind: "system" | "text" | "tool" | "result";
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyObj = any;
+
+// Traduz um tool_use do Claude em uma frase curta e legivel para o analista.
+function describeTool(name: string, input: AnyObj): string {
+  const s = (v: unknown, n = 90) => String(v ?? "").replace(/\s+/g, " ").trim().slice(0, n);
+  const base = (p?: string) => (p ? String(p).split(/[\\/]/).pop() : "") || "";
+  switch (name) {
+    case "Bash": return `Executando comando: ${s(input?.command)}`;
+    case "Read": return `Lendo arquivo: ${base(input?.file_path)}`;
+    case "Write": return `Escrevendo arquivo: ${base(input?.file_path)}`;
+    case "Edit":
+    case "MultiEdit": return `Editando arquivo: ${base(input?.file_path)}`;
+    case "Grep": return `Procurando por: ${s(input?.pattern, 60)}`;
+    case "Glob": return `Buscando arquivos: ${s(input?.pattern, 60)}`;
+    case "Skill": return `Rodando skill: ${s(input?.command ?? input?.skill)}`;
+    case "Task": return `Subagente: ${s(input?.description, 60)}`;
+    case "TodoWrite": return "Atualizando o plano de tarefas";
+    case "WebFetch": return `Consultando: ${s(input?.url, 60)}`;
+    default: return `Ferramenta: ${name}`;
+  }
+}
+
 /**
- * Roda o Claude Code em modo headless (-p) com a skill, de forma autonoma
- * (--dangerously-skip-permissions), dentro do projeto Orion.Modelos.
- * stdin ignorado (equivale a < /dev/null). Retorna o stdout (a saida final
- * do agente, que deve conter a linha JSON_GERADO=<caminho>).
+ * Roda o Claude Code headless com --output-format stream-json --verbose, emitindo
+ * cada passo (texto do agente e chamadas de ferramenta) via onProgress em tempo real.
+ * Retorna o transcript acumulado (para localizar JSON_GERADO=) e o texto do result.
  */
-export function runSkill(prompt: string): Promise<{ stdout: string; stderr: string; code: number }> {
+export function runSkill(
+  prompt: string,
+  onProgress?: (step: ProgressStep) => void
+): Promise<{ transcript: string; resultText: string; code: number; stderr: string }> {
   return new Promise((resolve, reject) => {
     const child = spawn(
       config.claudeBin,
-      ["--dangerously-skip-permissions", "-p", prompt, "--output-format", "text"],
+      ["--dangerously-skip-permissions", "-p", prompt, "--output-format", "stream-json", "--verbose"],
       {
         cwd: config.orionProjectDir,
         stdio: ["ignore", "pipe", "pipe"],
       }
     );
 
-    let stdout = "";
     let stderr = "";
-    child.stdout.on("data", (d) => { stdout += d.toString(); });
+    let transcript = "";
+    let resultText = "";
+    let buf = "";
+
+    const emit = (text: string, kind: ProgressStep["kind"]) => {
+      if (!text) return;
+      onProgress?.({ at: new Date().toISOString(), text, kind });
+    };
+
+    const handleEvent = (evt: AnyObj) => {
+      const t = evt?.type;
+      if (t === "system") {
+        if (evt.subtype === "init") emit("Sessao iniciada - analisando o documento...", "system");
+        return;
+      }
+      if (t === "assistant") {
+        const content = evt.message?.content;
+        if (Array.isArray(content)) {
+          for (const block of content) {
+            if (block?.type === "text" && typeof block.text === "string" && block.text.trim()) {
+              transcript += block.text + "\n";
+              const line = block.text.replace(/\s+/g, " ").trim().slice(0, 140);
+              if (line) emit(line, "text");
+            } else if (block?.type === "tool_use") {
+              emit(describeTool(block.name, block.input), "tool");
+            }
+          }
+        }
+        return;
+      }
+      if (t === "result") {
+        if (typeof evt.result === "string") {
+          resultText = evt.result;
+          transcript += evt.result + "\n";
+        }
+        return;
+      }
+    };
+
+    const onData = (chunk: Buffer) => {
+      buf += chunk.toString();
+      let idx: number;
+      // stream-json emite um objeto JSON por linha (NDJSON)
+      while ((idx = buf.indexOf("\n")) >= 0) {
+        const line = buf.slice(0, idx).trim();
+        buf = buf.slice(idx + 1);
+        if (!line) continue;
+        try { handleEvent(JSON.parse(line)); } catch { /* linha nao-JSON: ignora */ }
+      }
+    };
+
+    child.stdout.on("data", onData);
     child.stderr.on("data", (d) => { stderr += d.toString(); });
 
     const timer = setTimeout(() => {
@@ -28,14 +109,13 @@ export function runSkill(prompt: string): Promise<{ stdout: string; stderr: stri
       reject(new Error(`Timeout: a geracao excedeu ${config.jobTimeoutMs} ms`));
     }, config.jobTimeoutMs);
 
-    child.on("error", (err) => {
-      clearTimeout(timer);
-      reject(err);
-    });
+    child.on("error", (err) => { clearTimeout(timer); reject(err); });
 
     child.on("close", (code) => {
       clearTimeout(timer);
-      resolve({ stdout, stderr, code: code ?? -1 });
+      const rest = buf.trim();
+      if (rest) { try { handleEvent(JSON.parse(rest)); } catch { /* ignore */ } }
+      resolve({ transcript, resultText, code: code ?? -1, stderr });
     });
   });
 }

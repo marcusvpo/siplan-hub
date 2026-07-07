@@ -34,6 +34,7 @@ export const config = {
   pollIntervalMs: Number(process.env.POLL_INTERVAL_MS || 15000),
   jobTimeoutMs: Number(process.env.JOB_TIMEOUT_MS || 1800000),
   maxAttempts: Number(process.env.MAX_ATTEMPTS || 3),
+  heartbeatIntervalMs: Number(process.env.HEARTBEAT_INTERVAL_MS || 30000),
 
   // Geracao headless (Claude Code + skill criar-modelo-mesclado)
   claudeBin: required("CLAUDE_BIN"),
