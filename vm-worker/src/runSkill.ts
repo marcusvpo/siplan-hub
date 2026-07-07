@@ -35,20 +35,24 @@ function describeTool(name: string, input: AnyObj): string {
  * cada passo (texto do agente e chamadas de ferramenta) via onProgress em tempo real.
  * Retorna o transcript acumulado (para localizar JSON_GERADO=) e o texto do result.
  */
+export interface RunSkillOptions {
+  model?: string; // override do modelo (ex.: "sonnet"/"haiku") - tarefas leves rodam mais rapido
+  cwd?: string; // override do diretorio de trabalho
+}
+
 export function runSkill(
   prompt: string,
   onProgress?: (step: ProgressStep) => void,
-  shouldCancel?: () => Promise<boolean>
+  shouldCancel?: () => Promise<boolean>,
+  options: RunSkillOptions = {}
 ): Promise<{ transcript: string; resultText: string; code: number; stderr: string; cancelled: boolean }> {
   return new Promise((resolve, reject) => {
-    const child = spawn(
-      config.claudeBin,
-      ["--dangerously-skip-permissions", "-p", prompt, "--output-format", "stream-json", "--verbose"],
-      {
-        cwd: config.orionProjectDir,
-        stdio: ["ignore", "pipe", "pipe"],
-      }
-    );
+    const args = ["--dangerously-skip-permissions", "-p", prompt, "--output-format", "stream-json", "--verbose"];
+    if (options.model) args.push("--model", options.model);
+    const child = spawn(config.claudeBin, args, {
+      cwd: options.cwd || config.orionProjectDir,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
 
     let stderr = "";
     let transcript = "";
