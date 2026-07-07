@@ -1,5 +1,7 @@
 import "dotenv/config";
 import path from "node:path";
+import os from "node:os";
+import { existsSync, readdirSync } from "node:fs";
 
 function required(name: string): string {
   const value = process.env[name];
@@ -21,6 +23,36 @@ function secretKey(): string {
   return value;
 }
 
+// Resolve o binario do Claude Code. Se CLAUDE_BIN estiver setado e existir, usa.
+// Senao (ou se o caminho ficou obsoleto apos um update da extensao), procura o
+// binario nativo MAIS NOVO da extensao do VS Code automaticamente -> zero manutencao
+// quando a extensao atualiza e o numero de versao no caminho muda.
+function resolveClaudeBin(): string {
+  const explicit = process.env.CLAUDE_BIN;
+  if (explicit && existsSync(explicit)) return explicit;
+
+  const extDir =
+    process.env.VSCODE_EXT_DIR ||
+    path.join(os.homedir(), ".vscode-server", "extensions");
+  try {
+    const found = readdirSync(extDir)
+      .filter((d) => d.startsWith("anthropic.claude-code-"))
+      .map((d) => path.join(extDir, d, "resources", "native-binary", "claude"))
+      .filter((bin) => existsSync(bin))
+      // ordena pela versao no nome da pasta (desc) -> mais novo primeiro
+      .sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
+    if (found.length > 0) return found[0];
+  } catch {
+    /* pasta de extensoes inexistente: cai no erro abaixo */
+  }
+
+  throw new Error(
+    explicit
+      ? `CLAUDE_BIN (${explicit}) nao existe e nao encontrei o binario da extensao em ${extDir}. Reconfira o .env.`
+      : `Nao encontrei o binario do Claude Code em ${extDir}. Instale a extensao ou defina CLAUDE_BIN no .env.`
+  );
+}
+
 const orionProjectDir = process.env.ORION_PROJECT_DIR || "/opt/Orion.Modelos";
 
 export const config = {
@@ -37,7 +69,7 @@ export const config = {
   heartbeatIntervalMs: Number(process.env.HEARTBEAT_INTERVAL_MS || 30000),
 
   // Geracao headless (Claude Code + skill criar-modelo-mesclado)
-  claudeBin: required("CLAUDE_BIN"),
+  claudeBin: resolveClaudeBin(),
   orionProjectDir,
   modelosCriadosDir: process.env.MODELOS_CRIADOS_DIR || path.join(orionProjectDir, "modelos_criados"),
   entradaDir: process.env.ENTRADA_DIR || "/home/administrator/siplan_entrada",
