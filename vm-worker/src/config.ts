@@ -72,6 +72,10 @@ export const config = {
   // mais rapido que o padrao). Override via DTC_MODEL. Vazio = usa o padrao da CLI.
   dtcModel: process.env.DTC_MODEL || "sonnet",
 
+  // Chave de API opcional para fallback quando a assinatura bate o limite de sessao.
+  // Se definida (DTC_FALLBACK_API_KEY), o resumo tenta de novo cobrando via API.
+  fallbackApiKey: process.env.DTC_FALLBACK_API_KEY || "",
+
   // Geracao headless (Claude Code + skill criar-modelo-mesclado)
   claudeBin: resolveClaudeBin(),
   orionProjectDir,

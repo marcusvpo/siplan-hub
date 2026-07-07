@@ -50,6 +50,16 @@ import { plainTextToLexicalJson } from "@/lib/lexical";
 import { DtcAiJob } from "@/types/ProjectV2";
 import { LogsTab } from "@/components/ProjectManagement/Tabs/LogsTab";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -803,6 +813,37 @@ function TransicaoPlaceholder() {
   );
   const { online: aiWorkerOnline } = useModelWorkerStatus();
   const aiRunning = aiJob?.status === "processing" || aiJob?.status === "pending";
+
+  // Ha dados suficientes preenchidos para valer a pena gerar? (evita rodar a toa e
+  // receber "sem informacoes suficientes" so depois). Espelha a checagem do worker.
+  const aiHasEnough = useMemo(() => {
+    if (!localDtc) return false;
+    const len = (s?: string) => getLexicalTextLength(s || "");
+    const textScore =
+      len(localDtc.implantationProcess) +
+      len(localDtc.postImplantationProcess) +
+      len(localDtc.systemsInstalled) +
+      len(localDtc.convertedData);
+    const listScore =
+      (localDtc.implantationProcessLogs?.length || 0) +
+      (localDtc.implantationGainsList?.length || 0) +
+      (localDtc.implantationPendingList?.length || 0) +
+      (localDtc.implantationSuggestionsList?.length || 0);
+    return textScore >= 60 || listScore >= 2;
+  }, [localDtc]);
+  const aiHasExistingText = getLexicalTextLength(localDtc?.finalConsiderations || "") > 0;
+
+  const [aiConfirmOpen, setAiConfirmOpen] = useState(false);
+  const doEnqueueAi = () => enqueueAiJob.mutate({ requestedBy: fullName });
+  const handleGenerateAi = () => {
+    if (aiHasExistingText) setAiConfirmOpen(true);
+    else doEnqueueAi();
+  };
+  const aiDisabledReason = !aiWorkerOnline
+    ? "O gerador da IA está offline no momento"
+    : !aiHasEnough
+    ? "Preencha os campos do relato (processo, ganhos, pendências…) antes de gerar"
+    : "Gera um resumo do processo com base nos dados preenchidos";
 
   // Tickets helper functions
   const addTicket = () => {
@@ -3561,9 +3602,9 @@ function TransicaoPlaceholder() {
                               type="button"
                               size="sm"
                               variant="outline"
-                              disabled={isFormDisabled || aiRunning || !aiWorkerOnline}
-                              title={!aiWorkerOnline ? "O gerador da IA está offline no momento" : "Gera um resumo do processo com base nos dados preenchidos"}
-                              onClick={() => enqueueAiJob.mutate({ requestedBy: fullName })}
+                              disabled={isFormDisabled || aiRunning || !aiWorkerOnline || !aiHasEnough}
+                              title={aiDisabledReason}
+                              onClick={handleGenerateAi}
                               className="h-7 gap-1.5 text-xs"
                             >
                               {aiRunning ? (
@@ -3600,6 +3641,21 @@ function TransicaoPlaceholder() {
                           placeholder="Considerações adicionais ou notas de encerramento do projeto de transição..."
                           editable={!isFormDisabled}
                         />
+                        <AlertDialog open={aiConfirmOpen} onOpenChange={setAiConfirmOpen}>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Substituir o texto atual?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Já existe conteúdo nas Considerações Finais. Gerar com IA vai <strong>substituir</strong> o
+                                texto atual pelo rascunho gerado quando ficar pronto. Deseja continuar?
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Manter o atual</AlertDialogCancel>
+                              <AlertDialogAction onClick={doEnqueueAi}>Substituir e gerar</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     )}
                   </div>

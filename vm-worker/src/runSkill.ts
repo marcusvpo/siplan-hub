@@ -38,6 +38,7 @@ function describeTool(name: string, input: AnyObj): string {
 export interface RunSkillOptions {
   model?: string; // override do modelo (ex.: "sonnet"/"haiku") - tarefas leves rodam mais rapido
   cwd?: string; // override do diretorio de trabalho
+  env?: Record<string, string>; // variaveis extras (ex.: ANTHROPIC_API_KEY no fallback)
 }
 
 export function runSkill(
@@ -52,6 +53,7 @@ export function runSkill(
     const child = spawn(config.claudeBin, args, {
       cwd: options.cwd || config.orionProjectDir,
       stdio: ["ignore", "pipe", "pipe"],
+      env: options.env ? { ...process.env, ...options.env } : process.env,
     });
 
     let stderr = "";
