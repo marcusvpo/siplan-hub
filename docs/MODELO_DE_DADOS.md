@@ -30,7 +30,7 @@ Referência das tabelas, funções (RPCs), políticas de segurança (RLS) e buck
 | `form_templates` | Templates de formulário (aderência, infra, OrionTN/Reg/Pro) | `20260601141300_implantadores_templates` |
 | `project_form_responses` | Respostas de formulário por projeto (dirige status via verdict) | `20260601141300_implantadores_templates` |
 | `commercial_checklists` | Checklists comerciais (com link público) | `20260602141500_create_commercial_checklists` |
-| `model_generation_jobs` | Fila de geração automática de modelos (aba 5 Modelos Editor). Consumida pelo worker na VM ([vm-worker/](../vm-worker/README.md)). Colunas `progress`/`progress_log` guardam o andamento ao vivo | `20260707120000_create_model_generation_jobs` / `20260707160000_model_progress_and_worker_heartbeat` |
+| `model_generation_jobs` | Fila de geração automática de modelos (aba 5 Modelos Editor). Consumida pelo worker na VM ([vm-worker/](../vm-worker/README.md)). `progress`/`progress_log` = andamento ao vivo; `status` inclui `cancelled`; `cancel_requested` sinaliza cancelamento | `20260707120000_create_model_generation_jobs` / `..._160000_model_progress_and_worker_heartbeat` / `..._180000_model_jobs_cancel_and_available_rpcs` |
 | `model_worker_heartbeat` | Heartbeat do worker na VM (uma linha por `worker_id`) para o selo "Gerador online/offline" na tela | `20260707160000_model_progress_and_worker_heartbeat` |
 
 > Colunas evoluíram em migrations posteriores (ex.: `20251202_add_project_fields`, `20251212_add_stage_dates`, `20260611091500_add_work_hours`, `20260622171000_add_infra_servers_workstations`, `20260617112000_remove_unused_project_fields`). Consulte-as ao investigar um campo específico.
@@ -51,7 +51,8 @@ Referência das tabelas, funções (RPCs), políticas de segurança (RLS) e buck
 | `get_project_public_info(p_id)` | Info pública do projeto para a tela de coleta de infra (sem login) |
 | `update_project_public_infra(...)` | Submissão pública de infra (servidores/estações) via anon key |
 | `claim_model_generation_job(p_worker_id)` | Reivindica 1 job de geração de modelo de forma atômica (`FOR UPDATE SKIP LOCKED`) — um worker por job |
-| `append_available_model(p_project_id, p_file)` | Append atômico do JSON gerado em `projects.modelos_editor_available_files` (evita lost-update) |
+| `append_available_model(p_project_id, p_file)` | Append atômico de um JSON em `projects.modelos_editor_available_files` (usado pelo worker e pelo upload manual) |
+| `remove_available_model(p_project_id, p_file_id)` | Remove atômico (por id) de um modelo disponível — evita o frontend reescrever o array e apagar modelos gerados (lost-update) |
 | `requeue_stuck_model_jobs(p_timeout_seconds, p_max_attempts)` | Reaper: devolve à fila jobs travados em `processing`, respeitando `MAX_ATTEMPTS` |
 
 ---
