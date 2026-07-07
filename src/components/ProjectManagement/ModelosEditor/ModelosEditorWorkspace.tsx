@@ -442,31 +442,17 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
         if (!list || list.length === 0) return null;
         const allChecked = list.every(f => f.isDone);
         const someChecked = list.some(f => f.isDone);
-        const isSent = type === 'sent';
 
         return (
-            <div className={cn(
-                "flex items-center justify-between p-1.5 rounded border text-xs shrink-0 mb-1.5 transition-all duration-300",
-                isSent 
-                    ? "bg-indigo-50/50 dark:bg-indigo-950/20 border-indigo-100 dark:border-indigo-900/30" 
-                    : "bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-100 dark:border-emerald-900/30"
-            )}>
+            <div className="flex items-center justify-between p-1.5 rounded border border-border bg-muted/40 text-xs shrink-0 mb-1.5 transition-all duration-300">
                 <div className="flex items-center gap-2">
                     <Checkbox
                         checked={allChecked}
                         disabled={!canEditProjects}
                         onCheckedChange={(checked) => handleToggleAllFiles(type, list, !!checked)}
-                        className={cn(
-                            "rounded flex-shrink-0 h-3.5 w-3.5",
-                            isSent 
-                                ? "data-[state=checked]:bg-indigo-500 data-[state=checked]:border-indigo-500" 
-                                : "data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
-                        )}
+                        className="rounded flex-shrink-0 h-3.5 w-3.5 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                     />
-                    <span className={cn(
-                        "font-semibold",
-                        isSent ? "text-indigo-700 dark:text-indigo-400" : "text-emerald-700 dark:text-emerald-400"
-                    )}>
+                    <span className="font-semibold text-foreground">
                         Selecionar Todos
                     </span>
                 </div>
@@ -475,10 +461,7 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                         <Button
                             variant="ghost"
                             size="sm"
-                            className={cn(
-                                "h-6 px-2 text-[10px] flex items-center gap-1 hover:bg-slate-100 dark:hover:bg-slate-800",
-                                isSent ? "text-indigo-600 dark:text-indigo-400" : "text-emerald-600 dark:text-emerald-400"
-                            )}
+                            className="h-6 px-2 text-[10px] flex items-center gap-1 text-muted-foreground hover:text-foreground hover:bg-accent"
                             onClick={() => handleBatchDownload(type, list)}
                         >
                             <Download className="h-3 w-3" />
@@ -587,7 +570,7 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
             <Button
                 variant="ghost"
                 size="icon"
-                className="h-6.5 w-6.5 text-violet-500 hover:text-violet-600 dark:text-violet-400 dark:hover:text-violet-300 hover:bg-violet-50 dark:hover:bg-violet-900/20 group disabled:opacity-40"
+                className="h-6.5 w-6.5 text-muted-foreground hover:text-foreground hover:bg-accent group disabled:opacity-40"
                 title={isActive ? "Geração em andamento…" : isError ? "Tentar gerar novamente" : "Gerar modelo automático"}
                 disabled={isActive || enqueueJob.isPending}
                 onClick={(e) => { e.preventDefault(); handleGenerateModel(file); }}
@@ -601,26 +584,20 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
 
     const renderFileRow = (file: AttachedFile, type: 'sent' | 'available', list: AttachedFile[]) => (
         <div key={file.id} className={cn(
-            "flex items-center justify-between p-1.5 rounded bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800 text-xs transition-all duration-300 shadow-sm hover:shadow-md",
-            type === 'sent' ? "hover:border-indigo-300 dark:hover:border-indigo-700/50" : "hover:border-emerald-300 dark:hover:border-emerald-700/50",
-            file.isDone && "bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900/50"
+            "flex items-center justify-between p-1.5 rounded bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800 text-xs transition-all duration-300 shadow-sm hover:shadow-md hover:border-border",
+            file.isDone && "bg-muted border-border"
         )}>
             <div className="flex items-center gap-2 overflow-hidden">
                 <Checkbox
                     checked={!!file.isDone}
                     disabled={!canEditProjects}
                     onCheckedChange={() => handleToggleFileDone(file, type, list)}
-                    className={cn(
-                        "rounded flex-shrink-0 h-3.5 w-3.5",
-                        type === 'sent'
-                            ? "data-[state=checked]:bg-indigo-500 data-[state=checked]:border-indigo-500"
-                            : "data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
-                    )}
+                    className="rounded flex-shrink-0 h-3.5 w-3.5 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                 />
                 <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <span className={cn("truncate font-medium transition-colors cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400", file.isDone && "text-muted-foreground line-through")} onClick={(e) => { e.preventDefault(); handleFileView(file); }}>{file.name}</span>
+                        <span className={cn("truncate font-medium transition-colors cursor-pointer hover:text-foreground", file.isDone && "text-muted-foreground line-through")} onClick={(e) => { e.preventDefault(); handleFileView(file); }}>{file.name}</span>
                     </TooltipTrigger>
                     <TooltipContent side="top">
                         <p className="max-w-xs break-all">{file.name}</p>
@@ -630,10 +607,10 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
             <div className="flex items-center gap-0.5 shrink-0">
                 {type === 'sent' && renderJobBadge(file)}
                 {type === 'sent' && renderGenerateButton(file)}
-                <Button variant="ghost" size="icon" className="h-6.5 w-6.5 text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 group" title="Visualizar arquivo" onClick={(e) => { e.preventDefault(); handleFileView(file); }}>
+                <Button variant="ghost" size="icon" className="h-6.5 w-6.5 text-muted-foreground hover:text-foreground hover:bg-accent group" title="Visualizar arquivo" onClick={(e) => { e.preventDefault(); handleFileView(file); }}>
                     <Eye className="h-3.5 w-3.5 transition-transform duration-200 group-hover:scale-120" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-6.5 w-6.5 text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 group" title="Baixar" onClick={(e) => { e.preventDefault(); handleFileDownload(file); }}>
+                <Button variant="ghost" size="icon" className="h-6.5 w-6.5 text-muted-foreground hover:text-foreground hover:bg-accent group" title="Baixar" onClick={(e) => { e.preventDefault(); handleFileDownload(file); }}>
                     <Download className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-y-0.5" />
                 </Button>
                 {canDeleteFiles && (
@@ -654,17 +631,9 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
     ) => {
         const isSent = type === 'sent';
         return (
-            <div key={label} className={cn(
-                "rounded-md border p-2 space-y-1.5",
-                isSent
-                    ? "border-indigo-100 dark:border-indigo-900/30 bg-white/50 dark:bg-slate-900/40"
-                    : "border-emerald-100 dark:border-emerald-900/30 bg-white/50 dark:bg-slate-900/40"
-            )}>
+            <div key={label} className="rounded-md border border-border/60 bg-card/50 dark:bg-slate-900/40 p-2 space-y-1.5">
                 <div className="flex items-center justify-between gap-2">
-                    <span className={cn(
-                        "text-[10px] font-bold uppercase tracking-wider flex items-center gap-1",
-                        isSent ? "text-indigo-600 dark:text-indigo-400" : "text-emerald-600 dark:text-emerald-400"
-                    )}>
+                    <span className="text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 text-muted-foreground">
                         {label}
                         <span className="opacity-60 font-semibold">({catFiles.length})</span>
                     </span>
@@ -674,7 +643,7 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                                 <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="h-6 px-1.5 text-[10px] text-violet-600 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-900/40"
+                                    className="h-6 px-1.5 text-[10px] text-muted-foreground hover:text-foreground hover:bg-accent"
                                     title="Gerar automaticamente todos os modelos desta categoria"
                                     onClick={(e) => { e.preventDefault(); handleGenerateCategory(modelType, catFiles); }}
                                     disabled={enqueueJob.isPending}
@@ -686,12 +655,7 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                className={cn(
-                                    "h-6 px-1.5 text-[10px]",
-                                    isSent
-                                        ? "text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/40"
-                                        : "text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/40"
-                                )}
+                                className="h-6 px-1.5 text-[10px] text-muted-foreground hover:text-foreground hover:bg-accent"
                                 onClick={(e) => { e.preventDefault(); triggerUpload(type, modelType); }}
                                 disabled={!!uploadingType}
                             >
@@ -704,10 +668,7 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                     )}
                 </div>
                 {catFiles.length === 0 ? (
-                    <div className={cn(
-                        "text-[10px] text-muted-foreground text-center py-1.5 rounded border border-dashed",
-                        isSent ? "border-indigo-200/60 dark:border-indigo-800/40" : "border-emerald-200/60 dark:border-emerald-800/40"
-                    )}>
+                    <div className="text-[10px] text-muted-foreground text-center py-1.5 rounded border border-dashed border-border">
                         Nenhum modelo nesta categoria.
                     </div>
                 ) : (
@@ -747,17 +708,17 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
         const actualDone = stage.sentFiles.filter(f => f.isDone).length;
 
         return (
-            <div className="w-full space-y-1.5 bg-white/50 dark:bg-slate-900/50 p-3 rounded-lg border border-indigo-100 dark:border-indigo-900/30">
-                <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-indigo-700 dark:text-indigo-400">
+            <div className="w-full space-y-1.5 bg-card/50 dark:bg-slate-900/50 p-3 rounded-lg border border-border">
+                <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                     <span className="flex items-center gap-1.5">
                         <CheckCircle2 className="h-3.5 w-3.5" />
                         Progresso dos Modelos
                     </span>
                     <span>{actualDone} de {totalModels} ({Math.round((actualDone / totalModels) * 100)}%)</span>
                 </div>
-                <div className="h-1.5 w-full bg-indigo-100 dark:bg-indigo-900/20 rounded-full overflow-hidden">
+                <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
                     <div
-                        className={cn("h-full transition-all duration-500", actualDone === totalModels ? "bg-emerald-500" : "bg-indigo-500")}
+                        className="h-full bg-primary transition-all duration-500"
                         style={{ width: `${(actualDone / totalModels) * 100}%` }}
                     />
                 </div>
@@ -772,9 +733,9 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
             {/* Force 2 columns always */}
             <div className="flex-1 min-h-0 grid grid-cols-2 gap-3 w-full">
                 {/* Modelos Enviados */}
-                <div className="flex flex-col min-h-0 p-3 rounded-lg border border-indigo-100 dark:border-indigo-900/30 bg-indigo-50/30 dark:bg-indigo-900/10 space-y-2">
+                <div className="flex flex-col min-h-0 p-3 rounded-lg border border-border/60 bg-muted/20 dark:bg-muted/10 space-y-2">
                     <div className="flex items-center justify-between shrink-0">
-                        <Label className="text-[11px] font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5">
+                        <Label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
                             <UploadCloud className="h-3.5 w-3.5" />
                             Modelos Enviados (Cliente)
                         </Label>
@@ -790,7 +751,7 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-7.5 w-7.5 text-indigo-500 hover:text-indigo-700 hover:bg-indigo-100 dark:hover:bg-indigo-900/40"
+                                className="h-7.5 w-7.5 text-muted-foreground hover:text-foreground hover:bg-accent"
                                 title="Ver em tela cheia"
                                 onClick={(e) => { e.preventDefault(); setViewingFullscreen('sent'); }}
                             >
@@ -800,25 +761,25 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                     </div>
                     {stage.sentFiles && stage.sentFiles.length > 0 && (
                         <div className="relative mb-1.5 shrink-0">
-                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-indigo-400" />
+                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                             <Input
                                 placeholder="Filtrar modelos do cliente..."
                                 value={sentSearch}
                                 onChange={(e) => setSentSearch(e.target.value)}
-                                className="pl-8 h-8 text-[11px] bg-white/70 dark:bg-slate-900/70 border-indigo-100 dark:border-indigo-900/30 focus-visible:ring-indigo-500"
+                                className="pl-8 h-8 text-[11px] bg-background/70 border-input focus-visible:ring-ring"
                             />
                         </div>
                     )}
                     {renderSelectionHeader('sent', filteredSentFiles)}
-                    <div className="flex-1 overflow-y-auto pr-1.5 scrollbar-thin scrollbar-thumb-indigo-200 scrollbar-track-transparent hover:scrollbar-thumb-indigo-300 transition-colors">
+                    <div className="flex-1 overflow-y-auto pr-1.5 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent hover:scrollbar-thumb-muted-foreground/40 transition-colors">
                         {renderCategorizedFiles('sent', filteredSentFiles, stage.sentFiles || [])}
                     </div>
                 </div>
 
                 {/* Modelos Disponíveis */}
-                <div className="flex flex-col min-h-0 p-3 rounded-lg border border-emerald-100 dark:border-emerald-900/30 bg-emerald-50/30 dark:bg-emerald-900/10 space-y-2">
+                <div className="flex flex-col min-h-0 p-3 rounded-lg border border-border/60 bg-muted/20 dark:bg-muted/10 space-y-2">
                     <div className="flex items-center justify-between shrink-0">
-                        <Label className="text-[11px] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                        <Label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
                             <FileText className="h-3.5 w-3.5" />
                             Modelos Disponíveis (JSON)
                         </Label>
@@ -834,7 +795,7 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-7.5 w-7.5 text-emerald-500 hover:text-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/40"
+                                className="h-7.5 w-7.5 text-muted-foreground hover:text-foreground hover:bg-accent"
                                 title="Ver em tela cheia"
                                 onClick={(e) => { e.preventDefault(); setViewingFullscreen('available'); }}
                             >
@@ -844,17 +805,17 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                     </div>
                     {stage.availableFiles && stage.availableFiles.length > 0 && (
                         <div className="relative mb-1.5 shrink-0">
-                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-emerald-400" />
+                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                             <Input
                                 placeholder="Filtrar modelos JSON..."
                                 value={availableSearch}
                                 onChange={(e) => setAvailableSearch(e.target.value)}
-                                className="pl-8 h-8 text-[11px] bg-white/70 dark:bg-slate-900/70 border-emerald-100 dark:border-emerald-900/30 focus-visible:ring-emerald-500"
+                                className="pl-8 h-8 text-[11px] bg-background/70 border-input focus-visible:ring-ring"
                             />
                         </div>
                     )}
                     {renderSelectionHeader('available', filteredAvailableFiles)}
-                    <div className="flex-1 overflow-y-auto pr-1.5 scrollbar-thin scrollbar-thumb-emerald-200 scrollbar-track-transparent hover:scrollbar-thumb-emerald-300 transition-colors">
+                    <div className="flex-1 overflow-y-auto pr-1.5 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent hover:scrollbar-thumb-muted-foreground/40 transition-colors">
                         {renderCategorizedFiles('available', filteredAvailableFiles, stage.availableFiles || [])}
                     </div>
                 </div>
@@ -867,9 +828,9 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                         <div>
                             <DialogTitle className="flex items-center gap-2 text-xl">
                                 {viewingFullscreen === 'sent' ? (
-                                    <><UploadCloud className="h-5 w-5 text-indigo-500" /> Modelos Enviados (Cliente)</>
+                                    <><UploadCloud className="h-5 w-5 text-muted-foreground" /> Modelos Enviados (Cliente)</>
                                 ) : viewingFullscreen === 'available' ? (
-                                    <><FileText className="h-5 w-5 text-emerald-500" /> Modelos Disponíveis (JSON)</>
+                                    <><FileText className="h-5 w-5 text-muted-foreground" /> Modelos Disponíveis (JSON)</>
                                 ) : null}
                             </DialogTitle>
                             <DialogDescription className="mt-1">
@@ -882,12 +843,12 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                         {viewingFullscreen === 'sent' && (
                             <div className="space-y-3">
                                 <div className="relative mb-2">
-                                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-indigo-400" />
+                                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                     <Input
                                         placeholder="Filtrar modelos do cliente..."
                                         value={sentSearch}
                                         onChange={(e) => setSentSearch(e.target.value)}
-                                        className="pl-9 h-9 text-xs bg-white/70 dark:bg-slate-900/70 border-indigo-100 dark:border-indigo-900/30 focus-visible:ring-indigo-500"
+                                        className="pl-9 h-9 text-xs bg-background/70 border-input focus-visible:ring-ring"
                                     />
                                 </div>
                                 {renderSelectionHeader('sent', filteredSentFiles)}
@@ -898,12 +859,12 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                         {viewingFullscreen === 'available' && (
                             <div className="space-y-3">
                                 <div className="relative mb-2">
-                                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-400" />
+                                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                     <Input
                                         placeholder="Filtrar modelos JSON..."
                                         value={availableSearch}
                                         onChange={(e) => setAvailableSearch(e.target.value)}
-                                        className="pl-9 h-9 text-xs bg-white/70 dark:bg-slate-900/70 border-emerald-100 dark:border-emerald-900/30 focus-visible:ring-emerald-500"
+                                        className="pl-9 h-9 text-xs bg-background/70 border-input focus-visible:ring-ring"
                                     />
                                 </div>
                                 {renderSelectionHeader('available', filteredAvailableFiles)}
