@@ -202,7 +202,8 @@ export async function processDtcJob(job: DtcJob): Promise<void> {
   const { resultText, transcript, code, stderr, cancelled } = await runSkill(
     buildPrompt(context),
     (step) => record(step),
-    shouldCancel
+    shouldCancel,
+    { model: config.dtcModel || undefined }
   );
   await flushProgress(true);
 
