@@ -117,10 +117,12 @@ async function claimOneDtcJob(): Promise<boolean> {
   }
   const typedJob = job as DtcJob | null;
   if (!typedJob || !typedJob.id) return false;
-  const isImprove = typedJob.job_type === "improve_text";
-  console.log(`[${isImprove ? "improve" : "dtc"} ${typedJob.id}] iniciado (tentativa ${typedJob.attempts})`);
+  // improve_text (melhorar um bloco) e summary_blocks (resumo geral da etapa 7)
+  // compartilham o mesmo pipeline de texto avulso; o restante e o resumo do DTC.
+  const isTextJob = typedJob.job_type === "improve_text" || typedJob.job_type === "summary_blocks";
+  console.log(`[${isTextJob ? typedJob.job_type : "dtc"} ${typedJob.id}] iniciado (tentativa ${typedJob.attempts})`);
   try {
-    if (isImprove) await processImproveJob(typedJob);
+    if (isTextJob) await processImproveJob(typedJob);
     else await processDtcJob(typedJob);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
