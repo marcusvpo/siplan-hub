@@ -284,12 +284,16 @@ export interface ConversionStageV2 {
 
 export type ModelType =
   | 'minutas'
+  | 'traslado'
+  | 'livro'
   | 'qualificacao_partes'
   | 'qualificacao_imovel'
   | 'clausulas';
 
 export const MODEL_TYPES: { value: ModelType; label: string }[] = [
   { value: 'minutas', label: 'Minutas' },
+  { value: 'traslado', label: 'Traslado' },
+  { value: 'livro', label: 'Livro' },
   { value: 'qualificacao_partes', label: 'Qualificação de Partes' },
   { value: 'qualificacao_imovel', label: 'Qualificação de Imóvel' },
   { value: 'clausulas', label: 'Cláusulas' },
@@ -315,6 +319,23 @@ export interface ModelosEditorStageV2 {
   availableFiles?: AttachedFile[];
   lastUpdatedAt?: Date;
   lastUpdatedBy?: string;
+}
+
+// Geracao automatica de modelos JSON via worker na VM (fila de trabalho)
+export type ModelJobStatus = 'pending' | 'processing' | 'done' | 'error';
+
+export interface ModelGenerationJob {
+  id: string;
+  projectId: string;
+  sourceFilePath: string;
+  sourceFileName: string;
+  modelType: ModelType;
+  status: ModelJobStatus;
+  resultFilePath?: string;
+  errorMessage?: string;
+  attempts: number;
+  requestedBy?: string;
+  createdAt: string;
 }
 
 export interface ImplementationPhase {
