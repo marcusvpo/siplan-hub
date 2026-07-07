@@ -74,10 +74,6 @@ function listToText(arr: unknown): string {
 interface ProjectMeta {
   clientName: string;
   ticket?: string;
-  implStart?: string;
-  implEnd?: string;
-  postStart?: string;
-  postEnd?: string;
 }
 
 // Formata data ISO/date (YYYY-MM-DD...) para dd/mm/aaaa; vazio se ausente.
@@ -87,8 +83,41 @@ function fmtDate(v?: string): string {
   return m ? `${m[3]}/${m[2]}/${m[1]}` : String(v);
 }
 
+// Etapas 1..6 do projeto (a 7-pos-implantacao fica de fora: acontece apos a transicao).
+// Prefixo da coluna no banco -> rotulo. Cada etapa tem <prefixo>_status/_responsible/
+// _start_date/_end_date/_observations (+ campos especificos).
+const STAGES: [string, string][] = [
+  ["infra", "1. Analise de Infraestrutura"],
+  ["adherence", "2. Analise de Aderencia"],
+  ["conversion", "3. Conversao de Dados"],
+  ["environment", "4. Preparacao de Ambiente"],
+  ["modelos_editor", "5. Modelos Editor"],
+  ["implementation", "6. Implantacao e Treinamento"],
+];
+
+// Monta o bloco das etapas do projeto a partir da linha da tabela projects.
+function buildStagesSection(proj: AnyObj): string {
+  const parts: string[] = [];
+  for (const [prefix, label] of STAGES) {
+    const status = proj[`${prefix}_status`];
+    const resp = proj[`${prefix}_responsible`];
+    const periodo = [fmtDate(proj[`${prefix}_start_date`]), fmtDate(proj[`${prefix}_end_date`])].filter(Boolean).join(" a ");
+    const obs = lexToText(proj[`${prefix}_observations`]);
+    const meta: string[] = [];
+    if (status) meta.push(`status: ${status}`);
+    if (resp) meta.push(`responsavel: ${resp}`);
+    if (periodo) meta.push(`periodo: ${periodo}`);
+    // So inclui a etapa se tiver algo util
+    if (meta.length === 0 && !obs) continue;
+    let block = `- ${label}` + (meta.length ? ` (${meta.join(" | ")})` : "");
+    if (obs) block += `\n  ${obs.replace(/\n/g, "\n  ")}`;
+    parts.push(block);
+  }
+  return parts.join("\n");
+}
+
 // Monta o bloco de contexto com apenas o que for pertinente ao resumo do processo.
-function buildContext(dtc: AnyObj, meta: ProjectMeta): string {
+function buildContext(dtc: AnyObj, meta: ProjectMeta, proj: AnyObj): string {
   const seg = (title: string, body: string): string =>
     body && body.trim() ? `\n## ${title}\n${body.trim()}\n` : "";
 
@@ -103,16 +132,22 @@ function buildContext(dtc: AnyObj, meta: ProjectMeta): string {
     ? `${dtc.clientSatisfactionScore}/5 (${["", "Ruim", "Regular", "Bom", "Muito bom", "Excelente"][dtc.clientSatisfactionScore] || ""})`
     : "";
 
-  const periodo = [fmtDate(meta.implStart), fmtDate(meta.implEnd)].filter(Boolean).join(" a ");
-  const posPeriodo = [fmtDate(meta.postStart), fmtDate(meta.postEnd)].filter(Boolean).join(" a ");
+  // Periodo e analista vem da ETAPA 6 (Implantacao) do projeto - fonte da verdade.
+  // NAO usar o responsavel da etapa 7 (pos-implantacao): e outra pessoa/fase.
+  const periodo = [fmtDate(proj?.implementation_start_date), fmtDate(proj?.implementation_end_date)]
+    .filter(Boolean)
+    .join(" a ");
+  const analista =
+    (proj?.implementation_responsible as string) || dtc?.analystResponsible || dtc?.responsible || "-";
 
   let ctx = `Cliente/Cartorio: ${meta.clientName || "-"}`;
   if (meta.ticket) ctx += ` | Chamado/Ticket: ${meta.ticket}`;
   ctx += `\nServentia: ${dtc?.serventia || "-"} | Oficial: ${dtc?.oficial || "-"}`;
-  ctx += `\nResponsavel do cliente: ${dtc?.clientResponsible || "-"} | Analista: ${dtc?.analystResponsible || dtc?.responsible || "-"}`;
+  ctx += `\nResponsavel do cliente: ${dtc?.clientResponsible || "-"}`;
+  ctx += `\nAnalista que conduziu a implantacao (etapa 6): ${analista}`;
   if (periodo) ctx += `\nPeriodo da implantacao: ${periodo}`;
-  if (posPeriodo) ctx += `\nPeriodo de pos-implantacao: ${posPeriodo}`;
   ctx += "\n";
+  ctx += seg("Etapas do projeto (1 a 6)", buildStagesSection(proj));
   ctx += seg("Sistemas instalados", lexToText(dtc?.systemsInstalled));
   ctx += seg("Versoes dos sistemas", versions);
   ctx += seg(
@@ -143,7 +178,7 @@ FORMATACAO (Markdown leve, use com moderacao e apenas quando agregar clareza):
 - Listas com marcadores usando "- " no inicio da linha para enumerar ganhos ou pendencias.
 Nao exagere: a maior parte do texto deve ser texto normal. NAO use titulos com "#", NAO use tabelas, NAO use blocos de codigo.
 
-NAO invente dados que nao estejam no contexto.
+NAO invente dados que nao estejam no contexto. Use os nomes, datas e responsaveis EXATAMENTE como aparecem no contexto. O analista que conduziu a implantacao e o indicado como "Analista que conduziu a implantacao (etapa 6)" — nao troque por responsaveis de outras etapas.
 
 Responda SOMENTE com o texto final das consideracoes finais, sem preambulo, sem aspas e sem comentarios adicionais.
 
@@ -193,9 +228,11 @@ export async function processDtcJob(job: DtcJob): Promise<void> {
   await flushProgress(true);
 
   // 1. Ler o projeto (custom_fields.dtc + metadados uteis ao resumo)
+  // Lemos a linha inteira do projeto: alem do DTC (custom_fields.dtc), usamos as
+  // colunas das etapas 1..6 (<prefixo>_status/_responsible/_start_date/.../_observations).
   const { data: proj, error: projErr } = await supabase
     .from("projects")
-    .select("client_name, custom_fields, ticket_number, implementation_start_date, implementation_end_date, post_start_date, post_end_date")
+    .select("*")
     .eq("id", job.project_id)
     .single();
   if (projErr || !proj) throw new Error(`Falha ao ler o projeto: ${projErr?.message || "vazio"}`);
@@ -203,14 +240,14 @@ export async function processDtcJob(job: DtcJob): Promise<void> {
   const dtc = (proj.custom_fields as AnyObj)?.dtc;
   if (!dtc) throw new Error("Este projeto ainda nao possui dados de transicao (DTC) preenchidos.");
 
-  const context = buildContext(dtc, {
-    clientName: (proj.client_name as string) || "",
-    ticket: (proj.ticket_number as string) || undefined,
-    implStart: (proj.implementation_start_date as string) || undefined,
-    implEnd: (proj.implementation_end_date as string) || undefined,
-    postStart: (proj.post_start_date as string) || undefined,
-    postEnd: (proj.post_end_date as string) || undefined,
-  });
+  const context = buildContext(
+    dtc,
+    {
+      clientName: (proj.client_name as string) || "",
+      ticket: (proj.ticket_number as string) || undefined,
+    },
+    proj
+  );
   if (context.replace(/[^a-zA-Z0-9]/g, "").length < 40) {
     throw new Error("Nao ha informacoes suficientes preenchidas para gerar um resumo.");
   }
