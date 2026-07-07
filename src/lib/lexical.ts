@@ -3,10 +3,11 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type LexicalNode = Record<string, any>;
 
-// Bitmask de formato do Lexical (mesmo do LexicalRenderer): bold=1, italic=2, underline=4.
+// Bitmask de formato do Lexical (constantes reais do editor):
+// bold=1, italic=2, strikethrough=4, underline=8.
 const FORMAT_BOLD = 1;
 const FORMAT_ITALIC = 2;
-const FORMAT_UNDERLINE = 4;
+const FORMAT_UNDERLINE = 8;
 
 const textNode = (text: string, format = 0): LexicalNode => ({
   detail: 0,

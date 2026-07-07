@@ -270,6 +270,7 @@ const LexicalRenderer = ({ jsonStr, fallback }: { jsonStr: string; fallback: str
 
     const renderNode = (node: any, index: number): React.ReactNode => {
       if (node.type === "text") {
+        // Bitmask real do Lexical: bold=1, italic=2, strikethrough=4, underline=8.
         let element: React.ReactNode = node.text;
         if (node.format & 1) { // Bold
           element = <strong key={index}>{element}</strong>;
@@ -277,7 +278,10 @@ const LexicalRenderer = ({ jsonStr, fallback }: { jsonStr: string; fallback: str
         if (node.format & 2) { // Italic
           element = <em key={index}>{element}</em>;
         }
-        if (node.format & 4) { // Underline
+        if (node.format & 4) { // Strikethrough
+          element = <span key={index} style={{ textDecoration: "line-through" }}>{element}</span>;
+        }
+        if (node.format & 8) { // Underline
           element = <span key={index} style={{ textDecoration: "underline" }}>{element}</span>;
         }
         return <span key={index}>{element}</span>;
