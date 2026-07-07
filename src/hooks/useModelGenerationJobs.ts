@@ -17,6 +17,8 @@ const mapJob = (item: any): ModelGenerationJob => ({
   attempts: item.attempts ?? 0,
   requestedBy: item.requested_by ?? undefined,
   createdAt: item.created_at,
+  startedAt: item.started_at ?? undefined,
+  cancelRequested: !!item.cancel_requested,
   progress: item.progress ?? undefined,
   progressLog: Array.isArray(item.progress_log) ? item.progress_log : [],
   progressUpdatedAt: item.progress_updated_at ?? undefined,
@@ -64,6 +66,7 @@ export function useModelGenerationJobs(projectId?: string) {
       sourceFileName: string;
       modelType: ModelType;
       requestedBy?: string;
+      silent?: boolean;
     }) => {
       const { data, error: insertError } = await supabase
         .from("model_generation_jobs")
@@ -80,9 +83,11 @@ export function useModelGenerationJobs(projectId?: string) {
       if (insertError) throw insertError;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["modelJobs", projectId] });
-      toast.success("Geração de modelo enfileirada. Isso pode levar de 10 a 20 minutos.");
+      if (!variables.silent) {
+        toast.success("Geração de modelo enfileirada. Isso pode levar de 10 a 20 minutos.");
+      }
     },
     onError: (err) => {
       console.error("Erro ao enfileirar geração de modelo:", err);
@@ -109,6 +114,11 @@ export function useModelGenerationJobs(projectId?: string) {
           const raw = payload.new as Record<string, unknown> | null;
           const oldRaw = payload.old as Record<string, unknown> | null;
 
+          // Estado anterior (do cache) para detectar transicao de status -> aviso.
+          const prevList =
+            queryClient.getQueryData<ModelGenerationJob[]>(["modelJobs", projectId]) || [];
+          const prevJob = raw?.id ? prevList.find((j) => j.id === raw.id) : undefined;
+
           queryClient.setQueryData<ModelGenerationJob[]>(["modelJobs", projectId], (prev = []) => {
             if (payload.eventType === "DELETE") {
               return prev.filter((j) => j.id !== (oldRaw?.id as string));
@@ -122,10 +132,19 @@ export function useModelGenerationJobs(projectId?: string) {
             return copy;
           });
 
-          if (raw?.status === "done") {
+          const newStatus = raw?.status as string | undefined;
+          const changed = !!prevJob && prevJob.status !== newStatus;
+          const name = (raw?.source_file_name as string) || "modelo";
+
+          if (newStatus === "done") {
             // O worker ja apendou o JSON em modelos_editor_available_files;
             // refetch do projeto faz a coluna "Modelos Disponiveis (JSON)" atualizar.
             queryClient.invalidateQueries({ queryKey: ["projectDetails", projectId] });
+            if (changed) toast.success(`Modelo gerado: ${name}`);
+          } else if (changed && newStatus === "error") {
+            toast.error(`Falha ao gerar o modelo: ${name}`);
+          } else if (changed && newStatus === "cancelled") {
+            toast.info(`Geração cancelada: ${name}`);
           }
         }
       )
@@ -135,6 +154,66 @@ export function useModelGenerationJobs(projectId?: string) {
       supabase.removeChannel(channel);
     };
   }, [projectId, queryClient]);
+
+  // Cancelar um job: pending -> cancela direto; processing -> pede cancelamento
+  // (o worker checa cancel_requested e mata o Claude em instantes).
+  const cancelJob = async (job: ModelGenerationJob) => {
+    try {
+      if (job.status === "pending") {
+        await supabase
+          .from("model_generation_jobs")
+          .update({ status: "cancelled", finished_at: new Date().toISOString() })
+          .eq("id", job.id);
+      } else if (job.status === "processing") {
+        await supabase
+          .from("model_generation_jobs")
+          .update({ cancel_requested: true })
+          .eq("id", job.id);
+        toast.info("Cancelamento solicitado. A geração vai parar em instantes.");
+      }
+    } catch (err) {
+      console.error("Erro ao cancelar job:", err);
+      toast.error("Não foi possível cancelar a geração.");
+    }
+  };
+
+  // Remove um modelo disponivel (JSON) de forma atomica via RPC (nao reescreve o
+  // array inteiro -> nao arrisca apagar modelos gerados pelo worker).
+  const removeAvailableModel = async (fileId: string) => {
+    const { error: rpcError } = await supabase.rpc("remove_available_model", {
+      p_project_id: projectId,
+      p_file_id: fileId,
+    });
+    if (rpcError) throw rpcError;
+    queryClient.invalidateQueries({ queryKey: ["projectDetails", projectId] });
+  };
+
+  // Append atomico de um modelo disponivel (upload manual de JSON), mesmo RPC do worker.
+  const appendAvailableModel = async (file: {
+    id: string;
+    name: string;
+    path: string;
+    size: number;
+    uploadedAt: string;
+    modelType?: ModelType;
+  }) => {
+    const { error: rpcError } = await supabase.rpc("append_available_model", {
+      p_project_id: projectId,
+      p_file: file,
+    });
+    if (rpcError) throw rpcError;
+    queryClient.invalidateQueries({ queryKey: ["projectDetails", projectId] });
+  };
+
+  // Posicao (1-based) de um job pending na fila.
+  const getQueuePosition = (job: ModelGenerationJob): number | null => {
+    if (job.status !== "pending") return null;
+    const pending = jobs
+      .filter((j) => j.status === "pending")
+      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    const idx = pending.findIndex((j) => j.id === job.id);
+    return idx === -1 ? null : idx + 1;
+  };
 
   // Job "mais relevante" para um arquivo de origem (badge por linha).
   // Prioriza job ativo (processing > pending) sobre um terminal mais novo, para
@@ -151,7 +230,17 @@ export function useModelGenerationJobs(projectId?: string) {
     })[0];
   };
 
-  return { jobs, isLoading, error, enqueueJob, getLatestJobFor };
+  return {
+    jobs,
+    isLoading,
+    error,
+    enqueueJob,
+    getLatestJobFor,
+    cancelJob,
+    removeAvailableModel,
+    appendAvailableModel,
+    getQueuePosition,
+  };
 }
 
 /**

@@ -15,7 +15,9 @@ import {
     Clock,
     RotateCw,
     Activity,
-    Terminal
+    Terminal,
+    Ban,
+    Timer
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -25,6 +27,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Input } from "@/components/ui/input";
 import { useProjectFiles } from "@/hooks/useProjectFiles";
 import { useModelGenerationJobs, useModelWorkerStatus } from "@/hooks/useModelGenerationJobs";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useAuth } from "@/hooks/useAuth";
@@ -78,7 +81,10 @@ export function ModelosMetrics({ stage }: { stage: ModelosEditorStageV2 | undefi
 export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorkspaceProps) {
     const { toast } = useToast();
     const { uploadFile, getDownloadUrl, deleteFile: deleteStorageFile } = useProjectFiles(project.id);
-    const { jobs, enqueueJob, getLatestJobFor } = useModelGenerationJobs(project.id);
+    const {
+        jobs, enqueueJob, getLatestJobFor,
+        cancelJob, removeAvailableModel, appendAvailableModel, getQueuePosition,
+    } = useModelGenerationJobs(project.id);
     const { online: workerOnline, status: workerStatus } = useModelWorkerStatus();
     const { canUploadFiles, canDeleteFiles, canEditProjects } = usePermissions();
     const { user, fullName } = useAuth();
@@ -90,13 +96,74 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
         [jobs, progressJobId]
     );
 
-    const handleGenerateModel = (file: AttachedFile) => {
+    // Relogio para "tempo decorrido" nos badges (atualiza a cada 30s)
+    const [nowTick, setNowTick] = useState(() => Date.now());
+    useEffect(() => {
+        const t = setInterval(() => setNowTick(Date.now()), 30000);
+        return () => clearInterval(t);
+    }, []);
+    const elapsedMin = (iso?: string): number =>
+        iso ? Math.max(0, Math.floor((nowTick - new Date(iso).getTime()) / 60000)) : 0;
+
+    // Confere se a origem ainda existe no Storage antes de enfileirar (evita job fadado ao erro)
+    const STORAGE_BUCKET = "project-files";
+    const sourceExists = async (path: string): Promise<boolean> => {
+        const slash = path.lastIndexOf("/");
+        const folder = slash >= 0 ? path.slice(0, slash) : "";
+        const name = slash >= 0 ? path.slice(slash + 1) : path;
+        try {
+            const { data } = await supabase.storage.from(STORAGE_BUCKET).list(folder, { search: name, limit: 100 });
+            return !!data?.some((o) => o.name === name);
+        } catch {
+            return true; // se a checagem falhar, nao bloqueia (o worker reporta se faltar)
+        }
+    };
+
+    const handleGenerateModel = async (file: AttachedFile) => {
         if (!file.modelType) return;
+        if (!(await sourceExists(file.path))) {
+            toast({
+                title: "Arquivo não encontrado",
+                description: `"${file.name}" não está mais no armazenamento. Reenvie o arquivo antes de gerar.`,
+                variant: "destructive",
+            });
+            return;
+        }
         enqueueJob.mutate({
             sourceFilePath: file.path,
             sourceFileName: file.name,
             modelType: file.modelType,
             requestedBy: fullName || user?.email || "Sistema",
+        });
+    };
+
+    // Gera em lote todos os arquivos de uma categoria que ainda nao tem job ativo
+    const handleGenerateCategory = async (modelType: ModelType, catFiles: AttachedFile[]) => {
+        const targets = catFiles.filter((f) => {
+            if (!f.modelType) return false;
+            const job = getLatestJobFor(f.path);
+            return job?.status !== "pending" && job?.status !== "processing";
+        });
+        if (targets.length === 0) {
+            toast({ title: "Nada a gerar", description: "Todos os modelos desta categoria já estão na fila ou gerando." });
+            return;
+        }
+        let enq = 0;
+        let missing = 0;
+        for (const f of targets) {
+            if (!(await sourceExists(f.path))) { missing++; continue; }
+            enqueueJob.mutate({
+                sourceFilePath: f.path,
+                sourceFileName: f.name,
+                modelType: f.modelType as ModelType,
+                requestedBy: fullName || user?.email || "Sistema",
+                silent: true,
+            });
+            enq++;
+        }
+        toast({
+            title: "Geração em lote",
+            description: `${enq} modelo(s) enfileirado(s).${missing ? ` ${missing} ignorado(s) (arquivo ausente).` : ""}`,
         });
     };
     const [uploadingType, setUploadingType] = useState<'sent' | 'available' | null>(null);
@@ -152,10 +219,14 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                     });
                 }
 
-                const fieldToUpdate = type === 'sent' ? 'sentFiles' : 'availableFiles';
-                onUpdate({
-                    [fieldToUpdate]: [...currentFiles, ...newAttachedFiles]
-                });
+                if (type === 'available') {
+                    // Available e co-gerenciado com o worker: append atomico via RPC (nao reescreve o array).
+                    for (const af of newAttachedFiles) {
+                        await appendAvailableModel(af);
+                    }
+                } else {
+                    onUpdate({ sentFiles: [...currentFiles, ...newAttachedFiles] });
+                }
 
                 toast({
                     title: "Sucesso",
@@ -217,10 +288,11 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
             try {
                 await deleteStorageFile.mutateAsync({ ...file, projectId: project.id, fileUrl: file.path } as any);
 
-                const fieldToUpdate = type === 'sent' ? 'sentFiles' : 'availableFiles';
-                onUpdate({
-                    [fieldToUpdate]: currentFiles.filter((f) => f.id !== file.id)
-                });
+                if (type === 'available') {
+                    await removeAvailableModel(file.id);
+                } else {
+                    onUpdate({ sentFiles: currentFiles.filter((f) => f.id !== file.id) });
+                }
 
                 toast({
                     title: "Sucesso",
@@ -342,13 +414,12 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
 
                 for (const file of selectedFiles) {
                     await deleteStorageFile.mutateAsync({ ...file, projectId: project.id, fileUrl: file.path } as any);
+                    if (type === 'available') await removeAvailableModel(file.id);
                 }
 
-                const fieldToUpdate = type === 'sent' ? 'sentFiles' : 'availableFiles';
-                const remainingFiles = currentFiles.filter(f => !f.isDone);
-                onUpdate({
-                    [fieldToUpdate]: remainingFiles
-                });
+                if (type === 'sent') {
+                    onUpdate({ sentFiles: currentFiles.filter(f => !f.isDone) });
+                }
 
                 toast({
                     title: "Sucesso",
@@ -460,18 +531,29 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
         const open = (e: React.MouseEvent) => { e.preventDefault(); setProgressJobId(job.id); };
 
         switch (job.status) {
-            case 'pending':
+            case 'pending': {
+                const pos = getQueuePosition(job);
                 return (
                     <button type="button" onClick={open} title="Ver andamento"
                         className={cn(base, "bg-amber-50 text-amber-600 hover:bg-amber-100 dark:bg-amber-950/30 dark:text-amber-400 dark:hover:bg-amber-900/40")}>
-                        <Clock className="h-2.5 w-2.5" /> Na fila
+                        <Clock className="h-2.5 w-2.5" /> Na fila{pos && pos > 1 ? ` · ${pos}º` : ""}
                     </button>
                 );
-            case 'processing':
+            }
+            case 'processing': {
+                const mins = elapsedMin(job.startedAt || job.createdAt);
                 return (
                     <button type="button" onClick={open} title="Ver o que a IA está fazendo agora"
                         className={cn(base, "bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-950/30 dark:text-indigo-400 dark:hover:bg-indigo-900/40")}>
-                        <Loader2 className="h-2.5 w-2.5 animate-spin" /> Gerando…
+                        <Loader2 className="h-2.5 w-2.5 animate-spin" /> Gerando…{mins >= 1 ? ` ${mins}m` : ""}
+                    </button>
+                );
+            }
+            case 'cancelled':
+                return (
+                    <button type="button" onClick={open} title="Geração cancelada"
+                        className={cn(base, "bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-800/60 dark:text-slate-400 dark:hover:bg-slate-700/60")}>
+                        <AlertCircle className="h-2.5 w-2.5" /> Cancelado
                     </button>
                 );
             case 'done':
@@ -585,23 +667,38 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                         <span className="opacity-60 font-semibold">({catFiles.length})</span>
                     </span>
                     {modelType && canUploadFiles && (
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className={cn(
-                                "h-6 px-1.5 text-[10px]",
-                                isSent
-                                    ? "text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/40"
-                                    : "text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/40"
+                        <div className="flex items-center gap-1">
+                            {isSent && catFiles.length > 0 && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 px-1.5 text-[10px] text-violet-600 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-900/40"
+                                    title="Gerar automaticamente todos os modelos desta categoria"
+                                    onClick={(e) => { e.preventDefault(); handleGenerateCategory(modelType, catFiles); }}
+                                    disabled={enqueueJob.isPending}
+                                >
+                                    <Wand2 className="h-3 w-3 mr-1" />
+                                    Gerar todos
+                                </Button>
                             )}
-                            onClick={(e) => { e.preventDefault(); triggerUpload(type, modelType); }}
-                            disabled={!!uploadingType}
-                        >
-                            {uploadingType === type && pendingUpload?.modelType === modelType
-                                ? <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                                : <UploadCloud className="h-3 w-3 mr-1" />}
-                            Anexar
-                        </Button>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className={cn(
+                                    "h-6 px-1.5 text-[10px]",
+                                    isSent
+                                        ? "text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/40"
+                                        : "text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/40"
+                                )}
+                                onClick={(e) => { e.preventDefault(); triggerUpload(type, modelType); }}
+                                disabled={!!uploadingType}
+                            >
+                                {uploadingType === type && pendingUpload?.modelType === modelType
+                                    ? <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                                    : <UploadCloud className="h-3 w-3 mr-1" />}
+                                Anexar
+                            </Button>
+                        </div>
                     )}
                 </div>
                 {catFiles.length === 0 ? (
@@ -824,6 +921,7 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                             {progressJob?.status === 'pending' && <Clock className="h-4 w-4 text-amber-500" />}
                             {progressJob?.status === 'done' && <CheckCircle2 className="h-4 w-4 text-emerald-500" />}
                             {progressJob?.status === 'error' && <AlertCircle className="h-4 w-4 text-red-500" />}
+                            {progressJob?.status === 'cancelled' && <Ban className="h-4 w-4 text-slate-400" />}
                             Andamento da geração
                         </DialogTitle>
                         <DialogDescription className="truncate">
@@ -833,7 +931,16 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                             )}
                         </DialogDescription>
                     </DialogHeader>
-                    {progressJob && <ProgressBody job={progressJob} workerOnline={workerOnline} />}
+                    {progressJob && (
+                        <ProgressBody
+                            job={progressJob}
+                            workerOnline={workerOnline}
+                            queuePosition={getQueuePosition(progressJob)}
+                            onCancel={() => {
+                                if (confirm("Deseja cancelar esta geração?")) cancelJob(progressJob);
+                            }}
+                        />
+                    )}
                 </DialogContent>
             </Dialog>
         </div>
@@ -853,7 +960,12 @@ function formatStepTime(iso: string): string {
  * Corpo do modal de andamento: mostra o passo atual e o feed rolável dos passos,
  * com auto-scroll para o fim conforme novos passos chegam via Realtime.
  */
-function ProgressBody({ job, workerOnline }: { job: ModelGenerationJob; workerOnline: boolean }) {
+function ProgressBody({ job, workerOnline, queuePosition, onCancel }: {
+    job: ModelGenerationJob;
+    workerOnline: boolean;
+    queuePosition: number | null;
+    onCancel: () => void;
+}) {
     const scrollRef = useRef<HTMLDivElement>(null);
     const log = job.progressLog || [];
 
@@ -862,6 +974,20 @@ function ProgressBody({ job, workerOnline }: { job: ModelGenerationJob; workerOn
         if (el) el.scrollTo({ top: el.scrollHeight });
     }, [log.length, job.status]);
 
+    // Relogio proprio para o "tempo decorrido" (so enquanto ativo)
+    const [now, setNow] = useState(() => Date.now());
+    const active = job.status === 'pending' || job.status === 'processing';
+    useEffect(() => {
+        if (!active) return;
+        const t = setInterval(() => setNow(Date.now()), 15000);
+        return () => clearInterval(t);
+    }, [active]);
+
+    const sinceIso = job.status === 'processing' ? (job.startedAt || job.createdAt) : job.createdAt;
+    const mins = sinceIso ? Math.max(0, Math.floor((now - new Date(sinceIso).getTime()) / 60000)) : 0;
+    const elapsedLabel = mins >= 1 ? `há ${mins} min` : "agora há pouco";
+    const cancelInFlight = job.status === 'processing' && job.cancelRequested;
+
     const statusLine =
         job.status === 'pending'
             ? (workerOnline ? "Na fila — aguardando o gerador iniciar…" : "Na fila — o gerador está offline no momento. Vai começar assim que ele voltar.")
@@ -869,7 +995,9 @@ function ProgressBody({ job, workerOnline }: { job: ModelGenerationJob; workerOn
                 ? (job.progress || "Gerando…")
                 : job.status === 'done'
                     ? "Modelo gerado com sucesso e disponível na coluna “Modelos Disponíveis (JSON)”."
-                    : (job.errorMessage || "Falha na geração do modelo.");
+                    : job.status === 'cancelled'
+                        ? "Geração cancelada."
+                        : (job.errorMessage || "Falha na geração do modelo.");
 
     return (
         <div className="space-y-3">
@@ -879,11 +1007,34 @@ function ProgressBody({ job, workerOnline }: { job: ModelGenerationJob; workerOn
                     ? "border-red-200 dark:border-red-900/50 bg-red-50/60 dark:bg-red-950/20 text-red-700 dark:text-red-300"
                     : job.status === 'done'
                         ? "border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/60 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300"
-                        : "border-indigo-200 dark:border-indigo-900/50 bg-indigo-50/60 dark:bg-indigo-950/20 text-indigo-700 dark:text-indigo-300"
+                        : job.status === 'cancelled'
+                            ? "border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 text-slate-600 dark:text-slate-400"
+                            : "border-indigo-200 dark:border-indigo-900/50 bg-indigo-50/60 dark:bg-indigo-950/20 text-indigo-700 dark:text-indigo-300"
             )}>
                 {job.status === 'processing' && <Loader2 className="h-3.5 w-3.5 mt-0.5 shrink-0 animate-spin" />}
                 <span className="break-words">{statusLine}</span>
             </div>
+
+            {active && (
+                <div className="flex items-center justify-between gap-2 text-[10px] text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                        <Timer className="h-3 w-3" />
+                        {job.status === 'pending'
+                            ? <>Na fila{queuePosition && queuePosition > 1 ? ` · ${queuePosition}º` : ""} · {elapsedLabel}</>
+                            : <>Em andamento {elapsedLabel}</>}
+                    </span>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-[10px] text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                        onClick={(e) => { e.preventDefault(); onCancel(); }}
+                        disabled={cancelInFlight}
+                    >
+                        <Ban className="h-3 w-3 mr-1" />
+                        {cancelInFlight ? "Cancelando…" : "Cancelar"}
+                    </Button>
+                </div>
+            )}
 
             {log.length > 0 ? (
                 <div
