@@ -379,10 +379,11 @@ function mapModelosEditorStage(modelosEditor: ModelosEditorStageV2 | undefined, 
     modelos_editor_observations: modelosEditor.observations,
   };
 
+  // sentFiles tambem e co-gerenciado: o worker marca isDone (concluido) via RPC ao
+  // gerar o modelo. Por isso so escrevemos quando sentFiles vem EXPLICITO no update
+  // (evita um save de datas/status apagar o isDone marcado pelo worker).
   if (modelosEditor.sentFiles !== undefined) {
     result.modelos_editor_sent_files = modelosEditor.sentFiles;
-  } else if (oldModelosEditor?.sentFiles !== undefined) {
-    result.modelos_editor_sent_files = oldModelosEditor.sentFiles;
   }
 
   // IMPORTANTE: modelos_editor_available_files e co-gerenciado com o worker da VM

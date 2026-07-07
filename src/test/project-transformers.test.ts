@@ -432,9 +432,9 @@ describe("project-transformers", () => {
       // Verify that the arrays/objects are preserved from currentProject
       expect(result.infra_servers).toEqual([{ hostname: "test-server" }]);
       expect(result.infra_workstations).toEqual([{ id: 1, hostname: "test-station" }]);
-      expect(result.modelos_editor_sent_files).toEqual([{ name: "sent.pdf" }]);
-      // available_files e co-gerenciado com o worker: NAO e reescrito quando ausente
-      // do update (evita lost-update). A coluna fica intacta no banco.
+      // sent_files e available_files sao co-gerenciados com o worker (isDone / append):
+      // NAO sao reescritos quando ausentes do update (evita lost-update).
+      expect(result.modelos_editor_sent_files).toBeUndefined();
       expect(result.modelos_editor_available_files).toBeUndefined();
       expect(result.implementation_phase1).toEqual({ status: "done" });
       expect(result.implementation_phase2).toEqual({ status: "todo" });
