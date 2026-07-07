@@ -44,6 +44,10 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { activityLogger } from "@/services/activityLogger";
 import { useTimeline } from "@/hooks/useTimeline";
+import { useDtcAiJobs } from "@/hooks/useDtcAiJobs";
+import { useModelWorkerStatus } from "@/hooks/useModelGenerationJobs";
+import { plainTextToLexicalJson } from "@/lib/lexical";
+import { DtcAiJob } from "@/types/ProjectV2";
 import { LogsTab } from "@/components/ProjectManagement/Tabs/LogsTab";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
@@ -266,6 +270,7 @@ const LexicalRenderer = ({ jsonStr, fallback }: { jsonStr: string; fallback: str
 
     const renderNode = (node: any, index: number): React.ReactNode => {
       if (node.type === "text") {
+        // Bitmask real do Lexical: bold=1, italic=2, strikethrough=4, underline=8.
         let element: React.ReactNode = node.text;
         if (node.format & 1) { // Bold
           element = <strong key={index}>{element}</strong>;
@@ -273,7 +278,10 @@ const LexicalRenderer = ({ jsonStr, fallback }: { jsonStr: string; fallback: str
         if (node.format & 2) { // Italic
           element = <em key={index}>{element}</em>;
         }
-        if (node.format & 4) { // Underline
+        if (node.format & 4) { // Strikethrough
+          element = <span key={index} style={{ textDecoration: "line-through" }}>{element}</span>;
+        }
+        if (node.format & 8) { // Underline
           element = <span key={index} style={{ textDecoration: "underline" }}>{element}</span>;
         }
         return <span key={index}>{element}</span>;
@@ -777,6 +785,24 @@ function TransicaoPlaceholder() {
       };
     });
   };
+
+  // --- Geração com IA das "Considerações finais" (item 6) ---
+  // Ao concluir, o worker devolve o texto em result_text; aqui convertemos para
+  // Lexical, injetamos no editor (via remount por key) e o analista revisa/salva.
+  const [aiEditorKey, setAiEditorKey] = useState(0);
+  const applyAiResult = useCallback((job: DtcAiJob) => {
+    const text = (job.resultText || "").trim();
+    if (!text) return;
+    const lexical = plainTextToLexicalJson(text);
+    setLocalDtc(prev => (prev ? { ...prev, finalConsiderations: lexical } : prev));
+    setAiEditorKey(k => k + 1); // força remount do editor para refletir o texto
+  }, [setLocalDtc]);
+  const { enqueueJob: enqueueAiJob, activeJob: aiJob, cancelJob: cancelAiJob } = useDtcAiJobs(
+    selectedProjectId || undefined,
+    applyAiResult
+  );
+  const { online: aiWorkerOnline } = useModelWorkerStatus();
+  const aiRunning = aiJob?.status === "processing" || aiJob?.status === "pending";
 
   // Tickets helper functions
   const addTicket = () => {
@@ -3519,8 +3545,56 @@ function TransicaoPlaceholder() {
                             )}
                           </div>
                         </div>
-                        <Label htmlFor="finalConsiderations" className="text-xs font-bold text-muted-foreground">Notas de Encerramento do Projeto</Label>
+                        <div className="flex items-center justify-between gap-2">
+                          <Label htmlFor="finalConsiderations" className="text-xs font-bold text-muted-foreground">Notas de Encerramento do Projeto</Label>
+                          <div className="flex items-center gap-2">
+                            {aiRunning && (
+                              <button
+                                type="button"
+                                onClick={() => aiJob && cancelAiJob(aiJob)}
+                                className="text-[10px] text-muted-foreground hover:text-destructive underline underline-offset-2"
+                              >
+                                Cancelar
+                              </button>
+                            )}
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              disabled={isFormDisabled || aiRunning || !aiWorkerOnline}
+                              title={!aiWorkerOnline ? "O gerador da IA está offline no momento" : "Gera um resumo do processo com base nos dados preenchidos"}
+                              onClick={() => enqueueAiJob.mutate({ requestedBy: fullName })}
+                              className="h-7 gap-1.5 text-xs"
+                            >
+                              {aiRunning ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <Sparkles className="h-3.5 w-3.5" />
+                              )}
+                              {aiRunning ? "Gerando..." : "Gerar com IA"}
+                            </Button>
+                          </div>
+                        </div>
+                        {aiRunning && aiJob?.progress && (
+                          <p className="text-[10px] text-muted-foreground flex items-center gap-1.5 animate-pulse">
+                            <Loader2 className="h-3 w-3 animate-spin shrink-0" />
+                            <span className="truncate">{aiJob.progress}</span>
+                          </p>
+                        )}
+                        {!aiWorkerOnline && !aiRunning && (
+                          <p className="text-[10px] text-amber-500">Gerador da IA offline — a geração automática ficará indisponível até religar o worker.</p>
+                        )}
+                        {aiEditorKey > 0 && !aiRunning && (
+                          <div className="flex items-start gap-2 rounded-md border border-amber-400/40 bg-amber-400/10 px-3 py-2 text-[11px] text-amber-700 dark:text-amber-300">
+                            <Sparkles className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                            <span>
+                              <strong>Texto gerado por IA.</strong> É um rascunho a partir dos campos preenchidos — revise
+                              todo o conteúdo, corrija o que for necessário e complete o que faltar antes de salvar.
+                            </span>
+                          </div>
+                        )}
                         <RichTextEditor
+                          key={`final-considerations-${aiEditorKey}`}
                           content={localDtc.finalConsiderations}
                           onChange={(c) => handleFieldChange("finalConsiderations", c)}
                           placeholder="Considerações adicionais ou notas de encerramento do projeto de transição..."
