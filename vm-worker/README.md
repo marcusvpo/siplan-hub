@@ -132,6 +132,7 @@ sudo journalctl -u siplan-model-worker -f
 | `POLL_INTERVAL_MS` | Intervalo do polling de fallback (padrao 15000). |
 | `JOB_TIMEOUT_MS` | Timeout de uma geracao (padrao 1800000 = 30 min). |
 | `MAX_ATTEMPTS` | Tentativas antes de marcar erro definitivo (padrao 3). |
+| `HEARTBEAT_INTERVAL_MS` | Intervalo do heartbeat (selo online/offline na tela). Padrao 30000. |
 | `CLAUDE_BIN` | Caminho do binario do Claude Code (muda com update da extensao). |
 | `ORION_PROJECT_DIR` | Projeto onde a skill roda (padrao `/opt/Orion.Modelos`). |
 | `MODELOS_CRIADOS_DIR` | Pasta de saida dos JSONs (padrao `<ORION_PROJECT_DIR>/modelos_criados`). |
@@ -147,6 +148,25 @@ A skill salva em `modelos_criados/<codigo>/<cartorio>/modelo.json` (nome do cart
 
 1. a linha `JSON_GERADO=<caminho>` que o prompt pede para o agente imprimir no final; e
 2. fallback: o `modelo.json` mais recente em `modelos_criados` criado apos o inicio do job.
+
+</details>
+
+<details>
+<summary><b>Andamento ao vivo e saude do worker</b></summary>
+
+- **Andamento ao vivo:** o worker roda o Claude com `--output-format stream-json` e transmite cada
+  passo (texto do agente, chamadas de ferramenta) para as colunas `progress` / `progress_log` do
+  job. O frontend mostra esse feed ao vivo (via Realtime) ao clicar no badge "Gerando...".
+- **Heartbeat:** o worker faz upsert periodico em `model_worker_heartbeat` (a cada
+  `HEARTBEAT_INTERVAL_MS`). A tela mostra o selo "Gerador online/offline" a partir disso. Ao receber
+  SIGTERM, marca `stopping` para o selo cair na hora.
+- **Recuperacao no boot:** ao iniciar, qualquer job preso em `processing` deste worker (orfao de um
+  restart) volta para a fila imediatamente, sem esperar o timeout do reaper.
+- **Watchdog:** `scripts/worker-watchdog.sh` (cron do root, a cada 2 min) reinicia o servico se ele
+  estiver totalmente parado. Complementa o `Restart=always` do systemd (que cobre crashes).
+  Instalacao: ver o cabecalho do proprio script.
+
+Requer a migration `20260707160000_model_progress_and_worker_heartbeat.sql` aplicada no Supabase.
 
 </details>
 

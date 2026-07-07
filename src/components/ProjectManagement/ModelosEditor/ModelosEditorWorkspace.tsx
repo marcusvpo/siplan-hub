@@ -1,4 +1,4 @@
-import React, { useRef, useState, useMemo } from "react";
+import React, { useRef, useState, useMemo, useEffect } from "react";
 import {
     FileText,
     UploadCloud,
@@ -13,7 +13,9 @@ import {
     Wand2,
     AlertCircle,
     Clock,
-    RotateCw
+    RotateCw,
+    Activity,
+    Terminal
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -22,12 +24,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useProjectFiles } from "@/hooks/useProjectFiles";
-import { useModelGenerationJobs } from "@/hooks/useModelGenerationJobs";
+import { useModelGenerationJobs, useModelWorkerStatus } from "@/hooks/useModelGenerationJobs";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
-import { ProjectV2, AttachedFile, ModelosEditorStageV2, ModelType, MODEL_TYPES } from "@/types/ProjectV2";
+import { ProjectV2, AttachedFile, ModelosEditorStageV2, ModelType, MODEL_TYPES, ModelGenerationJob } from "@/types/ProjectV2";
 import { differenceInDays, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -76,9 +78,17 @@ export function ModelosMetrics({ stage }: { stage: ModelosEditorStageV2 | undefi
 export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorkspaceProps) {
     const { toast } = useToast();
     const { uploadFile, getDownloadUrl, deleteFile: deleteStorageFile } = useProjectFiles(project.id);
-    const { enqueueJob, getLatestJobFor } = useModelGenerationJobs(project.id);
+    const { jobs, enqueueJob, getLatestJobFor } = useModelGenerationJobs(project.id);
+    const { online: workerOnline, status: workerStatus } = useModelWorkerStatus();
     const { canUploadFiles, canDeleteFiles, canEditProjects } = usePermissions();
     const { user, fullName } = useAuth();
+
+    // Modal "ver andamento": guardamos o id e derivamos o job vivo (atualiza via Realtime)
+    const [progressJobId, setProgressJobId] = useState<string | null>(null);
+    const progressJob = useMemo(
+        () => jobs.find(j => j.id === progressJobId) || null,
+        [jobs, progressJobId]
+    );
 
     const handleGenerateModel = (file: AttachedFile) => {
         if (!file.modelType) return;
@@ -418,42 +428,65 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
         );
     };
 
+    // Selo de saude do worker na VM (online/offline). Fica no topo da coluna de enviados.
+    const renderWorkerStatus = () => (
+        <Tooltip>
+            <TooltipTrigger asChild>
+                <span className={cn(
+                    "flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider cursor-help",
+                    workerOnline
+                        ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400"
+                        : "bg-red-50 text-red-600 dark:bg-red-950/30 dark:text-red-400"
+                )}>
+                    <span className={cn("h-1.5 w-1.5 rounded-full", workerOnline ? "bg-emerald-500 animate-pulse" : "bg-red-500")} />
+                    {workerOnline ? "Gerador online" : "Gerador offline"}
+                </span>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+                <p className="max-w-xs">
+                    {workerOnline
+                        ? `Serviço de geração ativo${workerStatus?.status === "busy" ? " — gerando um modelo agora." : " e pronto para gerar."}`
+                        : "O serviço de geração está offline. As solicitações ficam na fila e são processadas assim que ele voltar."}
+                </p>
+            </TooltipContent>
+        </Tooltip>
+    );
+
     const renderJobBadge = (file: AttachedFile) => {
         const job = getLatestJobFor(file.path);
         if (!job) return null;
 
-        const base = "flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider shrink-0";
+        const base = "flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider shrink-0 cursor-pointer transition-colors";
+        const open = (e: React.MouseEvent) => { e.preventDefault(); setProgressJobId(job.id); };
+
         switch (job.status) {
             case 'pending':
                 return (
-                    <span className={cn(base, "bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400")}>
+                    <button type="button" onClick={open} title="Ver andamento"
+                        className={cn(base, "bg-amber-50 text-amber-600 hover:bg-amber-100 dark:bg-amber-950/30 dark:text-amber-400 dark:hover:bg-amber-900/40")}>
                         <Clock className="h-2.5 w-2.5" /> Na fila
-                    </span>
+                    </button>
                 );
             case 'processing':
                 return (
-                    <span className={cn(base, "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/30 dark:text-indigo-400")}>
+                    <button type="button" onClick={open} title="Ver o que a IA está fazendo agora"
+                        className={cn(base, "bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-950/30 dark:text-indigo-400 dark:hover:bg-indigo-900/40")}>
                         <Loader2 className="h-2.5 w-2.5 animate-spin" /> Gerando…
-                    </span>
+                    </button>
                 );
             case 'done':
                 return (
-                    <span className={cn(base, "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400")}>
+                    <button type="button" onClick={open} title="Ver detalhes da geração"
+                        className={cn(base, "bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-400 dark:hover:bg-emerald-900/40")}>
                         <CheckCircle2 className="h-2.5 w-2.5" /> Pronto
-                    </span>
+                    </button>
                 );
             case 'error':
                 return (
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <span className={cn(base, "bg-red-50 text-red-600 dark:bg-red-950/30 dark:text-red-400 cursor-help")}>
-                                <AlertCircle className="h-2.5 w-2.5" /> Erro
-                            </span>
-                        </TooltipTrigger>
-                        <TooltipContent side="top">
-                            <p className="max-w-xs break-words">{job.errorMessage || "Falha na geração do modelo."}</p>
-                        </TooltipContent>
-                    </Tooltip>
+                    <button type="button" onClick={open} title="Ver detalhes do erro"
+                        className={cn(base, "bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/30 dark:text-red-400 dark:hover:bg-red-900/40")}>
+                        <AlertCircle className="h-2.5 w-2.5" /> Erro
+                    </button>
                 );
             default:
                 return null;
@@ -654,6 +687,7 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                             onChange={(e) => handleFileUpload(e, 'sent', stage.sentFiles)}
                         />
                         <div className="flex items-center gap-1.5">
+                            {renderWorkerStatus()}
                             <Button
                                 variant="ghost"
                                 size="icon"
@@ -780,6 +814,114 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                     </div>
                 </DialogContent>
             </Dialog>
+
+            {/* Andamento ao vivo da geração (o que o Claude está fazendo na VM) */}
+            <Dialog open={!!progressJob} onOpenChange={(open) => !open && setProgressJobId(null)}>
+                <DialogContent className="max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-base">
+                            {progressJob?.status === 'processing' && <Loader2 className="h-4 w-4 animate-spin text-indigo-500" />}
+                            {progressJob?.status === 'pending' && <Clock className="h-4 w-4 text-amber-500" />}
+                            {progressJob?.status === 'done' && <CheckCircle2 className="h-4 w-4 text-emerald-500" />}
+                            {progressJob?.status === 'error' && <AlertCircle className="h-4 w-4 text-red-500" />}
+                            Andamento da geração
+                        </DialogTitle>
+                        <DialogDescription className="truncate">
+                            {progressJob?.sourceFileName}
+                            {progressJob && progressJob.attempts > 1 && (
+                                <span className="ml-1 opacity-70">· tentativa {progressJob.attempts}</span>
+                            )}
+                        </DialogDescription>
+                    </DialogHeader>
+                    {progressJob && <ProgressBody job={progressJob} workerOnline={workerOnline} />}
+                </DialogContent>
+            </Dialog>
+        </div>
+    );
+}
+
+// Formata o horario de um passo (HH:mm:ss)
+function formatStepTime(iso: string): string {
+    try {
+        return new Date(iso).toLocaleTimeString('pt-BR');
+    } catch {
+        return '';
+    }
+}
+
+/**
+ * Corpo do modal de andamento: mostra o passo atual e o feed rolável dos passos,
+ * com auto-scroll para o fim conforme novos passos chegam via Realtime.
+ */
+function ProgressBody({ job, workerOnline }: { job: ModelGenerationJob; workerOnline: boolean }) {
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const log = job.progressLog || [];
+
+    useEffect(() => {
+        const el = scrollRef.current;
+        if (el) el.scrollTo({ top: el.scrollHeight });
+    }, [log.length, job.status]);
+
+    const statusLine =
+        job.status === 'pending'
+            ? (workerOnline ? "Na fila — aguardando o gerador iniciar…" : "Na fila — o gerador está offline no momento. Vai começar assim que ele voltar.")
+            : job.status === 'processing'
+                ? (job.progress || "Gerando…")
+                : job.status === 'done'
+                    ? "Modelo gerado com sucesso e disponível na coluna “Modelos Disponíveis (JSON)”."
+                    : (job.errorMessage || "Falha na geração do modelo.");
+
+    return (
+        <div className="space-y-3">
+            <div className={cn(
+                "text-xs rounded-md border px-3 py-2 flex items-start gap-2",
+                job.status === 'error'
+                    ? "border-red-200 dark:border-red-900/50 bg-red-50/60 dark:bg-red-950/20 text-red-700 dark:text-red-300"
+                    : job.status === 'done'
+                        ? "border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/60 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300"
+                        : "border-indigo-200 dark:border-indigo-900/50 bg-indigo-50/60 dark:bg-indigo-950/20 text-indigo-700 dark:text-indigo-300"
+            )}>
+                {job.status === 'processing' && <Loader2 className="h-3.5 w-3.5 mt-0.5 shrink-0 animate-spin" />}
+                <span className="break-words">{statusLine}</span>
+            </div>
+
+            {log.length > 0 ? (
+                <div
+                    ref={scrollRef}
+                    className="max-h-72 overflow-y-auto rounded-md border border-border/60 bg-slate-50 dark:bg-slate-900/60 p-2 space-y-1 font-mono text-[10px] leading-relaxed scrollbar-thin"
+                >
+                    {log.map((s, i) => (
+                        <div key={i} className="flex gap-2">
+                            <span className="text-muted-foreground shrink-0 tabular-nums">{formatStepTime(s.at)}</span>
+                            <span className={cn(
+                                "break-words",
+                                s.kind === 'tool' && "text-indigo-600 dark:text-indigo-400",
+                                s.kind === 'result' && "text-emerald-600 dark:text-emerald-400 font-semibold",
+                                s.kind === 'system' && "text-muted-foreground",
+                            )}>
+                                {s.text}
+                            </span>
+                        </div>
+                    ))}
+                    {job.status === 'processing' && (
+                        <div className="flex items-center gap-1 text-muted-foreground pt-0.5">
+                            <Loader2 className="h-3 w-3 animate-spin" /> …
+                        </div>
+                    )}
+                </div>
+            ) : (
+                <div className="text-[11px] text-muted-foreground text-center py-6 border border-dashed rounded-md flex flex-col items-center gap-2">
+                    {job.status === 'processing'
+                        ? <><Activity className="h-4 w-4 animate-pulse" /> Aguardando os primeiros passos da IA…</>
+                        : <><Terminal className="h-4 w-4 opacity-60" /> Sem detalhes de andamento para este item.</>}
+                </div>
+            )}
+
+            {job.status === 'processing' && (
+                <p className="text-[10px] text-muted-foreground">
+                    A geração leva de 10 a 20 minutos. Você pode fechar esta janela — o andamento continua e o modelo aparece sozinho ao concluir.
+                </p>
+            )}
         </div>
     );
 }
