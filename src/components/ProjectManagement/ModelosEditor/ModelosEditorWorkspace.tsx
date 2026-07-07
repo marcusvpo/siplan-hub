@@ -137,15 +137,17 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
         });
     };
 
-    // Gera em lote todos os arquivos de uma categoria que ainda nao tem job ativo
+    // Gera em lote os arquivos de uma categoria que ainda NAO tem modelo.
+    // Pula os ja prontos (done) e os em andamento (pending/processing). Re-tenta
+    // os que deram erro ou foram cancelados. (Regerar um pronto: clicar no ✨ da linha.)
     const handleGenerateCategory = async (modelType: ModelType, catFiles: AttachedFile[]) => {
         const targets = catFiles.filter((f) => {
             if (!f.modelType) return false;
             const job = getLatestJobFor(f.path);
-            return job?.status !== "pending" && job?.status !== "processing";
+            return job?.status !== "pending" && job?.status !== "processing" && job?.status !== "done";
         });
         if (targets.length === 0) {
-            toast({ title: "Nada a gerar", description: "Todos os modelos desta categoria já estão na fila ou gerando." });
+            toast({ title: "Nada a gerar", description: "Todos os modelos desta categoria já estão prontos, na fila ou gerando." });
             return;
         }
         let enq = 0;
