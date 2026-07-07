@@ -136,9 +136,20 @@ export function useModelGenerationJobs(projectId?: string) {
     };
   }, [projectId, queryClient]);
 
-  // Job mais recente para um arquivo de origem (para o badge por linha)
-  const getLatestJobFor = (sourceFilePath: string): ModelGenerationJob | undefined =>
-    jobs.find((j) => j.sourceFilePath === sourceFilePath);
+  // Job "mais relevante" para um arquivo de origem (badge por linha).
+  // Prioriza job ativo (processing > pending) sobre um terminal mais novo, para
+  // que enfileirar 2x o mesmo arquivo nao esconda a geracao em andamento.
+  const getLatestJobFor = (sourceFilePath: string): ModelGenerationJob | undefined => {
+    const forFile = jobs.filter((j) => j.sourceFilePath === sourceFilePath);
+    if (forFile.length === 0) return undefined;
+    const rank = (s: ModelGenerationJob["status"]) =>
+      s === "processing" ? 0 : s === "pending" ? 1 : 2;
+    return [...forFile].sort((a, b) => {
+      const r = rank(a.status) - rank(b.status);
+      if (r !== 0) return r;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    })[0];
+  };
 
   return { jobs, isLoading, error, enqueueJob, getLatestJobFor };
 }
