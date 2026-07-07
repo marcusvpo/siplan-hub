@@ -517,6 +517,15 @@ export function StepsTab({
                 canEdit={canEditProjects}
                 projectId={project.id}
                 requestedBy={currentUserName}
+                reportMeta={{
+                  clientName: project.clientName,
+                  ticket: project.ticketNumber,
+                  systemType: project.systemType,
+                  responsible: stagesData.post.responsible,
+                  status: stagesData.post.status,
+                  startDate: stagesData.post.startDate,
+                  endDate: stagesData.post.endDate,
+                }}
               />
             }
           />
