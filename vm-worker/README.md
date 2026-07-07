@@ -1,0 +1,168 @@
+# SiplanHUB — VM Worker (geração automática de modelos)
+
+Worker que roda na VM Linux e conecta a aba 5 (Modelos Editor) do SiplanHUB ao gerador de
+modelos do Orion (Claude Code + skill `criar-modelo-mesclado`).
+
+Quando o analista sobe um documento do cliente na aba 5 e clica em "Gerar modelo automático",
+o SiplanHUB enfileira um job. Este worker puxa o job, roda a skill em modo headless autônomo, e
+devolve o `modelo.json` gerado direto para a coluna "Modelos Disponíveis (JSON)" da categoria.
+
+<details>
+<summary><b>Fluxo</b></summary>
+
+```
+[SiplanHUB / aba 5]  --insere job (pending)-->  [Supabase: model_generation_jobs]
+                                                          |  (Realtime + polling, so saida)
+                                                          v
+                                                 [worker na VM, como 'administrator']
+   baixa o doc do cliente -> roda:  claude --dangerously-skip-permissions -p "/criar-modelo-mesclado ..."
+   (autonomo, dentro de /opt/Orion.Modelos) -> localiza o modelo.json em modelos_criados
+   -> sobe no bucket -> project_files -> append em projects.modelos_editor_available_files -> done
+                                                          |
+[SiplanHUB] <-- Realtime + refetch --/  (JSON aparece sozinho na coluna "Modelos Disponiveis")
+```
+
+- A VM so faz conexoes de saida (Realtime e WebSocket outbound). Sem tunel, sem porta.
+- O `claim` usa `FOR UPDATE SKIP LOCKED` -> um worker por job. Processa 1 por vez.
+- Jobs travados voltam para a fila pelo reaper, respeitando `MAX_ATTEMPTS`.
+
+</details>
+
+<details>
+<summary><b>Decisoes de ambiente (importante)</b></summary>
+
+- Roda como `administrator` (nao-root). Motivos: (1) o Claude Code recusa
+  `--dangerously-skip-permissions` como root; (2) o `administrator` tem credencial do Claude em
+  `~/.claude`. Como o projeto `/opt/Orion.Modelos` e do root, foi concedida ACL de escrita ao
+  `administrator` (a posse continua do root — o uso manual como root segue funcionando):
+
+  ```bash
+  sudo setfacl -R -m u:administrator:rwx /opt/Orion.Modelos
+  sudo setfacl -R -d -m u:administrator:rwx /opt/Orion.Modelos
+  ```
+
+- Confianca do workspace: o `administrator` precisa ter aceitado a confianca do projeto uma vez
+  (interativo: `cd /opt/Orion.Modelos && <claude bin>` -> "Yes, I trust this folder").
+- Node 22 isolado via nvm (`/home/administrator/.nvm/...`) — o Node 18 do sistema (usado por
+  servicos em `/var/www`) nao e tocado.
+- `CLAUDE_BIN` aponta para o binario nativo da extensao do VS Code. A versao muda quando a
+  extensao atualiza — reconferir o caminho apos updates
+  (`ls ~/.vscode-server/extensions/ | grep claude`).
+
+</details>
+
+<details>
+<summary><b>Requisitos</b></summary>
+
+- Node.js 20+ (aqui: 22 via nvm) na VM.
+- Claude Code instalado e autenticado para o `administrator`.
+- Ambiente da skill saudavel: `cd /opt/Orion.Modelos && python3 tools/onboard_check.py` deve passar
+  (LibreOffice, API Orion `http://10.0.10.61:8702`, tools).
+- Chave service_role do Supabase (so no `.env`, nunca commitada).
+
+</details>
+
+<details>
+<summary><b>Setup</b></summary>
+
+```bash
+cd vm-worker
+cp .env.example .env      # preencha SUPABASE_SERVICE_ROLE_KEY e confira CLAUDE_BIN
+npm install               # com o Node 22 (nvm use 22)
+```
+
+</details>
+
+<details>
+<summary><b>Rodar como servico (systemd)</b></summary>
+
+Unit em `/etc/systemd/system/siplan-model-worker.service` (roda como `administrator`, com o
+Node 22 do nvm e o tsx):
+
+```ini
+[Unit]
+Description=SiplanHUB VM Worker (geracao de modelos)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=administrator
+WorkingDirectory=/home/administrator/vm-worker
+Environment=PATH=/home/administrator/.nvm/versions/node/v22.23.1/bin:/usr/bin:/bin
+ExecStart=/home/administrator/.nvm/versions/node/v22.23.1/bin/node /home/administrator/vm-worker/node_modules/tsx/dist/cli.mjs src/index.ts
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now siplan-model-worker
+sudo journalctl -u siplan-model-worker -f
+```
+
+</details>
+
+<details>
+<summary><b>Runbook de deploy (atualizar o worker)</b></summary>
+
+1. Copiar os arquivos atualizados de `vm-worker/` para `/home/administrator/vm-worker/`.
+2. `cd /home/administrator/vm-worker && nvm use 22 && npm install` (se mudaram deps).
+3. Conferir o `.env` (SERVICE_ROLE_KEY, CLAUDE_BIN, ORION_PROJECT_DIR, ENTRADA_DIR).
+4. `sudo systemctl restart siplan-model-worker` e acompanhar `journalctl -u siplan-model-worker -f`.
+   - No log de saude deve aparecer: `SiplanHUB VM worker iniciado`, `Realtime: SUBSCRIBED`, e 0 erros ocioso.
+
+</details>
+
+<details>
+<summary><b>Variaveis de ambiente</b></summary>
+
+| Variavel | Descricao |
+|---|---|
+| `SUPABASE_URL` | URL do projeto (mesma do frontend). |
+| `SUPABASE_SERVICE_ROLE_KEY` | Chave service_role (ignora RLS). So na VM. |
+| `STORAGE_BUCKET` | Bucket de arquivos (padrao `project-files`). |
+| `WORKER_ID` | Identificador deste worker. |
+| `POLL_INTERVAL_MS` | Intervalo do polling de fallback (padrao 15000). |
+| `JOB_TIMEOUT_MS` | Timeout de uma geracao (padrao 1800000 = 30 min). |
+| `MAX_ATTEMPTS` | Tentativas antes de marcar erro definitivo (padrao 3). |
+| `CLAUDE_BIN` | Caminho do binario do Claude Code (muda com update da extensao). |
+| `ORION_PROJECT_DIR` | Projeto onde a skill roda (padrao `/opt/Orion.Modelos`). |
+| `MODELOS_CRIADOS_DIR` | Pasta de saida dos JSONs (padrao `<ORION_PROJECT_DIR>/modelos_criados`). |
+| `ENTRADA_DIR` | Onde o worker baixa o doc do cliente (padrao `/home/administrator/siplan_entrada`). |
+
+</details>
+
+<details>
+<summary><b>Como o worker acha o JSON gerado</b></summary>
+
+A skill salva em `modelos_criados/<codigo>/<cartorio>/modelo.json` (nome do cartorio derivado do
+`client_name` do projeto no SiplanHUB). O worker localiza o arquivo por:
+
+1. a linha `JSON_GERADO=<caminho>` que o prompt pede para o agente imprimir no final; e
+2. fallback: o `modelo.json` mais recente em `modelos_criados` criado apos o inicio do job.
+
+</details>
+
+<details>
+<summary><b>Qualidade / limites (modo headless)</b></summary>
+
+O modo headless roda a skill de forma autonoma, decidindo sozinho as escolhas que a skill
+normalmente pergunta (tipo do modelo, exemplo-base, mapeamentos, nome do cartorio). Isso gera um
+rascunho — o analista deve revisar o modelo na aba 5 antes de usar em producao. Se a qualidade nao
+for suficiente, da para migrar para o modo semi-automatico (humano no volante).
+
+</details>
+
+<details>
+<summary><b>Seguranca</b></summary>
+
+- `SUPABASE_SERVICE_ROLE_KEY` so no `.env` da VM (perm `600`, dono `administrator`). Ignora RLS.
+- O frontend usa so a chave `anon` (enfileira o job e le status via RLS).
+- O worker roda um agente com `--dangerously-skip-permissions` — sem supervisao, com escrita no
+  projeto. Mantenha a VM e o `.env` restritos.
+
+</details>

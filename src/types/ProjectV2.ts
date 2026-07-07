@@ -317,6 +317,23 @@ export interface ModelosEditorStageV2 {
   lastUpdatedBy?: string;
 }
 
+// Geracao automatica de modelos JSON via worker na VM (fila de trabalho)
+export type ModelJobStatus = 'pending' | 'processing' | 'done' | 'error';
+
+export interface ModelGenerationJob {
+  id: string;
+  projectId: string;
+  sourceFilePath: string;
+  sourceFileName: string;
+  modelType: ModelType;
+  status: ModelJobStatus;
+  resultFilePath?: string;
+  errorMessage?: string;
+  attempts: number;
+  requestedBy?: string;
+  createdAt: string;
+}
+
 export interface ImplementationPhase {
   status: StageStatus;
   responsible?: string;

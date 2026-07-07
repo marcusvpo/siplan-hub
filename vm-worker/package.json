@@ -1,0 +1,22 @@
+{
+  "name": "siplan-hub-vm-worker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Worker que roda na VM Linux: puxa jobs de geracao de modelos do Supabase, executa a CLI do Claude Code e devolve o JSON para o SiplanHUB.",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.58.0",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}

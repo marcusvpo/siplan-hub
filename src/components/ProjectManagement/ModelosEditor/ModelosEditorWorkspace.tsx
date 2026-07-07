@@ -9,7 +9,11 @@ import {
     CheckCircle2,
     Calendar,
     FileEdit,
-    Search
+    Search,
+    Wand2,
+    AlertCircle,
+    Clock,
+    RotateCw
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -18,8 +22,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useProjectFiles } from "@/hooks/useProjectFiles";
+import { useModelGenerationJobs } from "@/hooks/useModelGenerationJobs";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { ProjectV2, AttachedFile, ModelosEditorStageV2, ModelType, MODEL_TYPES } from "@/types/ProjectV2";
 import { differenceInDays, format } from "date-fns";
@@ -70,7 +76,19 @@ export function ModelosMetrics({ stage }: { stage: ModelosEditorStageV2 | undefi
 export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorkspaceProps) {
     const { toast } = useToast();
     const { uploadFile, getDownloadUrl, deleteFile: deleteStorageFile } = useProjectFiles(project.id);
+    const { enqueueJob, getLatestJobFor } = useModelGenerationJobs(project.id);
     const { canUploadFiles, canDeleteFiles, canEditProjects } = usePermissions();
+    const { user, fullName } = useAuth();
+
+    const handleGenerateModel = (file: AttachedFile) => {
+        if (!file.modelType) return;
+        enqueueJob.mutate({
+            sourceFilePath: file.path,
+            sourceFileName: file.name,
+            modelType: file.modelType,
+            requestedBy: fullName || user?.email || "Sistema",
+        });
+    };
     const [uploadingType, setUploadingType] = useState<'sent' | 'available' | null>(null);
     const [pendingUpload, setPendingUpload] = useState<{ type: 'sent' | 'available'; modelType: ModelType } | null>(null);
 
@@ -400,6 +418,70 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
         );
     };
 
+    const renderJobBadge = (file: AttachedFile) => {
+        const job = getLatestJobFor(file.path);
+        if (!job) return null;
+
+        const base = "flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider shrink-0";
+        switch (job.status) {
+            case 'pending':
+                return (
+                    <span className={cn(base, "bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400")}>
+                        <Clock className="h-2.5 w-2.5" /> Na fila
+                    </span>
+                );
+            case 'processing':
+                return (
+                    <span className={cn(base, "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/30 dark:text-indigo-400")}>
+                        <Loader2 className="h-2.5 w-2.5 animate-spin" /> Gerando…
+                    </span>
+                );
+            case 'done':
+                return (
+                    <span className={cn(base, "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400")}>
+                        <CheckCircle2 className="h-2.5 w-2.5" /> Pronto
+                    </span>
+                );
+            case 'error':
+                return (
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <span className={cn(base, "bg-red-50 text-red-600 dark:bg-red-950/30 dark:text-red-400 cursor-help")}>
+                                <AlertCircle className="h-2.5 w-2.5" /> Erro
+                            </span>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">
+                            <p className="max-w-xs break-words">{job.errorMessage || "Falha na geração do modelo."}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                );
+            default:
+                return null;
+        }
+    };
+
+    const renderGenerateButton = (file: AttachedFile) => {
+        if (!file.modelType || !canUploadFiles) return null;
+        const job = getLatestJobFor(file.path);
+        const isActive = job?.status === 'pending' || job?.status === 'processing';
+        const isError = job?.status === 'error';
+
+        return (
+            <Button
+                variant="ghost"
+                size="icon"
+                className="h-6.5 w-6.5 text-violet-500 hover:text-violet-600 dark:text-violet-400 dark:hover:text-violet-300 hover:bg-violet-50 dark:hover:bg-violet-900/20 group disabled:opacity-40"
+                title={isActive ? "Geração em andamento…" : isError ? "Tentar gerar novamente" : "Gerar modelo automático"}
+                disabled={isActive || enqueueJob.isPending}
+                onClick={(e) => { e.preventDefault(); handleGenerateModel(file); }}
+            >
+                {isError
+                    ? <RotateCw className="h-3.5 w-3.5 transition-transform duration-200 group-hover:rotate-90" />
+                    : <Wand2 className="h-3.5 w-3.5 transition-transform duration-200 group-hover:scale-110" />}
+            </Button>
+        );
+    };
+
     const renderFileRow = (file: AttachedFile, type: 'sent' | 'available', list: AttachedFile[]) => (
         <div key={file.id} className={cn(
             "flex items-center justify-between p-1.5 rounded bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800 text-xs transition-all duration-300 shadow-sm hover:shadow-md",
@@ -429,6 +511,8 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                 </Tooltip>
             </div>
             <div className="flex items-center gap-0.5 shrink-0">
+                {type === 'sent' && renderJobBadge(file)}
+                {type === 'sent' && renderGenerateButton(file)}
                 <Button variant="ghost" size="icon" className="h-6.5 w-6.5 text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 group" title="Visualizar arquivo" onClick={(e) => { e.preventDefault(); handleFileView(file); }}>
                     <Eye className="h-3.5 w-3.5 transition-transform duration-200 group-hover:scale-120" />
                 </Button>
