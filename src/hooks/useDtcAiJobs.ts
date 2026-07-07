@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -33,6 +33,9 @@ export function useDtcAiJobs(
   onResult?: (job: DtcAiJob) => void
 ) {
   const queryClient = useQueryClient();
+  // Id do job que o usuario acabou de disparar; aplicamos o resultado quando ELE
+  // ficar 'done' (via realtime OU refetch), sem depender da transicao de status.
+  const awaitingRef = useRef<string | null>(null);
 
   const { data: jobs = [], isLoading } = useQuery({
     queryKey: ["dtcAiJobs", projectId],
@@ -45,6 +48,13 @@ export function useDtcAiJobs(
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data || []).map(mapJob);
+    },
+    // Enquanto houver job ativo, faz polling leve (rede de seguranca caso um
+    // evento realtime se perca). Para sozinho quando nao ha mais job em andamento.
+    refetchInterval: (query) => {
+      const data = query.state.data as DtcAiJob[] | undefined;
+      const active = data?.some((j) => j.status === "pending" || j.status === "processing");
+      return active ? 4000 : false;
     },
   });
 
@@ -62,7 +72,8 @@ export function useDtcAiJobs(
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      awaitingRef.current = (data?.id as string) || null;
       queryClient.invalidateQueries({ queryKey: ["dtcAiJobs", projectId] });
       toast.success("Gerando resumo com IA. Isso pode levar alguns minutos.");
     },
@@ -107,15 +118,24 @@ export function useDtcAiJobs(
           });
 
           const newStatus = raw?.status as string | undefined;
+          const id = raw?.id as string | undefined;
           const changed = !!prevJob && prevJob.status !== newStatus;
 
-          if (changed && newStatus === "done") {
-            onResult?.(mapJob(raw));
-            toast.success("Resumo gerado. Revise o texto antes de salvar.");
+          // Aplica o resultado do job que o usuario disparou, quando ELE concluir.
+          if (id && awaitingRef.current && id === awaitingRef.current) {
+            if (newStatus === "done") {
+              awaitingRef.current = null;
+              onResult?.(mapJob(raw));
+              toast.success("Resumo gerado. Revise o texto antes de salvar.");
+            } else if (newStatus === "error") {
+              awaitingRef.current = null;
+              toast.error(`Falha ao gerar o resumo: ${(raw?.error_message as string) || "erro desconhecido"}`);
+            } else if (newStatus === "cancelled") {
+              awaitingRef.current = null;
+              toast.info("Geração de resumo cancelada.");
+            }
           } else if (changed && newStatus === "error") {
             toast.error(`Falha ao gerar o resumo: ${(raw?.error_message as string) || "erro desconhecido"}`);
-          } else if (changed && newStatus === "cancelled") {
-            toast.info("Geração de resumo cancelada.");
           }
         }
       )
@@ -125,6 +145,20 @@ export function useDtcAiJobs(
       supabase.removeChannel(channel);
     };
   }, [projectId, queryClient, onResult]);
+
+  // Fallback: se o evento realtime de 'done' se perder, aplicamos assim que o job
+  // aguardado aparecer concluido na lista (a query tambem invalida/refaz).
+  useEffect(() => {
+    if (!awaitingRef.current) return;
+    const j = jobs.find((x) => x.id === awaitingRef.current);
+    if (j && j.status === "done" && j.resultText) {
+      awaitingRef.current = null;
+      onResult?.(j);
+      toast.success("Resumo gerado. Revise o texto antes de salvar.");
+    } else if (j && (j.status === "error" || j.status === "cancelled")) {
+      awaitingRef.current = null;
+    }
+  }, [jobs, onResult]);
 
   const cancelJob = async (job: DtcAiJob) => {
     try {
