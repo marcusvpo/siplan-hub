@@ -323,12 +323,12 @@ export function StageCard({
             </div>
           )}
 
-          {/* Start Date Field - Hidden when hideDates is true */}
-          {!hideDates && (
+          {/* Start Date Field - Hidden when hideDates is true or stage is adherence */}
+          {!hideDates && id !== "adherence" && (
             <div className="space-y-1.5">
               <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
                 <Calendar className="h-3 w-3 text-muted-foreground" />
-                {["infra", "adherence", "environment", "conversion"].includes(
+                {["infra", "environment", "conversion"].includes(
                   id,
                 )
                   ? "Enviado em"

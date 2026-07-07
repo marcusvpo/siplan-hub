@@ -33,13 +33,21 @@ export function useProjectForm(
   }, [data, updateData]);
 
   const updateStage = useCallback((stageKey: keyof ProjectV2['stages'], updates: Partial<ProjectV2['stages'][typeof stageKey]>) => {
+    const stageUpdates = { ...updates };
+    if (stageKey === "adherence") {
+      const currentStatus = data.stages?.adherence?.status || "todo";
+      if (currentStatus === "todo" && stageUpdates.endDate) {
+        stageUpdates.status = "in-progress";
+      }
+    }
+
     updateData({
       ...data,
       stages: {
         ...data.stages,
         [stageKey]: {
           ...data.stages[stageKey],
-          ...updates
+          ...stageUpdates
         }
       }
     });
