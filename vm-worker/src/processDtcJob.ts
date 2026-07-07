@@ -58,6 +58,7 @@ function listToText(arr: unknown): string {
       const parts: string[] = [];
       for (const [k, v] of Object.entries(item as AnyObj)) {
         if (v == null) continue;
+        if (SENSITIVE.test(k)) continue; // nunca vaza senha/login/chave em listas
         if (typeof v === "string") {
           const t = lexToText(v) || v;
           if (t.trim()) parts.push(`${k}: ${t.replace(/\s+/g, " ").trim()}`);
@@ -105,6 +106,40 @@ function parseMaybeJson(v: unknown): AnyObj | null {
   return null;
 }
 
+// Campos base ja mostrados no cabecalho de cada etapa (nao repetir nos extras).
+const STAGE_BASE = ["status", "responsible", "start_date", "end_date", "observations"];
+// Nunca vazar dados sensiveis/conexao no resumo (senhas, logins, chaves, host do banco).
+const SENSITIVE = /pass|senha|login|secret|token|api[_-]?key|\bkey\b|chave|credential|usuario|\buser\b|host|porta|\bport\b|\bip\b/i;
+
+// Converte um valor de coluna (string/lexical/numero/bool/objeto/array) em texto curto.
+function humanVal(v: unknown): string {
+  if (v == null || v === "") return "";
+  if (typeof v === "boolean") return v ? "sim" : "nao";
+  if (typeof v === "number") return String(v);
+  if (typeof v === "string") return (lexToText(v) || v).replace(/\s+/g, " ").trim();
+  if (Array.isArray(v)) return listToText(v).replace(/\n/g, "; ");
+  const pairs: string[] = [];
+  for (const [k, val] of Object.entries(v as AnyObj)) {
+    if (SENSITIVE.test(k) || val == null || val === "" || typeof val === "object") continue;
+    pairs.push(`${k}=${String(val).slice(0, 60)}`);
+  }
+  return pairs.join(", ");
+}
+
+// Dump generico dos campos extras de uma etapa (<prefixo>_*), pulando base e sensiveis.
+function dumpStageExtras(proj: AnyObj, prefix: string, skip: Set<string>): string[] {
+  const out: string[] = [];
+  for (const key of Object.keys(proj)) {
+    if (!key.startsWith(prefix + "_")) continue;
+    const suffix = key.slice(prefix.length + 1);
+    if (STAGE_BASE.includes(suffix) || skip.has(suffix) || SENSITIVE.test(suffix)) continue;
+    const val = humanVal(proj[key]);
+    if (!val) continue;
+    out.push(`  · ${suffix.replace(/_/g, " ")}: ${val.slice(0, 300)}`);
+  }
+  return out;
+}
+
 // Descreve uma sub-fase (implementation_phase1/2) em uma linha indentada.
 function phaseBlock(label: string, ph: AnyObj | null): string | null {
   if (!ph) return null;
@@ -142,9 +177,13 @@ function buildStagesSection(proj: AnyObj): string {
       if (p2) subs.push(p2);
     }
 
-    if (meta.length === 0 && !obs && subs.length === 0) continue;
+    // Campos extras da etapa (detalhes especificos), pulando sub-fases ja tratadas.
+    const extras = dumpStageExtras(proj, prefix, new Set(["phase1", "phase2"]));
+
+    if (meta.length === 0 && !obs && subs.length === 0 && extras.length === 0) continue;
     let block = `- ${label}` + (meta.length ? ` (${meta.join(" | ")})` : "");
     if (obs) block += `\n  ${obs.replace(/\n/g, "\n  ")}`;
+    if (extras.length) block += `\n${extras.join("\n")}`;
     if (subs.length) block += `\n${subs.join("\n")}`;
     parts.push(block);
   }
@@ -213,7 +252,13 @@ function buildContext(dtc: AnyObj, meta: ProjectMeta, proj: AnyObj): string {
 function buildPrompt(context: string): string {
   return `Voce e um analista de implantacao redigindo as "Consideracoes finais" do relatorio de transicao de conhecimento de uma implantacao de sistema para cartorio/serventia.
 
-Com base APENAS nas informacoes abaixo, escreva um resumo profissional, coeso e objetivo do processo de implantacao realizado: o que foi feito, sistemas e conversao, principais ganhos entregues, pendencias em aberto e uma conclusao/encerramento. Use portugues do Brasil, tom formal e claro. De 2 a 5 paragrafos curtos.
+Com base APENAS nas informacoes abaixo, escreva um relato profissional, detalhado e rico do processo de implantacao. O contexto traz TODAS as etapas do projeto (1 a 6): infraestrutura, aderencia, conversao de dados, preparacao de ambiente, modelos (Editor) e implantacao/treinamento — com status, responsaveis, datas, observacoes e detalhes de cada uma. Aproveite o que for relevante de cada etapa para deixar o resumo completo.
+
+Cubra: contexto e ambiente (nuvem/VPN, TI local), sistemas instalados e conversao realizada, o que foi feito em cada fase pertinente, treinamentos por setor, principais ganhos entregues, e uma conclusao/encerramento.
+
+VALIDE A SITUACAO DE CADA ETAPA: se alguma nao estiver concluida (status diferente de finalizado/adequado/concluido) ou tiver itens em aberto — por exemplo conversao ainda em andamento, modelos nao finalizados no Editor, ambiente ou infra com pendencia — mencione EXPLICITAMENTE como pendencia, dizendo o que falta e quem acompanha (quando o responsavel constar). Nao afirme que algo foi concluido se o status indicar o contrario.
+
+Use portugues do Brasil, tom formal e claro. De 3 a 7 paragrafos.
 
 FORMATACAO (Markdown leve, use com moderacao e apenas quando agregar clareza):
 - **negrito** para destacar termos-chave (ex.: nomes de sistemas, datas marcantes, o rotulo de um topico).
