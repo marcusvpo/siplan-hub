@@ -2,6 +2,7 @@ import { supabase } from "./supabase.js";
 import { config, Job, DtcJob } from "./config.js";
 import { processJob } from "./processJob.js";
 import { processDtcJob } from "./processDtcJob.js";
+import { processImproveJob } from "./processImproveJob.js";
 
 let busy = false;
 
@@ -116,9 +117,11 @@ async function claimOneDtcJob(): Promise<boolean> {
   }
   const typedJob = job as DtcJob | null;
   if (!typedJob || !typedJob.id) return false;
-  console.log(`[dtc ${typedJob.id}] iniciado (tentativa ${typedJob.attempts})`);
+  const isImprove = typedJob.job_type === "improve_text";
+  console.log(`[${isImprove ? "improve" : "dtc"} ${typedJob.id}] iniciado (tentativa ${typedJob.attempts})`);
   try {
-    await processDtcJob(typedJob);
+    if (isImprove) await processImproveJob(typedJob);
+    else await processDtcJob(typedJob);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error(`[dtc ${typedJob.id}] erro:`, msg);

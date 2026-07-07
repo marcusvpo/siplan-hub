@@ -45,6 +45,9 @@ export function useDtcAiJobs(
         .from("dtc_ai_jobs")
         .select("*")
         .eq("project_id", projectId as string)
+        // Este hook cuida so do resumo das "Consideracoes finais" (dtc_summary).
+        // Jobs 'improve_text' (Observacoes & Detalhes) tem hook proprio.
+        .eq("job_type", "dtc_summary")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data || []).map(mapJob);
@@ -99,6 +102,9 @@ export function useDtcAiJobs(
         (payload) => {
           const raw = payload.new as Record<string, unknown> | null;
           const oldRaw = payload.old as Record<string, unknown> | null;
+
+          // Ignora jobs de outro tipo (ex.: improve_text) que compartilham a tabela.
+          if (raw && raw.job_type && raw.job_type !== "dtc_summary") return;
 
           const prevList =
             queryClient.getQueryData<DtcAiJob[]>(["dtcAiJobs", projectId]) || [];
