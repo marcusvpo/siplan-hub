@@ -68,6 +68,10 @@ export const config = {
   maxAttempts: Number(process.env.MAX_ATTEMPTS || 3),
   heartbeatIntervalMs: Number(process.env.HEARTBEAT_INTERVAL_MS || 30000),
 
+  // Modelo usado no resumo com IA das "Consideracoes finais" (tarefa leve -> modelo
+  // mais rapido que o padrao). Override via DTC_MODEL. Vazio = usa o padrao da CLI.
+  dtcModel: process.env.DTC_MODEL || "sonnet",
+
   // Geracao headless (Claude Code + skill criar-modelo-mesclado)
   claudeBin: resolveClaudeBin(),
   orionProjectDir,
