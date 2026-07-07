@@ -40,3 +40,8 @@ dist-ssr
 *.tmp
 lint_report.txt
 
+# Documentos binarios de referencia (nao versionar)
+*.docx
+*.pdf
+*.xlsx
+

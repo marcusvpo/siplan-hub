@@ -45,9 +45,11 @@ devolve o `modelo.json` gerado direto para a coluna "Modelos Disponíveis (JSON)
   (interativo: `cd /opt/Orion.Modelos && <claude bin>` -> "Yes, I trust this folder").
 - Node 22 isolado via nvm (`/home/administrator/.nvm/...`) — o Node 18 do sistema (usado por
   servicos em `/var/www`) nao e tocado.
-- `CLAUDE_BIN` aponta para o binario nativo da extensao do VS Code. A versao muda quando a
-  extensao atualiza — reconferir o caminho apos updates
-  (`ls ~/.vscode-server/extensions/ | grep claude`).
+- **Binario do Claude:** por padrao o worker **descobre sozinho** o binario nativo mais novo da
+  extensao do VS Code (`~/.vscode-server/extensions/anthropic.claude-code-*`). Assim, quando a
+  extensao atualiza e o numero de versao no caminho muda, **nao quebra** — pega a versao nova
+  automaticamente. `CLAUDE_BIN` no `.env` continua sendo um override opcional (se setado e existir,
+  tem prioridade); `VSCODE_EXT_DIR` permite apontar outra pasta de extensoes.
 
 </details>
 
@@ -133,7 +135,8 @@ sudo journalctl -u siplan-model-worker -f
 | `JOB_TIMEOUT_MS` | Timeout de uma geracao (padrao 1800000 = 30 min). |
 | `MAX_ATTEMPTS` | Tentativas antes de marcar erro definitivo (padrao 3). |
 | `HEARTBEAT_INTERVAL_MS` | Intervalo do heartbeat (selo online/offline na tela). Padrao 30000. |
-| `CLAUDE_BIN` | Caminho do binario do Claude Code (muda com update da extensao). |
+| `CLAUDE_BIN` | (Opcional) Override do binario do Claude Code. Se ausente, auto-descobre o mais novo da extensao. |
+| `VSCODE_EXT_DIR` | (Opcional) Pasta de extensoes do VS Code (padrao `~/.vscode-server/extensions`). |
 | `ORION_PROJECT_DIR` | Projeto onde a skill roda (padrao `/opt/Orion.Modelos`). |
 | `MODELOS_CRIADOS_DIR` | Pasta de saida dos JSONs (padrao `<ORION_PROJECT_DIR>/modelos_criados`). |
 | `ENTRADA_DIR` | Onde o worker baixa o doc do cliente (padrao `/home/administrator/siplan_entrada`). |
