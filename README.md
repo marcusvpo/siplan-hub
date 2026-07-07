@@ -2,11 +2,10 @@
 
 Sistema interno de gestão operacional da **Siplan**, centralizando o acompanhamento de projetos de **conversão** e **implantação** de sistemas para cartórios, além de gestão **comercial**, **analytics** e **administração** de equipes.
 
-> 📖 **Documentação completa** em [`docs/`](docs/README.md) — inclui [documentação de todas as 48 telas](docs/telas/README.md), [modelo de dados Supabase](docs/MODELO_DE_DADOS.md), [referência de hooks](docs/REFERENCIA_HOOKS.md) e o [Manual do Desenvolvedor](docs/MANUAL_DESENVOLVEDOR.md).
+> **Documentação completa** em [`docs/`](docs/README.md) — inclui [documentação de todas as telas](docs/telas/README.md), [modelo de dados Supabase](docs/MODELO_DE_DADOS.md), [referência de hooks](docs/REFERENCIA_HOOKS.md) e o [Manual do Desenvolvedor](docs/MANUAL_DESENVOLVEDOR.md).
 
----
-
-## 🚀 Stack Tecnológica
+<details>
+<summary><b>Stack Tecnológica</b></summary>
 
 | Camada | Tecnologia |
 |---|---|
@@ -32,9 +31,10 @@ Sistema interno de gestão operacional da **Siplan**, centralizando o acompanham
 | **Temas** | next-themes (dark/light) |
 | **Testes** | Vitest + Testing Library + jsdom |
 
----
+</details>
 
-## ▶️ Executando Localmente
+<details>
+<summary><b>Executando Localmente</b></summary>
 
 **Pré-requisitos:** Node.js 18+ (recomendado 20 LTS). O repositório inclui `bun.lockb` e `package-lock.json` — use o gerenciador de sua preferência.
 
@@ -70,13 +70,14 @@ VITE_SUPABASE_PUBLISHABLE_KEY=<anon-key-publica>
 
 Setup do backend em [docs/SUPABASE_SETUP.md](docs/SUPABASE_SETUP.md).
 
----
+</details>
 
-## 📦 Módulos e Rotas
+<details>
+<summary><b>Módulos e Rotas</b></summary>
 
 Todas as rotas do app ficam sob `<ProtectedRoute>` + `MainLayout` (exigem login), exceto as rotas públicas e as administrativas (sob `/admin`, que exigem papel de administrador). Documentação detalhada de cada tela em [docs/telas/](docs/telas/README.md).
 
-### 🏠 Núcleo — Dashboard e Projetos
+### Núcleo — Dashboard e Projetos
 | Rota | Tela |
 |---|---|
 | `/` | Home (hub de navegação por permissões) |
@@ -87,16 +88,16 @@ Todas as rotas do app ficam sob `<ProtectedRoute>` + `MainLayout` (exigem login)
 | `/projects/:id/adherence` | Análise de aderência (JSON Schema + autosave) |
 | `/compare` | Comparar projetos lado a lado |
 
-### 📋 Conversão e Modelos OrionTN
+### Conversão e Modelos OrionTN
 | Rota | Tela |
 |---|---|
 | `/conversion` | Fila de conversão (+ Minha Fila detalhada) |
 | `/conversion/engines` | Motores de conversão |
 | `/orion-tn-models/dashboard` | Dashboard do estágio Modelos Editor |
 | `/orion-tn-models/projects` | Projetos OrionTN |
-| `/orion-tn-models/:projectId?` | Workspace de Modelos Editor |
+| `/orion-tn-models/:projectId?` | Workspace de Modelos Editor (com geração automática de modelos via [worker na VM](vm-worker/README.md)) |
 
-### 🧑‍🔧 Implantadores
+### Implantadores
 | Rota | Tela |
 |---|---|
 | `/implantadores` | Painel de implantadores |
@@ -106,7 +107,7 @@ Todas as rotas do app ficam sob `<ProtectedRoute>` + `MainLayout` (exigem login)
 | `/implantadores/treinamento` | Roteiro de treinamento *(placeholder)* |
 | `/implantadores/transicao` | DTC — Documento de Transição de Conhecimento (com leitor de voz) |
 
-### 💼 Comercial
+### Comercial
 | Rota | Tela |
 |---|---|
 | `/commercial/customers` | Painel de clientes |
@@ -116,7 +117,7 @@ Todas as rotas do app ficam sob `<ProtectedRoute>` + `MainLayout` (exigem login)
 | `/commercial/deployment-forms` | Formulários de implantação |
 | `/commercial/checklists` · `/questions` | Checklists e editor de perguntas |
 
-### 🗓️ Calendário, Analytics e Relatórios
+### Calendário, Analytics e Relatórios
 | Rota | Tela |
 |---|---|
 | `/calendar` | Calendário (drag & drop, bloqueio por férias) |
@@ -125,10 +126,10 @@ Todas as rotas do app ficam sob `<ProtectedRoute>` + `MainLayout` (exigem login)
 | `/reports` | Relatórios e análises |
 | `/deployments` · `/deployments/latest` | Próximas e últimas implantações |
 
-### ⚙️ Administração (`/admin` — requer papel admin)
+### Administração (`/admin` — requer papel admin)
 Dashboard admin, usuários, perfis (RBAC), equipes, auditoria, saúde dos projetos, férias, armazenamento e usuários inativos.
 
-### 🌐 Rotas Públicas (sem login — anon key + RLS/RPC)
+### Rotas Públicas (sem login — anon key + RLS/RPC)
 | Rota | Tela |
 |---|---|
 | `/login` | Login (Supabase Auth) |
@@ -136,9 +137,10 @@ Dashboard admin, usuários, perfis (RBAC), equipes, auditoria, saúde dos projet
 | `/public/checklist/:id` | Checklist comercial público |
 | `/public/infra-coleta/:id` | Coleta pública de infraestrutura |
 
----
+</details>
 
-## 🏗️ Arquitetura
+<details>
+<summary><b>Arquitetura</b></summary>
 
 ```
 src/
@@ -159,7 +161,7 @@ src/
 │   ├── editor/          # Editor rico (Lexical)
 │   ├── public/          # Componentes das telas públicas
 │   └── ui/              # Primitivos shadcn/ui
-├── hooks/               # 34 custom hooks (ver docs/REFERENCIA_HOOKS.md)
+├── hooks/               # Custom hooks (ver docs/REFERENCIA_HOOKS.md)
 ├── stores/              # Zustand: calendarStore, filterStore, projectStore
 ├── contexts/            # AuthContext (autenticação)
 ├── services/            # activityLogger
@@ -172,8 +174,10 @@ src/
 └── test/                # Testes Vitest
 
 supabase/
-├── migrations/          # 40 migrations (schema, RLS, RPCs, seeds)
+├── migrations/          # Migrations (schema, RLS, RPCs, seeds)
 └── functions/create-user/  # Edge Function de criação de usuário
+
+vm-worker/               # Worker na VM Linux: gera modelos JSON da aba 5 (ver vm-worker/README.md)
 ```
 
 Padrões-chave (detalhes no [Manual do Desenvolvedor](docs/MANUAL_DESENVOLVEDOR.md) e no [GEMINI.md](GEMINI.md)):
@@ -181,29 +185,34 @@ Padrões-chave (detalhes no [Manual do Desenvolvedor](docs/MANUAL_DESENVOLVEDOR.
 - **Mutações** via `useProjectsV2` devem invalidar as query keys corretas (`['projectsList']`, `['projectDetails', id]`).
 - **Autosave com debounce** (`useAutoSave`) em formulários de edição.
 
----
+</details>
 
-## 🔐 Autenticação e Segurança
+<details>
+<summary><b>Autenticação e Segurança</b></summary>
 
 - Login via **Supabase Auth**; rotas protegidas por `ProtectedRoute` e contexto `useAuth`.
 - **RBAC** com tabelas `app_roles` / `app_permissions` / `app_role_permissions` e função `has_permission()`; espelhado no front por `usePermissions`.
 - **RLS** habilitado em todas as tabelas; acesso público controlado por RPCs `SECURITY DEFINER` e políticas específicas. Ver [docs/MODELO_DE_DADOS.md](docs/MODELO_DE_DADOS.md).
 
----
+</details>
 
-## 🎨 Design System
+<details>
+<summary><b>Design System</b></summary>
 
 - **Tema:** dark/light via next-themes (padrão: dark).
 - **Cor primária:** vermelho bordô (`hsl(346, 84%, 45%)`).
 - **UI:** Radix + shadcn/ui, Tailwind, glassmorphism e micro-animações.
 - Diretrizes e checklist visual em [docs/VISUAL_QA.md](docs/VISUAL_QA.md).
 
----
+</details>
 
-## 🧪 Testes e Qualidade
+<details>
+<summary><b>Testes e Qualidade</b></summary>
 
 - **Testes:** `npm run test` (Vitest). Cobertura atual concentrada em transformadores de projeto e validação de infra.
 - **Lint:** `npm run lint` (ESLint + typescript-eslint).
 
 > [!NOTE]
 > **Pendência conhecida:** `src/integrations/supabase/types.ts` está vazio, deixando o data-layer sem tipagem e gerando erros de `tsc`. Regenere com `npx supabase gen types typescript --project-id <ref> > src/integrations/supabase/types.ts`.
+
+</details>

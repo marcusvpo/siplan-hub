@@ -30,6 +30,7 @@ Referência das tabelas, funções (RPCs), políticas de segurança (RLS) e buck
 | `form_templates` | Templates de formulário (aderência, infra, OrionTN/Reg/Pro) | `20260601141300_implantadores_templates` |
 | `project_form_responses` | Respostas de formulário por projeto (dirige status via verdict) | `20260601141300_implantadores_templates` |
 | `commercial_checklists` | Checklists comerciais (com link público) | `20260602141500_create_commercial_checklists` |
+| `model_generation_jobs` | Fila de geração automática de modelos (aba 5 Modelos Editor). Consumida pelo worker na VM ([vm-worker/](../vm-worker/README.md)) | `20260707120000_create_model_generation_jobs` |
 
 > Colunas evoluíram em migrations posteriores (ex.: `20251202_add_project_fields`, `20251212_add_stage_dates`, `20260611091500_add_work_hours`, `20260622171000_add_infra_servers_workstations`, `20260617112000_remove_unused_project_fields`). Consulte-as ao investigar um campo específico.
 
@@ -48,6 +49,9 @@ Referência das tabelas, funções (RPCs), políticas de segurança (RLS) e buck
 | `coerce_project_global_status()` | Normaliza/deriva o status global do projeto |
 | `get_project_public_info(p_id)` | Info pública do projeto para a tela de coleta de infra (sem login) |
 | `update_project_public_infra(...)` | Submissão pública de infra (servidores/estações) via anon key |
+| `claim_model_generation_job(p_worker_id)` | Reivindica 1 job de geração de modelo de forma atômica (`FOR UPDATE SKIP LOCKED`) — um worker por job |
+| `append_available_model(p_project_id, p_file)` | Append atômico do JSON gerado em `projects.modelos_editor_available_files` (evita lost-update) |
+| `requeue_stuck_model_jobs(p_timeout_seconds, p_max_attempts)` | Reaper: devolve à fila jobs travados em `processing`, respeitando `MAX_ATTEMPTS` |
 
 ---
 
