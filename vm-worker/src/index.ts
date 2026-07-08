@@ -83,6 +83,43 @@ async function markError(table: "model_generation_jobs" | "dtc_ai_jobs", id: str
     .then(undefined, (e) => console.error("Falha ao marcar erro:", e));
 }
 
+// Assinatura de "acabaram os tokens": o Claude encerra com "session/usage limit"
+// (ex.: "You've hit your session limit · resets 11:10pm"). NAO e bug do modelo,
+// entao nao vale marcar erro definitivo -> vale reenfileirar e retentar depois.
+const QUOTA_LIMIT_RE = /(session|usage) limit|hit your (session|usage) limit|limite de (sess|uso)/i;
+function isQuotaExhausted(message: string): boolean {
+  return QUOTA_LIMIT_RE.test(message);
+}
+
+/**
+ * Bateu o limite de sessao: devolve o job para a fila (status 'pending') com
+ * `retry_after` no futuro e SEM consumir a tentativa (desfaz o +1 do claim).
+ * O claim so pega jobs cujo retry_after ja passou -> o worker retenta sozinho
+ * assim que os tokens voltarem. O job aparece "na fila" no front (nao vira erro).
+ */
+async function requeueForQuota(
+  table: "model_generation_jobs" | "dtc_ai_jobs",
+  id: string,
+  attempts: number
+): Promise<void> {
+  const retryAfter = new Date(Date.now() + config.quotaRetryMs).toISOString();
+  const minutes = Math.round(config.quotaRetryMs / 60000);
+  await supabase
+    .from(table)
+    .update({
+      status: "pending",
+      worker_id: null,
+      started_at: null,
+      attempts: Math.max(0, attempts - 1), // desfaz o incremento do claim
+      retry_after: retryAfter,
+      error_message: null,
+      progress: `Limite de sessao do Claude atingido (tokens esgotados). Retomarei automaticamente assim que os tokens voltarem (nova tentativa em ~${minutes} min).`,
+    })
+    .eq("id", id)
+    .then(undefined, (e) => console.error("Falha ao reenfileirar por quota:", e));
+  console.log(`[job ${id}] limite de sessao -> reenfileirado, proxima tentativa apos ${retryAfter}`);
+}
+
 // Reivindica e processa UM job de modelo. Retorna true se pegou algum.
 async function claimOneModelJob(): Promise<boolean> {
   const { data: job, error } = await supabase.rpc("claim_model_generation_job", {
@@ -100,8 +137,12 @@ async function claimOneModelJob(): Promise<boolean> {
     await processJob(typedJob);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.error(`[job ${typedJob.id}] erro:`, msg);
-    await markError("model_generation_jobs", typedJob.id, msg);
+    if (isQuotaExhausted(msg)) {
+      await requeueForQuota("model_generation_jobs", typedJob.id, typedJob.attempts);
+    } else {
+      console.error(`[job ${typedJob.id}] erro:`, msg);
+      await markError("model_generation_jobs", typedJob.id, msg);
+    }
   }
   return true;
 }
@@ -126,8 +167,12 @@ async function claimOneDtcJob(): Promise<boolean> {
     else await processDtcJob(typedJob);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.error(`[dtc ${typedJob.id}] erro:`, msg);
-    await markError("dtc_ai_jobs", typedJob.id, msg);
+    if (isQuotaExhausted(msg)) {
+      await requeueForQuota("dtc_ai_jobs", typedJob.id, typedJob.attempts);
+    } else {
+      console.error(`[dtc ${typedJob.id}] erro:`, msg);
+      await markError("dtc_ai_jobs", typedJob.id, msg);
+    }
   }
   return true;
 }
