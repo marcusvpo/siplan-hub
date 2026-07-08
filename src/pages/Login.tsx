@@ -23,6 +23,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [isAdminLogin, setIsAdminLogin] = useState(false);
+  const [isForgotMode, setIsForgotMode] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { theme } = useTheme();
@@ -95,6 +96,38 @@ export default function Login() {
       });
     } finally {
       console.log("Login finally block reached. Setting loading to false.");
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Email enviado",
+        description:
+          "Se este email existir, você receberá um link para redefinir sua senha.",
+      });
+      setIsForgotMode(false);
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Não foi possível enviar o email. Tente novamente.";
+      toast({
+        variant: "destructive",
+        title: "Erro ao enviar email",
+        description: errorMessage,
+      });
+    } finally {
       setLoading(false);
     }
   };
@@ -197,15 +230,21 @@ export default function Login() {
             </div>
           </div>
           <CardTitle className="text-2xl font-bold tracking-tight text-foreground">
-            {isAdminLogin ? "Área Administrativa" : "Bem-vindo de volta"}
+            {isForgotMode
+              ? "Recuperar senha"
+              : isAdminLogin
+                ? "Área Administrativa"
+                : "Bem-vindo de volta"}
           </CardTitle>
           <CardDescription className="text-muted-foreground">
-            {isAdminLogin
-              ? "Entre com suas credenciais de administrador para gerenciar a plataforma."
-              : "Insira suas credenciais para acessar sua conta."}
+            {isForgotMode
+              ? "Informe seu email e enviaremos um link para redefinir sua senha."
+              : isAdminLogin
+                ? "Entre com suas credenciais de administrador para gerenciar a plataforma."
+                : "Insira suas credenciais para acessar sua conta."}
           </CardDescription>
         </CardHeader>
-        <form onSubmit={handleLogin}>
+        <form onSubmit={isForgotMode ? handleForgotPassword : handleLogin}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-foreground/80">Email</Label>
@@ -220,32 +259,52 @@ export default function Login() {
                 className="bg-background/50 border-border/50 focus:border-primary/50 transition-colors"
               />
             </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-foreground/80">Senha</Label>
+            {!isForgotMode && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password" className="text-foreground/80">Senha</Label>
+                  <button
+                    type="button"
+                    onClick={() => setIsForgotMode(true)}
+                    className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    Esqueci minha senha?
+                  </button>
+                </div>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  disabled={loading}
+                  className="bg-background/50 border-border/50 focus:border-primary/50 transition-colors"
+                />
               </div>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                disabled={loading}
-                className="bg-background/50 border-border/50 focus:border-primary/50 transition-colors"
-              />
-            </div>
+            )}
           </CardContent>
-          <CardFooter>
+          <CardFooter className="flex-col gap-3">
             <Button className="w-full font-bold shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all active:scale-[0.98]" type="submit" disabled={loading}>
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Entrando...
+                  {isForgotMode ? "Enviando..." : "Entrando..."}
                 </>
+              ) : isForgotMode ? (
+                "Enviar link de recuperação"
               ) : (
                 "Entrar"
               )}
             </Button>
+            {isForgotMode && (
+              <button
+                type="button"
+                onClick={() => setIsForgotMode(false)}
+                className="text-xs text-muted-foreground hover:text-primary transition-colors"
+              >
+                Voltar para o login
+              </button>
+            )}
           </CardFooter>
         </form>
       </Card>
