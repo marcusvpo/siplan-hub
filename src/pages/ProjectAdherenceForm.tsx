@@ -223,6 +223,14 @@ export default function ProjectAdherenceForm() {
 
   const isPrintMode = new URLSearchParams(window.location.search).get("print") === "true";
 
+  const getAnalysisDate = () => {
+    const isFinalized = response?.status === "approved" || response?.status === "approved_with_restrictions" || response?.status === "rejected";
+    if (isFinalized && response?.approved_at) {
+      return new Date(response.approved_at).toLocaleDateString("pt-BR");
+    }
+    return new Date().toLocaleDateString("pt-BR");
+  };
+
   // Trigger browser print dialog when in print mode and fully loaded
   useEffect(() => {
     if (isPrintMode && !isLoadingProj && !isLoadingResp && !isLoadingTpl && project && response) {
@@ -510,7 +518,7 @@ export default function ProjectAdherenceForm() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2 text-xs bg-slate-50 p-4 rounded-lg border">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-2 text-xs bg-slate-50 p-4 rounded-lg border">
             <div>
               <span className="text-muted-foreground block text-[10px] uppercase font-bold tracking-wider">Cliente / Projeto</span>
               <strong className="text-slate-800 text-[13px]">{project.clientName}</strong>
@@ -524,20 +532,30 @@ export default function ProjectAdherenceForm() {
               <strong className="text-slate-800 text-[13px]">{project.systemType}</strong>
             </div>
             <div>
+              <span className="text-muted-foreground block text-[10px] uppercase font-bold tracking-wider">Implantador</span>
+              <strong className="text-slate-800 text-[13px]">{project.responsibleAdherence || "Não definido"}</strong>
+            </div>
+            <div>
+              <span className="text-muted-foreground block text-[10px] uppercase font-bold tracking-wider">Data da Análise</span>
+              <strong className="text-slate-800 text-[13px]">{getAnalysisDate()}</strong>
+            </div>
+            <div>
               <span className="text-muted-foreground block text-[10px] uppercase font-bold tracking-wider">Status Homologação</span>
-              <span className={`inline-block mt-0.5 text-[10px] font-bold px-2 py-0.2 rounded border uppercase tracking-wider ${
-                isFinalized 
-                  ? (localFormData.finalVerdict === "Totalmente Aderente"
-                    ? "bg-green-100 text-green-800 border-green-200" 
-                    : localFormData.finalVerdict === "Aderente com Restrições"
-                    ? "bg-amber-100 text-amber-800 border-amber-200"
-                    : "bg-rose-100 text-rose-800 border-rose-200")
-                  : "bg-slate-100 text-slate-800 border-slate-200"
-              }`}>
-                {isFinalized 
-                  ? (localFormData.finalVerdict || "Finalizado") 
-                  : "Rascunho"}
-              </span>
+              <div className="mt-0.5">
+                <span className={`inline-block text-[10px] font-bold px-2 py-0.2 rounded border uppercase tracking-wider ${
+                  isFinalized 
+                    ? (localFormData.finalVerdict === "Totalmente Aderente"
+                      ? "bg-green-100 text-green-800 border-green-200" 
+                      : localFormData.finalVerdict === "Aderente com Restrições"
+                      ? "bg-amber-100 text-amber-800 border-amber-200"
+                      : "bg-rose-100 text-rose-800 border-rose-200")
+                    : "bg-slate-100 text-slate-800 border-slate-200"
+                }`}>
+                  {isFinalized 
+                    ? (localFormData.finalVerdict || "Finalizado") 
+                    : "Rascunho"}
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -803,16 +821,7 @@ export default function ProjectAdherenceForm() {
               <h1 className="text-2xl font-black tracking-tight text-foreground bg-gradient-to-r from-primary to-orange-500 bg-clip-text text-transparent">
                 Análise de Aderência
               </h1>
-              <Badge variant="outline" className="text-primary border-primary/20 bg-primary/5">
-                #{project.ticketNumber}
-              </Badge>
-              <Badge variant="secondary" className="bg-slate-700 text-white">
-                {project.systemType}
-              </Badge>
             </div>
-            <p className="text-sm text-muted-foreground font-semibold">
-              Cliente: {project.clientName}
-            </p>
           </div>
 
           <div className="flex items-center gap-3">
@@ -832,20 +841,48 @@ export default function ProjectAdherenceForm() {
                 Auto-salvando...
               </span>
             )}
-            
-            <Badge className={`text-xs font-bold px-3 py-1 border uppercase tracking-wider rounded-full ${
-              isFinalized 
-                ? (localFormData.finalVerdict === "Totalmente Aderente"
-                  ? "bg-green-500/10 text-green-600 border-green-500/20" 
-                  : localFormData.finalVerdict === "Aderente com Restrições"
-                  ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
-                  : "bg-rose-500/10 text-rose-600 border-rose-500/20")
-                : "bg-slate-500/10 text-slate-600 border-slate-500/20"
-            }`}>
-              {isFinalized 
-                ? (localFormData.finalVerdict || "Finalizado") 
-                : "Rascunho"}
-            </Badge>
+          </div>
+        </div>
+
+        {/* Informações de Cabeçalho */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 p-4 rounded-xl border bg-muted/20 text-xs text-left mt-2">
+          <div className="col-span-2 md:col-span-3 lg:col-span-2">
+            <span className="text-muted-foreground block text-[10px] uppercase font-bold tracking-wider mb-0.5">Cliente / Projeto</span>
+            <strong className="text-foreground text-[13px]">{project.clientName}</strong>
+          </div>
+          <div>
+            <span className="text-muted-foreground block text-[10px] uppercase font-bold tracking-wider mb-0.5">Ticket</span>
+            <strong className="text-foreground text-[13px]">#{project.ticketNumber}</strong>
+          </div>
+          <div>
+            <span className="text-muted-foreground block text-[10px] uppercase font-bold tracking-wider mb-0.5">Sistema / Produto</span>
+            <strong className="text-foreground text-[13px]">{project.systemType}</strong>
+          </div>
+          <div>
+            <span className="text-muted-foreground block text-[10px] uppercase font-bold tracking-wider mb-0.5">Implantador</span>
+            <strong className="text-foreground text-[13px]">{project.responsibleAdherence || "Não definido"}</strong>
+          </div>
+          <div>
+            <span className="text-muted-foreground block text-[10px] uppercase font-bold tracking-wider mb-0.5">Data da Análise</span>
+            <strong className="text-foreground text-[13px]">{getAnalysisDate()}</strong>
+          </div>
+          <div>
+            <span className="text-muted-foreground block text-[10px] uppercase font-bold tracking-wider mb-0.5">Status Homologação</span>
+            <div className="mt-0.5">
+              <Badge className={`text-[10px] font-bold px-2 py-0.2 border uppercase tracking-wider rounded ${
+                isFinalized 
+                  ? (localFormData.finalVerdict === "Totalmente Aderente"
+                    ? "bg-green-500/10 text-green-600 border-green-500/20" 
+                    : localFormData.finalVerdict === "Aderente com Restrições"
+                    ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
+                    : "bg-rose-500/10 text-rose-600 border-rose-500/20")
+                  : "bg-slate-500/10 text-slate-600 border-slate-500/20"
+              }`}>
+                {isFinalized 
+                  ? (localFormData.finalVerdict || "Finalizado") 
+                  : "Rascunho"}
+              </Badge>
+            </div>
           </div>
         </div>
       </div>
