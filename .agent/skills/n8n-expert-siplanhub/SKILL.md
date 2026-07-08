@@ -113,17 +113,21 @@ Execute the discovery database queries using the Supabase MCP tool to assert the
 
 ### Step 3: Architecture Definition
 Write out a clear architectural design in Markdown, explaining:
-- The trigger origin (e.g., a table webhook on `public.project_stages`).
+- The trigger origin (e.g., a table webhook on `public.projects`).
 - The specific filters required to isolate the execution state.
 - How recipients will be fetched or mapped.
 
-### Step 4: Complete Code / JSON Representation
-Provide the complete n8n Node Configuration block or the complete JSON structure for the critical nodes (Set, IF, Code, HTTP Request) so that the user can copy-paste it directly into n8n.
+### Step 4: Webhook Creation
+Define the exact trigger or webhook on the Supabase database. If it is a conditonal trigger, provide the complete PostgreSQL migration script using `CREATE TRIGGER ... WHEN (...) EXECUTE FUNCTION supabase_functions.http_request(...)`. Write the migration to `supabase/migrations/` and apply it to the database.
 
-### Step 5: Failure Tolerance & Observability
-Integrate robust error boundaries:
-- Specify `retryOnFail` parameters for external notification nodes.
-- Add an alternative execution path or an **Error Trigger Node** to alert developers on failure.
+### Step 5: Step-by-Step Markdown Manual Generation
+Write a comprehensive step-by-step documentation file in `docs/automacoes/` named `[nome_da_automacao].md` with the following structure:
+- **YAML Frontmatter**: Metadata detailing type, area, tags, and status.
+- **📋 1. Descrição Geral do Fluxo**: Detailed explanation of the flow and a Mermaid diagram.
+- **🛠️ 2. Configuração do Webhook no Supabase (Trigger)**: Instruction and exact SQL script to create the webhook trigger.
+- **⚙️ 3. Configuração Passo a Passo dos Nós no n8n**: Precise guidelines for manual UI configuration of each node (Name, Parameters, Conditions, Webhook Path, dynamic fields expressions using `{{ }}`).
+- **✉️ 4. Modelo do E-mail (HTML Premium)**: Premium inline-styled HTML template representing the notification, using Bordeaux Red (`#ad0505`) as the primary system accent color. It MUST include a section styled as "A BOLA ESTÁ COM VOCÊ — PRÓXIMOS PASSOS:" matching the repository design pattern: a container table with `background-color: #fff5f5; border: 1px dashed #feb2b2; margin-top: 25px; padding: 25px;`, a bold header in red `#ad0505` prefixed by the target emoji 🎯, and a clean list of immediate operational/system actions.
+- **🧪 5. Scripts de Simulação e Testes (Supabase)**: Safe SQL commands to insert test projects, simulate the trigger conditions using a transaction block (`BEGIN; ... ROLLBACK;`), and clean up test data.
 
 ---
 
@@ -134,7 +138,9 @@ When a prompt like the following is provided:
 *"preciso que você crie uma nova automação solicitando a Configuração de Ambiente quando houver a mudança do status da etapa '4. Preparação de Ambiente' em /projects para 'Em Andamento' e efetuar um disparo para o Hugo Januário, Bruno Fernandes e Alex Silva"*
 
 The agent will execute this mental model:
-1. **Query fields**: Discover if `projects` or `project_stages` contains the phase state information.
-2. **Isolate values**: Verify whether the name of the phase is handled as an id, a string column text, or a dictionary.
-3. **Map recipients**: Fetch table rows matching the names `Hugo Januário`, `Bruno Fernandes`, and `Alex Silva` to secure their exact email addresses or internal communications handles.
-4. **Draft the Node Network**: Present the resulting JSON blueprint containing the exact filter expressions, ensuring the data references accurately target `.body.new_row.status`.
+1. **Query fields**: Discover if `projects` contains the phase state information (`environment_status`).
+2. **Isolate values**: Verify the status values (e.g., `'in-progress'`, `'done'`, `'todo'`).
+3. **Map recipients**: Fetch table rows from `profiles` matching the names to secure their exact email addresses.
+4. **Create SQL Migration & Trigger**: Define and run the `CREATE TRIGGER` statement.
+5. **Draft the Node Network Manual**: Present and write the resulting Markdown step-by-step guide to `docs/automacoes/[nome_da_automacao].md` containing the exact parameter settings, Mermaid diagram, premium HTML email, and simulation transaction queries.
+
