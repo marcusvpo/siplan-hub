@@ -66,6 +66,10 @@ export const config = {
   pollIntervalMs: Number(process.env.POLL_INTERVAL_MS || 15000),
   jobTimeoutMs: Number(process.env.JOB_TIMEOUT_MS || 1800000),
   maxAttempts: Number(process.env.MAX_ATTEMPTS || 3),
+  // Quando o Claude bate o limite de sessao (tokens), o job NAO vira erro: volta
+  // para a fila e e retentado automaticamente apos este intervalo (default 15 min),
+  // sem consumir tentativa. O worker fica sondando ate os tokens voltarem.
+  quotaRetryMs: Number(process.env.QUOTA_RETRY_MS || 900000),
   heartbeatIntervalMs: Number(process.env.HEARTBEAT_INTERVAL_MS || 30000),
 
   // Modelo usado no resumo com IA das "Consideracoes finais" (tarefa leve -> modelo

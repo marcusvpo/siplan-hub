@@ -154,7 +154,10 @@ export async function processJob(job: Job): Promise<void> {
   }
 
   if (code !== 0) {
-    const tail = (stderr || transcript || "").slice(-1200);
+    // Inclui stderr E transcript no fim: o marcador de limite de sessao ("session
+    // limit") pode vir em qualquer um dos dois, e o loop principal detecta por essa
+    // assinatura para reenfileirar (em vez de marcar erro definitivo).
+    const tail = `${stderr}\n${transcript}`.slice(-1500);
     throw new Error(`Claude encerrou com codigo ${code}. Fim da saida: ${tail}`);
   }
 
