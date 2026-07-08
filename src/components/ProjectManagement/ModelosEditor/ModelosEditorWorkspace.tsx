@@ -1006,8 +1006,8 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
 
             {/* Andamento ao vivo da geração (o que o Claude está fazendo na VM) */}
             <Dialog open={!!progressJob} onOpenChange={(open) => !open && setProgressJobId(null)}>
-                <DialogContent className="max-w-3xl w-[92vw]">
-                    <DialogHeader>
+                <DialogContent className="max-w-5xl w-[94vw] max-h-[90vh] flex flex-col overflow-hidden">
+                    <DialogHeader className="shrink-0">
                         <DialogTitle className="flex items-center gap-2 text-base">
                             {progressJob?.status === 'processing' && <Loader2 className="h-4 w-4 animate-spin text-indigo-500" />}
                             {progressJob?.status === 'pending' && <Clock className="h-4 w-4 text-amber-500" />}
@@ -1092,9 +1092,9 @@ function ProgressBody({ job, workerOnline, queuePosition, onCancel }: {
                         : (job.errorMessage || "Falha na geração do modelo.");
 
     return (
-        <div className="space-y-3">
+        <div className="flex-1 min-h-0 flex flex-col gap-3">
             <div className={cn(
-                "text-xs rounded-md border px-3 py-2 flex items-start gap-2",
+                "shrink-0 text-xs rounded-md border px-3 py-2 flex items-start gap-2",
                 job.status === 'error'
                     ? "border-red-200 dark:border-red-900/50 bg-red-50/60 dark:bg-red-950/20 text-red-700 dark:text-red-300"
                     : job.status === 'done'
@@ -1104,7 +1104,7 @@ function ProgressBody({ job, workerOnline, queuePosition, onCancel }: {
                             : "border-indigo-200 dark:border-indigo-900/50 bg-indigo-50/60 dark:bg-indigo-950/20 text-indigo-700 dark:text-indigo-300"
             )}>
                 {job.status === 'processing' && <Loader2 className="h-3.5 w-3.5 mt-0.5 shrink-0 animate-spin" />}
-                <span className="break-words">{statusLine}</span>
+                <span className="min-w-0 flex-1 break-words">{statusLine}</span>
             </div>
 
             {active && (
@@ -1131,13 +1131,13 @@ function ProgressBody({ job, workerOnline, queuePosition, onCancel }: {
             {log.length > 0 ? (
                 <div
                     ref={scrollRef}
-                    className="max-h-72 overflow-y-auto rounded-md border border-border/60 bg-slate-50 dark:bg-slate-900/60 p-2 space-y-1 font-mono text-[10px] leading-relaxed scrollbar-thin"
+                    className="flex-1 min-h-0 max-h-[60vh] overflow-y-auto overflow-x-hidden rounded-md border border-border/60 bg-slate-50 dark:bg-slate-900/60 p-2 space-y-1 font-mono text-[10px] leading-relaxed scrollbar-thin"
                 >
                     {log.map((s, i) => (
                         <div key={i} className="flex gap-2">
                             <span className="text-muted-foreground shrink-0 tabular-nums">{formatStepTime(s.at)}</span>
                             <span className={cn(
-                                "break-words",
+                                "min-w-0 flex-1 whitespace-pre-wrap break-all",
                                 s.kind === 'tool' && "text-indigo-600 dark:text-indigo-400",
                                 s.kind === 'result' && "text-emerald-600 dark:text-emerald-400 font-semibold",
                                 s.kind === 'system' && "text-muted-foreground",
@@ -1153,7 +1153,7 @@ function ProgressBody({ job, workerOnline, queuePosition, onCancel }: {
                     )}
                 </div>
             ) : (
-                <div className="text-[11px] text-muted-foreground text-center py-6 border border-dashed rounded-md flex flex-col items-center gap-2">
+                <div className="flex-1 min-h-0 text-[11px] text-muted-foreground text-center py-6 border border-dashed rounded-md flex flex-col items-center justify-center gap-2">
                     {job.status === 'processing'
                         ? <><Activity className="h-4 w-4 animate-pulse" /> Aguardando os primeiros passos da IA…</>
                         : <><Terminal className="h-4 w-4 opacity-60" /> Sem detalhes de andamento para este item.</>}
