@@ -28,7 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus, Trash2, UserCog, Edit, Search, ChevronLeft, ChevronRight, FilterX } from "lucide-react";
+import { Loader2, Plus, Trash2, UserCog, Edit, Search, ChevronLeft, ChevronRight, FilterX, KeyRound } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -77,6 +77,13 @@ export default function UserManagement() {
   const [editName, setEditName] = useState("");
   const [editRole, setEditRole] = useState<string>("user");
   const [editTeam, setEditTeam] = useState<string>("");
+
+  // Reset Password State
+  const [resetUser, setResetUser] = useState<Profile | null>(null);
+  const [isResetOpen, setIsResetOpen] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  const [resetPassword, setResetPassword] = useState("");
+  const [resetPasswordConfirm, setResetPasswordConfirm] = useState("");
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -239,6 +246,64 @@ export default function UserManagement() {
       });
     } finally {
       setUpdating(false);
+    }
+  };
+
+  const openResetDialog = (user: Profile) => {
+    setResetUser(user);
+    setResetPassword("");
+    setResetPasswordConfirm("");
+    setIsResetOpen(true);
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetUser) return;
+
+    if (resetPassword !== resetPasswordConfirm) {
+      toast({
+        variant: "destructive",
+        title: "As senhas não coincidem",
+        description: "Confirme a nova senha corretamente.",
+      });
+      return;
+    }
+
+    setResetting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        "admin-reset-password",
+        {
+          body: { userId: resetUser.id, password: resetPassword },
+        },
+      );
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      logAction.mutate({
+        action: "USER_PASSWORD_RESET",
+        details: { userId: resetUser.id, email: resetUser.email },
+      });
+      toast({
+        title: "Senha redefinida",
+        description: `A senha de ${resetUser.full_name || resetUser.email} foi alterada com sucesso.`,
+      });
+
+      setIsResetOpen(false);
+      setResetUser(null);
+      setResetPassword("");
+      setResetPasswordConfirm("");
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Erro desconhecido";
+      toast({
+        variant: "destructive",
+        title: "Erro ao redefinir senha",
+        description: errorMessage,
+      });
+    } finally {
+      setResetting(false);
     }
   };
 
@@ -515,6 +580,52 @@ export default function UserManagement() {
         </DialogContent>
       </Dialog>
 
+      {/* Reset Password Dialog */}
+      <Dialog open={isResetOpen} onOpenChange={setIsResetOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Redefinir Senha</DialogTitle>
+            <DialogDescription>
+              Defina uma nova senha para{" "}
+              <strong>{resetUser?.full_name || resetUser?.email}</strong>. O
+              usuário poderá entrar imediatamente com a nova senha.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleResetPassword} className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="reset-password">Nova senha</Label>
+              <Input
+                id="reset-password"
+                type="password"
+                value={resetPassword}
+                onChange={(e) => setResetPassword(e.target.value)}
+                required
+                minLength={6}
+                autoComplete="new-password"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="reset-password-confirm">Confirmar nova senha</Label>
+              <Input
+                id="reset-password-confirm"
+                type="password"
+                value={resetPasswordConfirm}
+                onChange={(e) => setResetPasswordConfirm(e.target.value)}
+                required
+                minLength={6}
+                autoComplete="new-password"
+              />
+            </div>
+            <DialogFooter>
+              <Button type="submit" disabled={resetting}>
+                {resetting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Redefinir Senha
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       <div className="space-y-3">
         <div className="border rounded-md bg-card">
           <div className="w-full overflow-x-auto scrollbar-thin">
@@ -607,6 +718,15 @@ export default function UserManagement() {
                             onClick={() => openEditDialog(user)}
                           >
                             <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            title="Redefinir senha"
+                            onClick={() => openResetDialog(user)}
+                          >
+                            <KeyRound className="h-4 w-4" />
                           </Button>
                           <Button
                             variant="ghost"

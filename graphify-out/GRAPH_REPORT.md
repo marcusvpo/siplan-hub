@@ -1,16 +1,16 @@
 # Graph Report - siplan-hub  (2026-07-08)
 
 ## Corpus Check
-- 490 files · ~697,783 words
+- 492 files · ~699,116 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 3675 nodes · 6841 edges · 290 communities (221 shown, 69 thin omitted)
+- 3680 nodes · 6865 edges · 292 communities (225 shown, 67 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 72 edges (avg confidence: 0.66)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `6181fd24`
+- Built from commit: `b4de3bf3`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -58,7 +58,9 @@
 - Deployment Template & Stage Forms
 - Theme Provider
 - Health Badge & Pipeline Status
+- AuthContext.tsx
 - Auth Context
+- MainLayout.tsx
 - Menu Items & Home
 - Improve-Text AI Jobs
 - Toggle Component
@@ -300,70 +302,74 @@
 1. `cn()` - 182 edges
 2. `Communities (123 total, 21 thin omitted)` - 92 edges
 3. `ProjectV2` - 85 edges
-4. `Button` - 77 edges
-5. `useToast()` - 64 edges
-6. `Card` - 61 edges
-7. `CardContent` - 60 edges
+4. `Button` - 78 edges
+5. `useToast()` - 66 edges
+6. `Card` - 62 edges
+7. `CardContent` - 61 edges
 8. `Badge()` - 57 edges
-9. `supabase` - 50 edges
-10. `CardHeader` - 49 edges
+9. `supabase` - 51 edges
+10. `CardHeader` - 50 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `CustomImageUploadWidget()` --indirect_call--> `err()`  [INFERRED]
+  src/components/FormRenderer/FormRenderer.tsx → .agent/skills/typescript-expert/references/utility-types.ts
 - `PostObservations()` --indirect_call--> `err()`  [INFERRED]
   src/components/ProjectManagement/Forms/PostObservations.tsx → .agent/skills/typescript-expert/references/utility-types.ts
 - `InfraStageForm()` --indirect_call--> `err()`  [INFERRED]
   src/components/ProjectManagement/Forms/StageForms/InfraStageForm.tsx → .agent/skills/typescript-expert/references/utility-types.ts
 - `ModelosEditorWorkspace()` --indirect_call--> `err()`  [INFERRED]
   src/components/ProjectManagement/ModelosEditor/ModelosEditorWorkspace.tsx → .agent/skills/typescript-expert/references/utility-types.ts
-- `useConversionEngines()` --indirect_call--> `err()`  [INFERRED]
-  src/hooks/useConversionEngines.ts → .agent/skills/typescript-expert/references/utility-types.ts
-- `useConversionIssues()` --indirect_call--> `err()`  [INFERRED]
-  src/hooks/useConversionIssues.ts → .agent/skills/typescript-expert/references/utility-types.ts
+- `AuthProvider()` --indirect_call--> `err()`  [INFERRED]
+  src/contexts/AuthContext.tsx → .agent/skills/typescript-expert/references/utility-types.ts
 
 ## Import Cycles
 - None detected.
 
-## Communities (290 total, 69 thin omitted)
+## Communities (292 total, 67 thin omitted)
 
 ### Community 0 - "Conversion Issues & Post Forms"
-Cohesion: 0.12
-Nodes (28): STAGE_OPTIONS, COLORS, FONT_SIZES, VisualQuestionBuilderProps, DeploymentDetailsDialog(), StatusType, FallbackChecklistFormProps, ReportsFiltersProps (+20 more)
+Cohesion: 0.18
+Nodes (10): ProjectDistributionChart(), StatusChart(), TimelineChart(), WorkloadChart(), COLORS, FONT_SIZES, ModeToggle(), ReportsFilters() (+2 more)
 
 ### Community 1 - "Conversion Post Feed & Drawer"
-Cohesion: 0.22
-Nodes (10): ConversionPostFeed(), ConversionPostFeedProps, formatPostDate(), getInitials(), groupPostsByDate(), POST_TYPE_CONFIG, NewPostFormProps, ConversionPost (+2 more)
+Cohesion: 0.12
+Nodes (20): ConversionPostFeed(), ConversionPostFeedProps, formatPostDate(), getInitials(), groupPostsByDate(), POST_TYPE_CONFIG, NewPostFormProps, TabsContent (+12 more)
 
 ### Community 2 - "App Routes & Pages"
 Cohesion: 0.04
-Nodes (48): AderenciasFinalizadas, AdminDashboard, AdminLayout, AdminSettings, AgendaAnalistas, Analytics, AuditLogPage, Calendar (+40 more)
+Nodes (50): AderenciasFinalizadas, AdminDashboard, AdminLayout, AdminSettings, AgendaAnalistas, Analytics, App(), AuditLogPage (+42 more)
+
+### Community 3 - "Queue Card & Project Info"
+Cohesion: 0.17
+Nodes (4): ActivityLogger, LogAction, LogActionPayload, LogDetails
 
 ### Community 4 - "VM Worker Job Queue"
-Cohesion: 0.10
-Nodes (43): config, DtcJob, Job, ModelType, claimAndProcess(), claimOneDtcJob(), claimOneModelJob(), installShutdownHandlers() (+35 more)
+Cohesion: 0.16
+Nodes (17): config, DtcJob, Job, ModelType, buildImprovePrompt(), buildSummaryPrompt(), processImproveJob(), buildPrompt() (+9 more)
 
 ### Community 5 - "Alerts & DTC AI/Team Hooks"
-Cohesion: 0.09
-Nodes (35): jspdf, lexical, AiTarget, Block, blockTextLen(), blockToPlain(), escapeHtml(), fmtDate() (+27 more)
+Cohesion: 0.05
+Nodes (83): jspdf, ProjectDetailsModal(), AiTarget, Block, blockTextLen(), blockToPlain(), escapeHtml(), fmtDate() (+75 more)
 
 ### Community 6 - "Checklist & Visual Question Builder"
-Cohesion: 0.18
-Nodes (13): ChecklistEditor(), ChecklistEditorProps, SYSTEM_TYPES, convertVisualToJSONSchema(), convertVisualToUISchema(), parseJSONSchemaToVisual(), VisualQuestion, FormTemplate (+5 more)
+Cohesion: 0.16
+Nodes (16): ChecklistEditor(), ChecklistEditorProps, SYSTEM_TYPES, convertVisualToJSONSchema(), convertVisualToUISchema(), parseJSONSchemaToVisual(), VisualQuestion, VisualQuestionBuilder() (+8 more)
 
 ### Community 7 - "Project Stage Forms & Models"
-Cohesion: 0.08
-Nodes (34): EnvironmentStageFormProps, ImplementationStageFormProps, PhaseFormProps, InfraStageFormProps, ProjectRow, AdherenceStageV2, AuditEntry, BlockingReason (+26 more)
+Cohesion: 0.06
+Nodes (46): AdherenceStageFormProps, ConversionStageFormProps, formatStepTime(), ModelosEditorWorkspace(), ModelosEditorWorkspaceProps, ModelosMetrics(), normalizeModelName(), pairKeyFor() (+38 more)
 
 ### Community 8 - "Charts, KPI & Reports"
-Cohesion: 0.11
-Nodes (29): data, OverviewChart(), ProjectStatusChart(), ProjectStatusChartProps, STATUS_LABELS, formatAction(), RecentActivity(), STAGE_LABELS (+21 more)
+Cohesion: 0.13
+Nodes (26): ProjectStatusChartProps, STATUS_LABELS, FallbackChecklistForm(), FallbackChecklistFormProps, AdherenceGapCard(), GlobalMetrics(), HealthDistribution(), StatusDistribution() (+18 more)
 
 ### Community 9 - "Notification Bell & Dropdown"
-Cohesion: 0.12
+Cohesion: 0.11
 Nodes (19): UseNotificationsOptions, ConversionActivityLog, ConversionIssue, ConversionKPIs, ConversionMapping, ConversionQueueItem, DataVolume, HomologationStatus (+11 more)
 
 ### Community 10 - "Calendar Grid & Drag-Drop"
-Cohesion: 0.15
-Nodes (23): CalendarControls(), CalendarGrid(), CalendarGridProps, DayDroppableZone(), DraggableTeamMember(), DraggableTeamMemberProps, CalendarEventPill(), CalendarEventPillProps (+15 more)
+Cohesion: 0.17
+Nodes (21): CalendarControls(), CalendarGrid(), CalendarGridProps, DayDroppableZone(), DraggableTeamMember(), DraggableTeamMemberProps, CalendarEventPill(), CalendarEventPillProps (+13 more)
 
 ### Community 11 - "Modal/Tab Prop Types"
 Cohesion: 0.17
@@ -374,76 +380,80 @@ Cohesion: 0.11
 Nodes (18): AdherenceImpactSummary(), AdherenceQuestionField(), AdherenceQuestionValue, ArrayFieldTemplateItem, checkHasAdherenceQuestions(), CustomArrayFieldTemplate(), CustomCheckboxWidget(), customFields (+10 more)
 
 ### Community 13 - "Sidebar Components"
-Cohesion: 0.09
-Nodes (22): SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupAction, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarInput (+14 more)
+Cohesion: 0.08
+Nodes (25): Sidebar, SidebarContent, SidebarContext, SidebarFooter, SidebarGroup, SidebarGroupAction, SidebarGroupContent, SidebarGroupLabel (+17 more)
 
 ### Community 14 - "Deployment Cards & Project Hooks"
-Cohesion: 0.19
-Nodes (12): ScrollArea, ScrollBar, Client, Contact, Project, useCommercial(), getMarqueeStyle(), ClientOverview() (+4 more)
+Cohesion: 0.23
+Nodes (10): Client, Contact, Project, useCommercial(), ClientOverview(), CommercialBlockers(), getBlockers(), CommercialCustomers() (+2 more)
 
 ### Community 15 - "Dashboard KPI & Report"
-Cohesion: 0.29
-Nodes (11): useAuditLogs(), useTeams(), actionLabels, AuditLogPage(), formatLogDetails(), formatValue(), isUUID(), translateValue() (+3 more)
+Cohesion: 0.30
+Nodes (15): AnyObj, buildContext(), buildPrompt(), buildStagesSection(), dumpStageExtras(), fmtDate(), humanVal(), lexToText() (+7 more)
+
+### Community 16 - "Custom Widgets & Sheet"
+Cohesion: 0.15
+Nodes (9): DeploymentFormFields(), Props, RadioGroup, RadioGroupItem, DeploymentFormRecord, check(), DeploymentFormData, generateDeploymentTemplate() (+1 more)
 
 ### Community 17 - "Dashboard Table & Pagination"
-Cohesion: 0.12
-Nodes (21): DashboardTable(), DashboardTableProps, HealthBadge(), HealthBadgeProps, ButtonProps, buttonVariants, Calendar(), CalendarProps (+13 more)
+Cohesion: 0.10
+Nodes (24): DashboardTable(), DashboardTableProps, HealthBadge(), HealthBadgeProps, PipelineStatus(), PipelineStatusProps, ButtonProps, buttonVariants (+16 more)
 
 ### Community 18 - "App Sidebar & Protected Route"
-Cohesion: 0.20
-Nodes (11): UserProfileDrawer(), UserProfileDrawerProps, NOTIFICATION_TYPE_ICONS, NotificationBell(), ProtectedRoute(), AuthContext, AuthContextType, Permission (+3 more)
+Cohesion: 0.25
+Nodes (8): AppSidebar(), UserProfileDrawer(), UserProfileDrawerProps, ProtectedRoute(), useAuth(), useDeploymentForms(), AdminLayout(), DeploymentForms()
 
 ### Community 19 - "Overview/Activity & Avatar"
-Cohesion: 0.47
-Nodes (3): LogAction, LogActionPayload, LogDetails
+Cohesion: 0.32
+Nodes (13): err(), AderenciasFinalizadas(), claimAndProcess(), claimOneDtcJob(), claimOneModelJob(), installShutdownHandlers(), isQuotaExhausted(), main() (+5 more)
 
 ### Community 20 - "Commercial & Conversion Hooks"
 Cohesion: 0.14
-Nodes (17): CompactQueueCard(), CompactQueueCardProps, STATUS_COLORS, STATUS_LABELS, NewPostForm(), ProjectInfo, ProjectInfoSection(), ProjectInfoSectionProps (+9 more)
+Nodes (17): CompactQueueCard(), CompactQueueCardProps, STATUS_COLORS, STATUS_LABELS, ProjectInfo, ProjectInfoSection(), ProjectInfoSectionProps, ConversionKPIs (+9 more)
 
 ### Community 21 - "Worker package.json"
 Cohesion: 0.11
 Nodes (17): dependencies, dotenv, @supabase/supabase-js, description, devDependencies, tsx, @types/node, typescript (+9 more)
 
 ### Community 22 - "Distribution/Workload Charts"
-Cohesion: 0.12
-Nodes (19): DashboardKPI(), DashboardKPIProps, ProjectDistributionChart(), ProjectDistributionChartProps, StatusChart(), StatusChartProps, WorkloadChart(), WorkloadChartProps (+11 more)
+Cohesion: 0.25
+Nodes (5): ChartConfig, ChartContext, ChartContextProps, ChartLegendContent, THEMES
 
 ### Community 23 - "Modelos Editor & Model Jobs"
-Cohesion: 0.13
-Nodes (24): StageCard(), ImplementationStageForm(), formatStepTime(), ModelosEditorWorkspace(), ModelosEditorWorkspaceProps, ModelosMetrics(), normalizeModelName(), pairKeyFor() (+16 more)
+Cohesion: 0.16
+Nodes (21): StageCard(), StageCardProps, ConversionStageForm(), ImplementationPhaseForm(), ImplementationStageForm(), ImplementationStageFormProps, PhaseFormProps, StatusType (+13 more)
 
 ### Community 25 - "Deployment Form Fields"
-Cohesion: 0.20
-Nodes (13): DeploymentFormFields(), Props, ConversionStageForm(), ImplementationPhaseForm(), DeploymentFormRecord, useDeploymentForms(), DeploymentForms(), validateForm() (+5 more)
+Cohesion: 0.23
+Nodes (8): DashboardKPI(), DashboardKPIProps, KPICard(), KPICardProps, ScrollingText(), ScrollingTextProps, useKPIs(), KPIData
 
 ### Community 26 - "Project Transformers & Stages"
-Cohesion: 0.34
-Nodes (13): useProjectDetails(), calculateHealthScore(), formatDateForDB(), mapAdherenceStage(), mapConversionStage(), mapEnvironmentStage(), mapImplementationStage(), mapInfraStage() (+5 more)
+Cohesion: 0.41
+Nodes (12): calculateHealthScore(), formatDateForDB(), mapAdherenceStage(), mapConversionStage(), mapEnvironmentStage(), mapImplementationStage(), mapInfraStage(), mapModelosEditorStage() (+4 more)
 
 ### Community 27 - "use-toast Reducer"
 Cohesion: 0.11
 Nodes (23): Toast, ToastAction, ToastActionElement, ToastClose, ToastDescription, ToastProps, ToastTitle, toastVariants (+15 more)
 
 ### Community 28 - "Project Modal & Kanban"
-Cohesion: 0.18
-Nodes (12): DeploymentCard(), FilesTab(), AccordionContent, AccordionItem, AccordionTrigger, Badge(), BadgeProps, badgeVariants (+4 more)
+Cohesion: 0.11
+Nodes (26): NOTIFICATION_TYPE_ICONS, NotificationBell(), ProjectHeaderFormProps, TabProps, IndividualProjectReport(), ProjectHeaderStats(), ProjectSelector(), StageAnalysisTimeline() (+18 more)
 
 ### Community 29 - "Commercial/Public Checklists"
-Cohesion: 0.15
-Nodes (21): err(), react, CustomImageUploadWidget(), EnvironmentStageForm(), ProjectSelector(), AuthProvider(), useToast(), useCommercialChecklists() (+13 more)
+Cohesion: 0.18
+Nodes (16): react, CustomImageUploadWidget(), EnvironmentStageForm(), EnvironmentStageFormProps, useChart(), AuthProvider(), useToast(), useCommercialChecklists() (+8 more)
 
 ### Community 30 - "Commercial Page & Hooks"
-Cohesion: 0.05
-Nodes (62): ConversionIssuesTab(), ConversionIssuesTabProps, PRIORITIES, STATUSES, ConversionPostDrawer(), KPICard(), KPICardProps, ProjectDetailsModal() (+54 more)
+Cohesion: 0.10
+Nodes (37): ConversionIssuesTab(), ConversionIssuesTabProps, PRIORITIES, STATUSES, ConversionPostDrawer(), ConversionPostDrawerProps, STATUS_LABELS, NewPostForm() (+29 more)
 
 ### Community 31 - "Lexical Editor Config"
 Cohesion: 0.21
 Nodes (8): Editor(), editorConfig, nodes, Plugins(), ToolbarPlugin(), editorTheme, EditorContentEditable(), Props
 
 ### Community 32 - "Predictability & Bottlenecks"
-Cohesion: 0.22
-Nodes (14): StageCardProps, ProjectCardV3(), StepsTab(), BottleneckIssue, getBottleneckColor(), getBottleneckIcon(), getDaysStuck(), getSeverity() (+6 more)
+Cohesion: 0.25
+Nodes (13): ProjectCardV3(), ProjectCardV3Props, StepsTab(), Progress, getBottleneckColor(), getBottleneckIcon(), getDaysStuck(), getSeverity() (+5 more)
 
 ### Community 33 - "Worker tsconfig"
 Cohesion: 0.15
@@ -451,15 +461,19 @@ Nodes (12): compilerOptions, esModuleInterop, module, moduleResolution, outDir, 
 
 ### Community 34 - "Main Layout & Theme Toggle"
 Cohesion: 0.10
-Nodes (25): AppSidebar(), Breadcrumbs(), MainLayout(), MainLayoutProps, ModeToggle(), NewProjectDialog(), Sidebar, SidebarContext (+17 more)
+Nodes (20): Breadcrumbs(), DeploymentCard(), DeploymentCardProps, DeploymentDetailsDialog(), CustomTheme, RoadmapManagerProps, RoadmapSettings, useProjectsV2() (+12 more)
+
+### Community 35 - "Post Observations Editor"
+Cohesion: 0.39
+Nodes (8): lexical, LexicalNode, listItemNode(), listNode(), paragraphNode(), parseInline(), plainTextToLexicalJson(), textNode()
 
 ### Community 36 - "Toast Component"
 Cohesion: 0.02
 Nodes (92): Communities (123 total, 21 thin omitted), Community 0 - "Playwright Runner & Benchmarks", Community 10 - "Siplan Hub Domain Docs", Community 11 - "Error Handling & KPI Patterns", Community 12 - "Interview Analyzer (Python)", Community 13 - "Strict tsconfig", Community 14 - "Project Modal & Roadmap Tabs", Community 15 - "Editor Toolbar & UI Inputs" (+84 more)
 
 ### Community 37 - "Admin Stats & RBAC Hooks"
-Cohesion: 0.19
-Nodes (22): EditableCellProps, AlertDialogFooter(), AlertDialogHeader(), DialogFooter(), Input, Table, TableBody, TableCaption (+14 more)
+Cohesion: 0.17
+Nodes (14): data, OverviewChart(), ProjectStatusChart(), formatAction(), RecentActivity(), Avatar, AvatarFallback, AvatarImage (+6 more)
 
 ### Community 38 - "Files Tab & Accordion"
 Cohesion: 0.06
@@ -470,24 +484,32 @@ Cohesion: 0.22
 Nodes (6): RoadmapData, RoadmapPage(), StageConfig, StageData, STAGES_CONFIG, TimelineItem()
 
 ### Community 40 - "Deployment Template & Stage Forms"
-Cohesion: 0.12
-Nodes (32): ProjectSelectorProps, Alert, AlertDescription, AlertTitle, alertVariants, AutocompleteInput(), AutocompleteInputProps, Command (+24 more)
+Cohesion: 0.23
+Nodes (17): AutocompleteInputProps, Command, CommandDialogProps, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList (+9 more)
 
 ### Community 41 - "Theme Provider"
-Cohesion: 0.32
+Cohesion: 0.31
 Nodes (6): initialState, Theme, ThemeProviderContext, ThemeProviderState, ThemeProvider(), ThemeProviderProps
 
 ### Community 42 - "Health Badge & Pipeline Status"
-Cohesion: 0.50
-Nodes (3): PipelineStatus(), PipelineStatusProps, TooltipContent
+Cohesion: 0.22
+Nodes (8): SheetContent, SheetContentProps, SheetDescription, SheetFooter(), SheetHeader(), SheetOverlay, SheetTitle, sheetVariants
+
+### Community 43 - "AuthContext.tsx"
+Cohesion: 0.53
+Nodes (4): AuthContext, AuthContextType, Permission, UserRole
 
 ### Community 44 - "Auth Context"
 Cohesion: 0.03
 Nodes (58): dependencies, canvas-confetti, class-variance-authority, clsx, cmdk, date-fns, @dnd-kit/core, @dnd-kit/sortable (+50 more)
 
+### Community 45 - "MainLayout.tsx"
+Cohesion: 0.40
+Nodes (4): MainLayout(), MainLayoutProps, SidebarProvider, SidebarTrigger
+
 ### Community 46 - "Menu Items & Home"
-Cohesion: 0.11
-Nodes (22): ConversionPostDrawerProps, STATUS_LABELS, ProjectModal(), CustomTheme, RoadmapManager(), RoadmapManagerProps, RoadmapSettings, DialogContent (+14 more)
+Cohesion: 0.36
+Nodes (6): MenuItem, menuItems, useTheme(), Home(), Login(), ResetPassword()
 
 ### Community 47 - "Improve-Text AI Jobs"
 Cohesion: 0.04
@@ -562,8 +584,8 @@ Cohesion: 0.06
 Nodes (30): Análise de Bundle, 📝 Arquivos Modificados, Benefícios Problema 1, Benefícios Problema 2, Benefícios Problema 3, Build de Produção, 🔧 Build Warnings - Correções Aplicadas, ✅ Checklist de Deploy (+22 more)
 
 ### Community 74 - "ProjectV2"
-Cohesion: 0.07
-Nodes (32): DashboardReport(), DashboardReportProps, ProjectDetailsModalProps, TimelineChartProps, DeploymentCardProps, DeploymentDetailsDialogProps, ProjectHeaderForm(), ProjectHeaderFormProps (+24 more)
+Cohesion: 0.06
+Nodes (44): DashboardReport(), DashboardReportProps, ProjectDetailsModalProps, ProjectDistributionChartProps, StatusChartProps, TimelineChartProps, WorkloadChartProps, NewProjectDialog() (+36 more)
 
 ### Community 75 - "React Patterns"
 Cohesion: 0.07
@@ -718,8 +740,8 @@ Cohesion: 0.15
 Nodes (13): 10.1 Team Structure, 10.2 Budget, 10. Team & Resources, 11. Appendix, 1. Executive Summary, 2.1 Customer Problem, 2.2 Market Opportunity, 2.3 Business Case (+5 more)
 
 ### Community 114 - "AdherenceStageForm.tsx"
-Cohesion: 0.24
-Nodes (11): AdherenceStageForm(), AdherenceStageFormProps, useActiveTemplate(), ProjectFormResponse, UpsertResponseInput, useProjectFormResponse(), useUpsertFormResponse(), getGeneralFields() (+3 more)
+Cohesion: 0.16
+Nodes (17): AdherenceStageForm(), useDebounce(), AutoSaveConfig, SaveState, useActiveTemplate(), ProjectFormResponse, UpsertResponseInput, useProjectFormResponse() (+9 more)
 
 ### Community 115 - "compilerOptions"
 Cohesion: 0.15
@@ -740,10 +762,6 @@ Nodes (10): caveman, Example output, How to invoke, See also, What it does, Auto
 ### Community 119 - "Página 404 (Not Found)"
 Cohesion: 0.17
 Nodes (11): Autenticação e Rotas Protegidas, AuthProvider / AuthContext / useAuth, Componentes principais, Dados e Hooks, Fluxos e Interações, Módulo: Telas Públicas e Autenticação, Objetivo, ProtectedRoute (+3 more)
-
-### Community 120 - "InfraStageForm"
-Cohesion: 0.31
-Nodes (12): InfraStageForm(), PublicInfraCollection(), ServerInfo, WorkstationInfo, checkServerRequirements(), checkWorkstationRequirements(), extractGeneration(), formatDiskFreeSpace() (+4 more)
 
 ### Community 121 - "Anti-Patterns"
 Cohesion: 0.18
@@ -803,7 +821,7 @@ Nodes (9): Administração (`/admin` — requer papel admin), Calendário, Analy
 
 ### Community 136 - "filterStore.ts"
 Cohesion: 0.16
-Nodes (15): AdvancedFilters(), ProjectGrid(), useConversionQueue(), useProjectsList(), userProjectsListTransform(), Analytics(), defaultFilters, FilterState (+7 more)
+Nodes (17): AdvancedFilters(), AdvancedFiltersProps, ProjectGrid(), DropdownMenuSeparator, Separator, useProjectsList(), userProjectsListTransform(), Analytics() (+9 more)
 
 ### Community 137 - "Accessibility Audit and Testing"
 Cohesion: 0.25
@@ -818,8 +836,8 @@ Cohesion: 0.25
 Nodes (7): 1. Pense Antes de Codar (Think Before Coding), 2.1. Padrão Estrito de Split Query (Projetos), 2.2. Estado e Cache (React Query v5 + Zustand), 2.3. Interface, Formulários e Componentização, 2. Simplicidade e Arquitetura Siplan HUB, 3. Alterações Cirúrgicas (Surgical Changes), 4. Execução Guiada por Objetivos (Goal-Driven Execution)
 
 ### Community 140 - "TransicaoPlaceholder"
-Cohesion: 0.20
-Nodes (10): jszip, mapJob(), useDtcAiJobs(), useTimeline(), dtcStatusToStageStatus(), formatPhoneNumber(), getLexicalTextLength(), renderVal() (+2 more)
+Cohesion: 0.10
+Nodes (24): jszip, Alert, AlertDescription, AlertTitle, alertVariants, mapJob(), useDtcAiJobs(), ALL_SYSTEMS (+16 more)
 
 ### Community 142 - "Authentication & Authorization Implementation Patterns"
 Cohesion: 0.29
@@ -1054,8 +1072,8 @@ Cohesion: 0.33
 Nodes (6): Componentes principais, Dados e Hooks, Objetivo, Pontos de Manutenção, Regras de Negócio e Estados, TeamManagement (legado/descontinuado)
 
 ### Community 200 - "useAdminStats.ts"
-Cohesion: 0.15
-Nodes (12): AdminSettings(), DEFAULT_HEALTH_SETTINGS, ProjectHealthSettings, useAdminSettings(), useStorageStats(), ConversionIssue, supabase, SystemStorage() (+4 more)
+Cohesion: 0.43
+Nodes (5): AdminSettings(), STAGE_LABELS, DEFAULT_HEALTH_SETTINGS, ProjectHealthSettings, useAdminSettings()
 
 ### Community 201 - "Database Selection (2025)"
 Cohesion: 0.40
@@ -1170,24 +1188,24 @@ Cohesion: 0.67
 Nodes (3): Component Check, Design System Verification, Visual QA Checklist
 
 ## Knowledge Gaps
-- **2029 isolated node(s):** `{ chromium, firefox, webkit }`, `name`, `version`, `description`, `author` (+2024 more)
+- **2031 isolated node(s):** `{ chromium, firefox, webkit }`, `name`, `version`, `description`, `author` (+2026 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **69 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **67 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `cn()` connect `Commercial Page & Hooks` to `Conversion Issues & Post Forms`, `Conversion Post Feed & Drawer`, `Alerts & DTC AI/Team Hooks`, `Charts, KPI & Reports`, `filterStore.ts`, `Calendar Grid & Drag-Drop`, `Adherence Form Renderer`, `Sidebar Components`, `Deployment Cards & Project Hooks`, `TransicaoPlaceholder`, `Custom Widgets & Sheet`, `Dashboard Table & Pagination`, `App Sidebar & Protected Route`, `Commercial & Conversion Hooks`, `Distribution/Workload Charts`, `Modelos Editor & Model Jobs`, `Deployment Form Fields`, `use-toast Reducer`, `Project Modal & Kanban`, `Commercial/Public Checklists`, `Lexical Editor Config`, `Predictability & Bottlenecks`, `Main Layout & Theme Toggle`, `Admin Stats & RBAC Hooks`, `Roadmap Page`, `Deployment Template & Stage Forms`, `Health Badge & Pipeline Status`, `Menu Items & Home`, `ProjectV2`, `InfraStageForm`?**
-  _High betweenness centrality (0.035) - this node is a cross-community bridge._
-- **Why does `dependencies` connect `Auth Context` to `Alerts & DTC AI/Team Hooks`, `Modal/Tab Prop Types`, `TransicaoPlaceholder`, `Commercial/Public Checklists`, `sonner.tsx`?**
+- **Why does `cn()` connect `Project Modal & Kanban` to `Conversion Issues & Post Forms`, `Conversion Post Feed & Drawer`, `Alerts & DTC AI/Team Hooks`, `Checklist & Visual Question Builder`, `Project Stage Forms & Models`, `Charts, KPI & Reports`, `filterStore.ts`, `Calendar Grid & Drag-Drop`, `Adherence Form Renderer`, `TransicaoPlaceholder`, `Sidebar Components`, `Custom Widgets & Sheet`, `Dashboard Table & Pagination`, `App Sidebar & Protected Route`, `Commercial & Conversion Hooks`, `Distribution/Workload Charts`, `Modelos Editor & Model Jobs`, `Deployment Form Fields`, `use-toast Reducer`, `Commercial/Public Checklists`, `Commercial Page & Hooks`, `Lexical Editor Config`, `Predictability & Bottlenecks`, `Main Layout & Theme Toggle`, `Admin Stats & RBAC Hooks`, `Roadmap Page`, `Deployment Template & Stage Forms`, `Health Badge & Pipeline Status`, `Menu Items & Home`, `ProjectV2`?**
   _High betweenness centrality (0.026) - this node is a cross-community bridge._
-- **Why does `err()` connect `Commercial/Public Checklists` to `VM Worker Job Queue`, `Alerts & DTC AI/Team Hooks`, `filterStore.ts`, `TransicaoPlaceholder`, `Improve-Text AI Jobs`, `App Sidebar & Protected Route`, `Modelos Editor & Model Jobs`, `InfraStageForm`, `Commercial Page & Hooks`?**
+- **Why does `dependencies` connect `Auth Context` to `Post Observations Editor`, `Alerts & DTC AI/Team Hooks`, `Modal/Tab Prop Types`, `TransicaoPlaceholder`, `sonner.tsx`, `Commercial/Public Checklists`?**
+  _High betweenness centrality (0.026) - this node is a cross-community bridge._
+- **Why does `err()` connect `Overview/Activity & Avatar` to `Conversion Post Feed & Drawer`, `VM Worker Job Queue`, `Alerts & DTC AI/Team Hooks`, `Admin Stats & RBAC Hooks`, `Project Stage Forms & Models`, `TransicaoPlaceholder`, `Improve-Text AI Jobs`, `Commercial & Conversion Hooks`, `Modelos Editor & Model Jobs`, `Project Modal & Kanban`, `Commercial/Public Checklists`, `Commercial Page & Hooks`?**
   _High betweenness centrality (0.016) - this node is a cross-community bridge._
 - **What connects `Production-ready REST API template using FastAPI. Includes pagination, filterin`, `List users with pagination and filtering.`, `Partially update user.` to the rest of the system?**
-  _2105 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `Conversion Issues & Post Forms` be split into smaller, more focused modules?**
-  _Cohesion score 0.1196808510638298 - nodes in this community are weakly interconnected._
+  _2107 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `Conversion Post Feed & Drawer` be split into smaller, more focused modules?**
+  _Cohesion score 0.1225071225071225 - nodes in this community are weakly interconnected._
 - **Should `App Routes & Pages` be split into smaller, more focused modules?**
-  _Cohesion score 0.04 - nodes in this community are weakly interconnected._
-- **Should `VM Worker Job Queue` be split into smaller, more focused modules?**
-  _Cohesion score 0.09941944847605225 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.038461538461538464 - nodes in this community are weakly interconnected._
+- **Should `Alerts & DTC AI/Team Hooks` be split into smaller, more focused modules?**
+  _Cohesion score 0.05131370128725093 - nodes in this community are weakly interconnected._
