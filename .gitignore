@@ -45,3 +45,8 @@ lint_report.txt
 *.pdf
 *.xlsx
 
+
+# Graphify AST cache (regenerable, machine-specific hashes)
+graphify-out/cache/
+graphify-out-full/cache/
+src/graphify-out/cache/
