@@ -14,6 +14,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Login from "@/pages/Login";
 
 // Code Splitting: Lazy loading para rotas secundárias
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Index = lazy(() => import("./pages/Index"));
 const Home = lazy(() => import("./pages/Home"));
 const Reports = lazy(() => import("./pages/Reports"));
@@ -136,6 +137,14 @@ const App = () => (
             <Routes>
               {/* Public Routes */}
               <Route path="/login" element={<Login />} />
+              <Route
+                path="/reset-password"
+                element={
+                  <Suspense fallback={<PageLoader />}>
+                    <ResetPassword />
+                  </Suspense>
+                }
+              />
               <Route
                 path="/roadmap/:token"
                 element={

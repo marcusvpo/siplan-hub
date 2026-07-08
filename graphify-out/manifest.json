@@ -155,9 +155,9 @@
     "semantic_hash": ""
   },
   "src/App.tsx": {
-    "mtime": 1783021492.492164,
-    "ast_hash": "88629a3322848a6c0611d4947e08d459",
-    "semantic_hash": "88629a3322848a6c0611d4947e08d459"
+    "mtime": 1783538373.218865,
+    "ast_hash": "3ae66b6bf68a0ab5e41918c14d6a0e82",
+    "semantic_hash": ""
   },
   "src/components/Admin/OverviewChart.tsx": {
     "mtime": 1781122833.1542172,
@@ -340,7 +340,7 @@
     "semantic_hash": "35f70e43d77ab43f1343a9c3746bd2f9"
   },
   "src/components/ProjectManagement/ModelosEditor/ModelosEditorWorkspace.tsx": {
-    "mtime": 1783529645.4968767,
+    "mtime": 1783529764.8214328,
     "ast_hash": "e173b8a64a93ddf0e36052f2136acddc",
     "semantic_hash": ""
   },
@@ -1055,9 +1055,9 @@
     "semantic_hash": "a55fbfde4f134a9a8797ddf8318d5dc4"
   },
   "src/pages/Login.tsx": {
-    "mtime": 1781122833.2202768,
-    "ast_hash": "40a47624278a5a13a5cad9448d5eb653",
-    "semantic_hash": "40a47624278a5a13a5cad9448d5eb653"
+    "mtime": 1783538335.544963,
+    "ast_hash": "f111ac5fdb7e5f148efe352c51be11b0",
+    "semantic_hash": ""
   },
   "src/pages/NextDeployments.tsx": {
     "mtime": 1781536885.032834,
@@ -1135,9 +1135,9 @@
     "semantic_hash": "ea6238cfef874b4807eda59960340a3f"
   },
   "src/pages/admin/UserManagement.tsx": {
-    "mtime": 1781122833.2257915,
-    "ast_hash": "589027ab58d94f75fd8d1cc885e0a5d1",
-    "semantic_hash": "589027ab58d94f75fd8d1cc885e0a5d1"
+    "mtime": 1783538286.0112345,
+    "ast_hash": "00ba2f87458647af954359267eba2c1b",
+    "semantic_hash": ""
   },
   "src/pages/admin/VacationManagement.tsx": {
     "mtime": 1781122833.2267907,
@@ -2512,6 +2512,16 @@
   "graphify-out-full/graph.html": {
     "mtime": 1783515765.1291296,
     "ast_hash": "0f069693c71c626b052212e73061d119",
+    "semantic_hash": ""
+  },
+  "src/pages/ResetPassword.tsx": {
+    "mtime": 1783538359.304989,
+    "ast_hash": "ab72b8f634961ee8f2d26e3fe048087b",
+    "semantic_hash": ""
+  },
+  "supabase/functions/admin-reset-password/index.ts": {
+    "mtime": 1783538241.1085372,
+    "ast_hash": "9550013e61f8ba1f6071ecb7e4b13311",
     "semantic_hash": ""
   }
 }
