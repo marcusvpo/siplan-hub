@@ -17,7 +17,10 @@ import {
     Activity,
     Terminal,
     Ban,
-    Timer
+    Timer,
+    Link2,
+    ChevronDown,
+    ChevronRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -39,6 +42,22 @@ import { ptBR } from "date-fns/locale";
 interface ModelosEditorWorkspaceProps {
     project: ProjectV2;
     onUpdate: (updates: Partial<ModelosEditorStageV2>) => void;
+}
+
+// Chave de pareamento docx<->json derivada do nome (nao persistida).
+// Remove extensao, acentos e separadores para casar "PROCURACAO GERAL - ELA.docx"
+// com "PROCURACAO_GERAL_-_ELA.json". Restrita ao mesmo modelType pelo chamador.
+function normalizeModelName(name: string): string {
+    return name
+        .replace(/\.(docx|json)$/i, "")
+        .normalize("NFD")
+        .replace(/[̀-ͯ]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "");
+}
+
+function pairKeyFor(file: AttachedFile): string {
+    return `${file.modelType ?? "_"}::${normalizeModelName(file.name)}`;
 }
 
 export function ModelosMetrics({ stage }: { stage: ModelosEditorStageV2 | undefined }) {
@@ -184,6 +203,44 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
 
     const [sentSearch, setSentSearch] = useState("");
     const [availableSearch, setAvailableSearch] = useState("");
+    const [hoveredPairKey, setHoveredPairKey] = useState<string | null>(null);
+    const [flashKey, setFlashKey] = useState<string | null>(null);
+    const [activeTab, setActiveTab] = useState<'sent' | 'available'>('sent');
+    // Categorias comecam compactadas por padrao; guardamos as expandidas.
+    const [expandedCats, setExpandedCats] = useState<Set<string>>(new Set());
+    const rowRefs = useRef(new Map<string, HTMLDivElement>());
+
+    const toggleCategory = (key: string) => {
+        setExpandedCats(prev => {
+            const next = new Set(prev);
+            if (next.has(key)) next.delete(key); else next.add(key);
+            return next;
+        });
+    };
+
+    // Clicar no elo troca para a aba oposta, garante a categoria expandida e revela o par.
+    const revealCounterpart = (type: 'sent' | 'available', pairKey: string) => {
+        const other = type === 'sent' ? 'available' : 'sent';
+        const mt = pairKey.split('::')[0];
+        const label = MODEL_TYPES.find(m => m.value === mt)?.label ?? 'Sem categoria';
+        setExpandedCats(prev => {
+            if (prev.has(`${other}::${label}`)) return prev;
+            const next = new Set(prev);
+            next.add(`${other}::${label}`);
+            return next;
+        });
+        setActiveTab(other);
+        setFlashKey(pairKey);
+    };
+
+    // Depois que a aba alvo monta, rola ate o par e pisca ~1.4s.
+    useEffect(() => {
+        if (!flashKey) return;
+        const el = rowRefs.current.get(`${activeTab}:${flashKey}`);
+        el?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        const t = setTimeout(() => setFlashKey(null), 1400);
+        return () => clearTimeout(t);
+    }, [activeTab, flashKey]);
 
     const stage = project.stages.modelosEditor || ({} as ModelosEditorStageV2);
 
@@ -196,6 +253,16 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
         if (!stage.availableFiles) return [];
         return stage.availableFiles.filter(f => f.name.toLowerCase().includes(availableSearch.toLowerCase()));
     }, [stage.availableFiles, availableSearch]);
+
+    // Indice de pares docx<->json por nome normalizado + modelType.
+    // Um sent tem par se existe um available com a mesma chave (e vice-versa).
+    const pairedKeys = useMemo(() => {
+        const sentKeys = new Set((stage.sentFiles || []).map(pairKeyFor));
+        const availKeys = new Set((stage.availableFiles || []).map(pairKeyFor));
+        const both = new Set<string>();
+        sentKeys.forEach(k => { if (availKeys.has(k)) both.add(k); });
+        return both;
+    }, [stage.sentFiles, stage.availableFiles]);
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'sent' | 'available', currentFiles: AttachedFile[] = []) => {
         if (e.target.files && e.target.files.length > 0) {
@@ -582,12 +649,51 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
         );
     };
 
-    const renderFileRow = (file: AttachedFile, type: 'sent' | 'available', list: AttachedFile[]) => (
-        <div key={file.id} className={cn(
-            "flex items-center justify-between p-1.5 rounded bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800 text-xs transition-all duration-300 shadow-sm hover:shadow-md hover:border-border",
-            file.isDone && "bg-muted border-border"
-        )}>
+    const renderFileRow = (file: AttachedFile, type: 'sent' | 'available', list: AttachedFile[]) => {
+        const pairKey = pairKeyFor(file);
+        const hasPair = pairedKeys.has(pairKey);
+        const isHighlighted = (hoveredPairKey === pairKey || flashKey === pairKey) && hasPair;
+        // docx sem JSON correspondente = falta gerar (so lado enviado).
+        const missingJson = type === 'sent' && !hasPair;
+        return (
+        <div
+            key={file.id}
+            ref={(el) => { if (el) rowRefs.current.set(`${type}:${pairKey}`, el); }}
+            onMouseEnter={() => hasPair && setHoveredPairKey(pairKey)}
+            onMouseLeave={() => setHoveredPairKey(null)}
+            className={cn(
+                "flex items-center justify-between p-1.5 rounded bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800 text-xs transition-all duration-300 shadow-sm hover:shadow-md hover:border-border",
+                file.isDone && "bg-muted border-border",
+                isHighlighted && "ring-2 ring-primary bg-primary/10 border-primary shadow-md scale-[1.01]"
+            )}>
             <div className="flex items-center gap-2 overflow-hidden">
+                {hasPair ? (
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <button
+                                type="button"
+                                onClick={(e) => { e.preventDefault(); revealCounterpart(type, pairKey); }}
+                                className="shrink-0 rounded p-0.5 text-primary/70 hover:text-primary hover:bg-primary/10 transition-colors"
+                            >
+                                <Link2 className="h-3.5 w-3.5" />
+                            </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">
+                            <p>{type === 'sent' ? 'Ver JSON gerado →' : '← Ver docx de origem'}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                ) : missingJson ? (
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <AlertCircle className="h-3.5 w-3.5 shrink-0 text-amber-500" />
+                        </TooltipTrigger>
+                        <TooltipContent side="top">
+                            <p>Sem JSON correspondente ainda</p>
+                        </TooltipContent>
+                    </Tooltip>
+                ) : (
+                    <span className="w-3.5 shrink-0" />
+                )}
                 <Checkbox
                     checked={!!file.isDone}
                     disabled={!canEditProjects}
@@ -620,7 +726,8 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                 )}
             </div>
         </div>
-    );
+        );
+    };
 
     const renderCategoryBlock = (
         type: 'sent' | 'available',
@@ -630,13 +737,23 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
         allList: AttachedFile[]
     ) => {
         const isSent = type === 'sent';
+        const collapseKey = `${type}::${label}`;
+        const isCollapsed = !expandedCats.has(collapseKey);
         return (
             <div key={label} className="rounded-md border border-border/60 bg-card/50 dark:bg-slate-900/40 p-2 space-y-1.5">
                 <div className="flex items-center justify-between gap-2">
-                    <span className="text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 text-muted-foreground">
+                    <button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); toggleCategory(collapseKey); }}
+                        className="text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+                        title={isCollapsed ? "Expandir" : "Recolher"}
+                    >
+                        {isCollapsed
+                            ? <ChevronRight className="h-3 w-3" />
+                            : <ChevronDown className="h-3 w-3" />}
                         {label}
                         <span className="opacity-60 font-semibold">({catFiles.length})</span>
-                    </span>
+                    </button>
                     {modelType && canUploadFiles && (
                         <div className="flex items-center gap-1">
                             {isSent && catFiles.length > 0 && (
@@ -667,7 +784,7 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                         </div>
                     )}
                 </div>
-                {catFiles.length === 0 ? (
+                {!isCollapsed && (catFiles.length === 0 ? (
                     <div className="text-[10px] text-muted-foreground text-center py-1.5 rounded border border-dashed border-border">
                         Nenhum modelo nesta categoria.
                     </div>
@@ -675,7 +792,7 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                     <div className="space-y-1">
                         {catFiles.map(file => renderFileRow(file, type, allList))}
                     </div>
-                )}
+                ))}
             </div>
         );
     };
@@ -730,37 +847,75 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
         <div className="col-span-full w-full flex-1 flex flex-col min-h-0 space-y-3">
             {renderProgress()}
 
-            {/* Force 2 columns always */}
-            <div className="flex-1 min-h-0 grid grid-cols-2 gap-3 w-full">
-                {/* Modelos Enviados */}
-                <div className="flex flex-col min-h-0 p-3 rounded-lg border border-border/60 bg-muted/20 dark:bg-muted/10 space-y-2">
-                    <div className="flex items-center justify-between shrink-0">
-                        <Label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+            {/* Painel unico com abas (Enviados / Disponiveis) */}
+            <div className="flex-1 min-h-0 flex flex-col p-3 rounded-lg border border-border/60 bg-muted/20 dark:bg-muted/10 space-y-2">
+                {/* inputs de upload (sempre montados p/ o botao Anexar por categoria) */}
+                <input
+                    type="file"
+                    ref={sentFileInputRef}
+                    className="hidden"
+                    multiple
+                    onChange={(e) => handleFileUpload(e, 'sent', stage.sentFiles)}
+                />
+                <input
+                    type="file"
+                    ref={availableFileInputRef}
+                    className="hidden"
+                    accept=".json"
+                    multiple
+                    onChange={(e) => handleFileUpload(e, 'available', stage.availableFiles)}
+                />
+
+                {/* Barra de abas */}
+                <div className="flex items-center justify-between gap-2 shrink-0">
+                    <div className="flex items-center gap-1 p-1 rounded-lg bg-muted/60 dark:bg-slate-900/60 border border-border/60">
+                        <button
+                            type="button"
+                            onClick={(e) => { e.preventDefault(); setActiveTab('sent'); }}
+                            className={cn(
+                                "flex items-center gap-1.5 h-8 px-3 rounded-md text-[11px] font-bold uppercase tracking-wider transition-colors",
+                                activeTab === 'sent'
+                                    ? "bg-background text-foreground shadow-sm"
+                                    : "text-muted-foreground hover:text-foreground"
+                            )}
+                        >
                             <UploadCloud className="h-3.5 w-3.5" />
-                            Modelos Enviados (Cliente)
-                        </Label>
-                        <input
-                            type="file"
-                            ref={sentFileInputRef}
-                            className="hidden"
-                            multiple
-                            onChange={(e) => handleFileUpload(e, 'sent', stage.sentFiles)}
-                        />
-                        <div className="flex items-center gap-1.5">
-                            {renderWorkerStatus()}
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7.5 w-7.5 text-muted-foreground hover:text-foreground hover:bg-accent"
-                                title="Ver em tela cheia"
-                                onClick={(e) => { e.preventDefault(); setViewingFullscreen('sent'); }}
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
-                            </Button>
-                        </div>
+                            Enviados (Cliente)
+                            <span className="opacity-70">{stage.sentFiles?.length ?? 0}</span>
+                        </button>
+                        <button
+                            type="button"
+                            onClick={(e) => { e.preventDefault(); setActiveTab('available'); }}
+                            className={cn(
+                                "flex items-center gap-1.5 h-8 px-3 rounded-md text-[11px] font-bold uppercase tracking-wider transition-colors",
+                                activeTab === 'available'
+                                    ? "bg-background text-foreground shadow-sm"
+                                    : "text-muted-foreground hover:text-foreground"
+                            )}
+                        >
+                            <FileText className="h-3.5 w-3.5" />
+                            Disponíveis (JSON)
+                            <span className="opacity-70">{stage.availableFiles?.length ?? 0}</span>
+                        </button>
                     </div>
-                    {stage.sentFiles && stage.sentFiles.length > 0 && (
-                        <div className="relative mb-1.5 shrink-0">
+                    <div className="flex items-center gap-1.5">
+                        {renderWorkerStatus()}
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7.5 w-7.5 text-muted-foreground hover:text-foreground hover:bg-accent"
+                            title="Ver em tela cheia"
+                            onClick={(e) => { e.preventDefault(); setViewingFullscreen(activeTab); }}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+                        </Button>
+                    </div>
+                </div>
+
+                {/* Busca da aba ativa */}
+                {activeTab === 'sent' ? (
+                    (stage.sentFiles && stage.sentFiles.length > 0) && (
+                        <div className="relative shrink-0">
                             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                             <Input
                                 placeholder="Filtrar modelos do cliente..."
@@ -769,42 +924,10 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                                 className="pl-8 h-8 text-[11px] bg-background/70 border-input focus-visible:ring-ring"
                             />
                         </div>
-                    )}
-                    {renderSelectionHeader('sent', filteredSentFiles)}
-                    <div className="flex-1 overflow-y-auto pr-1.5 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent hover:scrollbar-thumb-muted-foreground/40 transition-colors">
-                        {renderCategorizedFiles('sent', filteredSentFiles, stage.sentFiles || [])}
-                    </div>
-                </div>
-
-                {/* Modelos Disponíveis */}
-                <div className="flex flex-col min-h-0 p-3 rounded-lg border border-border/60 bg-muted/20 dark:bg-muted/10 space-y-2">
-                    <div className="flex items-center justify-between shrink-0">
-                        <Label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-                            <FileText className="h-3.5 w-3.5" />
-                            Modelos Disponíveis (JSON)
-                        </Label>
-                        <input
-                            type="file"
-                            ref={availableFileInputRef}
-                            className="hidden"
-                            accept=".json"
-                            multiple
-                            onChange={(e) => handleFileUpload(e, 'available', stage.availableFiles)}
-                        />
-                        <div className="flex items-center gap-1.5">
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7.5 w-7.5 text-muted-foreground hover:text-foreground hover:bg-accent"
-                                title="Ver em tela cheia"
-                                onClick={(e) => { e.preventDefault(); setViewingFullscreen('available'); }}
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
-                            </Button>
-                        </div>
-                    </div>
-                    {stage.availableFiles && stage.availableFiles.length > 0 && (
-                        <div className="relative mb-1.5 shrink-0">
+                    )
+                ) : (
+                    (stage.availableFiles && stage.availableFiles.length > 0) && (
+                        <div className="relative shrink-0">
                             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                             <Input
                                 placeholder="Filtrar modelos JSON..."
@@ -813,11 +936,17 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                                 className="pl-8 h-8 text-[11px] bg-background/70 border-input focus-visible:ring-ring"
                             />
                         </div>
-                    )}
-                    {renderSelectionHeader('available', filteredAvailableFiles)}
-                    <div className="flex-1 overflow-y-auto pr-1.5 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent hover:scrollbar-thumb-muted-foreground/40 transition-colors">
-                        {renderCategorizedFiles('available', filteredAvailableFiles, stage.availableFiles || [])}
-                    </div>
+                    )
+                )}
+
+                {renderSelectionHeader(
+                    activeTab,
+                    activeTab === 'sent' ? filteredSentFiles : filteredAvailableFiles
+                )}
+                <div className="flex-1 overflow-y-auto pr-1.5 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent hover:scrollbar-thumb-muted-foreground/40 transition-colors">
+                    {activeTab === 'sent'
+                        ? renderCategorizedFiles('sent', filteredSentFiles, stage.sentFiles || [])
+                        : renderCategorizedFiles('available', filteredAvailableFiles, stage.availableFiles || [])}
                 </div>
             </div>
 
