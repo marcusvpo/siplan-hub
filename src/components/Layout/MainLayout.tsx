@@ -7,6 +7,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowRight, LayoutGrid } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { FloatingCopilot } from "@/components/Copilot/FloatingCopilot";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -80,6 +81,9 @@ export function MainLayout({ children }: MainLayoutProps) {
             {children}
           </main>
         </div>
+
+        {/* Botao flutuante do Copiloto (so aparece para usuarios habilitados) */}
+        <FloatingCopilot />
       </div>
     </SidebarProvider>
   );
