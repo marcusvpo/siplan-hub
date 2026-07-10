@@ -155,7 +155,7 @@
     "semantic_hash": ""
   },
   "src/App.tsx": {
-    "mtime": 1783707514.5874827,
+    "mtime": 1783707593.099173,
     "ast_hash": "584d702cb605bf534d26d7b57c19fa8a",
     "semantic_hash": ""
   },
@@ -980,7 +980,7 @@
     "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
   "src/layouts/AdminLayout.tsx": {
-    "mtime": 1783707526.457204,
+    "mtime": 1783707593.1011734,
     "ast_hash": "9ebd8142e95d0ee45d289336308a234e",
     "semantic_hash": ""
   },
@@ -2525,8 +2525,8 @@
     "semantic_hash": ""
   },
   "src/hooks/useCopilot.ts": {
-    "mtime": 1783698701.764603,
-    "ast_hash": "99bde9c10ba415075369c079ca0a0041",
+    "mtime": 1783709091.8858497,
+    "ast_hash": "c46b9a7bd534ea6531ed75833dab32a6",
     "semantic_hash": ""
   },
   "src/pages/Copilot.tsx": {
@@ -2555,8 +2555,8 @@
     "semantic_hash": ""
   },
   "vm-worker/src/processCopilotJob.ts": {
-    "mtime": 1783707427.1023653,
-    "ast_hash": "318c71fa6c1d1db1f1bcd2cc432a6020",
+    "mtime": 1783709079.2891617,
+    "ast_hash": "c2792869d275ae794f0e0b250aab2b8a",
     "semantic_hash": ""
   },
   ".agent/skills/n8n-expert-siplanhub/SKILL.md": {
@@ -2575,8 +2575,8 @@
     "semantic_hash": ""
   },
   "src/components/Copilot/CopilotChat.tsx": {
-    "mtime": 1783700480.373,
-    "ast_hash": "fedf4b9a48a7b4f466529762f21d7251",
+    "mtime": 1783709097.1210732,
+    "ast_hash": "9f235600ff2cf6ed89f3bb345ce6b6ac",
     "semantic_hash": ""
   },
   "src/components/Copilot/FloatingCopilot.tsx": {
@@ -2595,7 +2595,7 @@
     "semantic_hash": ""
   },
   "src/components/Copilot/SimpleMarkdown.tsx": {
-    "mtime": 1783707461.1875615,
+    "mtime": 1783707593.1001732,
     "ast_hash": "f6263b52b6780e0b83fbd10e8d129650",
     "semantic_hash": ""
   },
@@ -2605,8 +2605,13 @@
     "semantic_hash": ""
   },
   "src/pages/admin/CopilotUsage.tsx": {
-    "mtime": 1783707498.839006,
-    "ast_hash": "18e423eb9066e2a2a35f1a737c3fa3cf",
+    "mtime": 1783709121.7729766,
+    "ast_hash": "40e7cabfe5bdd5e2290c882aaaa3dfc9",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260710180000_copilot_tokens_charged.sql": {
+    "mtime": 1783709063.9352677,
+    "ast_hash": "cb0d55763c5974a92c545dc4a4c8c101",
     "semantic_hash": ""
   }
 }

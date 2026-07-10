@@ -297,7 +297,7 @@ export function CopilotChat({ showQuota = true, className }: CopilotChatProps) {
         )}
 
         {visibleJobs.map((job) => {
-          const cost = (job.tokensIn || 0) + (job.tokensOut || 0);
+          const cost = job.tokensCharged || (job.tokensIn || 0) + (job.tokensOut || 0);
           return (
             <div key={job.id} className="space-y-3">
               {/* Pergunta */}

@@ -25,10 +25,16 @@ interface JobRow {
   user_id: string;
   tokens_in: number;
   tokens_out: number;
+  tokens_charged: number;
   question: string;
   status: string;
   created_at: string;
 }
+
+// Tokens cobrados na cota (ponderado). Fallback para o bruto em jobs antigos
+// que ainda nao tinham a coluna tokens_charged.
+const chargedOf = (r: JobRow): number =>
+  r.tokens_charged || (r.tokens_in || 0) + (r.tokens_out || 0);
 
 interface UserAgg {
   userId: string;
@@ -59,7 +65,7 @@ export default function CopilotUsage() {
       const [{ data: jobs, error: jErr }, { data: profiles, error: pErr }] = await Promise.all([
         supabase
           .from("copilot_jobs")
-          .select("user_id, tokens_in, tokens_out, question, status, created_at")
+          .select("user_id, tokens_in, tokens_out, tokens_charged, question, status, created_at")
           .gte("created_at", since)
           .order("created_at", { ascending: false }),
         supabase.from("profiles").select("id, full_name, email"),
@@ -88,10 +94,7 @@ export default function CopilotUsage() {
     fetchData();
   }, [fetchData]);
 
-  const totalTokens = useMemo(
-    () => rows.reduce((s, r) => s + (r.tokens_in || 0) + (r.tokens_out || 0), 0),
-    [rows]
-  );
+  const totalTokens = useMemo(() => rows.reduce((s, r) => s + chargedOf(r), 0), [rows]);
 
   const byUser = useMemo<UserAgg[]>(() => {
     const agg = new Map<string, UserAgg>();
@@ -107,7 +110,7 @@ export default function CopilotUsage() {
           last: r.created_at,
         };
       cur.questions += 1;
-      cur.tokens += (r.tokens_in || 0) + (r.tokens_out || 0);
+      cur.tokens += chargedOf(r);
       if (r.created_at > cur.last) cur.last = r.created_at;
       agg.set(r.user_id, cur);
     }

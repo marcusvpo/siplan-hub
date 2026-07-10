@@ -8,8 +8,8 @@ const PROGRESS_FLUSH_MS = 2500;
 
 // Limites do contexto (economia de token): teto de projetos e de caracteres enviados
 // ao modelo. O retrieval e ESTRUTURADO (linhas compactas), nao embeddings.
-const MAX_PROJECTS = 300;
-const MAX_CONTEXT_CHARS = 60000;
+const MAX_PROJECTS = 800;
+const MAX_CONTEXT_CHARS = 130000;
 
 // Chat multi-turno: quantas trocas anteriores (pergunta+resposta) incluir no
 // prompt como contexto, e teto de caracteres do historico (controle de custo).
@@ -342,6 +342,7 @@ export async function processCopilotJob(job: CopilotJob): Promise<void> {
       result_text: answer,
       tokens_in: tokensIn,
       tokens_out: outputTokens,
+      tokens_charged: charged,
       finished_at: new Date().toISOString(),
     })
     .eq("id", job.id);

@@ -22,6 +22,7 @@ export interface CopilotJob {
   progress?: string;
   tokensIn: number;
   tokensOut: number;
+  tokensCharged: number;
   createdAt: string;
   finishedAt?: string;
 }
@@ -46,6 +47,7 @@ const mapJob = (j: any): CopilotJob => ({
   progress: j.progress ?? undefined,
   tokensIn: j.tokens_in ?? 0,
   tokensOut: j.tokens_out ?? 0,
+  tokensCharged: j.tokens_charged ?? 0,
   createdAt: j.created_at,
   finishedAt: j.finished_at ?? undefined,
 });
