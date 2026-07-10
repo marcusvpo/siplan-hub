@@ -4,10 +4,31 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Bot, Send, Loader2, User, Lock, Trash2, Copy, Check } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Bot,
+  Send,
+  Loader2,
+  User,
+  Lock,
+  Trash2,
+  Copy,
+  Check,
+  Download,
+  Star,
+  StopCircle,
+  RotateCcw,
+} from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { SimpleMarkdown } from "./SimpleMarkdown";
 
 const SUGESTOES = [
   "Quais cartorios estao com a conversao pendente?",
@@ -16,12 +37,24 @@ const SUGESTOES = [
   "Resuma o andamento geral do portfolio.",
 ];
 
+const SAVED_KEY = "copilot-saved-questions";
+const MAX_SAVED = 10;
+
 const fmtDateTime = (iso?: string): string => {
   if (!iso) return "";
   try {
     return format(new Date(iso), "dd/MM/yyyy HH:mm", { locale: ptBR });
   } catch {
     return "";
+  }
+};
+
+const loadSaved = (): string[] => {
+  try {
+    const raw = JSON.parse(localStorage.getItem(SAVED_KEY) || "[]");
+    return Array.isArray(raw) ? raw.filter((x) => typeof x === "string") : [];
+  } catch {
+    return [];
   }
 };
 
@@ -36,10 +69,12 @@ interface CopilotChatProps {
  * pagina /copilot quanto no widget flutuante. Ocupa 100% da altura do pai.
  */
 export function CopilotChat({ showQuota = true, className }: CopilotChatProps) {
-  const { access, accessLoading, jobs, enqueue, clearConversation, activeJob, hasAccess } =
+  const { access, accessLoading, jobs, enqueue, cancelJob, clearConversation, activeJob, hasAccess } =
     useCopilot();
   const [question, setQuestion] = useState("");
+  const [scope, setScope] = useState<"todos" | "ativos">("todos");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [saved, setSaved] = useState<string[]>(loadSaved);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -49,7 +84,7 @@ export function CopilotChat({ showQuota = true, className }: CopilotChatProps) {
   const send = () => {
     const q = question.trim();
     if (!q || activeJob) return;
-    enqueue.mutate(q);
+    enqueue.mutate({ question: q, scope: scope === "ativos" ? "ativos" : undefined });
     setQuestion("");
   };
 
@@ -68,6 +103,35 @@ export function CopilotChat({ showQuota = true, className }: CopilotChatProps) {
     if (!window.confirm("Limpar toda a conversa? Esta acao nao pode ser desfeita.")) return;
     clearConversation.mutate();
   };
+
+  const exportTxt = () => {
+    if (!jobs.length) return;
+    const body = jobs
+      .map((j) => {
+        const ans =
+          j.status === "done" ? j.resultText || "" : j.status === "error" ? `Falha: ${j.errorMessage || ""}` : "(sem resposta)";
+        return `[${fmtDateTime(j.createdAt)}] Voce:\n${j.question}\n\n[${fmtDateTime(j.finishedAt || j.createdAt)}] Copiloto:\n${ans}`;
+      })
+      .join("\n\n———\n\n");
+    const blob = new Blob([body], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `copiloto-${new Date().toISOString().slice(0, 10)}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const persistSaved = (next: string[]) => {
+    setSaved(next);
+    localStorage.setItem(SAVED_KEY, JSON.stringify(next));
+  };
+  const saveQuestion = () => {
+    const q = question.trim();
+    if (!q || saved.includes(q)) return;
+    persistSaved([q, ...saved].slice(0, MAX_SAVED));
+  };
+  const removeSaved = (q: string) => persistSaved(saved.filter((s) => s !== q));
 
   if (accessLoading) {
     return (
@@ -101,7 +165,7 @@ export function CopilotChat({ showQuota = true, className }: CopilotChatProps) {
 
   return (
     <div className={cn("flex flex-col h-full min-h-0", className)}>
-      {/* Barra: cota + limpar conversa */}
+      {/* Barra: cota + acoes */}
       {(showQuota || jobs.length > 0) && (
         <div className="flex items-center justify-between gap-2 px-1 pb-2">
           {showQuota && limit > 0 ? (
@@ -112,20 +176,31 @@ export function CopilotChat({ showQuota = true, className }: CopilotChatProps) {
             <span />
           )}
           {jobs.length > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 text-muted-foreground hover:text-destructive"
-              onClick={clear}
-              disabled={clearConversation.isPending}
-            >
-              {clearConversation.isPending ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
-              ) : (
-                <Trash2 className="h-3.5 w-3.5 mr-1" />
-              )}
-              Limpar conversa
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-muted-foreground"
+                onClick={exportTxt}
+                title="Exportar conversa (.txt)"
+              >
+                <Download className="h-3.5 w-3.5 mr-1" /> Exportar
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-muted-foreground hover:text-destructive"
+                onClick={clear}
+                disabled={clearConversation.isPending}
+              >
+                {clearConversation.isPending ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+                ) : (
+                  <Trash2 className="h-3.5 w-3.5 mr-1" />
+                )}
+                Limpar
+              </Button>
+            </div>
           )}
         </div>
       )}
@@ -148,6 +223,28 @@ export function CopilotChat({ showQuota = true, className }: CopilotChatProps) {
                 </button>
               ))}
             </div>
+            {saved.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                  <Star className="h-3.5 w-3.5" /> Salvas
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {saved.map((s) => (
+                    <span
+                      key={s}
+                      className="group inline-flex items-center gap-1 text-xs rounded-full border px-3 py-1 hover:bg-muted/50"
+                    >
+                      <button onClick={() => setQuestion(s)} className="max-w-[220px] truncate text-left">
+                        {s}
+                      </button>
+                      <button onClick={() => removeSaved(s)} className="opacity-40 hover:opacity-100" title="Remover">
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -165,9 +262,16 @@ export function CopilotChat({ showQuota = true, className }: CopilotChatProps) {
                     <User className="h-4 w-4" />
                   </div>
                 </div>
-                <span className="text-[10px] text-muted-foreground mt-1 mr-9">
-                  {fmtDateTime(job.createdAt)}
-                </span>
+                <div className="flex items-center gap-2 mt-1 mr-9 text-[10px] text-muted-foreground">
+                  <span>{fmtDateTime(job.createdAt)}</span>
+                  <button
+                    onClick={() => setQuestion(job.question)}
+                    className="flex items-center gap-1 hover:text-foreground transition-colors"
+                    title="Reperguntar (preenche a caixa)"
+                  >
+                    <RotateCcw className="h-3 w-3" /> Reperguntar
+                  </button>
+                </div>
               </div>
 
               {/* Resposta */}
@@ -176,8 +280,8 @@ export function CopilotChat({ showQuota = true, className }: CopilotChatProps) {
                   <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                     <Bot className="h-4 w-4 text-primary" />
                   </div>
-                  <div className="rounded-2xl rounded-tl-sm bg-muted px-4 py-2 text-sm whitespace-pre-wrap">
-                    {job.status === "done" && job.resultText}
+                  <div className="rounded-2xl rounded-tl-sm bg-muted px-4 py-2 text-sm">
+                    {job.status === "done" && <SimpleMarkdown text={job.resultText || ""} />}
                     {job.status === "error" && (
                       <span className="text-destructive">
                         Falha: {job.errorMessage || "erro desconhecido"}
@@ -223,12 +327,33 @@ export function CopilotChat({ showQuota = true, className }: CopilotChatProps) {
       </div>
 
       {/* Entrada */}
-      <div className="border-t pt-3 px-1">
+      <div className="border-t pt-3 px-1 space-y-2">
         {overQuota && (
-          <p className="text-xs text-destructive mb-2">
+          <p className="text-xs text-destructive">
             Cota diaria de tokens atingida. Novas perguntas liberam amanha ou apos o admin ajustar o limite.
           </p>
         )}
+        <div className="flex items-center gap-2">
+          <Select value={scope} onValueChange={(v) => setScope(v as "todos" | "ativos")}>
+            <SelectTrigger className="h-8 w-[150px] text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos os projetos</SelectItem>
+              <SelectItem value="ativos">Somente ativos</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 text-xs text-muted-foreground"
+            onClick={saveQuestion}
+            disabled={!question.trim()}
+            title="Salvar esta pergunta"
+          >
+            <Star className="h-3.5 w-3.5 mr-1" /> Salvar
+          </Button>
+        </div>
         <div className="flex items-end gap-2">
           <Textarea
             value={question}
@@ -244,14 +369,26 @@ export function CopilotChat({ showQuota = true, className }: CopilotChatProps) {
             disabled={!!activeJob || overQuota}
             className="resize-none"
           />
-          <Button
-            onClick={send}
-            disabled={!question.trim() || !!activeJob || overQuota}
-            size="icon"
-            className="h-10 w-10 shrink-0"
-          >
-            {activeJob ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-          </Button>
+          {activeJob ? (
+            <Button
+              onClick={() => cancelJob(activeJob)}
+              size="icon"
+              variant="destructive"
+              className="h-10 w-10 shrink-0"
+              title="Parar geracao"
+            >
+              <StopCircle className="h-4 w-4" />
+            </Button>
+          ) : (
+            <Button
+              onClick={send}
+              disabled={!question.trim() || overQuota}
+              size="icon"
+              className="h-10 w-10 shrink-0"
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </div>
     </div>

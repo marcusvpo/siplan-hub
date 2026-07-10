@@ -1670,8 +1670,8 @@
     "semantic_hash": "f197a9f0666e63ed79a154fcc1bfa86f"
   },
   "vm-worker/src/config.ts": {
-    "mtime": 1783697647.1583798,
-    "ast_hash": "cb431f31656b1e7f9e6ebc95d1e3555b",
+    "mtime": 1783698439.243298,
+    "ast_hash": "bf7029115c4378f7d21718496f432f94",
     "semantic_hash": ""
   },
   "vm-worker/src/index.ts": {
@@ -2525,8 +2525,8 @@
     "semantic_hash": ""
   },
   "src/hooks/useCopilot.ts": {
-    "mtime": 1783698154.1990507,
-    "ast_hash": "b46235fef25e5f14e4bdf2638734adf5",
+    "mtime": 1783698549.228148,
+    "ast_hash": "99bde9c10ba415075369c079ca0a0041",
     "semantic_hash": ""
   },
   "src/pages/Copilot.tsx": {
@@ -2555,8 +2555,8 @@
     "semantic_hash": ""
   },
   "vm-worker/src/processCopilotJob.ts": {
-    "mtime": 1783697647.159895,
-    "ast_hash": "eb416b8465dbc86a8e17382044d4c23a",
+    "mtime": 1783698503.425299,
+    "ast_hash": "ad43b807b556e8e81212c76efe9bfc19",
     "semantic_hash": ""
   },
   ".agent/skills/n8n-expert-siplanhub/SKILL.md": {
@@ -2575,8 +2575,8 @@
     "semantic_hash": ""
   },
   "src/components/Copilot/CopilotChat.tsx": {
-    "mtime": 1783698209.4380054,
-    "ast_hash": "423ee39bc4e1ab72d9e780cad5361cbd",
+    "mtime": 1783698616.1521983,
+    "ast_hash": "bec6fa2a8c892ff0a39c21c5a1a8ec22",
     "semantic_hash": ""
   },
   "src/components/Copilot/FloatingCopilot.tsx": {
@@ -2590,8 +2590,18 @@
     "semantic_hash": ""
   },
   "supabase/migrations/20260710160000_copilot_jobs_delete_policy.sql": {
-    "mtime": 1783698167.0071983,
-    "ast_hash": "80bb1be5838234f203111cc5b848a2d6",
+    "mtime": 1783698252.9157073,
+    "ast_hash": "e54a02989e89812ac1b61e3c75737ad9",
+    "semantic_hash": ""
+  },
+  "src/components/Copilot/SimpleMarkdown.tsx": {
+    "mtime": 1783698644.0112693,
+    "ast_hash": "5b0e539c3651d9edf8d021b32820ab71",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260710170000_copilot_multiturn_scope.sql": {
+    "mtime": 1783698447.3790524,
+    "ast_hash": "a225363f22d77110cb60a560d216cd70",
     "semantic_hash": ""
   }
 }
