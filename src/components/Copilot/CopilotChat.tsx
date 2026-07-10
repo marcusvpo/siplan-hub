@@ -26,6 +26,9 @@ import {
   RotateCcw,
   History,
   EyeOff,
+  ThumbsUp,
+  ThumbsDown,
+  Sparkles,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -74,8 +77,18 @@ interface CopilotChatProps {
  * pagina /copilot quanto no widget flutuante. Ocupa 100% da altura do pai.
  */
 export function CopilotChat({ showQuota = true, className }: CopilotChatProps) {
-  const { access, accessLoading, jobs, enqueue, cancelJob, clearConversation, activeJob, hasAccess } =
-    useCopilot();
+  const {
+    access,
+    accessLoading,
+    jobs,
+    enqueue,
+    cancelJob,
+    clearConversation,
+    setFeedback,
+    digest,
+    activeJob,
+    hasAccess,
+  } = useCopilot();
   const [question, setQuestion] = useState("");
   const [scope, setScope] = useState<"todos" | "ativos">("todos");
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -257,6 +270,16 @@ export function CopilotChat({ showQuota = true, className }: CopilotChatProps) {
         )}
         {visibleJobs.length === 0 && (
           <div className="pt-6 space-y-4">
+            {digest?.content && (
+              <div className="rounded-lg border bg-primary/5 p-3">
+                <p className="text-xs font-semibold text-primary flex items-center gap-1 mb-1">
+                  <Sparkles className="h-3.5 w-3.5" /> Resumo do dia
+                </p>
+                <div className="text-sm">
+                  <SimpleMarkdown text={digest.content} />
+                </div>
+              </div>
+            )}
             <p className="text-sm text-muted-foreground text-center">
               Comece com uma pergunta ou escolha uma sugestao:
             </p>
@@ -346,7 +369,7 @@ export function CopilotChat({ showQuota = true, className }: CopilotChatProps) {
                     )}
                   </div>
                 </div>
-                {/* Rodape da resposta: hora + custo + copiar */}
+                {/* Rodape da resposta: hora + custo + copiar + feedback */}
                 {job.status === "done" && (
                   <div className="flex items-center gap-2 mt-1 ml-9 text-[10px] text-muted-foreground">
                     <span>{fmtDateTime(job.finishedAt || job.createdAt)}</span>
@@ -366,6 +389,40 @@ export function CopilotChat({ showQuota = true, className }: CopilotChatProps) {
                         </>
                       )}
                     </button>
+                    <button
+                      onClick={() => setFeedback(job.id, 1)}
+                      className={cn(
+                        "hover:text-foreground transition-colors",
+                        job.feedback === 1 && "text-green-600"
+                      )}
+                      title="Resposta util"
+                    >
+                      <ThumbsUp className="h-3 w-3" />
+                    </button>
+                    <button
+                      onClick={() => setFeedback(job.id, -1)}
+                      className={cn(
+                        "hover:text-foreground transition-colors",
+                        job.feedback === -1 && "text-destructive"
+                      )}
+                      title="Resposta ruim"
+                    >
+                      <ThumbsDown className="h-3 w-3" />
+                    </button>
+                  </div>
+                )}
+                {/* Follow-ups sugeridos */}
+                {job.status === "done" && job.followups && job.followups.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-2 ml-9">
+                    {job.followups.map((f) => (
+                      <button
+                        key={f}
+                        onClick={() => setQuestion(f)}
+                        className="text-[11px] rounded-full border px-2.5 py-1 hover:bg-muted/50 transition-colors text-left"
+                      >
+                        {f}
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>
