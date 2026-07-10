@@ -34,6 +34,26 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { SimpleMarkdown } from "./SimpleMarkdown";
+import { useProjectsV2 } from "@/hooks/useProjectsV2";
+
+// Transforma os nomes de cartorio citados na resposta em links markdown para o
+// projeto, casando com a lista carregada. Substitui o {id:...} que antes vinha no
+// contexto do modelo (economia de tokens no worker).
+function linkifyProjects(text: string, projects: { id: string; clientName: string }[]): string {
+  if (!text || !projects?.length) return text;
+  const items = projects
+    .filter((p) => p.clientName && p.id && p.clientName.length >= 5)
+    .map((p) => ({ name: p.clientName, id: p.id }))
+    .sort((a, b) => b.name.length - a.name.length);
+  let out = text;
+  for (const { name, id } of items) {
+    if (out.includes(`(/projects/${id})`)) continue; // ja linkado
+    const esc = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const re = new RegExp(`(?<![[/\\w])${esc}(?![\\]\\w])`);
+    if (re.test(out)) out = out.replace(re, `[${name}](/projects/${id})`);
+  }
+  return out;
+}
 
 const SUGESTOES = [
   "Quais cartorios estao com a conversao pendente?",
@@ -89,6 +109,7 @@ export function CopilotChat({ showQuota = true, className }: CopilotChatProps) {
     activeJob,
     hasAccess,
   } = useCopilot();
+  const { projects } = useProjectsV2();
   const [question, setQuestion] = useState("");
   const [scope, setScope] = useState<"todos" | "ativos">("todos");
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -276,7 +297,7 @@ export function CopilotChat({ showQuota = true, className }: CopilotChatProps) {
                   <Sparkles className="h-3.5 w-3.5" /> Resumo do dia
                 </p>
                 <div className="text-sm">
-                  <SimpleMarkdown text={digest.content} />
+                  <SimpleMarkdown text={linkifyProjects(digest.content, projects)} />
                 </div>
               </div>
             )}
@@ -352,7 +373,9 @@ export function CopilotChat({ showQuota = true, className }: CopilotChatProps) {
                     <Bot className="h-4 w-4 text-primary" />
                   </div>
                   <div className="rounded-2xl rounded-tl-sm bg-muted px-4 py-2 text-sm">
-                    {job.status === "done" && <SimpleMarkdown text={job.resultText || ""} />}
+                    {job.status === "done" && (
+                      <SimpleMarkdown text={linkifyProjects(job.resultText || "", projects)} />
+                    )}
                     {job.status === "error" && (
                       <span className="text-destructive">
                         Falha: {job.errorMessage || "erro desconhecido"}

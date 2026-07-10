@@ -72,9 +72,9 @@ export function projectLine(proj: AnyObj): string {
   const head = ticket ? `${client} [${ticket}]` : client;
   const overall = short(proj.status, 24);
   const overallSeg = overall ? ` status_geral=${overall} ::` : " ::";
-  // {id:...} no fim serve para o modelo montar o link [Nome](/projects/ID).
-  const idSeg = proj.id ? ` {id:${proj.id}}` : "";
-  return `- ${head}${overallSeg} ${parts.join(" | ")}${idSeg}`.trim();
+  // Nao enviamos o id: o link para /projects/ID e montado no frontend, casando o
+  // nome do cartorio com a lista de projetos (economiza ~36 chars por linha).
+  return `- ${head}${overallSeg} ${parts.join(" | ")}`.trim();
 }
 
 // Descreve uma pendencia de conversao (issue aberta) em uma linha compacta.
@@ -83,8 +83,7 @@ export function issueLine(issue: AnyObj, clientById: Map<string, string>): strin
   const pri = short(issue.priority, 12);
   const st = short(issue.status, 16);
   const title = short(issue.title, 120);
-  const idSeg = issue.project_id ? ` {id:${issue.project_id}}` : "";
-  return `- ${cartorio} (prioridade ${pri}, ${st}): ${title}${idSeg}`;
+  return `- ${cartorio} (prioridade ${pri}, ${st}): ${title}`;
 }
 
 // "Ativo" = tem ao menos uma etapa com status preenchido e NAO concluido.
@@ -133,7 +132,7 @@ Regras:
 - Responda em portugues do Brasil, de forma direta e objetiva.
 - ATRASO: uma etapa esta atrasada quando a data de fim ja passou (anterior a hoje) E o status nao esta concluido. Use a data de hoje para decidir isso.
 - Considere "travado/pendente/parado" as etapas cujo status indique nao concluido (ex.: pendente, em andamento, bloqueado) e "concluido" as finalizadas (ex.: concluido, finalizado, adequado).
-- LINKS: ao citar um projeto, escreva o nome como link markdown [Nome do cartorio](/projects/ID), usando o ID que aparece como {id:...} na linha correspondente. NUNCA mostre o texto {id:...} cru na resposta.
+- Ao citar um projeto, escreva o nome do cartorio EXATAMENTE como aparece no portfolio (o sistema transforma o nome em link automaticamente).
 - Quando listar varios projetos, use uma lista com marcadores "- ".
 - Considere as PENDENCIAS DE CONVERSAO quando a pergunta for sobre conversao, bloqueios ou pendencias.
 - Se a informacao pedida NAO estiver nos dados, diga isso claramente; NAO invente dados.
@@ -300,6 +299,7 @@ export async function processCopilotJob(job: CopilotJob): Promise<void> {
   const { resultText, transcript, code, stderr, cancelled, inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens } =
     await runSkill(prompt, (step) => record(step), shouldCancel, {
       model: config.copilotModel || undefined,
+      cwd: config.copilotCwd,
     });
   await flushProgress(true);
 

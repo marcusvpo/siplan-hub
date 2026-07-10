@@ -79,6 +79,7 @@ export async function generateDailyDigest(): Promise<void> {
 
   const { resultText, code } = await runSkill(prompt, undefined, undefined, {
     model: config.copilotModel || undefined,
+    cwd: config.copilotCwd,
   });
   const content = (resultText || "").trim();
   if (code !== 0 || !content) return;

@@ -1,7 +1,7 @@
 import "dotenv/config";
 import path from "node:path";
 import os from "node:os";
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync, readdirSync, mkdirSync } from "node:fs";
 
 function required(name: string): string {
   const value = process.env[name];
@@ -55,6 +55,19 @@ function resolveClaudeBin(): string {
 
 const orionProjectDir = process.env.ORION_PROJECT_DIR || "/opt/Orion.Modelos";
 
+// Diretorio NEUTRO (vazio) onde o copiloto roda a CLI. Evita que o Claude Code
+// carregue no contexto o CLAUDE.md e as skills de /opt/Orion.Modelos (irrelevantes
+// para o Q&A e caros em tokens). Criado no boot.
+function ensureCopilotCwd(): string {
+  const dir = process.env.COPILOT_CWD || path.join(os.tmpdir(), "siplan-copilot");
+  try {
+    mkdirSync(dir, { recursive: true });
+  } catch {
+    /* ja existe / sem permissao: cai no default do runSkill */
+  }
+  return dir;
+}
+
 export const config = {
   // Supabase
   supabaseUrl: required("SUPABASE_URL"),
@@ -80,6 +93,8 @@ export const config = {
   // Claude Code (mesma assinatura do gerador de modelos, sem chave de API).
   // Tarefa leve de Q&A -> Haiku por padrao. Override via COPILOT_MODEL.
   copilotModel: process.env.COPILOT_MODEL || "haiku",
+  // Diretorio neutro para rodar o copiloto/digest (sem CLAUDE.md/skills do Orion).
+  copilotCwd: ensureCopilotCwd(),
 
   // Chave de API opcional para fallback quando a assinatura bate o limite de sessao.
   // Se definida (DTC_FALLBACK_API_KEY), o resumo tenta de novo cobrando via API.
