@@ -1675,7 +1675,7 @@
     "semantic_hash": ""
   },
   "vm-worker/src/index.ts": {
-    "mtime": 1783709607.9821358,
+    "mtime": 1783709811.998716,
     "ast_hash": "c0944a23913029816cc5289520e7b6b2",
     "semantic_hash": ""
   },
@@ -2525,8 +2525,8 @@
     "semantic_hash": ""
   },
   "src/hooks/useCopilot.ts": {
-    "mtime": 1783709656.7291217,
-    "ast_hash": "ef31eca6eb684dc321c469794e8456a4",
+    "mtime": 1783710493.177869,
+    "ast_hash": "01307aace27eb392f69b31583324acc3",
     "semantic_hash": ""
   },
   "src/pages/Copilot.tsx": {
@@ -2555,7 +2555,7 @@
     "semantic_hash": ""
   },
   "vm-worker/src/processCopilotJob.ts": {
-    "mtime": 1783709552.790712,
+    "mtime": 1783709812.000227,
     "ast_hash": "e681f90e6367bd141678f477a62a2c95",
     "semantic_hash": ""
   },
@@ -2575,7 +2575,7 @@
     "semantic_hash": ""
   },
   "src/components/Copilot/CopilotChat.tsx": {
-    "mtime": 1783709705.713923,
+    "mtime": 1783709811.9931731,
     "ast_hash": "827a3b8448eac066d2384f196e059281",
     "semantic_hash": ""
   },
@@ -2605,7 +2605,7 @@
     "semantic_hash": ""
   },
   "src/pages/admin/CopilotUsage.tsx": {
-    "mtime": 1783709750.7967873,
+    "mtime": 1783709811.9951727,
     "ast_hash": "ed45407ed37d64f7858cf092e7f89404",
     "semantic_hash": ""
   },
@@ -2615,18 +2615,18 @@
     "semantic_hash": ""
   },
   "supabase/migrations/20260710190000_copilot_feedback_followups.sql": {
-    "mtime": 1783709504.768654,
-    "ast_hash": "ab18cf3ed11ffe4e28ea521bbf82a6ff",
+    "mtime": 1783709811.9951727,
+    "ast_hash": "1add39a43aec76d666a81611a3b1440e",
     "semantic_hash": ""
   },
   "supabase/migrations/20260710200000_copilot_digests.sql": {
-    "mtime": 1783709512.4683168,
-    "ast_hash": "4d0158818bf4c536f93fbf47d110c1c9",
+    "mtime": 1783709811.9961746,
+    "ast_hash": "1ac6d64447bb5de193d22f8e9f4cb851",
     "semantic_hash": ""
   },
   "vm-worker/src/processCopilotDigest.ts": {
-    "mtime": 1783709578.2058196,
-    "ast_hash": "76ab75123a7ecfe10326f853eaf74289",
+    "mtime": 1783709811.998716,
+    "ast_hash": "e6376091341d1edae1b763b93823f87f",
     "semantic_hash": ""
   }
 }

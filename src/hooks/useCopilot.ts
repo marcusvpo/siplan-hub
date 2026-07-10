@@ -213,8 +213,16 @@ export function useCopilot() {
             const mapped = mapJob(raw);
             const idx = prev.findIndex((j) => j.id === mapped.id);
             if (idx === -1) return [...prev, mapped];
+            // Merge (nao sobrescreve): em updates parciais o Postgres omite colunas
+            // grandes/TOAST inalteradas (ex.: result_text ao curtir), que chegam como
+            // undefined. Mantemos o valor anterior nesses campos.
+            const merged = { ...prev[idx] } as CopilotJob;
+            (Object.keys(mapped) as (keyof CopilotJob)[]).forEach((k) => {
+              const v = mapped[k];
+              if (v !== undefined) (merged as Record<string, unknown>)[k as string] = v;
+            });
             const copy = prev.slice();
-            copy[idx] = mapped;
+            copy[idx] = merged;
             return copy;
           });
           // Ao concluir um job, atualiza a cota consumida.
