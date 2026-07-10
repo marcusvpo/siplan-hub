@@ -29,6 +29,11 @@ export function EnvironmentStageForm({
   const { toast } = useToast();
   const [showSoPassword, setShowSoPassword] = useState(false);
   const [showPgAccess, setShowPgAccess] = useState(false);
+  // Trava anti-autofill: campos de credencial iniciam readOnly para o
+  // gerenciador de senha do navegador não injetar login/senha do usuário.
+  // Liberado no primeiro foco (interação real do usuário).
+  const [credsLocked, setCredsLocked] = useState(true);
+  const unlockCreds = () => setCredsLocked(false);
 
   const autoFillAttempted = useRef(false);
 
@@ -239,7 +244,13 @@ export function EnvironmentStageForm({
               value={stage.soLogin || ""}
               onChange={(e) => onUpdate({ soLogin: e.target.value })}
               disabled={!canEditProjects}
+              readOnly={credsLocked}
+              onFocus={unlockCreds}
               placeholder="Ex: Administrator / Suporte"
+              autoComplete="off"
+              name="environment-so-login"
+              data-1p-ignore
+              data-lpignore="true"
               className="h-8 text-xs border border-muted/80 bg-background"
             />
           </div>
@@ -255,7 +266,13 @@ export function EnvironmentStageForm({
                 value={stage.soPassword || ""}
                 onChange={(e) => onUpdate({ soPassword: e.target.value })}
                 disabled={!canEditProjects}
+                readOnly={credsLocked}
+                onFocus={unlockCreds}
                 placeholder="Senha do SO"
+                autoComplete="new-password"
+                name="environment-so-password"
+                data-1p-ignore
+                data-lpignore="true"
                 className="h-8 text-xs border border-muted/80 bg-background pr-16"
               />
               <div className="absolute right-0.5 flex items-center gap-0.5">
@@ -325,7 +342,13 @@ export function EnvironmentStageForm({
               value={stage.postgresUser || ""}
               onChange={(e) => onUpdate({ postgresUser: e.target.value })}
               disabled={!canEditProjects}
+              readOnly={credsLocked}
+              onFocus={unlockCreds}
               placeholder="Ex: postgres"
+              autoComplete="off"
+              name="environment-pg-user"
+              data-1p-ignore
+              data-lpignore="true"
               className="h-8 text-xs border border-muted/80 bg-background"
             />
           </div>
@@ -341,7 +364,13 @@ export function EnvironmentStageForm({
                 value={stage.postgresPassword || ""}
                 onChange={(e) => onUpdate({ postgresPassword: e.target.value })}
                 disabled={!canEditProjects}
+                readOnly={credsLocked}
+                onFocus={unlockCreds}
                 placeholder="Senha..."
+                autoComplete="new-password"
+                name="environment-pg-password"
+                data-1p-ignore
+                data-lpignore="true"
                 className="h-8 text-xs border border-muted/80 bg-background pr-16"
               />
               <div className="absolute right-0.5 flex items-center gap-0.5">
