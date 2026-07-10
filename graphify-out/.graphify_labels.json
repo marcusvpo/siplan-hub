@@ -133,6 +133,7 @@
   "131": "graphify reference: extra exports and benchmark",
   "132": "graphify reference: extra exports and benchmark",
   "133": "🪝 Referência de Hooks",
+  "134": "FormRenderer.tsx",
   "135": "Siplan HUB",
   "136": "filterStore.ts",
   "137": "Accessibility Audit and Testing",
@@ -184,6 +185,7 @@
   "183": "Últimas Implantações",
   "184": "Login",
   "185": "ImplementationStageV2",
+  "186": "package.json",
   "187": "API Design Principles",
   "188": "Database Design",
   "189": "Error Handling Patterns",
@@ -197,6 +199,7 @@
   "197": "graphify reference: query, path, explain",
   "198": "🗄️ Modelo de Dados (Supabase / PostgreSQL)",
   "199": "TeamManagement (legado/descontinuado)",
+  "200": "RolesManagement.tsx",
   "201": "Database Selection (2025)",
   "202": "Indexing Principles",
   "203": "Query Optimization",
@@ -217,6 +220,7 @@
   "218": "graphify reference: add a URL and watch a folder",
   "219": "graphify reference: commit hook and native CLAUDE.md integration",
   "220": "graphify reference: incremental update and cluster-only",
+  "221": "useConversionPosts.ts",
   "222": "Selectors & Locators",
   "223": "Core Patterns",
   "224": "Installation & Setup",
@@ -289,5 +293,9 @@
   "291": "Serviço systemd siplan-model-worker",
   "292": "SiplanHUB VM Worker",
   "293": "Watchdog (worker-watchdog.sh cron)",
-  "294": "useProjectForm.ts"
+  "294": "useProjectForm.ts",
+  "295": "useConversionQueue.ts",
+  "296": "lexical.ts",
+  "297": "CopilotChat",
+  "298": "useImproveTextJobs.ts"
 }

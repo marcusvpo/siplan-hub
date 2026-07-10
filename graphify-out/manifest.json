@@ -1670,8 +1670,8 @@
     "semantic_hash": "f197a9f0666e63ed79a154fcc1bfa86f"
   },
   "vm-worker/src/config.ts": {
-    "mtime": 1783699445.5304186,
-    "ast_hash": "4f1534e04efb00a02f924efbe27fa551",
+    "mtime": 1783710893.9663632,
+    "ast_hash": "910f128c36bd91cfd7c4274c44a64bc4",
     "semantic_hash": ""
   },
   "vm-worker/src/index.ts": {
@@ -2525,7 +2525,7 @@
     "semantic_hash": ""
   },
   "src/hooks/useCopilot.ts": {
-    "mtime": 1783710493.177869,
+    "mtime": 1783710541.276515,
     "ast_hash": "01307aace27eb392f69b31583324acc3",
     "semantic_hash": ""
   },
@@ -2555,8 +2555,8 @@
     "semantic_hash": ""
   },
   "vm-worker/src/processCopilotJob.ts": {
-    "mtime": 1783709812.000227,
-    "ast_hash": "e681f90e6367bd141678f477a62a2c95",
+    "mtime": 1783710929.0902264,
+    "ast_hash": "ad9f005399498ddbcd9eeb2fa0a15007",
     "semantic_hash": ""
   },
   ".agent/skills/n8n-expert-siplanhub/SKILL.md": {
@@ -2575,8 +2575,8 @@
     "semantic_hash": ""
   },
   "src/components/Copilot/CopilotChat.tsx": {
-    "mtime": 1783709811.9931731,
-    "ast_hash": "827a3b8448eac066d2384f196e059281",
+    "mtime": 1783710982.3381498,
+    "ast_hash": "12cc8a290ff0f112e694f4c493f0c82f",
     "semantic_hash": ""
   },
   "src/components/Copilot/FloatingCopilot.tsx": {
@@ -2625,8 +2625,8 @@
     "semantic_hash": ""
   },
   "vm-worker/src/processCopilotDigest.ts": {
-    "mtime": 1783709811.998716,
-    "ast_hash": "e6376091341d1edae1b763b93823f87f",
+    "mtime": 1783710935.1262484,
+    "ast_hash": "fad83e9950b73ec803b0842f1c1dac5a",
     "semantic_hash": ""
   }
 }
