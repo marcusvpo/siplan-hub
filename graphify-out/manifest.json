@@ -255,7 +255,7 @@
     "semantic_hash": "88a4ebc70e8ad66a1f3c1223bf11b8b0"
   },
   "src/components/Layout/MainLayout.tsx": {
-    "mtime": 1783696861.9442277,
+    "mtime": 1783696949.0181887,
     "ast_hash": "eb7648af3a0f321ef2d6787eb1c80619",
     "semantic_hash": ""
   },
@@ -2525,13 +2525,13 @@
     "semantic_hash": ""
   },
   "src/hooks/useCopilot.ts": {
-    "mtime": 1783696737.3389375,
+    "mtime": 1783696949.0191891,
     "ast_hash": "047ac29f039f0da4db23ef051cafd072",
     "semantic_hash": ""
   },
   "src/pages/Copilot.tsx": {
-    "mtime": 1783696778.7051027,
-    "ast_hash": "2b0eb5b3eb5945c07d02e5a597b290cf",
+    "mtime": 1783696949.0201888,
+    "ast_hash": "4d10ff0376c9310a38962d34e33333f6",
     "semantic_hash": ""
   },
   "src/pages/admin/CopilotAccess.tsx": {
@@ -2575,13 +2575,13 @@
     "semantic_hash": ""
   },
   "src/components/Copilot/CopilotChat.tsx": {
-    "mtime": 1783696768.0499766,
-    "ast_hash": "731f945add8b63dfd0992e5514271b4e",
+    "mtime": 1783696949.0151813,
+    "ast_hash": "0ee33ee8ab106d5f9199da7991eee2b1",
     "semantic_hash": ""
   },
   "src/components/Copilot/FloatingCopilot.tsx": {
-    "mtime": 1783696838.9316213,
-    "ast_hash": "ca796aa0918516e5fecff878ff67bbde",
+    "mtime": 1783697087.215679,
+    "ast_hash": "78c6b3b056aa1526b44143deed529e91",
     "semantic_hash": ""
   }
 }
