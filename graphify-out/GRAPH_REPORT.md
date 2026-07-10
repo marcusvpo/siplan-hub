@@ -1,7 +1,7 @@
 # Graph Report - siplan-hub  (2026-07-10)
 
 ## Corpus Check
-- 508 files · ~710,752 words
+- 508 files · ~710,929 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `ad993986`
+- Built from commit: `91c6ca0e`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 

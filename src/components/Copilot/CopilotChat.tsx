@@ -24,6 +24,8 @@ import {
   Star,
   StopCircle,
   RotateCcw,
+  History,
+  EyeOff,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -39,6 +41,9 @@ const SUGESTOES = [
 
 const SAVED_KEY = "copilot-saved-questions";
 const MAX_SAVED = 10;
+// Marca o inicio da "sessao atual": trocas anteriores a isso ficam no historico
+// (escondidas por padrao). "Limpar" avanca essa marca para agora.
+const SESSION_KEY = "copilot-session-start";
 
 const fmtDateTime = (iso?: string): string => {
   if (!iso) return "";
@@ -75,6 +80,10 @@ export function CopilotChat({ showQuota = true, className }: CopilotChatProps) {
   const [scope, setScope] = useState<"todos" | "ativos">("todos");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [saved, setSaved] = useState<string[]>(loadSaved);
+  const [sessionStart, setSessionStart] = useState<number>(
+    () => Number(localStorage.getItem(SESSION_KEY)) || 0
+  );
+  const [showHistory, setShowHistory] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -101,7 +110,14 @@ export function CopilotChat({ showQuota = true, className }: CopilotChatProps) {
   const clear = () => {
     if (!jobs.length || clearConversation.isPending) return;
     if (!window.confirm("Limpar toda a conversa? Esta acao nao pode ser desfeita.")) return;
-    clearConversation.mutate();
+    clearConversation.mutate(undefined, {
+      onSuccess: () => {
+        const now = Date.now();
+        setSessionStart(now);
+        localStorage.setItem(SESSION_KEY, String(now));
+        setShowHistory(false);
+      },
+    });
   };
 
   const exportTxt = () => {
@@ -163,6 +179,12 @@ export function CopilotChat({ showQuota = true, className }: CopilotChatProps) {
   const usedToday = sameDay ? used : 0;
   const overQuota = limit > 0 && usedToday >= limit;
 
+  // Fronteira de sessao: por padrao mostra so as trocas da sessao atual; o
+  // historico (trocas anteriores ao ultimo "Limpar") aparece sob demanda.
+  const inSession = jobs.filter((j) => new Date(j.createdAt).getTime() >= sessionStart);
+  const olderCount = jobs.length - inSession.length;
+  const visibleJobs = showHistory ? jobs : inSession;
+
   return (
     <div className={cn("flex flex-col h-full min-h-0", className)}>
       {/* Barra: cota + acoes */}
@@ -177,6 +199,25 @@ export function CopilotChat({ showQuota = true, className }: CopilotChatProps) {
           )}
           {jobs.length > 0 && (
             <div className="flex items-center gap-1">
+              {(olderCount > 0 || showHistory) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-muted-foreground"
+                  onClick={() => setShowHistory((v) => !v)}
+                  title={showHistory ? "Ocultar historico" : "Ver conversas anteriores"}
+                >
+                  {showHistory ? (
+                    <>
+                      <EyeOff className="h-3.5 w-3.5 mr-1" /> Ocultar historico
+                    </>
+                  ) : (
+                    <>
+                      <History className="h-3.5 w-3.5 mr-1" /> Historico ({olderCount})
+                    </>
+                  )}
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
@@ -207,7 +248,14 @@ export function CopilotChat({ showQuota = true, className }: CopilotChatProps) {
 
       {/* Historico */}
       <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto space-y-5 px-1 pb-4">
-        {jobs.length === 0 && (
+        {showHistory && (
+          <div className="flex justify-center">
+            <Badge variant="outline" className="font-normal text-[10px]">
+              Vendo conversas anteriores
+            </Badge>
+          </div>
+        )}
+        {visibleJobs.length === 0 && (
           <div className="pt-6 space-y-4">
             <p className="text-sm text-muted-foreground text-center">
               Comece com uma pergunta ou escolha uma sugestao:
@@ -248,7 +296,7 @@ export function CopilotChat({ showQuota = true, className }: CopilotChatProps) {
           </div>
         )}
 
-        {jobs.map((job) => {
+        {visibleJobs.map((job) => {
           const cost = (job.tokensIn || 0) + (job.tokensOut || 0);
           return (
             <div key={job.id} className="space-y-3">
