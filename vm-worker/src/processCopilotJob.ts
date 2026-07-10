@@ -72,7 +72,19 @@ function projectLine(proj: AnyObj): string {
   const head = ticket ? `${client} [${ticket}]` : client;
   const overall = short(proj.status, 24);
   const overallSeg = overall ? ` status_geral=${overall} ::` : " ::";
-  return `- ${head}${overallSeg} ${parts.join(" | ")}`.trim();
+  // {id:...} no fim serve para o modelo montar o link [Nome](/projects/ID).
+  const idSeg = proj.id ? ` {id:${proj.id}}` : "";
+  return `- ${head}${overallSeg} ${parts.join(" | ")}${idSeg}`.trim();
+}
+
+// Descreve uma pendencia de conversao (issue aberta) em uma linha compacta.
+function issueLine(issue: AnyObj, clientById: Map<string, string>): string {
+  const cartorio = clientById.get(issue.project_id) || "(projeto desconhecido)";
+  const pri = short(issue.priority, 12);
+  const st = short(issue.status, 16);
+  const title = short(issue.title, 120);
+  const idSeg = issue.project_id ? ` {id:${issue.project_id}}` : "";
+  return `- ${cartorio} (prioridade ${pri}, ${st}): ${title}${idSeg}`;
 }
 
 // "Ativo" = tem ao menos uma etapa com status preenchido e NAO concluido.
@@ -94,31 +106,44 @@ interface HistoryItem {
 }
 
 // Monta o prompt unico (a CLI nao separa system/messages): instrucoes + portfolio
-// + historico recente da conversa + pergunta atual.
-function buildPrompt(portfolio: string, history: HistoryItem[], question: string): string {
+// + pendencias + historico recente da conversa + pergunta atual.
+function buildPrompt(
+  portfolio: string,
+  issues: string,
+  history: HistoryItem[],
+  question: string,
+  hoje: string
+): string {
   const histBlock = history.length
     ? `\n=== HISTORICO DA CONVERSA (mais antigo -> mais recente) ===\n${history
         .map((h) => `Usuario: ${h.question}\nCopiloto: ${h.result_text}`)
         .join("\n\n")}\n=== FIM DO HISTORICO ===\n`
     : "";
+  const issuesBlock = issues
+    ? `\n=== PENDENCIAS DE CONVERSAO EM ABERTO ===\n${issues}\n=== FIM DAS PENDENCIAS ===\n`
+    : "";
 
-  return `Voce e o Copiloto Operacional do SiplanHUB, sistema de gestao de projetos de implantacao de sistemas para cartorios/serventias. Responda a pergunta do usuario usando APENAS os dados do portfolio abaixo.
+  return `Voce e o Copiloto Operacional do SiplanHUB, sistema de gestao de projetos de implantacao de sistemas para cartorios/serventias. Responda a pergunta do usuario usando APENAS os dados abaixo.
 
-Cada linha do portfolio e um projeto (cliente/cartorio) com o status de cada etapa do pipeline: infra (infraestrutura), aderencia, conversao (conversao de dados), ambiente (preparacao de ambiente), modelos (Modelos Editor), implantacao (implantacao e treinamento) e pos (pos-implantacao). O formato de cada etapa e: etapa=status(responsavel)[inicio-fim].
+Data de hoje: ${hoje}.
+
+Cada linha do portfolio e um projeto (cliente/cartorio) com o status de cada etapa do pipeline: infra (infraestrutura), aderencia, conversao (conversao de dados), ambiente (preparacao de ambiente), modelos (Modelos Editor), implantacao (implantacao e treinamento) e pos (pos-implantacao). O formato de cada etapa e: etapa=status(responsavel)[inicio-fim]. As datas estao em dd/mm.
 
 Regras:
 - Responda em portugues do Brasil, de forma direta e objetiva.
-- Cite os nomes dos cartorios/clientes exatamente como aparecem.
-- Quando listar varios projetos, use uma lista com marcadores "- ".
-- Se a informacao pedida NAO estiver no portfolio, diga isso claramente; NAO invente dados.
-- Nao repita o portfolio inteiro; responda so o que foi perguntado.
-- Considere o historico da conversa para entender perguntas de acompanhamento (ex.: "e desses, quais atrasados?").
+- ATRASO: uma etapa esta atrasada quando a data de fim ja passou (anterior a hoje) E o status nao esta concluido. Use a data de hoje para decidir isso.
 - Considere "travado/pendente/parado" as etapas cujo status indique nao concluido (ex.: pendente, em andamento, bloqueado) e "concluido" as finalizadas (ex.: concluido, finalizado, adequado).
+- LINKS: ao citar um projeto, escreva o nome como link markdown [Nome do cartorio](/projects/ID), usando o ID que aparece como {id:...} na linha correspondente. NUNCA mostre o texto {id:...} cru na resposta.
+- Quando listar varios projetos, use uma lista com marcadores "- ".
+- Considere as PENDENCIAS DE CONVERSAO quando a pergunta for sobre conversao, bloqueios ou pendencias.
+- Se a informacao pedida NAO estiver nos dados, diga isso claramente; NAO invente dados.
+- Nao repita os dados inteiros; responda so o que foi perguntado.
+- Considere o historico da conversa para entender perguntas de acompanhamento (ex.: "e desses, quais atrasados?").
 
 === PORTFOLIO DE PROJETOS ===
 ${portfolio}
 === FIM DO PORTFOLIO ===
-${histBlock}
+${issuesBlock}${histBlock}
 === PERGUNTA ATUAL ===
 ${question}
 === FIM DA PERGUNTA ===
@@ -222,6 +247,19 @@ export async function processCopilotJob(job: CopilotJob): Promise<void> {
     portfolio += `\n(observacao: lista truncada por tamanho; ${scoped.length - lines.length} projeto(s) omitido(s).)`;
   }
 
+  // 2b. Pendencias de conversao em aberto (fonte extra: conversao/bloqueios).
+  const clientById = new Map<string, string>();
+  for (const p of projects || []) {
+    if (p.id) clientById.set(p.id, short(p.client_name, 60) || "(sem nome)");
+  }
+  const { data: issueRows } = await supabase
+    .from("conversion_issues")
+    .select("project_id, title, status, priority")
+    .in("status", ["open", "in_progress"])
+    .order("priority", { ascending: false })
+    .limit(100);
+  const issuesText = (issueRows || []).map((i) => issueLine(i, clientById)).join("\n");
+
   // 3. Historico recente (chat multi-turno): ultimas trocas concluidas do usuario.
   const { data: historyRows } = await supabase
     .from("copilot_jobs")
@@ -256,7 +294,8 @@ export async function processCopilotJob(job: CopilotJob): Promise<void> {
     return !!data?.cancel_requested;
   };
 
-  const prompt = buildPrompt(portfolio, history, job.question);
+  const hoje = new Date().toLocaleDateString("pt-BR");
+  const prompt = buildPrompt(portfolio, issuesText, history, job.question, hoje);
   const { resultText, transcript, code, stderr, cancelled, inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens } =
     await runSkill(prompt, (step) => record(step), shouldCancel, {
       model: config.copilotModel || undefined,

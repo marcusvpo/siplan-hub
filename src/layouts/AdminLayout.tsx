@@ -18,6 +18,7 @@ import {
   UserMinus,
   ArrowLeft,
   Sparkles,
+  BarChart3,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -70,6 +71,7 @@ export default function AdminLayout() {
     { href: "/admin/users", label: "Usuários", icon: Users },
     { href: "/admin/roles", label: "Perfis de Acesso", icon: Shield },
     { href: "/admin/copilot", label: "Copiloto", icon: Sparkles },
+    { href: "/admin/copilot-usage", label: "Uso do Copiloto", icon: BarChart3 },
     { href: "/admin/teams-config", label: "Configurações do Time", icon: Settings2 },
     { href: "/admin/inactive-users", label: "Usuários Inativos", icon: UserMinus },
     { href: "/admin/vacations", label: "Férias", icon: Palmtree },
