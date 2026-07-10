@@ -99,10 +99,10 @@ export function useCopilot() {
   });
 
   const enqueue = useMutation({
-    mutationFn: async (question: string) => {
+    mutationFn: async (input: { question: string; scope?: string }) => {
       const { data, error } = await supabase
         .from("copilot_jobs")
-        .insert({ user_id: userId, question })
+        .insert({ user_id: userId, question: input.question, scope: input.scope ?? null })
         .select()
         .single();
       if (error) throw error;

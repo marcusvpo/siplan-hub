@@ -13,6 +13,14 @@ const MAX_CONTEXT_CHARS = 60000;
 // Teto de tokens de saida por resposta.
 const MAX_OUTPUT_TOKENS = 4000;
 
+// Chat multi-turno: quantas trocas anteriores (pergunta+resposta) mandar como
+// contexto, e teto de caracteres do historico (controle de custo).
+const HISTORY_TURNS = 5;
+const MAX_HISTORY_CHARS = 8000;
+
+// Status que contam como etapa CONCLUIDA (para o filtro de escopo 'ativos').
+const CONCLUIDO_RE = /conclu|finaliz|adequ|entregue|ok\b/i;
+
 // Pesos para converter o uso reportado pela API em "tokens cobrados" na cota, na
 // proporcao do custo real: leitura de cache custa ~10% de um token de entrada,
 // escrita de cache ~25% a mais. Sem isso, cache_read (barato) drenava a cota cheio.
@@ -69,6 +77,19 @@ function projectLine(proj: AnyObj): string {
   return `- ${head}${overallSeg} ${parts.join(" | ")}`.trim();
 }
 
+// "Ativo" = tem ao menos uma etapa com status preenchido e NAO concluido.
+function isActiveProject(proj: AnyObj): boolean {
+  let anyStage = false;
+  for (const [prefix] of STAGES) {
+    const status = short(proj[`${prefix}_status`], 24);
+    if (!status) continue;
+    anyStage = true;
+    if (!CONCLUIDO_RE.test(status)) return true;
+  }
+  // Sem nenhuma etapa preenchida tambem conta como ativo (projeto novo/em aberto).
+  return !anyStage;
+}
+
 // Instrucoes + portfolio: vao no bloco 'system' com cache_control (prompt caching).
 // A pergunta do usuario vai como mensagem 'user'. Assim, perguntas repetidas sobre
 // o mesmo portfolio dentro de ~5 min reaproveitam o cache (entrada quase de graca).
@@ -97,13 +118,18 @@ interface ClaudeUsage {
   cache_read_input_tokens?: number;
 }
 
+interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
 /**
  * Chama a Messages API do Claude direto (sem o agente Claude Code), com o portfolio
- * em cache. Retorna o texto da resposta + o uso de tokens.
+ * em cache e o historico da conversa. Retorna o texto da resposta + o uso de tokens.
  */
 async function askClaude(
   system: string,
-  question: string
+  messages: ChatMessage[]
 ): Promise<{ answer: string; usage: ClaudeUsage }> {
   if (!config.copilotApiKey) {
     throw new Error(
@@ -121,7 +147,7 @@ async function askClaude(
       model: config.copilotModel,
       max_tokens: MAX_OUTPUT_TOKENS,
       system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
-      messages: [{ role: "user", content: question }],
+      messages,
     }),
   });
 
@@ -195,10 +221,13 @@ export async function processCopilotJob(job: CopilotJob): Promise<void> {
     .limit(MAX_PROJECTS);
   if (projErr) throw new Error(`Falha ao ler os projetos: ${projErr.message}`);
 
+  const onlyActive = job.scope === "ativos";
+  const scoped = onlyActive ? (projects || []).filter(isActiveProject) : projects || [];
+
   const lines: string[] = [];
   let chars = 0;
   let truncated = false;
-  for (const proj of projects || []) {
+  for (const proj of scoped) {
     const line = projectLine(proj);
     if (chars + line.length > MAX_CONTEXT_CHARS) {
       truncated = true;
@@ -208,16 +237,45 @@ export async function processCopilotJob(job: CopilotJob): Promise<void> {
     chars += line.length + 1;
   }
   if (lines.length === 0) {
-    throw new Error("Nao ha projetos cadastrados para consultar.");
+    throw new Error(
+      onlyActive
+        ? "Nenhum projeto ativo (com etapa nao concluida) para consultar."
+        : "Nao ha projetos cadastrados para consultar."
+    );
   }
   let portfolio = lines.join("\n");
+  if (onlyActive) portfolio = `(escopo: apenas projetos ativos)\n${portfolio}`;
   if (truncated) {
-    portfolio += `\n(observacao: lista truncada por tamanho; ${(projects || []).length - lines.length} projeto(s) omitido(s).)`;
+    portfolio += `\n(observacao: lista truncada por tamanho; ${scoped.length - lines.length} projeto(s) omitido(s).)`;
   }
 
-  // 3. Chamar a API do Claude
+  // 3. Historico recente (chat multi-turno): ultimas trocas concluidas do usuario.
+  const { data: history } = await supabase
+    .from("copilot_jobs")
+    .select("question, result_text")
+    .eq("user_id", job.user_id)
+    .eq("status", "done")
+    .neq("id", job.id)
+    .order("created_at", { ascending: false })
+    .limit(HISTORY_TURNS);
+
+  const messages: ChatMessage[] = [];
+  let histChars = 0;
+  // history vem do mais novo pro mais antigo; inverte para ordem cronologica.
+  for (const h of (history || []).slice().reverse()) {
+    const q = String(h.question || "").trim();
+    const a = String(h.result_text || "").trim();
+    if (!q || !a) continue;
+    histChars += q.length + a.length;
+    if (histChars > MAX_HISTORY_CHARS) continue;
+    messages.push({ role: "user", content: q });
+    messages.push({ role: "assistant", content: a });
+  }
+  messages.push({ role: "user", content: job.question });
+
+  // 4. Chamar a API do Claude
   await pushStep("Analisando com IA...");
-  const { answer, usage } = await askClaude(buildSystem(portfolio), job.question);
+  const { answer, usage } = await askClaude(buildSystem(portfolio), messages);
 
   // Uso -> tokens cobrados na cota (cache_read pesa pouco; cache_write um pouco mais).
   const inTokens = Number(usage.input_tokens) || 0;
