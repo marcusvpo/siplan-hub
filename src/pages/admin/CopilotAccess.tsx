@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Search, Sparkles, Save } from "lucide-react";
 
-const DEFAULT_LIMIT = 50000;
+const DEFAULT_LIMIT = 200000;
 
 interface Row {
   userId: string;
