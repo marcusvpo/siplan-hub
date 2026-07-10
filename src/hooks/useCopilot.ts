@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -58,6 +58,9 @@ export function useCopilot() {
   const { user } = useAuth();
   const userId = user?.id;
   const queryClient = useQueryClient();
+  // Sufixo unico por instancia do hook: a pagina /copilot e o widget flutuante
+  // podem montar o hook ao mesmo tempo; canais com o mesmo nome colidiriam.
+  const channelIdRef = useRef(Math.random().toString(36).slice(2));
 
   // Cota/permissao do usuario atual. A linha pode nao existir (=> sem acesso).
   const { data: access, isLoading: accessLoading } = useQuery({
@@ -136,7 +139,7 @@ export function useCopilot() {
   useEffect(() => {
     if (!userId) return;
     const channel = supabase
-      .channel(`copilot-jobs-${userId}`)
+      .channel(`copilot-jobs-${userId}-${channelIdRef.current}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "copilot_jobs", filter: `user_id=eq.${userId}` },
