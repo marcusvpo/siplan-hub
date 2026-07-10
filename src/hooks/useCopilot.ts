@@ -23,6 +23,7 @@ export interface CopilotJob {
   tokensIn: number;
   tokensOut: number;
   createdAt: string;
+  finishedAt?: string;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -46,6 +47,7 @@ const mapJob = (j: any): CopilotJob => ({
   tokensIn: j.tokens_in ?? 0,
   tokensOut: j.tokens_out ?? 0,
   createdAt: j.created_at,
+  finishedAt: j.finished_at ?? undefined,
 });
 
 /**
@@ -120,6 +122,21 @@ export function useCopilot() {
     },
   });
 
+  const clearConversation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("copilot_jobs").delete().eq("user_id", userId as string);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.setQueryData<CopilotJob[]>(["copilotJobs", userId], []);
+      toast.success("Conversa limpa.");
+    },
+    onError: (err: unknown) => {
+      const msg = err instanceof Error ? err.message : "erro desconhecido";
+      toast.error(`Nao foi possivel limpar: ${msg}`);
+    },
+  });
+
   const cancelJob = async (job: CopilotJob) => {
     try {
       if (job.status === "pending") {
@@ -179,6 +196,7 @@ export function useCopilot() {
     jobsLoading,
     enqueue,
     cancelJob,
+    clearConversation,
     activeJob,
     hasAccess: !!access?.enabled,
   };
