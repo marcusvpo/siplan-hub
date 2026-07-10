@@ -33,6 +33,7 @@ import {
   FileEdit,
   BookOpen,
   FileCheck,
+  Sparkles,
 } from "lucide-react";
 import {
   Collapsible,
@@ -41,6 +42,7 @@ import {
 } from "@/components/ui/collapsible";
 import { UserProfileDrawer } from "./UserProfileDrawer";
 import { Sidebar as ShadcnSidebar, useSidebar } from "@/components/ui/sidebar";
+import { useCopilot } from "@/hooks/useCopilot";
 
 export function AppSidebar() {
   const { state, toggleSidebar } = useSidebar();
@@ -72,6 +74,7 @@ export function AppSidebar() {
     (theme === "system" &&
       window.matchMedia("(prefers-color-scheme: dark)").matches);
       
+  const { hasAccess: hasCopilotAccess } = useCopilot();
   const { hasPermission } = usePermissions();
   const canViewImplantacao = hasPermission("menu_implantacao", "view");
   const canViewCalendario = hasPermission("menu_calendario", "view");
@@ -143,6 +146,25 @@ export function AppSidebar() {
             </Button>
           </Link>
         </div>
+
+        {/* Copiloto (IA) - so aparece para usuarios habilitados */}
+        {hasCopilotAccess && (
+          <div className="px-2">
+            <Link to="/copilot">
+              <Button
+                variant={isActive("/copilot") ? "secondary" : "ghost"}
+                className={cn(
+                  "w-full justify-start gap-3",
+                  collapsed ? "justify-center px-0" : "",
+                )}
+                title="Copiloto Operacional"
+              >
+                <Sparkles className="h-5 w-5" />
+                {!collapsed && <span>Copiloto</span>}
+              </Button>
+            </Link>
+          </div>
+        )}
 
         {/* Dashboard Group */}
         <div className="px-2">

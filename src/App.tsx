@@ -114,6 +114,8 @@ const InactiveUsers = lazy(() => import("./pages/admin/InactiveUsers"));
 const ProjectDetails = lazy(() => import("./pages/ProjectDetails"));
 const ProjectAdherenceForm = lazy(() => import("./pages/ProjectAdherenceForm"));
 const ProjectsKanban = lazy(() => import("./pages/ProjectsKanban"));
+const Copilot = lazy(() => import("./pages/Copilot"));
+const CopilotAccess = lazy(() => import("./pages/admin/CopilotAccess"));
 
 const queryClient = new QueryClient();
 
@@ -251,6 +253,14 @@ const App = () => (
                     </Suspense>
                   }
                 />
+                <Route
+                  path="copilot"
+                  element={
+                    <Suspense fallback={<PageLoader />}>
+                      <CopilotAccess />
+                    </Suspense>
+                  }
+                />
               </Route>
 
               {/* Protected App Routes */}
@@ -263,6 +273,7 @@ const App = () => (
                         <Routes>
                           <Route path="/" element={<Home />} />
                           <Route path="/dashboard" element={<DashboardV2 />} />
+                          <Route path="/copilot" element={<Copilot />} />
                           <Route path="/dashboard/kanban" element={<ProjectsKanban />} />
                           <Route path="/projects" element={<Index />} />
                           <Route path="/projects/:id" element={<ProjectDetails />} />

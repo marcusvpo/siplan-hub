@@ -133,12 +133,14 @@
   "131": "graphify reference: extra exports and benchmark",
   "132": "graphify reference: extra exports and benchmark",
   "133": "🪝 Referência de Hooks",
+  "134": "ProjectsKanban.tsx",
   "135": "Siplan HUB",
   "136": "filterStore.ts",
   "137": "Accessibility Audit and Testing",
   "138": "Epic: [Epic Name]",
   "139": "GEMINI.md",
   "140": "TransicaoPlaceholder",
+  "141": "useAuditLogs",
   "142": "Authentication & Authorization Implementation Patterns",
   "143": "Migration Principles",
   "144": "Schema Design Principles",
@@ -290,5 +292,9 @@
   "290": "Supabase (SUPABASE_SECRET_KEY, Realtime, RLS)",
   "291": "Serviço systemd siplan-model-worker",
   "292": "SiplanHUB VM Worker",
-  "293": "Watchdog (worker-watchdog.sh cron)"
+  "293": "Watchdog (worker-watchdog.sh cron)",
+  "294": "useProjectForm.ts",
+  "295": "useDeploymentForms.ts",
+  "296": "useImproveTextJobs.ts",
+  "297": "ProtectedRoute.tsx"
 }

@@ -1,8 +1,9 @@
 import { supabase } from "./supabase.js";
-import { config, Job, DtcJob } from "./config.js";
+import { config, Job, DtcJob, CopilotJob } from "./config.js";
 import { processJob } from "./processJob.js";
 import { processDtcJob } from "./processDtcJob.js";
 import { processImproveJob } from "./processImproveJob.js";
+import { processCopilotJob } from "./processCopilotJob.js";
 
 let busy = false;
 
@@ -69,9 +70,30 @@ async function recoverOwnStuckJobs(): Promise<void> {
     .eq("worker_id", config.workerId)
     .gte("attempts", config.maxAttempts);
   if (dtcErrErr) console.error("Erro ao marcar jobs DTC orfaos como erro:", dtcErrErr.message);
+
+  // Mesma recuperacao para os jobs do Copiloto (copilot_jobs)
+  const { error: coReqErr } = await supabase
+    .from("copilot_jobs")
+    .update({ status: "pending", worker_id: null, started_at: null })
+    .eq("status", "processing")
+    .eq("worker_id", config.workerId)
+    .lt("attempts", config.maxAttempts);
+  if (coReqErr) console.error("Erro ao recuperar jobs Copiloto orfaos (requeue):", coReqErr.message);
+
+  const { error: coErrErr } = await supabase
+    .from("copilot_jobs")
+    .update({
+      status: "error",
+      error_message: "Worker reiniciado durante a geracao (tentativas esgotadas).",
+      finished_at: new Date().toISOString(),
+    })
+    .eq("status", "processing")
+    .eq("worker_id", config.workerId)
+    .gte("attempts", config.maxAttempts);
+  if (coErrErr) console.error("Erro ao marcar jobs Copiloto orfaos como erro:", coErrErr.message);
 }
 
-async function markError(table: "model_generation_jobs" | "dtc_ai_jobs", id: string, message: string) {
+async function markError(table: "model_generation_jobs" | "dtc_ai_jobs" | "copilot_jobs", id: string, message: string) {
   await supabase
     .from(table)
     .update({
@@ -98,7 +120,7 @@ function isQuotaExhausted(message: string): boolean {
  * assim que os tokens voltarem. O job aparece "na fila" no front (nao vira erro).
  */
 async function requeueForQuota(
-  table: "model_generation_jobs" | "dtc_ai_jobs",
+  table: "model_generation_jobs" | "dtc_ai_jobs" | "copilot_jobs",
   id: string,
   attempts: number
 ): Promise<void> {
@@ -177,10 +199,36 @@ async function claimOneDtcJob(): Promise<boolean> {
   return true;
 }
 
+// Reivindica e processa UM job do Copiloto. Retorna true se pegou algum.
+async function claimOneCopilotJob(): Promise<boolean> {
+  const { data: job, error } = await supabase.rpc("claim_copilot_job", {
+    p_worker_id: config.workerId,
+  });
+  if (error) {
+    console.error("Erro no claim (copilot):", error.message);
+    return false;
+  }
+  const typedJob = job as CopilotJob | null;
+  if (!typedJob || !typedJob.id) return false;
+  console.log(`[copilot ${typedJob.id}] iniciado (tentativa ${typedJob.attempts})`);
+  try {
+    await processCopilotJob(typedJob);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (isQuotaExhausted(msg)) {
+      await requeueForQuota("copilot_jobs", typedJob.id, typedJob.attempts);
+    } else {
+      console.error(`[copilot ${typedJob.id}] erro:`, msg);
+      await markError("copilot_jobs", typedJob.id, msg);
+    }
+  }
+  return true;
+}
+
 /**
  * Drena as filas de forma atomica (FOR UPDATE SKIP LOCKED no banco), um job por
  * vez, sob o mesmo flag `busy` (so um Claude roda por vez). Prioriza modelos e
- * intercala com jobs de resumo (DTC) ate ambas as filas esvaziarem.
+ * intercala com jobs de resumo (DTC) e do Copiloto ate todas as filas esvaziarem.
  */
 async function claimAndProcess(): Promise<void> {
   if (busy) return;
@@ -192,7 +240,9 @@ async function claimAndProcess(): Promise<void> {
       const gotModel = await claimOneModelJob();
       if (gotModel) continue;
       const gotDtc = await claimOneDtcJob();
-      if (!gotDtc) return; // ambas as filas vazias
+      if (gotDtc) continue;
+      const gotCopilot = await claimOneCopilotJob();
+      if (!gotCopilot) return; // todas as filas vazias
     }
   } finally {
     busy = false;
@@ -216,6 +266,12 @@ async function reapStuckJobs(): Promise<void> {
     p_max_attempts: config.maxAttempts,
   });
   if (dtcError) console.error("Erro no reaper (dtc):", dtcError.message);
+
+  const { error: copilotError } = await supabase.rpc("requeue_stuck_copilot_jobs", {
+    p_timeout_seconds: Math.ceil(config.jobTimeoutMs / 1000),
+    p_max_attempts: config.maxAttempts,
+  });
+  if (copilotError) console.error("Erro no reaper (copilot):", copilotError.message);
 }
 
 // Encerramento limpo: marca o heartbeat como 'stopping' para o selo virar offline na hora.
@@ -254,6 +310,11 @@ async function main() {
     .on(
       "postgres_changes",
       { event: "INSERT", schema: "public", table: "dtc_ai_jobs" },
+      () => { void claimAndProcess(); }
+    )
+    .on(
+      "postgres_changes",
+      { event: "INSERT", schema: "public", table: "copilot_jobs" },
       () => { void claimAndProcess(); }
     )
     .subscribe((status) => console.log("Realtime:", status));
