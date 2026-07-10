@@ -1670,8 +1670,8 @@
     "semantic_hash": "f197a9f0666e63ed79a154fcc1bfa86f"
   },
   "vm-worker/src/config.ts": {
-    "mtime": 1783698439.243298,
-    "ast_hash": "bf7029115c4378f7d21718496f432f94",
+    "mtime": 1783699301.6366582,
+    "ast_hash": "4f1534e04efb00a02f924efbe27fa551",
     "semantic_hash": ""
   },
   "vm-worker/src/index.ts": {
@@ -1695,8 +1695,8 @@
     "semantic_hash": ""
   },
   "vm-worker/src/runSkill.ts": {
-    "mtime": 1783696486.7353375,
-    "ast_hash": "6b3977739d50ee00c401aba83d7500b2",
+    "mtime": 1783699337.297557,
+    "ast_hash": "a2e25563584bedfa843dc5110370d747",
     "semantic_hash": ""
   },
   "vm-worker/src/supabase.ts": {
@@ -2525,7 +2525,7 @@
     "semantic_hash": ""
   },
   "src/hooks/useCopilot.ts": {
-    "mtime": 1783698549.228148,
+    "mtime": 1783698701.764603,
     "ast_hash": "99bde9c10ba415075369c079ca0a0041",
     "semantic_hash": ""
   },
@@ -2555,8 +2555,8 @@
     "semantic_hash": ""
   },
   "vm-worker/src/processCopilotJob.ts": {
-    "mtime": 1783698503.425299,
-    "ast_hash": "ad43b807b556e8e81212c76efe9bfc19",
+    "mtime": 1783699400.7152476,
+    "ast_hash": "8a6d60d2a8984735ea99232511676308",
     "semantic_hash": ""
   },
   ".agent/skills/n8n-expert-siplanhub/SKILL.md": {
@@ -2575,8 +2575,8 @@
     "semantic_hash": ""
   },
   "src/components/Copilot/CopilotChat.tsx": {
-    "mtime": 1783698616.1521983,
-    "ast_hash": "bec6fa2a8c892ff0a39c21c5a1a8ec22",
+    "mtime": 1783698701.7624946,
+    "ast_hash": "f0cd87c900522771a85aad5855fb7c26",
     "semantic_hash": ""
   },
   "src/components/Copilot/FloatingCopilot.tsx": {
@@ -2595,13 +2595,13 @@
     "semantic_hash": ""
   },
   "src/components/Copilot/SimpleMarkdown.tsx": {
-    "mtime": 1783698644.0112693,
-    "ast_hash": "5b0e539c3651d9edf8d021b32820ab71",
+    "mtime": 1783698701.763592,
+    "ast_hash": "3c48b94b02b02f4eebebd92f9b3043f2",
     "semantic_hash": ""
   },
   "supabase/migrations/20260710170000_copilot_multiturn_scope.sql": {
-    "mtime": 1783698447.3790524,
-    "ast_hash": "a225363f22d77110cb60a560d216cd70",
+    "mtime": 1783698701.765603,
+    "ast_hash": "6d5066901878fbb907175503f4c34acc",
     "semantic_hash": ""
   }
 }

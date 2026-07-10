@@ -76,17 +76,10 @@ export const config = {
   // mais rapido que o padrao). Override via DTC_MODEL. Vazio = usa o padrao da CLI.
   dtcModel: process.env.DTC_MODEL || "sonnet",
 
-  // Copiloto Operacional: chama a Messages API DIRETO (sem o agente Claude Code),
-  // pra nao pagar o overhead de system prompt + tools a cada pergunta. Tarefa leve
-  // de Q&A -> Haiku por padrao. Override via COPILOT_MODEL (id de API completo).
-  copilotModel: process.env.COPILOT_MODEL || "claude-haiku-4-5-20251001",
-  // Chave de API para o copiloto (billing por uso, barato no Haiku). Aceita
-  // COPILOT_API_KEY, ANTHROPIC_API_KEY ou reusa a DTC_FALLBACK_API_KEY.
-  copilotApiKey:
-    process.env.COPILOT_API_KEY ||
-    process.env.ANTHROPIC_API_KEY ||
-    process.env.DTC_FALLBACK_API_KEY ||
-    "",
+  // Modelo do Copiloto Operacional (chat sobre o portfolio). Roda pela CLI do
+  // Claude Code (mesma assinatura do gerador de modelos, sem chave de API).
+  // Tarefa leve de Q&A -> Haiku por padrao. Override via COPILOT_MODEL.
+  copilotModel: process.env.COPILOT_MODEL || "haiku",
 
   // Chave de API opcional para fallback quando a assinatura bate o limite de sessao.
   // Se definida (DTC_FALLBACK_API_KEY), o resumo tenta de novo cobrando via API.
