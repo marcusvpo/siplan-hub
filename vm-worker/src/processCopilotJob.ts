@@ -1,15 +1,23 @@
 import { supabase } from "./supabase.js";
 import { config, CopilotJob } from "./config.js";
-import { runSkill, ProgressStep } from "./runSkill.js";
+import { ProgressStep } from "./runSkill.js";
 
 // Mantem apenas os ultimos N passos no banco (evita payloads gigantes no Realtime).
 const MAX_LOG_STEPS = 80;
-const PROGRESS_FLUSH_MS = 2500;
 
 // Limites do contexto (economia de token): teto de projetos e de caracteres enviados
-// ao Claude. O retrieval e ESTRUTURADO (linhas compactas), nao embeddings.
+// ao modelo. O retrieval e ESTRUTURADO (linhas compactas), nao embeddings.
 const MAX_PROJECTS = 300;
 const MAX_CONTEXT_CHARS = 60000;
+
+// Teto de tokens de saida por resposta.
+const MAX_OUTPUT_TOKENS = 4000;
+
+// Pesos para converter o uso reportado pela API em "tokens cobrados" na cota, na
+// proporcao do custo real: leitura de cache custa ~10% de um token de entrada,
+// escrita de cache ~25% a mais. Sem isso, cache_read (barato) drenava a cota cheio.
+const W_CACHE_READ = 0.1;
+const W_CACHE_WRITE = 1.25;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyObj = any;
@@ -61,8 +69,11 @@ function projectLine(proj: AnyObj): string {
   return `- ${head}${overallSeg} ${parts.join(" | ")}`.trim();
 }
 
-function buildPrompt(question: string, portfolio: string): string {
-  return `Voce e o Copiloto Operacional do SiplanHUB, sistema de gestao de projetos de implantacao de sistemas para cartorios/serventias. Responda a PERGUNTA do usuario usando APENAS os dados do portfolio abaixo.
+// Instrucoes + portfolio: vao no bloco 'system' com cache_control (prompt caching).
+// A pergunta do usuario vai como mensagem 'user'. Assim, perguntas repetidas sobre
+// o mesmo portfolio dentro de ~5 min reaproveitam o cache (entrada quase de graca).
+function buildSystem(portfolio: string): string {
+  return `Voce e o Copiloto Operacional do SiplanHUB, sistema de gestao de projetos de implantacao de sistemas para cartorios/serventias. Responda a pergunta do usuario usando APENAS os dados do portfolio abaixo.
 
 Cada linha do portfolio e um projeto (cliente/cartorio) com o status de cada etapa do pipeline: infra (infraestrutura), aderencia, conversao (conversao de dados), ambiente (preparacao de ambiente), modelos (Modelos Editor), implantacao (implantacao e treinamento) e pos (pos-implantacao). O formato de cada etapa e: etapa=status(responsavel)[inicio-fim].
 
@@ -76,35 +87,75 @@ Regras:
 
 === PORTFOLIO DE PROJETOS ===
 ${portfolio}
-=== FIM DO PORTFOLIO ===
+=== FIM DO PORTFOLIO ===`;
+}
 
-=== PERGUNTA ===
-${question}
-=== FIM DA PERGUNTA ===
+interface ClaudeUsage {
+  input_tokens?: number;
+  output_tokens?: number;
+  cache_creation_input_tokens?: number;
+  cache_read_input_tokens?: number;
+}
 
-Responda SOMENTE com a resposta final, sem preambulo.`;
+/**
+ * Chama a Messages API do Claude direto (sem o agente Claude Code), com o portfolio
+ * em cache. Retorna o texto da resposta + o uso de tokens.
+ */
+async function askClaude(
+  system: string,
+  question: string
+): Promise<{ answer: string; usage: ClaudeUsage }> {
+  if (!config.copilotApiKey) {
+    throw new Error(
+      "Copiloto sem chave de API. Defina COPILOT_API_KEY (ou ANTHROPIC_API_KEY / DTC_FALLBACK_API_KEY) no .env da VM."
+    );
+  }
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-api-key": config.copilotApiKey,
+      "anthropic-version": "2023-06-01",
+    },
+    body: JSON.stringify({
+      model: config.copilotModel,
+      max_tokens: MAX_OUTPUT_TOKENS,
+      system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
+      messages: [{ role: "user", content: question }],
+    }),
+  });
+
+  const data = (await res.json()) as AnyObj;
+  if (!res.ok) {
+    const msg = data?.error?.message || JSON.stringify(data).slice(0, 500);
+    throw new Error(`API do Claude retornou ${res.status}: ${msg}`);
+  }
+  const answer = Array.isArray(data.content)
+    ? data.content
+        .filter((b: AnyObj) => b?.type === "text" && typeof b.text === "string")
+        .map((b: AnyObj) => b.text)
+        .join("")
+        .trim()
+    : "";
+  return { answer, usage: (data.usage || {}) as ClaudeUsage };
 }
 
 /**
  * Pipeline de um job do Copiloto (ja marcado 'processing' pelo claim):
  * valida a cota do usuario -> monta o contexto compacto do portfolio ->
- * roda o Claude -> grava a resposta + tokens consumidos -> done.
+ * chama a API do Claude -> grava a resposta + tokens cobrados -> done.
  * Lanca em falha; o loop principal marca o job como 'error'.
  */
 export async function processCopilotJob(job: CopilotJob): Promise<void> {
   const steps: ProgressStep[] = [];
-  let currentText = "";
-  let lastFlush = 0;
 
-  const flushProgress = async (force = false): Promise<void> => {
-    const now = Date.now();
-    if (!force && now - lastFlush < PROGRESS_FLUSH_MS) return;
-    lastFlush = now;
+  const pushStep = async (text: string, kind: ProgressStep["kind"] = "system"): Promise<void> => {
+    steps.push({ at: new Date().toISOString(), text, kind });
     try {
       await supabase
         .from("copilot_jobs")
         .update({
-          progress: currentText || null,
+          progress: text,
           progress_log: steps.slice(-MAX_LOG_STEPS),
           progress_updated_at: new Date().toISOString(),
         })
@@ -114,17 +165,7 @@ export async function processCopilotJob(job: CopilotJob): Promise<void> {
     }
   };
 
-  const record = (step: ProgressStep): void => {
-    currentText = step.text;
-    steps.push(step);
-    void flushProgress(false);
-  };
-  const pushStep = (text: string, kind: ProgressStep["kind"] = "system"): void =>
-    record({ at: new Date().toISOString(), text, kind });
-
   // 1. Cota: bloqueia se o usuario nao esta habilitado ou ja estourou o teto do dia.
-  //    (a RLS ja barra o INSERT, mas reforcamos aqui pois o consumo e contabilizado
-  //    apos a resposta e um job grande pode ultrapassar o teto.)
   const { data: access } = await supabase
     .from("copilot_access")
     .select("enabled, daily_token_limit, tokens_used_today, period_reset_at")
@@ -145,8 +186,7 @@ export async function processCopilotJob(job: CopilotJob): Promise<void> {
   }
 
   // 2. Montar o contexto compacto do portfolio (retrieval estruturado)
-  pushStep("Lendo o portfolio de projetos...");
-  await flushProgress(true);
+  await pushStep("Lendo o portfolio de projetos...");
 
   const { data: projects, error: projErr } = await supabase
     .from("projects")
@@ -175,68 +215,45 @@ export async function processCopilotJob(job: CopilotJob): Promise<void> {
     portfolio += `\n(observacao: lista truncada por tamanho; ${(projects || []).length - lines.length} projeto(s) omitido(s).)`;
   }
 
-  // 3. Rodar o Claude
-  pushStep("Analisando com IA...");
-  await flushProgress(true);
+  // 3. Chamar a API do Claude
+  await pushStep("Analisando com IA...");
+  const { answer, usage } = await askClaude(buildSystem(portfolio), job.question);
 
-  const shouldCancel = async (): Promise<boolean> => {
-    const { data } = await supabase
-      .from("copilot_jobs")
-      .select("cancel_requested")
-      .eq("id", job.id)
-      .single();
-    return !!data?.cancel_requested;
-  };
-
-  const prompt = buildPrompt(job.question, portfolio);
-  const { resultText, transcript, code, stderr, cancelled, tokensIn, tokensOut } = await runSkill(
-    prompt,
-    (step) => record(step),
-    shouldCancel,
-    { model: config.copilotModel || undefined }
+  // Uso -> tokens cobrados na cota (cache_read pesa pouco; cache_write um pouco mais).
+  const inTokens = Number(usage.input_tokens) || 0;
+  const cacheWrite = Number(usage.cache_creation_input_tokens) || 0;
+  const cacheRead = Number(usage.cache_read_input_tokens) || 0;
+  const outTokens = Number(usage.output_tokens) || 0;
+  const tokensIn = inTokens + cacheWrite + cacheRead; // bruto de entrada (registro)
+  const charged = Math.round(
+    inTokens + cacheWrite * W_CACHE_WRITE + cacheRead * W_CACHE_READ + outTokens
   );
-  await flushProgress(true);
 
-  if (cancelled) {
+  if (charged > 0) {
     await supabase
-      .from("copilot_jobs")
-      .update({ status: "cancelled", finished_at: new Date().toISOString(), cancel_requested: false })
-      .eq("id", job.id);
-    console.log(`[copilot ${job.id}] cancelado pelo usuario`);
-    return;
-  }
-
-  // Contabiliza o consumo real de tokens ANTES de tratar erro/sucesso (o custo ocorreu).
-  const totalTokens = (tokensIn || 0) + (tokensOut || 0);
-  if (totalTokens > 0) {
-    await supabase
-      .rpc("add_copilot_tokens", { p_user_id: job.user_id, p_tokens: totalTokens })
+      .rpc("add_copilot_tokens", { p_user_id: job.user_id, p_tokens: charged })
       .then(undefined, (e) => console.error("Falha ao contabilizar tokens do copiloto:", e));
   }
 
-  if (code !== 0) {
-    const tail = (stderr || transcript || "").slice(-1200);
-    throw new Error(`Claude encerrou com codigo ${code}. Fim da saida: ${tail}`);
-  }
-
-  const answer = (resultText || "").trim();
   if (!answer) {
-    throw new Error(`O Claude nao retornou texto. Fim da saida: ${(transcript || "").slice(-800)}`);
+    throw new Error("O Claude nao retornou texto.");
   }
 
-  pushStep("Resposta pronta.", "result");
-  await flushProgress(true);
+  // 4. Concluir
+  await pushStep("Resposta pronta.", "result");
   const { error: doneError } = await supabase
     .from("copilot_jobs")
     .update({
       status: "done",
       result_text: answer,
-      tokens_in: tokensIn || 0,
-      tokens_out: tokensOut || 0,
+      tokens_in: tokensIn,
+      tokens_out: outTokens,
       finished_at: new Date().toISOString(),
     })
     .eq("id", job.id);
   if (doneError) throw new Error(`Falha ao concluir job: ${doneError.message}`);
 
-  console.log(`[copilot ${job.id}] concluido (${answer.length} chars, ${totalTokens} tokens)`);
+  console.log(
+    `[copilot ${job.id}] concluido (${answer.length} chars; in=${tokensIn} out=${outTokens} cobrado=${charged})`
+  );
 }
