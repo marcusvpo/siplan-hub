@@ -76,6 +76,10 @@ export const config = {
   // mais rapido que o padrao). Override via DTC_MODEL. Vazio = usa o padrao da CLI.
   dtcModel: process.env.DTC_MODEL || "sonnet",
 
+  // Modelo do Copiloto Operacional (chat sobre o portfolio). Tarefa leve -> sonnet
+  // por padrao (economia de token). Override via COPILOT_MODEL.
+  copilotModel: process.env.COPILOT_MODEL || "sonnet",
+
   // Chave de API opcional para fallback quando a assinatura bate o limite de sessao.
   // Se definida (DTC_FALLBACK_API_KEY), o resumo tenta de novo cobrando via API.
   fallbackApiKey: process.env.DTC_FALLBACK_API_KEY || "",
@@ -111,4 +115,14 @@ export interface DtcJob {
   attempts: number;
   job_type?: string;
   input_text?: string | null;
+}
+
+// Job do Copiloto Operacional: uma pergunta em linguagem natural sobre o portfolio.
+// O worker monta um contexto compacto com as etapas dos projetos e roda o Claude.
+export interface CopilotJob {
+  id: string;
+  user_id: string;
+  question: string;
+  status: string;
+  attempts: number;
 }

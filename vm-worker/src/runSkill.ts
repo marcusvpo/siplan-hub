@@ -46,7 +46,7 @@ export function runSkill(
   onProgress?: (step: ProgressStep) => void,
   shouldCancel?: () => Promise<boolean>,
   options: RunSkillOptions = {}
-): Promise<{ transcript: string; resultText: string; code: number; stderr: string; cancelled: boolean }> {
+): Promise<{ transcript: string; resultText: string; code: number; stderr: string; cancelled: boolean; tokensIn: number; tokensOut: number }> {
   return new Promise((resolve, reject) => {
     const args = ["--dangerously-skip-permissions", "-p", prompt, "--output-format", "stream-json", "--verbose"];
     if (options.model) args.push("--model", options.model);
@@ -61,6 +61,9 @@ export function runSkill(
     let resultText = "";
     let buf = "";
     let cancelled = false;
+    // Uso real de tokens reportado pelo evento 'result' do stream-json (para a cota).
+    let tokensIn = 0;
+    let tokensOut = 0;
 
     // Poll de cancelamento: se o usuario pediu cancelar, mata o Claude.
     let cancelChecking = false;
@@ -112,6 +115,14 @@ export function runSkill(
           resultText = evt.result;
           transcript += evt.result + "\n";
         }
+        const u = evt.usage;
+        if (u && typeof u === "object") {
+          tokensIn =
+            (Number(u.input_tokens) || 0) +
+            (Number(u.cache_read_input_tokens) || 0) +
+            (Number(u.cache_creation_input_tokens) || 0);
+          tokensOut = Number(u.output_tokens) || 0;
+        }
         return;
       }
     };
@@ -148,7 +159,7 @@ export function runSkill(
       cleanup();
       const rest = buf.trim();
       if (rest) { try { handleEvent(JSON.parse(rest)); } catch { /* ignore */ } }
-      resolve({ transcript, resultText, code: code ?? -1, stderr, cancelled });
+      resolve({ transcript, resultText, code: code ?? -1, stderr, cancelled, tokensIn, tokensOut });
     });
   });
 }

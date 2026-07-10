@@ -155,8 +155,8 @@
     "semantic_hash": ""
   },
   "src/App.tsx": {
-    "mtime": 1783538373.218865,
-    "ast_hash": "3ae66b6bf68a0ab5e41918c14d6a0e82",
+    "mtime": 1783695907.0170586,
+    "ast_hash": "5670276fc8a6b22d1c2afa975ea7eb2e",
     "semantic_hash": ""
   },
   "src/components/Admin/OverviewChart.tsx": {
@@ -245,9 +245,9 @@
     "semantic_hash": "fbeef457886221679d8422238870cfb9"
   },
   "src/components/Layout/AppSidebar.tsx": {
-    "mtime": 1783344525.6854825,
-    "ast_hash": "316de6ee5249c72fffe25f66d9b71d73",
-    "semantic_hash": "316de6ee5249c72fffe25f66d9b71d73"
+    "mtime": 1783695965.5727043,
+    "ast_hash": "20f046aa5d58dce7740102d80402ba14",
+    "semantic_hash": ""
   },
   "src/components/Layout/Breadcrumbs.tsx": {
     "mtime": 1781190226.886255,
@@ -315,9 +315,9 @@
     "semantic_hash": "4793e8955c4b3d349f08e74a905d1497"
   },
   "src/components/ProjectManagement/Forms/StageForms/EnvironmentStageForm.tsx": {
-    "mtime": 1782997967.2167218,
-    "ast_hash": "afbb4fea5d66114d5b16005818fc08a0",
-    "semantic_hash": "afbb4fea5d66114d5b16005818fc08a0"
+    "mtime": 1783694062.4956102,
+    "ast_hash": "bc36e724e935a42b35f81fc899d5ae6e",
+    "semantic_hash": ""
   },
   "src/components/ProjectManagement/Forms/StageForms/ImplementationStageForm.tsx": {
     "mtime": 1782906683.2074049,
@@ -980,9 +980,9 @@
     "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
   "src/layouts/AdminLayout.tsx": {
-    "mtime": 1781122833.2152374,
-    "ast_hash": "8223378092e52a7657d30549452a5d93",
-    "semantic_hash": "8223378092e52a7657d30549452a5d93"
+    "mtime": 1783695916.9188066,
+    "ast_hash": "f5b129afd3376b3ee42b78e475cb0010",
+    "semantic_hash": ""
   },
   "src/lib/editor-utils.ts": {
     "mtime": 1781122833.2152374,
@@ -1055,7 +1055,7 @@
     "semantic_hash": "a55fbfde4f134a9a8797ddf8318d5dc4"
   },
   "src/pages/Login.tsx": {
-    "mtime": 1783538335.544963,
+    "mtime": 1783538863.797714,
     "ast_hash": "f111ac5fdb7e5f148efe352c51be11b0",
     "semantic_hash": ""
   },
@@ -1070,9 +1070,9 @@
     "semantic_hash": "56c0e8759328865e67fc2c480b916804"
   },
   "src/pages/ProjectAdherenceForm.tsx": {
-    "mtime": 1782132906.2928247,
-    "ast_hash": "200c0ba9ab29276a93cbcaa3fd5cba77",
-    "semantic_hash": "200c0ba9ab29276a93cbcaa3fd5cba77"
+    "mtime": 1783694050.672787,
+    "ast_hash": "783241a04ddbf89c85c3f6ecb22358fa",
+    "semantic_hash": ""
   },
   "src/pages/ProjectDetails.tsx": {
     "mtime": 1783383430.2883556,
@@ -1135,7 +1135,7 @@
     "semantic_hash": "ea6238cfef874b4807eda59960340a3f"
   },
   "src/pages/admin/UserManagement.tsx": {
-    "mtime": 1783538286.0112345,
+    "mtime": 1783538863.7997148,
     "ast_hash": "00ba2f87458647af954359267eba2c1b",
     "semantic_hash": ""
   },
@@ -1670,13 +1670,13 @@
     "semantic_hash": "f197a9f0666e63ed79a154fcc1bfa86f"
   },
   "vm-worker/src/config.ts": {
-    "mtime": 1783517157.653733,
-    "ast_hash": "46dee1395574d895b152a9e1fbd5ea6e",
+    "mtime": 1783695606.6988716,
+    "ast_hash": "206323425155239efe9e206dc6fcd587",
     "semantic_hash": ""
   },
   "vm-worker/src/index.ts": {
-    "mtime": 1783517157.6547344,
-    "ast_hash": "f758b5cd971f86ce9ae4f5af906915e9",
+    "mtime": 1783695987.9341874,
+    "ast_hash": "101d6af84d8f512a56bf59f95819c951",
     "semantic_hash": ""
   },
   "vm-worker/src/processDtcJob.ts": {
@@ -1695,9 +1695,9 @@
     "semantic_hash": ""
   },
   "vm-worker/src/runSkill.ts": {
-    "mtime": 1783452317.1184764,
-    "ast_hash": "de83ef9e9bc5833be298a7154d7a0ac9",
-    "semantic_hash": "de83ef9e9bc5833be298a7154d7a0ac9"
+    "mtime": 1783695630.8326018,
+    "ast_hash": "6b3977739d50ee00c401aba83d7500b2",
+    "semantic_hash": ""
   },
   "vm-worker/src/supabase.ts": {
     "mtime": 1783385731.9610527,
@@ -2515,13 +2515,63 @@
     "semantic_hash": ""
   },
   "src/pages/ResetPassword.tsx": {
-    "mtime": 1783538359.304989,
-    "ast_hash": "ab72b8f634961ee8f2d26e3fe048087b",
+    "mtime": 1783538863.7987137,
+    "ast_hash": "b74700e352f127eadadd1b3c24fb28d0",
     "semantic_hash": ""
   },
   "supabase/functions/admin-reset-password/index.ts": {
-    "mtime": 1783538241.1085372,
-    "ast_hash": "9550013e61f8ba1f6071ecb7e4b13311",
+    "mtime": 1783538863.800715,
+    "ast_hash": "41142a745d8b95a557c353955cc81595",
+    "semantic_hash": ""
+  },
+  "src/hooks/useCopilot.ts": {
+    "mtime": 1783695794.2534459,
+    "ast_hash": "cd5b882c89b6c2dab5cead72b5b53526",
+    "semantic_hash": ""
+  },
+  "src/pages/Copilot.tsx": {
+    "mtime": 1783695832.033158,
+    "ast_hash": "d318db32f7cc1fa5de9a716683c2b203",
+    "semantic_hash": ""
+  },
+  "src/pages/admin/CopilotAccess.tsx": {
+    "mtime": 1783695871.121314,
+    "ast_hash": "871adf42c8ec463584c4d474fc6654ca",
+    "semantic_hash": ""
+  },
+  "supabase/.temp/linked-project.json": {
+    "mtime": 1783538735.903572,
+    "ast_hash": "5b3b3096fef45c615c28a36fd799153e",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260708141000_n8n_environment_trigger.sql": {
+    "mtime": 1783688440.3397727,
+    "ast_hash": "8eab28c2b4f1a985a52ea1602214d8dc",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260710120000_create_copilot.sql": {
+    "mtime": 1783695587.8590367,
+    "ast_hash": "66c096d511a8aa4289cfbfa62f28e759",
+    "semantic_hash": ""
+  },
+  "vm-worker/src/processCopilotJob.ts": {
+    "mtime": 1783695695.9719846,
+    "ast_hash": "5b26942df69064b78a75eb46cbfe64b7",
+    "semantic_hash": ""
+  },
+  ".agent/skills/n8n-expert-siplanhub/SKILL.md": {
+    "mtime": 1783688440.2747357,
+    "ast_hash": "931a9621666c63b3e4323b53c03ad569",
+    "semantic_hash": ""
+  },
+  "docs/automacoes/novo_projeto_criado_0800.md": {
+    "mtime": 1783694050.6712773,
+    "ast_hash": "b6c60e815f640151fca056b7847623bf",
+    "semantic_hash": ""
+  },
+  "docs/automacoes/preparacao_ambiente_iniciada.md": {
+    "mtime": 1783688440.335023,
+    "ast_hash": "c36a1b39c32ce32427a5f1165101de66",
     "semantic_hash": ""
   }
 }
