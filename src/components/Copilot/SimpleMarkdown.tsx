@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { Link } from "react-router-dom";
 
 /**
  * Renderizador de Markdown minimo e seguro (sem dangerouslySetInnerHTML) para o
@@ -7,9 +8,29 @@ import { ReactNode } from "react";
  * Nao interpreta HTML, entao nao ha risco de injecao.
  */
 
+function renderLink(label: string, url: string, key: number): ReactNode {
+  const cls = "text-primary underline underline-offset-2 hover:text-primary/80";
+  // Link interno (SPA) para rotas que comecam com "/"; externo abre em nova aba.
+  if (url.startsWith("/")) {
+    return (
+      <Link key={key} to={url} className={cls}>
+        {label}
+      </Link>
+    );
+  }
+  const safe = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+  return (
+    <a key={key} href={safe} target="_blank" rel="noopener noreferrer" className={cls}>
+      {label}
+    </a>
+  );
+}
+
 function renderInline(text: string): ReactNode[] {
   const nodes: ReactNode[] = [];
-  const re = /(\*\*([^*]+)\*\*|__([^_]+)__|\*([^*]+)\*)/;
+  // Ordem importa: link antes das enfases. Grupos: 2=linkText 3=linkUrl,
+  // 4=negrito, 5=sublinhado, 6=italico.
+  const re = /(\[([^\]]+)\]\(([^)]+)\)|\*\*([^*]+)\*\*|__([^_]+)__|\*([^*]+)\*)/;
   let rest = text;
   let key = 0;
   for (;;) {
@@ -19,9 +40,10 @@ function renderInline(text: string): ReactNode[] {
       break;
     }
     if (m.index > 0) nodes.push(rest.slice(0, m.index));
-    if (m[2] != null) nodes.push(<strong key={key++}>{m[2]}</strong>);
-    else if (m[3] != null) nodes.push(<u key={key++}>{m[3]}</u>);
-    else if (m[4] != null) nodes.push(<em key={key++}>{m[4]}</em>);
+    if (m[2] != null && m[3] != null) nodes.push(renderLink(m[2], m[3], key++));
+    else if (m[4] != null) nodes.push(<strong key={key++}>{m[4]}</strong>);
+    else if (m[5] != null) nodes.push(<u key={key++}>{m[5]}</u>);
+    else if (m[6] != null) nodes.push(<em key={key++}>{m[6]}</em>);
     rest = rest.slice(m.index + m[0].length);
   }
   return nodes;

@@ -116,6 +116,7 @@ const ProjectAdherenceForm = lazy(() => import("./pages/ProjectAdherenceForm"));
 const ProjectsKanban = lazy(() => import("./pages/ProjectsKanban"));
 const Copilot = lazy(() => import("./pages/Copilot"));
 const CopilotAccess = lazy(() => import("./pages/admin/CopilotAccess"));
+const CopilotUsage = lazy(() => import("./pages/admin/CopilotUsage"));
 
 const queryClient = new QueryClient();
 
@@ -258,6 +259,14 @@ const App = () => (
                   element={
                     <Suspense fallback={<PageLoader />}>
                       <CopilotAccess />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="copilot-usage"
+                  element={
+                    <Suspense fallback={<PageLoader />}>
+                      <CopilotUsage />
                     </Suspense>
                   }
                 />
