@@ -25,6 +25,8 @@ export interface CopilotJob {
   tokensCharged: number;
   createdAt: string;
   finishedAt?: string;
+  feedback?: number;
+  followups?: string[];
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -50,6 +52,13 @@ const mapJob = (j: any): CopilotJob => ({
   tokensCharged: j.tokens_charged ?? 0,
   createdAt: j.created_at,
   finishedAt: j.finished_at ?? undefined,
+  feedback: j.feedback ?? undefined,
+  followups: j.followups
+    ? String(j.followups)
+        .split("|")
+        .map((s: string) => s.trim())
+        .filter(Boolean)
+    : undefined,
 });
 
 /**
@@ -123,6 +132,37 @@ export function useCopilot() {
       }
     },
   });
+
+  // Resumo diario do portfolio (gerado pelo worker). Mostra o mais recente.
+  const { data: digest } = useQuery({
+    queryKey: ["copilotDigest", userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("copilot_digests")
+        .select("for_date, content")
+        .order("for_date", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data as { for_date: string; content: string } | null;
+    },
+  });
+
+  const setFeedback = async (jobId: string, value: number) => {
+    // toggle: clicar de novo no mesmo remove a avaliacao
+    queryClient.setQueryData<CopilotJob[]>(["copilotJobs", userId], (prev = []) =>
+      prev.map((j) => (j.id === jobId ? { ...j, feedback: j.feedback === value ? undefined : value } : j))
+    );
+    const current = (queryClient.getQueryData<CopilotJob[]>(["copilotJobs", userId]) || []).find(
+      (j) => j.id === jobId
+    );
+    try {
+      await supabase.from("copilot_jobs").update({ feedback: current?.feedback ?? null }).eq("id", jobId);
+    } catch (err) {
+      console.error("Erro ao salvar feedback:", err);
+    }
+  };
 
   const clearConversation = useMutation({
     mutationFn: async () => {
@@ -199,6 +239,8 @@ export function useCopilot() {
     enqueue,
     cancelJob,
     clearConversation,
+    setFeedback,
+    digest,
     activeJob,
     hasAccess: !!access?.enabled,
   };

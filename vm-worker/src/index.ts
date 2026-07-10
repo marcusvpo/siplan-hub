@@ -4,6 +4,7 @@ import { processJob } from "./processJob.js";
 import { processDtcJob } from "./processDtcJob.js";
 import { processImproveJob } from "./processImproveJob.js";
 import { processCopilotJob } from "./processCopilotJob.js";
+import { generateDailyDigest } from "./processCopilotDigest.js";
 
 let busy = false;
 
@@ -251,6 +252,25 @@ async function claimAndProcess(): Promise<void> {
 }
 
 /**
+ * Resumo diario do portfolio: gera 1x/dia (a partir das 6h) quando o worker esta
+ * ocioso. Usa o mesmo flag `busy` para nao rodar dois Claude ao mesmo tempo.
+ */
+async function maybeDailyDigest(): Promise<void> {
+  if (busy) return;
+  if (new Date().getHours() < 6) return; // evita gerar de madrugada
+  busy = true;
+  void sendHeartbeat("busy");
+  try {
+    await generateDailyDigest();
+  } catch (err) {
+    console.error("Erro no resumo diario:", err instanceof Error ? err.message : err);
+  } finally {
+    busy = false;
+    void sendHeartbeat("idle");
+  }
+}
+
+/**
  * Reaper: devolve jobs travados (worker morto em processing) para a fila,
  * respeitando MAX_ATTEMPTS. Roda junto do polling.
  */
@@ -319,10 +339,11 @@ async function main() {
     )
     .subscribe((status) => console.log("Realtime:", status));
 
-  // 2. Polling de fallback: pega jobs perdidos + roda o reaper
+  // 2. Polling de fallback: pega jobs perdidos + roda o reaper + resumo diario
   const tick = async () => {
     await reapStuckJobs();
     await claimAndProcess();
+    await maybeDailyDigest();
   };
   void tick();
   setInterval(() => { void tick(); }, config.pollIntervalMs);

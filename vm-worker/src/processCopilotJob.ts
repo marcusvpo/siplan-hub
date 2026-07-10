@@ -53,7 +53,7 @@ function short(v: unknown, n = 40): string {
 }
 
 // Monta UMA linha compacta por projeto com o status de cada etapa (+ responsavel/periodo).
-function projectLine(proj: AnyObj): string {
+export function projectLine(proj: AnyObj): string {
   const client = short(proj.client_name, 60) || "(sem nome)";
   const ticket = short(proj.ticket_number, 20);
   const parts: string[] = [];
@@ -78,7 +78,7 @@ function projectLine(proj: AnyObj): string {
 }
 
 // Descreve uma pendencia de conversao (issue aberta) em uma linha compacta.
-function issueLine(issue: AnyObj, clientById: Map<string, string>): string {
+export function issueLine(issue: AnyObj, clientById: Map<string, string>): string {
   const cartorio = clientById.get(issue.project_id) || "(projeto desconhecido)";
   const pri = short(issue.priority, 12);
   const st = short(issue.status, 16);
@@ -139,6 +139,7 @@ Regras:
 - Se a informacao pedida NAO estiver nos dados, diga isso claramente; NAO invente dados.
 - Nao repita os dados inteiros; responda so o que foi perguntado.
 - Considere o historico da conversa para entender perguntas de acompanhamento (ex.: "e desses, quais atrasados?").
+- FOLLOW-UPS: na ULTIMA linha da resposta, sugira 3 perguntas curtas de acompanhamento no formato exato: [[FOLLOWUPS]] pergunta 1 | pergunta 2 | pergunta 3
 
 === PORTFOLIO DE PROJETOS ===
 ${portfolio}
@@ -327,9 +328,23 @@ export async function processCopilotJob(job: CopilotJob): Promise<void> {
     throw new Error(`Claude encerrou com codigo ${code}. Fim da saida: ${tail}`);
   }
 
-  const answer = (resultText || "").trim();
+  let answer = (resultText || "").trim();
   if (!answer) {
     throw new Error(`O Claude nao retornou texto. Fim da saida: ${(transcript || "").slice(-800)}`);
+  }
+
+  // Extrai as sugestoes de follow-up da ultima linha ([[FOLLOWUPS]] a | b | c) e
+  // remove esse marcador do texto exibido.
+  let followups: string | null = null;
+  const fm = answer.match(/\[\[FOLLOWUPS\]\]\s*(.+)\s*$/i);
+  if (fm) {
+    const items = fm[1]
+      .split("|")
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .slice(0, 3);
+    if (items.length) followups = items.join("|");
+    answer = answer.slice(0, fm.index).trim();
   }
 
   // 5. Concluir
@@ -340,6 +355,7 @@ export async function processCopilotJob(job: CopilotJob): Promise<void> {
     .update({
       status: "done",
       result_text: answer,
+      followups,
       tokens_in: tokensIn,
       tokens_out: outputTokens,
       tokens_charged: charged,

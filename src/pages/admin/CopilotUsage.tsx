@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, BarChart3, MessageSquare, Coins, Users } from "lucide-react";
+import { Loader2, BarChart3, MessageSquare, Coins, Users, ThumbsUp } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -29,6 +29,7 @@ interface JobRow {
   question: string;
   status: string;
   created_at: string;
+  feedback: number | null;
 }
 
 // Tokens cobrados na cota (ponderado). Fallback para o bruto em jobs antigos
@@ -65,7 +66,7 @@ export default function CopilotUsage() {
       const [{ data: jobs, error: jErr }, { data: profiles, error: pErr }] = await Promise.all([
         supabase
           .from("copilot_jobs")
-          .select("user_id, tokens_in, tokens_out, tokens_charged, question, status, created_at")
+          .select("user_id, tokens_in, tokens_out, tokens_charged, question, status, created_at, feedback")
           .gte("created_at", since)
           .order("created_at", { ascending: false }),
         supabase.from("profiles").select("id, full_name, email"),
@@ -129,10 +130,26 @@ export default function CopilotUsage() {
       .slice(0, 8);
   }, [rows]);
 
+  const { up, down } = useMemo(() => {
+    let u = 0;
+    let d = 0;
+    for (const r of rows) {
+      if (r.feedback === 1) u += 1;
+      else if (r.feedback === -1) d += 1;
+    }
+    return { up: u, down: d };
+  }, [rows]);
+  const satisfacao = up + down > 0 ? Math.round((up / (up + down)) * 100) : null;
+
   const tiles = [
     { icon: MessageSquare, label: "Perguntas", value: rows.length.toLocaleString("pt-BR") },
     { icon: Coins, label: "Tokens (cobrados)", value: totalTokens.toLocaleString("pt-BR") },
     { icon: Users, label: "Usuarios ativos", value: byUser.length.toLocaleString("pt-BR") },
+    {
+      icon: ThumbsUp,
+      label: satisfacao !== null ? `Satisfacao (${up}👍 / ${down}👎)` : "Satisfacao",
+      value: satisfacao !== null ? `${satisfacao}%` : "-",
+    },
   ];
 
   return (
@@ -166,7 +183,7 @@ export default function CopilotUsage() {
       ) : (
         <>
           {/* Tiles */}
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {tiles.map((t) => {
               const Icon = t.icon;
               return (
