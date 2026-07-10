@@ -304,6 +304,8 @@ export function StepsTab({
             <div data-stage-id="infra">
               <StageCard
                 id="infra"
+              projectId={project.id}
+              requestedBy={currentUserName}
               label="1. Análise de Infraestrutura"
               icon={Server}
               status={stagesData.infra.status}
@@ -343,6 +345,8 @@ export function StepsTab({
             <div data-stage-id="adherence">
               <StageCard
                 id="adherence"
+              projectId={project.id}
+              requestedBy={currentUserName}
               label="2. Análise de Aderência"
               icon={CheckCircle2}
               status={stagesData.adherence.status}
@@ -367,6 +371,8 @@ export function StepsTab({
             <div data-stage-id="conversion">
               <StageCard
                 id="conversion"
+              projectId={project.id}
+              requestedBy={currentUserName}
               label="3. Conversão de Dados"
               icon={RefreshCw}
               status={stagesData.conversion.status}
@@ -391,6 +397,8 @@ export function StepsTab({
             <div data-stage-id="environment">
               <StageCard
                 id="environment"
+              projectId={project.id}
+              requestedBy={currentUserName}
               label="4. Preparação de Ambiente"
                 icon={Database}
                 status={stagesData.environment.status}
@@ -423,6 +431,8 @@ export function StepsTab({
         <div data-stage-id="modelosEditor">
           <StageCard
             id="modelosEditor"
+            projectId={project.id}
+            requestedBy={currentUserName}
             label={isModelosTN ? "1. Modelos Editor" : "5. Modelos Editor"}
             icon={FileEdit}
             status={stagesData.modelosEditor?.status || "todo"}
@@ -443,6 +453,8 @@ export function StepsTab({
         <div data-stage-id="implementation">
           <StageCard
             id="implementation"
+            projectId={project.id}
+            requestedBy={currentUserName}
             label={isModelosTN ? "2. Implantação & Treinamento" : `${isOrionTN ? "6" : "5"}. Implantação & Treinamento`}
             icon={Rocket}
             status={stagesData.implementation.status}

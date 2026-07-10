@@ -17,8 +17,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { AutocompleteInput } from "@/components/ui/autocomplete-input";
-import { RichTextEditor } from "@/components/ui/rich-text-editor";
-import { convertBlocksToTiptap } from "@/lib/editor-utils";
+import { ObservationsWithAI } from "@/components/ProjectManagement/Forms/ObservationsWithAI";
 
 interface StageCardProps {
   id: string;
@@ -48,6 +47,10 @@ interface StageCardProps {
   // Quando fornecido, substitui o editor unico de "Observacoes & Detalhes" por um
   // conteudo customizado (ex.: multiplos blocos + IA na etapa 7 - Pos-Implantacao).
   observationsSlot?: React.ReactNode;
+
+  // Habilitam "Melhorar texto com IA" no campo unico de Observacoes (etapas 1-6).
+  projectId?: string;
+  requestedBy?: string;
 }
 
 export function StageCard({
@@ -69,6 +72,8 @@ export function StageCard({
   canEditProjects = true,
   automationNotice,
   observationsSlot,
+  projectId,
+  requestedBy,
 }: StageCardProps) {
   const getStatusColor = (s: StageStatus) => {
     switch (s) {
@@ -154,18 +159,6 @@ export function StageCard({
         { value: "done", label: "Finalizado", color: "text-emerald-600 dark:text-emerald-400" },
         { value: "blocked", label: "Bloqueado", color: "text-amber-600 dark:text-amber-400" },
       ];
-
-  // Helper for Rich Text
-  const getEditorContent = (obs?: string) => {
-    if (!obs) return "";
-    try {
-      const parsed = JSON.parse(obs);
-      if (Array.isArray(parsed)) return convertBlocksToTiptap(parsed);
-      return parsed;
-    } catch {
-      return obs;
-    }
-  };
 
   return (
     <AccordionItem
@@ -409,22 +402,14 @@ export function StageCard({
         {observationsSlot ? (
           observationsSlot
         ) : (
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <div className="h-0.5 w-6 bg-slate-300 dark:bg-slate-700 rounded-full" />
-              <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                Observações & Detalhes
-              </Label>
-            </div>
-            <div className="rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden bg-slate-50/10 dark:bg-slate-950/5 w-full">
-              <RichTextEditor
-                content={getEditorContent(observations)}
-                onChange={(content) => onUpdate({ observations: content })}
-                placeholder={`Detalhes da etapa de ${label}...`}
-                editable={canEditProjects}
-              />
-            </div>
-          </div>
+          <ObservationsWithAI
+            label={label}
+            observations={observations}
+            onChange={(content) => onUpdate({ observations: content })}
+            canEdit={canEditProjects}
+            projectId={projectId}
+            requestedBy={requestedBy}
+          />
         )}
       </AccordionContent>
     </AccordionItem>
