@@ -20,6 +20,7 @@ import { useConversionQueue } from "@/hooks/useConversionQueue";
 import { useProjectFiles } from "@/hooks/useProjectFiles";
 import { StageCard } from "@/components/ProjectManagement/Forms/StageCard";
 import { PostObservations } from "@/components/ProjectManagement/Forms/PostObservations";
+import { EnvironmentScreenshots } from "@/components/ProjectManagement/Forms/EnvironmentScreenshots";
 import { InfraStageForm, AdherenceStageForm, EnvironmentStageForm, ConversionStageForm, ImplementationStageForm } from "../Forms/StageForms";
 import { Accordion } from "@/components/ui/accordion";
 import { Label } from "@/components/ui/label";
@@ -414,9 +415,20 @@ export function StepsTab({
                   stageReadiness.find((r) => r.stageId === "environment")?.reason
                 }
                 canEditProjects={canEditProjects}
+                specificFieldsTitle="Dados de conexão"
+                collapsibleSpecificFields={true}
                 automationNotice="Automação Ativa: Um e-mail de notificação foi enviado solicitando a preparação deste ambiente."
+                afterObservations={
+                  <EnvironmentScreenshots
+                    projectId={project.id}
+                    screenshots={stagesData.environment.screenshots}
+                    onChange={(next) => updateStage("environment", { screenshots: next })}
+                    canEdit={canEditProjects}
+                    uploadedBy={currentUserName}
+                  />
+                }
               >
-                <EnvironmentStageForm 
+                <EnvironmentStageForm
                   stage={stagesData.environment} 
                   canEditProjects={canEditProjects} 
                   onUpdate={(u) => updateStage("environment", u)} 

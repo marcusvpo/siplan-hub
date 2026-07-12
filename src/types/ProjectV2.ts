@@ -230,6 +230,15 @@ export interface RemoteAccessItem {
   password?: string;
 }
 
+// Print de tela anexado na etapa 4 (Preparacao de Ambiente). O binario fica no
+// bucket Storage 'project-files'; aqui guardamos so a referencia (path + metadados).
+export interface EnvironmentScreenshot {
+  path: string; // caminho no bucket project-files
+  name: string; // nome original para exibicao
+  uploadedAt?: string; // ISO
+  uploadedBy?: string;
+}
+
 export interface EnvironmentStageV2 {
   status: StageStatus;
   responsible?: string;
@@ -255,6 +264,7 @@ export interface EnvironmentStageV2 {
   postgresHost?: string;
   postgresUser?: string;
   postgresPassword?: string;
+  screenshots?: EnvironmentScreenshot[];
 }
 
 export interface ConversionStageV2 {
