@@ -144,6 +144,7 @@ export function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
         postgresHost: (row.custom_fields as any)?.environment_postgres_host || "",
         postgresUser: (row.custom_fields as any)?.environment_postgres_user || "",
         postgresPassword: (row.custom_fields as any)?.environment_postgres_password || "",
+        screenshots: (row.custom_fields as any)?.environment_screenshots || [],
       },
       conversion: createStage<ConversionStageV2>('conversion'),
       implementation: createStage<ImplementationStageV2>('implementation'),
@@ -556,6 +557,7 @@ export function transformToDB(project: Partial<ProjectV2>, currentProject?: Proj
       const postgresHost = stages.environment.postgresHost;
       const postgresUser = stages.environment.postgresUser;
       const postgresPassword = stages.environment.postgresPassword;
+      const screenshots = stages.environment.screenshots;
 
       dbRow.custom_fields = {
         ...(currentCustomFields as any),
@@ -570,6 +572,7 @@ export function transformToDB(project: Partial<ProjectV2>, currentProject?: Proj
         ...(postgresHost !== undefined ? { environment_postgres_host: postgresHost } : {}),
         ...(postgresUser !== undefined ? { environment_postgres_user: postgresUser } : {}),
         ...(postgresPassword !== undefined ? { environment_postgres_password: postgresPassword } : {}),
+        ...(screenshots !== undefined ? { environment_screenshots: screenshots } : {}),
       };
     }
   }

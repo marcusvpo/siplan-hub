@@ -1,4 +1,5 @@
-import { LucideIcon, Check, Calendar, User, Sparkles, Rocket } from "lucide-react";
+import { LucideIcon, Check, Calendar, User, Sparkles, Rocket, ChevronDown, ChevronRight } from "lucide-react";
+import { useState } from "react";
 import {
   AccordionItem,
   AccordionTrigger,
@@ -51,6 +52,16 @@ interface StageCardProps {
   // Habilitam "Melhorar texto com IA" no campo unico de Observacoes (etapas 1-6).
   projectId?: string;
   requestedBy?: string;
+
+  // Conteudo renderizado logo abaixo de "Observacoes & Detalhes"
+  // (ex.: galeria de prints na etapa 4 - Preparacao de Ambiente).
+  afterObservations?: React.ReactNode;
+
+  // Titulo do bloco de campos especificos (children). Default: "Campos Específicos".
+  specificFieldsTitle?: string;
+
+  // Torna o bloco de campos especificos colapsavel (recolhido por padrao).
+  collapsibleSpecificFields?: boolean;
 }
 
 export function StageCard({
@@ -74,7 +85,11 @@ export function StageCard({
   observationsSlot,
   projectId,
   requestedBy,
+  afterObservations,
+  specificFieldsTitle = "Campos Específicos",
+  collapsibleSpecificFields = false,
 }: StageCardProps) {
+  const [specificOpen, setSpecificOpen] = useState(false);
   const getStatusColor = (s: StageStatus) => {
     switch (s) {
       case "done":
@@ -388,12 +403,31 @@ export function StageCard({
           <div className="relative">
             <div className="relative bg-slate-50/30 dark:bg-slate-950/20 p-4 rounded-lg border border-dashed border-slate-200 dark:border-slate-800 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="col-span-full mb-1">
-                <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                  <div className="h-1 w-4 bg-slate-400 dark:bg-slate-650 rounded-full" />
-                  Campos Específicos
-                </h4>
+                {collapsibleSpecificFields ? (
+                  <button
+                    type="button"
+                    onClick={() => setSpecificOpen((v) => !v)}
+                    className="flex items-center gap-1.5 group"
+                    title={specificOpen ? "Recolher" : "Expandir"}
+                  >
+                    {specificOpen ? (
+                      <ChevronDown className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
+                    ) : (
+                      <ChevronRight className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
+                    )}
+                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 flex items-center gap-1.5 cursor-pointer group-hover:text-foreground transition-colors">
+                      <div className="h-1 w-4 bg-slate-400 dark:bg-slate-650 rounded-full" />
+                      {specificFieldsTitle}
+                    </h4>
+                  </button>
+                ) : (
+                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                    <div className="h-1 w-4 bg-slate-400 dark:bg-slate-650 rounded-full" />
+                    {specificFieldsTitle}
+                  </h4>
+                )}
               </div>
-              {children}
+              {(!collapsibleSpecificFields || specificOpen) && children}
             </div>
           </div>
         )}
@@ -411,6 +445,8 @@ export function StageCard({
             requestedBy={requestedBy}
           />
         )}
+
+        {afterObservations}
       </AccordionContent>
     </AccordionItem>
   );
