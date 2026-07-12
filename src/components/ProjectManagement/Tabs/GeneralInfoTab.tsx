@@ -3,7 +3,6 @@ import { useProjectForm } from "@/hooks/useProjectForm";
 import { Badge } from "@/components/ui/badge";
 import {
   CheckCircle2,
-  FileText,
   Server,
   Database,
   RefreshCw,
@@ -13,10 +12,10 @@ import {
   FileEdit,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
-import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { ProjectHeaderForm } from "@/components/ProjectManagement/Forms/ProjectHeaderForm";
+import { ObservationsWithAI } from "@/components/ProjectManagement/Forms/ObservationsWithAI";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useAuth } from "@/hooks/useAuth";
 
 interface TabProps {
   project: ProjectV2;
@@ -28,6 +27,9 @@ export function GeneralInfoTab({ project, onUpdate, onStageClick }: TabProps) {
   // We use useProjectForm mainly for Autosave management of Notes here
   const { data, updateField, saveState } = useProjectForm(project, onUpdate);
   const { canEditProjects } = usePermissions();
+  const { user } = useAuth();
+  const currentUserName =
+    user?.user_metadata?.full_name || user?.email || "Usuário";
 
   const isOrionTN =
     project.systemType === "Orion TN" ||
@@ -88,48 +90,18 @@ export function GeneralInfoTab({ project, onUpdate, onStageClick }: TabProps) {
 
   const stages = [...baseStages, ...orionStages, ...endStages];
 
-  // Local state for editor content
-  const [editorContent, setEditorContent] = useState<string | object>(() => {
-    const blocks = data.notes?.blocks || [];
-    if (blocks.length === 0) return "";
-
-    // If single block with JSON content
-    if (blocks.length === 1 && blocks[0].type === "paragraph") {
-      try {
-        if (!blocks[0].content) return "";
-        const parsed = JSON.parse(blocks[0].content);
-        if (parsed.type === "doc" || parsed.root) return parsed;
-      } catch {
-        return "";
-      }
-    }
-    return "";
-  });
+  // Conteudo bruto (string Lexical) guardado no primeiro bloco de notes.
+  const notesContent = data.notes?.blocks?.[0]?.content || "";
 
   const updateEditorContent = (content: string) => {
-    setEditorContent(content);
-
-    let blocks: ContentBlock[] = [];
-    try {
-      const parsed = JSON.parse(content);
-      blocks = [
-        {
-          id: crypto.randomUUID(),
-          type: "paragraph",
-          content: content,
-          checked: false,
-        },
-      ];
-    } catch {
-      blocks = [
-        {
-          id: crypto.randomUUID(),
-          type: "paragraph",
-          content: content,
-          checked: false,
-        },
-      ];
-    }
+    const blocks: ContentBlock[] = [
+      {
+        id: crypto.randomUUID(),
+        type: "paragraph",
+        content: content,
+        checked: false,
+      },
+    ];
 
     const newNotes = {
       ...data.notes,
@@ -261,25 +233,17 @@ export function GeneralInfoTab({ project, onUpdate, onStageClick }: TabProps) {
       {/* 2. Dados do Projeto (Componente Extraído) */}
       <ProjectHeaderForm project={data} />
 
-      {/* 3. Observações Gerais (Rich Editor) */}
-      <div className="space-y-2 pt-2">
-        <div className="flex items-center gap-2">
-          <FileText className="h-4 w-4 text-muted-foreground" />
-          <h3 className="text-sm font-semibold text-muted-foreground">
-            Observações Gerais
-          </h3>
-        </div>
-
-        <div className="bg-white dark:bg-card rounded-xl border shadow-sm overflow-hidden">
-          <div className="p-3">
-            <RichTextEditor
-              content={editorContent}
-              onChange={updateEditorContent}
-              placeholder="Digite suas observações gerais aqui..."
-              editable={canEditProjects}
-            />
-          </div>
-        </div>
+      {/* 3. Observações Gerais (Rich Editor + Melhorar texto com IA) */}
+      <div className="pt-2">
+        <ObservationsWithAI
+          title="Observações Gerais"
+          placeholder="Digite suas observações gerais aqui..."
+          observations={notesContent}
+          onChange={updateEditorContent}
+          canEdit={canEditProjects}
+          projectId={data.id}
+          requestedBy={currentUserName}
+        />
       </div>
     </div>
   );
