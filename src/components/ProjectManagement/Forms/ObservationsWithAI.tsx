@@ -49,7 +49,9 @@ function getEditorContent(obs?: string): string | object {
 }
 
 interface ObservationsWithAIProps {
-  label: string;
+  label?: string; // usado no placeholder padrao ("Detalhes da etapa de {label}...")
+  title?: string; // rotulo do cabecalho (default "Observações & Detalhes")
+  placeholder?: string;
   observations?: string;
   onChange: (obs: string) => void;
   canEdit: boolean;
@@ -63,7 +65,9 @@ interface ObservationsWithAIProps {
  * O usuario revisa (manter/substituir) antes de o texto gerado ser aplicado.
  */
 export function ObservationsWithAI({
-  label,
+  label = "",
+  title = "Observações & Detalhes",
+  placeholder,
   observations,
   onChange,
   canEdit,
@@ -117,7 +121,7 @@ export function ObservationsWithAI({
         <div className="flex items-center gap-2">
           <div className="h-0.5 w-6 bg-slate-300 dark:bg-slate-700 rounded-full" />
           <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-            Observações & Detalhes
+            {title}
           </Label>
         </div>
         {canEdit && projectId && (
@@ -144,7 +148,7 @@ export function ObservationsWithAI({
           key={editorKey}
           content={getEditorContent(observations)}
           onChange={onChange}
-          placeholder={`Detalhes da etapa de ${label}...`}
+          placeholder={placeholder ?? `Detalhes da etapa de ${label}...`}
           editable={canEdit}
         />
       </div>
