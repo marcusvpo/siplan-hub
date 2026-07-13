@@ -1955,28 +1955,28 @@ function TransicaoPlaceholder() {
 
           {/* ③ Executive Summary */}
           <div className="no-print grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="flex items-center gap-3 bg-amber-500/10 border border-amber-500/20 rounded-xl p-3">
+            <div className="flex items-center gap-3 bg-amber-500/10 dark:bg-transparent border border-amber-500/20 dark:border-amber-500/40 rounded-xl p-3">
               <ListChecks className="h-5 w-5 text-amber-500 shrink-0" />
               <div>
                 <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">Pendências abertas</p>
                 <p className="text-xl font-black text-amber-600 dark:text-amber-400 leading-tight">{execSummary.openPending}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3">
+            <div className="flex items-center gap-3 bg-emerald-500/10 dark:bg-transparent border border-emerald-500/20 dark:border-emerald-500/40 rounded-xl p-3">
               <TrendingUp className="h-5 w-5 text-emerald-500 shrink-0" />
               <div>
                 <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">Ganhos registrados</p>
                 <p className="text-xl font-black text-emerald-600 dark:text-emerald-400 leading-tight">{execSummary.gains}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 bg-blue-500/10 border border-blue-500/20 rounded-xl p-3">
+            <div className="flex items-center gap-3 bg-blue-500/10 dark:bg-transparent border border-blue-500/20 dark:border-blue-500/40 rounded-xl p-3">
               <Lightbulb className="h-5 w-5 text-blue-500 shrink-0" />
               <div>
                 <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">Sugestões</p>
                 <p className="text-xl font-black text-blue-600 dark:text-blue-400 leading-tight">{execSummary.suggestions}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 bg-purple-500/10 border border-purple-500/20 rounded-xl p-3">
+            <div className="flex items-center gap-3 bg-purple-500/10 dark:bg-transparent border border-purple-500/20 dark:border-purple-500/40 rounded-xl p-3">
               <Users className="h-5 w-5 text-purple-500 shrink-0" />
               <div>
                 <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">Colaboradores</p>
@@ -3626,7 +3626,7 @@ function TransicaoPlaceholder() {
                           <p className="text-[10px] text-amber-500">Gerador da IA offline — a geração automática ficará indisponível até religar o worker.</p>
                         )}
                         {aiEditorKey > 0 && !aiRunning && (
-                          <div className="flex items-start gap-2 rounded-md border border-amber-400/40 bg-amber-400/10 px-3 py-2 text-[11px] text-amber-700 dark:text-amber-300">
+                          <div className="flex items-start gap-2 rounded-md border border-amber-400/40 bg-amber-400/10 dark:bg-transparent px-3 py-2 text-[11px] text-amber-700 dark:text-amber-300">
                             <Sparkles className="h-3.5 w-3.5 mt-0.5 shrink-0" />
                             <span>
                               <strong>Texto gerado por IA.</strong> É um rascunho a partir dos campos preenchidos — revise

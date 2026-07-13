@@ -66,7 +66,7 @@ export default function SystemStorage() {
             </div>
             <Progress value={storagePercentage} className="h-3" />
             {storagePercentage > 80 && (
-              <div className="flex items-center gap-2 text-amber-600 dark:text-amber-500 text-sm font-medium mt-2 bg-amber-50 dark:bg-amber-500/10 p-2 rounded-md">
+              <div className="flex items-center gap-2 text-amber-600 dark:text-amber-500 text-sm font-medium mt-2 bg-amber-50 dark:bg-transparent border border-transparent dark:border-amber-500/40 p-2 rounded-md">
                 <AlertTriangle className="h-4 w-4" />
                 Atenção: Consumo de storage próximo ao limite.
               </div>

@@ -143,9 +143,9 @@ export function IndividualProjectReport({
                   key={idx}
                   className={cn(
                     "flex gap-3 items-start p-3 rounded-lg transition-all hover:scale-[1.01] border",
-                    insight.type === "warning" ? "bg-red-500/5 border-red-500/20 shadow-[0_0_15px_-5px_rgba(239,68,68,0.1)]" : 
-                    insight.type === "positive" ? "bg-emerald-500/5 border-emerald-500/20 shadow-[0_0_15px_-5px_rgba(16,185,129,0.1)]" :
-                    insight.type === "info" ? "bg-blue-500/5 border-blue-500/20 shadow-[0_0_15px_-5px_rgba(59,130,246,0.1)]" :
+                    insight.type === "warning" ? "bg-red-500/5 dark:bg-transparent border-red-500/20 shadow-[0_0_15px_-5px_rgba(239,68,68,0.1)]" :
+                    insight.type === "positive" ? "bg-emerald-500/5 dark:bg-transparent border-emerald-500/20 shadow-[0_0_15px_-5px_rgba(16,185,129,0.1)]" :
+                    insight.type === "info" ? "bg-blue-500/5 dark:bg-transparent border-blue-500/20 shadow-[0_0_15px_-5px_rgba(59,130,246,0.1)]" :
                     "bg-muted/30 border-muted-foreground/10"
                   )}
                 >

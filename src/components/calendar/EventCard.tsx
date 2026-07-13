@@ -34,7 +34,7 @@ function getEventTypeStyles(type: CalendarEvent["type"], colorClass: string) {
     case "vacation":
       return {
         className:
-          "bg-red-500/15 border-2 border-dashed border-red-400 dark:border-red-500 text-red-700 dark:text-red-300 italic",
+          "bg-red-500/15 dark:bg-transparent border-2 border-dashed border-red-400 dark:border-red-500 text-red-700 dark:text-red-300 italic",
         backgroundStyle: {
           backgroundImage:
             "repeating-linear-gradient(135deg, transparent, transparent 3px, rgba(239,68,68,0.08) 3px, rgba(239,68,68,0.08) 6px)",

@@ -186,7 +186,7 @@ export function GlobalMetrics({ projects }: GlobalMetricsProps) {
             </DialogTitle>
           </DialogHeader>
           <div className="mt-6 space-y-6">
-             <div className="flex items-center justify-between p-6 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 relative overflow-hidden">
+             <div className="flex items-center justify-between p-6 rounded-2xl bg-emerald-500/5 dark:bg-transparent border border-emerald-500/10 dark:border-emerald-500/30 relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-4 opacity-5">
                    <CheckCircle2 className="h-20 w-20" />
                 </div>
@@ -274,7 +274,7 @@ export function GlobalMetrics({ projects }: GlobalMetricsProps) {
                     <AlertTriangle className="h-3 w-3" /> Projetos Bloqueados ({blockedProjects.length})
                   </h4>
                   {blockedProjects.map(p => (
-                    <div key={p.id} className="flex items-center justify-between p-3 rounded-lg bg-red-500/5 border border-red-500/10">
+                    <div key={p.id} className="flex items-center justify-between p-3 rounded-lg bg-red-500/5 dark:bg-transparent border border-red-500/10 dark:border-red-500/30">
                       <span className="text-[11px] font-black uppercase max-w-[300px] truncate">{p.clientName}</span>
                       <Badge variant="destructive" className="text-[8px] h-4 font-black uppercase tracking-tighter">Impedido</Badge>
                     </div>
@@ -287,7 +287,7 @@ export function GlobalMetrics({ projects }: GlobalMetricsProps) {
                   <TrendingUp className="h-3 w-3" /> Em Andamento ({inProgressProjects.length})
                 </h4>
                 {inProgressProjects.map(p => (
-                  <div key={p.id} className="flex items-center justify-between p-3 rounded-lg bg-blue-500/5 border border-blue-500/10">
+                  <div key={p.id} className="flex items-center justify-between p-3 rounded-lg bg-blue-500/5 dark:bg-transparent border border-blue-500/10 dark:border-blue-500/30">
                     <span className="text-[11px] font-black uppercase max-w-[300px] truncate">{p.clientName}</span>
                     <Badge variant="outline" className="text-[8px] h-4 font-black uppercase tracking-tighter border-blue-500/30 text-blue-600">Ativo</Badge>
                   </div>
