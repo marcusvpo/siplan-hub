@@ -134,15 +134,15 @@ export function EnvironmentStageForm({
             onChange={(e) => onUpdate({ osVersion: e.target.value })}
             disabled={!canEditProjects}
             placeholder={stage.osType === "Linux" ? "Ex: Ubuntu 22.04" : "Ex: Server 2022"}
-            className="h-9 border border-input bg-background text-foreground hover:bg-slate-50/50 dark:hover:bg-slate-900/50 focus-visible:ring-1 focus-visible:ring-ring font-medium text-xs flex-1 min-w-[150px]"
+            className="h-9 border border-input bg-background text-foreground hover:bg-muted/50 focus-visible:ring-1 focus-visible:ring-ring font-medium text-xs flex-1 min-w-[150px]"
           />
         </div>
       </div>
 
       {/* Acessos Remotos */}
-      <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-3.5 bg-slate-50/30 dark:bg-slate-900/10 space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
-          <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-350 flex items-center gap-1.5">
+      <div className="border border-border rounded-lg p-3.5 bg-muted/20 space-y-4">
+        <div className="flex items-center justify-between border-b border-border pb-2">
+          <h4 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
             <Server className="h-3.5 w-3.5 text-muted-foreground" />
             Dados do Servidor & Acessos Remotos
           </h4>
@@ -152,7 +152,7 @@ export function EnvironmentStageForm({
             disabled={!canEditProjects}
             variant="outline"
             size="sm"
-            className="h-6.5 text-[10px] gap-1 border-slate-200 dark:border-slate-800 text-foreground hover:bg-slate-100 dark:hover:bg-slate-900 font-bold bg-background"
+            className="h-6.5 text-[10px] gap-1 border-border text-foreground hover:bg-muted font-bold bg-background"
           >
             <Plus className="h-3 w-3" />
             Adicionar Acesso
@@ -235,7 +235,7 @@ export function EnvironmentStageForm({
         )}
 
         {/* Credentials OS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-200 dark:border-slate-800 pt-4 mt-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-border pt-4 mt-2">
           {/* OS Login */}
           <div className="space-y-1.5">
             <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
@@ -307,7 +307,7 @@ export function EnvironmentStageForm({
         </div>
 
         {/* PostgreSQL Database Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-200 dark:border-slate-800 pt-4 mt-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-border pt-4 mt-2">
           {/* Postgres Version */}
           <div className="space-y-1.5">
             <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
