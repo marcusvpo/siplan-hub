@@ -943,7 +943,7 @@ function RoadmapStatusBadge({
         </div>
 
         {/* Explanation Note */}
-        <div className="max-w-xs px-3 py-2 rounded-lg bg-orange-500/10 border border-orange-500/20 backdrop-blur-sm">
+        <div className="max-w-xs px-3 py-2 rounded-lg bg-orange-500/10 dark:bg-transparent border border-orange-500/20 dark:border-orange-500/40 backdrop-blur-sm">
           <p className="text-[10px] text-orange-200/80 leading-relaxed">
             <span className="font-semibold text-orange-300">
               O que significa?

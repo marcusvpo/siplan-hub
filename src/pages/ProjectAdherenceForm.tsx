@@ -395,7 +395,7 @@ export default function ProjectAdherenceForm() {
         <Button variant="ghost" onClick={() => navigate(`/projects/${projectId}`)} className="gap-2">
           <ArrowLeft className="h-4 w-4" /> Voltar para o Projeto
         </Button>
-        <Card className="border-amber-200 bg-amber-500/5">
+        <Card className="border-amber-200 dark:border-amber-500/40 bg-amber-500/5 dark:bg-transparent">
           <CardHeader>
             <CardTitle className="text-amber-800 flex items-center gap-2">
               <FileWarning className="h-5 w-5" /> Sem Template de Aderência

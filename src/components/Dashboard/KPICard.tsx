@@ -19,9 +19,9 @@ interface KPICardProps {
 export const KPICard = ({ title, value, unit, icon: Icon, variant = "default", trend, onClick }: KPICardProps) => {
   const variantStyles = {
     default: "border-border bg-card",
-    success: "border-green-500/30 bg-green-500/5",
-    warning: "border-yellow-500/30 bg-yellow-500/5",
-    critical: "border-red-500/30 bg-red-500/5",
+    success: "border-green-500/30 bg-green-500/5 dark:bg-transparent",
+    warning: "border-yellow-500/30 bg-yellow-500/5 dark:bg-transparent",
+    critical: "border-red-500/30 bg-red-500/5 dark:bg-transparent",
   };
 
   const iconColors = {

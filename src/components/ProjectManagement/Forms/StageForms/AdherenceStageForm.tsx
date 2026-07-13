@@ -79,7 +79,7 @@ export function AdherenceStageForm({
     <div className="col-span-1 md:col-span-2 lg:col-span-3 space-y-4">
       {/* 1. Dynamic template form link */}
       {!activeTemplate ? (
-        <div className="p-3 border border-amber-300/40 bg-amber-500/5 rounded-lg flex items-start gap-2">
+        <div className="p-3 border border-amber-300/40 bg-amber-500/5 dark:bg-transparent rounded-lg flex items-start gap-2">
           <FileWarning className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
           <div className="space-y-0.5">
             <h4 className="text-xs font-bold text-amber-600">Sem Template de Aderência</h4>

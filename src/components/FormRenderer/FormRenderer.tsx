@@ -832,7 +832,7 @@ const checkHasAdherenceQuestions = (uiSchema: Record<string, unknown> | undefine
 
 const ImpactedItemsList = ({ items }: { items: ImpactedItem[] }) => {
   return (
-    <div className="p-5 border-2 border-rose-200 bg-rose-500/5 dark:border-rose-900/50 dark:bg-rose-950/10 rounded-xl space-y-4 animate-in fade-in duration-200">
+    <div className="p-5 border-2 border-rose-200 bg-rose-500/5 dark:border-rose-900/50 dark:bg-transparent rounded-xl space-y-4 animate-in fade-in duration-200">
       <div className="flex items-center gap-2 border-b border-rose-200/50 dark:border-rose-900/30 pb-2.5">
         <AlertTriangle className="h-5 w-5 text-rose-500 shrink-0" />
         <h4 className="text-sm font-extrabold text-rose-800 dark:text-rose-400 uppercase tracking-wide">
@@ -885,7 +885,7 @@ const AdherenceImpactSummary = ({ schema, formData }: { schema: Record<string, u
   if (verdict === "Não Aderente / Impeditivo") {
     return (
       <div className="space-y-4 my-6">
-        <div className="p-4 border-2 border-dashed border-rose-500/30 bg-rose-500/5 rounded-xl flex items-start gap-3.5 animate-in fade-in duration-200">
+        <div className="p-4 border-2 border-dashed border-rose-500/30 bg-rose-500/5 dark:bg-transparent rounded-xl flex items-start gap-3.5 animate-in fade-in duration-200">
           <AlertTriangle className="h-5 w-5 text-rose-500 shrink-0 mt-0.5" />
           <div className="space-y-1">
             <h4 className="text-sm font-bold text-rose-800 dark:text-rose-400">Implantação Não Aderente / Impeditivo</h4>
@@ -902,7 +902,7 @@ const AdherenceImpactSummary = ({ schema, formData }: { schema: Record<string, u
   if (verdict === "Aderente com Restrições") {
     return (
       <div className="space-y-4 my-6">
-        <div className="p-4 border-2 border-dashed border-amber-500/30 bg-amber-500/5 rounded-xl flex items-start gap-3.5 animate-in fade-in duration-200">
+        <div className="p-4 border-2 border-dashed border-amber-500/30 bg-amber-500/5 dark:bg-transparent rounded-xl flex items-start gap-3.5 animate-in fade-in duration-200">
           <AlertCircle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
           <div className="space-y-1">
             <h4 className="text-sm font-bold text-amber-800 dark:text-amber-400">Implantação Aderente com Restrições</h4>
@@ -918,7 +918,7 @@ const AdherenceImpactSummary = ({ schema, formData }: { schema: Record<string, u
 
   if (impactedItems.length === 0) {
     return (
-      <div className="p-4 border-2 border-dashed border-emerald-500/30 bg-emerald-500/5 rounded-xl flex items-start gap-3.5 my-6 animate-in fade-in duration-200">
+      <div className="p-4 border-2 border-dashed border-emerald-500/30 bg-emerald-500/5 dark:bg-transparent rounded-xl flex items-start gap-3.5 my-6 animate-in fade-in duration-200">
         <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
         <div className="space-y-1">
           <h4 className="text-sm font-bold text-emerald-800 dark:text-emerald-400">Implantação 100% Aderente!</h4>
