@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { format, differenceInDays, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { ChartEmptyState } from "./ChartEmptyState";
 
 interface TimelineChartProps {
   projects: ProjectV2[];
@@ -15,6 +16,23 @@ export const TimelineChart = ({ projects }: TimelineChartProps) => {
   const endDate = endOfMonth(addDays(today, 30)); // Show next 30 days roughly
   const days = eachDayOfInterval({ start: startDate, end: endDate });
 
+  const visibleProjects = projects
+    .filter((p) => {
+      if (p.globalStatus === "archived") return false;
+      const stages = Object.entries(p.stages);
+      const currentStage = stages.find(([_, stage]) => stage.status === "in-progress")?.[0];
+      return currentStage === "implementation" || currentStage === "post";
+    })
+    .sort((a, b) => {
+      const dateA = a.startDateActual || a.createdAt;
+      const dateB = b.startDateActual || b.createdAt;
+      return (
+        Math.abs(differenceInDays(new Date(dateA), today)) -
+        Math.abs(differenceInDays(new Date(dateB), today))
+      );
+    })
+    .slice(0, 25);
+
   return (
     <Card className="col-span-1 lg:col-span-2 shadow-sm border-muted/20">
       <CardHeader className="py-3 px-4 border-b bg-muted/5">
@@ -24,6 +42,13 @@ export const TimelineChart = ({ projects }: TimelineChartProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
+        {visibleProjects.length === 0 ? (
+          <ChartEmptyState
+            className="h-[320px]"
+            message="Nenhum projeto na timeline"
+            hint="Projetos em Implantação ou Pós-Implantação nos próximos 30 dias aparecem aqui."
+          />
+        ) : (
         <ScrollArea className="h-[320px] w-full">
           <div className="min-w-[1200px] p-4">
             {/* Header */}
@@ -59,23 +84,7 @@ export const TimelineChart = ({ projects }: TimelineChartProps) => {
                 ))}
               </div>
 
-              {projects
-                .filter(p => {
-                  if (p.globalStatus === 'archived') return false;
-                  
-                  // Encontrar a etapa que está "in-progress"
-                  const stages = Object.entries(p.stages);
-                  const currentStage = stages.find(([_, stage]) => stage.status === "in-progress")?.[0];
-                  
-                  // Mostrar apenas se for implantação ou pós
-                  return currentStage === 'implementation' || currentStage === 'post';
-                })
-                .sort((a, b) => {
-                  const dateA = a.startDateActual || a.createdAt;
-                  const dateB = b.startDateActual || b.createdAt;
-                  return Math.abs(differenceInDays(new Date(dateA), today)) - Math.abs(differenceInDays(new Date(dateB), today));
-                })
-                .slice(0, 25)
+              {visibleProjects
                 .map((project) => {
                 const sDate = project.startDateActual || project.createdAt;
                 const eDate = project.endDateActual || addDays(new Date(sDate), 14); // 14 days estimate
@@ -126,6 +135,7 @@ export const TimelineChart = ({ projects }: TimelineChartProps) => {
             </div>
           </div>
         </ScrollArea>
+        )}
       </CardContent>
     </Card>
   );

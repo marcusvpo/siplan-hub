@@ -14,6 +14,7 @@ import {
   Cell,
 } from "recharts";
 import { ProjectV2 } from "@/types/ProjectV2";
+import { ChartEmptyState } from "./ChartEmptyState";
 
 interface WorkloadChartProps {
   projects: ProjectV2[];
@@ -49,6 +50,13 @@ export const WorkloadChart = ({ projects }: WorkloadChartProps) => {
         <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Projetos por Líder</CardTitle>
       </CardHeader>
       <CardContent className="p-2 h-[calc(100%-40px)]">
+        {data.length === 0 ? (
+          <ChartEmptyState
+            className="h-full"
+            message="Nenhum projeto atribuído"
+            hint="A distribuição por líder aparece quando houver projetos."
+          />
+        ) : (
         <ChartContainer
           config={chartConfig}
           className="h-full w-full"
@@ -79,6 +87,7 @@ export const WorkloadChart = ({ projects }: WorkloadChartProps) => {
             </BarChart>
           </ResponsiveContainer>
         </ChartContainer>
+        )}
       </CardContent>
     </Card>
   );
