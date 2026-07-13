@@ -13,6 +13,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { ProjectV2 } from "@/types/ProjectV2";
+import { ChartEmptyState } from "./ChartEmptyState";
 
 interface StatusChartProps {
   projects: ProjectV2[];
@@ -75,6 +76,13 @@ export const StatusChart = ({ projects }: StatusChartProps) => {
         <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Status Geral</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
+        {data.every((d) => d.value === 0) ? (
+          <ChartEmptyState
+            className="h-[230px]"
+            message="Nenhum projeto ainda"
+            hint="Os status aparecem aqui quando houver projetos cadastrados."
+          />
+        ) : (
         <ChartContainer
           config={chartConfig}
           className="h-[230px] w-full"
@@ -103,6 +111,7 @@ export const StatusChart = ({ projects }: StatusChartProps) => {
             </BarChart>
           </ResponsiveContainer>
         </ChartContainer>
+        )}
       </CardContent>
     </Card>
   );

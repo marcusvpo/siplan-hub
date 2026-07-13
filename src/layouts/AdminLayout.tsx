@@ -126,7 +126,11 @@ export default function AdminLayout() {
                   location.pathname.startsWith(item.href));
 
               return (
-                <Link key={item.href} to={item.href}>
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  aria-current={isActive ? "page" : undefined}
+                >
                   <Button
                     variant={isActive ? "secondary" : "ghost"}
                     className={cn(
@@ -202,6 +206,7 @@ export default function AdminLayout() {
       {/* Overlay for mobile sidebar */}
       {sidebarOpen && (
         <div
+          aria-hidden="true"
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />

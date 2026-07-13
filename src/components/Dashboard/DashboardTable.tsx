@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { HealthBadge } from "./HealthBadge";
 import { PipelineStatus } from "./PipelineStatus";
+import { ChartEmptyState } from "./ChartEmptyState";
 import { Eye, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { format, isPast } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -36,6 +37,15 @@ export const DashboardTable = ({ onProjectClick }: DashboardTableProps) => {
       <div className="flex items-center justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
+    );
+  }
+
+  if (projects.length === 0) {
+    return (
+      <ChartEmptyState
+        message="Nenhum projeto cadastrado"
+        hint="Os projetos aparecem aqui assim que forem criados."
+      />
     );
   }
 

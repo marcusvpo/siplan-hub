@@ -6,6 +6,7 @@ import {
 } from "@/components/ui/chart";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from "recharts";
 import { ProjectV2 } from "@/types/ProjectV2";
+import { ChartEmptyState } from "./ChartEmptyState";
 
 interface ProjectDistributionChartProps {
   projects: ProjectV2[];
@@ -82,6 +83,13 @@ export const ProjectDistributionChart = ({
         <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Etapa Atual</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
+        {data.length === 0 ? (
+          <ChartEmptyState
+            className="h-[230px]"
+            message="Nenhum projeto em andamento"
+            hint="A distribuição por etapa aparece quando houver projetos ativos."
+          />
+        ) : (
         <ChartContainer
           config={chartConfig}
           className="h-[230px] w-full"
@@ -118,6 +126,7 @@ export const ProjectDistributionChart = ({
             </PieChart>
           </ResponsiveContainer>
         </ChartContainer>
+        )}
       </CardContent>
     </Card>
   );
