@@ -66,11 +66,11 @@ export function FloatingCopilot() {
       <Button
         onClick={() => setOpen(true)}
         size="icon"
-        className="fixed bottom-6 right-6 z-40 h-14 w-14 rounded-full shadow-lg shadow-primary/30 hover:scale-105 transition-transform"
+        className="fixed bottom-6 right-6 z-40 h-9 w-9 rounded-full shadow-lg shadow-primary/30 hover:scale-105 transition-transform"
         title="Copiloto Operacional"
         aria-label="Abrir Copiloto"
       >
-        <Sparkles className="h-6 w-6" />
+        <Sparkles className="h-4 w-4" />
       </Button>
 
       <Sheet open={open} onOpenChange={setOpen}>
