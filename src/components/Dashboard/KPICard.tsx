@@ -62,11 +62,19 @@ export const KPICard = ({ title, value, unit, icon: Icon, variant = "default", t
                   trend.direction === "down" && "text-red-600",
                   trend.direction === "stable" && "text-muted-foreground"
                 )}
+                aria-label={cn(
+                  trend.direction === "up" && "Tendência de alta",
+                  trend.direction === "down" && "Tendência de queda",
+                  trend.direction === "stable" && "Tendência estável",
+                  `${Math.abs(trend.value)}%`
+                )}
               >
-                {trend.direction === "up" && "↑"}
-                {trend.direction === "down" && "↓"}
-                {trend.direction === "stable" && "→"}
-                <span>{Math.abs(trend.value)}%</span>
+                <span aria-hidden="true">
+                  {trend.direction === "up" && "↑"}
+                  {trend.direction === "down" && "↓"}
+                  {trend.direction === "stable" && "→"}
+                </span>
+                <span aria-hidden="true">{Math.abs(trend.value)}%</span>
               </div>
             )}
           </div>
