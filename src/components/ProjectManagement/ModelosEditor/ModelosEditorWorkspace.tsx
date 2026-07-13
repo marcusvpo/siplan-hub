@@ -604,7 +604,7 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
             case 'cancelled':
                 return (
                     <button type="button" onClick={open} title="Geração cancelada"
-                        className={cn(base, "bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-800/60 dark:text-slate-400 dark:hover:bg-slate-700/60")}>
+                        className={cn(base, "bg-neutral-100 text-neutral-500 hover:bg-neutral-200 dark:bg-neutral-800/60 dark:text-neutral-400 dark:hover:bg-neutral-700/60")}>
                         <AlertCircle className="h-2.5 w-2.5" /> Cancelado
                     </button>
                 );
@@ -662,7 +662,7 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
             onMouseEnter={() => hasPair && setHoveredPairKey(pairKey)}
             onMouseLeave={() => setHoveredPairKey(null)}
             className={cn(
-                "flex items-center justify-between p-1.5 rounded bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800 text-xs transition-all duration-300 shadow-sm hover:shadow-md hover:border-border",
+                "flex items-center justify-between p-1.5 rounded bg-white dark:bg-neutral-900 border border-border/50 dark:border-neutral-800 text-xs transition-all duration-300 shadow-sm hover:shadow-md hover:border-border",
                 file.isDone && "bg-muted border-border",
                 isHighlighted && "ring-2 ring-primary bg-primary/10 border-primary shadow-md scale-[1.01]"
             )}>
@@ -740,7 +740,7 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
         const collapseKey = `${type}::${label}`;
         const isCollapsed = !expandedCats.has(collapseKey);
         return (
-            <div key={label} className="rounded-md border border-border/60 bg-card/50 dark:bg-slate-900/40 p-2 space-y-1.5">
+            <div key={label} className="rounded-md border border-border/60 bg-card/50 dark:bg-neutral-900/40 p-2 space-y-1.5">
                 <div className="flex items-center justify-between gap-2">
                     <button
                         type="button"
@@ -825,7 +825,7 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
         const actualDone = stage.sentFiles.filter(f => f.isDone).length;
 
         return (
-            <div className="w-full space-y-1.5 bg-card/50 dark:bg-slate-900/50 p-3 rounded-lg border border-border">
+            <div className="w-full space-y-1.5 bg-card/50 dark:bg-neutral-900/50 p-3 rounded-lg border border-border">
                 <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                     <span className="flex items-center gap-1.5">
                         <CheckCircle2 className="h-3.5 w-3.5" />
@@ -868,7 +868,7 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
 
                 {/* Barra de abas */}
                 <div className="flex items-center justify-between gap-2 shrink-0">
-                    <div className="flex items-center gap-1 p-1 rounded-lg bg-muted/60 dark:bg-slate-900/60 border border-border/60">
+                    <div className="flex items-center gap-1 p-1 rounded-lg bg-muted/60 dark:bg-neutral-900/60 border border-border/60">
                         <button
                             type="button"
                             onClick={(e) => { e.preventDefault(); setActiveTab('sent'); }}
@@ -1013,7 +1013,7 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                             {progressJob?.status === 'pending' && <Clock className="h-4 w-4 text-amber-500" />}
                             {progressJob?.status === 'done' && <CheckCircle2 className="h-4 w-4 text-emerald-500" />}
                             {progressJob?.status === 'error' && <AlertCircle className="h-4 w-4 text-red-500" />}
-                            {progressJob?.status === 'cancelled' && <Ban className="h-4 w-4 text-slate-400" />}
+                            {progressJob?.status === 'cancelled' && <Ban className="h-4 w-4 text-neutral-400" />}
                             Andamento da geração
                         </DialogTitle>
                         <DialogDescription className="truncate">
@@ -1100,7 +1100,7 @@ function ProgressBody({ job, workerOnline, queuePosition, onCancel }: {
                     : job.status === 'done'
                         ? "border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/60 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300"
                         : job.status === 'cancelled'
-                            ? "border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 text-slate-600 dark:text-slate-400"
+                            ? "border-neutral-200 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-900/40 text-neutral-600 dark:text-neutral-400"
                             : "border-indigo-200 dark:border-indigo-900/50 bg-indigo-50/60 dark:bg-indigo-950/20 text-indigo-700 dark:text-indigo-300"
             )}>
                 {job.status === 'processing' && <Loader2 className="h-3.5 w-3.5 mt-0.5 shrink-0 animate-spin" />}
@@ -1131,7 +1131,7 @@ function ProgressBody({ job, workerOnline, queuePosition, onCancel }: {
             {log.length > 0 ? (
                 <div
                     ref={scrollRef}
-                    className="flex-1 min-h-0 max-h-[60vh] overflow-y-auto overflow-x-hidden rounded-md border border-border/60 bg-slate-50 dark:bg-slate-900/60 p-2 space-y-1 font-mono text-[10px] leading-relaxed scrollbar-thin"
+                    className="flex-1 min-h-0 max-h-[60vh] overflow-y-auto overflow-x-hidden rounded-md border border-border/60 bg-neutral-50 dark:bg-neutral-900/60 p-2 space-y-1 font-mono text-[10px] leading-relaxed scrollbar-thin"
                 >
                     {log.map((s, i) => (
                         <div key={i} className="flex gap-2">
