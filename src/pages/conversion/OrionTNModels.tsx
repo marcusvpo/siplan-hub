@@ -72,10 +72,10 @@ export default function OrionTNModels() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] overflow-hidden bg-slate-50 dark:bg-slate-950/50">
+    <div className="flex h-[calc(100vh-4rem)] overflow-hidden bg-neutral-50 dark:bg-neutral-950/50">
       {/* Sidebar de Projetos */}
       <div className={cn(
-        "w-80 border-r bg-white dark:bg-slate-900 flex flex-col shrink-0 transition-all duration-300 ease-in-out overflow-hidden",
+        "w-80 border-r bg-white dark:bg-neutral-900 flex flex-col shrink-0 transition-all duration-300 ease-in-out overflow-hidden",
         !isSidebarOpen && "w-0 border-r-0 opacity-0 pointer-events-none"
       )}>
         <div className="p-3 border-b space-y-2.5">
@@ -130,7 +130,7 @@ export default function OrionTNModels() {
                       "w-full text-left px-2 py-1.5 rounded transition-all duration-200 flex items-center justify-between gap-1",
                       isSelected
                         ? "bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/50"
-                        : "hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-400 border border-transparent"
+                        : "hover:bg-neutral-50 dark:hover:bg-neutral-800/50 text-neutral-600 dark:text-neutral-400 border border-transparent"
                     )}
                   >
                     <div className="flex-1 min-w-0 overflow-hidden">
@@ -158,7 +158,7 @@ export default function OrionTNModels() {
 
       {/* Área Principal */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-12 border-b bg-white dark:bg-slate-900 flex items-center px-4 shrink-0">
+        <header className="h-12 border-b bg-white dark:bg-neutral-900 flex items-center px-4 shrink-0">
           <div className="flex items-center gap-2.5 min-w-0 flex-1">
             {!isSidebarOpen && (
               <Button
@@ -197,11 +197,11 @@ export default function OrionTNModels() {
             </div>
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-center p-4 space-y-3">
-              <div className="bg-white dark:bg-slate-900 p-6 rounded-full border border-dashed border-slate-200 dark:border-slate-800 mb-1">
-                <Layout className="h-10 w-10 text-slate-300 dark:text-slate-700" />
+              <div className="bg-white dark:bg-neutral-900 p-6 rounded-full border border-dashed border-neutral-200 dark:border-neutral-800 mb-1">
+                <Layout className="h-10 w-10 text-neutral-300 dark:text-neutral-700" />
               </div>
               <div className="max-w-xs">
-                <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">Nenhum projeto selecionado</h3>
+                <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">Nenhum projeto selecionado</h3>
                 <p className="text-xs text-muted-foreground mt-1.5">
                   Escolha um projeto na barra lateral para começar a configurar os modelos e visualizar o progresso.
                 </p>
