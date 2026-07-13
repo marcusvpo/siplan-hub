@@ -3861,7 +3861,7 @@ function TransicaoPlaceholder() {
                     <div className="border-2 border-black p-5 space-y-5">
                       {/* Document Header */}
                       <div className="text-center border-b-2 border-black pb-4">
-                        <h2 className="text-xl font-bold tracking-tight uppercase">Documento de Transição de Conhecimento</h2>
+                        <h2 className="text-xl font-bold tracking-tight uppercase text-gray-900">Documento de Transição de Conhecimento</h2>
                         <h3 className="text-base font-semibold text-gray-700">Implantação / Service Desk</h3>
                         {localDtc.supportCallNumber && (
                           <p className="text-xs font-bold text-gray-600 mt-1">Chamado de Origem: {localDtc.supportCallNumber}</p>
