@@ -43,8 +43,8 @@ export function ProjectHeaderForm({ project }: ProjectHeaderFormProps) {
                <div className="bg-card hover:bg-accent/50 transition-colors rounded-xl border shadow-sm p-2.5 space-y-1 group">
                   <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider group-hover:text-primary transition-colors">Líder</p>
                   <div className="flex items-center gap-2.5">
-                     <div className="h-7 w-7 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center overflow-hidden shadow-inner">
-                        <User className="h-3.5 w-3.5 text-slate-600" />
+                     <div className="h-7 w-7 rounded-full bg-gradient-to-br from-neutral-200 to-neutral-300 flex items-center justify-center overflow-hidden shadow-inner">
+                        <User className="h-3.5 w-3.5 text-neutral-600" />
                      </div>
                      <p className="font-bold text-sm truncate">{project.projectLeader}</p>
                   </div>

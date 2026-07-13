@@ -79,7 +79,7 @@ function SortableThumb({
       {...attributes}
       {...listeners}
       className={cn(
-        "group relative rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden bg-slate-100 dark:bg-slate-900 aspect-video touch-none",
+        "group relative rounded-lg border border-neutral-200 dark:border-neutral-800 overflow-hidden bg-neutral-100 dark:bg-neutral-900 aspect-video touch-none",
         canEdit && "cursor-grab active:cursor-grabbing"
       )}
     >
@@ -269,7 +269,7 @@ export function EnvironmentScreenshots({
           ) : (
             <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
           )}
-          <div className="h-0.5 w-6 bg-slate-300 dark:bg-slate-700 rounded-full" />
+          <div className="h-0.5 w-6 bg-neutral-300 dark:bg-neutral-700 rounded-full" />
           <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5 cursor-pointer group-hover:text-foreground transition-colors">
             <ImageIcon className="h-3 w-3 text-indigo-500" />
             Galeria de Imagens
@@ -322,7 +322,7 @@ export function EnvironmentScreenshots({
           </p>
 
           {!hasShots ? (
-            <div className="rounded-lg border border-dashed border-slate-200 dark:border-slate-800 py-6 text-center text-[11px] text-muted-foreground italic bg-slate-50/30 dark:bg-slate-950/10">
+            <div className="rounded-lg border border-dashed border-neutral-200 dark:border-neutral-800 py-6 text-center text-[11px] text-muted-foreground italic bg-neutral-50/30 dark:bg-neutral-950/10">
               {canUpload
                 ? "Nenhum print anexado. Arraste imagens para cá."
                 : "Nenhum print anexado."}

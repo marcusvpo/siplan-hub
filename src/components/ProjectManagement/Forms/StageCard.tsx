@@ -101,7 +101,7 @@ export function StageCard({
       case "waiting_adjustment":
         return "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-orange-200/50 dark:shadow-black/40";
       default:
-        return "bg-gradient-to-r from-slate-400 to-slate-500 text-white dark:shadow-black/40";
+        return "bg-gradient-to-r from-neutral-400 to-neutral-500 text-white dark:shadow-black/40";
     }
   };
 
@@ -116,7 +116,7 @@ export function StageCard({
       case "waiting_adjustment":
         return "border-l-orange-500";
       default:
-        return "border-l-slate-300";
+        return "border-l-neutral-300";
     }
   };
 
@@ -131,14 +131,14 @@ export function StageCard({
       case "waiting_adjustment":
         return "bg-gradient-to-br from-orange-100 to-red-200 text-orange-700 ring-2 ring-orange-300 dark:from-orange-950/40 dark:to-red-900/40 dark:text-orange-400 dark:ring-orange-800/50";
       default:
-        return "bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600 dark:from-slate-800/40 dark:to-slate-700/40 dark:text-slate-400 dark:ring-slate-800/50";
+        return "bg-gradient-to-br from-neutral-100 to-neutral-200 text-neutral-600 dark:from-neutral-800/40 dark:to-neutral-700/40 dark:text-neutral-400 dark:ring-neutral-800/50";
     }
   };
 
   const statusOptions =
     id === "adherence" || id === "conversion"
       ? [
-        { value: "todo", label: "Não Iniciado", color: "text-slate-600 dark:text-slate-300" },
+        { value: "todo", label: "Não Iniciado", color: "text-neutral-600 dark:text-neutral-300" },
         {
           value: "in-progress",
           label: id === "adherence" ? "Em Análise" : "Em Andamento",
@@ -165,7 +165,7 @@ export function StageCard({
           : []),
       ]
       : [
-        { value: "todo", label: "Não Iniciado", color: "text-slate-600 dark:text-slate-300" },
+        { value: "todo", label: "Não Iniciado", color: "text-neutral-600 dark:text-neutral-300" },
         {
           value: "in-progress",
           label: "Em Andamento",
@@ -274,7 +274,7 @@ export function StageCard({
           {/* Status Field */}
           <div className="space-y-1.5">
             <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-              <div className="h-1.5 w-1.5 rounded-full bg-slate-400 dark:bg-slate-650" />
+              <div className="h-1.5 w-1.5 rounded-full bg-neutral-400 dark:bg-neutral-650" />
               Status
             </Label>
             <Select
@@ -283,7 +283,7 @@ export function StageCard({
               disabled={!canEditProjects}
             >
               <SelectTrigger
-                className="h-9 border border-input bg-background text-xs font-medium text-foreground hover:bg-slate-50/50 dark:hover:bg-slate-900/50 transition-all duration-200"
+                className="h-9 border border-input bg-background text-xs font-medium text-foreground hover:bg-neutral-50/50 dark:hover:bg-neutral-900/50 transition-all duration-200"
               >
                 <SelectValue />
               </SelectTrigger>
@@ -302,7 +302,7 @@ export function StageCard({
                           opt.value === "in-progress" && "bg-blue-500",
                           opt.value === "blocked" && "bg-amber-500",
                           opt.value === "waiting_adjustment" && "bg-orange-500",
-                          opt.value === "todo" && "bg-slate-400",
+                          opt.value === "todo" && "bg-neutral-400",
                         )}
                       />
                       {opt.label}
@@ -324,7 +324,7 @@ export function StageCard({
                 value={responsible}
                 onChange={(v) => onUpdate({ responsible: v })}
                 disabled={!canEditProjects}
-                className="h-9 border border-input bg-background text-foreground hover:bg-slate-50/50 dark:hover:bg-slate-900/50 focus-visible:ring-1 focus-visible:ring-ring text-xs"
+                className="h-9 border border-input bg-background text-foreground hover:bg-neutral-50/50 dark:hover:bg-neutral-900/50 focus-visible:ring-1 focus-visible:ring-ring text-xs"
               />
             </div>
           )}
@@ -362,7 +362,7 @@ export function StageCard({
                   })
                 }
                 disabled={!canEditProjects}
-                className="h-9 border border-input bg-background text-foreground hover:bg-slate-50/50 dark:hover:bg-slate-900/50 focus-visible:ring-1 focus-visible:ring-ring font-medium text-xs"
+                className="h-9 border border-input bg-background text-foreground hover:bg-neutral-50/50 dark:hover:bg-neutral-900/50 focus-visible:ring-1 focus-visible:ring-ring font-medium text-xs"
               />
             </div>
           )}
@@ -391,7 +391,7 @@ export function StageCard({
                   })
                 }
                 disabled={!canEditProjects}
-                className="h-9 border border-input bg-background text-foreground hover:bg-slate-50/50 dark:hover:bg-slate-900/50 focus-visible:ring-1 focus-visible:ring-ring font-medium text-xs"
+                className="h-9 border border-input bg-background text-foreground hover:bg-neutral-50/50 dark:hover:bg-neutral-900/50 focus-visible:ring-1 focus-visible:ring-ring font-medium text-xs"
               />
             </div>
           )}
@@ -401,7 +401,7 @@ export function StageCard({
         {/* Specific Fields (Children) */}
         {children && (
           <div className="relative">
-            <div className="relative bg-slate-50/30 dark:bg-slate-950/20 p-4 rounded-lg border border-dashed border-slate-200 dark:border-slate-800 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="relative bg-neutral-50/30 dark:bg-neutral-950/20 p-4 rounded-lg border border-dashed border-neutral-200 dark:border-neutral-800 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="col-span-full mb-1">
                 {collapsibleSpecificFields ? (
                   <button
@@ -413,18 +413,18 @@ export function StageCard({
                     aria-expanded={specificOpen}
                   >
                     {specificOpen ? (
-                      <ChevronDown className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
+                      <ChevronDown className="h-3.5 w-3.5 text-neutral-500 dark:text-neutral-400" />
                     ) : (
-                      <ChevronRight className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
+                      <ChevronRight className="h-3.5 w-3.5 text-neutral-500 dark:text-neutral-400" />
                     )}
-                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 flex items-center gap-1.5 cursor-pointer group-hover:text-foreground transition-colors">
-                      <div className="h-1 w-4 bg-slate-400 dark:bg-slate-650 rounded-full" />
+                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5 cursor-pointer group-hover:text-foreground transition-colors">
+                      <div className="h-1 w-4 bg-neutral-400 dark:bg-neutral-650 rounded-full" />
                       {specificFieldsTitle}
                     </h4>
                   </button>
                 ) : (
-                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                    <div className="h-1 w-4 bg-slate-400 dark:bg-slate-650 rounded-full" />
+                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5">
+                    <div className="h-1 w-4 bg-neutral-400 dark:bg-neutral-650 rounded-full" />
                     {specificFieldsTitle}
                   </h4>
                 )}

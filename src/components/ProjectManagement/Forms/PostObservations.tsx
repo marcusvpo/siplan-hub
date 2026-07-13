@@ -473,9 +473,9 @@ export function PostObservations({
             return (
               <div
                 key={`${block.id}:${block.editorKey}`}
-                className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/10 dark:bg-slate-950/5"
+                className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/10 dark:bg-neutral-950/5"
               >
-                <div className="flex items-center justify-between gap-2 px-2.5 py-1.5 border-b border-slate-100 dark:border-slate-800/60">
+                <div className="flex items-center justify-between gap-2 px-2.5 py-1.5 border-b border-neutral-100 dark:border-neutral-800/60">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                     Bloco {idx + 1}
                   </span>
@@ -617,7 +617,7 @@ export function PostObservations({
               pelo texto abaixo.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="max-h-[45vh] overflow-y-auto rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 p-3 text-sm whitespace-pre-wrap">
+          <div className="max-h-[45vh] overflow-y-auto rounded-md border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950/40 p-3 text-sm whitespace-pre-wrap">
             {pending?.generated}
           </div>
           <AlertDialogFooter>

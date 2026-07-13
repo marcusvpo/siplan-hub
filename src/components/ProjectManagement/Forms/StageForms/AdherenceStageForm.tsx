@@ -125,7 +125,7 @@ export function AdherenceStageForm({
                       : response.data?.finalVerdict === "Aderente com Restrições"
                       ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
                       : "bg-rose-500/10 text-rose-600 border-rose-500/20")
-                    : "bg-slate-500/10 text-slate-600 border-slate-500/20"
+                    : "bg-neutral-500/10 text-neutral-600 border-neutral-500/20"
                 }`}>
                   {isFinalized 
                     ? (response.data?.finalVerdict || "Finalizado") 
@@ -144,7 +144,7 @@ export function AdherenceStageForm({
       )}
 
       <div className="border-t pt-3 space-y-2.5">
-        <div className="flex items-center space-x-2 p-2 bg-slate-50/50 dark:bg-slate-900/30 rounded-lg border border-slate-200 dark:border-slate-800">
+        <div className="flex items-center space-x-2 p-2 bg-neutral-50/50 dark:bg-neutral-900/30 rounded-lg border border-neutral-200 dark:border-neutral-800">
           <Checkbox
             id="has-gap"
             checked={stage.hasProductGap || false}
@@ -152,18 +152,18 @@ export function AdherenceStageForm({
               onUpdate({ hasProductGap: checked === true })
             }
             disabled={!canEditProjects || isFinalized}
-            className="border-slate-350 dark:border-slate-700 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+            className="border-neutral-350 dark:border-neutral-700 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
           />
           <Label
             htmlFor="has-gap"
-            className="text-slate-700 dark:text-slate-300 font-bold cursor-pointer text-[10px] uppercase tracking-wider flex items-center gap-1.5"
+            className="text-neutral-700 dark:text-neutral-300 font-bold cursor-pointer text-[10px] uppercase tracking-wider flex items-center gap-1.5"
           >
             <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
             Existe Gap de Produto?
           </Label>
         </div>
         {stage.hasProductGap && (
-          <div className="bg-slate-50/30 dark:bg-slate-950/10 p-3 rounded-lg space-y-2 border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div className="bg-neutral-50/30 dark:bg-neutral-950/10 p-3 rounded-lg space-y-2 border border-neutral-200 dark:border-neutral-800 shadow-sm">
             <div className="space-y-1.5">
               <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
                 <div className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
@@ -173,7 +173,7 @@ export function AdherenceStageForm({
                 value={stage.gapDescription || ""}
                 onChange={(e) => onUpdate({ gapDescription: e.target.value })}
                 disabled={!canEditProjects || isFinalized}
-                className="min-h-[70px] border border-input bg-background text-foreground hover:bg-slate-50/50 dark:hover:bg-slate-900/50 focus-visible:ring-1 focus-visible:ring-ring text-xs py-1.5"
+                className="min-h-[70px] border border-input bg-background text-foreground hover:bg-neutral-50/50 dark:hover:bg-neutral-900/50 focus-visible:ring-1 focus-visible:ring-ring text-xs py-1.5"
                 placeholder="Descreva detalhadamente o gap identificado..."
               />
             </div>

@@ -154,7 +154,7 @@ function EditableCell({ value, onChange, placeholder, disabled, className }: Edi
     <div
       onClick={() => setIsEditing(true)}
       className={cn(
-        "text-[10.5px] px-1.5 py-1 break-all cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 rounded min-h-7 flex items-center transition-colors w-full whitespace-pre-wrap leading-tight",
+        "text-[10.5px] px-1.5 py-1 break-all cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded min-h-7 flex items-center transition-colors w-full whitespace-pre-wrap leading-tight",
         !value && "text-muted-foreground/30 italic",
         className
       )}
@@ -1192,7 +1192,7 @@ export function InfraStageForm({
                   });
                 }}
                 disabled={stage.publicLinkClosed === true}
-                className="font-bold border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900/50 shadow-sm h-8 text-xs"
+                className="font-bold border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900/50 shadow-sm h-8 text-xs"
               >
                 <Share2 className="mr-1.5 h-3.5 w-3.5" />
                 Copiar Link Público
@@ -1215,8 +1215,8 @@ export function InfraStageForm({
                 }}
                 disabled={!canEditProjects}
                 className={cn(
-                  "font-bold border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900/50 shadow-sm h-8 text-xs",
-                  stage.publicLinkClosed && "border-slate-200 text-slate-500 bg-slate-50/50 hover:bg-slate-100/50 dark:border-slate-800 dark:text-slate-400 dark:bg-slate-900/30"
+                  "font-bold border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900/50 shadow-sm h-8 text-xs",
+                  stage.publicLinkClosed && "border-neutral-200 text-neutral-500 bg-neutral-50/50 hover:bg-neutral-100/50 dark:border-neutral-800 dark:text-neutral-400 dark:bg-neutral-900/30"
                 )}
               >
                 {stage.publicLinkClosed ? (
@@ -1237,7 +1237,7 @@ export function InfraStageForm({
                 variant="outline"
                 size="sm"
                 onClick={handleGenerateAnalyticalReport}
-                className="font-bold border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900/50 shadow-sm h-8 text-xs"
+                className="font-bold border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900/50 shadow-sm h-8 text-xs"
               >
                 <FileText className="mr-1.5 h-3.5 w-3.5" />
                 Gerar Relatório Analítico
@@ -1255,7 +1255,7 @@ export function InfraStageForm({
                 "font-bold text-[10px] px-2 py-0.5 shadow-sm rounded-md border",
                 (lastUpdatedBy === 'Coleta Pública (Técnico)' || lastUpdatedBy.includes('Coleta Pública'))
                   ? "bg-indigo-50 dark:bg-indigo-950/20 text-indigo-700 dark:text-indigo-400 border-indigo-200 dark:border-indigo-900/50" 
-                  : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700"
+                  : "bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border-neutral-200 dark:border-neutral-700"
               )}
             >
               {(lastUpdatedBy === 'Coleta Pública (Técnico)' || lastUpdatedBy.includes('Coleta Pública')) 
@@ -1289,7 +1289,7 @@ export function InfraStageForm({
           disabled={!canEditProjects}
         >
           <SelectTrigger
-            className="h-9 border border-input bg-background font-medium text-xs text-foreground hover:bg-slate-50/50 dark:hover:bg-slate-900/50 transition-all duration-200"
+            className="h-9 border border-input bg-background font-medium text-xs text-foreground hover:bg-neutral-50/50 dark:hover:bg-neutral-900/50 transition-all duration-200"
           >
             <SelectValue placeholder="Selecione..." />
           </SelectTrigger>
@@ -1317,7 +1317,7 @@ export function InfraStageForm({
             </SelectItem>
             <SelectItem
               value="Aguardando Adequação"
-              className="text-gray-600 dark:text-slate-400 font-medium"
+              className="text-gray-600 dark:text-neutral-400 font-medium"
             >
               <div className="flex items-center gap-2">
                 <div className="h-2.5 w-2.5 rounded-full bg-gray-500" />
@@ -1330,7 +1330,7 @@ export function InfraStageForm({
 
       <div className="space-y-2.5">
         <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-          <div className="h-2 w-2 rounded-full bg-slate-400 dark:bg-slate-600" />
+          <div className="h-2 w-2 rounded-full bg-neutral-400 dark:bg-neutral-600" />
           Status Estações
         </Label>
         <Select
@@ -1341,7 +1341,7 @@ export function InfraStageForm({
           disabled={!canEditProjects}
         >
           <SelectTrigger
-            className="h-9 border border-input bg-background font-medium text-xs text-foreground hover:bg-slate-50/50 dark:hover:bg-slate-900/50 transition-all duration-200"
+            className="h-9 border border-input bg-background font-medium text-xs text-foreground hover:bg-neutral-50/50 dark:hover:bg-neutral-900/50 transition-all duration-200"
           >
             <SelectValue placeholder="Selecione..." />
           </SelectTrigger>
@@ -1369,7 +1369,7 @@ export function InfraStageForm({
             </SelectItem>
             <SelectItem
               value="Aguardando Adequação"
-              className="text-gray-600 dark:text-slate-400 font-medium"
+              className="text-gray-600 dark:text-neutral-400 font-medium"
             >
               <div className="flex items-center gap-2">
                 <div className="h-2.5 w-2.5 rounded-full bg-gray-500" />
@@ -1382,7 +1382,7 @@ export function InfraStageForm({
 
       <div className="space-y-2.5">
         <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-          <div className="h-2 w-2 rounded-full bg-slate-400 dark:bg-slate-600" />
+          <div className="h-2 w-2 rounded-full bg-neutral-400 dark:bg-neutral-600" />
           Qtd. de Estações
         </Label>
         <Input
@@ -1394,38 +1394,38 @@ export function InfraStageForm({
             })
           }
           disabled={!canEditProjects}
-          className="h-9 border border-input bg-background text-foreground hover:bg-slate-50/50 dark:hover:bg-slate-900/50 focus-visible:ring-1 focus-visible:ring-ring font-medium text-xs"
+          className="h-9 border border-input bg-background text-foreground hover:bg-neutral-50/50 dark:hover:bg-neutral-900/50 focus-visible:ring-1 focus-visible:ring-ring font-medium text-xs"
         />
       </div>
 
       {/* ABAS DE DETALHES DE INFRAESTRUTURA (COL-SPAN-FULL) */}
-      <div className="col-span-full border-t border-slate-100 dark:border-slate-800/80 pt-3 mt-2">
+      <div className="col-span-full border-t border-neutral-100 dark:border-neutral-800/80 pt-3 mt-2">
         <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="w-full">
-          <TabsList className="bg-slate-100/80 dark:bg-slate-950/40 p-0.5 border dark:border-slate-800/60 rounded-lg flex flex-wrap h-auto gap-0.5">
+          <TabsList className="bg-neutral-100/80 dark:bg-neutral-950/40 p-0.5 border dark:border-neutral-800/60 rounded-lg flex flex-wrap h-auto gap-0.5">
             <TabsTrigger 
               value="geral" 
-              className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 py-1.5 px-3 font-bold data-[state=active]:text-[hsl(346,84%,45%)] flex items-center gap-1.5 text-xs text-[11px]"
+              className="data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 py-1.5 px-3 font-bold data-[state=active]:text-[hsl(346,84%,45%)] flex items-center gap-1.5 text-xs text-[11px]"
             >
               <Activity className="h-3.5 w-3.5" />
               Visão Geral
             </TabsTrigger>
             <TabsTrigger 
               value="servidores" 
-              className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 py-1.5 px-3 font-bold data-[state=active]:text-[hsl(346,84%,45%)] flex items-center gap-1.5 text-xs text-[11px]"
+              className="data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 py-1.5 px-3 font-bold data-[state=active]:text-[hsl(346,84%,45%)] flex items-center gap-1.5 text-xs text-[11px]"
             >
               <ServerIcon className="h-3.5 w-3.5" />
               Servidores ({servers.length})
             </TabsTrigger>
             <TabsTrigger 
               value="estacoes" 
-              className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 py-1.5 px-3 font-bold data-[state=active]:text-[hsl(346,84%,45%)] flex items-center gap-1.5 text-xs text-[11px]"
+              className="data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 py-1.5 px-3 font-bold data-[state=active]:text-[hsl(346,84%,45%)] flex items-center gap-1.5 text-xs text-[11px]"
             >
               <Laptop className="h-3.5 w-3.5" />
               Estações ({workstations.length})
             </TabsTrigger>
             <TabsTrigger 
               value="manual" 
-              className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 py-1.5 px-3 font-bold data-[state=active]:text-[hsl(346,84%,45%)] flex items-center gap-1.5 text-xs text-[11px]"
+              className="data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 py-1.5 px-3 font-bold data-[state=active]:text-[hsl(346,84%,45%)] flex items-center gap-1.5 text-xs text-[11px]"
             >
               <BookOpen className="h-3.5 w-3.5" />
               Manual Técnico
@@ -1435,9 +1435,9 @@ export function InfraStageForm({
           {/* TAB 1: VISÃO GERAL */}
           <TabsContent value="geral" className="pt-2 space-y-3">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <Card className="bg-slate-50/50 dark:bg-slate-950/10 border dark:border-slate-800/60 shadow-sm rounded-lg">
+              <Card className="bg-neutral-50/50 dark:bg-neutral-950/10 border dark:border-neutral-800/60 shadow-sm rounded-lg">
                 <CardHeader className="p-3 pb-1">
-                  <CardTitle className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                  <CardTitle className="text-xs font-bold text-neutral-500 uppercase tracking-wider flex items-center justify-between">
                     Servidor(es)
                     <ServerIcon className="h-3.5 w-3.5 text-sky-500" />
                   </CardTitle>
@@ -1461,9 +1461,9 @@ export function InfraStageForm({
                 </CardContent>
               </Card>
 
-              <Card className="bg-slate-50/50 dark:bg-slate-950/10 border dark:border-slate-800/60 shadow-sm rounded-lg">
+              <Card className="bg-neutral-50/50 dark:bg-neutral-950/10 border dark:border-neutral-800/60 shadow-sm rounded-lg">
                 <CardHeader className="p-3 pb-1">
-                  <CardTitle className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                  <CardTitle className="text-xs font-bold text-neutral-500 uppercase tracking-wider flex items-center justify-between">
                     Estações Cadastradas
                     <Laptop className="h-3.5 w-3.5 text-purple-500" />
                   </CardTitle>
@@ -1474,9 +1474,9 @@ export function InfraStageForm({
                 </CardContent>
               </Card>
 
-              <Card className="bg-slate-50/50 dark:bg-slate-950/10 border dark:border-slate-800/60 shadow-sm rounded-lg">
+              <Card className="bg-neutral-50/50 dark:bg-neutral-950/10 border dark:border-neutral-800/60 shadow-sm rounded-lg">
                 <CardHeader className="p-3 pb-1">
-                  <CardTitle className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                  <CardTitle className="text-xs font-bold text-neutral-500 uppercase tracking-wider flex items-center justify-between">
                     Compatibilidade Estações
                     <CheckCircle2 className="h-3.5 w-3.5 text-teal-500" />
                   </CardTitle>
@@ -1486,7 +1486,7 @@ export function InfraStageForm({
                     <p className="text-xs text-muted-foreground">Sem dados de estações</p>
                   ) : (
                     <div className="space-y-1">
-                      <div className="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden flex">
+                      <div className="w-full bg-neutral-200 dark:bg-neutral-800 h-1.5 rounded-full overflow-hidden flex">
                         <div 
                           className="bg-emerald-500 h-full transition-all duration-300"
                           style={{ width: `${(stationsOkCount / workstations.length) * 100}%` }}
@@ -1506,8 +1506,8 @@ export function InfraStageForm({
               </Card>
             </div>
 
-            <div className="bg-slate-50/50 dark:bg-slate-950/10 border dark:border-slate-800/60 p-3 rounded-lg space-y-2">
-              <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+            <div className="bg-neutral-50/50 dark:bg-neutral-950/10 border dark:border-neutral-800/60 p-3 rounded-lg space-y-2">
+              <h4 className="text-xs font-bold text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5">
                 <Info className="h-3.5 w-3.5 text-indigo-500" />
                 Notas Técnicas e Observações
               </h4>
@@ -1520,7 +1520,7 @@ export function InfraStageForm({
                     onChange={e => onUpdate({ serverInUse: e.target.value })}
                     placeholder="Ex: Servidor HP ProLiant antigo, Xeon 4 cores, 16GB"
                     disabled={!canEditProjects}
-                    className="border-slate-200 dark:border-slate-800/60 h-8 text-xs"
+                    className="border-neutral-200 dark:border-neutral-800/60 h-8 text-xs"
                   />
                 </div>
                 <div className="space-y-1">
@@ -1530,7 +1530,7 @@ export function InfraStageForm({
                     onChange={e => onUpdate({ serverNeeded: e.target.value })}
                     placeholder="Ex: Novo Servidor Dell PowerEdge T350 cotado comercialmente"
                     disabled={!canEditProjects}
-                    className="border-slate-200 dark:border-slate-800/60 h-8 text-xs"
+                    className="border-neutral-200 dark:border-neutral-800/60 h-8 text-xs"
                   />
                 </div>
               </div>
@@ -1543,7 +1543,7 @@ export function InfraStageForm({
                   placeholder="Descreva detalhes da viabilidade da infraestrutura, bloqueios específicos encontrados, se há necessidade de upgrades rápidos..."
                   disabled={!canEditProjects}
                   rows={2}
-                  className="border-slate-200 dark:border-slate-800/60 text-xs py-1"
+                  className="border-neutral-200 dark:border-neutral-800/60 text-xs py-1"
                 />
               </div>
             </div>
@@ -1587,9 +1587,9 @@ export function InfraStageForm({
             </div>
 
             {servers.length === 0 ? (
-              <div className="text-center py-8 border-2 border-dashed rounded-xl bg-slate-50/30 dark:bg-slate-900/10 border-slate-200 dark:border-slate-800/60">
-                <ServerIcon className="h-10 w-10 mx-auto text-slate-300 mb-2" />
-                <p className="text-sm font-semibold text-slate-500">Nenhum servidor cadastrado nesta etapa.</p>
+              <div className="text-center py-8 border-2 border-dashed rounded-xl bg-neutral-50/30 dark:bg-neutral-900/10 border-neutral-200 dark:border-neutral-800/60">
+                <ServerIcon className="h-10 w-10 mx-auto text-neutral-300 mb-2" />
+                <p className="text-sm font-semibold text-neutral-500">Nenhum servidor cadastrado nesta etapa.</p>
                 <p className="text-xs text-muted-foreground mt-1">Adicione manualmente ou importe do script PowerShell.</p>
               </div>
             ) : (
@@ -1597,13 +1597,13 @@ export function InfraStageForm({
                 {servers.map((srv, idx) => {
                   const validation = checkServerRequirements(srv, workstationsCount);
                   return (
-                    <Card key={idx} className="border dark:border-slate-800/80 shadow-sm relative overflow-hidden bg-card/65">
+                    <Card key={idx} className="border dark:border-neutral-800/80 shadow-sm relative overflow-hidden bg-card/65">
                       {/* Indicador lateral de status de compatibilidade */}
                       <div className={cn("absolute left-0 top-0 bottom-0 w-1.5", validation.meets ? "bg-emerald-500" : "bg-rose-500")} />
                       
-                      <CardHeader className="py-2 px-4 flex flex-row items-center justify-between border-b dark:border-slate-800/50">
+                      <CardHeader className="py-2 px-4 flex flex-row items-center justify-between border-b dark:border-neutral-800/50">
                         <div className="flex items-center gap-2">
-                          <ServerIcon className="h-4 w-4 text-slate-400" />
+                          <ServerIcon className="h-4 w-4 text-neutral-400" />
                           <CardTitle className="text-xs font-bold tracking-tight">
                             {srv.hostname || `SERVIDOR ${idx + 1}`}
                           </CardTitle>
@@ -1657,7 +1657,7 @@ export function InfraStageForm({
                                 handleServersChange(list);
                               }}
                               disabled={!canEditProjects}
-                              className="h-8 text-xs border-slate-200 dark:border-slate-800/60"
+                              className="h-8 text-xs border-neutral-200 dark:border-neutral-800/60"
                             />
                           </div>
                           <div className="space-y-0.5 col-span-1 sm:col-span-1 md:col-span-3">
@@ -1671,7 +1671,7 @@ export function InfraStageForm({
                               }}
                               placeholder="Ex: Dell T340"
                               disabled={!canEditProjects}
-                              className="h-8 text-xs border-slate-200 dark:border-slate-800/60"
+                              className="h-8 text-xs border-neutral-200 dark:border-neutral-800/60"
                             />
                           </div>
                           <div className="space-y-0.5 col-span-1 sm:col-span-1 md:col-span-2">
@@ -1685,7 +1685,7 @@ export function InfraStageForm({
                               }}
                               disabled={!canEditProjects}
                             >
-                              <SelectTrigger className="h-8 text-xs border-slate-200 dark:border-slate-800/60">
+                              <SelectTrigger className="h-8 text-xs border-neutral-200 dark:border-neutral-800/60">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -1705,7 +1705,7 @@ export function InfraStageForm({
                               }}
                               placeholder="Ex: Intel Xeon E5-2620"
                               disabled={!canEditProjects}
-                              className="h-8 text-xs border-slate-200 dark:border-slate-800/60"
+                              className="h-8 text-xs border-neutral-200 dark:border-neutral-800/60"
                             />
                           </div>
                           <div className="space-y-0.5 col-span-1 sm:col-span-1 md:col-span-2">
@@ -1719,7 +1719,7 @@ export function InfraStageForm({
                               }}
                               placeholder="Ex: 6"
                               disabled={!canEditProjects}
-                              className="h-8 text-xs border-slate-200 dark:border-slate-800/60"
+                              className="h-8 text-xs border-neutral-200 dark:border-neutral-800/60"
                             />
                           </div>
                           <div className="space-y-0.5 col-span-1 sm:col-span-1 md:col-span-2">
@@ -1733,7 +1733,7 @@ export function InfraStageForm({
                               }}
                               placeholder="Ex: 32 GB"
                               disabled={!canEditProjects}
-                              className="h-8 text-xs border-slate-200 dark:border-slate-800/60"
+                              className="h-8 text-xs border-neutral-200 dark:border-neutral-800/60"
                             />
                           </div>
                           <div className="space-y-0.5 col-span-1 sm:col-span-1 md:col-span-3">
@@ -1747,7 +1747,7 @@ export function InfraStageForm({
                               }}
                               placeholder="Ex: 2 TB SAS RAID 1"
                               disabled={!canEditProjects}
-                              className="h-8 text-xs border-slate-200 dark:border-slate-800/60"
+                              className="h-8 text-xs border-neutral-200 dark:border-neutral-800/60"
                             />
                           </div>
                           <div className="space-y-0.5 col-span-1 sm:col-span-1 md:col-span-2">
@@ -1761,7 +1761,7 @@ export function InfraStageForm({
                               }}
                               placeholder="Ex: 500 GB"
                               disabled={!canEditProjects}
-                              className="h-8 text-xs border-slate-200 dark:border-slate-800/60"
+                              className="h-8 text-xs border-neutral-200 dark:border-neutral-800/60"
                             />
                           </div>
                           <div className="space-y-0.5 col-span-1 sm:col-span-2 md:col-span-3">
@@ -1775,7 +1775,7 @@ export function InfraStageForm({
                               }}
                               placeholder="Ex: Windows Server 2022"
                               disabled={!canEditProjects}
-                              className="h-8 text-xs border-slate-200 dark:border-slate-800/60"
+                              className="h-8 text-xs border-neutral-200 dark:border-neutral-800/60"
                             />
                           </div>
                           <div className="space-y-0.5 col-span-1 sm:col-span-1 md:col-span-4">
@@ -1789,7 +1789,7 @@ export function InfraStageForm({
                               }}
                               placeholder="Ex: Bitdefender"
                               disabled={!canEditProjects}
-                              className="h-8 text-xs border-slate-200 dark:border-slate-800/60"
+                              className="h-8 text-xs border-neutral-200 dark:border-neutral-800/60"
                             />
                           </div>
                           <div className="space-y-0.5 col-span-1 sm:col-span-1 md:col-span-4">
@@ -1803,7 +1803,7 @@ export function InfraStageForm({
                               }}
                               placeholder="Ex: 1000 Mbps"
                               disabled={!canEditProjects}
-                              className="h-8 text-xs border-slate-200 dark:border-slate-800/60"
+                              className="h-8 text-xs border-neutral-200 dark:border-neutral-800/60"
                             />
                           </div>
                           <div className="space-y-0.5 col-span-1 sm:col-span-2 md:col-span-4">
@@ -1817,7 +1817,7 @@ export function InfraStageForm({
                               }}
                               placeholder="Ex: Nuvem + HD Externo"
                               disabled={!canEditProjects}
-                              className="h-8 text-xs border-slate-200 dark:border-slate-800/60"
+                              className="h-8 text-xs border-neutral-200 dark:border-neutral-800/60"
                             />
                           </div>
                           <div className="space-y-0.5 col-span-1 sm:col-span-1 md:col-span-6">
@@ -1831,10 +1831,10 @@ export function InfraStageForm({
                               }}
                               disabled={!canEditProjects}
                             >
-                              <SelectTrigger className="h-8 text-xs border-slate-200 dark:border-slate-800/60">
+                              <SelectTrigger className="h-8 text-xs border-neutral-200 dark:border-neutral-800/60">
                                 <SelectValue />
                               </SelectTrigger>
-                              <SelectContent className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+                              <SelectContent className="bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100">
                                 <SelectItem value="Local">Local</SelectItem>
                                 <SelectItem value="Nuvem">Nuvem</SelectItem>
                               </SelectContent>
@@ -1851,10 +1851,10 @@ export function InfraStageForm({
                               }}
                               disabled={!canEditProjects}
                             >
-                              <SelectTrigger className="h-8 text-xs border-slate-200 dark:border-slate-800/60">
+                              <SelectTrigger className="h-8 text-xs border-neutral-200 dark:border-neutral-800/60">
                                 <SelectValue />
                               </SelectTrigger>
-                              <SelectContent className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+                              <SelectContent className="bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100">
                                 <SelectItem value="Sim">Sim</SelectItem>
                                 <SelectItem value="Não">Não</SelectItem>
                               </SelectContent>
@@ -1871,7 +1871,7 @@ export function InfraStageForm({
                               }}
                               placeholder="Detalhes adicionais..."
                               disabled={!canEditProjects}
-                              className="h-8 text-xs border-slate-200 dark:border-slate-800/60"
+                              className="h-8 text-xs border-neutral-200 dark:border-neutral-800/60"
                             />
                           </div>
                         </div>
@@ -1949,7 +1949,7 @@ export function InfraStageForm({
                       onChange={e => setExcelText(e.target.value)}
                       placeholder="Cole aqui (ex: 1	DANI	ADM	Daniela...)"
                       rows={10}
-                      className="font-mono text-xs border-slate-200 dark:border-slate-800/80"
+                      className="font-mono text-xs border-neutral-200 dark:border-neutral-800/80"
                     />
                     <DialogFooter>
                       <Button variant="outline" size="sm" onClick={() => setExcelText("")}>Limpar</Button>
@@ -1993,24 +1993,24 @@ export function InfraStageForm({
                   "border-2 border-dashed rounded-xl p-4 text-center text-xs transition-colors cursor-pointer",
                   dragOver 
                     ? "border-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/10 text-emerald-800 dark:text-emerald-400" 
-                    : "border-slate-200 dark:border-slate-800/60 hover:bg-slate-50/40 dark:hover:bg-slate-900/10"
+                    : "border-neutral-200 dark:border-neutral-800/60 hover:bg-neutral-50/40 dark:hover:bg-neutral-900/10"
                 )}
               >
-                <ClipboardList className="mx-auto h-5 w-5 text-slate-400 mb-1.5" />
+                <ClipboardList className="mx-auto h-5 w-5 text-neutral-400 mb-1.5" />
                 Arrastar e soltar múltiplos arquivos **.txt** coletados das estações aqui para importar de uma vez!
               </div>
             )}
 
             {workstations.length === 0 ? (
-              <div className="text-center py-8 border-2 border-dashed rounded-xl bg-slate-50/30 dark:bg-slate-900/10 border-slate-200 dark:border-slate-800/60">
-                <Laptop className="h-10 w-10 mx-auto text-slate-300 mb-2" />
-                <p className="text-sm font-semibold text-slate-500">Nenhuma estação cadastrada.</p>
+              <div className="text-center py-8 border-2 border-dashed rounded-xl bg-neutral-50/30 dark:bg-neutral-900/10 border-neutral-200 dark:border-neutral-800/60">
+                <Laptop className="h-10 w-10 mx-auto text-neutral-300 mb-2" />
+                <p className="text-sm font-semibold text-neutral-500">Nenhuma estação cadastrada.</p>
                 <p className="text-xs text-muted-foreground mt-1">Adicione uma estação ou use as opções de importação acima.</p>
               </div>
             ) : (
-              <div className="border dark:border-slate-800/60 rounded-xl overflow-x-auto shadow-sm bg-card">
+              <div className="border dark:border-neutral-800/60 rounded-xl overflow-x-auto shadow-sm bg-card">
                 <Table className="w-full table-fixed border-collapse">
-                  <TableHeader className="bg-slate-50/60 dark:bg-slate-950/20">
+                  <TableHeader className="bg-neutral-50/60 dark:bg-neutral-950/20">
                     <TableRow className="h-9">
                       <TableHead className="w-[35px] font-bold text-center text-[10.5px] px-1 py-1">Item</TableHead>
                       <TableHead className="w-[11%] font-bold text-[10.5px] px-2 py-1">Hostname</TableHead>
@@ -2028,9 +2028,9 @@ export function InfraStageForm({
                     {workstations.map((ws, idx) => {
                       const validation = checkWorkstationRequirements(ws);
                       return (
-                        <TableRow key={idx} className="hover:bg-slate-50/40 dark:hover:bg-slate-900/20 h-auto">
+                        <TableRow key={idx} className="hover:bg-neutral-50/40 dark:hover:bg-neutral-900/20 h-auto">
                           {/* Item / ID */}
-                          <TableCell className="font-semibold text-slate-500 text-center py-1.5 px-1 text-[10.5px]">
+                          <TableCell className="font-semibold text-neutral-500 text-center py-1.5 px-1 text-[10.5px]">
                             {idx + 1}
                           </TableCell>
 
@@ -2165,7 +2165,7 @@ export function InfraStageForm({
                                 }}
                                 disabled={!canEditProjects}
                               >
-                                <SelectTrigger className={cn("h-7 text-[10px] font-semibold w-full border-transparent hover:border-slate-200 dark:hover:border-slate-800 focus:border-indigo-500 bg-transparent focus:bg-white dark:focus:bg-slate-900 transition-all px-1.5",
+                                <SelectTrigger className={cn("h-7 text-[10px] font-semibold w-full border-transparent hover:border-neutral-200 dark:hover:border-neutral-800 focus:border-indigo-500 bg-transparent focus:bg-white dark:focus:bg-neutral-900 transition-all px-1.5",
                                   ws.meetsRequirements === "Sim" && "text-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-300",
                                   ws.meetsRequirements === "Não" && "text-rose-600 bg-rose-50/50 dark:bg-rose-950/20 border-rose-300"
                                 )}>
@@ -2189,7 +2189,7 @@ export function InfraStageForm({
                                     <DialogHeader>
                                       <DialogTitle>Problemas Encontrados: {ws.hostname || `Estação ${idx + 1}`}</DialogTitle>
                                     </DialogHeader>
-                                    <ul className="list-disc pl-5 space-y-1.5 text-sm text-slate-700 dark:text-slate-300">
+                                    <ul className="list-disc pl-5 space-y-1.5 text-sm text-neutral-700 dark:text-neutral-300">
                                       {validation.issues.map((iss, i) => (
                                         <li key={i}>{iss}</li>
                                       ))}
@@ -2247,9 +2247,9 @@ export function InfraStageForm({
 
           {/* TAB 4: MANUAL TÉCNICO */}
           <TabsContent value="manual" className="pt-4 space-y-4">
-            <Card className="border dark:border-slate-800/60 shadow-sm bg-card">
-              <CardHeader className="border-b dark:border-b-slate-800/50 bg-slate-50/50 dark:bg-slate-950/15">
-                <CardTitle className="text-md font-bold tracking-tight text-slate-800 dark:text-slate-200">
+            <Card className="border dark:border-neutral-800/60 shadow-sm bg-card">
+              <CardHeader className="border-b dark:border-b-neutral-800/50 bg-neutral-50/50 dark:bg-neutral-950/15">
+                <CardTitle className="text-md font-bold tracking-tight text-neutral-800 dark:text-neutral-200">
                   Manual de Compatibilidade do Cartório (Orion TN / PRO)
                 </CardTitle>
                 <CardDescription>
@@ -2262,9 +2262,9 @@ export function InfraStageForm({
                     <ServerIcon className="h-4.5 w-4.5" />
                     Requisitos dos Servidores (Minimos e Recomendados)
                   </h4>
-                  <div className="border dark:border-slate-800/60 rounded-lg overflow-hidden">
+                  <div className="border dark:border-neutral-800/60 rounded-lg overflow-hidden">
                     <Table>
-                      <TableHeader className="bg-slate-50/60 dark:bg-slate-950/20">
+                      <TableHeader className="bg-neutral-50/60 dark:bg-neutral-950/20">
                         <TableRow>
                           <TableHead className="font-bold text-xs">Quantidade de Estações</TableHead>
                           <TableHead className="font-bold text-xs">Requisitos Mínimos (SATA/Virtualizado)</TableHead>
@@ -2303,7 +2303,7 @@ export function InfraStageForm({
                       <Laptop className="h-4.5 w-4.5" />
                       Requisitos das Estações
                     </h4>
-                    <div className="border dark:border-slate-800/60 rounded-lg p-4 bg-slate-50/40 dark:bg-slate-950/10 space-y-2 text-xs">
+                    <div className="border dark:border-neutral-800/60 rounded-lg p-4 bg-neutral-50/40 dark:bg-neutral-950/10 space-y-2 text-xs">
                       <p><strong>Processador:</strong> Intel Core i3 6ª Ger + / AMD Ryzen 3 (Mínimo) | Intel Core i5 8ª Ger + / AMD Ryzen 5 (Recomendado)</p>
                       <p><strong>Memória RAM:</strong> 4 GB para estações comuns | 8 GB para Balcão de Firmas (Recomendado Dual-Channel)</p>
                       <p><strong>Disco:</strong> 7200 RPM SATA com 10GB livres (Mínimo) | SSD com 10GB livres (Recomendado)</p>
@@ -2317,7 +2317,7 @@ export function InfraStageForm({
                       <ClipboardList className="h-4.5 w-4.5" />
                       Recomendações de Rede & Segurança
                     </h4>
-                    <div className="border dark:border-slate-800/60 rounded-lg p-4 bg-slate-50/40 dark:bg-slate-950/10 space-y-2 text-xs">
+                    <div className="border dark:border-neutral-800/60 rounded-lg p-4 bg-neutral-50/40 dark:bg-neutral-950/10 space-y-2 text-xs">
                       <p><strong>Redes Sem Fio (Wi-Fi):</strong> A Siplan alerta para a **NÃO utilização de Wi-Fi** nas estações de processamento dos softwares, por conta de lentidão no tráfego de imagens e instabilidade.</p>
                       <p><strong>Anti-Vírus:</strong> Recomenda-se soluções corporativas com gerenciamento centralizado (ex: Bitdefender Corporate).</p>
                       <p><strong>Nobreak:</strong> Gerenciável e adequado para desligar automaticamente o servidor em faltas de energia.</p>

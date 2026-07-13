@@ -119,7 +119,7 @@ export function ObservationsWithAI({
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <div className="h-0.5 w-6 bg-slate-300 dark:bg-slate-700 rounded-full" />
+          <div className="h-0.5 w-6 bg-neutral-300 dark:bg-neutral-700 rounded-full" />
           <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
             {title}
           </Label>
@@ -143,7 +143,7 @@ export function ObservationsWithAI({
           </Button>
         )}
       </div>
-      <div className="rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden bg-slate-50/10 dark:bg-slate-950/5 w-full">
+      <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 overflow-hidden bg-neutral-50/10 dark:bg-neutral-950/5 w-full">
         <RichTextEditor
           key={editorKey}
           content={getEditorContent(observations)}
@@ -166,7 +166,7 @@ export function ObservationsWithAI({
               pelo texto abaixo.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="max-h-[45vh] overflow-y-auto rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 p-3 text-sm whitespace-pre-wrap">
+          <div className="max-h-[45vh] overflow-y-auto rounded-md border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950/40 p-3 text-sm whitespace-pre-wrap">
             {pending}
           </div>
           <AlertDialogFooter>

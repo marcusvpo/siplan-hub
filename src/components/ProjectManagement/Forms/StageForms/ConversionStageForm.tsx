@@ -102,8 +102,8 @@ export function ConversionStageForm({
                       equipe de conversão será notificada e o projeto aparecerá no
                       dashboard deles.
                     </p>
-                    <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                      <Label className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                    <div className="space-y-2 pt-2 border-t border-neutral-100 dark:border-neutral-800">
+                      <Label className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">
                         Defina a Prioridade da Conversão:
                       </Label>
                       <Select
@@ -215,7 +215,7 @@ export function ConversionStageForm({
           }
         >
           <SelectTrigger
-            className="h-9 border border-input bg-background text-xs font-medium text-foreground hover:bg-slate-50/50 dark:hover:bg-slate-900/50 transition-all duration-200"
+            className="h-9 border border-input bg-background text-xs font-medium text-foreground hover:bg-neutral-50/50 dark:hover:bg-neutral-900/50 transition-all duration-200"
           >
             <SelectValue placeholder="Selecione..." />
           </SelectTrigger>
@@ -243,7 +243,7 @@ export function ConversionStageForm({
             </SelectItem>
             <SelectItem
               value="Aguardando Adequação"
-              className="text-gray-600 dark:text-slate-400 font-medium"
+              className="text-gray-600 dark:text-neutral-400 font-medium"
             >
               <div className="flex items-center gap-2">
                 <div className="h-2.5 w-2.5 rounded-full bg-gray-500" />
@@ -263,7 +263,7 @@ export function ConversionStageForm({
           onChange={(v) =>
             onUpdate({ homologationResponsible: v })
           }
-          className="h-9 border border-input bg-background text-foreground hover:bg-slate-50/50 dark:hover:bg-slate-900/50 focus-visible:ring-1 focus-visible:ring-ring text-xs"
+          className="h-9 border border-input bg-background text-foreground hover:bg-neutral-50/50 dark:hover:bg-neutral-900/50 focus-visible:ring-1 focus-visible:ring-ring text-xs"
         />
       </div>
 
@@ -288,7 +288,7 @@ export function ConversionStageForm({
                 : undefined,
             })
           }
-          className="h-9 border border-input bg-background text-foreground hover:bg-slate-50/50 dark:hover:bg-slate-900/50 focus-visible:ring-1 focus-visible:ring-ring font-medium text-xs"
+          className="h-9 border border-input bg-background text-foreground hover:bg-neutral-50/50 dark:hover:bg-neutral-900/50 focus-visible:ring-1 focus-visible:ring-ring font-medium text-xs"
         />
       </div>
     </>
