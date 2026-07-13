@@ -194,7 +194,7 @@ export default function Home() {
                                 whileTap={{ scale: 0.98 }}
                             >
                                 <Card
-                                    className="cursor-pointer overflow-hidden border border-border/60 dark:border-white/5 transition-all duration-300 hover:scale-[1.02] hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5 dark:hover:shadow-indigo-500/10 group bg-card/60 backdrop-blur-sm shadow-sm h-full"
+                                    className="cursor-pointer overflow-hidden border border-border/60 dark:border-white/5 transition-all duration-300 hover:scale-[1.02] hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5 dark:hover:shadow-primary/10 group bg-card/60 backdrop-blur-sm shadow-sm h-full"
                                     onClick={() => handleCardClick(item)}
                                 >
                                     <CardContent className="p-4">
