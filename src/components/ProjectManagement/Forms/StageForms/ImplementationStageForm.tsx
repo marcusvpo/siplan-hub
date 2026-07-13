@@ -79,7 +79,7 @@ function ImplementationPhaseForm({
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3.5 mb-3.5 relative text-left">
         <div className="space-y-1.5">
           <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-            <div className="h-1.5 w-1.5 rounded-full bg-slate-400 dark:bg-slate-650" />
+            <div className="h-1.5 w-1.5 rounded-full bg-neutral-400 dark:bg-neutral-650" />
             Status
           </Label>
           <Select
@@ -90,14 +90,14 @@ function ImplementationPhaseForm({
             disabled={!canEditProjects}
           >
             <SelectTrigger
-              className="h-9 border border-input bg-background font-medium text-xs text-foreground hover:bg-slate-50/50 dark:hover:bg-slate-900/50 transition-all duration-200"
+              className="h-9 border border-input bg-background font-medium text-xs text-foreground hover:bg-neutral-50/50 dark:hover:bg-neutral-900/50 transition-all duration-200"
             >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="todo" className="text-xs">
                 <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-slate-400" />
+                  <div className="h-2 w-2 rounded-full bg-neutral-400" />
                   Não Iniciado
                 </div>
               </SelectItem>
@@ -131,7 +131,7 @@ function ImplementationPhaseForm({
             value={phase?.responsible || ""}
             onChange={(v) => onUpdatePhase(phaseKey, { responsible: v })}
             disabled={!canEditProjects}
-            className="h-9 border border-input bg-background text-foreground hover:bg-slate-50/50 dark:hover:bg-slate-900/50 focus-visible:ring-1 focus-visible:ring-ring text-xs"
+            className="h-9 border border-input bg-background text-foreground hover:bg-neutral-50/50 dark:hover:bg-neutral-900/50 focus-visible:ring-1 focus-visible:ring-ring text-xs"
           />
         </div>
         <div className="space-y-1.5">
@@ -154,7 +154,7 @@ function ImplementationPhaseForm({
               })
             }
             disabled={!canEditProjects}
-            className="h-9 border border-input bg-background text-foreground hover:bg-slate-50/50 dark:hover:bg-slate-900/50 focus-visible:ring-1 focus-visible:ring-ring font-medium text-xs"
+            className="h-9 border border-input bg-background text-foreground hover:bg-neutral-50/50 dark:hover:bg-neutral-900/50 focus-visible:ring-1 focus-visible:ring-ring font-medium text-xs"
           />
         </div>
         <div className="space-y-1.5">
@@ -177,18 +177,18 @@ function ImplementationPhaseForm({
               })
             }
             disabled={!canEditProjects}
-            className="h-9 border border-input bg-background text-foreground hover:bg-slate-50/50 dark:hover:bg-slate-900/50 focus-visible:ring-1 focus-visible:ring-ring font-medium text-xs"
+            className="h-9 border border-input bg-background text-foreground hover:bg-neutral-50/50 dark:hover:bg-neutral-900/50 focus-visible:ring-1 focus-visible:ring-ring font-medium text-xs"
           />
         </div>
       </div>
       <div className="space-y-2 relative text-left">
         <div className="flex items-center gap-2">
-          <div className="h-0.5 w-6 rounded-full bg-slate-300 dark:bg-slate-700" />
+          <div className="h-0.5 w-6 rounded-full bg-neutral-300 dark:bg-neutral-700" />
           <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
             Observações da {label}
           </Label>
         </div>
-        <div className="rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden bg-slate-50/10 dark:bg-slate-950/5">
+        <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 overflow-hidden bg-neutral-50/10 dark:bg-neutral-950/5">
           <RichTextEditor
             content={getPhaseContent()}
             onChange={(c) => onUpdatePhase(phaseKey, { observations: c })}
@@ -215,10 +215,10 @@ export function ImplementationStageForm({
         phase={stage.phase1}
         canEditProjects={canEditProjects}
         onUpdatePhase={onUpdatePhase}
-        badgeClass="bg-slate-500 dark:bg-slate-700"
-        titleColor="text-slate-800 dark:text-slate-300"
-        borderColor="border-slate-200 dark:border-slate-800"
-        bgGradient="bg-slate-50/30 dark:bg-slate-950/10"
+        badgeClass="bg-neutral-500 dark:bg-neutral-700"
+        titleColor="text-neutral-800 dark:text-neutral-300"
+        borderColor="border-neutral-200 dark:border-neutral-800"
+        bgGradient="bg-neutral-50/30 dark:bg-neutral-950/10"
         glowColor=""
         themeColor="blue"
       />
@@ -230,10 +230,10 @@ export function ImplementationStageForm({
         phase={stage.phase2}
         canEditProjects={canEditProjects}
         onUpdatePhase={onUpdatePhase}
-        badgeClass="bg-slate-500 dark:bg-slate-700"
-        titleColor="text-slate-800 dark:text-slate-300"
-        borderColor="border-slate-200 dark:border-slate-800"
-        bgGradient="bg-slate-50/30 dark:bg-slate-950/10"
+        badgeClass="bg-neutral-500 dark:bg-neutral-700"
+        titleColor="text-neutral-800 dark:text-neutral-300"
+        borderColor="border-neutral-200 dark:border-neutral-800"
+        bgGradient="bg-neutral-50/30 dark:bg-neutral-950/10"
         glowColor=""
         themeColor="purple"
       />
