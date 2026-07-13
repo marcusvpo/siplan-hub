@@ -78,32 +78,32 @@
   }
 
   .dark {
-    /* Dark Mode: Deep Slate/Navy feel - NOT Just Black */
-    --background: 222 47% 4%;
-    /* Very deep slate */
-    --foreground: 210 40% 98%;
+    /* Dark Mode: Neutral dark gray/black - low saturation */
+    --background: 0 0% 4%;
+    /* Neutral near-black */
+    --foreground: 0 0% 98%;
 
-    --card: 222 47% 6%;
+    --card: 0 0% 7%;
     /* Slightly lighter than bg */
-    --card-foreground: 210 40% 98%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 222 47% 6%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 98%;
 
     /* Primary stays vibrant but readable */
     --primary: 346 84% 55%;
     --primary-foreground: 0 0% 100%;
     --primary-light: 346 84% 20%;
 
-    --secondary: 217 32% 12%;
-    /* Dark slate */
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 0 0% 14%;
+    /* Neutral dark gray */
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 217 32% 12%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 0 0% 14%;
+    --muted-foreground: 0 0% 64%;
 
-    --accent: 217 32% 12%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 0 0% 14%;
+    --accent-foreground: 0 0% 98%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
@@ -117,20 +117,20 @@
     --critical: 0 62.8% 30.6%;
     --critical-foreground: 0 0% 100%;
 
-    /* Borders move to darker slates */
-    --border: 217 32% 12%;
+    /* Borders neutral dark gray */
+    --border: 0 0% 14%;
     /* Subtle integration */
-    --input: 217 32% 12%;
+    --input: 0 0% 14%;
     --ring: 346 84% 55%;
 
-    --sidebar-background: 222 47% 4%;
+    --sidebar-background: 0 0% 4%;
     /* Matches bg for seamless look */
-    --sidebar-foreground: 215 20% 65%;
+    --sidebar-foreground: 0 0% 64%;
     --sidebar-primary: 346 84% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 217 32% 12%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 32% 12%;
+    --sidebar-accent: 0 0% 14%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 14%;
     --sidebar-ring: 346 84% 55%;
 
     --chart-1: 346 84% 55%;
