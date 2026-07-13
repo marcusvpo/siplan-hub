@@ -211,6 +211,7 @@ export function EnvironmentStageForm({
                       onClick={() => handleCopyText(access.password || "", "Senha")}
                       className="absolute right-0.5 h-6 w-6 text-muted-foreground hover:text-foreground rounded-full"
                       title="Copiar senha"
+                      aria-label="Copiar senha do acesso remoto"
                     >
                       <Copy className="h-3 w-3" />
                     </Button>
@@ -283,6 +284,7 @@ export function EnvironmentStageForm({
                   onClick={() => setShowSoPassword(!showSoPassword)}
                   className="h-6 w-6 text-muted-foreground hover:text-foreground rounded-full"
                   title={showSoPassword ? "Ocultar senha" : "Ver senha"}
+                  aria-label={showSoPassword ? "Ocultar senha do SO" : "Ver senha do SO"}
                 >
                   {showSoPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                 </Button>
@@ -294,6 +296,7 @@ export function EnvironmentStageForm({
                     onClick={() => handleCopyText(stage.soPassword || "", "Senha do SO")}
                     className="h-6 w-6 text-muted-foreground hover:text-foreground rounded-full"
                     title="Copiar senha"
+                    aria-label="Copiar senha do SO"
                   >
                     <Copy className="h-3.5 w-3.5" />
                   </Button>
@@ -381,6 +384,7 @@ export function EnvironmentStageForm({
                   onClick={() => setShowPgAccess(!showPgAccess)}
                   className="h-6 w-6 text-muted-foreground hover:text-foreground rounded-full"
                   title={showPgAccess ? "Ocultar senha" : "Ver senha"}
+                  aria-label={showPgAccess ? "Ocultar senha do PostgreSQL" : "Ver senha do PostgreSQL"}
                 >
                   {showPgAccess ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                 </Button>
@@ -392,6 +396,7 @@ export function EnvironmentStageForm({
                     onClick={() => handleCopyText(stage.postgresPassword || "", "Senha do PostgreSQL")}
                     className="h-6 w-6 text-muted-foreground hover:text-foreground rounded-full"
                     title="Copiar senha"
+                    aria-label="Copiar senha do PostgreSQL"
                   >
                     <Copy className="h-3.5 w-3.5" />
                   </Button>

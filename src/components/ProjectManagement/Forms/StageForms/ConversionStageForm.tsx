@@ -133,35 +133,51 @@ export function ConversionStageForm({
           </AlertDialog>
 
           {isInConversionQueue && conversionItem && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 w-8 p-0 border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors"
-              title="Remover da fila de conversão"
-              onClick={async (e) => {
-                e.stopPropagation();
-                if (
-                  confirm(
-                    "Tem certeza que deseja remover este projeto da fila de conversão?",
-                  )
-                ) {
-                  const success = await onRemoveFromQueue(
-                    conversionItem.id,
-                    projectId,
-                  );
-                  if (success) {
-                    onUpdate({
-                      sentAt: undefined,
-                      status: "todo" as StageStatus,
-                      homologationStatus: undefined,
-                      homologationResponsible: undefined,
-                    });
-                  }
-                }
-              }}
-            >
-              <X className="h-3.5 w-3.5" />
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 w-8 p-0 border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors"
+                  title="Remover da fila de conversão"
+                  aria-label="Remover da fila de conversão"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Remover da fila de conversão?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    O projeto será retirado da fila e o estágio volta para "A fazer".
+                    Você pode reenviá-lo depois, se necessário.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-red-600 hover:bg-red-700"
+                    onClick={async () => {
+                      const success = await onRemoveFromQueue(
+                        conversionItem.id,
+                        projectId,
+                      );
+                      if (success) {
+                        onUpdate({
+                          sentAt: undefined,
+                          status: "todo" as StageStatus,
+                          homologationStatus: undefined,
+                          homologationResponsible: undefined,
+                        });
+                      }
+                    }}
+                  >
+                    Remover
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           )}
         </div>
 

@@ -1612,14 +1612,37 @@ export function InfraStageForm({
                           </Badge>
                         </div>
                         {canEditProjects && (
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={() => deleteServer(idx)}
-                            className="h-6 w-6 text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/20"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                aria-label={`Remover ${srv.hostname || `servidor ${idx + 1}`}`}
+                                className="h-6 w-6 text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/20"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                  Remover {srv.hostname || `servidor ${idx + 1}`}?
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Todos os dados deste servidor (hostname, specs e configurações) serão apagados. Esta ação não pode ser desfeita.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction
+                                  className="bg-rose-600 hover:bg-rose-700"
+                                  onClick={() => deleteServer(idx)}
+                                >
+                                  Remover
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         )}
                       </CardHeader>
                       <CardContent className="p-3 pt-2">
@@ -2180,14 +2203,37 @@ export function InfraStageForm({
                           {/* Botão de Deletar */}
                           <TableCell className="p-0.5 text-center">
                             {canEditProjects && (
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                onClick={() => deleteWorkstation(idx)}
-                                className="h-6 w-6 text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/20"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    aria-label={`Remover estação de trabalho ${idx + 1}`}
+                                    className="h-6 w-6 text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/20"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                      Remover estação de trabalho {idx + 1}?
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Os dados desta estação serão apagados. Esta ação não pode ser desfeita.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      className="bg-rose-600 hover:bg-rose-700"
+                                      onClick={() => deleteWorkstation(idx)}
+                                    >
+                                      Remover
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
                             )}
                           </TableCell>
                         </TableRow>

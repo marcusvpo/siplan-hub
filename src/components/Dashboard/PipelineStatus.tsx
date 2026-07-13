@@ -70,6 +70,8 @@ export const PipelineStatus = ({ project }: PipelineStatusProps) => {
           <Tooltip>
             <TooltipTrigger>
               <div
+                role="img"
+                aria-label={`${stage.label}: ${getStatusLabel(stage.status)}`}
                 className={cn(
                   "h-2.5 w-2.5 rounded-full transition-all",
                   getStatusColor(stage.status)

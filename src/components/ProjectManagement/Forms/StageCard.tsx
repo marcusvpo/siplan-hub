@@ -409,6 +409,8 @@ export function StageCard({
                     onClick={() => setSpecificOpen((v) => !v)}
                     className="flex items-center gap-1.5 group"
                     title={specificOpen ? "Recolher" : "Expandir"}
+                    aria-label={specificOpen ? "Recolher campos específicos" : "Expandir campos específicos"}
+                    aria-expanded={specificOpen}
                   >
                     {specificOpen ? (
                       <ChevronDown className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
