@@ -281,7 +281,7 @@ export function VoiceDictationButton({
     return (
       <Dialog open onOpenChange={(o) => !o && cancelRecording()}>
         <DialogContent
-          className="max-w-lg"
+          className="max-w-2xl"
           onInteractOutside={(e) => e.preventDefault()}
         >
           <DialogHeader>
@@ -307,7 +307,7 @@ export function VoiceDictationButton({
           {/* Legenda ao vivo (rascunho). Aparece em navegadores com Web Speech API. */}
           <div
             ref={captionRef}
-            className="min-h-[10rem] max-h-[45vh] overflow-y-auto rounded-md border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950/40 p-4 text-base leading-relaxed whitespace-pre-wrap"
+            className="min-h-[18rem] max-h-[60vh] overflow-y-auto rounded-md border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950/40 p-5 text-lg leading-relaxed whitespace-pre-wrap"
           >
             {liveText ? (
               <>
