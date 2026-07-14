@@ -42,6 +42,16 @@ function fmt(sec: number): string {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
+// Web Speech API para a legenda ao vivo (preview enquanto grava). Best-effort:
+// existe em Chrome/Edge/Android; ausente no iOS Safari/Firefox (la fica so o batch).
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getSpeechRecognition(): any {
+  if (typeof window === "undefined") return null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const w = window as any;
+  return w.SpeechRecognition || w.webkitSpeechRecognition || null;
+}
+
 interface VoiceDictationButtonProps {
   projectId?: string;
   requestedBy?: string;
@@ -67,12 +77,17 @@ export function VoiceDictationButton({
   const [elapsed, setElapsed] = useState(0);
   const [busy, setBusy] = useState(false); // enviando/processando na IA
   const [pending, setPending] = useState<string | null>(null); // texto gerado p/ revisar
+  const [liveText, setLiveText] = useState(""); // legenda ao vivo (rascunho)
 
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const cancelledRef = useRef(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recognitionRef = useRef<any>(null); // instancia do SpeechRecognition
+  const liveFinalRef = useRef(""); // trecho ja finalizado da legenda
+  const recordingActiveRef = useRef(false); // grava? (para reiniciar o reconhecimento em pausas)
 
   const onResult = useCallback((job: DtcAiJob) => {
     setBusy(false);
@@ -95,11 +110,68 @@ export function VoiceDictationButton({
     streamRef.current = null;
   };
 
+  // Legenda ao vivo via Web Speech API. Roda em PARALELO ao MediaRecorder e serve
+  // so de preview (rascunho cru). O texto FINAL continua vindo do whisper+Claude.
+  const startLiveCaption = () => {
+    const SR = getSpeechRecognition();
+    if (!SR) return; // navegador sem suporte -> segue so com o batch
+    try {
+      const rec = new SR();
+      rec.lang = "pt-BR";
+      rec.continuous = true;
+      rec.interimResults = true;
+      liveFinalRef.current = "";
+      setLiveText("");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      rec.onresult = (e: any) => {
+        let interim = "";
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          const r = e.results[i];
+          if (r.isFinal) liveFinalRef.current += r[0].transcript;
+          else interim += r[0].transcript;
+        }
+        setLiveText((liveFinalRef.current + " " + interim).trim());
+      };
+      rec.onerror = () => {
+        /* silencioso: a legenda e best-effort, o batch nao depende dela */
+      };
+      rec.onend = () => {
+        // O reconhecimento para sozinho em pausas de fala; reinicia enquanto grava.
+        if (recordingActiveRef.current) {
+          try {
+            rec.start();
+          } catch {
+            /* ignore */
+          }
+        }
+      };
+      recognitionRef.current = rec;
+      rec.start();
+    } catch {
+      /* preview indisponivel: segue so com o batch */
+    }
+  };
+
+  const stopLiveCaption = () => {
+    recordingActiveRef.current = false;
+    const rec = recognitionRef.current;
+    recognitionRef.current = null;
+    if (rec) {
+      try {
+        rec.onend = null;
+        rec.stop();
+      } catch {
+        /* ignore */
+      }
+    }
+  };
+
   // Cleanup ao desmontar
   useEffect(() => {
     return () => {
       stopTimer();
       releaseStream();
+      stopLiveCaption();
     };
   }, []);
 
@@ -124,6 +196,8 @@ export function VoiceDictationButton({
       rec.onstop = async () => {
         stopTimer();
         releaseStream();
+        stopLiveCaption();
+        setLiveText("");
         setRecording(false);
         if (cancelledRef.current) {
           chunksRef.current = [];
@@ -148,6 +222,8 @@ export function VoiceDictationButton({
       rec.start();
       setRecording(true);
       setElapsed(0);
+      recordingActiveRef.current = true;
+      startLiveCaption(); // legenda ao vivo (best-effort, em paralelo)
       timerRef.current = setInterval(() => {
         setElapsed((s) => {
           const next = s + 1;
@@ -180,6 +256,8 @@ export function VoiceDictationButton({
     }
     stopTimer();
     releaseStream();
+    stopLiveCaption();
+    setLiveText("");
     setRecording(false);
   };
 
@@ -191,38 +269,53 @@ export function VoiceDictationButton({
 
   if (!projectId) return null;
 
-  // Estado: gravando -> barra com timer + parar/cancelar
+  // Estado: gravando -> barra com timer + parar/cancelar + legenda ao vivo
   if (recording) {
     return (
-      <div className="flex items-center gap-1 rounded-full bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 px-2 h-7">
-        <span className="relative flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
-        </span>
-        <span className="text-xs font-semibold tabular-nums text-rose-600 dark:text-rose-400 min-w-[2.5rem]">
-          {fmt(elapsed)}
-        </span>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={stopRecording}
-          className="h-6 gap-1 px-1.5 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-100 dark:hover:bg-rose-900/40"
-          title="Parar e transcrever"
-        >
-          <Square className="h-3 w-3 fill-current" />
-          Parar
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={cancelRecording}
-          className="h-6 w-6 text-muted-foreground hover:text-rose-600"
-          title="Descartar"
-        >
-          <X className="h-3.5 w-3.5" />
-        </Button>
+      <div className="relative">
+        <div className="flex items-center gap-1 rounded-full bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 px-2 h-7">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
+          </span>
+          <span className="text-xs font-semibold tabular-nums text-rose-600 dark:text-rose-400 min-w-[2.5rem]">
+            {fmt(elapsed)}
+          </span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={stopRecording}
+            className="h-6 gap-1 px-1.5 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-100 dark:hover:bg-rose-900/40"
+            title="Parar e transcrever"
+          >
+            <Square className="h-3 w-3 fill-current" />
+            Parar
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={cancelRecording}
+            className="h-6 w-6 text-muted-foreground hover:text-rose-600"
+            title="Descartar"
+          >
+            <X className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+
+        {/* Legenda ao vivo (rascunho). So aparece em navegadores com Web Speech API;
+            o texto profissional final vem do whisper+Claude ao parar. */}
+        {liveText && (
+          <div className="absolute top-full right-0 mt-1 w-80 max-w-[80vw] max-h-32 overflow-y-auto rounded-lg border border-rose-200 dark:border-rose-900 bg-white dark:bg-neutral-900 shadow-lg p-2 z-20">
+            <div className="text-[9px] font-bold uppercase tracking-wide text-rose-500 mb-1">
+              Legenda ao vivo (rascunho)
+            </div>
+            <p className="text-xs leading-snug text-neutral-700 dark:text-neutral-200 whitespace-pre-wrap">
+              {liveText}
+            </p>
+          </div>
+        )}
       </div>
     );
   }
