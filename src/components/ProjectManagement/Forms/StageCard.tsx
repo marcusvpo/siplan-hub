@@ -57,6 +57,10 @@ interface StageCardProps {
   // (ex.: galeria de prints na etapa 4 - Preparacao de Ambiente).
   afterObservations?: React.ReactNode;
 
+  // Conteudo renderizado entre os campos especificos e "Observacoes & Detalhes"
+  // (ex.: campo "Configuracao no Orion Admin" na etapa 4 - Preparacao de Ambiente).
+  beforeObservations?: React.ReactNode;
+
   // Titulo do bloco de campos especificos (children). Default: "Campos Específicos".
   specificFieldsTitle?: string;
 
@@ -86,6 +90,7 @@ export function StageCard({
   projectId,
   requestedBy,
   afterObservations,
+  beforeObservations,
   specificFieldsTitle = "Campos Específicos",
   collapsibleSpecificFields = false,
 }: StageCardProps) {
@@ -433,6 +438,8 @@ export function StageCard({
             </div>
           </div>
         )}
+
+        {beforeObservations}
 
         {/* Rich Text Editor (ou slot customizado, ex.: multiplos blocos + IA) */}
         {observationsSlot ? (

@@ -21,6 +21,8 @@ import { useProjectFiles } from "@/hooks/useProjectFiles";
 import { StageCard } from "@/components/ProjectManagement/Forms/StageCard";
 import { PostObservations } from "@/components/ProjectManagement/Forms/PostObservations";
 import { EnvironmentScreenshots } from "@/components/ProjectManagement/Forms/EnvironmentScreenshots";
+import { ObservationsWithAI } from "@/components/ProjectManagement/Forms/ObservationsWithAI";
+import { CollapsibleFieldSection } from "@/components/ProjectManagement/Forms/CollapsibleFieldSection";
 import { InfraStageForm, AdherenceStageForm, EnvironmentStageForm, ConversionStageForm, ImplementationStageForm } from "../Forms/StageForms";
 import { Accordion } from "@/components/ui/accordion";
 import { Label } from "@/components/ui/label";
@@ -418,6 +420,19 @@ export function StepsTab({
                 specificFieldsTitle="Dados de conexão"
                 collapsibleSpecificFields={true}
                 automationNotice="Automação Ativa: Um e-mail de notificação foi enviado solicitando a preparação deste ambiente."
+                beforeObservations={
+                  <CollapsibleFieldSection title="Configuração no Orion Admin">
+                    <ObservationsWithAI
+                      hideTitle
+                      placeholder="Detalhes da configuração no Orion Admin..."
+                      observations={stagesData.environment.orionAdminConfig}
+                      onChange={(content) => updateStage("environment", { orionAdminConfig: content })}
+                      canEdit={canEditProjects}
+                      projectId={project.id}
+                      requestedBy={currentUserName}
+                    />
+                  </CollapsibleFieldSection>
+                }
                 afterObservations={
                   <EnvironmentScreenshots
                     projectId={project.id}

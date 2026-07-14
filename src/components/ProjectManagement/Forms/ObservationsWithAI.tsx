@@ -51,6 +51,7 @@ function getEditorContent(obs?: string): string | object {
 interface ObservationsWithAIProps {
   label?: string; // usado no placeholder padrao ("Detalhes da etapa de {label}...")
   title?: string; // rotulo do cabecalho (default "Observações & Detalhes")
+  hideTitle?: boolean; // oculta o rotulo interno (ex.: quando um wrapper ja exibe o titulo)
   placeholder?: string;
   observations?: string;
   onChange: (obs: string) => void;
@@ -67,6 +68,7 @@ interface ObservationsWithAIProps {
 export function ObservationsWithAI({
   label = "",
   title = "Observações & Detalhes",
+  hideTitle = false,
   placeholder,
   observations,
   onChange,
@@ -117,13 +119,15 @@ export function ObservationsWithAI({
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <div className="h-0.5 w-6 bg-neutral-300 dark:bg-neutral-700 rounded-full" />
-          <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-            {title}
-          </Label>
-        </div>
+      <div className={`flex items-center gap-2 ${hideTitle ? "justify-end" : "justify-between"}`}>
+        {!hideTitle && (
+          <div className="flex items-center gap-2">
+            <div className="h-0.5 w-6 bg-neutral-300 dark:bg-neutral-700 rounded-full" />
+            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              {title}
+            </Label>
+          </div>
+        )}
         {canEdit && projectId && (
           <Button
             type="button"
