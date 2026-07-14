@@ -128,3 +128,39 @@ export function plainTextToLexicalJson(text: string): string {
     },
   });
 }
+
+/**
+ * Anexa um texto (Markdown leve) ao conteúdo Lexical existente, preservando os nós
+ * já presentes. Usado no preenchimento por voz: o texto ditado entra como novos
+ * parágrafos ao fim do campo, sem apagar o que o analista já havia escrito.
+ * Se o conteúdo atual estiver vazio/inválido, retorna só o texto convertido.
+ */
+export function appendPlainTextToLexicalJson(
+  existing: string | object | undefined,
+  text: string
+): string {
+  const appended = plainTextToLexicalJson(text);
+  if (!existing) return appended;
+
+  try {
+    const base = typeof existing === "string" ? JSON.parse(existing) : existing;
+    const baseChildren: LexicalNode[] = base?.root?.children;
+    if (!Array.isArray(baseChildren) || baseChildren.length === 0) return appended;
+
+    const newChildren: LexicalNode[] = JSON.parse(appended).root.children;
+    return JSON.stringify({
+      root: {
+        children: [...baseChildren, ...newChildren],
+        direction: "ltr",
+        format: "",
+        indent: 0,
+        type: "root",
+        version: 1,
+      },
+    });
+  } catch {
+    // Conteúdo legado (HTML/blocos) que não é JSON Lexical: não dá para mesclar com
+    // segurança; devolve só o texto novo (o chamador decide manter/substituir).
+    return appended;
+  }
+}

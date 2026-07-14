@@ -111,6 +111,19 @@ export const config = {
   // Se definida (DTC_FALLBACK_API_KEY), o resumo tenta de novo cobrando via API.
   fallbackApiKey: process.env.DTC_FALLBACK_API_KEY || "",
 
+  // Transcricao de voz (jobs 'voice_note'). whisper.cpp roda LOCALMENTE na VM:
+  // sem chave, custo zero por uso, audio nao sai da VM. whisper-cli exige WAV
+  // 16kHz mono, entao o audio do navegador (webm/opus, mp4/aac) e convertido
+  // antes com ffmpeg. Ajuste os caminhos no .env conforme a instalacao.
+  //   WHISPER_BIN    -> binario whisper-cli (ou main) do whisper.cpp compilado
+  //   WHISPER_MODEL  -> arquivo ggml do modelo (ex.: ggml-large-v3-turbo.bin)
+  //   WHISPER_LANGUAGE -> idioma forcado (default 'pt' -> pt-BR)
+  //   FFMPEG_BIN     -> binario do ffmpeg para converter o audio em WAV 16k mono
+  whisperBin: process.env.WHISPER_BIN || "whisper-cli",
+  whisperModel: process.env.WHISPER_MODEL || "/opt/whisper.cpp/models/ggml-large-v3-turbo.bin",
+  whisperLanguage: process.env.WHISPER_LANGUAGE || "pt",
+  ffmpegBin: process.env.FFMPEG_BIN || "ffmpeg",
+
   // Geracao headless (Claude Code + skill criar-modelo-mesclado)
   // Valor inicial (log de boot). O spawn usa getClaudeBin(), que revalida.
   claudeBin: getClaudeBin(),
@@ -143,6 +156,8 @@ export interface DtcJob {
   attempts: number;
   job_type?: string;
   input_text?: string | null;
+  // Caminho do audio no Storage (bucket project-files) para jobs 'voice_note'.
+  audio_path?: string | null;
 }
 
 // Job do Copiloto Operacional: uma pergunta em linguagem natural sobre o portfolio.

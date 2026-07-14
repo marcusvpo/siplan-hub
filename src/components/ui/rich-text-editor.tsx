@@ -10,16 +10,34 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { VoiceDictationButton } from "@/components/ui/voice-dictation-button"
+import { appendPlainTextToLexicalJson, plainTextToLexicalJson } from "@/lib/lexical"
 
 interface RichTextEditorProps {
   content: string | object; // HTML string or JSON object
   onChange: (content: string) => void; // Returns JSON string
   editable?: boolean;
   placeholder?: string;
+  /** Habilita o botão "Preencher por voz" (requer projectId). */
+  enableVoice?: boolean;
+  projectId?: string;
+  requestedBy?: string;
 }
 
-export function RichTextEditor({ content, onChange, editable = true, placeholder }: RichTextEditorProps) {
+export function RichTextEditor({ content, onChange, editable = true, placeholder, enableVoice, projectId, requestedBy }: RichTextEditorProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  // O componente Editor (Lexical) só lê o conteúdo no mount; ao aplicar texto por
+  // voz forçamos um remount bumpando esta key para o novo conteúdo aparecer.
+  const [editorKey, setEditorKey] = useState(0);
+
+  const showVoice = !!(enableVoice && editable && projectId);
+  const applyVoiceText = (text: string, mode: "append" | "replace") => {
+    const next = mode === "append"
+      ? appendPlainTextToLexicalJson(content, text)
+      : plainTextToLexicalJson(text);
+    onChange(next);
+    setEditorKey((k) => k + 1);
+  };
 
   // Memoize config to prevent re-initialization on every render unless content changes meaningfully
   // Note: Editor component might not react to config prop changes after mount, so keying might be needed if external updates happen.
@@ -46,22 +64,33 @@ export function RichTextEditor({ content, onChange, editable = true, placeholder
 
   return (
     <div className="relative group min-h-[200px] w-full border rounded-md bg-background">
-      {/* Focus Mode Button */}
-      {editable && (
-          <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsExpanded(true)}
-                title="Modo Foco (Tela Cheia)"
-            >
-                <Maximize2 className="h-4 w-4 text-muted-foreground" />
-            </Button>
+      {/* Toolbar do canto: voz (sempre visível) + modo foco (no hover) */}
+      {(showVoice || editable) && (
+          <div className="absolute top-2 right-2 z-10 flex items-center gap-1">
+            {showVoice && (
+              <VoiceDictationButton
+                projectId={projectId}
+                requestedBy={requestedBy}
+                onApply={applyVoiceText}
+              />
+            )}
+            {editable && (
+              <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsExpanded(true)}
+                  title="Modo Foco (Tela Cheia)"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                  <Maximize2 className="h-4 w-4 text-muted-foreground" />
+              </Button>
+            )}
           </div>
       )}
 
-      <div className="p-1">
+      <div className={showVoice ? "p-1 pt-11" : "p-1"}>
         <Editor
+            key={editorKey}
             editorSerializedState={initialConfig}
             onSerializedChange={(value) => onChange(JSON.stringify(value))}
             placeholder={placeholder}

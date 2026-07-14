@@ -3,6 +3,7 @@ import { config, Job, DtcJob, CopilotJob } from "./config.js";
 import { processJob } from "./processJob.js";
 import { processDtcJob } from "./processDtcJob.js";
 import { processImproveJob } from "./processImproveJob.js";
+import { processVoiceJob } from "./processVoiceJob.js";
 import { processCopilotJob } from "./processCopilotJob.js";
 import { generateDailyDigest } from "./processCopilotDigest.js";
 
@@ -182,11 +183,15 @@ async function claimOneDtcJob(): Promise<boolean> {
   const typedJob = job as DtcJob | null;
   if (!typedJob || !typedJob.id) return false;
   // improve_text (melhorar um bloco) e summary_blocks (resumo geral da etapa 7)
-  // compartilham o mesmo pipeline de texto avulso; o restante e o resumo do DTC.
+  // compartilham o mesmo pipeline de texto avulso; voice_note transcreve+eleva um
+  // audio; o restante e o resumo do DTC.
+  const isVoiceJob = typedJob.job_type === "voice_note";
   const isTextJob = typedJob.job_type === "improve_text" || typedJob.job_type === "summary_blocks";
-  console.log(`[${isTextJob ? typedJob.job_type : "dtc"} ${typedJob.id}] iniciado (tentativa ${typedJob.attempts})`);
+  const kind = isVoiceJob ? "voice" : isTextJob ? typedJob.job_type : "dtc";
+  console.log(`[${kind} ${typedJob.id}] iniciado (tentativa ${typedJob.attempts})`);
   try {
-    if (isTextJob) await processImproveJob(typedJob);
+    if (isVoiceJob) await processVoiceJob(typedJob);
+    else if (isTextJob) await processImproveJob(typedJob);
     else await processDtcJob(typedJob);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
