@@ -315,7 +315,7 @@ export function EnvironmentScreenshots({
             <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
           )}
           <div className="h-0.5 w-6 bg-neutral-300 dark:bg-neutral-700 rounded-full" />
-          <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5 cursor-pointer group-hover:text-foreground transition-colors">
+          <Label className="text-xs font-extrabold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5 cursor-pointer group-hover:text-foreground transition-colors">
             <ImageIcon className="h-3 w-3 text-indigo-500" />
             Galeria de Imagens
             {hasShots && (

@@ -417,13 +417,13 @@ export function StageCard({
                     ) : (
                       <ChevronRight className="h-3.5 w-3.5 text-neutral-500 dark:text-neutral-400" />
                     )}
-                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5 cursor-pointer group-hover:text-foreground transition-colors">
+                    <h4 className="text-xs font-extrabold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5 cursor-pointer group-hover:text-foreground transition-colors">
                       <div className="h-1 w-4 bg-neutral-400 dark:bg-neutral-650 rounded-full" />
                       {specificFieldsTitle}
                     </h4>
                   </button>
                 ) : (
-                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5">
+                  <h4 className="text-xs font-extrabold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5">
                     <div className="h-1 w-4 bg-neutral-400 dark:bg-neutral-650 rounded-full" />
                     {specificFieldsTitle}
                   </h4>
