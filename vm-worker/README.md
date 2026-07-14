@@ -131,6 +131,65 @@ sudo journalctl -u siplan-model-worker -f
 </details>
 
 <details>
+<summary><b>Dois workers na mesma assinatura (split por funcao, custo zero)</b></summary>
+
+A geracao de modelo pode levar ate 30 min e, com **um worker unico**, trava as demais
+funcoes de IA (melhorar-texto, voz, copiloto) enquanto roda. Para evitar isso **sem gastar
+alem da assinatura**, rode **dois** servicos na mesma VM/assinatura, separados por funcao via
+`WORKER_ROLES` (ver a variavel no `.env.example`):
+
+- **`siplan-model-worker`** — `WORKER_ROLES=models` (so `model_generation_jobs`).
+- **`siplan-ai-worker`** — `WORKER_ROLES=ai` (so `dtc_ai_jobs` — texto/voz — + `copilot_jobs`).
+
+Assim um modelo gerando **nunca** bloqueia texto/voz/copiloto. Tradeoff (gratis): os dois
+consomem a **mesma cota** da assinatura; se estourar o limite de sessao, os jobs voltam pra
+fila e esperam o reset (nao viram erro, nao cobram a mais).
+
+1. Adicione ao unit `siplan-model-worker.service` (secao `[Service]`):
+   ```ini
+   Environment=WORKER_ROLES=models
+   Environment=WORKER_ID=vm-models
+   ```
+   (o `Environment=` do systemd tem prioridade sobre o `.env`, pois o dotenv nao sobrescreve
+   variaveis ja definidas.)
+
+2. Crie `/etc/systemd/system/siplan-ai-worker.service` (identico ao de modelos, trocando a
+   Description e adicionando os dois `Environment` abaixo):
+   ```ini
+   [Unit]
+   Description=SiplanHUB VM Worker (IA rapida: texto/voz/copiloto)
+   After=network-online.target
+   Wants=network-online.target
+
+   [Service]
+   Type=simple
+   User=administrator
+   WorkingDirectory=/home/administrator/vm-worker
+   Environment=PATH=/home/administrator/.nvm/versions/node/v22.23.1/bin:/usr/bin:/bin
+   Environment=WORKER_ROLES=ai
+   Environment=WORKER_ID=vm-ai
+   ExecStart=/home/administrator/.nvm/versions/node/v22.23.1/bin/node /home/administrator/vm-worker/node_modules/tsx/dist/cli.mjs src/index.ts
+   Restart=always
+   RestartSec=10
+
+   [Install]
+   WantedBy=multi-user.target
+   ```
+
+3. Ative os dois:
+   ```bash
+   sudo systemctl daemon-reload
+   sudo systemctl restart siplan-model-worker      # agora so com papel 'models'
+   sudo systemctl enable --now siplan-ai-worker    # novo worker de IA rapida
+   ```
+
+Compartilham o mesmo codigo (`/home/administrator/vm-worker`) e `.env`; so mudam `WORKER_ROLES`
+e `WORKER_ID`. O `auto-deploy.sh` ja reinicia os dois quando o codigo muda. No boot pelo log deve
+aparecer `papeis=models` num e `papeis=ai` no outro, ambos com `Realtime: SUBSCRIBED`.
+
+</details>
+
+<details>
 <summary><b>Runbook de deploy (atualizar o worker)</b></summary>
 
 1. Copiar os arquivos atualizados de `vm-worker/` para `/home/administrator/vm-worker/`.

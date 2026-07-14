@@ -283,14 +283,15 @@ async function claimAndProcess(): Promise<void> {
   busy = true;
   void sendHeartbeat("busy");
   try {
-    // eslint-disable-next-line no-constant-condition
     while (true) {
-      const gotModel = await claimOneModelJob();
-      if (gotModel) continue;
-      const gotDtc = await claimOneDtcJob();
-      if (gotDtc) continue;
-      const gotCopilot = await claimOneCopilotJob();
-      if (!gotCopilot) return; // todas as filas vazias
+      // Modelos (lento) so se este worker tiver o papel 'models'.
+      if (config.workerRoles.models && (await claimOneModelJob())) continue;
+      // Texto/voz/copiloto (rapido) so se tiver o papel 'ai'.
+      if (config.workerRoles.ai) {
+        if (await claimOneDtcJob()) continue;
+        if (await claimOneCopilotJob()) continue;
+      }
+      return; // nenhuma fila deste worker tem job pendente
     }
   } finally {
     busy = false;
@@ -353,7 +354,8 @@ function installShutdownHandlers() {
 }
 
 async function main() {
-  console.log(`SiplanHUB VM worker iniciado (worker_id=${config.workerId}).`);
+  const roles = [config.workerRoles.models && "models", config.workerRoles.ai && "ai"].filter(Boolean).join("+") || "nenhum";
+  console.log(`SiplanHUB VM worker iniciado (worker_id=${config.workerId}, papeis=${roles}).`);
   console.log(`Bucket=${config.bucket} | poll=${config.pollIntervalMs}ms | timeout=${config.jobTimeoutMs}ms`);
   console.log(`Claude bin: ${config.claudeBin}`);
 
@@ -366,31 +368,37 @@ async function main() {
   // 0b. Recupera jobs que ficaram presos em 'processing' de um restart anterior
   await recoverOwnStuckJobs();
 
-  // 1. Realtime: acorda o worker assim que um job e inserido (conexao de SAIDA, sem tunel)
-  supabase
-    .channel("vm-worker-jobs")
-    .on(
+  // 1. Realtime: acorda o worker assim que um job e inserido (conexao de SAIDA, sem
+  //    tunel). So assina as tabelas das filas que ESTE worker processa (por papel).
+  let channel = supabase.channel(`vm-worker-jobs-${config.workerId}`);
+  if (config.workerRoles.models) {
+    channel = channel.on(
       "postgres_changes",
       { event: "INSERT", schema: "public", table: "model_generation_jobs" },
       () => { void claimAndProcess(); }
-    )
-    .on(
-      "postgres_changes",
-      { event: "INSERT", schema: "public", table: "dtc_ai_jobs" },
-      () => { void claimAndProcess(); }
-    )
-    .on(
-      "postgres_changes",
-      { event: "INSERT", schema: "public", table: "copilot_jobs" },
-      () => { void claimAndProcess(); }
-    )
-    .subscribe((status) => console.log("Realtime:", status));
+    );
+  }
+  if (config.workerRoles.ai) {
+    channel = channel
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "dtc_ai_jobs" },
+        () => { void claimAndProcess(); }
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "copilot_jobs" },
+        () => { void claimAndProcess(); }
+      );
+  }
+  channel.subscribe((status) => console.log("Realtime:", status));
 
   // 2. Polling de fallback: pega jobs perdidos + roda o reaper + resumo diario
   const tick = async () => {
     await reapStuckJobs();
     await claimAndProcess();
-    await maybeDailyDigest();
+    // O resumo diario do portfolio e tarefa do copiloto -> so o worker 'ai'.
+    if (config.workerRoles.ai) await maybeDailyDigest();
   };
   void tick();
   setInterval(() => { void tick(); }, config.pollIntervalMs);
