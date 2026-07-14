@@ -7,6 +7,26 @@ Quando o analista sobe um documento do cliente na aba 5 e clica em "Gerar modelo
 o SiplanHUB enfileira um job. Este worker puxa o job, roda a skill em modo headless autônomo, e
 devolve o `modelo.json` gerado direto para a coluna "Modelos Disponíveis (JSON)" da categoria.
 
+> **Este é o único worker da VM** e processa **várias filas** (não só a de modelos). Cada
+> funcionalidade de IA do app enfileira em uma tabela do Supabase e este processo reivindica e
+> executa. Documentação por funcionalidade em [`../docs/`](../docs/README.md).
+
+<details>
+<summary><b>Filas processadas por este worker</b></summary>
+
+| Fila (tabela) | O que faz | Job types | Doc |
+|---|---|---|---|
+| `model_generation_jobs` | Geração automática de modelos (aba 5) | — | este README |
+| `dtc_ai_jobs` | IA de texto: "Gerar com IA" (Considerações Finais), "Melhorar texto", "Resumo geral" | `dtc_summary`, `improve_text`, `summary_blocks` | [FUNCIONALIDADE_GERAR_COM_IA.md](../docs/FUNCIONALIDADE_GERAR_COM_IA.md) |
+| `dtc_ai_jobs` | **Preencher por voz** (ditado → transcrição → texto profissional) | `voice_note` | [FUNCIONALIDADE_VOZ.md](../docs/FUNCIONALIDADE_VOZ.md) |
+| `copilot_jobs` | Copiloto Operacional (chat sobre o portfólio) + digest diário | — | [FUNCIONALIDADE_COPILOTO.md](../docs/FUNCIONALIDADE_COPILOTO.md) |
+
+Os jobs de modelos rodam o Claude dentro de `/opt/Orion.Modelos` (com a skill). Os demais rodam o
+Claude em tarefas de texto puro. **Voz** depende adicionalmente de `whisper.cpp` + `ffmpeg` na VM
+(ver seção própria abaixo).
+
+</details>
+
 <details>
 <summary><b>Fluxo</b></summary>
 
@@ -140,6 +160,43 @@ sudo journalctl -u siplan-model-worker -f
 | `ORION_PROJECT_DIR` | Projeto onde a skill roda (padrao `/opt/Orion.Modelos`). |
 | `MODELOS_CRIADOS_DIR` | Pasta de saida dos JSONs (padrao `<ORION_PROJECT_DIR>/modelos_criados`). |
 | `ENTRADA_DIR` | Onde o worker baixa o doc do cliente (padrao `/home/administrator/siplan_entrada`). |
+| `DTC_MODEL` | Modelo do Claude nas tarefas de texto (padrao `sonnet`). |
+| `DTC_FALLBACK_API_KEY` | (Opcional) API key p/ fallback quando a assinatura bate o limite de sessao. |
+| `COPILOT_MODEL` | Modelo do Copiloto Operacional (padrao `haiku`). |
+| `COPILOT_CWD` | Diretorio neutro onde o copiloto roda a CLI (padrao `<tmp>/siplan-copilot`). |
+| `WHISPER_BIN` | (Voz) Binario do whisper.cpp (ex.: `/opt/whisper.cpp/build/bin/whisper-cli`). |
+| `WHISPER_MODEL` | (Voz) Arquivo ggml do modelo (ex.: `.../ggml-large-v3-turbo.bin`). |
+| `WHISPER_LANGUAGE` | (Voz) Idioma forcado (padrao `pt`). |
+| `FFMPEG_BIN` | (Voz) Binario do ffmpeg (padrao `ffmpeg`). |
+
+</details>
+
+<details>
+<summary><b>Transcricao de voz (whisper.cpp) — dependencia do "Preencher por voz"</b></summary>
+
+Os jobs `voice_note` (fila `dtc_ai_jobs`) transcrevem o audio **localmente** com `whisper.cpp` e
+depois elevam o texto com o Claude. Requer, **so nesta VM**, `ffmpeg` + `whisper.cpp` + um modelo ggml.
+O Claude Code headless **nao ingere audio** — quem transcreve e o whisper.cpp.
+
+Instalar (uma vez, como root):
+
+```bash
+sudo apt-get update && sudo apt-get install -y ffmpeg git build-essential cmake
+sudo git clone https://github.com/ggerganov/whisper.cpp /opt/whisper.cpp
+cd /opt/whisper.cpp && sudo cmake -B build && sudo cmake --build build -j --config Release
+sudo ./models/download-ggml-model.sh large-v3-turbo   # ~1.6 GB, bom pt-BR
+# aponta no .env:
+cd /home/administrator/vm-worker
+grep -q '^WHISPER_BIN='   .env || echo 'WHISPER_BIN=/opt/whisper.cpp/build/bin/whisper-cli' >> .env
+grep -q '^WHISPER_MODEL=' .env || echo 'WHISPER_MODEL=/opt/whisper.cpp/models/ggml-large-v3-turbo.bin' >> .env
+sudo systemctl restart siplan-model-worker
+```
+
+Teste: `./build/bin/whisper-cli -m models/ggml-large-v3-turbo.bin -f samples/jfk.wav -l en -nt`.
+Detalhes completos (fluxo, banco, frontend, troubleshooting, migracao) em
+[../docs/FUNCIONALIDADE_VOZ.md](../docs/FUNCIONALIDADE_VOZ.md).
+
+**Sem whisper.cpp/ffmpeg/modelo, apenas os jobs de voz falham** — modelos, DTC e copiloto seguem normais.
 
 </details>
 

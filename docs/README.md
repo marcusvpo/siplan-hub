@@ -56,12 +56,16 @@ Catálogo dos custom hooks, stores Zustand e contexto de autenticação, organiz
 </details>
 
 <details>
-<summary><b>6. Geração automática de modelos (worker na VM)</b></summary>
+<summary><b>6. Worker na VM e funcionalidades de IA</b></summary>
 
-Worker na VM Linux que conecta a aba 5 (Modelos Editor) ao gerador de modelos do Orion
-(Claude Code + skill `criar-modelo-mesclado`). Setup, systemd e segurança.
+Um único worker na VM Linux processa todas as filas de IA do app (Claude headless + whisper.cpp).
+Setup, systemd, autodeploy, segurança e as filas processadas.
 
-- **Acesse:** [../vm-worker/README.md](../vm-worker/README.md)
+- **Worker (visão geral, setup, deploy):** [../vm-worker/README.md](../vm-worker/README.md)
+- **Geração automática de modelos** (aba 5, skill `criar-modelo-mesclado`): [../vm-worker/README.md](../vm-worker/README.md)
+- **"Gerar com IA" / Melhorar texto / Resumo** (fila `dtc_ai_jobs`): [FUNCIONALIDADE_GERAR_COM_IA.md](FUNCIONALIDADE_GERAR_COM_IA.md)
+- **Preencher por voz** (ditado → whisper.cpp → Claude): [FUNCIONALIDADE_VOZ.md](FUNCIONALIDADE_VOZ.md)
+- **Copiloto Operacional** (chat sobre o portfólio, fila `copilot_jobs`): [FUNCIONALIDADE_COPILOTO.md](FUNCIONALIDADE_COPILOTO.md)
 
 </details>
 
