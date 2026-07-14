@@ -144,6 +144,43 @@ async function requeueForQuota(
   console.log(`[job ${id}] limite de sessao -> reenfileirado, proxima tentativa apos ${retryAfter}`);
 }
 
+// Assinatura de "timeout": a geracao passou de JOB_TIMEOUT_MS e o runSkill abortou
+// (ex.: "Timeout: a geracao excedeu 1800000 ms"). Diferente de quota: aqui a tentativa
+// E consumida (o retry e limitado por MAX_ATTEMPTS para nao rodar 30 min em loop).
+const TIMEOUT_RE = /geracao excedeu \d+ ms|timeout: a geracao/i;
+function isTimeout(message: string): boolean {
+  return TIMEOUT_RE.test(message);
+}
+
+/**
+ * Erro retentavel (ex.: timeout): devolve o job para a fila (status 'pending')
+ * mantendo o contador de tentativas (o claim ja incrementou), para retentar ate
+ * MAX_ATTEMPTS. Retorna true se reenfileirou; false se as tentativas se esgotaram
+ * (nesse caso o chamador marca 'error' definitivo).
+ */
+async function requeueForRetry(
+  table: "model_generation_jobs" | "dtc_ai_jobs" | "copilot_jobs",
+  id: string,
+  attempts: number,
+  reason: string
+): Promise<boolean> {
+  if (attempts >= config.maxAttempts) return false; // esgotou -> deixa virar erro
+  await supabase
+    .from(table)
+    .update({
+      status: "pending",
+      worker_id: null,
+      started_at: null,
+      retry_after: new Date().toISOString(), // elegivel de imediato
+      error_message: null,
+      progress: `${reason} Retentando automaticamente (tentativa ${attempts + 1} de ${config.maxAttempts})...`,
+    })
+    .eq("id", id)
+    .then(undefined, (e) => console.error("Falha ao reenfileirar para retry:", e));
+  console.log(`[job ${id}] ${reason} -> reenfileirado (tentativa ${attempts}/${config.maxAttempts})`);
+  return true;
+}
+
 // Reivindica e processa UM job de modelo. Retorna true se pegou algum.
 async function claimOneModelJob(): Promise<boolean> {
   const { data: job, error } = await supabase.rpc("claim_model_generation_job", {
@@ -163,6 +200,11 @@ async function claimOneModelJob(): Promise<boolean> {
     const msg = err instanceof Error ? err.message : String(err);
     if (isQuotaExhausted(msg)) {
       await requeueForQuota("model_generation_jobs", typedJob.id, typedJob.attempts);
+    } else if (
+      isTimeout(msg) &&
+      (await requeueForRetry("model_generation_jobs", typedJob.id, typedJob.attempts, "Timeout na geracao do modelo."))
+    ) {
+      console.warn(`[job ${typedJob.id}] timeout -> reenfileirado para nova tentativa`);
     } else {
       console.error(`[job ${typedJob.id}] erro:`, msg);
       await markError("model_generation_jobs", typedJob.id, msg);
