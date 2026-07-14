@@ -275,6 +275,7 @@ export interface EnvironmentStageV2 {
   postgresHost?: string;
   postgresUser?: string;
   postgresPassword?: string;
+  orionAdminConfig?: string;
   screenshots?: EnvironmentScreenshot[];
 }
 
