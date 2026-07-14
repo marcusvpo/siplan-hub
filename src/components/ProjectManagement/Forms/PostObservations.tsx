@@ -55,8 +55,8 @@ function parseState(obs?: string): PostState {
   if (!obs || !obs.trim()) return empty;
   try {
     const p = JSON.parse(obs);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (p && p.v === 2 && Array.isArray(p.blocks)) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const blocks = (p.blocks as any[]).map((b) =>
         makeBlock(
           typeof b?.content === "string" ? b.content : b?.content ? JSON.stringify(b.content) : "",
@@ -518,6 +518,9 @@ export function PostObservations({
                     onChange={(content) => updateBlock(block.id, content)}
                     placeholder={`Detalhes da pós-implantação (bloco ${idx + 1})...`}
                     editable={canEdit}
+                    enableVoice
+                    projectId={projectId}
+                    requestedBy={requestedBy}
                   />
                 </div>
               </div>
