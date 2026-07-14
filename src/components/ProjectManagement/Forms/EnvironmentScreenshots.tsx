@@ -255,6 +255,34 @@ export function EnvironmentScreenshots({
     handleFiles(e.dataTransfer.files);
   };
 
+  // --- Colar print da area de transferencia (Ctrl+V) ---
+  // Escopo: so quando o dropzone esta focado (clicar nele), para nao capturar
+  // colagens destinadas ao editor de texto acima.
+  const onZonePaste = (e: React.ClipboardEvent) => {
+    if (!canUpload) return;
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    const images: File[] = [];
+    for (const item of Array.from(items)) {
+      if (item.kind === "file" && item.type.startsWith("image/")) {
+        const file = item.getAsFile();
+        if (!file) continue;
+        // Print da clipboard costuma vir sem nome util; da um nome amigavel.
+        const ext = file.type.split("/")[1] || "png";
+        const named =
+          file.name && file.name !== "image.png"
+            ? file
+            : new File([file], `print-colado-${Date.now()}.${ext}`, { type: file.type });
+        images.push(named);
+      }
+    }
+    if (images.length === 0) return;
+    e.preventDefault();
+    const dt = new DataTransfer();
+    images.forEach((f) => dt.items.add(f));
+    handleFiles(dt.files);
+  };
+
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-2">
@@ -310,15 +338,22 @@ export function EnvironmentScreenshots({
           onDragOver={onZoneDragOver}
           onDragLeave={onZoneDragLeave}
           onDrop={onZoneDrop}
+          onPaste={onZonePaste}
+          tabIndex={canUpload ? 0 : undefined}
+          aria-label="Área de prints: arraste, cole (Ctrl+V) ou use o botão Adicionar prints"
           className={cn(
-            "relative space-y-2 rounded-lg transition-colors",
+            "relative space-y-2 rounded-lg transition-colors outline-none",
+            canUpload &&
+              "focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
             dragOver &&
               "ring-2 ring-indigo-400 ring-offset-2 ring-offset-background bg-indigo-50/40 dark:bg-indigo-950/20"
           )}
         >
           <p className="text-[11px] text-muted-foreground px-1">
             Anexe prints da tela com o sistema configurado. Arraste imagens do seu computador
-            para cá ou clique em "Adicionar prints". Clique numa imagem para ampliar.
+            para cá, clique em "Adicionar prints", ou clique nesta área e cole com{" "}
+            <kbd className="px-1 py-0.5 rounded border border-border bg-muted text-[10px] font-mono">Ctrl+V</kbd>.
+            Clique numa imagem para ampliar.
           </p>
 
           {!hasShots ? (
