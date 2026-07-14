@@ -429,7 +429,7 @@ export function PostObservations({
             ) : (
               <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
             )}
-            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground cursor-pointer group-hover:text-foreground transition-colors">
+            <Label className="text-base font-bold uppercase tracking-wide text-muted-foreground cursor-pointer group-hover:text-foreground transition-colors">
               Observações & Detalhes
             </Label>
             {blocks.length > 1 && (
@@ -543,8 +543,8 @@ export function PostObservations({
             ) : (
               <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
             )}
-            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5 cursor-pointer group-hover:text-foreground transition-colors">
-              <FileText className="h-3 w-3 text-indigo-500" />
+            <Label className="text-base font-bold uppercase tracking-wide text-muted-foreground flex items-center gap-1.5 cursor-pointer group-hover:text-foreground transition-colors">
+              <FileText className="h-4 w-4 text-indigo-500" />
               Resumo Geral
             </Label>
           </button>
