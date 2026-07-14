@@ -15,19 +15,23 @@ const PROGRESS_FLUSH_MS = 2500;
 // repeticoes e possiveis erros do reconhecimento). Pedimos ao Claude que limpe e
 // eleve, mas SEM inventar fatos.
 function buildVoicePrompt(transcript: string): string {
-  return `Voce e um redator profissional. O TEXTO ORIGINAL abaixo e a transcricao bruta de um audio ditado por um analista de implantacao (fala espontanea, transcrita automaticamente). Reescreva-o como um texto escrito claro, coeso, bem pontuado e com portugues formal e profissional.
+  return `Voce e um redator profissional. O TEXTO ORIGINAL abaixo e a transcricao bruta de um audio ditado por um analista de implantacao (fala espontanea, transcrita automaticamente). Reescreva-o como um relato escrito rico, claro, bem estruturado, bem pontuado e com portugues formal e profissional.
 
 REGRAS:
 - Preserve INTEGRALMENTE o sentido, os fatos, nomes, datas e numeros ditados. NAO invente, NAO acrescente e NAO remova informacoes.
 - Remova hesitacoes, repeticoes, muletas ("ne", "tipo", "entao assim") e falsos comecos tipicos da fala.
 - Corrija provaveis erros de transcricao quando o contexto tornar a intencao obvia; na duvida, mantenha.
-- Portugues do Brasil. Nao adicione preambulo, titulo, nem comentarios sobre o que voce mudou.
-- Organize em paragrafos e, quando fizer sentido, em listas.
+- Portugues do Brasil. Nao adicione preambulo, titulo geral, nem comentarios sobre o que voce mudou.
+- Estruture o conteudo: agrupe por assunto em paragrafos e, sempre que houver enumeracao (etapas, itens, setores, pendencias), use listas.
 
-FORMATACAO (Markdown leve, com moderacao e apenas quando agregar clareza):
-- **negrito** para termos-chave. __sublinhado__ para enfase critica. *italico* para observacoes secundarias.
-- Listas com "- " no inicio da linha; listas numeradas com "1." quando houver ordem.
+FORMATACAO (Markdown leve — USE de forma ativa para destacar o que importa, sem exagerar a ponto de quase tudo ficar marcado):
+- **negrito** para termos-chave, nomes de sistemas/setores, decisoes, entregas e resultados.
+- __sublinhado__ para pontos criticos, prazos e pendencias que exigem atencao.
+- *italico* para observacoes secundarias e ressalvas.
+- Listas com "- " no inicio da linha; listas numeradas com "1." quando houver ordem/sequencia.
 Nao use titulos com "#", nem tabelas, nem blocos de codigo.
+
+Objetivo: um texto que um gestor leia e entenda rapidamente o que foi feito, com os pontos-chave saltando aos olhos pela formatacao — sempre fiel ao que foi ditado.
 
 Responda SOMENTE com o texto reescrito, sem aspas e sem qualquer texto adicional.
 
