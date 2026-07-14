@@ -88,6 +88,7 @@ export function VoiceDictationButton({
   const recognitionRef = useRef<any>(null); // instancia do SpeechRecognition
   const liveFinalRef = useRef(""); // trecho ja finalizado da legenda
   const recordingActiveRef = useRef(false); // grava? (para reiniciar o reconhecimento em pausas)
+  const captionRef = useRef<HTMLDivElement>(null); // container da legenda (auto-scroll)
 
   const onResult = useCallback((job: DtcAiJob) => {
     setBusy(false);
@@ -174,6 +175,12 @@ export function VoiceDictationButton({
       stopLiveCaption();
     };
   }, []);
+
+  // Auto-scroll da legenda para o fim conforme o texto cresce.
+  useEffect(() => {
+    const el = captionRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [liveText]);
 
   const startRecording = async () => {
     if (!projectId) return;
@@ -269,54 +276,66 @@ export function VoiceDictationButton({
 
   if (!projectId) return null;
 
-  // Estado: gravando -> barra com timer + parar/cancelar + legenda ao vivo
+  // Estado: gravando -> modal com timer, legenda ao vivo grande e Parar/Descartar.
   if (recording) {
     return (
-      <div className="relative">
-        <div className="flex items-center gap-1 rounded-full bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 px-2 h-7">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
-          </span>
-          <span className="text-xs font-semibold tabular-nums text-rose-600 dark:text-rose-400 min-w-[2.5rem]">
-            {fmt(elapsed)}
-          </span>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={stopRecording}
-            className="h-6 gap-1 px-1.5 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-100 dark:hover:bg-rose-900/40"
-            title="Parar e transcrever"
-          >
-            <Square className="h-3 w-3 fill-current" />
-            Parar
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={cancelRecording}
-            className="h-6 w-6 text-muted-foreground hover:text-rose-600"
-            title="Descartar"
-          >
-            <X className="h-3.5 w-3.5" />
-          </Button>
-        </div>
+      <Dialog open onOpenChange={(o) => !o && cancelRecording()}>
+        <DialogContent
+          className="max-w-lg"
+          onInteractOutside={(e) => e.preventDefault()}
+        >
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Mic className="h-5 w-5 text-rose-500" />
+              Gravando
+              <span className="ml-1 inline-flex items-center gap-1.5 rounded-full bg-rose-50 dark:bg-rose-950/40 px-2 py-0.5">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
+                </span>
+                <span className="text-sm font-semibold tabular-nums text-rose-600 dark:text-rose-400">
+                  {fmt(elapsed)}
+                </span>
+              </span>
+            </DialogTitle>
+            <DialogDescription>
+              Fale com calma. O texto abaixo é um rascunho ao vivo; ao parar, a IA gera
+              a versão profissional final.
+            </DialogDescription>
+          </DialogHeader>
 
-        {/* Legenda ao vivo (rascunho). So aparece em navegadores com Web Speech API;
-            o texto profissional final vem do whisper+Claude ao parar. */}
-        {liveText && (
-          <div className="absolute top-full right-0 mt-1 w-80 max-w-[80vw] max-h-32 overflow-y-auto rounded-lg border border-rose-200 dark:border-rose-900 bg-white dark:bg-neutral-900 shadow-lg p-2 z-20">
-            <div className="text-[9px] font-bold uppercase tracking-wide text-rose-500 mb-1">
-              Legenda ao vivo (rascunho)
-            </div>
-            <p className="text-xs leading-snug text-neutral-700 dark:text-neutral-200 whitespace-pre-wrap">
-              {liveText}
-            </p>
+          {/* Legenda ao vivo (rascunho). Aparece em navegadores com Web Speech API. */}
+          <div
+            ref={captionRef}
+            className="min-h-[10rem] max-h-[45vh] overflow-y-auto rounded-md border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950/40 p-4 text-base leading-relaxed whitespace-pre-wrap"
+          >
+            {liveText ? (
+              <>
+                {liveText}
+                <span className="ml-0.5 inline-block h-4 w-0.5 -mb-0.5 bg-rose-500 animate-pulse align-middle" />
+              </>
+            ) : (
+              <span className="text-muted-foreground italic">
+                Ouvindo… pode começar a falar.
+              </span>
+            )}
           </div>
-        )}
-      </div>
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button variant="outline" onClick={cancelRecording} className="gap-1">
+              <X className="h-4 w-4" />
+              Descartar
+            </Button>
+            <Button
+              onClick={stopRecording}
+              className="gap-1 bg-rose-600 hover:bg-rose-700 text-white"
+            >
+              <Square className="h-3.5 w-3.5 fill-current" />
+              Parar e transcrever
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     );
   }
 
