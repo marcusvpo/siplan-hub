@@ -64,6 +64,20 @@ export function getClaudeBin(): string {
   return cachedClaudeBin;
 }
 
+// Papeis deste worker: quais filas ele processa. Permite rodar 2 processos na
+// MESMA assinatura (custo zero) sem que a geracao de modelo (lenta, ate 30 min)
+// bloqueie melhorar-texto/voz/copiloto.
+//   WORKER_ROLES=models  -> so model_generation_jobs
+//   WORKER_ROLES=ai      -> so dtc_ai_jobs (texto/voz) + copilot_jobs
+//   vazio / 'all'        -> todas as filas (comportamento atual, 1 worker unico)
+function parseWorkerRoles(raw?: string): { models: boolean; ai: boolean } {
+  const set = new Set(
+    (raw || "all").toLowerCase().split(",").map((s) => s.trim()).filter(Boolean)
+  );
+  const all = set.size === 0 || set.has("all");
+  return { models: all || set.has("models"), ai: all || set.has("ai") };
+}
+
 const orionProjectDir = process.env.ORION_PROJECT_DIR || "/opt/Orion.Modelos";
 
 // Diretorio NEUTRO (vazio) onde o copiloto roda a CLI. Evita que o Claude Code
@@ -87,6 +101,7 @@ export const config = {
 
   // Operacional
   workerId: process.env.WORKER_ID || "vm-worker",
+  workerRoles: parseWorkerRoles(process.env.WORKER_ROLES),
   pollIntervalMs: Number(process.env.POLL_INTERVAL_MS || 15000),
   jobTimeoutMs: Number(process.env.JOB_TIMEOUT_MS || 1800000),
   maxAttempts: Number(process.env.MAX_ATTEMPTS || 3),

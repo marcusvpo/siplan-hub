@@ -17,7 +17,9 @@ set -uo pipefail
 REPO="marcusvpo/siplan-hub"
 BRANCH="main"
 SRC_DIR="/home/administrator/vm-worker/src"
-SERVICE="siplan-model-worker"
+# Servicos a reiniciar quando o codigo muda. Com o split por funcao rodam 2
+# (modelos + IA rapida); so reinicia os que existem (o segundo e opcional).
+SERVICES="siplan-model-worker siplan-ai-worker"
 OWNER="administrator"
 
 python3 - "$REPO" "$BRANCH" "$SRC_DIR" <<'PY'
@@ -82,6 +84,10 @@ fi
 
 if [ "$changed_src" -eq 1 ] || [ "$need_install" -eq 1 ]; then
   chown -R "$OWNER":"$OWNER" "$SRC_DIR" 2>/dev/null || true
-  systemctl restart "$SERVICE"
-  echo "$(date '+%F %T') worker atualizado e reiniciado"
+  for svc in $SERVICES; do
+    # so reinicia servicos instalados (o siplan-ai-worker e opcional)
+    if systemctl list-unit-files "${svc}.service" 2>/dev/null | grep -q "${svc}.service"; then
+      systemctl restart "$svc" && echo "$(date '+%F %T') $svc atualizado e reiniciado"
+    fi
+  done
 fi
