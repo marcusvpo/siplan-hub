@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { config } from "./config.js";
+import { config, getClaudeBin } from "./config.js";
 
 export interface ProgressStep {
   at: string; // ISO timestamp
@@ -60,7 +60,7 @@ export function runSkill(
   return new Promise((resolve, reject) => {
     const args = ["--dangerously-skip-permissions", "-p", prompt, "--output-format", "stream-json", "--verbose"];
     if (options.model) args.push("--model", options.model);
-    const child = spawn(config.claudeBin, args, {
+    const child = spawn(getClaudeBin(), args, {
       cwd: options.cwd || config.orionProjectDir,
       stdio: ["ignore", "pipe", "pipe"],
       env: options.env ? { ...process.env, ...options.env } : process.env,
