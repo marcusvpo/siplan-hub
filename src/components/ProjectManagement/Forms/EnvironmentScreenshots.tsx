@@ -256,32 +256,49 @@ export function EnvironmentScreenshots({
   };
 
   // --- Colar print da area de transferencia (Ctrl+V) ---
-  // Escopo: so quando o dropzone esta focado (clicar nele), para nao capturar
-  // colagens destinadas ao editor de texto acima.
-  const onZonePaste = (e: React.ClipboardEvent) => {
-    if (!canUpload) return;
-    const items = e.clipboardData?.items;
-    if (!items) return;
+  // Listener global: funciona sem clicar na galeria. Protegido para NAO capturar
+  // colagens destinadas a campos de texto / editor Lexical (contentEditable).
+  const extractClipboardImages = useCallback((data: DataTransfer | null): File[] => {
+    if (!data) return [];
     const images: File[] = [];
-    for (const item of Array.from(items)) {
+    for (const item of Array.from(data.items)) {
       if (item.kind === "file" && item.type.startsWith("image/")) {
         const file = item.getAsFile();
         if (!file) continue;
         // Print da clipboard costuma vir sem nome util; da um nome amigavel.
         const ext = file.type.split("/")[1] || "png";
-        const named =
+        images.push(
           file.name && file.name !== "image.png"
             ? file
-            : new File([file], `print-colado-${Date.now()}.${ext}`, { type: file.type });
-        images.push(named);
+            : new File([file], `print-colado-${Date.now()}.${ext}`, { type: file.type })
+        );
       }
     }
-    if (images.length === 0) return;
-    e.preventDefault();
-    const dt = new DataTransfer();
-    images.forEach((f) => dt.items.add(f));
-    handleFiles(dt.files);
-  };
+    return images;
+  }, []);
+
+  useEffect(() => {
+    if (!open || !canUpload) return;
+    const handler = (e: ClipboardEvent) => {
+      const el = document.activeElement as HTMLElement | null;
+      if (
+        el &&
+        (el.tagName === "INPUT" ||
+          el.tagName === "TEXTAREA" ||
+          el.isContentEditable)
+      ) {
+        return; // deixa o campo de texto/editor tratar o paste
+      }
+      const images = extractClipboardImages(e.clipboardData);
+      if (images.length === 0) return;
+      e.preventDefault();
+      const dt = new DataTransfer();
+      images.forEach((f) => dt.items.add(f));
+      handleFiles(dt.files);
+    };
+    document.addEventListener("paste", handler);
+    return () => document.removeEventListener("paste", handler);
+  }, [open, canUpload, extractClipboardImages, handleFiles]);
 
   return (
     <div className="space-y-2">
@@ -338,22 +355,18 @@ export function EnvironmentScreenshots({
           onDragOver={onZoneDragOver}
           onDragLeave={onZoneDragLeave}
           onDrop={onZoneDrop}
-          onPaste={onZonePaste}
-          tabIndex={canUpload ? 0 : undefined}
           aria-label="Área de prints: arraste, cole (Ctrl+V) ou use o botão Adicionar prints"
           className={cn(
-            "relative space-y-2 rounded-lg transition-colors outline-none",
-            canUpload &&
-              "focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+            "relative space-y-2 rounded-lg transition-colors",
             dragOver &&
               "ring-2 ring-indigo-400 ring-offset-2 ring-offset-background bg-indigo-50/40 dark:bg-indigo-950/20"
           )}
         >
           <p className="text-[11px] text-muted-foreground px-1">
-            Anexe prints da tela com o sistema configurado. Arraste imagens do seu computador
-            para cá, clique em "Adicionar prints", ou clique nesta área e cole com{" "}
-            <kbd className="px-1 py-0.5 rounded border border-border bg-muted text-[10px] font-mono">Ctrl+V</kbd>.
-            Clique numa imagem para ampliar.
+            Anexe prints da tela com o sistema configurado. Arraste imagens para cá, clique em
+            "Adicionar prints", ou copie um print e cole com{" "}
+            <kbd className="px-1 py-0.5 rounded border border-border bg-muted text-[10px] font-mono">Ctrl+V</kbd>{" "}
+            (com esta seção aberta). Clique numa imagem para ampliar.
           </p>
 
           {!hasShots ? (
