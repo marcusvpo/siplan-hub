@@ -1,4 +1,5 @@
 import { CalendarControls } from "@/components/calendar/CalendarControls";
+import { CalendarLegend } from "@/components/calendar/CalendarLegend";
 import { CalendarGrid } from "@/components/calendar/CalendarGrid";
 import { DraggableTeamMember } from "@/components/calendar/DraggableTeamMember";
 import { useCalendarStore } from "@/stores/calendarStore";
@@ -417,7 +418,10 @@ export default function Calendar() {
               ))}
             </div>
 
-            {isInteractiveMode && <TrashDroppable />}
+            <div className="flex items-center gap-4">
+              <CalendarLegend />
+              {isInteractiveMode && <TrashDroppable />}
+            </div>
           </div>
 
           {/* Main Grid */}
