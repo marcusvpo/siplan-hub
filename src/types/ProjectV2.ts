@@ -230,6 +230,16 @@ export interface RemoteAccessItem {
   password?: string;
 }
 
+// Credencial de acesso ao SO na etapa 4 (Preparacao de Ambiente). Suporta
+// multiplos SOs por projeto (ex: um servidor Windows e outro Linux), cada um
+// com seu tipo, usuario e senha.
+export interface OsCredential {
+  id: string;
+  osType?: string; // "Windows" | "Linux"
+  login?: string;
+  password?: string;
+}
+
 // Print de tela anexado na etapa 4 (Preparacao de Ambiente). O binario fica no
 // bucket Storage 'project-files'; aqui guardamos so a referencia (path + metadados).
 export interface EnvironmentScreenshot {
@@ -258,6 +268,7 @@ export interface EnvironmentStageV2 {
   anydeskPassword?: string;
   soLogin?: string;
   soPassword?: string;
+  osCredentials?: OsCredential[];
   remoteAccessList?: RemoteAccessItem[];
   postgresVersion?: string;
   postgresAccessData?: string;

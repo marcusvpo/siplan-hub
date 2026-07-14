@@ -1,4 +1,4 @@
-import { EnvironmentStageV2, RemoteAccessItem } from "@/types/ProjectV2";
+import { EnvironmentStageV2, RemoteAccessItem, OsCredential } from "@/types/ProjectV2";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -27,8 +27,9 @@ export function EnvironmentStageForm({
   infraServers,
 }: EnvironmentStageFormProps) {
   const { toast } = useToast();
-  const [showSoPassword, setShowSoPassword] = useState(false);
   const [showPgAccess, setShowPgAccess] = useState(false);
+  // Visibilidade da senha por credencial de SO (chave = cred.id)
+  const [visibleOsPwd, setVisibleOsPwd] = useState<Record<string, boolean>>({});
   // Trava anti-autofill: campos de credencial iniciam readOnly para o
   // gerenciador de senha do navegador não injetar login/senha do usuário.
   // Liberado no primeiro foco (interação real do usuário).
@@ -102,6 +103,57 @@ export function EnvironmentStageForm({
       remoteAccessList: stage.remoteAccessList.filter((_, i) => i !== idx)
     });
   };
+
+  // --- Credenciais do SO (multiplas) ---
+  const addOsCredential = () => {
+    const list = stage.osCredentials || [];
+    onUpdate({
+      osCredentials: [
+        ...list,
+        { id: crypto.randomUUID(), osType: "", login: "", password: "" },
+      ],
+    });
+  };
+
+  const updateOsCredential = (idx: number, field: keyof OsCredential, val: string) => {
+    const list = stage.osCredentials || [];
+    const updated = [...list];
+    updated[idx] = { ...updated[idx], [field]: val };
+    onUpdate({ osCredentials: updated });
+  };
+
+  const removeOsCredential = (idx: number) => {
+    const list = stage.osCredentials || [];
+    onUpdate({ osCredentials: list.filter((_, i) => i !== idx) });
+  };
+
+  const toggleOsPwd = (id: string) =>
+    setVisibleOsPwd((prev) => ({ ...prev, [id]: !prev[id] }));
+
+  // Backfill: migra credencial unica legada (soLogin/soPassword/osType) para o
+  // novo array osCredentials na primeira visualizacao, sem perder dados antigos.
+  const osCredsBackfilled = useRef(false);
+  useEffect(() => {
+    if (osCredsBackfilled.current) return;
+    const hasCreds = (stage.osCredentials?.length ?? 0) > 0;
+    if (hasCreds) {
+      osCredsBackfilled.current = true;
+      return;
+    }
+    if (stage.soLogin || stage.soPassword || stage.osType) {
+      osCredsBackfilled.current = true;
+      onUpdate({
+        osCredentials: [
+          {
+            id: crypto.randomUUID(),
+            osType: stage.osType || "",
+            login: stage.soLogin || "",
+            password: stage.soPassword || "",
+          },
+        ],
+      });
+    }
+  }, [stage.osCredentials, stage.soLogin, stage.soPassword, stage.osType, onUpdate]);
 
   return (
     <div className="space-y-4 col-span-full">
@@ -234,76 +286,142 @@ export function EnvironmentStageForm({
           </div>
         )}
 
-        {/* Credentials OS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-border pt-4 mt-2">
-          {/* OS Login */}
-          <div className="space-y-1.5">
+        {/* Credenciais do SO (multiplas) */}
+        <div className="border-t border-border pt-4 mt-2 space-y-3">
+          <div className="flex items-center justify-between">
             <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-              Usuário do Sistema Operacional (SO)
+              Credenciais do Sistema Operacional (SO)
             </Label>
-            <Input
-              value={stage.soLogin || ""}
-              onChange={(e) => onUpdate({ soLogin: e.target.value })}
-              disabled={!canEditProjects}
-              readOnly={credsLocked}
-              onFocus={unlockCreds}
-              placeholder="Ex: Administrator / Suporte"
-              autoComplete="off"
-              name="environment-so-login"
-              data-1p-ignore
-              data-lpignore="true"
-              className="h-8 text-xs border border-muted/80 bg-background"
-            />
+            {canEditProjects && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addOsCredential}
+                className="h-6.5 text-[10px] gap-1 border-border text-foreground hover:bg-muted font-bold bg-background"
+              >
+                <Plus className="h-3 w-3" />
+                Adicionar Credencial
+              </Button>
+            )}
           </div>
 
-          {/* OS Password */}
-          <div className="space-y-1.5">
-            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-              Senha do Sistema Operacional (SO)
-            </Label>
-            <div className="relative flex items-center">
-              <Input
-                type={showSoPassword ? "text" : "password"}
-                value={stage.soPassword || ""}
-                onChange={(e) => onUpdate({ soPassword: e.target.value })}
-                disabled={!canEditProjects}
-                readOnly={credsLocked}
-                onFocus={unlockCreds}
-                placeholder="Senha do SO"
-                autoComplete="new-password"
-                name="environment-so-password"
-                data-1p-ignore
-                data-lpignore="true"
-                className="h-8 text-xs border border-muted/80 bg-background pr-16"
-              />
-              <div className="absolute right-0.5 flex items-center gap-0.5">
+          {(!stage.osCredentials || stage.osCredentials.length === 0) && (
+            <p className="text-[11px] text-muted-foreground italic">
+              Nenhuma credencial adicionada. Clique em "Adicionar Credencial" para incluir usuário e senha por SO (Windows/Linux).
+            </p>
+          )}
+
+          {stage.osCredentials?.map((cred, idx) => (
+            <div
+              key={cred.id}
+              className="grid grid-cols-1 md:grid-cols-[10rem_1fr_1fr_auto] gap-2 items-end"
+            >
+              {/* Tipo de SO */}
+              <div className="space-y-1">
+                <Label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
+                  Tipo de SO
+                </Label>
+                <Select
+                  value={cred.osType || ""}
+                  onValueChange={(v) => updateOsCredential(idx, "osType", v)}
+                  disabled={!canEditProjects}
+                >
+                  <SelectTrigger className="h-8 text-xs border border-muted/80 bg-background">
+                    <SelectValue placeholder="Windows / Linux" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Windows" className="text-xs">Windows</SelectItem>
+                    <SelectItem value="Linux" className="text-xs">Linux</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Usuário */}
+              <div className="space-y-1">
+                <Label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
+                  Usuário
+                </Label>
+                <Input
+                  value={cred.login || ""}
+                  onChange={(e) => updateOsCredential(idx, "login", e.target.value)}
+                  disabled={!canEditProjects}
+                  readOnly={credsLocked}
+                  onFocus={unlockCreds}
+                  placeholder="Ex: Administrator / suporte"
+                  autoComplete="off"
+                  name={`environment-os-login-${idx}`}
+                  data-1p-ignore
+                  data-lpignore="true"
+                  className="h-8 text-xs border border-muted/80 bg-background"
+                />
+              </div>
+
+              {/* Senha */}
+              <div className="space-y-1">
+                <Label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
+                  Senha
+                </Label>
+                <div className="relative flex items-center">
+                  <Input
+                    type={visibleOsPwd[cred.id] ? "text" : "password"}
+                    value={cred.password || ""}
+                    onChange={(e) => updateOsCredential(idx, "password", e.target.value)}
+                    disabled={!canEditProjects}
+                    readOnly={credsLocked}
+                    onFocus={unlockCreds}
+                    placeholder="Senha do SO"
+                    autoComplete="new-password"
+                    name={`environment-os-password-${idx}`}
+                    data-1p-ignore
+                    data-lpignore="true"
+                    className="h-8 text-xs border border-muted/80 bg-background pr-16"
+                  />
+                  <div className="absolute right-0.5 flex items-center gap-0.5">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => toggleOsPwd(cred.id)}
+                      className="h-6 w-6 text-muted-foreground hover:text-foreground rounded-full"
+                      title={visibleOsPwd[cred.id] ? "Ocultar senha" : "Ver senha"}
+                      aria-label={visibleOsPwd[cred.id] ? "Ocultar senha do SO" : "Ver senha do SO"}
+                    >
+                      {visibleOsPwd[cred.id] ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                    </Button>
+                    {cred.password && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleCopyText(cred.password || "", "Senha do SO")}
+                        className="h-6 w-6 text-muted-foreground hover:text-foreground rounded-full"
+                        title="Copiar senha"
+                        aria-label="Copiar senha do SO"
+                      >
+                        <Copy className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Remover */}
+              {canEditProjects && (
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
-                  onClick={() => setShowSoPassword(!showSoPassword)}
-                  className="h-6 w-6 text-muted-foreground hover:text-foreground rounded-full"
-                  title={showSoPassword ? "Ocultar senha" : "Ver senha"}
-                  aria-label={showSoPassword ? "Ocultar senha do SO" : "Ver senha do SO"}
+                  onClick={() => removeOsCredential(idx)}
+                  aria-label="Remover credencial de SO"
+                  title="Remover credencial"
+                  className="h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-full shrink-0"
                 >
-                  {showSoPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                  <Trash2 className="h-4 w-4" />
                 </Button>
-                {stage.soPassword && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleCopyText(stage.soPassword || "", "Senha do SO")}
-                    className="h-6 w-6 text-muted-foreground hover:text-foreground rounded-full"
-                    title="Copiar senha"
-                    aria-label="Copiar senha do SO"
-                  >
-                    <Copy className="h-3.5 w-3.5" />
-                  </Button>
-                )}
-              </div>
+              )}
             </div>
-          </div>
+          ))}
         </div>
 
         {/* PostgreSQL Database Section */}
