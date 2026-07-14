@@ -228,6 +228,7 @@ interface DTCData {
 }
 
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { VoiceDictationButton } from "@/components/ui/voice-dictation-button";
 
 const renderVal = (val?: string | number | null, fallback = "Não informado") => {
   if (val !== undefined && val !== null && String(val).trim() !== "") {
@@ -2852,6 +2853,9 @@ function TransicaoPlaceholder() {
                             onChange={(c) => handleFieldChange("implantationProcess", c)}
                             placeholder="Relate como ocorreu o processo de implantação, infraestrutura instalada, treinamento dos usuários e aceitação inicial..."
                             editable={!isFormDisabled}
+                            enableVoice
+                            projectId={selectedProjectId || undefined}
+                            requestedBy={fullName}
                           />
                           {(() => {
                             const count = getLexicalTextLength(localDtc.implantationProcess || "");
@@ -2920,7 +2924,24 @@ function TransicaoPlaceholder() {
                                   </div>
 
                                   <div className="space-y-1">
-                                    <Label className="text-[10px] font-bold text-muted-foreground uppercase">Atividades Realizadas:</Label>
+                                    <div className="flex items-center justify-between">
+                                      <Label className="text-[10px] font-bold text-muted-foreground uppercase">Atividades Realizadas:</Label>
+                                      {!isFormDisabled && selectedProjectId && (
+                                        <VoiceDictationButton
+                                          projectId={selectedProjectId}
+                                          requestedBy={fullName}
+                                          onApply={(text, mode) =>
+                                            updateImplantationLog(
+                                              idx,
+                                              "description",
+                                              mode === "append" && log.description
+                                                ? `${log.description}\n\n${text}`
+                                                : text
+                                            )
+                                          }
+                                        />
+                                      )}
+                                    </div>
                                     <Textarea
                                       value={log.description}
                                       onChange={(e) => updateImplantationLog(idx, "description", e.target.value)}

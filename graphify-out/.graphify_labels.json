@@ -297,5 +297,8 @@
   "295": "useConversionQueue.ts",
   "296": "lexical.ts",
   "297": "CopilotChat",
-  "298": "useImproveTextJobs.ts"
+  "298": "useImproveTextJobs.ts",
+  "299": "useAuth.ts",
+  "300": "useAdminSettings.ts",
+  "301": "OverviewChart.tsx"
 }
