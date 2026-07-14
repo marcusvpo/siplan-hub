@@ -53,6 +53,17 @@ function resolveClaudeBin(): string {
   );
 }
 
+// Cache com revalidacao. Reusa o binario ja resolvido, mas se ele sumir (a
+// extensao do VS Code atualizou e apagou a pasta da versao antiga), re-descobre
+// o mais novo. Evita `spawn ... ENOENT` em workers de longa duracao apos um
+// update da extensao, sem precisar reiniciar o worker.
+let cachedClaudeBin: string | null = null;
+export function getClaudeBin(): string {
+  if (cachedClaudeBin && existsSync(cachedClaudeBin)) return cachedClaudeBin;
+  cachedClaudeBin = resolveClaudeBin();
+  return cachedClaudeBin;
+}
+
 const orionProjectDir = process.env.ORION_PROJECT_DIR || "/opt/Orion.Modelos";
 
 // Diretorio NEUTRO (vazio) onde o copiloto roda a CLI. Evita que o Claude Code
@@ -101,7 +112,8 @@ export const config = {
   fallbackApiKey: process.env.DTC_FALLBACK_API_KEY || "",
 
   // Geracao headless (Claude Code + skill criar-modelo-mesclado)
-  claudeBin: resolveClaudeBin(),
+  // Valor inicial (log de boot). O spawn usa getClaudeBin(), que revalida.
+  claudeBin: getClaudeBin(),
   orionProjectDir,
   modelosCriadosDir: process.env.MODELOS_CRIADOS_DIR || path.join(orionProjectDir, "modelos_criados"),
   entradaDir: process.env.ENTRADA_DIR || "/home/administrator/siplan_entrada",
