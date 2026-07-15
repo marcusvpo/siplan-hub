@@ -85,6 +85,59 @@ export function AppSidebar() {
   const canViewKanban = hasPermission("kanban", "view");
   const canViewImplantadores = hasPermission("menu_implantadores", "view");
   const can = (resource: string) => hasPermission(resource, "view");
+
+  // Ter o menu não significa ter as telas dentro dele. Sem isto, um perfil com
+  // menu_x mas sem nenhum subitem veria um grupo vazio, e o ícone do modo
+  // colapsado levaria direto pra "Acesso negado".
+  const primeiraRota = (...opcoes: [string, string][]) =>
+    opcoes.find(([resource]) => can(resource))?.[1];
+
+  const rotaDashboard = primeiraRota(
+    ["dashboard_view", "/dashboard"],
+    ["kanban", "/dashboard/kanban"],
+  );
+  const rotaImplantacao = primeiraRota(
+    ["projects", "/projects"],
+    ["reports", "/reports"],
+    ["deployments_next", "/deployments"],
+    ["deployments_latest", "/deployments/latest"],
+  );
+  const rotaCalendario = primeiraRota(
+    ["calendar_projects", "/calendar"],
+    ["calendar_analysts", "/agenda-analistas"],
+  );
+  const rotaComercial = primeiraRota(
+    ["commercial_customers", "/commercial/customers"],
+    ["commercial_blockers", "/commercial/blockers"],
+    ["commercial_contacts", "/commercial/contacts"],
+    ["commercial_deployment_forms", "/commercial/deployment-forms"],
+    ["commercial_checklists", "/commercial/checklists"],
+  );
+  const rotaConversao = primeiraRota(
+    ["conversion_home", "/conversion"],
+    ["conversion_engines", "/conversion/engines"],
+  );
+  const rotaOrion = primeiraRota(
+    ["orion_dashboard", "/orion-tn-models/dashboard"],
+    ["orion_projects", "/orion-tn-models/projects"],
+    ["orion_editor", "/orion-tn-models"],
+  );
+  const rotaImplantadores = primeiraRota(
+    ["implantadores_home", "/implantadores"],
+    ["implantadores_aderencia", "/implantadores/aderencia"],
+    ["implantadores_aderencia_finalizadas", "/implantadores/aderencia/finalizadas"],
+    ["conversion_homologation", "/implantadores/homologation"],
+    ["implantadores_treinamento", "/implantadores/treinamento"],
+    ["implantadores_transicao", "/implantadores/transicao"],
+  );
+
+  const mostrarDashboard = !!rotaDashboard;
+  const mostrarImplantacao = canViewImplantacao && !!rotaImplantacao;
+  const mostrarCalendario = canViewCalendario && !!rotaCalendario;
+  const mostrarComercial = canViewComercial && !!rotaComercial;
+  const mostrarConversao = canViewConversao && !!rotaConversao;
+  const mostrarOrion = canViewOrion && !!rotaOrion;
+  const mostrarImplantadores = canViewImplantadores && !!rotaImplantadores;
   
   const logoSrc = isDark
     ? "/assets/Siplan_logo_branco.png"
@@ -168,6 +221,7 @@ export function AppSidebar() {
         )}
 
         {/* Dashboard Group */}
+        {mostrarDashboard && (
         <div className="px-2">
           {!collapsed ? (
             <Collapsible
@@ -223,7 +277,7 @@ export function AppSidebar() {
               </CollapsibleContent>
             </Collapsible>
           ) : (
-            <Link to="/dashboard">
+            <Link to={rotaDashboard!}>
               <Button
                 variant={location.pathname.startsWith("/dashboard") ? "secondary" : "ghost"}
                 className="w-full justify-center px-0"
@@ -234,9 +288,10 @@ export function AppSidebar() {
             </Link>
           )}
         </div>
+        )}
 
         {/* Implantação Group */}
-        {canViewImplantacao && (
+        {mostrarImplantacao && (
         <div className="px-2">
           {!collapsed ? (
             <Collapsible
@@ -318,7 +373,7 @@ export function AppSidebar() {
               </CollapsibleContent>
             </Collapsible>
           ) : (
-              <Link to="/projects">
+              <Link to={rotaImplantacao!}>
                 <Button
                   variant={
                     isActive("/projects") ||
@@ -340,7 +395,7 @@ export function AppSidebar() {
         )}
 
         {/* Calendário Group */}
-        {canViewCalendario && (
+        {mostrarCalendario && (
         <div className="px-2">
           {!collapsed ? (
             <Collapsible
@@ -399,7 +454,7 @@ export function AppSidebar() {
               </CollapsibleContent>
             </Collapsible>
           ) : (
-            <Link to="/calendar">
+            <Link to={rotaCalendario!}>
               <Button
                 variant={
                   isActive("/calendar") || isActive("/agenda-analistas") ? "secondary" : "ghost"
@@ -416,7 +471,7 @@ export function AppSidebar() {
         )}
 
         {/* Commercial Group */}
-        {canViewComercial && (
+        {mostrarComercial && (
         <div className="px-2">
           {!collapsed ? (
             <Collapsible className="space-y-1">
@@ -511,7 +566,7 @@ export function AppSidebar() {
               </CollapsibleContent>
             </Collapsible>
           ) : (
-              <Link to="/commercial/customers">
+              <Link to={rotaComercial!}>
                 <Button
                   variant={
                     isActive("/commercial/customers") ||
@@ -533,7 +588,7 @@ export function AppSidebar() {
         )}
 
         {/* Conversão Group */}
-        {canViewConversao && (
+        {mostrarConversao && (
         <div className="px-2">
           {!collapsed ? (
             <Collapsible className="space-y-1">
@@ -586,7 +641,7 @@ export function AppSidebar() {
               </CollapsibleContent>
             </Collapsible>
           ) : (
-            <Link to="/conversion">
+            <Link to={rotaConversao!}>
               <Button
                 variant={
                   location.pathname.startsWith("/conversion")
@@ -604,7 +659,7 @@ export function AppSidebar() {
         )}
 
         {/* OrionTN Models */}
-        {canViewOrion && (
+        {mostrarOrion && (
         <div className="px-2">
           {!collapsed ? (
             <Collapsible
@@ -688,7 +743,7 @@ export function AppSidebar() {
               </CollapsibleContent>
             </Collapsible>
           ) : (
-            <Link to="/orion-tn-models/projects">
+            <Link to={rotaOrion!}>
               <Button
                 variant={
                   location.pathname.startsWith("/orion-tn-models")
@@ -706,7 +761,7 @@ export function AppSidebar() {
         )}
 
         {/* Implantadores Group */}
-        {canViewImplantadores && (
+        {mostrarImplantadores && (
         <div className="px-2">
           {!collapsed ? (
             <Collapsible
@@ -819,7 +874,7 @@ export function AppSidebar() {
               </CollapsibleContent>
             </Collapsible>
           ) : (
-            <Link to="/implantadores">
+            <Link to={rotaImplantadores!}>
               <Button
                 variant={
                   location.pathname.startsWith("/implantadores")
