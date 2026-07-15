@@ -332,17 +332,23 @@ export default function UserManagement() {
       return;
 
     try {
-      // NOTE: We can't delete from auth.users easily via client.
-      // We can only delete the profile usually.
-      // Real deletion requires a backend function or Supabase Admin API.
-      // Assuming existing logic (deleting profile) is what user wants,
-      // or that an Edge Function handles it.
-      // But for now, we just delete the profile row as per previous code.
-      const { error } = await supabase
+      // profiles tem RLS sem policy de DELETE: o PostgREST apaga zero linhas e
+      // NÃO retorna erro. Sem o .select() abaixo a tela dava "removido" sem ter
+      // removido nada. Conferimos o que voltou antes de declarar sucesso.
+      const { data: removidos, error } = await supabase
         .from("profiles")
         .delete()
-        .eq("id", userId);
+        .eq("id", userId)
+        .select("id");
       if (error) throw error;
+
+      if (!removidos || removidos.length === 0) {
+        throw new Error(
+          "A exclusão foi bloqueada pelo banco e nenhum usuário foi removido. " +
+            "Excluir usuários ainda não está disponível — use Usuários Inativos " +
+            "para revogar o acesso.",
+        );
+      }
 
       logAction.mutate({ action: "USER_DELETED", details: { userId } });
       toast({
