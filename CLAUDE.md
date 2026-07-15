@@ -74,6 +74,25 @@ supabase/migrations/        migrations SQL + functions (edge)
 - **Formulários de estágio isolados** em `ProjectManagement/Forms/StageForms/` — edite um sem tocar nos outros.
 - Drag-and-drop: `@dnd-kit` / `@hello-pangea/dnd`. Rich text: Lexical. PDF: jspdf/html2canvas.
 
+## Permissões (RBAC) — obrigatório ao criar tela/rotina
+
+Controle de acesso em 5 camadas que precisam concordar: catálogo (`src/constants/permissions.ts`) → menu (`menuItems.ts` + `AppSidebar.tsx`) → guarda de rota (`RequirePermission` no `App.tsx`) → gate de ação (`usePermissions().hasPermission`) → **RLS no banco** (única defesa real; as outras 4 são só UI). Doc completo: **`docs/PERMISSOES_RBAC.md`** — leia antes de mexer.
+
+**Ao adicionar uma TELA nova, faça os 5 passos (pular um deixa buraco silencioso):**
+1. Recurso em `permissions.ts` (`PERMISSION_RESOURCES`), só com as `actions` que vai aplicar de fato.
+2. Migration em `supabase/migrations/` inserindo em `app_permissions` (`ON CONFLICT DO UPDATE`); conceda ao `admin` **e ao perfil `user`** o que o `user` já podia — senão trava a equipe no deploy. **A tela `/admin/roles` lista o que vem do banco, não do código: sem migration, o checkbox não aparece.**
+3. `permissionKey` no `menuItems.ts` + gate no `AppSidebar.tsx` (`can(...)` e lista `primeiraRota`).
+4. `<RequirePermission resource="...">` na rota do `App.tsx`.
+5. Gate de ação na tela: esconder criar/excluir, desabilitar editar, `if (!canX) return` no handler.
+
+**Regras invioláveis:**
+- Só declare uma ação (`create/edit/delete/execute/manage`) se houver enforcement real. Checkbox sem efeito mente para quem configura o perfil.
+- Permissão nova nasce **permissiva** (concedida a quem já usava) e é restringida de propósito pelo admin. Nunca restrinja em silêncio no deploy — foi o que trancou 22 pessoas em 15/07.
+- RLS: **nunca `TO public`** (inclui `anon`, e a chave anon está no bundle público). Use `TO authenticated`. Escrita sensível: `USING (has_permission(auth.uid(),'<recurso>','<ação>'))`.
+- Edge function privilegiada valida com a RPC `has_permission`, não com `role='admin'`.
+- Antes de aplicar policy em produção: ensaie em `begin ... rollback` com `set local role` (ver doc §5). E **não rode `supabase db push`** (histórico da CLI vazio; replayaria 60+ migrations).
+- Verificação: `npm test` inclui `rls-invariants.test.ts`, que roda contra o banco (precisa `SUPABASE_DB_URL` no `.env`) e pega menu órfão, escrita/leitura anônima e perfil sem tela.
+
 ## Regras estritas (economia de tokens e tempo)
 
 1. **Grafo antes de grep.** `graphify-out/graph.json` existe — para "onde/o que/como", rode `graphify query "..."`, `graphify explain "<símbolo>"` ou `graphify path "<A>" "<B>"` antes de varrer fonte. Retorna subgrafo pequeno. `GRAPH_REPORT.md` só para visão macro.

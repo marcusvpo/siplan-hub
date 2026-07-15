@@ -47,7 +47,16 @@ Mapa das tabelas, funções/RPCs, RLS/RBAC e buckets de Storage, derivado das mi
 </details>
 
 <details>
-<summary><b>5. Referência de Hooks</b></summary>
+<summary><b>5. Permissões e RLS (RBAC)</b></summary>
+
+Controle de acesso em 5 camadas (catálogo → menu → guarda de rota → gate de ação → RLS). **Checklist obrigatório ao criar tela ou rotina nova**, como verificar, ensaio de policy e armadilhas do banco.
+
+- **Acesse:** [PERMISSOES_RBAC.md](PERMISSOES_RBAC.md)
+
+</details>
+
+<details>
+<summary><b>6. Referência de Hooks</b></summary>
 
 Catálogo dos custom hooks, stores Zustand e contexto de autenticação, organizados por domínio.
 
@@ -56,7 +65,7 @@ Catálogo dos custom hooks, stores Zustand e contexto de autenticação, organiz
 </details>
 
 <details>
-<summary><b>6. Worker na VM e funcionalidades de IA</b></summary>
+<summary><b>7. Worker na VM e funcionalidades de IA</b></summary>
 
 Um único worker na VM Linux processa todas as filas de IA do app (Claude headless + whisper.cpp).
 Setup, systemd, autodeploy, segurança e as filas processadas.
