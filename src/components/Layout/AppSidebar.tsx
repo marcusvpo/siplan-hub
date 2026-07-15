@@ -84,6 +84,7 @@ export function AppSidebar() {
   const canViewDashboardView = hasPermission("dashboard_view", "view");
   const canViewKanban = hasPermission("kanban", "view");
   const canViewImplantadores = hasPermission("menu_implantadores", "view");
+  const can = (resource: string) => hasPermission(resource, "view");
   
   const logoSrc = isDark
     ? "/assets/Siplan_logo_branco.png"
@@ -265,6 +266,7 @@ export function AppSidebar() {
                   <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider pl-4 mb-2 block">
                     Projetos
                   </span>
+                  {can("projects") && (
                   <Link to="/projects">
                     <Button
                       variant={isActive("/projects") ? "secondary" : "ghost"}
@@ -275,6 +277,8 @@ export function AppSidebar() {
                       <span>Gerenciar Projetos</span>
                     </Button>
                   </Link>
+                  )}
+                  {can("reports") && (
                   <Link to="/reports">
                     <Button
                       variant={isActive("/reports") ? "secondary" : "ghost"}
@@ -285,6 +289,8 @@ export function AppSidebar() {
                       <span>Relatórios</span>
                     </Button>
                   </Link>
+                  )}
+                  {can("deployments_next") && (
                   <Link to="/deployments">
                     <Button
                       variant={isActive("/deployments") ? "secondary" : "ghost"}
@@ -295,6 +301,8 @@ export function AppSidebar() {
                       <span>Próx. Implantações</span>
                     </Button>
                   </Link>
+                  )}
+                  {can("deployments_latest") && (
                   <Link to="/deployments/latest">
                     <Button
                       variant={isActive("/deployments/latest") ? "secondary" : "ghost"}
@@ -305,6 +313,7 @@ export function AppSidebar() {
                       <span>Últimas Implantações</span>
                     </Button>
                   </Link>
+                  )}
                 </div>
               </CollapsibleContent>
             </Collapsible>
@@ -362,6 +371,7 @@ export function AppSidebar() {
                   <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider pl-4 mb-2 block">
                     Cronogramas
                   </span>
+                  {can("calendar_projects") && (
                   <Link to="/calendar">
                     <Button
                       variant={isActive("/calendar") ? "secondary" : "ghost"}
@@ -372,6 +382,8 @@ export function AppSidebar() {
                       <span>Calendário de Projetos</span>
                     </Button>
                   </Link>
+                  )}
+                  {can("calendar_analysts") && (
                   <Link to="/agenda-analistas">
                     <Button
                       variant={isActive("/agenda-analistas") ? "secondary" : "ghost"}
@@ -382,6 +394,7 @@ export function AppSidebar() {
                       <span>Agenda dos Analistas</span>
                     </Button>
                   </Link>
+                  )}
                 </div>
               </CollapsibleContent>
             </Collapsible>
@@ -422,6 +435,7 @@ export function AppSidebar() {
               </CollapsibleTrigger>
               <CollapsibleContent className="space-y-1 pl-4 animate-in slide-in-from-top-2">
                 <div className="pt-1 pb-2">
+                  {can("commercial_customers") && (
                   <Link to="/commercial/customers">
                     <Button
                       variant={
@@ -436,6 +450,8 @@ export function AppSidebar() {
                       <span>Painel de Clientes</span>
                     </Button>
                   </Link>
+                  )}
+                  {can("commercial_blockers") && (
                   <Link to="/commercial/blockers">
                     <Button
                       variant={
@@ -448,6 +464,8 @@ export function AppSidebar() {
                       <span>Bloqueios</span>
                     </Button>
                   </Link>
+                  )}
+                  {can("commercial_contacts") && (
                   <Link to="/commercial/contacts">
                     <Button
                       variant={
@@ -460,6 +478,8 @@ export function AppSidebar() {
                       <span>Contatos</span>
                     </Button>
                   </Link>
+                  )}
+                  {can("commercial_deployment_forms") && (
                   <Link to="/commercial/deployment-forms">
                     <Button
                       variant={
@@ -472,6 +492,8 @@ export function AppSidebar() {
                       <span>Form. Nova Implantação</span>
                     </Button>
                   </Link>
+                  )}
+                  {can("commercial_checklists") && (
                   <Link to="/commercial/checklists">
                     <Button
                       variant={
@@ -484,6 +506,7 @@ export function AppSidebar() {
                       <span>Checklist do Cliente</span>
                     </Button>
                   </Link>
+                  )}
                 </div>
               </CollapsibleContent>
             </Collapsible>
@@ -533,6 +556,7 @@ export function AppSidebar() {
               </CollapsibleTrigger>
               <CollapsibleContent className="space-y-1 pl-4 animate-in slide-in-from-top-2">
                 <div className="pt-1 pb-2">
+                  {can("conversion_home") && (
                   <Link to="/conversion">
                     <Button
                       variant={isActive("/conversion") ? "secondary" : "ghost"}
@@ -543,6 +567,8 @@ export function AppSidebar() {
                       <span>Gestão de Atividades</span>
                     </Button>
                   </Link>
+                  )}
+                  {can("conversion_engines") && (
                   <Link to="/conversion/engines">
                     <Button
                       variant={
@@ -555,6 +581,7 @@ export function AppSidebar() {
                       <span>Motores</span>
                     </Button>
                   </Link>
+                  )}
                 </div>
               </CollapsibleContent>
             </Collapsible>
@@ -613,6 +640,7 @@ export function AppSidebar() {
                     <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-2">
                       Gestão
                     </span>
+                    {can("orion_dashboard") && (
                     <Link to="/orion-tn-models/dashboard">
                       <Button
                         variant={isActive("/orion-tn-models/dashboard") ? "secondary" : "ghost"}
@@ -623,6 +651,8 @@ export function AppSidebar() {
                         <span className="text-xs font-medium">Dashboard</span>
                       </Button>
                     </Link>
+                    )}
+                    {can("orion_projects") && (
                     <Link to="/orion-tn-models/projects">
                       <Button
                         variant={isActive("/orion-tn-models/projects") ? "secondary" : "ghost"}
@@ -633,6 +663,8 @@ export function AppSidebar() {
                         <span className="text-xs font-medium">Gerenciar Projetos</span>
                       </Button>
                     </Link>
+                    )}
+                    {can("orion_editor") && (
                     <Link to="/orion-tn-models">
                       <Button
                         variant={
@@ -650,6 +682,7 @@ export function AppSidebar() {
                         <span className="text-xs font-medium">Editor de Modelos</span>
                       </Button>
                     </Link>
+                    )}
                   </div>
                 </div>
               </CollapsibleContent>
@@ -709,6 +742,7 @@ export function AppSidebar() {
                     <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-2">
                       Operacional
                     </span>
+                    {can("implantadores_home") && (
                     <Link to="/implantadores">
                       <Button
                         variant={isActive("/implantadores") ? "secondary" : "ghost"}
@@ -719,6 +753,8 @@ export function AppSidebar() {
                         <span className="text-xs font-medium">Visão Geral</span>
                       </Button>
                     </Link>
+                    )}
+                    {can("implantadores_aderencia") && (
                     <Link to="/implantadores/aderencia">
                       <Button
                         variant={isActive("/implantadores/aderencia") ? "secondary" : "ghost"}
@@ -729,6 +765,8 @@ export function AppSidebar() {
                         <span className="text-xs font-medium">Editor de Aderência</span>
                       </Button>
                     </Link>
+                    )}
+                    {can("implantadores_aderencia_finalizadas") && (
                     <Link to="/implantadores/aderencia/finalizadas">
                       <Button
                         variant={isActive("/implantadores/aderencia/finalizadas") ? "secondary" : "ghost"}
@@ -739,6 +777,8 @@ export function AppSidebar() {
                         <span className="text-xs font-medium">Aderências Finalizadas</span>
                       </Button>
                     </Link>
+                    )}
+                    {can("conversion_homologation") && (
                     <Link to="/implantadores/homologation">
                       <Button
                         variant={isActive("/implantadores/homologation") ? "secondary" : "ghost"}
@@ -749,6 +789,8 @@ export function AppSidebar() {
                         <span className="text-xs font-medium">Homologação de Conversões</span>
                       </Button>
                     </Link>
+                    )}
+                    {can("implantadores_treinamento") && (
                     <Link to="/implantadores/treinamento">
                       <Button
                         variant={isActive("/implantadores/treinamento") ? "secondary" : "ghost"}
@@ -759,6 +801,8 @@ export function AppSidebar() {
                         <span className="text-xs font-medium">Roteiro de Treinamento</span>
                       </Button>
                     </Link>
+                    )}
+                    {can("implantadores_transicao") && (
                     <Link to="/implantadores/transicao">
                       <Button
                         variant={isActive("/implantadores/transicao") ? "secondary" : "ghost"}
@@ -769,6 +813,7 @@ export function AppSidebar() {
                         <span className="text-xs font-medium">Documento de Transição</span>
                       </Button>
                     </Link>
+                    )}
                   </div>
                 </div>
               </CollapsibleContent>

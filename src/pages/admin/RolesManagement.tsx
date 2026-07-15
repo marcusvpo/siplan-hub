@@ -21,48 +21,12 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-
-const resourceTranslations: Record<string, string> = {
-  projects: "Projetos",
-  files: "Arquivos",
-  menu_implantacao: "Menu Implantação",
-  menu_calendario: "Menu Calendário",
-  menu_comercial: "Menu Comercial",
-  menu_conversao: "Menu Conversão",
-  menu_orion: "Menu OrionTN",
-  menu_reports: "Menu Relatórios",
-  commercial_customers: "Comercial - Clientes",
-  commercial_blockers: "Comercial - Bloqueios",
-  commercial_contacts: "Comercial - Contatos",
-  conversion_home: "Conversão - Gestão",
-  conversion_engines: "Conversão - Motores",
-  conversion_homologation: "Conversão - Homologação",
-  calendar_projects: "Calendário - Projetos",
-  calendar_analysts: "Calendário - Analistas",
-  orion_dashboard: "Orion - Dashboard",
-  orion_projects: "Orion - Projetos",
-  orion_editor: "Orion - Editor",
-  orion_export: "Orion - Exportação",
-  users: "Usuários (Admin)",
-  teams: "Equipes (Admin)",
-  roles: "Perfis (Admin)",
-  vacations: "Férias (Admin)",
-  settings: "Configurações Globais (Admin)",
-  dashboard: "Dashboard Principal",
-  dashboard_view: "Dashboard - Visão Geral",
-  kanban: "Dashboard - Quadro Kanban",
-};
-
-const actionTranslations: Record<string, string> = {
-  view: "Visualizar",
-  create: "Criar",
-  edit: "Editar / Modificar",
-  delete: "Excluir / Remover",
-  manage: "Gerenciamento Total",
-  execute: "Executar Ação",
-  upload: "Enviar Arquivos",
-  download: "Baixar Arquivos",
-};
+import {
+  PERMISSION_CATEGORY_ORDER,
+  getActionLabel,
+  getResourceCategory,
+  getResourceLabel,
+} from "@/constants/permissions";
 
 interface AppRole {
   id: string;
@@ -289,26 +253,23 @@ export default function RolesManagement() {
     }
   };
 
-  // Group permissions by category then by resource
-  const getCategory = (resource: string) => {
-    if (resource.startsWith('commercial_') || resource === 'menu_comercial') return 'Comercial';
-    if (resource.startsWith('calendar_') || resource === 'menu_calendario') return 'Calendário';
-    if (resource.startsWith('conversion_') || resource === 'menu_conversao') return 'Conversão';
-    if (resource.startsWith('orion_') || resource === 'menu_orion') return 'Modelos Editor OrionTN';
-    if (['users', 'teams', 'roles', 'audit_logs', 'vacations', 'settings', 'dashboard'].includes(resource)) return 'Administração';
-    if (resource === 'projects' || resource === 'menu_implantacao') return 'Implantação & Projetos';
-    if (resource === 'files' || resource === 'menu_reports') return 'Relatórios & Arquivos';
-    if (resource === 'kanban' || resource === 'dashboard_view') return 'Dashboard';
-    return 'Outros';
-  };
-
+  // Agrupa por categoria e, dentro dela, por recurso
   const permissionsByCategory = permissions.reduce((acc, perm) => {
-    const category = getCategory(perm.resource);
+    const category = getResourceCategory(perm.resource);
     if (!acc[category]) acc[category] = {};
     if (!acc[category][perm.resource]) acc[category][perm.resource] = [];
     acc[category][perm.resource].push(perm);
     return acc;
   }, {} as Record<string, Record<string, AppPermission[]>>);
+
+  // Categorias na ordem do catálogo; recursos ainda não catalogados vão pro fim
+  const orderedCategories = Object.entries(permissionsByCategory).sort(
+    ([a], [b]) => {
+      const ia = PERMISSION_CATEGORY_ORDER.indexOf(a as never);
+      const ib = PERMISSION_CATEGORY_ORDER.indexOf(b as never);
+      return (ia === -1 ? Number.MAX_SAFE_INTEGER : ia) - (ib === -1 ? Number.MAX_SAFE_INTEGER : ib);
+    },
+  );
 
   if (view === "form") {
     return (
@@ -356,7 +317,7 @@ export default function RolesManagement() {
               <p className="text-sm text-muted-foreground">Selecione quais áreas do sistema este perfil poderá acessar e quais ações poderá realizar.</p>
             </div>
             <Accordion type="multiple" className="w-full space-y-4">
-              {Object.entries(permissionsByCategory).map(([category, resources]) => {
+              {orderedCategories.map(([category, resources]) => {
                 // Collect all permissions for this category to check "Select All" state
                 const categoryPerms = Object.values(resources).flat();
                 const isAllSelected = categoryPerms.every(p => selectedPermissions.includes(p.id));
@@ -391,7 +352,7 @@ export default function RolesManagement() {
                         {Object.entries(resources).map(([resource, perms]) => (
                         <div key={resource} className="space-y-3 border p-4 rounded-md bg-muted/10 hover:bg-muted/30 transition-colors">
                           <h4 className="font-semibold capitalize text-sm text-primary">
-                            {resourceTranslations[resource] || resource}
+                            {getResourceLabel(resource)}
                           </h4>
                           <div className="space-y-3 pt-1">
                             {perms.map(perm => (
@@ -407,7 +368,7 @@ export default function RolesManagement() {
                                     htmlFor={`perm-${perm.id}`}
                                     className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer capitalize"
                                   >
-                                    {actionTranslations[perm.action] || perm.action}
+                                    {getActionLabel(perm.action)}
                                   </label>
                                   <p className="text-[0.8rem] text-muted-foreground leading-snug">
                                     {perm.description}

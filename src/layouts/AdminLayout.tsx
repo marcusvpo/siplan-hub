@@ -27,7 +27,7 @@ import { activityLogger } from "@/services/activityLogger";
 
 export default function AdminLayout() {
   const { user, role, loading, permissionsLoaded, signOut } = useAuth();
-  const { canManageUsers } = usePermissions();
+  const { canManageUsers, hasPermission } = usePermissions();
   const { theme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const location = useLocation();
@@ -62,23 +62,27 @@ export default function AdminLayout() {
     );
   }
 
-  if (!user || (!canManageUsers && role !== "admin")) {
+  // canManageUsers mantém o acesso dos perfis criados antes de admin_panel existir
+  const canAccessAdmin =
+    role === "admin" || hasPermission("admin_panel", "view") || canManageUsers;
+
+  if (!user || !canAccessAdmin) {
     return <Navigate to="/dashboard" replace />;
   }
 
   const navItems = [
-    { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/admin/users", label: "Usuários", icon: Users },
-    { href: "/admin/roles", label: "Perfis de Acesso", icon: Shield },
-    { href: "/admin/copilot", label: "Copiloto", icon: Sparkles },
-    { href: "/admin/copilot-usage", label: "Uso do Copiloto", icon: BarChart3 },
-    { href: "/admin/teams-config", label: "Configurações do Time", icon: Settings2 },
-    { href: "/admin/inactive-users", label: "Usuários Inativos", icon: UserMinus },
-    { href: "/admin/vacations", label: "Férias", icon: Palmtree },
-    { href: "/admin/settings", label: "Saúde dos Projetos", icon: Activity },
-    { href: "/admin/storage", label: "Armazenamento", icon: HardDrive },
-    { href: "/admin/audit", label: "Logs", icon: History },
-  ];
+    { href: "/admin", label: "Dashboard", icon: LayoutDashboard, resource: "admin_dashboard" },
+    { href: "/admin/users", label: "Usuários", icon: Users, resource: "users" },
+    { href: "/admin/roles", label: "Perfis de Acesso", icon: Shield, resource: "roles" },
+    { href: "/admin/copilot", label: "Copiloto", icon: Sparkles, resource: "copilot_admin" },
+    { href: "/admin/copilot-usage", label: "Uso do Copiloto", icon: BarChart3, resource: "copilot_usage" },
+    { href: "/admin/teams-config", label: "Configurações do Time", icon: Settings2, resource: "teams" },
+    { href: "/admin/inactive-users", label: "Usuários Inativos", icon: UserMinus, resource: "inactive_users" },
+    { href: "/admin/vacations", label: "Férias", icon: Palmtree, resource: "vacations" },
+    { href: "/admin/settings", label: "Saúde dos Projetos", icon: Activity, resource: "settings" },
+    { href: "/admin/storage", label: "Armazenamento", icon: HardDrive, resource: "storage" },
+    { href: "/admin/audit", label: "Logs", icon: History, resource: "audit_logs" },
+  ].filter((item) => hasPermission(item.resource, "view"));
 
   return (
     <div className="min-h-[100dvh] bg-muted/10 flex overflow-hidden">

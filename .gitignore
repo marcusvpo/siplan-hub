@@ -50,3 +50,6 @@ lint_report.txt
 graphify-out/cache/
 graphify-out-full/cache/
 src/graphify-out/cache/
+
+# Supabase CLI local state (link do projeto, machine-specific)
+supabase/.temp/
