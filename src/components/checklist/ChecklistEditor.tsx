@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useFormTemplates, useActiveTemplate, usePublishTemplate, FormTemplate } from "@/hooks/useFormTemplates";
 import { useToast } from "@/hooks/use-toast";
+import { usePermissions } from "@/hooks/usePermissions";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -67,6 +68,14 @@ export function ChecklistEditor({
   // Mutation to publish
   const publishMutation = usePublishTemplate();
 
+  // O editor é compartilhado por três telas; cada uma tem seu próprio recurso.
+  const { hasPermission } = usePermissions();
+  const canPublish = kind === "adherence"
+    ? hasPermission("implantadores_aderencia", "edit")
+    : kind === "commercial_checklist"
+      ? hasPermission("commercial_checklist_questions", "manage")
+      : hasPermission("templates", "manage");
+
   // Load active template questions when system type changes
   useEffect(() => {
     if (activeTemplate) {
@@ -101,6 +110,8 @@ export function ChecklistEditor({
   };
 
   const handlePublish = async () => {
+    if (!canPublish) return;
+
     if (questions.length === 0) {
       toast({
         title: "Erro de Validação",
@@ -278,7 +289,7 @@ export function ChecklistEditor({
             <div className="flex justify-end gap-3">
               <Button
                 onClick={handlePublish}
-                disabled={publishMutation.isPending}
+                disabled={publishMutation.isPending || !canPublish}
                 className={`px-6 gap-2 ${theme.button}`}
               >
                 <Save className="h-4 w-4" />

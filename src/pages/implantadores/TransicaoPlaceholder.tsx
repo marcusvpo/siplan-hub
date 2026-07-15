@@ -4,6 +4,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 import { useProjectDetails } from "@/hooks/useProjectDetails";
 import { useProjectsV2 } from "@/hooks/useProjectsV2";
 import { useAutoSave } from "@/hooks/useAutoSave";
@@ -376,6 +377,10 @@ function SortableItem({ id, children }: { id: string; children: (dragHandleProps
 
 function TransicaoPlaceholder() {
   const { fullName, isAdmin } = useAuth();
+  // Permissões do perfil sobre a tela de Transição (DTC)
+  const { hasPermission } = usePermissions();
+  const canEditTransicao = hasPermission("implantadores_transicao", "edit");
+  const canExecuteTransicao = hasPermission("implantadores_transicao", "execute");
   const { updateProject } = useProjectsV2();
   const { addAutoLog } = useTimeline();
   const queryClient = useQueryClient();
@@ -702,6 +707,7 @@ function TransicaoPlaceholder() {
 
   // Immediate status transition updates (bypass debounce for UX buttons)
   const handleStatusChange = async (newStatus: DTCData["status"]) => {
+    if (!canExecuteTransicao) return;
     if (!selectedProjectId || !localDtc || !project) return;
 
     const now = new Date().toISOString();
@@ -787,6 +793,7 @@ function TransicaoPlaceholder() {
 
   // Field change handler
   const handleFieldChange = (field: keyof DTCData, value: any) => {
+    if (!canEditTransicao) return;
     if (!localDtc) return;
     setLocalDtc(prev => {
       if (!prev) return null;
@@ -835,8 +842,12 @@ function TransicaoPlaceholder() {
   const aiHasExistingText = getLexicalTextLength(localDtc?.finalConsiderations || "") > 0;
 
   const [aiConfirmOpen, setAiConfirmOpen] = useState(false);
-  const doEnqueueAi = () => enqueueAiJob.mutate({ requestedBy: fullName });
+  const doEnqueueAi = () => {
+    if (!canExecuteTransicao) return;
+    enqueueAiJob.mutate({ requestedBy: fullName });
+  };
   const handleGenerateAi = () => {
+    if (!canExecuteTransicao) return;
     if (aiHasExistingText) setAiConfirmOpen(true);
     else doEnqueueAi();
   };
@@ -848,6 +859,7 @@ function TransicaoPlaceholder() {
 
   // Tickets helper functions
   const addTicket = () => {
+    if (!canEditTransicao) return;
     if (!localDtc) return;
     handleFieldChange("tickets", [
       ...localDtc.tickets,
@@ -856,6 +868,7 @@ function TransicaoPlaceholder() {
   };
 
   const removeTicket = (idx: number) => {
+    if (!canEditTransicao) return;
     if (!localDtc) return;
     handleFieldChange(
       "tickets",
@@ -864,6 +877,7 @@ function TransicaoPlaceholder() {
   };
 
   const updateTicket = (idx: number, key: keyof DTCTicket, val: any) => {
+    if (!canEditTransicao) return;
     if (!localDtc) return;
     const updated = [...localDtc.tickets];
     updated[idx] = {
@@ -875,6 +889,7 @@ function TransicaoPlaceholder() {
 
   // Key Users helper functions
   const addKeyUser = () => {
+    if (!canEditTransicao) return;
     if (!localDtc) return;
     const currentList = localDtc.keyUsersList || [];
     handleFieldChange("keyUsersList", [
@@ -884,6 +899,7 @@ function TransicaoPlaceholder() {
   };
 
   const removeKeyUser = (idx: number) => {
+    if (!canEditTransicao) return;
     if (!localDtc || !localDtc.keyUsersList) return;
     handleFieldChange(
       "keyUsersList",
@@ -892,6 +908,7 @@ function TransicaoPlaceholder() {
   };
 
   const updateKeyUser = (idx: number, key: keyof KeyUserItem, val: any) => {
+    if (!canEditTransicao) return;
     if (!localDtc || !localDtc.keyUsersList) return;
     const updated = [...localDtc.keyUsersList];
     updated[idx] = {
@@ -903,6 +920,7 @@ function TransicaoPlaceholder() {
 
   // Remote Access helper functions
   const addRemoteAccess = () => {
+    if (!canEditTransicao) return;
     if (!localDtc) return;
     const currentList = localDtc.remoteAccessList || [];
     handleFieldChange("remoteAccessList", [
@@ -912,6 +930,7 @@ function TransicaoPlaceholder() {
   };
 
   const removeRemoteAccess = (idx: number) => {
+    if (!canEditTransicao) return;
     if (!localDtc || !localDtc.remoteAccessList) return;
     handleFieldChange(
       "remoteAccessList",
@@ -920,6 +939,7 @@ function TransicaoPlaceholder() {
   };
 
   const updateRemoteAccess = (idx: number, key: keyof RemoteAccessItem, val: any) => {
+    if (!canEditTransicao) return;
     if (!localDtc || !localDtc.remoteAccessList) return;
     const updated = [...localDtc.remoteAccessList];
     updated[idx] = {
@@ -930,6 +950,7 @@ function TransicaoPlaceholder() {
   };
 
   const addEmployee = () => {
+    if (!canEditTransicao) return;
     if (!localDtc) return;
     const currentList = localDtc.employeesList || [];
     handleFieldChange("employeesList", [
@@ -939,6 +960,7 @@ function TransicaoPlaceholder() {
   };
 
   const removeEmployee = (idx: number) => {
+    if (!canEditTransicao) return;
     if (!localDtc || !localDtc.employeesList) return;
     handleFieldChange(
       "employeesList",
@@ -947,6 +969,7 @@ function TransicaoPlaceholder() {
   };
 
   const updateEmployee = (idx: number, key: keyof EmployeeItem, val: any) => {
+    if (!canEditTransicao) return;
     if (!localDtc || !localDtc.employeesList) return;
     const updated = [...localDtc.employeesList];
     updated[idx] = {
@@ -972,6 +995,7 @@ function TransicaoPlaceholder() {
   };
 
   const addImplantationLog = () => {
+    if (!canEditTransicao) return;
     if (!localDtc) return;
     const currentList = localDtc.implantationProcessLogs || [];
     // Default to current local date
@@ -983,6 +1007,7 @@ function TransicaoPlaceholder() {
   };
 
   const removeImplantationLog = (idx: number) => {
+    if (!canEditTransicao) return;
     if (!localDtc || !localDtc.implantationProcessLogs) return;
     handleFieldChange(
       "implantationProcessLogs",
@@ -991,6 +1016,7 @@ function TransicaoPlaceholder() {
   };
 
   const updateImplantationLog = (idx: number, key: keyof ImplantationLogItem, val: string) => {
+    if (!canEditTransicao) return;
     if (!localDtc || !localDtc.implantationProcessLogs) return;
     const updated = [...localDtc.implantationProcessLogs];
     updated[idx] = {
@@ -1001,6 +1027,7 @@ function TransicaoPlaceholder() {
   };
 
   const addImplantationPending = () => {
+    if (!canEditTransicao) return;
     if (!localDtc) return;
     const currentList = localDtc.implantationPendingList || [];
     handleFieldChange("implantationPendingList", [
@@ -1010,6 +1037,7 @@ function TransicaoPlaceholder() {
   };
 
   const removeImplantationPending = (idx: number) => {
+    if (!canEditTransicao) return;
     if (!localDtc || !localDtc.implantationPendingList) return;
     handleFieldChange(
       "implantationPendingList",
@@ -1018,6 +1046,7 @@ function TransicaoPlaceholder() {
   };
 
   const updateImplantationPending = (idx: number, key: keyof ImplantationPendingItem, val: string) => {
+    if (!canEditTransicao) return;
     if (!localDtc || !localDtc.implantationPendingList) return;
     const updated = [...localDtc.implantationPendingList];
     updated[idx] = {
@@ -1028,6 +1057,7 @@ function TransicaoPlaceholder() {
   };
 
   const addImplantationGain = () => {
+    if (!canEditTransicao) return;
     if (!localDtc) return;
     const currentList = localDtc.implantationGainsList || [];
     handleFieldChange("implantationGainsList", [
@@ -1037,6 +1067,7 @@ function TransicaoPlaceholder() {
   };
 
   const removeImplantationGain = (idx: number) => {
+    if (!canEditTransicao) return;
     if (!localDtc || !localDtc.implantationGainsList) return;
     handleFieldChange(
       "implantationGainsList",
@@ -1045,6 +1076,7 @@ function TransicaoPlaceholder() {
   };
 
   const updateImplantationGain = (idx: number, key: keyof ImplantationGainItem, val: string) => {
+    if (!canEditTransicao) return;
     if (!localDtc || !localDtc.implantationGainsList) return;
     const updated = [...localDtc.implantationGainsList];
     updated[idx] = { ...updated[idx], [key]: val };
@@ -1052,6 +1084,7 @@ function TransicaoPlaceholder() {
   };
 
   const addImplantationSuggestion = () => {
+    if (!canEditTransicao) return;
     if (!localDtc) return;
     const currentList = localDtc.implantationSuggestionsList || [];
     handleFieldChange("implantationSuggestionsList", [
@@ -1061,6 +1094,7 @@ function TransicaoPlaceholder() {
   };
 
   const removeImplantationSuggestion = (idx: number) => {
+    if (!canEditTransicao) return;
     if (!localDtc || !localDtc.implantationSuggestionsList) return;
     handleFieldChange(
       "implantationSuggestionsList",
@@ -1069,6 +1103,7 @@ function TransicaoPlaceholder() {
   };
 
   const updateImplantationSuggestion = (idx: number, key: keyof ImplantationSuggestionItem, val: string) => {
+    if (!canEditTransicao) return;
     if (!localDtc || !localDtc.implantationSuggestionsList) return;
     const updated = [...localDtc.implantationSuggestionsList];
     updated[idx] = {
@@ -1116,6 +1151,7 @@ function TransicaoPlaceholder() {
   };
 
   const toggleSystemInstalled = (system: string) => {
+    if (!canEditTransicao) return;
     if (!localDtc) return;
     const current = localDtc.systemsInstalled 
       ? localDtc.systemsInstalled.split(",").map(s => s.trim()).filter(Boolean)
@@ -1150,6 +1186,7 @@ function TransicaoPlaceholder() {
   };
 
   const handleSystemVersionChange = (sys: string, version: string) => {
+    if (!canEditTransicao) return;
     if (!localDtc) return;
     const currentList = localDtc.systemVersionsList || {};
     const updatedList = {
@@ -1354,7 +1391,7 @@ function TransicaoPlaceholder() {
     }
   };
 
-  const isFormDisabled = localDtc?.status === "approved";
+  const isFormDisabled = localDtc?.status === "approved" || !canEditTransicao;
 
   // ⑥ Drag & Drop sensors
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
@@ -1638,6 +1675,7 @@ function TransicaoPlaceholder() {
 
   // ⑦ Export to PDF using html2canvas + jsPDF
   const exportToPdf = useCallback(async () => {
+    if (!canExecuteTransicao) return;
     if (!printRef.current) return;
     try {
       toast.loading("Gerando PDF...", { id: "pdf-export" });
@@ -1679,7 +1717,7 @@ function TransicaoPlaceholder() {
       console.error(err);
           toast.error("Erro ao gerar PDF.", { id: "pdf-export" });
     }
-  }, [localDtc]);
+  }, [localDtc, canExecuteTransicao]);
 
   return (
     <div className="container mx-auto pt-0 px-6 pb-6 space-y-6 max-w-7xl -mt-6">
@@ -1872,7 +1910,7 @@ function TransicaoPlaceholder() {
                     >
                       Retornar a Rascunho
                     </Button>
-                    {(isAdmin || fullName === localDtc.analystResponsible) && (
+                    {(isAdmin || fullName === localDtc.analystResponsible) && canExecuteTransicao && (
                       <Button
                         onClick={() => handleStatusChange("approved")}
                         className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-1 text-[11px] h-7 px-2.5"

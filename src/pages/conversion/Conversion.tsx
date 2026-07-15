@@ -19,6 +19,7 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -85,6 +86,12 @@ const STATUS_COLORS: Record<string, string> = {
 export default function Conversion() {
   const { user, team } = useAuth();
   const isConversionTeam = team === "conversion";
+
+  // Permissões do perfil (ortogonais ao gate de time acima)
+  const { hasPermission } = usePermissions();
+  const canEditConversion = hasPermission("conversion_home", "edit");
+  const canDeleteConversion = hasPermission("conversion_home", "delete");
+  const canExecuteConversion = hasPermission("conversion_home", "execute");
 
   // Current user info from auth
   const currentUserId = user?.id || "";
@@ -255,7 +262,7 @@ export default function Conversion() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="text-xs">
-                {!item.engineStatus && isConversionTeam && (
+                {!item.engineStatus && isConversionTeam && canExecuteConversion && (
                   <DropdownMenuItem
                     onClick={(e) => {
                       e.stopPropagation();
@@ -266,7 +273,7 @@ export default function Conversion() {
                     Enviar p/ Conversor
                   </DropdownMenuItem>
                 )}
-                {isConversionTeam && (
+                {isConversionTeam && canEditConversion && (
                   <DropdownMenuItem
                     onClick={(e) => {
                       e.stopPropagation();
@@ -277,10 +284,11 @@ export default function Conversion() {
                     Transferir
                   </DropdownMenuItem>
                 )}
-                {isConversionTeam && (
+                {isConversionTeam && canDeleteConversion && (
                   <DropdownMenuItem
                     onClick={(e) => {
                       e.stopPropagation();
+                      if (!canDeleteConversion) return;
                       if (confirm(`Remover "${item.clientName}"?`)) {
                         removeFromQueue(item.id, item.projectId);
                       }
@@ -375,7 +383,7 @@ export default function Conversion() {
           {/* Ações Rápidas do Card */}
           <div className="flex gap-1.5 pt-1.5">
             {/* Botão Assumir */}
-            {!item.assignedTo && isConversionTeam && (
+            {!item.assignedTo && isConversionTeam && canEditConversion && (
               <Button
                 size="sm"
                 className="w-full bg-primary hover:bg-primary/95 text-primary-foreground font-semibold flex items-center justify-center gap-1 text-[10px] h-7"
@@ -390,7 +398,7 @@ export default function Conversion() {
             )}
 
             {/* Botão Enviar p/ Homologação */}
-            {item.queueStatus === "in_progress" && (
+            {item.queueStatus === "in_progress" && canExecuteConversion && (
               <Button
                 size="sm"
                 className="w-full bg-primary hover:bg-primary/95 text-primary-foreground font-semibold flex items-center justify-center gap-1 text-[10px] h-7"
@@ -458,6 +466,8 @@ export default function Conversion() {
   };
 
   const handleAssign = async (item: ConversionQueueItem) => {
+    if (!canEditConversion) return;
+
     const success = await assignToMe(
       item.id,
       currentUserId,
@@ -472,6 +482,7 @@ export default function Conversion() {
   };
 
   const handleTransfer = async () => {
+    if (!canEditConversion) return;
     if (!transferDialog.item || !selectedNewOwner) return;
 
     const member = conversionMembers.find((m) => m.id === selectedNewOwner);
@@ -494,6 +505,7 @@ export default function Conversion() {
   };
 
   const handleSendToHomologation = async () => {
+    if (!canExecuteConversion) return;
     if (!homologationDialog.item) return;
 
     const analyst = selectedImplantador && selectedImplantador !== "unassigned_open"
@@ -521,6 +533,8 @@ export default function Conversion() {
     item: ConversionQueueItem,
     status: string,
   ) => {
+    if (!canEditConversion) return;
+
     const success = await updateQueueStatus(item.id, status);
     if (success) {
       toast.success("Status atualizado!");
@@ -530,6 +544,8 @@ export default function Conversion() {
   };
 
   const handleApproveHomologation = async (item: ConversionQueueItem) => {
+    if (!canExecuteConversion) return;
+
     const success = await approveHomologation(item.id);
     if (success) {
       toast.success("Homologação aprovada!");
@@ -780,7 +796,7 @@ export default function Conversion() {
               {/* Linha 4: Botões de Ação na base */}
               <div className="flex gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-905 w-full">
                 {/* Action 1: Assumir (Assign to Me) */}
-                {!item.assignedTo && isConversionTeam && (
+                {!item.assignedTo && isConversionTeam && canEditConversion && (
                   <Button
                     size="sm"
                     className="flex-1 bg-primary hover:bg-primary/95 text-primary-foreground font-semibold flex items-center justify-center gap-1 text-[10px] h-7.5 px-2 rounded shadow-sm transition-all duration-200 active:scale-95"
@@ -794,7 +810,7 @@ export default function Conversion() {
                   </Button>
                 )}
 
-                {item.queueStatus === "in_progress" && (
+                {item.queueStatus === "in_progress" && canExecuteConversion && (
                   <Button
                     size="sm"
                     className="flex-1 bg-primary hover:bg-primary/95 text-primary-foreground font-semibold flex items-center justify-center gap-1 text-[10px] h-7.5 px-2 rounded shadow-sm transition-all duration-200 active:scale-95"
@@ -844,11 +860,11 @@ export default function Conversion() {
                   variant="outline"
                   className={cn(
                     "border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 flex items-center justify-center text-[10px] h-7.5 rounded shadow-sm font-semibold",
-                    (!item.assignedTo && isConversionTeam) || 
-                    (item.queueStatus === "in_progress") || 
-                    (item.queueStatus === "homologation_issues") || 
+                    (!item.assignedTo && isConversionTeam && canEditConversion) ||
+                    (item.queueStatus === "in_progress" && canExecuteConversion) ||
+                    (item.queueStatus === "homologation_issues") ||
                     (item.queueStatus === "done" && item.homologationStatus === "approved")
-                      ? "w-8 px-0 shrink-0" 
+                      ? "w-8 px-0 shrink-0"
                       : "flex-1 px-2"
                   )}
                   onClick={(e) => {
@@ -859,17 +875,17 @@ export default function Conversion() {
                   title="Ver publicações e posts"
                 >
                   <MessageSquare className="h-3.5 w-3.5 text-primary" />
-                  {(!item.assignedTo && isConversionTeam) || 
-                  (item.queueStatus === "in_progress") || 
-                  (item.queueStatus === "homologation_issues") || 
+                  {(!item.assignedTo && isConversionTeam && canEditConversion) ||
+                  (item.queueStatus === "in_progress" && canExecuteConversion) ||
+                  (item.queueStatus === "homologation_issues") ||
                   (item.queueStatus === "done" && item.homologationStatus === "approved")
-                    ? "" 
+                    ? ""
                     : <span className="ml-1">Feed</span>
                   }
                 </Button>
 
                 {/* Dropdown de Mais Opções no Kanban */}
-                {isConversionTeam && (
+                {isConversionTeam && (canEditConversion || canDeleteConversion || canExecuteConversion) && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
@@ -882,7 +898,7 @@ export default function Conversion() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="text-xs">
-                      {!item.engineStatus && (
+                      {!item.engineStatus && canExecuteConversion && (
                         <DropdownMenuItem
                           onClick={(e) => {
                             e.stopPropagation();
@@ -893,27 +909,32 @@ export default function Conversion() {
                           Enviar p/ Conversor
                         </DropdownMenuItem>
                       )}
-                      <DropdownMenuItem
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setTransferDialog({ open: true, item });
-                        }}
-                      >
-                        <ArrowRight className="h-3.5 w-3.5 mr-1.5" />
-                        Transferir
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (confirm(`Remover "${item.clientName}"?`)) {
-                            removeFromQueue(item.id, item.projectId);
-                          }
-                        }}
-                        className="text-red-655 focus:text-red-655 focus:bg-red-50 dark:focus:bg-red-950/20"
-                      >
-                        <AlertCircle className="h-3.5 w-3.5 mr-1.5" />
-                        Remover da Fila
-                      </DropdownMenuItem>
+                      {canEditConversion && (
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setTransferDialog({ open: true, item });
+                          }}
+                        >
+                          <ArrowRight className="h-3.5 w-3.5 mr-1.5" />
+                          Transferir
+                        </DropdownMenuItem>
+                      )}
+                      {canDeleteConversion && (
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!canDeleteConversion) return;
+                            if (confirm(`Remover "${item.clientName}"?`)) {
+                              removeFromQueue(item.id, item.projectId);
+                            }
+                          }}
+                          className="text-red-655 focus:text-red-655 focus:bg-red-50 dark:focus:bg-red-950/20"
+                        >
+                          <AlertCircle className="h-3.5 w-3.5 mr-1.5" />
+                          Remover da Fila
+                        </DropdownMenuItem>
+                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 )}
@@ -1066,7 +1087,7 @@ export default function Conversion() {
             {/* Right Column / Actions Panel */}
             <div className="flex flex-wrap lg:flex-nowrap items-center gap-2 pt-3 lg:pt-0 border-t lg:border-t-0 lg:border-l lg:pl-4 border-slate-100 dark:border-slate-800 shrink-0 w-full lg:w-auto justify-end">
               {/* Action 1: Assumir (Assign to Me) */}
-              {!item.assignedTo && isConversionTeam && (
+              {!item.assignedTo && isConversionTeam && canEditConversion && (
                 <Button
                   size="sm"
                   variant="default"
@@ -1082,7 +1103,7 @@ export default function Conversion() {
               )}
 
               {/* Action 2: Enviar p/ Homologação */}
-              {item.queueStatus === "in_progress" && (
+              {item.queueStatus === "in_progress" && canExecuteConversion && (
                 <Button
                   size="sm"
                   variant="default"
@@ -1175,7 +1196,7 @@ export default function Conversion() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  {!item.engineStatus && isConversionTeam && (
+                  {!item.engineStatus && isConversionTeam && canExecuteConversion && (
                     <DropdownMenuItem
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1186,7 +1207,7 @@ export default function Conversion() {
                       Enviar para criação do Conversor
                     </DropdownMenuItem>
                   )}
-                  {isConversionTeam && (
+                  {isConversionTeam && canEditConversion && (
                     <DropdownMenuItem
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1197,10 +1218,11 @@ export default function Conversion() {
                       Transferir
                     </DropdownMenuItem>
                   )}
-                  {isConversionTeam && (
+                  {isConversionTeam && canDeleteConversion && (
                     <DropdownMenuItem
                       onClick={(e) => {
                         e.stopPropagation();
+                        if (!canDeleteConversion) return;
                         if (
                           confirm(
                             `Tem certeza que deseja remover "${item.clientName}" da fila?`
@@ -1865,11 +1887,12 @@ export default function Conversion() {
             </div>
           </div>
           <DialogFooter className="sm:justify-between">
-            {transferDialog.item && (
+            {transferDialog.item && canDeleteConversion && (
               <Button
                 variant="ghost"
                 className="text-red-550 hover:text-red-650 hover:bg-red-50 dark:hover:bg-red-900/20 font-semibold"
                 onClick={() => {
+                  if (!canDeleteConversion) return;
                   const isAssigned = !!transferDialog.item?.assignedTo;
                   const confirmMsg = isAssigned
                     ? `Deseja desassumir "${transferDialog.item?.clientName}" e devolvê-lo para a fila de Pendentes?`
@@ -1893,7 +1916,10 @@ export default function Conversion() {
               >
                 Cancelar
               </Button>
-              <Button onClick={handleTransfer} disabled={!selectedNewOwner}>
+              <Button
+                onClick={handleTransfer}
+                disabled={!selectedNewOwner || !canEditConversion}
+              >
                 Transferir
               </Button>
             </div>
@@ -1955,6 +1981,7 @@ export default function Conversion() {
             </Button>
             <Button
               onClick={handleSendToHomologation}
+              disabled={!canExecuteConversion}
               className="bg-primary hover:bg-primary/90"
             >
               Enviar para Homologação
@@ -2004,6 +2031,7 @@ export default function Conversion() {
             </Button>
             <Button
               onClick={async () => {
+                if (!canExecuteConversion) return;
                 if (engineDialog.item) {
                   await requestEngine(
                     engineDialog.item.id,
@@ -2015,6 +2043,7 @@ export default function Conversion() {
                   refetch();
                 }
               }}
+              disabled={!canExecuteConversion}
               className="bg-orange-600 hover:bg-orange-700"
             >
               <Cog className="h-4 w-4 mr-2" />

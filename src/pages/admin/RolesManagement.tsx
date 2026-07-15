@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Plus, Trash2, Edit, Shield, ArrowLeft } from "lucide-react";
 import { useAuditLogs } from "@/hooks/useAuditLogs";
+import { usePermissions } from "@/hooks/usePermissions";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Accordion,
@@ -52,6 +53,8 @@ export default function RolesManagement() {
   
   const { toast } = useToast();
   const { logAction } = useAuditLogs();
+  const { hasPermission } = usePermissions();
+  const canManageRoles = hasPermission("roles", "manage");
 
   // Form State
   const [editingRoleId, setEditingRoleId] = useState<string | null>(null);
@@ -115,6 +118,7 @@ export default function RolesManagement() {
 
   const handleSaveRole = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canManageRoles) return;
     setSaving(true);
 
     try {
@@ -189,6 +193,8 @@ export default function RolesManagement() {
   };
 
   const handleDeleteRole = async (role: AppRole) => {
+    if (!canManageRoles) return;
+
     if (role.name === 'admin' || role.name === 'user') {
       toast({
         variant: "destructive",
@@ -296,7 +302,7 @@ export default function RolesManagement() {
                 value={roleName}
                 onChange={(e) => setRoleName(e.target.value)}
                 required
-                disabled={roleName === 'admin' || roleName === 'user'}
+                disabled={!canManageRoles || roleName === 'admin' || roleName === 'user'}
                 placeholder="Ex: Gerente Comercial"
               />
             </div>
@@ -306,6 +312,7 @@ export default function RolesManagement() {
                 id="description"
                 value={roleDescription}
                 onChange={(e) => setRoleDescription(e.target.value)}
+                disabled={!canManageRoles}
                 placeholder="Acesso total aos módulos do comercial"
               />
             </div>
@@ -338,11 +345,12 @@ export default function RolesManagement() {
                     </AccordionTrigger>
                     <AccordionContent className="px-2 pb-4">
                       <div className="flex justify-end mb-4 border-b pb-2">
-                        <Button 
-                          type="button" 
-                          variant="ghost" 
-                          size="sm" 
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
                           onClick={() => toggleCategoryPermissions(categoryPerms)}
+                          disabled={!canManageRoles}
                           className="text-xs h-8"
                         >
                           {isAllSelected ? "Remover Todos" : "Selecionar Todos"}
@@ -357,10 +365,11 @@ export default function RolesManagement() {
                           <div className="space-y-3 pt-1">
                             {perms.map(perm => (
                               <div key={perm.id} className="flex flex-row items-start space-x-3">
-                                <Checkbox 
-                                  id={`perm-${perm.id}`} 
+                                <Checkbox
+                                  id={`perm-${perm.id}`}
                                   checked={selectedPermissions.includes(perm.id)}
                                   onCheckedChange={() => togglePermission(perm.id)}
+                                  disabled={!canManageRoles}
                                   className="mt-0.5"
                                 />
                                 <div className="space-y-1.5 leading-none">
@@ -389,12 +398,14 @@ export default function RolesManagement() {
 
           <div className="flex justify-end gap-3 pt-4 border-t">
             <Button type="button" variant="outline" onClick={() => setView("list")}>
-              Cancelar
+              {canManageRoles ? "Cancelar" : "Voltar"}
             </Button>
-            <Button type="submit" disabled={saving}>
-              {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Salvar Perfil
-            </Button>
+            {canManageRoles && (
+              <Button type="submit" disabled={saving}>
+                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Salvar Perfil
+              </Button>
+            )}
           </div>
         </form>
       </div>
@@ -412,10 +423,12 @@ export default function RolesManagement() {
             Gerencie os perfis que podem ser atribuídos aos usuários.
           </p>
         </div>
-        <Button onClick={openCreateForm}>
-          <Plus className="mr-2 h-4 w-4" />
-          Novo Perfil
-        </Button>
+        {canManageRoles && (
+          <Button onClick={openCreateForm}>
+            <Plus className="mr-2 h-4 w-4" />
+            Novo Perfil
+          </Button>
+        )}
       </div>
 
       <div className="border rounded-md bg-card shadow-sm">
@@ -469,20 +482,22 @@ export default function RolesManagement() {
                           variant="ghost"
                           size="icon"
                           onClick={() => openEditForm(role)}
-                          title="Editar Perfil"
+                          title={canManageRoles ? "Editar Perfil" : "Ver Perfil"}
                         >
                           <Edit className="h-4 w-4 text-muted-foreground hover:text-foreground" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-destructive/70 hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => handleDeleteRole(role)}
-                          disabled={role.name === 'admin' || role.name === 'user'}
-                          title="Excluir Perfil"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        {canManageRoles && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive/70 hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => handleDeleteRole(role)}
+                            disabled={role.name === 'admin' || role.name === 'user'}
+                            title="Excluir Perfil"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>

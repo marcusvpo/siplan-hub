@@ -24,6 +24,7 @@ import {
   DropResult 
 } from "@hello-pangea/dnd";
 import { useToast } from "@/hooks/use-toast";
+import { usePermissions } from "@/hooks/usePermissions";
 
 type KanbanStatus = "todo" | "in-progress" | "done" | "blocked";
 
@@ -65,6 +66,8 @@ export default function ProjectsKanban() {
   const { projects, isLoading, updateProject } = useProjectsV2();
   const [selectedProject, setSelectedProject] = useState<ProjectV2 | null>(null);
   const { toast } = useToast();
+  const { hasPermission } = usePermissions();
+  const canEditKanban = hasPermission("kanban", "edit");
 
   const groupedProjects = useMemo(() => {
     const groups: Record<KanbanStatus, ProjectV2[]> = {
@@ -87,6 +90,8 @@ export default function ProjectsKanban() {
   }, [projects]);
 
   const onDragEnd = (result: DropResult) => {
+    if (!canEditKanban) return;
+
     const { destination, source, draggableId } = result;
 
     if (!destination) return;
@@ -165,10 +170,11 @@ export default function ProjectsKanban() {
                       )}
                     >
                       {groupedProjects[column.id].map((project, index) => (
-                        <Draggable 
-                          key={project.id} 
-                          draggableId={project.id} 
+                        <Draggable
+                          key={project.id}
+                          draggableId={project.id}
                           index={index}
+                          isDragDisabled={!canEditKanban}
                         >
                           {(provided, snapshot) => (
                             <div

@@ -37,6 +37,7 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { usePermissions } from "@/hooks/usePermissions";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -56,6 +57,8 @@ export default function ClientOverview() {
     updateClient,
   } = useCommercial();
   const { toast } = useToast();
+  const { hasPermission } = usePermissions();
+  const canAddClientData = hasPermission("commercial_customers", "create");
 
   const [newNote, setNewNote] = useState("");
   const [isAddingTag, setIsAddingTag] = useState(false);
@@ -99,6 +102,7 @@ export default function ClientOverview() {
     : "healthy";
 
   const handleAddTag = async () => {
+    if (!canAddClientData) return;
     if (!newTag.trim()) return;
     const currentTags = client.tags || [];
     if (currentTags.includes(newTag)) return;
@@ -113,6 +117,7 @@ export default function ClientOverview() {
   };
 
   const handleAddNote = async () => {
+    if (!canAddClientData) return;
     if (!newNote.trim()) return;
 
     const { error } = await supabase.from("commercial_notes").insert({
@@ -190,34 +195,35 @@ export default function ClientOverview() {
                       {tag}
                     </Badge>
                   ))}
-                  {isAddingTag ? (
-                    <div className="flex items-center gap-1">
-                      <Input
-                        value={newTag}
-                        onChange={(e) => setNewTag(e.target.value)}
-                        className="h-6 w-24 text-xs"
-                        placeholder="Nova tag"
-                        onKeyDown={(e) => e.key === "Enter" && handleAddTag()}
-                      />
+                  {canAddClientData &&
+                    (isAddingTag ? (
+                      <div className="flex items-center gap-1">
+                        <Input
+                          value={newTag}
+                          onChange={(e) => setNewTag(e.target.value)}
+                          className="h-6 w-24 text-xs"
+                          placeholder="Nova tag"
+                          onKeyDown={(e) => e.key === "Enter" && handleAddTag()}
+                        />
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-6 w-6"
+                          onClick={handleAddTag}
+                        >
+                          <CheckCircle className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ) : (
                       <Button
-                        size="icon"
                         variant="ghost"
-                        className="h-6 w-6"
-                        onClick={handleAddTag}
+                        size="sm"
+                        className="h-5 px-2 text-xs text-muted-foreground"
+                        onClick={() => setIsAddingTag(true)}
                       >
-                        <CheckCircle className="h-3 w-3" />
+                        <Plus className="h-3 w-3 mr-1" /> Tag
                       </Button>
-                    </div>
-                  ) : (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-5 px-2 text-xs text-muted-foreground"
-                      onClick={() => setIsAddingTag(true)}
-                    >
-                      <Plus className="h-3 w-3 mr-1" /> Tag
-                    </Button>
-                  )}
+                    ))}
                 </div>
               </div>
             </div>
@@ -553,26 +559,28 @@ export default function ClientOverview() {
             </div>
 
             {/* Add Note Input */}
-            <div className="mb-6 p-4 bg-card border rounded-lg shadow-sm">
-              <Textarea
-                placeholder="Adicione uma nota comercial..."
-                className="resize-none mb-2 min-h-[80px]"
-                value={newNote}
-                onChange={(e) => setNewNote(e.target.value)}
-              />
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-muted-foreground">
-                  Visível apenas para o Comercial
-                </span>
-                <Button
-                  size="sm"
-                  onClick={handleAddNote}
-                  disabled={!newNote.trim()}
-                >
-                  Adicionar Nota
-                </Button>
+            {canAddClientData && (
+              <div className="mb-6 p-4 bg-card border rounded-lg shadow-sm">
+                <Textarea
+                  placeholder="Adicione uma nota comercial..."
+                  className="resize-none mb-2 min-h-[80px]"
+                  value={newNote}
+                  onChange={(e) => setNewNote(e.target.value)}
+                />
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-muted-foreground">
+                    Visível apenas para o Comercial
+                  </span>
+                  <Button
+                    size="sm"
+                    onClick={handleAddNote}
+                    disabled={!newNote.trim()}
+                  >
+                    Adicionar Nota
+                  </Button>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Timeline */}
             <div className="relative border-l-2 border-muted space-y-8 pl-6 ml-3">

@@ -11,7 +11,9 @@ export function usePermissions() {
   const isAdmin = context.isAdmin;
   
   // Specific permission checks can be abstracted here as well
-  const canManageUsers = context.hasPermission("users", "manage");
+  // 'users.manage' foi trocado por ações granulares; 'edit' é o equivalente.
+  // Perfis que tinham manage herdaram edit na migration 20260715103000.
+  const canManageUsers = context.hasPermission("users", "edit");
   const canCreateProjects = context.hasPermission("projects", "create");
   const canEditProjects = context.hasPermission("projects", "edit");
   const canDeleteProjects = context.hasPermission("projects", "delete");

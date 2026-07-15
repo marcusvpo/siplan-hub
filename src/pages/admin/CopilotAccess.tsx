@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { usePermissions } from "@/hooks/usePermissions";
 import { Loader2, Search, Sparkles, Save } from "lucide-react";
 
 const DEFAULT_LIMIT = 200000;
@@ -37,6 +38,8 @@ export default function CopilotAccess() {
   const [savingId, setSavingId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const { toast } = useToast();
+  const { hasPermission } = usePermissions();
+  const canManageCopilot = hasPermission("copilot_admin", "manage");
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -85,6 +88,8 @@ export default function CopilotAccess() {
   }, [fetchData]);
 
   const persist = async (row: Row, enabled: boolean, limit: number) => {
+    // defesa: sem permissao de gerenciar copiloto nao persiste
+    if (!canManageCopilot) return;
     setSavingId(row.userId);
     try {
       const { error } = await supabase
@@ -114,10 +119,14 @@ export default function CopilotAccess() {
   };
 
   const toggleEnabled = (row: Row, value: boolean) => {
+    // defesa: sem permissao de gerenciar copiloto nao altera
+    if (!canManageCopilot) return;
     persist(row, value, row.dailyTokenLimit);
   };
 
   const saveLimit = (row: Row) => {
+    // defesa: sem permissao de gerenciar copiloto nao altera
+    if (!canManageCopilot) return;
     const parsed = Math.max(0, Math.floor(Number(row.draftLimit) || 0));
     persist(row, row.enabled, parsed);
   };
@@ -200,7 +209,7 @@ export default function CopilotAccess() {
                       <TableCell className="text-center">
                         <Switch
                           checked={row.enabled}
-                          disabled={savingId === row.userId}
+                          disabled={!canManageCopilot || savingId === row.userId}
                           onCheckedChange={(v) => toggleEnabled(row, v)}
                         />
                       </TableCell>
@@ -210,6 +219,7 @@ export default function CopilotAccess() {
                           min={0}
                           step={1000}
                           value={row.draftLimit}
+                          disabled={!canManageCopilot}
                           onChange={(e) =>
                             setRows((prev) =>
                               prev.map((r) =>
@@ -230,7 +240,7 @@ export default function CopilotAccess() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          disabled={!row.dirty || savingId === row.userId}
+                          disabled={!canManageCopilot || !row.dirty || savingId === row.userId}
                           onClick={() => saveLimit(row)}
                         >
                           {savingId === row.userId ? (

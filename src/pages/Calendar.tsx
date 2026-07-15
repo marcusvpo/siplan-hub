@@ -28,6 +28,7 @@ import { Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useVacations } from "@/hooks/useVacations";
 import { useToast } from "@/hooks/use-toast";
+import { usePermissions } from "@/hooks/usePermissions";
 
 function TrashDroppable() {
   const { setNodeRef, isOver } = useDroppable({
@@ -81,6 +82,11 @@ export default function Calendar() {
   );
   const { projects = [], isLoading } = useProjectsV2();
   const { vacations = [] } = useVacations();
+
+  const { hasPermission } = usePermissions();
+  const canCreateEvents = hasPermission("calendar_projects", "create");
+  const canEditEvents = hasPermission("calendar_projects", "edit");
+  const canDeleteEvents = hasPermission("calendar_projects", "delete");
 
   // Memoize Transformation Logic to avoid recalculating on every render
   const realEvents = useMemo(() => {
@@ -320,6 +326,7 @@ export default function Calendar() {
 
     // Handle Delete Drop
     if (over.id === "trash") {
+      if (!canDeleteEvents) return;
       const eventToTrash = active.data.current?.event;
       if (eventToTrash) {
         removeInteractiveEvent(eventToTrash.id);
@@ -337,6 +344,7 @@ export default function Calendar() {
 
     // If dragging new member allocation
     if (active.data.current?.isNew) {
+      if (!canCreateEvents) return;
       const memberId = active.data.current.memberId;
 
       const conflict = checkVacationConflict(memberId, targetDate);
@@ -363,6 +371,7 @@ export default function Calendar() {
     }
     // If moving existing event
     else {
+      if (!canEditEvents) return;
       const existingEvent = active.data.current?.event as CalendarEvent;
       if (existingEvent) {
         // Calculate duration to preserve it
@@ -420,7 +429,7 @@ export default function Calendar() {
 
             <div className="flex items-center gap-4">
               <CalendarLegend />
-              {isInteractiveMode && <TrashDroppable />}
+              {isInteractiveMode && canDeleteEvents && <TrashDroppable />}
             </div>
           </div>
 

@@ -41,6 +41,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { usePermissions } from "@/hooks/usePermissions";
 import { cn } from "@/lib/utils";
 
 import { getMarqueeStyle } from "@/lib/marquee";
@@ -66,6 +67,10 @@ export default function CommercialContacts() {
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [roleFilter, setRoleFilter] = useState("");
   const { toast } = useToast();
+  const { hasPermission } = usePermissions();
+  const canCreateContacts = hasPermission("commercial_contacts", "create");
+  const canEditContacts = hasPermission("commercial_contacts", "edit");
+  const canDeleteContacts = hasPermission("commercial_contacts", "delete");
 
   const [formData, setFormData] = useState({
     name: "",
@@ -89,6 +94,7 @@ export default function CommercialContacts() {
   };
 
   const handleOpenCreate = () => {
+    if (!canCreateContacts) return;
     resetForm();
     if (selectedClientId) {
       setFormData((prev) => ({ ...prev, client_id: selectedClientId }));
@@ -97,6 +103,7 @@ export default function CommercialContacts() {
   };
 
   const handleOpenEdit = (contact: Contact) => {
+    if (!canEditContacts) return;
     setEditingContact(contact);
     setFormData({
       name: contact.name,
@@ -145,6 +152,7 @@ export default function CommercialContacts() {
   };
 
   const handleDelete = async (id: string) => {
+    if (!canDeleteContacts) return;
     if (confirm("Tem certeza que deseja excluir este contato?")) {
       try {
         await deleteContact.mutateAsync(id);
@@ -212,13 +220,15 @@ export default function CommercialContacts() {
             ))}
           </select>
 
-          <Button
-            onClick={handleOpenCreate}
-            className="gap-2 bg-purple-600 hover:bg-purple-700 shadow-sm"
-          >
-            <Plus className="h-4 w-4" />
-            Novo Contato
-          </Button>
+          {canCreateContacts && (
+            <Button
+              onClick={handleOpenCreate}
+              className="gap-2 bg-purple-600 hover:bg-purple-700 shadow-sm"
+            >
+              <Plus className="h-4 w-4" />
+              Novo Contato
+            </Button>
+          )}
         </div>
       </div>
 
@@ -299,7 +309,7 @@ export default function CommercialContacts() {
               <p className="text-sm">
                 Tente ajustar seus filtros ou selecione outro cliente.
               </p>
-              {selectedClientId && (
+              {selectedClientId && canCreateContacts && (
                 <Button
                   variant="outline"
                   onClick={handleOpenCreate}
@@ -355,17 +365,21 @@ export default function CommercialContacts() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => handleOpenEdit(contact)}
-                        >
-                          <Pencil className="h-4 w-4 mr-2" /> Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-red-600 focus:text-red-700 focus:bg-red-50"
-                          onClick={() => handleDelete(contact.id)}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" /> Excluir
-                        </DropdownMenuItem>
+                        {canEditContacts && (
+                          <DropdownMenuItem
+                            onClick={() => handleOpenEdit(contact)}
+                          >
+                            <Pencil className="h-4 w-4 mr-2" /> Editar
+                          </DropdownMenuItem>
+                        )}
+                        {canDeleteContacts && (
+                          <DropdownMenuItem
+                            className="text-red-600 focus:text-red-700 focus:bg-red-50"
+                            onClick={() => handleDelete(contact.id)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" /> Excluir
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </CardHeader>

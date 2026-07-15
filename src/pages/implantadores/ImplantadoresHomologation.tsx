@@ -60,6 +60,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 import { formatDistanceToNow, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useConversionPosts } from "@/hooks/useConversionPosts";
@@ -89,6 +90,9 @@ interface ConversionQueueItem {
 
 export default function ImplantadoresHomologation() {
   const { user, team } = useAuth();
+  const { hasPermission } = usePermissions();
+  // Time diz quem e da area; permissao diz o que o perfil pode executar
+  const canExecuteHomologation = hasPermission("conversion_homologation", "execute");
   const isImplantador = team === "implementation" || team === "implementer";
   const currentUserId = user?.id || "";
   const currentUserName =
@@ -343,6 +347,11 @@ export default function ImplantadoresHomologation() {
 
   // Action: Assume homologation
   const handleAssume = async (item: ConversionQueueItem) => {
+    // Sem permissao de execucao na homologacao
+    if (!canExecuteHomologation) {
+      toast.error("Você não tem permissão para assumir homologações");
+      return;
+    }
     try {
       const { error: queueError } = await supabase
         .from("conversion_queue")
@@ -380,6 +389,11 @@ export default function ImplantadoresHomologation() {
 
   // Action: Release homologation back to queue
   const handleRelease = async (item: ConversionQueueItem) => {
+    // Sem permissao de execucao na homologacao
+    if (!canExecuteHomologation) {
+      toast.error("Você não tem permissão para devolver homologações");
+      return;
+    }
     try {
       const { error: queueError } = await supabase
         .from("conversion_queue")
@@ -583,8 +597,13 @@ export default function ImplantadoresHomologation() {
 
   // Action: Submit Homologation Report (Verdict)
   const submitVerdict = async () => {
+    // Sem permissao de execucao na homologacao
+    if (!canExecuteHomologation) {
+      toast.error("Você não tem permissão para enviar pareceres de homologação");
+      return;
+    }
     if (!selectedItem || !verdictType) return;
-    
+
     const reportHtml = editorRef.current?.innerHTML || "";
     toast.loading("Enviando resultado...", { id: "verdict-submit" });
 
@@ -797,7 +816,7 @@ export default function ImplantadoresHomologation() {
             {mode === "action" && (
               <>
                 {isUnassigned ? (
-                  isImplantador ? (
+                  isImplantador && canExecuteHomologation ? (
                     <Button
                       size="sm"
                       onClick={() => handleAssume(item)}
@@ -890,22 +909,26 @@ export default function ImplantadoresHomologation() {
               >
                 Cancelar
               </Button>
-              <Button
-                variant="default"
-                onClick={() => openVerdict("issues")}
-                className="bg-red-600 hover:bg-red-700 text-white font-semibold text-xs h-9 flex items-center gap-1.5 border border-red-700/30 shadow-xs"
-              >
-                <AlertTriangle className="h-3.5 w-3.5" />
-                Com Inconsistências
-              </Button>
-              <Button
-                variant="default"
-                onClick={() => openVerdict("approve")}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs h-9 flex items-center gap-1.5 border border-emerald-700/30 shadow-xs"
-              >
-                <CheckCircle2 className="h-3.5 w-3.5" />
-                Aprovar Homologação
-              </Button>
+              {canExecuteHomologation && (
+                <>
+                  <Button
+                    variant="default"
+                    onClick={() => openVerdict("issues")}
+                    className="bg-red-600 hover:bg-red-700 text-white font-semibold text-xs h-9 flex items-center gap-1.5 border border-red-700/30 shadow-xs"
+                  >
+                    <AlertTriangle className="h-3.5 w-3.5" />
+                    Com Inconsistências
+                  </Button>
+                  <Button
+                    variant="default"
+                    onClick={() => openVerdict("approve")}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs h-9 flex items-center gap-1.5 border border-emerald-700/30 shadow-xs"
+                  >
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    Aprovar Homologação
+                  </Button>
+                </>
+              )}
             </div>
           </div>
 
