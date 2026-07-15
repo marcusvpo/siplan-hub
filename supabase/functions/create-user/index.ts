@@ -43,18 +43,23 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Check if caller has admin role
-    const { data: callerProfile } = await supabaseAdmin
-      .from("profiles")
-      .select("role")
-      .eq("id", caller.id)
-      .single();
+    // Check if caller has the users.create permission.
+    // has_permission() returns true for role='admin', so this is a superset of
+    // the previous admin-only check — admins keep access, and custom roles with
+    // the permission gain it. Same source of truth the UI uses.
+    const { data: allowed, error: permError } = await supabaseAdmin.rpc(
+      "has_permission",
+      { user_id: caller.id, req_resource: "users", req_action: "create" },
+    );
 
-    if (!callerProfile || callerProfile.role !== "admin") {
-      return new Response(JSON.stringify({ error: "Forbidden: admin only" }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    if (permError || !allowed) {
+      return new Response(
+        JSON.stringify({ error: "Forbidden: requires users.create permission" }),
+        {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     const { email, password, full_name, team, role } = await req.json();
