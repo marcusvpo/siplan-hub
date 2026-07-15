@@ -37,6 +37,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ConversionPostDrawer } from "@/components/conversion/ConversionPostDrawer";
+import { usePermissions } from "@/hooks/usePermissions";
 
 const ENGINE_STATUS_CONFIG: Record<
   EngineStatus,
@@ -73,6 +74,9 @@ export default function ConversionEngines() {
     null,
   );
 
+  const { hasPermission } = usePermissions();
+  const canEditEngines = hasPermission("conversion_engines", "edit");
+
   const filteredEngines = engines.filter((e) => {
     const matchesSearch =
       !search ||
@@ -85,6 +89,7 @@ export default function ConversionEngines() {
   });
 
   const handleSaveStatus = async () => {
+    if (!canEditEngines) return;
     if (!editItem) return;
     await updateEngineStatus(editItem, editStatus, editNotes || undefined);
     setEditItem(null);
@@ -265,20 +270,22 @@ export default function ConversionEngines() {
                       )}
                     </div>
 
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="gap-1"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditItem(engine.id);
-                        setEditStatus(engine.engineStatus);
-                        setEditNotes(engine.engineNotes || "");
-                      }}
-                    >
-                      <RefreshCw className="h-3.5 w-3.5" />
-                      Atualizar
-                    </Button>
+                    {canEditEngines && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditItem(engine.id);
+                          setEditStatus(engine.engineStatus);
+                          setEditNotes(engine.engineNotes || "");
+                        }}
+                      >
+                        <RefreshCw className="h-3.5 w-3.5" />
+                        Atualizar
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -322,7 +329,9 @@ export default function ConversionEngines() {
             <Button variant="outline" onClick={() => setEditItem(null)}>
               Cancelar
             </Button>
-            <Button onClick={handleSaveStatus}>Salvar</Button>
+            <Button onClick={handleSaveStatus} disabled={!canEditEngines}>
+              Salvar
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

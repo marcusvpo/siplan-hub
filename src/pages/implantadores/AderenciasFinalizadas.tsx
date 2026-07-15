@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { ClipboardCheck, Eye, Printer, RefreshCw, Trash2, ArrowLeft, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { usePermissions } from "@/hooks/usePermissions";
 import { ProjectFormResponse } from "@/hooks/useProjectFormResponse";
 
 interface CompletedFormWithProject extends Omit<ProjectFormResponse, "projects"> {
@@ -18,6 +19,8 @@ interface CompletedFormWithProject extends Omit<ProjectFormResponse, "projects">
 
 export default function AderenciasFinalizadas() {
   const { toast } = useToast();
+  const { hasPermission } = usePermissions();
+  const canDeleteAderencias = hasPermission("implantadores_aderencia_finalizadas", "delete");
   const [completedForms, setCompletedForms] = useState<CompletedFormWithProject[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -77,6 +80,9 @@ export default function AderenciasFinalizadas() {
   }, [loadCompletedForms]);
 
   const handleDeleteForm = async (formId: string) => {
+    // defesa: sem permissao de exclusao nao remove
+    if (!canDeleteAderencias) return;
+
     if (!window.confirm("Deseja realmente excluir esta resposta de formulário? O status de aderência do projeto correspondente será resetado.")) {
       return;
     }
@@ -267,15 +273,17 @@ export default function AderenciasFinalizadas() {
                             <Printer className="h-3.5 w-3.5" />
                             PDF
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteForm(form.id)}
-                            className="h-8 px-2.5 text-[11px] gap-1 hover:bg-rose-50 text-rose-600 hover:text-rose-700"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                            Excluir
-                          </Button>
+                          {canDeleteAderencias && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteForm(form.id)}
+                              className="h-8 px-2.5 text-[11px] gap-1 hover:bg-rose-50 text-rose-600 hover:text-rose-700"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                              Excluir
+                            </Button>
+                          )}
                         </td>
                       </tr>
                     );

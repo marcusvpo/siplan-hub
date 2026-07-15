@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useVacations, Vacation, VacationInput } from "@/hooks/useVacations";
+import { usePermissions } from "@/hooks/usePermissions";
 import { CALENDAR_MEMBERS } from "@/types/calendar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,6 +69,12 @@ export default function VacationManagement() {
   const { vacations, isLoading, addVacation, updateVacation, deleteVacation } =
     useVacations();
 
+  // Permissões do recurso de férias
+  const { hasPermission } = usePermissions();
+  const canCreateVacations = hasPermission("vacations", "create");
+  const canEditVacations = hasPermission("vacations", "edit");
+  const canDeleteVacations = hasPermission("vacations", "delete");
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingVacation, setEditingVacation] = useState<Vacation | null>(null);
@@ -113,8 +120,12 @@ export default function VacationManagement() {
     e.preventDefault();
 
     if (editingVacation) {
+      // Defesa: sem permissão de edição, não persiste
+      if (!canEditVacations) return;
       await updateVacation.mutateAsync({ id: editingVacation.id, ...formData });
     } else {
+      // Defesa: sem permissão de criação, não persiste
+      if (!canCreateVacations) return;
       await addVacation.mutateAsync(formData);
     }
 
@@ -128,6 +139,9 @@ export default function VacationManagement() {
   };
 
   const confirmDelete = async () => {
+    // Defesa: sem permissão de exclusão, não persiste
+    if (!canDeleteVacations) return;
+
     if (vacationToDelete) {
       await deleteVacation.mutateAsync(vacationToDelete);
       setDeleteDialogOpen(false);
@@ -194,13 +208,15 @@ export default function VacationManagement() {
             Gerencie os períodos de férias dos implantadores
           </p>
         </div>
-        <Button
-          onClick={handleOpenCreate}
-          className="bg-red-600 hover:bg-red-700"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Cadastrar Férias
-        </Button>
+        {canCreateVacations && (
+          <Button
+            onClick={handleOpenCreate}
+            className="bg-red-600 hover:bg-red-700"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Cadastrar Férias
+          </Button>
+        )}
       </div>
 
       {/* Alert Info */}
@@ -303,17 +319,20 @@ export default function VacationManagement() {
                               variant="ghost"
                               size="icon"
                               onClick={() => handleOpenEdit(vacation)}
+                              disabled={!canEditVacations}
                             >
                               <Pencil className="h-4 w-4" />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="text-destructive hover:text-destructive"
-                              onClick={() => handleDeleteClick(vacation.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                            {canDeleteVacations && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-destructive hover:text-destructive"
+                                onClick={() => handleDeleteClick(vacation.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>
@@ -431,7 +450,9 @@ export default function VacationManagement() {
                 disabled={
                   !formData.implantador_name ||
                   !formData.start_date ||
-                  !formData.end_date
+                  !formData.end_date ||
+                  // Permissão do modo atual: editando vs criando
+                  (editingVacation ? !canEditVacations : !canCreateVacations)
                 }
               >
                 {editingVacation ? "Salvar Alterações" : "Cadastrar"}

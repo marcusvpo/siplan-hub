@@ -34,6 +34,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useTeams } from "@/hooks/useTeams";
 import { useAuditLogs } from "@/hooks/useAuditLogs";
+import { usePermissions } from "@/hooks/usePermissions";
 import { useMemo } from "react";
 
 interface Profile {
@@ -56,6 +57,13 @@ export default function UserManagement() {
   const { toast } = useToast();
   const { teams } = useTeams();
   const { logAction } = useAuditLogs();
+  const { hasPermission } = usePermissions();
+
+  // Permissões do recurso "users"
+  const canCreateUsers = hasPermission("users", "create");
+  const canEditUsers = hasPermission("users", "edit");
+  const canDeleteUsers = hasPermission("users", "delete");
+  const canResetPassword = hasPermission("users", "execute");
 
   // New Search and Pagination State
   const [searchTerm, setSearchTerm] = useState("");
@@ -151,6 +159,8 @@ export default function UserManagement() {
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Defesa: sem permissão de criação, não prossegue
+    if (!canCreateUsers) return;
     setCreating(true);
 
     try {
@@ -207,6 +217,8 @@ export default function UserManagement() {
   const handleUpdateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingUser) return;
+    // Defesa: sem permissão de edição, não prossegue
+    if (!canEditUsers) return;
 
     setUpdating(true);
     try {
@@ -259,6 +271,8 @@ export default function UserManagement() {
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!resetUser) return;
+    // Defesa: sem permissão de execução, não redefine senha
+    if (!canResetPassword) return;
 
     if (resetPassword !== resetPasswordConfirm) {
       toast({
@@ -308,6 +322,8 @@ export default function UserManagement() {
   };
 
   const handleDeleteUser = async (userId: string) => {
+    // Defesa: sem permissão de exclusão, não prossegue
+    if (!canDeleteUsers) return;
     if (
       !confirm(
         "Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.",
@@ -405,6 +421,7 @@ export default function UserManagement() {
             </Select>
           </div>
 
+          {canCreateUsers && (
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
               <Button size="sm">
@@ -502,6 +519,7 @@ export default function UserManagement() {
               </form>
             </DialogContent>
           </Dialog>
+          )}
         </div>
       </div>
 
@@ -571,7 +589,7 @@ export default function UserManagement() {
               </div>
             </div>
             <DialogFooter>
-              <Button type="submit" disabled={updating}>
+              <Button type="submit" disabled={updating || !canEditUsers}>
                 {updating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Salvar Alterações
               </Button>
@@ -617,7 +635,7 @@ export default function UserManagement() {
               />
             </div>
             <DialogFooter>
-              <Button type="submit" disabled={resetting}>
+              <Button type="submit" disabled={resetting || !canResetPassword}>
                 {resetting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Redefinir Senha
               </Button>
@@ -715,10 +733,12 @@ export default function UserManagement() {
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8"
+                            disabled={!canEditUsers}
                             onClick={() => openEditDialog(user)}
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
+                          {canResetPassword && (
                           <Button
                             variant="ghost"
                             size="icon"
@@ -728,6 +748,8 @@ export default function UserManagement() {
                           >
                             <KeyRound className="h-4 w-4" />
                           </Button>
+                          )}
+                          {canDeleteUsers && (
                           <Button
                             variant="ghost"
                             size="icon"
@@ -736,6 +758,7 @@ export default function UserManagement() {
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>

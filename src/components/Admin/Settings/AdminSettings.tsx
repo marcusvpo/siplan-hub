@@ -12,6 +12,7 @@ import {
   useAdminSettings,
   ProjectHealthSettings,
 } from "@/hooks/useAdminSettings";
+import { usePermissions } from "@/hooks/usePermissions";
 import { Save } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -26,6 +27,11 @@ const STAGE_LABELS: Record<string, string> = {
 
 export function AdminSettings() {
   const { healthSettings, loading, updateHealthSettings } = useAdminSettings();
+
+  // Permissão de edição das configurações
+  const { hasPermission } = usePermissions();
+  const canEditSettings = hasPermission("settings", "edit");
+
   const [formData, setFormData] = useState<ProjectHealthSettings>({});
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -43,6 +49,9 @@ export function AdminSettings() {
   };
 
   const handleSave = () => {
+    // Defesa: sem permissão de edição, não persiste
+    if (!canEditSettings) return;
+
     updateHealthSettings(formData);
     setHasChanges(false);
   };
@@ -72,12 +81,13 @@ export function AdminSettings() {
                   min="0"
                   value={formData[key] || 0}
                   onChange={(e) => handleChange(key, e.target.value)}
+                  disabled={!canEditSettings}
                 />
               </div>
             ))}
           </div>
           <div className="flex justify-end pt-4">
-            <Button onClick={handleSave} disabled={!hasChanges}>
+            <Button onClick={handleSave} disabled={!hasChanges || !canEditSettings}>
               <Save className="mr-2 h-4 w-4" />
               Salvar Alterações
             </Button>

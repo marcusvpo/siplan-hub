@@ -1,4 +1,6 @@
 import { describe, it, expect } from "vitest";
+import { readFileSync, readdirSync } from "node:fs";
+import { join, resolve } from "node:path";
 import { menuItems } from "@/constants/menuItems";
 import {
   PERMISSION_CATEGORY_ORDER,
@@ -8,6 +10,19 @@ import {
 } from "@/constants/permissions";
 
 const catalogResources = new Set(PERMISSION_RESOURCES.map((r) => r.resource));
+const catalogPairs = new Set(
+  PERMISSION_RESOURCES.flatMap((r) => r.actions.map((a) => `${r.resource}:${a}`)),
+);
+
+const SRC = resolve(__dirname, "..");
+
+function sourceFiles(dir: string): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) return sourceFiles(full);
+    return /\.tsx?$/.test(entry.name) ? [full] : [];
+  });
+}
 
 describe("catálogo de permissões", () => {
   it("não repete recursos", () => {
@@ -53,5 +68,24 @@ describe("catálogo de permissões", () => {
   it("cai em 'Outros' para recurso desconhecido, sem quebrar", () => {
     expect(getResourceCategory("recurso_inexistente")).toBe("Outros");
     expect(getResourceLabel("recurso_inexistente")).toBe("recurso_inexistente");
+  });
+
+  // hasPermission com par inexistente é sempre-falso: trava a tela para todo
+  // mundo que não é admin, silenciosamente. Só pega chamadas com literais.
+  it("todo hasPermission(<literal>, <literal>) usa par existente no catálogo", () => {
+    const call = /hasPermission\(\s*["']([a-z_]+)["']\s*,\s*["']([a-z_]+)["']\s*\)/g;
+    const unknown: string[] = [];
+
+    for (const file of sourceFiles(SRC)) {
+      const code = readFileSync(file, "utf8");
+      for (const [, resource, action] of code.matchAll(call)) {
+        const pair = `${resource}:${action}`;
+        if (!catalogPairs.has(pair)) {
+          unknown.push(`${file.replace(SRC, "src")} → ${pair}`);
+        }
+      }
+    }
+
+    expect(unknown, "pares fora do catálogo").toEqual([]);
   });
 });

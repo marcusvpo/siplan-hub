@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useDeploymentForms, type DeploymentFormRecord } from "@/hooks/useDeploymentForms";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 import { DeploymentFormFields } from "@/components/commercial/DeploymentFormFields";
 import { generateDeploymentTemplate, type DeploymentFormData } from "@/utils/deployment-template";
 import { useToast } from "@/hooks/use-toast";
@@ -101,6 +102,9 @@ export default function DeploymentForms() {
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [projectComboboxOpen, setProjectComboboxOpen] = useState(false);
   const { fullName } = useAuth();
+  const { hasPermission } = usePermissions();
+  const canCreateForms = hasPermission("commercial_deployment_forms", "create");
+  const canDeleteForms = hasPermission("commercial_deployment_forms", "delete");
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [mode, setMode] = useState<"list" | "create">("list");
@@ -140,6 +144,7 @@ export default function DeploymentForms() {
   }, [fullName, mode, formData.filled_by, lastUserSync]);
 
   const handleCreate = () => {
+    if (!canCreateForms) return;
     setFormData({ ...EMPTY_FORM, filled_by: fullName || "" });
     setSelectedProjectId("");
     setMode("create");
@@ -444,10 +449,12 @@ export default function DeploymentForms() {
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">Passagem de projeto Comercial → Implantação</p>
         </div>
-        <Button onClick={handleCreate} className="bg-indigo-600 hover:bg-indigo-700 gap-2 shrink-0 shadow-lg shadow-indigo-500/20">
-          <Plus className="h-4 w-4" />
-          Novo Formulário
-        </Button>
+        {canCreateForms && (
+          <Button onClick={handleCreate} className="bg-indigo-600 hover:bg-indigo-700 gap-2 shrink-0 shadow-lg shadow-indigo-500/20">
+            <Plus className="h-4 w-4" />
+            Novo Formulário
+          </Button>
+        )}
       </div>
 
       {/* Stats strip */}
@@ -496,7 +503,7 @@ export default function DeploymentForms() {
             <p className="text-muted-foreground text-sm max-w-sm mt-1">
               {search ? "Tente outra busca." : "Crie o primeiro formulário de passagem de projeto."}
             </p>
-            {!search && (
+            {!search && canCreateForms && (
               <Button onClick={handleCreate} className="mt-4 bg-indigo-600 hover:bg-indigo-700 gap-2">
                 <Plus className="h-4 w-4" /> Criar primeiro formulário
               </Button>
@@ -528,17 +535,20 @@ export default function DeploymentForms() {
                           <Badge variant={urg.variant} className="text-[11px] px-2 py-0">{urg.icon} {urg.label}</Badge>
                         </div>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 shrink-0"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (confirm("Excluir este formulário?")) deleteForm.mutate(form.id);
-                        }}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
+                      {canDeleteForms && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 shrink-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!canDeleteForms) return;
+                            if (confirm("Excluir este formulário?")) deleteForm.mutate(form.id);
+                          }}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
                     </div>
 
                     <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground border-t pt-2.5">

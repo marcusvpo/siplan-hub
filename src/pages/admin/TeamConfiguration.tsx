@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useTeams } from "@/hooks/useTeams";
 import { useAuditLogs } from "@/hooks/useAuditLogs";
+import { usePermissions } from "@/hooks/usePermissions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -30,6 +31,12 @@ const ITEMS_PER_PAGE = 6;
 export default function TeamConfiguration() {
   const { teams, isLoading, createTeam, updateTeam, deleteTeam } = useTeams();
   const { logAction } = useAuditLogs();
+  const { hasPermission } = usePermissions();
+
+  // Permissões do recurso "teams"
+  const canCreateTeams = hasPermission("teams", "create");
+  const canEditTeams = hasPermission("teams", "edit");
+  const canDeleteTeams = hasPermission("teams", "delete");
 
   const [isOpen, setIsOpen] = useState(false);
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
@@ -75,6 +82,8 @@ export default function TeamConfiguration() {
     e.preventDefault();
 
     if (editingTeam) {
+      // Defesa: sem permissão de edição, não prossegue
+      if (!canEditTeams) return;
       updateTeam.mutate(
         { ...formData, id: editingTeam.id },
         {
@@ -89,6 +98,8 @@ export default function TeamConfiguration() {
         },
       );
     } else {
+      // Defesa: sem permissão de criação, não prossegue
+      if (!canCreateTeams) return;
       createTeam.mutate(formData, {
         onSuccess: () => {
           logAction.mutate({
@@ -113,6 +124,8 @@ export default function TeamConfiguration() {
   };
 
   const handleDelete = (id: string, label: string) => {
+    // Defesa: sem permissão de exclusão, não prossegue
+    if (!canDeleteTeams) return;
     if (confirm(`Tem certeza que deseja excluir o time "${label}"?`)) {
       deleteTeam.mutate(id, {
         onSuccess: () => {
@@ -163,12 +176,14 @@ export default function TeamConfiguration() {
               if (!open) resetForm();
             }}
           >
-            <DialogTrigger asChild>
-              <Button size="sm">
-                <Plus className="mr-2 h-4 w-4" />
-                Nova Equipe
-              </Button>
-            </DialogTrigger>
+            {canCreateTeams && (
+              <DialogTrigger asChild>
+                <Button size="sm">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Nova Equipe
+                </Button>
+              </DialogTrigger>
+            )}
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>
@@ -221,7 +236,10 @@ export default function TeamConfiguration() {
                   />
                 </div>
                 <DialogFooter>
-                  <Button type="submit">
+                  <Button
+                    type="submit"
+                    disabled={editingTeam ? !canEditTeams : !canCreateTeams}
+                  >
                     {editingTeam ? "Salvar" : "Criar"}
                   </Button>
                 </DialogFooter>
@@ -280,10 +298,12 @@ export default function TeamConfiguration() {
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8"
+                            disabled={!canEditTeams}
                             onClick={() => handleEdit(team)}
                           >
                             <Pencil className="h-4 w-4" />
                           </Button>
+                          {canDeleteTeams && (
                           <Button
                             variant="ghost"
                             size="icon"
@@ -292,6 +312,7 @@ export default function TeamConfiguration() {
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>

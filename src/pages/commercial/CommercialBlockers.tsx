@@ -24,6 +24,7 @@ import {
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { usePermissions } from "@/hooks/usePermissions";
 
 // Helper to determine active blockers
 const getBlockers = (projectObj: Project) => {
@@ -77,6 +78,8 @@ export default function CommercialBlockers() {
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { hasPermission } = usePermissions();
+  const canEditBlockers = hasPermission("commercial_blockers", "edit");
 
   // Helper to mark project as viewed
   const markAsViewed = (projectId: string) => {
@@ -131,6 +134,7 @@ export default function CommercialBlockers() {
   };
 
   const handleSaveNotes = async () => {
+    if (!canEditBlockers) return;
     if (!selectedProject) return;
 
     try {
@@ -160,6 +164,8 @@ export default function CommercialBlockers() {
     project: Project,
     blockerStage?: string
   ) => {
+    if (!canEditBlockers) return;
+
     if (
       !confirm(
         "Confirmar que este bloqueio foi resolvido pelo comercial? Isso atualizará o status do projeto e adicionará uma tag."
@@ -400,6 +406,7 @@ export default function CommercialBlockers() {
                           {project.sold_hours ? `${project.sold_hours}h` : "0h"}
                         </span>
                       </div>
+                      {canEditBlockers && (
                       <Button
                         variant="ghost"
                         size="sm"
@@ -412,6 +419,7 @@ export default function CommercialBlockers() {
                         <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
                         Resolver
                       </Button>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -481,7 +489,7 @@ export default function CommercialBlockers() {
                     content={editorContent}
                     onChange={setEditorContent}
                     placeholder="Registre aqui o andamento comercial..."
-                    editable={true}
+                    editable={canEditBlockers}
                   />
                 </div>
               </div>
@@ -495,10 +503,12 @@ export default function CommercialBlockers() {
                 </Button>
                 <Button
                   onClick={handleSaveNotes}
+                  disabled={!canEditBlockers}
                   className="bg-indigo-600 hover:bg-indigo-700"
                 >
                   Salvar Observações
                 </Button>
+                {canEditBlockers && (
                 <Button
                   variant="secondary"
                   className="ml-auto text-green-700 bg-green-100 hover:bg-green-200"
@@ -507,6 +517,7 @@ export default function CommercialBlockers() {
                   <CheckCircle2 className="h-4 w-4 mr-2" />
                   Marcar como Resolvido
                 </Button>
+                )}
               </div>
             </div>
           )}

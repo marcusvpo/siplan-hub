@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useProjectsV2 } from "@/hooks/useProjectsV2";
+import { usePermissions } from "@/hooks/usePermissions";
 import { ModelosEditorWorkspace } from "@/components/ProjectManagement/ModelosEditor/ModelosEditorWorkspace";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -18,6 +19,8 @@ export default function OrionTNModels() {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const { projects, isLoading, updateProject } = useProjectsV2();
+  const { hasPermission } = usePermissions();
+  const canEditOrionModels = hasPermission("orion_editor", "edit");
   const [projectSearch, setProjectSearch] = useState("");
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -47,7 +50,7 @@ export default function OrionTNModels() {
   };
 
   const updateStage = async (proj: typeof selectedProject, stageKey: string, updates: any) => {
-    if (!proj) return;
+    if (!proj || !canEditOrionModels) return;
     await updateProject.mutateAsync({
       projectId: proj.id,
       updates: {

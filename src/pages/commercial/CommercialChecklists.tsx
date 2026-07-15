@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useCommercialChecklists, type CommercialChecklistRecord } from "@/hooks/useCommercialChecklists";
 import { useProjectsV2 } from "@/hooks/useProjectsV2";
+import { usePermissions } from "@/hooks/usePermissions";
 import { useToast } from "@/hooks/use-toast";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -29,6 +30,9 @@ import { FormRenderer } from "@/components/FormRenderer/FormRenderer";
 export default function CommercialChecklists() {
   const { checklists, isLoading: isLoadingChecklists, createChecklist, deleteChecklist } = useCommercialChecklists();
   const { projects, isLoading: isLoadingProjects } = useProjectsV2();
+  const { hasPermission } = usePermissions();
+  const canCreateChecklists = hasPermission("commercial_checklists", "create");
+  const canDeleteChecklists = hasPermission("commercial_checklists", "delete");
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -90,6 +94,7 @@ export default function CommercialChecklists() {
   );
 
   const handleCreate = () => {
+    if (!canCreateChecklists) return;
     if (!selectedProjectId) {
       toast({ title: "Atenção", description: "Selecione um projeto para continuar.", variant: "destructive" });
       return;
@@ -116,6 +121,7 @@ export default function CommercialChecklists() {
 
   const handleDelete = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!canDeleteChecklists) return;
     if (confirm("Excluir este checklist permanentemente? O cliente não poderá mais respondê-lo.")) {
       deleteChecklist.mutate(id);
     }
@@ -154,10 +160,12 @@ export default function CommercialChecklists() {
             <Settings className="h-4 w-4" />
             Editar Perguntas
           </Button>
-          <Button onClick={() => setCreateDialogOpen(true)} className="bg-indigo-600 hover:bg-indigo-700 gap-2 shadow-lg shadow-indigo-500/20">
-            <Plus className="h-4 w-4" />
-            Novo Checklist
-          </Button>
+          {canCreateChecklists && (
+            <Button onClick={() => setCreateDialogOpen(true)} className="bg-indigo-600 hover:bg-indigo-700 gap-2 shadow-lg shadow-indigo-500/20">
+              <Plus className="h-4 w-4" />
+              Novo Checklist
+            </Button>
+          )}
         </div>
       </div>
 
@@ -207,7 +215,7 @@ export default function CommercialChecklists() {
             <p className="text-muted-foreground text-sm max-w-sm mt-1">
               {search ? "Tente buscar por outro termo." : "Crie o primeiro checklist de implantação para enviar ao cliente."}
             </p>
-            {!search && (
+            {!search && canCreateChecklists && (
               <Button onClick={() => setCreateDialogOpen(true)} className="mt-4 bg-indigo-600 hover:bg-indigo-700 gap-2">
                 <Plus className="h-4 w-4" /> Criar primeiro checklist
               </Button>
@@ -248,14 +256,16 @@ export default function CommercialChecklists() {
                           )}
                         </div>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 shrink-0"
-                        onClick={(e) => handleDelete(item.id, e)}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
+                      {canDeleteChecklists && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 shrink-0"
+                          onClick={(e) => handleDelete(item.id, e)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
                     </div>
 
                     <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground border-t pt-2.5">
