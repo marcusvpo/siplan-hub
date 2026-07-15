@@ -22,12 +22,20 @@ export default function Home() {
     const { theme } = useTheme();
     const { hasPermission, isAdmin } = usePermissions();
 
-    // Filter menu items the user has permission to see
+    // Filter menu items the user has permission to see.
+    // Ter o menu não basta: um grupo cujos subitens estão todos bloqueados
+    // vira um card que abre vazio, então ele também some.
     const allowedMenuItems = useMemo(() => {
         return menuItems.filter(item => {
-            if (!item.permissionKey) return true; // No permission required (e.g. Dashboard)
             if (isAdmin) return true;
-            return hasPermission(item.permissionKey, "view");
+            if (item.permissionKey && !hasPermission(item.permissionKey, "view")) {
+                return false;
+            }
+            const subItems = item.subItems ?? [];
+            if (subItems.length === 0) return true;
+            return subItems.some(
+                sub => !sub.permissionKey || hasPermission(sub.permissionKey, "view"),
+            );
         });
     }, [hasPermission, isAdmin]);
 
