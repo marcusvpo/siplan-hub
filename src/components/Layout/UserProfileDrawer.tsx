@@ -1,7 +1,30 @@
 import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, User, Mail, Users, Shield, LayoutDashboard } from "lucide-react";
+import {
+  X,
+  User,
+  Mail,
+  Users,
+  Shield,
+  LayoutDashboard,
+  KeyRound,
+  Loader2,
+} from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface UserProfileDrawerProps {
   isOpen: boolean;
@@ -12,6 +35,51 @@ export function UserProfileDrawer({ isOpen, onClose }: UserProfileDrawerProps) {
   const { user, team, role } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+  const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [savingPassword, setSavingPassword] = useState(false);
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (password !== passwordConfirm) {
+      toast({
+        variant: "destructive",
+        title: "As senhas não coincidem",
+        description: "Confirme a nova senha corretamente.",
+      });
+      return;
+    }
+
+    setSavingPassword(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) throw error;
+
+      toast({
+        title: "Senha alterada",
+        description: "Sua senha foi atualizada com sucesso.",
+      });
+      setPassword("");
+      setPasswordConfirm("");
+      setPasswordDialogOpen(false);
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Não foi possível alterar a senha.";
+      toast({
+        variant: "destructive",
+        title: "Erro ao alterar senha",
+        description: errorMessage,
+      });
+    } finally {
+      setSavingPassword(false);
+    }
+  };
 
   // Get user name from metadata
   const userName =
@@ -49,6 +117,7 @@ export function UserProfileDrawer({ isOpen, onClose }: UserProfileDrawerProps) {
   };
 
   return (
+    <>
     <AnimatePresence>
       {isOpen && (
         <>
@@ -165,6 +234,15 @@ export function UserProfileDrawer({ isOpen, onClose }: UserProfileDrawerProps) {
                   )}
                 </button>
               )}
+
+              {/* Change Password Button */}
+              <button
+                onClick={() => setPasswordDialogOpen(true)}
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition-colors shadow-sm font-medium text-sm border border-transparent"
+              >
+                <KeyRound className="w-4 h-4" />
+                Alterar minha senha
+              </button>
             </div>
 
             {/* Footer */}
@@ -177,5 +255,66 @@ export function UserProfileDrawer({ isOpen, onClose }: UserProfileDrawerProps) {
         </>
       )}
     </AnimatePresence>
+
+      {/* Change Password Dialog */}
+      <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Alterar minha senha</DialogTitle>
+            <DialogDescription>
+              Escolha uma nova senha para sua conta.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleChangePassword} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="new-password">Nova senha</Label>
+              <Input
+                id="new-password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                disabled={savingPassword}
+                autoComplete="new-password"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="new-password-confirm">Confirmar nova senha</Label>
+              <Input
+                id="new-password-confirm"
+                type="password"
+                value={passwordConfirm}
+                onChange={(e) => setPasswordConfirm(e.target.value)}
+                required
+                minLength={6}
+                disabled={savingPassword}
+                autoComplete="new-password"
+              />
+            </div>
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setPasswordDialogOpen(false)}
+                disabled={savingPassword}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={savingPassword}>
+                {savingPassword ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  "Salvar senha"
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
