@@ -11,6 +11,7 @@ import { MainLayout } from "@/components/Layout/MainLayout";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { RequirePermission } from "@/components/auth/RequirePermission";
 import Login from "@/pages/Login";
 
 // Code Splitting: Lazy loading para rotas secundárias
@@ -186,7 +187,9 @@ const App = () => (
                   index
                   element={
                     <Suspense fallback={<PageLoader />}>
-                      <AdminDashboard />
+                      <RequirePermission resource="admin_dashboard">
+                        <AdminDashboard />
+                      </RequirePermission>
                     </Suspense>
                   }
                 />
@@ -194,7 +197,9 @@ const App = () => (
                   path="users"
                   element={
                     <Suspense fallback={<PageLoader />}>
-                      <UserManagement />
+                      <RequirePermission resource="users">
+                        <UserManagement />
+                      </RequirePermission>
                     </Suspense>
                   }
                 />
@@ -202,7 +207,9 @@ const App = () => (
                   path="roles"
                   element={
                     <Suspense fallback={<PageLoader />}>
-                      <RolesManagement />
+                      <RequirePermission resource="roles">
+                        <RolesManagement />
+                      </RequirePermission>
                     </Suspense>
                   }
                 />
@@ -210,7 +217,9 @@ const App = () => (
                   path="teams-config"
                   element={
                     <Suspense fallback={<PageLoader />}>
-                      <TeamConfiguration />
+                      <RequirePermission resource="teams">
+                        <TeamConfiguration />
+                      </RequirePermission>
                     </Suspense>
                   }
                 />
@@ -218,7 +227,9 @@ const App = () => (
                   path="audit"
                   element={
                     <Suspense fallback={<PageLoader />}>
-                      <AuditLogPage />
+                      <RequirePermission resource="audit_logs">
+                        <AuditLogPage />
+                      </RequirePermission>
                     </Suspense>
                   }
                 />
@@ -226,7 +237,9 @@ const App = () => (
                   path="settings"
                   element={
                     <Suspense fallback={<PageLoader />}>
-                      <AdminSettings />
+                      <RequirePermission resource="settings">
+                        <AdminSettings />
+                      </RequirePermission>
                     </Suspense>
                   }
                 />
@@ -234,7 +247,9 @@ const App = () => (
                   path="vacations"
                   element={
                     <Suspense fallback={<PageLoader />}>
-                      <VacationManagement />
+                      <RequirePermission resource="vacations">
+                        <VacationManagement />
+                      </RequirePermission>
                     </Suspense>
                   }
                 />
@@ -242,7 +257,9 @@ const App = () => (
                   path="storage"
                   element={
                     <Suspense fallback={<PageLoader />}>
-                      <SystemStorage />
+                      <RequirePermission resource="storage">
+                        <SystemStorage />
+                      </RequirePermission>
                     </Suspense>
                   }
                 />
@@ -250,7 +267,9 @@ const App = () => (
                   path="inactive-users"
                   element={
                     <Suspense fallback={<PageLoader />}>
-                      <InactiveUsers />
+                      <RequirePermission resource="inactive_users">
+                        <InactiveUsers />
+                      </RequirePermission>
                     </Suspense>
                   }
                 />
@@ -258,7 +277,9 @@ const App = () => (
                   path="copilot"
                   element={
                     <Suspense fallback={<PageLoader />}>
-                      <CopilotAccess />
+                      <RequirePermission resource="copilot_admin">
+                        <CopilotAccess />
+                      </RequirePermission>
                     </Suspense>
                   }
                 />
@@ -266,7 +287,9 @@ const App = () => (
                   path="copilot-usage"
                   element={
                     <Suspense fallback={<PageLoader />}>
-                      <CopilotUsage />
+                      <RequirePermission resource="copilot_usage">
+                        <CopilotUsage />
+                      </RequirePermission>
                     </Suspense>
                   }
                 />
@@ -281,87 +304,266 @@ const App = () => (
                       <Suspense fallback={<PageLoader />}>
                         <Routes>
                           <Route path="/" element={<Home />} />
-                          <Route path="/dashboard" element={<DashboardV2 />} />
+                          <Route
+                            path="/dashboard"
+                            element={
+                              <RequirePermission resource="dashboard_view">
+                                <DashboardV2 />
+                              </RequirePermission>
+                            }
+                          />
                           <Route path="/copilot" element={<Copilot />} />
-                          <Route path="/dashboard/kanban" element={<ProjectsKanban />} />
-                          <Route path="/projects" element={<Index />} />
-                          <Route path="/projects/:id" element={<ProjectDetails />} />
-                          <Route path="/projects/:id/adherence" element={<ProjectAdherenceForm />} />
-                          <Route path="/calendar" element={<Calendar />} />
-                          <Route path="/agenda-analistas" element={<AgendaAnalistas />} />
+                          <Route
+                            path="/dashboard/kanban"
+                            element={
+                              <RequirePermission resource="kanban">
+                                <ProjectsKanban />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/projects"
+                            element={
+                              <RequirePermission resource="projects">
+                                <Index />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/projects/:id"
+                            element={
+                              <RequirePermission resource="projects">
+                                <ProjectDetails />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/projects/:id/adherence"
+                            element={
+                              <RequirePermission resource="projects">
+                                <ProjectAdherenceForm />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/calendar"
+                            element={
+                              <RequirePermission resource="calendar_projects">
+                                <Calendar />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/agenda-analistas"
+                            element={
+                              <RequirePermission resource="calendar_analysts">
+                                <AgendaAnalistas />
+                              </RequirePermission>
+                            }
+                          />
                           <Route
                             path="/compare"
-                            element={<CompareProjects />}
+                            element={
+                              <RequirePermission resource="compare_projects">
+                                <CompareProjects />
+                              </RequirePermission>
+                            }
                           />
-                          <Route path="/reports" element={<Reports />} />
-                          <Route path="/analytics" element={<Analytics />} />
+                          <Route
+                            path="/reports"
+                            element={
+                              <RequirePermission resource="reports">
+                                <Reports />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/analytics"
+                            element={
+                              <RequirePermission resource="analytics">
+                                <Analytics />
+                              </RequirePermission>
+                            }
+                          />
                           <Route
                             path="/deployments"
-                            element={<NextDeployments />}
+                            element={
+                              <RequirePermission resource="deployments_next">
+                                <NextDeployments />
+                              </RequirePermission>
+                            }
                           />
                           <Route
                             path="/deployments/latest"
-                            element={<LatestDeployments />}
+                            element={
+                              <RequirePermission resource="deployments_latest">
+                                <LatestDeployments />
+                              </RequirePermission>
+                            }
                           />
                           <Route
                             path="/commercial/blockers"
-                            element={<CommercialBlockers />}
+                            element={
+                              <RequirePermission resource="commercial_blockers">
+                                <CommercialBlockers />
+                              </RequirePermission>
+                            }
                           />
                           <Route
                             path="/commercial/contacts"
-                            element={<CommercialContacts />}
+                            element={
+                              <RequirePermission resource="commercial_contacts">
+                                <CommercialContacts />
+                              </RequirePermission>
+                            }
                           />
                           <Route
                             path="/commercial/customers"
-                            element={<CommercialCustomers />}
+                            element={
+                              <RequirePermission resource="commercial_customers">
+                                <CommercialCustomers />
+                              </RequirePermission>
+                            }
                           />
                           <Route
                             path="/commercial/client/:id"
-                            element={<ClientOverview />}
+                            element={
+                              <RequirePermission resource="commercial_customers">
+                                <ClientOverview />
+                              </RequirePermission>
+                            }
                           />
                           <Route
                             path="/commercial/client/:id/timeline"
-                            element={<CustomerTimeline />}
+                            element={
+                              <RequirePermission resource="commercial_customers">
+                                <CustomerTimeline />
+                              </RequirePermission>
+                            }
                           />
                           <Route
                             path="/commercial/deployment-forms"
-                            element={<DeploymentForms />}
+                            element={
+                              <RequirePermission resource="commercial_deployment_forms">
+                                <DeploymentForms />
+                              </RequirePermission>
+                            }
                           />
                           <Route
                             path="/commercial/checklists"
-                            element={<CommercialChecklists />}
+                            element={
+                              <RequirePermission resource="commercial_checklists">
+                                <CommercialChecklists />
+                              </RequirePermission>
+                            }
                           />
                           <Route
                             path="/commercial/checklists/questions"
-                            element={<EditarChecklistComercial />}
+                            element={
+                              <RequirePermission
+                                resource="commercial_checklist_questions"
+                                action="manage"
+                              >
+                                <EditarChecklistComercial />
+                              </RequirePermission>
+                            }
                           />
-                          <Route path="/conversion" element={<Conversion />} />
+                          <Route
+                            path="/conversion"
+                            element={
+                              <RequirePermission resource="conversion_home">
+                                <Conversion />
+                              </RequirePermission>
+                            }
+                          />
                           <Route
                             path="/implantadores/homologation"
-                            element={<ImplantadoresHomologation />}
+                            element={
+                              <RequirePermission resource="conversion_homologation">
+                                <ImplantadoresHomologation />
+                              </RequirePermission>
+                            }
                           />
                           <Route
                             path="/conversion/engines"
-                            element={<ConversionEngines />}
+                            element={
+                              <RequirePermission resource="conversion_engines">
+                                <ConversionEngines />
+                              </RequirePermission>
+                            }
                           />
                           <Route
                             path="/orion-tn-models/dashboard"
-                            element={<OrionTNDashboard />}
+                            element={
+                              <RequirePermission resource="orion_dashboard">
+                                <OrionTNDashboard />
+                              </RequirePermission>
+                            }
                           />
                           <Route
                             path="/orion-tn-models/projects"
-                            element={<OrionTNProjects />}
+                            element={
+                              <RequirePermission resource="orion_projects">
+                                <OrionTNProjects />
+                              </RequirePermission>
+                            }
                           />
                           <Route
                             path="/orion-tn-models/:projectId?"
-                            element={<OrionTNModels />}
+                            element={
+                              <RequirePermission resource="orion_editor">
+                                <OrionTNModels />
+                              </RequirePermission>
+                            }
                           />
-                          <Route path="/implantadores" element={<Implantadores />} />
-                          <Route path="/implantadores/aderencia" element={<ImplantadoresAderencia />} />
-                          <Route path="/implantadores/aderencia/finalizadas" element={<AderenciasFinalizadas />} />
-                          <Route path="/implantadores/aderencia/:systemType" element={<ImplantadoresAderencia />} />
-                          <Route path="/implantadores/treinamento" element={<TreinamentoPlaceholder />} />
-                          <Route path="/implantadores/transicao" element={<TransicaoPlaceholder />} />
+                          <Route
+                            path="/implantadores"
+                            element={
+                              <RequirePermission resource="implantadores_home">
+                                <Implantadores />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/implantadores/aderencia"
+                            element={
+                              <RequirePermission resource="implantadores_aderencia">
+                                <ImplantadoresAderencia />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/implantadores/aderencia/finalizadas"
+                            element={
+                              <RequirePermission resource="implantadores_aderencia_finalizadas">
+                                <AderenciasFinalizadas />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/implantadores/aderencia/:systemType"
+                            element={
+                              <RequirePermission resource="implantadores_aderencia">
+                                <ImplantadoresAderencia />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/implantadores/treinamento"
+                            element={
+                              <RequirePermission resource="implantadores_treinamento">
+                                <TreinamentoPlaceholder />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/implantadores/transicao"
+                            element={
+                              <RequirePermission resource="implantadores_transicao">
+                                <TransicaoPlaceholder />
+                              </RequirePermission>
+                            }
+                          />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </Suspense>
