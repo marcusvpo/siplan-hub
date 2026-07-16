@@ -34,6 +34,7 @@ import {
   BookOpen,
   FileCheck,
   Sparkles,
+  Headset,
 } from "lucide-react";
 import {
   Collapsible,
@@ -83,6 +84,7 @@ export function AppSidebar() {
   const canViewOrion = hasPermission("menu_orion", "view");
   const canViewDashboardView = hasPermission("dashboard_view", "view");
   const canViewKanban = hasPermission("kanban", "view");
+  const canViewPosPanorama = hasPermission("pos_panorama", "view");
   const canViewImplantadores = hasPermission("menu_implantadores", "view");
   const can = (resource: string) => hasPermission(resource, "view");
 
@@ -95,6 +97,7 @@ export function AppSidebar() {
   const rotaDashboard = primeiraRota(
     ["dashboard_view", "/dashboard"],
     ["kanban", "/dashboard/kanban"],
+    ["pos_panorama", "/dashboard/pos-implantacao"],
   );
   const rotaImplantacao = primeiraRota(
     ["projects", "/projects"],
@@ -270,6 +273,18 @@ export function AppSidebar() {
                       >
                         <LayoutDashboard className="h-4 w-4" />
                         <span>Quadro Kanban</span>
+                      </Button>
+                    </Link>
+                  )}
+                  {canViewPosPanorama && (
+                    <Link to="/dashboard/pos-implantacao">
+                      <Button
+                        variant={isActive("/dashboard/pos-implantacao") ? "secondary" : "ghost"}
+                        size="sm"
+                        className="w-full justify-start gap-3 h-9"
+                      >
+                        <Headset className="h-4 w-4" />
+                        <span>Panorama Pós</span>
                       </Button>
                     </Link>
                   )}

@@ -17,6 +17,9 @@ export interface Chamado0800 {
   dataAbertura?: string;
   dataEncerramento?: string;
   syncedAt?: string;
+  /** Tema curto gerado por IA no worker ("selo digital", "livro caixa"...).
+   * undefined = ainda nao classificado; "interno" nunca chega aqui (filtrado). */
+  tema?: string;
 }
 
 export interface Chamados0800Result {
@@ -34,6 +37,11 @@ export interface Chamados0800Result {
  * Comparacao em minusculas.
  */
 const NATUREZAS_IGNORADAS = ["nova implantação", "nova implantacao"];
+
+/** true para naturezas internas que nao entram em lista nem analise. */
+export function isNaturezaIgnorada(natureza?: string | null): boolean {
+  return NATUREZAS_IGNORADAS.includes((natureza || "").toLowerCase());
+}
 
 /**
  * Normaliza nome de produto para comparacao: minusculas, so alfanumericos.
@@ -68,7 +76,7 @@ function toIsoDay(value?: Date | string | null): string | undefined {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mapChamado = (c: any): Chamado0800 => ({
+export const mapChamado0800 = (c: any): Chamado0800 => ({
   numeroChamado: c.numero_chamado,
   nomeCliente: c.nome_cliente ?? undefined,
   solicitante: c.solicitante ?? undefined,
@@ -83,6 +91,7 @@ const mapChamado = (c: any): Chamado0800 => ({
   dataAbertura: c.data_abertura ?? undefined,
   dataEncerramento: c.data_encerramento ?? undefined,
   syncedAt: c.synced_at ?? undefined,
+  tema: c.tema_ia && c.tema_ia !== "interno" ? c.tema_ia : undefined,
 });
 
 /**
@@ -136,7 +145,7 @@ export function useChamados0800(
       const { data, error } = await q;
       if (error) throw error;
 
-      let chamados = (data ?? []).map(mapChamado);
+      let chamados = (data ?? []).map(mapChamado0800);
       chamados = chamados.filter(
         (c) => !NATUREZAS_IGNORADAS.includes((c.natureza || "").toLowerCase())
       );
@@ -163,6 +172,151 @@ export function useChamados0800(
     /** true quando faltam datas do pos ou ticket valido para consultar */
     parametrosIncompletos: !valido,
   };
+}
+
+export interface BenchmarkPos {
+  /** mediana de chamados por pos entre os outros projetos do mesmo produto */
+  mediana: number;
+  /** quantos projetos entraram na comparacao */
+  projetos: number;
+}
+
+/**
+ * Benchmark da carteira: mediana de chamados de pos entre os OUTROS projetos do
+ * mesmo produto (com pos iniciado). Transforma o total do projeto atual em
+ * veredito ("3 chamados" e bom ou ruim?). Tudo lido do espelho chamados_0800.
+ */
+export function useBenchmarkPos(systemType?: string | null, excludeTicket?: string | null) {
+  const hoje = new Date().toISOString().slice(0, 10);
+  return useQuery<BenchmarkPos | null>({
+    queryKey: ["benchmarkPos", systemType, excludeTicket],
+    enabled: !!systemType,
+    staleTime: 5 * 60_000,
+    queryFn: async () => {
+      const { data: projs, error: projErr } = await supabase
+        .from("projects")
+        .select("ticket_number, post_start_date, post_end_date, post_status")
+        .eq("is_deleted", false)
+        .eq("system_type", systemType as string)
+        .not("post_start_date", "is", null);
+      if (projErr) throw projErr;
+
+      const candidatos = (projs ?? [])
+        .map((p) => ({
+          ticket: (p.ticket_number || "").trim(),
+          inicio: p.post_start_date as string,
+          fim: p.post_status === "done" && p.post_end_date ? (p.post_end_date as string) : hoje,
+        }))
+        .filter((p) => /^\d{4,}$/.test(p.ticket) && p.ticket !== (excludeTicket || "").trim());
+      if (candidatos.length < 2) return null; // sem base de comparacao
+
+      const { data: origens, error: origErr } = await supabase
+        .from("chamados_0800")
+        .select("numero_chamado, id_cliente_ellevo")
+        .in("numero_chamado", candidatos.map((c) => c.ticket));
+      if (origErr) throw origErr;
+      const ticketToCliente = new Map(
+        (origens ?? []).map((o) => [o.numero_chamado as string, o.id_cliente_ellevo as number])
+      );
+
+      const resolvidos = candidatos.filter((c) => ticketToCliente.has(c.ticket));
+      if (resolvidos.length < 2) return null;
+
+      const minInicio = resolvidos.map((c) => c.inicio).sort()[0];
+      const { data: chamados, error: chErr } = await supabase
+        .from("chamados_0800")
+        .select("id_cliente_ellevo, data_abertura, natureza, software")
+        .in("id_cliente_ellevo", [...new Set(resolvidos.map((c) => ticketToCliente.get(c.ticket)!))])
+        .gte("data_abertura", minInicio);
+      if (chErr) throw chErr;
+
+      const counts = resolvidos.map((c) => {
+        const idCliente = ticketToCliente.get(c.ticket)!;
+        return (chamados ?? []).filter(
+          (ch) =>
+            ch.id_cliente_ellevo === idCliente &&
+            !!ch.data_abertura &&
+            (ch.data_abertura as string) >= c.inicio &&
+            (ch.data_abertura as string) <= c.fim &&
+            !isNaturezaIgnorada(ch.natureza as string) &&
+            softwareMatchesSystemType(ch.software as string, systemType)
+        ).length;
+      });
+
+      counts.sort((a, b) => a - b);
+      const meio = Math.floor(counts.length / 2);
+      const mediana =
+        counts.length % 2 === 1 ? counts[meio] : Math.round((counts[meio - 1] + counts[meio]) / 2);
+      return { mediana, projetos: counts.length };
+    },
+  });
+}
+
+export interface ParecerPosJob {
+  id: string;
+  status: string;
+  resultText?: string;
+  errorMessage?: string;
+  progress?: string;
+  createdAt: string;
+}
+
+/**
+ * Parecer IA da Analise Pos-Implantacao: enfileira um job 'pos_parecer' na fila
+ * dtc_ai_jobs (input_text = JSON compacto dos chamados do periodo); o vm-worker
+ * roda o Claude e devolve o texto em result_text. A query faz polling enquanto
+ * houver job ativo e guarda o ultimo parecer concluido do projeto.
+ */
+export function useParecerPos(projectId?: string) {
+  const queryClient = useQueryClient();
+  const queryKey = ["parecerPos", projectId];
+
+  const { data: jobs = [] } = useQuery<ParecerPosJob[]>({
+    queryKey,
+    enabled: !!projectId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("dtc_ai_jobs")
+        .select("id, status, result_text, error_message, progress, created_at")
+        .eq("project_id", projectId as string)
+        .eq("job_type", "pos_parecer")
+        .order("created_at", { ascending: false })
+        .limit(5);
+      if (error) throw error;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (data ?? []).map((j: any) => ({
+        id: j.id,
+        status: j.status,
+        resultText: j.result_text ?? undefined,
+        errorMessage: j.error_message ?? undefined,
+        progress: j.progress ?? undefined,
+        createdAt: j.created_at,
+      }));
+    },
+    refetchInterval: (query) => {
+      const data = query.state.data as ParecerPosJob[] | undefined;
+      const ativo = data?.some((j) => j.status === "pending" || j.status === "processing");
+      return ativo ? 4000 : false;
+    },
+  });
+
+  const gerarParecer = async (inputJson: string, requestedBy?: string): Promise<void> => {
+    const { error } = await supabase.from("dtc_ai_jobs").insert({
+      project_id: projectId,
+      job_type: "pos_parecer",
+      target_field: "pos_parecer",
+      input_text: inputJson,
+      requested_by: requestedBy ?? null,
+    });
+    if (error) throw error;
+    await queryClient.invalidateQueries({ queryKey });
+  };
+
+  const ativo = jobs.find((j) => j.status === "pending" || j.status === "processing");
+  const ultimo = jobs.find((j) => j.status === "done" && j.resultText);
+  const ultimoErro = !ativo && jobs[0]?.status === "error" ? jobs[0] : undefined;
+
+  return { gerarParecer, ativo, ultimo, ultimoErro };
 }
 
 /**

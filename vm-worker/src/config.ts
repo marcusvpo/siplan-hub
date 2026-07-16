@@ -124,6 +124,8 @@ export const config = {
   // Cliente sai do escopo do sync quando todo pos-implantacao dele terminou ha
   // mais dias que isto (o historico ja espelhado permanece).
   chamadosSyncGraceDays: Number(process.env.CHAMADOS_SYNC_GRACE_DAYS || 60),
+  // Modelo da classificacao de temas dos chamados (tarefa leve em lote -> haiku).
+  chamadosTemaModel: process.env.CHAMADOS_TEMA_MODEL || "haiku",
 
   // Modelo usado no resumo com IA das "Consideracoes finais" (tarefa leve -> modelo
   // mais rapido que o padrao). Override via DTC_MODEL. Vazio = usa o padrao da CLI.

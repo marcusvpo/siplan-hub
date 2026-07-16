@@ -59,6 +59,31 @@ ${text}
 === FIM DOS BLOCOS ===`;
 }
 
+// Prompt do parecer da Analise Pos-Implantacao: recebe um JSON compacto com os
+// chamados 0800 do periodo do pos e escreve uma leitura qualitativa (temas
+// recorrentes, causa provavel, recomendacoes) para o time de implantacao.
+function buildParecerPrompt(json: string): string {
+  return `Voce e um analista senior de implantacao de sistemas para cartorios. Abaixo esta um JSON com os chamados de suporte (0800) que UM cliente abriu durante o periodo de pos-implantacao de um projeto.
+
+Escreva um PARECER curto (2 a 4 paragrafos + no maximo 4 recomendacoes em lista) respondendo:
+1. Quais assuntos/temas se repetem nos chamados? Cite os numeros dos chamados relevantes (ex.: #746373).
+2. A causa provavel do atrito e capacitacao dos usuarios (duvidas), qualidade do produto/ambiente (erros e bugs) ou fatores pontuais?
+3. O que a equipe de implantacao deve fazer a respeito (recomendacoes objetivas e acionaveis)?
+
+REGRAS:
+- Baseie-se APENAS nos dados do JSON. NAO invente fatos, numeros nem chamados.
+- Considere status (aberto ha muito tempo = risco), criticidade e datas.
+- Portugues do Brasil, tom profissional e direto. Sem preambulo, sem titulo geral, sem repetir estas instrucoes.
+
+FORMATACAO (Markdown leve): **negrito** para termos-chave; listas com "- ". Nao use titulos com "#", tabelas nem blocos de codigo.
+
+Responda SOMENTE com o texto do parecer.
+
+=== CHAMADOS DO POS (JSON) ===
+${json}
+=== FIM ===`;
+}
+
 /**
  * Pipeline de um job 'improve_text' (ja marcado 'processing' pelo claim):
  * le o texto de entrada (input_text) -> roda o Claude para reescrever ->
@@ -97,23 +122,39 @@ export async function processImproveJob(job: DtcJob): Promise<void> {
     record({ at: new Date().toISOString(), text, kind });
 
   const isSummary = job.job_type === "summary_blocks";
+  const isParecer = job.job_type === "pos_parecer";
 
-  pushStep(isSummary ? "Lendo os blocos de observacoes..." : "Lendo o texto para melhorar...");
+  pushStep(
+    isParecer
+      ? "Lendo os chamados do periodo do pos..."
+      : isSummary
+      ? "Lendo os blocos de observacoes..."
+      : "Lendo o texto para melhorar..."
+  );
   await flushProgress(true);
 
   // 1. Texto de entrada: pode vir como JSON do Lexical ou texto puro.
+  //    No parecer, input_text e um JSON de chamados e vai integro para o prompt.
   const raw = job.input_text || "";
-  const text = (lexToText(raw) || raw).trim();
+  const text = isParecer ? raw.trim() : (lexToText(raw) || raw).trim();
   if (text.replace(/[^a-zA-Z0-9]/g, "").length < 10) {
     throw new Error(
-      isSummary
+      isParecer
+        ? "Nao ha chamados suficientes para gerar um parecer."
+        : isSummary
         ? "Nao ha texto suficiente nos blocos para gerar um resumo."
         : "O texto e muito curto para ser melhorado."
     );
   }
 
   // 2. Rodar o Claude para reescrever/resumir
-  pushStep(isSummary ? "Gerando o resumo com IA..." : "Melhorando o texto com IA...");
+  pushStep(
+    isParecer
+      ? "Gerando o parecer com IA..."
+      : isSummary
+      ? "Gerando o resumo com IA..."
+      : "Melhorando o texto com IA..."
+  );
   await flushProgress(true);
 
   const shouldCancel = async (): Promise<boolean> => {
@@ -125,7 +166,11 @@ export async function processImproveJob(job: DtcJob): Promise<void> {
     return !!data?.cancel_requested;
   };
 
-  const prompt = isSummary ? buildSummaryPrompt(text) : buildImprovePrompt(text);
+  const prompt = isParecer
+    ? buildParecerPrompt(text)
+    : isSummary
+    ? buildSummaryPrompt(text)
+    : buildImprovePrompt(text);
   let { resultText, transcript, code, stderr, cancelled } = await runSkill(
     prompt,
     (step) => record(step),
@@ -185,7 +230,11 @@ export async function processImproveJob(job: DtcJob): Promise<void> {
 
   // 3. Concluir job com o texto gerado
   pushStep(
-    isSummary ? "Resumo pronto! Revise antes de aplicar." : "Texto pronto! Revise antes de aplicar.",
+    isParecer
+      ? "Parecer pronto!"
+      : isSummary
+      ? "Resumo pronto! Revise antes de aplicar."
+      : "Texto pronto! Revise antes de aplicar.",
     "result"
   );
   await flushProgress(true);

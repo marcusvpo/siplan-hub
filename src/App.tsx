@@ -115,6 +115,7 @@ const InactiveUsers = lazy(() => import("./pages/admin/InactiveUsers"));
 const ProjectDetails = lazy(() => import("./pages/ProjectDetails"));
 const ProjectAdherenceForm = lazy(() => import("./pages/ProjectAdherenceForm"));
 const ProjectsKanban = lazy(() => import("./pages/ProjectsKanban"));
+const PosPanorama = lazy(() => import("./pages/PosPanorama"));
 const Copilot = lazy(() => import("./pages/Copilot"));
 const CopilotAccess = lazy(() => import("./pages/admin/CopilotAccess"));
 const CopilotUsage = lazy(() => import("./pages/admin/CopilotUsage"));
@@ -318,6 +319,14 @@ const App = () => (
                             element={
                               <RequirePermission resource="kanban">
                                 <ProjectsKanban />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/dashboard/pos-implantacao"
+                            element={
+                              <RequirePermission resource="pos_panorama">
+                                <PosPanorama />
                               </RequirePermission>
                             }
                           />
