@@ -227,6 +227,31 @@ aparecer `papeis=models` num e `papeis=ai` no outro, ambos com `Realtime: SUBSCR
 | `WHISPER_MODEL` | (Voz) Arquivo ggml do modelo (ex.: `.../ggml-large-v3-turbo.bin`). |
 | `WHISPER_LANGUAGE` | (Voz) Idioma forcado (padrao `pt`). |
 | `FFMPEG_BIN` | (Voz) Binario do ffmpeg (padrao `ffmpeg`). |
+| `MSSQL_HOST` | (Chamados 0800) IP do SQL Server interno (ex.: `10.0.10.59`). Vazio = sync desligado. |
+| `MSSQL_PORT` | (Chamados 0800) Porta (padrao 1433). |
+| `MSSQL_DATABASE` | (Chamados 0800) Banco (padrao `Siplan_AcessoIA`). |
+| `MSSQL_USER` / `MSSQL_PASSWORD` | (Chamados 0800) Credencial de leitura da view. So no `.env` da VM. |
+| `CHAMADOS_SYNC_INTERVAL_MS` | (Chamados 0800) Intervalo do sync (padrao 300000 = 5 min). |
+| `CHAMADOS_SYNC_GRACE_DAYS` | (Chamados 0800) Dias apos o fim do pos em que o cliente segue no escopo (padrao 60). |
+
+</details>
+
+<details>
+<summary><b>Espelho de chamados 0800 (Ellevo -> chamados_0800)</b></summary>
+
+`src/chamadosSync.ts` consulta a view `vw_2026_ChamadosTodosStatus` no SQL Server interno
+(`MSSQL_HOST`) e upserta o resultado deduplicado em `public.chamados_0800` no Supabase. Nao usa
+Claude nem entra nas filas: e um timer proprio (5 min) + atendimento imediato quando o front
+insere um pedido em `chamados_sync_requests` (botao "sincronizar agora" do card de Pos, via
+Realtime). Escopo: chamados de origem dos projetos (`projects.ticket_number`) + chamados dos
+clientes com pos-implantacao ativa (janela = menor `post_start_date`; sai do escopo
+`CHAMADOS_SYNC_GRACE_DAYS` dias apos o fim do pos).
+
+**Rode o sync em UM worker so.** Os dois servicos compartilham o `.env`; para desligar no de
+modelos existe o drop-in `/etc/systemd/system/siplan-model-worker.service.d/no-chamados-sync.conf`
+com `Environment=MSSQL_HOST=` (vazio). Hoje o dono do sync e o `siplan-ai-worker`. No log do dono
+deve aparecer `[chamados-sync] ativo: ... (+ sync sob demanda via Realtime)` e, no outro,
+`[chamados-sync] desligado`.
 
 </details>
 
