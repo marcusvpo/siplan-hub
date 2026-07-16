@@ -111,6 +111,20 @@ export const config = {
   quotaRetryMs: Number(process.env.QUOTA_RETRY_MS || 900000),
   heartbeatIntervalMs: Number(process.env.HEARTBEAT_INTERVAL_MS || 30000),
 
+  // Espelho de chamados 0800 (Ellevo -> public.chamados_0800). O SQL Server so
+  // e alcancavel de dentro da rede, por isso o sync roda aqui. Desligado quando
+  // MSSQL_HOST esta vazio; com 2 workers na mesma VM, configure as vars em UM so
+  // (senao os dois sincronizam em dobro, inofensivo mas inutil).
+  mssqlHost: process.env.MSSQL_HOST || "",
+  mssqlPort: Number(process.env.MSSQL_PORT || 1433),
+  mssqlDatabase: process.env.MSSQL_DATABASE || "Siplan_AcessoIA",
+  mssqlUser: process.env.MSSQL_USER || "",
+  mssqlPassword: process.env.MSSQL_PASSWORD || "",
+  chamadosSyncIntervalMs: Number(process.env.CHAMADOS_SYNC_INTERVAL_MS || 300000),
+  // Cliente sai do escopo do sync quando todo pos-implantacao dele terminou ha
+  // mais dias que isto (o historico ja espelhado permanece).
+  chamadosSyncGraceDays: Number(process.env.CHAMADOS_SYNC_GRACE_DAYS || 60),
+
   // Modelo usado no resumo com IA das "Consideracoes finais" (tarefa leve -> modelo
   // mais rapido que o padrao). Override via DTC_MODEL. Vazio = usa o padrao da CLI.
   dtcModel: process.env.DTC_MODEL || "sonnet",

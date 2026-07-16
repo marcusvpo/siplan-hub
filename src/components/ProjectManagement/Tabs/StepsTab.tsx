@@ -20,6 +20,7 @@ import { useConversionQueue } from "@/hooks/useConversionQueue";
 import { useProjectFiles } from "@/hooks/useProjectFiles";
 import { StageCard } from "@/components/ProjectManagement/Forms/StageCard";
 import { PostObservations } from "@/components/ProjectManagement/Forms/PostObservations";
+import { PostChamados0800 } from "@/components/ProjectManagement/Forms/PostChamados0800";
 import { EnvironmentScreenshots } from "@/components/ProjectManagement/Forms/EnvironmentScreenshots";
 import { ObservationsWithAI } from "@/components/ProjectManagement/Forms/ObservationsWithAI";
 import { CollapsibleFieldSection } from "@/components/ProjectManagement/Forms/CollapsibleFieldSection";
@@ -550,22 +551,31 @@ export function StepsTab({
             }
             canEditProjects={canEditProjects}
             observationsSlot={
-              <PostObservations
-                observations={stagesData.post.observations}
-                onChange={(obs) => updateStage("post", { observations: obs })}
-                canEdit={canEditProjects}
-                projectId={project.id}
-                requestedBy={currentUserName}
-                reportMeta={{
-                  clientName: project.clientName,
-                  ticket: project.ticketNumber,
-                  systemType: project.systemType,
-                  responsible: stagesData.post.responsible,
-                  status: stagesData.post.status,
-                  startDate: stagesData.post.startDate,
-                  endDate: stagesData.post.endDate,
-                }}
-              />
+              <div className="space-y-4">
+                <PostObservations
+                  observations={stagesData.post.observations}
+                  onChange={(obs) => updateStage("post", { observations: obs })}
+                  canEdit={canEditProjects}
+                  projectId={project.id}
+                  requestedBy={currentUserName}
+                  reportMeta={{
+                    clientName: project.clientName,
+                    ticket: project.ticketNumber,
+                    systemType: project.systemType,
+                    responsible: stagesData.post.responsible,
+                    status: stagesData.post.status,
+                    startDate: stagesData.post.startDate,
+                    endDate: stagesData.post.endDate,
+                  }}
+                />
+                <PostChamados0800
+                  ticketNumber={project.ticketNumber}
+                  startDate={stagesData.post.startDate}
+                  endDate={stagesData.post.endDate}
+                  postStatus={stagesData.post.status}
+                  systemType={project.systemType}
+                />
+              </div>
             }
           />
         </div>

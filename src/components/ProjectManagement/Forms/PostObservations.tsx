@@ -8,7 +8,7 @@ import { useImproveTextJobs } from "@/hooks/useImproveTextJobs";
 import { useModelWorkerStatus } from "@/hooks/useModelGenerationJobs";
 import { DtcAiJob } from "@/types/ProjectV2";
 import { toast } from "sonner";
-import { Plus, Trash2, Sparkles, Loader2, Wand2, FileText, ChevronDown, ChevronRight, FileDown } from "lucide-react";
+import { Plus, Trash2, Sparkles, Loader2, Wand2, FileText, ClipboardList, ChevronDown, ChevronRight, FileDown } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -416,7 +416,7 @@ export function PostObservations({
   return (
     <div className="space-y-4">
       {/* ===== Observações & Detalhes (multi-bloco) ===== */}
-      <div className="space-y-3">
+      <div className="relative bg-neutral-50/30 dark:bg-neutral-950/20 p-4 rounded-lg border border-dashed border-neutral-200 dark:border-neutral-800 space-y-3">
         <div className="flex items-center justify-between gap-2">
           <button
             type="button"
@@ -429,7 +429,9 @@ export function PostObservations({
             ) : (
               <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
             )}
-            <Label className="text-base font-bold uppercase tracking-wide text-muted-foreground cursor-pointer group-hover:text-foreground transition-colors">
+            <Label className="text-xs font-extrabold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5 cursor-pointer group-hover:text-foreground transition-colors">
+              <div className="h-1 w-4 bg-neutral-400 dark:bg-neutral-650 rounded-full" />
+              <ClipboardList className="h-4 w-4 text-indigo-500" />
               Observações & Detalhes
             </Label>
             {blocks.length > 1 && (
@@ -530,7 +532,7 @@ export function PostObservations({
       </div>
 
       {/* ===== Resumo Geral ===== */}
-      <div className="space-y-2">
+      <div className="relative bg-neutral-50/30 dark:bg-neutral-950/20 p-4 rounded-lg border border-dashed border-neutral-200 dark:border-neutral-800 space-y-2">
         <div className="flex items-center justify-between gap-2">
           <button
             type="button"
@@ -543,7 +545,8 @@ export function PostObservations({
             ) : (
               <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
             )}
-            <Label className="text-base font-bold uppercase tracking-wide text-muted-foreground flex items-center gap-1.5 cursor-pointer group-hover:text-foreground transition-colors">
+            <Label className="text-xs font-extrabold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5 cursor-pointer group-hover:text-foreground transition-colors">
+              <div className="h-1 w-4 bg-neutral-400 dark:bg-neutral-650 rounded-full" />
               <FileText className="h-4 w-4 text-indigo-500" />
               Resumo Geral
             </Label>
