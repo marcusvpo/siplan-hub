@@ -17,6 +17,7 @@ import {
   statusBadgeClass,
 } from "@/components/ProjectManagement/Chamado0800DetailDialog";
 import { useModelWorkerStatus } from "@/hooks/useModelGenerationJobs";
+import { MarkdownLite, markdownLiteToHtml } from "@/components/MarkdownLite";
 import { toast } from "sonner";
 import {
   RefreshCw,
@@ -349,7 +350,7 @@ export function PosImplantacaoTab({ project }: PosImplantacaoTabProps) {
           ${
             ultimoParecer?.resultText
               ? `<h3 style="font-size:13px;">Parecer da IA</h3>
-          <p style="font-size:12px;line-height:1.55;color:#1e293b;white-space:pre-wrap;">${escapeHtml(ultimoParecer.resultText)}</p>`
+          <div style="font-size:12px;color:#1e293b;">${markdownLiteToHtml(ultimoParecer.resultText)}</div>`
               : ""
           }
           <h3 style="font-size:13px;">Chamados do período</h3>
@@ -802,8 +803,8 @@ export function PosImplantacaoTab({ project }: PosImplantacaoTabProps) {
                   {parecerAtivo.progress || "Gerando parecer com IA…"}
                 </p>
               ) : ultimoParecer?.resultText ? (
-                <div className="text-sm leading-relaxed whitespace-pre-wrap">
-                  {ultimoParecer.resultText}
+                <div className="text-sm">
+                  <MarkdownLite text={ultimoParecer.resultText} />
                   <p className="text-[10px] text-muted-foreground mt-2">
                     gerado em {new Date(ultimoParecer.createdAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
                   </p>
