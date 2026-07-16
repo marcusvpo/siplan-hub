@@ -38,6 +38,7 @@ import {
   ExternalLink,
   ChevronLeft,
   ChevronRight,
+  TriangleAlert,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -63,6 +64,16 @@ const PERIODOS = [
 
 const norm = (s: string): string =>
   s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+
+/** Crítico E ainda em aberto — merece destaque visual na lista. */
+const isCriticoAberto = (c: { criticidade?: string; dataEncerramento?: string }): boolean => {
+  if (c.dataEncerramento) return false;
+  const crit = (c.criticidade || "").toLowerCase();
+  return crit.includes("crítico") && !crit.includes("não");
+};
+
+const diasDesde = (iso?: string): number =>
+  iso ? Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 86400000)) : 0;
 
 interface PanoramaBaseProps {
   /** 'abertos' = só projetos com pós em andamento; 'todos' = inclui finalizados */
@@ -792,12 +803,19 @@ export function PanoramaBase({ escopo, titulo, descricao }: PanoramaBaseProps) {
             </CardHeader>
             <CardContent className="px-4 pb-3 pt-0">
               <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 divide-y divide-neutral-100 dark:divide-neutral-800/60 overflow-hidden">
-                {paginados.map((c) => (
+                {paginados.map((c) => {
+                  const critico = isCriticoAberto(c);
+                  return (
                   <button
                     key={c.numeroChamado}
                     type="button"
                     onClick={() => setChamadoSelecionado(c)}
-                    className="w-full text-left px-3 py-1.5 hover:bg-neutral-50 dark:hover:bg-neutral-900/40 transition-colors"
+                    className={cn(
+                      "w-full text-left px-3 py-1.5 transition-colors",
+                      critico
+                        ? "bg-red-50/70 dark:bg-red-950/20 border-l-2 border-l-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
+                        : "hover:bg-neutral-50 dark:hover:bg-neutral-900/40"
+                    )}
                     title="Ver detalhes do chamado"
                   >
                     <div className="flex items-center justify-between gap-2">
@@ -806,6 +824,12 @@ export function PanoramaBase({ escopo, titulo, descricao }: PanoramaBaseProps) {
                         {c.titulo || "(sem título)"}
                       </span>
                       <span className="flex items-center gap-1.5 shrink-0">
+                        {critico && (
+                          <Badge className="text-[10px] pointer-events-none bg-red-600 hover:bg-red-600 text-white gap-0.5">
+                            <TriangleAlert className="h-2.5 w-2.5" />
+                            CRÍTICO
+                          </Badge>
+                        )}
                         <Badge variant="outline" className="text-[10px] font-normal pointer-events-none">
                           {c.projetoProduto}
                         </Badge>
@@ -822,11 +846,20 @@ export function PanoramaBase({ escopo, titulo, descricao }: PanoramaBaseProps) {
                         <CalendarDays className="h-3 w-3" />
                         {fmtDateBr(c.dataAbertura)}
                         {" → "}
-                        {c.dataEncerramento ? fmtDateBr(c.dataEncerramento) : "aberto"}
+                        {c.dataEncerramento ? (
+                          fmtDateBr(c.dataEncerramento)
+                        ) : critico ? (
+                          <span className="text-red-600 dark:text-red-400 font-semibold">
+                            aberto há {diasDesde(c.dataAbertura)} d
+                          </span>
+                        ) : (
+                          "aberto"
+                        )}
                       </span>
                     </div>
                   </button>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Paginacao */}
