@@ -21,6 +21,8 @@ import { useProjectFiles } from "@/hooks/useProjectFiles";
 import { StageCard } from "@/components/ProjectManagement/Forms/StageCard";
 import { PostObservations } from "@/components/ProjectManagement/Forms/PostObservations";
 import { PostChamados0800 } from "@/components/ProjectManagement/Forms/PostChamados0800";
+import { checkPosCriticosAbertos } from "@/hooks/useChamados0800";
+import { toast as sonnerToast } from "sonner";
 import { EnvironmentScreenshots } from "@/components/ProjectManagement/Forms/EnvironmentScreenshots";
 import { ObservationsWithAI } from "@/components/ProjectManagement/Forms/ObservationsWithAI";
 import { CollapsibleFieldSection } from "@/components/ProjectManagement/Forms/CollapsibleFieldSection";
@@ -542,7 +544,28 @@ export function StepsTab({
             startDate={stagesData.post.startDate}
             endDate={stagesData.post.endDate}
             observations={stagesData.post.observations}
-            onUpdate={(u) => updateStage("post", u)}
+            onUpdate={(u) => {
+              // Aviso suave: concluir o pos com chamado CRITICO do cliente ainda
+              // em aberto merece um alerta (nao bloqueia a conclusao).
+              if (u.status === "done") {
+                void checkPosCriticosAbertos(
+                  project.ticketNumber,
+                  project.systemType,
+                  stagesData.post.startDate
+                ).then(({ total, numeros }) => {
+                  if (total > 0) {
+                    sonnerToast.warning(
+                      `Pós concluído com ${total} chamado${total === 1 ? "" : "s"} CRÍTICO${total === 1 ? "" : "S"} em aberto no 0800 (${numeros
+                        .slice(0, 3)
+                        .map((n) => `#${n}`)
+                        .join(", ")}${total > 3 ? "…" : ""}). Confira a aba Análise Pós-Implantação.`,
+                      { duration: 10000 }
+                    );
+                  }
+                });
+              }
+              updateStage("post", u);
+            }}
             isReadyToStart={
               stageReadiness.find((r) => r.stageId === "post")?.isReady
             }

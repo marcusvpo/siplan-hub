@@ -84,6 +84,31 @@ ${json}
 === FIM ===`;
 }
 
+// Prompt do parecer da CARTEIRA (Panorama Pos-Implantacao): recebe um JSON com
+// o recorte agregado (temas por cartorio, naturezas, criticos) e escreve a
+// leitura executiva do que e sistemico vs pontual.
+function buildPanoramaParecerPrompt(json: string): string {
+  return `Voce e um gestor senior de implantacao de sistemas para cartorios analisando a CARTEIRA de projetos em pos-implantacao. Abaixo esta um JSON agregado dos chamados 0800 abertos pelos clientes DENTRO dos periodos de pos (filtro ja aplicado), incluindo temas gerados por IA com a contagem de cartorios em que cada um aparece.
+
+Escreva um PARECER EXECUTIVO curto (2 a 4 paragrafos + no maximo 5 recomendacoes em lista) respondendo:
+1. Quais temas sao SISTEMICOS (aparecem em 2+ cartorios) e o que indicam — bug de produto, falha de ambiente/configuracao padrao ou lacuna do treinamento padrao?
+2. O equilibrio geral da carteira: duvidas de uso vs erros/bugs — as implantacoes estao gerando mais atrito de capacitacao ou de produto?
+3. Pontos de risco (chamados criticos em aberto, cartorios com volume fora da curva).
+4. Recomendacoes objetivas para o time de implantacao e para o time de produto.
+
+REGRAS:
+- Baseie-se APENAS nos dados do JSON. NAO invente fatos nem numeros. Cite temas e cartorios pelos nomes do JSON.
+- Portugues do Brasil, tom executivo e direto. Sem preambulo, sem titulo geral.
+
+FORMATACAO (Markdown leve): **negrito** para termos-chave; listas com "- ". Nao use titulos com "#", tabelas nem blocos de codigo.
+
+Responda SOMENTE com o texto do parecer.
+
+=== RECORTE DA CARTEIRA (JSON) ===
+${json}
+=== FIM ===`;
+}
+
 /**
  * Pipeline de um job 'improve_text' (ja marcado 'processing' pelo claim):
  * le o texto de entrada (input_text) -> roda o Claude para reescrever ->
@@ -122,7 +147,8 @@ export async function processImproveJob(job: DtcJob): Promise<void> {
     record({ at: new Date().toISOString(), text, kind });
 
   const isSummary = job.job_type === "summary_blocks";
-  const isParecer = job.job_type === "pos_parecer";
+  const isParecer = job.job_type === "pos_parecer" || job.job_type === "panorama_parecer";
+  const isPanorama = job.job_type === "panorama_parecer";
 
   pushStep(
     isParecer
@@ -166,7 +192,9 @@ export async function processImproveJob(job: DtcJob): Promise<void> {
     return !!data?.cancel_requested;
   };
 
-  const prompt = isParecer
+  const prompt = isPanorama
+    ? buildPanoramaParecerPrompt(text)
+    : isParecer
     ? buildParecerPrompt(text)
     : isSummary
     ? buildSummaryPrompt(text)

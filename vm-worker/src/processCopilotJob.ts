@@ -109,6 +109,7 @@ interface HistoryItem {
 function buildPrompt(
   portfolio: string,
   issues: string,
+  chamadosPos: string,
   history: HistoryItem[],
   question: string,
   hoje: string
@@ -120,6 +121,9 @@ function buildPrompt(
     : "";
   const issuesBlock = issues
     ? `\n=== PENDENCIAS DE CONVERSAO EM ABERTO ===\n${issues}\n=== FIM DAS PENDENCIAS ===\n`
+    : "";
+  const chamadosBlock = chamadosPos
+    ? `\n=== CHAMADOS 0800 NO POS-IMPLANTACAO (por projeto) ===\n${chamadosPos}\n=== FIM DOS CHAMADOS ===\n`
     : "";
 
   return `Voce e o Copiloto Operacional do SiplanHUB, sistema de gestao de projetos de implantacao de sistemas para cartorios/serventias. Responda a pergunta do usuario usando APENAS os dados abaixo.
@@ -135,6 +139,7 @@ Regras:
 - Ao citar um projeto, escreva o nome do cartorio EXATAMENTE como aparece no portfolio (o sistema transforma o nome em link automaticamente).
 - Quando listar varios projetos, use uma lista com marcadores "- ".
 - Considere as PENDENCIAS DE CONVERSAO quando a pergunta for sobre conversao, bloqueios ou pendencias.
+- Considere os CHAMADOS 0800 NO POS quando a pergunta for sobre suporte, bugs, duvidas, temas recorrentes ou saude do pos-implantacao.
 - Se a informacao pedida NAO estiver nos dados, diga isso claramente; NAO invente dados.
 - Nao repita os dados inteiros; responda so o que foi perguntado.
 - Considere o historico da conversa para entender perguntas de acompanhamento (ex.: "e desses, quais atrasados?").
@@ -143,7 +148,7 @@ Regras:
 === PORTFOLIO DE PROJETOS ===
 ${portfolio}
 === FIM DO PORTFOLIO ===
-${issuesBlock}${histBlock}
+${issuesBlock}${chamadosBlock}${histBlock}
 === PERGUNTA ATUAL ===
 ${question}
 === FIM DA PERGUNTA ===
@@ -260,6 +265,79 @@ export async function processCopilotJob(job: CopilotJob): Promise<void> {
     .limit(100);
   const issuesText = (issueRows || []).map((i) => issueLine(i, clientById)).join("\n");
 
+  // 2c. Chamados 0800 no pos (espelho chamados_0800): visao compacta por projeto
+  //     em pos — total, abertos, criticos e temas IA mais frequentes. Best-effort:
+  //     falha aqui nao derruba o copiloto, so responde sem esse bloco.
+  let chamadosPosText = "";
+  try {
+    const normProd = (s: string): string => (s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const emPos = (projects || []).filter(
+      (p) => p.post_start_date && /^\d{4,}$/.test(String(p.ticket_number || "").trim())
+    );
+    if (emPos.length > 0) {
+      const tickets = [...new Set(emPos.map((p) => String(p.ticket_number).trim()))];
+      const { data: origens } = await supabase
+        .from("chamados_0800")
+        .select("numero_chamado, id_cliente_ellevo")
+        .in("numero_chamado", tickets);
+      const ticketToCliente = new Map(
+        (origens || []).map((o) => [o.numero_chamado as string, o.id_cliente_ellevo as number])
+      );
+      const ids = [...new Set([...ticketToCliente.values()])];
+      if (ids.length > 0) {
+        const minStart = emPos.map((p) => p.post_start_date as string).sort()[0];
+        const { data: cham } = await supabase
+          .from("chamados_0800")
+          .select("id_cliente_ellevo, software, natureza, criticidade, tema_ia, data_abertura, data_encerramento")
+          .in("id_cliente_ellevo", ids)
+          .gte("data_abertura", minStart)
+          .limit(5000);
+        const hojeIso = new Date().toISOString().slice(0, 10);
+        const linhas: string[] = [];
+        for (const p of emPos) {
+          const idCliente = ticketToCliente.get(String(p.ticket_number).trim());
+          if (idCliente === undefined) continue;
+          const fim =
+            p.post_status === "done" && p.post_end_date ? (p.post_end_date as string) : hojeIso;
+          const doPos = (cham || []).filter(
+            (c) =>
+              c.id_cliente_ellevo === idCliente &&
+              (c.data_abertura as string) >= (p.post_start_date as string) &&
+              (c.data_abertura as string) <= fim &&
+              normProd(c.software as string).startsWith(normProd(p.system_type as string)) &&
+              !["nova implantação", "negociação comercial"].includes(
+                String(c.natureza || "").toLowerCase()
+              )
+          );
+          if (doPos.length === 0) continue;
+          const abertos = doPos.filter((c) => !c.data_encerramento);
+          const criticos = abertos.filter((c) => {
+            const crit = String(c.criticidade || "").toLowerCase();
+            return crit.includes("crítico") && !crit.includes("não");
+          });
+          const temas = new Map<string, number>();
+          for (const c of doPos) {
+            const t = c.tema_ia as string | null;
+            if (t && t !== "interno" && t !== "não classificado") temas.set(t, (temas.get(t) ?? 0) + 1);
+          }
+          const topTemas = [...temas.entries()]
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 3)
+            .map(([t, n]) => `${t}(${n})`)
+            .join(", ");
+          linhas.push(
+            `${short(p.client_name, 60)} [${p.system_type}]: ${doPos.length} chamados no pos, ` +
+              `${abertos.length} abertos${criticos.length ? ` (${criticos.length} CRITICOS)` : ""}` +
+              `${topTemas ? `; temas: ${topTemas}` : ""}`
+          );
+        }
+        chamadosPosText = linhas.join("\n");
+      }
+    }
+  } catch {
+    /* sem o bloco de chamados o copiloto segue normal */
+  }
+
   // 3. Historico recente (chat multi-turno): ultimas trocas concluidas do usuario.
   const { data: historyRows } = await supabase
     .from("copilot_jobs")
@@ -295,7 +373,7 @@ export async function processCopilotJob(job: CopilotJob): Promise<void> {
   };
 
   const hoje = new Date().toLocaleDateString("pt-BR");
-  const prompt = buildPrompt(portfolio, issuesText, history, job.question, hoje);
+  const prompt = buildPrompt(portfolio, issuesText, chamadosPosText, history, job.question, hoje);
   const { resultText, transcript, code, stderr, cancelled, inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens } =
     await runSkill(prompt, (step) => record(step), shouldCancel, {
       model: config.copilotModel || undefined,

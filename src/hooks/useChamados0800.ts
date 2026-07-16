@@ -252,6 +252,51 @@ export function useBenchmarkPos(systemType?: string | null, excludeTicket?: stri
   });
 }
 
+/**
+ * Checagem pontual usada ao CONCLUIR o pós: existe chamado CRÍTICO em aberto do
+ * cliente/produto dentro do período? Retorna os números para o aviso (suave —
+ * não bloqueia a conclusão, só informa quem conclui).
+ */
+export async function checkPosCriticosAbertos(
+  ticketNumber?: string | null,
+  systemType?: string | null,
+  startDate?: Date | string | null
+): Promise<{ total: number; numeros: string[] }> {
+  const vazio = { total: 0, numeros: [] as string[] };
+  const ticket = (ticketNumber || "").trim();
+  const inicio = toIsoDay(startDate);
+  if (!/^\d{4,}$/.test(ticket) || !inicio) return vazio;
+
+  const { data: origem } = await supabase
+    .from("chamados_0800")
+    .select("id_cliente_ellevo")
+    .eq("numero_chamado", ticket)
+    .maybeSingle();
+  if (!origem) return vazio;
+
+  const { data } = await supabase
+    .from("chamados_0800")
+    .select("numero_chamado, natureza, criticidade, software, data_encerramento")
+    .eq("id_cliente_ellevo", origem.id_cliente_ellevo)
+    .gte("data_abertura", inicio)
+    .is("data_encerramento", null);
+
+  const criticos = (data ?? [])
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .filter((c: any) => {
+      const crit = (c.criticidade || "").toLowerCase();
+      return (
+        !isNaturezaIgnorada(c.natureza) &&
+        (!systemType || softwareMatchesSystemType(c.software, systemType)) &&
+        crit.includes("crítico") &&
+        !crit.includes("não")
+      );
+    })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .map((c: any) => c.numero_chamado as string);
+  return { total: criticos.length, numeros: criticos };
+}
+
 export interface ParecerPosJob {
   id: string;
   status: string;
