@@ -33,15 +33,15 @@ interface Chamado0800DetailDialogProps {
 export function Chamado0800DetailDialog({ chamado, onClose }: Chamado0800DetailDialogProps) {
   return (
     <Dialog open={!!chamado} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-3xl w-[calc(100vw-2rem)] max-h-[90vh] overflow-y-auto overflow-x-hidden">
+      <DialogContent className="max-w-5xl w-[calc(100vw-2rem)] max-h-[92vh] overflow-y-auto overflow-x-hidden">
         {chamado && (
           <>
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 pr-6">
-                <span className="font-mono text-indigo-600 dark:text-indigo-400">
+              <DialogTitle className="pr-8 leading-snug">
+                <span className="font-mono text-indigo-600 dark:text-indigo-400 mr-2">
                   #{chamado.numeroChamado}
                 </span>
-                <span className="truncate">{chamado.titulo || "(sem título)"}</span>
+                <span className="break-words">{chamado.titulo || "(sem título)"}</span>
               </DialogTitle>
               <DialogDescription className="flex items-center gap-2 flex-wrap">
                 <Badge className={cn("pointer-events-none", statusBadgeClass(chamado.status))}>

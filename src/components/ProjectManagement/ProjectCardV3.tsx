@@ -6,6 +6,7 @@ import {
   CardHeader,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { PosSaudeBadge } from "@/components/ProjectManagement/PosSaudeBadge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import {
@@ -175,6 +176,7 @@ export function ProjectCardV3({
 
       {/* Project Status Badges - Top Right Corner */}
       <div className="absolute -top-1.5 -right-1.5 z-10 flex items-center gap-1.5">
+        <PosSaudeBadge projectId={project.id} />
         {isFromAutomacao && (
           <Badge className="text-[9px] px-2 py-0.5 font-bold shadow-lg border-2 border-background bg-indigo-500 hover:bg-indigo-600 text-white shadow-indigo-500/20">
             Novo

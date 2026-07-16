@@ -155,7 +155,7 @@
     "semantic_hash": ""
   },
   "src/App.tsx": {
-    "mtime": 1784217583.4308991,
+    "mtime": 1784218779.596889,
     "ast_hash": "acfab550a74c7bbd3c77c0f60b802373",
     "semantic_hash": ""
   },
@@ -245,7 +245,7 @@
     "semantic_hash": "fbeef457886221679d8422238870cfb9"
   },
   "src/components/Layout/AppSidebar.tsx": {
-    "mtime": 1784217633.7907908,
+    "mtime": 1784218779.5978904,
     "ast_hash": "163ca93ef7ef06e0a92294b1194d02d4",
     "semantic_hash": ""
   },
@@ -345,9 +345,9 @@
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/ProjectCardV3.tsx": {
-    "mtime": 1782132906.2609644,
-    "ast_hash": "af6d9a3b78d1dfe0ade71cc57992039a",
-    "semantic_hash": "af6d9a3b78d1dfe0ade71cc57992039a"
+    "mtime": 1784227654.521771,
+    "ast_hash": "fa0188076cb650f2d3f02f88ec5cdc2d",
+    "semantic_hash": ""
   },
   "src/components/ProjectManagement/ProjectGrid.tsx": {
     "mtime": 1782132906.262077,
@@ -390,8 +390,8 @@
     "semantic_hash": "65e7886b33b0b89d976af8880bf376bf"
   },
   "src/components/ProjectManagement/Tabs/StepsTab.tsx": {
-    "mtime": 1784212583.0079896,
-    "ast_hash": "421200f851c772be3d24a80a28815341",
+    "mtime": 1784227398.9858236,
+    "ast_hash": "832f6f685f1e5220f12a676851fc8d40",
     "semantic_hash": ""
   },
   "src/components/ProtectedRoute.tsx": {
@@ -765,7 +765,7 @@
     "semantic_hash": "5bff9ea3904b15a9e1908b128c88e75f"
   },
   "src/constants/menuItems.ts": {
-    "mtime": 1784217455.3760397,
+    "mtime": 1784218779.6008878,
     "ast_hash": "ad256f91798bbf5e8b370c809a2428a1",
     "semantic_hash": ""
   },
@@ -1670,13 +1670,13 @@
     "semantic_hash": "f197a9f0666e63ed79a154fcc1bfa86f"
   },
   "vm-worker/src/config.ts": {
-    "mtime": 1784217023.7821743,
+    "mtime": 1784218779.6058896,
     "ast_hash": "0b96ae380492f35bbd5074c8c79035d8",
     "semantic_hash": ""
   },
   "vm-worker/src/index.ts": {
-    "mtime": 1784217039.7752874,
-    "ast_hash": "14ad8e6368c1dfed82db3ac9885e8c86",
+    "mtime": 1784227299.6840756,
+    "ast_hash": "d6b508c0474f4a3834487a5327cd6659",
     "semantic_hash": ""
   },
   "vm-worker/src/processDtcJob.ts": {
@@ -1685,8 +1685,8 @@
     "semantic_hash": "72aeed83ee2a9ca64077eaf1f59e26b1"
   },
   "vm-worker/src/processImproveJob.ts": {
-    "mtime": 1784217068.6462798,
-    "ast_hash": "e528bef2b25c781a5dd60e8651af8927",
+    "mtime": 1784227297.4947357,
+    "ast_hash": "ef109d92681db1373d9b146882eb119e",
     "semantic_hash": ""
   },
   "vm-worker/src/processJob.ts": {
@@ -2340,7 +2340,7 @@
     "semantic_hash": "b18b42eb2cc25505d498822bb45287eb"
   },
   "CLAUDE.md": {
-    "mtime": 1784217844.8079789,
+    "mtime": 1784218779.5568156,
     "ast_hash": "ee34130a54007286d9a4f20a1666323d",
     "semantic_hash": ""
   },
@@ -2460,7 +2460,7 @@
     "semantic_hash": "a9b03494151fe90e5decd2405400e106"
   },
   "vm-worker/README.md": {
-    "mtime": 1784217838.79643,
+    "mtime": 1784218779.6048875,
     "ast_hash": "24554ef68932445fc39ac4500d3f908a",
     "semantic_hash": ""
   },
@@ -2555,8 +2555,8 @@
     "semantic_hash": ""
   },
   "vm-worker/src/processCopilotJob.ts": {
-    "mtime": 1783711048.7689881,
-    "ast_hash": "ad9f005399498ddbcd9eeb2fa0a15007",
+    "mtime": 1784227727.557598,
+    "ast_hash": "d37c01bdc318e3941b1e077530af370c",
     "semantic_hash": ""
   },
   ".agent/skills/n8n-expert-siplanhub/SKILL.md": {
@@ -2680,7 +2680,7 @@
     "semantic_hash": ""
   },
   "src/constants/permissions.ts": {
-    "mtime": 1784217450.950493,
+    "mtime": 1784218779.6008878,
     "ast_hash": "2fe895e9b0c92f6f2db149096d22b09a",
     "semantic_hash": ""
   },
@@ -2770,13 +2770,13 @@
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/Forms/PostChamados0800.tsx": {
-    "mtime": 1784217220.668837,
-    "ast_hash": "e73d32833fc026719639f0bc551b2c4b",
+    "mtime": 1784218779.5988884,
+    "ast_hash": "fce972d91c34f39d577ae38300f7a66d",
     "semantic_hash": ""
   },
   "src/hooks/useChamados0800.ts": {
-    "mtime": 1784217496.9175625,
-    "ast_hash": "bcccb5d436327e0b4b3b70052611bd05",
+    "mtime": 1784227374.7511933,
+    "ast_hash": "918a938826868b781a6a4836389c6401",
     "semantic_hash": ""
   },
   "supabase/migrations/20260716120000_chamados_0800_mirror.sql": {
@@ -2800,33 +2800,58 @@
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/Tabs/PosImplantacaoTab.tsx": {
-    "mtime": 1784217363.885321,
-    "ast_hash": "6bfd10a3203cebdcbca99643ceb71e8d",
+    "mtime": 1784219105.6339064,
+    "ast_hash": "1865c218b5d610ef1f4b36a11b0ac4da",
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/Chamado0800DetailDialog.tsx": {
-    "mtime": 1784217187.9271507,
-    "ast_hash": "d464e460b70d57a345b46d1f48211510",
+    "mtime": 1784226769.4291272,
+    "ast_hash": "f9c163b109cb67b6741519eb8f314a46",
     "semantic_hash": ""
   },
   "src/hooks/usePosPanorama.ts": {
-    "mtime": 1784217511.0192206,
-    "ast_hash": "4e93d25f25e283f6a6caef619d0af021",
+    "mtime": 1784227616.3876326,
+    "ast_hash": "51aa72385f953f7823e22016d9f6029f",
     "semantic_hash": ""
   },
   "src/pages/PosPanorama.tsx": {
-    "mtime": 1784217565.1064162,
-    "ast_hash": "0d28c5a69f96c791122e6bcf9f3e0a0e",
+    "mtime": 1784227508.6011205,
+    "ast_hash": "efe819e27ebb7101530b3a102f2720c7",
     "semantic_hash": ""
   },
   "supabase/migrations/20260716190000_pos_panorama_tema_ia.sql": {
-    "mtime": 1784216938.746845,
-    "ast_hash": "568d17ab8c1bd5536f6d4894f2aada6d",
+    "mtime": 1784218779.6038885,
+    "ast_hash": "94c857089559fc85f573caaeecff3dc2",
     "semantic_hash": ""
   },
   "vm-worker/src/chamadosClassify.ts": {
-    "mtime": 1784216996.603354,
-    "ast_hash": "f213d74fa12ca63018361effa211665e",
+    "mtime": 1784218779.6058896,
+    "ast_hash": "f86ac89eb3e2127b9e862dfe8b49aa7b",
+    "semantic_hash": ""
+  },
+  "src/components/MarkdownLite.tsx": {
+    "mtime": 1784219105.6329055,
+    "ast_hash": "0a7ac65fbbfa7c9e881f19e431d9a603",
+    "semantic_hash": ""
+  },
+  "src/components/ProjectManagement/PosSaudeBadge.tsx": {
+    "mtime": 1784227643.0899718,
+    "ast_hash": "8b7b88bd3fc3958e151955300efd20f8",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260716200000_dtc_ai_jobs_pos_parecer.sql": {
+    "mtime": 1784218779.6038885,
+    "ast_hash": "f2d34effb2d85d2cb67785491e09a77f",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260716210000_panorama_parecer_e_alertas.sql": {
+    "mtime": 1784227273.8844318,
+    "ast_hash": "c28e4749e4ca20b57a9a88866a1b972b",
+    "semantic_hash": ""
+  },
+  "docs/automacoes/alertas_pos_implantacao.md": {
+    "mtime": 1784227759.3204029,
+    "ast_hash": "f79906fa3bdcbece82481d379509fca0",
     "semantic_hash": ""
   }
 }
