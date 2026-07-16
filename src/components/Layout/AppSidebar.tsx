@@ -113,7 +113,6 @@ export function AppSidebar() {
     ["commercial_customers", "/commercial/customers"],
     ["commercial_blockers", "/commercial/blockers"],
     ["commercial_contacts", "/commercial/contacts"],
-    ["commercial_deployment_forms", "/commercial/deployment-forms"],
     ["commercial_checklists", "/commercial/checklists"],
   );
   const rotaConversao = primeiraRota(
@@ -549,20 +548,7 @@ export function AppSidebar() {
                     </Button>
                   </Link>
                   )}
-                  {can("commercial_deployment_forms") && (
-                  <Link to="/commercial/deployment-forms">
-                    <Button
-                      variant={
-                        isActive("/commercial/deployment-forms") ? "secondary" : "ghost"
-                      }
-                      size="sm"
-                      className="w-full justify-start gap-3 h-9"
-                    >
-                      <ClipboardList className="h-4 w-4" />
-                      <span>Form. Nova Implantação</span>
-                    </Button>
-                  </Link>
-                  )}
+
                   {can("commercial_checklists") && (
                   <Link to="/commercial/checklists">
                     <Button
@@ -587,7 +573,6 @@ export function AppSidebar() {
                     isActive("/commercial/customers") ||
                       isActive("/commercial/blockers") ||
                       isActive("/commercial/contacts") ||
-                      isActive("/commercial/deployment-forms") ||
                       isActive("/commercial/checklists")
                       ? "secondary"
                       : "ghost"

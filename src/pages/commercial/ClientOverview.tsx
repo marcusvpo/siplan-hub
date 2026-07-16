@@ -83,7 +83,14 @@ export default function ClientOverview() {
   }
 
   const clientProjects =
-    projectsWithClients?.filter((p) => p.client_id === client.id) || [];
+    projectsWithClients?.filter(
+      (p) =>
+        p.client_id === client.id ||
+        (!p.client_id &&
+          p.client_name &&
+          client.name &&
+          p.client_name.toLowerCase().trim() === client.name.toLowerCase().trim())
+    ) || [];
   const clientContacts =
     contacts?.filter((c) => c.client_id === client.id) || [];
   const clientBlockers = clientProjects.filter(

@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { SonnerToaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
 
 // Imports críticos (imediatos - usados no first load)
@@ -43,9 +43,6 @@ const CommercialCustomers = lazy(
 );
 const CustomerTimeline = lazy(
   () => import("./pages/commercial/CustomerTimeline"),
-);
-const DeploymentForms = lazy(
-  () => import("./pages/commercial/DeploymentForms"),
 );
 
 // Conversion Pages (lazy)
@@ -452,11 +449,7 @@ const App = () => (
                           />
                           <Route
                             path="/commercial/deployment-forms"
-                            element={
-                              <RequirePermission resource="commercial_deployment_forms">
-                                <DeploymentForms />
-                              </RequirePermission>
-                            }
+                            element={<Navigate to="/commercial/checklists" replace />}
                           />
                           <Route
                             path="/commercial/checklists"

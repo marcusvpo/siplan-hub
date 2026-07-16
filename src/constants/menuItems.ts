@@ -154,13 +154,6 @@ export const menuItems: MenuItem[] = [
                 permissionKey: "commercial_contacts",
             },
             {
-                title: "Form. Nova Implantação",
-                path: "/commercial/deployment-forms",
-                icon: ClipboardList,
-                description: "Formulários de solicitação de implantação",
-                permissionKey: "commercial_deployment_forms",
-            },
-            {
                 title: "Checklist do Cliente",
                 path: "/commercial/checklists",
                 icon: ClipboardList,

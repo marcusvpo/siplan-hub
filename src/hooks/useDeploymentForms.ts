@@ -68,5 +68,28 @@ export function useDeploymentForms() {
     },
   });
 
-  return { forms, isLoading, createForm, deleteForm };
+  const updateForm = useMutation({
+    mutationFn: async ({ id, formData }: { id: string; formData: Partial<DeploymentFormData> }) => {
+      const { data, error } = await supabase
+        .from("deployment_forms" as any)
+        .update({
+          ...formData,
+          updated_at: new Date().toISOString(),
+        } as any)
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as unknown as DeploymentFormRecord;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["deployment-forms"] });
+      toast({ title: "Sucesso", description: "Formulário de implantação atualizado com sucesso." });
+    },
+    onError: (err: any) => {
+      toast({ title: "Erro", description: err.message || "Erro ao atualizar formulário.", variant: "destructive" });
+    },
+  });
+
+  return { forms, isLoading, createForm, deleteForm, updateForm };
 }
