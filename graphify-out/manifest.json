@@ -290,8 +290,8 @@
     "semantic_hash": "d18024f3caaa2776e88806c1303eb5b4"
   },
   "src/components/ProjectManagement/Forms/PostObservations.tsx": {
-    "mtime": 1784055464.2959032,
-    "ast_hash": "7c1404bffa42b9315631736fe5421084",
+    "mtime": 1784212583.0069883,
+    "ast_hash": "57247630223b13ccdf1b7c3a906a402c",
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/Forms/ProjectHeaderForm.tsx": {
@@ -390,8 +390,8 @@
     "semantic_hash": "65e7886b33b0b89d976af8880bf376bf"
   },
   "src/components/ProjectManagement/Tabs/StepsTab.tsx": {
-    "mtime": 1784209817.598896,
-    "ast_hash": "d8777c080660f8f853251be8f53085df",
+    "mtime": 1784212583.0079896,
+    "ast_hash": "421200f851c772be3d24a80a28815341",
     "semantic_hash": ""
   },
   "src/components/ProtectedRoute.tsx": {
@@ -1650,7 +1650,7 @@
     "semantic_hash": "5311f5de7d31692db03f82272a9eb76e"
   },
   "vm-worker/package.json": {
-    "mtime": 1784209817.6018953,
+    "mtime": 1784212583.0418997,
     "ast_hash": "29017638eb14dcb0d060c1f4d290055d",
     "semantic_hash": ""
   },
@@ -1670,12 +1670,12 @@
     "semantic_hash": "f197a9f0666e63ed79a154fcc1bfa86f"
   },
   "vm-worker/src/config.ts": {
-    "mtime": 1784209817.6028953,
+    "mtime": 1784212583.0444324,
     "ast_hash": "4cb54998d4a524c611028357fec49bc0",
     "semantic_hash": ""
   },
   "vm-worker/src/index.ts": {
-    "mtime": 1784209817.6034014,
+    "mtime": 1784212583.0454412,
     "ast_hash": "2b6634d9b201c9ad35e4a317786b1733",
     "semantic_hash": ""
   },
@@ -2770,28 +2770,33 @@
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/Forms/PostChamados0800.tsx": {
-    "mtime": 1784209817.789487,
-    "ast_hash": "ba32918e507c21c5abe5321096875b38",
+    "mtime": 1784213754.9247308,
+    "ast_hash": "7cc2f3b1e9e38ee34f99c7161aa6d877",
     "semantic_hash": ""
   },
   "src/hooks/useChamados0800.ts": {
-    "mtime": 1784209817.7904875,
-    "ast_hash": "684cfbf83281f54c9eb6d388bda7c168",
+    "mtime": 1784213731.4723516,
+    "ast_hash": "1982e7534f09447efbf211cd6cb7c2b3",
     "semantic_hash": ""
   },
   "supabase/migrations/20260716120000_chamados_0800_mirror.sql": {
-    "mtime": 1784209817.7914886,
+    "mtime": 1784212583.0099905,
     "ast_hash": "077f3c60a46288e855b69dfa7e2ba4a4",
     "semantic_hash": ""
   },
   "vm-worker/src/chamadosSync.ts": {
-    "mtime": 1784209817.7924912,
-    "ast_hash": "a807927b79a2cb19bca33cb68c41994d",
+    "mtime": 1784213711.7477837,
+    "ast_hash": "5bc22090efbd3e8a23b4b02b613deb72",
     "semantic_hash": ""
   },
   "docs/PERMISSOES_RBAC.md": {
     "mtime": 1784132740.4505043,
     "ast_hash": "cf775071fa4983c8c7f856602ad9f4c1",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260716150000_chamados_sync_requests.sql": {
+    "mtime": 1784213423.782544,
+    "ast_hash": "b422598c75d01a1a661fe1bd664363ad",
     "semantic_hash": ""
   }
 }

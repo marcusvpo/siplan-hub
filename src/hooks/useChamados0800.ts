@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Chamado0800 {
@@ -152,4 +153,50 @@ export function useChamados0800(
     /** true quando faltam datas do pos ou ticket valido para consultar */
     parametrosIncompletos: !valido,
   };
+}
+
+/**
+ * "Sincronizar agora": insere um pedido em chamados_sync_requests; o vm-worker
+ * escuta o INSERT via Realtime, roda o sync imediatamente e marca a linha como
+ * done/error. Aqui aguardamos o desfecho (ate ~40s) e invalidamos o cache dos
+ * chamados para a lista recarregar ja com o espelho fresco.
+ */
+export function useSolicitarSyncChamados0800() {
+  const queryClient = useQueryClient();
+  const [syncing, setSyncing] = useState(false);
+
+  const solicitarSync = async (): Promise<void> => {
+    if (syncing) return;
+    setSyncing(true);
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      const { data, error } = await supabase
+        .from("chamados_sync_requests")
+        .insert({ requested_by: auth.user?.email ?? null })
+        .select("id")
+        .single();
+      if (error) throw error;
+
+      for (let i = 0; i < 20; i++) {
+        await new Promise((r) => setTimeout(r, 2000));
+        const { data: row } = await supabase
+          .from("chamados_sync_requests")
+          .select("status, detail")
+          .eq("id", data.id)
+          .maybeSingle();
+        if (row?.status === "done") {
+          await queryClient.invalidateQueries({ queryKey: ["chamados0800"] });
+          return;
+        }
+        if (row?.status === "error") {
+          throw new Error(row.detail || "O worker reportou erro no sync.");
+        }
+      }
+      throw new Error("O worker não respondeu em 40s — ele está online?");
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  return { solicitarSync, syncing };
 }
