@@ -212,7 +212,14 @@ export function PanoramaBase({ escopo, titulo, descricao }: PanoramaBaseProps) {
 
   const handleGerarParecer = async () => {
     try {
+      // Projetos cujos chamados estao no recorte: o worker usa os ids para
+      // anexar o contexto das etapas (conversao, aderencia, DTC) ao parecer.
+      const idsNoRecorte = [...new Set(filtrados.map((c) => c.projetoId))];
+      const projetosDoRecorte = (data?.projetos ?? [])
+        .filter((p) => idsNoRecorte.includes(p.id))
+        .map((p) => ({ id: p.id, cliente: p.cliente, produto: p.produto }));
       const payload = {
+        projetos: projetosDoRecorte,
         recorte: {
           produto,
           natureza,
