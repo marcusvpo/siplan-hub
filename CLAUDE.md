@@ -45,6 +45,7 @@ Runtime separado — **o front nunca o chama**, comunica só por filas no Supaba
 - `model_generation_jobs` ← `useModelGenerationJobs` (estágio 5)
 - `dtc_ai_jobs` ← `useDtcAiJobs` (estágio 6, "Gerar com IA") e melhorar-texto (estágio 7)
 - Ciclo: `claimOneJob()` (`FOR UPDATE SKIP LOCKED`) → Claude headless (stream-json) → grava `progress_log` → `sendHeartbeat()` (`model_worker_heartbeat`, selo online/offline).
+- **Chamados 0800** (`chamadosSync.ts`, sem Claude): espelha a view `vw_2026_ChamadosTodosStatus` do SQL Server interno (Ellevo) em `chamados_0800` a cada 5 min; pedido em `chamados_sync_requests` (botão do card de Pós) dispara sync imediato via Realtime. Vínculo projeto↔cliente: `projects.ticket_number` = chamado de origem → `IDCliente`. UI: `PostChamados0800` + `useChamados0800` (estágio 7). Ver `vm-worker/README.md` §chamados.
 
 ### Cross-cutting
 `src/lib/predictability-utils.ts` — `stageReadiness` / `identifyBottleneck` calculados genericamente sobre os 7 estágios (dependem do formato uniforme de estágio).
