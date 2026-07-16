@@ -1075,9 +1075,9 @@
     "semantic_hash": ""
   },
   "src/pages/ProjectDetails.tsx": {
-    "mtime": 1783383430.2883556,
-    "ast_hash": "7a4ba2aea4aabb063bbc4a8d31ac10c9",
-    "semantic_hash": "7a4ba2aea4aabb063bbc4a8d31ac10c9"
+    "mtime": 1784215338.838073,
+    "ast_hash": "a22b58a11fc4ea32aad4a80fecaf683f",
+    "semantic_hash": ""
   },
   "src/pages/ProjectsKanban.tsx": {
     "mtime": 1784123070.6412244,
@@ -2340,8 +2340,8 @@
     "semantic_hash": "b18b42eb2cc25505d498822bb45287eb"
   },
   "CLAUDE.md": {
-    "mtime": 1784132740.4495366,
-    "ast_hash": "a174e04f1454ab5cdd826b1f9ec6a986",
+    "mtime": 1784214764.5074272,
+    "ast_hash": "de5411d2012526ff298d3e850ef5425b",
     "semantic_hash": ""
   },
   "GEMINI.md": {
@@ -2460,8 +2460,8 @@
     "semantic_hash": "a9b03494151fe90e5decd2405400e106"
   },
   "vm-worker/README.md": {
-    "mtime": 1784057992.2717123,
-    "ast_hash": "7c92e0d57d917a7ff7c153843d51e50c",
+    "mtime": 1784214764.5074272,
+    "ast_hash": "64d27da8d844ea4c5362e8959254a104",
     "semantic_hash": ""
   },
   "assets/Siplan_logo.png": {
@@ -2770,13 +2770,13 @@
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/Forms/PostChamados0800.tsx": {
-    "mtime": 1784213754.9247308,
+    "mtime": 1784214094.573443,
     "ast_hash": "7cc2f3b1e9e38ee34f99c7161aa6d877",
     "semantic_hash": ""
   },
   "src/hooks/useChamados0800.ts": {
-    "mtime": 1784213731.4723516,
-    "ast_hash": "1982e7534f09447efbf211cd6cb7c2b3",
+    "mtime": 1784215758.61746,
+    "ast_hash": "2c67aaa9cd18f5663954e8ecfe275caf",
     "semantic_hash": ""
   },
   "supabase/migrations/20260716120000_chamados_0800_mirror.sql": {
@@ -2785,7 +2785,7 @@
     "semantic_hash": ""
   },
   "vm-worker/src/chamadosSync.ts": {
-    "mtime": 1784213711.7477837,
+    "mtime": 1784214094.5774434,
     "ast_hash": "5bc22090efbd3e8a23b4b02b613deb72",
     "semantic_hash": ""
   },
@@ -2795,8 +2795,13 @@
     "semantic_hash": ""
   },
   "supabase/migrations/20260716150000_chamados_sync_requests.sql": {
-    "mtime": 1784213423.782544,
-    "ast_hash": "b422598c75d01a1a661fe1bd664363ad",
+    "mtime": 1784214094.5754423,
+    "ast_hash": "7b8f9812dbad48eebb4e9d4d15bf837a",
+    "semantic_hash": ""
+  },
+  "src/components/ProjectManagement/Tabs/PosImplantacaoTab.tsx": {
+    "mtime": 1784215318.3123283,
+    "ast_hash": "2583981fcfcc12e9ee400948d250d74b",
     "semantic_hash": ""
   }
 }
