@@ -20,6 +20,7 @@ import {
     BookOpen,
     FolderClosed,
     FileCheck,
+    Headset,
 } from "lucide-react";
 
 export interface MenuItem {
@@ -57,6 +58,13 @@ export const menuItems: MenuItem[] = [
                 icon: LayoutDashboard,
                 description: "Acompanhamento visual do fluxo",
                 permissionKey: "kanban",
+            },
+            {
+                title: "Panorama Pós-Implantação",
+                path: "/dashboard/pos-implantacao",
+                icon: Headset,
+                description: "Chamados 0800 dos pós por produto, tema e recorrência",
+                permissionKey: "pos_panorama",
             },
         ],
     },

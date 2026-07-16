@@ -253,6 +253,17 @@ com `Environment=MSSQL_HOST=` (vazio). Hoje o dono do sync e o `siplan-ai-worker
 deve aparecer `[chamados-sync] ativo: ... (+ sync sob demanda via Realtime)` e, no outro,
 `[chamados-sync] desligado`.
 
+**Classificacao de temas (IA).** `src/chamadosClassify.ts` roda como a fila de MENOR prioridade do
+worker dono do sync: pega lotes de chamados com `tema_ia` null e pede ao Claude (haiku,
+`CHAMADOS_TEMA_MODEL`) um tema curto por chamado ("selo digital", "livro caixa"...), reusando os
+temas ja existentes para agrupar recorrencia entre cartorios (tela Panorama Pos-Implantacao).
+Naturezas internas (nova implantacao/negociacao comercial) recebem `tema_ia='interno'` sem gastar
+IA. Log: `[chamados-tema] lote ok: N/M classificados`.
+
+**Parecer da Analise Pos (IA).** Job `pos_parecer` na fila `dtc_ai_jobs` (mesmo pipeline de texto
+do improve/summary): o front manda um JSON com os chamados do periodo e o worker devolve um parecer
+qualitativo em `result_text`.
+
 </details>
 
 <details>

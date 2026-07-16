@@ -306,5 +306,6 @@
   "304": "SimpleMarkdown.tsx",
   "305": "AuthContext.tsx",
   "306": "useHomologationEvents.ts",
-  "307": "ProtectedRoute.tsx"
+  "307": "ProtectedRoute.tsx",
+  "308": "useImproveTextJobs.ts"
 }

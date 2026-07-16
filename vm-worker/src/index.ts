@@ -7,6 +7,7 @@ import { processVoiceJob } from "./processVoiceJob.js";
 import { processCopilotJob } from "./processCopilotJob.js";
 import { generateDailyDigest } from "./processCopilotDigest.js";
 import { startChamadosSync } from "./chamadosSync.js";
+import { classifyPendingChamados } from "./chamadosClassify.js";
 
 let busy = false;
 
@@ -229,7 +230,10 @@ async function claimOneDtcJob(): Promise<boolean> {
   // compartilham o mesmo pipeline de texto avulso; voice_note transcreve+eleva um
   // audio; o restante e o resumo do DTC.
   const isVoiceJob = typedJob.job_type === "voice_note";
-  const isTextJob = typedJob.job_type === "improve_text" || typedJob.job_type === "summary_blocks";
+  const isTextJob =
+    typedJob.job_type === "improve_text" ||
+    typedJob.job_type === "summary_blocks" ||
+    typedJob.job_type === "pos_parecer";
   const kind = isVoiceJob ? "voice" : isTextJob ? typedJob.job_type : "dtc";
   console.log(`[${kind} ${typedJob.id}] iniciado (tentativa ${typedJob.attempts})`);
   try {
@@ -291,6 +295,8 @@ async function claimAndProcess(): Promise<void> {
       if (config.workerRoles.ai) {
         if (await claimOneDtcJob()) continue;
         if (await claimOneCopilotJob()) continue;
+        // Menor prioridade: classificar temas dos chamados 0800 (lotes haiku).
+        if (await classifyPendingChamados()) continue;
       }
       return; // nenhuma fila deste worker tem job pendente
     }

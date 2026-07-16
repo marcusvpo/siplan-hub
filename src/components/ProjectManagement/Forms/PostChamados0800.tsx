@@ -3,15 +3,13 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useChamados0800, useSolicitarSyncChamados0800, Chamado0800 } from "@/hooks/useChamados0800";
-import { Headset, ChevronDown, ChevronRight, Loader2, CalendarDays, User, RefreshCw } from "lucide-react";
-import { toast } from "sonner";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+  Chamado0800DetailDialog,
+  fmtDateBr,
+  statusBadgeClass,
+} from "@/components/ProjectManagement/Chamado0800DetailDialog";
+import { Headset, ChevronDown, ChevronRight, Loader2, CalendarDays, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
 
 interface PostChamados0800Props {
   /** projects.ticket_number — chamado 0800 que originou o projeto */
@@ -24,20 +22,6 @@ interface PostChamados0800Props {
   postStatus?: string;
   /** projects.system_type — lista só chamados do mesmo produto do projeto */
   systemType?: string;
-}
-
-const fmtDate = (iso?: string): string => {
-  if (!iso) return "—";
-  const [y, m, d] = iso.split("-");
-  return y && m && d ? `${d}/${m}/${y}` : iso;
-};
-
-function statusBadgeClass(status?: string): string {
-  const s = (status || "").toLowerCase();
-  if (s.includes("conclu")) return "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400";
-  if (s.includes("não iniciado") || s.includes("nao iniciado"))
-    return "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300";
-  return "bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400";
 }
 
 /**
@@ -156,11 +140,12 @@ export function PostChamados0800({ ticketNumber, startDate, endDate, postStatus,
                   </div>
                   <div className="flex items-center gap-3 mt-0.5 text-[11px] text-muted-foreground">
                     <span>{c.natureza || "—"}</span>
+                    {c.tema && <span className="italic">“{c.tema}”</span>}
                     <span className="flex items-center gap-1">
                       <CalendarDays className="h-3 w-3" />
-                      {fmtDate(c.dataAbertura)}
+                      {fmtDateBr(c.dataAbertura)}
                       {" → "}
-                      {c.dataEncerramento ? fmtDate(c.dataEncerramento) : "aberto"}
+                      {c.dataEncerramento ? fmtDateBr(c.dataEncerramento) : "aberto"}
                     </span>
                   </div>
                 </button>
@@ -170,71 +155,7 @@ export function PostChamados0800({ ticketNumber, startDate, endDate, postStatus,
         </div>
       )}
 
-      {/* Modal de detalhes do chamado */}
-      <Dialog open={!!selecionado} onOpenChange={(v) => !v && setSelecionado(null)}>
-        <DialogContent className="max-w-3xl w-[calc(100vw-2rem)] max-h-[90vh] overflow-y-auto overflow-x-hidden">
-          {selecionado && (
-            <>
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2 pr-6">
-                  <span className="font-mono text-indigo-600 dark:text-indigo-400">
-                    #{selecionado.numeroChamado}
-                  </span>
-                  <span className="truncate">{selecionado.titulo || "(sem título)"}</span>
-                </DialogTitle>
-                <DialogDescription className="flex items-center gap-2 flex-wrap">
-                  <Badge className={cn("pointer-events-none", statusBadgeClass(selecionado.status))}>
-                    {selecionado.status || "—"}
-                  </Badge>
-                  {selecionado.natureza && <span>{selecionado.natureza}</span>}
-                  {selecionado.criticidade && <span>· {selecionado.criticidade}</span>}
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Serventia</p>
-                  <p>{selecionado.nomeCliente || "—"}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Solicitante</p>
-                  <p className="flex items-center gap-1">
-                    <User className="h-3.5 w-3.5 text-muted-foreground" />
-                    {selecionado.solicitante || "—"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Abertura</p>
-                  <p>{fmtDate(selecionado.dataAbertura)}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Encerramento</p>
-                  <p>{selecionado.dataEncerramento ? fmtDate(selecionado.dataEncerramento) : "Em aberto"}</p>
-                </div>
-                {selecionado.software && (
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Software</p>
-                    <p>{selecionado.software}</p>
-                  </div>
-                )}
-                {selecionado.equipeResponsavel && (
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Equipe responsável</p>
-                    <p>{selecionado.equipeResponsavel}</p>
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Descrição</p>
-                <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/20 p-3 text-sm whitespace-pre-wrap break-words">
-                  {selecionado.descricao || "Sem descrição."}
-                </div>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+      <Chamado0800DetailDialog chamado={selecionado} onClose={() => setSelecionado(null)} />
     </div>
   );
 }
