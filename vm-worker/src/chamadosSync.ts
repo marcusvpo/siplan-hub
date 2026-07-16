@@ -127,7 +127,7 @@ async function upsertChamados(rows: ReturnType<typeof mapRow>[]): Promise<void> 
   }
 }
 
-async function runOnce(): Promise<void> {
+async function runOnce(): Promise<string> {
   // 1. Projetos ativos com numero de chamado valido
   const { data: projects, error: projError } = await supabase
     .from("projects")
@@ -142,7 +142,7 @@ async function runOnce(): Promise<void> {
         .filter((t) => /^\d{4,}$/.test(t))
     ),
   ];
-  if (tickets.length === 0) return;
+  if (tickets.length === 0) return "0 projetos com ticket valido";
 
   const pool = await new sql.ConnectionPool({
     server: config.mssqlHost,
@@ -207,12 +207,28 @@ async function runOnce(): Promise<void> {
     const rows = [...porNumero.values()].map(mapRow);
     if (rows.length > 0) await upsertChamados(rows);
 
-    console.log(
-      `[chamados-sync] ok: ${rows.length} chamados (${origem.recordset.length} origem, ` +
-        `${doPeriodo.length} do periodo, ${janelaPorCliente.size} clientes em pos)`
-    );
+    const detail =
+      `${rows.length} chamados (${origem.recordset.length} origem, ` +
+      `${doPeriodo.length} do periodo, ${janelaPorCliente.size} clientes em pos)`;
+    console.log(`[chamados-sync] ok: ${detail}`);
+    return detail;
   } finally {
     await pool.close();
+  }
+}
+
+/**
+ * Marca como concluidos (ou com erro) os pedidos de "sincronizar agora" feitos
+ * pelo botao do card de Pos (tabela chamados_sync_requests). Best-effort.
+ */
+async function resolvePendingRequests(status: "done" | "error", detail: string): Promise<void> {
+  try {
+    await supabase
+      .from("chamados_sync_requests")
+      .update({ status, detail, finished_at: new Date().toISOString() })
+      .eq("status", "pending");
+  } catch {
+    /* best-effort */
   }
 }
 
@@ -227,19 +243,35 @@ export function startChamadosSync(): void {
     if (syncRunning) return; // rodada anterior ainda em andamento
     syncRunning = true;
     try {
-      await runOnce();
+      const detail = await runOnce();
+      await resolvePendingRequests("done", detail);
     } catch (err) {
       // Falha de rede/SQL nao derruba o worker: proxima rodada tenta de novo e
       // o front continua servindo o ultimo snapshot do espelho.
-      console.error("[chamados-sync] erro:", err instanceof Error ? err.message : err);
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error("[chamados-sync] erro:", msg);
+      await resolvePendingRequests("error", msg);
     } finally {
       syncRunning = false;
     }
   };
   void tick();
   setInterval(() => { void tick(); }, config.chamadosSyncIntervalMs);
+
+  // Botao "sincronizar agora" do card de Pos: INSERT em chamados_sync_requests
+  // acorda o sync na hora (sem esperar o intervalo). Fallback: se o Realtime
+  // falhar, o proprio tick periodico resolve os pedidos pendentes.
+  supabase
+    .channel(`chamados-sync-requests-${config.workerId}`)
+    .on(
+      "postgres_changes",
+      { event: "INSERT", schema: "public", table: "chamados_sync_requests" },
+      () => { void tick(); }
+    )
+    .subscribe();
+
   console.log(
     `[chamados-sync] ativo: ${config.mssqlHost}:${config.mssqlPort}/${config.mssqlDatabase} ` +
-      `a cada ${Math.round(config.chamadosSyncIntervalMs / 1000)}s`
+      `a cada ${Math.round(config.chamadosSyncIntervalMs / 1000)}s (+ sync sob demanda via Realtime)`
   );
 }

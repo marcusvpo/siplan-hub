@@ -2,8 +2,9 @@ import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { useChamados0800, Chamado0800 } from "@/hooks/useChamados0800";
-import { Headset, ChevronDown, ChevronRight, Loader2, CalendarDays, User } from "lucide-react";
+import { useChamados0800, useSolicitarSyncChamados0800, Chamado0800 } from "@/hooks/useChamados0800";
+import { Headset, ChevronDown, ChevronRight, Loader2, CalendarDays, User, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -53,6 +54,16 @@ export function PostChamados0800({ ticketNumber, startDate, endDate, postStatus,
   const fimEfetivo = postStatus === "done" ? endDate : undefined;
   const { chamados, clienteResolvido, lastSyncedAt, isLoading, error, parametrosIncompletos } =
     useChamados0800(ticketNumber, startDate, fimEfetivo, systemType);
+  const { solicitarSync, syncing } = useSolicitarSyncChamados0800();
+
+  const handleSyncAgora = async () => {
+    try {
+      await solicitarSync();
+      toast.success("Chamados sincronizados com o 0800.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao sincronizar com o 0800.");
+    }
+  };
 
   return (
     <div className="relative bg-neutral-50/30 dark:bg-neutral-950/20 p-4 rounded-lg border border-dashed border-neutral-200 dark:border-neutral-800 space-y-2">
@@ -79,9 +90,22 @@ export function PostChamados0800({ ticketNumber, startDate, endDate, postStatus,
             </span>
           )}
         </button>
-        {open && lastSyncedAt && (
-          <span className="text-[10px] text-muted-foreground">
-            sincronizado {new Date(lastSyncedAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
+        {open && !parametrosIncompletos && (
+          <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+            {syncing
+              ? "sincronizando…"
+              : lastSyncedAt
+              ? `sincronizado ${new Date(lastSyncedAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}`
+              : null}
+            <button
+              type="button"
+              onClick={handleSyncAgora}
+              disabled={syncing}
+              title="Sincronizar com o 0800 agora"
+              className="p-1 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+            >
+              <RefreshCw className={cn("h-3 w-3", syncing && "animate-spin")} />
+            </button>
           </span>
         )}
       </div>
