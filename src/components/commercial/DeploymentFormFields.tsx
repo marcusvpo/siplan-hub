@@ -87,6 +87,16 @@ const YesNo = ({
   </div>
 );
 
+const formatPhone = (value: string): string => {
+  if (!value) return "";
+  const clean = value.replace(/\D/g, "");
+  const digits = clean.slice(0, 11);
+  if (digits.length <= 2) return digits.length > 0 ? `(${digits}` : "";
+  if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+};
+
 export function DeploymentFormFields({ data, onChange, errors = new Set() }: Props) {
   const set = (field: keyof DeploymentFormData, value: DeploymentFormData[keyof DeploymentFormData]) =>
     onChange({ ...data, [field]: value });
@@ -121,11 +131,6 @@ export function DeploymentFormFields({ data, onChange, errors = new Set() }: Pro
             <Input value={data.docusign_contract_number || ""} onChange={ev => set("docusign_contract_number", ev.target.value)}
               placeholder="Contrato" className={`h-8 text-sm ${e("docusign_contract_number")}`} />
           </div>
-        </div>
-        <div className="mt-3 space-y-1" {...attr("sales_rep")}>
-          <RL label="Vendedor responsável" />
-          <Input value={data.sales_rep || ""} onChange={ev => set("sales_rep", ev.target.value)}
-            placeholder="Nome do vendedor" className={`h-8 text-sm ${e("sales_rep")}`} />
         </div>
       </SectionCard>
 
@@ -260,7 +265,7 @@ export function DeploymentFormFields({ data, onChange, errors = new Set() }: Pro
             <div className="grid grid-cols-3 gap-2">
               <Input value={data.official_name || ""} onChange={ev => set("official_name", ev.target.value)}
                 placeholder="Nome" className="h-8 text-sm" />
-              <Input type="tel" value={data.official_phone || ""} onChange={ev => set("official_phone", ev.target.value)}
+              <Input type="tel" value={data.official_phone || ""} onChange={ev => set("official_phone", formatPhone(ev.target.value))}
                 placeholder="(00) 00000-0000" className="h-8 text-sm" />
               <Input value={data.official_email || ""} onChange={ev => set("official_email", ev.target.value)}
                 placeholder="E-mail" className="h-8 text-sm" />
@@ -275,7 +280,7 @@ export function DeploymentFormFields({ data, onChange, errors = new Set() }: Pro
             <div className="grid grid-cols-3 gap-2">
               <Input value={data.it_name || ""} onChange={ev => set("it_name", ev.target.value)}
                 placeholder="Nome" className="h-8 text-sm" />
-              <Input type="tel" value={data.it_phone || ""} onChange={ev => set("it_phone", ev.target.value)}
+              <Input type="tel" value={data.it_phone || ""} onChange={ev => set("it_phone", formatPhone(ev.target.value))}
                 placeholder="(00) 00000-0000" className="h-8 text-sm" />
               <Input value={data.it_email || ""} onChange={ev => set("it_email", ev.target.value)}
                 placeholder="E-mail" className="h-8 text-sm" />
@@ -292,7 +297,7 @@ export function DeploymentFormFields({ data, onChange, errors = new Set() }: Pro
                 placeholder="Nome" className="h-8 text-sm" />
               <Input value={data.operational_role || ""} onChange={ev => set("operational_role", ev.target.value)}
                 placeholder="Cargo" className="h-8 text-sm" />
-              <Input type="tel" value={data.operational_phone || ""} onChange={ev => set("operational_phone", ev.target.value)}
+              <Input type="tel" value={data.operational_phone || ""} onChange={ev => set("operational_phone", formatPhone(ev.target.value))}
                 placeholder="(00) 00000-0000" className="h-8 text-sm" />
               <Input value={data.operational_email || ""} onChange={ev => set("operational_email", ev.target.value)}
                 placeholder="E-mail" className="h-8 text-sm" />

@@ -69,7 +69,6 @@ N.º OP: ${v(d.op_number)}
 N. Pedido de Venda: ${v(d.sales_order_number)}
 Data do Pedido: ${v(d.order_date)}
 N.º Contrato (DocuSign): ${v(d.docusign_contract_number)}
-Vendedor responsável: ${v(d.sales_rep)}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

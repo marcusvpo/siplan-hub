@@ -163,6 +163,7 @@ export function ProjectModal({
                 <DeploymentFormStatusButton
                   projectId={displayProject.id}
                   deploymentForm={projectDeploymentForm}
+                  checklistId={projectChecklist?.id}
                   onCloseModal={() => onOpenChange(false)}
                 />
               </>
@@ -387,10 +388,12 @@ function ChecklistStatusButton({
 function DeploymentFormStatusButton({
   projectId,
   deploymentForm,
+  checklistId,
   onCloseModal,
 }: {
   projectId: string;
   deploymentForm: { id: string } | null | undefined;
+  checklistId: string | null | undefined;
   onCloseModal: () => void;
 }) {
   const navigate = useNavigate();
@@ -416,7 +419,11 @@ function DeploymentFormStatusButton({
       className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[11px] font-semibold px-2.5 py-0.5 flex items-center gap-1.5 cursor-pointer hover:bg-emerald-500/20 transition-colors shadow-sm shrink-0"
       title="Formulário preenchido! Clique para ver as informações."
       onClick={() => {
-        navigate(`/commercial/deployment-forms?view=${deploymentForm.id}`);
+        if (checklistId) {
+          navigate(`/commercial/checklists?view=${checklistId}&tab=commercial`);
+        } else {
+          navigate(`/commercial/checklists`);
+        }
         onCloseModal();
       }}
     >

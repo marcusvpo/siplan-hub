@@ -71,10 +71,20 @@ export default function CommercialCustomers() {
     setCurrentPage(1);
   }, [searchTerm, statusFilter, projectsFilter, lastActionFilter, itemsPerPage]);
 
-  // Helper to compute client health and stats
+  // Helper to compute client health and stats - only considering projects "Em Andamento"
   const getClientStats = (clientId: string) => {
+    const client = clients?.find((c) => c.id === clientId);
     const clientProjects =
-      projectsWithClients?.filter((p) => p.client_id === clientId) || [];
+      projectsWithClients?.filter(
+        (p) =>
+          (p.client_id === clientId ||
+            (!p.client_id &&
+              p.client_name &&
+              client?.name &&
+              p.client_name.toLowerCase().trim() === client.name.toLowerCase().trim())) &&
+          p.global_status === "in-progress" &&
+          p.post_status !== "in-progress"
+      ) || [];
 
     // Calculate dynamic health score
     let hasCritical = false;
@@ -134,6 +144,12 @@ export default function CommercialCustomers() {
   const filteredClients =
     clients?.filter((client) => {
       const stats = getClientStats(client.id);
+
+      // Apenas mostra clientes com projetos com status "Em Andamento"
+      if (stats.activeProjects === 0) {
+        return false;
+      }
+
       const matchesSearch = client.name
         .toLowerCase()
         .includes(searchTerm.toLowerCase());
@@ -148,8 +164,6 @@ export default function CommercialCustomers() {
       let matchesProjects = true;
       if (projectsFilter === "critical") {
         matchesProjects = stats.status === "critical"; // Simplified
-      } else if (projectsFilter === "no-projects") {
-        matchesProjects = stats.activeProjects === 0;
       } else if (projectsFilter === "has-blockers") {
         matchesProjects = stats.blockers > 0;
       }
@@ -253,7 +267,6 @@ export default function CommercialCustomers() {
               <SelectItem value="all">Todos os Projetos</SelectItem>
               <SelectItem value="critical">Com Projetos Críticos</SelectItem>
               <SelectItem value="has-blockers">Com Bloqueios</SelectItem>
-              <SelectItem value="no-projects">Sem Projetos Ativos</SelectItem>
             </SelectContent>
           </Select>
 

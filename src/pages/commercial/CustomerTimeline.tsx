@@ -61,7 +61,14 @@ export default function CustomerTimeline() {
   if (!client) return <div>Cliente não encontrado</div>;
 
   const clientProjects =
-    projectsWithClients?.filter((p) => p.client_id === client.id) || [];
+    projectsWithClients?.filter(
+      (p) =>
+        p.client_id === client.id ||
+        (!p.client_id &&
+          p.client_name &&
+          client.name &&
+          p.client_name.toLowerCase().trim() === client.name.toLowerCase().trim())
+    ) || [];
   const clientNotes =
     allCommercialNotes?.filter((n) => n.client_id === client.id) || [];
 
