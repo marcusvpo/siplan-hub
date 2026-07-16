@@ -172,7 +172,7 @@ export function PostChamados0800({ ticketNumber, startDate, endDate, postStatus,
 
       {/* Modal de detalhes do chamado */}
       <Dialog open={!!selecionado} onOpenChange={(v) => !v && setSelecionado(null)}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl w-[calc(100vw-2rem)] max-h-[90vh] overflow-y-auto overflow-x-hidden">
           {selecionado && (
             <>
               <DialogHeader>
@@ -227,7 +227,7 @@ export function PostChamados0800({ ticketNumber, startDate, endDate, postStatus,
 
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Descrição</p>
-                <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/20 p-3 text-sm whitespace-pre-wrap break-words max-h-64 overflow-y-auto">
+                <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/20 p-3 text-sm whitespace-pre-wrap break-words">
                   {selecionado.descricao || "Sem descrição."}
                 </div>
               </div>

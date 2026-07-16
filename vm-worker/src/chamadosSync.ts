@@ -72,13 +72,22 @@ export function decodeDescricao(raw: string | null): string | null {
   if (text.startsWith("ÿþ")) {
     text = Buffer.from(text, "latin1").toString("utf16le").slice(1); // pula o BOM
   }
+  const fromCode = (code: number): string => {
+    try {
+      return code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : "";
+    } catch {
+      return "";
+    }
+  };
   text = text
     .replace(/<[^>]*>/g, " ")
     .replace(/&gt;/gi, ">")
     .replace(/&lt;/gi, "<")
     .replace(/&quot;/gi, '"')
-    .replace(/&#0?39;/g, "'")
     .replace(/&nbsp;/gi, " ")
+    // Entidades numericas ("Certid&#227;o" -> "Certidão"; tambem &#x hex)
+    .replace(/&#x([0-9a-f]+);/gi, (_, h: string) => fromCode(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_, d: string) => fromCode(Number(d)))
     .replace(/&amp;/gi, "&")
     .replace(/\s+/g, " ")
     .trim();
