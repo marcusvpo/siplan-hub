@@ -298,14 +298,15 @@
   "296": "commercial-contacts-permissions.test.tsx",
   "297": "CopilotChat",
   "298": "LogsTab.tsx",
-  "299": "useAuth.ts",
-  "300": "PipelineStatus.tsx",
-  "301": "3. Banco de dados",
+  "299": "PipelineStatus.tsx",
+  "300": "useTeams.ts",
+  "301": "Coleta Pública de Infraestrutura",
   "302": "Login",
   "303": "Página 404 (Not Found)",
   "304": "SimpleMarkdown.tsx",
   "305": "AuthContext.tsx",
   "306": "useHomologationEvents.ts",
   "307": "ProtectedRoute.tsx",
-  "308": "useImproveTextJobs.ts"
+  "308": "useImproveTextJobs.ts",
+  "309": "calendar.tsx"
 }

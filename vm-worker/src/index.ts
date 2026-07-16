@@ -233,7 +233,8 @@ async function claimOneDtcJob(): Promise<boolean> {
   const isTextJob =
     typedJob.job_type === "improve_text" ||
     typedJob.job_type === "summary_blocks" ||
-    typedJob.job_type === "pos_parecer";
+    typedJob.job_type === "pos_parecer" ||
+    typedJob.job_type === "panorama_parecer";
   const kind = isVoiceJob ? "voice" : isTextJob ? typedJob.job_type : "dtc";
   console.log(`[${kind} ${typedJob.id}] iniciado (tentativa ${typedJob.attempts})`);
   try {

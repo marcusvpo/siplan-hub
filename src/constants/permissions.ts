@@ -60,6 +60,7 @@ export const PERMISSION_RESOURCES: PermissionResourceDef[] = [
   { resource: "dashboard_view", label: "Dashboard - Visão Geral", category: "Dashboard", actions: ["view"] },
   { resource: "kanban", label: "Dashboard - Quadro Kanban", category: "Dashboard", actions: ["view", "edit"] },
   { resource: "pos_panorama", label: "Dashboard - Panorama Pós-Implantação", category: "Dashboard", actions: ["view"] },
+  { resource: "pos_panorama_geral", label: "Dashboard - Panorama Geral (pós histórico)", category: "Dashboard", actions: ["view"] },
 
   // Implantação & Projetos
   { resource: "menu_implantacao", label: "Menu Implantação", category: "Implantação & Projetos", actions: ["view"] },
