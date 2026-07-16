@@ -59,10 +59,92 @@ ${text}
 === FIM DOS BLOCOS ===`;
 }
 
+/**
+ * Contexto das etapas dos projetos para os pareceres de pos: conversao de dados
+ * (sistema de origem, complexidade, desvios, homologacao), gap de aderencia,
+ * aceite da implantacao e o resumo de transicao (DTC) quando existir. Ajuda a
+ * IA a separar "bug de produto" de "sequela de conversao" ou "lacuna de
+ * treinamento". Best-effort: qualquer falha retorna vazio e o parecer sai sem
+ * este bloco.
+ */
+async function buildProjectStagesContext(projectIds: string[]): Promise<string> {
+  try {
+    const ids = [...new Set(projectIds.filter(Boolean))].slice(0, 30);
+    if (ids.length === 0) return "";
+
+    const { data } = await supabase
+      .from("projects")
+      .select(
+        "id, client_name, system_type, legacy_system, conversion_source_system, conversion_complexity, " +
+          "conversion_record_count, conversion_deviations, conversion_homologation_status, conversion_status, " +
+          "adherence_has_product_gap, adherence_gap_description, implementation_acceptance_status, " +
+          "post_start_date, post_end_date, post_status"
+      )
+      .in("id", ids);
+    // O supabase-js nao infere o tipo de selects montados por concatenacao.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const projs = (data ?? []) as any[];
+    if (projs.length === 0) return "";
+
+    // Ultimo resumo de transicao (DTC) concluido por projeto, se houver.
+    const { data: dtcs } = await supabase
+      .from("dtc_ai_jobs")
+      .select("project_id, result_text, created_at")
+      .in("project_id", ids)
+      .eq("job_type", "dtc_summary")
+      .eq("status", "done")
+      .order("created_at", { ascending: false })
+      .limit(60);
+    const dtcPorProjeto = new Map<string, string>();
+    for (const d of dtcs ?? []) {
+      const pid = d.project_id as string;
+      if (!dtcPorProjeto.has(pid) && d.result_text) {
+        dtcPorProjeto.set(pid, String(d.result_text).replace(/\s+/g, " ").slice(0, 900));
+      }
+    }
+
+    const linhas = projs.map((p) => {
+      const partes: string[] = [];
+      const origem = p.conversion_source_system || p.legacy_system;
+      if (origem) {
+        partes.push(
+          `conversao de dados: origem=${origem}` +
+            (p.conversion_complexity ? `, complexidade=${p.conversion_complexity}` : "") +
+            (p.conversion_record_count ? `, ~${p.conversion_record_count} registros` : "") +
+            (p.conversion_homologation_status ? `, homologacao=${p.conversion_homologation_status}` : "") +
+            (p.conversion_status ? `, status=${p.conversion_status}` : "")
+        );
+      } else {
+        partes.push("sem conversao de dados registrada");
+      }
+      if (p.conversion_deviations) {
+        partes.push(`DESVIOS DA CONVERSAO: ${String(p.conversion_deviations).replace(/\s+/g, " ").slice(0, 400)}`);
+      }
+      if (p.adherence_has_product_gap) {
+        partes.push(
+          `gap de produto na aderencia${p.adherence_gap_description ? `: ${String(p.adherence_gap_description).replace(/\s+/g, " ").slice(0, 250)}` : ""}`
+        );
+      }
+      if (p.implementation_acceptance_status) partes.push(`aceite da implantacao: ${p.implementation_acceptance_status}`);
+      partes.push(`pos: ${p.post_start_date ?? "?"} a ${p.post_status === "done" ? p.post_end_date ?? "?" : "em andamento"}`);
+      const dtc = dtcPorProjeto.get(p.id as string);
+      if (dtc) partes.push(`RESUMO DE TRANSICAO (DTC): ${dtc}`);
+      return `- ${p.client_name} [${p.system_type}]: ${partes.join(" | ")}`;
+    });
+    return linhas.join("\n");
+  } catch {
+    return "";
+  }
+}
+
+const CONTEXTO_ETAPAS_REGRAS = `
+- Use o CONTEXTO DAS ETAPAS DOS PROJETOS para formular hipoteses de causa raiz: temas como registros/atos nao localizados, dados divergentes, numeracao ou valores errados podem ser SEQUELA DA CONVERSAO DE DADOS (verifique sistema de origem, desvios registrados e status da homologacao) e nao bug do produto nem falta de treinamento. Diga qual hipotese os dados sustentam.
+- Se um projeto nao tiver contexto de etapas ou DTC, simplesmente nao o cite nesse aspecto — NAO invente.`;
+
 // Prompt do parecer da Analise Pos-Implantacao: recebe um JSON compacto com os
 // chamados 0800 do periodo do pos e escreve uma leitura qualitativa (temas
 // recorrentes, causa provavel, recomendacoes) para o time de implantacao.
-function buildParecerPrompt(json: string): string {
+function buildParecerPrompt(json: string, contextoProjetos: string): string {
   return `Voce e um analista senior de implantacao de sistemas para cartorios. Abaixo esta um JSON com os chamados de suporte (0800) que UM cliente abriu durante o periodo de pos-implantacao de um projeto.
 
 Escreva um PARECER curto (2 a 4 paragrafos + no maximo 4 recomendacoes em lista) respondendo:
@@ -72,7 +154,7 @@ Escreva um PARECER curto (2 a 4 paragrafos + no maximo 4 recomendacoes em lista)
 
 REGRAS:
 - Baseie-se APENAS nos dados do JSON. NAO invente fatos, numeros nem chamados.
-- Considere status (aberto ha muito tempo = risco), criticidade e datas.
+- Considere status (aberto ha muito tempo = risco), criticidade e datas.${contextoProjetos ? CONTEXTO_ETAPAS_REGRAS : ""}
 - Portugues do Brasil, tom profissional e direto. Sem preambulo, sem titulo geral, sem repetir estas instrucoes.
 
 FORMATACAO (Markdown leve): **negrito** para termos-chave; listas com "- ". Nao use titulos com "#", tabelas nem blocos de codigo.
@@ -81,7 +163,40 @@ Responda SOMENTE com o texto do parecer.
 
 === CHAMADOS DO POS (JSON) ===
 ${json}
-=== FIM ===`;
+=== FIM ===${contextoProjetos ? `
+
+=== CONTEXTO DAS ETAPAS DOS PROJETOS ===
+${contextoProjetos}
+=== FIM DO CONTEXTO ===` : ""}`;
+}
+
+// Prompt do parecer da CARTEIRA (Panorama Pos-Implantacao): recebe um JSON com
+// o recorte agregado (temas por cartorio, naturezas, criticos) e escreve a
+// leitura executiva do que e sistemico vs pontual.
+function buildPanoramaParecerPrompt(json: string, contextoProjetos: string): string {
+  return `Voce e um gestor senior de implantacao de sistemas para cartorios analisando a CARTEIRA de projetos em pos-implantacao. Abaixo esta um JSON agregado dos chamados 0800 abertos pelos clientes DENTRO dos periodos de pos (filtro ja aplicado), incluindo temas gerados por IA com a contagem de cartorios em que cada um aparece.
+
+Escreva um PARECER EXECUTIVO curto (2 a 4 paragrafos + no maximo 5 recomendacoes em lista) respondendo:
+1. Quais temas sao SISTEMICOS (aparecem em 2+ cartorios) e o que indicam — bug de produto, falha de ambiente/configuracao padrao ou lacuna do treinamento padrao?
+2. O equilibrio geral da carteira: duvidas de uso vs erros/bugs — as implantacoes estao gerando mais atrito de capacitacao ou de produto?
+3. Pontos de risco (chamados criticos em aberto, cartorios com volume fora da curva).
+4. Recomendacoes objetivas para o time de implantacao e para o time de produto.
+
+REGRAS:
+- Baseie-se APENAS nos dados do JSON. NAO invente fatos nem numeros. Cite temas e cartorios pelos nomes do JSON.${contextoProjetos ? CONTEXTO_ETAPAS_REGRAS : ""}
+- Portugues do Brasil, tom executivo e direto. Sem preambulo, sem titulo geral.
+
+FORMATACAO (Markdown leve): **negrito** para termos-chave; listas com "- ". Nao use titulos com "#", tabelas nem blocos de codigo.
+
+Responda SOMENTE com o texto do parecer.
+
+=== RECORTE DA CARTEIRA (JSON) ===
+${json}
+=== FIM ===${contextoProjetos ? `
+
+=== CONTEXTO DAS ETAPAS DOS PROJETOS ===
+${contextoProjetos}
+=== FIM DO CONTEXTO ===` : ""}`;
 }
 
 /**
@@ -122,7 +237,8 @@ export async function processImproveJob(job: DtcJob): Promise<void> {
     record({ at: new Date().toISOString(), text, kind });
 
   const isSummary = job.job_type === "summary_blocks";
-  const isParecer = job.job_type === "pos_parecer";
+  const isParecer = job.job_type === "pos_parecer" || job.job_type === "panorama_parecer";
+  const isPanorama = job.job_type === "panorama_parecer";
 
   pushStep(
     isParecer
@@ -166,8 +282,32 @@ export async function processImproveJob(job: DtcJob): Promise<void> {
     return !!data?.cancel_requested;
   };
 
-  const prompt = isParecer
-    ? buildParecerPrompt(text)
+  // Contexto das etapas dos projetos (conversao, aderencia, DTC...) para os
+  // pareceres: por projeto usa o project_id do job; o da carteira recebe os ids
+  // do recorte dentro do JSON (payload.projetos). Best-effort — sem contexto o
+  // parecer sai normalmente.
+  let contextoProjetos = "";
+  if (isParecer) {
+    pushStep("Lendo as etapas dos projetos (conversao, aderencia, DTC)...");
+    await flushProgress(true);
+    if (isPanorama) {
+      try {
+        const payload = JSON.parse(text) as { projetos?: Array<{ id?: string }> };
+        contextoProjetos = await buildProjectStagesContext(
+          (payload.projetos ?? []).map((p) => String(p.id || ""))
+        );
+      } catch {
+        /* payload sem lista de projetos: segue sem contexto */
+      }
+    } else if (job.project_id) {
+      contextoProjetos = await buildProjectStagesContext([job.project_id]);
+    }
+  }
+
+  const prompt = isPanorama
+    ? buildPanoramaParecerPrompt(text, contextoProjetos)
+    : isParecer
+    ? buildParecerPrompt(text, contextoProjetos)
     : isSummary
     ? buildSummaryPrompt(text)
     : buildImprovePrompt(text);

@@ -85,6 +85,7 @@ export function AppSidebar() {
   const canViewDashboardView = hasPermission("dashboard_view", "view");
   const canViewKanban = hasPermission("kanban", "view");
   const canViewPosPanorama = hasPermission("pos_panorama", "view");
+  const canViewPosPanoramaGeral = hasPermission("pos_panorama_geral", "view");
   const canViewImplantadores = hasPermission("menu_implantadores", "view");
   const can = (resource: string) => hasPermission(resource, "view");
 
@@ -98,6 +99,7 @@ export function AppSidebar() {
     ["dashboard_view", "/dashboard"],
     ["kanban", "/dashboard/kanban"],
     ["pos_panorama", "/dashboard/pos-implantacao"],
+    ["pos_panorama_geral", "/dashboard/pos-panorama-geral"],
   );
   const rotaImplantacao = primeiraRota(
     ["projects", "/projects"],
@@ -284,6 +286,18 @@ export function AppSidebar() {
                       >
                         <Headset className="h-4 w-4" />
                         <span>Panorama Pós</span>
+                      </Button>
+                    </Link>
+                  )}
+                  {canViewPosPanoramaGeral && (
+                    <Link to="/dashboard/pos-panorama-geral">
+                      <Button
+                        variant={isActive("/dashboard/pos-panorama-geral") ? "secondary" : "ghost"}
+                        size="sm"
+                        className="w-full justify-start gap-3 h-9"
+                      >
+                        <History className="h-4 w-4" />
+                        <span>Panorama Geral</span>
                       </Button>
                     </Link>
                   )}
