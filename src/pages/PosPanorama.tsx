@@ -36,6 +36,8 @@ import {
   Sparkles,
   FileDown,
   ExternalLink,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -91,6 +93,8 @@ export default function PosPanorama() {
   const { data, isLoading, error } = usePosPanorama(inicioQuery, fimQuery);
   const [chamadoSelecionado, setChamadoSelecionado] = useState<ChamadoPanorama | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [pagina, setPagina] = useState(1);
+  const [porPagina, setPorPagina] = useState(6);
   const navigate = useNavigate();
   const { gerarParecer, ativo: parecerAtivo, ultimo: ultimoParecer, ultimoErro } = usePanoramaParecer();
   const { online: workerOnline } = useModelWorkerStatus();
@@ -307,6 +311,15 @@ export default function PosPanorama() {
     }
   };
 
+  // Paginacao da lista de chamados. Nao ha reset explicito ao filtrar: a pagina
+  // atual e SEMPRE limitada ao total, entao encolher o recorte reposiciona sozinho.
+  const totalPaginas = Math.max(1, Math.ceil(filtrados.length / porPagina));
+  const paginaAtual = Math.min(pagina, totalPaginas);
+  const paginados = useMemo(
+    () => filtrados.slice((paginaAtual - 1) * porPagina, paginaAtual * porPagina),
+    [filtrados, paginaAtual, porPagina]
+  );
+
   const temFiltroFino =
     produto !== "todos" || natureza !== "todas" || status !== "todos" ||
     criticidade !== "todas" || !!tema || !!cartorio || !!busca.trim();
@@ -322,15 +335,15 @@ export default function PosPanorama() {
   };
 
   return (
-    <div className="p-6 space-y-4 max-w-[1400px] mx-auto [--viz-bar:#2a78d6] dark:[--viz-bar:#3987e5]">
+    <div className="p-4 space-y-3 max-w-[1400px] mx-auto [--viz-bar:#2a78d6] dark:[--viz-bar:#3987e5]">
       {/* Cabecalho */}
       <div className="flex items-end justify-between gap-3 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Headset className="h-6 w-6 text-primary" />
+          <h1 className="text-xl font-bold flex items-center gap-2">
+            <Headset className="h-5 w-5 text-primary" />
             Panorama Pós-Implantação
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-xs text-muted-foreground mt-0.5">
             Somente chamados abertos <strong>dentro do período de pós</strong> de cada projeto
             (cliente + produto) — recorrência de temas entre cartórios.
           </p>
@@ -359,11 +372,11 @@ export default function PosPanorama() {
 
       {/* Barra de filtros */}
       <Card>
-        <CardContent className="p-3 space-y-2">
+        <CardContent className="p-2.5 space-y-1.5">
           <div className="flex items-center gap-2 flex-wrap">
             <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
             <Select value={produto} onValueChange={setProduto}>
-              <SelectTrigger className="w-[150px] h-9"><SelectValue placeholder="Produto" /></SelectTrigger>
+              <SelectTrigger className="w-[150px] h-8"><SelectValue placeholder="Produto" /></SelectTrigger>
               <SelectContent>
                 {PRODUTOS.map((p) => (
                   <SelectItem key={p} value={p}>{p === "todos" ? "Todos os produtos" : p}</SelectItem>
@@ -371,7 +384,7 @@ export default function PosPanorama() {
               </SelectContent>
             </Select>
             <Select value={natureza} onValueChange={setNatureza}>
-              <SelectTrigger className="w-[190px] h-9"><SelectValue placeholder="Natureza" /></SelectTrigger>
+              <SelectTrigger className="w-[190px] h-8"><SelectValue placeholder="Natureza" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="todas">Todas as naturezas</SelectItem>
                 {opcoes.naturezas.map((n) => (
@@ -380,7 +393,7 @@ export default function PosPanorama() {
               </SelectContent>
             </Select>
             <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="w-[130px] h-9"><SelectValue placeholder="Status" /></SelectTrigger>
+              <SelectTrigger className="w-[130px] h-8"><SelectValue placeholder="Status" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="todos">Todos os status</SelectItem>
                 <SelectItem value="abertos">Em aberto</SelectItem>
@@ -388,7 +401,7 @@ export default function PosPanorama() {
               </SelectContent>
             </Select>
             <Select value={criticidade} onValueChange={setCriticidade}>
-              <SelectTrigger className="w-[160px] h-9"><SelectValue placeholder="Criticidade" /></SelectTrigger>
+              <SelectTrigger className="w-[160px] h-8"><SelectValue placeholder="Criticidade" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="todas">Toda criticidade</SelectItem>
                 {opcoes.criticidades.map((c) => (
@@ -397,7 +410,7 @@ export default function PosPanorama() {
               </SelectContent>
             </Select>
             <Select value={periodo} onValueChange={setPeriodo}>
-              <SelectTrigger className="w-[180px] h-9"><SelectValue placeholder="Período" /></SelectTrigger>
+              <SelectTrigger className="w-[180px] h-8"><SelectValue placeholder="Período" /></SelectTrigger>
               <SelectContent>
                 {PERIODOS.map((p) => (
                   <SelectItem key={p.valor} value={p.valor}>{p.rotulo}</SelectItem>
@@ -410,7 +423,7 @@ export default function PosPanorama() {
                   type="date"
                   value={dataInicio}
                   onChange={(e) => setDataInicio(e.target.value)}
-                  className="h-9 w-[150px]"
+                  className="h-8 w-[150px]"
                   title="Abertura a partir de"
                 />
                 <span className="text-xs text-muted-foreground">até</span>
@@ -418,7 +431,7 @@ export default function PosPanorama() {
                   type="date"
                   value={dataFim}
                   onChange={(e) => setDataFim(e.target.value)}
-                  className="h-9 w-[150px]"
+                  className="h-8 w-[150px]"
                   title="Abertura até"
                 />
               </span>
@@ -429,7 +442,7 @@ export default function PosPanorama() {
                 value={busca}
                 onChange={(e) => setBusca(e.target.value)}
                 placeholder="Buscar nº, título, cartório ou tema…"
-                className="h-9 pl-8"
+                className="h-8 pl-8"
               />
             </div>
           </div>
@@ -479,7 +492,7 @@ export default function PosPanorama() {
       ) : (
         <>
           {/* KPIs */}
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
             {[
               { label: "Chamados no recorte", value: String(filtrados.length), icon: Headset },
               { label: "Cartórios envolvidos", value: String(agg.cartorios.length), icon: Building2 },
@@ -492,28 +505,29 @@ export default function PosPanorama() {
               { label: "Temas distintos (IA)", value: String(agg.temas.length), icon: Tags },
             ].map((t) => (
               <Card key={t.label}>
-                <CardContent className="p-4 flex items-center gap-3">
+                <CardContent className="p-3 flex items-center gap-2.5">
                   <t.icon className="h-4 w-4 text-muted-foreground shrink-0" />
                   <div>
-                    <p className="text-xl font-bold leading-none">{t.value}</p>
-                    <p className="text-[11px] text-muted-foreground mt-1">{t.label}</p>
+                    <p className="text-lg font-bold leading-none">{t.value}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">{t.label}</p>
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-4 items-start">
+          {/* Grade 2x2 alinhada: todos os cards com a MESMA altura de conteudo */}
+          <div className="grid lg:grid-cols-2 gap-3">
             {/* Temas recorrentes */}
-            <Card>
-              <CardHeader className="pb-2">
+            <Card className="flex flex-col">
+              <CardHeader className="px-4 py-2.5">
                 <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
                   <Tags className="h-4 w-4 text-indigo-500" />
                   Temas recorrentes entre cartórios
                   <span className="ml-1 text-[10px] font-normal text-muted-foreground">clique para filtrar</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="px-4 pb-3 pt-0 h-[280px] overflow-y-auto">
                 {agg.temas.length === 0 ? (
                   <p className="text-xs text-muted-foreground">
                     {agg.semTema > 0
@@ -528,7 +542,7 @@ export default function PosPanorama() {
                         type="button"
                         onClick={() => setTema(tema === t.tema ? null : t.tema)}
                         className={cn(
-                          "w-full flex items-center justify-between gap-2 py-2 text-left hover:bg-neutral-50 dark:hover:bg-neutral-900/40 px-2 rounded transition-colors",
+                          "w-full flex items-center justify-between gap-2 py-1.5 text-left hover:bg-neutral-50 dark:hover:bg-neutral-900/40 px-2 rounded transition-colors",
                           tema === t.tema && "bg-indigo-50 dark:bg-indigo-950/30"
                         )}
                       >
@@ -561,20 +575,16 @@ export default function PosPanorama() {
               </CardContent>
             </Card>
 
-            <div className="space-y-4">
-              {/* Naturezas */}
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-semibold">
-                    Chamados por natureza
-                    <span className="ml-2 text-[10px] font-normal text-muted-foreground">clique para filtrar</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer
-                    width="100%"
-                    height={Math.max(150, Math.min(agg.porNatureza.length, 8) * 36)}
-                  >
+            {/* Naturezas */}
+            <Card className="flex flex-col">
+              <CardHeader className="px-4 py-2.5">
+                <CardTitle className="text-sm font-semibold">
+                  Chamados por natureza
+                  <span className="ml-2 text-[10px] font-normal text-muted-foreground">clique para filtrar</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="px-4 pb-3 pt-0 h-[280px]">
+                <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                       data={agg.porNatureza.slice(0, 8)}
                       layout="vertical"
@@ -622,16 +632,16 @@ export default function PosPanorama() {
                 </CardContent>
               </Card>
 
-              {/* Ranking de cartorios */}
-              <Card>
-                <CardHeader className="pb-2">
+            {/* Ranking de cartorios */}
+            <Card className="flex flex-col">
+                <CardHeader className="px-4 py-2.5">
                   <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
                     <Trophy className="h-4 w-4 text-amber-500" />
                     Cartórios com mais chamados no pós
                     <span className="ml-1 text-[10px] font-normal text-muted-foreground">clique para filtrar</span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-1">
+                <CardContent className="space-y-0.5 px-4 pb-3 pt-0 h-[280px] overflow-y-auto">
                   {agg.cartorios.slice(0, 8).map(([nome, n]) => {
                     const max = agg.cartorios[0]?.[1] || 1;
                     return (
@@ -640,7 +650,7 @@ export default function PosPanorama() {
                         type="button"
                         onClick={() => setCartorio(cartorio === nome ? null : nome)}
                         className={cn(
-                          "w-full text-left px-2 py-1.5 rounded hover:bg-neutral-50 dark:hover:bg-neutral-900/40 transition-colors",
+                          "w-full text-left px-2 py-1 rounded hover:bg-neutral-50 dark:hover:bg-neutral-900/40 transition-colors",
                           cartorio === nome && "bg-indigo-50 dark:bg-indigo-950/30"
                         )}
                       >
@@ -658,14 +668,11 @@ export default function PosPanorama() {
                     );
                   })}
                 </CardContent>
-              </Card>
-            </div>
-          </div>
+            </Card>
 
-          {/* Tendencia mensal */}
-          {agg.porMes.length > 1 && (
-            <Card>
-              <CardHeader className="pb-2">
+            {/* Tendencia mensal */}
+            <Card className="flex flex-col">
+              <CardHeader className="px-4 py-2.5">
                 <CardTitle className="text-sm font-semibold">
                   Tendência mensal
                   <span className="ml-2 text-[10px] font-normal text-muted-foreground">
@@ -673,8 +680,9 @@ export default function PosPanorama() {
                   </span>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={200}>
+              <CardContent className="px-4 pb-3 pt-0 h-[280px]">
+                {agg.porMes.length > 1 ? (
+                <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={agg.porMes} margin={{ top: 16, right: 8, bottom: 0, left: 8 }}>
                     <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="0" />
                     <XAxis
@@ -704,14 +712,19 @@ export default function PosPanorama() {
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Sem meses suficientes no recorte para mostrar tendência.
+                  </p>
+                )}
               </CardContent>
             </Card>
-          )}
+          </div>
 
           {/* Projetos do cartorio selecionado — atalho direto pro projeto */}
           {cartorio && (
             <Card>
-              <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
+              <CardHeader className="px-4 py-2.5 flex flex-row items-center justify-between space-y-0">
                 <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
                   <FolderKanban className="h-4 w-4 text-indigo-500" />
                   Projetos de {cartorio}
@@ -720,13 +733,13 @@ export default function PosPanorama() {
                   <X className="h-3.5 w-3.5" /> Fechar
                 </Button>
               </CardHeader>
-              <CardContent>
+              <CardContent className="px-4 pb-3 pt-0">
                 {projetosDoCartorio.length === 0 ? (
                   <p className="text-xs text-muted-foreground">Nenhum projeto com pós deste cartório.</p>
                 ) : (
                   <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 divide-y divide-neutral-100 dark:divide-neutral-800/60 overflow-hidden">
                     {projetosDoCartorio.map((p) => (
-                      <div key={p.id} className="flex items-center justify-between gap-2 px-3 py-2">
+                      <div key={p.id} className="flex items-center justify-between gap-2 px-3 py-1.5">
                         <div className="min-w-0">
                           <p className="text-xs font-semibold flex items-center gap-1.5">
                             <Badge variant="outline" className="text-[10px] font-normal pointer-events-none">
@@ -757,77 +770,22 @@ export default function PosPanorama() {
             </Card>
           )}
 
-          {/* Parecer IA da carteira */}
-          <Card>
-            <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
-                <Sparkles className="h-4 w-4 text-indigo-500" />
-                Parecer da IA — carteira
-              </CardTitle>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-7 gap-1 text-xs"
-                onClick={handleGerarParecer}
-                disabled={!!parecerAtivo || !workerOnline || filtrados.length === 0}
-                title={
-                  !workerOnline
-                    ? "O gerador da IA está offline no momento"
-                    : parecerAtivo
-                    ? "Aguarde o parecer em andamento"
-                    : "Analisa o recorte atual (temas, cartórios, críticos) e escreve o parecer executivo"
-                }
-              >
-                {parecerAtivo ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
-                {ultimoParecer ? "Atualizar parecer" : "Gerar parecer"}
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {parecerAtivo ? (
-                <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  {parecerAtivo.progress || "Gerando parecer da carteira…"}
-                </p>
-              ) : ultimoParecer?.resultText ? (
-                <div className="text-sm">
-                  <MarkdownLite text={ultimoParecer.resultText} />
-                  <p className="text-[10px] text-muted-foreground mt-2">
-                    gerado em{" "}
-                    {new Date(ultimoParecer.createdAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}{" "}
-                    — reflete o recorte usado no momento da geração
-                  </p>
-                </div>
-              ) : ultimoErro ? (
-                <p className="text-xs text-red-600">Falha no último parecer: {ultimoErro.errorMessage}</p>
-              ) : (
-                <p className="text-xs text-muted-foreground">
-                  A IA analisa o recorte atual — temas sistêmicos (2+ cartórios), equilíbrio dúvidas vs
-                  bugs, críticos em aberto — e escreve o parecer executivo da carteira.
-                </p>
-              )}
-            </CardContent>
-          </Card>
-
           {/* Lista de chamados do recorte */}
           <Card>
-            <CardHeader className="pb-2">
+            <CardHeader className="px-4 py-2.5">
               <CardTitle className="text-sm font-semibold">
                 Chamados do recorte{" "}
-                <span className="text-muted-foreground font-normal">
-                  ({filtrados.length}
-                  {filtrados.length > 100 ? " — exibindo os 100 mais recentes" : ""})
-                </span>
+                <span className="text-muted-foreground font-normal">({filtrados.length})</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-4 pb-3 pt-0">
               <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 divide-y divide-neutral-100 dark:divide-neutral-800/60 overflow-hidden">
-                {filtrados.slice(0, 100).map((c) => (
+                {paginados.map((c) => (
                   <button
                     key={c.numeroChamado}
                     type="button"
                     onClick={() => setChamadoSelecionado(c)}
-                    className="w-full text-left px-3 py-2 hover:bg-neutral-50 dark:hover:bg-neutral-900/40 transition-colors"
+                    className="w-full text-left px-3 py-1.5 hover:bg-neutral-50 dark:hover:bg-neutral-900/40 transition-colors"
                     title="Ver detalhes do chamado"
                   >
                     <div className="flex items-center justify-between gap-2">
@@ -858,6 +816,111 @@ export default function PosPanorama() {
                   </button>
                 ))}
               </div>
+
+              {/* Paginacao */}
+              {filtrados.length > 0 && (
+                <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground flex-wrap gap-2">
+                  <span className="flex items-center gap-2">
+                    <Select
+                      value={String(porPagina)}
+                      onValueChange={(v) => {
+                        setPorPagina(Number(v));
+                        setPagina(1);
+                      }}
+                    >
+                      <SelectTrigger className="h-7 w-[64px] text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[6, 15, 30, 50].map((n) => (
+                          <SelectItem key={n} value={String(n)}>
+                            {n}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    por página · {(paginaAtual - 1) * porPagina + 1}–
+                    {Math.min(paginaAtual * porPagina, filtrados.length)} de {filtrados.length}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-7 gap-1 text-xs"
+                      disabled={paginaAtual <= 1}
+                      onClick={() => setPagina(paginaAtual - 1)}
+                    >
+                      <ChevronLeft className="h-3.5 w-3.5" /> Anterior
+                    </Button>
+                    <span className="px-2 tabular-nums">
+                      página {paginaAtual} de {totalPaginas}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-7 gap-1 text-xs"
+                      disabled={paginaAtual >= totalPaginas}
+                      onClick={() => setPagina(paginaAtual + 1)}
+                    >
+                      Próxima <ChevronRight className="h-3.5 w-3.5" />
+                    </Button>
+                  </span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Parecer IA da carteira */}
+          <Card>
+            <CardHeader className="px-4 py-2.5 flex flex-row items-center justify-between space-y-0">
+              <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
+                <Sparkles className="h-4 w-4 text-indigo-500" />
+                Parecer da IA — carteira
+              </CardTitle>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 gap-1 text-xs"
+                onClick={handleGerarParecer}
+                disabled={!!parecerAtivo || !workerOnline || filtrados.length === 0}
+                title={
+                  !workerOnline
+                    ? "O gerador da IA está offline no momento"
+                    : parecerAtivo
+                    ? "Aguarde o parecer em andamento"
+                    : "Analisa o recorte atual (temas, cartórios, críticos) e escreve o parecer executivo"
+                }
+              >
+                {parecerAtivo ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                {ultimoParecer ? "Atualizar parecer" : "Gerar parecer"}
+              </Button>
+            </CardHeader>
+            <CardContent className="px-4 pb-3 pt-0">
+              {parecerAtivo ? (
+                <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  {parecerAtivo.progress || "Gerando parecer da carteira…"}
+                </p>
+              ) : ultimoParecer?.resultText ? (
+                <div className="text-sm">
+                  <MarkdownLite text={ultimoParecer.resultText} />
+                  <p className="text-[10px] text-muted-foreground mt-2">
+                    gerado em{" "}
+                    {new Date(ultimoParecer.createdAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}{" "}
+                    — reflete o recorte usado no momento da geração
+                  </p>
+                </div>
+              ) : ultimoErro ? (
+                <p className="text-xs text-red-600">Falha no último parecer: {ultimoErro.errorMessage}</p>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  A IA analisa o recorte atual — temas sistêmicos (2+ cartórios), equilíbrio dúvidas vs
+                  bugs, críticos em aberto — e escreve o parecer executivo da carteira.
+                </p>
+              )}
             </CardContent>
           </Card>
         </>
