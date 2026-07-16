@@ -303,5 +303,8 @@
   "301": "3. Banco de dados",
   "302": "Login",
   "303": "Página 404 (Not Found)",
-  "304": "SimpleMarkdown.tsx"
+  "304": "SimpleMarkdown.tsx",
+  "305": "AuthContext.tsx",
+  "306": "useHomologationEvents.ts",
+  "307": "ProtectedRoute.tsx"
 }

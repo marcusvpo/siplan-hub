@@ -16,6 +16,7 @@ import { LogsTab } from "@/components/ProjectManagement/Tabs/LogsTab";
 import { RoadmapManager } from "@/components/ProjectManagement/RoadmapManager";
 import { EditProjectTab } from "@/components/ProjectManagement/Tabs/EditProjectTab";
 import { Chamado0800Tab } from "@/components/ProjectManagement/Tabs/Chamado0800Tab"; // Tab 0800
+import { PosImplantacaoTab } from "@/components/ProjectManagement/Tabs/PosImplantacaoTab";
 import { ProjectV2 } from "@/types/ProjectV2";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -168,6 +169,12 @@ export default function ProjectDetails() {
                   >
                     Roadmap
                   </TabsTrigger>
+                  <TabsTrigger
+                    value="pos_analysis"
+                    className="h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-2 text-muted-foreground hover:text-primary/80 hover:border-border/50 data-[state=active]:text-foreground transition-all duration-200 whitespace-nowrap"
+                  >
+                    Análise Pós-Implantação
+                  </TabsTrigger>
                   <button
                     type="button"
                     onClick={() => navigate(`/implantadores/transicao?project=${id}`)}
@@ -243,6 +250,15 @@ export default function ProjectDetails() {
                       transition={{ duration: 0.2 }}
                     >
                       <RoadmapManager projectId={project.id} />
+                    </motion.div>
+                  </TabsContent>
+                  <TabsContent value="pos_analysis" className="m-0 border-none p-0 outline-none">
+                    <motion.div
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <PosImplantacaoTab project={project} />
                     </motion.div>
                   </TabsContent>
                   {project && (project.TituloChamado || project.descricaotramite || project.ResponsavelAtividade || project.EtapasProjeto) && (

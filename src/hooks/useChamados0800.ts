@@ -29,6 +29,13 @@ export interface Chamados0800Result {
 }
 
 /**
+ * Naturezas que nao representam dor do cliente no pos e so poluem a lista e a
+ * analise: "Nova implantação" e o chamado interno do proprio projeto.
+ * Comparacao em minusculas.
+ */
+const NATUREZAS_IGNORADAS = ["nova implantação", "nova implantacao"];
+
+/**
  * Normaliza nome de produto para comparacao: minusculas, so alfanumericos.
  * "Orion TN" ≈ "OrionTN"; "Orion REG" ≈ "OrionREG (TDPJ)" (via prefixo);
  * "WEB RI" ≈ "WEBRI".
@@ -130,6 +137,9 @@ export function useChamados0800(
       if (error) throw error;
 
       let chamados = (data ?? []).map(mapChamado);
+      chamados = chamados.filter(
+        (c) => !NATUREZAS_IGNORADAS.includes((c.natureza || "").toLowerCase())
+      );
       // Corte por produto no cliente (valores de Software do Ellevo variam de
       // grafia — "OrionPRO", "OrionREG (TDPJ)" — por isso nao da para filtrar
       // direto no SQL).
