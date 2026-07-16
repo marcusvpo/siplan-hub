@@ -60,11 +60,17 @@ interface JanelaPos {
  *
  * @param inicio corte opcional extra de abertura (yyyy-mm-dd) — filtro do usuário
  * @param fim    corte opcional extra de abertura (yyyy-mm-dd)
+ * @param escopo 'abertos' = só projetos com pós EM ANDAMENTO (tela operacional);
+ *               'todos'   = inclui pós finalizados (Panorama Geral / histórico)
  */
-export function usePosPanorama(inicio: string | null, fim: string | null) {
+export function usePosPanorama(
+  inicio: string | null,
+  fim: string | null,
+  escopo: "abertos" | "todos" = "todos"
+) {
   const hoje = new Date().toISOString().slice(0, 10);
   return useQuery<PosPanoramaData>({
-    queryKey: ["posPanorama", inicio, fim],
+    queryKey: ["posPanorama", inicio, fim, escopo],
     staleTime: 60_000,
     queryFn: async () => {
       // 1. Projetos com pós iniciado
@@ -85,7 +91,8 @@ export function usePosPanorama(inicio: string | null, fim: string | null) {
           fim: p.post_status === "done" && p.post_end_date ? (p.post_end_date as string) : hoje,
           posConcluido: p.post_status === "done",
         }))
-        .filter((j) => /^\d{4,}$/.test(j.ticket));
+        .filter((j) => /^\d{4,}$/.test(j.ticket))
+        .filter((j) => escopo === "todos" || !j.posConcluido);
       if (janelas.length === 0) return { chamados: [], projetosEmPos: 0, projetos: [] };
 
       // 2. Resolve o cliente Ellevo de cada projeto pelo chamado de origem

@@ -64,13 +64,24 @@ const PERIODOS = [
 const norm = (s: string): string =>
   s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 
+interface PanoramaBaseProps {
+  /** 'abertos' = só projetos com pós em andamento; 'todos' = inclui finalizados */
+  escopo: "abertos" | "todos";
+  titulo: string;
+  descricao: string;
+}
+
 /**
- * Panorama Pós-Implantação: visão de carteira dos chamados 0800 que caíram
- * DENTRO da janela de pós de algum projeto (cliente + produto + período — mesmo
- * critério da aba por projeto). Foco em recorrência: o mesmo tema (IA) em
- * vários cartórios indica problema sistêmico, não caso isolado.
+ * Base compartilhada dos panoramas de pós: visão de carteira dos chamados 0800
+ * que caíram DENTRO da janela de pós de algum projeto (cliente + produto +
+ * período — mesmo critério da aba por projeto). Foco em recorrência: o mesmo
+ * tema (IA) em vários cartórios indica problema sistêmico, não caso isolado.
+ *
+ * Duas telas usam esta base:
+ *  - Panorama Pós-Implantação (escopo 'abertos'): operacional, só pós em andamento
+ *  - Panorama Geral (escopo 'todos'): histórico, inclui pós finalizados
  */
-export default function PosPanorama() {
+export function PanoramaBase({ escopo, titulo, descricao }: PanoramaBaseProps) {
   // ----- filtros -----
   const [produto, setProduto] = useState<string>("todos");
   const [natureza, setNatureza] = useState<string>("todas");
@@ -90,7 +101,7 @@ export default function PosPanorama() {
     return [inicio, null];
   }, [periodo, dataInicio, dataFim]);
 
-  const { data, isLoading, error } = usePosPanorama(inicioQuery, fimQuery);
+  const { data, isLoading, error } = usePosPanorama(inicioQuery, fimQuery, escopo);
   const [chamadoSelecionado, setChamadoSelecionado] = useState<ChamadoPanorama | null>(null);
   const [exporting, setExporting] = useState(false);
   const [pagina, setPagina] = useState(1);
@@ -341,12 +352,9 @@ export default function PosPanorama() {
         <div>
           <h1 className="text-xl font-bold flex items-center gap-2">
             <Headset className="h-5 w-5 text-primary" />
-            Panorama Pós-Implantação
+            {titulo}
           </h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Somente chamados abertos <strong>dentro do período de pós</strong> de cada projeto
-            (cliente + produto) — recorrência de temas entre cartórios.
-          </p>
+          <p className="text-xs text-muted-foreground mt-0.5">{descricao}</p>
         </div>
         <span className="flex items-center gap-2">
           {data?.lastSyncedAt && (
@@ -496,7 +504,11 @@ export default function PosPanorama() {
             {[
               { label: "Chamados no recorte", value: String(filtrados.length), icon: Headset },
               { label: "Cartórios envolvidos", value: String(agg.cartorios.length), icon: Building2 },
-              { label: "Projetos com pós", value: String(data.projetosEmPos), icon: FolderKanban },
+              {
+                label: escopo === "abertos" ? "Projetos em pós agora" : "Projetos com pós",
+                value: String(data.projetosEmPos),
+                icon: FolderKanban,
+              },
               {
                 label: "Concluídos",
                 value: `${agg.concluidos} (${Math.round((agg.concluidos / filtrados.length) * 100)}%)`,
@@ -928,5 +940,16 @@ export default function PosPanorama() {
 
       <Chamado0800DetailDialog chamado={chamadoSelecionado} onClose={() => setChamadoSelecionado(null)} />
     </div>
+  );
+}
+
+/** Tela operacional: só projetos com pós EM ANDAMENTO. */
+export default function PosPanorama() {
+  return (
+    <PanoramaBase
+      escopo="abertos"
+      titulo="Panorama Pós-Implantação"
+      descricao="Somente projetos com pós EM ANDAMENTO — chamados abertos dentro do período de pós de cada projeto (cliente + produto)."
+    />
   );
 }
