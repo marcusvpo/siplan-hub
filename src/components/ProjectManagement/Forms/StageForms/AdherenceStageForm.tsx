@@ -8,8 +8,8 @@ import { useProjectFormResponse, useUpsertFormResponse } from "@/hooks/useProjec
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 import { Link, useNavigate } from "react-router-dom";
-import { FileWarning, CheckCircle, ClipboardCheck, ArrowUpRight, AlertTriangle } from "lucide-react";
-
+import { FileWarning, CheckCircle, ClipboardCheck, ArrowUpRight, AlertTriangle, Printer, AlertCircle } from "lucide-react";
+import { getImpactedItems } from "@/utils/adherence-helpers";
 
 interface AdherenceStageFormProps {
   projectId: string;
@@ -74,6 +74,8 @@ export function AdherenceStageForm({
 
   const isFinalized = response?.status === "approved" || response?.status === "approved_with_restrictions" || response?.status === "rejected";
   const isFormLocked = isFinalized || !canEditProjects;
+  const isImpeditivoVerdict = response?.data?.finalVerdict === "Não Aderente / Impeditivo" || response?.status === "rejected";
+  const impeditivoItems = getImpactedItems(activeTemplate?.schema_json, response?.data);
 
   return (
     <div className="col-span-1 md:col-span-2 lg:col-span-3 space-y-4">
@@ -108,40 +110,97 @@ export function AdherenceStageForm({
           </Button>
         </div>
       ) : (
-        <div className="p-3 border border-primary/20 bg-primary/5 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-start gap-2.5">
-            <ClipboardCheck className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-            <div className="space-y-0.5">
-              <h4 className="text-xs font-bold text-foreground">Formulário de Aderência Inicializado</h4>
-              <p className="text-[11px] text-muted-foreground leading-relaxed">
-                O questionário técnico para verificar os gaps operacionais do sistema <strong>{systemType}</strong> está pronto.
-              </p>
-              <div className="flex items-center gap-1.5 mt-1">
-                <span className="text-[9px] text-muted-foreground font-semibold">Status:</span>
-                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border uppercase tracking-wider ${
-                  isFinalized 
-                    ? (response.data?.finalVerdict === "Totalmente Aderente"
-                      ? "bg-green-500/10 text-green-600 border-green-500/20" 
-                      : response.data?.finalVerdict === "Aderente com Restrições"
-                      ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
-                      : "bg-rose-500/10 text-rose-600 border-rose-500/20")
-                    : "bg-neutral-500/10 text-neutral-600 border-neutral-500/20"
-                }`}>
-                  {isFinalized 
-                    ? (response.data?.finalVerdict || "Finalizado") 
-                    : "Rascunho"}
-                </span>
+        <div className="space-y-3">
+          <div className="p-3 border border-primary/20 bg-primary/5 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-start gap-2.5">
+              <ClipboardCheck className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+              <div className="space-y-0.5">
+                <h4 className="text-xs font-bold text-foreground">Formulário de Aderência Inicializado</h4>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  O questionário técnico para verificar os gaps operacionais do sistema <strong>{systemType}</strong> está pronto.
+                </p>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <span className="text-[9px] text-muted-foreground font-semibold">Status:</span>
+                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border uppercase tracking-wider ${
+                    isFinalized 
+                      ? (response.data?.finalVerdict === "Totalmente Aderente"
+                        ? "bg-green-500/10 text-green-600 border-green-500/20" 
+                        : response.data?.finalVerdict === "Aderente com Restrições"
+                        ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
+                        : "bg-rose-500/10 text-rose-600 border-rose-500/20")
+                      : "bg-neutral-500/10 text-neutral-600 border-neutral-500/20"
+                  }`}>
+                    {isFinalized 
+                      ? (response.data?.finalVerdict || "Finalizado") 
+                      : "Rascunho"}
+                  </span>
+                </div>
               </div>
             </div>
+            <div className="flex items-center gap-2 shrink-0 flex-wrap">
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => window.open(`/projects/${projectId}/adherence?print=true`, "_blank")}
+                className="text-xs font-semibold gap-1.5 h-8 px-3"
+              >
+                <Printer className="h-3.5 w-3.5" />
+                Imprimir PDF
+              </Button>
+              <Link to={`/projects/${projectId}/adherence`}>
+                <Button size="sm" className="text-xs font-semibold gap-1.5 h-8 px-3">
+                  Acessar Formulário
+                  <ArrowUpRight className="h-3.5 w-3.5" />
+                </Button>
+              </Link>
+            </div>
           </div>
-          <Link to={`/projects/${projectId}/adherence`} className="shrink-0">
-            <Button size="sm" className="text-xs font-semibold gap-1.5 h-8 px-3">
-              Acessar Formulário
-              <ArrowUpRight className="h-3.5 w-3.5" />
-            </Button>
-          </Link>
+
+          {/* Se a análise for "Não Aderente / Impeditivo", exibir motivo do impedimento e perguntas impeditivas */}
+          {isImpeditivoVerdict && (
+            <div className="p-3.5 border border-rose-500/30 bg-rose-500/5 rounded-lg space-y-3">
+              {/* Motivo do Impedimento */}
+              <div className="space-y-1">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+                  <AlertCircle className="h-3.5 w-3.5" /> Motivo do Impedimento:
+                </span>
+                <p className="text-xs text-foreground bg-background/80 p-2.5 rounded border border-rose-500/20 italic whitespace-pre-wrap">
+                  {response.data?.finalNotes || "Nenhuma justificativa ou parecer final registrado."}
+                </p>
+              </div>
+
+              {/* Perguntas consideradas impeditivo */}
+              <div className="space-y-2">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+                  <FileWarning className="h-3.5 w-3.5" /> Perguntas Consideradas como Impeditivo ({impeditivoItems.length}):
+                </span>
+                {impeditivoItems.length > 0 ? (
+                  <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                    {impeditivoItems.map((item, idx) => (
+                      <div key={idx} className="p-2.5 bg-background/80 border border-rose-500/20 rounded-md text-xs space-y-1 shadow-sm">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-bold text-foreground text-[11px]">{item.questionTitle}</span>
+                          <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 shrink-0">
+                            {item.sectionTitle}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground leading-relaxed">
+                          <strong>Impacto / Detalhes:</strong> {item.detalhes}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-muted-foreground bg-background/80 p-2 rounded border border-rose-500/20 italic">
+                    Nenhuma pergunta individual marcada com impacto no questionário técnico.
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
+
 
       <div className="border-t pt-3 space-y-2.5">
         <div className="flex items-center space-x-2 p-2 bg-neutral-50/50 dark:bg-neutral-900/30 rounded-lg border border-neutral-200 dark:border-neutral-800">
