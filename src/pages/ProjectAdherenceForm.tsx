@@ -27,41 +27,8 @@ import {
   Printer
 } from "lucide-react";
 
-interface ImpactedItem {
-  sectionTitle: string;
-  questionTitle: string;
-  detalhes: string;
-  nivel_impacto?: string;
-}
+import { getImpactedItems, ImpactedItem } from "@/utils/adherence-helpers";
 
-const getImpactedItems = (schema: any, formData: any): ImpactedItem[] => {
-  const items: ImpactedItem[] = [];
-  if (!schema || !schema.properties || !formData) return items;
-
-  const traverse = (currentSchema: any, currentData: any, currentSectionTitle: string) => {
-    if (!currentSchema || !currentSchema.properties || !currentData) return;
-
-    Object.keys(currentSchema.properties).forEach((key) => {
-      const propSchema = currentSchema.properties[key];
-      const propData = currentData[key];
-      if (!propSchema) return;
-
-      if (propSchema.type === "object" && !("impacto" in (propSchema.properties || {}))) {
-        traverse(propSchema, propData, propSchema.title || currentSectionTitle);
-      } else if (propData && propData.impacto === true) {
-        items.push({
-          sectionTitle: currentSectionTitle,
-          questionTitle: propSchema.title || "Pergunta",
-          detalhes: propData.detalhes || "Nenhum detalhe informado.",
-          nivel_impacto: propData.nivel_impacto ?? "SIM",
-        });
-      }
-    });
-  };
-
-  traverse(schema, formData, "Geral");
-  return items;
-};
 
 interface PrintQuestion {
   id: string;

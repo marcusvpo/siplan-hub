@@ -127,6 +127,31 @@ const PageLoader = () => (
   </div>
 );
 
+const ProjectAdherenceRouteWrapper = () => {
+  const isPrintMode = new URLSearchParams(window.location.search).get("print") === "true";
+
+  if (isPrintMode) {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <ProjectAdherenceForm />
+      </Suspense>
+    );
+  }
+
+  return (
+    <ProtectedRoute>
+      <MainLayout>
+        <Suspense fallback={<PageLoader />}>
+          <RequirePermission resource="projects">
+            <ProjectAdherenceForm />
+          </RequirePermission>
+        </Suspense>
+      </MainLayout>
+    </ProtectedRoute>
+  );
+};
+
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
@@ -172,6 +197,11 @@ const App = () => (
                   </Suspense>
                 }
               />
+              <Route
+                path="/projects/:id/adherence"
+                element={<ProjectAdherenceRouteWrapper />}
+              />
+
 
               {/* Admin Routes */}
               <Route
@@ -352,14 +382,7 @@ const App = () => (
                               </RequirePermission>
                             }
                           />
-                          <Route
-                            path="/projects/:id/adherence"
-                            element={
-                              <RequirePermission resource="projects">
-                                <ProjectAdherenceForm />
-                              </RequirePermission>
-                            }
-                          />
+
                           <Route
                             path="/calendar"
                             element={
