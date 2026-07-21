@@ -28,9 +28,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Check, ChevronsUpDown, Plus, Trash2, X } from "lucide-react";
+import { Check, ChevronsUpDown, Plus, Trash2, X, PauseCircle, PlayCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+
 
 interface TabProps {
   project: ProjectV2;
@@ -316,21 +317,48 @@ export function EditProjectTab({ project, onUpdate }: TabProps) {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Status Global <span className="text-[10px] text-muted-foreground font-normal">(Calculado das etapas)</span></Label>
-            <Select
-              value={data.globalStatus}
-              disabled
-            >
-              <SelectTrigger className="bg-muted text-muted-foreground cursor-not-allowed">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="in-progress">Em Andamento</SelectItem>
-                <SelectItem value="done">Concluído</SelectItem>
-                <SelectItem value="blocked">Bloqueado</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label>Status Global <span className="text-[10px] text-muted-foreground font-normal">(Automático / Manual)</span></Label>
+            <div className="flex items-center gap-2">
+              <Select
+                value={data.globalStatus || "in-progress"}
+                onValueChange={(value) => handleChange("globalStatus", value)}
+              >
+                <SelectTrigger className="flex-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="in-progress">Em Andamento</SelectItem>
+                  <SelectItem value="blocked">Pausado / Bloqueado</SelectItem>
+                  <SelectItem value="done">Concluído</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {data.globalStatus === "blocked" ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleChange("globalStatus", "in-progress")}
+                  className="h-10 text-xs font-semibold gap-1.5 border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10 dark:border-emerald-500/30 dark:text-emerald-400 shrink-0"
+                >
+                  <PlayCircle className="h-4 w-4 text-emerald-500" />
+                  Retomar Projeto
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleChange("globalStatus", "blocked")}
+                  className="h-10 text-xs font-semibold gap-1.5 border-amber-500/30 text-amber-600 hover:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-400 shrink-0"
+                >
+                  <PauseCircle className="h-4 w-4 text-amber-500" />
+                  Mover para Pausado
+                </Button>
+              )}
+            </div>
           </div>
+
         </CardContent>
       </Card>
 

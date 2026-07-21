@@ -443,18 +443,22 @@ export function transformToDB(project: Partial<ProjectV2>, currentProject?: Proj
         || "todo";
     };
     
-    const stagesKeys: (keyof ProjectV2['stages'])[] = ["infra", "adherence", "environment", "conversion", "modelosEditor", "implementation", "post"];
-    const hasAnyBlockedStage = stagesKeys.some(key => getStageStatus(key) === "blocked");
-    
-    if (hasAnyBlockedStage) {
-      calculatedGlobalStatus = "blocked";
-    } else if (getStageStatus("post") === "done") {
+    if (getStageStatus("post") === "done") {
       calculatedGlobalStatus = "done";
+    } else if (project.globalStatus === "archived") {
+      calculatedGlobalStatus = "archived";
+    } else if (
+      project.globalStatus === "blocked" || 
+      (currentProject?.globalStatus === "blocked" && project.globalStatus !== "in-progress" && project.globalStatus !== "done")
+    ) {
+      calculatedGlobalStatus = "blocked";
     } else {
       calculatedGlobalStatus = "in-progress";
     }
   }
   if (calculatedGlobalStatus !== undefined) dbRow.global_status = calculatedGlobalStatus;
+
+
 
   if (project.overallProgress !== undefined) dbRow.overall_progress = project.overallProgress;
 
