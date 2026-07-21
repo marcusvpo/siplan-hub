@@ -392,3 +392,105 @@ LIMIT 1;
 
 ROLLBACK;
 ```
+
+---
+
+## 🛡️ 6. Proteção contra Duplicação por Múltiplos Trâmites (Ellevo/0800)
+
+Quando a view do 0800 (`vw_2026_PROCESSO_VENDA_FATURAMENTO_ITEM_ATIVIDADES`) retornar múltiplas linhas por chamado (uma para cada trâmite ou atualização de atividade), siga a configuração abaixo para **barrar duplicações de projetos**:
+
+### 1. Nó Microsoft SQL (Deduplicação via Query)
+Substitua a consulta SQL no n8n para selecionar apenas a versão mais recente por `NumeroChamado`:
+
+```sql
+WITH c AS (
+  SELECT 
+    NomeCliente, 
+    NumeroChamado, 
+    Software, 
+    NumeroPedidoVenda, 
+    TituloChamado, 
+    descricaotramite, 
+    ResponsavelAtividade, 
+    EtapasProjeto, 
+    DataPedidoVenda,
+    ROW_NUMBER() OVER (
+      PARTITION BY NumeroChamado 
+      ORDER BY DataPedidoVenda DESC
+    ) AS rn
+  FROM plataformaellevo..vw_2026_PROCESSO_VENDA_FATURAMENTO_ITEM_ATIVIDADES 
+  WHERE DataPedidoVenda >= '2026-06-10 00:00:00' 
+    AND Software IS NOT NULL 
+    AND TituloChamado IS NOT NULL
+    AND Software IN ('OrionTN', 'OrionPRO', 'OrionREG', 'Orion TN', 'Orion PRO', 'Orion REG', 'WEBRI', 'WEB RI')
+    AND TituloChamado LIKE '%Implantação e Treinamento%'
+)
+SELECT * FROM c WHERE rn = 1;
+```
+
+### 2. Nó Code (JavaScript - Agrupamento Idempotente por `p_ticket_number`)
+Substitua o código do nó **Code** pelo seguinte trecho, que garante que mesmo se múltiplos JSONs chegarem, apenas **1 objeto por chamado** é gerado para o Supabase:
+
+```javascript
+const projectsByTicket = new Map();
+
+for (const item of $input.all()) {
+  const dados = item.json;
+  
+  let systemType = dados.Software || dados.software;
+  const isOrionTarget = systemType && systemType.match(/Orion\s?(TN|PRO|REG)/i);
+  if (!isOrionTarget) continue;
+
+  const titulo = dados.TituloChamado || dados.titulochamado || dados.TITULOCHAMADO;
+  const isCorrectType = titulo && titulo.toLowerCase().includes('implantação e treinamento');
+  if (!isCorrectType) continue;
+
+  systemType = systemType.replace(/Orion\s?(TN|PRO|REG)/i, 'Orion $1');
+
+  let opNumber = null;
+  if (titulo) {
+    const match = titulo.match(/OP:\s*([\d\/]+)/i);
+    if (match && match[1]) {
+      const cleanNumber = match[1].replace(/\//g, '');
+      opNumber = parseInt(cleanNumber, 10);
+    }
+  }
+
+  const ticketNum = String(dados.NumeroChamado || dados.numerochamado);
+  const tramiteDesc = dados.descricaotramite || dados.DescricaoTramite || dados.Descricaotramite || 'Sem descrição';
+  const responsavel = dados.ResponsavelAtividade || dados.responsavelatividade || 'Não atribuído';
+  const etapas = dados.EtapasProjeto || dados.etapasprojeto || 'Sem etapas definidas';
+
+  if (!projectsByTicket.has(ticketNum)) {
+    projectsByTicket.set(ticketNum, {
+      p_ticket_number: ticketNum,
+      p_client_name: dados.NomeCliente || dados.nomecliente,
+      p_system_type: systemType,
+      p_sales_order_number: dados.NumeroPedidoVenda ? parseInt(dados.NumeroPedidoVenda, 10) : null,
+      p_op_number: opNumber,
+      p_titulo_chamado: titulo || 'Título não preenchido no 0800',
+      p_descricao_tramite: tramiteDesc,
+      p_responsavel_atividade: responsavel,
+      p_etapas_projeto: etapas,
+      p_project_leader: 'Bruno Fernandes'
+    });
+  }
+}
+
+return Array.from(projectsByTicket.values()).map(data => ({ json: data }));
+```
+
+### 3. Chamada da RPC `upsert_project_from_0800` no Supabase (Nó HTTP Request)
+No nó seguinte do n8n (Supabase / HTTP Request), em vez de fazer um `INSERT` direto em `projects`, faça uma chamada `POST` para a RPC idempotente:
+- **URL**: `https://<SEU-SUPABASE-ID>.supabase.co/rest/v1/rpc/upsert_project_from_0800`
+- **Method**: `POST`
+- **Headers**:
+  - `apikey`: `<SERVICE_ROLE_KEY>`
+  - `Authorization`: `Bearer <SERVICE_ROLE_KEY>`
+  - `Content-Type`: `application/json`
+- **Body**:
+```json
+{{ $json }}
+```
+Com essa estrutura, novos chamados criam o projeto e novos trâmites de chamados existentes são gravados automaticamente na linha do tempo (`timeline_events`) sem duplicar projetos.
+
