@@ -68,8 +68,9 @@ export function TimePerStageChart({ projects }: TimePerStageChartProps) {
   ];
 
   const data = stages.map((stage) => {
-    // Filter projects that have BOTH start and end dates for this stage
+    // Filter projects that have BOTH start and end dates for this stage (excluding finalized and Modelos TN)
     const projectsWithCompleteDates = projects.filter((p) => {
+      if (p.systemType === "Modelos TN" || p.globalStatus === "done" || p.globalStatus === "archived" || p.globalStatus === "canceled") return false;
       const { startDate, endDate } = getStartAndEndDates(p, stage.key);
       // Only include if BOTH dates are present
       return startDate !== null && endDate !== null;

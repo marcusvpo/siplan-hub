@@ -1,20 +1,25 @@
 import { useMemo } from "react";
 import { ProjectV2, KPIData } from "@/types/ProjectV2";
 
-export const useKPIs = (projects: ProjectV2[]): KPIData => {
+export const useKPIs = (rawProjects: ProjectV2[]): KPIData => {
   return useMemo(() => {
+    const projects = rawProjects.filter((p) => p.systemType !== "Modelos TN");
     const totalProjects = projects.length;
-    const criticalProjects = projects.filter((p) => p.healthScore === "critical" && p.globalStatus !== "blocked").length;
-    const blockedProjects = projects.filter((p) => p.globalStatus === "blocked").length;
-    const atRiskProjects = projects.filter((p) => p.healthScore === "warning").length;
+    const isFinalized = (p: ProjectV2) =>
+      p.globalStatus === "done" || p.globalStatus === "archived" || p.globalStatus === "canceled";
+
+    const criticalProjects = projects.filter((p) => !isFinalized(p) && p.healthScore === "critical" && p.globalStatus !== "blocked").length;
+    const blockedProjects = projects.filter((p) => !isFinalized(p) && p.globalStatus === "blocked").length;
+    const atRiskProjects = projects.filter((p) => !isFinalized(p) && p.healthScore === "warning").length;
     const completedProjects = projects.filter((p) => p.globalStatus === "done").length;
 
     const completionRate = totalProjects > 0 ? (completedProjects / totalProjects) * 100 : 0;
 
-    // Calcular tempo médio por etapa
+    // Calcular tempo médio por etapa para projetos ativos
     const getAvgStageTime = (prefix: string) => {
       const completedStages = projects.filter(
         (p) => 
+          !isFinalized(p) &&
           (p.stages as any)[prefix]?.status === "done" && 
           (p.stages as any)[prefix]?.startDate && 
           (p.stages as any)[prefix]?.endDate
@@ -40,10 +45,8 @@ export const useKPIs = (projects: ProjectV2[]): KPIData => {
       implementation: getAvgStageTime("implementation"),
     };
 
-    // Taxa de sucesso: % de projetos que estão "OK" ou "Concluídos"
-    // Mudança: Projetos Concluídos são considerados Sucesso se não estiverem bloqueados ou deletados.
-    // Projetos Ativos são considerados Sucesso se healthScore === 'ok'
-    const activeProjects = projects.filter(p => p.globalStatus !== 'done');
+    // Taxa de sucesso: % de projetos ativos que estão "OK" + Concluídos
+    const activeProjects = projects.filter(p => !isFinalized(p));
     const successfulActive = activeProjects.filter(p => p.healthScore === 'ok').length;
     
     const successfulDone = completedProjects; // Se concluiu, é sucesso por definição
@@ -80,5 +83,5 @@ export const useKPIs = (projects: ProjectV2[]): KPIData => {
       successRate,
       avgStageTime,
     };
-  }, [projects]);
+  }, [rawProjects]);
 };

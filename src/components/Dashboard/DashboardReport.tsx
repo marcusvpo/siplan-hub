@@ -101,7 +101,7 @@ export const DashboardReport = ({ projects, kpis }: DashboardReportProps) => {
               <div className="w-4 h-[2px] bg-rose-500" /> Alertas de Atenção Imediata
             </h3>
             <div className="space-y-2">
-              {projects.filter(p => p.healthScore === 'critical').slice(0, 5).map((project, i) => (
+              {projects.filter(p => p.systemType !== 'Modelos TN' && p.healthScore === 'critical' && p.globalStatus !== 'done' && p.globalStatus !== 'archived' && p.globalStatus !== 'canceled').slice(0, 5).map((project, i) => (
                 <div key={i} className="p-4 rounded-xl border-l-4 border-rose-500 bg-rose-50 flex justify-between items-center shadow-sm">
                   <div>
                     <p className="text-xs font-bold text-slate-900">{project.clientName}</p>
@@ -133,7 +133,7 @@ export const DashboardReport = ({ projects, kpis }: DashboardReportProps) => {
             </tr>
           </thead>
           <tbody>
-            {projects.slice(0, 100).map((project, i) => {
+            {projects.filter(p => p.systemType !== 'Modelos TN' && p.globalStatus !== 'done' && p.globalStatus !== 'archived' && p.globalStatus !== 'canceled').slice(0, 100).map((project, i) => {
               const stages = Object.entries(project.stages);
               const currentStage = stages.find(([_, stage]) => stage.status === "in-progress")?.[0] || "-";
               
@@ -156,8 +156,8 @@ export const DashboardReport = ({ projects, kpis }: DashboardReportProps) => {
             })}
           </tbody>
         </table>
-        {projects.length > 100 && (
-          <p className="text-[9px] italic text-slate-400 mt-4">* Exibindo 100 de {projects.length} projetos ativos no sistema.</p>
+        {projects.filter(p => p.systemType !== 'Modelos TN' && p.globalStatus !== 'done' && p.globalStatus !== 'archived' && p.globalStatus !== 'canceled').length > 100 && (
+          <p className="text-[9px] italic text-slate-400 mt-4">* Exibindo 100 de {projects.filter(p => p.systemType !== 'Modelos TN' && p.globalStatus !== 'done' && p.globalStatus !== 'archived' && p.globalStatus !== 'canceled').length} projetos ativos no sistema.</p>
         )}
         
         {/* Footer clearance for last page */}

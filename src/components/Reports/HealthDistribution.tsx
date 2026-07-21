@@ -7,12 +7,15 @@ interface HealthDistributionProps {
 }
 
 export function HealthDistribution({ projects }: HealthDistributionProps) {
-  const ok = projects.filter((p) => p.healthScore === "ok").length;
-  const warning = projects.filter((p) => p.healthScore === "warning").length;
-  const critical = projects.filter(
+  const activeProjects = projects.filter(
+    (p) => p.systemType !== "Modelos TN" && p.globalStatus !== "done" && p.globalStatus !== "archived" && p.globalStatus !== "canceled"
+  );
+  const ok = activeProjects.filter((p) => p.healthScore === "ok").length;
+  const warning = activeProjects.filter((p) => p.healthScore === "warning").length;
+  const critical = activeProjects.filter(
     (p) => p.healthScore === "critical" && p.globalStatus !== "blocked"
   ).length;
-  const total = projects.length;
+  const total = activeProjects.length;
 
   const getPercentage = (count: number) =>
     total > 0 ? Math.round((count / total) * 100) : 0;
