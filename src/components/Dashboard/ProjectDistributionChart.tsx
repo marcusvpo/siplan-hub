@@ -26,6 +26,9 @@ export const ProjectDistributionChart = ({
   };
 
   projects.forEach((project) => {
+    if (project.systemType === "Modelos TN" || project.globalStatus === "done" || project.globalStatus === "archived" || project.globalStatus === "canceled") {
+      return;
+    }
     const stages = Object.entries(project.stages);
     const currentStage =
       stages.find(([_, stage]) => stage.status === "in-progress")?.[0] ||

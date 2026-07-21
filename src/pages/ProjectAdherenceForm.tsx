@@ -132,7 +132,38 @@ interface PrintGeneralField {
   options?: string[];
 }
 
-const getGeneralFields = (schema: any, formData: any): PrintGeneralField[] => {
+const isImageUrl = (val: any): boolean => {
+  if (typeof val !== "string") return false;
+  const lower = val.toLowerCase();
+  return (
+    lower.startsWith("http://") ||
+    lower.startsWith("https://") ||
+    lower.includes("/storage/v1/object/public/")
+  );
+};
+
+export const extractUrlsFromValue = (val: any): string[] => {
+  if (!val) return [];
+  if (Array.isArray(val)) {
+    return val.filter((item) => isImageUrl(item));
+  }
+  if (typeof val === "string") {
+    try {
+      const parsed = JSON.parse(val);
+      if (Array.isArray(parsed)) {
+        return parsed.filter((item) => isImageUrl(item));
+      }
+    } catch {
+      // not JSON
+    }
+    if (isImageUrl(val)) {
+      return val.split(",").map((s) => s.trim()).filter((s) => isImageUrl(s));
+    }
+  }
+  return [];
+};
+
+const getGeneralFields = (schema: any, formData: any, uiSchema?: any): PrintGeneralField[] => {
   const fields: PrintGeneralField[] = [];
   if (!schema || !schema.properties) return fields;
   
@@ -147,10 +178,13 @@ const getGeneralFields = (schema: any, formData: any): PrintGeneralField[] => {
       
     if (!isSection) {
       let type = propSchema.type;
-      if (propSchema.type === "array" && (propSchema as any).items?.type === "string") {
-        type = "checkboxes";
-      } else if (propSchema.type === "array" && (propSchema as any).items?.type === "object") {
+      const uiWidget = uiSchema?.[key]?.["ui:widget"];
+      const valUrls = extractUrlsFromValue(data[key]);
+
+      if (uiWidget === "imageUpload" || valUrls.length > 0 || (propSchema.type === "array" && (propSchema as any).items?.type === "object")) {
         type = "images";
+      } else if (propSchema.type === "array" && (propSchema as any).items?.type === "string") {
+        type = "checkboxes";
       }
       
       fields.push({
@@ -408,7 +442,7 @@ export default function ProjectAdherenceForm() {
 
   if (isPrintMode) {
     const printSections = getPrintSections(activeTemplate.schema_json, localFormData);
-    const generalFields = getGeneralFields(activeTemplate.schema_json, localFormData);
+    const generalFields = getGeneralFields(activeTemplate.schema_json, localFormData, activeTemplate.ui_json);
     const impactedItems = getImpactedItems(activeTemplate.schema_json, localFormData);
 
     return (
@@ -535,16 +569,17 @@ export default function ProjectAdherenceForm() {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-xs">
               {generalFields.map((field) => {
-                if (field.type === "images") {
-                  const urls = Array.isArray(field.value) ? field.value : [];
-                  if (urls.length === 0) return null;
+                const urls = extractUrlsFromValue(field.value);
+                if (field.type === "images" || urls.length > 0) {
+                  const displayUrls = urls.length > 0 ? urls : (Array.isArray(field.value) ? field.value : []);
+                  if (displayUrls.length === 0) return null;
                   return (
                     <div key={field.key} className="col-span-1 md:col-span-2 space-y-2 mt-2">
                       <span className="text-muted-foreground block text-[10px] uppercase font-bold tracking-wider">{field.title}</span>
-                      <div className="grid grid-cols-3 gap-3">
-                        {urls.map((url, idx) => (
-                          <div key={idx} className="border rounded-md overflow-hidden aspect-square bg-slate-100">
-                            <img src={url} alt={`Impressora ${idx + 1}`} className="w-full h-full object-cover" />
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                        {displayUrls.map((url, idx) => (
+                          <div key={idx} className="border rounded-md overflow-hidden aspect-square bg-slate-100 shadow-sm">
+                            <img src={url} alt={`${field.title} ${idx + 1}`} className="w-full h-full object-cover" />
                           </div>
                         ))}
                       </div>

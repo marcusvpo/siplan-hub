@@ -6,7 +6,8 @@ interface StatusDistributionProps {
   projects: ProjectV2[];
 }
 
-export function StatusDistribution({ projects }: StatusDistributionProps) {
+export function StatusDistribution({ projects: rawProjects }: StatusDistributionProps) {
+  const projects = rawProjects.filter((p) => p.systemType !== "Modelos TN");
   const inProgress = projects.filter(
     (p) => p.globalStatus === "in-progress"
   ).length;

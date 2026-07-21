@@ -18,7 +18,7 @@ export const TimelineChart = ({ projects }: TimelineChartProps) => {
 
   const visibleProjects = projects
     .filter((p) => {
-      if (p.globalStatus === "archived") return false;
+      if (p.systemType === "Modelos TN" || p.globalStatus === "archived" || p.globalStatus === "done" || p.globalStatus === "canceled") return false;
       const stages = Object.entries(p.stages);
       const currentStage = stages.find(([_, stage]) => stage.status === "in-progress")?.[0];
       return currentStage === "implementation" || currentStage === "post";

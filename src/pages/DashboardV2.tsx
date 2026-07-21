@@ -25,7 +25,8 @@ import html2canvas from "html2canvas";
 import { DashboardReport } from "@/components/Dashboard/DashboardReport";
 
 export default function DashboardV2() {
-  const { projects, isLoading } = useProjectsV2();
+  const { projects: rawProjects, isLoading } = useProjectsV2();
+  const projects = rawProjects.filter((p) => p.systemType !== "Modelos TN");
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -78,7 +79,7 @@ export default function DashboardV2() {
 
 
   const criticalAlerts = projects
-    .filter((p) => p.healthScore === "critical" && p.globalStatus !== "blocked")
+    .filter((p) => p.healthScore === "critical" && p.globalStatus !== "blocked" && p.globalStatus !== "done" && p.globalStatus !== "archived" && p.globalStatus !== "canceled")
     .slice(0, 5);
 
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);

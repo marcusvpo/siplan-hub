@@ -17,6 +17,8 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
+import { hasAdherenceGap } from "@/utils/adherence-helpers";
+
 interface IndividualProjectReportProps {
   projects: ProjectV2[];
 }
@@ -38,12 +40,12 @@ export function IndividualProjectReport({
     if (!selectedProject) return [];
 
     const list = [];
-    const gaps = selectedProject.stages.adherence.hasProductGap;
+    const gaps = hasAdherenceGap(selectedProject);
     if (gaps) {
       list.push({
         type: "warning",
-        title: "Gaps de Produto",
-        desc: "Este projeto possui gaps de produto identificados na aderência. Isso pode aumentar o risco de atraso na Implantação.",
+        title: "Gaps de Aderência",
+        desc: "Este projeto possui gaps ou impedimentos/bloqueios identificados na etapa de Aderência.",
       });
     }
 

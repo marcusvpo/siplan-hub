@@ -339,7 +339,22 @@ const CustomImageUploadWidget = (props: WidgetProps) => {
   const [isUploading, setIsUploading] = React.useState(false);
   const projectId = formContext?.projectId || "global";
 
-  const urls = Array.isArray(value) ? value : [];
+  const urls = React.useMemo(() => {
+    if (!value) return [];
+    if (Array.isArray(value)) return value.filter((v): v is string => typeof v === "string" && v.length > 0);
+    if (typeof value === "string") {
+      try {
+        const parsed = JSON.parse(value);
+        if (Array.isArray(parsed)) return parsed.filter((v): v is string => typeof v === "string" && v.length > 0);
+      } catch {
+        // Not JSON
+      }
+      if (value.startsWith("http://") || value.startsWith("https://") || value.includes("/storage/")) {
+        return value.split(",").map(s => s.trim()).filter(s => s.length > 0);
+      }
+    }
+    return [];
+  }, [value]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;

@@ -1,17 +1,19 @@
 import { ProjectV2 } from "@/types/ProjectV2";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangle, FileWarning } from "lucide-react";
+import { hasAdherenceGap } from "@/utils/adherence-helpers";
 
 interface AdherenceGapCardProps {
   projects: ProjectV2[];
 }
 
 export function AdherenceGapCard({ projects }: AdherenceGapCardProps) {
-  const projectsWithGap = projects.filter(
-    (p) => p.stages.adherence.hasProductGap === true
+  const activeProjects = projects.filter(
+    (p) => p.systemType !== "Modelos TN" && p.globalStatus !== "done" && p.globalStatus !== "archived" && p.globalStatus !== "canceled"
   );
+  const projectsWithGap = activeProjects.filter(hasAdherenceGap);
   const gapCount = projectsWithGap.length;
-  const total = projects.length;
+  const total = activeProjects.length;
   const gapPercentage = total > 0 ? Math.round((gapCount / total) * 100) : 0;
 
   return (

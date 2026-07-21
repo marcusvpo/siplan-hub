@@ -93,10 +93,28 @@ export default function CommercialBlockers() {
     }
   };
 
+  // Helper to check if project is finalized/concluded
+  const isFinalizedProject = (project: Project) => {
+    const gStatus = (project.global_status || "").toLowerCase();
+    const status = ((project as any).status || "").toLowerCase();
+    return (
+      gStatus === "done" ||
+      gStatus === "archived" ||
+      gStatus === "canceled" ||
+      gStatus === "concluded" ||
+      status === "concluded" ||
+      status === "finalizado" ||
+      status === "done"
+    );
+  };
+
   // Filter projects logic
   const blockedProjects =
     projectsWithClients
       ?.filter((project) => {
+        if (project.system_type === "Modelos TN") return false;
+        if (isFinalizedProject(project)) return false;
+
         const blockers = getBlockers(project);
         if (blockers.length === 0) return false;
 

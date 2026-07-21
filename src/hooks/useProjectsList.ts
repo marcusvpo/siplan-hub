@@ -36,7 +36,7 @@ export const useProjectsList = (
           id, client_name, ticket_number, system_type, global_status, updated_at, 
           project_leader, client_primary_contact, overall_progress, priority, is_deleted, created_at,
           infra_status, infra_start_date, infra_end_date, infra_responsible,
-          adherence_status, adherence_start_date, adherence_end_date, adherence_responsible,
+          adherence_status, adherence_start_date, adherence_end_date, adherence_responsible, adherence_has_product_gap, adherence_gap_description,
           environment_status, environment_start_date, environment_end_date, environment_responsible,
           conversion_status, conversion_start_date, conversion_end_date, conversion_sent_at, conversion_finished_at, conversion_responsible,
           modelos_editor_status, modelos_editor_start_date, modelos_editor_end_date, modelos_editor_responsible,
@@ -100,6 +100,8 @@ interface ProjectRow {
     priority: string; 
     infra_status?: string;
     adherence_status?: string;
+    adherence_has_product_gap?: boolean;
+    adherence_gap_description?: string;
     environment_status?: string;
     conversion_status?: string;
     modelos_editor_status?: string;
@@ -153,7 +155,9 @@ function userProjectsListTransform(row: ProjectRow): Partial<ProjectV2> {
                 status: row.adherence_status || 'todo',
                 startDate: row.adherence_start_date ? new Date(row.adherence_start_date as string) : undefined,
                 endDate: row.adherence_end_date ? new Date(row.adherence_end_date as string) : undefined,
-                responsible: row.adherence_responsible as string | undefined
+                responsible: row.adherence_responsible as string | undefined,
+                hasProductGap: Boolean(row.adherence_has_product_gap),
+                gapDescription: (row.adherence_gap_description as string) || undefined
             } as AdherenceStageV2,
             environment: { 
                 status: row.environment_status || 'todo',

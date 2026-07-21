@@ -24,13 +24,14 @@ export default function Reports() {
     );
   }
 
-  // Extract unique systems from actual projects (dynamic filter)
+  // Extract unique systems from actual projects (dynamic filter, excluding Modelos TN)
+  const projectsWithoutModelosTN = projects.filter((p) => p.systemType !== "Modelos TN");
   const systems = Array.from(
-    new Set(projects.map((p) => p.systemType).filter(Boolean))
+    new Set(projectsWithoutModelosTN.map((p) => p.systemType).filter(Boolean))
   ).sort();
 
   // Apply filters
-  const filteredProjects = projects.filter((project) => {
+  const filteredProjects = projectsWithoutModelosTN.filter((project) => {
     const matchesSystem =
       systemFilter === "all" || project.systemType === systemFilter;
 
@@ -109,7 +110,7 @@ export default function Reports() {
         </TabsContent>
 
         <TabsContent value="individual" className="m-0 animate-in fade-in slide-in-from-right-4 duration-500">
-          <IndividualProjectReport projects={projects} />
+          <IndividualProjectReport projects={projectsWithoutModelosTN} />
         </TabsContent>
       </Tabs>
     </div>

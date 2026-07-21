@@ -29,6 +29,7 @@ export const StatusChart = ({ projects }: StatusChartProps) => {
   };
 
   projects.forEach((project) => {
+    if (project.systemType === "Modelos TN") return;
     if (project.globalStatus in statusCount) {
       statusCount[project.globalStatus]++;
     }
