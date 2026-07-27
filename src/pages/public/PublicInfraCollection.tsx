@@ -453,8 +453,13 @@ export default function PublicInfraCollection() {
   };
 
   // Extract systemCount and systemsList from public project payload
-  const systemCount = project?.system_count || 1;
-  const systemsList: string[] = project?.systems_list || (project?.system_type ? [project.system_type] : []);
+  const rawSystemsList: string[] = Array.isArray(project?.systems_list) 
+    ? project.systems_list.filter((s: unknown): s is string => typeof s === "string" && s.trim() !== "") 
+    : [];
+  const systemsList: string[] = rawSystemsList.length > 0 
+    ? Array.from(new Set(rawSystemsList)) 
+    : (project?.system_type ? [project.system_type] : []);
+  const systemCount = Math.max(systemsList.length, project?.system_count || 1);
 
   // Submit Final
   const handleSubmitData = async () => {
@@ -663,7 +668,7 @@ export default function PublicInfraCollection() {
                 <Clock className="h-5 w-5 text-indigo-600" />
                 <div className="text-left">
                   <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">
-                    {systemCount > 1 ? `Sistemas Pretendidos (${systemCount})` : "Sistema Pretendido"}
+                    {systemsList.length > 1 ? `Sistemas Pretendidos (${systemsList.length})` : "Sistema Pretendido"}
                   </span>
                   <span className="text-sm font-semibold text-slate-900">
                     {systemsList.length > 0 ? systemsList.join(" + ") : (project.system_type || "Orion TN")}
