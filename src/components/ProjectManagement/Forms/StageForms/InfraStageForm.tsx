@@ -214,6 +214,11 @@ export function InfraStageForm({
     new Set(sameClientProjects.map((p) => p.systemType).filter(Boolean))
   );
 
+  // Deterministic canonical project ID for client's single shared public link
+  const canonicalProjectId = sameClientProjects.length > 0
+    ? [...sameClientProjects].sort((a, b) => a.id.localeCompare(b.id))[0].id
+    : projectId;
+
   const handleUpdateWithSync = (updates: Partial<InfraStageV2>) => {
     onUpdate(updates);
 
@@ -1227,7 +1232,7 @@ export function InfraStageForm({
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  const link = `${window.location.origin}/public/infra-coleta/${projectId}`;
+                  const link = `${window.location.origin}/public/infra-coleta/${canonicalProjectId}`;
                   navigator.clipboard.writeText(link);
                   toast({
                     title: "Link de Coleta Copiado",

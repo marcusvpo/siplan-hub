@@ -19,12 +19,24 @@ BEGIN
 
   -- Get all active system types and total count for the same client (case insensitive)
   SELECT 
-    COALESCE(jsonb_agg(DISTINCT system_type), '[]'::jsonb),
-    COUNT(DISTINCT id)
+    COALESCE(
+      jsonb_agg(DISTINCT sys) FILTER (WHERE sys IS NOT NULL AND TRIM(sys) != ''), 
+      '[]'::jsonb
+    ),
+    COUNT(DISTINCT id_val)
   INTO v_systems_list, v_system_count
-  FROM public.projects
-  WHERE LOWER(TRIM(client_name)) = LOWER(TRIM(project_record.client_name))
-    AND is_deleted = false;
+  FROM (
+    SELECT id AS id_val, system_type AS sys FROM public.projects 
+    WHERE LOWER(TRIM(client_name)) = LOWER(TRIM(project_record.client_name)) 
+      AND is_deleted = false 
+      AND system_type IS NOT NULL 
+      AND TRIM(system_type) != ''
+    UNION
+    SELECT id AS id_val, UNNEST(products) AS sys FROM public.projects 
+    WHERE LOWER(TRIM(client_name)) = LOWER(TRIM(project_record.client_name)) 
+      AND is_deleted = false 
+      AND products IS NOT NULL
+  ) s;
 
   IF v_system_count IS NULL OR v_system_count < 1 THEN
     v_system_count := 1;
