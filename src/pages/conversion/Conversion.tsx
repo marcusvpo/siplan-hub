@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { normalizeText } from "@/lib/utils";
 import {
   Database,
   RefreshCw,
@@ -199,11 +200,12 @@ export default function Conversion() {
 
   // Filter queue items
   const filterItems = (items: ConversionQueueItem[]) => {
+    const normQuery = normalizeText(searchQuery);
     return items.filter((item) => {
       const matchesSearch =
-        !searchQuery ||
-        item.clientName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.ticketNumber?.toLowerCase().includes(searchQuery.toLowerCase());
+        !normQuery ||
+        normalizeText(item.clientName).includes(normQuery) ||
+        normalizeText(item.ticketNumber).includes(normQuery);
       const matchesStatus =
         statusFilter === "all" || item.queueStatus === statusFilter;
       const matchesSystem =
@@ -214,11 +216,12 @@ export default function Conversion() {
 
   // Filter queue items for Kanban (ignoring statusFilter)
   const filterKanbanItems = (items: ConversionQueueItem[]) => {
+    const normQuery = normalizeText(searchQuery);
     return items.filter((item) => {
       const matchesSearch =
-        !searchQuery ||
-        item.clientName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.ticketNumber?.toLowerCase().includes(searchQuery.toLowerCase());
+        !normQuery ||
+        normalizeText(item.clientName).includes(normQuery) ||
+        normalizeText(item.ticketNumber).includes(normQuery);
       const matchesSystem =
         systemFilter === "all" || item.systemType === systemFilter;
       return matchesSearch && matchesSystem;

@@ -1,5 +1,6 @@
 // legacy import removed
 import { useState } from "react";
+import { normalizeText } from "@/lib/utils";
 import { ProjectV2 } from "@/types/ProjectV2";
 import {
     Card,
@@ -63,9 +64,11 @@ export default function OrionTNProjects() {
     }
 
     // Filter and Paginate
+    const normQuery = normalizeText(searchQuery);
     const filteredProjects = orionTNProjects.filter(p =>
-        p.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.ticketNumber?.toLowerCase().includes(searchQuery.toLowerCase())
+        !normQuery ||
+        normalizeText(p.clientName).includes(normQuery) ||
+        normalizeText(p.ticketNumber).includes(normQuery)
     );
 
     const totalPages = Math.ceil(filteredProjects.length / pageSize);

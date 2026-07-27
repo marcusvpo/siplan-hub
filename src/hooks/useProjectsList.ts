@@ -46,11 +46,6 @@ export const useProjectsList = (
         `) 
         .eq("is_deleted", false);
 
-      // Apply Search
-      if (searchQuery) {
-        query = query.or(`client_name.ilike.%${searchQuery}%,ticket_number.ilike.%${searchQuery}%`);
-      }
-
       // Apply View Preset (Server-side filtering for proper performance)
       if (viewPreset === "post") {
         query = query.eq("post_status", "in-progress");
