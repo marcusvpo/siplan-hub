@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import { AdvancedFilters } from "./AdvancedFilters";
 import { useFilterStore } from "@/stores/filterStore";
-import { cn } from "@/lib/utils";
+import { cn, normalizeText } from "@/lib/utils";
 
 export function ProjectGrid() {
   const {
@@ -107,13 +107,16 @@ export function ProjectGrid() {
 
   // Filter and Sort Logic
   const filteredAndSortedProjects = useMemo(() => {
+    const normQuery = normalizeText(searchQuery);
+
     let result = projects.filter((project) => {
       // Search filter
       const clientName = project.clientName || "";
       const ticketNumber = project.ticketNumber || "";
       const matchesSearch =
-        clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        ticketNumber.toLowerCase().includes(searchQuery.toLowerCase());
+        !normQuery ||
+        normalizeText(clientName).includes(normQuery) ||
+        normalizeText(ticketNumber).includes(normQuery);
 
       // View preset (status) filter
       let matchesPreset = true;
