@@ -48,4 +48,20 @@ Intel(R) Core(TM) i5-9500 CPU @ 3.00GHz
     const res3 = checkServerRequirements({ processor: "Intel(R) Core(TM) i5-9500 CPU @ 3.00GHz" }, 5);
     expect(res3.meets).toBe(true); // Should not report low core count error since it cannot extract a valid small core number
   });
+
+  it("should multiply server CPU and RAM requirements when client has multiple systems", () => {
+    // 5 workstations, 1 system -> RAM base 20 GB, Cores base 6
+    // With 2 systems -> RAM min 40 GB, Cores min 12
+    const singleSystem = checkServerRequirements({ memory: "32 GB", cores: "8" }, 5, 1);
+    expect(singleSystem.meets).toBe(true);
+
+    const dualSystem = checkServerRequirements({ memory: "32 GB", cores: "8" }, 5, 2);
+    expect(dualSystem.meets).toBe(false);
+    expect(dualSystem.issues.some(i => i.includes("Mínimo de 40 GB recomendado"))).toBe(true);
+    expect(dualSystem.issues.some(i => i.includes("Mínimo recomendado de 12 núcleos"))).toBe(true);
+
+    // With 48 GB RAM and 16 cores -> Meets 2 systems requirement
+    const dualSystemPass = checkServerRequirements({ memory: "48 GB", cores: "16" }, 5, 2);
+    expect(dualSystemPass.meets).toBe(true);
+  });
 });
