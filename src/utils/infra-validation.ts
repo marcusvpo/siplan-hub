@@ -93,9 +93,14 @@ export const checkWorkstationRequirements = (station: WorkstationInfo) => {
   };
 };
 
-export const checkServerRequirements = (server: ServerInfo, workstationsCount: number) => {
+export const checkServerRequirements = (
+  server: ServerInfo,
+  workstationsCount: number,
+  systemCount: number = 1
+) => {
   const issues: string[] = [];
   const count = workstationsCount || 0;
+  const sysCount = Math.max(1, systemCount || 1);
 
   // CPU cores check
   let cores: number | null = null;
@@ -122,9 +127,11 @@ export const checkServerRequirements = (server: ServerInfo, workstationsCount: n
   }
 
   if (cores !== null) {
-    const minCores = count > 15 ? 8 : 6;
+    const baseMinCores = count > 15 ? 8 : 6;
+    const minCores = baseMinCores * sysCount;
     if (cores < minCores) {
-      issues.push(`Processador com ${cores} núcleos. Mínimo recomendado de ${minCores} núcleos para ${count} estações.`);
+      const sysLabel = sysCount > 1 ? ` (${sysCount} sistemas x ${baseMinCores} núcleos)` : "";
+      issues.push(`Processador com ${cores} núcleos. Mínimo recomendado de ${minCores} núcleos para ${count} estações${sysLabel}.`);
     }
   }
 
@@ -133,13 +140,16 @@ export const checkServerRequirements = (server: ServerInfo, workstationsCount: n
     const ramMatch = server.memory.match(/(\d+)/);
     if (ramMatch) {
       const ram = parseInt(ramMatch[1]);
-      let minRam = 20;
-      if (count <= 5) minRam = 20;
-      else if (count <= 10) minRam = 24;
-      else minRam = 48; // > 10 stations requires 48GB as per spreadsheet rules
+      let baseMinRam = 20;
+      if (count <= 5) baseMinRam = 20;
+      else if (count <= 10) baseMinRam = 24;
+      else baseMinRam = 48; // > 10 stations requires 48GB as per spreadsheet rules
+
+      const minRam = baseMinRam * sysCount;
 
       if (ram < minRam) {
-        issues.push(`Memória RAM baixa (${ram} GB). Mínimo de ${minRam} GB recomendado para ${count} estações.`);
+        const sysLabel = sysCount > 1 ? ` (${sysCount} sistemas x ${baseMinRam} GB)` : "";
+        issues.push(`Memória RAM baixa (${ram} GB). Mínimo de ${minRam} GB recomendado para ${count} estações${sysLabel}.`);
       }
     }
   }

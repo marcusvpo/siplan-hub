@@ -452,6 +452,10 @@ export default function PublicInfraCollection() {
     });
   };
 
+  // Extract systemCount and systemsList from public project payload
+  const systemCount = project?.system_count || 1;
+  const systemsList: string[] = project?.systems_list || (project?.system_type ? [project.system_type] : []);
+
   // Submit Final
   const handleSubmitData = async () => {
     if (workstations.length === 0 && servers.length === 0) {
@@ -486,7 +490,7 @@ export default function PublicInfraCollection() {
     let calculatedServerStatus: string | null = null;
     if (servers.length > 0) {
       const okCount = servers.filter(srv => {
-        return checkServerRequirements(srv, workstationsCount).meets;
+        return checkServerRequirements(srv, workstationsCount, systemCount).meets;
       }).length;
       const failCount = servers.length - okCount;
 
@@ -658,8 +662,12 @@ export default function PublicInfraCollection() {
               <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl flex items-center gap-3 shrink-0">
                 <Clock className="h-5 w-5 text-indigo-600" />
                 <div className="text-left">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Sistema Pretendido</span>
-                  <span className="text-sm font-semibold text-slate-900">{project.system_type || "Orion TN"}</span>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">
+                    {systemCount > 1 ? `Sistemas Pretendidos (${systemCount})` : "Sistema Pretendido"}
+                  </span>
+                  <span className="text-sm font-semibold text-slate-900">
+                    {systemsList.length > 0 ? systemsList.join(" + ") : (project.system_type || "Orion TN")}
+                  </span>
                 </div>
               </div>
             </div>
@@ -783,7 +791,7 @@ export default function PublicInfraCollection() {
             
             <div className="grid grid-cols-1 gap-4">
               {servers.map((srv, idx) => {
-                const validation = checkServerRequirements(srv, workstationsCount);
+                const validation = checkServerRequirements(srv, workstationsCount, systemCount);
                 return (
                   <Card key={idx} className="border-slate-200 shadow-sm relative overflow-hidden bg-white">
                     <div className={cn("absolute left-0 top-0 bottom-0 w-1", validation.meets ? "bg-emerald-500" : "bg-rose-500")} />

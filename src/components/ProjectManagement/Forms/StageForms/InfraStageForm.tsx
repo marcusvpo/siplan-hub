@@ -1,7 +1,7 @@
 import { InfraStageV2, ServerInfo, WorkstationInfo, ProjectV2 } from "@/types/ProjectV2";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { transformToProjectV3 } from "@/utils/project-transformers";
+import { transformToProjectV3, transformToDB } from "@/utils/project-transformers";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
@@ -186,72 +186,45 @@ export function InfraStageForm({
   const [excelImportOpen, setExcelImportOpen] = useState(false);
   const [excelText, setExcelText] = useState("");
   const [dragOver, setDragOver] = useState(false);
-  const [syncDialogOpen, setSyncDialogOpen] = useState(false);
-  const [selectedSourceProjectId, setSelectedSourceProjectId] = useState<string | null>(null);
 
-  // Search candidate source projects for the same client that already have infra data
-  const { data: candidateProjects = [] } = useQuery({
-    queryKey: ["sameClientProjectsInfra", clientName, projectId],
+  // Search all active projects for the same client to detect multi-system setups and auto-sync
+  const { data: sameClientProjects = [] } = useQuery({
+    queryKey: ["sameClientProjectsAll", clientName],
     queryFn: async () => {
-      if (!clientName || !projectId) return [];
+      if (!clientName) return [];
 
       const { data, error } = await supabase
         .from("projects")
         .select("*")
         .eq("is_deleted", false)
-        .ilike("client_name", clientName.trim())
-        .neq("id", projectId);
+        .ilike("client_name", clientName.trim());
 
       if (error) {
-        console.error("Erro ao buscar projetos do mesmo cliente para infra:", error);
+        console.error("Erro ao buscar projetos do mesmo cliente:", error);
         return [];
       }
 
-      return (data || [])
-        .map(transformToProjectV3)
-        .filter((p) => {
-          const infra = p.stages?.infra;
-          if (!infra) return false;
-          const hasServers = Array.isArray(infra.servers) && infra.servers.length > 0;
-          const hasWorkstations = Array.isArray(infra.workstations) && infra.workstations.length > 0;
-          const hasStatus = !!infra.serverStatus || !!infra.workstationsStatus;
-          const hasNotes = !!infra.technicalNotes?.trim();
-          return hasServers || hasWorkstations || hasStatus || hasNotes;
-        });
+      return (data || []).map(transformToProjectV3);
     },
-    enabled: !!clientName && !!projectId,
+    enabled: !!clientName,
   });
 
-  const handleSyncInfra = (sourceProject: ProjectV2) => {
-    const sourceInfra = sourceProject.stages?.infra;
-    if (!sourceInfra) return;
+  const systemCount = Math.max(1, sameClientProjects.length);
+  const systemsList = Array.from(
+    new Set(sameClientProjects.map((p) => p.systemType).filter(Boolean))
+  );
 
-    const isBlocked = sourceInfra.serverStatus === "Inadequado" || sourceInfra.workstationsStatus === "Inadequado";
-
-    const updates: Partial<InfraStageV2> = {
-      status: sourceInfra.status || (isBlocked ? "blocked" : "done"),
-      servers: sourceInfra.servers ? JSON.parse(JSON.stringify(sourceInfra.servers)) : [],
-      workstations: sourceInfra.workstations ? JSON.parse(JSON.stringify(sourceInfra.workstations)) : [],
-      workstationsCount: sourceInfra.workstationsCount || (sourceInfra.workstations?.length || 0),
-      workstationsStatus: sourceInfra.workstationsStatus,
-      serverStatus: sourceInfra.serverStatus,
-      technicalNotes: sourceInfra.technicalNotes || "",
-      observations: sourceInfra.observations || "",
-      approvedByInfra: sourceInfra.approvedByInfra,
-      serverInUse: sourceInfra.serverInUse || "",
-      serverNeeded: sourceInfra.serverNeeded || "",
-      clientResponsible: sourceInfra.clientResponsible || "",
-    };
-
+  const handleUpdateWithSync = (updates: Partial<InfraStageV2>) => {
     onUpdate(updates);
 
-    toast({
-      title: "Infraestrutura Sincronizada",
-      description: `Dados de infraestrutura copiados do projeto ${sourceProject.systemType || sourceProject.clientName} com sucesso!`,
-      className: "bg-emerald-500 text-white border-emerald-600",
-    });
-
-    setSyncDialogOpen(false);
+    if (clientName && sameClientProjects.length > 1) {
+      const otherProjects = sameClientProjects.filter((p) => p.id !== projectId);
+      otherProjects.forEach(async (p) => {
+        const updatedInfra = { ...p.stages?.infra, ...updates };
+        const dbUpdates = transformToDB({ stages: { ...p.stages, infra: updatedInfra } }, p);
+        await supabase.from("projects").update(dbUpdates).eq("id", p.id);
+      });
+    }
   };
   
   const serverFileInputRef = useRef<HTMLInputElement>(null);
@@ -320,7 +293,7 @@ export function InfraStageForm({
       pdf.setFont("helvetica", "normal");
       pdf.setFontSize(9.5);
       pdf.setTextColor(71, 85, 105);
-      pdf.text(`Serventia/Cartório: ${clientName || "Não identificada"}`, margin, posY);
+      pdf.text(`Serventia/Cartório: ${clientName || "Não identificada"}${systemCount > 1 ? ` (${systemCount} Sistemas: ${systemsList.join(" + ")})` : ""}`, margin, posY);
       posY += 5;
 
       pdf.text(`Responsável (Siplan): ${stage.responsible || "Não informado"}`, margin, posY);
@@ -396,7 +369,7 @@ export function InfraStageForm({
         posY += 8;
       } else {
         servers.forEach((srv, idx) => {
-          const validation = checkServerRequirements(srv, workstationsCount);
+          const validation = checkServerRequirements(srv, workstationsCount, systemCount);
           checkAddPage(96);
 
           // Inline spec validations for red text highlights
@@ -418,7 +391,7 @@ export function InfraStageForm({
               }
             }
           }
-          const minCores = workstationsCount > 15 ? 8 : 6;
+          const minCores = (workstationsCount > 15 ? 8 : 6) * systemCount;
           const cpuInconsistent = coresVal !== null && coresVal < minCores;
 
           let ramInconsistent = false;
@@ -426,7 +399,8 @@ export function InfraStageForm({
             const ramMatch = srv.memory.match(/(\d+)/);
             if (ramMatch) {
               const ram = parseInt(ramMatch[1]);
-              const minRam = workstationsCount <= 5 ? 20 : (workstationsCount <= 10 ? 24 : 48);
+              const baseMinRam = workstationsCount <= 5 ? 20 : (workstationsCount <= 10 ? 24 : 48);
+              const minRam = baseMinRam * systemCount;
               if (ram < minRam) ramInconsistent = true;
             }
           }
@@ -851,7 +825,7 @@ export function InfraStageForm({
     // 2. Calculate Server Status
     if (servers.length > 0) {
       const okCount = servers.filter(srv => {
-        return checkServerRequirements(srv, workstationsCount).meets;
+        return checkServerRequirements(srv, workstationsCount, systemCount).meets;
       }).length;
       const failCount = servers.length - okCount;
 
@@ -876,21 +850,21 @@ export function InfraStageForm({
     }
 
     if (updated) {
-      onUpdate(updates);
+      handleUpdateWithSync(updates);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workstations, servers, workstationsCount]);
+  }, [workstations, servers, workstationsCount, systemCount]);
 
   // Sync count on change
   const handleWorkstationsChange = (newWorkstations: WorkstationInfo[]) => {
-    onUpdate({
+    handleUpdateWithSync({
       workstations: newWorkstations,
       workstationsCount: newWorkstations.length
     });
   };
 
   const handleServersChange = (newServers: ServerInfo[]) => {
-    onUpdate({ servers: newServers });
+    handleUpdateWithSync({ servers: newServers });
   };
 
   // Add Item Helpers
@@ -1208,7 +1182,7 @@ export function InfraStageForm({
   const stationsFailCount = workstations.filter(w => w.meetsRequirements === "Não").length;
   const stationsPendingCount = workstations.filter(w => !w.meetsRequirements).length;
 
-  const serverValidationResults = servers.map(srv => checkServerRequirements(srv, workstationsCount));
+  const serverValidationResults = servers.map(srv => checkServerRequirements(srv, workstationsCount, systemCount));
   const serversOkCount = serverValidationResults.filter(r => r.meets).length;
   const serversFailCount = serverValidationResults.filter(r => !r.meets).length;
 
@@ -1274,7 +1248,7 @@ export function InfraStageForm({
                 size="sm"
                 onClick={() => {
                   const newClosed = !stage.publicLinkClosed;
-                  onUpdate({ publicLinkClosed: newClosed });
+                  handleUpdateWithSync({ publicLinkClosed: newClosed });
                   toast({
                     title: newClosed ? "Link Público Fechado" : "Link Público Reaberto",
                     description: newClosed 
@@ -1313,18 +1287,15 @@ export function InfraStageForm({
                 Gerar Relatório Analítico
               </Button>
 
-              {candidateProjects.length > 0 && (
-                <Button
-                  type="button"
+              {systemCount > 1 && (
+                <Badge
                   variant="outline"
-                  size="sm"
-                  onClick={() => setSyncDialogOpen(true)}
-                  disabled={!canEditProjects}
-                  className="font-bold border-indigo-200 dark:border-indigo-900/50 text-indigo-700 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-950/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 shadow-sm h-8 text-xs flex items-center gap-1.5"
+                  className="font-bold border-indigo-200 dark:border-indigo-900/50 text-indigo-700 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-950/30 shadow-sm h-8 text-xs flex items-center gap-1.5 px-3"
+                  title={`Sistemas do cliente: ${systemsList.join(", ")}`}
                 >
                   <RefreshCw className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
-                  Sincronizar Dados ({candidateProjects.length})
-                </Button>
+                  Infraestrutura Compartilhada ({systemCount} Sistemas: {systemsList.join(" + ")})
+                </Badge>
               )}
             </>
           )}
@@ -1369,7 +1340,7 @@ export function InfraStageForm({
         </Label>
         <Select
           value={stage.serverStatus || ""}
-          onValueChange={(v) => onUpdate({ serverStatus: v as StatusType })}
+          onValueChange={(v) => handleUpdateWithSync({ serverStatus: v as StatusType })}
           disabled={!canEditProjects}
         >
           <SelectTrigger
@@ -1420,7 +1391,7 @@ export function InfraStageForm({
         <Select
           value={stage.workstationsStatus || ""}
           onValueChange={(v) =>
-            onUpdate({ workstationsStatus: v as StatusType })
+            handleUpdateWithSync({ workstationsStatus: v as StatusType })
           }
           disabled={!canEditProjects}
         >
@@ -1473,7 +1444,7 @@ export function InfraStageForm({
           type="number"
           value={workstationsCount}
           onChange={(e) =>
-            onUpdate({
+            handleUpdateWithSync({
               workstationsCount: parseInt(e.target.value) || 0,
             })
           }
@@ -1601,7 +1572,7 @@ export function InfraStageForm({
                   <Label className="text-[10px] font-bold text-muted-foreground uppercase">Servidor em Uso Atual</Label>
                   <Input 
                     value={stage.serverInUse || ""} 
-                    onChange={e => onUpdate({ serverInUse: e.target.value })}
+                    onChange={e => handleUpdateWithSync({ serverInUse: e.target.value })}
                     placeholder="Ex: Servidor HP ProLiant antigo, Xeon 4 cores, 16GB"
                     disabled={!canEditProjects}
                     className="border-neutral-200 dark:border-neutral-800/60 h-8 text-xs"
@@ -1611,7 +1582,7 @@ export function InfraStageForm({
                   <Label className="text-[10px] font-bold text-muted-foreground uppercase">Servidor Necessário/Cotado</Label>
                   <Input 
                     value={stage.serverNeeded || ""} 
-                    onChange={e => onUpdate({ serverNeeded: e.target.value })}
+                    onChange={e => handleUpdateWithSync({ serverNeeded: e.target.value })}
                     placeholder="Ex: Novo Servidor Dell PowerEdge T350 cotado comercialmente"
                     disabled={!canEditProjects}
                     className="border-neutral-200 dark:border-neutral-800/60 h-8 text-xs"
@@ -1623,7 +1594,7 @@ export function InfraStageForm({
                 <Label className="text-[10px] font-bold text-muted-foreground uppercase">Notas de Viabilidade e Parecer Técnico</Label>
                 <Textarea 
                   value={stage.technicalNotes || ""} 
-                  onChange={e => onUpdate({ technicalNotes: e.target.value })}
+                  onChange={e => handleUpdateWithSync({ technicalNotes: e.target.value })}
                   placeholder="Descreva detalhes da viabilidade da infraestrutura, bloqueios específicos encontrados, se há necessidade de upgrades rápidos..."
                   disabled={!canEditProjects}
                   rows={2}
@@ -1679,7 +1650,7 @@ export function InfraStageForm({
             ) : (
               <div className="space-y-2.5">
                 {servers.map((srv, idx) => {
-                  const validation = checkServerRequirements(srv, workstationsCount);
+                  const validation = checkServerRequirements(srv, workstationsCount, systemCount);
                   return (
                     <Card key={idx} className="border dark:border-neutral-800/80 shadow-sm relative overflow-hidden bg-card/65">
                       {/* Indicador lateral de status de compatibilidade */}
@@ -2415,106 +2386,6 @@ export function InfraStageForm({
         </Tabs>
       </div>
 
-      {/* Modal de Sincronização de Infraestrutura */}
-      <Dialog open={syncDialogOpen} onOpenChange={setSyncDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-base font-semibold">
-              <RefreshCw className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-              Sincronizar Dados de Infraestrutura
-            </DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground pt-1">
-              Encontramos outro(s) projeto(s) cadastrado(s) para o cliente <strong className="text-foreground">{clientName}</strong> com dados de infraestrutura preenchidos.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-3 py-2">
-            <p className="text-xs text-muted-foreground">
-              Selecione o projeto do qual deseja importar os dados (servidores, estações de trabalho, parecer técnico e responsáveis):
-            </p>
-
-            <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-              {candidateProjects.map((p) => {
-                const srvCount = p.stages?.infra?.servers?.length || 0;
-                const wsCount = p.stages?.infra?.workstations?.length || 0;
-                const isSelected = selectedSourceProjectId === p.id || (candidateProjects.length === 1 && (!selectedSourceProjectId || selectedSourceProjectId === p.id));
-
-                return (
-                  <div
-                    key={p.id}
-                    onClick={() => setSelectedSourceProjectId(p.id)}
-                    className={cn(
-                      "p-3 rounded-lg border text-xs cursor-pointer transition-all flex flex-col gap-1.5",
-                      isSelected
-                        ? "border-indigo-500 bg-indigo-50/40 dark:bg-indigo-950/30 dark:border-indigo-500/70 ring-1 ring-indigo-500/30"
-                        : "border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-900/50"
-                    )}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-foreground text-sm">
-                        {p.systemType || "Sistema Não Especificado"}
-                      </span>
-                      <Badge variant="outline" className="text-[10px] uppercase font-mono">
-                        #{p.ticketNumber || "Sem chamado"}
-                      </Badge>
-                    </div>
-
-                    <div className="flex items-center gap-3 text-muted-foreground text-[11px]">
-                      <span className="flex items-center gap-1">
-                        <ServerIcon className="h-3 w-3" />
-                        {srvCount} Servidor{srvCount !== 1 ? "es" : ""}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Laptop className="h-3 w-3" />
-                        {wsCount} Estaçõ{wsCount !== 1 ? "es" : "ão"}
-                      </span>
-                      {p.stages?.infra?.serverStatus && (
-                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
-                          {p.stages.infra.serverStatus}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="rounded-md bg-amber-50 dark:bg-amber-950/30 p-2.5 border border-amber-200 dark:border-amber-900/50 text-[11px] text-amber-800 dark:text-amber-300 flex items-start gap-2">
-              <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
-              <span>
-                <strong>Atenção:</strong> A sincronização irá substituir a lista atual de servidores e estações deste projeto pelos dados do projeto selecionado.
-              </span>
-            </div>
-          </div>
-
-          <DialogFooter className="gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setSyncDialogOpen(false)}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
-              disabled={candidateProjects.length > 1 && !selectedSourceProjectId}
-              onClick={() => {
-                const targetId = selectedSourceProjectId || (candidateProjects.length === 1 ? candidateProjects[0].id : null);
-                const sourceProj = candidateProjects.find(p => p.id === targetId);
-                if (sourceProj) {
-                  handleSyncInfra(sourceProj);
-                }
-              }}
-            >
-              <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
-              Confirmar Sincronização
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }
