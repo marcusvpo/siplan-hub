@@ -17,6 +17,7 @@ import {
   Clock,
   X,
   Cog,
+  PlayCircle,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -62,6 +63,34 @@ export function ProjectCardV3({
   const bottlenecks = identifyBottlenecks(project); // Array of all bottlenecks
   const stageReadiness = getStageReadiness(project);
 
+  const isImplementationInProgress =
+    project.stages?.implementation?.status === "in-progress";
+  const isConfirmed = !!project.stages?.implementation?.phase1?.isConfirmed;
+  const phase1 = project.stages?.implementation?.phase1;
+  const startDate = phase1?.startDate || project.stages?.implementation?.startDate;
+  const endDate = phase1?.endDate || project.stages?.implementation?.endDate;
+  const hasForecastDates = Boolean(startDate && endDate);
+
+  const isForecastScheduled = !isImplementationInProgress && !isConfirmed && hasForecastDates;
+
+  const hasTopLeftTag = isImplementationInProgress || isConfirmed || isForecastScheduled;
+
+  const getVerticalBarColor = () => {
+    if (project.healthScore === "critical") return "bg-rose-500";
+    if (project.healthScore === "warning") return "bg-amber-500";
+
+    if (isImplementationInProgress) {
+      return "bg-blue-600";
+    }
+    if (isConfirmed) {
+      return "bg-emerald-500";
+    }
+    if (isForecastScheduled) {
+      return "bg-slate-600 dark:bg-slate-500";
+    }
+    return "bg-[#0dcaf0]";
+  };
+
   const getHealthColor = (score: string) => {
     switch (score) {
       case "ok":
@@ -102,16 +131,24 @@ export function ProjectCardV3({
           label: "Pausado",
           className: "bg-amber-500 hover:bg-amber-600 text-white border-amber-600",
         };
-      default: // in-progress
+      default: {
+        let colorClass = "bg-[#0dcaf0] hover:bg-[#0bb5d8] text-white border-[#0dcaf0] font-extrabold shadow-[#0dcaf0]/20";
+        if (isImplementationInProgress) {
+          colorClass = "bg-blue-600 hover:bg-blue-700 text-white border-blue-600 shadow-blue-500/20";
+        } else if (isConfirmed) {
+          colorClass = "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 shadow-emerald-500/20";
+        } else if (isForecastScheduled) {
+          colorClass = "bg-slate-600 hover:bg-slate-700 dark:bg-slate-600 text-white border-slate-600 shadow-slate-600/20";
+        }
         return {
-          label: "Em Andamento",
-          className: "bg-blue-600 hover:bg-blue-700 text-white border-blue-700 shadow-blue-500/20",
+          label: "Projeto Ativo",
+          className: colorClass,
         };
+      }
     }
   };
 
   const globalStatusBadge = getGlobalStatusBadge(project.globalStatus);
-  const isConfirmed = !!project.stages?.implementation?.phase1?.isConfirmed;
 
   const isOrionTN =
     project.systemType === "Orion TN" ||
@@ -169,19 +206,30 @@ export function ProjectCardV3({
     >
       <div
         className={cn(
-          "absolute left-0 top-0 bottom-0 w-1 transition-all duration-300",
-          getHealthColor(project.healthScore),
-          "group-hover:w-1.5",
+          "absolute left-0 top-0 bottom-0 w-1 transition-all duration-300 group-hover:w-1.5",
+          getVerticalBarColor(),
         )}
       />
 
-      {/* Implantação Confirmada Badge - Top Left Corner */}
-      {isConfirmed && (
+      {/* Top Left Tag: Implantação em Andamento (Azul) vs Implantação Confirmada (Verde) vs Previsão Agendada (Cinza Escuro) */}
+      {hasTopLeftTag && (
         <div className="absolute -top-2.5 left-2 z-10">
-          <Badge className="text-[9px] px-2 py-0.5 font-bold shadow-lg border-2 border-background bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20 flex items-center gap-1">
-            <CheckCircle2 className="w-2.5 h-2.5" />
-            Implantação Confirmada
-          </Badge>
+          {isImplementationInProgress ? (
+            <Badge className="text-[9px] px-2 py-0.5 font-bold shadow-lg border-2 border-background bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20 flex items-center gap-1">
+              <PlayCircle className="w-2.5 h-2.5" />
+              Implantação em Andamento
+            </Badge>
+          ) : isConfirmed ? (
+            <Badge className="text-[9px] px-2 py-0.5 font-bold shadow-lg border-2 border-background bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20 flex items-center gap-1">
+              <CheckCircle2 className="w-2.5 h-2.5" />
+              Implantação Confirmada
+            </Badge>
+          ) : (
+            <Badge className="text-[9px] px-2 py-0.5 font-bold shadow-lg border-2 border-background bg-slate-600 hover:bg-slate-700 dark:bg-slate-600 dark:hover:bg-slate-500 text-white shadow-slate-600/20 flex items-center gap-1">
+              <Calendar className="w-2.5 h-2.5 text-slate-200" />
+              Previsão Agendada
+            </Badge>
+          )}
         </div>
       )}
 
@@ -215,19 +263,26 @@ export function ProjectCardV3({
       )}
 
       {/* 1. Info Principal */}
-      <div className={cn("flex flex-col justify-center flex-[1.5] min-w-0 space-y-1", isConfirmed && "pt-2 md:pt-2.5")}>
+      <div className={cn("flex flex-col justify-center flex-[1.5] min-w-0 space-y-1", hasTopLeftTag && "pt-2 md:pt-2.5")}>
         <div className="flex items-center gap-2 min-w-0">
           <div
             className={cn(
               "h-2.5 w-2.5 rounded-full shrink-0 shadow-sm ring-1 ring-background",
-              getHealthColor(project.healthScore),
+              getVerticalBarColor(),
             )}
-            title={`Saúde: ${project.healthScore === "ok"
-              ? "OK"
-              : project.healthScore === "warning"
+            title={`Status: ${
+              isImplementationInProgress
+                ? "Implantação em Andamento"
+                : isConfirmed
+                ? "Implantação Confirmada"
+                : "Projeto Ativo"
+            } | Saúde: ${
+              project.healthScore === "ok"
+                ? "OK"
+                : project.healthScore === "warning"
                 ? "Atenção"
                 : "Crítico"
-              }`}
+            }`}
           />
           <h3
             className="font-bold text-base leading-tight truncate tracking-tight text-foreground/90 overflow-hidden"
