@@ -40,7 +40,7 @@ export const useProjectsList = (
           environment_status, environment_start_date, environment_end_date, environment_responsible,
           conversion_status, conversion_start_date, conversion_end_date, conversion_sent_at, conversion_finished_at, conversion_responsible,
           modelos_editor_status, modelos_editor_start_date, modelos_editor_end_date, modelos_editor_responsible,
-          implementation_status, implementation_start_date, implementation_end_date, implementation_responsible,
+          implementation_status, implementation_start_date, implementation_end_date, implementation_responsible, implementation_phase1,
           post_status, post_start_date, post_end_date, post_responsible,
           TituloChamado, descricaotramite, ResponsavelAtividade, EtapasProjeto
         `) 
@@ -182,7 +182,8 @@ function userProjectsListTransform(row: ProjectRow): Partial<ProjectV2> {
                 status: row.implementation_status || 'todo',
                 startDate: row.implementation_start_date ? new Date(row.implementation_start_date as string) : undefined,
                 endDate: row.implementation_end_date ? new Date(row.implementation_end_date as string) : undefined,
-                responsible: row.implementation_responsible as string | undefined
+                responsible: row.implementation_responsible as string | undefined,
+                phase1: (row.implementation_phase1 as ImplementationStageV2['phase1']) || undefined
             } as ImplementationStageV2,
             post: { 
                 status: row.post_status || 'todo',

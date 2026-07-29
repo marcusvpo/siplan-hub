@@ -95,22 +95,23 @@ export function ProjectCardV3({
       case "done":
         return {
           label: "Finalizado",
-          className: "bg-blue-500 text-white border-blue-600",
+          className: "bg-slate-700 hover:bg-slate-800 text-white border-slate-800",
         };
       case "blocked":
         return {
           label: "Pausado",
-          className: "bg-amber-500 text-white border-amber-600",
+          className: "bg-amber-500 hover:bg-amber-600 text-white border-amber-600",
         };
       default: // in-progress
         return {
-          label: "Em andamento",
-          className: "bg-emerald-500 text-white border-emerald-600",
+          label: "Em Andamento",
+          className: "bg-blue-600 hover:bg-blue-700 text-white border-blue-700 shadow-blue-500/20",
         };
     }
   };
 
   const globalStatusBadge = getGlobalStatusBadge(project.globalStatus);
+  const isConfirmed = !!project.stages?.implementation?.phase1?.isConfirmed;
 
   const isOrionTN =
     project.systemType === "Orion TN" ||
@@ -174,11 +175,21 @@ export function ProjectCardV3({
         )}
       />
 
+      {/* Implantação Confirmada Badge - Top Left Corner */}
+      {isConfirmed && (
+        <div className="absolute -top-2.5 left-2 z-10">
+          <Badge className="text-[9px] px-2 py-0.5 font-bold shadow-lg border-2 border-background bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20 flex items-center gap-1">
+            <CheckCircle2 className="w-2.5 h-2.5" />
+            Implantação Confirmada
+          </Badge>
+        </div>
+      )}
+
       {/* Project Status Badges - Top Right Corner */}
       <div className="absolute -top-1.5 -right-1.5 z-10 flex items-center gap-1.5">
         <PosSaudeBadge projectId={project.id} />
         {isFromAutomacao && (
-          <Badge className="text-[9px] px-2 py-0.5 font-bold shadow-lg border-2 border-background bg-indigo-500 hover:bg-indigo-600 text-white shadow-indigo-500/20">
+          <Badge className="text-[9px] px-2 py-0.5 font-bold shadow-lg border-2 border-background bg-purple-600 hover:bg-purple-700 text-white shadow-purple-500/20">
             Novo
           </Badge>
         )}
@@ -204,7 +215,7 @@ export function ProjectCardV3({
       )}
 
       {/* 1. Info Principal */}
-      <div className="flex flex-col justify-center flex-[1.5] min-w-0 space-y-1">
+      <div className={cn("flex flex-col justify-center flex-[1.5] min-w-0 space-y-1", isConfirmed && "pt-2 md:pt-2.5")}>
         <div className="flex items-center gap-2 min-w-0">
           <div
             className={cn(
