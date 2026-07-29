@@ -9,7 +9,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Rocket, CheckCircle2, Power, GraduationCap } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Rocket, CheckCircle2, Power, GraduationCap, Calendar } from "lucide-react";
 import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { convertBlocksToTiptap } from "@/lib/editor-utils";
@@ -63,19 +64,53 @@ function ImplementationPhaseForm({
 
   return (
     <div className={cn("relative overflow-hidden rounded-xl border p-4 shadow-sm", borderColor, bgGradient)}>
-      <h4 className="font-bold mb-3 flex items-center gap-2 relative text-left">
-        <Badge className={cn("text-white px-2 py-0.5 text-[10px] shadow-sm font-semibold flex items-center gap-1", badgeClass)}>
-          {phaseKey === "phase1" ? (
-            <Rocket className="h-3 w-3 shrink-0" />
-          ) : (
-            <GraduationCap className="h-3 w-3 shrink-0" />
-          )}
-          <span>{label}</span>
-        </Badge>
-        <span className={cn("text-base font-bold", titleColor)}>
-          {phaseKey === "phase1" ? "Treinamento & Acompanhamento" : "Possível Retorno"}
-        </span>
-      </h4>
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <h4 className="font-bold flex items-center gap-2 relative text-left">
+          <Badge className={cn("text-white px-2 py-0.5 text-[10px] shadow-sm font-semibold flex items-center gap-1", badgeClass)}>
+            {phaseKey === "phase1" ? (
+              <Rocket className="h-3 w-3 shrink-0" />
+            ) : (
+              <GraduationCap className="h-3 w-3 shrink-0" />
+            )}
+            <span>{label}</span>
+          </Badge>
+          <span className={cn("text-base font-bold", titleColor)}>
+            {phaseKey === "phase1" ? "Treinamento & Acompanhamento" : "Possível Retorno"}
+          </span>
+        </h4>
+
+        {phaseKey === "phase1" && (
+          <div
+            onClick={() => canEditProjects && onUpdatePhase("phase1", { isConfirmed: !phase?.isConfirmed })}
+            className={cn(
+              "flex items-center gap-2.5 px-3 py-1.5 rounded-lg border transition-all cursor-pointer select-none",
+              phase?.isConfirmed
+                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20"
+                : "bg-slate-100 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200/70"
+            )}
+          >
+            <Switch
+              checked={!!phase?.isConfirmed}
+              onCheckedChange={(checked) => onUpdatePhase("phase1", { isConfirmed: checked })}
+              disabled={!canEditProjects}
+              className="data-[state=checked]:bg-emerald-600"
+            />
+            <span className="text-xs font-bold flex items-center gap-1">
+              {phase?.isConfirmed ? (
+                <>
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                  Implantação Confirmada
+                </>
+              ) : (
+                <>
+                  <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                  Implantação Confirmada?
+                </>
+              )}
+            </span>
+          </div>
+        )}
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3.5 mb-3.5 relative text-left">
         <div className="space-y-1.5">
           <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">

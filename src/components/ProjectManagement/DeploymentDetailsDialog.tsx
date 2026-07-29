@@ -21,6 +21,7 @@ import {
   Tag,
   User,
   ArrowRight,
+  CheckCircle2,
 } from "lucide-react";
 
 interface DeploymentDetailsDialogProps {
@@ -78,7 +79,18 @@ export function DeploymentDetailsDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg p-4 gap-3">
         <DialogHeader className="space-y-1">
-          <div className="flex items-center gap-1.5 mb-0.5">
+          <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
+            {phase1?.isConfirmed ? (
+              <Badge className="bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 border-none shadow-sm flex items-center gap-1">
+                <CheckCircle2 className="w-2.5 h-2.5" />
+                Implantação Confirmada
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-300 dark:border-slate-700 text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 flex items-center gap-1">
+                <Calendar className="w-2.5 h-2.5 text-slate-400" />
+                Previsão
+              </Badge>
+            )}
             <Badge
               variant="outline"
               className={`${getSystemBadgeColor(
