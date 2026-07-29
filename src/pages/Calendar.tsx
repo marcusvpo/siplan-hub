@@ -187,21 +187,19 @@ export default function Calendar() {
         });
       }
 
-      // Adherence
-      const adherenceStart = toLocalDate(project.stages.adherence?.startDate);
+      // Adherence (Agendado Para - dia único)
       const adherenceEnd = toLocalDate(project.stages.adherence?.endDate);
       const adherenceResponsible = project.stages.adherence?.responsible;
 
       if (adherenceEnd && adherenceResponsible) {
         const member = findMember(adherenceResponsible);
-        const start = adherenceStart || adherenceEnd;
 
         events.push({
           id: `real-${project.id}-adherence`,
           resourceId: member?.id || "unknown",
           title: `Aderência: ${project.clientName}`,
           clientName: project.clientName,
-          start,
+          start: adherenceEnd,
           end: adherenceEnd,
           type: "adherence",
           status: "confirmed",

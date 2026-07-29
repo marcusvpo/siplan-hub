@@ -17,7 +17,8 @@ interface DashboardKPIProps {
 }
 
 export const DashboardKPI: React.FC<DashboardKPIProps> = ({ onCardClick }) => {
-  const { projects, isLoading } = useProjectsV2();
+  const { projects: rawProjects, isLoading } = useProjectsV2();
+  const projects = rawProjects.filter((p) => p.systemType !== "Modelos TN");
   const kpis = useKPIs(projects);
 
   if (isLoading) {
