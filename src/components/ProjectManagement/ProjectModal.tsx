@@ -16,7 +16,7 @@ import { RoadmapManager } from "./RoadmapManager";
 import { Chamado0800Tab } from "./Tabs/Chamado0800Tab";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Pencil, X, Maximize2, ClipboardList } from "lucide-react";
+import { Pencil, X, Maximize2, ClipboardList, PlayCircle, CheckCircle2, Calendar } from "lucide-react";
 import { useState } from "react";
 import { useProjectDetails } from "@/hooks/useProjectDetails";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -24,6 +24,8 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { PosSaudeBadge } from "@/components/ProjectManagement/PosSaudeBadge";
+import { cn } from "@/lib/utils";
 
 interface ProjectModalProps {
   project: Partial<ProjectV2> | null;
@@ -50,6 +52,55 @@ export function ProjectModal({
   );
 
   const displayProject = fullProject || (initialProject as ProjectV2); // Fallback to initial for header if loading
+
+  const isImplementationInProgress =
+    displayProject?.stages?.implementation?.status === "in-progress";
+  const isConfirmed = !!displayProject?.stages?.implementation?.phase1?.isConfirmed;
+  const phase1 = displayProject?.stages?.implementation?.phase1;
+  const startDate = phase1?.startDate || displayProject?.stages?.implementation?.startDate;
+  const endDate = phase1?.endDate || displayProject?.stages?.implementation?.endDate;
+  const hasForecastDates = Boolean(startDate && endDate);
+
+  const isForecastScheduled = !isImplementationInProgress && !isConfirmed && hasForecastDates;
+  const hasTopLeftTag = isImplementationInProgress || isConfirmed || isForecastScheduled;
+
+  const isFromAutomacao = Boolean(
+    displayProject?.TituloChamado || 
+    displayProject?.descricaotramite || 
+    displayProject?.ResponsavelAtividade || 
+    displayProject?.EtapasProjeto
+  );
+
+  const getGlobalStatusBadge = (status?: ProjectV2["globalStatus"]) => {
+    switch (status) {
+      case "done":
+        return {
+          label: "Finalizado",
+          className: "bg-slate-700 hover:bg-slate-800 text-white border-slate-800",
+        };
+      case "blocked":
+        return {
+          label: "Pausado",
+          className: "bg-amber-500 hover:bg-amber-600 text-white border-amber-600",
+        };
+      default: {
+        let colorClass = "bg-[#0dcaf0] hover:bg-[#0bb5d8] text-white border-[#0dcaf0] font-extrabold shadow-[#0dcaf0]/20";
+        if (isImplementationInProgress) {
+          colorClass = "bg-blue-600 hover:bg-blue-700 text-white border-blue-600 shadow-blue-500/20";
+        } else if (isConfirmed) {
+          colorClass = "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 shadow-emerald-500/20";
+        } else if (isForecastScheduled) {
+          colorClass = "bg-slate-600 hover:bg-slate-700 dark:bg-slate-600 text-white border-slate-600 shadow-slate-600/20";
+        }
+        return {
+          label: "Projeto Ativo",
+          className: colorClass,
+        };
+      }
+    }
+  };
+
+  const globalStatusBadge = getGlobalStatusBadge(displayProject?.globalStatus);
 
   const { data: projectChecklist } = useQuery({
     queryKey: ["project-commercial-checklist", displayProject?.id],
@@ -93,9 +144,49 @@ export function ProjectModal({
         if (!val) setIsEditing(false);
       }}
     >
-      <DialogContent className="max-w-[90vw] w-[90vw] h-[90vh] flex flex-col p-0 gap-0">
-        <DialogHeader className="px-6 py-3 border-b shrink-0 flex flex-row items-start justify-between gap-4">
-          <div className="flex flex-col gap-1 min-w-0 flex-1">
+      <DialogContent className="max-w-[90vw] w-[90vw] h-[90vh] flex flex-col p-0 gap-0 overflow-visible">
+        {/* Top Left Tag - Floating over top border */}
+        {hasTopLeftTag && (
+          <div className="absolute -top-2.5 left-4 z-50">
+            {isImplementationInProgress ? (
+              <Badge className="text-[10px] px-2.5 py-0.5 font-bold shadow-lg border-2 border-background bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20 flex items-center gap-1">
+                <PlayCircle className="w-3 h-3" />
+                Implantação em Andamento
+              </Badge>
+            ) : isConfirmed ? (
+              <Badge className="text-[10px] px-2.5 py-0.5 font-bold shadow-lg border-2 border-background bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20 flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3" />
+                Implantação Confirmada
+              </Badge>
+            ) : (
+              <Badge className="text-[10px] px-2.5 py-0.5 font-bold shadow-lg border-2 border-background bg-slate-600 hover:bg-slate-700 dark:bg-slate-600 dark:hover:bg-slate-500 text-white shadow-slate-600/20 flex items-center gap-1">
+                <Calendar className="w-3 h-3 text-slate-200" />
+                Previsão Agendada
+              </Badge>
+            )}
+          </div>
+        )}
+
+        {/* Top Right Badges - Floating over top-right border */}
+        <div className="absolute -top-2.5 right-12 z-50 flex items-center gap-1.5">
+          {displayProject?.id && <PosSaudeBadge projectId={displayProject.id} />}
+          {isFromAutomacao && (
+            <Badge className="text-[10px] px-2.5 py-0.5 font-bold shadow-lg border-2 border-background bg-purple-600 hover:bg-purple-700 text-white shadow-purple-500/20">
+              Novo
+            </Badge>
+          )}
+          <Badge
+            className={cn(
+              "text-[10px] px-2.5 py-0.5 font-bold shadow-lg border-2 border-background",
+              globalStatusBadge.className,
+            )}
+          >
+            {globalStatusBadge.label}
+          </Badge>
+        </div>
+
+        <DialogHeader className={cn("px-6 py-3.5 border-b shrink-0 flex flex-row items-start justify-between gap-4", hasTopLeftTag && "pt-6 md:pt-6.5")}>
+          <div className={cn("flex flex-col gap-1 min-w-0 flex-1", hasTopLeftTag && "mt-1")}>
             {isLoading ? (
               <DialogTitle>
                 <Skeleton className="h-6 w-64" />
