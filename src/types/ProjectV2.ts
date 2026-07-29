@@ -417,6 +417,7 @@ export interface ImplementationPhase {
   clientFeedback?: string;
   acceptanceStatus?: string;
   observations?: string;
+  isConfirmed?: boolean;
 }
 
 export interface ImplementationStageV2 {
