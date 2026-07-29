@@ -29,13 +29,12 @@ export const ProjectDistributionChart = ({
     if (project.systemType === "Modelos TN" || project.globalStatus === "done" || project.globalStatus === "archived" || project.globalStatus === "canceled") {
       return;
     }
-    const stages = Object.entries(project.stages);
-    const currentStage =
-      stages.find(([_, stage]) => stage.status === "in-progress")?.[0] ||
-      "infra";
-    if (currentStage in stageCount) {
-      stageCount[currentStage as keyof typeof stageCount]++;
-    }
+    if (!project.stages) return;
+    Object.entries(project.stages).forEach(([stageKey, stage]) => {
+      if ((stage as any)?.status === "in-progress" && stageKey in stageCount) {
+        stageCount[stageKey as keyof typeof stageCount]++;
+      }
+    });
   });
 
   const data = [

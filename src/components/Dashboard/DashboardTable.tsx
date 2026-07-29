@@ -29,7 +29,8 @@ const PROJECTS_PER_PAGE = 6;
 
 export const DashboardTable = ({ onProjectClick }: DashboardTableProps) => {
   const { setSelectedProject } = useProjectStore();
-  const { projects, isLoading } = useProjectsV2();
+  const { projects: rawProjects, isLoading } = useProjectsV2();
+  const projects = rawProjects.filter((p) => p.systemType !== "Modelos TN");
   const [currentPage, setCurrentPage] = useState(1);
 
   if (isLoading) {

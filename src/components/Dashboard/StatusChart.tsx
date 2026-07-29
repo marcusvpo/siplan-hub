@@ -21,26 +21,19 @@ interface StatusChartProps {
 
 export const StatusChart = ({ projects }: StatusChartProps) => {
   const statusCount = {
-    todo: 0,
     "in-progress": 0,
     done: 0,
     blocked: 0,
-    archived: 0,
   };
 
   projects.forEach((project) => {
     if (project.systemType === "Modelos TN") return;
     if (project.globalStatus in statusCount) {
-      statusCount[project.globalStatus]++;
+      statusCount[project.globalStatus as keyof typeof statusCount]++;
     }
   });
 
   const data = [
-    {
-      name: "Não Iniciado",
-      value: statusCount.todo,
-      fill: "hsl(var(--chart-1))",
-    },
     {
       name: "Em Andamento",
       value: statusCount["in-progress"],
@@ -56,19 +49,12 @@ export const StatusChart = ({ projects }: StatusChartProps) => {
       value: statusCount.blocked,
       fill: "hsl(var(--chart-4))",
     },
-    {
-      name: "Arquivado",
-      value: statusCount.archived,
-      fill: "hsl(var(--chart-5))",
-    },
   ];
 
   const chartConfig = {
-    todo: { label: "Não Iniciado", color: "hsl(var(--chart-1))" },
     "in-progress": { label: "Em Andamento", color: "hsl(var(--chart-2))" },
     done: { label: "Finalizado", color: "hsl(var(--chart-3))" },
     blocked: { label: "Bloqueado", color: "hsl(var(--chart-4))" },
-    archived: { label: "Arquivado", color: "hsl(var(--chart-5))" },
   };
 
   return (
