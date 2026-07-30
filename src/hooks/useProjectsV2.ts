@@ -35,6 +35,7 @@ export const useProjectsV2 = () => {
 
       return (data || []).map(transformToProjectV3);
     },
+    staleTime: 1000 * 60 * 5, // 5 minutos de cache
   });
 
   const updateProject = useMutation({

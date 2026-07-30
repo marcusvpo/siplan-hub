@@ -21,7 +21,7 @@ export const useProjectDetails = (projectId: string | null) => {
       return transformToProjectV3(data);
     },
     enabled: !!projectId,
-    staleTime: 0, // Always fetch fresh details when opening modal
+    staleTime: 1000 * 60 * 2, // 2 minutos de cache para evitar downloads repetidos de trâmites
   });
 
   return {

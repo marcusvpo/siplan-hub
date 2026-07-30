@@ -326,11 +326,17 @@ async function maybeDailyDigest(): Promise<void> {
   }
 }
 
+let lastReapAt = 0;
+const REAP_INTERVAL_MS = 5 * 60 * 1000; // 5 minutos
+
 /**
  * Reaper: devolve jobs travados (worker morto em processing) para a fila,
  * respeitando MAX_ATTEMPTS. Roda junto do polling.
  */
 async function reapStuckJobs(): Promise<void> {
+  const now = Date.now();
+  if (now - lastReapAt < REAP_INTERVAL_MS) return;
+  lastReapAt = now;
   const { error } = await supabase.rpc("requeue_stuck_model_jobs", {
     p_timeout_seconds: Math.ceil(config.jobTimeoutMs / 1000),
     p_max_attempts: config.maxAttempts,

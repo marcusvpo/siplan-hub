@@ -29,6 +29,12 @@ ${portfolio}
 ${issuesBlock}`;
 }
 
+export const PROJECT_PORTFOLIO_FIELDS =
+  "id, client_name, ticket_number, system_type, infra_status, infra_responsible, infra_start_date, infra_end_date, adherence_status, adherence_responsible, adherence_start_date, adherence_end_date, conversion_status, conversion_responsible, conversion_start_date, conversion_end_date, environment_status, environment_responsible, environment_start_date, environment_end_date, modelos_editor_status, modelos_editor_responsible, modelos_editor_start_date, modelos_editor_end_date, implementation_status, implementation_responsible, implementation_start_date, implementation_end_date, post_status, post_responsible, post_start_date, post_end_date";
+
+let lastDigestAttemptAt = 0;
+const DIGEST_RETRY_INTERVAL_MS = 60 * 60 * 1000; // No máximo 1 tentativa por hora se falhar
+
 /**
  * Gera (uma vez por dia) um resumo executivo do portfolio e grava em copilot_digests.
  * Idempotente: se ja existe resumo para hoje, nao faz nada. Best-effort.
@@ -44,9 +50,16 @@ export async function generateDailyDigest(): Promise<void> {
     .maybeSingle();
   if (existing) return;
 
+  // Evita re-executar a busca pesada a cada tick do polling se o digest falhou ou não existe resumo
+  const now = Date.now();
+  if (now - lastDigestAttemptAt < DIGEST_RETRY_INTERVAL_MS) {
+    return;
+  }
+  lastDigestAttemptAt = now;
+
   const { data: projects, error: projErr } = await supabase
     .from("projects")
-    .select("*")
+    .select(PROJECT_PORTFOLIO_FIELDS)
     .order("client_name", { ascending: true })
     .limit(MAX_PROJECTS);
   if (projErr || !projects || projects.length === 0) return;
