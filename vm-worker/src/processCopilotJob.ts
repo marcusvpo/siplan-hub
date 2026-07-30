@@ -217,9 +217,12 @@ export async function processCopilotJob(job: CopilotJob): Promise<void> {
   pushStep("Lendo o portfolio de projetos...");
   await flushProgress(true);
 
+  const PROJECT_PORTFOLIO_FIELDS =
+    "id, client_name, ticket_number, system_type, infra_status, infra_responsible, infra_start_date, infra_end_date, adherence_status, adherence_responsible, adherence_start_date, adherence_end_date, conversion_status, conversion_responsible, conversion_start_date, conversion_end_date, environment_status, environment_responsible, environment_start_date, environment_end_date, modelos_editor_status, modelos_editor_responsible, modelos_editor_start_date, modelos_editor_end_date, implementation_status, implementation_responsible, implementation_start_date, implementation_end_date, post_status, post_responsible, post_start_date, post_end_date";
+
   const { data: projects, error: projErr } = await supabase
     .from("projects")
-    .select("*")
+    .select(PROJECT_PORTFOLIO_FIELDS)
     .order("client_name", { ascending: true })
     .limit(MAX_PROJECTS);
   if (projErr) throw new Error(`Falha ao ler os projetos: ${projErr.message}`);

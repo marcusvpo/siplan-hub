@@ -63,17 +63,22 @@ export function ProjectCardV3({
   const bottlenecks = identifyBottlenecks(project); // Array of all bottlenecks
   const stageReadiness = getStageReadiness(project);
 
+  const isModelosTN = project.systemType === "Modelos TN";
+
   const isImplementationInProgress =
-    project.stages?.implementation?.status === "in-progress";
-  const isConfirmed = !!project.stages?.implementation?.phase1?.isConfirmed;
+    !isModelosTN && project.stages?.implementation?.status === "in-progress";
+  const isConfirmed =
+    !isModelosTN && !!project.stages?.implementation?.phase1?.isConfirmed;
   const phase1 = project.stages?.implementation?.phase1;
   const startDate = phase1?.startDate || project.stages?.implementation?.startDate;
   const endDate = phase1?.endDate || project.stages?.implementation?.endDate;
   const hasForecastDates = Boolean(startDate && endDate);
 
-  const isForecastScheduled = !isImplementationInProgress && !isConfirmed && hasForecastDates;
+  const isForecastScheduled =
+    !isModelosTN && !isImplementationInProgress && !isConfirmed && hasForecastDates;
 
-  const hasTopLeftTag = isImplementationInProgress || isConfirmed || isForecastScheduled;
+  const hasTopLeftTag =
+    !isModelosTN && (isImplementationInProgress || isConfirmed || isForecastScheduled);
 
   const getVerticalBarColor = () => {
     if (project.healthScore === "critical") return "bg-rose-500";
@@ -155,8 +160,6 @@ export function ProjectCardV3({
     project.systemType === "Modelos TN" ||
     project.products?.includes("Orion TN") ||
     project.products?.includes("OrionTN");
-
-  const isModelosTN = project.systemType === "Modelos TN";
 
   const baseStages = isModelosTN ? [] : [
     { id: "infra", label: "Infra", status: project.stages.infra.status },

@@ -27,7 +27,8 @@ export const useProjectsList = (
     isLoading, 
     error
   } = useQuery({
-    queryKey: ["projectsList", searchQuery, viewPreset],
+    queryKey: ["projectsList", viewPreset],
+    staleTime: 1000 * 60 * 5, // 5 minutos de cache (filtro de busca e ordenação são aplicados no cliente)
     queryFn: async () => {
       // Start building the query
       let query = supabase

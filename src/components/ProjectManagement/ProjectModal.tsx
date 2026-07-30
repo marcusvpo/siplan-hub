@@ -53,16 +53,21 @@ export function ProjectModal({
 
   const displayProject = fullProject || (initialProject as ProjectV2); // Fallback to initial for header if loading
 
+  const isModelosTN = displayProject?.systemType === "Modelos TN";
+
   const isImplementationInProgress =
-    displayProject?.stages?.implementation?.status === "in-progress";
-  const isConfirmed = !!displayProject?.stages?.implementation?.phase1?.isConfirmed;
+    !isModelosTN && displayProject?.stages?.implementation?.status === "in-progress";
+  const isConfirmed =
+    !isModelosTN && !!displayProject?.stages?.implementation?.phase1?.isConfirmed;
   const phase1 = displayProject?.stages?.implementation?.phase1;
   const startDate = phase1?.startDate || displayProject?.stages?.implementation?.startDate;
   const endDate = phase1?.endDate || displayProject?.stages?.implementation?.endDate;
   const hasForecastDates = Boolean(startDate && endDate);
 
-  const isForecastScheduled = !isImplementationInProgress && !isConfirmed && hasForecastDates;
-  const hasTopLeftTag = isImplementationInProgress || isConfirmed || isForecastScheduled;
+  const isForecastScheduled =
+    !isModelosTN && !isImplementationInProgress && !isConfirmed && hasForecastDates;
+  const hasTopLeftTag =
+    !isModelosTN && (isImplementationInProgress || isConfirmed || isForecastScheduled);
 
   const isFromAutomacao = Boolean(
     displayProject?.TituloChamado || 

@@ -102,7 +102,7 @@ export const config = {
   // Operacional
   workerId: process.env.WORKER_ID || "vm-worker",
   workerRoles: parseWorkerRoles(process.env.WORKER_ROLES),
-  pollIntervalMs: Number(process.env.POLL_INTERVAL_MS || 15000),
+  pollIntervalMs: Number(process.env.POLL_INTERVAL_MS || 60000),
   jobTimeoutMs: Number(process.env.JOB_TIMEOUT_MS || 1800000),
   maxAttempts: Number(process.env.MAX_ATTEMPTS || 3),
   // Quando o Claude bate o limite de sessao (tokens), o job NAO vira erro: volta
