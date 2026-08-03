@@ -99,9 +99,16 @@ export function DeploymentCard({
       <div className="p-4 pb-2 z-10 flex-shrink-0">
         <div className="flex justify-between items-start mb-2 gap-2">
           <div className="flex flex-col items-start gap-1.5">
-            {/* Status Tag: Implantação Confirmada vs Previsão (High Contrast) */}
+            {/* Status Tag: Em Andamento vs Implantação Confirmada vs Previsão */}
             <div className="flex flex-wrap items-center gap-1.5">
-              {isConfirmed ? (
+              {isInProgress ? (
+                <Badge
+                  className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 border-none shadow-sm animate-pulse flex items-center gap-1"
+                >
+                  <PlayCircle className="w-3 h-3" />
+                  Em Andamento
+                </Badge>
+              ) : isConfirmed ? (
                 <Badge
                   className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 border-none shadow-sm flex items-center gap-1"
                 >
@@ -114,15 +121,6 @@ export function DeploymentCard({
                 >
                   <Calendar className="w-3 h-3 text-slate-300" />
                   Previsão
-                </Badge>
-              )}
-
-              {isInProgress && (
-                <Badge
-                  className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 border-none shadow-sm animate-pulse flex items-center gap-1"
-                >
-                  <PlayCircle className="w-3 h-3" />
-                  Em Andamento
                 </Badge>
               )}
             </div>
