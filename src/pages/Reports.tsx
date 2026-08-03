@@ -8,7 +8,8 @@ import { AdherenceGapCard } from "@/components/Reports/AdherenceGapCard";
 import { ReportsFilters } from "@/components/Reports/ReportsFilters";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { IndividualProjectReport } from "@/components/Reports/Individual/IndividualProjectReport";
-import { Loader2, LayoutDashboard, Search } from "lucide-react";
+import { ImplementerReportTab } from "@/components/Reports/Implementers/ImplementerReportTab";
+import { Loader2, LayoutDashboard, Search, Users } from "lucide-react";
 
 export default function Reports() {
   const { projects, isLoading } = useProjectsV2();
@@ -81,6 +82,13 @@ export default function Reports() {
               <Search className="h-3 w-3" />
               Análise Individual
             </TabsTrigger>
+            <TabsTrigger 
+              value="implementers" 
+              className="gap-1.5 px-3 py-1 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all rounded-md text-[10px] font-bold uppercase tracking-wider"
+            >
+              <Users className="h-3 w-3" />
+              Implantadores
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -111,6 +119,10 @@ export default function Reports() {
 
         <TabsContent value="individual" className="m-0 animate-in fade-in slide-in-from-right-4 duration-500">
           <IndividualProjectReport projects={projectsWithoutModelosTN} />
+        </TabsContent>
+
+        <TabsContent value="implementers" className="m-0 animate-in fade-in slide-in-from-right-4 duration-500">
+          <ImplementerReportTab />
         </TabsContent>
       </Tabs>
     </div>
