@@ -30,23 +30,13 @@ function describeTool(name: string, input: AnyObj): string {
   }
 }
 
-/**
- * Roda o Claude Code headless com --output-format stream-json --verbose, emitindo
- * cada passo (texto do agente e chamadas de ferramenta) via onProgress em tempo real.
- * Retorna o transcript acumulado (para localizar JSON_GERADO=) e o texto do result.
- */
 export interface RunSkillOptions {
-  model?: string; // override do modelo (ex.: "sonnet"/"haiku") - tarefas leves rodam mais rapido
+  model?: string; // override do modelo
   cwd?: string; // override do diretorio de trabalho
-  env?: Record<string, string>; // variaveis extras (ex.: ANTHROPIC_API_KEY no fallback)
+  env?: Record<string, string>; // variaveis extras
 }
 
-export function runSkill(
-  prompt: string,
-  onProgress?: (step: ProgressStep) => void,
-  shouldCancel?: () => Promise<boolean>,
-  options: RunSkillOptions = {}
-): Promise<{
+export interface RunSkillResult {
   transcript: string;
   resultText: string;
   code: number;
@@ -56,7 +46,174 @@ export function runSkill(
   outputTokens: number;
   cacheReadTokens: number;
   cacheCreationTokens: number;
-}> {
+}
+
+/**
+ * Executa o prompt localmente usando o Ollama via HTTP streaming API.
+ */
+async function runOllama(
+  prompt: string,
+  onProgress?: (step: ProgressStep) => void,
+  shouldCancel?: () => Promise<boolean>,
+  options: RunSkillOptions = {}
+): Promise<RunSkillResult> {
+  const emit = (text: string, kind: ProgressStep["kind"]) => {
+    if (!text) return;
+    onProgress?.({ at: new Date().toISOString(), text, kind });
+  };
+
+  const rawModel = options.model;
+  const modelName = rawModel && !["sonnet", "haiku", "opus"].includes(rawModel.toLowerCase())
+    ? rawModel
+    : config.ollamaModel;
+
+  emit(`Sessão iniciada (Ollama - ${modelName}) - processando...`, "system");
+
+  let cancelled = false;
+  let cancelChecking = false;
+
+  const controller = new AbortController();
+
+  const cancelTimer = shouldCancel
+    ? setInterval(async () => {
+        if (cancelChecking || cancelled) return;
+        cancelChecking = true;
+        try {
+          if (await shouldCancel()) {
+            cancelled = true;
+            controller.abort();
+          }
+        } catch {
+          /* ignora erro de checagem */
+        } finally {
+          cancelChecking = false;
+        }
+      }, 2500)
+    : undefined;
+
+  let transcript = "";
+  let resultText = "";
+  let inputTokens = 0;
+  let outputTokens = 0;
+
+  try {
+    const res = await fetch(`${config.ollamaHost}/api/generate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: modelName,
+        prompt: prompt,
+        stream: true,
+      }),
+      signal: controller.signal,
+    });
+
+    if (!res.ok) {
+      const errText = await res.text().catch(() => "");
+      throw new Error(`Ollama respondeu com HTTP ${res.status}: ${errText}`);
+    }
+
+    if (!res.body) {
+      throw new Error("Resposta do Ollama veio sem corpo (stream).");
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+    let buffer = "";
+    let progressBuffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() || "";
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+        try {
+          const json = JSON.parse(trimmed);
+          if (json.response) {
+            resultText += json.response;
+            transcript += json.response;
+            progressBuffer += json.response;
+
+            if (progressBuffer.includes("\n") || progressBuffer.length >= 80) {
+              const display = progressBuffer.replace(/\s+/g, " ").trim().slice(0, 140);
+              if (display) emit(display, "text");
+              progressBuffer = "";
+            }
+          }
+          if (json.done) {
+            inputTokens = Number(json.prompt_eval_count) || 0;
+            outputTokens = Number(json.eval_count) || 0;
+          }
+        } catch {
+          /* ignora JSON malformado na linha */
+        }
+      }
+    }
+
+    if (progressBuffer.trim()) {
+      emit(progressBuffer.replace(/\s+/g, " ").trim().slice(0, 140), "text");
+    }
+
+    if (cancelTimer) clearInterval(cancelTimer);
+
+    return {
+      transcript,
+      resultText,
+      code: 0,
+      stderr: "",
+      cancelled: false,
+      inputTokens,
+      outputTokens,
+      cacheReadTokens: 0,
+      cacheCreationTokens: 0,
+    };
+  } catch (err: any) {
+    if (cancelTimer) clearInterval(cancelTimer);
+
+    if (cancelled || err?.name === "AbortError") {
+      return {
+        transcript,
+        resultText,
+        code: -1,
+        stderr: "Cancelado pelo usuário",
+        cancelled: true,
+        inputTokens,
+        outputTokens,
+        cacheReadTokens: 0,
+        cacheCreationTokens: 0,
+      };
+    }
+
+    const stderrMsg = err?.message || String(err);
+    return {
+      transcript,
+      resultText: "",
+      code: 1,
+      stderr: `Erro Ollama (${config.ollamaHost}): ${stderrMsg}. Certifique-se que o Ollama está rodando e o modelo '${modelName}' baixado (ollama pull ${modelName}).`,
+      cancelled: false,
+      inputTokens: 0,
+      outputTokens: 0,
+      cacheReadTokens: 0,
+      cacheCreationTokens: 0,
+    };
+  }
+}
+
+/**
+ * Executa via Claude Code CLI.
+ */
+function runClaude(
+  prompt: string,
+  onProgress?: (step: ProgressStep) => void,
+  shouldCancel?: () => Promise<boolean>,
+  options: RunSkillOptions = {}
+): Promise<RunSkillResult> {
   return new Promise((resolve, reject) => {
     const args = ["--dangerously-skip-permissions", "-p", prompt, "--output-format", "stream-json", "--verbose"];
     if (options.model) args.push("--model", options.model);
@@ -71,13 +228,11 @@ export function runSkill(
     let resultText = "";
     let buf = "";
     let cancelled = false;
-    // Uso real de tokens reportado pelo evento 'result' do stream-json (para a cota).
     let inputTokens = 0;
     let outputTokens = 0;
     let cacheReadTokens = 0;
     let cacheCreationTokens = 0;
 
-    // Poll de cancelamento: se o usuario pediu cancelar, mata o Claude.
     let cancelChecking = false;
     const cancelTimer = shouldCancel
       ? setInterval(async () => {
@@ -141,12 +296,11 @@ export function runSkill(
     const onData = (chunk: Buffer) => {
       buf += chunk.toString();
       let idx: number;
-      // stream-json emite um objeto JSON por linha (NDJSON)
       while ((idx = buf.indexOf("\n")) >= 0) {
         const line = buf.slice(0, idx).trim();
         buf = buf.slice(idx + 1);
         if (!line) continue;
-        try { handleEvent(JSON.parse(line)); } catch { /* linha nao-JSON: ignora */ }
+        try { handleEvent(JSON.parse(line)); } catch { /* ignora */ }
       }
     };
 
@@ -183,4 +337,28 @@ export function runSkill(
       });
     });
   });
+}
+
+/**
+ * Ponto de entrada unificado para execução de LLM no worker.
+ * Suporta Ollama (local e gratuito) e Claude CLI.
+ */
+export async function runSkill(
+  prompt: string,
+  onProgress?: (step: ProgressStep) => void,
+  shouldCancel?: () => Promise<boolean>,
+  options: RunSkillOptions = {}
+): Promise<RunSkillResult> {
+  if (config.llmProvider === "claude") {
+    try {
+      const res = await runClaude(prompt, onProgress, shouldCancel, options);
+      if (res.code === 0 || res.cancelled) return res;
+      console.warn("[runSkill] Claude CLI falhou. Redirecionando para Ollama local...", res.stderr);
+    } catch (err) {
+      console.warn("[runSkill] Erro ao executar Claude CLI. Redirecionando para Ollama local...", err);
+    }
+  }
+
+  // Padrão: Ollama local
+  return runOllama(prompt, onProgress, shouldCancel, options);
 }

@@ -43,14 +43,10 @@ function resolveClaudeBin(): string {
       .sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
     if (found.length > 0) return found[0];
   } catch {
-    /* pasta de extensoes inexistente: cai no erro abaixo */
+    /* pasta de extensoes inexistente */
   }
 
-  throw new Error(
-    explicit
-      ? `CLAUDE_BIN (${explicit}) nao existe e nao encontrei o binario da extensao em ${extDir}. Reconfira o .env.`
-      : `Nao encontrei o binario do Claude Code em ${extDir}. Instale a extensao ou defina CLAUDE_BIN no .env.`
-  );
+  return explicit || "claude";
 }
 
 // Cache com revalidacao. Reusa o binario ja resolvido, mas se ele sumir (a
@@ -137,6 +133,11 @@ export const config = {
   copilotModel: process.env.COPILOT_MODEL || "haiku",
   // Diretorio neutro para rodar o copiloto/digest (sem CLAUDE.md/skills do Orion).
   copilotCwd: ensureCopilotCwd(),
+
+  // Provedor de LLM para tarefas de texto/voz/copiloto: 'ollama' (default/local) ou 'claude'
+  llmProvider: (process.env.LLM_PROVIDER || "ollama").toLowerCase(),
+  ollamaHost: process.env.OLLAMA_HOST || "http://127.0.0.1:11434",
+  ollamaModel: process.env.OLLAMA_MODEL || "llama3.1",
 
   // Chave de API opcional para fallback quando a assinatura bate o limite de sessao.
   // Se definida (DTC_FALLBACK_API_KEY), o resumo tenta de novo cobrando via API.
