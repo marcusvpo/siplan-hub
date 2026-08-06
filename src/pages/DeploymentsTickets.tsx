@@ -24,15 +24,11 @@ import {
   getDefaultChamadosDateRange,
   needsHistoricalChamadosSync,
 } from "@/lib/chamados-date-range";
+import {
+  CHAMADOS_ORION_PRODUCTS,
+  getOrionSoftwarePattern,
+} from "@/lib/chamados-product-filter";
 import { toast } from "sonner";
-
-const PRODUTOS = [
-  { value: "todos", label: "Todos os produtos" },
-  { value: "Orion TN", label: "Orion TN" },
-  { value: "Orion PRO", label: "Orion PRO" },
-  { value: "Orion REG", label: "Orion REG" },
-  { value: "WEB RI", label: "WEB RI" }
-];
 
 export default function DeploymentsTickets() {
   const defaultDateRange = useMemo(() => getDefaultChamadosDateRange(), []);
@@ -98,7 +94,8 @@ export default function DeploymentsTickets() {
       try {
         const { data, error } = await supabase
           .from("chamados_processo_venda")
-          .select("nome_cliente");
+          .select("nome_cliente")
+          .ilike("software", getOrionSoftwarePattern("todos"));
         if (!error && data) {
           const names = data.map((row: { nome_cliente?: string | null }) => row.nome_cliente).filter(Boolean);
           if (names.length > 0) {
@@ -114,7 +111,8 @@ export default function DeploymentsTickets() {
         const { data: projs, error: projsErr } = await supabase
           .from("projects")
           .select("client_name")
-          .eq("is_deleted", false);
+          .eq("is_deleted", false)
+          .ilike("system_type", "%orion%");
         if (!projsErr && projs) {
           const names = projs.map((p: { client_name?: string | null }) => p.client_name).filter(Boolean);
           return [...new Set(names)].sort();
@@ -130,12 +128,13 @@ export default function DeploymentsTickets() {
 
   // Busca lista de status únicos
   const { data: statusList = [] } = useQuery<string[]>({
-    queryKey: ["distinctStatuses", dataInicio, dataFim],
+    queryKey: ["distinctStatuses", dataInicio, dataFim, produto],
     queryFn: async () => {
       try {
         let query = supabase
           .from("chamados_processo_venda")
-          .select("status");
+          .select("status")
+          .ilike("software", getOrionSoftwarePattern(produto));
         if (dataInicio) query = query.gte("data_abertura", dataInicio);
         if (dataFim) query = query.lte("data_abertura", dataFim);
         const { data, error } = await query;
@@ -287,7 +286,7 @@ export default function DeploymentsTickets() {
                     <SelectValue placeholder="Selecione o produto" />
                   </SelectTrigger>
                   <SelectContent>
-                    {PRODUTOS.map((p) => (
+                    {CHAMADOS_ORION_PRODUCTS.map((p) => (
                       <SelectItem key={p.value} value={p.value}>
                         {p.label}
                       </SelectItem>
