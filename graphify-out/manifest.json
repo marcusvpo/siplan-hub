@@ -155,7 +155,7 @@
     "semantic_hash": ""
   },
   "src/App.tsx": {
-    "mtime": 1786021097.9096334,
+    "mtime": 1786027900.7897658,
     "ast_hash": "25db1cf1c528e03da7b8a3f136760226",
     "semantic_hash": ""
   },
@@ -245,8 +245,8 @@
     "semantic_hash": "fbeef457886221679d8422238870cfb9"
   },
   "src/components/Layout/AppSidebar.tsx": {
-    "mtime": 1786026657.310418,
-    "ast_hash": "310c0a358460494bd354537265fddbf8",
+    "mtime": 1786027906.6543975,
+    "ast_hash": "f0e41f59266f591357a12b3391155bbc",
     "semantic_hash": ""
   },
   "src/components/Layout/Breadcrumbs.tsx": {
@@ -765,8 +765,8 @@
     "semantic_hash": "5bff9ea3904b15a9e1908b128c88e75f"
   },
   "src/constants/menuItems.ts": {
-    "mtime": 1786026657.308445,
-    "ast_hash": "5d325b63f5c374cb6202bc49a9393207",
+    "mtime": 1786027906.6554012,
+    "ast_hash": "4095c6a739c7bc580a4a63a4fa5bcfb7",
     "semantic_hash": ""
   },
   "src/contexts/AuthContext.tsx": {
@@ -1670,7 +1670,7 @@
     "semantic_hash": ""
   },
   "vm-worker/src/index.ts": {
-    "mtime": 1786023213.5269158,
+    "mtime": 1786027900.809818,
     "ast_hash": "cf48f1ef572d3fcd876a2e603de891d2",
     "semantic_hash": ""
   },
@@ -2675,13 +2675,13 @@
     "semantic_hash": ""
   },
   "src/constants/permissions.ts": {
-    "mtime": 1786026657.3114123,
-    "ast_hash": "5b9ee1ac806c4651eb71f4ea5ae5451a",
+    "mtime": 1786027906.6563985,
+    "ast_hash": "9343ffd0e01184e1d1b6530821ae4fec",
     "semantic_hash": ""
   },
   "src/test/permissions-catalog.test.ts": {
-    "mtime": 1786026657.3119204,
-    "ast_hash": "ed4e666bd4f997428cd4a74219a3abed",
+    "mtime": 1786027906.656905,
+    "ast_hash": "7176a68d9a78a2eb821c99c58dba5b76",
     "semantic_hash": ""
   },
   "supabase/migrations/20260715093000_rbac_screens_expansion.sql": {
@@ -2770,7 +2770,7 @@
     "semantic_hash": ""
   },
   "src/hooks/useChamados0800.ts": {
-    "mtime": 1786023244.41654,
+    "mtime": 1786027900.8058186,
     "ast_hash": "488f95b70867d5d2cc3e2b1aec9e6627",
     "semantic_hash": ""
   },
@@ -2780,8 +2780,8 @@
     "semantic_hash": ""
   },
   "vm-worker/src/chamadosSync.ts": {
-    "mtime": 1786027420.9987915,
-    "ast_hash": "649d39b8037f48374e3f1b8deb030998",
+    "mtime": 1786027906.6579132,
+    "ast_hash": "fae766a23d3762c26c7d62e235251fed",
     "semantic_hash": ""
   },
   "docs/PERMISSOES_RBAC.md": {
@@ -2870,8 +2870,8 @@
     "semantic_hash": ""
   },
   "scripts/apply-migration.js": {
-    "mtime": 1786023660.3938572,
-    "ast_hash": "d7e6d31e8bbe752339a7d127a9c1be91",
+    "mtime": 1786027900.7857242,
+    "ast_hash": "ecb979218d01d04ae7f4fe2730552c94",
     "semantic_hash": ""
   },
   "src/components/Reports/Implementers/ImplementerAllCartoriosTable.tsx": {
@@ -2960,8 +2960,8 @@
     "semantic_hash": ""
   },
   "src/pages/DeploymentsTickets.tsx": {
-    "mtime": 1786027244.6411767,
-    "ast_hash": "65a4ef7c27a5dddc25daab2cfa51049f",
+    "mtime": 1786028378.4842618,
+    "ast_hash": "1f55ba33e2ca15c16f89275b52f20163",
     "semantic_hash": ""
   },
   "src/utils/adherence-helpers.ts": {
@@ -2995,23 +2995,33 @@
     "semantic_hash": ""
   },
   "supabase/migrations/20260806095200_consultar_chamados_permission.sql": {
-    "mtime": 1786021030.2328513,
-    "ast_hash": "981429b83618fee11c53268228f8fc42",
+    "mtime": 1786027900.806818,
+    "ast_hash": "3be543edee00189e93b31f0a741fdc94",
     "semantic_hash": ""
   },
   "supabase/migrations/20260806103000_create_chamados_processo_venda.sql": {
-    "mtime": 1786023119.6389315,
-    "ast_hash": "c868199c45640657f84d40b37d8aa0b3",
+    "mtime": 1786027900.8078184,
+    "ast_hash": "7a6b5b58bc3382f292ba649742b61075",
     "semantic_hash": ""
   },
   "supabase/migrations/20260806114500_fix_distinct_chamados_processo_venda_clients.sql": {
-    "mtime": 1786027244.6371832,
-    "ast_hash": "261ba18a480ebefe0f272cbbf2cabfc7",
+    "mtime": 1786027906.6579132,
+    "ast_hash": "853439bf88cb0849bc2c6fb6846540df",
     "semantic_hash": ""
   },
   "docs/automacoes/coleta_infra_concluida.md": {
     "mtime": 1785877154.0627563,
     "ast_hash": "7b34591fd0c1e421afafd1bf1b0e75c7",
+    "semantic_hash": ""
+  },
+  "src/test/normalize-search.test.ts": {
+    "mtime": 1786028378.4842618,
+    "ast_hash": "f38a9d03c8e99fa1d59448d8207d7198",
+    "semantic_hash": ""
+  },
+  "src/utils/normalize-search.ts": {
+    "mtime": 1786028378.483259,
+    "ast_hash": "7b06f40a87fae4ece51b82b395564886",
     "semantic_hash": ""
   }
 }
