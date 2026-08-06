@@ -65,6 +65,15 @@ describe("catálogo de permissões", () => {
     }
   });
 
+  it("mantém a consulta de chamados no menu Dashboard", () => {
+    const dashboard = menuItems.find((item) => item.title === "Dashboard");
+    const implantacao = menuItems.find((item) => item.title === "Implantação");
+
+    expect(dashboard?.subItems?.some((sub) => sub.permissionKey === "chamados_query")).toBe(true);
+    expect(implantacao?.subItems?.some((sub) => sub.permissionKey === "chamados_query")).toBe(false);
+    expect(getResourceCategory("chamados_query")).toBe("Dashboard");
+  });
+
   it("cai em 'Outros' para recurso desconhecido, sem quebrar", () => {
     expect(getResourceCategory("recurso_inexistente")).toBe("Outros");
     expect(getResourceLabel("recurso_inexistente")).toBe("recurso_inexistente");

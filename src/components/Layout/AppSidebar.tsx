@@ -53,7 +53,8 @@ export function AppSidebar() {
   const { theme } = useTheme();
   const { projects } = useProjectsV2();
   const [isDashboardOpen, setIsDashboardOpen] = useState(
-    location.pathname.startsWith("/dashboard"),
+    location.pathname.startsWith("/dashboard") ||
+      location.pathname === "/deployments/tickets",
   );
   const [isImplantacaoOpen, setIsImplantacaoOpen] = useState(false);
   const [isCalendarioOpen, setIsCalendarioOpen] = useState(false);
@@ -100,13 +101,13 @@ export function AppSidebar() {
     ["kanban", "/dashboard/kanban"],
     ["pos_panorama", "/dashboard/pos-implantacao"],
     ["pos_panorama_geral", "/dashboard/pos-panorama-geral"],
+    ["chamados_query", "/deployments/tickets"],
   );
   const rotaImplantacao = primeiraRota(
     ["projects", "/projects"],
     ["reports", "/reports"],
     ["deployments_next", "/deployments"],
     ["deployments_latest", "/deployments/latest"],
-    ["chamados_query", "/deployments/tickets"],
   );
   const rotaCalendario = primeiraRota(
     ["calendar_projects", "/calendar"],
@@ -302,13 +303,30 @@ export function AppSidebar() {
                       </Button>
                     </Link>
                   )}
+                  {can("chamados_query") && (
+                    <Link to="/deployments/tickets">
+                      <Button
+                        variant={isActive("/deployments/tickets") ? "secondary" : "ghost"}
+                        size="sm"
+                        className="w-full justify-start gap-3 h-9"
+                      >
+                        <ClipboardList className="h-4 w-4" />
+                        <span>Consultar Chamados</span>
+                      </Button>
+                    </Link>
+                  )}
                 </div>
               </CollapsibleContent>
             </Collapsible>
           ) : (
             <Link to={rotaDashboard!}>
               <Button
-                variant={location.pathname.startsWith("/dashboard") ? "secondary" : "ghost"}
+                variant={
+                  location.pathname.startsWith("/dashboard") ||
+                    isActive("/deployments/tickets")
+                    ? "secondary"
+                    : "ghost"
+                }
                 className="w-full justify-center px-0"
                 title="Dashboard"
               >
@@ -398,18 +416,6 @@ export function AppSidebar() {
                     </Button>
                   </Link>
                   )}
-                  {can("chamados_query") && (
-                  <Link to="/deployments/tickets">
-                    <Button
-                      variant={isActive("/deployments/tickets") ? "secondary" : "ghost"}
-                      size="sm"
-                      className="w-full justify-start gap-3 h-9"
-                    >
-                      <ClipboardList className="h-4 w-4" />
-                      <span>Consultar Chamados</span>
-                    </Button>
-                  </Link>
-                  )}
                 </div>
               </CollapsibleContent>
             </Collapsible>
@@ -420,8 +426,7 @@ export function AppSidebar() {
                     isActive("/projects") ||
                       isActive("/reports") ||
                       isActive("/deployments") ||
-                      isActive("/deployments/latest") ||
-                      isActive("/deployments/tickets")
+                      isActive("/deployments/latest")
                       ? "secondary"
                       : "ghost"
                   }

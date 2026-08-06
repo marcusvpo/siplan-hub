@@ -42,13 +42,16 @@ export default function DeploymentsTickets() {
   const [clientSearchOpen, setClientSearchOpen] = useState(false);
 
   const { data: clients = [], isLoading: loadingClients } = useQuery<string[]>({
-    queryKey: ["distinctClients"],
+    queryKey: ["distinctProcessoVendaClients"],
     queryFn: async () => {
       // 1. Tenta a RPC para performance
       try {
         const { data, error } = await supabase.rpc("get_distinct_chamados_clientes");
-        if (!error && data && Array.isArray(data)) {
-          return data.map((row) => row.nome_cliente).filter(Boolean);
+        if (!error && data && Array.isArray(data) && data.length > 0) {
+          return data
+            .map((row) => row.nome_cliente)
+            .filter((name): name is string => Boolean(name))
+            .sort((a, b) => a.localeCompare(b, "pt-BR"));
         }
       } catch (e) {
         console.warn("RPC get_distinct_chamados_clientes falhou:", e);
