@@ -15,6 +15,7 @@ import {
   ClipboardList, Search, CalendarDays, Filter, X, ChevronLeft, ChevronRight, ChevronsUpDown, Check, Eye
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { normalizeSearchText } from "@/utils/normalize-search";
 
 const PRODUTOS = [
   { value: "todos", label: "Todos os produtos" },
@@ -313,8 +314,8 @@ export default function DeploymentsTickets() {
                 </PopoverTrigger>
                 <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
                   <Command filter={(value, search) => {
-                    const val = value.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                    const searchVal = search.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    const val = normalizeSearchText(value);
+                    const searchVal = normalizeSearchText(search);
                     return val.includes(searchVal) ? 1 : 0;
                   }}>
                     <CommandInput placeholder="Buscar cliente..." />
