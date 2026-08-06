@@ -548,57 +548,57 @@ export default function DeploymentsTickets() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <Table>
+              <Table className="text-xs">
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
-                    <TableHead className="w-[120px]">Chamado</TableHead>
-                    <TableHead className="min-w-[200px]">Serventia / Cliente</TableHead>
-                    <TableHead className="min-w-[150px]">Natureza</TableHead>
-                    <TableHead className="w-[140px]">Software</TableHead>
-                    <TableHead className="w-[120px] text-center">Status</TableHead>
-                    <TableHead className="w-[120px]">Abertura</TableHead>
-                    <TableHead className="w-[80px] text-center">Ações</TableHead>
+                    <TableHead className="h-9 w-[120px] px-3 text-xs">Chamado</TableHead>
+                    <TableHead className="h-9 min-w-[200px] px-3 text-xs">Serventia / Cliente</TableHead>
+                    <TableHead className="h-9 min-w-[150px] px-3 text-xs">Natureza</TableHead>
+                    <TableHead className="h-9 w-[140px] px-3 text-xs">Software</TableHead>
+                    <TableHead className="h-9 w-[120px] px-3 text-center text-xs">Status</TableHead>
+                    <TableHead className="h-9 w-[120px] px-3 text-xs">Abertura</TableHead>
+                    <TableHead className="h-9 w-[80px] px-3 text-center text-xs">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {chamados.map((chamado) => (
                     <TableRow key={chamado.numeroChamado} className="hover:bg-muted/40 transition-colors">
-                      <TableCell className="font-mono font-medium text-xs text-primary" style={{ color: "hsl(346, 84%, 45%)" }}>
+                      <TableCell className="px-3 py-2 font-mono font-medium text-[11px] text-primary" style={{ color: "hsl(346, 84%, 45%)" }}>
                         #{chamado.numeroChamado}
                       </TableCell>
-                      <TableCell className="max-w-[300px]">
-                        <div className="flex flex-col">
-                          <span className="font-semibold text-sm text-foreground truncate" title={chamado.nomeCliente}>
+                      <TableCell className="max-w-[300px] px-3 py-2">
+                        <div className="flex flex-col gap-0.5 leading-tight">
+                          <span className="truncate text-xs font-semibold text-foreground" title={chamado.nomeCliente}>
                             {chamado.nomeCliente || "—"}
                           </span>
-                          <span className="text-xs text-muted-foreground truncate" title={chamado.titulo}>
+                          <span className="truncate text-[11px] text-muted-foreground" title={chamado.titulo}>
                             {chamado.titulo || "—"}
                           </span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-sm font-normal text-muted-foreground truncate max-w-[180px]" title={chamado.natureza}>
+                      <TableCell className="max-w-[180px] truncate px-3 py-2 text-xs font-normal text-muted-foreground" title={chamado.natureza}>
                         {chamado.natureza || "—"}
                       </TableCell>
-                      <TableCell className="text-sm">
+                      <TableCell className="px-3 py-2 text-xs">
                         {chamado.software || chamado.produto || "—"}
                       </TableCell>
-                      <TableCell className="text-center">
-                        <Badge className={cn("pointer-events-none text-[10px] py-0.5 px-2 font-semibold", statusBadgeClass(chamado.status))}>
+                      <TableCell className="px-3 py-2 text-center">
+                        <Badge className={cn("pointer-events-none px-1.5 py-0 text-[9px] font-semibold", statusBadgeClass(chamado.status))}>
                           {chamado.status || "—"}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
+                      <TableCell className="px-3 py-2 text-xs text-muted-foreground">
                         {fmtDateBr(chamado.dataAbertura)}
                       </TableCell>
-                      <TableCell className="text-center">
+                      <TableCell className="px-3 py-2 text-center">
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 hover:bg-muted text-muted-foreground hover:text-foreground"
+                          className="h-7 w-7 text-muted-foreground hover:bg-muted hover:text-foreground"
                           onClick={() => setSelectedChamado(chamado)}
                           title="Visualizar chamado"
                         >
-                          <Eye className="h-4 w-4" />
+                          <Eye className="h-3.5 w-3.5" />
                         </Button>
                       </TableCell>
                     </TableRow>
