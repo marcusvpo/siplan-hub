@@ -303,9 +303,14 @@ async function runProcessoVendaOnce(): Promise<string> {
       WITH c AS (
         SELECT NumeroChamado, codigoCliente, NomeCliente, RazaoSocialCliente,
                DataPedidoVenda, NumeroPedidoVenda, TituloChamado, descricaotramite,
-               Natureza, Software, Status, DataAberturaChamado, DataEncerramentoChamado,
-               ROW_NUMBER() OVER (PARTITION BY NumeroChamado ORDER BY DataPedidoVenda DESC) AS rn
+               Natureza, Software, SoftwareLicenciadoPV, ResumoItem,
+               StatusFaturamento, DataAberturaChamado, SolDataFechamento,
+               ROW_NUMBER() OVER (
+                 PARTITION BY NumeroChamado
+                 ORDER BY DataAtividade DESC, DataPedidoVenda DESC, AbsID DESC
+               ) AS rn
         FROM dbo.vw_2026_PROCESSO_VENDA_FATURAMENTO_ITEM_ATIVIDADES
+        WHERE NumeroChamado IS NOT NULL
       )
       SELECT * FROM c WHERE rn = 1
     `);
@@ -320,11 +325,11 @@ async function runProcessoVendaOnce(): Promise<string> {
       titulo: r.TituloChamado || null,
       descricao: decodeDescricao(r.descricaotramite),
       natureza: r.Natureza || null,
-      status: r.Status || "Não iniciado",
+      status: r.StatusFaturamento || "Não iniciado",
       software: r.Software || null,
-      produto: r.Produto || null,
+      produto: r.SoftwareLicenciadoPV || r.ResumoItem || null,
       data_abertura: toIsoDate(r.DataAberturaChamado || r.DataPedidoVenda),
-      data_encerramento: toIsoDate(r.DataEncerramentoChamado),
+      data_encerramento: toIsoDate(r.SolDataFechamento),
       synced_at: new Date().toISOString(),
     }));
 
