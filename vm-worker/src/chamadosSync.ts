@@ -310,44 +310,20 @@ async function runProcessoVendaOnce(startDate: string, endDate: string): Promise
   }).connect();
 
   try {
-    // Filtra a view antes do ROW_NUMBER para o SQL Server nao varrer todo o
-    // historico a cada ciclo. O periodo pode ser a janela padrao ou uma faixa
-    // historica solicitada pela tela.
+    // View exclusiva da Consulta de Chamados: ja entrega uma linha por chamado,
+    // somente produtos Orion e sem o join 1:N de itens de venda/faturamento.
+    // O periodo continua no SQL para o otimizador consultar apenas a janela.
     const res = await pool
       .request()
       .input("startDate", sql.Date, startDate)
       .input("endDate", sql.Date, endDate)
       .query<any>(`
-      WITH processo AS (
-        SELECT NumeroChamado, codigoCliente, NomeCliente, RazaoSocialCliente,
-               DataPedidoVenda, NumeroPedidoVenda, TituloChamado, descricaotramite,
-               Natureza, Software, SoftwareLicenciadoPV, ResumoItem,
-               DataAberturaChamado, SolDataFechamento,
-               ROW_NUMBER() OVER (
-                 PARTITION BY NumeroChamado
-                 ORDER BY DataAtividade DESC, DataPedidoVenda DESC, AbsID DESC
-               ) AS rn
-        FROM dbo.vw_2026_PROCESSO_VENDA_FATURAMENTO_ITEM_ATIVIDADES
-        WHERE NumeroChamado IS NOT NULL
-          AND DataAberturaChamado >= @startDate
-          AND DataAberturaChamado < DATEADD(DAY, 1, @endDate)
-      ),
-      chamados AS (
-        SELECT NumeroChamado, StatusChamado,
-               ROW_NUMBER() OVER (
-                 PARTITION BY NumeroChamado
-                 ORDER BY DataAtividade DESC, DataAberturaChamado DESC
-               ) AS rn
-        FROM dbo.vw_2026_ChamadosTodosStatus
-        WHERE DataAberturaChamado >= @startDate
-          AND DataAberturaChamado < DATEADD(DAY, 1, @endDate)
-      )
-      SELECT p.*, c.StatusChamado
-      FROM processo p
-      LEFT JOIN chamados c
-        ON c.NumeroChamado = CONVERT(varchar(50), p.NumeroChamado)
-       AND c.rn = 1
-      WHERE p.rn = 1
+      SELECT NumeroChamado, codigoCliente, NomeCliente, RazaoSocialCliente,
+             TituloChamado, descricaotramite, Natureza, StatusChamado,
+             Software, Produto, DataAberturaChamado, SolDataFechamento
+      FROM dbo.vw_2026_HUB_CONSULTA_CHAMADOS_ORION
+      WHERE DataAberturaChamado >= @startDate
+        AND DataAberturaChamado < DATEADD(DAY, 1, @endDate)
     `);
 
     const rows = res.recordset.map((r) => ({
@@ -355,15 +331,15 @@ async function runProcessoVendaOnce(startDate: string, endDate: string): Promise
       codigo_cliente: r.codigoCliente ? String(r.codigoCliente) : null,
       nome_cliente: cleanNomeCliente(r.NomeCliente),
       razao_social_cliente: r.RazaoSocialCliente || null,
-      data_pedido_venda: toIsoDate(r.DataPedidoVenda),
-      numero_pedido_venda: r.NumeroPedidoVenda ? String(r.NumeroPedidoVenda) : null,
+      data_pedido_venda: null,
+      numero_pedido_venda: null,
       titulo: r.TituloChamado || null,
       descricao: decodeDescricao(r.descricaotramite),
       natureza: r.Natureza || null,
       status: normalizeChamadoStatus(r.StatusChamado) || "Não iniciado",
       software: r.Software || null,
-      produto: r.SoftwareLicenciadoPV || r.ResumoItem || null,
-      data_abertura: toIsoDate(r.DataAberturaChamado || r.DataPedidoVenda),
+      produto: r.Produto || null,
+      data_abertura: toIsoDate(r.DataAberturaChamado),
       data_encerramento: toIsoDate(r.SolDataFechamento),
       synced_at: new Date().toISOString(),
     }));
