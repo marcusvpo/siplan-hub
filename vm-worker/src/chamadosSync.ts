@@ -303,7 +303,7 @@ async function runProcessoVendaOnce(): Promise<string> {
       WITH c AS (
         SELECT NumeroChamado, codigoCliente, NomeCliente, RazaoSocialCliente,
                DataPedidoVenda, NumeroPedidoVenda, TituloChamado, descricaotramite,
-               Natureza, Software, Status, DataAberturaChamado, DataEncerramentoChamado,
+               Natureza, Software, Status, DataAberturaChamado,
                ROW_NUMBER() OVER (PARTITION BY NumeroChamado ORDER BY DataPedidoVenda DESC) AS rn
         FROM dbo.vw_2026_PROCESSO_VENDA_FATURAMENTO_ITEM_ATIVIDADES
       )
@@ -324,7 +324,7 @@ async function runProcessoVendaOnce(): Promise<string> {
       software: r.Software || null,
       produto: r.Produto || null,
       data_abertura: toIsoDate(r.DataAberturaChamado || r.DataPedidoVenda),
-      data_encerramento: toIsoDate(r.DataEncerramentoChamado),
+      data_encerramento: null,
       synced_at: new Date().toISOString(),
     }));
 
