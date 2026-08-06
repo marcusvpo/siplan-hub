@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { getOrionSoftwarePattern } from "@/lib/chamados-product-filter";
+import { getOrionProductPattern } from "@/lib/chamados-product-filter";
 
 export interface Chamado0800 {
   numeroChamado: string;
@@ -506,9 +506,9 @@ export function useChamadosSearch({
       if (clientNames && clientNames.length > 0) {
         q = q.in("nome_cliente", clientNames);
       }
-      // Esta tela e exclusiva dos softwares Orion. O campo `produto` descreve
-      // o item licenciado e pode conter Orion mesmo em chamados de Caixa/SIPLAN.
-      q = q.ilike("software", getOrionSoftwarePattern(product));
+      // As opcoes Orion TN/PRO/REG representam o produto licenciado. `software`
+      // e apenas o modulo que recebeu o chamado (Caixa, OrionPRO etc.).
+      q = q.ilike("produto", getOrionProductPattern(product));
       if (statuses && statuses.length > 0) {
         q = q.in("status", statuses);
       }
