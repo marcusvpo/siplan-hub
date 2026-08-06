@@ -473,7 +473,7 @@ export interface ChamadosSearchFilters {
   clientNames?: string[] | null;
   product?: string | null;
   searchTerm?: string | null;
-  status?: string | null;
+  statuses?: string[] | null;
   page?: number;
   pageSize?: number;
 }
@@ -484,12 +484,12 @@ export function useChamadosSearch({
   clientNames,
   product,
   searchTerm,
-  status,
+  statuses,
   page = 1,
   pageSize = 20,
 }: ChamadosSearchFilters) {
   const query = useQuery({
-    queryKey: ["chamadosSearch", startDate, endDate, clientNames, product, searchTerm, status, page, pageSize],
+    queryKey: ["chamadosSearch", startDate, endDate, clientNames, product, searchTerm, statuses, page, pageSize],
     staleTime: 30_000,
     queryFn: async () => {
       let q = supabase
@@ -514,8 +514,8 @@ export function useChamadosSearch({
           q = q.or(`software.ilike.%${prod}%,produto.ilike.%${prod}%`);
         }
       }
-      if (status && status !== "todos") {
-        q = q.eq("status", status);
+      if (statuses && statuses.length > 0) {
+        q = q.in("status", statuses);
       }
       if (searchTerm) {
         const term = searchTerm.trim();

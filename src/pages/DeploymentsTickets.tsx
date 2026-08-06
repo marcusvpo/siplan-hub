@@ -42,7 +42,7 @@ export default function DeploymentsTickets() {
   const [dataFim, setDataFim] = useState<string>(defaultDateRange.endDate);
   const [selectedClients, setSelectedClients] = useState<string[]>([]);
   const [produto, setProduto] = useState<string>("todos");
-  const [selectedStatus, setSelectedStatus] = useState<string>("todos");
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [busca, setBusca] = useState<string>("");
   
   // Paginação
@@ -52,6 +52,7 @@ export default function DeploymentsTickets() {
   // Modais e Diálogos
   const [selectedChamado, setSelectedChamado] = useState<Chamado0800 | null>(null);
   const [clientSearchOpen, setClientSearchOpen] = useState(false);
+  const [statusSearchOpen, setStatusSearchOpen] = useState(false);
   const lastRequestedRange = useRef<string>("");
   const { solicitarSync: solicitarSyncPeriodo, syncing: syncingPeriodo } =
     useSolicitarSyncProcessoVenda();
@@ -157,7 +158,7 @@ export default function DeploymentsTickets() {
     clientNames: selectedClients.length > 0 ? selectedClients : null,
     product: produto,
     searchTerm: busca || null,
-    status: selectedStatus,
+    statuses: selectedStatuses.length > 0 ? selectedStatuses : null,
     page,
     pageSize,
   });
@@ -174,12 +175,22 @@ export default function DeploymentsTickets() {
     });
   };
 
+  const toggleStatus = (status: string) => {
+    setSelectedStatuses((current) => {
+      const next = current.includes(status)
+        ? current.filter((item) => item !== status)
+        : [...current, status];
+      setPage(1);
+      return next;
+    });
+  };
+
   const clearAllFilters = () => {
     setDataInicio(defaultDateRange.startDate);
     setDataFim(defaultDateRange.endDate);
     setSelectedClients([]);
     setProduto("todos");
-    setSelectedStatus("todos");
+    setSelectedStatuses([]);
     setBusca("");
     setPage(1);
   };
@@ -220,7 +231,7 @@ export default function DeploymentsTickets() {
               <Filter className="h-3.5 w-3.5 text-primary" style={{ color: "hsl(346, 84%, 45%)" }} />
               Filtros
             </div>
-            {(dataInicio !== defaultDateRange.startDate || dataFim !== defaultDateRange.endDate || selectedClients.length > 0 || produto !== "todos" || selectedStatus !== "todos" || busca) && (
+            {(dataInicio !== defaultDateRange.startDate || dataFim !== defaultDateRange.endDate || selectedClients.length > 0 || produto !== "todos" || selectedStatuses.length > 0 || busca) && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -288,22 +299,70 @@ export default function DeploymentsTickets() {
               {/* Status */}
               <div className="space-y-1">
                 <label className="text-xs font-medium text-muted-foreground">Status</label>
-                <Select 
-                  value={selectedStatus} 
-                  onValueChange={(val) => handleFilterChange(setSelectedStatus, val)}
-                >
-                  <SelectTrigger className="w-full text-sm h-9">
-                    <SelectValue placeholder="Selecione o status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todos os status</SelectItem>
-                    {statusList.map((st) => (
-                      <SelectItem key={st} value={st}>
-                        {st}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Popover open={statusSearchOpen} onOpenChange={setStatusSearchOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      className="w-full justify-between font-normal text-sm h-9"
+                    >
+                      <span className="truncate">
+                        {selectedStatuses.length === 1
+                          ? selectedStatuses[0]
+                          : selectedStatuses.length > 1
+                          ? `${selectedStatuses.length} selecionados`
+                          : "Todos os status"}
+                      </span>
+                      <ChevronsUpDown className="ml-1 h-3.5 w-3.5 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Buscar status..." />
+                      <CommandList>
+                        <CommandEmpty>Nenhum status encontrado.</CommandEmpty>
+                        <CommandGroup>
+                          <CommandItem
+                            value="todos os status"
+                            onSelect={() => {
+                              setSelectedStatuses([]);
+                              setPage(1);
+                            }}
+                          >
+                            <div className="flex items-center gap-2 w-full">
+                              <div className={cn(
+                                "flex h-4 w-4 items-center justify-center rounded border border-primary/50",
+                                selectedStatuses.length === 0 ? "bg-primary text-primary-foreground border-primary" : "opacity-50"
+                              )}>
+                                {selectedStatuses.length === 0 && <Check className="h-3 w-3" />}
+                              </div>
+                              <span>Todos os status</span>
+                            </div>
+                          </CommandItem>
+                          {statusList.map((status) => (
+                            <CommandItem
+                              key={status}
+                              value={status}
+                              onSelect={() => toggleStatus(status)}
+                            >
+                              <div className="flex items-center gap-2 w-full">
+                                <div className={cn(
+                                  "flex h-4 w-4 items-center justify-center rounded border border-primary/50",
+                                  selectedStatuses.includes(status)
+                                    ? "bg-primary text-primary-foreground border-primary"
+                                    : "opacity-50"
+                                )}>
+                                  {selectedStatuses.includes(status) && <Check className="h-3 w-3" />}
+                                </div>
+                                <span className="truncate">{status}</span>
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
 
               {/* Busca Rápida */}
@@ -330,6 +389,40 @@ export default function DeploymentsTickets() {
                 </div>
               </div>
             </div>
+
+            {selectedStatuses.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 items-center">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase mr-1">Status:</span>
+                {selectedStatuses.map((status) => (
+                  <Badge
+                    key={status}
+                    variant="secondary"
+                    className="text-xs bg-muted/60 text-foreground py-0.5 pl-2 pr-1.5 flex items-center gap-1.5 h-6"
+                  >
+                    <span>{status}</span>
+                    <button
+                      type="button"
+                      onClick={() => toggleStatus(status)}
+                      className="rounded-full p-0.5 hover:bg-muted text-muted-foreground hover:text-foreground focus:outline-none"
+                      aria-label={`Remover status ${status}`}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedStatuses([]);
+                    setPage(1);
+                  }}
+                  className="text-xs text-muted-foreground hover:text-primary h-6 px-1.5 ml-1"
+                >
+                  Limpar Status
+                </Button>
+              </div>
+            )}
 
             <p className="text-[11px] text-muted-foreground">
               Período padrão: últimos 30 dias. Ao escolher uma data anterior, somente esse período é consultado na origem.
