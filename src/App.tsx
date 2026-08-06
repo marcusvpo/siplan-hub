@@ -26,6 +26,7 @@ const Calendar = lazy(() => import("./pages/Calendar"));
 const AgendaAnalistas = lazy(() => import("./pages/AgendaAnalistas"));
 const NextDeployments = lazy(() => import("./pages/NextDeployments"));
 const LatestDeployments = lazy(() => import("./pages/LatestDeployments"));
+const DeploymentsTickets = lazy(() => import("./pages/DeploymentsTickets"));
 const RoadmapPage = lazy(() => import("./pages/RoadmapPage"));
 const TeamConfiguration = lazy(() => import("./pages/admin/TeamConfiguration"));
 const AuditLogPage = lazy(() => import("./pages/admin/AuditLog"));
@@ -436,6 +437,14 @@ const App = () => (
                             element={
                               <RequirePermission resource="deployments_latest">
                                 <LatestDeployments />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/deployments/tickets"
+                            element={
+                              <RequirePermission resource="chamados_query">
+                                <DeploymentsTickets />
                               </RequirePermission>
                             }
                           />

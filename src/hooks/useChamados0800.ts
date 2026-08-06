@@ -409,3 +409,85 @@ export function useSolicitarSyncChamados0800() {
 
   return { solicitarSync, syncing };
 }
+
+export interface ChamadosSearchFilters {
+  startDate?: string | null;
+  endDate?: string | null;
+  clientNames?: string[] | null;
+  product?: string | null;
+  searchTerm?: string | null;
+  status?: string | null;
+  page?: number;
+  pageSize?: number;
+}
+
+export function useChamadosSearch({
+  startDate,
+  endDate,
+  clientNames,
+  product,
+  searchTerm,
+  status,
+  page = 1,
+  pageSize = 20,
+}: ChamadosSearchFilters) {
+  const query = useQuery({
+    queryKey: ["chamadosSearch", startDate, endDate, clientNames, product, searchTerm, status, page, pageSize],
+    staleTime: 30_000,
+    queryFn: async () => {
+      let q = supabase
+        .from("chamados_processo_venda")
+        .select("*", { count: "exact" });
+
+      if (startDate) {
+        q = q.gte("data_abertura", startDate);
+      }
+      if (endDate) {
+        q = q.lte("data_abertura", endDate);
+      }
+      if (clientNames && clientNames.length > 0) {
+        q = q.in("nome_cliente", clientNames);
+      }
+      if (product && product !== "todos") {
+        const prod = product.toLowerCase().trim();
+        if (prod.includes("orion")) {
+          const base = prod.replace("orion", "").trim(); // tn, pro, reg
+          q = q.or(`software.ilike.%orion%${base}%,software.ilike.%orion ${base}%,produto.ilike.%orion%${base}%,produto.ilike.%orion ${base}%`);
+        } else {
+          q = q.or(`software.ilike.%${prod}%,produto.ilike.%${prod}%`);
+        }
+      }
+      if (status && status !== "todos") {
+        q = q.eq("status", status);
+      }
+      if (searchTerm) {
+        const term = searchTerm.trim();
+        if (/^\d+$/.test(term)) {
+          q = q.or(`numero_chamado.eq.${term},nome_cliente.ilike.%${term}%,titulo.ilike.%${term}%`);
+        } else {
+          q = q.or(`nome_cliente.ilike.%${term}%,titulo.ilike.%${term}%,descricao.ilike.%${term}%`);
+        }
+      }
+
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+
+      q = q.order("data_abertura", { ascending: false }).range(from, to);
+
+      const { data, error, count } = await q;
+      if (error) throw error;
+
+      return {
+        chamados: (data ?? []).map(mapChamado0800),
+        totalCount: count ?? 0,
+      };
+    },
+  });
+
+  return {
+    chamados: query.data?.chamados ?? [],
+    totalCount: query.data?.totalCount ?? 0,
+    isLoading: query.isLoading,
+    error: query.error,
+  };
+}
