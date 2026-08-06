@@ -506,9 +506,9 @@ export function useChamadosSearch({
       if (clientNames && clientNames.length > 0) {
         q = q.in("nome_cliente", clientNames);
       }
-      // As opcoes Orion TN/PRO/REG representam o produto licenciado. `software`
-      // e apenas o modulo que recebeu o chamado (Caixa, OrionPRO etc.).
-      q = q.ilike("produto", getOrionProductPattern(product));
+      // A view repete o chamado para cada item licenciado do cliente. O campo
+      // `software` identifica o produto que realmente recebeu o chamado.
+      q = q.ilike("software", getOrionProductPattern(product));
       const validStatuses = (statuses ?? []).filter(isChamadoStatus);
       q = q.in(
         "status",
