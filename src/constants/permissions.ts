@@ -68,6 +68,7 @@ export const PERMISSION_RESOURCES: PermissionResourceDef[] = [
   { resource: "deployments_next", label: "Próximas Implantações", category: "Implantação & Projetos", actions: ["view"] },
   { resource: "deployments_latest", label: "Últimas Implantações", category: "Implantação & Projetos", actions: ["view"] },
   { resource: "compare_projects", label: "Comparar Projetos", category: "Implantação & Projetos", actions: ["view"] },
+  { resource: "chamados_query", label: "Consultar Chamados", category: "Implantação & Projetos", actions: ["view"] },
 
   // Relatórios & Arquivos
   { resource: "menu_reports", label: "Menu Relatórios", category: "Relatórios & Arquivos", actions: ["view"] },
