@@ -116,7 +116,9 @@ export const config = {
   mssqlDatabase: process.env.MSSQL_DATABASE || "Siplan_AcessoIA",
   mssqlUser: process.env.MSSQL_USER || "",
   mssqlPassword: process.env.MSSQL_PASSWORD || "",
+  processoVendaRequestTimeoutMs: Number(process.env.PROCESSO_VENDA_REQUEST_TIMEOUT_MS || 300000),
   chamadosSyncIntervalMs: Number(process.env.CHAMADOS_SYNC_INTERVAL_MS || 300000),
+  processoVendaSyncDays: Number(process.env.PROCESSO_VENDA_SYNC_DAYS || 30),
   // Cliente sai do escopo do sync quando todo pos-implantacao dele terminou ha
   // mais dias que isto (o historico ja espelhado permanece).
   chamadosSyncGraceDays: Number(process.env.CHAMADOS_SYNC_GRACE_DAYS || 60),

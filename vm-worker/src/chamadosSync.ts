@@ -47,6 +47,12 @@ interface ProjectRow {
   post_end_date: string | null;
 }
 
+interface ProcessoVendaSyncRequest {
+  id: string;
+  start_date: string;
+  end_date: string;
+}
+
 // Colunas de chamado da view + dedupe por NumeroChamado (1 linha por chamado).
 const CHAMADO_SELECT = `
   WITH c AS (
@@ -235,7 +241,8 @@ async function resolvePendingRequests(status: "done" | "error", detail: string):
     await supabase
       .from("chamados_sync_requests")
       .update({ status, detail, finished_at: new Date().toISOString() })
-      .eq("status", "pending");
+      .eq("status", "pending")
+      .eq("scope", "chamados_0800");
   } catch {
     /* best-effort */
   }
@@ -274,7 +281,12 @@ export function startChamadosSync(): void {
     .channel(`chamados-sync-requests-${config.workerId}`)
     .on(
       "postgres_changes",
-      { event: "INSERT", schema: "public", table: "chamados_sync_requests" },
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "chamados_sync_requests",
+        filter: "scope=eq.chamados_0800",
+      },
       () => { void tick(); }
     )
     .subscribe();
@@ -285,7 +297,7 @@ export function startChamadosSync(): void {
   );
 }
 
-async function runProcessoVendaOnce(): Promise<string> {
+async function runProcessoVendaOnce(startDate: string, endDate: string): Promise<string> {
   const pool = await new sql.ConnectionPool({
     server: config.mssqlHost,
     port: config.mssqlPort,
@@ -293,13 +305,18 @@ async function runProcessoVendaOnce(): Promise<string> {
     user: config.mssqlUser,
     password: config.mssqlPassword,
     options: { encrypt: false, trustServerCertificate: true },
-    requestTimeout: 120000,
+    requestTimeout: config.processoVendaRequestTimeoutMs,
   }).connect();
 
   try {
-    // Busca todos os chamados da view de processo de venda (sem filtro por projeto!)
-    // Deduplica por NumeroChamado trazendo o registro com o DataPedidoVenda mais recente
-    const res = await pool.request().query<any>(`
+    // Filtra a view antes do ROW_NUMBER para o SQL Server nao varrer todo o
+    // historico a cada ciclo. O periodo pode ser a janela padrao ou uma faixa
+    // historica solicitada pela tela.
+    const res = await pool
+      .request()
+      .input("startDate", sql.Date, startDate)
+      .input("endDate", sql.Date, endDate)
+      .query<any>(`
       WITH c AS (
         SELECT NumeroChamado, codigoCliente, NomeCliente, RazaoSocialCliente,
                DataPedidoVenda, NumeroPedidoVenda, TituloChamado, descricaotramite,
@@ -311,6 +328,8 @@ async function runProcessoVendaOnce(): Promise<string> {
                ) AS rn
         FROM dbo.vw_2026_PROCESSO_VENDA_FATURAMENTO_ITEM_ATIVIDADES
         WHERE NumeroChamado IS NOT NULL
+          AND DataAberturaChamado >= @startDate
+          AND DataAberturaChamado < DATEADD(DAY, 1, @endDate)
       )
       SELECT * FROM c WHERE rn = 1
     `);
@@ -343,7 +362,7 @@ async function runProcessoVendaOnce(): Promise<string> {
       }
     }
 
-    const detail = `${rows.length} chamados de processos de venda sincronizados`;
+    const detail = `${rows.length} chamados sincronizados no periodo ${startDate} a ${endDate}`;
     console.log(`[processo-venda-sync] ok: ${detail}`);
     return detail;
   } finally {
@@ -352,6 +371,39 @@ async function runProcessoVendaOnce(): Promise<string> {
 }
 
 let processoVendaSyncRunning = false;
+let processoVendaSyncRequested = false;
+
+function isoDateDaysAgo(days: number): string {
+  const date = new Date();
+  date.setUTCHours(0, 0, 0, 0);
+  date.setUTCDate(date.getUTCDate() - days);
+  return date.toISOString().slice(0, 10);
+}
+
+async function getPendingProcessoVendaRequest(): Promise<ProcessoVendaSyncRequest | null> {
+  const { data, error } = await supabase
+    .from("chamados_sync_requests")
+    .select("id, start_date, end_date")
+    .eq("scope", "processo_venda")
+    .eq("status", "pending")
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw new Error(`select processo venda sync request: ${error.message}`);
+  return data as ProcessoVendaSyncRequest | null;
+}
+
+async function resolveProcessoVendaRequest(
+  id: string,
+  status: "done" | "error",
+  detail: string
+): Promise<void> {
+  const { error } = await supabase
+    .from("chamados_sync_requests")
+    .update({ status, detail, finished_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) console.error("[processo-venda-sync] erro ao concluir pedido:", error.message);
+}
 
 export function startProcessoVendaSync(): void {
   if (!config.mssqlHost || !config.mssqlUser || !config.mssqlPassword) {
@@ -359,18 +411,54 @@ export function startProcessoVendaSync(): void {
     return;
   }
   const tick = async () => {
-    if (processoVendaSyncRunning) return;
+    if (processoVendaSyncRunning) {
+      processoVendaSyncRequested = true;
+      return;
+    }
     processoVendaSyncRunning = true;
     try {
-      await runProcessoVendaOnce();
+      const request = await getPendingProcessoVendaRequest();
+      if (request) {
+        try {
+          const detail = await runProcessoVendaOnce(request.start_date, request.end_date);
+          await resolveProcessoVendaRequest(request.id, "done", detail);
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          await resolveProcessoVendaRequest(request.id, "error", msg);
+          throw err;
+        }
+      } else {
+        await runProcessoVendaOnce(
+          isoDateDaysAgo(Math.max(config.processoVendaSyncDays - 1, 0)),
+          isoDateDaysAgo(0)
+        );
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error("[processo-venda-sync] erro:", msg);
     } finally {
       processoVendaSyncRunning = false;
+      if (processoVendaSyncRequested) {
+        processoVendaSyncRequested = false;
+        void tick();
+      }
     }
   };
   void tick();
   // Roda a cada intervalo de sincronização configurado (ex: 5 min)
   setInterval(() => { void tick(); }, config.chamadosSyncIntervalMs);
+
+  supabase
+    .channel(`processo-venda-sync-requests-${config.workerId}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "chamados_sync_requests",
+        filter: "scope=eq.processo_venda",
+      },
+      () => { void tick(); }
+    )
+    .subscribe();
 }
