@@ -1,6 +1,7 @@
 import sql from "mssql";
 import { supabase } from "./supabase.js";
 import { config } from "./config.js";
+import { normalizeChamadoStatus } from "./chamadosStatus.js";
 
 /**
  * Sync de chamados 0800 (Ellevo) -> espelho public.chamados_0800 no Supabase.
@@ -359,7 +360,7 @@ async function runProcessoVendaOnce(startDate: string, endDate: string): Promise
       titulo: r.TituloChamado || null,
       descricao: decodeDescricao(r.descricaotramite),
       natureza: r.Natureza || null,
-      status: r.StatusChamado || "Não iniciado",
+      status: normalizeChamadoStatus(r.StatusChamado) || "Não iniciado",
       software: r.Software || null,
       produto: r.SoftwareLicenciadoPV || r.ResumoItem || null,
       data_abertura: toIsoDate(r.DataAberturaChamado || r.DataPedidoVenda),

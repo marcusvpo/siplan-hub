@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { getOrionProductPattern } from "@/lib/chamados-product-filter";
+import { CHAMADO_STATUS_OPTIONS, isChamadoStatus } from "@/lib/chamados-status";
 
 export interface Chamado0800 {
   numeroChamado: string;
@@ -450,7 +451,6 @@ export function useSolicitarSyncProcessoVenda() {
           await Promise.all([
             queryClient.invalidateQueries({ queryKey: ["chamadosSearch"] }),
             queryClient.invalidateQueries({ queryKey: ["distinctProcessoVendaClients"] }),
-            queryClient.invalidateQueries({ queryKey: ["distinctStatuses"] }),
           ]);
           return;
         }
@@ -509,9 +509,11 @@ export function useChamadosSearch({
       // As opcoes Orion TN/PRO/REG representam o produto licenciado. `software`
       // e apenas o modulo que recebeu o chamado (Caixa, OrionPRO etc.).
       q = q.ilike("produto", getOrionProductPattern(product));
-      if (statuses && statuses.length > 0) {
-        q = q.in("status", statuses);
-      }
+      const validStatuses = (statuses ?? []).filter(isChamadoStatus);
+      q = q.in(
+        "status",
+        validStatuses.length > 0 ? validStatuses : [...CHAMADO_STATUS_OPTIONS]
+      );
       if (searchTerm) {
         const term = searchTerm.trim();
         if (/^\d+$/.test(term)) {

@@ -29,6 +29,7 @@ import {
   formatOrionProductLabel,
   getOrionProductPattern,
 } from "@/lib/chamados-product-filter";
+import { CHAMADO_STATUS_OPTIONS } from "@/lib/chamados-status";
 import { toast } from "sonner";
 
 export default function DeploymentsTickets() {
@@ -127,29 +128,7 @@ export default function DeploymentsTickets() {
     staleTime: 5 * 60_000,
   });
 
-  // Busca lista de status únicos
-  const { data: statusList = [] } = useQuery<string[]>({
-    queryKey: ["distinctStatuses", dataInicio, dataFim, produto],
-    queryFn: async () => {
-      try {
-        let query = supabase
-          .from("chamados_processo_venda")
-          .select("status")
-          .ilike("produto", getOrionProductPattern(produto));
-        if (dataInicio) query = query.gte("data_abertura", dataInicio);
-        if (dataFim) query = query.lte("data_abertura", dataFim);
-        const { data, error } = await query;
-        if (!error && data) {
-          const list = data.map((row: { status?: string | null }) => row.status).filter(Boolean);
-          return [...new Set(list)].sort();
-        }
-      } catch (e) {
-        console.warn("Falha ao consultar status únicos de chamados:", e);
-      }
-      return ["Não iniciado", "Em andamento", "Concluído"];
-    },
-    staleTime: 5 * 60_000,
-  });
+  const statusList = CHAMADO_STATUS_OPTIONS;
 
   // Query principal dos chamados usando o hook recém-criado
   const { chamados, totalCount, isLoading, error } = useChamadosSearch({
