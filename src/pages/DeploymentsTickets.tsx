@@ -97,7 +97,7 @@ export default function DeploymentsTickets() {
         const { data, error } = await supabase
           .from("chamados_processo_venda")
           .select("nome_cliente")
-          .ilike("produto", getOrionProductPattern("todos"));
+          .ilike("software", getOrionProductPattern("todos"));
         if (!error && data) {
           const names = data.map((row: { nome_cliente?: string | null }) => row.nome_cliente).filter(Boolean);
           if (names.length > 0) {
@@ -558,8 +558,8 @@ export default function DeploymentsTickets() {
                       <TableCell className="max-w-[180px] truncate px-3 py-2 text-xs font-normal text-muted-foreground" title={chamado.natureza}>
                         {chamado.natureza || "—"}
                       </TableCell>
-                      <TableCell className="px-3 py-2 text-xs" title={chamado.produto}>
-                        {formatOrionProductLabel(chamado.produto)}
+                      <TableCell className="px-3 py-2 text-xs" title={chamado.software}>
+                        {formatOrionProductLabel(chamado.software)}
                       </TableCell>
                       <TableCell className="px-3 py-2 text-center">
                         <Badge className={cn("pointer-events-none px-1.5 py-0 text-[9px] font-semibold", statusBadgeClass(chamado.status))}>
