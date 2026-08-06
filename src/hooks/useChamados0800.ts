@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { getOrionSoftwarePattern } from "@/lib/chamados-product-filter";
 
 export interface Chamado0800 {
   numeroChamado: string;
@@ -505,15 +506,9 @@ export function useChamadosSearch({
       if (clientNames && clientNames.length > 0) {
         q = q.in("nome_cliente", clientNames);
       }
-      if (product && product !== "todos") {
-        const prod = product.toLowerCase().trim();
-        if (prod.includes("orion")) {
-          const base = prod.replace("orion", "").trim(); // tn, pro, reg
-          q = q.or(`software.ilike.%orion%${base}%,software.ilike.%orion ${base}%,produto.ilike.%orion%${base}%,produto.ilike.%orion ${base}%`);
-        } else {
-          q = q.or(`software.ilike.%${prod}%,produto.ilike.%${prod}%`);
-        }
-      }
+      // Esta tela e exclusiva dos softwares Orion. O campo `produto` descreve
+      // o item licenciado e pode conter Orion mesmo em chamados de Caixa/SIPLAN.
+      q = q.ilike("software", getOrionSoftwarePattern(product));
       if (statuses && statuses.length > 0) {
         q = q.in("status", statuses);
       }
