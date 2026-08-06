@@ -109,6 +109,13 @@ export const menuItems: MenuItem[] = [
                 description: "Histórico de instalações concluídas",
                 permissionKey: "deployments_latest",
             },
+            {
+                title: "Consultar Chamados",
+                path: "/deployments/tickets",
+                icon: ClipboardList,
+                description: "Busca de chamados 0800 por cliente, período e produto",
+                permissionKey: "chamados_query",
+            },
         ],
     },
     {

@@ -6,7 +6,7 @@ import { processImproveJob } from "./processImproveJob.js";
 import { processVoiceJob } from "./processVoiceJob.js";
 import { processCopilotJob } from "./processCopilotJob.js";
 import { generateDailyDigest } from "./processCopilotDigest.js";
-import { startChamadosSync } from "./chamadosSync.js";
+import { startChamadosSync, startProcessoVendaSync } from "./chamadosSync.js";
 import { classifyPendingChamados } from "./chamadosClassify.js";
 
 let busy = false;
@@ -385,6 +385,7 @@ async function main() {
   // 0c. Espelho de chamados 0800 (Ellevo -> chamados_0800). Timer proprio, nao
   //     disputa o flag `busy` (nao envolve Claude). No-op sem MSSQL_* no .env.
   startChamadosSync();
+  startProcessoVendaSync();
 
   // 1. Realtime: acorda o worker assim que um job e inserido (conexao de SAIDA, sem
   //    tunel). So assina as tabelas das filas que ESTE worker processa (por papel).

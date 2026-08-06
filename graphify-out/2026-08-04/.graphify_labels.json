@@ -308,7 +308,5 @@
   "306": "useHomologationEvents.ts",
   "307": "ProtectedRoute.tsx",
   "308": "useImproveTextJobs.ts",
-  "309": "calendar.tsx",
-  "310": "processImproveJob.ts",
-  "311": "OverviewChart.tsx"
+  "309": "calendar.tsx"
 }

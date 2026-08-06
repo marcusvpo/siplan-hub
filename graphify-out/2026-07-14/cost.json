@@ -1,0 +1,19 @@
+{
+  "runs": [
+    {
+      "date": "2026-07-08T12:07:31.068025+00:00",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "files": 499
+    },
+    {
+      "date": "2026-07-08T12:25:24.495399+00:00",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "files": 306,
+      "note": "scoped: src+vm-worker+supabase"
+    }
+  ],
+  "total_input_tokens": 0,
+  "total_output_tokens": 0
+}
