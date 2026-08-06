@@ -129,12 +129,15 @@ export default function DeploymentsTickets() {
 
   // Busca lista de status únicos
   const { data: statusList = [] } = useQuery<string[]>({
-    queryKey: ["distinctStatuses"],
+    queryKey: ["distinctStatuses", dataInicio, dataFim],
     queryFn: async () => {
       try {
-        const { data, error } = await supabase
+        let query = supabase
           .from("chamados_processo_venda")
           .select("status");
+        if (dataInicio) query = query.gte("data_abertura", dataInicio);
+        if (dataFim) query = query.lte("data_abertura", dataFim);
+        const { data, error } = await query;
         if (!error && data) {
           const list = data.map((row: { status?: string | null }) => row.status).filter(Boolean);
           return [...new Set(list)].sort();

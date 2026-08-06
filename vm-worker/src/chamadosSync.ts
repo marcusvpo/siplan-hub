@@ -317,11 +317,11 @@ async function runProcessoVendaOnce(startDate: string, endDate: string): Promise
       .input("startDate", sql.Date, startDate)
       .input("endDate", sql.Date, endDate)
       .query<any>(`
-      WITH c AS (
+      WITH processo AS (
         SELECT NumeroChamado, codigoCliente, NomeCliente, RazaoSocialCliente,
                DataPedidoVenda, NumeroPedidoVenda, TituloChamado, descricaotramite,
                Natureza, Software, SoftwareLicenciadoPV, ResumoItem,
-               StatusFaturamento, DataAberturaChamado, SolDataFechamento,
+               DataAberturaChamado, SolDataFechamento,
                ROW_NUMBER() OVER (
                  PARTITION BY NumeroChamado
                  ORDER BY DataAtividade DESC, DataPedidoVenda DESC, AbsID DESC
@@ -330,8 +330,23 @@ async function runProcessoVendaOnce(startDate: string, endDate: string): Promise
         WHERE NumeroChamado IS NOT NULL
           AND DataAberturaChamado >= @startDate
           AND DataAberturaChamado < DATEADD(DAY, 1, @endDate)
+      ),
+      chamados AS (
+        SELECT NumeroChamado, StatusChamado,
+               ROW_NUMBER() OVER (
+                 PARTITION BY NumeroChamado
+                 ORDER BY DataAtividade DESC, DataAberturaChamado DESC
+               ) AS rn
+        FROM dbo.vw_2026_ChamadosTodosStatus
+        WHERE DataAberturaChamado >= @startDate
+          AND DataAberturaChamado < DATEADD(DAY, 1, @endDate)
       )
-      SELECT * FROM c WHERE rn = 1
+      SELECT p.*, c.StatusChamado
+      FROM processo p
+      LEFT JOIN chamados c
+        ON c.NumeroChamado = CONVERT(varchar(50), p.NumeroChamado)
+       AND c.rn = 1
+      WHERE p.rn = 1
     `);
 
     const rows = res.recordset.map((r) => ({
@@ -344,7 +359,7 @@ async function runProcessoVendaOnce(startDate: string, endDate: string): Promise
       titulo: r.TituloChamado || null,
       descricao: decodeDescricao(r.descricaotramite),
       natureza: r.Natureza || null,
-      status: r.StatusFaturamento || "Não iniciado",
+      status: r.StatusChamado || "Não iniciado",
       software: r.Software || null,
       produto: r.SoftwareLicenciadoPV || r.ResumoItem || null,
       data_abertura: toIsoDate(r.DataAberturaChamado || r.DataPedidoVenda),
