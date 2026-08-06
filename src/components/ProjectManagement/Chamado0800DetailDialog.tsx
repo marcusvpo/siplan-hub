@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { formatOrionProductLabel } from "@/lib/chamados-product-filter";
 import { Chamado0800 } from "@/hooks/useChamados0800";
 import { User } from "lucide-react";
 import {
@@ -77,9 +78,15 @@ export function Chamado0800DetailDialog({ chamado, onClose }: Chamado0800DetailD
                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Encerramento</p>
                 <p>{chamado.dataEncerramento ? fmtDateBr(chamado.dataEncerramento) : "Em aberto"}</p>
               </div>
+              {chamado.produto && (
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Produto</p>
+                  <p>{formatOrionProductLabel(chamado.produto)}</p>
+                </div>
+              )}
               {chamado.software && (
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Software</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Módulo / Software</p>
                   <p>{chamado.software}</p>
                 </div>
               )}

@@ -26,7 +26,8 @@ import {
 } from "@/lib/chamados-date-range";
 import {
   CHAMADOS_ORION_PRODUCTS,
-  getOrionSoftwarePattern,
+  formatOrionProductLabel,
+  getOrionProductPattern,
 } from "@/lib/chamados-product-filter";
 import { toast } from "sonner";
 
@@ -95,7 +96,7 @@ export default function DeploymentsTickets() {
         const { data, error } = await supabase
           .from("chamados_processo_venda")
           .select("nome_cliente")
-          .ilike("software", getOrionSoftwarePattern("todos"));
+          .ilike("produto", getOrionProductPattern("todos"));
         if (!error && data) {
           const names = data.map((row: { nome_cliente?: string | null }) => row.nome_cliente).filter(Boolean);
           if (names.length > 0) {
@@ -134,7 +135,7 @@ export default function DeploymentsTickets() {
         let query = supabase
           .from("chamados_processo_venda")
           .select("status")
-          .ilike("software", getOrionSoftwarePattern(produto));
+          .ilike("produto", getOrionProductPattern(produto));
         if (dataInicio) query = query.gte("data_abertura", dataInicio);
         if (dataFim) query = query.lte("data_abertura", dataFim);
         const { data, error } = await query;
@@ -553,7 +554,7 @@ export default function DeploymentsTickets() {
                     <TableHead className="h-9 w-[120px] px-3 text-xs">Chamado</TableHead>
                     <TableHead className="h-9 min-w-[200px] px-3 text-xs">Serventia / Cliente</TableHead>
                     <TableHead className="h-9 min-w-[150px] px-3 text-xs">Natureza</TableHead>
-                    <TableHead className="h-9 w-[140px] px-3 text-xs">Software</TableHead>
+                    <TableHead className="h-9 w-[140px] px-3 text-xs">Produto</TableHead>
                     <TableHead className="h-9 w-[120px] px-3 text-center text-xs">Status</TableHead>
                     <TableHead className="h-9 w-[120px] px-3 text-xs">Abertura</TableHead>
                     <TableHead className="h-9 w-[80px] px-3 text-center text-xs">Ações</TableHead>
@@ -578,8 +579,8 @@ export default function DeploymentsTickets() {
                       <TableCell className="max-w-[180px] truncate px-3 py-2 text-xs font-normal text-muted-foreground" title={chamado.natureza}>
                         {chamado.natureza || "—"}
                       </TableCell>
-                      <TableCell className="px-3 py-2 text-xs">
-                        {chamado.software || chamado.produto || "—"}
+                      <TableCell className="px-3 py-2 text-xs" title={chamado.produto}>
+                        {formatOrionProductLabel(chamado.produto)}
                       </TableCell>
                       <TableCell className="px-3 py-2 text-center">
                         <Badge className={cn("pointer-events-none px-1.5 py-0 text-[9px] font-semibold", statusBadgeClass(chamado.status))}>
