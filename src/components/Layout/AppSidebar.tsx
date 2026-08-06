@@ -106,6 +106,7 @@ export function AppSidebar() {
     ["reports", "/reports"],
     ["deployments_next", "/deployments"],
     ["deployments_latest", "/deployments/latest"],
+    ["chamados_query", "/deployments/tickets"],
   );
   const rotaCalendario = primeiraRota(
     ["calendar_projects", "/calendar"],
@@ -397,6 +398,18 @@ export function AppSidebar() {
                     </Button>
                   </Link>
                   )}
+                  {can("chamados_query") && (
+                  <Link to="/deployments/tickets">
+                    <Button
+                      variant={isActive("/deployments/tickets") ? "secondary" : "ghost"}
+                      size="sm"
+                      className="w-full justify-start gap-3 h-9"
+                    >
+                      <ClipboardList className="h-4 w-4" />
+                      <span>Consultar Chamados</span>
+                    </Button>
+                  </Link>
+                  )}
                 </div>
               </CollapsibleContent>
             </Collapsible>
@@ -407,7 +420,8 @@ export function AppSidebar() {
                     isActive("/projects") ||
                       isActive("/reports") ||
                       isActive("/deployments") ||
-                      isActive("/deployments/latest")
+                      isActive("/deployments/latest") ||
+                      isActive("/deployments/tickets")
                       ? "secondary"
                       : "ghost"
                   }

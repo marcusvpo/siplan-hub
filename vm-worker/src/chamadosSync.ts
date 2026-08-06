@@ -284,3 +284,88 @@ export function startChamadosSync(): void {
       `a cada ${Math.round(config.chamadosSyncIntervalMs / 1000)}s (+ sync sob demanda via Realtime)`
   );
 }
+
+async function runProcessoVendaOnce(): Promise<string> {
+  const pool = await new sql.ConnectionPool({
+    server: config.mssqlHost,
+    port: config.mssqlPort,
+    database: config.mssqlDatabase,
+    user: config.mssqlUser,
+    password: config.mssqlPassword,
+    options: { encrypt: false, trustServerCertificate: true },
+    requestTimeout: 120000,
+  }).connect();
+
+  try {
+    // Busca todos os chamados da view de processo de venda (sem filtro por projeto!)
+    // Deduplica por NumeroChamado trazendo o registro com o DataPedidoVenda mais recente
+    const res = await pool.request().query<any>(`
+      WITH c AS (
+        SELECT NumeroChamado, codigoCliente, NomeCliente, RazaoSocialCliente,
+               DataPedidoVenda, NumeroPedidoVenda, TituloChamado, descricaotramite,
+               Natureza, Software, Status, DataAberturaChamado, DataEncerramentoChamado,
+               ROW_NUMBER() OVER (PARTITION BY NumeroChamado ORDER BY DataPedidoVenda DESC) AS rn
+        FROM dbo.vw_2026_PROCESSO_VENDA_FATURAMENTO_ITEM_ATIVIDADES
+      )
+      SELECT * FROM c WHERE rn = 1
+    `);
+
+    const rows = res.recordset.map((r) => ({
+      numero_chamado: String(r.NumeroChamado),
+      codigo_cliente: r.codigoCliente ? String(r.codigoCliente) : null,
+      nome_cliente: cleanNomeCliente(r.NomeCliente),
+      razao_social_cliente: r.RazaoSocialCliente || null,
+      data_pedido_venda: toIsoDate(r.DataPedidoVenda),
+      numero_pedido_venda: r.NumeroPedidoVenda ? String(r.NumeroPedidoVenda) : null,
+      titulo: r.TituloChamado || null,
+      descricao: decodeDescricao(r.descricaotramite),
+      natureza: r.Natureza || null,
+      status: r.Status || "Não iniciado",
+      software: r.Software || null,
+      produto: r.Produto || null,
+      data_abertura: toIsoDate(r.DataAberturaChamado || r.DataPedidoVenda),
+      data_encerramento: toIsoDate(r.DataEncerramentoChamado),
+      synced_at: new Date().toISOString(),
+    }));
+
+    if (rows.length > 0) {
+      // Upsert em lotes de 200 na tabela chamados_processo_venda
+      for (let i = 0; i < rows.length; i += 200) {
+        const { error } = await supabase
+          .from("chamados_processo_venda")
+          .upsert(rows.slice(i, i + 200), { onConflict: "numero_chamado" });
+        if (error) throw new Error(`upsert chamados_processo_venda: ${error.message}`);
+      }
+    }
+
+    const detail = `${rows.length} chamados de processos de venda sincronizados`;
+    console.log(`[processo-venda-sync] ok: ${detail}`);
+    return detail;
+  } finally {
+    await pool.close();
+  }
+}
+
+let processoVendaSyncRunning = false;
+
+export function startProcessoVendaSync(): void {
+  if (!config.mssqlHost || !config.mssqlUser || !config.mssqlPassword) {
+    console.log("[processo-venda-sync] desligado (MSSQL_HOST/MSSQL_USER/MSSQL_PASSWORD ausentes).");
+    return;
+  }
+  const tick = async () => {
+    if (processoVendaSyncRunning) return;
+    processoVendaSyncRunning = true;
+    try {
+      await runProcessoVendaOnce();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error("[processo-venda-sync] erro:", msg);
+    } finally {
+      processoVendaSyncRunning = false;
+    }
+  };
+  void tick();
+  // Roda a cada intervalo de sincronização configurado (ex: 5 min)
+  setInterval(() => { void tick(); }, config.chamadosSyncIntervalMs);
+}

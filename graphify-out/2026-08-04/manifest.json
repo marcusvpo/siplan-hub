@@ -155,7 +155,7 @@
     "semantic_hash": ""
   },
   "src/App.tsx": {
-    "mtime": 1784230485.322349,
+    "mtime": 1784230226.711473,
     "ast_hash": "771444d74f66160ed7d2889604d223aa",
     "semantic_hash": ""
   },
@@ -245,7 +245,7 @@
     "semantic_hash": "fbeef457886221679d8422238870cfb9"
   },
   "src/components/Layout/AppSidebar.tsx": {
-    "mtime": 1784230485.3233504,
+    "mtime": 1784230235.137843,
     "ast_hash": "669906c4f9501e176eb27e63b6a5052c",
     "semantic_hash": ""
   },
@@ -765,7 +765,7 @@
     "semantic_hash": "5bff9ea3904b15a9e1908b128c88e75f"
   },
   "src/constants/menuItems.ts": {
-    "mtime": 1784230485.3233504,
+    "mtime": 1784230214.0482652,
     "ast_hash": "0c150b4ad004afd3afd19adfbe8864e4",
     "semantic_hash": ""
   },
@@ -1040,8 +1040,8 @@
     "semantic_hash": ""
   },
   "src/pages/Home.tsx": {
-    "mtime": 1784234040.1069508,
-    "ast_hash": "edc125460102143d4a7969a57057c18c",
+    "mtime": 1784126648.179173,
+    "ast_hash": "9f37156c2cb9838af0c96a1de8d4660c",
     "semantic_hash": ""
   },
   "src/pages/Index.tsx": {
@@ -1670,8 +1670,8 @@
     "semantic_hash": "f197a9f0666e63ed79a154fcc1bfa86f"
   },
   "vm-worker/src/config.ts": {
-    "mtime": 1785875276.8547237,
-    "ast_hash": "b351a228388adbc6de6cf443bb248c11",
+    "mtime": 1784218779.6058896,
+    "ast_hash": "0b96ae380492f35bbd5074c8c79035d8",
     "semantic_hash": ""
   },
   "vm-worker/src/index.ts": {
@@ -1685,8 +1685,8 @@
     "semantic_hash": "72aeed83ee2a9ca64077eaf1f59e26b1"
   },
   "vm-worker/src/processImproveJob.ts": {
-    "mtime": 1784232017.4956675,
-    "ast_hash": "044e84fc1183ebff1e71210cfd45254d",
+    "mtime": 1784228281.2802417,
+    "ast_hash": "ef109d92681db1373d9b146882eb119e",
     "semantic_hash": ""
   },
   "vm-worker/src/processJob.ts": {
@@ -1695,8 +1695,8 @@
     "semantic_hash": ""
   },
   "vm-worker/src/runSkill.ts": {
-    "mtime": 1785875290.2393441,
-    "ast_hash": "dc66c41e9d68c2d45f54ec45c6bc1fdf",
+    "mtime": 1784033251.5674064,
+    "ast_hash": "8e2e029009fc28264b3f34a58b9d81de",
     "semantic_hash": ""
   },
   "vm-worker/src/supabase.ts": {
@@ -2580,8 +2580,8 @@
     "semantic_hash": ""
   },
   "src/components/Copilot/FloatingCopilot.tsx": {
-    "mtime": 1784233030.9808986,
-    "ast_hash": "977cb7e279e8f1cfc732b07e19dac6f7",
+    "mtime": 1783955902.824179,
+    "ast_hash": "4ea16fa7eca8fbd92c34360546a75cf0",
     "semantic_hash": ""
   },
   "supabase/migrations/20260710150000_copilot_raise_quota.sql": {
@@ -2680,7 +2680,7 @@
     "semantic_hash": ""
   },
   "src/constants/permissions.ts": {
-    "mtime": 1784230485.3243482,
+    "mtime": 1784230204.8089542,
     "ast_hash": "04d97291a1f2a2c721a5f3b5f0803c8e",
     "semantic_hash": ""
   },
@@ -2810,13 +2810,13 @@
     "semantic_hash": ""
   },
   "src/hooks/usePosPanorama.ts": {
-    "mtime": 1784230485.325349,
+    "mtime": 1784230158.0615656,
     "ast_hash": "841cfdddd1f6ab6c7ecaea9f659165e0",
     "semantic_hash": ""
   },
   "src/pages/PosPanorama.tsx": {
-    "mtime": 1784232017.4936583,
-    "ast_hash": "f29c12495b2c3708d89ff579349d1779",
+    "mtime": 1784230191.777153,
+    "ast_hash": "9e1c161fa6731df89c9fe21664a9b1f8",
     "semantic_hash": ""
   },
   "supabase/migrations/20260716190000_pos_panorama_tema_ia.sql": {
@@ -2855,13 +2855,13 @@
     "semantic_hash": ""
   },
   "src/pages/PosPanoramaGeral.tsx": {
-    "mtime": 1784230485.3278663,
-    "ast_hash": "a6ff2d58511d7f2e9087aa15b32099f7",
+    "mtime": 1784230194.5961652,
+    "ast_hash": "c54f9e516ba2c7076fecbda0210d4306",
     "semantic_hash": ""
   },
   "supabase/migrations/20260716230000_pos_panorama_geral.sql": {
-    "mtime": 1784230485.3278663,
-    "ast_hash": "c8fe3f84710f8524a372a015cac5a8ba",
+    "mtime": 1784230210.4721735,
+    "ast_hash": "25230818c34453e66486dd65b7fad457",
     "semantic_hash": ""
   }
 }
