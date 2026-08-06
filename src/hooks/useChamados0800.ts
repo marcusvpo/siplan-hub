@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -406,6 +406,63 @@ export function useSolicitarSyncChamados0800() {
       setSyncing(false);
     }
   };
+
+  return { solicitarSync, syncing };
+}
+
+/**
+ * Solicita ao worker a importacao de uma faixa historica exclusiva da tela de
+ * Consulta de Chamados. O fluxo tradicional de chamados_0800 nao e alterado.
+ */
+export function useSolicitarSyncProcessoVenda() {
+  const queryClient = useQueryClient();
+  const [syncing, setSyncing] = useState(false);
+  const activeRequests = useRef(0);
+
+  const solicitarSync = useCallback(async (startDate: string, endDate: string): Promise<void> => {
+    activeRequests.current += 1;
+    setSyncing(true);
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      const { data, error } = await supabase
+        .from("chamados_sync_requests")
+        .insert({
+          requested_by: auth.user?.email ?? null,
+          scope: "processo_venda",
+          start_date: startDate,
+          end_date: endDate,
+        })
+        .select("id")
+        .single();
+      if (error) throw error;
+
+      // Periodos historicos extensos podem levar mais tempo no SQL Server.
+      for (let i = 0; i < 180; i++) {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        const { data: row, error: pollError } = await supabase
+          .from("chamados_sync_requests")
+          .select("status, detail")
+          .eq("id", data.id)
+          .maybeSingle();
+        if (pollError) throw pollError;
+        if (row?.status === "done") {
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: ["chamadosSearch"] }),
+            queryClient.invalidateQueries({ queryKey: ["distinctProcessoVendaClients"] }),
+            queryClient.invalidateQueries({ queryKey: ["distinctStatuses"] }),
+          ]);
+          return;
+        }
+        if (row?.status === "error") {
+          throw new Error(row.detail || "O worker reportou erro na consulta do periodo.");
+        }
+      }
+      throw new Error("A consulta do periodo excedeu 6 minutos.");
+    } finally {
+      activeRequests.current -= 1;
+      setSyncing(activeRequests.current > 0);
+    }
+  }, [queryClient]);
 
   return { solicitarSync, syncing };
 }

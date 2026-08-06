@@ -1,7 +1,11 @@
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useChamadosSearch, Chamado0800 } from "@/hooks/useChamados0800";
+import {
+  useChamadosSearch,
+  useSolicitarSyncProcessoVenda,
+  Chamado0800,
+} from "@/hooks/useChamados0800";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -16,6 +20,11 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { normalizeSearchText } from "@/utils/normalize-search";
+import {
+  getDefaultChamadosDateRange,
+  needsHistoricalChamadosSync,
+} from "@/lib/chamados-date-range";
+import { toast } from "sonner";
 
 const PRODUTOS = [
   { value: "todos", label: "Todos os produtos" },
@@ -26,9 +35,11 @@ const PRODUTOS = [
 ];
 
 export default function DeploymentsTickets() {
+  const defaultDateRange = useMemo(() => getDefaultChamadosDateRange(), []);
+
   // Filtros
-  const [dataInicio, setDataInicio] = useState<string>("");
-  const [dataFim, setDataFim] = useState<string>("");
+  const [dataInicio, setDataInicio] = useState<string>(defaultDateRange.startDate);
+  const [dataFim, setDataFim] = useState<string>(defaultDateRange.endDate);
   const [selectedClients, setSelectedClients] = useState<string[]>([]);
   const [produto, setProduto] = useState<string>("todos");
   const [selectedStatus, setSelectedStatus] = useState<string>("todos");
@@ -41,6 +52,30 @@ export default function DeploymentsTickets() {
   // Modais e Diálogos
   const [selectedChamado, setSelectedChamado] = useState<Chamado0800 | null>(null);
   const [clientSearchOpen, setClientSearchOpen] = useState(false);
+  const lastRequestedRange = useRef<string>("");
+  const { solicitarSync: solicitarSyncPeriodo, syncing: syncingPeriodo } =
+    useSolicitarSyncProcessoVenda();
+
+  useEffect(() => {
+    if (!needsHistoricalChamadosSync(dataInicio, dataFim, defaultDateRange)) return;
+
+    const rangeKey = `${dataInicio}:${dataFim}`;
+    if (lastRequestedRange.current === rangeKey) return;
+
+    const timer = window.setTimeout(() => {
+      lastRequestedRange.current = rangeKey;
+      void solicitarSyncPeriodo(dataInicio, dataFim).catch((error) => {
+        lastRequestedRange.current = "";
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Nao foi possivel atualizar o periodo selecionado."
+        );
+      });
+    }, 700);
+
+    return () => window.clearTimeout(timer);
+  }, [dataInicio, dataFim, defaultDateRange, solicitarSyncPeriodo]);
 
   const { data: clients = [], isLoading: loadingClients } = useQuery<string[]>({
     queryKey: ["distinctProcessoVendaClients"],
@@ -64,7 +99,7 @@ export default function DeploymentsTickets() {
           .from("chamados_processo_venda")
           .select("nome_cliente");
         if (!error && data) {
-          const names = data.map((row: any) => row.nome_cliente).filter(Boolean);
+          const names = data.map((row: { nome_cliente?: string | null }) => row.nome_cliente).filter(Boolean);
           if (names.length > 0) {
             return [...new Set(names)].sort();
           }
@@ -80,7 +115,7 @@ export default function DeploymentsTickets() {
           .select("client_name")
           .eq("is_deleted", false);
         if (!projsErr && projs) {
-          const names = projs.map((p: any) => p.client_name).filter(Boolean);
+          const names = projs.map((p: { client_name?: string | null }) => p.client_name).filter(Boolean);
           return [...new Set(names)].sort();
         }
       } catch (e) {
@@ -101,7 +136,7 @@ export default function DeploymentsTickets() {
           .from("chamados_processo_venda")
           .select("status");
         if (!error && data) {
-          const list = data.map((row: any) => row.status).filter(Boolean);
+          const list = data.map((row: { status?: string | null }) => row.status).filter(Boolean);
           return [...new Set(list)].sort();
         }
       } catch (e) {
@@ -137,8 +172,8 @@ export default function DeploymentsTickets() {
   };
 
   const clearAllFilters = () => {
-    setDataInicio("");
-    setDataFim("");
+    setDataInicio(defaultDateRange.startDate);
+    setDataFim(defaultDateRange.endDate);
     setSelectedClients([]);
     setProduto("todos");
     setSelectedStatus("todos");
@@ -168,7 +203,7 @@ export default function DeploymentsTickets() {
         {/* Indicador de Status/Sync rápido */}
         <Badge variant="outline" className="px-3 py-1 font-normal text-xs text-muted-foreground flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          Conexão Ellevo ativa (sync ~5 min)
+          {syncingPeriodo ? "Atualizando período selecionado..." : "Conexão Ellevo ativa (sync ~5 min)"}
         </Badge>
       </div>
 
@@ -182,7 +217,7 @@ export default function DeploymentsTickets() {
               <Filter className="h-3.5 w-3.5 text-primary" style={{ color: "hsl(346, 84%, 45%)" }} />
               Filtros
             </div>
-            {(dataInicio || dataFim || selectedClients.length > 0 || produto !== "todos" || selectedStatus !== "todos" || busca) && (
+            {(dataInicio !== defaultDateRange.startDate || dataFim !== defaultDateRange.endDate || selectedClients.length > 0 || produto !== "todos" || selectedStatus !== "todos" || busca) && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -207,6 +242,7 @@ export default function DeploymentsTickets() {
                 <Input
                   type="date"
                   value={dataInicio}
+                  max={dataFim || undefined}
                   onChange={(e) => handleFilterChange(setDataInicio, e.target.value)}
                   className="w-full text-sm h-9"
                 />
@@ -220,6 +256,7 @@ export default function DeploymentsTickets() {
                 <Input
                   type="date"
                   value={dataFim}
+                  min={dataInicio || undefined}
                   onChange={(e) => handleFilterChange(setDataFim, e.target.value)}
                   className="w-full text-sm h-9"
                 />
@@ -290,6 +327,10 @@ export default function DeploymentsTickets() {
                 </div>
               </div>
             </div>
+
+            <p className="text-[11px] text-muted-foreground">
+              Período padrão: últimos 30 dias. Ao escolher uma data anterior, somente esse período é consultado na origem.
+            </p>
 
             {/* Linha 2: Clientes / Serventias (Full Width) */}
             <div className="space-y-1">
