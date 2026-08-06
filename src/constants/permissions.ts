@@ -61,6 +61,7 @@ export const PERMISSION_RESOURCES: PermissionResourceDef[] = [
   { resource: "kanban", label: "Dashboard - Quadro Kanban", category: "Dashboard", actions: ["view", "edit"] },
   { resource: "pos_panorama", label: "Dashboard - Panorama Pós-Implantação", category: "Dashboard", actions: ["view"] },
   { resource: "pos_panorama_geral", label: "Dashboard - Panorama Geral (pós histórico)", category: "Dashboard", actions: ["view"] },
+  { resource: "chamados_query", label: "Consultar Chamados", category: "Dashboard", actions: ["view"] },
 
   // Implantação & Projetos
   { resource: "menu_implantacao", label: "Menu Implantação", category: "Implantação & Projetos", actions: ["view"] },
@@ -68,7 +69,6 @@ export const PERMISSION_RESOURCES: PermissionResourceDef[] = [
   { resource: "deployments_next", label: "Próximas Implantações", category: "Implantação & Projetos", actions: ["view"] },
   { resource: "deployments_latest", label: "Últimas Implantações", category: "Implantação & Projetos", actions: ["view"] },
   { resource: "compare_projects", label: "Comparar Projetos", category: "Implantação & Projetos", actions: ["view"] },
-  { resource: "chamados_query", label: "Consultar Chamados", category: "Implantação & Projetos", actions: ["view"] },
 
   // Relatórios & Arquivos
   { resource: "menu_reports", label: "Menu Relatórios", category: "Relatórios & Arquivos", actions: ["view"] },
