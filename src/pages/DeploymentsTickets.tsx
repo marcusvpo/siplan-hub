@@ -201,34 +201,34 @@ export default function DeploymentsTickets() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-4 md:p-5 space-y-4">
       {/* Cabeçalho */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-muted pb-5">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 border-b border-muted pb-3">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-3 text-foreground">
-            <ClipboardList className="h-6 w-6 text-primary" style={{ color: "hsl(346, 84%, 45%)" }} />
+          <h1 className="text-xl font-bold flex items-center gap-2 text-foreground">
+            <ClipboardList className="h-5 w-5 text-primary" style={{ color: "hsl(346, 84%, 45%)" }} />
             Consulta de Chamados (Ellevo/0800)
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs text-muted-foreground mt-0.5">
             Pesquise e consulte o histórico de chamados sincronizados do Ellevo de forma global e consolidada.
           </p>
         </div>
         
         {/* Indicador de Status/Sync rápido */}
-        <Badge variant="outline" className="px-3 py-1 font-normal text-xs text-muted-foreground flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <Badge variant="outline" className="px-2.5 py-0.5 font-normal text-[11px] text-muted-foreground flex items-center gap-1.5">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
           {syncingPeriodo ? "Atualizando período selecionado..." : "Conexão Ellevo ativa (sync ~5 min)"}
         </Badge>
       </div>
 
       {/* Seção de Filtros Compacta */}
       <Card className="border border-muted/80 shadow-sm bg-card/60 backdrop-blur-sm">
-        <CardContent className="p-4 space-y-3">
+        <CardContent className="p-3 space-y-2">
           
           {/* Header do Filtro Inline com Limpeza de Filtros */}
-          <div className="flex items-center justify-between border-b border-muted/40 pb-2">
-            <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              <Filter className="h-3.5 w-3.5 text-primary" style={{ color: "hsl(346, 84%, 45%)" }} />
+          <div className="flex items-center justify-between border-b border-muted/40 pb-1.5">
+            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              <Filter className="h-3 w-3 text-primary" style={{ color: "hsl(346, 84%, 45%)" }} />
               Filtros
             </div>
             {(dataInicio !== defaultDateRange.startDate || dataFim !== defaultDateRange.endDate || selectedClients.length > 0 || produto !== "todos" || selectedStatuses.length > 0 || busca) && (
@@ -236,7 +236,7 @@ export default function DeploymentsTickets() {
                 variant="ghost"
                 size="sm"
                 onClick={clearAllFilters}
-                className="text-xs text-muted-foreground hover:text-primary h-6 px-2 flex items-center gap-1"
+                className="text-[11px] text-muted-foreground hover:text-primary h-5 px-1.5 flex items-center gap-1"
               >
                 <X className="h-3 w-3" />
                 Limpar filtros
@@ -245,12 +245,12 @@ export default function DeploymentsTickets() {
           </div>
 
           {/* Grid de Filtros: Linha 1 com 5 colunas, Linha 2 com Clientes (Full Width) */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             {/* Linha 1: Datas, Produto, Status, Busca */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2">
               {/* Data Início */}
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground">
+              <div className="space-y-0.5">
+                <label className="text-[11px] font-medium text-muted-foreground">
                   Abertura (Início)
                 </label>
                 <Input
@@ -258,13 +258,13 @@ export default function DeploymentsTickets() {
                   value={dataInicio}
                   max={dataFim || undefined}
                   onChange={(e) => handleFilterChange(setDataInicio, e.target.value)}
-                  className="w-full text-sm h-9"
+                  className="w-full text-xs h-8"
                 />
               </div>
 
               {/* Data Fim */}
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground">
+              <div className="space-y-0.5">
+                <label className="text-[11px] font-medium text-muted-foreground">
                   Abertura (Fim)
                 </label>
                 <Input
@@ -272,18 +272,18 @@ export default function DeploymentsTickets() {
                   value={dataFim}
                   min={dataInicio || undefined}
                   onChange={(e) => handleFilterChange(setDataFim, e.target.value)}
-                  className="w-full text-sm h-9"
+                  className="w-full text-xs h-8"
                 />
               </div>
 
               {/* Produto */}
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground">Produto / Software</label>
+              <div className="space-y-0.5">
+                <label className="text-[11px] font-medium text-muted-foreground">Produto / Software</label>
                 <Select 
                   value={produto} 
                   onValueChange={(val) => handleFilterChange(setProduto, val)}
                 >
-                  <SelectTrigger className="w-full text-sm h-9">
+                  <SelectTrigger className="w-full text-xs h-8">
                     <SelectValue placeholder="Selecione o produto" />
                   </SelectTrigger>
                   <SelectContent>
@@ -297,14 +297,14 @@ export default function DeploymentsTickets() {
               </div>
 
               {/* Status */}
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground">Status</label>
+              <div className="space-y-0.5">
+                <label className="text-[11px] font-medium text-muted-foreground">Status</label>
                 <Popover open={statusSearchOpen} onOpenChange={setStatusSearchOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
                       role="combobox"
-                      className="w-full justify-between font-normal text-sm h-9"
+                      className="w-full justify-between font-normal text-xs h-8"
                     >
                       <span className="truncate">
                         {selectedStatuses.length === 1
@@ -313,28 +313,29 @@ export default function DeploymentsTickets() {
                           ? `${selectedStatuses.length} selecionados`
                           : "Todos os status"}
                       </span>
-                      <ChevronsUpDown className="ml-1 h-3.5 w-3.5 shrink-0 opacity-50" />
+                      <ChevronsUpDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
                     <Command>
-                      <CommandInput placeholder="Buscar status..." />
+                      <CommandInput placeholder="Buscar status..." className="h-8 text-xs" />
                       <CommandList>
                         <CommandEmpty>Nenhum status encontrado.</CommandEmpty>
                         <CommandGroup>
                           <CommandItem
                             value="todos os status"
+                            className="py-1.5 text-xs"
                             onSelect={() => {
                               setSelectedStatuses([]);
                               setPage(1);
                             }}
                           >
-                            <div className="flex items-center gap-2 w-full">
+                            <div className="flex items-center gap-1.5 w-full">
                               <div className={cn(
-                                "flex h-4 w-4 items-center justify-center rounded border border-primary/50",
+                                "flex h-3.5 w-3.5 items-center justify-center rounded border border-primary/50",
                                 selectedStatuses.length === 0 ? "bg-primary text-primary-foreground border-primary" : "opacity-50"
                               )}>
-                                {selectedStatuses.length === 0 && <Check className="h-3 w-3" />}
+                                {selectedStatuses.length === 0 && <Check className="h-2.5 w-2.5" />}
                               </div>
                               <span>Todos os status</span>
                             </div>
@@ -343,16 +344,17 @@ export default function DeploymentsTickets() {
                             <CommandItem
                               key={status}
                               value={status}
+                              className="py-1.5 text-xs"
                               onSelect={() => toggleStatus(status)}
                             >
-                              <div className="flex items-center gap-2 w-full">
+                              <div className="flex items-center gap-1.5 w-full">
                                 <div className={cn(
-                                  "flex h-4 w-4 items-center justify-center rounded border border-primary/50",
+                                  "flex h-3.5 w-3.5 items-center justify-center rounded border border-primary/50",
                                   selectedStatuses.includes(status)
                                     ? "bg-primary text-primary-foreground border-primary"
                                     : "opacity-50"
                                 )}>
-                                  {selectedStatuses.includes(status) && <Check className="h-3 w-3" />}
+                                  {selectedStatuses.includes(status) && <Check className="h-2.5 w-2.5" />}
                                 </div>
                                 <span className="truncate">{status}</span>
                               </div>
@@ -366,8 +368,8 @@ export default function DeploymentsTickets() {
               </div>
 
               {/* Busca Rápida */}
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground">
+              <div className="space-y-0.5">
+                <label className="text-[11px] font-medium text-muted-foreground">
                   Busca Rápida
                 </label>
                 <div className="relative">
@@ -376,7 +378,7 @@ export default function DeploymentsTickets() {
                     placeholder="Chamado, título, termo..."
                     value={busca}
                     onChange={(e) => handleFilterChange(setBusca, e.target.value)}
-                    className="w-full text-sm pr-7 h-9"
+                    className="w-full text-xs pr-7 h-8"
                   />
                   {busca && (
                     <button
@@ -391,13 +393,13 @@ export default function DeploymentsTickets() {
             </div>
 
             {selectedStatuses.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 items-center">
+              <div className="flex flex-wrap gap-1 items-center">
                 <span className="text-[10px] font-bold text-muted-foreground uppercase mr-1">Status:</span>
                 {selectedStatuses.map((status) => (
                   <Badge
                     key={status}
                     variant="secondary"
-                    className="text-xs bg-muted/60 text-foreground py-0.5 pl-2 pr-1.5 flex items-center gap-1.5 h-6"
+                    className="text-[11px] bg-muted/60 text-foreground py-0 pl-1.5 pr-1 flex items-center gap-1 h-5"
                   >
                     <span>{status}</span>
                     <button
@@ -406,7 +408,7 @@ export default function DeploymentsTickets() {
                       className="rounded-full p-0.5 hover:bg-muted text-muted-foreground hover:text-foreground focus:outline-none"
                       aria-label={`Remover status ${status}`}
                     >
-                      <X className="h-3 w-3" />
+                      <X className="h-2.5 w-2.5" />
                     </button>
                   </Badge>
                 ))}
@@ -417,26 +419,26 @@ export default function DeploymentsTickets() {
                     setSelectedStatuses([]);
                     setPage(1);
                   }}
-                  className="text-xs text-muted-foreground hover:text-primary h-6 px-1.5 ml-1"
+                  className="text-[11px] text-muted-foreground hover:text-primary h-5 px-1 ml-1"
                 >
                   Limpar Status
                 </Button>
               </div>
             )}
 
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-[10px] leading-tight text-muted-foreground">
               Período padrão: últimos 30 dias. Ao escolher uma data anterior, somente esse período é consultado na origem.
             </p>
 
             {/* Linha 2: Clientes / Serventias (Full Width) */}
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-muted-foreground">Clientes / Serventias</label>
+            <div className="space-y-0.5">
+              <label className="text-[11px] font-medium text-muted-foreground">Clientes / Serventias</label>
               <Popover open={clientSearchOpen} onOpenChange={setClientSearchOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     role="combobox"
-                    className="w-full justify-between font-normal text-sm h-9"
+                    className="w-full justify-between font-normal text-xs h-8"
                     disabled={loadingClients}
                   >
                     <span className="truncate">
@@ -446,7 +448,7 @@ export default function DeploymentsTickets() {
                         ? `${selectedClients.length} selecionados`
                         : "Selecionar Clientes..."}
                     </span>
-                    <ChevronsUpDown className="ml-1 h-3.5 w-3.5 shrink-0 opacity-50" />
+                    <ChevronsUpDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
@@ -455,25 +457,26 @@ export default function DeploymentsTickets() {
                     const searchVal = normalizeSearchText(search);
                     return val.includes(searchVal) ? 1 : 0;
                   }}>
-                    <CommandInput placeholder="Buscar cliente..." />
-                    <CommandList className="max-h-[250px] overflow-y-auto">
+                    <CommandInput placeholder="Buscar cliente..." className="h-8 text-xs" />
+                    <CommandList className="max-h-[220px] overflow-y-auto">
                       <CommandEmpty>Nenhum cliente encontrado.</CommandEmpty>
                       <CommandGroup>
                         {clients.map((client) => (
                           <CommandItem
                             key={client}
                             value={client.toLowerCase()}
+                            className="py-1.5 text-xs"
                             onSelect={() => toggleClient(client)}
                           >
-                            <div className="flex items-center gap-2 w-full">
+                            <div className="flex items-center gap-1.5 w-full">
                               <div className={cn(
-                                "flex h-4 w-4 items-center justify-center rounded border border-primary/50 transition-colors",
+                                "flex h-3.5 w-3.5 items-center justify-center rounded border border-primary/50 transition-colors",
                                 selectedClients.includes(client) ? "bg-primary text-primary-foreground border-primary" : "opacity-50"
                               )}
                               style={selectedClients.includes(client) ? { backgroundColor: "hsl(346, 84%, 45%)", borderColor: "hsl(346, 84%, 45%)" } : {}}
                               >
                                 {selectedClients.includes(client) && (
-                                  <Check className="h-3 w-3" />
+                                  <Check className="h-2.5 w-2.5" />
                                 )}
                               </div>
                               <span className="truncate">{client}</span>
@@ -490,13 +493,13 @@ export default function DeploymentsTickets() {
 
           {/* Badges de Clientes Selecionados (Row debaixo compacta) */}
           {selectedClients.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 items-center pt-2 border-t border-muted/30">
+            <div className="flex flex-wrap gap-1 items-center pt-1.5 border-t border-muted/30">
               <span className="text-[10px] font-bold text-muted-foreground uppercase mr-1">Selecionados:</span>
               {selectedClients.map((client) => (
                 <Badge 
                   key={client} 
                   variant="secondary" 
-                  className="text-xs bg-muted/60 text-foreground py-0.5 pl-2 pr-1.5 flex items-center gap-1.5 h-6"
+                  className="text-[11px] bg-muted/60 text-foreground py-0 pl-1.5 pr-1 flex items-center gap-1 h-5"
                 >
                   <span className="truncate max-w-[180px]">{client}</span>
                   <button
@@ -504,7 +507,7 @@ export default function DeploymentsTickets() {
                     onClick={() => toggleClient(client)}
                     className="rounded-full p-0.5 hover:bg-muted text-muted-foreground hover:text-foreground focus:outline-none"
                   >
-                    <X className="h-3 w-3" />
+                    <X className="h-2.5 w-2.5" />
                   </button>
                 </Badge>
               ))}
@@ -515,7 +518,7 @@ export default function DeploymentsTickets() {
                   setSelectedClients([]);
                   setPage(1);
                 }}
-                className="text-xs text-muted-foreground hover:text-primary h-6 px-1.5 ml-1"
+                className="text-[11px] text-muted-foreground hover:text-primary h-5 px-1 ml-1"
               >
                 Limpar Clientes
               </Button>
