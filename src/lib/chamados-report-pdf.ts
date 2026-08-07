@@ -88,6 +88,23 @@ export async function generateChamadosReportPdf(
     (item.status || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes("conclu")
   ).length;
   const open = chamados.length - concluded;
+  const natureGroups = Array.from(
+    chamados.reduce((groups, item) => {
+      const nature = item.natureza?.trim() || "Sem natureza";
+      const key = nature
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLocaleLowerCase("pt-BR");
+      const group = groups.get(key) || { label: nature, items: [] };
+      group.items.push(item);
+      groups.set(key, group);
+      return groups;
+    }, new Map<string, { label: string; items: ChamadoReportRow[] }>())
+  )
+    .map(([, group]) => [group.label, group.items] as const)
+    .sort(([natureA], [natureB]) =>
+      natureA.localeCompare(natureB, "pt-BR", { sensitivity: "base" })
+  );
 
   const drawSummaryCard = (
     x: number,
@@ -109,6 +126,43 @@ export async function generateChamadosReportPdf(
     pdf.setFontSize(7);
     pdf.setTextColor(100, 110, 125);
     pdf.text(label, x + 5, y + 9.2);
+  };
+
+  const drawNatureSummary = () => {
+    const cardsPerRow = 4;
+    const gap = 2;
+    const cardWidth = (pageWidth - marginX * 2 - gap * (cardsPerRow - 1)) / cardsPerRow;
+    const cardHeight = 9;
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(7.5);
+    pdf.setTextColor(65, 75, 90);
+    pdf.text("Chamados por natureza", marginX, y);
+    y += 2.5;
+
+    natureGroups.forEach(([nature, items], index) => {
+      const column = index % cardsPerRow;
+      const x = marginX + column * (cardWidth + gap);
+      if (column === 0 && index > 0) y += cardHeight + gap;
+
+      pdf.setFillColor(248, 250, 252);
+      pdf.setDrawColor(225, 230, 237);
+      pdf.roundedRect(x, y, cardWidth, cardHeight, 1.2, 1.2, "FD");
+      pdf.setFillColor(190, 0, 48);
+      pdf.rect(x, y, 1.2, cardHeight, "F");
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(9);
+      pdf.setTextColor(25, 32, 44);
+      pdf.text(String(items.length), x + 4, y + 5.4);
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(6.5);
+      pdf.setTextColor(85, 95, 110);
+      const natureLines = pdf.splitTextToSize(nature, cardWidth - 15) as string[];
+      const label = natureLines[0] || "Sem natureza";
+      pdf.text(label.length > 34 ? `${label.slice(0, 31)}...` : label, x + 12, y + 5.3);
+    });
+
+    y += cardHeight + 5;
   };
 
   const drawReportHeader = () => {
@@ -148,6 +202,7 @@ export async function generateChamadosReportPdf(
     drawSummaryCard(marginX + 135.5, "Concluídos", concluded, [5, 150, 105]);
     drawSummaryCard(marginX + 203.25, "Em aberto", open, [37, 99, 235]);
     y += 16;
+    drawNatureSummary();
   };
 
   const columns = [
@@ -196,10 +251,35 @@ export async function generateChamadosReportPdf(
     drawTableHeader();
   };
 
-  drawReportHeader();
-  drawTableHeader();
+  const drawNatureGroupHeader = (
+    nature: string,
+    count: number,
+    continuation = false
+  ) => {
+    const height = 7;
+    pdf.setFillColor(235, 238, 244);
+    pdf.setDrawColor(215, 221, 230);
+    pdf.rect(marginX, y, tableWidth, height, "FD");
+    pdf.setFillColor(190, 0, 48);
+    pdf.rect(marginX, y, 1.5, height, "F");
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(8);
+    pdf.setTextColor(35, 44, 58);
+    pdf.text(
+      `${nature}${continuation ? " (continuação)" : ""}`,
+      marginX + 3.5,
+      y + 4.5
+    );
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(7);
+    pdf.setTextColor(90, 100, 115);
+    pdf.text(`${count} chamado(s)`, marginX + tableWidth - 3, y + 4.5, {
+      align: "right",
+    });
+    y += height;
+  };
 
-  chamados.forEach((item, rowIndex) => {
+  const prepareChamadoLayout = (item: ChamadoReportRow) => {
     const wrappedCells = columns.map((column) => {
       const lines = pdf.splitTextToSize(text(column.value(item)), column.width - 3) as string[];
       if (lines.length <= 5) return lines;
@@ -207,7 +287,10 @@ export async function generateChamadosReportPdf(
       visible[4] = `${visible[4].replace(/\s+$/, "")}...`;
       return visible;
     });
-    const rowHeight = Math.max(7, Math.max(...wrappedCells.map((lines) => lines.length)) * lineHeight + 3);
+    const rowHeight = Math.max(
+      7,
+      Math.max(...wrappedCells.map((lines) => lines.length)) * lineHeight + 3
+    );
 
     pdf.setFont("helvetica", "normal");
     pdf.setFontSize(6.4);
@@ -221,49 +304,77 @@ export async function generateChamadosReportPdf(
     }
     const tramiteRowHeight = Math.max(5.8, tramiteLines.length * 2.7 + 2.2);
 
-    if (y + rowHeight + tramiteRowHeight > pageHeight - bottomMargin) {
+    return {
+      wrappedCells,
+      rowHeight,
+      tramiteLines,
+      tramiteRowHeight,
+      totalHeight: rowHeight + tramiteRowHeight,
+    };
+  };
+
+  drawReportHeader();
+  drawTableHeader();
+
+  let rowIndex = 0;
+  natureGroups.forEach(([nature, items]) => {
+    const firstLayout = items[0] ? prepareChamadoLayout(items[0]) : null;
+    if (
+      firstLayout &&
+      y + 7 + firstLayout.totalHeight > pageHeight - bottomMargin
+    ) {
       startContinuationPage();
     }
+    drawNatureGroupHeader(nature, items.length);
 
-    let x = marginX;
-    wrappedCells.forEach((lines, index) => {
-      const column = columns[index];
-      const fill: [number, number, number] =
-        rowIndex % 2 === 0 ? [255, 255, 255] : [247, 249, 252];
-      // O jsPDF consome o estilo de pintura depois de cada retângulo. As cores
-      // precisam ser reaplicadas em cada célula para não herdarem o cabeçalho.
-      pdf.setFillColor(...fill);
-      pdf.setDrawColor(220, 225, 232);
-      pdf.rect(x, y, column.width, rowHeight, "F");
-      pdf.rect(x, y, column.width, rowHeight, "S");
-
-      pdf.setFont("helvetica", index === 0 ? "bold" : "normal");
-      pdf.setFontSize(7);
-      if (index === 0) {
-        pdf.setTextColor(190, 0, 48);
-      } else if (index === 5 && (item.status || "").toLowerCase().includes("conclu")) {
-        pdf.setTextColor(5, 130, 90);
-      } else {
-        pdf.setTextColor(30, 38, 50);
+    items.forEach((item, itemIndex) => {
+      const layout = itemIndex === 0 && firstLayout ? firstLayout : prepareChamadoLayout(item);
+      if (y + layout.totalHeight > pageHeight - bottomMargin) {
+        startContinuationPage();
+        drawNatureGroupHeader(nature, items.length, true);
       }
-      pdf.text(lines, x + 1.5, y + 3.7);
-      x += column.width;
-    });
-    y += rowHeight;
 
-    const tramiteFill: [number, number, number] =
-      rowIndex % 2 === 0 ? [246, 248, 251] : [241, 244, 248];
-    pdf.setFillColor(...tramiteFill);
-    pdf.setDrawColor(220, 225, 232);
-    pdf.rect(marginX, y, tableWidth, tramiteRowHeight, "F");
-    pdf.rect(marginX, y, tableWidth, tramiteRowHeight, "S");
-    pdf.setFillColor(190, 0, 48);
-    pdf.rect(marginX, y, 1.2, tramiteRowHeight, "F");
-    pdf.setFont("helvetica", "italic");
-    pdf.setFontSize(6.4);
-    pdf.setTextColor(75, 85, 100);
-    pdf.text(tramiteLines, marginX + 2.5, y + 3.2);
-    y += tramiteRowHeight;
+      let x = marginX;
+      layout.wrappedCells.forEach((lines, index) => {
+        const column = columns[index];
+        const fill: [number, number, number] =
+          rowIndex % 2 === 0 ? [255, 255, 255] : [247, 249, 252];
+        // O jsPDF consome o estilo de pintura depois de cada retângulo. As cores
+        // precisam ser reaplicadas em cada célula para não herdarem o cabeçalho.
+        pdf.setFillColor(...fill);
+        pdf.setDrawColor(220, 225, 232);
+        pdf.rect(x, y, column.width, layout.rowHeight, "F");
+        pdf.rect(x, y, column.width, layout.rowHeight, "S");
+
+        pdf.setFont("helvetica", index === 0 ? "bold" : "normal");
+        pdf.setFontSize(7);
+        if (index === 0) {
+          pdf.setTextColor(190, 0, 48);
+        } else if (index === 5 && (item.status || "").toLowerCase().includes("conclu")) {
+          pdf.setTextColor(5, 130, 90);
+        } else {
+          pdf.setTextColor(30, 38, 50);
+        }
+        pdf.text(lines, x + 1.5, y + 3.7);
+        x += column.width;
+      });
+      y += layout.rowHeight;
+
+      const tramiteFill: [number, number, number] =
+        rowIndex % 2 === 0 ? [246, 248, 251] : [241, 244, 248];
+      pdf.setFillColor(...tramiteFill);
+      pdf.setDrawColor(220, 225, 232);
+      pdf.rect(marginX, y, tableWidth, layout.tramiteRowHeight, "F");
+      pdf.rect(marginX, y, tableWidth, layout.tramiteRowHeight, "S");
+      pdf.setFillColor(190, 0, 48);
+      pdf.rect(marginX, y, 1.2, layout.tramiteRowHeight, "F");
+      pdf.setFont("helvetica", "italic");
+      pdf.setFontSize(6.4);
+      pdf.setTextColor(75, 85, 100);
+      pdf.text(layout.tramiteLines, marginX + 2.5, y + 3.2);
+      y += layout.tramiteRowHeight;
+      rowIndex += 1;
+    });
   });
 
   const totalPages = pdf.getNumberOfPages();
