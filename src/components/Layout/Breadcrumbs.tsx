@@ -53,13 +53,13 @@ export function Breadcrumbs() {
         return (
           <div key={to} className="flex items-center">
             {isLast ? (
-              <span className="font-medium text-foreground max-w-[240px] md:max-w-[360px] truncate" title={name}>
+              <span className="font-medium text-foreground max-w-[110px] sm:max-w-[240px] md:max-w-[360px] truncate text-xs sm:text-sm" title={name}>
                 {name}
               </span>
             ) : (
               <Link
                 to={to}
-                className="hover:text-foreground transition-colors max-w-[200px] truncate"
+                className="hover:text-foreground transition-colors max-w-[90px] sm:max-w-[200px] truncate text-xs sm:text-sm"
                 title={name}
               >
                 {name}

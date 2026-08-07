@@ -138,8 +138,8 @@ export function GeneralInfoTab({ project, onUpdate, onStageClick }: TabProps) {
       </div>
 
       {/* 1. Pipeline Visual Moderno */}
-      <div className="w-full py-2 px-4 bg-card/50 backdrop-blur-sm rounded-2xl border shadow-sm relative overflow-hidden">
-        <div className="flex items-center justify-between relative z-10 max-w-5xl mx-auto">
+      <div className="w-full py-2 px-3 sm:px-4 bg-card/50 backdrop-blur-sm rounded-2xl border shadow-sm relative overflow-x-auto scrollbar-none">
+        <div className="flex items-center justify-between relative z-10 min-w-[500px] sm:min-w-full max-w-5xl mx-auto py-1">
           {/* Connecting Line */}
           <div className="absolute top-[1.3rem] left-0 right-0 h-0.5 bg-muted -z-10 rounded-full" />
 
