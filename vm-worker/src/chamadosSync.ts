@@ -437,8 +437,8 @@ export function startProcessoVendaSync(): void {
     }
   };
   void tick();
-  // Roda a cada intervalo de sincronização configurado (ex: 5 min)
-  setInterval(() => { void tick(); }, config.chamadosSyncIntervalMs);
+  // Atualização de fundo econômica; pedidos da tela continuam imediatos via Realtime.
+  setInterval(() => { void tick(); }, config.processoVendaSyncIntervalMs);
 
   supabase
     .channel(`processo-venda-sync-requests-${config.workerId}`)

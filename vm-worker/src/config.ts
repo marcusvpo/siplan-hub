@@ -118,6 +118,9 @@ export const config = {
   mssqlPassword: process.env.MSSQL_PASSWORD || "",
   processoVendaRequestTimeoutMs: Number(process.env.PROCESSO_VENDA_REQUEST_TIMEOUT_MS || 300000),
   chamadosSyncIntervalMs: Number(process.env.CHAMADOS_SYNC_INTERVAL_MS || 300000),
+  // Consulta de Chamados usa um espelho separado: atualizacao de fundo mais
+  // economica, complementada pelo sync sob demanda disparado pelos filtros.
+  processoVendaSyncIntervalMs: Number(process.env.PROCESSO_VENDA_SYNC_INTERVAL_MS || 3600000),
   processoVendaSyncDays: Number(process.env.PROCESSO_VENDA_SYNC_DAYS || 30),
   // Cliente sai do escopo do sync quando todo pos-implantacao dele terminou ha
   // mais dias que isto (o historico ja espelhado permanece).

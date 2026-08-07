@@ -233,6 +233,7 @@ aparecer `papeis=models` num e `papeis=ai` no outro, ambos com `Realtime: SUBSCR
 | `MSSQL_USER` / `MSSQL_PASSWORD` | (Chamados 0800) Credencial de leitura da view. So no `.env` da VM. |
 | `CHAMADOS_SYNC_INTERVAL_MS` | (Chamados 0800) Intervalo do sync (padrao 300000 = 5 min). |
 | `PROCESSO_VENDA_REQUEST_TIMEOUT_MS` | Timeout exclusivo da view de processo de venda (padrao 300000 = 5 min). |
+| `PROCESSO_VENDA_SYNC_INTERVAL_MS` | Intervalo de fundo exclusivo da Consulta de Chamados (padrao 3600000 = 1 hora; filtros continuam sincronizando sob demanda). |
 | `PROCESSO_VENDA_SYNC_DAYS` | Janela padrao do espelho de processo de venda (padrao 30 dias). |
 | `CHAMADOS_SYNC_GRACE_DAYS` | (Chamados 0800) Dias apos o fim do pos em que o cliente segue no escopo (padrao 60). |
 
