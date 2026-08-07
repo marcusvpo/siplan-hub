@@ -22,7 +22,6 @@ import { cn } from "@/lib/utils";
 import { normalizeSearchText } from "@/utils/normalize-search";
 import {
   getDefaultChamadosDateRange,
-  needsHistoricalChamadosSync,
 } from "@/lib/chamados-date-range";
 import {
   CHAMADOS_ORION_PRODUCTS,
@@ -31,6 +30,9 @@ import {
 } from "@/lib/chamados-product-filter";
 import { CHAMADO_STATUS_OPTIONS } from "@/lib/chamados-status";
 import { toast } from "sonner";
+
+const FILTER_SYNC_DEBOUNCE_MS = 700;
+const FILTER_SYNC_FRESHNESS_MS = 30_000;
 
 export default function DeploymentsTickets() {
   const defaultDateRange = useMemo(() => getDefaultChamadosDateRange(), []);
@@ -51,30 +53,45 @@ export default function DeploymentsTickets() {
   const [selectedChamado, setSelectedChamado] = useState<Chamado0800 | null>(null);
   const [clientSearchOpen, setClientSearchOpen] = useState(false);
   const [statusSearchOpen, setStatusSearchOpen] = useState(false);
-  const lastRequestedRange = useRef<string>("");
+  const syncedRanges = useRef(new Map<string, number>());
+  const syncingRanges = useRef(new Set<string>());
   const { solicitarSync: solicitarSyncPeriodo, syncing: syncingPeriodo } =
     useSolicitarSyncProcessoVenda();
 
+  const filterSyncKey = useMemo(
+    () => JSON.stringify([selectedClients, produto, selectedStatuses, busca.trim(), clientSearchOpen]),
+    [selectedClients, produto, selectedStatuses, busca, clientSearchOpen]
+  );
+
   useEffect(() => {
-    if (!needsHistoricalChamadosSync(dataInicio, dataFim, defaultDateRange)) return;
+    if (!dataInicio || !dataFim || dataInicio > dataFim) return;
 
     const rangeKey = `${dataInicio}:${dataFim}`;
-    if (lastRequestedRange.current === rangeKey) return;
+    const lastSync = syncedRanges.current.get(rangeKey) ?? 0;
+    if (Date.now() - lastSync < FILTER_SYNC_FRESHNESS_MS) return;
 
     const timer = window.setTimeout(() => {
-      lastRequestedRange.current = rangeKey;
-      void solicitarSyncPeriodo(dataInicio, dataFim).catch((error) => {
-        lastRequestedRange.current = "";
-        toast.error(
-          error instanceof Error
-            ? error.message
-            : "Nao foi possivel atualizar o periodo selecionado."
-        );
-      });
-    }, 700);
+      if (syncingRanges.current.has(rangeKey)) return;
+
+      syncingRanges.current.add(rangeKey);
+      void solicitarSyncPeriodo(dataInicio, dataFim)
+        .then(() => {
+          syncedRanges.current.set(rangeKey, Date.now());
+        })
+        .catch((error) => {
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : "Nao foi possivel atualizar o periodo selecionado."
+          );
+        })
+        .finally(() => {
+          syncingRanges.current.delete(rangeKey);
+        });
+    }, FILTER_SYNC_DEBOUNCE_MS);
 
     return () => window.clearTimeout(timer);
-  }, [dataInicio, dataFim, defaultDateRange, solicitarSyncPeriodo]);
+  }, [dataInicio, dataFim, filterSyncKey, solicitarSyncPeriodo]);
 
   const { data: clients = [], isLoading: loadingClients } = useQuery<string[]>({
     queryKey: ["distinctProcessoVendaClients"],
@@ -196,7 +213,7 @@ export default function DeploymentsTickets() {
         {/* Indicador de Status/Sync rápido */}
         <Badge variant="outline" className="px-2 py-0 font-normal text-[10px] text-muted-foreground flex items-center gap-1.5 h-5">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-          {syncingPeriodo ? "Atualizando período selecionado..." : "Conexão Ellevo ativa (sync ~5 min)"}
+          {syncingPeriodo ? "Atualizando dados..." : "Ellevo ativo (1h + filtros sob demanda)"}
         </Badge>
       </div>
 
