@@ -39,9 +39,9 @@ function parseBlocos(texto: string): Bloco[] {
       }
       continue;
     }
-    if (/^-\s+/.test(t)) {
-      if (ultimo?.tipo === "ul") ultimo.itens.push(t.replace(/^-\s+/, ""));
-      else blocos.push({ tipo: "ul", itens: [t.replace(/^-\s+/, "")] });
+    if (/^[-*+]\s+/.test(t)) {
+      if (ultimo?.tipo === "ul") ultimo.itens.push(t.replace(/^[-*+]\s+/, ""));
+      else blocos.push({ tipo: "ul", itens: [t.replace(/^[-*+]\s+/, "")] });
     } else if (/^\d+\.\s+/.test(t)) {
       if (ultimo?.tipo === "ol") ultimo.itens.push(t.replace(/^\d+\.\s+/, ""));
       else blocos.push({ tipo: "ol", itens: [t.replace(/^\d+\.\s+/, "")] });
