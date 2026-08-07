@@ -42,6 +42,7 @@ export default function DeploymentsTickets() {
   const [dataFim, setDataFim] = useState<string>(defaultDateRange.endDate);
   const [selectedClients, setSelectedClients] = useState<string[]>([]);
   const [produto, setProduto] = useState<string>("todos");
+  const [natureza, setNatureza] = useState<string>("todas");
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [busca, setBusca] = useState<string>("");
   
@@ -59,8 +60,8 @@ export default function DeploymentsTickets() {
     useSolicitarSyncProcessoVenda();
 
   const filterSyncKey = useMemo(
-    () => JSON.stringify([selectedClients, produto, selectedStatuses, busca.trim(), clientSearchOpen]),
-    [selectedClients, produto, selectedStatuses, busca, clientSearchOpen]
+    () => JSON.stringify([selectedClients, produto, natureza, selectedStatuses, busca.trim(), clientSearchOpen]),
+    [selectedClients, produto, natureza, selectedStatuses, busca, clientSearchOpen]
   );
 
   useEffect(() => {
@@ -145,6 +146,30 @@ export default function DeploymentsTickets() {
     staleTime: 5 * 60_000,
   });
 
+  const { data: naturezas = [], isLoading: loadingNaturezas } = useQuery<string[]>({
+    queryKey: ["distinctProcessoVendaNaturezas", dataInicio, dataFim, selectedClients, produto],
+    queryFn: async () => {
+      let q = supabase
+        .from("chamados_processo_venda")
+        .select("natureza")
+        .not("natureza", "is", null)
+        .ilike("software", getOrionProductPattern(produto));
+
+      if (dataInicio) q = q.gte("data_abertura", dataInicio);
+      if (dataFim) q = q.lte("data_abertura", dataFim);
+      if (selectedClients.length > 0) q = q.in("nome_cliente", selectedClients);
+
+      const { data, error } = await q;
+      if (error) throw error;
+
+      const values = (data ?? [])
+        .map((row: { natureza?: string | null }) => row.natureza?.trim())
+        .filter((value): value is string => Boolean(value));
+      return [...new Set(values)].sort((a, b) => a.localeCompare(b, "pt-BR"));
+    },
+    staleTime: 5 * 60_000,
+  });
+
   const statusList = CHAMADO_STATUS_OPTIONS;
 
   // Query principal dos chamados usando o hook recém-criado
@@ -153,6 +178,7 @@ export default function DeploymentsTickets() {
     endDate: dataFim || null,
     clientNames: selectedClients.length > 0 ? selectedClients : null,
     product: produto,
+    nature: natureza,
     searchTerm: busca || null,
     statuses: selectedStatuses.length > 0 ? selectedStatuses : null,
     page,
@@ -186,6 +212,7 @@ export default function DeploymentsTickets() {
     setDataFim(defaultDateRange.endDate);
     setSelectedClients([]);
     setProduto("todos");
+    setNatureza("todas");
     setSelectedStatuses([]);
     setBusca("");
     setPage(1);
@@ -232,7 +259,7 @@ export default function DeploymentsTickets() {
                 Período padrão: últimos 30 dias; datas anteriores consultam somente a faixa escolhida na origem.
               </span>
             </div>
-            {(dataInicio !== defaultDateRange.startDate || dataFim !== defaultDateRange.endDate || selectedClients.length > 0 || produto !== "todos" || selectedStatuses.length > 0 || busca) && (
+            {(dataInicio !== defaultDateRange.startDate || dataFim !== defaultDateRange.endDate || selectedClients.length > 0 || produto !== "todos" || natureza !== "todas" || selectedStatuses.length > 0 || busca) && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -245,10 +272,10 @@ export default function DeploymentsTickets() {
             )}
           </div>
 
-          {/* Grid de Filtros: Linha 1 com 5 colunas, Linha 2 com Clientes (Full Width) */}
+          {/* Grid de Filtros: Linha 1 compacta, Linha 2 com Clientes (Full Width) */}
           <div className="space-y-1.5">
-            {/* Linha 1: Datas, Produto, Status, Busca */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-1.5">
+            {/* Linha 1: Datas, Produto, Natureza, Status, Busca */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-1.5">
               {/* Data Início */}
               <div className="space-y-0">
                 <label className="text-[10px] leading-none font-medium text-muted-foreground">
@@ -282,7 +309,11 @@ export default function DeploymentsTickets() {
                 <label className="text-[10px] leading-none font-medium text-muted-foreground">Produto / Software</label>
                 <Select 
                   value={produto} 
-                  onValueChange={(val) => handleFilterChange(setProduto, val)}
+                  onValueChange={(val) => {
+                    setProduto(val);
+                    setNatureza("todas");
+                    setPage(1);
+                  }}
                 >
                   <SelectTrigger className="w-full text-[11px] h-7">
                     <SelectValue placeholder="Selecione o produto" />
@@ -291,6 +322,28 @@ export default function DeploymentsTickets() {
                     {CHAMADOS_ORION_PRODUCTS.map((p) => (
                       <SelectItem key={p.value} value={p.value}>
                         {p.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Natureza */}
+              <div className="space-y-0">
+                <label className="text-[10px] leading-none font-medium text-muted-foreground">Natureza</label>
+                <Select
+                  value={natureza}
+                  onValueChange={(val) => handleFilterChange(setNatureza, val)}
+                  disabled={loadingNaturezas}
+                >
+                  <SelectTrigger className="w-full text-[11px] h-7">
+                    <SelectValue placeholder={loadingNaturezas ? "Carregando..." : "Todas as naturezas"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todas">Todas as naturezas</SelectItem>
+                    {naturezas.map((item) => (
+                      <SelectItem key={item} value={item}>
+                        {item}
                       </SelectItem>
                     ))}
                   </SelectContent>

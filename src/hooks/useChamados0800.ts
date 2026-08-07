@@ -451,6 +451,7 @@ export function useSolicitarSyncProcessoVenda() {
           await Promise.all([
             queryClient.invalidateQueries({ queryKey: ["chamadosSearch"] }),
             queryClient.invalidateQueries({ queryKey: ["distinctProcessoVendaClients"] }),
+            queryClient.invalidateQueries({ queryKey: ["distinctProcessoVendaNaturezas"] }),
           ]);
           return;
         }
@@ -473,6 +474,7 @@ export interface ChamadosSearchFilters {
   endDate?: string | null;
   clientNames?: string[] | null;
   product?: string | null;
+  nature?: string | null;
   searchTerm?: string | null;
   statuses?: string[] | null;
   page?: number;
@@ -484,13 +486,14 @@ export function useChamadosSearch({
   endDate,
   clientNames,
   product,
+  nature,
   searchTerm,
   statuses,
   page = 1,
   pageSize = 20,
 }: ChamadosSearchFilters) {
   const query = useQuery({
-    queryKey: ["chamadosSearch", startDate, endDate, clientNames, product, searchTerm, statuses, page, pageSize],
+    queryKey: ["chamadosSearch", startDate, endDate, clientNames, product, nature, searchTerm, statuses, page, pageSize],
     staleTime: 30_000,
     queryFn: async () => {
       let q = supabase
@@ -509,6 +512,9 @@ export function useChamadosSearch({
       // A view repete o chamado para cada item licenciado do cliente. O campo
       // `software` identifica o produto que realmente recebeu o chamado.
       q = q.ilike("software", getOrionProductPattern(product));
+      if (nature && nature !== "todas") {
+        q = q.eq("natureza", nature);
+      }
       const validStatuses = (statuses ?? []).filter(isChamadoStatus);
       q = q.in(
         "status",
