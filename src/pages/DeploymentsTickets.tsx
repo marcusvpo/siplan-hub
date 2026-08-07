@@ -180,21 +180,21 @@ export default function DeploymentsTickets() {
   };
 
   return (
-    <div className="container mx-auto p-4 md:p-5 space-y-4">
+    <div className="container mx-auto p-3 md:p-4 space-y-2.5">
       {/* Cabeçalho */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 border-b border-muted pb-3">
-        <div>
-          <h1 className="text-xl font-bold flex items-center gap-2 text-foreground">
-            <ClipboardList className="h-5 w-5 text-primary" style={{ color: "hsl(346, 84%, 45%)" }} />
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 border-b border-muted pb-2">
+        <div className="flex flex-col lg:flex-row lg:items-baseline gap-x-3">
+          <h1 className="text-lg font-bold flex items-center gap-1.5 text-foreground whitespace-nowrap">
+            <ClipboardList className="h-4 w-4 text-primary" style={{ color: "hsl(346, 84%, 45%)" }} />
             Consulta de Chamados (Ellevo/0800)
           </h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <p className="text-[10px] text-muted-foreground leading-tight">
             Pesquise e consulte o histórico de chamados sincronizados do Ellevo de forma global e consolidada.
           </p>
         </div>
         
         {/* Indicador de Status/Sync rápido */}
-        <Badge variant="outline" className="px-2.5 py-0.5 font-normal text-[11px] text-muted-foreground flex items-center gap-1.5">
+        <Badge variant="outline" className="px-2 py-0 font-normal text-[10px] text-muted-foreground flex items-center gap-1.5 h-5">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
           {syncingPeriodo ? "Atualizando período selecionado..." : "Conexão Ellevo ativa (sync ~5 min)"}
         </Badge>
@@ -202,13 +202,18 @@ export default function DeploymentsTickets() {
 
       {/* Seção de Filtros Compacta */}
       <Card className="border border-muted/80 shadow-sm bg-card/60 backdrop-blur-sm">
-        <CardContent className="p-3 space-y-2">
+        <CardContent className="p-2.5 space-y-1.5">
           
           {/* Header do Filtro Inline com Limpeza de Filtros */}
-          <div className="flex items-center justify-between border-b border-muted/40 pb-1.5">
-            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-              <Filter className="h-3 w-3 text-primary" style={{ color: "hsl(346, 84%, 45%)" }} />
-              Filtros
+          <div className="flex items-center justify-between border-b border-muted/40 pb-1">
+            <div className="flex min-w-0 items-center gap-2">
+              <div className="flex shrink-0 items-center gap-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                <Filter className="h-2.5 w-2.5 text-primary" style={{ color: "hsl(346, 84%, 45%)" }} />
+                Filtros
+              </div>
+              <span className="hidden lg:block truncate text-[9px] leading-none text-muted-foreground/80">
+                Período padrão: últimos 30 dias; datas anteriores consultam somente a faixa escolhida na origem.
+              </span>
             </div>
             {(dataInicio !== defaultDateRange.startDate || dataFim !== defaultDateRange.endDate || selectedClients.length > 0 || produto !== "todos" || selectedStatuses.length > 0 || busca) && (
               <Button
@@ -224,12 +229,12 @@ export default function DeploymentsTickets() {
           </div>
 
           {/* Grid de Filtros: Linha 1 com 5 colunas, Linha 2 com Clientes (Full Width) */}
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {/* Linha 1: Datas, Produto, Status, Busca */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-1.5">
               {/* Data Início */}
-              <div className="space-y-0.5">
-                <label className="text-[11px] font-medium text-muted-foreground">
+              <div className="space-y-0">
+                <label className="text-[10px] leading-none font-medium text-muted-foreground">
                   Abertura (Início)
                 </label>
                 <Input
@@ -237,13 +242,13 @@ export default function DeploymentsTickets() {
                   value={dataInicio}
                   max={dataFim || undefined}
                   onChange={(e) => handleFilterChange(setDataInicio, e.target.value)}
-                  className="w-full text-xs h-8"
+                  className="w-full text-[11px] h-7"
                 />
               </div>
 
               {/* Data Fim */}
-              <div className="space-y-0.5">
-                <label className="text-[11px] font-medium text-muted-foreground">
+              <div className="space-y-0">
+                <label className="text-[10px] leading-none font-medium text-muted-foreground">
                   Abertura (Fim)
                 </label>
                 <Input
@@ -251,18 +256,18 @@ export default function DeploymentsTickets() {
                   value={dataFim}
                   min={dataInicio || undefined}
                   onChange={(e) => handleFilterChange(setDataFim, e.target.value)}
-                  className="w-full text-xs h-8"
+                  className="w-full text-[11px] h-7"
                 />
               </div>
 
               {/* Produto */}
-              <div className="space-y-0.5">
-                <label className="text-[11px] font-medium text-muted-foreground">Produto / Software</label>
+              <div className="space-y-0">
+                <label className="text-[10px] leading-none font-medium text-muted-foreground">Produto / Software</label>
                 <Select 
                   value={produto} 
                   onValueChange={(val) => handleFilterChange(setProduto, val)}
                 >
-                  <SelectTrigger className="w-full text-xs h-8">
+                  <SelectTrigger className="w-full text-[11px] h-7">
                     <SelectValue placeholder="Selecione o produto" />
                   </SelectTrigger>
                   <SelectContent>
@@ -276,14 +281,14 @@ export default function DeploymentsTickets() {
               </div>
 
               {/* Status */}
-              <div className="space-y-0.5">
-                <label className="text-[11px] font-medium text-muted-foreground">Status</label>
+              <div className="space-y-0">
+                <label className="text-[10px] leading-none font-medium text-muted-foreground">Status</label>
                 <Popover open={statusSearchOpen} onOpenChange={setStatusSearchOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
                       role="combobox"
-                      className="w-full justify-between font-normal text-xs h-8"
+                      className="w-full justify-between font-normal text-[11px] h-7"
                     >
                       <span className="truncate">
                         {selectedStatuses.length === 1
@@ -347,8 +352,8 @@ export default function DeploymentsTickets() {
               </div>
 
               {/* Busca Rápida */}
-              <div className="space-y-0.5">
-                <label className="text-[11px] font-medium text-muted-foreground">
+              <div className="space-y-0">
+                <label className="text-[10px] leading-none font-medium text-muted-foreground">
                   Busca Rápida
                 </label>
                 <div className="relative">
@@ -357,7 +362,7 @@ export default function DeploymentsTickets() {
                     placeholder="Chamado, título, termo..."
                     value={busca}
                     onChange={(e) => handleFilterChange(setBusca, e.target.value)}
-                    className="w-full text-xs pr-7 h-8"
+                    className="w-full text-[11px] pr-7 h-7"
                   />
                   {busca && (
                     <button
@@ -378,7 +383,7 @@ export default function DeploymentsTickets() {
                   <Badge
                     key={status}
                     variant="secondary"
-                    className="text-[11px] bg-muted/60 text-foreground py-0 pl-1.5 pr-1 flex items-center gap-1 h-5"
+                    className="text-[10px] bg-muted/60 text-foreground py-0 pl-1.5 pr-1 flex items-center gap-1 h-4"
                   >
                     <span>{status}</span>
                     <button
@@ -387,7 +392,7 @@ export default function DeploymentsTickets() {
                       className="rounded-full p-0.5 hover:bg-muted text-muted-foreground hover:text-foreground focus:outline-none"
                       aria-label={`Remover status ${status}`}
                     >
-                      <X className="h-2.5 w-2.5" />
+                      <X className="h-2 w-2" />
                     </button>
                   </Badge>
                 ))}
@@ -398,26 +403,57 @@ export default function DeploymentsTickets() {
                     setSelectedStatuses([]);
                     setPage(1);
                   }}
-                  className="text-[11px] text-muted-foreground hover:text-primary h-5 px-1 ml-1"
+                  className="text-[10px] text-muted-foreground hover:text-primary h-4 px-1 ml-1"
                 >
                   Limpar Status
                 </Button>
               </div>
             )}
 
-            <p className="text-[10px] leading-tight text-muted-foreground">
-              Período padrão: últimos 30 dias. Ao escolher uma data anterior, somente esse período é consultado na origem.
-            </p>
-
             {/* Linha 2: Clientes / Serventias (Full Width) */}
-            <div className="space-y-0.5">
-              <label className="text-[11px] font-medium text-muted-foreground">Clientes / Serventias</label>
+            <div className="space-y-0">
+              <div className="flex min-h-4 flex-wrap items-center gap-1">
+                <label className="mr-1 text-[10px] leading-none font-medium text-muted-foreground">Clientes / Serventias</label>
+                {selectedClients.length > 0 && (
+                  <>
+                    <span className="text-[9px] font-bold text-muted-foreground uppercase">Selecionados:</span>
+                    {selectedClients.map((client) => (
+                      <Badge
+                        key={client}
+                        variant="secondary"
+                        className="h-4 max-w-[190px] gap-0.5 bg-muted/60 py-0 pl-1.5 pr-0.5 text-[9px] text-foreground"
+                      >
+                        <span className="truncate">{client}</span>
+                        <button
+                          type="button"
+                          onClick={() => toggleClient(client)}
+                          className="rounded-full p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground focus:outline-none"
+                          aria-label={`Remover cliente ${client}`}
+                        >
+                          <X className="h-2 w-2" />
+                        </button>
+                      </Badge>
+                    ))}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedClients([]);
+                        setPage(1);
+                      }}
+                      className="h-4 px-1 text-[9px] text-muted-foreground hover:text-primary"
+                    >
+                      Limpar Clientes
+                    </Button>
+                  </>
+                )}
+              </div>
               <Popover open={clientSearchOpen} onOpenChange={setClientSearchOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     role="combobox"
-                    className="w-full justify-between font-normal text-xs h-8"
+                    className="w-full justify-between font-normal text-[11px] h-7"
                     disabled={loadingClients}
                   >
                     <span className="truncate">
@@ -470,39 +506,6 @@ export default function DeploymentsTickets() {
             </div>
           </div>
 
-          {/* Badges de Clientes Selecionados (Row debaixo compacta) */}
-          {selectedClients.length > 0 && (
-            <div className="flex flex-wrap gap-1 items-center pt-1.5 border-t border-muted/30">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase mr-1">Selecionados:</span>
-              {selectedClients.map((client) => (
-                <Badge 
-                  key={client} 
-                  variant="secondary" 
-                  className="text-[11px] bg-muted/60 text-foreground py-0 pl-1.5 pr-1 flex items-center gap-1 h-5"
-                >
-                  <span className="truncate max-w-[180px]">{client}</span>
-                  <button
-                    type="button"
-                    onClick={() => toggleClient(client)}
-                    className="rounded-full p-0.5 hover:bg-muted text-muted-foreground hover:text-foreground focus:outline-none"
-                  >
-                    <X className="h-2.5 w-2.5" />
-                  </button>
-                </Badge>
-              ))}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setSelectedClients([]);
-                  setPage(1);
-                }}
-                className="text-[11px] text-muted-foreground hover:text-primary h-5 px-1 ml-1"
-              >
-                Limpar Clientes
-              </Button>
-            </div>
-          )}
         </CardContent>
       </Card>
 
