@@ -202,24 +202,54 @@ ${contextoProjetos}
 // Analise executiva da tela global de chamados. O payload contem os totais de
 // todo o recorte e uma amostra priorizada com descricoes/ultimos tramites.
 function buildTicketsAnalysisPrompt(json: string): string {
-  return `Voce e um gestor senior de suporte e produto para sistemas de cartorios. Analise o JSON da tela global de chamados Orion. Os filtros ja foram aplicados e os agregados representam TODO o recorte; a lista detalhada pode ser uma amostra priorizada quando o volume for alto.
+  return `Voce e um gerente senior de Suporte, Produto e Qualidade de software para cartorios. Produza uma analise gerencial profunda do JSON da tela global de chamados Orion. Os filtros ja foram aplicados. "indicadores" e "distribuicoes" representam TODO o recorte; "amostra_detalhada" e uma amostra priorizada de chamados com descricoes e ultimo tramite.
 
-Produza um parecer executivo completo, objetivo e acionavel cobrindo:
-1. **Resumo executivo**: volume, taxa de conclusao, distribuicao por status e tendencia no periodo.
-2. **Principais causas e naturezas**: destaque bugs, erros, configuracao, duvidas operacionais e instalacao. Diferencie sintomas pontuais de recorrencias.
-3. **Clientes e produtos com maior impacto**: identifique concentracoes fora da curva sem atribuir culpa.
-4. **Riscos e pendencias**: chamados em aberto, antigos, temas repetidos e casos sem tramite/solucao registrada.
-5. **Solucoes observadas**: sintetize os ultimos tramites dos concluidos, destacando solucoes reutilizaveis e lacunas de documentacao.
-6. **Plano de acao**: no maximo 7 recomendacoes priorizadas, separando acoes para Suporte, Produto/Desenvolvimento e Treinamento/Documentacao.
+O parecer deve responder de forma clara, quantitativa e baseada em evidencias:
+- O volume de encerramentos esta acompanhando o volume de aberturas? Compare mes a mes "opened" e "closed", a taxa geral de conclusao e indique aumento ou reducao de backlog.
+- Quantos bugs/erros/reclamacoes foram resolvidos e quantos continuam abertos? Calcule a taxa, cite exemplos e resuma as solucoes registradas nos ultimos tramites.
+- Quais chamados estao abertos ha mais tempo? Para cada caso relevante, use o ultimo tramite para explicar por que aparenta continuar aberto. Se o dado nao comprovar o motivo, escreva explicitamente "motivo nao identificado nos tramites"; nunca suponha.
+- Quais naturezas, clientes e produtos concentram volume ou recorrencia? Diferencie volume absoluto de possivel problema sistemico.
+- A velocidade de resolucao e o envelhecimento dos abertos sao saudaveis para o recorte? Use media de resolucao, media de idade, faixas acima de 30/60 dias e distribuicao por status.
+
+ESTRUTURA OBRIGATORIA:
+**1. Resumo executivo**
+- 4 a 7 bullets com os principais numeros, leitura da saude operacional e os dois maiores alertas.
+
+**2. Aberturas, encerramentos e backlog**
+- Compare abertura x encerramento por mes, taxa de conclusao, tendencia e possivel pressao de backlog.
+
+**3. Bugs, erros e reclamacoes**
+- Informe total, resolvidos, abertos e taxa de resolucao.
+- Separe recorrencias, bugs ainda sem solucao e solucoes comprovadas nos tramites. Cite os chamados usados como evidencia.
+
+**4. Chamados antigos e motivos de permanencia**
+- Liste os casos mais antigos com numero, dias em aberto, cliente, responsavel/equipe e motivo evidenciado pelo ultimo tramite.
+- Destaque ausencia de tramite, bloqueio, espera, pendencia tecnica ou falta de evidencias, conforme os dados.
+
+**5. Naturezas, clientes e produtos de maior impacto**
+- Mostre concentracoes, recorrencias e possiveis oportunidades de treinamento, documentacao ou melhoria de produto.
+
+**6. Qualidade das solucoes e dos registros**
+- Avalie se os ultimos tramites dos concluidos explicam a solucao e quais respostas podem virar base de conhecimento.
+
+**7. Riscos e plano de acao priorizado**
+- Use prioridades **Alta**, **Media** e **Baixa**, com responsavel sugerido entre Suporte, Produto/Desenvolvimento e Treinamento/Documentacao.
+- No maximo 8 acoes concretas, mensuraveis e ligadas aos achados anteriores.
+
+**8. Conclusao gerencial**
+- Um paragrafo curto com o diagnostico geral e o que deve ser acompanhado no proximo ciclo.
 
 REGRAS:
 - Baseie-se APENAS no JSON. NAO invente fatos, causas, numeros, clientes ou chamados.
 - Cite numeros de chamados relevantes no formato #750000 quando estiverem na amostra.
 - Se houver registros omitidos da amostra, deixe claro que as conclusoes qualitativas usam a amostra, enquanto os totais usam todo o recorte.
 - Nao trate "Nao iniciado" como faturamento: e status operacional do chamado.
+- Nao diga que um chamado foi resolvido apenas porque existe um tramite; confirme pelo status e descreva somente a solucao que estiver escrita no tramite.
+- Nao repita a lista completa de titulos. Sintetize padroes, causas, riscos e solucoes.
+- Sempre apresente numeros e percentuais disponiveis antes da interpretacao.
 - Portugues do Brasil, tom profissional e direto.
 
-FORMATACAO (Markdown leve): **negrito** para secoes e termos-chave; listas com "- ". Nao use titulos com #, tabelas nem blocos de codigo.
+FORMATACAO (Markdown leve): mantenha exatamente as 8 secoes em **negrito**; use listas com "- "; destaque numeros, riscos, prioridades e conclusoes importantes em **negrito**. Nao use titulos com #, tabelas nem blocos de codigo.
 
 Responda SOMENTE com o parecer.
 
