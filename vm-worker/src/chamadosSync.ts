@@ -567,8 +567,9 @@ async function runProcessoVendaOnce(
   }
 }
 
-let processoVendaSyncRunning = false;
-let processoVendaSyncRequested = false;
+let processoVendaGeneralSyncRunning = false;
+let processoVendaRequestSyncRunning = false;
+let processoVendaRequestSyncRequested = false;
 
 function isoDateDaysAgo(days: number): string {
   const date = new Date();
@@ -613,15 +614,16 @@ export function startProcessoVendaSync(): void {
     console.log("[processo-venda-sync] desligado (MSSQL_HOST/MSSQL_USER/MSSQL_PASSWORD ausentes).");
     return;
   }
-  const tick = async () => {
-    if (processoVendaSyncRunning) {
-      processoVendaSyncRequested = true;
+
+  const syncPendingRequests = async () => {
+    if (processoVendaRequestSyncRunning) {
+      processoVendaRequestSyncRequested = true;
       return;
     }
-    processoVendaSyncRunning = true;
+    processoVendaRequestSyncRunning = true;
     try {
-      const request = await getPendingProcessoVendaRequest();
-      if (request) {
+      let request = await getPendingProcessoVendaRequest();
+      while (request) {
         try {
           const result = await runProcessoVendaOnce(
             request.start_date,
@@ -637,28 +639,43 @@ export function startProcessoVendaSync(): void {
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
           await resolveProcessoVendaRequest(request.id, "error", msg);
-          throw err;
+          console.error("[processo-venda-sync] erro no pedido sob demanda:", msg);
         }
-      } else {
-        await runProcessoVendaOnce(
-          isoDateDaysAgo(Math.max(config.processoVendaSyncDays - 1, 0)),
-          isoDateDaysAgo(0)
-        );
+        request = await getPendingProcessoVendaRequest();
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      console.error("[processo-venda-sync] erro:", msg);
+      console.error("[processo-venda-sync] erro ao consultar pedidos pendentes:", msg);
     } finally {
-      processoVendaSyncRunning = false;
-      if (processoVendaSyncRequested) {
-        processoVendaSyncRequested = false;
-        void tick();
+      processoVendaRequestSyncRunning = false;
+      if (processoVendaRequestSyncRequested) {
+        processoVendaRequestSyncRequested = false;
+        void syncPendingRequests();
       }
     }
   };
-  void tick();
-  // Atualização de fundo econômica; pedidos da tela continuam imediatos via Realtime.
-  setInterval(() => { void tick(); }, config.processoVendaSyncIntervalMs);
+
+  const syncGeneralPeriod = async () => {
+    if (processoVendaGeneralSyncRunning) return;
+    processoVendaGeneralSyncRunning = true;
+    try {
+      await runProcessoVendaOnce(
+        isoDateDaysAgo(Math.max(config.processoVendaSyncDays - 1, 0)),
+        isoDateDaysAgo(0)
+      );
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error("[processo-venda-sync] erro na atualizacao horaria:", msg);
+    } finally {
+      processoVendaGeneralSyncRunning = false;
+    }
+  };
+
+  // As duas rotinas possuem travas independentes: um filtro da tela nao espera
+  // a atualizacao geral terminar. Cada execucao abre sua propria conexao MSSQL.
+  void syncPendingRequests();
+  void syncGeneralPeriod();
+  setInterval(() => { void syncGeneralPeriod(); }, config.processoVendaSyncIntervalMs);
 
   supabase
     .channel(`processo-venda-sync-requests-${config.workerId}`)
@@ -670,7 +687,7 @@ export function startProcessoVendaSync(): void {
         table: "chamados_sync_requests",
         filter: "scope=eq.processo_venda",
       },
-      () => { void tick(); }
+      () => { void syncPendingRequests(); }
     )
     .subscribe();
 }
