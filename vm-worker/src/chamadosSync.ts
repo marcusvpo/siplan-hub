@@ -52,6 +52,20 @@ interface ProcessoVendaSyncRequest {
   id: string;
   start_date: string;
   end_date: string;
+  filters: ProcessoVendaSyncFilters | null;
+}
+
+interface ProcessoVendaSyncFilters {
+  client_names?: string[];
+  product?: string | null;
+  nature?: string | null;
+  statuses?: string[];
+  search_term?: string | null;
+}
+
+interface ProcessoVendaSyncResult {
+  detail: string;
+  ticketNumbers: string[];
 }
 
 interface ProcessoVendaTramiteRow {
@@ -64,6 +78,42 @@ interface ProcessoVendaTramiteRow {
   EquipeResponsavelAtividade: string | null;
   DescricaoAtividade: string | null;
   descricaotramite: string | null;
+}
+
+function cleanFilterValues(values?: unknown): string[] {
+  if (!Array.isArray(values)) return [];
+  return [...new Set(
+    values
+      .filter((value): value is string => typeof value === "string")
+      .map((value) => value.trim())
+      .filter(Boolean)
+  )];
+}
+
+function normalizeProcessoVendaFilters(
+  filters?: ProcessoVendaSyncFilters | null
+): ProcessoVendaSyncFilters {
+  return {
+    client_names: cleanFilterValues(filters?.client_names),
+    product: typeof filters?.product === "string" ? filters.product.trim() : null,
+    nature: typeof filters?.nature === "string" ? filters.nature.trim() : null,
+    statuses: cleanFilterValues(filters?.statuses)
+      .map((status) => normalizeChamadoStatus(status))
+      .filter((status): status is string => Boolean(status)),
+    search_term:
+      typeof filters?.search_term === "string" && filters.search_term.trim()
+        ? filters.search_term.trim()
+        : null,
+  };
+}
+
+function getWorkerOrionProductPattern(product?: string | null): string | null {
+  const normalized = (product || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  if (!normalized || normalized === "todos") return null;
+  if (normalized === "oriontn") return "orion%tn%";
+  if (normalized === "orionpro") return "orion%pro%";
+  if (normalized === "orionreg") return "orion%reg%";
+  return "orion%";
 }
 
 // Colunas de chamado da view + dedupe por NumeroChamado (1 linha por chamado).
@@ -310,7 +360,11 @@ export function startChamadosSync(): void {
   );
 }
 
-async function runProcessoVendaOnce(startDate: string, endDate: string): Promise<string> {
+async function runProcessoVendaOnce(
+  startDate: string,
+  endDate: string,
+  requestedFilters: ProcessoVendaSyncFilters = {}
+): Promise<ProcessoVendaSyncResult> {
   const pool = await new sql.ConnectionPool({
     server: config.mssqlHost,
     port: config.mssqlPort,
@@ -322,20 +376,76 @@ async function runProcessoVendaOnce(startDate: string, endDate: string): Promise
   }).connect();
 
   try {
+    const filters = normalizeProcessoVendaFilters(requestedFilters);
+    const chamadoRequest = pool
+      .request()
+      .input("startDate", sql.Date, startDate)
+      .input("endDate", sql.Date, endDate);
+    const whereClauses = [
+      "DataAberturaChamado >= @startDate",
+      "DataAberturaChamado < DATEADD(DAY, 1, @endDate)",
+    ];
+
+    if (filters.client_names && filters.client_names.length > 0) {
+      const parameters = filters.client_names.map((client, index) => {
+        const name = `client${index}`;
+        chamadoRequest.input(name, sql.NVarChar(500), client);
+        return `@${name}`;
+      });
+      whereClauses.push(
+        `LTRIM(RTRIM(NomeCliente)) COLLATE Latin1_General_CI_AI IN (${parameters.join(", ")})`
+      );
+    }
+
+    const productPattern = getWorkerOrionProductPattern(filters.product);
+    if (productPattern) {
+      chamadoRequest.input("softwarePattern", sql.NVarChar(100), productPattern);
+      whereClauses.push(
+        "LTRIM(RTRIM(Software)) COLLATE Latin1_General_CI_AI LIKE @softwarePattern"
+      );
+    }
+
+    if (filters.nature && filters.nature.toLowerCase() !== "todas") {
+      chamadoRequest.input("nature", sql.NVarChar(300), filters.nature);
+      whereClauses.push(
+        "LTRIM(RTRIM(Natureza)) COLLATE Latin1_General_CI_AI = @nature"
+      );
+    }
+
+    if (filters.statuses && filters.statuses.length > 0) {
+      const parameters = filters.statuses.map((status, index) => {
+        const name = `status${index}`;
+        chamadoRequest.input(name, sql.NVarChar(100), status);
+        return `@${name}`;
+      });
+      whereClauses.push(
+        `LTRIM(RTRIM(StatusChamado)) COLLATE Latin1_General_CI_AI IN (${parameters.join(", ")})`
+      );
+    }
+
+    if (filters.search_term) {
+      chamadoRequest.input("searchLike", sql.NVarChar(1000), `%${filters.search_term}%`);
+      const searchParts = [
+        "NomeCliente COLLATE Latin1_General_CI_AI LIKE @searchLike",
+        "TituloChamado COLLATE Latin1_General_CI_AI LIKE @searchLike",
+        "CAST(descricaotramite AS nvarchar(max)) COLLATE Latin1_General_CI_AI LIKE @searchLike",
+      ];
+      if (/^\d+$/.test(filters.search_term)) {
+        chamadoRequest.input("searchNumber", sql.VarChar(50), filters.search_term);
+        searchParts.unshift("CONVERT(varchar(50), NumeroChamado) = @searchNumber");
+      }
+      whereClauses.push(`(${searchParts.join(" OR ")})`);
+    }
+
     // View exclusiva da Consulta de Chamados: ja entrega uma linha por chamado,
     // somente produtos Orion e sem o join 1:N de itens de venda/faturamento.
     // O periodo continua no SQL para o otimizador consultar apenas a janela.
-    const res = await pool
-      .request()
-      .input("startDate", sql.Date, startDate)
-      .input("endDate", sql.Date, endDate)
-      .query<any>(`
+    const res = await chamadoRequest.query<any>(`
       SELECT NumeroChamado, codigoCliente, NomeCliente, RazaoSocialCliente,
              TituloChamado, descricaotramite, Natureza, StatusChamado,
              Software, Produto, DataAberturaChamado, SolDataFechamento
       FROM dbo.vw_2026_HUB_CONSULTA_CHAMADOS_ORION
-      WHERE DataAberturaChamado >= @startDate
-        AND DataAberturaChamado < DATEADD(DAY, 1, @endDate)
+      WHERE ${whereClauses.join("\n        AND ")}
     `);
 
     const rows = res.recordset.map((r) => ({
@@ -370,24 +480,41 @@ async function runProcessoVendaOnce(startDate: string, endDate: string): Promise
     // view base do Ellevo, que possui uma linha por tramite. SequenciaTramite e
     // a chave estavel; SELECT DISTINCT elimina repeticoes causadas pelos joins
     // internos da view sem descartar movimentacoes diferentes.
-    const tramitesResult = await pool
-      .request()
-      .input("startDate", sql.Date, startDate)
-      .input("endDate", sql.Date, endDate)
-      .query<ProcessoVendaTramiteRow>(`
-      SELECT DISTINCT
-             NumeroChamado, NumeroTramite, SequenciaTramite,
-             CONVERT(varchar(19), DataTramite, 126) AS DataTramiteIso,
-             ResponsavelTramite, ResponsavelAtividade,
-             EquipeResponsavelAtividade, DescricaoAtividade,
-             CAST(descricaotramite AS nvarchar(max)) AS descricaotramite
-      FROM plataformaellevo..vw_ChamadosTodosStatus_Tramites_Tempos
-      WHERE DataAberturaChamado >= @startDate
-        AND DataAberturaChamado < DATEADD(DAY, 1, @endDate)
-        AND LTRIM(RTRIM(Software)) LIKE 'Orion%'
-        AND SequenciaTramite IS NOT NULL
-        AND NULLIF(LTRIM(RTRIM(CAST(descricaotramite AS nvarchar(max)))), '') IS NOT NULL
-    `);
+    const ticketNumbers = [...new Set(rows.map((row) => row.numero_chamado))];
+    const tramiteRows: ProcessoVendaTramiteRow[] = [];
+    const tramiteTicketBatchSize = 500;
+
+    // O historico e a parte mais pesada da view 1:N. Consultar somente os IDs
+    // encontrados pelo SELECT filtrado evita reler todos os tramites do periodo.
+    for (let from = 0; from < ticketNumbers.length; from += tramiteTicketBatchSize) {
+      const batch = ticketNumbers.slice(from, from + tramiteTicketBatchSize);
+      const tramiteRequest = pool
+        .request()
+        .input("startDate", sql.Date, startDate)
+        .input("endDate", sql.Date, endDate);
+      const ticketParameters = batch.map((ticket, index) => {
+        const name = `ticket${index}`;
+        tramiteRequest.input(name, sql.VarChar(50), ticket);
+        return `@${name}`;
+      });
+
+      const tramitesResult = await tramiteRequest.query<ProcessoVendaTramiteRow>(`
+        SELECT DISTINCT
+               NumeroChamado, NumeroTramite, SequenciaTramite,
+               CONVERT(varchar(19), DataTramite, 126) AS DataTramiteIso,
+               ResponsavelTramite, ResponsavelAtividade,
+               EquipeResponsavelAtividade, DescricaoAtividade,
+               CAST(descricaotramite AS nvarchar(max)) AS descricaotramite
+        FROM plataformaellevo..vw_ChamadosTodosStatus_Tramites_Tempos
+        WHERE DataAberturaChamado >= @startDate
+          AND DataAberturaChamado < DATEADD(DAY, 1, @endDate)
+          AND LTRIM(RTRIM(Software)) LIKE 'Orion%'
+          AND CONVERT(varchar(50), NumeroChamado) IN (${ticketParameters.join(", ")})
+          AND SequenciaTramite IS NOT NULL
+          AND NULLIF(LTRIM(RTRIM(CAST(descricaotramite AS nvarchar(max)))), '') IS NOT NULL
+      `);
+      tramiteRows.push(...tramitesResult.recordset);
+    }
 
     const tramitesPorChave = new Map<string, {
       numero_chamado: string;
@@ -401,7 +528,7 @@ async function runProcessoVendaOnce(startDate: string, endDate: string): Promise
       synced_at: string;
     }>();
 
-    for (const tramite of tramitesResult.recordset) {
+    for (const tramite of tramiteRows) {
       const numeroChamado = String(tramite.NumeroChamado);
       const sequenciaTramite = Number(tramite.SequenciaTramite);
       const chave = `${numeroChamado}:${sequenciaTramite}`;
@@ -434,7 +561,7 @@ async function runProcessoVendaOnce(startDate: string, endDate: string): Promise
       `${rows.length} chamados e ${tramites.length} tramites sincronizados ` +
       `no periodo ${startDate} a ${endDate}`;
     console.log(`[processo-venda-sync] ok: ${detail}`);
-    return detail;
+    return { detail, ticketNumbers };
   } finally {
     await pool.close();
   }
@@ -453,7 +580,7 @@ function isoDateDaysAgo(days: number): string {
 async function getPendingProcessoVendaRequest(): Promise<ProcessoVendaSyncRequest | null> {
   const { data, error } = await supabase
     .from("chamados_sync_requests")
-    .select("id, start_date, end_date")
+    .select("id, start_date, end_date, filters")
     .eq("scope", "processo_venda")
     .eq("status", "pending")
     .order("created_at", { ascending: true })
@@ -466,11 +593,17 @@ async function getPendingProcessoVendaRequest(): Promise<ProcessoVendaSyncReques
 async function resolveProcessoVendaRequest(
   id: string,
   status: "done" | "error",
-  detail: string
+  detail: string,
+  ticketNumbers: string[] = []
 ): Promise<void> {
   const { error } = await supabase
     .from("chamados_sync_requests")
-    .update({ status, detail, finished_at: new Date().toISOString() })
+    .update({
+      status,
+      detail,
+      result_ticket_ids: status === "done" ? ticketNumbers : null,
+      finished_at: new Date().toISOString(),
+    })
     .eq("id", id);
   if (error) console.error("[processo-venda-sync] erro ao concluir pedido:", error.message);
 }
@@ -490,8 +623,17 @@ export function startProcessoVendaSync(): void {
       const request = await getPendingProcessoVendaRequest();
       if (request) {
         try {
-          const detail = await runProcessoVendaOnce(request.start_date, request.end_date);
-          await resolveProcessoVendaRequest(request.id, "done", detail);
+          const result = await runProcessoVendaOnce(
+            request.start_date,
+            request.end_date,
+            request.filters || {}
+          );
+          await resolveProcessoVendaRequest(
+            request.id,
+            "done",
+            result.detail,
+            result.ticketNumbers
+          );
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
           await resolveProcessoVendaRequest(request.id, "error", msg);

@@ -469,12 +469,28 @@ export function useSolicitarSyncChamados0800() {
  * Solicita ao worker a importacao de uma faixa historica exclusiva da tela de
  * Consulta de Chamados. O fluxo tradicional de chamados_0800 nao e alterado.
  */
+export interface ProcessoVendaSyncFilters {
+  clientNames?: string[] | null;
+  product?: string | null;
+  nature?: string | null;
+  statuses?: string[] | null;
+  searchTerm?: string | null;
+}
+
+export interface ProcessoVendaSyncResult {
+  ticketNumbers: string[];
+}
+
 export function useSolicitarSyncProcessoVenda() {
   const queryClient = useQueryClient();
   const [syncing, setSyncing] = useState(false);
   const activeRequests = useRef(0);
 
-  const solicitarSync = useCallback(async (startDate: string, endDate: string): Promise<void> => {
+  const solicitarSync = useCallback(async (
+    startDate: string,
+    endDate: string,
+    filters: ProcessoVendaSyncFilters = {}
+  ): Promise<ProcessoVendaSyncResult> => {
     activeRequests.current += 1;
     setSyncing(true);
     try {
@@ -486,6 +502,13 @@ export function useSolicitarSyncProcessoVenda() {
           scope: "processo_venda",
           start_date: startDate,
           end_date: endDate,
+          filters: {
+            client_names: filters.clientNames ?? [],
+            product: filters.product ?? null,
+            nature: filters.nature ?? null,
+            statuses: filters.statuses ?? [],
+            search_term: filters.searchTerm?.trim() || null,
+          },
         })
         .select("id")
         .single();
@@ -496,7 +519,7 @@ export function useSolicitarSyncProcessoVenda() {
         await new Promise((resolve) => setTimeout(resolve, 2000));
         const { data: row, error: pollError } = await supabase
           .from("chamados_sync_requests")
-          .select("status, detail")
+          .select("status, detail, result_ticket_ids")
           .eq("id", data.id)
           .maybeSingle();
         if (pollError) throw pollError;
@@ -506,7 +529,11 @@ export function useSolicitarSyncProcessoVenda() {
             queryClient.invalidateQueries({ queryKey: ["distinctProcessoVendaClients"] }),
             queryClient.invalidateQueries({ queryKey: ["distinctProcessoVendaNaturezas"] }),
           ]);
-          return;
+          return {
+            ticketNumbers: Array.isArray(row.result_ticket_ids)
+              ? row.result_ticket_ids.map(String)
+              : [],
+          };
         }
         if (row?.status === "error") {
           throw new Error(row.detail || "O worker reportou erro na consulta do periodo.");
@@ -530,6 +557,7 @@ export interface ChamadosSearchFilters {
   nature?: string | null;
   searchTerm?: string | null;
   statuses?: string[] | null;
+  ticketNumbers?: string[] | null;
   page?: number;
   pageSize?: number;
 }
@@ -543,6 +571,7 @@ function createChamadosSearchQuery(
     nature,
     searchTerm,
     statuses,
+    ticketNumbers,
   }: ChamadosSearchFilters,
   withCount = false
 ) {
@@ -553,6 +582,7 @@ function createChamadosSearchQuery(
   if (startDate) q = q.gte("data_abertura", startDate);
   if (endDate) q = q.lte("data_abertura", endDate);
   if (clientNames && clientNames.length > 0) q = q.in("nome_cliente", clientNames);
+  if (ticketNumbers && ticketNumbers.length > 0) q = q.in("numero_chamado", ticketNumbers);
 
   q = q.ilike("software", getOrionProductPattern(product));
   if (nature && nature !== "todas") q = q.eq("natureza", nature);
@@ -617,6 +647,10 @@ async function fetchUltimosTramites(
 export async function fetchAllChamadosForReport(
   filters: Omit<ChamadosSearchFilters, "page" | "pageSize">
 ): Promise<ChamadoReportRow[]> {
+  if (Array.isArray(filters.ticketNumbers) && filters.ticketNumbers.length === 0) {
+    return [];
+  }
+
   const batchSize = 1000;
   const rows: unknown[] = [];
 
@@ -651,15 +685,41 @@ export function useChamadosSearch({
   nature,
   searchTerm,
   statuses,
+  ticketNumbers,
   page = 1,
   pageSize = 20,
 }: ChamadosSearchFilters) {
   const query = useQuery({
-    queryKey: ["chamadosSearch", startDate, endDate, clientNames, product, nature, searchTerm, statuses, page, pageSize],
+    queryKey: [
+      "chamadosSearch",
+      startDate,
+      endDate,
+      clientNames,
+      product,
+      nature,
+      searchTerm,
+      statuses,
+      ticketNumbers,
+      page,
+      pageSize,
+    ],
     staleTime: 30_000,
     queryFn: async () => {
+      if (Array.isArray(ticketNumbers) && ticketNumbers.length === 0) {
+        return { chamados: [], totalCount: 0 };
+      }
+
       let q = createChamadosSearchQuery(
-        { startDate, endDate, clientNames, product, nature, searchTerm, statuses },
+        {
+          startDate,
+          endDate,
+          clientNames,
+          product,
+          nature,
+          searchTerm,
+          statuses,
+          ticketNumbers,
+        },
         true
       );
 

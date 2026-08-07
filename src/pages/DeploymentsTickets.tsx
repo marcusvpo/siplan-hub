@@ -6,6 +6,7 @@ import {
   useSolicitarSyncProcessoVenda,
   fetchAllChamadosForReport,
   Chamado0800,
+  type ProcessoVendaSyncFilters,
 } from "@/hooks/useChamados0800";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -34,7 +35,8 @@ import { generateChamadosReportPdf } from "@/lib/chamados-report-pdf";
 import { toast } from "sonner";
 
 const FILTER_SYNC_DEBOUNCE_MS = 700;
-const FILTER_SYNC_FRESHNESS_MS = 30_000;
+const FILTER_SYNC_FRESHNESS_MS = 5 * 60_000;
+const MAX_SYNC_SNAPSHOT_TICKETS = 250;
 
 export default function DeploymentsTickets() {
   const defaultDateRange = useMemo(() => getDefaultChamadosDateRange(), []);
@@ -57,30 +59,60 @@ export default function DeploymentsTickets() {
   const [clientSearchOpen, setClientSearchOpen] = useState(false);
   const [statusSearchOpen, setStatusSearchOpen] = useState(false);
   const [generatingPdf, setGeneratingPdf] = useState(false);
-  const syncedRanges = useRef(new Map<string, number>());
+  const [syncSnapshot, setSyncSnapshot] = useState<{
+    key: string;
+    syncedAt: number;
+    ticketNumbers: string[];
+  } | null>(null);
+  const firstFilterSync = useRef(true);
+  const syncedQueries = useRef(new Map<string, {
+    syncedAt: number;
+    ticketNumbers: string[];
+  }>());
   const syncingRanges = useRef(new Set<string>());
   const { solicitarSync: solicitarSyncPeriodo, syncing: syncingPeriodo } =
     useSolicitarSyncProcessoVenda();
 
+  const syncFilters = useMemo<ProcessoVendaSyncFilters>(() => ({
+    clientNames: selectedClients.length > 0 ? selectedClients : null,
+    product: produto,
+    nature: natureza,
+    statuses: selectedStatuses.length > 0 ? selectedStatuses : null,
+    searchTerm: busca || null,
+  }), [selectedClients, produto, natureza, selectedStatuses, busca]);
+
   const filterSyncKey = useMemo(
-    () => JSON.stringify([selectedClients, produto, natureza, selectedStatuses, busca.trim(), clientSearchOpen]),
-    [selectedClients, produto, natureza, selectedStatuses, busca, clientSearchOpen]
+    () => JSON.stringify([dataInicio, dataFim, syncFilters]),
+    [dataInicio, dataFim, syncFilters]
   );
 
   useEffect(() => {
     if (!dataInicio || !dataFim || dataInicio > dataFim) return;
+    // A abertura da tela usa o espelho horario imediatamente. O worker so e
+    // acionado depois que o usuario realmente altera algum filtro.
+    if (firstFilterSync.current) {
+      firstFilterSync.current = false;
+      return;
+    }
 
-    const rangeKey = `${dataInicio}:${dataFim}`;
-    const lastSync = syncedRanges.current.get(rangeKey) ?? 0;
-    if (Date.now() - lastSync < FILTER_SYNC_FRESHNESS_MS) return;
+    const cached = syncedQueries.current.get(filterSyncKey);
+    if (cached && Date.now() - cached.syncedAt < FILTER_SYNC_FRESHNESS_MS) {
+      setSyncSnapshot({ key: filterSyncKey, ...cached });
+      return;
+    }
 
     const timer = window.setTimeout(() => {
-      if (syncingRanges.current.has(rangeKey)) return;
+      if (syncingRanges.current.has(filterSyncKey)) return;
 
-      syncingRanges.current.add(rangeKey);
-      void solicitarSyncPeriodo(dataInicio, dataFim)
-        .then(() => {
-          syncedRanges.current.set(rangeKey, Date.now());
+      syncingRanges.current.add(filterSyncKey);
+      void solicitarSyncPeriodo(dataInicio, dataFim, syncFilters)
+        .then((result) => {
+          const snapshot = {
+            syncedAt: Date.now(),
+            ticketNumbers: result.ticketNumbers,
+          };
+          syncedQueries.current.set(filterSyncKey, snapshot);
+          setSyncSnapshot({ key: filterSyncKey, ...snapshot });
         })
         .catch((error) => {
           toast.error(
@@ -90,12 +122,12 @@ export default function DeploymentsTickets() {
           );
         })
         .finally(() => {
-          syncingRanges.current.delete(rangeKey);
+          syncingRanges.current.delete(filterSyncKey);
         });
     }, FILTER_SYNC_DEBOUNCE_MS);
 
     return () => window.clearTimeout(timer);
-  }, [dataInicio, dataFim, filterSyncKey, solicitarSyncPeriodo]);
+  }, [dataInicio, dataFim, filterSyncKey, solicitarSyncPeriodo, syncFilters]);
 
   const { data: clients = [], isLoading: loadingClients } = useQuery<string[]>({
     queryKey: ["distinctProcessoVendaClients"],
@@ -174,6 +206,11 @@ export default function DeploymentsTickets() {
   });
 
   const statusList = CHAMADO_STATUS_OPTIONS;
+  const syncedTicketNumbers =
+    syncSnapshot?.key === filterSyncKey &&
+    syncSnapshot.ticketNumbers.length <= MAX_SYNC_SNAPSHOT_TICKETS
+      ? syncSnapshot.ticketNumbers
+      : null;
 
   // Query principal dos chamados usando o hook recém-criado
   const { chamados, totalCount, isLoading, error } = useChamadosSearch({
@@ -184,6 +221,7 @@ export default function DeploymentsTickets() {
     nature: natureza,
     searchTerm: busca || null,
     statuses: selectedStatuses.length > 0 ? selectedStatuses : null,
+    ticketNumbers: syncedTicketNumbers,
     page,
     pageSize,
   });
@@ -230,11 +268,25 @@ export default function DeploymentsTickets() {
     if (generatingPdf || !dataInicio || !dataFim || dataInicio > dataFim) return;
 
     setGeneratingPdf(true);
-    toast.loading("Atualizando os dados do relatório...", { id: "chamados-report-pdf" });
     try {
-      // O relatório força uma leitura atual da view para não exportar o espelho
-      // de até uma hora atrás.
-      await solicitarSyncPeriodo(dataInicio, dataFim);
+      let reportTicketNumbers: string[] | null = null;
+      let cached = syncedQueries.current.get(filterSyncKey);
+
+      if (!cached || Date.now() - cached.syncedAt >= FILTER_SYNC_FRESHNESS_MS) {
+        toast.loading("Atualizando os dados do relatório...", { id: "chamados-report-pdf" });
+        const result = await solicitarSyncPeriodo(dataInicio, dataFim, syncFilters);
+        cached = {
+          syncedAt: Date.now(),
+          ticketNumbers: result.ticketNumbers,
+        };
+        syncedQueries.current.set(filterSyncKey, cached);
+        setSyncSnapshot({ key: filterSyncKey, ...cached });
+      }
+
+      if (cached.ticketNumbers.length <= MAX_SYNC_SNAPSHOT_TICKETS) {
+        reportTicketNumbers = cached.ticketNumbers;
+      }
+
       toast.loading("Montando o relatório PDF...", { id: "chamados-report-pdf" });
 
       const reportRows = await fetchAllChamadosForReport({
@@ -245,6 +297,7 @@ export default function DeploymentsTickets() {
         nature: natureza,
         searchTerm: busca || null,
         statuses: selectedStatuses.length > 0 ? selectedStatuses : null,
+        ticketNumbers: reportTicketNumbers,
       });
 
       if (reportRows.length === 0) {
@@ -311,7 +364,9 @@ export default function DeploymentsTickets() {
           {/* Indicador de Status/Sync rápido */}
           <Badge variant="outline" className="px-2 py-0 font-normal text-[10px] text-muted-foreground flex items-center gap-1.5 h-5">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            {syncingPeriodo ? "Atualizando dados..." : "Ellevo ativo (1h + filtros sob demanda)"}
+            {syncingPeriodo
+              ? "Consultando filtro na origem..."
+              : "Ellevo ativo (1h + filtros sob demanda)"}
           </Badge>
         </div>
       </div>
