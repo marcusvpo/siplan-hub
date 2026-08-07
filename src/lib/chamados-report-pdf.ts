@@ -45,7 +45,7 @@ export async function generateChamadosReportPdf(
   const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
-  const marginX = 10;
+  const marginX = 15;
   const bottomMargin = 12;
   const lineHeight = 3.2;
   let y = 0;
@@ -58,14 +58,41 @@ export async function generateChamadosReportPdf(
     !filters.nature || filters.nature === "todas" ? "Todas" : filters.nature;
   const statusLabel = filters.statuses.length > 0 ? filters.statuses.join(", ") : "Todos";
   const generatedAt = new Date().toLocaleString("pt-BR");
+  const uniqueClients = new Set(chamados.map((item) => item.nomeCliente).filter(Boolean)).size;
+  const concluded = chamados.filter((item) =>
+    (item.status || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes("conclu")
+  ).length;
+  const open = chamados.length - concluded;
+
+  const drawSummaryCard = (
+    x: number,
+    label: string,
+    value: number,
+    accent: [number, number, number]
+  ) => {
+    const width = 63.75;
+    pdf.setFillColor(248, 250, 252);
+    pdf.setDrawColor(225, 230, 237);
+    pdf.roundedRect(x, y, width, 12, 1.5, 1.5, "FD");
+    pdf.setFillColor(...accent);
+    pdf.rect(x, y, 2, 12, "F");
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(11);
+    pdf.setTextColor(25, 32, 44);
+    pdf.text(String(value), x + 5, y + 5.2);
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(7);
+    pdf.setTextColor(100, 110, 125);
+    pdf.text(label, x + 5, y + 9.2);
+  };
 
   const drawReportHeader = () => {
     pdf.setFillColor(190, 0, 48);
-    pdf.rect(0, 0, pageWidth, 3, "F");
-    y = 10;
+    pdf.rect(0, 0, pageWidth, 4, "F");
+    y = 12;
 
     pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(15);
+    pdf.setFontSize(16);
     pdf.setTextColor(20, 25, 35);
     pdf.text("Relatório de Chamados - Ellevo/0800", marginX, y);
 
@@ -75,7 +102,7 @@ export async function generateChamadosReportPdf(
     pdf.text(`Gerado pelo SiplanHUB em ${generatedAt}`, pageWidth - marginX, y, {
       align: "right",
     });
-    y += 6;
+    y += 7;
 
     pdf.setFontSize(8.5);
     pdf.setTextColor(45, 55, 70);
@@ -89,13 +116,13 @@ export async function generateChamadosReportPdf(
     ].join("  |  ");
     const filterLines = pdf.splitTextToSize(filterDescription, pageWidth - marginX * 2);
     pdf.text(filterLines, marginX, y);
-    y += filterLines.length * 3.5 + 2;
+    y += filterLines.length * 3.5 + 3;
 
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(9);
-    pdf.setTextColor(190, 0, 48);
-    pdf.text(`${chamados.length} chamado(s) encontrado(s)`, marginX, y);
-    y += 4;
+    drawSummaryCard(marginX, "Chamados encontrados", chamados.length, [190, 0, 48]);
+    drawSummaryCard(marginX + 67.75, "Clientes / serventias", uniqueClients, [71, 85, 105]);
+    drawSummaryCard(marginX + 135.5, "Concluídos", concluded, [5, 150, 105]);
+    drawSummaryCard(marginX + 203.25, "Em aberto", open, [37, 99, 235]);
+    y += 16;
   };
 
   const columns = [
@@ -111,28 +138,35 @@ export async function generateChamadosReportPdf(
   const drawTableHeader = () => {
     let x = marginX;
     pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(7.5);
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFillColor(45, 55, 70);
-    pdf.setDrawColor(45, 55, 70);
+    pdf.setFontSize(7.3);
     for (const column of columns) {
-      pdf.rect(x, y, column.width, 6, "FD");
+      pdf.setFillColor(37, 45, 58);
+      pdf.setDrawColor(37, 45, 58);
+      pdf.rect(x, y, column.width, 6.5, "F");
+      pdf.rect(x, y, column.width, 6.5, "S");
+      pdf.setTextColor(255, 255, 255);
       pdf.text(column.label, x + 1.5, y + 4);
       x += column.width;
     }
-    y += 6;
+    y += 6.5;
   };
 
   const startContinuationPage = () => {
     pdf.addPage();
     pdf.setFillColor(190, 0, 48);
-    pdf.rect(0, 0, pageWidth, 2, "F");
-    y = 8;
+    pdf.rect(0, 0, pageWidth, 3, "F");
+    y = 9;
     pdf.setFont("helvetica", "bold");
     pdf.setFontSize(9);
     pdf.setTextColor(45, 55, 70);
     pdf.text("Relatório de Chamados - continuação", marginX, y);
-    y += 4;
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(7);
+    pdf.setTextColor(100, 110, 125);
+    pdf.text(`${chamados.length} chamado(s) no relatório`, pageWidth - marginX, y, {
+      align: "right",
+    });
+    y += 5;
     drawTableHeader();
   };
 
@@ -142,22 +176,36 @@ export async function generateChamadosReportPdf(
   chamados.forEach((item, rowIndex) => {
     const wrappedCells = columns.map((column) => {
       const lines = pdf.splitTextToSize(text(column.value(item)), column.width - 3) as string[];
-      return lines.slice(0, 5);
+      if (lines.length <= 5) return lines;
+      const visible = lines.slice(0, 5);
+      visible[4] = `${visible[4].replace(/\s+$/, "")}...`;
+      return visible;
     });
-    const rowHeight = Math.max(6, Math.max(...wrappedCells.map((lines) => lines.length)) * lineHeight + 3);
+    const rowHeight = Math.max(7, Math.max(...wrappedCells.map((lines) => lines.length)) * lineHeight + 3);
 
     if (y + rowHeight > pageHeight - bottomMargin) startContinuationPage();
 
     let x = marginX;
-    pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(7);
-    pdf.setTextColor(30, 38, 50);
-    pdf.setDrawColor(220, 225, 232);
-    pdf.setFillColor(...(rowIndex % 2 === 0 ? [255, 255, 255] : [247, 249, 252]) as [number, number, number]);
-
     wrappedCells.forEach((lines, index) => {
       const column = columns[index];
-      pdf.rect(x, y, column.width, rowHeight, "FD");
+      const fill: [number, number, number] =
+        rowIndex % 2 === 0 ? [255, 255, 255] : [247, 249, 252];
+      // O jsPDF consome o estilo de pintura depois de cada retângulo. As cores
+      // precisam ser reaplicadas em cada célula para não herdarem o cabeçalho.
+      pdf.setFillColor(...fill);
+      pdf.setDrawColor(220, 225, 232);
+      pdf.rect(x, y, column.width, rowHeight, "F");
+      pdf.rect(x, y, column.width, rowHeight, "S");
+
+      pdf.setFont("helvetica", index === 0 ? "bold" : "normal");
+      pdf.setFontSize(7);
+      if (index === 0) {
+        pdf.setTextColor(190, 0, 48);
+      } else if (index === 5 && (item.status || "").toLowerCase().includes("conclu")) {
+        pdf.setTextColor(5, 130, 90);
+      } else {
+        pdf.setTextColor(30, 38, 50);
+      }
       pdf.text(lines, x + 1.5, y + 3.7);
       x += column.width;
     });
@@ -170,6 +218,9 @@ export async function generateChamadosReportPdf(
     pdf.setFont("helvetica", "normal");
     pdf.setFontSize(7);
     pdf.setTextColor(125, 135, 150);
+    pdf.setDrawColor(225, 230, 237);
+    pdf.line(marginX, pageHeight - 9, pageWidth - marginX, pageHeight - 9);
+    pdf.text("SiplanHUB · Consulta de Chamados", marginX, pageHeight - 5);
     pdf.text(`Página ${page} de ${totalPages}`, pageWidth - marginX, pageHeight - 5, {
       align: "right",
     });
