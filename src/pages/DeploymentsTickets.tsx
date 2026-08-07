@@ -50,7 +50,7 @@ export default function DeploymentsTickets() {
   
   // Paginação
   const [page, setPage] = useState(1);
-  const pageSize = 15;
+  const [pageSize, setPageSize] = useState(5);
 
   // Modais e Diálogos
   const [selectedChamado, setSelectedChamado] = useState<Chamado0800 | null>(null);
@@ -731,41 +731,66 @@ export default function DeploymentsTickets() {
               </Table>
 
               {/* Seção de Paginação */}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-muted bg-muted/20">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-3 py-2.5 border-t border-muted bg-muted/20">
                 <span className="text-xs text-muted-foreground">
                   Mostrando <strong className="font-medium text-foreground">{chamados.length}</strong> de <strong className="font-medium text-foreground">{totalCount}</strong> chamados encontrados.
                 </span>
-                
-                {totalPages > 1 && (
-                  <div className="flex items-center gap-1.5">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                      disabled={page === 1}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                    
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground px-2">
-                      <span>Página</span>
-                      <strong className="font-medium text-foreground">{page}</strong>
-                      <span>de</span>
-                      <strong className="font-medium text-foreground">{totalPages}</strong>
-                    </div>
 
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                      disabled={page === totalPages}
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <span>Exibir</span>
+                    <Select
+                      value={String(pageSize)}
+                      onValueChange={(value) => {
+                        setPageSize(Number(value));
+                        setPage(1);
+                      }}
                     >
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
+                      <SelectTrigger className="h-7 w-[68px] text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[5, 10, 15, 25, 50].map((size) => (
+                          <SelectItem key={size} value={String(size)}>
+                            {size}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <span>por página</span>
                   </div>
-                )}
+
+                  {totalPages > 1 && (
+                    <div className="flex items-center gap-1.5">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                        disabled={page === 1}
+                      >
+                        <ChevronLeft className="h-3.5 w-3.5" />
+                      </Button>
+
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground px-2">
+                        <span>Página</span>
+                        <strong className="font-medium text-foreground">{page}</strong>
+                        <span>de</span>
+                        <strong className="font-medium text-foreground">{totalPages}</strong>
+                      </div>
+
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                        disabled={page === totalPages}
+                      >
+                        <ChevronRight className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
