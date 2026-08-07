@@ -1,4 +1,4 @@
-import type { Chamado0800 } from "@/hooks/useChamados0800";
+import type { Chamado0800, ChamadoReportRow } from "@/hooks/useChamados0800";
 import { formatOrionProductLabel } from "@/lib/chamados-product-filter";
 
 export interface ChamadosReportFilters {
@@ -15,6 +15,17 @@ function formatDate(value?: string | null): string {
   if (!value) return "-";
   const match = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
   return match ? `${match[3]}/${match[2]}/${match[1]}` : value;
+}
+
+function formatDateTime(value?: string | null): string {
+  if (!value) return "data não informada";
+  const match = value.match(
+    /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2}))?)?/
+  );
+  if (!match) return value;
+  const [, year, month, day, hour, minute, second] = match;
+  const time = hour && minute ? ` ${hour}:${minute}${second ? `:${second}` : ""}` : "";
+  return `${day}/${month}/${year}${time}`;
 }
 
 function localIsoDate(date = new Date()): string {
@@ -37,8 +48,22 @@ function summarizeClients(clients: string[]): string {
   return `${clients.slice(0, 3).join(", ")} e mais ${clients.length - 3}`;
 }
 
+function latestTramiteText(item: ChamadoReportRow): string {
+  const tramite = item.ultimoTramite;
+  if (!tramite) return "Último trâmite: nenhum trâmite registrado.";
+
+  const metadata = [
+    tramite.numeroTramite ? `Trâmite ${tramite.numeroTramite}` : "Último trâmite",
+    formatDateTime(tramite.dataTramite),
+    tramite.responsavel,
+    tramite.atividade,
+  ].filter(Boolean);
+
+  return `${metadata.join(" | ")} - ${text(tramite.descricao)}`;
+}
+
 export async function generateChamadosReportPdf(
-  chamados: Chamado0800[],
+  chamados: ChamadoReportRow[],
   filters: ChamadosReportFilters
 ): Promise<void> {
   const { jsPDF } = await import("jspdf");
@@ -134,6 +159,7 @@ export async function generateChamadosReportPdf(
     { label: "Status", width: 32, value: (item: Chamado0800) => text(item.status) },
     { label: "Abertura", width: 23, value: (item: Chamado0800) => formatDate(item.dataAbertura) },
   ];
+  const tableWidth = columns.reduce((total, column) => total + column.width, 0);
 
   const drawTableHeader = () => {
     let x = marginX;
@@ -183,7 +209,21 @@ export async function generateChamadosReportPdf(
     });
     const rowHeight = Math.max(7, Math.max(...wrappedCells.map((lines) => lines.length)) * lineHeight + 3);
 
-    if (y + rowHeight > pageHeight - bottomMargin) startContinuationPage();
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(6.4);
+    const allTramiteLines = pdf.splitTextToSize(
+      text(latestTramiteText(item)),
+      tableWidth - 5
+    ) as string[];
+    const tramiteLines = allTramiteLines.slice(0, 3);
+    if (allTramiteLines.length > 3) {
+      tramiteLines[2] = `${tramiteLines[2].replace(/\s+$/, "")}...`;
+    }
+    const tramiteRowHeight = Math.max(5.8, tramiteLines.length * 2.7 + 2.2);
+
+    if (y + rowHeight + tramiteRowHeight > pageHeight - bottomMargin) {
+      startContinuationPage();
+    }
 
     let x = marginX;
     wrappedCells.forEach((lines, index) => {
@@ -210,6 +250,20 @@ export async function generateChamadosReportPdf(
       x += column.width;
     });
     y += rowHeight;
+
+    const tramiteFill: [number, number, number] =
+      rowIndex % 2 === 0 ? [246, 248, 251] : [241, 244, 248];
+    pdf.setFillColor(...tramiteFill);
+    pdf.setDrawColor(220, 225, 232);
+    pdf.rect(marginX, y, tableWidth, tramiteRowHeight, "F");
+    pdf.rect(marginX, y, tableWidth, tramiteRowHeight, "S");
+    pdf.setFillColor(190, 0, 48);
+    pdf.rect(marginX, y, 1.2, tramiteRowHeight, "F");
+    pdf.setFont("helvetica", "italic");
+    pdf.setFontSize(6.4);
+    pdf.setTextColor(75, 85, 100);
+    pdf.text(tramiteLines, marginX + 2.5, y + 3.2);
+    y += tramiteRowHeight;
   });
 
   const totalPages = pdf.getNumberOfPages();

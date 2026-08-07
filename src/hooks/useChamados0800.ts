@@ -34,6 +34,10 @@ export interface ChamadoTramite {
   descricao?: string;
 }
 
+export interface ChamadoReportRow extends Chamado0800 {
+  ultimoTramite?: ChamadoTramite;
+}
+
 export interface Chamados0800Result {
   chamados: Chamado0800[];
   /** false = o chamado de origem do projeto ainda nao apareceu no espelho
@@ -106,6 +110,17 @@ export const mapChamado0800 = (c: any): Chamado0800 => ({
   tema: c.tema_ia && c.tema_ia !== "interno" ? c.tema_ia : undefined,
 });
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mapChamadoTramite = (tramite: any): ChamadoTramite => ({
+  sequenciaTramite: Number(tramite.sequencia_tramite),
+  numeroTramite: tramite.numero_tramite ?? undefined,
+  dataTramite: tramite.data_tramite ?? undefined,
+  responsavel: tramite.responsavel ?? undefined,
+  equipeResponsavel: tramite.equipe_responsavel ?? undefined,
+  atividade: tramite.atividade ?? undefined,
+  descricao: tramite.descricao ?? undefined,
+});
+
 /** Historico 1:N de tramites da tela Consulta de Chamados. */
 export function useChamadoTramites(numeroChamado?: string, enabled = true) {
   const query = useQuery({
@@ -123,15 +138,7 @@ export function useChamadoTramites(numeroChamado?: string, enabled = true) {
         .order("numero_tramite", { ascending: false });
 
       if (error) throw error;
-      return (data ?? []).map((tramite) => ({
-        sequenciaTramite: Number(tramite.sequencia_tramite),
-        numeroTramite: tramite.numero_tramite ?? undefined,
-        dataTramite: tramite.data_tramite ?? undefined,
-        responsavel: tramite.responsavel ?? undefined,
-        equipeResponsavel: tramite.equipe_responsavel ?? undefined,
-        atividade: tramite.atividade ?? undefined,
-        descricao: tramite.descricao ?? undefined,
-      }));
+      return (data ?? []).map(mapChamadoTramite);
     },
   });
 
@@ -568,10 +575,48 @@ function createChamadosSearchQuery(
   return q;
 }
 
-/** Busca todos os chamados do recorte atual em lotes para o relatório PDF. */
+async function fetchUltimosTramites(
+  numerosChamados: string[]
+): Promise<Map<string, ChamadoTramite>> {
+  const ultimosPorChamado = new Map<string, ChamadoTramite>();
+  const ticketBatchSize = 100;
+  const rowBatchSize = 1000;
+
+  for (let ticketFrom = 0; ticketFrom < numerosChamados.length; ticketFrom += ticketBatchSize) {
+    const ticketBatch = numerosChamados.slice(ticketFrom, ticketFrom + ticketBatchSize);
+
+    for (let rowFrom = 0; ; rowFrom += rowBatchSize) {
+      const { data, error } = await supabase
+        .from("chamados_processo_venda_tramites")
+        .select(
+          "numero_chamado, sequencia_tramite, numero_tramite, data_tramite, responsavel, equipe_responsavel, atividade, descricao"
+        )
+        .in("numero_chamado", ticketBatch)
+        .order("data_tramite", { ascending: false, nullsFirst: false })
+        .order("numero_tramite", { ascending: false })
+        .order("sequencia_tramite", { ascending: false })
+        .range(rowFrom, rowFrom + rowBatchSize - 1);
+
+      if (error) throw error;
+      const batch = data ?? [];
+      for (const tramite of batch) {
+        const numeroChamado = String(tramite.numero_chamado);
+        if (!ultimosPorChamado.has(numeroChamado)) {
+          ultimosPorChamado.set(numeroChamado, mapChamadoTramite(tramite));
+        }
+      }
+
+      if (batch.length < rowBatchSize) break;
+    }
+  }
+
+  return ultimosPorChamado;
+}
+
+/** Busca todos os chamados e o último trâmite do recorte para o relatório PDF. */
 export async function fetchAllChamadosForReport(
   filters: Omit<ChamadosSearchFilters, "page" | "pageSize">
-): Promise<Chamado0800[]> {
+): Promise<ChamadoReportRow[]> {
   const batchSize = 1000;
   const rows: unknown[] = [];
 
@@ -587,7 +632,15 @@ export async function fetchAllChamadosForReport(
     if (batch.length < batchSize) break;
   }
 
-  return rows.map(mapChamado0800);
+  const chamados = rows.map(mapChamado0800);
+  const ultimosTramites = await fetchUltimosTramites(
+    chamados.map((chamado) => chamado.numeroChamado)
+  );
+
+  return chamados.map((chamado) => ({
+    ...chamado,
+    ultimoTramite: ultimosTramites.get(chamado.numeroChamado),
+  }));
 }
 
 export function useChamadosSearch({
