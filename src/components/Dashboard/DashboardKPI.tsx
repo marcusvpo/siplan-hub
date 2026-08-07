@@ -23,16 +23,16 @@ export const DashboardKPI: React.FC<DashboardKPIProps> = ({ onCardClick }) => {
 
   if (isLoading) {
     return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7">
         {Array.from({ length: 7 }).map((_, i) => (
-          <Skeleton key={i} className="h-32" />
+          <Skeleton key={i} className="h-24 sm:h-32" />
         ))}
       </div>
     );
   }
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7">
+    <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7">
       <KPICard
         title="Total"
         value={kpis.totalProjects}

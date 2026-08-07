@@ -40,24 +40,24 @@ export const KPICard = ({ title, value, unit, icon: Icon, variant = "default", t
       )}
       onClick={onClick}
     >
-      <CardContent className="p-3 sm:p-4">
-        <div className="flex items-start justify-between">
-          <div className="space-y-1 sm:space-y-2 flex-1 min-w-0">
+      <CardContent className="p-2.5 sm:p-4">
+        <div className="flex items-start justify-between gap-1">
+          <div className="space-y-0.5 sm:space-y-2 flex-1 min-w-0">
             <ScrollingText 
               text={title} 
-              className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+              className="text-[9px] sm:text-xs font-semibold uppercase tracking-wider text-muted-foreground"
               speed={30}
             />
             <div className="flex items-baseline gap-1">
-              <h3 className="text-xl sm:text-2xl font-black tracking-tight truncate">
+              <h3 className="text-lg sm:text-2xl font-black tracking-tight truncate">
                 {value}
-                {unit && <span className="text-xs sm:text-sm text-muted-foreground ml-0.5">{unit}</span>}
+                {unit && <span className="text-[10px] sm:text-sm text-muted-foreground ml-0.5">{unit}</span>}
               </h3>
             </div>
             {trend && (
               <div
                 className={cn(
-                  "flex items-center gap-0.5 text-[10px] font-bold",
+                  "flex items-center gap-0.5 text-[9px] sm:text-[10px] font-bold",
                   trend.direction === "up" && "text-green-600",
                   trend.direction === "down" && "text-red-600",
                   trend.direction === "stable" && "text-muted-foreground"
@@ -78,8 +78,8 @@ export const KPICard = ({ title, value, unit, icon: Icon, variant = "default", t
               </div>
             )}
           </div>
-          <div className={cn("p-1.5 sm:p-2 rounded-md bg-background/50 shrink-0 ml-2", iconColors[variant])}>
-            <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
+          <div className={cn("p-1 sm:p-2 rounded-md bg-background/50 shrink-0 ml-1.5 sm:ml-2", iconColors[variant])}>
+            <Icon className="h-3.5 w-3.5 sm:h-5 sm:w-5" />
           </div>
         </div>
       </CardContent>

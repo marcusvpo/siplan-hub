@@ -141,7 +141,7 @@ export const NewProjectDialog = () => {
           Cadastrar Novo Projeto
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[94vw] sm:w-full sm:max-w-[700px] max-h-[88vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>Criar Novo Projeto</DialogTitle>
           <DialogDescription>
@@ -156,7 +156,7 @@ export const NewProjectDialog = () => {
             </TabsList>
 
             <TabsContent value="dados" className="space-y-4 mt-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="clientName">
                     Nome do Cliente <span className="text-destructive">*</span>
@@ -281,7 +281,7 @@ export const NewProjectDialog = () => {
                 </div>
 
                 {systemType === "Modelos TN" ? (
-                  <div className="space-y-2 col-span-2">
+                  <div className="space-y-2 col-span-1 sm:col-span-2">
                     <Label htmlFor="workHours">Horas de Trabalho</Label>
                     <Input
                       id="workHours"
@@ -338,7 +338,7 @@ export const NewProjectDialog = () => {
                       />
                     </div>
 
-                    <div className="space-y-2 col-span-2">
+                    <div className="space-y-2 col-span-1 sm:col-span-2">
                       <Label htmlFor="specialty">Especialidade</Label>
                       <Select value={specialty} onValueChange={setSpecialty}>
                         <SelectTrigger id="specialty">
@@ -363,7 +363,7 @@ export const NewProjectDialog = () => {
             </TabsContent>
           </Tabs>
 
-          <div className="flex justify-end gap-3 pt-4 border-t">
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-4 border-t">
             <Button
               type="button"
               variant="outline"

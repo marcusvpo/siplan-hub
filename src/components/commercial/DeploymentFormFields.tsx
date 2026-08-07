@@ -110,7 +110,7 @@ export function DeploymentFormFields({ data, onChange, errors = new Set() }: Pro
 
       {/* ── DADOS ADMINISTRATIVOS ── */}
       <SectionCard title="Dados Administrativos" icon={FileText} color="indigo">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
           <div className="space-y-1" {...attr("op_number")}>
             <RL label="N.º OP" />
             <Input value={data.op_number || ""} onChange={ev => set("op_number", ev.target.value)}
@@ -142,7 +142,7 @@ export function DeploymentFormFields({ data, onChange, errors = new Set() }: Pro
             <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">
               Sistemas / Módulos adicionais contratados:
             </p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
               <CheckRow checked={data.module_lcw} onCheckedChange={v => set("module_lcw", v)} label="LCW (Livro Caixa Web)" />
               <CheckRow checked={data.module_on_hand} onCheckedChange={v => set("module_on_hand", v)} label="On Hand (App Mobile)" />
               <CheckRow checked={data.module_sga} onCheckedChange={v => set("module_sga", v)} label="SGA (Gestão de Atendimento)" />

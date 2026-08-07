@@ -62,8 +62,8 @@ export function ConversionPostDrawer({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0 overflow-hidden">
-        <DialogHeader className="space-y-3 p-6 pb-2 shrink-0 bg-muted/10">
+      <DialogContent className="w-[94vw] sm:w-full max-w-2xl max-h-[88vh] flex flex-col p-0 overflow-hidden">
+        <DialogHeader className="space-y-3 p-4 sm:p-6 pb-2 shrink-0 bg-muted/10">
           <DialogTitle className="flex items-center gap-2">
             <MessageSquare className="h-5 w-5 text-primary" />
             <span className="truncate">{clientName}</span>
@@ -92,7 +92,7 @@ export function ConversionPostDrawer({
         <Separator className="shrink-0" />
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
-          <TabsList className="mx-6 mt-4 shrink-0 bg-muted/40 border">
+          <TabsList className="mx-3 sm:mx-6 mt-4 shrink-0 bg-muted/40 border max-w-full overflow-x-auto scrollbar-none">
             <TabsTrigger value="posts" className="gap-1.5 py-2">
               <MessageSquare className="h-4 w-4" />
               Diário / Notas ({posts.length})
@@ -103,14 +103,14 @@ export function ConversionPostDrawer({
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="posts" className="flex-1 overflow-y-auto px-6 py-4 focus-visible:outline-none">
+          <TabsContent value="posts" className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 focus-visible:outline-none">
             <h4 className="text-sm font-semibold mb-3 text-muted-foreground">
               Notas e Publicações da Conversão
             </h4>
             <ConversionPostFeed posts={posts} loading={postsLoading} readOnly />
           </TabsContent>
 
-          <TabsContent value="homologations" className="flex-1 overflow-y-auto px-6 py-4 focus-visible:outline-none">
+          <TabsContent value="homologations" className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 focus-visible:outline-none">
             <h4 className="text-sm font-semibold mb-4 text-muted-foreground">
               Histórico de Movimentações da Homologação
             </h4>
