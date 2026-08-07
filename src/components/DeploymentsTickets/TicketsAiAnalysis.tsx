@@ -19,6 +19,7 @@ import {
   Building2,
   CheckCircle2,
   Clock3,
+  Eye,
   Headset,
   Loader2,
   Sparkles,
@@ -28,6 +29,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MarkdownLite } from "@/components/MarkdownLite";
+import { Chamado0800DetailDialog } from "@/components/ProjectManagement/Chamado0800DetailDialog";
 import {
   fetchAllChamadosForReport,
   fetchAllChamados,
@@ -155,6 +157,7 @@ export function TicketsAiAnalysis({
   filterDescription,
 }: TicketsAiAnalysisProps) {
   const [preparingAi, setPreparingAi] = useState(false);
+  const [selectedChamado, setSelectedChamado] = useState<ChamadoReportRow | null>(null);
   const { user } = useAuth();
   const { online: workerOnline } = useModelWorkerStatus();
   const { generate, active: activeJob, latest, latestError } = useTicketsAiAnalysis(
@@ -359,7 +362,20 @@ export function TicketsAiAnalysis({
                   <p className="truncate text-[11px] font-medium"><span className="font-mono text-rose-600">#{row.numeroChamado}</span> {row.titulo || "Sem titulo"}</p>
                   <p className="truncate text-[9px] text-muted-foreground">{row.nomeCliente || "Cliente não informado"}</p>
                 </div>
-                <Badge variant="outline" className="shrink-0 text-[9px]">{daysOpen(row.dataAbertura)} dias</Badge>
+                <div className="flex shrink-0 items-center gap-1">
+                  <Badge variant="outline" className="text-[9px]">{daysOpen(row.dataAbertura)} dias</Badge>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                    title={`Ver detalhes do chamado ${row.numeroChamado}`}
+                    aria-label={`Ver detalhes e trâmites do chamado ${row.numeroChamado}`}
+                    onClick={() => setSelectedChamado(row)}
+                  >
+                    <Eye className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               </div>
             ))}
           </CardContent>
@@ -391,6 +407,12 @@ export function TicketsAiAnalysis({
           </CardContent>
         </Card>
       </div>
+
+      <Chamado0800DetailDialog
+        chamado={selectedChamado}
+        onClose={() => setSelectedChamado(null)}
+        showTramites
+      />
     </div>
   );
 }
