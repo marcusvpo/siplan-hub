@@ -204,7 +204,7 @@ export function ProjectCardV3({
 
   return (
     <Card
-      className="w-full hover:shadow-lg hover:border-primary/20 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer flex flex-col md:flex-row items-center p-2.5 md:p-3 gap-3 md:gap-4 min-h-[5.5rem] h-auto relative overflow-visible group bg-card/50 backdrop-blur-sm"
+      className="w-full hover:shadow-lg hover:border-primary/20 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer flex flex-col md:flex-row items-stretch md:items-center p-3 md:p-3 gap-3 md:gap-4 min-h-[5.5rem] h-auto relative overflow-hidden group bg-card/50 backdrop-blur-sm"
       onClick={() => onClick(project)}
     >
       <div
@@ -214,9 +214,39 @@ export function ProjectCardV3({
         )}
       />
 
-      {/* Top Left Tag: Implantação em Andamento (Azul) vs Implantação Confirmada (Verde) vs Previsão Agendada (Cinza Escuro) */}
+      {/* Mobile Status Badges Header */}
+      <div className="flex sm:hidden flex-wrap items-center gap-1.5 w-full pt-0.5 pb-1 border-b border-border/20">
+        {isImplementationInProgress ? (
+          <Badge className="text-[9px] px-2 py-0.5 font-bold bg-blue-600 text-white flex items-center gap-1">
+            <PlayCircle className="w-2.5 h-2.5" />
+            Implantação em Andamento
+          </Badge>
+        ) : isConfirmed ? (
+          <Badge className="text-[9px] px-2 py-0.5 font-bold bg-emerald-600 text-white flex items-center gap-1">
+            <CheckCircle2 className="w-2.5 h-2.5" />
+            Implantação Confirmada
+          </Badge>
+        ) : isForecastScheduled ? (
+          <Badge className="text-[9px] px-2 py-0.5 font-bold bg-slate-600 text-white flex items-center gap-1">
+            <Calendar className="w-2.5 h-2.5 text-slate-200" />
+            Previsão Agendada
+          </Badge>
+        ) : null}
+
+        <PosSaudeBadge projectId={project.id} />
+        {isFromAutomacao && (
+          <Badge className="text-[9px] px-2 py-0.5 font-bold bg-purple-600 text-white">
+            Novo
+          </Badge>
+        )}
+        <Badge className={cn("text-[9px] px-2 py-0.5 font-bold", globalStatusBadge.className)}>
+          {globalStatusBadge.label}
+        </Badge>
+      </div>
+
+      {/* Desktop Top Left Tag */}
       {hasTopLeftTag && (
-        <div className="absolute -top-2.5 left-2 z-10">
+        <div className="hidden sm:block absolute -top-2.5 left-2 z-10">
           {isImplementationInProgress ? (
             <Badge className="text-[9px] px-2 py-0.5 font-bold shadow-lg border-2 border-background bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20 flex items-center gap-1">
               <PlayCircle className="w-2.5 h-2.5" />
@@ -236,8 +266,8 @@ export function ProjectCardV3({
         </div>
       )}
 
-      {/* Project Status Badges - Top Right Corner */}
-      <div className="absolute -top-1.5 -right-1.5 z-10 flex items-center gap-1.5">
+      {/* Desktop Project Status Badges - Top Right Corner */}
+      <div className="hidden sm:flex absolute -top-1.5 -right-1.5 z-10 items-center gap-1.5">
         <PosSaudeBadge projectId={project.id} />
         {isFromAutomacao && (
           <Badge className="text-[9px] px-2 py-0.5 font-bold shadow-lg border-2 border-background bg-purple-600 hover:bg-purple-700 text-white shadow-purple-500/20">
@@ -256,7 +286,7 @@ export function ProjectCardV3({
 
       {/* Selection Checkbox */}
       {onSelect && (
-        <div className="mr-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+        <div className="mr-1 shrink-0 self-center" onClick={(e) => e.stopPropagation()}>
           <Checkbox
             checked={selected}
             onCheckedChange={(checked) => onSelect(checked as boolean)}
@@ -266,8 +296,8 @@ export function ProjectCardV3({
       )}
 
       {/* 1. Info Principal */}
-      <div className={cn("flex flex-col justify-center flex-[1.5] min-w-0 space-y-1", hasTopLeftTag && "pt-2 md:pt-2.5")}>
-        <div className="flex items-center gap-2 min-w-0">
+      <div className={cn("flex flex-col justify-center flex-[1.5] w-full md:w-auto min-w-0 space-y-1", hasTopLeftTag && "pt-1 sm:pt-2 md:pt-2.5")}>
+        <div className="flex items-center gap-2 w-full min-w-0">
           <div
             className={cn(
               "h-2.5 w-2.5 rounded-full shrink-0 shadow-sm ring-1 ring-background",
@@ -288,44 +318,42 @@ export function ProjectCardV3({
             }`}
           />
           <h3
-            className="font-bold text-base leading-tight truncate tracking-tight text-foreground/90 overflow-hidden"
+            className="font-bold text-sm sm:text-base leading-tight truncate tracking-tight text-foreground/90 w-full min-w-0"
             title={project.clientName}
           >
             {project.clientName}
           </h3>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground w-full min-w-0">
           <Badge
             variant="outline"
-            className="font-medium bg-muted/50 text-muted-foreground border-border/50 px-1 py-0 text-[10px]"
+            className="font-medium bg-muted/50 text-muted-foreground border-border/50 px-1 py-0 text-[10px] shrink-0"
           >
             {project.systemType}
           </Badge>
-          <span className="font-mono opacity-70">
+          <span className="font-mono opacity-70 shrink-0">
             #{project.ticketNumber}
           </span>
         </div>
 
         {project.TituloChamado && (
-          <div className="text-[11px] font-medium text-muted-foreground/90 truncate leading-snug w-full" title={project.TituloChamado}>
+          <div className="text-[11px] font-medium text-muted-foreground/90 truncate leading-snug w-full min-w-0" title={project.TituloChamado}>
             {project.TituloChamado}
           </div>
         )}
         
         {project.EtapasProjeto && (
-          <div className="text-[10px] text-muted-foreground/80 truncate flex items-center gap-1.5 w-full bg-muted/40 rounded-md px-1.5 py-0.5 border border-border/30" title={project.EtapasProjeto}>
-            <div className="w-1.5 h-1.5 rounded-full bg-blue-500/80 animate-pulse"></div>
-            0800: <span className="font-medium text-foreground/80">{project.EtapasProjeto}</span>
+          <div className="text-[10px] text-muted-foreground/80 truncate flex items-center gap-1.5 w-full min-w-0 bg-muted/40 rounded-md px-1.5 py-0.5 border border-border/30" title={project.EtapasProjeto}>
+            <div className="w-1.5 h-1.5 rounded-full bg-blue-500/80 animate-pulse shrink-0"></div>
+            <span className="truncate">0800: <span className="font-medium text-foreground/80">{project.EtapasProjeto}</span></span>
           </div>
         )}
 
-        <div className="flex flex-wrap items-center gap-2">
-
-
+        <div className="flex flex-wrap items-center gap-2 w-full min-w-0">
           {/* Project Leader */}
           <div
-            className="flex items-center gap-1 text-[9px] text-muted-foreground min-w-0"
+            className="flex items-center gap-1 text-[9px] text-muted-foreground min-w-0 truncate"
             title={`Líder: ${project.projectLeader}`}
           >
             <div className="h-3.5 w-3.5 shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-[7px] font-bold text-primary ring-1 ring-primary/20">
@@ -339,8 +367,8 @@ export function ProjectCardV3({
       </div>
 
       {/* 2. Pipeline Visual */}
-      <div className="flex-[2.5] w-full md:w-auto flex flex-col justify-center px-3 md:px-4 md:border-l md:border-r border-border/40 min-h-[2.5rem] bg-gradient-to-r from-transparent via-muted/5 to-transparent overflow-hidden">
-        <div className="flex items-center justify-between gap-1 relative w-full max-w-2xl mx-auto">
+      <div className="flex-[2.5] w-full md:w-auto flex flex-col justify-center px-2 sm:px-4 md:border-l md:border-r border-border/40 min-h-[2.5rem] bg-gradient-to-r from-transparent via-muted/5 to-transparent overflow-x-auto scrollbar-none py-1">
+        <div className="flex items-center justify-between gap-1 relative w-full min-w-[280px] sm:min-w-0 max-w-2xl mx-auto">
           {/* Linha de conexão (fundo) */}
           <div className="absolute top-1/2 left-0 right-0 h-[1px] bg-muted-foreground/10 -z-10 transform -translate-y-1/2 rounded-full" />
 
@@ -391,7 +419,7 @@ export function ProjectCardV3({
       </div>
 
       {/* 3. Gargalo Atual */}
-      <div className="flex-[1.2] flex flex-col justify-center px-4 md:border-r border-border/40 min-w-0 bg-gradient-to-r from-transparent via-muted/3 to-transparent">
+      <div className="flex-[1.2] w-full md:w-auto flex flex-col justify-center px-2 sm:px-4 md:border-r border-border/40 min-w-0 bg-gradient-to-r from-transparent via-muted/3 to-transparent">
         <span className="text-[9px] text-muted-foreground uppercase tracking-wider font-bold opacity-60 mb-1 whitespace-nowrap overflow-hidden">
           Gargalo{bottlenecks.length > 1 ? "s" : ""}
         </span>
@@ -429,7 +457,7 @@ export function ProjectCardV3({
       </div>
 
       {/* 4. Metricas & Ações */}
-      <div className="flex-[1.2] flex items-center gap-3 justify-end pl-1 shrink-0">
+      <div className="flex-[1.2] w-full md:w-auto flex items-center gap-3 justify-between md:justify-end pl-1 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-border/30">
         <div className="flex flex-col items-end shrink-0">
           <span className="text-[8px] text-muted-foreground uppercase tracking-wider font-bold opacity-60 mb-0.5">
             UAT

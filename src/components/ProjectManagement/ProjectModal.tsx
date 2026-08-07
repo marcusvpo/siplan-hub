@@ -191,7 +191,7 @@ export function ProjectModal({
           </Badge>
         </div>
 
-        <DialogHeader className={cn("px-4 sm:px-6 py-3 sm:py-3.5 border-b shrink-0 flex flex-col sm:flex-row items-start sm:items-start justify-between gap-3 sm:gap-4", hasTopLeftTag && "pt-2 sm:pt-6.5")}>
+        <DialogHeader className={cn("pl-4 pr-12 sm:px-6 py-3 sm:py-3.5 border-b shrink-0 flex flex-col sm:flex-row items-start sm:items-start justify-between gap-3 sm:gap-4", hasTopLeftTag && "pt-2 sm:pt-6.5")}>
           <div className={cn("flex flex-col gap-1 min-w-0 flex-1 pr-6 sm:pr-0", hasTopLeftTag && "mt-0.5 sm:mt-1")}>
             {isLoading ? (
               <DialogTitle>

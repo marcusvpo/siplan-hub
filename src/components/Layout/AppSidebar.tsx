@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/use-theme";
 import { useProjectsV2 } from "@/hooks/useProjectsV2";
@@ -46,12 +46,19 @@ import { Sidebar as ShadcnSidebar, useSidebar } from "@/components/ui/sidebar";
 import { useCopilot } from "@/hooks/useCopilot";
 
 export function AppSidebar() {
-  const { state, toggleSidebar } = useSidebar();
+  const { state, toggleSidebar, setOpenMobile, isMobile } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
   const { signOut } = useAuth();
   const { theme } = useTheme();
   const { projects } = useProjectsV2();
+
+  // Auto-retract mobile sidebar on navigation
+  useEffect(() => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  }, [location.pathname, isMobile, setOpenMobile]);
   const [isDashboardOpen, setIsDashboardOpen] = useState(
     location.pathname.startsWith("/dashboard") ||
       location.pathname === "/deployments/tickets",
