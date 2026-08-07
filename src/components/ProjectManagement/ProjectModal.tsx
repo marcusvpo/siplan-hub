@@ -14,9 +14,10 @@ import { FilesTab } from "./Tabs/FilesTab";
 import { LogsTab } from "./Tabs/LogsTab";
 import { RoadmapManager } from "./RoadmapManager";
 import { Chamado0800Tab } from "./Tabs/Chamado0800Tab";
+import { PosImplantacaoTab } from "./Tabs/PosImplantacaoTab";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Pencil, X, Maximize2, ClipboardList, PlayCircle, CheckCircle2, Calendar } from "lucide-react";
+import { Pencil, X, Maximize2, ClipboardList, PlayCircle, CheckCircle2, Calendar, ExternalLink } from "lucide-react";
 import { useState } from "react";
 import { useProjectDetails } from "@/hooks/useProjectDetails";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -313,8 +314,8 @@ export function ProjectModal({
             }}
             className="flex-1 flex flex-col overflow-hidden"
           >
-            <div className="px-6 border-b bg-muted/30">
-              <TabsList className="h-12 bg-transparent p-0 gap-6">
+            <div className="px-6 border-b bg-muted/30 overflow-x-auto scrollbar-none">
+              <TabsList className="h-12 bg-transparent p-0 gap-6 min-w-max flex-nowrap">
                 <TabsTrigger
                   value="general"
                   className="h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-2 text-muted-foreground hover:text-primary/80 hover:border-border/50 data-[state=active]:text-foreground transition-all duration-200"
@@ -353,6 +354,26 @@ export function ProjectModal({
                 >
                   Roadmap
                 </TabsTrigger>
+                <TabsTrigger
+                  value="pos_analysis"
+                  className="h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-2 text-muted-foreground hover:text-primary/80 hover:border-border/50 data-[state=active]:text-foreground transition-all duration-200 whitespace-nowrap"
+                >
+                  Análise Pós-Implantação
+                </TabsTrigger>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (displayProject?.id) {
+                      navigate(`/implantadores/transicao?project=${displayProject.id}`);
+                      onOpenChange(false);
+                    }
+                  }}
+                  className="h-full rounded-none border-b-2 border-transparent px-2 text-muted-foreground hover:text-primary/80 hover:border-border/50 transition-all duration-200 flex items-center gap-1.5 whitespace-nowrap text-sm font-medium"
+                  title="Abrir a Transição (DTC) deste projeto"
+                >
+                  Transição
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </button>
                 <div className="flex items-center h-full ml-auto">
                   {canEditProjects && (
                   <Button
@@ -405,6 +426,9 @@ export function ProjectModal({
                   </TabsContent>
                   <TabsContent value="roadmap" className="m-0 h-full">
                     <RoadmapManager projectId={fullProject.id} />
+                  </TabsContent>
+                  <TabsContent value="pos_analysis" className="m-0 h-full">
+                    <PosImplantacaoTab project={fullProject} />
                   </TabsContent>
                   {fullProject && (fullProject.TituloChamado || fullProject.descricaotramite || fullProject.ResponsavelAtividade || fullProject.EtapasProjeto) && (
                     <TabsContent value="chamado_0800" className="m-0 h-full">
