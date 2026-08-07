@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Bar,
@@ -40,6 +40,13 @@ import { useTicketsAiAnalysis } from "@/hooks/useTicketsAiAnalysis";
 import { useModelWorkerStatus } from "@/hooks/useModelGenerationJobs";
 import { useAuth } from "@/hooks/useAuth";
 import { formatOrionProductLabel } from "@/lib/chamados-product-filter";
+import {
+  buildTicketsAiAnalytics,
+  isTicketBugLike,
+  isTicketCompleted,
+  ticketDaysBetween,
+  ticketDaysOpen,
+} from "@/lib/tickets-ai-analytics";
 
 const STATUS_COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#64748b", "#e11d48"];
 const CHART_COLOR = "hsl(346, 84%, 45%)";
@@ -59,79 +66,7 @@ interface TicketsAiAnalysisProps {
     statuses: string[];
     searchTerm: string;
   };
-}
-
-const normalize = (value?: string): string =>
-  (value || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-
-const isCompleted = (row: ChamadoReportRow): boolean =>
-  normalize(row.status).includes("concluido");
-
-const isBugLike = (row: ChamadoReportRow): boolean =>
-  /(bug|erro|falha|reclamacao|incidente)/.test(normalize(row.natureza));
-
-const daysBetween = (start?: string, end?: string): number | null => {
-  if (!start || !end) return null;
-  const difference = new Date(end).getTime() - new Date(start).getTime();
-  return Number.isFinite(difference) ? Math.max(0, Math.round(difference / 86_400_000)) : null;
-};
-
-const daysOpen = (start?: string): number => {
-  if (!start) return 0;
-  return Math.max(0, Math.round((Date.now() - new Date(start).getTime()) / 86_400_000));
-};
-
-function countBy(rows: ChamadoReportRow[], selector: (row: ChamadoReportRow) => string) {
-  const counts = new Map<string, number>();
-  for (const row of rows) {
-    const key = selector(row).trim() || "Nao informado";
-    counts.set(key, (counts.get(key) ?? 0) + 1);
-  }
-  return [...counts.entries()]
-    .map(([name, total]) => ({ name, total }))
-    .sort((left, right) => right.total - left.total || left.name.localeCompare(right.name, "pt-BR"));
-}
-
-function buildAnalytics(rows: ChamadoReportRow[]) {
-  const completed = rows.filter(isCompleted);
-  const open = rows.filter((row) => !isCompleted(row));
-  const bugLike = rows.filter(isBugLike);
-  const clients = new Set(rows.map((row) => row.nomeCliente).filter(Boolean));
-  const resolutionDays = completed
-    .map((row) => daysBetween(row.dataAbertura, row.dataEncerramento))
-    .filter((value): value is number => value !== null);
-
-  const timelineCounts = new Map<string, number>();
-  for (const row of rows) {
-    if (!row.dataAbertura) continue;
-    const key = row.dataAbertura.slice(0, 7);
-    timelineCounts.set(key, (timelineCounts.get(key) ?? 0) + 1);
-  }
-
-  return {
-    total: rows.length,
-    completed: completed.length,
-    open: open.length,
-    bugLike: bugLike.length,
-    clients: clients.size,
-    completionRate: rows.length ? Math.round((completed.length / rows.length) * 100) : 0,
-    averageResolutionDays: resolutionDays.length
-      ? Math.round(resolutionDays.reduce((sum, value) => sum + value, 0) / resolutionDays.length)
-      : null,
-    byStatus: countBy(rows, (row) => row.status || "Nao informado"),
-    byNature: countBy(rows, (row) => row.natureza || "Nao informado"),
-    byClient: countBy(rows, (row) => row.nomeCliente || "Nao informado"),
-    byProduct: countBy(rows, (row) => formatOrionProductLabel(row.software || row.produto)),
-    timeline: [...timelineCounts.entries()]
-      .sort(([left], [right]) => left.localeCompare(right))
-      .map(([month, total]) => ({ month: month.split("-").reverse().join("/"), total })),
-    oldestOpen: [...open]
-      .sort((left, right) => daysOpen(right.dataAbertura) - daysOpen(left.dataAbertura))
-      .slice(0, 8),
-  };
+  onAnalysisResultChange?: (result: { text: string; createdAt: string } | null) => void;
 }
 
 const tooltipStyle = {
@@ -155,6 +90,7 @@ export function TicketsAiAnalysis({
   syncing,
   filters,
   filterDescription,
+  onAnalysisResultChange,
 }: TicketsAiAnalysisProps) {
   const [preparingAi, setPreparingAi] = useState(false);
   const [selectedChamado, setSelectedChamado] = useState<ChamadoReportRow | null>(null);
@@ -172,7 +108,13 @@ export function TicketsAiAnalysis({
     queryFn: () => fetchAllChamados(filters),
   });
 
-  const analytics = useMemo(() => buildAnalytics(rows), [rows]);
+  const analytics = useMemo(() => buildTicketsAiAnalytics(rows), [rows]);
+
+  useEffect(() => {
+    onAnalysisResultChange?.(
+      latest?.resultText ? { text: latest.resultText, createdAt: latest.createdAt } : null
+    );
+  }, [latest?.createdAt, latest?.resultText, onAnalysisResultChange]);
 
   const handleGenerate = async () => {
     if (!rows.length || activeJob || syncing || preparingAi) return;
@@ -180,8 +122,8 @@ export function TicketsAiAnalysis({
     try {
       const enrichedRows = await fetchAllChamadosForReport(filters);
       const priorityRows = [...enrichedRows].sort((left, right) => {
-        const leftScore = (!isCompleted(left) ? 4 : 0) + (isBugLike(left) ? 2 : 0) + Math.min(daysOpen(left.dataAbertura) / 30, 2);
-        const rightScore = (!isCompleted(right) ? 4 : 0) + (isBugLike(right) ? 2 : 0) + Math.min(daysOpen(right.dataAbertura) / 30, 2);
+        const leftScore = (!isTicketCompleted(left) ? 4 : 0) + (isTicketBugLike(left) ? 2 : 0) + Math.min(ticketDaysOpen(left.dataAbertura) / 30, 2);
+        const rightScore = (!isTicketCompleted(right) ? 4 : 0) + (isTicketBugLike(right) ? 2 : 0) + Math.min(ticketDaysOpen(right.dataAbertura) / 30, 2);
         return rightScore - leftScore;
       });
       const detailedSample = priorityRows.slice(0, 120).map((row) => ({
@@ -194,7 +136,12 @@ export function TicketsAiAnalysis({
         produto: formatOrionProductLabel(row.software || row.produto),
         abertura: row.dataAbertura || null,
         encerramento: row.dataEncerramento || null,
-        dias_em_aberto: isCompleted(row) ? null : daysOpen(row.dataAbertura),
+        dias_em_aberto: isTicketCompleted(row) ? null : ticketDaysOpen(row.dataAbertura),
+        dias_ate_encerramento: isTicketCompleted(row)
+          ? ticketDaysBetween(row.dataAbertura, row.dataEncerramento)
+          : null,
+        equipe_responsavel: row.equipeResponsavel || null,
+        solicitante: row.solicitante || null,
         ultimo_tramite: row.ultimoTramite
           ? {
               data: row.ultimoTramite.dataTramite || null,
@@ -214,14 +161,21 @@ export function TicketsAiAnalysis({
           em_aberto: analytics.open,
           taxa_conclusao_percentual: analytics.completionRate,
           bugs_erros_reclamacoes: analytics.bugLike,
+          bugs_resolvidos: analytics.bugCompleted,
+          bugs_em_aberto: analytics.bugOpen,
+          taxa_resolucao_bugs_percentual: analytics.bugResolutionRate,
           media_dias_resolucao: analytics.averageResolutionDays,
+          media_dias_dos_abertos: analytics.averageOpenDays,
+          abertos_mais_30_dias: analytics.openOver30Days,
+          abertos_mais_60_dias: analytics.openOver60Days,
         },
         distribuicoes: {
           status: analytics.byStatus,
           natureza: analytics.byNature,
           clientes: analytics.byClient,
           produtos: analytics.byProduct,
-          evolucao_mensal: analytics.timeline,
+          envelhecimento_dos_abertos: analytics.aging,
+          fluxo_mensal_aberturas_encerramentos: analytics.monthlyFlow,
         },
         amostra_detalhada: detailedSample,
         registros_detalhados: detailedSample.length,
@@ -264,7 +218,7 @@ export function TicketsAiAnalysis({
           { label: "Clientes", value: analytics.clients, icon: Building2, color: "text-violet-500" },
           { label: "Concluídos", value: `${analytics.completed} (${analytics.completionRate}%)`, icon: CheckCircle2, color: "text-emerald-500" },
           { label: "Em aberto", value: analytics.open, icon: Clock3, color: "text-blue-500" },
-          { label: "Bugs/erros", value: analytics.bugLike, icon: AlertTriangle, color: "text-amber-500" },
+          { label: "Bugs resolvidos", value: `${analytics.bugCompleted}/${analytics.bugLike}`, icon: AlertTriangle, color: "text-amber-500" },
           { label: "Média de resolução", value: analytics.averageResolutionDays === null ? "-" : `${analytics.averageResolutionDays} d`, icon: BarChart3, color: "text-cyan-500" },
         ].map((item) => (
           <Card key={item.label} className="border-muted/80">
@@ -333,19 +287,20 @@ export function TicketsAiAnalysis({
         </Card>
 
         <Card>
-          <CardHeader className="px-3 py-2"><CardTitle className="text-xs">Evolução mensal de aberturas</CardTitle></CardHeader>
+          <CardHeader className="px-3 py-2"><CardTitle className="text-xs">Evolução mensal: abertos x concluídos</CardTitle></CardHeader>
           <CardContent className="h-[240px] px-2 pb-2 pt-0">
-            {analytics.timeline.length > 0 ? (
+            {analytics.monthlyFlow.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={analytics.timeline} margin={{ top: 18, right: 8, bottom: 0, left: 8 }}>
+                <BarChart data={analytics.monthlyFlow} margin={{ top: 18, right: 8, bottom: 0, left: 8 }}>
                   <CartesianGrid vertical={false} stroke="hsl(var(--border))" />
                   <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} />
                   <YAxis hide allowDecimals={false} />
                   <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "hsl(var(--muted))", opacity: 0.35 }} />
-                  <Bar dataKey="total" fill="#0ea5e9" radius={[4, 4, 0, 0]}><LabelList dataKey="total" position="top" className="fill-foreground text-[10px]" /></Bar>
+                  <Bar dataKey="opened" name="Abertos" fill="#0ea5e9" radius={[4, 4, 0, 0]}><LabelList dataKey="opened" position="top" className="fill-foreground text-[9px]" /></Bar>
+                  <Bar dataKey="closed" name="Concluídos" fill="#10b981" radius={[4, 4, 0, 0]}><LabelList dataKey="closed" position="top" className="fill-foreground text-[9px]" /></Bar>
                 </BarChart>
               </ResponsiveContainer>
-            ) : <p className="py-16 text-center text-xs text-muted-foreground">Sem datas suficientes para a tendencia.</p>}
+            ) : <p className="py-16 text-center text-xs text-muted-foreground">Sem datas suficientes para a tendência.</p>}
           </CardContent>
         </Card>
       </div>
@@ -363,7 +318,7 @@ export function TicketsAiAnalysis({
                   <p className="truncate text-[9px] text-muted-foreground">{row.nomeCliente || "Cliente não informado"}</p>
                 </div>
                 <div className="flex shrink-0 items-center gap-1">
-                  <Badge variant="outline" className="text-[9px]">{daysOpen(row.dataAbertura)} dias</Badge>
+                  <Badge variant="outline" className="text-[9px]">{ticketDaysOpen(row.dataAbertura)} dias</Badge>
                   <Button
                     type="button"
                     variant="ghost"

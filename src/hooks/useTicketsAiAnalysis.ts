@@ -25,7 +25,9 @@ function hashFilterKey(value: string): string {
 /** Parecer da IA isolado pelo usuario e pela combinacao atual de filtros. */
 export function useTicketsAiAnalysis(filterKey: string, requestedBy?: string) {
   const queryClient = useQueryClient();
-  const targetField = `tickets_analysis:${hashFilterKey(filterKey)}`;
+  // A versão faz resultados antigos, gerados com um prompt menos analítico,
+  // não serem reutilizados no relatório executivo atual.
+  const targetField = `tickets_analysis:v2:${hashFilterKey(filterKey)}`;
   const queryKey = ["ticketsAiAnalysis", requestedBy, targetField];
 
   const { data: jobs = [] } = useQuery<TicketsAiAnalysisJob[]>({

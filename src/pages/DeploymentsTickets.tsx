@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   useChamadosSearch,
   useSolicitarSyncProcessoVenda,
+  fetchAllChamados,
   fetchAllChamadosForReport,
   Chamado0800,
   type ProcessoVendaSyncFilters,
@@ -33,6 +34,10 @@ import {
 } from "@/lib/chamados-product-filter";
 import { CHAMADO_STATUS_OPTIONS } from "@/lib/chamados-status";
 import { generateChamadosReportPdf } from "@/lib/chamados-report-pdf";
+import {
+  generateTicketsAiAnalysisPdf,
+  type TicketsAiReportAnalysis,
+} from "@/lib/tickets-ai-report-pdf";
 import { toast } from "sonner";
 import { TicketsAiAnalysis } from "@/components/DeploymentsTickets/TicketsAiAnalysis";
 
@@ -62,6 +67,7 @@ export default function DeploymentsTickets() {
   const [statusSearchOpen, setStatusSearchOpen] = useState(false);
   const [generatingPdf, setGeneratingPdf] = useState(false);
   const [activeView, setActiveView] = useState<"list" | "analysis">("list");
+  const [analysisResult, setAnalysisResult] = useState<TicketsAiReportAnalysis | null>(null);
   const [syncSnapshot, setSyncSnapshot] = useState<{
     key: string;
     syncedAt: number;
@@ -270,13 +276,19 @@ export default function DeploymentsTickets() {
   const handleGeneratePdf = async () => {
     if (generatingPdf || !dataInicio || !dataFim || dataInicio > dataFim) return;
 
+    if (activeView === "analysis" && !analysisResult) {
+      toast.info("Gere as considerações da IA antes de emitir o relatório da análise.");
+      return;
+    }
+
     setGeneratingPdf(true);
     try {
+      const toastId = activeView === "analysis" ? "tickets-ai-report-pdf" : "chamados-report-pdf";
       let reportTicketNumbers: string[] | null = null;
       let cached = syncedQueries.current.get(filterSyncKey);
 
       if (!cached || Date.now() - cached.syncedAt >= FILTER_SYNC_FRESHNESS_MS) {
-        toast.loading("Atualizando os dados do relatório...", { id: "chamados-report-pdf" });
+        toast.loading("Atualizando os dados do relatório...", { id: toastId });
         const result = await solicitarSyncPeriodo(dataInicio, dataFim, syncFilters);
         cached = {
           syncedAt: Date.now(),
@@ -290,9 +302,23 @@ export default function DeploymentsTickets() {
         reportTicketNumbers = cached.ticketNumbers;
       }
 
-      toast.loading("Montando o relatório PDF...", { id: "chamados-report-pdf" });
+      toast.loading(
+        activeView === "analysis"
+          ? "Montando o relatório executivo com gráficos e análise..."
+          : "Montando o relatório PDF...",
+        { id: toastId }
+      );
 
-      const reportRows = await fetchAllChamadosForReport({
+      const reportFilters = {
+        startDate: dataInicio,
+        endDate: dataFim,
+        clients: selectedClients,
+        product: produto,
+        nature: natureza,
+        statuses: selectedStatuses,
+        searchTerm: busca,
+      };
+      const reportSearchFilters = {
         startDate: dataInicio,
         endDate: dataFim,
         clientNames: selectedClients.length > 0 ? selectedClients : null,
@@ -301,32 +327,39 @@ export default function DeploymentsTickets() {
         searchTerm: busca || null,
         statuses: selectedStatuses.length > 0 ? selectedStatuses : null,
         ticketNumbers: reportTicketNumbers,
-      });
+      };
 
-      if (reportRows.length === 0) {
-        toast.info("Nenhum chamado encontrado para gerar o relatório.", {
-          id: "chamados-report-pdf",
+      if (activeView === "analysis") {
+        const reportRows = await fetchAllChamados(reportSearchFilters);
+        if (reportRows.length === 0) {
+          toast.info("Nenhum chamado encontrado para gerar o relatório.", { id: toastId });
+          return;
+        }
+        await generateTicketsAiAnalysisPdf(reportRows, reportFilters, analysisResult as TicketsAiReportAnalysis);
+        toast.success(`Relatório de análise gerado com ${reportRows.length} chamado(s).`, {
+          id: toastId,
         });
         return;
       }
 
-      await generateChamadosReportPdf(reportRows, {
-        startDate: dataInicio,
-        endDate: dataFim,
-        clients: selectedClients,
-        product: produto,
-        nature: natureza,
-        statuses: selectedStatuses,
-        searchTerm: busca,
-      });
+      const reportRows = await fetchAllChamadosForReport(reportSearchFilters);
+
+      if (reportRows.length === 0) {
+        toast.info("Nenhum chamado encontrado para gerar o relatório.", {
+          id: toastId,
+        });
+        return;
+      }
+
+      await generateChamadosReportPdf(reportRows, reportFilters);
       toast.success(`Relatório gerado com ${reportRows.length} chamado(s).`, {
-        id: "chamados-report-pdf",
+        id: toastId,
       });
     } catch (error) {
       console.error("Erro ao gerar relatório de chamados:", error);
       toast.error(
         error instanceof Error ? error.message : "Não foi possível gerar o relatório PDF.",
-        { id: "chamados-report-pdf" }
+        { id: activeView === "analysis" ? "tickets-ai-report-pdf" : "chamados-report-pdf" }
       );
     } finally {
       setGeneratingPdf(false);
@@ -354,14 +387,20 @@ export default function DeploymentsTickets() {
             className="h-7 gap-1.5 px-2 text-[10px]"
             onClick={handleGeneratePdf}
             disabled={generatingPdf || syncingPeriodo || !dataInicio || !dataFim || dataInicio > dataFim}
-            title="Gerar PDF com todos os chamados filtrados"
+            title={activeView === "analysis"
+              ? "Gerar PDF executivo com gráficos e parecer da IA"
+              : "Gerar PDF com todos os chamados filtrados"}
           >
             {generatingPdf ? (
               <Loader2 className="h-3 w-3 animate-spin" />
             ) : (
               <FileDown className="h-3 w-3" />
             )}
-            {generatingPdf ? "Gerando PDF..." : "Relatório PDF"}
+            {generatingPdf
+              ? "Gerando PDF..."
+              : activeView === "analysis"
+              ? "Relatório da análise"
+              : "Relatório PDF"}
           </Button>
 
           {/* Indicador de Status/Sync rápido */}
@@ -902,6 +941,7 @@ export default function DeploymentsTickets() {
             statuses: selectedStatuses,
             searchTerm: busca,
           }}
+          onAnalysisResultChange={setAnalysisResult}
         />
       )}
     </div>
