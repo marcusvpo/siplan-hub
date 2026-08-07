@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   useChamadosSearch,
   useSolicitarSyncProcessoVenda,
+  fetchAllChamadosForReport,
   Chamado0800,
 } from "@/hooks/useChamados0800";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -16,7 +17,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Chamado0800DetailDialog, fmtDateBr, statusBadgeClass } from "@/components/ProjectManagement/Chamado0800DetailDialog";
 import { 
-  ClipboardList, Search, CalendarDays, Filter, X, ChevronLeft, ChevronRight, ChevronsUpDown, Check, Eye
+  ClipboardList, Search, CalendarDays, Filter, X, ChevronLeft, ChevronRight, ChevronsUpDown, Check, Eye, FileDown, Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { normalizeSearchText } from "@/utils/normalize-search";
@@ -29,6 +30,7 @@ import {
   getOrionProductPattern,
 } from "@/lib/chamados-product-filter";
 import { CHAMADO_STATUS_OPTIONS } from "@/lib/chamados-status";
+import { generateChamadosReportPdf } from "@/lib/chamados-report-pdf";
 import { toast } from "sonner";
 
 const FILTER_SYNC_DEBOUNCE_MS = 700;
@@ -54,6 +56,7 @@ export default function DeploymentsTickets() {
   const [selectedChamado, setSelectedChamado] = useState<Chamado0800 | null>(null);
   const [clientSearchOpen, setClientSearchOpen] = useState(false);
   const [statusSearchOpen, setStatusSearchOpen] = useState(false);
+  const [generatingPdf, setGeneratingPdf] = useState(false);
   const syncedRanges = useRef(new Map<string, number>());
   const syncingRanges = useRef(new Set<string>());
   const { solicitarSync: solicitarSyncPeriodo, syncing: syncingPeriodo } =
@@ -223,6 +226,57 @@ export default function DeploymentsTickets() {
     setPage(1);
   };
 
+  const handleGeneratePdf = async () => {
+    if (generatingPdf || !dataInicio || !dataFim || dataInicio > dataFim) return;
+
+    setGeneratingPdf(true);
+    toast.loading("Atualizando os dados do relatório...", { id: "chamados-report-pdf" });
+    try {
+      // O relatório força uma leitura atual da view para não exportar o espelho
+      // de até uma hora atrás.
+      await solicitarSyncPeriodo(dataInicio, dataFim);
+      toast.loading("Montando o relatório PDF...", { id: "chamados-report-pdf" });
+
+      const reportRows = await fetchAllChamadosForReport({
+        startDate: dataInicio,
+        endDate: dataFim,
+        clientNames: selectedClients.length > 0 ? selectedClients : null,
+        product: produto,
+        nature: natureza,
+        searchTerm: busca || null,
+        statuses: selectedStatuses.length > 0 ? selectedStatuses : null,
+      });
+
+      if (reportRows.length === 0) {
+        toast.info("Nenhum chamado encontrado para gerar o relatório.", {
+          id: "chamados-report-pdf",
+        });
+        return;
+      }
+
+      await generateChamadosReportPdf(reportRows, {
+        startDate: dataInicio,
+        endDate: dataFim,
+        clients: selectedClients,
+        product: produto,
+        nature: natureza,
+        statuses: selectedStatuses,
+        searchTerm: busca,
+      });
+      toast.success(`Relatório gerado com ${reportRows.length} chamado(s).`, {
+        id: "chamados-report-pdf",
+      });
+    } catch (error) {
+      console.error("Erro ao gerar relatório de chamados:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Não foi possível gerar o relatório PDF.",
+        { id: "chamados-report-pdf" }
+      );
+    } finally {
+      setGeneratingPdf(false);
+    }
+  };
+
   return (
     <div className="container mx-auto p-3 md:p-4 space-y-2.5">
       {/* Cabeçalho */}
@@ -237,11 +291,29 @@ export default function DeploymentsTickets() {
           </p>
         </div>
         
-        {/* Indicador de Status/Sync rápido */}
-        <Badge variant="outline" className="px-2 py-0 font-normal text-[10px] text-muted-foreground flex items-center gap-1.5 h-5">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-          {syncingPeriodo ? "Atualizando dados..." : "Ellevo ativo (1h + filtros sob demanda)"}
-        </Badge>
+        <div className="flex items-center gap-1.5">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 gap-1.5 px-2 text-[10px]"
+            onClick={handleGeneratePdf}
+            disabled={generatingPdf || syncingPeriodo || !dataInicio || !dataFim || dataInicio > dataFim}
+            title="Gerar PDF com todos os chamados filtrados"
+          >
+            {generatingPdf ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <FileDown className="h-3 w-3" />
+            )}
+            {generatingPdf ? "Gerando PDF..." : "Relatório PDF"}
+          </Button>
+
+          {/* Indicador de Status/Sync rápido */}
+          <Badge variant="outline" className="px-2 py-0 font-normal text-[10px] text-muted-foreground flex items-center gap-1.5 h-5">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            {syncingPeriodo ? "Atualizando dados..." : "Ellevo ativo (1h + filtros sob demanda)"}
+          </Badge>
+        </div>
       </div>
 
       {/* Seção de Filtros Compacta */}

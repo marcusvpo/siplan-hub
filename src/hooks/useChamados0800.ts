@@ -481,6 +481,69 @@ export interface ChamadosSearchFilters {
   pageSize?: number;
 }
 
+function createChamadosSearchQuery(
+  {
+    startDate,
+    endDate,
+    clientNames,
+    product,
+    nature,
+    searchTerm,
+    statuses,
+  }: ChamadosSearchFilters,
+  withCount = false
+) {
+  let q = supabase
+    .from("chamados_processo_venda")
+    .select("*", { count: withCount ? "exact" : undefined });
+
+  if (startDate) q = q.gte("data_abertura", startDate);
+  if (endDate) q = q.lte("data_abertura", endDate);
+  if (clientNames && clientNames.length > 0) q = q.in("nome_cliente", clientNames);
+
+  q = q.ilike("software", getOrionProductPattern(product));
+  if (nature && nature !== "todas") q = q.eq("natureza", nature);
+
+  const validStatuses = (statuses ?? []).filter(isChamadoStatus);
+  q = q.in(
+    "status",
+    validStatuses.length > 0 ? validStatuses : [...CHAMADO_STATUS_OPTIONS]
+  );
+
+  if (searchTerm) {
+    const term = searchTerm.trim();
+    if (/^\d+$/.test(term)) {
+      q = q.or(`numero_chamado.eq.${term},nome_cliente.ilike.%${term}%,titulo.ilike.%${term}%`);
+    } else {
+      q = q.or(`nome_cliente.ilike.%${term}%,titulo.ilike.%${term}%,descricao.ilike.%${term}%`);
+    }
+  }
+
+  return q;
+}
+
+/** Busca todos os chamados do recorte atual em lotes para o relatório PDF. */
+export async function fetchAllChamadosForReport(
+  filters: Omit<ChamadosSearchFilters, "page" | "pageSize">
+): Promise<Chamado0800[]> {
+  const batchSize = 1000;
+  const rows: unknown[] = [];
+
+  for (let from = 0; ; from += batchSize) {
+    const { data, error } = await createChamadosSearchQuery(filters)
+      .order("data_abertura", { ascending: false })
+      .order("numero_chamado", { ascending: false })
+      .range(from, from + batchSize - 1);
+    if (error) throw error;
+
+    const batch = data ?? [];
+    rows.push(...batch);
+    if (batch.length < batchSize) break;
+  }
+
+  return rows.map(mapChamado0800);
+}
+
 export function useChamadosSearch({
   startDate,
   endDate,
@@ -496,43 +559,18 @@ export function useChamadosSearch({
     queryKey: ["chamadosSearch", startDate, endDate, clientNames, product, nature, searchTerm, statuses, page, pageSize],
     staleTime: 30_000,
     queryFn: async () => {
-      let q = supabase
-        .from("chamados_processo_venda")
-        .select("*", { count: "exact" });
-
-      if (startDate) {
-        q = q.gte("data_abertura", startDate);
-      }
-      if (endDate) {
-        q = q.lte("data_abertura", endDate);
-      }
-      if (clientNames && clientNames.length > 0) {
-        q = q.in("nome_cliente", clientNames);
-      }
-      // A view repete o chamado para cada item licenciado do cliente. O campo
-      // `software` identifica o produto que realmente recebeu o chamado.
-      q = q.ilike("software", getOrionProductPattern(product));
-      if (nature && nature !== "todas") {
-        q = q.eq("natureza", nature);
-      }
-      const validStatuses = (statuses ?? []).filter(isChamadoStatus);
-      q = q.in(
-        "status",
-        validStatuses.length > 0 ? validStatuses : [...CHAMADO_STATUS_OPTIONS]
+      let q = createChamadosSearchQuery(
+        { startDate, endDate, clientNames, product, nature, searchTerm, statuses },
+        true
       );
-      if (searchTerm) {
-        const term = searchTerm.trim();
-        if (/^\d+$/.test(term)) {
-          q = q.or(`numero_chamado.eq.${term},nome_cliente.ilike.%${term}%,titulo.ilike.%${term}%`);
-        } else {
-          q = q.or(`nome_cliente.ilike.%${term}%,titulo.ilike.%${term}%,descricao.ilike.%${term}%`);
-        }
-      }
 
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
 
-      q = q.order("data_abertura", { ascending: false }).range(from, to);
+      q = q
+        .order("data_abertura", { ascending: false })
+        .order("numero_chamado", { ascending: false })
+        .range(from, to);
 
       const { data, error, count } = await q;
       if (error) throw error;
