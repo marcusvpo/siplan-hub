@@ -54,6 +54,18 @@ interface ProcessoVendaSyncRequest {
   end_date: string;
 }
 
+interface ProcessoVendaTramiteRow {
+  NumeroChamado: string;
+  NumeroTramite: number | null;
+  SequenciaTramite: number;
+  DataTramiteIso: string | null;
+  ResponsavelTramite: string | null;
+  ResponsavelAtividade: string | null;
+  EquipeResponsavelAtividade: string | null;
+  DescricaoAtividade: string | null;
+  descricaotramite: string | null;
+}
+
 // Colunas de chamado da view + dedupe por NumeroChamado (1 linha por chamado).
 const CHAMADO_SELECT = `
   WITH c AS (
@@ -354,7 +366,73 @@ async function runProcessoVendaOnce(startDate: string, endDate: string): Promise
       }
     }
 
-    const detail = `${rows.length} chamados sincronizados no periodo ${startDate} a ${endDate}`;
+    // A view usada acima mantem uma linha por chamado. O historico 1:N vem da
+    // view base do Ellevo, que possui uma linha por tramite. SequenciaTramite e
+    // a chave estavel; SELECT DISTINCT elimina repeticoes causadas pelos joins
+    // internos da view sem descartar movimentacoes diferentes.
+    const tramitesResult = await pool
+      .request()
+      .input("startDate", sql.Date, startDate)
+      .input("endDate", sql.Date, endDate)
+      .query<ProcessoVendaTramiteRow>(`
+      SELECT DISTINCT
+             NumeroChamado, NumeroTramite, SequenciaTramite,
+             CONVERT(varchar(19), DataTramite, 126) AS DataTramiteIso,
+             ResponsavelTramite, ResponsavelAtividade,
+             EquipeResponsavelAtividade, DescricaoAtividade,
+             CAST(descricaotramite AS nvarchar(max)) AS descricaotramite
+      FROM plataformaellevo..vw_ChamadosTodosStatus_Tramites_Tempos
+      WHERE DataAberturaChamado >= @startDate
+        AND DataAberturaChamado < DATEADD(DAY, 1, @endDate)
+        AND LTRIM(RTRIM(Software)) LIKE 'Orion%'
+        AND SequenciaTramite IS NOT NULL
+        AND NULLIF(LTRIM(RTRIM(CAST(descricaotramite AS nvarchar(max)))), '') IS NOT NULL
+    `);
+
+    const tramitesPorChave = new Map<string, {
+      numero_chamado: string;
+      sequencia_tramite: number;
+      numero_tramite: number | null;
+      data_tramite: string | null;
+      responsavel: string | null;
+      equipe_responsavel: string | null;
+      atividade: string | null;
+      descricao: string | null;
+      synced_at: string;
+    }>();
+
+    for (const tramite of tramitesResult.recordset) {
+      const numeroChamado = String(tramite.NumeroChamado);
+      const sequenciaTramite = Number(tramite.SequenciaTramite);
+      const chave = `${numeroChamado}:${sequenciaTramite}`;
+      tramitesPorChave.set(chave, {
+        numero_chamado: numeroChamado,
+        sequencia_tramite: sequenciaTramite,
+        numero_tramite: tramite.NumeroTramite ?? null,
+        data_tramite: tramite.DataTramiteIso || null,
+        responsavel: tramite.ResponsavelTramite || tramite.ResponsavelAtividade || null,
+        equipe_responsavel: tramite.EquipeResponsavelAtividade || null,
+        atividade: tramite.DescricaoAtividade || null,
+        descricao: decodeDescricao(tramite.descricaotramite),
+        synced_at: new Date().toISOString(),
+      });
+    }
+
+    const tramites = [...tramitesPorChave.values()];
+    for (let i = 0; i < tramites.length; i += 200) {
+      const { error } = await supabase
+        .from("chamados_processo_venda_tramites")
+        .upsert(tramites.slice(i, i + 200), {
+          onConflict: "numero_chamado,sequencia_tramite",
+        });
+      if (error) {
+        throw new Error(`upsert chamados_processo_venda_tramites: ${error.message}`);
+      }
+    }
+
+    const detail =
+      `${rows.length} chamados e ${tramites.length} tramites sincronizados ` +
+      `no periodo ${startDate} a ${endDate}`;
     console.log(`[processo-venda-sync] ok: ${detail}`);
     return detail;
   } finally {

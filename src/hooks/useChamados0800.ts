@@ -24,6 +24,16 @@ export interface Chamado0800 {
   tema?: string;
 }
 
+export interface ChamadoTramite {
+  sequenciaTramite: number;
+  numeroTramite?: number;
+  dataTramite?: string;
+  responsavel?: string;
+  equipeResponsavel?: string;
+  atividade?: string;
+  descricao?: string;
+}
+
 export interface Chamados0800Result {
   chamados: Chamado0800[];
   /** false = o chamado de origem do projeto ainda nao apareceu no espelho
@@ -95,6 +105,42 @@ export const mapChamado0800 = (c: any): Chamado0800 => ({
   syncedAt: c.synced_at ?? undefined,
   tema: c.tema_ia && c.tema_ia !== "interno" ? c.tema_ia : undefined,
 });
+
+/** Historico 1:N de tramites da tela Consulta de Chamados. */
+export function useChamadoTramites(numeroChamado?: string, enabled = true) {
+  const query = useQuery({
+    queryKey: ["chamadoProcessoVendaTramites", numeroChamado],
+    enabled: enabled && !!numeroChamado,
+    staleTime: 30_000,
+    queryFn: async (): Promise<ChamadoTramite[]> => {
+      const { data, error } = await supabase
+        .from("chamados_processo_venda_tramites")
+        .select(
+          "sequencia_tramite, numero_tramite, data_tramite, responsavel, equipe_responsavel, atividade, descricao"
+        )
+        .eq("numero_chamado", numeroChamado!)
+        .order("data_tramite", { ascending: false, nullsFirst: false })
+        .order("numero_tramite", { ascending: false });
+
+      if (error) throw error;
+      return (data ?? []).map((tramite) => ({
+        sequenciaTramite: Number(tramite.sequencia_tramite),
+        numeroTramite: tramite.numero_tramite ?? undefined,
+        dataTramite: tramite.data_tramite ?? undefined,
+        responsavel: tramite.responsavel ?? undefined,
+        equipeResponsavel: tramite.equipe_responsavel ?? undefined,
+        atividade: tramite.atividade ?? undefined,
+        descricao: tramite.descricao ?? undefined,
+      }));
+    },
+  });
+
+  return {
+    tramites: query.data ?? [],
+    isLoading: query.isLoading,
+    error: query.error,
+  };
+}
 
 /**
  * Chamados 0800 (Ellevo) do cliente do projeto, abertos dentro do periodo do

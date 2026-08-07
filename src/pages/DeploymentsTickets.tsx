@@ -802,6 +802,7 @@ export default function DeploymentsTickets() {
         <Chamado0800DetailDialog
           chamado={selectedChamado}
           onClose={() => setSelectedChamado(null)}
+          showTramites
         />
       )}
     </div>
