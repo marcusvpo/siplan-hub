@@ -199,6 +199,35 @@ ${contextoProjetos}
 === FIM DO CONTEXTO ===` : ""}`;
 }
 
+// Analise executiva da tela global de chamados. O payload contem os totais de
+// todo o recorte e uma amostra priorizada com descricoes/ultimos tramites.
+function buildTicketsAnalysisPrompt(json: string): string {
+  return `Voce e um gestor senior de suporte e produto para sistemas de cartorios. Analise o JSON da tela global de chamados Orion. Os filtros ja foram aplicados e os agregados representam TODO o recorte; a lista detalhada pode ser uma amostra priorizada quando o volume for alto.
+
+Produza um parecer executivo completo, objetivo e acionavel cobrindo:
+1. **Resumo executivo**: volume, taxa de conclusao, distribuicao por status e tendencia no periodo.
+2. **Principais causas e naturezas**: destaque bugs, erros, configuracao, duvidas operacionais e instalacao. Diferencie sintomas pontuais de recorrencias.
+3. **Clientes e produtos com maior impacto**: identifique concentracoes fora da curva sem atribuir culpa.
+4. **Riscos e pendencias**: chamados em aberto, antigos, temas repetidos e casos sem tramite/solucao registrada.
+5. **Solucoes observadas**: sintetize os ultimos tramites dos concluidos, destacando solucoes reutilizaveis e lacunas de documentacao.
+6. **Plano de acao**: no maximo 7 recomendacoes priorizadas, separando acoes para Suporte, Produto/Desenvolvimento e Treinamento/Documentacao.
+
+REGRAS:
+- Baseie-se APENAS no JSON. NAO invente fatos, causas, numeros, clientes ou chamados.
+- Cite numeros de chamados relevantes no formato #750000 quando estiverem na amostra.
+- Se houver registros omitidos da amostra, deixe claro que as conclusoes qualitativas usam a amostra, enquanto os totais usam todo o recorte.
+- Nao trate "Nao iniciado" como faturamento: e status operacional do chamado.
+- Portugues do Brasil, tom profissional e direto.
+
+FORMATACAO (Markdown leve): **negrito** para secoes e termos-chave; listas com "- ". Nao use titulos com #, tabelas nem blocos de codigo.
+
+Responda SOMENTE com o parecer.
+
+=== DADOS FILTRADOS DOS CHAMADOS ===
+${json}
+=== FIM DOS DADOS ===`;
+}
+
 /**
  * Pipeline de um job 'improve_text' (ja marcado 'processing' pelo claim):
  * le o texto de entrada (input_text) -> roda o Claude para reescrever ->
@@ -237,12 +266,18 @@ export async function processImproveJob(job: DtcJob): Promise<void> {
     record({ at: new Date().toISOString(), text, kind });
 
   const isSummary = job.job_type === "summary_blocks";
-  const isParecer = job.job_type === "pos_parecer" || job.job_type === "panorama_parecer";
+  const isTicketsAnalysis = job.job_type === "tickets_analysis";
+  const isParecer =
+    job.job_type === "pos_parecer" ||
+    job.job_type === "panorama_parecer" ||
+    isTicketsAnalysis;
   const isPanorama = job.job_type === "panorama_parecer";
 
   pushStep(
     isParecer
-      ? "Lendo os chamados do periodo do pos..."
+      ? isTicketsAnalysis
+        ? "Lendo os indicadores e chamados do filtro..."
+        : "Lendo os chamados do periodo do pos..."
       : isSummary
       ? "Lendo os blocos de observacoes..."
       : "Lendo o texto para melhorar..."
@@ -266,7 +301,9 @@ export async function processImproveJob(job: DtcJob): Promise<void> {
   // 2. Rodar o Claude para reescrever/resumir
   pushStep(
     isParecer
-      ? "Gerando o parecer com IA..."
+      ? isTicketsAnalysis
+        ? "Analisando riscos, recorrencias e solucoes..."
+        : "Gerando o parecer com IA..."
       : isSummary
       ? "Gerando o resumo com IA..."
       : "Melhorando o texto com IA..."
@@ -287,7 +324,7 @@ export async function processImproveJob(job: DtcJob): Promise<void> {
   // do recorte dentro do JSON (payload.projetos). Best-effort — sem contexto o
   // parecer sai normalmente.
   let contextoProjetos = "";
-  if (isParecer) {
+  if (isParecer && !isTicketsAnalysis) {
     pushStep("Lendo as etapas dos projetos (conversao, aderencia, DTC)...");
     await flushProgress(true);
     if (isPanorama) {
@@ -304,7 +341,9 @@ export async function processImproveJob(job: DtcJob): Promise<void> {
     }
   }
 
-  const prompt = isPanorama
+  const prompt = isTicketsAnalysis
+    ? buildTicketsAnalysisPrompt(text)
+    : isPanorama
     ? buildPanoramaParecerPrompt(text, contextoProjetos)
     : isParecer
     ? buildParecerPrompt(text, contextoProjetos)
