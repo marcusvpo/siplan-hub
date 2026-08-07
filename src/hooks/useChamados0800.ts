@@ -526,6 +526,7 @@ export function useSolicitarSyncProcessoVenda() {
         if (row?.status === "done") {
           await Promise.all([
             queryClient.invalidateQueries({ queryKey: ["chamadosSearch"] }),
+            queryClient.invalidateQueries({ queryKey: ["ticketsAiDashboard"] }),
             queryClient.invalidateQueries({ queryKey: ["distinctProcessoVendaClients"] }),
             queryClient.invalidateQueries({ queryKey: ["distinctProcessoVendaNaturezas"] }),
           ]);
@@ -643,10 +644,10 @@ async function fetchUltimosTramites(
   return ultimosPorChamado;
 }
 
-/** Busca todos os chamados e o último trâmite do recorte para o relatório PDF. */
-export async function fetchAllChamadosForReport(
+/** Busca todos os chamados do recorte sem carregar o histórico de trâmites. */
+export async function fetchAllChamados(
   filters: Omit<ChamadosSearchFilters, "page" | "pageSize">
-): Promise<ChamadoReportRow[]> {
+): Promise<Chamado0800[]> {
   if (Array.isArray(filters.ticketNumbers) && filters.ticketNumbers.length === 0) {
     return [];
   }
@@ -666,7 +667,15 @@ export async function fetchAllChamadosForReport(
     if (batch.length < batchSize) break;
   }
 
-  const chamados = rows.map(mapChamado0800);
+  return rows.map(mapChamado0800);
+}
+
+/** Busca todos os chamados e o último trâmite do recorte para PDF ou IA. */
+export async function fetchAllChamadosForReport(
+  filters: Omit<ChamadosSearchFilters, "page" | "pageSize">
+): Promise<ChamadoReportRow[]> {
+  const chamados = await fetchAllChamados(filters);
+  if (chamados.length === 0) return [];
   const ultimosTramites = await fetchUltimosTramites(
     chamados.map((chamado) => chamado.numeroChamado)
   );

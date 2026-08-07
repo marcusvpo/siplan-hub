@@ -187,7 +187,7 @@ export interface Job {
 // entrada nos jobs 'improve_text'.
 export interface DtcJob {
   id: string;
-  project_id: string;
+  project_id: string | null;
   target_field: string;
   status: string;
   attempts: number;

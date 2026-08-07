@@ -12,13 +12,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Chamado0800DetailDialog, fmtDateBr, statusBadgeClass } from "@/components/ProjectManagement/Chamado0800DetailDialog";
 import { 
-  ClipboardList, Search, CalendarDays, Filter, X, ChevronLeft, ChevronRight, ChevronsUpDown, Check, Eye, FileDown, Loader2
+  ClipboardList, Search, CalendarDays, Filter, X, ChevronLeft, ChevronRight, ChevronsUpDown, Check, Eye, FileDown, Loader2, BarChart3
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { normalizeSearchText } from "@/utils/normalize-search";
@@ -33,6 +34,7 @@ import {
 import { CHAMADO_STATUS_OPTIONS } from "@/lib/chamados-status";
 import { generateChamadosReportPdf } from "@/lib/chamados-report-pdf";
 import { toast } from "sonner";
+import { TicketsAiAnalysis } from "@/components/DeploymentsTickets/TicketsAiAnalysis";
 
 const FILTER_SYNC_DEBOUNCE_MS = 700;
 const FILTER_SYNC_FRESHNESS_MS = 5 * 60_000;
@@ -59,6 +61,7 @@ export default function DeploymentsTickets() {
   const [clientSearchOpen, setClientSearchOpen] = useState(false);
   const [statusSearchOpen, setStatusSearchOpen] = useState(false);
   const [generatingPdf, setGeneratingPdf] = useState(false);
+  const [activeView, setActiveView] = useState<"list" | "analysis">("list");
   const [syncSnapshot, setSyncSnapshot] = useState<{
     key: string;
     syncedAt: number;
@@ -706,8 +709,21 @@ export default function DeploymentsTickets() {
         </CardContent>
       </Card>
 
-      {/* Resultados */}
-      <Card className="border border-muted/80 shadow-sm overflow-hidden">
+      <Tabs value={activeView} onValueChange={(value) => setActiveView(value as "list" | "analysis")}>
+        <TabsList className="h-8 border border-muted/80 bg-muted/40 p-0.5">
+          <TabsTrigger value="list" className="h-7 gap-1.5 px-3 text-[11px]">
+            <ClipboardList className="h-3.5 w-3.5" /> Consulta de chamados
+          </TabsTrigger>
+          <TabsTrigger value="analysis" className="h-7 gap-1.5 px-3 text-[11px]">
+            <BarChart3 className="h-3.5 w-3.5" /> Análise de chamados IA
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+
+      {activeView === "list" ? (
+        <>
+        {/* Resultados */}
+        <Card className="border border-muted/80 shadow-sm overflow-hidden">
         <CardContent className="p-0">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center p-12 space-y-4">
@@ -850,14 +866,42 @@ export default function DeploymentsTickets() {
             </div>
           )}
         </CardContent>
-      </Card>
+        </Card>
 
-      {/* Modal de Detalhes do Chamado */}
-      {selectedChamado && (
-        <Chamado0800DetailDialog
-          chamado={selectedChamado}
-          onClose={() => setSelectedChamado(null)}
-          showTramites
+        {/* Modal de Detalhes do Chamado */}
+        {selectedChamado && (
+          <Chamado0800DetailDialog
+            chamado={selectedChamado}
+            onClose={() => setSelectedChamado(null)}
+            showTramites
+          />
+        )}
+        </>
+      ) : (
+        <TicketsAiAnalysis
+          active
+          filterKey={filterSyncKey}
+          syncedAt={syncSnapshot?.key === filterSyncKey ? syncSnapshot.syncedAt : undefined}
+          syncing={syncingPeriodo}
+          filters={{
+            startDate: dataInicio || null,
+            endDate: dataFim || null,
+            clientNames: selectedClients.length > 0 ? selectedClients : null,
+            product: produto,
+            nature: natureza,
+            searchTerm: busca || null,
+            statuses: selectedStatuses.length > 0 ? selectedStatuses : null,
+            ticketNumbers: syncedTicketNumbers,
+          }}
+          filterDescription={{
+            startDate: dataInicio,
+            endDate: dataFim,
+            clients: selectedClients,
+            product: produto,
+            nature: natureza,
+            statuses: selectedStatuses,
+            searchTerm: busca,
+          }}
         />
       )}
     </div>
