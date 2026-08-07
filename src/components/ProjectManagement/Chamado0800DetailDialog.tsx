@@ -29,6 +29,16 @@ const fmtDateTimeBr = (value?: string): string => {
   return `${d}/${m}/${y}${time}`;
 };
 
+const formatTicketDuration = (start?: string, end?: string): string => {
+  if (!start) return "—";
+  const startTime = new Date(start).getTime();
+  const endTime = end ? new Date(end).getTime() : Date.now();
+  if (!Number.isFinite(startTime) || !Number.isFinite(endTime)) return "—";
+
+  const days = Math.max(0, Math.round((endTime - startTime) / 86_400_000));
+  return `${days} ${days === 1 ? "dia" : "dias"}`;
+};
+
 export function statusBadgeClass(status?: string): string {
   const s = (status || "").toLowerCase();
   if (s.includes("conclu")) return "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400";
@@ -103,6 +113,15 @@ export function Chamado0800DetailDialog({
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Encerramento</p>
                 <p>{chamado.dataEncerramento ? fmtDateBr(chamado.dataEncerramento) : "Em aberto"}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                  {chamado.dataEncerramento ? "Tempo até o encerramento" : "Tempo em aberto"}
+                </p>
+                <p className="flex items-center gap-1">
+                  <Clock3 className="h-3.5 w-3.5 text-muted-foreground" />
+                  {formatTicketDuration(chamado.dataAbertura, chamado.dataEncerramento)}
+                </p>
               </div>
               {chamado.produto && (
                 <div>
