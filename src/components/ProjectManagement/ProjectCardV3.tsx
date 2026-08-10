@@ -241,7 +241,7 @@ export function ProjectCardV3({
         <PosSaudeBadge projectId={project.id} />
         {isFromAutomacao && (
           <Badge className="text-[9px] px-2 py-0.5 font-bold shadow-lg border-2 border-background bg-purple-600 hover:bg-purple-700 text-white shadow-purple-500/20">
-            Novo
+            Autom. N8N
           </Badge>
         )}
         <Badge
@@ -319,21 +319,6 @@ export function ProjectCardV3({
             <span className="truncate">0800: <span className="font-medium text-foreground/80">{project.EtapasProjeto}</span></span>
           </div>
         )}
-
-        <div className="flex flex-wrap items-center gap-2 w-full min-w-0">
-          {/* Project Leader */}
-          <div
-            className="flex items-center gap-1 text-[9px] text-muted-foreground min-w-0 truncate"
-            title={`Líder: ${project.projectLeader}`}
-          >
-            <div className="h-3.5 w-3.5 shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-[7px] font-bold text-primary ring-1 ring-primary/20">
-              {project.projectLeader.substring(0, 2).toUpperCase()}
-            </div>
-            <span className="truncate font-medium">
-              {project.projectLeader}
-            </span>
-          </div>
-        </div>
       </div>
 
       {/* 2. Pipeline Visual */}

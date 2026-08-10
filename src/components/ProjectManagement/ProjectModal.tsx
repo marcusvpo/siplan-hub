@@ -178,7 +178,7 @@ export function ProjectModal({
           {displayProject?.id && <PosSaudeBadge projectId={displayProject.id} />}
           {isFromAutomacao && (
             <Badge className="text-[10px] px-2.5 py-0.5 font-bold shadow-lg border-2 border-background bg-purple-600 hover:bg-purple-700 text-white shadow-purple-500/20">
-              Novo
+              Autom. N8N
             </Badge>
           )}
           <Badge
