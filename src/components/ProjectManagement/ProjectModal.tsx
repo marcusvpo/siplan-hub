@@ -150,10 +150,10 @@ export function ProjectModal({
         if (!val) setIsEditing(false);
       }}
     >
-      <DialogContent className="w-[96vw] sm:w-[90vw] max-w-full h-[92vh] sm:h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
-        {/* Top Left Tag - Floating over top border on Desktop, stacked on Mobile */}
+      <DialogContent className="w-[96vw] sm:w-[90vw] max-w-full h-[92vh] sm:h-[90vh] flex flex-col p-0 gap-0 overflow-visible">
+        {/* Top Left Tag - Floating over top border */}
         {hasTopLeftTag && (
-          <div className="sm:absolute sm:-top-2.5 sm:left-4 z-50 px-4 pt-3 sm:p-0">
+          <div className="absolute -top-2.5 left-4 z-50">
             {isImplementationInProgress ? (
               <Badge className="text-[10px] px-2.5 py-0.5 font-bold shadow-lg border-2 border-background bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20 flex items-center gap-1 w-fit">
                 <PlayCircle className="w-3 h-3" />
@@ -173,8 +173,8 @@ export function ProjectModal({
           </div>
         )}
 
-        {/* Top Right Badges - Floating over top-right border on Desktop, inline on Mobile */}
-        <div className="sm:absolute sm:-top-2.5 sm:right-12 z-50 flex items-center flex-wrap gap-1.5 px-4 pt-1 sm:p-0">
+        {/* Top Right Badges - Floating over top-right border */}
+        <div className="absolute -top-2.5 right-12 z-50 flex items-center gap-1.5">
           {displayProject?.id && <PosSaudeBadge projectId={displayProject.id} />}
           {isFromAutomacao && (
             <Badge className="text-[10px] px-2.5 py-0.5 font-bold shadow-lg border-2 border-background bg-purple-600 hover:bg-purple-700 text-white shadow-purple-500/20">
@@ -191,8 +191,8 @@ export function ProjectModal({
           </Badge>
         </div>
 
-        <DialogHeader className={cn("pl-4 pr-12 sm:px-6 py-3 sm:py-3.5 border-b shrink-0 flex flex-col sm:flex-row items-start sm:items-start justify-between gap-3 sm:gap-4", hasTopLeftTag && "pt-2 sm:pt-6.5")}>
-          <div className={cn("flex flex-col gap-1 min-w-0 flex-1 pr-6 sm:pr-0", hasTopLeftTag && "mt-0.5 sm:mt-1")}>
+        <DialogHeader className={cn("px-4 sm:px-6 py-3 sm:py-3.5 border-b shrink-0 flex flex-row items-start justify-between gap-4", hasTopLeftTag && "pt-6 sm:pt-6.5")}>
+          <div className={cn("flex flex-col gap-1 min-w-0 flex-1", hasTopLeftTag && "mt-1")}>
             {isLoading ? (
               <DialogTitle>
                 <Skeleton className="h-6 w-48 sm:w-64" />
