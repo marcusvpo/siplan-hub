@@ -481,48 +481,74 @@ export interface ProcessoVendaSyncResult {
   ticketNumbers: string[];
 }
 
+const PROCESSO_VENDA_SYNC_SUPERSEDED = "PROCESSO_VENDA_SYNC_SUPERSEDED";
+
+class ProcessoVendaSyncSupersededError extends Error {
+  readonly code = PROCESSO_VENDA_SYNC_SUPERSEDED;
+
+  constructor() {
+    super("Consulta substituida por filtros mais recentes.");
+    this.name = "ProcessoVendaSyncSupersededError";
+  }
+}
+
+export function isProcessoVendaSyncSupersededError(error: unknown): boolean {
+  return error instanceof ProcessoVendaSyncSupersededError
+    || (error instanceof Error
+      && "code" in error
+      && error.code === PROCESSO_VENDA_SYNC_SUPERSEDED);
+}
+
 export function useSolicitarSyncProcessoVenda() {
   const queryClient = useQueryClient();
   const [syncing, setSyncing] = useState(false);
-  const activeRequests = useRef(0);
+  const latestRequestVersion = useRef(0);
 
   const solicitarSync = useCallback(async (
     startDate: string,
     endDate: string,
     filters: ProcessoVendaSyncFilters = {}
   ): Promise<ProcessoVendaSyncResult> => {
-    activeRequests.current += 1;
+    const requestVersion = ++latestRequestVersion.current;
+    const assertLatestRequest = () => {
+      if (requestVersion !== latestRequestVersion.current) {
+        throw new ProcessoVendaSyncSupersededError();
+      }
+    };
+
     setSyncing(true);
     try {
-      const { data: auth } = await supabase.auth.getUser();
-      const { data, error } = await supabase
-        .from("chamados_sync_requests")
-        .insert({
-          requested_by: auth.user?.email ?? null,
-          scope: "processo_venda",
-          start_date: startDate,
-          end_date: endDate,
-          filters: {
+      const { data: requestId, error } = await supabase.rpc(
+        "request_processo_venda_sync",
+        {
+          p_start_date: startDate,
+          p_end_date: endDate,
+          p_filters: {
             client_names: filters.clientNames ?? [],
             product: filters.product ?? null,
             nature: filters.nature ?? null,
             statuses: filters.statuses ?? [],
             search_term: filters.searchTerm?.trim() || null,
           },
-        })
-        .select("id")
-        .single();
+        }
+      );
       if (error) throw error;
+      if (typeof requestId !== "string") {
+        throw new Error("O Supabase nao retornou o identificador da consulta.");
+      }
+      assertLatestRequest();
 
       // Periodos historicos extensos podem levar mais tempo no SQL Server.
       for (let i = 0; i < 180; i++) {
         await new Promise((resolve) => setTimeout(resolve, 2000));
+        assertLatestRequest();
         const { data: row, error: pollError } = await supabase
           .from("chamados_sync_requests")
           .select("status, detail, result_ticket_ids")
-          .eq("id", data.id)
+          .eq("id", requestId)
           .maybeSingle();
         if (pollError) throw pollError;
+        assertLatestRequest();
         if (row?.status === "done") {
           await Promise.all([
             queryClient.invalidateQueries({ queryKey: ["chamadosSearch"] }),
@@ -537,13 +563,17 @@ export function useSolicitarSyncProcessoVenda() {
           };
         }
         if (row?.status === "error") {
+          if (row.detail?.startsWith("Substituida por uma consulta mais recente")) {
+            throw new ProcessoVendaSyncSupersededError();
+          }
           throw new Error(row.detail || "O worker reportou erro na consulta do periodo.");
         }
       }
       throw new Error("A consulta do periodo excedeu 6 minutos.");
     } finally {
-      activeRequests.current -= 1;
-      setSyncing(activeRequests.current > 0);
+      if (requestVersion === latestRequestVersion.current) {
+        setSyncing(false);
+      }
     }
   }, [queryClient]);
 
