@@ -204,7 +204,7 @@ export function ProjectCardV3({
 
   return (
     <Card
-      className="w-full hover:shadow-lg hover:border-primary/20 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer flex flex-col md:flex-row items-stretch md:items-center p-3 md:p-3 gap-3 md:gap-4 min-h-[5.5rem] h-auto relative overflow-hidden group bg-card/50 backdrop-blur-sm"
+      className="w-full hover:shadow-lg hover:border-primary/20 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer flex flex-col md:flex-row items-stretch md:items-center p-3 md:p-3 gap-3 md:gap-4 min-h-[5.5rem] h-auto relative overflow-visible group bg-card/50 backdrop-blur-sm"
       onClick={() => onClick(project)}
     >
       <div
@@ -214,39 +214,9 @@ export function ProjectCardV3({
         )}
       />
 
-      {/* Mobile Status Badges Header */}
-      <div className="flex sm:hidden flex-wrap items-center gap-1.5 w-full pt-0.5 pb-1 border-b border-border/20">
-        {isImplementationInProgress ? (
-          <Badge className="text-[9px] px-2 py-0.5 font-bold bg-blue-600 text-white flex items-center gap-1">
-            <PlayCircle className="w-2.5 h-2.5" />
-            Implantação em Andamento
-          </Badge>
-        ) : isConfirmed ? (
-          <Badge className="text-[9px] px-2 py-0.5 font-bold bg-emerald-600 text-white flex items-center gap-1">
-            <CheckCircle2 className="w-2.5 h-2.5" />
-            Implantação Confirmada
-          </Badge>
-        ) : isForecastScheduled ? (
-          <Badge className="text-[9px] px-2 py-0.5 font-bold bg-slate-600 text-white flex items-center gap-1">
-            <Calendar className="w-2.5 h-2.5 text-slate-200" />
-            Previsão Agendada
-          </Badge>
-        ) : null}
-
-        <PosSaudeBadge projectId={project.id} />
-        {isFromAutomacao && (
-          <Badge className="text-[9px] px-2 py-0.5 font-bold bg-purple-600 text-white">
-            Novo
-          </Badge>
-        )}
-        <Badge className={cn("text-[9px] px-2 py-0.5 font-bold", globalStatusBadge.className)}>
-          {globalStatusBadge.label}
-        </Badge>
-      </div>
-
-      {/* Desktop Top Left Tag */}
+      {/* Top Left Tag - Floating over Top Border */}
       {hasTopLeftTag && (
-        <div className="hidden sm:block absolute -top-2.5 left-2 z-10">
+        <div className="absolute -top-2.5 left-2 z-10">
           {isImplementationInProgress ? (
             <Badge className="text-[9px] px-2 py-0.5 font-bold shadow-lg border-2 border-background bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20 flex items-center gap-1">
               <PlayCircle className="w-2.5 h-2.5" />
@@ -266,8 +236,8 @@ export function ProjectCardV3({
         </div>
       )}
 
-      {/* Desktop Project Status Badges - Top Right Corner */}
-      <div className="hidden sm:flex absolute -top-1.5 -right-1.5 z-10 items-center gap-1.5">
+      {/* Project Status Badges - Floating over Top Right Corner */}
+      <div className="absolute -top-1.5 -right-1.5 z-10 flex items-center gap-1.5">
         <PosSaudeBadge projectId={project.id} />
         {isFromAutomacao && (
           <Badge className="text-[9px] px-2 py-0.5 font-bold shadow-lg border-2 border-background bg-purple-600 hover:bg-purple-700 text-white shadow-purple-500/20">
