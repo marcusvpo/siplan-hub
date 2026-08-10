@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useProjectsList } from "@/hooks/useProjectsList";
 import { useConversionQueue } from "@/hooks/useConversionQueue";
 import { useProjectsV2 } from "@/hooks/useProjectsV2";
@@ -52,6 +52,8 @@ export function ProjectGrid() {
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
+  const closedIdRef = useRef<string | null>(null);
+
   // Reset to page 1 on filter changes
   useEffect(() => {
     setCurrentPage(1);
@@ -70,22 +72,31 @@ export function ProjectGrid() {
   // Open project from URL if present
   useEffect(() => {
     const projectId = searchParams.get("id");
-    if (projectId && projects.length > 0) {
-      const project = projects.find((p) => p.id === projectId);
-      // Only set if different to avoid loops or unnecessary updates
-      if (project && project.id !== selectedProject?.id) {
-        setSelectedProject(project);
-      }
+    if (!projectId) {
+      closedIdRef.current = null;
+      return;
+    }
+
+    // Do not re-open if user explicitly closed this project modal
+    if (closedIdRef.current === projectId) {
+      return;
+    }
+
+    if (projectId !== selectedProject?.id) {
+      const foundInList = projects.find((p) => p.id === projectId);
+      setSelectedProject(foundInList || ({ id: projectId } as Partial<ProjectV2>));
     }
   }, [searchParams, projects, selectedProject]);
 
   const handleCloseModal = () => {
-    setSelectedProject(null);
-    if (searchParams.get("id")) {
+    const currentId = searchParams.get("id");
+    if (currentId) {
+      closedIdRef.current = currentId;
       const newParams = new URLSearchParams(searchParams);
       newParams.delete("id");
-      setSearchParams(newParams);
+      setSearchParams(newParams, { replace: true });
     }
+    setSelectedProject(null);
   };
 
   // Extract unique values for filter dropdowns
