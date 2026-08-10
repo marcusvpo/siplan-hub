@@ -1,6 +1,6 @@
 import { useProjectsV2 } from "@/hooks/useProjectsV2";
 import { ProjectV2 } from "@/types/ProjectV2";
-import { DeploymentDetailsDialog } from "@/components/ProjectManagement/DeploymentDetailsDialog";
+import { useNavigate } from "react-router-dom";
 import { format, subDays, subMonths, isAfter, isBefore, startOfYear } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useState, useMemo } from "react";
@@ -39,9 +39,8 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 export default function LatestDeployments() {
+  const navigate = useNavigate();
   const { projects, isLoading } = useProjectsV2();
-  const [selectedProject, setSelectedProject] = useState<ProjectV2 | null>(null);
-  const [detailsOpen, setDetailsOpen] = useState(false);
 
   // Filter States
   const [searchTerm, setSearchTerm] = useState("");
@@ -238,8 +237,7 @@ export default function LatestDeployments() {
   }, [filteredProjects]);
 
   const handleCardClick = (project: ProjectV2) => {
-    setSelectedProject(project);
-    setDetailsOpen(true);
+    navigate(`/projects?id=${project.id}`);
   };
 
   const getSatisfactionEmoji = (satisfaction: string) => {
@@ -765,20 +763,6 @@ export default function LatestDeployments() {
         </motion.div>
       )}
 
-      {/* Details Dialog */}
-      <DeploymentDetailsDialog
-        project={selectedProject}
-        open={detailsOpen}
-        onOpenChange={(open) => {
-          setDetailsOpen(open);
-          if (!open) setSelectedProject(null);
-        }}
-        customTitle={selectedProject?.clientName}
-        customDescription="Detalhes históricos da implantação finalizada"
-        customStartDate={selectedProject?.stages.implementation?.phase1?.startDate}
-        customEndDate={selectedProject?.stages.implementation?.phase1?.endDate}
-        customResponsible={selectedProject?.stages.implementation?.phase1?.responsible || selectedProject?.projectLeader}
-      />
     </div>
   );
 }
