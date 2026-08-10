@@ -36,7 +36,9 @@ async function run() {
   await client.connect();
   console.log("Conectado com sucesso ao banco remoto do Supabase!");
 
-  const migrationPath = path.resolve('supabase/migrations/20260806103000_create_chamados_processo_venda.sql');
+  const migrationPath = path.resolve(
+    process.argv[2] || 'supabase/migrations/20260806103000_create_chamados_processo_venda.sql'
+  );
   if (!fs.existsSync(migrationPath)) {
     console.error(`Erro: Arquivo de migração não encontrado em ${migrationPath}`);
     process.exit(1);

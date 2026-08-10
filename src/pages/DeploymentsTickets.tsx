@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   useChamadosSearch,
   useSolicitarSyncProcessoVenda,
+  isProcessoVendaSyncSupersededError,
   fetchAllChamados,
   fetchAllChamadosForReport,
   Chamado0800,
@@ -124,6 +125,7 @@ export default function DeploymentsTickets() {
           setSyncSnapshot({ key: filterSyncKey, ...snapshot });
         })
         .catch((error) => {
+          if (isProcessoVendaSyncSupersededError(error)) return;
           toast.error(
             error instanceof Error
               ? error.message
