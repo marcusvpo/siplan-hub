@@ -52,6 +52,7 @@ interface ProcessoVendaSyncRequest {
   id: string;
   start_date: string;
   end_date: string;
+  requested_by: string | null;
   filters: ProcessoVendaSyncFilters | null;
 }
 
@@ -68,6 +69,56 @@ interface ProcessoVendaSyncResult {
   ticketNumbers: string[];
 }
 
+interface ProcessoVendaRunControl {
+  cancelled: boolean;
+  reason: string;
+  activeSqlRequest: sql.Request | null;
+}
+
+class ProcessoVendaSyncCancelledError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ProcessoVendaSyncCancelledError";
+  }
+}
+
+function cancelProcessoVendaRun(
+  control: ProcessoVendaRunControl | null,
+  reason: string
+): void {
+  if (!control || control.cancelled) return;
+  control.cancelled = true;
+  control.reason = reason;
+  try {
+    control.activeSqlRequest?.cancel();
+  } catch (err) {
+    console.warn("[processo-venda-sync] falha ao cancelar request MSSQL:", err);
+  }
+}
+
+function assertProcessoVendaRunActive(control?: ProcessoVendaRunControl): void {
+  if (control?.cancelled) {
+    throw new ProcessoVendaSyncCancelledError(control.reason || "Consulta cancelada.");
+  }
+}
+
+async function executeControlledQuery<T>(
+  request: sql.Request,
+  query: string,
+  control?: ProcessoVendaRunControl
+) {
+  assertProcessoVendaRunActive(control);
+  if (control) control.activeSqlRequest = request;
+  try {
+    return await request.query<T>(query);
+  } catch (err) {
+    assertProcessoVendaRunActive(control);
+    throw err;
+  } finally {
+    if (control?.activeSqlRequest === request) control.activeSqlRequest = null;
+  }
+}
+
 interface ProcessoVendaTramiteRow {
   NumeroChamado: string;
   NumeroTramite: number | null;
@@ -78,6 +129,21 @@ interface ProcessoVendaTramiteRow {
   EquipeResponsavelAtividade: string | null;
   DescricaoAtividade: string | null;
   descricaotramite: string | null;
+}
+
+interface ProcessoVendaViewRow {
+  NumeroChamado: string | number;
+  codigoCliente: string | number | null;
+  NomeCliente: string | null;
+  RazaoSocialCliente: string | null;
+  TituloChamado: string | null;
+  descricaotramite: string | null;
+  Natureza: string | null;
+  StatusChamado: string | null;
+  Software: string | null;
+  Produto: string | null;
+  DataAberturaChamado: Date | null;
+  SolDataFechamento: Date | null;
 }
 
 function cleanFilterValues(values?: unknown): string[] {
@@ -363,7 +429,8 @@ export function startChamadosSync(): void {
 async function runProcessoVendaOnce(
   startDate: string,
   endDate: string,
-  requestedFilters: ProcessoVendaSyncFilters = {}
+  requestedFilters: ProcessoVendaSyncFilters = {},
+  control?: ProcessoVendaRunControl
 ): Promise<ProcessoVendaSyncResult> {
   const pool = await new sql.ConnectionPool({
     server: config.mssqlHost,
@@ -440,13 +507,15 @@ async function runProcessoVendaOnce(
     // View exclusiva da Consulta de Chamados: ja entrega uma linha por chamado,
     // somente produtos Orion e sem o join 1:N de itens de venda/faturamento.
     // O periodo continua no SQL para o otimizador consultar apenas a janela.
-    const res = await chamadoRequest.query<any>(`
+    const res = await executeControlledQuery<ProcessoVendaViewRow>(chamadoRequest, `
       SELECT NumeroChamado, codigoCliente, NomeCliente, RazaoSocialCliente,
              TituloChamado, descricaotramite, Natureza, StatusChamado,
              Software, Produto, DataAberturaChamado, SolDataFechamento
       FROM dbo.vw_2026_HUB_CONSULTA_CHAMADOS_ORION
       WHERE ${whereClauses.join("\n        AND ")}
-    `);
+    `, control);
+
+    assertProcessoVendaRunActive(control);
 
     const rows = res.recordset.map((r) => ({
       numero_chamado: String(r.NumeroChamado),
@@ -469,6 +538,7 @@ async function runProcessoVendaOnce(
     if (rows.length > 0) {
       // Upsert em lotes de 200 na tabela chamados_processo_venda
       for (let i = 0; i < rows.length; i += 200) {
+        assertProcessoVendaRunActive(control);
         const { error } = await supabase
           .from("chamados_processo_venda")
           .upsert(rows.slice(i, i + 200), { onConflict: "numero_chamado" });
@@ -487,6 +557,7 @@ async function runProcessoVendaOnce(
     // O historico e a parte mais pesada da view 1:N. Consultar somente os IDs
     // encontrados pelo SELECT filtrado evita reler todos os tramites do periodo.
     for (let from = 0; from < ticketNumbers.length; from += tramiteTicketBatchSize) {
+      assertProcessoVendaRunActive(control);
       const batch = ticketNumbers.slice(from, from + tramiteTicketBatchSize);
       const tramiteRequest = pool
         .request()
@@ -498,7 +569,7 @@ async function runProcessoVendaOnce(
         return `@${name}`;
       });
 
-      const tramitesResult = await tramiteRequest.query<ProcessoVendaTramiteRow>(`
+      const tramitesResult = await executeControlledQuery<ProcessoVendaTramiteRow>(tramiteRequest, `
         SELECT DISTINCT
                NumeroChamado, NumeroTramite, SequenciaTramite,
                CONVERT(varchar(19), DataTramite, 126) AS DataTramiteIso,
@@ -512,7 +583,7 @@ async function runProcessoVendaOnce(
           AND CONVERT(varchar(50), NumeroChamado) IN (${ticketParameters.join(", ")})
           AND SequenciaTramite IS NOT NULL
           AND NULLIF(LTRIM(RTRIM(CAST(descricaotramite AS nvarchar(max)))), '') IS NOT NULL
-      `);
+      `, control);
       tramiteRows.push(...tramitesResult.recordset);
     }
 
@@ -547,6 +618,7 @@ async function runProcessoVendaOnce(
 
     const tramites = [...tramitesPorChave.values()];
     for (let i = 0; i < tramites.length; i += 200) {
+      assertProcessoVendaRunActive(control);
       const { error } = await supabase
         .from("chamados_processo_venda_tramites")
         .upsert(tramites.slice(i, i + 200), {
@@ -570,6 +642,15 @@ async function runProcessoVendaOnce(
 let processoVendaGeneralSyncRunning = false;
 let processoVendaRequestSyncRunning = false;
 let processoVendaRequestSyncRequested = false;
+let activeProcessoVendaRequest: {
+  request: ProcessoVendaSyncRequest;
+  control: ProcessoVendaRunControl;
+} | null = null;
+let activeProcessoVendaGeneralControl: ProcessoVendaRunControl | null = null;
+
+const PROCESSO_VENDA_QUEUE_POLL_MS = 3_000;
+const SUPERSEDED_REQUEST_DETAIL =
+  "Substituida por uma consulta mais recente do mesmo usuario.";
 
 function isoDateDaysAgo(days: number): string {
   const date = new Date();
@@ -581,7 +662,7 @@ function isoDateDaysAgo(days: number): string {
 async function getPendingProcessoVendaRequest(): Promise<ProcessoVendaSyncRequest | null> {
   const { data, error } = await supabase
     .from("chamados_sync_requests")
-    .select("id, start_date, end_date, filters")
+    .select("id, start_date, end_date, requested_by, filters")
     .eq("scope", "processo_venda")
     .eq("status", "pending")
     .order("created_at", { ascending: true })
@@ -589,6 +670,89 @@ async function getPendingProcessoVendaRequest(): Promise<ProcessoVendaSyncReques
     .maybeSingle();
   if (error) throw new Error(`select processo venda sync request: ${error.message}`);
   return data as ProcessoVendaSyncRequest | null;
+}
+
+async function recoverInterruptedProcessoVendaRequests(): Promise<void> {
+  const { error } = await supabase
+    .from("chamados_sync_requests")
+    .update({
+      status: "pending",
+      detail: "Retomada apos reinicio do worker.",
+      finished_at: null,
+    })
+    .eq("scope", "processo_venda")
+    .eq("status", "processing");
+  if (error) throw new Error(`recover processo venda requests: ${error.message}`);
+}
+
+async function supersedeDuplicatePendingRequests(): Promise<void> {
+  const { data, error } = await supabase
+    .from("chamados_sync_requests")
+    .select("id, requested_by, created_at")
+    .eq("scope", "processo_venda")
+    .eq("status", "pending")
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(`coalesce processo venda requests: ${error.message}`);
+
+  const newestByRequester = new Set<string>();
+  const supersededIds: string[] = [];
+  for (const row of data || []) {
+    const requesterKey = row.requested_by || "__sem_solicitante__";
+    if (newestByRequester.has(requesterKey)) supersededIds.push(row.id);
+    else newestByRequester.add(requesterKey);
+  }
+
+  for (let i = 0; i < supersededIds.length; i += 100) {
+    const { error: updateError } = await supabase
+      .from("chamados_sync_requests")
+      .update({
+        status: "error",
+        detail: SUPERSEDED_REQUEST_DETAIL,
+        finished_at: new Date().toISOString(),
+      })
+      .in("id", supersededIds.slice(i, i + 100))
+      .eq("status", "pending");
+    if (updateError) {
+      throw new Error(`supersede processo venda requests: ${updateError.message}`);
+    }
+  }
+
+  if (supersededIds.length > 0) {
+    console.log(
+      `[processo-venda-sync] ${supersededIds.length} pedido(s) antigo(s) descartado(s); mantido apenas o mais recente por usuario.`
+    );
+  }
+}
+
+async function claimProcessoVendaRequest(id: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("chamados_sync_requests")
+    .update({ status: "processing", detail: "Consultando filtro na origem..." })
+    .eq("id", id)
+    .eq("status", "pending")
+    .select("id")
+    .maybeSingle();
+  if (error) throw new Error(`claim processo venda request: ${error.message}`);
+  return Boolean(data?.id);
+}
+
+async function cancelActiveRequestWhenSuperseded(): Promise<void> {
+  if (!activeProcessoVendaRequest) return;
+  const { data, error } = await supabase
+    .from("chamados_sync_requests")
+    .select("status, detail")
+    .eq("id", activeProcessoVendaRequest.request.id)
+    .maybeSingle();
+  if (error) {
+    console.warn("[processo-venda-sync] falha ao conferir cancelamento:", error.message);
+    return;
+  }
+  if (data?.status !== "processing") {
+    cancelProcessoVendaRun(
+      activeProcessoVendaRequest.control,
+      data?.detail || "Consulta substituida ou cancelada."
+    );
+  }
 }
 
 async function resolveProcessoVendaRequest(
@@ -605,7 +769,8 @@ async function resolveProcessoVendaRequest(
       result_ticket_ids: status === "done" ? ticketNumbers : null,
       finished_at: new Date().toISOString(),
     })
-    .eq("id", id);
+    .eq("id", id)
+    .eq("status", "processing");
   if (error) console.error("[processo-venda-sync] erro ao concluir pedido:", error.message);
 }
 
@@ -618,17 +783,39 @@ export function startProcessoVendaSync(): void {
   const syncPendingRequests = async () => {
     if (processoVendaRequestSyncRunning) {
       processoVendaRequestSyncRequested = true;
+      await cancelActiveRequestWhenSuperseded();
+      return;
+    }
+    if (processoVendaGeneralSyncRunning) {
+      processoVendaRequestSyncRequested = true;
+      cancelProcessoVendaRun(
+        activeProcessoVendaGeneralControl,
+        "Atualizacao horaria interrompida para priorizar um filtro da tela."
+      );
       return;
     }
     processoVendaRequestSyncRunning = true;
     try {
+      await supersedeDuplicatePendingRequests();
       let request = await getPendingProcessoVendaRequest();
       while (request) {
+        if (!(await claimProcessoVendaRequest(request.id))) {
+          request = await getPendingProcessoVendaRequest();
+          continue;
+        }
+
+        const control: ProcessoVendaRunControl = {
+          cancelled: false,
+          reason: "",
+          activeSqlRequest: null,
+        };
+        activeProcessoVendaRequest = { request, control };
         try {
           const result = await runProcessoVendaOnce(
             request.start_date,
             request.end_date,
-            request.filters || {}
+            request.filters || {},
+            control
           );
           await resolveProcessoVendaRequest(
             request.id,
@@ -638,9 +825,16 @@ export function startProcessoVendaSync(): void {
           );
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
-          await resolveProcessoVendaRequest(request.id, "error", msg);
-          console.error("[processo-venda-sync] erro no pedido sob demanda:", msg);
+          if (control.cancelled) {
+            console.log(`[processo-venda-sync] pedido ${request.id} cancelado: ${msg}`);
+          } else {
+            await resolveProcessoVendaRequest(request.id, "error", msg);
+            console.error("[processo-venda-sync] erro no pedido sob demanda:", msg);
+          }
+        } finally {
+          activeProcessoVendaRequest = null;
         }
+        await supersedeDuplicatePendingRequests();
         request = await getPendingProcessoVendaRequest();
       }
     } catch (err) {
@@ -656,25 +850,51 @@ export function startProcessoVendaSync(): void {
   };
 
   const syncGeneralPeriod = async () => {
-    if (processoVendaGeneralSyncRunning) return;
+    if (processoVendaGeneralSyncRunning || processoVendaRequestSyncRunning) return;
     processoVendaGeneralSyncRunning = true;
+    const control: ProcessoVendaRunControl = {
+      cancelled: false,
+      reason: "",
+      activeSqlRequest: null,
+    };
+    activeProcessoVendaGeneralControl = control;
     try {
       await runProcessoVendaOnce(
         isoDateDaysAgo(Math.max(config.processoVendaSyncDays - 1, 0)),
-        isoDateDaysAgo(0)
+        isoDateDaysAgo(0),
+        {},
+        control
       );
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      console.error("[processo-venda-sync] erro na atualizacao horaria:", msg);
+      if (control.cancelled) {
+        console.log(`[processo-venda-sync] ${msg}`);
+      } else {
+        console.error("[processo-venda-sync] erro na atualizacao horaria:", msg);
+      }
     } finally {
+      activeProcessoVendaGeneralControl = null;
       processoVendaGeneralSyncRunning = false;
+      if (processoVendaRequestSyncRequested) {
+        processoVendaRequestSyncRequested = false;
+        void syncPendingRequests();
+      }
     }
   };
 
-  // As duas rotinas possuem travas independentes: um filtro da tela nao espera
-  // a atualizacao geral terminar. Cada execucao abre sua propria conexao MSSQL.
-  void syncPendingRequests();
-  void syncGeneralPeriod();
+  // Realtime reduz a latencia; o polling garante recuperacao automatica se o
+  // canal desconectar. As rotinas compartilham prioridade para nunca executar
+  // duas consultas MSSQL pesadas em paralelo.
+  void (async () => {
+    try {
+      await recoverInterruptedProcessoVendaRequests();
+      await syncPendingRequests();
+      await syncGeneralPeriod();
+    } catch (err) {
+      console.error("[processo-venda-sync] erro na inicializacao:", err);
+    }
+  })();
+  setInterval(() => { void syncPendingRequests(); }, PROCESSO_VENDA_QUEUE_POLL_MS);
   setInterval(() => { void syncGeneralPeriod(); }, config.processoVendaSyncIntervalMs);
 
   supabase
@@ -687,7 +907,29 @@ export function startProcessoVendaSync(): void {
         table: "chamados_sync_requests",
         filter: "scope=eq.processo_venda",
       },
-      () => { void syncPendingRequests(); }
+      (payload) => {
+        const inserted = payload.new as { id?: string; requested_by?: string | null };
+        const active = activeProcessoVendaRequest;
+        if (
+          active
+          && inserted.id !== active.request.id
+          && inserted.requested_by
+          && inserted.requested_by === active.request.requested_by
+        ) {
+          void resolveProcessoVendaRequest(
+            active.request.id,
+            "error",
+            SUPERSEDED_REQUEST_DETAIL
+          ).finally(() => {
+            cancelProcessoVendaRun(active.control, SUPERSEDED_REQUEST_DETAIL);
+          });
+        }
+        void syncPendingRequests();
+      }
     )
     .subscribe();
+
+  console.log(
+    `[processo-venda-sync] fila resiliente ativa (poll ${PROCESSO_VENDA_QUEUE_POLL_MS / 1000}s, latest-wins por usuario).`
+  );
 }
