@@ -91,6 +91,12 @@ const TransicaoPlaceholder = lazy(() =>
   import("./pages/implantadores/TransicaoPlaceholder"),
 );
 
+// CS/CX Pages (lazy)
+const CsCxOverview = lazy(() => import("./pages/cs-cx/CsCxOverview"));
+const CsCxMigrationPlaceholder = lazy(() =>
+  import("./pages/cs-cx/CsCxMigrationPlaceholder"),
+);
+
 // Admin Pages (lazy)
 const AdminLayout = lazy(() => import("./layouts/AdminLayout"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
@@ -604,6 +610,124 @@ const App = () => (
                             element={
                               <RequirePermission resource="implantadores_transicao">
                                 <TransicaoPlaceholder />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/cs-cx"
+                            element={
+                              <RequirePermission resource="cs_cx_home">
+                                <CsCxOverview />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/cs-cx/registros"
+                            element={
+                              <RequirePermission resource="cs_cx_registros">
+                                <CsCxMigrationPlaceholder
+                                  title="Solicitações"
+                                  description="Registros, solicitações, filtros, histórico e quadro Kanban do sistema legado serão migrados para esta área."
+                                />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/cs-cx/cartorios"
+                            element={
+                              <RequirePermission resource="cs_cx_cartorios">
+                                <CsCxMigrationPlaceholder
+                                  title="Cartórios"
+                                  description="Cadastros, produtos implantados, status, histórico e exportações dos cartórios serão migrados para esta área."
+                                />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/cs-cx/contatos"
+                            element={
+                              <RequirePermission resource="cs_cx_contatos">
+                                <CsCxMigrationPlaceholder
+                                  title="Contatos"
+                                  description="Contatos, responsáveis, produtos, filtros, indicadores e exportações serão migrados para esta área."
+                                />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/cs-cx/agendamentos"
+                            element={
+                              <RequirePermission resource="cs_cx_agendamentos">
+                                <CsCxMigrationPlaceholder
+                                  title="Agendamentos"
+                                  description="Agenda, calendário, realização, conclusão, cancelamento, remarcação e exportações serão migrados para esta área."
+                                />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/cs-cx/rotinas"
+                            element={
+                              <RequirePermission resource="cs_cx_rotinas">
+                                <CsCxMigrationPlaceholder
+                                  title="Rotinas"
+                                  description="Modelos, itens, aplicações por cartório, análises, histórico, relatórios e exportações serão migrados para esta área."
+                                />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/cs-cx/pos-implantacao"
+                            element={
+                              <RequirePermission resource="cs_cx_pos_implantacao">
+                                <CsCxMigrationPlaceholder
+                                  title="Pós-Implantação"
+                                  description="Acompanhamentos, lançamentos, encerramentos, reaberturas, anexos, estatísticas e PDFs serão migrados para esta área."
+                                />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/cs-cx/visitas"
+                            element={
+                              <RequirePermission resource="cs_cx_visitas">
+                                <CsCxMigrationPlaceholder
+                                  title="Visitas"
+                                  description="Visitas, checklists, pendências, anexos, geração de solicitações, status e PDFs serão migrados para esta área."
+                                />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/cs-cx/nps"
+                            element={
+                              <RequirePermission resource="cs_cx_nps">
+                                <CsCxMigrationPlaceholder
+                                  title="NPS"
+                                  description="Respostas, importações, classificações, histórico, webhook, indicadores e PDFs serão migrados para esta área."
+                                />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/cs-cx/relatorios"
+                            element={
+                              <RequirePermission resource="cs_cx_reports">
+                                <CsCxMigrationPlaceholder
+                                  title="Relatórios CS/CX"
+                                  description="Relatórios operacionais, estatísticas, filtros e exportações serão consolidados nesta área."
+                                />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/cs-cx/admin"
+                            element={
+                              <RequirePermission resource="cs_cx_admin">
+                                <CsCxMigrationPlaceholder
+                                  title="Administração CS/CX"
+                                  description="Modelos, categorias, tipos, produtos, prioridades e demais configurações do legado serão migrados para esta área."
+                                />
                               </RequirePermission>
                             }
                           />
