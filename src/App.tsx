@@ -97,6 +97,8 @@ const CsCxRequests = lazy(() => import("./pages/cs-cx/CsCxRequests"));
 const CsCxRegistryOffices = lazy(() =>
   import("./pages/cs-cx/CsCxRegistryOffices"),
 );
+const CsCxContacts = lazy(() => import("./pages/cs-cx/CsCxContacts"));
+const CsCxAppointments = lazy(() => import("./pages/cs-cx/CsCxAppointments"));
 const CsCxMigrationPlaceholder = lazy(() =>
   import("./pages/cs-cx/CsCxMigrationPlaceholder"),
 );
@@ -645,10 +647,7 @@ const App = () => (
                             path="/cs-cx/contatos"
                             element={
                               <RequirePermission resource="cs_cx_contatos">
-                                <CsCxMigrationPlaceholder
-                                  title="Contatos"
-                                  description="Contatos, responsáveis, produtos, filtros, indicadores e exportações serão migrados para esta área."
-                                />
+                                <CsCxContacts />
                               </RequirePermission>
                             }
                           />
@@ -656,10 +655,7 @@ const App = () => (
                             path="/cs-cx/agendamentos"
                             element={
                               <RequirePermission resource="cs_cx_agendamentos">
-                                <CsCxMigrationPlaceholder
-                                  title="Agendamentos"
-                                  description="Agenda, calendário, realização, conclusão, cancelamento, remarcação e exportações serão migrados para esta área."
-                                />
+                                <CsCxAppointments />
                               </RequirePermission>
                             }
                           />
