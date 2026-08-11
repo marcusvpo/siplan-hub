@@ -31,6 +31,7 @@ const TABLES = [
   {
     source: 'users',
     target: 'cs_cx_user_map',
+    hasNoOrigin: true,
     query: `SELECT id, username, email, nome_completo, role::text AS role, ativo,
       pode_ver_todos_lancamentos, perfil_acesso_id, data_criacao, ultimo_login, ultimo_acesso
       FROM users ORDER BY id`,
@@ -201,7 +202,9 @@ async function migrate() {
       const sourceResult = await source.query(spec.query);
       await markSourceMissing(spec);
 
-      const rows = sourceResult.rows.map((row) => withSyncFields(spec.map(row, maps)));
+      const rows = sourceResult.rows.map((row) =>
+        withSyncFields(spec.map(row, maps), !spec.hasNoOrigin),
+      );
       await bulkUpsert(spec, rows);
       stats[spec.source] = { scanned: rows.length };
 
@@ -299,7 +302,13 @@ async function markSourceMissing(spec) {
     );
     return;
   }
-  await target.query(`UPDATE public.${spec.target} SET source_present = false`);
+  if (spec.hasNoOrigin) {
+    await target.query(`UPDATE public.${spec.target} SET source_present = false`);
+    return;
+  }
+  await target.query(
+    `UPDATE public.${spec.target} SET source_present = false WHERE origin = 'legacy'`,
+  );
 }
 
 async function targetCount(spec) {
@@ -309,9 +318,14 @@ async function targetCount(spec) {
        WHERE source_present AND source_table = $1`,
       [spec.auditSource],
     )
-    : await target.query(
-      `SELECT count(*)::bigint AS count FROM public.${spec.target} WHERE source_present`,
-    );
+    : spec.hasNoOrigin
+      ? await target.query(
+          `SELECT count(*)::bigint AS count FROM public.${spec.target} WHERE source_present`,
+        )
+      : await target.query(
+          `SELECT count(*)::bigint AS count FROM public.${spec.target}
+           WHERE source_present AND origin = 'legacy'`,
+        );
   return Number(result.rows[0].count);
 }
 
@@ -369,11 +383,12 @@ function auditSpec(sourceTable, entityType, entityColumn) {
   };
 }
 
-function withSyncFields(row) {
+function withSyncFields(row, includeOrigin) {
   const normalized = normalize(row);
   return {
     ...row,
     source_hash: crypto.createHash('sha256').update(JSON.stringify(normalized)).digest('hex'),
+    ...(includeOrigin ? { origin: 'legacy' } : {}),
     source_present: true,
     last_synced_at: new Date(),
   };
