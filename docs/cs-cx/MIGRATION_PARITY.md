@@ -25,8 +25,8 @@ Este documento é a matriz de controle da migração do sistema Flask em
 | --- | --- | --- |
 | Autenticação | login, logout, perfil, validação e renovação de sessão | inventariado; será substituído por Supabase Auth |
 | Visão geral | atalhos por perfil, indicadores e central de prioridades | fundação |
-| Solicitações | lista, filtros, busca, criação, edição, exclusão, detalhe, Kanban, mudança de status, histórico, PDF e exportação | fundação |
-| Cartórios | cadastro, edição, ativação, produtos, período de implantação, registros, histórico e PDFs | fundação |
+| Solicitações | lista, filtros, busca, criação, edição, exclusão, detalhe, Kanban, mudança de status, histórico, PDF e exportação | em migração; lista, CRUD, filtros, quadro e status implementados |
+| Cartórios | cadastro, edição, ativação, produtos, período de implantação, registros, histórico e PDFs | em migração; cadastro, CRUD, filtros e produtos implementados |
 | Contatos | lista, filtros, criação, edição, exclusão, produtos, estatísticas e PDFs | fundação |
 | Agendamentos | lista, calendário, criação, edição, realização, conclusão, cancelamento, remarcação, impressão e PDF | fundação |
 | Rotinas | aplicações, configuração, análise, histórico, modelos, itens, categorias, tipos, reordenação, relatórios e PDF | fundação |

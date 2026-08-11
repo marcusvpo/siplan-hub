@@ -93,6 +93,10 @@ const TransicaoPlaceholder = lazy(() =>
 
 // CS/CX Pages (lazy)
 const CsCxOverview = lazy(() => import("./pages/cs-cx/CsCxOverview"));
+const CsCxRequests = lazy(() => import("./pages/cs-cx/CsCxRequests"));
+const CsCxRegistryOffices = lazy(() =>
+  import("./pages/cs-cx/CsCxRegistryOffices"),
+);
 const CsCxMigrationPlaceholder = lazy(() =>
   import("./pages/cs-cx/CsCxMigrationPlaceholder"),
 );
@@ -625,10 +629,7 @@ const App = () => (
                             path="/cs-cx/registros"
                             element={
                               <RequirePermission resource="cs_cx_registros">
-                                <CsCxMigrationPlaceholder
-                                  title="Solicitações"
-                                  description="Registros, solicitações, filtros, histórico e quadro Kanban do sistema legado serão migrados para esta área."
-                                />
+                                <CsCxRequests />
                               </RequirePermission>
                             }
                           />
@@ -636,10 +637,7 @@ const App = () => (
                             path="/cs-cx/cartorios"
                             element={
                               <RequirePermission resource="cs_cx_cartorios">
-                                <CsCxMigrationPlaceholder
-                                  title="Cartórios"
-                                  description="Cadastros, produtos implantados, status, histórico e exportações dos cartórios serão migrados para esta área."
-                                />
+                                <CsCxRegistryOffices />
                               </RequirePermission>
                             }
                           />

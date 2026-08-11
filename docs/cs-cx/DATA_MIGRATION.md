@@ -26,6 +26,7 @@ Aplicar, nesta ordem:
 1. `20260811100000_cs_cx_module_permissions.sql`
 2. `20260811110000_cs_cx_migration_control.sql`
 3. `20260811111000_cs_cx_core_schema.sql`
+4. `20260811112000_cs_cx_native_records.sql`
 
 Configurar as URLs sem commitá-las:
 
