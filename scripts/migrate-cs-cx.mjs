@@ -162,8 +162,40 @@ const TABLES = [
       updated_at: row.data_atualizacao,
     }),
   },
+  {
+    source: 'agendamentos',
+    target: 'cs_cx_appointments',
+    query: `SELECT id, titulo, data_hora, duracao_minutos, tipo::text AS tipo,
+      status::text AS status, cartorio_id, contato_id, responsavel_id,
+      usuario_criador_id, descricao, local, observacoes, resultado,
+      data_criacao, data_atualizacao, data_realizacao, data_cancelamento
+      FROM agendamentos ORDER BY id`,
+    map: (row, maps) => ({
+      legacy_id: row.id,
+      title: row.titulo,
+      starts_at: row.data_hora,
+      duration_minutes: row.duracao_minutos,
+      appointment_type: row.tipo,
+      status: row.status,
+      registry_office_id: maps.offices.get(key(row.cartorio_id)) ?? null,
+      contact_id: maps.contacts.get(key(row.contato_id)) ?? null,
+      legacy_responsible_user_id: row.responsavel_id,
+      responsible_profile_id: maps.profiles.get(key(row.responsavel_id)) ?? null,
+      legacy_creator_user_id: row.usuario_criador_id,
+      created_by: maps.profiles.get(key(row.usuario_criador_id)) ?? null,
+      description: row.descricao,
+      location: row.local,
+      notes: row.observacoes,
+      result: row.resultado,
+      created_at: row.data_criacao,
+      updated_at: row.data_atualizacao,
+      realized_at: row.data_realizacao,
+      canceled_at: row.data_cancelamento,
+    }),
+  },
   auditSpec('logs_auditoria', 'registro', 'registro_id'),
   auditSpec('logs_auditoria_contatos', 'contato', 'contato_id'),
+  auditSpec('logs_auditoria_agendamentos', 'agendamento', 'agendamento_id'),
 ];
 
 async function main() {
@@ -261,19 +293,27 @@ async function verify() {
 async function assertTargetReady() {
   const result = await target.query(
     `SELECT to_regclass('public.cs_cx_migration_runs') AS control,
-            to_regclass('public.cs_cx_registry_offices') AS core`,
+            to_regclass('public.cs_cx_registry_offices') AS core,
+            to_regclass('public.cs_cx_appointments') AS appointments`,
   );
-  if (!result.rows[0].control || !result.rows[0].core) {
-    throw new Error('Aplique primeiro as migrations 20260811110000 e 20260811111000.');
+  if (!result.rows[0].control || !result.rows[0].core || !result.rows[0].appointments) {
+    throw new Error('Aplique todas as migrations CS/CX antes de executar a carga.');
   }
 }
 
 async function loadMaps() {
-  const maps = { profiles: new Map(), products: new Map(), offices: new Map(), requests: new Map() };
+  const maps = {
+    profiles: new Map(),
+    products: new Map(),
+    offices: new Map(),
+    requests: new Map(),
+    contacts: new Map(),
+  };
   await refreshMaps('cs_cx_user_map', maps);
   await refreshMaps('cs_cx_products', maps);
   await refreshMaps('cs_cx_registry_offices', maps);
   await refreshMaps('cs_cx_requests', maps);
+  await refreshMaps('cs_cx_contacts', maps);
   return maps;
 }
 
@@ -283,6 +323,7 @@ async function refreshMaps(table, maps) {
     cs_cx_products: ['products', 'id'],
     cs_cx_registry_offices: ['offices', 'id'],
     cs_cx_requests: ['requests', 'id'],
+    cs_cx_contacts: ['contacts', 'id'],
   };
   const destination = destinations[table];
   if (!destination) return;

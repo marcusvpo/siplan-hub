@@ -27,8 +27,8 @@ Este documento é a matriz de controle da migração do sistema Flask em
 | Visão geral | atalhos por perfil, indicadores e central de prioridades | fundação |
 | Solicitações | lista, filtros, busca, criação, edição, exclusão, detalhe, Kanban, mudança de status, histórico, PDF e exportação | em migração; lista, CRUD, filtros, quadro e status implementados |
 | Cartórios | cadastro, edição, ativação, produtos, período de implantação, registros, histórico e PDFs | em migração; cadastro, CRUD, filtros e produtos implementados |
-| Contatos | lista, filtros, criação, edição, exclusão, produtos, estatísticas e PDFs | fundação |
-| Agendamentos | lista, calendário, criação, edição, realização, conclusão, cancelamento, remarcação, impressão e PDF | fundação |
+| Contatos | lista, filtros, criação, edição, exclusão, produtos, estatísticas e PDFs | em migração; lista, CRUD, filtros e indicadores básicos implementados |
+| Agendamentos | lista, calendário, criação, edição, realização, conclusão, cancelamento, remarcação, impressão e PDF | em migração; lista, calendário, CRUD e mudanças de estado implementados |
 | Rotinas | aplicações, configuração, análise, histórico, modelos, itens, categorias, tipos, reordenação, relatórios e PDF | fundação |
 | Pós-implantação | abertura, edição, encerramento, reabertura, lançamentos, anexos, estatísticas, impressão e PDF | fundação |
 | Visitas | criação, edição, checklist, pendências, anexos, geração de solicitações, status e PDF | fundação |
