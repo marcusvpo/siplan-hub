@@ -3,6 +3,25 @@
 O merge em `main` só deve ser proposto depois que os itens técnicos abaixo estiverem
 concluídos. O legado continua sendo a fonte oficial até a virada final.
 
+O gate conectado pode ser consultado a qualquer momento com:
+
+```bash
+npm run check:cs-cx
+```
+
+Ele retorna código `0` somente quando schema/RLS, carga, usuários, anexos,
+permissões administrativas e o webhook NPS protegido estiverem completos.
+
+## Estado em 12/08/2026
+
+- Schema aplicado no projeto `okvufcwkophaadttmjwa`: 25/25 tabelas com RLS.
+- Carga inicial `ba771699-528d-4f58-bacf-73a296fd9518` concluída.
+- Reconciliação: 27/27 conjuntos com contagens iguais e zero hashes divergentes.
+- Testes automatizados: 119 aprovados; build de produção aprovado.
+- Usuários ativos: 4/6 vinculados; dois de/para aguardam decisão do negócio.
+- Anexos históricos: 0/2 copiados; aguarda service role local.
+- Webhook NPS: ainda não implantado (endpoint retornando HTTP 404).
+
 ## Antes da validação humana
 
 - [ ] Credencial local `SUPABASE_DB_URL` válida, sem envio por chat ou commit.
@@ -14,6 +33,7 @@ concluídos. O legado continua sendo a fonte oficial até a virada final.
 - [ ] Relatório de usuários gerado; e-mails únicos vinculados automaticamente.
 - [ ] Exceções do de/para confirmadas pelo responsável do negócio.
 - [ ] Perfis piloto recebem somente as permissões CS/CX necessárias.
+- [ ] Edge Function NPS implantada e rejeitando chamadas sem token.
 - [ ] Build, lint e testes automatizados aprovados.
 - [ ] Anexos históricos copiados e aprovados por checksum.
 - [ ] Smoke test das rotas e das ações de escrita com um perfil piloto.

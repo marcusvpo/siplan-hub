@@ -162,24 +162,24 @@ async function assertReadiness() {
     throw new Error(`Tabelas CS/CX incompletas: ${tables.length}/${EXPECTED_TABLES.length}.`);
   }
 
-  const [permissionResult, snapshotResult, bucketResult, rlsResult] = await Promise.all([
-    target.query(
-      `SELECT count(DISTINCT resource)::int AS count FROM public.app_permissions
-       WHERE resource = ANY($1::text[])`,
-      [EXPECTED_RESOURCES],
-    ),
-    target.query(`
-      SELECT count(*)::int AS count FROM information_schema.columns
-      WHERE table_schema = 'public' AND table_name = 'cs_cx_routine_history'
-        AND column_name IN ('registry_office_name', 'routine_model_name', 'model_item_name', 'actor_name')
-    `),
-    target.query(`SELECT count(*)::int AS count FROM storage.buckets WHERE id = 'cs-cx-attachments'`),
-    target.query(
-      `SELECT count(*)::int AS count FROM pg_tables
-       WHERE schemaname = 'public' AND tablename = ANY($1::text[]) AND rowsecurity`,
-      [EXPECTED_TABLES],
-    ),
-  ]);
+  // node-postgres serializa uma conexão; consultas paralelas no mesmo Client
+  // geram aviso e deixarão de ser aceitas no pg 9.
+  const permissionResult = await target.query(
+    `SELECT count(DISTINCT resource)::int AS count FROM public.app_permissions
+     WHERE resource = ANY($1::text[])`,
+    [EXPECTED_RESOURCES],
+  );
+  const snapshotResult = await target.query(`
+    SELECT count(*)::int AS count FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'cs_cx_routine_history'
+      AND column_name IN ('registry_office_name', 'routine_model_name', 'model_item_name', 'actor_name')
+  `);
+  const bucketResult = await target.query(`SELECT count(*)::int AS count FROM storage.buckets WHERE id = 'cs-cx-attachments'`);
+  const rlsResult = await target.query(
+    `SELECT count(*)::int AS count FROM pg_tables
+     WHERE schemaname = 'public' AND tablename = ANY($1::text[]) AND rowsecurity`,
+    [EXPECTED_TABLES],
+  );
 
   if (permissionResult.rows[0].count !== EXPECTED_RESOURCES.length) throw new Error('Catálogo de permissões CS/CX incompleto.');
   if (snapshotResult.rows[0].count !== 4) throw new Error('Snapshots do histórico de rotinas incompletos.');
