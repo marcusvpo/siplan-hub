@@ -683,10 +683,10 @@ function ClassificationBadge({ value }: { value: string }) {
     <Badge
       variant={
         value === "DETRATOR"
-          ? "destructive"
+          ? "critical"
           : value === "PROMOTOR"
-            ? "default"
-            : "secondary"
+            ? "success"
+            : "warning"
       }
     >
       {CLASS_LABELS[value] ?? value}
