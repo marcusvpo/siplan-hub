@@ -23,7 +23,26 @@ try {
              WHERE table_schema = 'public'
                AND table_name = 'cs_cx_user_map'
                AND column_name = 'mapping_ignored'
-           ) AS mapping_exceptions
+           ) AS mapping_exceptions,
+           NOT has_table_privilege(
+             'authenticated',
+             'public.cs_cx_nps_responses',
+             'INSERT'
+           ) AND NOT has_table_privilege(
+             'authenticated',
+             'public.cs_cx_nps_responses',
+             'UPDATE'
+           ) AND NOT EXISTS (
+             SELECT 1 FROM pg_policies
+             WHERE schemaname = 'public'
+               AND tablename = 'cs_cx_nps_responses'
+               AND cmd IN ('INSERT', 'UPDATE')
+               AND ('authenticated' = ANY(roles) OR 'public' = ANY(roles))
+           ) AND COALESCE(NOT has_function_privilege(
+             'authenticated',
+             to_regprocedure('public.cs_cx_import_nps(uuid,jsonb)'),
+             'EXECUTE'
+           ), true) AS nps_responses_immutable
     FROM pg_tables
     WHERE schemaname = 'public' AND tablename LIKE 'cs_cx_%'
   `);
@@ -74,6 +93,13 @@ try {
         schemaRow.with_rls === EXPECTED_TABLES &&
         schemaRow.mapping_exceptions,
       `${schemaRow.total}/${EXPECTED_TABLES} tabelas; RLS ${schemaRow.with_rls}/${EXPECTED_TABLES}; exceções de usuário ${schemaRow.mapping_exceptions ? "OK" : "ausentes"}`,
+    ],
+    [
+      "Integridade NPS",
+      schemaRow.nps_responses_immutable,
+      schemaRow.nps_responses_immutable
+        ? "respostas sem INSERT/UPDATE autenticado; importação desativada"
+        : "respostas ainda permitem criação, edição ou importação autenticada",
     ],
     [
       "Carga",

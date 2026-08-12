@@ -24,12 +24,18 @@ const workflow = readFileSync(
   "utf8",
 );
 const migrations = [
-  ...runner.matchAll(/["']((?:20260811|20260812)\d+_cs_cx_[^"']+\.sql)["']/g),
-].map((match) => match[1]);
+  ...new Set(
+    [
+      ...runner.matchAll(
+        /["']((?:20260811|20260812)\d+_cs_cx_[^"']+\.sql)["']/g,
+      ),
+    ].map((match) => match[1]),
+  ),
+];
 
 describe("preflight do schema CS/CX", () => {
   it("mantém uma lista explícita e existente de migrations", () => {
-    expect(migrations).toHaveLength(14);
+    expect(migrations).toHaveLength(15);
     expect(new Set(migrations).size).toBe(migrations.length);
     for (const migration of migrations) {
       expect(
@@ -97,6 +103,22 @@ describe("preflight do schema CS/CX", () => {
     expect(readiness).toContain("attachmentRow.copied === attachmentRow.total");
     expect(readiness).toContain("probeNpsWebhook(apiUrl)");
     expect(readiness).toContain("probePublicNps(apiUrl)");
+    expect(readiness).toContain("nps_responses_immutable");
     expect(readiness).toContain("[401, 403].includes(response.status)");
+  });
+
+  it("torna as respostas NPS imutaveis para usuarios da aplicacao", () => {
+    const migration = readFileSync(
+      resolve(
+        root,
+        "supabase/migrations/20260812109000_cs_cx_nps_response_immutability.sql",
+      ),
+      "utf8",
+    );
+
+    expect(migration).toContain("DROP POLICY IF EXISTS cs_cx_nps_responses_create");
+    expect(migration).toContain("DROP POLICY IF EXISTS cs_cx_nps_responses_edit");
+    expect(migration).toMatch(/REVOKE INSERT, UPDATE ON public\.cs_cx_nps_responses/);
+    expect(migration).toMatch(/REVOKE ALL ON FUNCTION public\.cs_cx_import_nps/);
   });
 });

@@ -218,17 +218,31 @@ describe("CS/CX visitas e NPS — permissões", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("libera criação de NPS com a permissão correta", () => {
+  it("permite solicitar NPS sem liberar inclusão ou importação de respostas", () => {
     renderPage(<CsCxNps />, ["cs_cx_nps:create"]);
-    expect(
-      screen.getByRole("button", { name: /registrar manualmente/i }),
-    ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /solicitar nps/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /importar arquivo/i }),
-    ).toBeInTheDocument();
+      screen.queryByRole("button", { name: /registrar manualmente/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /importar arquivo/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("mantém respostas somente para visualização mesmo com permissão de edição", () => {
+    renderPage(<CsCxNps />, ["cs_cx_nps:edit"]);
+    expect(
+      screen.queryByRole("button", { name: /editar resposta/i }),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getAllByRole("button", { name: /visualizar resposta/i })[0],
+    );
+    expect(screen.getByText("Visualizar resposta NPS")).toBeInTheDocument();
+    expect(screen.getByText(/somente leitura/i)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /salvar/i })).not.toBeInTheDocument();
   });
 
   it("pagina respostas e histórico de NPS em blocos compactos", () => {
