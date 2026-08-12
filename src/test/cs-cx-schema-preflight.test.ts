@@ -3,20 +3,39 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const root = process.cwd();
-const runner = readFileSync(resolve(root, "scripts/prepare-cs-cx-schema.mjs"), "utf8");
-const migrator = readFileSync(resolve(root, "scripts/migrate-cs-cx.mjs"), "utf8");
-const fileMigrator = readFileSync(resolve(root, "scripts/migrate-cs-cx-files.mjs"), "utf8");
-const readiness = readFileSync(resolve(root, "scripts/check-cs-cx-readiness.mjs"), "utf8");
-const workflow = readFileSync(resolve(root, ".github/workflows/supabase-migrations.yml"), "utf8");
-const migrations = [...runner.matchAll(/'((?:20260811|20260812)\d+_cs_cx_[^']+\.sql)'/g)]
-  .map((match) => match[1]);
+const runner = readFileSync(
+  resolve(root, "scripts/prepare-cs-cx-schema.mjs"),
+  "utf8",
+);
+const migrator = readFileSync(
+  resolve(root, "scripts/migrate-cs-cx.mjs"),
+  "utf8",
+);
+const fileMigrator = readFileSync(
+  resolve(root, "scripts/migrate-cs-cx-files.mjs"),
+  "utf8",
+);
+const readiness = readFileSync(
+  resolve(root, "scripts/check-cs-cx-readiness.mjs"),
+  "utf8",
+);
+const workflow = readFileSync(
+  resolve(root, ".github/workflows/supabase-migrations.yml"),
+  "utf8",
+);
+const migrations = [
+  ...runner.matchAll(/["']((?:20260811|20260812)\d+_cs_cx_[^"']+\.sql)["']/g),
+].map((match) => match[1]);
 
 describe("preflight do schema CS/CX", () => {
   it("mantém uma lista explícita e existente de migrations", () => {
-    expect(migrations).toHaveLength(13);
+    expect(migrations).toHaveLength(14);
     expect(new Set(migrations).size).toBe(migrations.length);
     for (const migration of migrations) {
-      expect(existsSync(resolve(root, "supabase/migrations", migration)), migration).toBe(true);
+      expect(
+        existsSync(resolve(root, "supabase/migrations", migration)),
+        migration,
+      ).toBe(true);
     }
   });
 
@@ -24,9 +43,9 @@ describe("preflight do schema CS/CX", () => {
     expect(runner).toContain("--apply");
     expect(runner).toContain("--confirm-project=");
     expect(runner).toContain("pg_advisory_xact_lock");
-    expect(runner).toContain("target.query('BEGIN')");
-    expect(runner).toContain("target.query('COMMIT')");
-    expect(runner).toContain("target.query('ROLLBACK')");
+    expect(runner).toMatch(/target\.query\(["']BEGIN["']\)/);
+    expect(runner).toMatch(/target\.query\(["']COMMIT["']\)/);
+    expect(runner).toMatch(/target\.query\(["']ROLLBACK["']\)/);
   });
 
   it("não permite aplicar automaticamente o histórico global no CI", () => {
@@ -37,7 +56,9 @@ describe("preflight do schema CS/CX", () => {
   });
 
   it("trava a conexão legada em somente leitura", () => {
-    expect(migrator).toContain("SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY");
+    expect(migrator).toContain(
+      "SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY",
+    );
     expect(migrator).toContain("mode === 'source'");
     expect(migrator).toContain("source_preflight LIMIT 0");
   });
@@ -67,12 +88,15 @@ describe("preflight do schema CS/CX", () => {
 
   it("mantém um gate conectado para a homologação", () => {
     expect(readiness).toContain("NOT_READY");
-    expect(readiness).toContain("READY - CS/CX pronto para homologação humana.");
+    expect(readiness).toContain(
+      "READY - CS/CX pronto para homologação humana.",
+    );
     expect(readiness).toContain("schemaRow.with_rls === EXPECTED_TABLES");
     expect(readiness).toContain("userRow.pending === 0");
     expect(readiness).toContain("userRow.ignored");
     expect(readiness).toContain("attachmentRow.copied === attachmentRow.total");
     expect(readiness).toContain("probeNpsWebhook(apiUrl)");
+    expect(readiness).toContain("probePublicNps(apiUrl)");
     expect(readiness).toContain("[401, 403].includes(response.status)");
   });
 });

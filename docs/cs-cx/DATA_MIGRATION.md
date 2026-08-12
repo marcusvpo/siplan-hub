@@ -38,6 +38,8 @@ O pacote controlado contém, nesta ordem:
 10. `20260812104000_cs_cx_routine_administration.sql`
 11. `20260812105000_cs_cx_routine_reports.sql`
 12. `20260812106000_cs_cx_routine_history_context.sql`
+13. `20260812107000_cs_cx_user_mapping_exceptions.sql`
+14. `20260812108000_cs_cx_nps_public_surveys.sql`
 
 O histórico global de migrations do Supabase ainda não possui baseline confiável.
 Por isso, não use `supabase db push`: ele pode tentar reaplicar migrations antigas do
@@ -111,6 +113,26 @@ Envie o segredo preferencialmente no header `x-nps-webhook-token`. Durante a
 transição, a função também aceita `Authorization: Bearer ...` e `?token=...` para
 compatibilidade com o Power Automate atual. A RPC interna só pode ser executada
 pela `service_role`, deduplica por cartório/respondente/dia e audita a inclusão.
+
+## Formulário NPS nativo
+
+A tela de NPS também permite manter questionários e gerar um link individual por
+cartório/contato. O destinatário acessa `/nps/responder/:token` sem login; a Edge
+Function `cs-cx-nps-public` entrega apenas o snapshot público das perguntas e
+registra a resposta pela `service_role`. Cada token é UUID v4, tem validade,
+aceita uma única resposta e pode ser cancelado no HUB.
+
+Questionários já enviados são preservados como snapshot no convite e na resposta,
+portanto uma edição posterior não muda pesquisas antigas. O endpoint limita o
+tamanho da carga, usa honeypot e não concede as RPCs públicas a `anon` ou
+`authenticated`.
+
+```bash
+supabase functions deploy cs-cx-nps-public --project-ref=PROJECT_REF
+```
+
+O webhook do Power Automate permanece disponível durante a transição, mas novos
+envios podem usar diretamente o formulário nativo.
 
 ## Anexos
 

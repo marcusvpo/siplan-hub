@@ -51,9 +51,7 @@ const Conversion = lazy(() => import("./pages/conversion/Conversion"));
 const ConversionEngines = lazy(
   () => import("./pages/conversion/ConversionEngines"),
 );
-const OrionTNModels = lazy(
-  () => import("./pages/conversion/OrionTNModels"),
-);
+const OrionTNModels = lazy(() => import("./pages/conversion/OrionTNModels"));
 const OrionTNProjects = lazy(
   () => import("./pages/conversion/OrionTNProjects"),
 );
@@ -63,39 +61,40 @@ const OrionTNDashboard = lazy(
 
 // Implantadores Pages (lazy)
 const Implantadores = lazy(() => import("./pages/implantadores/Implantadores"));
-const ImplantadoresAderencia = lazy(() =>
-  import("./pages/implantadores/EditarFormAderencia"),
+const ImplantadoresAderencia = lazy(
+  () => import("./pages/implantadores/EditarFormAderencia"),
 );
-const AderenciasFinalizadas = lazy(() =>
-  import("./pages/implantadores/AderenciasFinalizadas"),
+const AderenciasFinalizadas = lazy(
+  () => import("./pages/implantadores/AderenciasFinalizadas"),
 );
-const ImplantadoresHomologation = lazy(() =>
-  import("./pages/implantadores/ImplantadoresHomologation"),
+const ImplantadoresHomologation = lazy(
+  () => import("./pages/implantadores/ImplantadoresHomologation"),
 );
-const CommercialChecklists = lazy(() =>
-  import("./pages/commercial/CommercialChecklists"),
+const CommercialChecklists = lazy(
+  () => import("./pages/commercial/CommercialChecklists"),
 );
-const EditarChecklistComercial = lazy(() =>
-  import("./pages/commercial/EditarChecklistComercial"),
+const EditarChecklistComercial = lazy(
+  () => import("./pages/commercial/EditarChecklistComercial"),
 );
-const PublicChecklist = lazy(() =>
-  import("./pages/public/PublicChecklist"),
+const PublicChecklist = lazy(() => import("./pages/public/PublicChecklist"));
+const PublicInfraCollection = lazy(
+  () => import("./pages/public/PublicInfraCollection"),
 );
-const PublicInfraCollection = lazy(() =>
-  import("./pages/public/PublicInfraCollection"),
+const PublicNpsResponse = lazy(
+  () => import("./pages/public/PublicNpsResponse"),
 );
-const TreinamentoPlaceholder = lazy(() =>
-  import("./pages/implantadores/TreinamentoPlaceholder"),
+const TreinamentoPlaceholder = lazy(
+  () => import("./pages/implantadores/TreinamentoPlaceholder"),
 );
-const TransicaoPlaceholder = lazy(() =>
-  import("./pages/implantadores/TransicaoPlaceholder"),
+const TransicaoPlaceholder = lazy(
+  () => import("./pages/implantadores/TransicaoPlaceholder"),
 );
 
 // CS/CX Pages (lazy)
 const CsCxOverview = lazy(() => import("./pages/cs-cx/CsCxOverview"));
 const CsCxRequests = lazy(() => import("./pages/cs-cx/CsCxRequests"));
-const CsCxRegistryOffices = lazy(() =>
-  import("./pages/cs-cx/CsCxRegistryOffices"),
+const CsCxRegistryOffices = lazy(
+  () => import("./pages/cs-cx/CsCxRegistryOffices"),
 );
 const CsCxContacts = lazy(() => import("./pages/cs-cx/CsCxContacts"));
 const CsCxAppointments = lazy(() => import("./pages/cs-cx/CsCxAppointments"));
@@ -143,7 +142,8 @@ const PageLoader = () => (
 );
 
 const ProjectAdherenceRouteWrapper = () => {
-  const isPrintMode = new URLSearchParams(window.location.search).get("print") === "true";
+  const isPrintMode =
+    new URLSearchParams(window.location.search).get("print") === "true";
 
   if (isPrintMode) {
     return (
@@ -165,7 +165,6 @@ const ProjectAdherenceRouteWrapper = () => {
     </ProtectedRoute>
   );
 };
-
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -213,10 +212,17 @@ const App = () => (
                 }
               />
               <Route
+                path="/nps/responder/:token"
+                element={
+                  <Suspense fallback={<PageLoader />}>
+                    <PublicNpsResponse />
+                  </Suspense>
+                }
+              />
+              <Route
                 path="/projects/:id/adherence"
                 element={<ProjectAdherenceRouteWrapper />}
               />
-
 
               {/* Admin Routes */}
               <Route
@@ -504,7 +510,9 @@ const App = () => (
                           />
                           <Route
                             path="/commercial/deployment-forms"
-                            element={<Navigate to="/commercial/checklists" replace />}
+                            element={
+                              <Navigate to="/commercial/checklists" replace />
+                            }
                           />
                           <Route
                             path="/commercial/checklists"

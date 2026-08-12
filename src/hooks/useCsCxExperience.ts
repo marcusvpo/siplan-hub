@@ -1,10 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import type {
+  NpsAnswers,
+  NpsQuestionnaireSnapshot,
+} from "@/types/cs-cx-nps-survey";
 
 const db = supabase as unknown as SupabaseClient;
 
-export const CS_CX_VISIT_STATUSES = ["aberto", "emandamento", "concluido", "reaberto"] as const;
+export const CS_CX_VISIT_STATUSES = [
+  "aberto",
+  "emandamento",
+  "concluido",
+  "reaberto",
+] as const;
 
 export interface CsCxVisitChecklistItem {
   id: string;
@@ -111,6 +120,10 @@ export interface CsCxNpsResponse {
   improvement_suggestion: string | null;
   classification: "PROMOTOR" | "NEUTRO" | "DETRATOR";
   origin: "legacy" | "hub";
+  invitation_id: string | null;
+  questionnaire_id: string | null;
+  questionnaire_snapshot: NpsQuestionnaireSnapshot | null;
+  answers: NpsAnswers;
   registry_office: { id: string; name: string } | null;
 }
 
@@ -138,7 +151,10 @@ export interface CsCxNpsHistory {
   registry_office: { id: string; name: string } | null;
 }
 
-interface RawVisit extends Omit<CsCxVisit, "registry_office" | "visitor" | "checklist" | "pending_items" | "attachments"> {
+interface RawVisit extends Omit<
+  CsCxVisit,
+  "registry_office" | "visitor" | "checklist" | "pending_items" | "attachments"
+> {
   cs_cx_registry_offices: { id: string; name: string } | null;
   profiles: { id: string; full_name: string | null } | null;
 }
@@ -156,46 +172,75 @@ export function useCsCxVisits() {
   const query = useQuery({
     queryKey: ["cs-cx", "visits"],
     queryFn: async () => {
-      const [visitsResult, checklistResult, pendingResult, attachmentResult] = await Promise.all([
-        db.from("cs_cx_visits").select(`
+      const [visitsResult, checklistResult, pendingResult, attachmentResult] =
+        await Promise.all([
+          db
+            .from("cs_cx_visits")
+            .select(
+              `
           id, legacy_id, registry_office_id, visitor_profile_id, visit_date,
           start_time, end_time, status, objective, general_notes, origin,
           cs_cx_registry_offices (id, name),
           profiles!cs_cx_visits_visitor_profile_id_fkey (id, full_name)
-        `).eq("source_present", true).order("visit_date", { ascending: false }),
-        db.from("cs_cx_visit_checklist_items")
-          .select("id, visit_id, name, description, checked, notes, sort_order")
-          .eq("source_present", true),
-        db.from("cs_cx_visit_pending_items")
-          .select("id, visit_id, title, description, priority, category, notes, due_date, status, request_id")
-          .eq("source_present", true),
-        db.from("cs_cx_visit_attachments")
-          .select("id, visit_id, original_name, mime_type, size_bytes, description, storage_path, uploaded_at, origin")
-          .eq("source_present", true),
-      ]);
+        `,
+            )
+            .eq("source_present", true)
+            .order("visit_date", { ascending: false }),
+          db
+            .from("cs_cx_visit_checklist_items")
+            .select(
+              "id, visit_id, name, description, checked, notes, sort_order",
+            )
+            .eq("source_present", true),
+          db
+            .from("cs_cx_visit_pending_items")
+            .select(
+              "id, visit_id, title, description, priority, category, notes, due_date, status, request_id",
+            )
+            .eq("source_present", true),
+          db
+            .from("cs_cx_visit_attachments")
+            .select(
+              "id, visit_id, original_name, mime_type, size_bytes, description, storage_path, uploaded_at, origin",
+            )
+            .eq("source_present", true),
+        ]);
       if (visitsResult.error) throw visitsResult.error;
       if (checklistResult.error) throw checklistResult.error;
       if (pendingResult.error) throw pendingResult.error;
       if (attachmentResult.error) throw attachmentResult.error;
 
-      const checklist = (checklistResult.data ?? []) as Array<CsCxVisitChecklistItem & { visit_id: string }>;
-      const pending = (pendingResult.data ?? []) as Array<CsCxVisitPendingItem & { visit_id: string }>;
-      const attachments = (attachmentResult.data ?? []) as Array<CsCxVisitAttachment & { visit_id: string }>;
-      return ((visitsResult.data ?? []) as unknown as RawVisit[]).map((visit) => ({
-        ...visit,
-        registry_office: visit.cs_cx_registry_offices,
-        visitor: visit.profiles,
-        checklist: checklist.filter((item) => item.visit_id === visit.id).sort((a, b) => a.sort_order - b.sort_order),
-        pending_items: pending.filter((item) => item.visit_id === visit.id),
-        attachments: attachments.filter((item) => item.visit_id === visit.id),
-      })) satisfies CsCxVisit[];
+      const checklist = (checklistResult.data ?? []) as Array<
+        CsCxVisitChecklistItem & { visit_id: string }
+      >;
+      const pending = (pendingResult.data ?? []) as Array<
+        CsCxVisitPendingItem & { visit_id: string }
+      >;
+      const attachments = (attachmentResult.data ?? []) as Array<
+        CsCxVisitAttachment & { visit_id: string }
+      >;
+      return ((visitsResult.data ?? []) as unknown as RawVisit[]).map(
+        (visit) => ({
+          ...visit,
+          registry_office: visit.cs_cx_registry_offices,
+          visitor: visit.profiles,
+          checklist: checklist
+            .filter((item) => item.visit_id === visit.id)
+            .sort((a, b) => a.sort_order - b.sort_order),
+          pending_items: pending.filter((item) => item.visit_id === visit.id),
+          attachments: attachments.filter((item) => item.visit_id === visit.id),
+        }),
+      ) satisfies CsCxVisit[];
     },
   });
 
   const profilesQuery = useQuery({
     queryKey: ["cs-cx", "profile-options"],
     queryFn: async () => {
-      const { data, error } = await db.from("profiles").select("id, full_name").order("full_name");
+      const { data, error } = await db
+        .from("profiles")
+        .select("id, full_name")
+        .order("full_name");
       if (error) throw error;
       return (data ?? []) as Array<{ id: string; full_name: string | null }>;
     },
@@ -214,17 +259,26 @@ export function useCsCxVisits() {
         general_notes: emptyToNull(input.general_notes),
       };
       if (input.id) {
-        const { data, error } = await db.from("cs_cx_visits").update(payload).eq("id", input.id).select().single();
+        const { data, error } = await db
+          .from("cs_cx_visits")
+          .update(payload)
+          .eq("id", input.id)
+          .select()
+          .single();
         if (error) throw error;
         return data;
       }
       const user = await currentUser();
-      const { data, error } = await db.from("cs_cx_visits").insert({
-        ...payload,
-        visitor_profile_id: payload.visitor_profile_id ?? user.id,
-        origin: "hub",
-        source_present: true,
-      }).select().single();
+      const { data, error } = await db
+        .from("cs_cx_visits")
+        .insert({
+          ...payload,
+          visitor_profile_id: payload.visitor_profile_id ?? user.id,
+          origin: "hub",
+          source_present: true,
+        })
+        .select()
+        .single();
       if (error) throw error;
       return data;
     },
@@ -233,7 +287,10 @@ export function useCsCxVisits() {
 
   const setVisitStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await db.from("cs_cx_visits").update({ status }).eq("id", id);
+      const { error } = await db
+        .from("cs_cx_visits")
+        .update({ status })
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => invalidateExperience(queryClient),
@@ -241,7 +298,10 @@ export function useCsCxVisits() {
 
   const toggleChecklist = useMutation({
     mutationFn: async ({ id, checked }: { id: string; checked: boolean }) => {
-      const { error } = await db.from("cs_cx_visit_checklist_items").update({ checked }).eq("id", id);
+      const { error } = await db
+        .from("cs_cx_visit_checklist_items")
+        .update({ checked })
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => invalidateExperience(queryClient),
@@ -257,11 +317,16 @@ export function useCsCxVisits() {
         sort_order: input.sort_order,
       };
       if (input.id) {
-        const { error } = await db.from("cs_cx_visit_checklist_items").update(payload).eq("id", input.id);
+        const { error } = await db
+          .from("cs_cx_visit_checklist_items")
+          .update(payload)
+          .eq("id", input.id);
         if (error) throw error;
         return;
       }
-      const { error } = await db.from("cs_cx_visit_checklist_items").insert({ ...payload, origin: "hub", source_present: true });
+      const { error } = await db
+        .from("cs_cx_visit_checklist_items")
+        .insert({ ...payload, origin: "hub", source_present: true });
       if (error) throw error;
     },
     onSuccess: () => invalidateExperience(queryClient),
@@ -269,7 +334,10 @@ export function useCsCxVisits() {
 
   const deleteChecklistItem = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await db.from("cs_cx_visit_checklist_items").delete().eq("id", id);
+      const { error } = await db
+        .from("cs_cx_visit_checklist_items")
+        .delete()
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => invalidateExperience(queryClient),
@@ -288,11 +356,16 @@ export function useCsCxVisits() {
         status: input.status,
       };
       if (input.id) {
-        const { error } = await db.from("cs_cx_visit_pending_items").update(payload).eq("id", input.id);
+        const { error } = await db
+          .from("cs_cx_visit_pending_items")
+          .update(payload)
+          .eq("id", input.id);
         if (error) throw error;
         return;
       }
-      const { error } = await db.from("cs_cx_visit_pending_items").insert({ ...payload, origin: "hub", source_present: true });
+      const { error } = await db
+        .from("cs_cx_visit_pending_items")
+        .insert({ ...payload, origin: "hub", source_present: true });
       if (error) throw error;
     },
     onSuccess: () => invalidateExperience(queryClient),
@@ -300,7 +373,10 @@ export function useCsCxVisits() {
 
   const deletePendingItem = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await db.from("cs_cx_visit_pending_items").delete().eq("id", id);
+      const { error } = await db
+        .from("cs_cx_visit_pending_items")
+        .delete()
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => invalidateExperience(queryClient),
@@ -308,7 +384,9 @@ export function useCsCxVisits() {
 
   const generateRequest = useMutation({
     mutationFn: async (pendingItemId: string) => {
-      const { data, error } = await db.rpc("cs_cx_generate_visit_request", { p_pending_item_id: pendingItemId });
+      const { data, error } = await db.rpc("cs_cx_generate_visit_request", {
+        p_pending_item_id: pendingItemId,
+      });
       if (error) throw error;
       return data as string;
     },
@@ -316,26 +394,39 @@ export function useCsCxVisits() {
   });
 
   const uploadAttachment = useMutation({
-    mutationFn: async ({ visitId, file, description }: { visitId: string; file: File; description?: string }) => {
-      if (file.size > 20 * 1024 * 1024) throw new Error("O arquivo deve ter no máximo 20 MB.");
+    mutationFn: async ({
+      visitId,
+      file,
+      description,
+    }: {
+      visitId: string;
+      file: File;
+      description?: string;
+    }) => {
+      if (file.size > 20 * 1024 * 1024)
+        throw new Error("O arquivo deve ter no máximo 20 MB.");
       const user = await currentUser();
       const safeName = sanitizeFileName(file.name);
       const storagePath = `visits/${visitId}/${crypto.randomUUID()}-${safeName}`;
-      const { error: storageError } = await supabase.storage.from("cs-cx-attachments").upload(storagePath, file, { contentType: file.type || undefined });
+      const { error: storageError } = await supabase.storage
+        .from("cs-cx-attachments")
+        .upload(storagePath, file, { contentType: file.type || undefined });
       if (storageError) throw storageError;
 
-      const { error: dbError } = await db.from("cs_cx_visit_attachments").insert({
-        visit_id: visitId,
-        stored_name: storagePath.slice(storagePath.lastIndexOf("/") + 1),
-        original_name: file.name,
-        mime_type: file.type || null,
-        size_bytes: file.size,
-        description: emptyToNull(description),
-        storage_path: storagePath,
-        uploaded_by: user.id,
-        origin: "hub",
-        source_present: true,
-      });
+      const { error: dbError } = await db
+        .from("cs_cx_visit_attachments")
+        .insert({
+          visit_id: visitId,
+          stored_name: storagePath.slice(storagePath.lastIndexOf("/") + 1),
+          original_name: file.name,
+          mime_type: file.type || null,
+          size_bytes: file.size,
+          description: emptyToNull(description),
+          storage_path: storagePath,
+          uploaded_by: user.id,
+          origin: "hub",
+          source_present: true,
+        });
       if (dbError) {
         await supabase.storage.from("cs-cx-attachments").remove([storagePath]);
         throw dbError;
@@ -347,18 +438,28 @@ export function useCsCxVisits() {
   const deleteAttachment = useMutation({
     mutationFn: async (attachment: CsCxVisitAttachment) => {
       if (attachment.storage_path) {
-        const { error } = await supabase.storage.from("cs-cx-attachments").remove([attachment.storage_path]);
+        const { error } = await supabase.storage
+          .from("cs-cx-attachments")
+          .remove([attachment.storage_path]);
         if (error) throw error;
       }
-      const { error } = await db.from("cs_cx_visit_attachments").delete().eq("id", attachment.id);
+      const { error } = await db
+        .from("cs_cx_visit_attachments")
+        .delete()
+        .eq("id", attachment.id);
       if (error) throw error;
     },
     onSuccess: () => invalidateExperience(queryClient),
   });
 
   async function downloadAttachment(attachment: CsCxVisitAttachment) {
-    if (!attachment.storage_path) throw new Error("O arquivo legado ainda não foi copiado para o Supabase Storage.");
-    const { data, error } = await supabase.storage.from("cs-cx-attachments").createSignedUrl(attachment.storage_path, 3600);
+    if (!attachment.storage_path)
+      throw new Error(
+        "O arquivo legado ainda não foi copiado para o Supabase Storage.",
+      );
+    const { data, error } = await supabase.storage
+      .from("cs-cx-attachments")
+      .createSignedUrl(attachment.storage_path, 3600);
     if (error) throw error;
     return data.signedUrl;
   }
@@ -397,27 +498,41 @@ export function useCsCxNps() {
   const responsesQuery = useQuery({
     queryKey: ["cs-cx", "nps-responses"],
     queryFn: async () => {
-      const { data, error } = await db.from("cs_cx_nps_responses").select(`
+      const { data, error } = await db
+        .from("cs_cx_nps_responses")
+        .select(
+          `
         id, legacy_id, registry_office_id, responded_at, respondent_name,
         respondent_office, score, score_reason, improvement_suggestion,
-        classification, origin, cs_cx_registry_offices (id, name)
-      `).eq("source_present", true).order("responded_at", { ascending: false });
+        classification, origin, invitation_id, questionnaire_id,
+        questionnaire_snapshot, answers, cs_cx_registry_offices (id, name)
+      `,
+        )
+        .eq("source_present", true)
+        .order("responded_at", { ascending: false });
       if (error) throw error;
       return ((data ?? []) as unknown as RawNps[]).map((response) => ({
         ...response,
         registry_office: response.cs_cx_registry_offices,
       })) satisfies CsCxNpsResponse[];
     },
+    refetchInterval: 15_000,
   });
 
   const historyQuery = useQuery({
     queryKey: ["cs-cx", "nps-history"],
     queryFn: async () => {
-      const { data, error } = await db.from("cs_cx_nps_history").select(`
+      const { data, error } = await db
+        .from("cs_cx_nps_history")
+        .select(
+          `
         id, registry_office_id, period_start, period_end, total_responses,
         total_promoters, total_neutrals, total_detractors, nps_score,
         cs_cx_registry_offices (id, name)
-      `).eq("source_present", true).order("period_end", { ascending: false });
+      `,
+        )
+        .eq("source_present", true)
+        .order("period_end", { ascending: false });
       if (error) throw error;
       return ((data ?? []) as unknown as RawNpsHistory[]).map((history) => ({
         ...history,
@@ -439,17 +554,26 @@ export function useCsCxNps() {
         classification: classifyNps(input.score),
       };
       if (input.id) {
-        const { data, error } = await db.from("cs_cx_nps_responses").update(payload).eq("id", input.id).select().single();
+        const { data, error } = await db
+          .from("cs_cx_nps_responses")
+          .update(payload)
+          .eq("id", input.id)
+          .select()
+          .single();
         if (error) throw error;
         return data;
       }
       const user = await currentUser();
-      const { data, error } = await db.from("cs_cx_nps_responses").insert({
-        ...payload,
-        author_profile_id: user.id,
-        origin: "hub",
-        source_present: true,
-      }).select().single();
+      const { data, error } = await db
+        .from("cs_cx_nps_responses")
+        .insert({
+          ...payload,
+          author_profile_id: user.id,
+          origin: "hub",
+          source_present: true,
+        })
+        .select()
+        .single();
       if (error) throw error;
       return data;
     },
@@ -458,15 +582,27 @@ export function useCsCxNps() {
 
   const deleteResponse = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await db.from("cs_cx_nps_responses").delete().eq("id", id);
+      const { error } = await db
+        .from("cs_cx_nps_responses")
+        .delete()
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => invalidateExperience(queryClient),
   });
 
   const importResponses = useMutation({
-    mutationFn: async ({ registryOfficeId, rows }: { registryOfficeId: string; rows: CsCxNpsImportRow[] }) => {
-      const { data, error } = await db.rpc("cs_cx_import_nps", { p_registry_office_id: registryOfficeId, p_rows: rows });
+    mutationFn: async ({
+      registryOfficeId,
+      rows,
+    }: {
+      registryOfficeId: string;
+      rows: CsCxNpsImportRow[];
+    }) => {
+      const { data, error } = await db.rpc("cs_cx_import_nps", {
+        p_registry_office_id: registryOfficeId,
+        p_rows: rows,
+      });
       if (error) throw error;
       return data as { imported: number; duplicates: number };
     },
@@ -504,7 +640,11 @@ function emptyToNull(value?: string) {
 }
 
 function sanitizeFileName(name: string) {
-  return name.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^\w.()-]+/g, "_").slice(0, 180);
+  return name
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\w.()-]+/g, "_")
+    .slice(0, 180);
 }
 
 function invalidateExperience(queryClient: ReturnType<typeof useQueryClient>) {
