@@ -109,10 +109,11 @@ vi.mock("@/hooks/useCsCxExperience", () => ({
       respondent_name: index === 0 ? "Maria" : `Respondente ${index + 1}`,
       respondent_office:
         index === 0 ? "Cartório Central" : `Cartório ${index + 1}`,
-      score: 10,
+      score: index === 1 ? 8 : index === 2 ? 5 : 10,
       score_reason: index === 0 ? "Ótimo atendimento" : `Motivo ${index + 1}`,
       improvement_suggestion: null,
-      classification: "PROMOTOR",
+      classification:
+        index === 1 ? "NEUTRO" : index === 2 ? "DETRATOR" : "PROMOTOR",
       origin: "legacy",
       registry_office: {
         id: "office-1",
@@ -251,6 +252,20 @@ describe("CS/CX visitas e NPS — permissões", () => {
     expect(screen.getByText("Visualizar resposta NPS")).toBeInTheDocument();
     expect(screen.getByText(/somente leitura/i)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /salvar/i })).not.toBeInTheDocument();
+  });
+
+  it("diferencia visualmente promotores, neutros e detratores", () => {
+    renderPage(<CsCxNps />, []);
+    fireEvent.mouseDown(screen.getByRole("tab", { name: /respostas/i }), {
+      button: 0,
+      ctrlKey: false,
+    });
+
+    for (const badge of screen.getAllByText("Promotor")) {
+      expect(badge).toHaveClass("bg-success");
+    }
+    expect(screen.getByText("Neutro")).toHaveClass("bg-warning");
+    expect(screen.getByText("Detrator")).toHaveClass("bg-critical");
   });
 
   it("pagina respostas e histórico de NPS em blocos compactos", () => {
