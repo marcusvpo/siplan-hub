@@ -83,7 +83,6 @@ describe("catálogo de permissões", () => {
       "cs_cx_contatos",
       "cs_cx_agendamentos",
       "cs_cx_rotinas",
-      "cs_cx_pos_implantacao",
       "cs_cx_visitas",
       "cs_cx_nps",
       "cs_cx_reports",

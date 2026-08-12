@@ -29,10 +29,9 @@ Este documento é a matriz de controle da migração do sistema Flask em
 | Cartórios | cadastro, edição, ativação, produtos, período de implantação, registros, histórico e PDFs | em migração; cadastro, CRUD, filtros e produtos implementados |
 | Contatos | lista, filtros, criação, edição, exclusão, produtos, estatísticas e PDFs | em migração; lista, CRUD, filtros e indicadores básicos implementados |
 | Agendamentos | lista, calendário, criação, edição, realização, conclusão, cancelamento, remarcação, impressão e PDF | em migração; lista, calendário, CRUD e mudanças de estado implementados |
-| Rotinas | aplicações, configuração, análise, histórico, modelos, itens, categorias, tipos, reordenação, relatórios e PDF | fundação |
-| Pós-implantação | abertura, edição, encerramento, reabertura, lançamentos, anexos, estatísticas, impressão e PDF | fundação |
-| Visitas | criação, edição, checklist, pendências, anexos, geração de solicitações, status e PDF | fundação |
-| NPS | respostas, importação, classificação, estatísticas, histórico, reatribuição, webhook, exclusão e PDF | fundação |
+| Rotinas | aplicações, configuração, análise, histórico, modelos, itens, categorias, tipos, reordenação, relatórios e PDF | em migração; schema e carga incremental preparados, aplicações, análise de itens e catálogo de modelos implementados |
+| Visitas | criação, edição, checklist, pendências, anexos, geração de solicitações, status e PDF | em migração; schema e carga incremental preparados, lista, CRUD, status, checklist e leitura de pendências implementados |
+| NPS | respostas, importação, classificação, estatísticas, histórico, reatribuição, webhook, exclusão e PDF | em migração; schema e carga incremental preparados, respostas, classificação automática, indicadores e histórico implementados |
 | Notificações | lista, leitura individual e leitura em lote | inventariado; integrar com notifications existente |
 | Administração | usuários, perfis, permissões, logs, prioridades, estatísticas, PDF e Excel | fundação; identidade será integrada ao RBAC do Hub |
 
@@ -42,15 +41,14 @@ Este documento é a matriz de controle da migração do sistema Flask em
 `cartorio_produtos`, `registros`, `anexos`, `logs_auditoria`, `categorias_rotina`,
 `tipos_rotina`, `modelos_rotina`, `modelo_rotina_produtos`, `itens_modelo_rotina`,
 `rotinas_cartorio`, `config_item_cartorio`, `historico_rotina_cartorio`, `produtos`,
-`contatos`, `logs_auditoria_contatos`, `pos_implantacao`,
-`lancamentos_pos_implantacao`, `anexos_pos_implantacao`,
-`logs_auditoria_pos_implantacao`, `logs_auditoria_lancamentos_pos`, `agendamentos`,
+`contatos`, `logs_auditoria_contatos`, `agendamentos`,
 `logs_auditoria_agendamentos`, `respostas_nps`, `historico_nps`,
 `logs_auditoria_nps`, `visitas_cartorio`, `itens_checklist_visita`,
 `pendencias_visita`, `anexos_visita`, `logs_auditoria_visita` e `notifications`.
 
 ## Pontos especiais
 
+- Pós-implantação não será duplicado no CS/CX: o acompanhamento continuará nas telas nativas de projetos e no Panorama Pós-Implantação do HUB.
 - `users` será mapeada para `auth.users` + `profiles`; não será copiada como autenticação paralela.
 - `notifications` será integrada à tabela já existente no Hub para evitar colisão.
 - Arquivos de `uploads/` serão copiados para Supabase Storage com hash e vínculo ao registro original.

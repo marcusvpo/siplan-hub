@@ -99,6 +99,9 @@ const CsCxRegistryOffices = lazy(() =>
 );
 const CsCxContacts = lazy(() => import("./pages/cs-cx/CsCxContacts"));
 const CsCxAppointments = lazy(() => import("./pages/cs-cx/CsCxAppointments"));
+const CsCxRoutines = lazy(() => import("./pages/cs-cx/CsCxRoutines"));
+const CsCxVisits = lazy(() => import("./pages/cs-cx/CsCxVisits"));
+const CsCxNps = lazy(() => import("./pages/cs-cx/CsCxNps"));
 const CsCxMigrationPlaceholder = lazy(() =>
   import("./pages/cs-cx/CsCxMigrationPlaceholder"),
 );
@@ -663,21 +666,7 @@ const App = () => (
                             path="/cs-cx/rotinas"
                             element={
                               <RequirePermission resource="cs_cx_rotinas">
-                                <CsCxMigrationPlaceholder
-                                  title="Rotinas"
-                                  description="Modelos, itens, aplicações por cartório, análises, histórico, relatórios e exportações serão migrados para esta área."
-                                />
-                              </RequirePermission>
-                            }
-                          />
-                          <Route
-                            path="/cs-cx/pos-implantacao"
-                            element={
-                              <RequirePermission resource="cs_cx_pos_implantacao">
-                                <CsCxMigrationPlaceholder
-                                  title="Pós-Implantação"
-                                  description="Acompanhamentos, lançamentos, encerramentos, reaberturas, anexos, estatísticas e PDFs serão migrados para esta área."
-                                />
+                                <CsCxRoutines />
                               </RequirePermission>
                             }
                           />
@@ -685,10 +674,7 @@ const App = () => (
                             path="/cs-cx/visitas"
                             element={
                               <RequirePermission resource="cs_cx_visitas">
-                                <CsCxMigrationPlaceholder
-                                  title="Visitas"
-                                  description="Visitas, checklists, pendências, anexos, geração de solicitações, status e PDFs serão migrados para esta área."
-                                />
+                                <CsCxVisits />
                               </RequirePermission>
                             }
                           />
@@ -696,10 +682,7 @@ const App = () => (
                             path="/cs-cx/nps"
                             element={
                               <RequirePermission resource="cs_cx_nps">
-                                <CsCxMigrationPlaceholder
-                                  title="NPS"
-                                  description="Respostas, importações, classificações, histórico, webhook, indicadores e PDFs serão migrados para esta área."
-                                />
+                                <CsCxNps />
                               </RequirePermission>
                             }
                           />

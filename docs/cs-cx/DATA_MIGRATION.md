@@ -5,7 +5,10 @@ Esta etapa migra o núcleo do SistemaRegistro sem interromper a produção:
 - usuários (somente identidade e vínculo; nunca o hash de senha);
 - produtos, cartórios e produtos implantados;
 - registros/solicitações e metadados dos anexos;
-- contatos e auditoria desses dois fluxos.
+- contatos, agendamentos e suas auditorias;
+- modelos, itens, aplicações e histórico de rotinas;
+- visitas, checklists, pendências, anexos e auditoria;
+- respostas, históricos e auditoria de NPS.
 
 Os demais domínios listados em `MIGRATION_PARITY.md` entram nas próximas etapas.
 
@@ -28,6 +31,8 @@ Aplicar, nesta ordem:
 3. `20260811111000_cs_cx_core_schema.sql`
 4. `20260811112000_cs_cx_native_records.sql`
 5. `20260811113000_cs_cx_contacts_appointments.sql`
+6. `20260812100000_cs_cx_routines.sql`
+7. `20260812101000_cs_cx_visits_nps.sql`
 
 Configurar as URLs sem commitá-las:
 

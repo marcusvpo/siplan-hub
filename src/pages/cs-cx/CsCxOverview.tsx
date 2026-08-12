@@ -70,13 +70,6 @@ const areas: CsCxArea[] = [
     icon: ListChecks,
   },
   {
-    title: "Pós-Implantação",
-    description: "Acompanhamentos, lançamentos, prazos e documentos anexos.",
-    path: "/cs-cx/pos-implantacao",
-    permission: "cs_cx_pos_implantacao",
-    icon: Headset,
-  },
-  {
     title: "Visitas",
     description: "Planejamento, checklist, pendências, anexos e solicitações geradas.",
     path: "/cs-cx/visitas",
@@ -123,7 +116,7 @@ export default function CsCxOverview() {
             <h1 className="text-3xl font-black tracking-tight md:text-4xl">CS/CX</h1>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground md:text-base">
               Central de relacionamento e acompanhamento dos cartórios, reunindo solicitações,
-              contatos, rotinas, visitas, pós-implantação e satisfação do cliente.
+              contatos, rotinas, visitas e satisfação do cliente.
             </p>
           </div>
         </div>
