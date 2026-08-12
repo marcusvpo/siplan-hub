@@ -14,7 +14,13 @@ await target.connect();
 try {
   const schema = await target.query(`
     SELECT count(*)::int AS total,
-           count(*) FILTER (WHERE rowsecurity)::int AS with_rls
+           count(*) FILTER (WHERE rowsecurity)::int AS with_rls,
+           EXISTS (
+             SELECT 1 FROM information_schema.columns
+             WHERE table_schema = 'public'
+               AND table_name = 'cs_cx_user_map'
+               AND column_name = 'mapping_ignored'
+           ) AS mapping_exceptions
     FROM pg_tables
     WHERE schemaname = 'public' AND tablename LIKE 'cs_cx_%'
   `);
@@ -25,9 +31,10 @@ try {
     LIMIT 1
   `);
   const users = await target.query(`
-    SELECT count(*) FILTER (WHERE source_present AND active)::int AS active,
-           count(*) FILTER (WHERE source_present AND active AND profile_id IS NOT NULL)::int AS linked,
-           count(*) FILTER (WHERE source_present AND active AND profile_id IS NULL)::int AS pending
+    SELECT count(*) FILTER (WHERE source_present AND active AND NOT mapping_ignored)::int AS eligible,
+           count(*) FILTER (WHERE source_present AND active AND NOT mapping_ignored AND profile_id IS NOT NULL)::int AS linked,
+           count(*) FILTER (WHERE source_present AND active AND NOT mapping_ignored AND profile_id IS NULL)::int AS pending,
+           count(*) FILTER (WHERE source_present AND active AND mapping_ignored)::int AS ignored
     FROM public.cs_cx_user_map
   `);
   const attachments = await target.query(`
@@ -57,12 +64,12 @@ try {
   const attachmentRow = attachments.rows[0];
   const permissionRow = permissions.rows[0];
   const checks = [
-    ['Schema', schemaRow.total === EXPECTED_TABLES && schemaRow.with_rls === EXPECTED_TABLES,
-      `${schemaRow.total}/${EXPECTED_TABLES} tabelas; RLS ${schemaRow.with_rls}/${EXPECTED_TABLES}`],
+    ['Schema', schemaRow.total === EXPECTED_TABLES && schemaRow.with_rls === EXPECTED_TABLES && schemaRow.mapping_exceptions,
+      `${schemaRow.total}/${EXPECTED_TABLES} tabelas; RLS ${schemaRow.with_rls}/${EXPECTED_TABLES}; exceções de usuário ${schemaRow.mapping_exceptions ? 'OK' : 'ausentes'}`],
     ['Carga', runRow?.status === 'completed' && ['initial', 'delta'].includes(runRow.mode),
       runRow ? `${runRow.mode}/${runRow.status}; ${runRow.completed_at?.toISOString() ?? 'sem conclusão'}` : 'ausente'],
     ['Usuários', userRow.pending === 0,
-      `${userRow.linked}/${userRow.active} ativos vinculados; ${userRow.pending} pendente(s)`],
+      `${userRow.linked}/${userRow.eligible} ativos elegíveis vinculados; ${userRow.ignored} ignorado(s); ${userRow.pending} pendente(s)`],
     ['Anexos', attachmentRow.copied === attachmentRow.total,
       `${attachmentRow.copied}/${attachmentRow.total} copiado(s)`],
     ['Permissões admin', permissionRow.total > 0 && permissionRow.admin_linked === permissionRow.total,
