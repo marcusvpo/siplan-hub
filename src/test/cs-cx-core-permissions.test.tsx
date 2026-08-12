@@ -19,18 +19,18 @@ vi.mock("@/hooks/useCsCxCore", async (importOriginal) => {
   return {
     ...original,
     useCsCxRegistryOffices: () => ({
-      offices: [{
-        id: "office-1",
-        legacy_id: 10,
-        name: "Cartório Central",
-        sap_code: "SAP-1",
+      offices: Array.from({ length: 12 }, (_, index) => ({
+        id: `office-${index + 1}`,
+        legacy_id: 10 + index,
+        name: index === 0 ? "Cartório Central" : `Cartório ${index + 1}`,
+        sap_code: `SAP-${index + 1}`,
         active: true,
         contact_details: null,
         notes: null,
         origin: "legacy",
         created_at: null,
         products: [],
-      }],
+      })),
       products: [],
       isLoading: false,
       error: null,
@@ -94,6 +94,17 @@ describe("CS/CX — ações por permissão", () => {
   it("libera criação de cartório com o recurso correto", () => {
     renderPage(<CsCxRegistryOffices />, ["cs_cx_cartorios:create"]);
     expect(screen.getByRole("button", { name: /novo cartório/i })).toBeInTheDocument();
+  });
+
+  it("pagina a lista de cartórios em blocos compactos", () => {
+    renderPage(<CsCxRegistryOffices />, []);
+    expect(screen.getByLabelText("Mostrando 1 a 5 de 12 cartórios")).toBeInTheDocument();
+    expect(screen.queryByText("Cartório 6")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /próxima página/i }));
+
+    expect(screen.getByText("Cartório 6")).toBeInTheDocument();
+    expect(screen.getByLabelText("Mostrando 6 a 10 de 12 cartórios")).toBeInTheDocument();
   });
 
   it("mantém solicitações visíveis e esconde escrita sem permissão", () => {
