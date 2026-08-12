@@ -114,6 +114,26 @@ export interface CsCxOfficeRoutine {
   items: CsCxRoutineItemConfig[];
 }
 
+export interface CsCxRoutineHistory {
+  id: string;
+  legacy_id: number | null;
+  office_routine_id: string | null;
+  model_item_id: string | null;
+  action: string;
+  previous_status: boolean | null;
+  new_status: boolean | null;
+  notes: string | null;
+  legacy_user_id: number | null;
+  actor_profile_id: string | null;
+  occurred_at: string;
+  ip_address: string | null;
+  origin: "legacy" | "hub";
+  registry_office_name: string | null;
+  routine_model_name: string | null;
+  model_item_name: string | null;
+  actor_name: string | null;
+}
+
 interface RawModel extends Omit<CsCxRoutineModel, "products" | "item_count"> {
   cs_cx_routine_model_products?: Array<{ source_present: boolean; cs_cx_products: { id: string; name: string } | null }>;
   cs_cx_routine_model_items?: Array<{ source_present: boolean }>;
@@ -224,6 +244,35 @@ export function useCsCxRoutines() {
     },
   });
 
+  const historyQuery = useQuery({
+    queryKey: ["cs-cx", "routine-history"],
+    queryFn: async () => {
+      const pageSize = 1000;
+      const rows: CsCxRoutineHistory[] = [];
+
+      for (let from = 0; ; from += pageSize) {
+        const { data, error } = await db
+          .from("cs_cx_routine_history")
+          .select(`
+            id, legacy_id, office_routine_id, model_item_id, action,
+            previous_status, new_status, notes, legacy_user_id,
+            actor_profile_id, occurred_at, ip_address, origin,
+            registry_office_name, routine_model_name, model_item_name, actor_name
+          `)
+          .eq("source_present", true)
+          .order("occurred_at", { ascending: false })
+          .range(from, from + pageSize - 1);
+        if (error) throw error;
+
+        const page = (data ?? []) as CsCxRoutineHistory[];
+        rows.push(...page);
+        if (page.length < pageSize) break;
+      }
+
+      return rows;
+    },
+  });
+
   const applyRoutine = useMutation({
     mutationFn: async (input: { registryOfficeId: string; routineModelId: string; notes?: string }) => {
       const { data, error } = await db.rpc("cs_cx_apply_routine", {
@@ -260,9 +309,10 @@ export function useCsCxRoutines() {
   return {
     models: modelsQuery.data ?? [],
     routines: routinesQuery.data ?? [],
-    isLoading: modelsQuery.isLoading || routinesQuery.isLoading,
-    error: modelsQuery.error ?? routinesQuery.error,
-    refetch: async () => Promise.all([modelsQuery.refetch(), routinesQuery.refetch()]),
+    history: historyQuery.data ?? [],
+    isLoading: modelsQuery.isLoading || routinesQuery.isLoading || historyQuery.isLoading,
+    error: modelsQuery.error ?? routinesQuery.error ?? historyQuery.error,
+    refetch: async () => Promise.all([modelsQuery.refetch(), routinesQuery.refetch(), historyQuery.refetch()]),
     applyRoutine,
     setRoutineItem,
     deleteRoutine,
