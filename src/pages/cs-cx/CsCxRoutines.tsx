@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Activity, ArrowRight, CheckCircle2, ChevronDown, ChevronUp, ClipboardCheck, Clock3, Database, FileDown, ListChecks, Pencil, Plus, RefreshCw, Search, Trash2, TriangleAlert } from "lucide-react";
+import { Activity, ArrowRight, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ClipboardCheck, Clock3, Database, FileDown, ListChecks, Pencil, Plus, RefreshCw, Search, Trash2, TriangleAlert } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,7 @@ const STATUS_OPTIONS = [
   { value: "ativo", label: "Ativo" },
   { value: "inativo", label: "Inativo" },
 ] as const;
+const DEFAULT_PAGE_SIZE = 5;
 
 export default function CsCxRoutines() {
   const { models, routines, history, isLoading, error, refetch, applyRoutine, setRoutineItem, deleteRoutine } = useCsCxRoutines();
@@ -31,6 +32,10 @@ export default function CsCxRoutines() {
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [officeFilter, setOfficeFilter] = useState("all");
+  const [applicationPage, setApplicationPage] = useState(1);
+  const [applicationPageSize, setApplicationPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [modelPage, setModelPage] = useState(1);
+  const [modelPageSize, setModelPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [applyOpen, setApplyOpen] = useState(false);
   const [applyForm, setApplyForm] = useState({ registryOfficeId: "", routineModelId: "", notes: "" });
@@ -43,6 +48,8 @@ export default function CsCxRoutines() {
   const [historyAction, setHistoryAction] = useState("all");
   const [historyStart, setHistoryStart] = useState("");
   const [historyEnd, setHistoryEnd] = useState("");
+  const [historyPage, setHistoryPage] = useState(1);
+  const [historyPageSize, setHistoryPageSize] = useState(DEFAULT_PAGE_SIZE);
 
   const canCreate = hasPermission("cs_cx_rotinas", "create");
   const canEdit = hasPermission("cs_cx_rotinas", "edit");
@@ -56,6 +63,18 @@ export default function CsCxRoutines() {
       return matchesTerm && (officeFilter === "all" || routine.registry_office_id === officeFilter);
     });
   }, [officeFilter, routines, search]);
+  const applicationTotalPages = Math.max(1, Math.ceil(filtered.length / applicationPageSize));
+  const currentApplicationPage = Math.min(applicationPage, applicationTotalPages);
+  const pagedRoutines = useMemo(
+    () => filtered.slice((currentApplicationPage - 1) * applicationPageSize, currentApplicationPage * applicationPageSize),
+    [applicationPageSize, currentApplicationPage, filtered],
+  );
+  const modelTotalPages = Math.max(1, Math.ceil(models.length / modelPageSize));
+  const currentModelPage = Math.min(modelPage, modelTotalPages);
+  const pagedModels = useMemo(
+    () => models.slice((currentModelPage - 1) * modelPageSize, currentModelPage * modelPageSize),
+    [currentModelPage, modelPageSize, models],
+  );
 
   const totals = useMemo(() => {
     const items = routines.flatMap((routine) => routine.items);
@@ -90,6 +109,22 @@ export default function CsCxRoutines() {
         && (!historyEnd || day <= historyEnd);
     });
   }, [history, historyAction, historyEnd, historySearch, historyStart]);
+  const historyTotalPages = Math.max(1, Math.ceil(filteredHistory.length / historyPageSize));
+  const currentHistoryPage = Math.min(historyPage, historyTotalPages);
+  const pagedHistory = useMemo(
+    () => filteredHistory.slice((currentHistoryPage - 1) * historyPageSize, currentHistoryPage * historyPageSize),
+    [currentHistoryPage, filteredHistory, historyPageSize],
+  );
+
+  const updateSearch = (value: string) => { setSearch(value); setApplicationPage(1); };
+  const updateOfficeFilter = (value: string) => { setOfficeFilter(value); setApplicationPage(1); };
+  const updateApplicationPageSize = (value: string) => { setApplicationPageSize(Number(value)); setApplicationPage(1); };
+  const updateModelPageSize = (value: string) => { setModelPageSize(Number(value)); setModelPage(1); };
+  const updateHistorySearch = (value: string) => { setHistorySearch(value); setHistoryPage(1); };
+  const updateHistoryAction = (value: string) => { setHistoryAction(value); setHistoryPage(1); };
+  const updateHistoryStart = (value: string) => { setHistoryStart(value); setHistoryPage(1); };
+  const updateHistoryEnd = (value: string) => { setHistoryEnd(value); setHistoryPage(1); };
+  const updateHistoryPageSize = (value: string) => { setHistoryPageSize(Number(value)); setHistoryPage(1); };
 
   async function handleApply() {
     try {
@@ -146,78 +181,82 @@ export default function CsCxRoutines() {
     }
   }
 
-  if (isLoading) return <div className="container mx-auto max-w-7xl space-y-4 p-6"><Skeleton className="h-28 w-full" /><Skeleton className="h-80 w-full" /></div>;
+  if (isLoading) return <div className="container mx-auto max-w-[1600px] space-y-4 px-4 py-4 lg:px-6"><Skeleton className="h-20 w-full" /><Skeleton className="h-72 w-full" /></div>;
 
   return (
-    <div className="container mx-auto max-w-7xl space-y-6 p-6">
-      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
-        <div><div className="flex items-center gap-2 text-sm font-medium text-rose-600 dark:text-rose-300"><ListChecks className="h-4 w-4" />CS/CX</div><h1 className="mt-1 text-3xl font-black tracking-tight">Rotinas</h1><p className="text-sm text-muted-foreground">Modelos aplicados aos cartórios, análise dos itens e histórico operacional.</p></div>
-        {canCreate && <Button onClick={() => setApplyOpen(true)} className="gap-2"><Plus className="h-4 w-4" />Aplicar rotina</Button>}
+    <div className="container mx-auto max-w-[1600px] space-y-4 px-4 py-4 lg:px-6">
+      <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
+        <div className="flex items-center gap-2"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-300"><ListChecks className="h-4 w-4" /></span><div><h1 className="text-2xl font-black leading-none tracking-tight">Rotinas</h1><p className="mt-1 text-xs text-muted-foreground">Modelos aplicados aos cartórios, análise dos itens e histórico operacional</p></div></div>
+        {canCreate && <Button size="sm" onClick={() => setApplyOpen(true)} className="gap-2"><Plus className="h-4 w-4" />Aplicar rotina</Button>}
       </div>
 
-      {error && <Card className="border-destructive/40"><CardContent className="flex items-center justify-between gap-4 pt-6"><div className="flex items-center gap-2 text-sm text-destructive"><TriangleAlert className="h-4 w-4" />{messageOf(error)}</div><Button variant="outline" size="sm" onClick={() => refetch()}><RefreshCw className="mr-2 h-4 w-4" />Tentar novamente</Button></CardContent></Card>}
+      {error && <Card className="border-destructive/40"><CardContent className="flex items-center justify-between gap-3 p-3"><div className="flex items-center gap-2 text-sm text-destructive"><TriangleAlert className="h-4 w-4" />{messageOf(error)}</div><Button variant="outline" size="sm" onClick={() => refetch()}><RefreshCw className="mr-2 h-4 w-4" />Tentar novamente</Button></CardContent></Card>}
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
         <Metric icon={Database} label="Aplicações" value={totals.applications} />
         <Metric icon={CheckCircle2} label="Itens ativos" value={totals.active} />
         <Metric icon={Activity} label="Itens inativos" value={totals.inactive} />
         <Metric icon={ClipboardCheck} label="A analisar" value={totals.pending} />
       </div>
 
-      <Tabs defaultValue="applications" className="space-y-4">
-        <TabsList><TabsTrigger value="applications">Aplicações</TabsTrigger><TabsTrigger value="models">Modelos</TabsTrigger><TabsTrigger value="history">Histórico</TabsTrigger></TabsList>
-        <TabsContent value="applications" className="space-y-4">
-          <Card><CardContent className="grid gap-3 pt-6 md:grid-cols-[1fr_280px]"><div className="relative"><Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" /><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar cartório, modelo ou observação..." className="pl-9" /></div><Select value={officeFilter} onValueChange={setOfficeFilter}><SelectTrigger><SelectValue placeholder="Todos os cartórios" /></SelectTrigger><SelectContent><SelectItem value="all">Todos os cartórios</SelectItem>{offices.map((office) => <SelectItem key={office.id} value={office.id}>{office.name}</SelectItem>)}</SelectContent></Select></CardContent></Card>
+      <Tabs defaultValue="applications" className="space-y-3">
+        <TabsList className="h-9"><TabsTrigger className="h-7" value="applications">Aplicações</TabsTrigger><TabsTrigger className="h-7" value="models">Modelos</TabsTrigger><TabsTrigger className="h-7" value="history">Histórico</TabsTrigger></TabsList>
+        <TabsContent value="applications" className="space-y-3">
+          <Card><CardContent className="grid gap-2 p-3 md:grid-cols-[minmax(260px,1fr)_260px]"><div className="relative"><Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" /><Input value={search} onChange={(event) => updateSearch(event.target.value)} placeholder="Buscar cartório, modelo ou observação..." className="h-9 pl-9" /></div><Select value={officeFilter} onValueChange={updateOfficeFilter}><SelectTrigger className="h-9"><SelectValue placeholder="Todos os cartórios" /></SelectTrigger><SelectContent><SelectItem value="all">Todos os cartórios</SelectItem>{offices.map((office) => <SelectItem key={office.id} value={office.id}>{office.name}</SelectItem>)}</SelectContent></Select></CardContent></Card>
 
-          <div className="space-y-3">
-            {filtered.map((routine) => {
+          <div className="space-y-2">
+            {pagedRoutines.map((routine) => {
               const isExpanded = expanded === routine.id;
               const analyzed = routine.items.filter((item) => item.active !== null).length;
               return <Card key={routine.id}>
-                <CardHeader className="pb-3"><div className="flex flex-col justify-between gap-3 md:flex-row md:items-center"><div><CardTitle className="text-base">{routine.registry_office?.name ?? "Cartório removido"}</CardTitle><CardDescription>{routine.routine_model?.name ?? "Modelo removido"} · {analyzed}/{routine.items.length} itens analisados · aplicado em {formatDate(routine.applied_at)}</CardDescription></div><div className="flex gap-2">{routine.origin === "legacy" && <Badge variant="outline">Legado</Badge>}<Button variant="ghost" size="icon" aria-label="Exportar PDF da rotina" disabled={exportingRoutineId === routine.id} onClick={() => handleRoutinePdf(routine)}><FileDown className="h-4 w-4" /></Button><Button variant="outline" size="sm" onClick={() => setExpanded(isExpanded ? null : routine.id)}>{isExpanded ? <ChevronUp className="mr-2 h-4 w-4" /> : <ChevronDown className="mr-2 h-4 w-4" />}{isExpanded ? "Ocultar" : "Analisar"}</Button>{canDelete && <Button variant="ghost" size="icon" aria-label="Desvincular rotina" onClick={() => setDeleting(routine)}><Trash2 className="h-4 w-4 text-destructive" /></Button>}</div></div></CardHeader>
-                {isExpanded && <CardContent className="space-y-2 border-t pt-4">{routine.notes && <p className="mb-3 text-sm text-muted-foreground">{routine.notes}</p>}{routine.items.map((item) => <div key={item.id} className="flex flex-col justify-between gap-3 rounded-lg border p-3 md:flex-row md:items-center"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><span className="font-medium">{item.model_item?.name ?? "Item removido"}</span>{item.model_item?.required && <Badge variant="secondary">Obrigatório</Badge>}{item.model_item?.category && <Badge variant="outline" style={{ borderColor: item.model_item.category.display_color }}>{item.model_item.category.name}</Badge>}</div><p className="mt-1 text-xs text-muted-foreground">{item.model_item?.routine_type?.name}{item.analysis_notes ? ` · ${item.analysis_notes}` : ""}</p></div><div className="flex items-center gap-2"><StatusBadge active={item.active} />{canEdit && <Button variant="ghost" size="sm" onClick={() => openItem(routine, item)}><Pencil className="mr-2 h-3.5 w-3.5" />Editar</Button>}</div></div>)}</CardContent>}
+                <CardHeader className="px-4 py-3"><div className="flex flex-col justify-between gap-2 md:flex-row md:items-center"><div className="min-w-0"><CardTitle className="truncate text-sm" title={routine.registry_office?.name ?? "Cartório removido"}>{routine.registry_office?.name ?? "Cartório removido"}</CardTitle><CardDescription className="mt-0.5 text-xs">{routine.routine_model?.name ?? "Modelo removido"} · {analyzed}/{routine.items.length} itens analisados · aplicado em {formatDate(routine.applied_at)}</CardDescription></div><div className="flex items-center gap-1.5">{routine.origin === "legacy" && <Badge variant="outline" className="h-5 px-1.5 text-[10px]">Legado</Badge>}<Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Exportar PDF da rotina" disabled={exportingRoutineId === routine.id} onClick={() => handleRoutinePdf(routine)}><FileDown className="h-4 w-4" /></Button><Button variant="outline" size="sm" className="h-8" onClick={() => setExpanded(isExpanded ? null : routine.id)}>{isExpanded ? <ChevronUp className="mr-1.5 h-3.5 w-3.5" /> : <ChevronDown className="mr-1.5 h-3.5 w-3.5" />}{isExpanded ? "Ocultar" : "Analisar"}</Button>{canDelete && <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Desvincular rotina" onClick={() => setDeleting(routine)}><Trash2 className="h-4 w-4 text-destructive" /></Button>}</div></div></CardHeader>
+                {isExpanded && <CardContent className="space-y-1.5 border-t px-3 py-2.5">{routine.notes && <p className="mb-2 line-clamp-2 text-xs text-muted-foreground" title={routine.notes}>{routine.notes}</p>}{routine.items.map((item) => <div key={item.id} className="flex flex-col justify-between gap-2 rounded-md border px-3 py-2 md:flex-row md:items-center"><div className="min-w-0"><div className="flex flex-wrap items-center gap-1.5"><span className="text-sm font-medium">{item.model_item?.name ?? "Item removido"}</span>{item.model_item?.required && <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">Obrigatório</Badge>}{item.model_item?.category && <Badge variant="outline" className="h-5 px-1.5 text-[10px]" style={{ borderColor: item.model_item.category.display_color }}>{item.model_item.category.name}</Badge>}</div><p className="mt-0.5 truncate text-[11px] leading-4 text-muted-foreground">{item.model_item?.routine_type?.name}{item.analysis_notes ? ` · ${item.analysis_notes}` : ""}</p></div><div className="flex items-center gap-1.5"><StatusBadge active={item.active} />{canEdit && <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => openItem(routine, item)}><Pencil className="mr-1.5 h-3.5 w-3.5" />Editar</Button>}</div></div>)}</CardContent>}
               </Card>;
             })}
             {!filtered.length && <Card><CardContent className="py-12 text-center text-sm text-muted-foreground">Nenhuma rotina encontrada.</CardContent></Card>}
           </div>
+          <RoutinePaginationBar currentPage={currentApplicationPage} pageSize={applicationPageSize} totalItems={filtered.length} totalPages={applicationTotalPages} itemLabel="aplicações" selectLabel="Aplicações por página" onPageChange={setApplicationPage} onPageSizeChange={updateApplicationPageSize} />
         </TabsContent>
 
-        <TabsContent value="models" className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {models.map((model) => <Card key={model.id}><CardHeader><div className="flex items-start justify-between gap-3"><div><CardTitle className="text-base">{model.name}</CardTitle><CardDescription className="mt-1">{model.description || "Sem descrição"}</CardDescription></div><Badge variant={model.active ? "default" : "secondary"}>{model.active ? "Ativo" : "Inativo"}</Badge></div></CardHeader><CardContent className="space-y-3"><p className="text-sm"><strong>{model.item_count}</strong> itens configurados</p><div className="flex flex-wrap gap-1">{model.products.map((product) => <Badge key={product.id} variant="outline">{product.name}</Badge>)}</div></CardContent></Card>)}
+        <TabsContent value="models" className="space-y-3">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{pagedModels.map((model) => <Card key={model.id}><CardHeader className="p-4 pb-2"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><CardTitle className="truncate text-sm" title={model.name}>{model.name}</CardTitle><CardDescription className="mt-0.5 line-clamp-2 text-xs" title={model.description ?? ""}>{model.description || "Sem descrição"}</CardDescription></div><Badge variant={model.active ? "default" : "secondary"} className="h-5 px-1.5 text-[10px]">{model.active ? "Ativo" : "Inativo"}</Badge></div></CardHeader><CardContent className="space-y-2 p-4 pt-0"><p className="text-xs"><strong>{model.item_count}</strong> itens configurados</p><div className="flex flex-wrap gap-1">{model.products.map((product) => <Badge key={product.id} variant="outline" className="h-5 px-1.5 text-[10px]">{product.name}</Badge>)}</div></CardContent></Card>)}</div>
+          {!models.length && <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">Nenhum modelo encontrado.</CardContent></Card>}
+          <RoutinePaginationBar currentPage={currentModelPage} pageSize={modelPageSize} totalItems={models.length} totalPages={modelTotalPages} itemLabel="modelos" selectLabel="Modelos por página" onPageChange={setModelPage} onPageSizeChange={updateModelPageSize} />
         </TabsContent>
 
-        <TabsContent value="history" className="space-y-4">
+        <TabsContent value="history" className="space-y-3">
           <Card>
-            <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-base"><Clock3 className="h-4 w-4 text-rose-600" />Histórico de alterações</CardTitle><CardDescription>Registro completo das aplicações e mudanças nos itens de rotina.</CardDescription></CardHeader>
-            <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1fr_220px_170px_170px]">
-              <div className="relative"><Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" /><Input value={historySearch} onChange={(event) => setHistorySearch(event.target.value)} placeholder="Buscar cartório, modelo, item ou responsável..." className="pl-9" /></div>
-              <Select value={historyAction} onValueChange={setHistoryAction}><SelectTrigger><SelectValue placeholder="Todas as ações" /></SelectTrigger><SelectContent><SelectItem value="all">Todas as ações</SelectItem>{historyActions.map((action) => <SelectItem key={action} value={action}>{actionLabel(action)}</SelectItem>)}</SelectContent></Select>
-              <Input type="date" aria-label="Data inicial do histórico" value={historyStart} onChange={(event) => setHistoryStart(event.target.value)} />
-              <Input type="date" aria-label="Data final do histórico" value={historyEnd} onChange={(event) => setHistoryEnd(event.target.value)} />
+            <CardHeader className="p-3 pb-2"><CardTitle className="flex items-center gap-2 text-sm"><Clock3 className="h-4 w-4 text-rose-600" />Histórico de alterações</CardTitle><CardDescription className="text-xs">Registro completo das aplicações e mudanças nos itens de rotina.</CardDescription></CardHeader>
+            <CardContent className="grid gap-2 p-3 pt-1 md:grid-cols-2 xl:grid-cols-[minmax(260px,1fr)_210px_155px_155px]">
+              <div className="relative"><Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" /><Input value={historySearch} onChange={(event) => updateHistorySearch(event.target.value)} placeholder="Buscar cartório, modelo, item ou responsável..." className="h-9 pl-9" /></div>
+              <Select value={historyAction} onValueChange={updateHistoryAction}><SelectTrigger className="h-9"><SelectValue placeholder="Todas as ações" /></SelectTrigger><SelectContent><SelectItem value="all">Todas as ações</SelectItem>{historyActions.map((action) => <SelectItem key={action} value={action}>{actionLabel(action)}</SelectItem>)}</SelectContent></Select>
+              <Input className="h-9" type="date" aria-label="Data inicial do histórico" value={historyStart} onChange={(event) => updateHistoryStart(event.target.value)} />
+              <Input className="h-9" type="date" aria-label="Data final do histórico" value={historyEnd} onChange={(event) => updateHistoryEnd(event.target.value)} />
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="pb-3"><CardTitle className="text-base">{filteredHistory.length} registro{filteredHistory.length === 1 ? "" : "s"}</CardTitle></CardHeader>
+            <CardHeader className="px-3 py-2.5"><CardTitle className="text-sm">{filteredHistory.length} registro{filteredHistory.length === 1 ? "" : "s"}</CardTitle></CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <Table>
-                  <TableHeader><TableRow><TableHead>Data e hora</TableHead><TableHead>Responsável</TableHead><TableHead>Ação</TableHead><TableHead>Cartório / modelo</TableHead><TableHead>Item</TableHead><TableHead>Alteração</TableHead><TableHead>Observação</TableHead><TableHead>IP</TableHead></TableRow></TableHeader>
+                  <TableHeader><TableRow><TableHead className="h-9 px-3 text-xs">Data e hora</TableHead><TableHead className="h-9 px-3 text-xs">Responsável</TableHead><TableHead className="h-9 px-3 text-xs">Ação</TableHead><TableHead className="h-9 px-3 text-xs">Cartório / modelo</TableHead><TableHead className="h-9 px-3 text-xs">Item</TableHead><TableHead className="h-9 px-3 text-xs">Alteração</TableHead><TableHead className="h-9 px-3 text-xs">Observação</TableHead><TableHead className="h-9 px-3 text-xs">IP</TableHead></TableRow></TableHeader>
                   <TableBody>
-                    {filteredHistory.map((entry) => <TableRow key={entry.id}>
-                      <TableCell className="whitespace-nowrap text-xs">{formatDateTime(entry.occurred_at)}</TableCell>
-                      <TableCell><p className="max-w-40 truncate text-sm font-medium">{entry.actor_name ?? (entry.legacy_user_id ? `Usuário legado #${entry.legacy_user_id}` : "Sistema")}</p>{entry.origin === "legacy" && <span className="text-xs text-muted-foreground">Legado</span>}</TableCell>
-                      <TableCell><ActionBadge action={entry.action} /></TableCell>
-                      <TableCell><p className="max-w-56 truncate text-sm font-medium">{entry.registry_office_name ?? "Cartório não vinculado"}</p><p className="max-w-56 truncate text-xs text-muted-foreground">{entry.routine_model_name ?? "Modelo não informado"}</p></TableCell>
-                      <TableCell className="max-w-56 text-sm">{entry.model_item_name ?? "Modelo completo"}</TableCell>
-                      <TableCell>{hasStatusTransition(entry.action, entry.previous_status, entry.new_status) ? <div className="flex items-center gap-1.5"><StatusBadge active={entry.previous_status} /><ArrowRight className="h-3.5 w-3.5 text-muted-foreground" /><StatusBadge active={entry.new_status} /></div> : <span className="text-muted-foreground">—</span>}</TableCell>
-                      <TableCell className="max-w-72 whitespace-normal text-xs text-muted-foreground">{entry.notes || "—"}</TableCell>
-                      <TableCell className="whitespace-nowrap text-xs text-muted-foreground">{entry.ip_address || "—"}</TableCell>
+                    {pagedHistory.map((entry) => <TableRow key={entry.id}>
+                      <TableCell className="whitespace-nowrap px-3 py-2 text-xs">{formatDateTime(entry.occurred_at)}</TableCell>
+                      <TableCell className="px-3 py-2"><p className="max-w-40 truncate text-xs font-medium">{entry.actor_name ?? (entry.legacy_user_id ? `Usuário legado #${entry.legacy_user_id}` : "Sistema")}</p>{entry.origin === "legacy" && <span className="text-[10px] leading-4 text-muted-foreground">Legado</span>}</TableCell>
+                      <TableCell className="px-3 py-2"><ActionBadge action={entry.action} /></TableCell>
+                      <TableCell className="px-3 py-2"><p className="max-w-56 truncate text-xs font-medium">{entry.registry_office_name ?? "Cartório não vinculado"}</p><p className="max-w-56 truncate text-[10px] leading-4 text-muted-foreground">{entry.routine_model_name ?? "Modelo não informado"}</p></TableCell>
+                      <TableCell className="max-w-56 px-3 py-2 text-xs"><p className="line-clamp-2" title={entry.model_item_name ?? "Modelo completo"}>{entry.model_item_name ?? "Modelo completo"}</p></TableCell>
+                      <TableCell className="px-3 py-2">{hasStatusTransition(entry.action, entry.previous_status, entry.new_status) ? <div className="flex items-center gap-1"><StatusBadge active={entry.previous_status} /><ArrowRight className="h-3 w-3 text-muted-foreground" /><StatusBadge active={entry.new_status} /></div> : <span className="text-muted-foreground">—</span>}</TableCell>
+                      <TableCell className="max-w-64 px-3 py-2 text-xs text-muted-foreground"><p className="line-clamp-2" title={entry.notes ?? ""}>{entry.notes || "—"}</p></TableCell>
+                      <TableCell className="whitespace-nowrap px-3 py-2 text-xs text-muted-foreground">{entry.ip_address || "—"}</TableCell>
                     </TableRow>)}
                     {!filteredHistory.length && <TableRow><TableCell colSpan={8} className="h-32 text-center text-muted-foreground">Nenhum registro encontrado para os filtros selecionados.</TableCell></TableRow>}
                   </TableBody>
                 </Table>
               </div>
+              <div className="px-3 pb-3"><RoutinePaginationBar currentPage={currentHistoryPage} pageSize={historyPageSize} totalItems={filteredHistory.length} totalPages={historyTotalPages} itemLabel="registros" selectLabel="Registros por página" onPageChange={setHistoryPage} onPageSizeChange={updateHistoryPageSize} /></div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -233,20 +272,27 @@ export default function CsCxRoutines() {
 }
 
 function Metric({ icon: Icon, label, value }: { icon: typeof Database; label: string; value: number }) {
-  return <Card><CardContent className="flex items-center gap-3 pt-6"><div className="rounded-lg bg-rose-50 p-2 text-rose-600 dark:bg-rose-950/40"><Icon className="h-4 w-4" /></div><div><p className="text-xs text-muted-foreground">{label}</p><p className="text-2xl font-black">{value}</p></div></CardContent></Card>;
+  return <Card><CardContent className="flex items-center gap-2.5 px-3 py-2.5"><div className="rounded-lg bg-rose-50 p-1.5 text-rose-600 dark:bg-rose-950/40"><Icon className="h-4 w-4" /></div><div><p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</p><p className="text-xl font-black leading-6">{value}</p></div></CardContent></Card>;
 }
 
 function StatusBadge({ active }: { active: boolean | null }) {
-  if (active === true) return <Badge className="bg-emerald-600 hover:bg-emerald-600">Ativo</Badge>;
-  if (active === false) return <Badge variant="destructive">Inativo</Badge>;
-  return <Badge variant="secondary">Analisar</Badge>;
+  if (active === true) return <Badge className="h-5 bg-emerald-600 px-1.5 text-[10px] font-normal hover:bg-emerald-600">Ativo</Badge>;
+  if (active === false) return <Badge variant="destructive" className="h-5 px-1.5 text-[10px] font-normal">Inativo</Badge>;
+  return <Badge variant="secondary" className="h-5 px-1.5 text-[10px] font-normal">Analisar</Badge>;
 }
 
 function ActionBadge({ action }: { action: string }) {
-  if (action === "ATIVADO") return <Badge className="bg-emerald-600 hover:bg-emerald-600">{actionLabel(action)}</Badge>;
-  if (action === "DESATIVADO" || action === "DESVINCULADO" || action.startsWith("REMOVIDO")) return <Badge variant="destructive">{actionLabel(action)}</Badge>;
-  if (action === "APLICADO" || action === "ITEM_ADICIONADO") return <Badge>{actionLabel(action)}</Badge>;
-  return <Badge variant="secondary">{actionLabel(action)}</Badge>;
+  const className = "h-5 whitespace-nowrap px-1.5 text-[10px] font-normal";
+  if (action === "ATIVADO") return <Badge className={`${className} bg-emerald-600 hover:bg-emerald-600`}>{actionLabel(action)}</Badge>;
+  if (action === "DESATIVADO" || action === "DESVINCULADO" || action.startsWith("REMOVIDO")) return <Badge variant="destructive" className={className}>{actionLabel(action)}</Badge>;
+  if (action === "APLICADO" || action === "ITEM_ADICIONADO") return <Badge className={className}>{actionLabel(action)}</Badge>;
+  return <Badge variant="secondary" className={className}>{actionLabel(action)}</Badge>;
+}
+
+function RoutinePaginationBar({ currentPage, pageSize, totalItems, totalPages, itemLabel, selectLabel, onPageChange, onPageSizeChange }: { currentPage: number; pageSize: number; totalItems: number; totalPages: number; itemLabel: string; selectLabel: string; onPageChange: (page: number) => void; onPageSizeChange: (size: string) => void }) {
+  const firstItem = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const lastItem = Math.min(currentPage * pageSize, totalItems);
+  return <div className="flex flex-col gap-2 border-t pt-3 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between"><span aria-label={`Mostrando ${firstItem} a ${lastItem} de ${totalItems} ${itemLabel}`}>Mostrando <strong className="font-semibold text-foreground">{firstItem}–{lastItem}</strong> de <strong className="font-semibold text-foreground">{totalItems}</strong></span><div className="flex flex-wrap items-center gap-2"><span>Por página</span><Select value={String(pageSize)} onValueChange={onPageSizeChange}><SelectTrigger aria-label={selectLabel} className="h-8 w-[72px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="5">5</SelectItem><SelectItem value="10">10</SelectItem><SelectItem value="20">20</SelectItem><SelectItem value="50">50</SelectItem></SelectContent></Select><span className="min-w-[92px] text-center">Página {currentPage} de {totalPages}</span><Button type="button" variant="outline" size="icon" className="h-8 w-8" aria-label={`Página anterior de ${itemLabel}`} disabled={currentPage <= 1} onClick={() => onPageChange(currentPage - 1)}><ChevronLeft className="h-4 w-4" /></Button><Button type="button" variant="outline" size="icon" className="h-8 w-8" aria-label={`Próxima página de ${itemLabel}`} disabled={currentPage >= totalPages} onClick={() => onPageChange(currentPage + 1)}><ChevronRight className="h-4 w-4" /></Button></div></div>;
 }
 
 function actionLabel(action: string) {
