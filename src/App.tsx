@@ -102,6 +102,7 @@ const CsCxAppointments = lazy(() => import("./pages/cs-cx/CsCxAppointments"));
 const CsCxRoutines = lazy(() => import("./pages/cs-cx/CsCxRoutines"));
 const CsCxVisits = lazy(() => import("./pages/cs-cx/CsCxVisits"));
 const CsCxNps = lazy(() => import("./pages/cs-cx/CsCxNps"));
+const CsCxAdmin = lazy(() => import("./pages/cs-cx/CsCxAdmin"));
 const CsCxMigrationPlaceholder = lazy(() =>
   import("./pages/cs-cx/CsCxMigrationPlaceholder"),
 );
@@ -701,10 +702,7 @@ const App = () => (
                             path="/cs-cx/admin"
                             element={
                               <RequirePermission resource="cs_cx_admin">
-                                <CsCxMigrationPlaceholder
-                                  title="Administração CS/CX"
-                                  description="Modelos, categorias, tipos, produtos, prioridades e demais configurações do legado serão migrados para esta área."
-                                />
+                                <CsCxAdmin />
                               </RequirePermission>
                             }
                           />

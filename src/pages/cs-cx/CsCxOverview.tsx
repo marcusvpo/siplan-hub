@@ -104,17 +104,17 @@ export default function CsCxOverview() {
   const visibleAreas = areas.filter((area) => hasPermission(area.permission, "view"));
 
   return (
-    <div className="container mx-auto max-w-7xl space-y-8 p-6">
-      <section className="relative overflow-hidden rounded-2xl border border-rose-200/70 bg-gradient-to-br from-rose-50 via-background to-slate-50 p-8 shadow-sm dark:border-rose-950/70 dark:from-rose-950/20 dark:via-background dark:to-slate-950">
-        <Headset className="pointer-events-none absolute -bottom-10 -right-8 h-56 w-56 text-rose-500/10" />
-        <div className="relative z-10 max-w-3xl space-y-4">
+    <div className="container mx-auto max-w-7xl space-y-5 p-4 md:p-6">
+      <section className="relative overflow-hidden rounded-xl border border-rose-200/70 bg-gradient-to-br from-rose-50 via-background to-slate-50 px-5 py-4 shadow-sm dark:border-rose-950/70 dark:from-rose-950/20 dark:via-background dark:to-slate-950 md:px-6 md:py-5">
+        <Headset className="pointer-events-none absolute -bottom-10 -right-6 h-40 w-40 text-rose-500/10" />
+        <div className="relative z-10 max-w-3xl space-y-2.5">
           <Badge variant="outline" className="gap-1.5 border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300">
             <ShieldCheck className="h-3.5 w-3.5" />
             Customer Success & Customer Experience
           </Badge>
           <div>
-            <h1 className="text-3xl font-black tracking-tight md:text-4xl">CS/CX</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground md:text-base">
+            <h1 className="text-2xl font-black tracking-tight md:text-3xl">CS/CX</h1>
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
               Central de relacionamento e acompanhamento dos cartórios, reunindo solicitações,
               contatos, rotinas, visitas e satisfação do cliente.
             </p>
@@ -122,7 +122,7 @@ export default function CsCxOverview() {
         </div>
       </section>
 
-      <section className="space-y-4">
+      <section className="space-y-3">
         <div>
           <h2 className="text-xl font-bold">Áreas do módulo</h2>
           <p className="text-sm text-muted-foreground">
