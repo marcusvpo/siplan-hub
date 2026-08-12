@@ -713,16 +713,44 @@ async function applyUserMap(mapPath) {
 
 async function verify() {
   let valid = true;
-  console.log('Tabela origem -> destino ativo');
+  const maps = await loadMaps();
+  console.log('Tabela origem -> destino ativo; hashes divergentes');
   for (const spec of TABLES) {
-    const sourceResult = await source.query(`SELECT count(*)::bigint AS count FROM ${spec.source}`);
-    const sourceCount = Number(sourceResult.rows[0].count);
-    const activeCount = await targetCount(spec);
-    const status = sourceCount === activeCount ? 'OK' : 'DIVERGENTE';
-    console.log(`${spec.source}: ${sourceCount} -> ${activeCount} [${status}]`);
-    valid &&= sourceCount === activeCount;
+    const sourceResult = await source.query(spec.query);
+    const expectedHashes = new Map(sourceResult.rows.map((row) => {
+      const mapped = withSyncFields(spec.map(row, maps), !spec.hasNoOrigin);
+      return [key(mapped.legacy_id), mapped.source_hash];
+    }));
+    const actualHashes = await targetHashes(spec);
+    const hashMismatches = [...expectedHashes]
+      .filter(([legacyId, hash]) => actualHashes.get(legacyId) !== hash)
+      .length;
+    const sourceCount = sourceResult.rows.length;
+    const activeCount = actualHashes.size;
+    const matches = sourceCount === activeCount && hashMismatches === 0;
+    const status = matches ? 'OK' : 'DIVERGENTE';
+    console.log(`${spec.source}: ${sourceCount} -> ${activeCount}; hash ${hashMismatches} [${status}]`);
+    valid &&= matches;
   }
   return valid;
+}
+
+async function targetHashes(spec) {
+  const result = spec.auditSource
+    ? await target.query(
+      `SELECT legacy_id, source_hash FROM public.${spec.target}
+       WHERE source_present AND source_table = $1`,
+      [spec.auditSource],
+    )
+    : spec.hasNoOrigin
+      ? await target.query(
+        `SELECT legacy_id, source_hash FROM public.${spec.target} WHERE source_present`,
+      )
+      : await target.query(
+        `SELECT legacy_id, source_hash FROM public.${spec.target}
+         WHERE source_present AND origin = 'legacy'`,
+      );
+  return new Map(result.rows.map((row) => [key(row.legacy_id), row.source_hash]));
 }
 
 async function assertTargetReady() {

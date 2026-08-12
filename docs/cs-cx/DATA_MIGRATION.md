@@ -92,6 +92,10 @@ captura alterações e exclusões até em tabelas legadas que não possuem `upda
 Depois de medir o volume real, a leitura pode ser paginada por marca d'água sem mudar
 o contrato idempotente.
 
+O `verify` relê e transforma cada registro da origem, compara contagens e o hash
+SHA-256 do conteúdo esperado com o destino. Assim, quantidade igual não mascara
+campo divergente ou associação incorreta.
+
 ## Webhook NPS
 
 A função `cs-cx-nps-webhook` preserva o contrato JSON do legado (`data`,
