@@ -39,6 +39,7 @@ vi.mock("@/hooks/useCsCxNpsSurveys", () => ({
     createInvitation: mutation,
     cancelInvitation: mutation,
     saveQuestionnaire: mutation,
+    uploadQuestionnaireBackground: mutation,
     setQuestionnaireActive: mutation,
     setDefaultQuestionnaire: mutation,
   }),
@@ -234,6 +235,25 @@ describe("CS/CX visitas e NPS — permissões", () => {
     expect(
       screen.queryByRole("button", { name: /importar arquivo/i }),
     ).not.toBeInTheDocument();
+  });
+
+  it("oferece personalização visual por questionário", () => {
+    renderPage(<CsCxNps />, ["cs_cx_nps:create"]);
+    fireEvent.mouseDown(screen.getByRole("tab", { name: /questionários/i }), {
+      button: 0,
+      ctrlKey: false,
+    });
+    fireEvent.click(
+      screen.getByRole("button", { name: /novo questionário/i }),
+    );
+
+    expect(screen.getByLabelText("Cor principal")).toBeInTheDocument();
+    expect(screen.getByLabelText("Cor de fundo")).toBeInTheDocument();
+    expect(screen.getByLabelText(/escolher imagem/i)).toHaveAttribute(
+      "accept",
+      "image/jpeg,image/png,image/webp",
+    );
+    expect(screen.getByText("Pré-visualização")).toBeInTheDocument();
   });
 
   it("mantém respostas somente para visualização mesmo com permissão de edição", () => {

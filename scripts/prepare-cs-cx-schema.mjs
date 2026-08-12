@@ -19,11 +19,13 @@ const MIGRATIONS = [
   "20260812107000_cs_cx_user_mapping_exceptions.sql",
   "20260812108000_cs_cx_nps_public_surveys.sql",
   "20260812109000_cs_cx_nps_response_immutability.sql",
+  "20260812110000_cs_cx_nps_questionnaire_themes.sql",
 ];
 const FEATURE_MIGRATIONS = new Map([
   ["cs_cx_user_map.mapping_ignored", "20260812107000_cs_cx_user_mapping_exceptions.sql"],
   ["cs_cx_nps_responses public survey columns", "20260812108000_cs_cx_nps_public_surveys.sql"],
   ["cs_cx_nps_responses immutability", "20260812109000_cs_cx_nps_response_immutability.sql"],
+  ["cs_cx_nps_questionnaire themes", "20260812110000_cs_cx_nps_questionnaire_themes.sql"],
 ]);
 const EXPECTED_TABLES = [
   "cs_cx_user_map",
@@ -219,7 +221,18 @@ async function getMissingFeatures() {
       'authenticated',
       to_regprocedure('public.cs_cx_import_nps(uuid,jsonb)'),
       'EXECUTE'
-    ), true) AS nps_responses_immutable
+    ), true) AS nps_responses_immutable,
+    EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name = 'cs_cx_nps_questionnaires'
+        AND column_name = 'theme'
+    ) AND EXISTS (
+      SELECT 1 FROM storage.buckets
+      WHERE id = 'cs-cx-nps-assets'
+        AND public
+        AND file_size_limit = 5242880
+    ) AS nps_questionnaire_themes
   `);
   const missing = [];
   if (!result.rows[0].mapping_ignored)
@@ -228,6 +241,8 @@ async function getMissingFeatures() {
     missing.push("cs_cx_nps_responses public survey columns");
   if (!result.rows[0].nps_responses_immutable)
     missing.push("cs_cx_nps_responses immutability");
+  if (!result.rows[0].nps_questionnaire_themes)
+    missing.push("cs_cx_nps_questionnaire themes");
   return missing;
 }
 
