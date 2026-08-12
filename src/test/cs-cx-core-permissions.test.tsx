@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
 const hasPermission = vi.fn();
@@ -39,11 +39,11 @@ vi.mock("@/hooks/useCsCxCore", async (importOriginal) => {
       deleteOffice: mutation,
     }),
     useCsCxRequests: () => ({
-      requests: [{
-        id: "request-1",
-        legacy_id: 20,
-        ticket_number: "CH-123",
-        description: "Ajustar integração",
+      requests: Array.from({ length: 12 }, (_, index) => ({
+        id: `request-${index + 1}`,
+        legacy_id: 20 + index,
+        ticket_number: index === 0 ? "CH-123" : `CH-${100 + index}`,
+        description: index === 0 ? "Ajustar integração" : `Solicitação ${index + 1}`,
         module: "Notas",
         requester: "Maria",
         responsible: "João",
@@ -58,7 +58,7 @@ vi.mock("@/hooks/useCsCxCore", async (importOriginal) => {
         updated_at: null,
         origin: "legacy",
         registry_office: { id: "office-1", name: "Cartório Central" },
-      }],
+      })),
       isLoading: false,
       error: null,
       refetch: vi.fn(),
@@ -103,5 +103,16 @@ describe("CS/CX — ações por permissão", () => {
   it("libera criação de solicitação com o recurso correto", () => {
     renderPage(<CsCxRequests />, ["cs_cx_registros:create"]);
     expect(screen.getByRole("button", { name: /nova solicitação/i })).toBeInTheDocument();
+  });
+
+  it("pagina a lista de solicitações em blocos compactos", () => {
+    renderPage(<CsCxRequests />, []);
+    expect(screen.getByLabelText("Mostrando 1 a 10 de 12 solicitações")).toBeInTheDocument();
+    expect(screen.queryByText("CH-110")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /próxima página/i }));
+
+    expect(screen.getByText("CH-110")).toBeInTheDocument();
+    expect(screen.getByLabelText("Mostrando 11 a 12 de 12 solicitações")).toBeInTheDocument();
   });
 });
