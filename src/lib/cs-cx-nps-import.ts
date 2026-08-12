@@ -12,8 +12,11 @@ export interface NpsCsvResult { rows: CsCxNpsImportRow[]; errors: string[] }
 
 export function parseNpsCsv(content: string, fallbackOffice: string): NpsCsvResult {
   const delimiter = detectDelimiter(content);
-  const records = parseDelimited(content, delimiter);
-  if (records.length < 2) throw new Error("O CSV não possui respostas.");
+  return parseNpsRows(parseDelimited(content, delimiter), fallbackOffice);
+}
+
+export function parseNpsRows(records: string[][], fallbackOffice: string): NpsCsvResult {
+  if (records.length < 2) throw new Error("O arquivo não possui respostas.");
 
   const headers = records[0].map(normalizeHeader);
   const columns = {

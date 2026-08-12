@@ -85,6 +85,6 @@ describe("CS/CX visitas e NPS — permissões", () => {
   it("libera criação de NPS com a permissão correta", () => {
     renderPage(<CsCxNps />, ["cs_cx_nps:create"]);
     expect(screen.getByRole("button", { name: /nova resposta/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /importar csv/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /importar arquivo/i })).toBeInTheDocument();
   });
 });
