@@ -34,6 +34,7 @@ Aplicar, nesta ordem:
 6. `20260812100000_cs_cx_routines.sql`
 7. `20260812101000_cs_cx_visits_nps.sql`
 8. `20260812102000_cs_cx_advanced_operations.sql`
+9. `20260812103000_cs_cx_nps_webhook.sql`
 
 Configurar as URLs sem commitá-las:
 
@@ -61,6 +62,22 @@ O modo `delta` deliberadamente relê o conjunto completo nesta primeira versão.
 captura alterações e exclusões até em tabelas legadas que não possuem `updated_at`.
 Depois de medir o volume real, a leitura pode ser paginada por marca d'água sem mudar
 o contrato idempotente.
+
+## Webhook NPS
+
+A função `cs-cx-nps-webhook` preserva o contrato JSON do legado (`data`,
+`nome_cartorio` ou `respondente`, `pontuacao`, `motivo` e `sugestao`). Antes do
+deploy, configure um segredo novo e forte, sem reutilizar o token padrão legado:
+
+```bash
+supabase secrets set NPS_WEBHOOK_TOKEN="um-segredo-longo-e-aleatorio"
+supabase functions deploy cs-cx-nps-webhook
+```
+
+Envie o segredo preferencialmente no header `x-nps-webhook-token`. Durante a
+transição, a função também aceita `Authorization: Bearer ...` e `?token=...` para
+compatibilidade com o Power Automate atual. A RPC interna só pode ser executada
+pela `service_role`, deduplica por cartório/respondente/dia e audita a inclusão.
 
 ## Anexos
 
