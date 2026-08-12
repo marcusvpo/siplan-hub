@@ -1,4 +1,5 @@
 import type { CsCxNpsResponse, CsCxVisit } from "@/hooks/useCsCxExperience";
+import type { NpsAnalytics } from "@/lib/cs-cx-nps-analytics";
 
 export type CsCxReportRow = [label: string, value: string];
 export interface CsCxReportBlock { title: string; subtitle: string; rows: CsCxReportRow[] }
@@ -75,6 +76,96 @@ export async function generateCsCxNpsPdf(responses: CsCxNpsResponse[], filterDes
     ],
     blocks,
     `relatorio-nps-${localIsoDate()}.pdf`,
+  );
+}
+
+export async function generateCsCxNpsAnalysisPdf(
+  analytics: NpsAnalytics,
+  filterDescription: string,
+  aiReport?: string,
+) {
+  const blocks: CsCxReportBlock[] = [];
+  if (aiReport?.trim()) {
+    blocks.push({
+      title: "ANÁLISE EXECUTIVA COM IA",
+      subtitle: "Síntese dos indicadores e da voz dos clientes",
+      rows: splitReportRows(aiReport),
+    });
+  }
+
+  blocks.push({
+    title: "EVOLUÇÃO MENSAL",
+    subtitle: `${analytics.monthly.length} período(s) com respostas`,
+    rows: analytics.monthly.map((month) => [
+      month.label,
+      `NPS ${month.nps} · Nota média ${month.averageScore} · ${month.responses} resposta(s) · ${month.promoters} promotor(es) · ${month.neutrals} neutro(s) · ${month.detractors} detrator(es)`,
+    ]),
+  });
+
+  blocks.push({
+    title: "DESEMPENHO POR CARTÓRIO",
+    subtitle: "Ordenado do menor para o maior NPS",
+    rows: analytics.byOffice.map((office) => [
+      office.name,
+      `NPS ${office.nps} · Nota média ${office.averageScore} · ${office.responses} resposta(s) · ${office.promoters} promotor(es) · ${office.neutrals} neutro(s) · ${office.detractors} detrator(es)`,
+    ]),
+  });
+
+  if (analytics.feedback.length) {
+    blocks.push({
+      title: "VOZ DO CLIENTE",
+      subtitle: `${analytics.feedback.length} resposta(s) com comentário`,
+      rows: analytics.feedback.slice(0, 100).flatMap((feedback) => [
+        [
+          `${feedback.office} · Nota ${feedback.score}`,
+          feedback.reason || "Motivo não informado",
+        ] as CsCxReportRow,
+        ...(feedback.suggestion
+          ? [["Sugestão", feedback.suggestion] as CsCxReportRow]
+          : []),
+      ]),
+    });
+  }
+
+  if (analytics.additionalQuestions.length) {
+    blocks.push({
+      title: "PERGUNTAS ADICIONAIS",
+      subtitle: `${analytics.additionalQuestions.length} pergunta(s) consolidada(s)`,
+      rows: analytics.additionalQuestions.flatMap((question) => [
+        [
+          question.title,
+          [
+            `${question.answers} resposta(s)`,
+            question.averageScore === null
+              ? ""
+              : `Nota média ${question.averageScore}/10`,
+            question.options.length
+              ? question.options
+                  .map((option) => `${option.label}: ${option.total}`)
+                  .join(" · ")
+              : "",
+          ]
+            .filter(Boolean)
+            .join(" · "),
+        ] as CsCxReportRow,
+        ...question.textSamples.map(
+          (sample): CsCxReportRow => [sample.office, sample.answer],
+        ),
+      ]),
+    });
+  }
+
+  await generateCsCxPdfReport(
+    "BI E RELATÓRIO DE NPS",
+    filterDescription,
+    [
+      { label: "NPS", value: analytics.nps },
+      { label: "Nota média", value: analytics.averageScore },
+      { label: "Respostas", value: analytics.total },
+      { label: "Cartórios", value: analytics.officesCount },
+    ],
+    blocks,
+    `bi-nps-${localIsoDate()}.pdf`,
   );
 }
 
@@ -181,6 +272,34 @@ export async function generateCsCxPdfReport(title: string, filterDescription: st
 
 function clean(value: string) {
   return (value.trim() || "-").replace(/[–—]/g, "-").replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
+}
+function stripMarkdown(value: string) {
+  return value
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/(\*\*|__)(.*?)\1/g, "$2")
+    .replace(/^[-*+]\s+/gm, "- ")
+    .replace(/^\d+\.\s+/gm, "- ");
+}
+function splitReportRows(value: string): CsCxReportRow[] {
+  const normalized = stripMarkdown(value).trim();
+  const paragraphs = normalized.split(/\n{2,}/).filter(Boolean);
+  const chunks: string[] = [];
+  for (const paragraph of paragraphs) {
+    const lines = paragraph.split("\n");
+    let current = "";
+    for (const line of lines) {
+      if (current && current.length + line.length + 1 > 900) {
+        chunks.push(current);
+        current = "";
+      }
+      current += `${current ? "\n" : ""}${line}`;
+    }
+    if (current) chunks.push(current);
+  }
+  return (chunks.length ? chunks : [normalized]).map((chunk, index) => [
+    index === 0 ? "Relatório" : "Continuação",
+    chunk,
+  ]);
 }
 function formatDate(value: string) { const [year, month, day] = value.slice(0, 10).split("-"); return `${day}/${month}/${year}`; }
 function formatDateTime(value: string) { return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value)); }

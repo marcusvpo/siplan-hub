@@ -8,6 +8,20 @@ vi.mock("@/hooks/usePermissions", () => ({
   usePermissions: () => ({ hasPermission }),
 }));
 vi.mock("@/hooks/use-toast", () => ({ useToast: () => ({ toast: vi.fn() }) }));
+vi.mock("@/hooks/useAuth", () => ({
+  useAuth: () => ({ user: { id: "user-1" } }),
+}));
+vi.mock("@/hooks/useModelGenerationJobs", () => ({
+  useModelWorkerStatus: () => ({ online: true, busy: false, status: null }),
+}));
+vi.mock("@/hooks/useCsCxNpsAiReport", () => ({
+  useCsCxNpsAiReport: () => ({
+    generate: vi.fn(),
+    active: undefined,
+    latest: undefined,
+    latestError: undefined,
+  }),
+}));
 vi.mock("@/hooks/useCsCxCore", () => ({
   useCsCxRegistryOffices: () => ({
     offices: [{ id: "office-1", name: "Cartório Central", active: true }],
@@ -241,5 +255,25 @@ describe("CS/CX visitas e NPS — permissões", () => {
       screen.getByLabelText("Mostrando 1 a 5 de 7 períodos"),
     ).toBeInTheDocument();
     expect(screen.queryByText("Histórico 6")).not.toBeInTheDocument();
+  });
+
+  it("exibe o BI de NPS e restringe a geração com IA pela permissão", () => {
+    const { rerender } = renderPage(<CsCxNps />, []);
+    fireEvent.mouseDown(screen.getByRole("tab", { name: /análises/i }), {
+      button: 0,
+      ctrlKey: false,
+    });
+    expect(screen.getByText("Evolução mensal do NPS")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /gerar relatório com ia/i }),
+    ).not.toBeInTheDocument();
+
+    hasPermission.mockImplementation((resource: string, action: string) =>
+      ["cs_cx_nps:create"].includes(`${resource}:${action}`),
+    );
+    rerender(<CsCxNps />);
+    expect(
+      screen.getByRole("button", { name: /gerar relatório com ia/i }),
+    ).toBeInTheDocument();
   });
 });
