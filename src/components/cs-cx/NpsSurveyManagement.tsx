@@ -76,6 +76,7 @@ const QUESTION_TYPES: Array<{
   value: Exclude<NpsQuestionType, "nps">;
   label: string;
 }> = [
+  { value: "rating", label: "Nota (0 a 10)" },
   { value: "text", label: "Texto curto" },
   { value: "textarea", label: "Texto longo" },
   { value: "single_choice", label: "Escolha única" },

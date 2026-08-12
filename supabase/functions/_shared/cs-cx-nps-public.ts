@@ -47,7 +47,12 @@ export function parsePublicNpsSubmission(
   for (const [key, value] of entries) {
     if (!/^[a-zA-Z0-9_-]{1,100}$/.test(key))
       throw new Error("Identificador de pergunta inválido.");
-    if (typeof value === "number" && Number.isFinite(value))
+    if (
+      typeof value === "number" &&
+      Number.isInteger(value) &&
+      value >= 0 &&
+      value <= 10
+    )
       answers[key] = value;
     else if (typeof value === "string" && value.length <= 10_000)
       answers[key] = value;

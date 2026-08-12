@@ -5,6 +5,7 @@ import {
 } from "../../supabase/functions/_shared/cs-cx-nps-public";
 import {
   DEFAULT_NPS_QUESTIONS,
+  newNpsQuestion,
   validateNpsQuestionnaire,
 } from "@/lib/cs-cx-nps-survey";
 
@@ -39,6 +40,13 @@ describe("formulário público de NPS", () => {
         ),
       }),
     ).toThrow(/quantidade/i);
+    expect(() =>
+      parsePublicNpsSubmission({
+        token,
+        respondent_name: "Maria",
+        answers: { score: 11 },
+      }),
+    ).toThrow(/formato/i);
   });
 
   it("mantém a escala NPS obrigatória no questionário", () => {
@@ -56,5 +64,11 @@ describe("formulário público de NPS", () => {
         ),
       }),
     ).toMatch(/pergunta principal de NPS/i);
+  });
+
+  it("permite adicionar uma nota complementar sem alterar o NPS principal", () => {
+    const question = newNpsQuestion("rating");
+    expect(question.type).toBe("rating");
+    expect(question.semantic_key).toBeUndefined();
   });
 });
