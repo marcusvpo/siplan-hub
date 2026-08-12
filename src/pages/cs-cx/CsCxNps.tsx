@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import {
+  CalendarRange,
   ChevronLeft,
   ChevronRight,
   Eye,
@@ -26,7 +27,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -139,6 +146,21 @@ export default function CsCxNps() {
       ),
     [currentHistoryPage, history, historyPageSize],
   );
+  const historySummary = useMemo(() => {
+    const officeIds = new Set(history.map((item) => item.registry_office_id));
+    const totalResponses = history.reduce(
+      (total, item) => total + item.total_responses,
+      0,
+    );
+    const starts = history.map((item) => item.period_start).sort();
+    const ends = history.map((item) => item.period_end).sort();
+    return {
+      offices: officeIds.size,
+      totalResponses,
+      firstPeriod: starts.at(0) ?? null,
+      lastPeriod: ends.at(-1) ?? null,
+    };
+  }, [history]);
   const updateSearch = (value: string) => {
     setSearch(value);
     setResponsePage(1);
@@ -279,7 +301,7 @@ export default function CsCxNps() {
             Questionários
           </TabsTrigger>
           <TabsTrigger className="h-7" value="history">
-            Histórico
+            Histórico consolidado
           </TabsTrigger>
         </TabsList>
         <TabsContent value="responses" className="mt-3 space-y-3">
@@ -431,48 +453,125 @@ export default function CsCxNps() {
         </TabsContent>
         <TabsContent value="history" className="mt-3">
           <Card>
+            <CardHeader className="border-b px-4 py-3">
+              <div className="flex flex-col justify-between gap-3 lg:flex-row lg:items-start">
+                <div className="flex min-w-0 gap-2.5">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-900 dark:text-slate-300">
+                    <CalendarRange className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <CardTitle className="text-sm">
+                      Fechamentos históricos de NPS
+                    </CardTitle>
+                    <CardDescription className="mt-0.5 max-w-3xl text-xs leading-relaxed">
+                      Consolidações importadas do sistema anterior. Cada linha
+                      representa o resultado de um cartório em um período; as
+                      respostas atuais ficam na aba Respostas e no BI de Análises.
+                    </CardDescription>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-1.5 text-[10px]">
+                  <Badge variant="outline">{history.length} fechamentos</Badge>
+                  <Badge variant="outline">
+                    {historySummary.offices}{" "}
+                    {historySummary.offices === 1 ? "cartório" : "cartórios"}
+                  </Badge>
+                  <Badge variant="outline">
+                    {historySummary.totalResponses} respostas consolidadas
+                  </Badge>
+                </div>
+              </div>
+              {historySummary.firstPeriod && historySummary.lastPeriod && (
+                <p className="pl-10 text-[10px] text-muted-foreground">
+                  Cobertura histórica:{" "}
+                  {formatDateOnly(historySummary.firstPeriod)} até{" "}
+                  {formatDateOnly(historySummary.lastPeriod)}
+                </p>
+              )}
+            </CardHeader>
             <CardContent className="p-0">
               <Table className="[&_td]:px-3 [&_td]:py-2 [&_th]:h-9 [&_th]:px-3">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Cartório</TableHead>
-                    <TableHead>Período</TableHead>
-                    <TableHead>Respostas</TableHead>
-                    <TableHead>Promotores</TableHead>
-                    <TableHead>Neutros</TableHead>
-                    <TableHead>Detratores</TableHead>
-                    <TableHead>NPS</TableHead>
+                    <TableHead>Período avaliado</TableHead>
+                    <TableHead>Base da pesquisa</TableHead>
+                    <TableHead>Composição das respostas</TableHead>
+                    <TableHead>Resultado do período</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {pagedHistory.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell
-                        className="max-w-64 truncate font-medium"
-                        title={item.registry_office?.name}
-                      >
-                        {item.registry_office?.name}
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap text-xs">
-                        {formatDateOnly(item.period_start)} –{" "}
-                        {formatDateOnly(item.period_end)}
-                      </TableCell>
-                      <TableCell>{item.total_responses}</TableCell>
-                      <TableCell>{item.total_promoters}</TableCell>
-                      <TableCell>{item.total_neutrals}</TableCell>
-                      <TableCell>{item.total_detractors}</TableCell>
-                      <TableCell className="font-black">
-                        {item.nps_score.toFixed(1)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {pagedHistory.map((item) => {
+                    const status = npsHistoryStatus(item.nps_score);
+                    return (
+                      <TableRow key={item.id}>
+                        <TableCell
+                          className="max-w-64 truncate font-medium"
+                          title={item.registry_office?.name}
+                        >
+                          {item.registry_office?.name ??
+                            "Cartório não informado"}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap text-xs">
+                          {formatDateOnly(item.period_start)} –{" "}
+                          {formatDateOnly(item.period_end)}
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-bold">
+                            {item.total_responses}
+                          </span>
+                          <span className="ml-1 text-[10px] text-muted-foreground">
+                            respostas
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <div
+                            className="flex flex-wrap gap-1"
+                            aria-label={`${item.total_promoters} promotores, ${item.total_neutrals} neutros e ${item.total_detractors} detratores`}
+                          >
+                            <HistoryCount
+                              label="Promotores"
+                              shortLabel="P"
+                              value={item.total_promoters}
+                              tone="positive"
+                            />
+                            <HistoryCount
+                              label="Neutros"
+                              shortLabel="N"
+                              value={item.total_neutrals}
+                              tone="neutral"
+                            />
+                            <HistoryCount
+                              label="Detratores"
+                              shortLabel="D"
+                              value={item.total_detractors}
+                              tone="negative"
+                            />
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Badge
+                              variant="outline"
+                              className={status.className}
+                            >
+                              NPS {item.nps_score.toFixed(1)}
+                            </Badge>
+                            <span className="text-[10px] font-medium text-muted-foreground">
+                              {status.label}
+                            </span>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                   {!history.length && (
                     <TableRow>
                       <TableCell
-                        colSpan={7}
+                        colSpan={5}
                         className="h-24 text-center text-sm text-muted-foreground"
                       >
-                        Nenhum histórico encontrado.
+                        Nenhum fechamento histórico foi importado.
                       </TableCell>
                     </TableRow>
                   )}
@@ -678,6 +777,67 @@ function NpsPaginationBar({
     </div>
   );
 }
+
+function HistoryCount({
+  label,
+  shortLabel,
+  value,
+  tone,
+}: {
+  label: string;
+  shortLabel: string;
+  value: number;
+  tone: "positive" | "neutral" | "negative";
+}) {
+  const toneClass = {
+    positive:
+      "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300",
+    neutral:
+      "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300",
+    negative:
+      "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300",
+  }[tone];
+  return (
+    <Badge
+      variant="outline"
+      className={`h-5 gap-1 px-1.5 text-[9px] font-semibold ${toneClass}`}
+      title={`${value} ${label.toLocaleLowerCase("pt-BR")}`}
+    >
+      <span aria-hidden="true">{shortLabel}</span>
+      {value}
+    </Badge>
+  );
+}
+
+function npsHistoryStatus(score: number) {
+  if (score >= 75) {
+    return {
+      label: "Zona de excelência",
+      className:
+        "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300",
+    };
+  }
+  if (score >= 50) {
+    return {
+      label: "Zona de qualidade",
+      className:
+        "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-300",
+    };
+  }
+  if (score >= 0) {
+    return {
+      label: "Zona de aperfeiçoamento",
+      className:
+        "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300",
+    };
+  }
+  return {
+    label: "Zona crítica",
+    className:
+      "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300",
+  };
+}
+
 function ClassificationBadge({ value }: { value: string }) {
   return (
     <Badge
