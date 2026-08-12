@@ -313,6 +313,15 @@ describe("CS/CX visitas e NPS — permissões", () => {
       ctrlKey: false,
     });
     expect(
+      screen.getByText("Fechamentos históricos de NPS"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/cada linha representa o resultado de um cartório/i),
+    ).toBeInTheDocument();
+    expect(screen.getByText("7 fechamentos")).toBeInTheDocument();
+    expect(screen.getByText("28 respostas consolidadas")).toBeInTheDocument();
+    expect(screen.getAllByText("Zona de excelência")).toHaveLength(5);
+    expect(
       screen.getByLabelText("Mostrando 1 a 5 de 7 períodos"),
     ).toBeInTheDocument();
     expect(screen.queryByText("Histórico 6")).not.toBeInTheDocument();
