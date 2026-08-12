@@ -124,6 +124,7 @@ describe("CS/CX — ações por permissão", () => {
     const boardTab = screen.getByRole("tab", { name: /quadro/i });
     fireEvent.mouseDown(boardTab, { button: 0, ctrlKey: false });
 
+    expect(screen.getByText("Fluxo das solicitações").parentElement?.parentElement).toHaveClass("md:absolute");
     expect(screen.getByLabelText("Solicitações em Aguardando")).toHaveClass("overflow-y-auto");
     fireEvent.click(screen.getByRole("button", { name: /abrir quadro em tela cheia/i }));
     expect(screen.getByRole("button", { name: /sair da tela cheia/i })).toBeInTheDocument();

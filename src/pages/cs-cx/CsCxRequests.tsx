@@ -311,11 +311,14 @@ function RequestBoard({ requests, canEdit, onEdit, onStatusChange }: { requests:
     <section
       aria-label="Quadro de solicitações"
       className={cn(
-        "flex min-h-0 flex-col gap-2",
+        "relative flex min-h-0 flex-col gap-2",
         isFullscreen && "fixed inset-0 z-50 bg-background p-3 sm:p-4",
       )}
     >
-      <div className="flex shrink-0 items-center justify-between gap-3">
+      <div className={cn(
+        "flex shrink-0 items-center justify-between gap-3",
+        !isFullscreen && "md:absolute md:-top-12 md:left-[190px] md:right-0",
+      )}>
         <div>
           <p className="text-sm font-semibold">Fluxo das solicitações</p>
           <p className="text-[11px] text-muted-foreground">{canEdit ? "Arraste os cartões entre as colunas para alterar o status." : "Role cada coluna separadamente para consultar as solicitações."}</p>
