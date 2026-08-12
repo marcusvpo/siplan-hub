@@ -127,17 +127,6 @@ export interface CsCxNpsResponse {
   registry_office: { id: string; name: string } | null;
 }
 
-export interface CsCxNpsInput {
-  id?: string;
-  registry_office_id: string;
-  responded_at: string;
-  respondent_name: string;
-  respondent_office: string;
-  score: number;
-  score_reason?: string;
-  improvement_suggestion?: string;
-}
-
 export interface CsCxNpsHistory {
   id: string;
   registry_office_id: string;
@@ -541,45 +530,6 @@ export function useCsCxNps() {
     },
   });
 
-  const saveResponse = useMutation({
-    mutationFn: async (input: CsCxNpsInput) => {
-      const payload = {
-        registry_office_id: input.registry_office_id,
-        responded_at: new Date(input.responded_at).toISOString(),
-        respondent_name: input.respondent_name.trim(),
-        respondent_office: input.respondent_office.trim(),
-        score: input.score,
-        score_reason: emptyToNull(input.score_reason),
-        improvement_suggestion: emptyToNull(input.improvement_suggestion),
-        classification: classifyNps(input.score),
-      };
-      if (input.id) {
-        const { data, error } = await db
-          .from("cs_cx_nps_responses")
-          .update(payload)
-          .eq("id", input.id)
-          .select()
-          .single();
-        if (error) throw error;
-        return data;
-      }
-      const user = await currentUser();
-      const { data, error } = await db
-        .from("cs_cx_nps_responses")
-        .insert({
-          ...payload,
-          author_profile_id: user.id,
-          origin: "hub",
-          source_present: true,
-        })
-        .select()
-        .single();
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => invalidateExperience(queryClient),
-  });
-
   const deleteResponse = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await db
@@ -591,40 +541,14 @@ export function useCsCxNps() {
     onSuccess: () => invalidateExperience(queryClient),
   });
 
-  const importResponses = useMutation({
-    mutationFn: async ({
-      registryOfficeId,
-      rows,
-    }: {
-      registryOfficeId: string;
-      rows: CsCxNpsImportRow[];
-    }) => {
-      const { data, error } = await db.rpc("cs_cx_import_nps", {
-        p_registry_office_id: registryOfficeId,
-        p_rows: rows,
-      });
-      if (error) throw error;
-      return data as { imported: number; duplicates: number };
-    },
-    onSuccess: () => invalidateExperience(queryClient),
-  });
-
   return {
     responses: responsesQuery.data ?? [],
     history: historyQuery.data ?? [],
     isLoading: responsesQuery.isLoading || historyQuery.isLoading,
     error: responsesQuery.error ?? historyQuery.error,
     refetch: responsesQuery.refetch,
-    saveResponse,
     deleteResponse,
-    importResponses,
   };
-}
-
-export function classifyNps(score: number): "PROMOTOR" | "NEUTRO" | "DETRATOR" {
-  if (score >= 9) return "PROMOTOR";
-  if (score >= 7) return "NEUTRO";
-  return "DETRATOR";
 }
 
 async function currentUser() {

@@ -140,4 +140,42 @@ suite("invariantes de RLS (banco real)", () => {
     `);
     expect(rows).toEqual([]);
   });
+
+  it("respostas NPS nao podem ser incluidas, importadas ou alteradas por usuarios", async () => {
+    const { rows } = await client.query(`
+      select
+        has_table_privilege(
+          'authenticated',
+          'public.cs_cx_nps_responses',
+          'INSERT'
+        ) as can_insert,
+        has_table_privilege(
+          'authenticated',
+          'public.cs_cx_nps_responses',
+          'UPDATE'
+        ) as can_update,
+        has_function_privilege(
+          'authenticated',
+          'public.cs_cx_import_nps(uuid,jsonb)',
+          'EXECUTE'
+        ) as can_import,
+        exists (
+          select 1
+          from pg_policies
+          where schemaname = 'public'
+            and tablename = 'cs_cx_nps_responses'
+            and cmd in ('INSERT', 'UPDATE', 'ALL')
+            and ('authenticated' = any(roles) or 'public' = any(roles))
+        ) as has_write_policy
+    `);
+
+    expect(rows).toEqual([
+      {
+        can_insert: false,
+        can_update: false,
+        can_import: false,
+        has_write_policy: false,
+      },
+    ]);
+  });
 });

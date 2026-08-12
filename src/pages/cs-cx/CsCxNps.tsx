@@ -7,15 +7,12 @@ import {
   Frown,
   Link2,
   Meh,
-  Pencil,
-  Plus,
   RefreshCw,
   Search,
   Smile,
   Star,
   Trash2,
   TriangleAlert,
-  Upload,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -34,12 +31,10 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -57,34 +52,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
-import { useCsCxRegistryOffices } from "@/hooks/useCsCxCore";
 import {
-  type CsCxNpsInput,
   type CsCxNpsResponse,
   useCsCxNps,
 } from "@/hooks/useCsCxExperience";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useToast } from "@/hooks/use-toast";
 import { generateCsCxNpsPdf } from "@/lib/cs-cx-experience-pdf";
-import { parseNpsCsv } from "@/lib/cs-cx-nps-import";
-import { parseNpsXlsx } from "@/lib/cs-cx-nps-xlsx";
 import {
   NpsInvitationsPanel,
   NpsQuestionnairesPanel,
 } from "@/components/cs-cx/NpsSurveyManagement";
 import { NpsAnalyticsPanel } from "@/components/cs-cx/NpsAnalytics";
 import { answerLabel } from "@/lib/cs-cx-nps-survey";
-
-const emptyForm: CsCxNpsInput = {
-  registry_office_id: "",
-  responded_at: toLocalInput(new Date()),
-  respondent_name: "",
-  respondent_office: "",
-  score: 10,
-  score_reason: "",
-  improvement_suggestion: "",
-};
 const CLASS_LABELS: Record<string, string> = {
   PROMOTOR: "Promotor",
   NEUTRO: "Neutro",
@@ -99,11 +79,8 @@ export default function CsCxNps() {
     isLoading,
     error,
     refetch,
-    saveResponse,
     deleteResponse,
-    importResponses,
   } = useCsCxNps();
-  const { offices } = useCsCxRegistryOffices();
   const { hasPermission } = usePermissions();
   const { toast } = useToast();
   const [search, setSearch] = useState("");
@@ -112,17 +89,11 @@ export default function CsCxNps() {
   const [responsePageSize, setResponsePageSize] = useState(DEFAULT_PAGE_SIZE);
   const [historyPage, setHistoryPage] = useState(1);
   const [historyPageSize, setHistoryPageSize] = useState(DEFAULT_PAGE_SIZE);
-  const [form, setForm] = useState<CsCxNpsInput>(emptyForm);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [importOpen, setImportOpen] = useState(false);
-  const [importOfficeId, setImportOfficeId] = useState("");
-  const [importFile, setImportFile] = useState<File | null>(null);
   const [deleting, setDeleting] = useState<CsCxNpsResponse | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [requestOpen, setRequestOpen] = useState(false);
   const [viewing, setViewing] = useState<CsCxNpsResponse | null>(null);
   const canCreate = hasPermission("cs_cx_nps", "create");
-  const canEdit = hasPermission("cs_cx_nps", "edit");
   const canDelete = hasPermission("cs_cx_nps", "delete");
 
   const filtered = useMemo(() => {
@@ -197,36 +168,6 @@ export default function CsCxNps() {
     ? Math.round(((promoters - detractors) / responses.length) * 1000) / 10
     : 0;
 
-  function openCreate() {
-    setForm({ ...emptyForm, responded_at: toLocalInput(new Date()) });
-    setDialogOpen(true);
-  }
-  function openEdit(response: CsCxNpsResponse) {
-    setForm({
-      id: response.id,
-      registry_office_id: response.registry_office_id,
-      responded_at: toLocalInput(new Date(response.responded_at)),
-      respondent_name: response.respondent_name,
-      respondent_office: response.respondent_office,
-      score: response.score,
-      score_reason: response.score_reason ?? "",
-      improvement_suggestion: response.improvement_suggestion ?? "",
-    });
-    setDialogOpen(true);
-  }
-  async function handleSave() {
-    try {
-      await saveResponse.mutateAsync(form);
-      setDialogOpen(false);
-      toast({ title: form.id ? "Resposta atualizada" : "Resposta registrada" });
-    } catch (mutationError) {
-      toast({
-        title: "Não foi possível salvar",
-        description: messageOf(mutationError),
-        variant: "destructive",
-      });
-    }
-  }
   async function handleDelete() {
     if (!deleting) return;
     try {
@@ -236,37 +177,6 @@ export default function CsCxNps() {
     } catch (mutationError) {
       toast({
         title: "Não foi possível excluir",
-        description: messageOf(mutationError),
-        variant: "destructive",
-      });
-    }
-  }
-  async function handleImport() {
-    const office = offices.find((item) => item.id === importOfficeId);
-    if (!office || !importFile) return;
-    try {
-      const parsed = importFile.name
-        .toLocaleLowerCase("pt-BR")
-        .endsWith(".xlsx")
-        ? await parseNpsXlsx(await importFile.arrayBuffer(), office.name)
-        : parseNpsCsv(await importFile.text(), office.name);
-      if (!parsed.rows.length)
-        throw new Error(
-          parsed.errors[0] ?? "Nenhuma resposta válida encontrada.",
-        );
-      const result = await importResponses.mutateAsync({
-        registryOfficeId: office.id,
-        rows: parsed.rows,
-      });
-      setImportOpen(false);
-      setImportFile(null);
-      toast({
-        title: "Importação concluída",
-        description: `${result.imported} importadas, ${result.duplicates} duplicadas e ${parsed.errors.length} linhas inválidas.`,
-      });
-    } catch (mutationError) {
-      toast({
-        title: "Não foi possível importar",
         description: messageOf(mutationError),
         variant: "destructive",
       });
@@ -327,24 +237,10 @@ export default function CsCxNps() {
             Exportar PDF
           </Button>
           {canCreate && (
-            <>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setImportOpen(true)}
-              >
-                <Upload className="mr-2 h-4 w-4" />
-                Importar arquivo
-              </Button>
-              <Button size="sm" variant="outline" onClick={openCreate}>
-                <Plus className="mr-2 h-4 w-4" />
-                Registrar manualmente
-              </Button>
-              <Button size="sm" onClick={() => setRequestOpen(true)}>
-                <Link2 className="mr-2 h-4 w-4" />
-                Solicitar NPS
-              </Button>
-            </>
+            <Button size="sm" onClick={() => setRequestOpen(true)}>
+              <Link2 className="mr-2 h-4 w-4" />
+              Solicitar NPS
+            </Button>
           )}
         </div>
       </div>
@@ -425,7 +321,7 @@ export default function CsCxNps() {
                     <TableHead>Nota</TableHead>
                     <TableHead>Classificação</TableHead>
                     <TableHead>Motivo</TableHead>
-                    <TableHead className="w-28" />
+                    <TableHead className="w-20" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -466,28 +362,15 @@ export default function CsCxNps() {
                       </TableCell>
                       <TableCell>
                         <div className="flex">
-                          {response.questionnaire_snapshot && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              aria-label="Ver resposta completa"
-                              onClick={() => setViewing(response)}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          )}
-                          {canEdit && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              aria-label="Editar resposta"
-                              onClick={() => openEdit(response)}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                          )}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            aria-label="Visualizar resposta"
+                            onClick={() => setViewing(response)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
                           {canDelete && (
                             <Button
                               variant="ghost"
@@ -611,195 +494,6 @@ export default function CsCxNps() {
           </Card>
         </TabsContent>
       </Tabs>
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>
-              {form.id ? "Editar resposta" : "Nova resposta NPS"}
-            </DialogTitle>
-            <DialogDescription>
-              A classificação é calculada automaticamente pela nota.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Cartório">
-              <Select
-                value={form.registry_office_id}
-                onValueChange={(value) => {
-                  const office = offices.find((item) => item.id === value);
-                  setForm((current) => ({
-                    ...current,
-                    registry_office_id: value,
-                    respondent_office:
-                      current.respondent_office || office?.name || "",
-                  }));
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent>
-                  {offices.map((office) => (
-                    <SelectItem key={office.id} value={office.id}>
-                      {office.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-            <Field label="Data e hora">
-              <Input
-                type="datetime-local"
-                value={form.responded_at}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    responded_at: event.target.value,
-                  }))
-                }
-              />
-            </Field>
-            <Field label="Respondente">
-              <Input
-                value={form.respondent_name}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    respondent_name: event.target.value,
-                  }))
-                }
-              />
-            </Field>
-            <Field label="Cartório informado">
-              <Input
-                value={form.respondent_office}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    respondent_office: event.target.value,
-                  }))
-                }
-              />
-            </Field>
-            <Field label={`Nota: ${form.score}`}>
-              <Input
-                type="range"
-                min="0"
-                max="10"
-                value={form.score}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    score: Number(event.target.value),
-                  }))
-                }
-              />
-            </Field>
-            <div className="flex items-end pb-2">
-              <ClassificationBadge
-                value={
-                  form.score >= 9
-                    ? "PROMOTOR"
-                    : form.score >= 7
-                      ? "NEUTRO"
-                      : "DETRATOR"
-                }
-              />
-            </div>
-            <div className="md:col-span-2">
-              <Label htmlFor="score-reason">Motivo da nota</Label>
-              <Textarea
-                id="score-reason"
-                value={form.score_reason}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    score_reason: event.target.value,
-                  }))
-                }
-              />
-            </div>
-            <div className="md:col-span-2">
-              <Label htmlFor="improvement">Sugestão de melhoria</Label>
-              <Textarea
-                id="improvement"
-                value={form.improvement_suggestion}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    improvement_suggestion: event.target.value,
-                  }))
-                }
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              Cancelar
-            </Button>
-            <Button
-              disabled={
-                !form.registry_office_id ||
-                !form.respondent_name.trim() ||
-                !form.respondent_office.trim() ||
-                saveResponse.isPending
-              }
-              onClick={handleSave}
-            >
-              Salvar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      <Dialog open={importOpen} onOpenChange={setImportOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Importar respostas NPS</DialogTitle>
-            <DialogDescription>
-              Use XLSX ou CSV com Data/Hora, Nome e Nota/Pontuação. Motivo e
-              Sugestão são opcionais; duplicatas serão ignoradas.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Field label="Cartório de destino">
-              <Select value={importOfficeId} onValueChange={setImportOfficeId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent>
-                  {offices.map((office) => (
-                    <SelectItem key={office.id} value={office.id}>
-                      {office.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-            <Field label="Arquivo XLSX ou CSV">
-              <Input
-                type="file"
-                accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
-                onChange={(event) =>
-                  setImportFile(event.target.files?.[0] ?? null)
-                }
-              />
-            </Field>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setImportOpen(false)}>
-              Cancelar
-            </Button>
-            <Button
-              disabled={
-                !importOfficeId || !importFile || importResponses.isPending
-              }
-              onClick={handleImport}
-            >
-              Importar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
       <AlertDialog
         open={Boolean(deleting)}
         onOpenChange={(open) => !open && setDeleting(null)}
@@ -826,24 +520,58 @@ export default function CsCxNps() {
       >
         <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Resposta completa</DialogTitle>
+            <DialogTitle>Visualizar resposta NPS</DialogTitle>
             <DialogDescription>
-              {viewing?.respondent_name} ·{" "}
-              {viewing?.registry_office?.name ?? viewing?.respondent_office}
+              Somente leitura. Respostas enviadas pelos clientes não podem ser
+              alteradas.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            {viewing?.questionnaire_snapshot?.questions.map((question) => (
-              <div key={question.id} className="rounded-lg border p-3">
-                <p className="text-xs font-semibold text-muted-foreground">
-                  {question.title}
-                </p>
-                <p className="mt-1 whitespace-pre-wrap text-sm font-medium">
-                  {answerLabel(question, viewing.answers)}
-                </p>
+          {viewing && (
+            <div className="space-y-3">
+              <div className="grid gap-2 rounded-lg border bg-muted/20 p-3 sm:grid-cols-2">
+                <ReadOnlyField label="Data" value={formatDate(viewing.responded_at)} />
+                <ReadOnlyField
+                  label="Cartório"
+                  value={viewing.registry_office?.name ?? viewing.respondent_office}
+                />
+                <ReadOnlyField label="Respondente" value={viewing.respondent_name} />
+                <ReadOnlyField
+                  label="Resultado"
+                  value={`Nota ${viewing.score} · ${CLASS_LABELS[viewing.classification]}`}
+                />
               </div>
-            ))}
-          </div>
+              {viewing.score_reason && (
+                <ReadOnlyAnswer label="Motivo da nota" value={viewing.score_reason} />
+              )}
+              {viewing.improvement_suggestion && (
+                <ReadOnlyAnswer
+                  label="Sugestão de melhoria"
+                  value={viewing.improvement_suggestion}
+                />
+              )}
+              {viewing.questionnaire_snapshot?.questions
+                .filter((question) => !question.semantic_key)
+                .map((question) => (
+                  <ReadOnlyAnswer
+                    key={question.id}
+                    label={question.title}
+                    value={answerLabel(question, viewing.answers)}
+                  />
+                ))}
+              {!viewing.score_reason &&
+                !viewing.improvement_suggestion &&
+                !viewing.questionnaire_snapshot?.questions.some(
+                  (question) => !question.semantic_key,
+                ) && (
+                  <p className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
+                    Esta resposta possui somente os dados resumidos acima.
+                  </p>
+                )}
+              <p className="text-[10px] text-muted-foreground">
+                Origem: {viewing.origin === "legacy" ? "sistema legado" : "formulário do Siplan HUB"}
+              </p>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
@@ -965,23 +693,26 @@ function ClassificationBadge({ value }: { value: string }) {
     </Badge>
   );
 }
-function Field({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
+function ReadOnlyField({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <Label>{label}</Label>
-      {children}
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+        {label}
+      </p>
+      <p className="mt-0.5 text-sm font-semibold">{value || "—"}</p>
     </div>
   );
 }
-function toLocalInput(date: Date) {
-  const offset = date.getTimezoneOffset() * 60_000;
-  return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+
+function ReadOnlyAnswer({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border p-3">
+      <p className="text-xs font-semibold text-muted-foreground">{label}</p>
+      <p className="mt-1 whitespace-pre-wrap text-sm font-medium">
+        {value || "—"}
+      </p>
+    </div>
+  );
 }
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("pt-BR", {
