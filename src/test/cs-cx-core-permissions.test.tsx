@@ -107,12 +107,12 @@ describe("CS/CX — ações por permissão", () => {
 
   it("pagina a lista de solicitações em blocos compactos", () => {
     renderPage(<CsCxRequests />, []);
-    expect(screen.getByLabelText("Mostrando 1 a 10 de 12 solicitações")).toBeInTheDocument();
-    expect(screen.queryByText("CH-110")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Mostrando 1 a 5 de 12 solicitações")).toBeInTheDocument();
+    expect(screen.queryByText("CH-105")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /próxima página/i }));
 
-    expect(screen.getByText("CH-110")).toBeInTheDocument();
-    expect(screen.getByLabelText("Mostrando 11 a 12 de 12 solicitações")).toBeInTheDocument();
+    expect(screen.getByText("CH-105")).toBeInTheDocument();
+    expect(screen.getByLabelText("Mostrando 6 a 10 de 12 solicitações")).toBeInTheDocument();
   });
 });
