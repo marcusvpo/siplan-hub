@@ -50,10 +50,10 @@ vi.mock("@/hooks/useCsCxEngagement", () => ({
     deleteContact: mutation,
   }),
   useCsCxAppointments: () => ({
-    appointments: [{
-      id: "appointment-1",
-      legacy_id: 2,
-      title: "Reunião de acompanhamento",
+    appointments: Array.from({ length: 12 }, (_, index) => ({
+      id: `appointment-${index + 1}`,
+      legacy_id: index + 2,
+      title: index === 0 ? "Reunião de acompanhamento" : `Agendamento ${index + 1}`,
       starts_at: "2026-08-15T13:00:00.000Z",
       duration_minutes: 60,
       appointment_type: "REUNIAO",
@@ -74,7 +74,7 @@ vi.mock("@/hooks/useCsCxEngagement", () => ({
       registry_office: { id: "office-1", name: "Cartório Central" },
       contact: { id: "contact-1", contact_person: "Maria" },
       responsible: { id: "profile-1", full_name: "Bruno", email: null },
-    }],
+    })),
     profiles: [{ id: "profile-1", full_name: "Bruno", email: null }],
     isLoading: false,
     error: null,
@@ -129,5 +129,16 @@ describe("CS/CX contatos e agendamentos — permissões", () => {
   it("libera criação de agendamentos com a permissão correta", () => {
     renderPage(<CsCxAppointments />, ["cs_cx_agendamentos:create"]);
     expect(screen.getByRole("button", { name: /novo agendamento/i })).toBeInTheDocument();
+  });
+
+  it("pagina a lista de agendamentos em blocos compactos", () => {
+    renderPage(<CsCxAppointments />, []);
+    expect(screen.getByLabelText("Mostrando 1 a 5 de 12 agendamentos")).toBeInTheDocument();
+    expect(screen.queryByText("Agendamento 6")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /próxima página/i }));
+
+    expect(screen.getByText("Agendamento 6")).toBeInTheDocument();
+    expect(screen.getByLabelText("Mostrando 6 a 10 de 12 agendamentos")).toBeInTheDocument();
   });
 });
