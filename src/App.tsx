@@ -103,9 +103,7 @@ const CsCxRoutines = lazy(() => import("./pages/cs-cx/CsCxRoutines"));
 const CsCxVisits = lazy(() => import("./pages/cs-cx/CsCxVisits"));
 const CsCxNps = lazy(() => import("./pages/cs-cx/CsCxNps"));
 const CsCxAdmin = lazy(() => import("./pages/cs-cx/CsCxAdmin"));
-const CsCxMigrationPlaceholder = lazy(() =>
-  import("./pages/cs-cx/CsCxMigrationPlaceholder"),
-);
+const CsCxReports = lazy(() => import("./pages/cs-cx/CsCxReports"));
 
 // Admin Pages (lazy)
 const AdminLayout = lazy(() => import("./layouts/AdminLayout"));
@@ -691,10 +689,7 @@ const App = () => (
                             path="/cs-cx/relatorios"
                             element={
                               <RequirePermission resource="cs_cx_reports">
-                                <CsCxMigrationPlaceholder
-                                  title="Relatórios CS/CX"
-                                  description="Relatórios operacionais, estatísticas, filtros e exportações serão consolidados nesta área."
-                                />
+                                <CsCxReports />
                               </RequirePermission>
                             }
                           />

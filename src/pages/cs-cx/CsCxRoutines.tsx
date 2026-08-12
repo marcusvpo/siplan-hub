@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Activity, CheckCircle2, ChevronDown, ChevronUp, ClipboardCheck, Database, ListChecks, Pencil, Plus, RefreshCw, Search, Trash2, TriangleAlert } from "lucide-react";
+import { Activity, CheckCircle2, ChevronDown, ChevronUp, ClipboardCheck, Database, FileDown, ListChecks, Pencil, Plus, RefreshCw, Search, Trash2, TriangleAlert } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import { useCsCxRegistryOffices } from "@/hooks/useCsCxCore";
 import { type CsCxOfficeRoutine, type CsCxRoutineItemConfig, useCsCxRoutines } from "@/hooks/useCsCxRoutines";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useToast } from "@/hooks/use-toast";
+import { generateCsCxRoutinePdf } from "@/lib/cs-cx-routines-report";
 
 const STATUS_OPTIONS = [
   { value: "analisar", label: "Analisar" },
@@ -36,6 +37,7 @@ export default function CsCxRoutines() {
   const [itemStatus, setItemStatus] = useState("analisar");
   const [itemNotes, setItemNotes] = useState("");
   const [deleting, setDeleting] = useState<CsCxOfficeRoutine | null>(null);
+  const [exportingRoutineId, setExportingRoutineId] = useState<string | null>(null);
 
   const canCreate = hasPermission("cs_cx_rotinas", "create");
   const canEdit = hasPermission("cs_cx_rotinas", "edit");
@@ -103,6 +105,18 @@ export default function CsCxRoutines() {
     }
   }
 
+  async function handleRoutinePdf(routine: CsCxOfficeRoutine) {
+    setExportingRoutineId(routine.id);
+    try {
+      await generateCsCxRoutinePdf(routine);
+      toast({ title: "PDF da rotina gerado" });
+    } catch (exportError) {
+      toast({ title: "Não foi possível gerar o PDF", description: messageOf(exportError), variant: "destructive" });
+    } finally {
+      setExportingRoutineId(null);
+    }
+  }
+
   if (isLoading) return <div className="container mx-auto max-w-7xl space-y-4 p-6"><Skeleton className="h-28 w-full" /><Skeleton className="h-80 w-full" /></div>;
 
   return (
@@ -131,7 +145,7 @@ export default function CsCxRoutines() {
               const isExpanded = expanded === routine.id;
               const analyzed = routine.items.filter((item) => item.active !== null).length;
               return <Card key={routine.id}>
-                <CardHeader className="pb-3"><div className="flex flex-col justify-between gap-3 md:flex-row md:items-center"><div><CardTitle className="text-base">{routine.registry_office?.name ?? "Cartório removido"}</CardTitle><CardDescription>{routine.routine_model?.name ?? "Modelo removido"} · {analyzed}/{routine.items.length} itens analisados · aplicado em {formatDate(routine.applied_at)}</CardDescription></div><div className="flex gap-2">{routine.origin === "legacy" && <Badge variant="outline">Legado</Badge>}<Button variant="outline" size="sm" onClick={() => setExpanded(isExpanded ? null : routine.id)}>{isExpanded ? <ChevronUp className="mr-2 h-4 w-4" /> : <ChevronDown className="mr-2 h-4 w-4" />}{isExpanded ? "Ocultar" : "Analisar"}</Button>{canDelete && <Button variant="ghost" size="icon" aria-label="Desvincular rotina" onClick={() => setDeleting(routine)}><Trash2 className="h-4 w-4 text-destructive" /></Button>}</div></div></CardHeader>
+                <CardHeader className="pb-3"><div className="flex flex-col justify-between gap-3 md:flex-row md:items-center"><div><CardTitle className="text-base">{routine.registry_office?.name ?? "Cartório removido"}</CardTitle><CardDescription>{routine.routine_model?.name ?? "Modelo removido"} · {analyzed}/{routine.items.length} itens analisados · aplicado em {formatDate(routine.applied_at)}</CardDescription></div><div className="flex gap-2">{routine.origin === "legacy" && <Badge variant="outline">Legado</Badge>}<Button variant="ghost" size="icon" aria-label="Exportar PDF da rotina" disabled={exportingRoutineId === routine.id} onClick={() => handleRoutinePdf(routine)}><FileDown className="h-4 w-4" /></Button><Button variant="outline" size="sm" onClick={() => setExpanded(isExpanded ? null : routine.id)}>{isExpanded ? <ChevronUp className="mr-2 h-4 w-4" /> : <ChevronDown className="mr-2 h-4 w-4" />}{isExpanded ? "Ocultar" : "Analisar"}</Button>{canDelete && <Button variant="ghost" size="icon" aria-label="Desvincular rotina" onClick={() => setDeleting(routine)}><Trash2 className="h-4 w-4 text-destructive" /></Button>}</div></div></CardHeader>
                 {isExpanded && <CardContent className="space-y-2 border-t pt-4">{routine.notes && <p className="mb-3 text-sm text-muted-foreground">{routine.notes}</p>}{routine.items.map((item) => <div key={item.id} className="flex flex-col justify-between gap-3 rounded-lg border p-3 md:flex-row md:items-center"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><span className="font-medium">{item.model_item?.name ?? "Item removido"}</span>{item.model_item?.required && <Badge variant="secondary">Obrigatório</Badge>}{item.model_item?.category && <Badge variant="outline" style={{ borderColor: item.model_item.category.display_color }}>{item.model_item.category.name}</Badge>}</div><p className="mt-1 text-xs text-muted-foreground">{item.model_item?.routine_type?.name}{item.analysis_notes ? ` · ${item.analysis_notes}` : ""}</p></div><div className="flex items-center gap-2"><StatusBadge active={item.active} />{canEdit && <Button variant="ghost" size="sm" onClick={() => openItem(routine, item)}><Pencil className="mr-2 h-3.5 w-3.5" />Editar</Button>}</div></div>)}</CardContent>}
               </Card>;
             })}

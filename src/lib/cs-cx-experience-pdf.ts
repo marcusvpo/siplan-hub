@@ -1,8 +1,8 @@
 import type { CsCxNpsResponse, CsCxVisit } from "@/hooks/useCsCxExperience";
 
-type ReportRow = [label: string, value: string];
-interface ReportBlock { title: string; subtitle: string; rows: ReportRow[] }
-interface SummaryItem { label: string; value: string | number }
+export type CsCxReportRow = [label: string, value: string];
+export interface CsCxReportBlock { title: string; subtitle: string; rows: CsCxReportRow[] }
+export interface CsCxSummaryItem { label: string; value: string | number }
 
 const STATUS_LABELS: Record<string, string> = {
   aberto: "Aberta", emandamento: "Em andamento", concluido: "Concluída", reaberto: "Reaberta",
@@ -11,7 +11,7 @@ const STATUS_LABELS: Record<string, string> = {
 export async function generateCsCxVisitsPdf(visits: CsCxVisit[], filterDescription: string) {
   const completed = visits.filter((visit) => visit.status === "concluido").length;
   const pending = visits.flatMap((visit) => visit.pending_items).filter((item) => item.status !== "resolvida").length;
-  const blocks = visits.map((visit): ReportBlock => ({
+  const blocks = visits.map((visit): CsCxReportBlock => ({
     title: visit.registry_office?.name ?? "Cartório removido",
     subtitle: `${formatDate(visit.visit_date)} · ${STATUS_LABELS[visit.status] ?? visit.status}`,
     rows: [
@@ -24,7 +24,7 @@ export async function generateCsCxVisitsPdf(visits: CsCxVisit[], filterDescripti
       ["Observações", visit.general_notes ?? "Não informadas"],
     ],
   }));
-  await generateReport(
+  await generateCsCxPdfReport(
     "RELATÓRIO DE VISITAS",
     filterDescription,
     [
@@ -50,7 +50,7 @@ export async function generateCsCxNpsPdf(responses: CsCxNpsResponse[], filterDes
     groups.set(office, group);
     return groups;
   }, new Map<string, CsCxNpsResponse[]>())).sort(([officeA], [officeB]) => officeA.localeCompare(officeB, "pt-BR"));
-  const blocks = byOffice.map(([office, officeResponses]): ReportBlock => {
+  const blocks = byOffice.map(([office, officeResponses]): CsCxReportBlock => {
     const officePromoters = officeResponses.filter((item) => item.classification === "PROMOTOR").length;
     const officeDetractors = officeResponses.filter((item) => item.classification === "DETRATOR").length;
     const officeNps = Math.round(((officePromoters - officeDetractors) / officeResponses.length) * 1000) / 10;
@@ -58,13 +58,13 @@ export async function generateCsCxNpsPdf(responses: CsCxNpsResponse[], filterDes
       title: office,
       subtitle: `${officeResponses.length} resposta(s) · NPS ${officeNps}`,
       rows: officeResponses.sort((a, b) => b.responded_at.localeCompare(a.responded_at)).flatMap((response) => [
-        [formatDateTime(response.responded_at), `${response.respondent_name} · Nota ${response.score} · ${response.classification}`] as ReportRow,
-        ...(response.score_reason ? [["Motivo", response.score_reason] as ReportRow] : []),
-        ...(response.improvement_suggestion ? [["Sugestão", response.improvement_suggestion] as ReportRow] : []),
+        [formatDateTime(response.responded_at), `${response.respondent_name} · Nota ${response.score} · ${response.classification}`] as CsCxReportRow,
+        ...(response.score_reason ? [["Motivo", response.score_reason] as CsCxReportRow] : []),
+        ...(response.improvement_suggestion ? [["Sugestão", response.improvement_suggestion] as CsCxReportRow] : []),
       ]),
     };
   });
-  await generateReport(
+  await generateCsCxPdfReport(
     "RELATÓRIO DE NPS",
     filterDescription,
     [
@@ -78,7 +78,7 @@ export async function generateCsCxNpsPdf(responses: CsCxNpsResponse[], filterDes
   );
 }
 
-async function generateReport(title: string, filterDescription: string, summary: SummaryItem[], blocks: ReportBlock[], filename: string) {
+export async function generateCsCxPdfReport(title: string, filterDescription: string, summary: CsCxSummaryItem[], blocks: CsCxReportBlock[], filename: string) {
   if (!blocks.length) throw new Error("Não há dados no filtro atual para exportar.");
   const { jsPDF } = await import("jspdf");
   const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });

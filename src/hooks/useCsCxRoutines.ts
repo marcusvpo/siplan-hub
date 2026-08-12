@@ -262,7 +262,7 @@ export function useCsCxRoutines() {
     routines: routinesQuery.data ?? [],
     isLoading: modelsQuery.isLoading || routinesQuery.isLoading,
     error: modelsQuery.error ?? routinesQuery.error,
-    refetch: routinesQuery.refetch,
+    refetch: async () => Promise.all([modelsQuery.refetch(), routinesQuery.refetch()]),
     applyRoutine,
     setRoutineItem,
     deleteRoutine,

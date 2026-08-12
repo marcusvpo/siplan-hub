@@ -82,6 +82,7 @@ describe("CS/CX rotinas — permissões", () => {
   it("mantém os dados visíveis sem liberar escrita", () => {
     renderPage([]);
     expect(screen.getByText("Cartório Central")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /exportar pdf da rotina/i })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /aplicar rotina/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /desvincular rotina/i })).not.toBeInTheDocument();
   });
