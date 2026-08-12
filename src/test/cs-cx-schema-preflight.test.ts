@@ -1,0 +1,50 @@
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { describe, expect, it } from "vitest";
+
+const root = process.cwd();
+const runner = readFileSync(resolve(root, "scripts/prepare-cs-cx-schema.mjs"), "utf8");
+const migrator = readFileSync(resolve(root, "scripts/migrate-cs-cx.mjs"), "utf8");
+const workflow = readFileSync(resolve(root, ".github/workflows/supabase-migrations.yml"), "utf8");
+const migrations = [...runner.matchAll(/'((?:20260811|20260812)\d+_cs_cx_[^']+\.sql)'/g)]
+  .map((match) => match[1]);
+
+describe("preflight do schema CS/CX", () => {
+  it("mantém uma lista explícita e existente de migrations", () => {
+    expect(migrations).toHaveLength(12);
+    expect(new Set(migrations).size).toBe(migrations.length);
+    for (const migration of migrations) {
+      expect(existsSync(resolve(root, "supabase/migrations", migration)), migration).toBe(true);
+    }
+  });
+
+  it("exige confirmação do projeto e aplica o pacote em uma transação", () => {
+    expect(runner).toContain("--apply");
+    expect(runner).toContain("--confirm-project=");
+    expect(runner).toContain("pg_advisory_xact_lock");
+    expect(runner).toContain("target.query('BEGIN')");
+    expect(runner).toContain("target.query('COMMIT')");
+    expect(runner).toContain("target.query('ROLLBACK')");
+  });
+
+  it("não permite aplicar automaticamente o histórico global no CI", () => {
+    expect(workflow).toContain("npm run prepare:cs-cx -- --static");
+    expect(workflow).not.toMatch(/run:\s*supabase\s+db\s+push/i);
+    expect(workflow).not.toContain("SUPABASE_ACCESS_TOKEN");
+    expect(workflow).not.toContain("SUPABASE_DB_PASSWORD");
+  });
+
+  it("trava a conexão legada em somente leitura", () => {
+    expect(migrator).toContain("SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY");
+    expect(migrator).toContain("mode === 'source'");
+    expect(migrator).toContain("source_preflight LIMIT 0");
+  });
+
+  it("protege cargas e o de/para manual com confirmação e transação", () => {
+    expect(migrator).toContain("--confirm-project=");
+    expect(migrator).toContain("--map=artifacts/cs-cx-user-map.json");
+    expect(migrator).toContain("jsonb_to_recordset");
+    expect(migrator).toContain("await target.query('BEGIN')");
+    expect(migrator).toContain("await target.query('ROLLBACK')");
+  });
+});

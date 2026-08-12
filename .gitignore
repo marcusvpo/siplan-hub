@@ -39,6 +39,8 @@ dist-ssr
 *.tsbuildinfo
 *.tmp
 lint_report.txt
+/artifacts/cs-cx-user-mapping.csv
+/artifacts/cs-cx-user-map.json
 
 # Documentos binarios de referencia (nao versionar)
 *.docx
