@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 const hasPermission = vi.fn();
 const mutation = { mutateAsync: vi.fn(), mutate: vi.fn(), isPending: false };
@@ -17,10 +17,16 @@ vi.mock("@/hooks/useCsCxExperience", () => ({
       visit_date: "2026-08-10", start_time: "09:00:00", end_time: "11:00:00", status: "aberto",
       objective: "Acompanhar operação", general_notes: null, origin: "legacy",
       registry_office: { id: "office-1", name: "Cartório Central" }, visitor: { id: "profile-1", full_name: "Bruno" },
-      checklist: [], pending_items: [],
+      checklist: [], pending_items: [{
+        id: "pending-1", title: "Revisar cadastro", description: "Conferir dados", priority: "media",
+        category: null, notes: null, due_date: null, status: "pendente", request_id: null,
+      }], attachments: [],
     }],
     profiles: [{ id: "profile-1", full_name: "Bruno" }], isLoading: false, error: null, refetch: vi.fn(),
-    saveVisit: mutation, setVisitStatus: mutation, toggleChecklist: mutation, deleteVisit: mutation,
+    saveVisit: mutation, setVisitStatus: mutation, toggleChecklist: mutation,
+    saveChecklistItem: mutation, deleteChecklistItem: mutation, savePendingItem: mutation,
+    deletePendingItem: mutation, generateRequest: mutation, uploadAttachment: mutation,
+    deleteAttachment: mutation, downloadAttachment: vi.fn(), deleteVisit: mutation,
   }),
   useCsCxNps: () => ({
     responses: [{
@@ -29,7 +35,8 @@ vi.mock("@/hooks/useCsCxExperience", () => ({
       improvement_suggestion: null, classification: "PROMOTOR", origin: "legacy",
       registry_office: { id: "office-1", name: "Cartório Central" },
     }],
-    history: [], isLoading: false, error: null, refetch: vi.fn(), saveResponse: mutation, deleteResponse: mutation,
+    history: [], isLoading: false, error: null, refetch: vi.fn(), saveResponse: mutation,
+    deleteResponse: mutation, importResponses: mutation,
   }),
 }));
 
@@ -56,6 +63,18 @@ describe("CS/CX visitas e NPS — permissões", () => {
     expect(screen.getByRole("button", { name: /nova visita/i })).toBeInTheDocument();
   });
 
+  it("exige permissão de solicitações para gerar uma a partir da visita", () => {
+    const { rerender } = renderPage(<CsCxVisits />, ["cs_cx_visitas:edit"]);
+    fireEvent.click(screen.getByRole("button", { name: /detalhes/i }));
+    expect(screen.queryByRole("button", { name: /gerar solicitação/i })).not.toBeInTheDocument();
+
+    hasPermission.mockImplementation((resource: string, action: string) => [
+      "cs_cx_visitas:edit", "cs_cx_registros:create",
+    ].includes(`${resource}:${action}`));
+    rerender(<CsCxVisits />);
+    expect(screen.getByRole("button", { name: /gerar solicitação/i })).toBeInTheDocument();
+  });
+
   it("mantém NPS em leitura sem liberar escrita", () => {
     renderPage(<CsCxNps />, []);
     expect(screen.getByText("Maria")).toBeInTheDocument();
@@ -66,5 +85,6 @@ describe("CS/CX visitas e NPS — permissões", () => {
   it("libera criação de NPS com a permissão correta", () => {
     renderPage(<CsCxNps />, ["cs_cx_nps:create"]);
     expect(screen.getByRole("button", { name: /nova resposta/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /importar csv/i })).toBeInTheDocument();
   });
 });
