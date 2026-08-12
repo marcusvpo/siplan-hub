@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 const hasPermission = vi.fn();
 const mutation = { mutateAsync: vi.fn(), isPending: false };
@@ -58,6 +58,25 @@ vi.mock("@/hooks/useCsCxRoutines", () => ({
         },
       }],
     }],
+    history: [{
+      id: "history-1",
+      legacy_id: 10,
+      office_routine_id: "routine-1",
+      model_item_id: "item-1",
+      action: "ATIVADO",
+      previous_status: null,
+      new_status: true,
+      notes: "Validado com o cliente",
+      legacy_user_id: 7,
+      actor_profile_id: null,
+      occurred_at: "2026-08-10T13:30:00.000Z",
+      ip_address: "10.0.10.9",
+      origin: "legacy",
+      registry_office_name: "Cartório Central",
+      routine_model_name: "Rotinas Firmas",
+      model_item_name: "Reconhecimento de firma",
+      actor_name: "Bruno Fernandes",
+    }],
     isLoading: false,
     error: null,
     refetch: vi.fn(),
@@ -91,5 +110,15 @@ describe("CS/CX rotinas — permissões", () => {
     renderPage(["cs_cx_rotinas:create", "cs_cx_rotinas:delete"]);
     expect(screen.getByRole("button", { name: /aplicar rotina/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /desvincular rotina/i })).toBeInTheDocument();
+  });
+
+  it("exibe o histórico detalhado sem exigir permissão de escrita", () => {
+    renderPage([]);
+    fireEvent.mouseDown(screen.getByRole("tab", { name: "Histórico" }), { button: 0, ctrlKey: false });
+
+    expect(screen.getByText("Bruno Fernandes")).toBeInTheDocument();
+    expect(screen.getByText("Item ativado")).toBeInTheDocument();
+    expect(screen.getByText("Validado com o cliente")).toBeInTheDocument();
+    expect(screen.getByLabelText("Data inicial do histórico")).toBeInTheDocument();
   });
 });

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Activity, CheckCircle2, ChevronDown, ChevronUp, ClipboardCheck, Database, FileDown, ListChecks, Pencil, Plus, RefreshCw, Search, Trash2, TriangleAlert } from "lucide-react";
+import { Activity, ArrowRight, CheckCircle2, ChevronDown, ChevronUp, ClipboardCheck, Clock3, Database, FileDown, ListChecks, Pencil, Plus, RefreshCw, Search, Trash2, TriangleAlert } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useCsCxRegistryOffices } from "@/hooks/useCsCxCore";
@@ -24,7 +25,7 @@ const STATUS_OPTIONS = [
 ] as const;
 
 export default function CsCxRoutines() {
-  const { models, routines, isLoading, error, refetch, applyRoutine, setRoutineItem, deleteRoutine } = useCsCxRoutines();
+  const { models, routines, history, isLoading, error, refetch, applyRoutine, setRoutineItem, deleteRoutine } = useCsCxRoutines();
   const { offices } = useCsCxRegistryOffices();
   const { hasPermission } = usePermissions();
   const { toast } = useToast();
@@ -38,6 +39,10 @@ export default function CsCxRoutines() {
   const [itemNotes, setItemNotes] = useState("");
   const [deleting, setDeleting] = useState<CsCxOfficeRoutine | null>(null);
   const [exportingRoutineId, setExportingRoutineId] = useState<string | null>(null);
+  const [historySearch, setHistorySearch] = useState("");
+  const [historyAction, setHistoryAction] = useState("all");
+  const [historyStart, setHistoryStart] = useState("");
+  const [historyEnd, setHistoryEnd] = useState("");
 
   const canCreate = hasPermission("cs_cx_rotinas", "create");
   const canEdit = hasPermission("cs_cx_rotinas", "edit");
@@ -61,6 +66,30 @@ export default function CsCxRoutines() {
       pending: items.filter((item) => item.active === null).length,
     };
   }, [routines]);
+
+  const historyActions = useMemo(
+    () => [...new Set(history.map((entry) => entry.action))].sort((a, b) => actionLabel(a).localeCompare(actionLabel(b), "pt-BR")),
+    [history],
+  );
+
+  const filteredHistory = useMemo(() => {
+    const term = historySearch.trim().toLocaleLowerCase("pt-BR");
+    return history.filter((entry) => {
+      const matchesTerm = !term || [
+        entry.registry_office_name,
+        entry.routine_model_name,
+        entry.model_item_name,
+        entry.actor_name,
+        entry.notes,
+        entry.action,
+      ].some((value) => value?.toLocaleLowerCase("pt-BR").includes(term));
+      const day = localDateKey(entry.occurred_at);
+      return matchesTerm
+        && (historyAction === "all" || entry.action === historyAction)
+        && (!historyStart || day >= historyStart)
+        && (!historyEnd || day <= historyEnd);
+    });
+  }, [history, historyAction, historyEnd, historySearch, historyStart]);
 
   async function handleApply() {
     try {
@@ -136,7 +165,7 @@ export default function CsCxRoutines() {
       </div>
 
       <Tabs defaultValue="applications" className="space-y-4">
-        <TabsList><TabsTrigger value="applications">Aplicações</TabsTrigger><TabsTrigger value="models">Modelos</TabsTrigger></TabsList>
+        <TabsList><TabsTrigger value="applications">Aplicações</TabsTrigger><TabsTrigger value="models">Modelos</TabsTrigger><TabsTrigger value="history">Histórico</TabsTrigger></TabsList>
         <TabsContent value="applications" className="space-y-4">
           <Card><CardContent className="grid gap-3 pt-6 md:grid-cols-[1fr_280px]"><div className="relative"><Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" /><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar cartório, modelo ou observação..." className="pl-9" /></div><Select value={officeFilter} onValueChange={setOfficeFilter}><SelectTrigger><SelectValue placeholder="Todos os cartórios" /></SelectTrigger><SelectContent><SelectItem value="all">Todos os cartórios</SelectItem>{offices.map((office) => <SelectItem key={office.id} value={office.id}>{office.name}</SelectItem>)}</SelectContent></Select></CardContent></Card>
 
@@ -155,6 +184,42 @@ export default function CsCxRoutines() {
 
         <TabsContent value="models" className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {models.map((model) => <Card key={model.id}><CardHeader><div className="flex items-start justify-between gap-3"><div><CardTitle className="text-base">{model.name}</CardTitle><CardDescription className="mt-1">{model.description || "Sem descrição"}</CardDescription></div><Badge variant={model.active ? "default" : "secondary"}>{model.active ? "Ativo" : "Inativo"}</Badge></div></CardHeader><CardContent className="space-y-3"><p className="text-sm"><strong>{model.item_count}</strong> itens configurados</p><div className="flex flex-wrap gap-1">{model.products.map((product) => <Badge key={product.id} variant="outline">{product.name}</Badge>)}</div></CardContent></Card>)}
+        </TabsContent>
+
+        <TabsContent value="history" className="space-y-4">
+          <Card>
+            <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-base"><Clock3 className="h-4 w-4 text-rose-600" />Histórico de alterações</CardTitle><CardDescription>Registro completo das aplicações e mudanças nos itens de rotina.</CardDescription></CardHeader>
+            <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1fr_220px_170px_170px]">
+              <div className="relative"><Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" /><Input value={historySearch} onChange={(event) => setHistorySearch(event.target.value)} placeholder="Buscar cartório, modelo, item ou responsável..." className="pl-9" /></div>
+              <Select value={historyAction} onValueChange={setHistoryAction}><SelectTrigger><SelectValue placeholder="Todas as ações" /></SelectTrigger><SelectContent><SelectItem value="all">Todas as ações</SelectItem>{historyActions.map((action) => <SelectItem key={action} value={action}>{actionLabel(action)}</SelectItem>)}</SelectContent></Select>
+              <Input type="date" aria-label="Data inicial do histórico" value={historyStart} onChange={(event) => setHistoryStart(event.target.value)} />
+              <Input type="date" aria-label="Data final do histórico" value={historyEnd} onChange={(event) => setHistoryEnd(event.target.value)} />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3"><CardTitle className="text-base">{filteredHistory.length} registro{filteredHistory.length === 1 ? "" : "s"}</CardTitle></CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader><TableRow><TableHead>Data e hora</TableHead><TableHead>Responsável</TableHead><TableHead>Ação</TableHead><TableHead>Cartório / modelo</TableHead><TableHead>Item</TableHead><TableHead>Alteração</TableHead><TableHead>Observação</TableHead><TableHead>IP</TableHead></TableRow></TableHeader>
+                  <TableBody>
+                    {filteredHistory.map((entry) => <TableRow key={entry.id}>
+                      <TableCell className="whitespace-nowrap text-xs">{formatDateTime(entry.occurred_at)}</TableCell>
+                      <TableCell><p className="max-w-40 truncate text-sm font-medium">{entry.actor_name ?? (entry.legacy_user_id ? `Usuário legado #${entry.legacy_user_id}` : "Sistema")}</p>{entry.origin === "legacy" && <span className="text-xs text-muted-foreground">Legado</span>}</TableCell>
+                      <TableCell><ActionBadge action={entry.action} /></TableCell>
+                      <TableCell><p className="max-w-56 truncate text-sm font-medium">{entry.registry_office_name ?? "Cartório não vinculado"}</p><p className="max-w-56 truncate text-xs text-muted-foreground">{entry.routine_model_name ?? "Modelo não informado"}</p></TableCell>
+                      <TableCell className="max-w-56 text-sm">{entry.model_item_name ?? "Modelo completo"}</TableCell>
+                      <TableCell>{hasStatusTransition(entry.action, entry.previous_status, entry.new_status) ? <div className="flex items-center gap-1.5"><StatusBadge active={entry.previous_status} /><ArrowRight className="h-3.5 w-3.5 text-muted-foreground" /><StatusBadge active={entry.new_status} /></div> : <span className="text-muted-foreground">—</span>}</TableCell>
+                      <TableCell className="max-w-72 whitespace-normal text-xs text-muted-foreground">{entry.notes || "—"}</TableCell>
+                      <TableCell className="whitespace-nowrap text-xs text-muted-foreground">{entry.ip_address || "—"}</TableCell>
+                    </TableRow>)}
+                    {!filteredHistory.length && <TableRow><TableCell colSpan={8} className="h-32 text-center text-muted-foreground">Nenhum registro encontrado para os filtros selecionados.</TableCell></TableRow>}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
 
@@ -177,8 +242,45 @@ function StatusBadge({ active }: { active: boolean | null }) {
   return <Badge variant="secondary">Analisar</Badge>;
 }
 
+function ActionBadge({ action }: { action: string }) {
+  if (action === "ATIVADO") return <Badge className="bg-emerald-600 hover:bg-emerald-600">{actionLabel(action)}</Badge>;
+  if (action === "DESATIVADO" || action === "DESVINCULADO" || action.startsWith("REMOVIDO")) return <Badge variant="destructive">{actionLabel(action)}</Badge>;
+  if (action === "APLICADO" || action === "ITEM_ADICIONADO") return <Badge>{actionLabel(action)}</Badge>;
+  return <Badge variant="secondary">{actionLabel(action)}</Badge>;
+}
+
+function actionLabel(action: string) {
+  const labels: Record<string, string> = {
+    APLICADO: "Rotina aplicada",
+    ATIVADO: "Item ativado",
+    DESATIVADO: "Item desativado",
+    ANALISAR: "Marcado para análise",
+    ITEM_ADICIONADO: "Item adicionado",
+    REMOVIDO: "Item removido",
+    REMOVIDO_POR_EXCLUSAO_MODELO: "Item removido do modelo",
+    DESVINCULADO: "Rotina desvinculada",
+    ANALISADO: "Item analisado",
+    ANALISE_CARTORIO: "Análise do cartório",
+  };
+  return labels[action] ?? action.toLocaleLowerCase("pt-BR").replaceAll("_", " ").replace(/^./, (letter) => letter.toLocaleUpperCase("pt-BR"));
+}
+
+function hasStatusTransition(action: string, previous: boolean | null, next: boolean | null) {
+  return previous !== null || next !== null || ["ATIVADO", "DESATIVADO", "ANALISAR"].includes(action);
+}
+
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short" }).format(new Date(value));
+}
+
+function formatDateTime(value: string) {
+  return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value));
+}
+
+function localDateKey(value: string) {
+  const parts = new Intl.DateTimeFormat("en-US", { year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date(value));
+  const get = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value ?? "";
+  return `${get("year")}-${get("month")}-${get("day")}`;
 }
 
 function messageOf(error: unknown) {

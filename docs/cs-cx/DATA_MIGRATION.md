@@ -37,6 +37,7 @@ Aplicar, nesta ordem:
 9. `20260812103000_cs_cx_nps_webhook.sql`
 10. `20260812104000_cs_cx_routine_administration.sql`
 11. `20260812105000_cs_cx_routine_reports.sql`
+12. `20260812106000_cs_cx_routine_history_context.sql`
 
 Configurar as URLs sem commitá-las:
 
