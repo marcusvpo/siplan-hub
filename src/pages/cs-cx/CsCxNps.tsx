@@ -264,13 +264,13 @@ export default function CsCxNps() {
         <Metric icon={Meh} label="Neutros" value={neutrals} />
         <Metric icon={Frown} label="Detratores" value={detractors} />
       </div>
-      <Tabs defaultValue="responses">
+      <Tabs defaultValue="analytics">
         <TabsList className="h-9">
-          <TabsTrigger className="h-7" value="responses">
-            Respostas
-          </TabsTrigger>
           <TabsTrigger className="h-7" value="analytics">
             Análises
+          </TabsTrigger>
+          <TabsTrigger className="h-7" value="responses">
+            Respostas
           </TabsTrigger>
           <TabsTrigger className="h-7" value="invitations">
             Solicitações

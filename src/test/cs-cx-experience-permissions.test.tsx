@@ -206,6 +206,10 @@ describe("CS/CX visitas e NPS — permissões", () => {
 
   it("mantém NPS em leitura sem liberar escrita", () => {
     renderPage(<CsCxNps />, []);
+    fireEvent.mouseDown(screen.getByRole("tab", { name: /respostas/i }), {
+      button: 0,
+      ctrlKey: false,
+    });
     expect(screen.getByText("Maria")).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /registrar manualmente/i }),
@@ -233,6 +237,10 @@ describe("CS/CX visitas e NPS — permissões", () => {
 
   it("mantém respostas somente para visualização mesmo com permissão de edição", () => {
     renderPage(<CsCxNps />, ["cs_cx_nps:edit"]);
+    fireEvent.mouseDown(screen.getByRole("tab", { name: /respostas/i }), {
+      button: 0,
+      ctrlKey: false,
+    });
     expect(
       screen.queryByRole("button", { name: /editar resposta/i }),
     ).not.toBeInTheDocument();
@@ -247,6 +255,10 @@ describe("CS/CX visitas e NPS — permissões", () => {
 
   it("pagina respostas e histórico de NPS em blocos compactos", () => {
     renderPage(<CsCxNps />, []);
+    fireEvent.mouseDown(screen.getByRole("tab", { name: /respostas/i }), {
+      button: 0,
+      ctrlKey: false,
+    });
     expect(
       screen.getByLabelText("Mostrando 1 a 5 de 12 respostas"),
     ).toBeInTheDocument();
@@ -273,10 +285,6 @@ describe("CS/CX visitas e NPS — permissões", () => {
 
   it("exibe o BI de NPS e restringe a geração com IA pela permissão", () => {
     const { rerender } = renderPage(<CsCxNps />, []);
-    fireEvent.mouseDown(screen.getByRole("tab", { name: /análises/i }), {
-      button: 0,
-      ctrlKey: false,
-    });
     expect(screen.getByText("Evolução mensal do NPS")).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /gerar relatório com ia/i }),
