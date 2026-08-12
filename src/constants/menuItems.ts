@@ -331,13 +331,6 @@ export const menuItems: MenuItem[] = [
                 permissionKey: "cs_cx_rotinas",
             },
             {
-                title: "Pós-Implantação",
-                path: "/cs-cx/pos-implantacao",
-                icon: Headset,
-                description: "Acompanhamentos, lançamentos e anexos",
-                permissionKey: "cs_cx_pos_implantacao",
-            },
-            {
                 title: "Visitas",
                 path: "/cs-cx/visitas",
                 icon: MapPin,

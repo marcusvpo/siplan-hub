@@ -118,7 +118,6 @@ export const PERMISSION_RESOURCES: PermissionResourceDef[] = [
   { resource: "cs_cx_contatos", label: "CS/CX - Contatos", category: "CS/CX", actions: ["view", "create", "edit", "delete"] },
   { resource: "cs_cx_agendamentos", label: "CS/CX - Agendamentos", category: "CS/CX", actions: ["view", "create", "edit", "delete"] },
   { resource: "cs_cx_rotinas", label: "CS/CX - Rotinas", category: "CS/CX", actions: ["view", "create", "edit", "delete"] },
-  { resource: "cs_cx_pos_implantacao", label: "CS/CX - Pós-Implantação", category: "CS/CX", actions: ["view", "create", "edit", "delete"] },
   { resource: "cs_cx_visitas", label: "CS/CX - Visitas", category: "CS/CX", actions: ["view", "create", "edit", "delete"] },
   { resource: "cs_cx_nps", label: "CS/CX - NPS", category: "CS/CX", actions: ["view", "create", "edit", "delete"] },
   { resource: "cs_cx_reports", label: "CS/CX - Relatórios", category: "CS/CX", actions: ["view"] },

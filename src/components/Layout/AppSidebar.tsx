@@ -159,7 +159,6 @@ export function AppSidebar() {
     ["cs_cx_contatos", "/cs-cx/contatos"],
     ["cs_cx_agendamentos", "/cs-cx/agendamentos"],
     ["cs_cx_rotinas", "/cs-cx/rotinas"],
-    ["cs_cx_pos_implantacao", "/cs-cx/pos-implantacao"],
     ["cs_cx_visitas", "/cs-cx/visitas"],
     ["cs_cx_nps", "/cs-cx/nps"],
     ["cs_cx_reports", "/cs-cx/relatorios"],
@@ -1042,14 +1041,6 @@ export function AppSidebar() {
                       <Button variant={isActive("/cs-cx/rotinas") ? "secondary" : "ghost"} size="sm" className="w-full justify-start gap-3 h-9">
                         <ListChecks className="h-4 w-4" />
                         <span className="text-xs font-medium">Rotinas</span>
-                      </Button>
-                    </Link>
-                    )}
-                    {can("cs_cx_pos_implantacao") && (
-                    <Link to="/cs-cx/pos-implantacao">
-                      <Button variant={isActive("/cs-cx/pos-implantacao") ? "secondary" : "ghost"} size="sm" className="w-full justify-start gap-3 h-9">
-                        <Headset className="h-4 w-4" />
-                        <span className="text-xs font-medium">Pós-Implantação</span>
                       </Button>
                     </Link>
                     )}

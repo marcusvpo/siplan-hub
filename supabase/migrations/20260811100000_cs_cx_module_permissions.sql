@@ -30,11 +30,6 @@ INSERT INTO public.app_permissions (resource, action, description) VALUES
   ('cs_cx_rotinas', 'edit', 'Editar rotinas de CS/CX'),
   ('cs_cx_rotinas', 'delete', 'Excluir rotinas de CS/CX'),
 
-  ('cs_cx_pos_implantacao', 'view', 'Visualizar pós-implantação de CS/CX'),
-  ('cs_cx_pos_implantacao', 'create', 'Criar acompanhamentos de pós-implantação'),
-  ('cs_cx_pos_implantacao', 'edit', 'Editar acompanhamentos de pós-implantação'),
-  ('cs_cx_pos_implantacao', 'delete', 'Excluir acompanhamentos de pós-implantação'),
-
   ('cs_cx_visitas', 'view', 'Visualizar visitas de CS/CX'),
   ('cs_cx_visitas', 'create', 'Criar visitas de CS/CX'),
   ('cs_cx_visitas', 'edit', 'Editar visitas de CS/CX'),
