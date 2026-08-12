@@ -13,6 +13,7 @@ const apply = args.has('--apply');
 const outputArg = [...args].find((arg) => arg.startsWith('--output='));
 const mapArg = [...args].find((arg) => arg.startsWith('--map='));
 const confirmation = [...args].find((arg) => arg.startsWith('--confirm-project='))?.split('=')[1];
+const needsSource = mode !== 'users' || !apply;
 
 loadDotEnv();
 
@@ -25,7 +26,7 @@ if (!['verify', 'users', 'source'].includes(mode) && !apply) {
 
 const sourceUrl = process.env.CS_CX_SOURCE_DATABASE_URL;
 const targetUrl = process.env.SUPABASE_DB_URL;
-if (!sourceUrl || (mode !== 'source' && !targetUrl)) {
+if ((needsSource && !sourceUrl) || (mode !== 'source' && !targetUrl)) {
   fail(mode === 'source'
     ? 'Defina CS_CX_SOURCE_DATABASE_URL no ambiente ou .env.'
     : 'Defina CS_CX_SOURCE_DATABASE_URL e SUPABASE_DB_URL no ambiente ou .env.');
@@ -38,7 +39,9 @@ if (mode === 'users' && apply && !mapArg) {
   fail('Para aplicar o de/para, informe --map=artifacts/cs-cx-user-map.json.');
 }
 
-const source = new Client(connectionOptions(sourceUrl, process.env.CS_CX_SOURCE_SSL === 'true'));
+const source = needsSource
+  ? new Client(connectionOptions(sourceUrl, process.env.CS_CX_SOURCE_SSL === 'true'))
+  : null;
 const target = targetUrl
   ? new Client(connectionOptions(targetUrl, process.env.CS_CX_TARGET_SSL !== 'false'))
   : null;
@@ -474,9 +477,11 @@ const TABLES = [
 ];
 
 async function main() {
-  await source.connect();
-  await source.query('SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY');
-  await source.query(`SET TIME ZONE 'UTC'`);
+  if (source) {
+    await source.connect();
+    await source.query('SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY');
+    await source.query(`SET TIME ZONE 'UTC'`);
+  }
   if (mode === 'source') {
     try {
       await validateSourceSchema();
@@ -489,7 +494,7 @@ async function main() {
   try {
     await target.connect();
   } catch (error) {
-    await source.end();
+    await source?.end();
     throw error;
   }
   await target.query(`SET TIME ZONE 'UTC'`);
@@ -508,7 +513,7 @@ async function main() {
     }
     await migrate();
   } finally {
-    await Promise.allSettled([source.end(), target.end()]);
+    await Promise.allSettled([source?.end(), target.end()]);
   }
 }
 
@@ -597,7 +602,7 @@ async function autoLinkProfiles() {
       SELECT id, lower(trim(email)) AS normalized_email,
              count(*) OVER (PARTITION BY lower(trim(email))) AS matches
       FROM public.cs_cx_user_map
-      WHERE source_present AND NULLIF(trim(email), '') IS NOT NULL
+      WHERE source_present AND NOT mapping_ignored AND NULLIF(trim(email), '') IS NOT NULL
     )
     UPDATE public.cs_cx_user_map user_map
     SET profile_id = profile.id
@@ -608,6 +613,7 @@ async function autoLinkProfiles() {
     WHERE user_map.id = legacy.id
       AND legacy.matches = 1
       AND user_map.profile_id IS NULL
+      AND NOT user_map.mapping_ignored
     RETURNING user_map.id
   `);
   return result.rowCount ?? 0;
@@ -661,8 +667,13 @@ async function applyUserMap(mapPath) {
     if (!Number.isInteger(mapping.legacy_id) || mapping.legacy_id <= 0) {
       throw new Error('Cada item precisa de legacy_id inteiro e positivo.');
     }
-    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(mapping.profile_id ?? '')) {
-      throw new Error(`profile_id inválido para o usuário legado ${mapping.legacy_id}.`);
+    if (mapping.ignore !== undefined && typeof mapping.ignore !== 'boolean') {
+      throw new Error(`ignore deve ser booleano para o usuário legado ${mapping.legacy_id}.`);
+    }
+    const ignored = mapping.ignore === true;
+    const hasValidProfile = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(mapping.profile_id ?? '');
+    if (ignored === hasValidProfile) {
+      throw new Error(`Informe profile_id válido ou ignore=true para o usuário legado ${mapping.legacy_id}.`);
     }
     if (seenLegacyIds.has(mapping.legacy_id)) throw new Error(`legacy_id duplicado no arquivo: ${mapping.legacy_id}.`);
     seenLegacyIds.add(mapping.legacy_id);
@@ -672,10 +683,10 @@ async function applyUserMap(mapPath) {
   try {
     const validation = await target.query(
       `WITH input AS (
-         SELECT legacy_id, profile_id
-         FROM jsonb_to_recordset($1::jsonb) AS row(legacy_id bigint, profile_id uuid)
+         SELECT legacy_id, profile_id, COALESCE(ignore, false) AS ignore
+         FROM jsonb_to_recordset($1::jsonb) AS row(legacy_id bigint, profile_id uuid, ignore boolean)
        )
-       SELECT input.legacy_id, input.profile_id,
+       SELECT input.legacy_id, input.profile_id, input.ignore,
               user_map.id IS NOT NULL AS legacy_exists,
               profile.id IS NOT NULL AS profile_exists
        FROM input
@@ -684,18 +695,19 @@ async function applyUserMap(mapPath) {
        LEFT JOIN public.profiles profile ON profile.id = input.profile_id`,
       [JSON.stringify(mappings)],
     );
-    const invalid = validation.rows.filter((row) => !row.legacy_exists || !row.profile_exists);
+    const invalid = validation.rows.filter((row) => !row.legacy_exists || (!row.ignore && !row.profile_exists));
     if (invalid.length) {
       throw new Error(`De/para contém ${invalid.length} vínculo(s) inexistente(s) no destino.`);
     }
 
     const result = await target.query(
       `WITH input AS (
-         SELECT legacy_id, profile_id
-         FROM jsonb_to_recordset($1::jsonb) AS row(legacy_id bigint, profile_id uuid)
+         SELECT legacy_id, profile_id, COALESCE(ignore, false) AS ignore
+         FROM jsonb_to_recordset($1::jsonb) AS row(legacy_id bigint, profile_id uuid, ignore boolean)
        )
        UPDATE public.cs_cx_user_map user_map
-       SET profile_id = input.profile_id
+       SET profile_id = CASE WHEN input.ignore THEN NULL ELSE input.profile_id END,
+           mapping_ignored = input.ignore
        FROM input
        WHERE user_map.legacy_id = input.legacy_id
          AND user_map.source_present
@@ -704,7 +716,7 @@ async function applyUserMap(mapPath) {
     );
     if (result.rowCount !== mappings.length) throw new Error('Nem todos os vínculos foram aplicados.');
     await target.query('COMMIT');
-    console.log(`${result.rowCount} vínculo(s) de usuário aplicado(s) no projeto ${projectRef}.`);
+    console.log(`${result.rowCount} decisão(ões) de de/para aplicada(s) no projeto ${projectRef}.`);
   } catch (error) {
     await target.query('ROLLBACK');
     throw error;
@@ -760,10 +772,17 @@ async function assertTargetReady() {
             to_regclass('public.cs_cx_appointments') AS appointments,
             to_regclass('public.cs_cx_office_routine_items') AS routines,
             to_regclass('public.cs_cx_visits') AS visits,
-            to_regclass('public.cs_cx_nps_responses') AS nps`,
+            to_regclass('public.cs_cx_nps_responses') AS nps,
+            EXISTS (
+              SELECT 1 FROM information_schema.columns
+              WHERE table_schema = 'public'
+                AND table_name = 'cs_cx_user_map'
+                AND column_name = 'mapping_ignored'
+            ) AS mapping_exceptions`,
   );
   if (!result.rows[0].control || !result.rows[0].core || !result.rows[0].appointments
-      || !result.rows[0].routines || !result.rows[0].visits || !result.rows[0].nps) {
+      || !result.rows[0].routines || !result.rows[0].visits || !result.rows[0].nps
+      || !result.rows[0].mapping_exceptions) {
     throw new Error('Aplique todas as migrations CS/CX antes de executar a carga.');
   }
 }

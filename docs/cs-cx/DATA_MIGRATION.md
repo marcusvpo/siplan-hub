@@ -149,7 +149,8 @@ Para aplicar as exceções confirmadas, crie localmente (sem commit) o arquivo
 
 ```json
 [
-  { "legacy_id": 7, "profile_id": "00000000-0000-4000-8000-000000000000" }
+  { "legacy_id": 7, "profile_id": "00000000-0000-4000-8000-000000000000" },
+  { "legacy_id": 8, "ignore": true }
 ]
 ```
 
@@ -161,4 +162,7 @@ npm run migrate:cs-cx -- users --apply \
   --confirm-project=PROJECT_REF
 ```
 
-O script valida todos os IDs antes de atualizar e aplica o arquivo em uma transação.
+Use `ignore: true` somente quando o usuário legado não deve ter conta correspondente
+no HUB. A decisão fica persistida e não volta a aparecer como pendência nas cargas
+delta. O script valida todos os IDs antes de atualizar e aplica o arquivo em uma
+transação.

@@ -13,7 +13,7 @@ const migrations = [...runner.matchAll(/'((?:20260811|20260812)\d+_cs_cx_[^']+\.
 
 describe("preflight do schema CS/CX", () => {
   it("mantém uma lista explícita e existente de migrations", () => {
-    expect(migrations).toHaveLength(12);
+    expect(migrations).toHaveLength(13);
     expect(new Set(migrations).size).toBe(migrations.length);
     for (const migration of migrations) {
       expect(existsSync(resolve(root, "supabase/migrations", migration)), migration).toBe(true);
@@ -46,6 +46,8 @@ describe("preflight do schema CS/CX", () => {
     expect(migrator).toContain("--confirm-project=");
     expect(migrator).toContain("--map=artifacts/cs-cx-user-map.json");
     expect(migrator).toContain("jsonb_to_recordset");
+    expect(migrator).toContain("mapping_ignored = input.ignore");
+    expect(migrator).toContain("AND NOT mapping_ignored");
     expect(migrator).toContain("await target.query('BEGIN')");
     expect(migrator).toContain("await target.query('ROLLBACK')");
     expect(migrator).toContain("targetHashes(spec)");
@@ -66,6 +68,7 @@ describe("preflight do schema CS/CX", () => {
     expect(readiness).toContain("READY - CS/CX pronto para homologação humana.");
     expect(readiness).toContain("schemaRow.with_rls === EXPECTED_TABLES");
     expect(readiness).toContain("userRow.pending === 0");
+    expect(readiness).toContain("userRow.ignored");
     expect(readiness).toContain("attachmentRow.copied === attachmentRow.total");
     expect(readiness).toContain("probeNpsWebhook(apiUrl)");
     expect(readiness).toContain("[401, 403].includes(response.status)");

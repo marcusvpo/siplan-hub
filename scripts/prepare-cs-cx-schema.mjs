@@ -16,7 +16,9 @@ const MIGRATIONS = [
   '20260812104000_cs_cx_routine_administration.sql',
   '20260812105000_cs_cx_routine_reports.sql',
   '20260812106000_cs_cx_routine_history_context.sql',
+  '20260812107000_cs_cx_user_mapping_exceptions.sql',
 ];
+const UPGRADE_MIGRATIONS = [MIGRATIONS.at(-1)];
 const EXPECTED_TABLES = [
   'cs_cx_user_map', 'cs_cx_migration_runs', 'cs_cx_migration_state',
   'cs_cx_products', 'cs_cx_registry_offices', 'cs_cx_registry_office_products',
@@ -57,12 +59,20 @@ const target = new Client(connectionOptions(targetUrl, process.env.CS_CX_TARGET_
 await target.connect();
 try {
   const presentTables = await getPresentTables();
+  const missingFeatures = presentTables.length === EXPECTED_TABLES.length
+    ? await getMissingFeatures()
+    : [];
   console.log(`Projeto: ${projectRef ?? 'não identificado'}; tabelas CS/CX: ${presentTables.length}/${EXPECTED_TABLES.length}.`);
 
   if (!apply) {
-    await printReadiness(presentTables);
+    await printReadiness(presentTables, missingFeatures);
   } else if (presentTables.length === EXPECTED_TABLES.length) {
-    console.log('Schema CS/CX já está completo; nenhuma migration foi reaplicada.');
+    if (missingFeatures.length) {
+      await applySchema(UPGRADE_MIGRATIONS);
+      console.log(`Schema CS/CX atualizado: ${missingFeatures.join(', ')}.`);
+    } else {
+      console.log('Schema CS/CX já está completo; nenhuma migration foi reaplicada.');
+    }
     await assertReadiness();
   } else if (presentTables.length > 0) {
     throw new Error(`Schema parcial detectado (${presentTables.length}/${EXPECTED_TABLES.length}). Revise antes de aplicar.`);
@@ -113,7 +123,19 @@ async function getPresentTables() {
   return result.rows.map((row) => row.tablename);
 }
 
-async function printReadiness(presentTables) {
+async function getMissingFeatures() {
+  const result = await target.query(`
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name = 'cs_cx_user_map'
+        AND column_name = 'mapping_ignored'
+    ) AS mapping_ignored
+  `);
+  return result.rows[0].mapping_ignored ? [] : ['cs_cx_user_map.mapping_ignored'];
+}
+
+async function printReadiness(presentTables, missingFeatures) {
   if (presentTables.length === 0) {
     console.log('Schema ausente. Use --apply com a confirmação do projeto para instalá-lo.');
     process.exitCode = 2;
@@ -121,6 +143,11 @@ async function printReadiness(presentTables) {
   }
   if (presentTables.length < EXPECTED_TABLES.length) {
     console.log(`Schema parcial. Ausentes: ${EXPECTED_TABLES.filter((table) => !presentTables.includes(table)).join(', ')}.`);
+    process.exitCode = 2;
+    return;
+  }
+  if (missingFeatures.length) {
+    console.log(`Schema desatualizado. Recursos ausentes: ${missingFeatures.join(', ')}.`);
     process.exitCode = 2;
     return;
   }
@@ -140,11 +167,11 @@ async function assertBaseDependencies() {
   if (missing.length) throw new Error(`Dependências do HUB ausentes: ${missing.join(', ')}.`);
 }
 
-async function applySchema() {
+async function applySchema(migrations = MIGRATIONS) {
   await target.query('BEGIN');
   try {
     await target.query(`SELECT pg_advisory_xact_lock(hashtext('siplan-hub:cs-cx-schema'))`);
-    for (const filename of MIGRATIONS) {
+    for (const filename of migrations) {
       const sql = fs.readFileSync(path.resolve('supabase', 'migrations', filename), 'utf8');
       console.log(`Aplicando ${filename}...`);
       await target.query(sql);
@@ -174,6 +201,7 @@ async function assertReadiness() {
     WHERE table_schema = 'public' AND table_name = 'cs_cx_routine_history'
       AND column_name IN ('registry_office_name', 'routine_model_name', 'model_item_name', 'actor_name')
   `);
+  const missingFeatures = await getMissingFeatures();
   const bucketResult = await target.query(`SELECT count(*)::int AS count FROM storage.buckets WHERE id = 'cs-cx-attachments'`);
   const rlsResult = await target.query(
     `SELECT count(*)::int AS count FROM pg_tables
@@ -183,6 +211,7 @@ async function assertReadiness() {
 
   if (permissionResult.rows[0].count !== EXPECTED_RESOURCES.length) throw new Error('Catálogo de permissões CS/CX incompleto.');
   if (snapshotResult.rows[0].count !== 4) throw new Error('Snapshots do histórico de rotinas incompletos.');
+  if (missingFeatures.length) throw new Error(`Recursos do schema ausentes: ${missingFeatures.join(', ')}.`);
   if (bucketResult.rows[0].count !== 1) throw new Error('Bucket privado de anexos CS/CX ausente.');
   if (rlsResult.rows[0].count !== EXPECTED_TABLES.length) throw new Error('RLS não está ativa em todas as tabelas CS/CX.');
 }

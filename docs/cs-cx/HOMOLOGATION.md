@@ -17,8 +17,8 @@ permissões administrativas e o webhook NPS protegido estiverem completos.
 - Schema aplicado no projeto `okvufcwkophaadttmjwa`: 25/25 tabelas com RLS.
 - Carga inicial `ba771699-528d-4f58-bacf-73a296fd9518` concluída.
 - Reconciliação: 27/27 conjuntos com contagens iguais e zero hashes divergentes.
-- Testes automatizados: 119 aprovados; build de produção aprovado.
-- Usuários ativos: 4/6 vinculados; dois de/para aguardam decisão do negócio.
+- Testes automatizados: 129 aprovados; build de produção aprovado.
+- Usuários ativos elegíveis: 5/5 vinculados; uma exceção ignorada por decisão do negócio.
 - Anexos históricos: 0/2 copiados; aguarda service role local.
 - Webhook NPS: ainda não implantado (endpoint retornando HTTP 404).
 
@@ -27,11 +27,11 @@ permissões administrativas e o webhook NPS protegido estiverem completos.
 - [ ] Credencial local `SUPABASE_DB_URL` válida, sem envio por chat ou commit.
 - [ ] `npm run prepare:cs-cx -- --static` aprovado.
 - [ ] Diagnóstico conectado do schema aprovado.
-- [ ] Pacote controlado das 12 migrations aplicado e validado.
+- [x] Pacote controlado das 13 migrations aplicado e validado.
 - [ ] Carga inicial concluída sem erro.
 - [ ] `verify` com todas as contagens em `OK`.
 - [ ] Relatório de usuários gerado; e-mails únicos vinculados automaticamente.
-- [ ] Exceções do de/para confirmadas pelo responsável do negócio.
+- [x] Exceções do de/para confirmadas pelo responsável do negócio.
 - [ ] Perfis piloto recebem somente as permissões CS/CX necessárias.
 - [ ] Edge Function NPS implantada e rejeitando chamadas sem token.
 - [ ] Build, lint e testes automatizados aprovados.
