@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -21,9 +21,17 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import {
+  darkenNpsThemeColor,
+  normalizeNpsTheme,
+  npsThemeForegroundColor,
+  npsThemeTint,
+  publicNpsAssetUrl,
+} from "@/lib/cs-cx-nps-survey";
 import type {
   NpsAnswers,
   NpsQuestion,
+  NpsQuestionnaireTheme,
   PublicNpsInvitation,
 } from "@/types/cs-cx-nps-survey";
 
@@ -44,6 +52,7 @@ export default function PublicNpsResponse() {
     retry: false,
   });
   const invitation = invitationQuery.data;
+  const theme = normalizeNpsTheme(invitation?.questionnaire?.theme);
   const questions = invitation?.questionnaire?.questions ?? [];
   const missingRequired = questions.some(
     (question) => question.required && isEmptyAnswer(answers[question.id]),
@@ -108,7 +117,7 @@ export default function PublicNpsResponse() {
     );
   if (submitted)
     return (
-      <PublicShell>
+      <PublicShell theme={theme}>
         <StateCard
           icon={CheckCircle2}
           title="Obrigado pela sua avaliação!"
@@ -119,7 +128,7 @@ export default function PublicNpsResponse() {
     );
   if (unavailable)
     return (
-      <PublicShell>
+      <PublicShell theme={theme}>
         <StateCard
           icon={invitation.status === "RESPONDIDO" ? CheckCircle2 : Clock3}
           title={statusTitle(invitation.status)}
@@ -130,12 +139,21 @@ export default function PublicNpsResponse() {
     );
 
   return (
-    <PublicShell>
+    <PublicShell theme={theme}>
       <Card className="overflow-hidden border-slate-200 bg-white shadow-xl shadow-slate-200/60">
-        <div className="h-1.5 bg-gradient-to-r from-rose-600 via-red-500 to-rose-400" />
+        <div
+          className="h-1.5"
+          style={{ backgroundColor: theme.primary_color }}
+        />
         <CardContent className="space-y-7 p-5 sm:p-8">
           <div className="space-y-3 border-b border-slate-100 pb-6">
-            <div className="inline-flex items-center gap-2 rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700">
+            <div
+              className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold"
+              style={{
+                backgroundColor: npsThemeTint(theme.primary_color, 0.1),
+                color: theme.primary_color,
+              }}
+            >
               <Star className="h-3.5 w-3.5" />
               Pesquisa de satisfação
             </div>
@@ -160,7 +178,7 @@ export default function PublicNpsResponse() {
               htmlFor="respondent-name"
               className="text-sm font-bold text-slate-900"
             >
-              Seu nome <span className="text-rose-600">*</span>
+              Seu nome <span className="text-[var(--nps-primary)]">*</span>
             </Label>
             <Input
               id="respondent-name"
@@ -207,7 +225,7 @@ export default function PublicNpsResponse() {
             </div>
           )}
           <Button
-            className="h-11 w-full bg-rose-600 font-bold text-white hover:bg-rose-700 sm:w-auto sm:px-8"
+            className="h-11 w-full bg-[var(--nps-primary)] font-bold text-[var(--nps-primary-foreground)] hover:bg-[var(--nps-primary-hover)] sm:w-auto sm:px-8"
             disabled={submitting || missingRequired || !respondentName.trim()}
             onClick={submit}
           >
@@ -245,7 +263,9 @@ function QuestionField({
         <span className="text-slate-400">{index + 1}.</span>
         <span>
           {question.title}
-          {question.required && <span className="ml-1 text-rose-600">*</span>}
+          {question.required && (
+            <span className="ml-1 text-[var(--nps-primary)]">*</span>
+          )}
         </span>
       </div>
       {question.type === "nps" && (
@@ -347,7 +367,7 @@ function NpsScale({
                   : score >= 7
                     ? "border-amber-500 bg-amber-500 text-white"
                     : "border-rose-600 bg-rose-600 text-white"
-                : "border-slate-200 bg-white text-slate-700 hover:border-rose-300 hover:bg-rose-50",
+                : "border-slate-200 bg-white text-slate-700 hover:border-[var(--nps-primary)] hover:bg-[var(--nps-primary-soft)]",
             )}
           >
             {score}
@@ -392,8 +412,8 @@ function RatingScale({
             className={cn(
               "h-11 rounded-lg border text-sm font-black transition",
               value === score
-                ? "border-rose-600 bg-rose-600 text-white"
-                : "border-slate-200 bg-white text-slate-700 hover:border-rose-300 hover:bg-rose-50",
+                ? "border-[var(--nps-primary)] bg-[var(--nps-primary)] text-[var(--nps-primary-foreground)]"
+                : "border-slate-200 bg-white text-slate-700 hover:border-[var(--nps-primary)] hover:bg-[var(--nps-primary-soft)]",
             )}
           >
             {score}
@@ -408,16 +428,50 @@ function RatingScale({
   );
 }
 
-function PublicShell({ children }: { children: React.ReactNode }) {
+function PublicShell({
+  children,
+  theme: themeInput,
+}: {
+  children: React.ReactNode;
+  theme?: NpsQuestionnaireTheme;
+}) {
+  const theme = normalizeNpsTheme(themeInput);
+  const backgroundUrl = publicNpsAssetUrl(theme.background_image_path);
+  const style = {
+    "--nps-primary": theme.primary_color,
+    "--nps-primary-hover": darkenNpsThemeColor(theme.primary_color),
+    "--nps-primary-foreground": npsThemeForegroundColor(theme.primary_color),
+    "--nps-primary-soft": npsThemeTint(theme.primary_color, 0.08),
+    backgroundColor: theme.background_color,
+  } as CSSProperties;
   return (
-    <div className="min-h-screen bg-slate-50 px-4 py-8 text-slate-950 sm:py-12">
-      <div className="mx-auto max-w-3xl">
+    <div
+      data-testid="nps-public-shell"
+      className="relative min-h-screen overflow-hidden px-4 py-8 text-slate-950 sm:py-12"
+      style={style}
+    >
+      {backgroundUrl && (
+        <>
+          <div
+            data-testid="nps-background-image"
+            className="fixed inset-0 bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: `url("${backgroundUrl}")` }}
+            aria-hidden="true"
+          />
+          <div
+            className="fixed inset-0 bg-white"
+            style={{ opacity: theme.background_overlay / 100 }}
+            aria-hidden="true"
+          />
+        </>
+      )}
+      <div className="relative z-10 mx-auto max-w-3xl">
         <div className="mb-6 flex items-center justify-center gap-2">
           <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-950 font-black text-white">
             S
           </span>
           <span className="text-xl font-black tracking-tight">
-            Siplan <span className="text-rose-600">HUB</span>
+            Siplan <span className="text-[var(--nps-primary)]">HUB</span>
           </span>
         </div>
         {children}
@@ -449,7 +503,7 @@ function StateCard({
             "flex h-14 w-14 items-center justify-center rounded-full",
             success
               ? "bg-emerald-50 text-emerald-600"
-              : "bg-rose-50 text-rose-600",
+              : "bg-[var(--nps-primary-soft)] text-[var(--nps-primary)]",
           )}
         >
           <Icon className={cn("h-7 w-7", spin && "animate-spin")} />

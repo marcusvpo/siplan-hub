@@ -10,14 +10,17 @@ import {
   Clock3,
   Copy,
   FileEdit,
+  ImageUp,
   Link2,
   Loader2,
+  Palette,
   Pencil,
   Plus,
   Power,
   PowerOff,
   Send,
   Star,
+  Trash2,
   X,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -61,13 +64,20 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { useToast } from "@/hooks/use-toast";
 import {
   DEFAULT_NPS_QUESTIONS,
+  DEFAULT_NPS_THEME,
+  npsThemeForegroundColor,
+  npsThemeTint,
   newNpsQuestion,
+  normalizeNpsTheme,
+  publicNpsAssetUrl,
+  validateNpsBackgroundFile,
   validateNpsQuestionnaire,
 } from "@/lib/cs-cx-nps-survey";
 import { cn } from "@/lib/utils";
 import type {
   CsCxNpsQuestionnaire,
   NpsQuestion,
+  NpsQuestionnaireTheme,
   NpsQuestionType,
 } from "@/types/cs-cx-nps-survey";
 
@@ -464,6 +474,7 @@ export function NpsQuestionnairesPanel() {
   const {
     questionnaires,
     saveQuestionnaire,
+    uploadQuestionnaireBackground,
     setQuestionnaireActive,
     setDefaultQuestionnaire,
   } = useCsCxNpsSurveys();
@@ -478,10 +489,27 @@ export function NpsQuestionnairesPanel() {
     DEFAULT_NPS_QUESTIONS,
   );
   const [isDefault, setIsDefault] = useState(false);
+  const [theme, setTheme] = useState<NpsQuestionnaireTheme>(
+    DEFAULT_NPS_THEME,
+  );
+  const [backgroundFile, setBackgroundFile] = useState<File | null>(null);
+  const [backgroundPreviewUrl, setBackgroundPreviewUrl] = useState<
+    string | null
+  >(null);
   const [newType, setNewType] =
     useState<Exclude<NpsQuestionType, "nps">>("text");
   const canCreate = hasPermission("cs_cx_nps", "create");
   const canEdit = hasPermission("cs_cx_nps", "edit");
+
+  useEffect(() => {
+    if (!backgroundFile || typeof URL.createObjectURL !== "function") {
+      setBackgroundPreviewUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(backgroundFile);
+    setBackgroundPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [backgroundFile]);
 
   function openEditor(item: CsCxNpsQuestionnaire | "new") {
     setEditing(item);
@@ -496,6 +524,12 @@ export function NpsQuestionnairesPanel() {
           })),
     );
     setIsDefault(item === "new" ? !questionnaires.length : item.is_default);
+    setTheme(
+      item === "new"
+        ? { ...DEFAULT_NPS_THEME }
+        : normalizeNpsTheme(item.theme),
+    );
+    setBackgroundFile(null);
   }
 
   function updateQuestion(id: string, updates: Partial<NpsQuestion>) {
@@ -510,11 +544,25 @@ export function NpsQuestionnairesPanel() {
     [next[index], next[target]] = [next[target], next[index]];
     setQuestions(next);
   }
+  function selectBackground(file: File | null) {
+    if (!file) return;
+    const validation = validateNpsBackgroundFile(file);
+    if (validation) {
+      toast({
+        title: "Imagem inválida",
+        description: validation,
+        variant: "destructive",
+      });
+      return;
+    }
+    setBackgroundFile(file);
+  }
   async function save() {
     const validation = validateNpsQuestionnaire({
       title,
       description,
       questions,
+      theme,
     });
     if (validation) {
       toast({
@@ -525,11 +573,18 @@ export function NpsQuestionnairesPanel() {
       return;
     }
     try {
+      const backgroundImagePath = backgroundFile
+        ? await uploadQuestionnaireBackground.mutateAsync(backgroundFile)
+        : theme.background_image_path;
       await saveQuestionnaire.mutateAsync({
         id: editing === "new" ? undefined : editing?.id,
         title,
         description,
         questions,
+        theme: {
+          ...theme,
+          background_image_path: backgroundImagePath,
+        },
         is_active: editing === "new" ? true : editing!.is_active,
         is_default: isDefault,
       });
@@ -543,6 +598,9 @@ export function NpsQuestionnairesPanel() {
       });
     }
   }
+
+  const previewBackgroundUrl =
+    backgroundPreviewUrl ?? publicNpsAssetUrl(theme.background_image_path);
 
   return (
     <>
@@ -560,6 +618,14 @@ export function NpsQuestionnairesPanel() {
             <CardContent className="flex items-start justify-between gap-3 p-4">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
+                  <span
+                    className="h-3 w-3 shrink-0 rounded-full border border-black/10"
+                    style={{
+                      backgroundColor: normalizeNpsTheme(item.theme)
+                        .primary_color,
+                    }}
+                    aria-label={`Cor do questionário ${item.title}`}
+                  />
                   <h3 className="truncate font-bold">{item.title}</h3>
                   {item.is_default && (
                     <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">
@@ -676,6 +742,107 @@ export function NpsQuestionnairesPanel() {
                 </Field>
               </div>
             </div>
+            <Card className="overflow-hidden border-slate-200">
+              <CardContent className="space-y-4 p-4">
+                <div className="flex items-center gap-2">
+                  <Palette className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <h3 className="text-sm font-bold">Aparência da pesquisa</h3>
+                    <p className="text-xs text-muted-foreground">
+                      Personalização aplicada somente aos novos convites.
+                    </p>
+                  </div>
+                </div>
+                <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(280px,1fr)]">
+                  <div className="space-y-4">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <ColorControl
+                        id="nps-primary-color"
+                        label="Cor principal"
+                        value={theme.primary_color}
+                        onChange={(value) =>
+                          setTheme((current) => ({
+                            ...current,
+                            primary_color: value,
+                          }))
+                        }
+                      />
+                      <ColorControl
+                        id="nps-background-color"
+                        label="Cor de fundo"
+                        value={theme.background_color}
+                        onChange={(value) =>
+                          setTheme((current) => ({
+                            ...current,
+                            background_color: value,
+                          }))
+                        }
+                      />
+                    </div>
+                    <Field label="Imagem de fundo (JPG, PNG ou WEBP, até 5 MB)">
+                      <div className="flex flex-wrap gap-2">
+                        <Button variant="outline" size="sm" asChild>
+                          <label htmlFor="nps-background-image" className="cursor-pointer">
+                            <ImageUp className="mr-2 h-4 w-4" />
+                            Escolher imagem
+                          </label>
+                        </Button>
+                        <Input
+                          id="nps-background-image"
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          className="sr-only"
+                          onChange={(event) =>
+                            selectBackground(event.target.files?.[0] ?? null)
+                          }
+                        />
+                        {previewBackgroundUrl && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive"
+                            onClick={() => {
+                              setBackgroundFile(null);
+                              setTheme((current) => ({
+                                ...current,
+                                background_image_path: null,
+                              }));
+                            }}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Remover imagem
+                          </Button>
+                        )}
+                      </div>
+                    </Field>
+                    {previewBackgroundUrl && (
+                      <Field
+                        label={`Cobertura clara sobre a imagem: ${theme.background_overlay}%`}
+                      >
+                        <Input
+                          type="range"
+                          min="0"
+                          max="90"
+                          step="5"
+                          value={theme.background_overlay}
+                          onChange={(event) =>
+                            setTheme((current) => ({
+                              ...current,
+                              background_overlay: Number(event.target.value),
+                            }))
+                          }
+                        />
+                      </Field>
+                    )}
+                  </div>
+                  <NpsThemePreview
+                    title={title || "Título da pesquisa"}
+                    theme={theme}
+                    backgroundUrl={previewBackgroundUrl}
+                  />
+                </div>
+              </CardContent>
+            </Card>
             <div className="space-y-3">
               {questions.map((question, index) => (
                 <Card
@@ -803,8 +970,15 @@ export function NpsQuestionnairesPanel() {
             <Button variant="outline" onClick={() => setEditing(null)}>
               Cancelar
             </Button>
-            <Button disabled={saveQuestionnaire.isPending} onClick={save}>
-              {saveQuestionnaire.isPending ? (
+            <Button
+              disabled={
+                saveQuestionnaire.isPending ||
+                uploadQuestionnaireBackground.isPending
+              }
+              onClick={save}
+            >
+              {saveQuestionnaire.isPending ||
+              uploadQuestionnaireBackground.isPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <FileEdit className="mr-2 h-4 w-4" />
@@ -815,6 +989,101 @@ export function NpsQuestionnairesPanel() {
         </DialogContent>
       </Dialog>
     </>
+  );
+}
+
+function ColorControl({
+  id,
+  label,
+  value,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <Field label={label}>
+      <div className="flex gap-2">
+        <Input
+          id={id}
+          type="color"
+          aria-label={label}
+          className="h-9 w-12 cursor-pointer p-1"
+          value={/^#[0-9a-f]{6}$/i.test(value) ? value : "#E11D48"}
+          onChange={(event) => onChange(event.target.value.toUpperCase())}
+        />
+        <Input
+          aria-label={`${label} hexadecimal`}
+          value={value}
+          maxLength={7}
+          className="h-9 font-mono uppercase"
+          onChange={(event) => onChange(event.target.value.toUpperCase())}
+        />
+      </div>
+    </Field>
+  );
+}
+
+function NpsThemePreview({
+  title,
+  theme,
+  backgroundUrl,
+}: {
+  title: string;
+  theme: NpsQuestionnaireTheme;
+  backgroundUrl: string | null;
+}) {
+  const normalized = normalizeNpsTheme(theme);
+  return (
+    <div>
+      <Label>Pré-visualização</Label>
+      <div
+        className="relative mt-1 min-h-52 overflow-hidden rounded-xl border bg-cover bg-center p-5"
+        style={{
+          backgroundColor: normalized.background_color,
+          backgroundImage: backgroundUrl ? `url("${backgroundUrl}")` : undefined,
+        }}
+      >
+        {backgroundUrl && (
+          <div
+            className="absolute inset-0 bg-white"
+            style={{ opacity: normalized.background_overlay / 100 }}
+          />
+        )}
+        <div className="relative overflow-hidden rounded-lg border bg-white shadow-md">
+          <div
+            className="h-1.5"
+            style={{ backgroundColor: normalized.primary_color }}
+          />
+          <div className="space-y-3 p-4">
+            <span
+              className="inline-flex rounded-full px-2 py-1 text-[10px] font-bold"
+              style={{
+                backgroundColor: npsThemeTint(normalized.primary_color, 0.1),
+                color: normalized.primary_color,
+              }}
+            >
+              Pesquisa de satisfação
+            </span>
+            <p className="line-clamp-2 text-base font-black text-slate-950">
+              {title}
+            </p>
+            <div className="h-8 rounded-md border border-slate-200 bg-slate-50" />
+            <span
+              className="inline-flex rounded-md px-3 py-2 text-[10px] font-bold text-white"
+              style={{
+                backgroundColor: normalized.primary_color,
+                color: npsThemeForegroundColor(normalized.primary_color),
+              }}
+            >
+              Enviar avaliação
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 

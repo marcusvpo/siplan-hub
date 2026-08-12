@@ -6,6 +6,11 @@ import type {
   CsCxNpsQuestionnaire,
   NpsQuestionnaireSnapshot,
 } from "@/types/cs-cx-nps-survey";
+import {
+  normalizeNpsTheme,
+  NPS_THEME_ASSET_BUCKET,
+  validateNpsBackgroundFile,
+} from "@/lib/cs-cx-nps-survey";
 
 const db = supabase as unknown as SupabaseClient;
 
@@ -50,7 +55,7 @@ export function useCsCxNpsSurveys() {
       const { data, error } = await db
         .from("cs_cx_nps_questionnaires")
         .select(
-          "id, title, description, questions, is_active, is_default, created_at, updated_at",
+          "id, title, description, questions, theme, is_active, is_default, created_at, updated_at",
         )
         .order("is_default", { ascending: false })
         .order("updated_at", { ascending: false });
@@ -93,6 +98,7 @@ export function useCsCxNpsSurveys() {
         title: input.title.trim(),
         description: input.description?.trim() || null,
         questions: input.questions,
+        theme: normalizeNpsTheme(input.theme),
         is_active: input.is_active,
         is_default: input.is_default,
       };
@@ -127,6 +133,29 @@ export function useCsCxNpsSurveys() {
       if (error) throw error;
     },
     onSuccess: () => invalidateNpsSurveys(queryClient),
+  });
+
+  const uploadQuestionnaireBackground = useMutation({
+    mutationFn: async (file: File) => {
+      const validation = validateNpsBackgroundFile(file);
+      if (validation) throw new Error(validation);
+      const extension =
+        file.type === "image/png"
+          ? "png"
+          : file.type === "image/webp"
+            ? "webp"
+            : "jpg";
+      const path = `themes/${crypto.randomUUID()}.${extension}`;
+      const { error } = await supabase.storage
+        .from(NPS_THEME_ASSET_BUCKET)
+        .upload(path, file, {
+          cacheControl: "31536000",
+          contentType: file.type,
+          upsert: false,
+        });
+      if (error) throw error;
+      return path;
+    },
   });
 
   const setDefaultQuestionnaire = useMutation({
@@ -176,6 +205,7 @@ export function useCsCxNpsSurveys() {
     refetch: async () =>
       Promise.all([questionnairesQuery.refetch(), invitationsQuery.refetch()]),
     saveQuestionnaire,
+    uploadQuestionnaireBackground,
     setQuestionnaireActive,
     setDefaultQuestionnaire,
     createInvitation,

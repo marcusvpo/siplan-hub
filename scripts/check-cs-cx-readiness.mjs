@@ -42,7 +42,18 @@ try {
              'authenticated',
              to_regprocedure('public.cs_cx_import_nps(uuid,jsonb)'),
              'EXECUTE'
-           ), true) AS nps_responses_immutable
+           ), true) AS nps_responses_immutable,
+           EXISTS (
+             SELECT 1 FROM information_schema.columns
+             WHERE table_schema = 'public'
+               AND table_name = 'cs_cx_nps_questionnaires'
+               AND column_name = 'theme'
+           ) AND EXISTS (
+             SELECT 1 FROM storage.buckets
+             WHERE id = 'cs-cx-nps-assets'
+               AND public
+               AND file_size_limit = 5242880
+           ) AS nps_questionnaire_themes
     FROM pg_tables
     WHERE schemaname = 'public' AND tablename LIKE 'cs_cx_%'
   `);
@@ -100,6 +111,13 @@ try {
       schemaRow.nps_responses_immutable
         ? "respostas sem INSERT/UPDATE autenticado; importação desativada"
         : "respostas ainda permitem criação, edição ou importação autenticada",
+    ],
+    [
+      "Temas NPS",
+      schemaRow.nps_questionnaire_themes,
+      schemaRow.nps_questionnaire_themes
+        ? "tema por questionário e bucket público de imagens disponíveis"
+        : "coluna de tema ou bucket de imagens ausente",
     ],
     [
       "Carga",

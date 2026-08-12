@@ -35,7 +35,7 @@ const migrations = [
 
 describe("preflight do schema CS/CX", () => {
   it("mantém uma lista explícita e existente de migrations", () => {
-    expect(migrations).toHaveLength(15);
+    expect(migrations).toHaveLength(16);
     expect(new Set(migrations).size).toBe(migrations.length);
     for (const migration of migrations) {
       expect(
@@ -104,6 +104,7 @@ describe("preflight do schema CS/CX", () => {
     expect(readiness).toContain("probeNpsWebhook(apiUrl)");
     expect(readiness).toContain("probePublicNps(apiUrl)");
     expect(readiness).toContain("nps_responses_immutable");
+    expect(readiness).toContain("nps_questionnaire_themes");
     expect(readiness).toContain("[401, 403].includes(response.status)");
   });
 
@@ -120,5 +121,21 @@ describe("preflight do schema CS/CX", () => {
     expect(migration).toContain("DROP POLICY IF EXISTS cs_cx_nps_responses_edit");
     expect(migration).toMatch(/REVOKE INSERT, UPDATE ON public\.cs_cx_nps_responses/);
     expect(migration).toMatch(/REVOKE ALL ON FUNCTION public\.cs_cx_import_nps/);
+  });
+
+  it("versiona a identidade visual das pesquisas NPS", () => {
+    const migration = readFileSync(
+      resolve(
+        root,
+        "supabase/migrations/20260812110000_cs_cx_nps_questionnaire_themes.sql",
+      ),
+      "utf8",
+    );
+
+    expect(migration).toContain("ADD COLUMN IF NOT EXISTS theme JSONB");
+    expect(migration).toContain("'theme', questionnaire.theme");
+    expect(migration).toContain("'cs-cx-nps-assets'");
+    expect(migration).toContain("file_size_limit");
+    expect(migration).not.toMatch(/FOR (?:UPDATE|DELETE) TO authenticated/);
   });
 });

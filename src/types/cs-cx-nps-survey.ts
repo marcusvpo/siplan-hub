@@ -10,10 +10,18 @@ export interface NpsQuestion {
   options?: string[];
 }
 
+export interface NpsQuestionnaireTheme {
+  primary_color: string;
+  background_color: string;
+  background_image_path: string | null;
+  background_overlay: number;
+}
+
 export interface NpsQuestionnaireSnapshot {
   title: string;
   description: string | null;
   questions: NpsQuestion[];
+  theme?: NpsQuestionnaireTheme;
 }
 
 export interface CsCxNpsQuestionnaire extends NpsQuestionnaireSnapshot {
