@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
 const hasPermission = vi.fn();
@@ -25,15 +25,15 @@ vi.mock("@/hooks/useCsCxEngagement", () => ({
   CS_CX_APPOINTMENT_TYPES: ["REUNIAO", "CALL", "VISITA", "OUTRO"],
   CS_CX_APPOINTMENT_STATUSES: ["AGENDADO", "REALIZADO", "CANCELADO", "REMARCADO", "CONCLUIDO"],
   useCsCxContacts: () => ({
-    contacts: [{
-      id: "contact-1",
-      legacy_id: 1,
+    contacts: Array.from({ length: 12 }, (_, index) => ({
+      id: `contact-${index + 1}`,
+      legacy_id: index + 1,
       contact_date: "2026-08-10",
       notes: "Contato produtivo",
       pending_items: null,
       product_id: "product-1",
-      contact_person: "Maria",
-      contact_details: "maria@exemplo.com",
+      contact_person: index === 0 ? "Maria" : `Pessoa ${index + 1}`,
+      contact_details: index === 0 ? "maria@exemplo.com" : `pessoa${index + 1}@exemplo.com`,
       registry_office_id: "office-1",
       ticket_number: null,
       author_profile_id: null,
@@ -42,7 +42,7 @@ vi.mock("@/hooks/useCsCxEngagement", () => ({
       origin: "legacy",
       product: { id: "product-1", name: "Orion" },
       registry_office: { id: "office-1", name: "Cartório Central" },
-    }],
+    })),
     isLoading: false,
     error: null,
     refetch: vi.fn(),
@@ -107,6 +107,17 @@ describe("CS/CX contatos e agendamentos — permissões", () => {
   it("libera criação de contatos com a permissão correta", () => {
     renderPage(<CsCxContacts />, ["cs_cx_contatos:create"]);
     expect(screen.getByRole("button", { name: /novo contato/i })).toBeInTheDocument();
+  });
+
+  it("pagina a lista de contatos em blocos compactos", () => {
+    renderPage(<CsCxContacts />, []);
+    expect(screen.getByLabelText("Mostrando 1 a 5 de 12 contatos")).toBeInTheDocument();
+    expect(screen.queryByText("Pessoa 6")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /próxima página/i }));
+
+    expect(screen.getByText("Pessoa 6")).toBeInTheDocument();
+    expect(screen.getByLabelText("Mostrando 6 a 10 de 12 contatos")).toBeInTheDocument();
   });
 
   it("mantém agenda em leitura e esconde criação", () => {
