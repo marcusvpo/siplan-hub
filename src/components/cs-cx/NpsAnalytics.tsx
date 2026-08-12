@@ -4,6 +4,7 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  LabelList,
   Legend,
   Line,
   LineChart,
@@ -32,7 +33,13 @@ import {
 import { MarkdownLite } from "@/components/MarkdownLite";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -141,6 +148,20 @@ export function NpsAnalyticsPanel({
     { name: "Neutros", value: analytics.neutrals },
     { name: "Detratores", value: analytics.detractors },
   ];
+  const officeRanking = analytics.byOffice.slice(0, 12);
+  const officeRankingDomain: [number, number] = officeRanking.some(
+    (office) => office.nps < 0,
+  )
+    ? officeRanking.some((office) => office.nps > 0)
+      ? [-100, 100]
+      : [-100, 0]
+    : [0, 100];
+  const officeRankingTicks =
+    officeRankingDomain[0] === 0
+      ? [0, 25, 50, 75, 100]
+      : officeRankingDomain[1] === 0
+        ? [-100, -75, -50, -25, 0]
+        : [-100, -50, 0, 50, 100];
 
   async function handleGenerate() {
     if (!analytics.total || active) return;
@@ -422,17 +443,27 @@ export function NpsAnalyticsPanel({
           <div className="grid gap-2.5 xl:grid-cols-[1.45fr_1fr]">
             <Card>
               <CardHeader className="px-3 py-2">
-                <CardTitle className="text-xs">NPS por cartório</CardTitle>
+                <CardTitle className="text-xs">Ranking de NPS por cartório</CardTitle>
+                <CardDescription className="text-[10px]">
+                  Do maior para o menor · até 12 cartórios
+                </CardDescription>
               </CardHeader>
               <CardContent className="h-[310px] px-2 pb-2 pt-0">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                   <BarChart
-                    data={analytics.byOffice.slice(0, 12)}
+                    data={officeRanking}
                     layout="vertical"
-                    margin={{ top: 4, right: 24, bottom: 0, left: 8 }}
+                    margin={{ top: 4, right: 34, bottom: 8, left: 8 }}
                   >
                     <CartesianGrid horizontal={false} stroke="hsl(var(--border))" />
-                    <XAxis type="number" domain={[-100, 100]} hide />
+                    <XAxis
+                      type="number"
+                      domain={officeRankingDomain}
+                      ticks={officeRankingTicks}
+                      tickLine={false}
+                      axisLine={false}
+                      tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9 }}
+                    />
                     <YAxis
                       type="category"
                       dataKey="name"
@@ -446,7 +477,18 @@ export function NpsAnalyticsPanel({
                     />
                     <ReferenceLine x={0} stroke="hsl(var(--muted-foreground))" />
                     <Tooltip contentStyle={tooltipStyle} />
-                    <Bar dataKey="nps" name="NPS" fill="#e11d48" radius={4} />
+                    <Bar dataKey="nps" name="NPS" radius={4}>
+                      {officeRanking.map((office) => (
+                        <Cell key={office.key} fill={officeNpsColor(office.nps)} />
+                      ))}
+                      <LabelList
+                        dataKey="nps"
+                        position="right"
+                        fill="hsl(var(--foreground))"
+                        fontSize={9}
+                        fontWeight={600}
+                      />
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -648,6 +690,12 @@ function npsTone(nps: number): "positive" | "negative" | "muted" {
   if (nps >= 50) return "positive";
   if (nps < 0) return "negative";
   return "muted";
+}
+
+function officeNpsColor(nps: number) {
+  if (nps >= 50) return "#10b981";
+  if (nps < 0) return "#e11d48";
+  return "#f59e0b";
 }
 
 function classificationClass(classification: CsCxNpsResponse["classification"]) {

@@ -45,6 +45,20 @@ describe("BI de NPS", () => {
     expect(filtered.map((item) => item.id)).toEqual(["3"]);
   });
 
+  it("ordena o ranking de cartórios do maior NPS para o menor", () => {
+    const ranking = buildNpsAnalytics([
+      response("high", "office-high", "Cartório Promotor", "2026-02-03T12:00:00Z", 10, "PROMOTOR", "Excelente", "Maria"),
+      response("neutral", "office-neutral", "Cartório Neutro", "2026-02-02T12:00:00Z", 8, "NEUTRO", "Regular", "Ana"),
+      response("low", "office-low", "Cartório Detrator", "2026-02-01T12:00:00Z", 2, "DETRATOR", "Ruim", "João"),
+    ]).byOffice;
+
+    expect(ranking.map((office) => [office.name, office.nps])).toEqual([
+      ["Cartório Promotor", 100],
+      ["Cartório Neutro", 0],
+      ["Cartório Detrator", -100],
+    ]);
+  });
+
   it("prepara evidências para a IA sem expor o nome do respondente", () => {
     const source = buildNpsAiSource(buildNpsAnalytics(responses), "Todo o período");
 

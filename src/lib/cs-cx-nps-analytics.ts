@@ -217,7 +217,7 @@ export function buildNpsAnalytics(
     }))
     .sort(
       (left, right) =>
-        left.nps - right.nps ||
+        right.nps - left.nps ||
         right.responses - left.responses ||
         left.name.localeCompare(right.name, "pt-BR"),
     );
@@ -304,7 +304,14 @@ export function buildNpsAiSource(
 ) {
   const latest = analytics.monthly.at(-1);
   const previous = analytics.monthly.at(-2);
-  const priorities = analytics.byOffice.slice(0, 5);
+  const priorities = [...analytics.byOffice]
+    .sort(
+      (left, right) =>
+        left.nps - right.nps ||
+        right.responses - left.responses ||
+        left.name.localeCompare(right.name, "pt-BR"),
+    )
+    .slice(0, 5);
   const feedback = analytics.feedback.slice(0, 100);
   const omitted = Math.max(0, analytics.feedback.length - feedback.length);
 
