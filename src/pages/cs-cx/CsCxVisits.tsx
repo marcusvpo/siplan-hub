@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { CalendarDays, CheckCircle2, ChevronDown, ChevronUp, ClipboardList, MapPin, Pencil, Plus, RefreshCw, Search, Trash2, TriangleAlert } from "lucide-react";
+import { CalendarDays, CheckCircle2, ChevronDown, ChevronUp, ClipboardList, FileDown, MapPin, Pencil, Plus, RefreshCw, Search, Trash2, TriangleAlert } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { useCsCxRegistryOffices } from "@/hooks/useCsCxCore";
 import { CS_CX_VISIT_STATUSES, type CsCxVisit, type CsCxVisitInput, useCsCxVisits } from "@/hooks/useCsCxExperience";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useToast } from "@/hooks/use-toast";
+import { generateCsCxVisitsPdf } from "@/lib/cs-cx-experience-pdf";
 import CsCxVisitDetails from "@/pages/cs-cx/CsCxVisitDetails";
 
 const STATUS_LABELS: Record<string, string> = { aberto: "Aberta", emandamento: "Em andamento", concluido: "Concluída", reaberto: "Reaberta" };
@@ -30,6 +31,7 @@ export default function CsCxVisits() {
   const [form, setForm] = useState<CsCxVisitInput>(emptyForm);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState<CsCxVisit | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   const canCreate = hasPermission("cs_cx_visitas", "create");
   const canEdit = hasPermission("cs_cx_visitas", "edit");
@@ -58,10 +60,18 @@ export default function CsCxVisits() {
     try { await deleteVisit.mutateAsync(deleting.id); setDeleting(null); toast({ title: "Visita excluída" }); }
     catch (mutationError) { toast({ title: "Não foi possível excluir", description: messageOf(mutationError), variant: "destructive" }); }
   }
+  async function handleExport() {
+    setIsExporting(true);
+    try {
+      const filters = [statusFilter === "all" ? "Todos os status" : `Status: ${STATUS_LABELS[statusFilter] ?? statusFilter}`, search.trim() ? `Busca: ${search.trim()}` : "Sem filtro de busca"];
+      await generateCsCxVisitsPdf(filtered, filters.join(" · "));
+    } catch (exportError) { toast({ title: "Não foi possível gerar o PDF", description: messageOf(exportError), variant: "destructive" }); }
+    finally { setIsExporting(false); }
+  }
 
   if (isLoading) return <div className="container mx-auto max-w-7xl space-y-4 p-6"><Skeleton className="h-28 w-full" /><Skeleton className="h-80 w-full" /></div>;
   return <div className="container mx-auto max-w-7xl space-y-6 p-6">
-    <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end"><div><div className="flex items-center gap-2 text-sm font-medium text-rose-600 dark:text-rose-300"><MapPin className="h-4 w-4" />CS/CX</div><h1 className="mt-1 text-3xl font-black tracking-tight">Visitas</h1><p className="text-sm text-muted-foreground">Planejamento, execução, checklist e pendências das visitas aos cartórios.</p></div>{canCreate && <Button onClick={openCreate}><Plus className="mr-2 h-4 w-4" />Nova visita</Button>}</div>
+    <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end"><div><div className="flex items-center gap-2 text-sm font-medium text-rose-600 dark:text-rose-300"><MapPin className="h-4 w-4" />CS/CX</div><h1 className="mt-1 text-3xl font-black tracking-tight">Visitas</h1><p className="text-sm text-muted-foreground">Planejamento, execução, checklist e pendências das visitas aos cartórios.</p></div><div className="flex gap-2"><Button variant="outline" disabled={!filtered.length || isExporting} onClick={handleExport}><FileDown className="mr-2 h-4 w-4" />Exportar PDF</Button>{canCreate && <Button onClick={openCreate}><Plus className="mr-2 h-4 w-4" />Nova visita</Button>}</div></div>
     {error && <Card className="border-destructive/40"><CardContent className="flex items-center justify-between pt-6"><span className="flex items-center gap-2 text-sm text-destructive"><TriangleAlert className="h-4 w-4" />{messageOf(error)}</span><Button variant="outline" size="sm" onClick={() => refetch()}><RefreshCw className="mr-2 h-4 w-4" />Tentar novamente</Button></CardContent></Card>}
     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><Metric icon={CalendarDays} label="Total de visitas" value={visits.length} /><Metric icon={MapPin} label="Em acompanhamento" value={openCount} /><Metric icon={ClipboardList} label="Pendências abertas" value={pendingCount} /><Metric icon={CheckCircle2} label="Itens verificados" value={checklistCount} /></div>
     <Card><CardContent className="grid gap-3 pt-6 md:grid-cols-[1fr_240px]"><div className="relative"><Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" /><Input className="pl-9" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar cartório, objetivo ou visitante..." /></div><Select value={statusFilter} onValueChange={setStatusFilter}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Todos os status</SelectItem>{CS_CX_VISIT_STATUSES.map((status) => <SelectItem key={status} value={status}>{STATUS_LABELS[status]}</SelectItem>)}</SelectContent></Select></CardContent></Card>
