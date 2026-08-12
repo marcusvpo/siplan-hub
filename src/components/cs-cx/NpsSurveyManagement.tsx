@@ -635,7 +635,7 @@ export function NpsQuestionnairesPanel() {
         open={Boolean(editing)}
         onOpenChange={(open) => !open && setEditing(null)}
       >
-        <DialogContent className="max-h-[92vh] max-w-3xl overflow-y-auto">
+        <DialogContent className="max-h-[92vh] max-w-4xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editing === "new"
