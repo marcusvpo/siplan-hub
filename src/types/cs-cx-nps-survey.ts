@@ -1,5 +1,5 @@
 export type NpsQuestionType =
-  "nps" | "text" | "textarea" | "single_choice" | "multiple_choice";
+  "nps" | "rating" | "text" | "textarea" | "single_choice" | "multiple_choice";
 
 export interface NpsQuestion {
   id: string;
