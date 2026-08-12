@@ -115,12 +115,30 @@ function storagePath(attachment) {
 }
 
 async function download(storagePathValue) {
-  const { data, error } = await bucket.download(storagePathValue);
-  if (error) {
-    if (/not found|does not exist|404/i.test(error.message ?? '')) return null;
+  try {
+    const { data, error } = await bucket.download(storagePathValue);
+    if (error) {
+      if (await isMissingObjectError(error)) return null;
+      throw error;
+    }
+    return Buffer.from(await data.arrayBuffer());
+  } catch (error) {
+    if (await isMissingObjectError(error)) return null;
     throw error;
   }
-  return Buffer.from(await data.arrayBuffer());
+}
+
+async function isMissingObjectError(error) {
+  if (/not found|does not exist|404|NoSuchKey/i.test(error?.message ?? '')) return true;
+  const response = error?.originalError;
+  if (!(response instanceof Response)) return false;
+  try {
+    const payload = await response.clone().json();
+    return String(payload?.statusCode) === '404'
+      || /not found|NoSuchKey/i.test(`${payload?.error ?? ''} ${payload?.message ?? ''} ${payload?.code ?? ''}`);
+  } catch {
+    return response.status === 404;
+  }
 }
 
 function sha256(content) {

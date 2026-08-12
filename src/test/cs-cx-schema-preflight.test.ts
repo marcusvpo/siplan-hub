@@ -59,6 +59,8 @@ describe("preflight do schema CS/CX", () => {
     expect(fileMigrator).toContain("--confirm-project=");
     expect(fileMigrator).toContain("createHash('sha256')");
     expect(fileMigrator).toContain("upsert: false");
+    expect(fileMigrator).toContain("NoSuchKey");
+    expect(fileMigrator).toContain("error?.originalError");
     expect(fileMigrator).toContain("if (apply && !attachment.storage_path)");
     expect(fileMigrator).not.toMatch(/console\.log\([^\n]*serviceRoleKey/);
   });
