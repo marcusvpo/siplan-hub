@@ -29,13 +29,18 @@ vi.mock("@/hooks/useCsCxExperience", () => ({
     deleteAttachment: mutation, downloadAttachment: vi.fn(), deleteVisit: mutation,
   }),
   useCsCxNps: () => ({
-    responses: [{
-      id: "nps-1", legacy_id: 1, registry_office_id: "office-1", responded_at: "2026-08-10T12:00:00Z",
-      respondent_name: "Maria", respondent_office: "Cartório Central", score: 10, score_reason: "Ótimo atendimento",
+    responses: Array.from({ length: 12 }, (_, index) => ({
+      id: `nps-${index + 1}`, legacy_id: index + 1, registry_office_id: "office-1", responded_at: "2026-08-10T12:00:00Z",
+      respondent_name: index === 0 ? "Maria" : `Respondente ${index + 1}`, respondent_office: index === 0 ? "Cartório Central" : `Cartório ${index + 1}`,
+      score: 10, score_reason: index === 0 ? "Ótimo atendimento" : `Motivo ${index + 1}`,
       improvement_suggestion: null, classification: "PROMOTOR", origin: "legacy",
-      registry_office: { id: "office-1", name: "Cartório Central" },
-    }],
-    history: [], isLoading: false, error: null, refetch: vi.fn(), saveResponse: mutation,
+      registry_office: { id: "office-1", name: index === 0 ? "Cartório Central" : `Cartório ${index + 1}` },
+    })),
+    history: Array.from({ length: 7 }, (_, index) => ({
+      id: `history-${index + 1}`, registry_office_id: "office-1", period_start: `2026-0${index + 1}-01`, period_end: `2026-0${index + 1}-28`,
+      total_responses: index + 1, total_promoters: index + 1, total_neutrals: 0, total_detractors: 0, nps_score: 100,
+      registry_office: { id: "office-1", name: `Histórico ${index + 1}` },
+    })), isLoading: false, error: null, refetch: vi.fn(), saveResponse: mutation,
     deleteResponse: mutation, importResponses: mutation,
   }),
 }));
@@ -97,5 +102,20 @@ describe("CS/CX visitas e NPS — permissões", () => {
     renderPage(<CsCxNps />, ["cs_cx_nps:create"]);
     expect(screen.getByRole("button", { name: /nova resposta/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /importar arquivo/i })).toBeInTheDocument();
+  });
+
+  it("pagina respostas e histórico de NPS em blocos compactos", () => {
+    renderPage(<CsCxNps />, []);
+    expect(screen.getByLabelText("Mostrando 1 a 5 de 12 respostas")).toBeInTheDocument();
+    expect(screen.queryByText("Respondente 6")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /próxima página de respostas/i }));
+
+    expect(screen.getByText("Respondente 6")).toBeInTheDocument();
+    expect(screen.getByLabelText("Mostrando 6 a 10 de 12 respostas")).toBeInTheDocument();
+
+    fireEvent.mouseDown(screen.getByRole("tab", { name: /histórico/i }), { button: 0, ctrlKey: false });
+    expect(screen.getByLabelText("Mostrando 1 a 5 de 7 períodos")).toBeInTheDocument();
+    expect(screen.queryByText("Histórico 6")).not.toBeInTheDocument();
   });
 });
