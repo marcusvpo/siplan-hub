@@ -15,6 +15,7 @@ concluídos. O legado continua sendo a fonte oficial até a virada final.
 - [ ] Exceções do de/para confirmadas pelo responsável do negócio.
 - [ ] Perfis piloto recebem somente as permissões CS/CX necessárias.
 - [ ] Build, lint e testes automatizados aprovados.
+- [ ] Anexos históricos copiados e aprovados por checksum.
 - [ ] Smoke test das rotas e das ações de escrita com um perfil piloto.
 
 ## Roteiro da validação humana
