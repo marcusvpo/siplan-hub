@@ -1,31 +1,47 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import net from 'node:net';
+import path from 'node:path';
 import pg from 'pg';
+import { csvCell, matchLegacyUsers } from './lib/cs-cx-user-matching.mjs';
 
 const { Client } = pg;
-const VALID_MODES = new Set(['initial', 'delta', 'verify']);
+const VALID_MODES = new Set(['initial', 'delta', 'verify', 'users', 'source']);
 const args = new Set(process.argv.slice(2));
 const mode = [...args].find((arg) => VALID_MODES.has(arg)) ?? 'verify';
 const apply = args.has('--apply');
+const outputArg = [...args].find((arg) => arg.startsWith('--output='));
+const mapArg = [...args].find((arg) => arg.startsWith('--map='));
+const confirmation = [...args].find((arg) => arg.startsWith('--confirm-project='))?.split('=')[1];
 
 loadDotEnv();
 
 if (!VALID_MODES.has(mode)) {
-  fail('Modo invalido. Use initial, delta ou verify.');
+  fail('Modo invalido. Use initial, delta, verify, users ou source.');
 }
-if (mode !== 'verify' && !apply) {
+if (!['verify', 'users', 'source'].includes(mode) && !apply) {
   fail('Carga bloqueada: acrescente --apply. Sem essa flag nenhuma escrita e feita.');
 }
 
 const sourceUrl = process.env.CS_CX_SOURCE_DATABASE_URL;
 const targetUrl = process.env.SUPABASE_DB_URL;
-if (!sourceUrl || !targetUrl) {
-  fail('Defina CS_CX_SOURCE_DATABASE_URL e SUPABASE_DB_URL no ambiente ou .env.');
+if (!sourceUrl || (mode !== 'source' && !targetUrl)) {
+  fail(mode === 'source'
+    ? 'Defina CS_CX_SOURCE_DATABASE_URL no ambiente ou .env.'
+    : 'Defina CS_CX_SOURCE_DATABASE_URL e SUPABASE_DB_URL no ambiente ou .env.');
+}
+const projectRef = targetUrl ? resolveProjectRef(targetUrl, process.env.VITE_SUPABASE_URL) : null;
+if (apply && (!projectRef || confirmation !== projectRef)) {
+  fail(`Confirme o projeto com --confirm-project=${projectRef ?? '<project-ref>'}.`);
+}
+if (mode === 'users' && apply && !mapArg) {
+  fail('Para aplicar o de/para, informe --map=artifacts/cs-cx-user-map.json.');
 }
 
 const source = new Client(connectionOptions(sourceUrl, process.env.CS_CX_SOURCE_SSL === 'true'));
-const target = new Client(connectionOptions(targetUrl, process.env.CS_CX_TARGET_SSL !== 'false'));
+const target = targetUrl
+  ? new Client(connectionOptions(targetUrl, process.env.CS_CX_TARGET_SSL !== 'false'))
+  : null;
 
 const TABLES = [
   {
@@ -459,11 +475,31 @@ const TABLES = [
 
 async function main() {
   await source.connect();
-  await target.connect();
+  await source.query('SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY');
   await source.query(`SET TIME ZONE 'UTC'`);
+  if (mode === 'source') {
+    try {
+      await validateSourceSchema();
+    } finally {
+      await source.end();
+    }
+    return;
+  }
+
+  try {
+    await target.connect();
+  } catch (error) {
+    await source.end();
+    throw error;
+  }
   await target.query(`SET TIME ZONE 'UTC'`);
 
   try {
+    if (mode === 'users') {
+      if (apply) await applyUserMap(mapArg.slice('--map='.length));
+      else await reportUserMatches(outputArg?.slice('--output='.length));
+      return;
+    }
     await assertTargetReady();
     if (mode === 'verify') {
       const ok = await verify();
@@ -474,6 +510,16 @@ async function main() {
   } finally {
     await Promise.allSettled([source.end(), target.end()]);
   }
+}
+
+async function validateSourceSchema() {
+  console.log('Tabela legada: linhas');
+  for (const spec of TABLES) {
+    await source.query(`SELECT * FROM (${spec.query}) AS source_preflight LIMIT 0`);
+    const result = await source.query(`SELECT count(*)::bigint AS count FROM ${spec.source}`);
+    console.log(`${spec.source}: ${Number(result.rows[0].count)}`);
+  }
+  console.log(`${TABLES.length} consultas legadas validadas em modo somente leitura.`);
 }
 
 async function migrate() {
@@ -497,6 +543,10 @@ async function migrate() {
         withSyncFields(spec.map(row, maps), !spec.hasNoOrigin),
       );
       await bulkUpsert(spec, rows);
+      if (spec.target === 'cs_cx_user_map') {
+        const linked = await autoLinkProfiles();
+        console.log(`usuarios: ${linked} vínculo(s) automático(s) por e-mail`);
+      }
       stats[spec.source] = { scanned: rows.length };
 
       await refreshMaps(spec.target, maps);
@@ -531,6 +581,132 @@ async function migrate() {
        WHERE id = $1`,
       [runId, String(error.message ?? error).slice(0, 4000)],
     ).catch(() => undefined);
+    throw error;
+  }
+}
+
+async function autoLinkProfiles() {
+  const result = await target.query(`
+    WITH profile_candidates AS (
+      SELECT id, lower(trim(email)) AS normalized_email,
+             count(*) OVER (PARTITION BY lower(trim(email))) AS matches
+      FROM public.profiles
+      WHERE NULLIF(trim(email), '') IS NOT NULL
+    ),
+    legacy_candidates AS (
+      SELECT id, lower(trim(email)) AS normalized_email,
+             count(*) OVER (PARTITION BY lower(trim(email))) AS matches
+      FROM public.cs_cx_user_map
+      WHERE source_present AND NULLIF(trim(email), '') IS NOT NULL
+    )
+    UPDATE public.cs_cx_user_map user_map
+    SET profile_id = profile.id
+    FROM legacy_candidates legacy
+    JOIN profile_candidates profile
+      ON profile.normalized_email = legacy.normalized_email
+     AND profile.matches = 1
+    WHERE user_map.id = legacy.id
+      AND legacy.matches = 1
+      AND user_map.profile_id IS NULL
+    RETURNING user_map.id
+  `);
+  return result.rowCount ?? 0;
+}
+
+async function reportUserMatches(outputPath = 'artifacts/cs-cx-user-mapping.csv') {
+  const [legacyResult, profilesResult] = await Promise.all([
+    source.query(`SELECT id, username, email, nome_completo, ativo FROM users ORDER BY id`),
+    target.query(`SELECT id, email, full_name FROM public.profiles ORDER BY full_name, email`),
+  ]);
+
+  const report = matchLegacyUsers(legacyResult.rows, profilesResult.rows);
+
+  const headers = Object.keys(report[0] ?? {
+    legacy_id: '', legacy_username: '', legacy_email: '', legacy_name: '',
+    legacy_active: '', status: '', profile_id: '', profile_email: '', profile_name: '',
+  });
+  const artifactRoot = path.resolve('artifacts');
+  const resolvedOutput = path.resolve(outputPath);
+  if (resolvedOutput !== artifactRoot && !resolvedOutput.startsWith(`${artifactRoot}${path.sep}`)) {
+    throw new Error('O relatório de usuários deve ser salvo dentro de artifacts/.');
+  }
+  fs.mkdirSync(artifactRoot, { recursive: true });
+  fs.writeFileSync(
+    resolvedOutput,
+    `${headers.join(',')}\n${report.map((row) => headers.map((header) => csvCell(row[header])).join(',')).join('\n')}\n`,
+    'utf8',
+  );
+
+  const counts = report.reduce((summary, row) => {
+    summary[row.status] = (summary[row.status] ?? 0) + 1;
+    return summary;
+  }, {});
+  console.log(`Usuários legados: ${report.length}; perfis HUB: ${profilesResult.rows.length}`);
+  console.log(`E-mail exato: ${counts.exact_email ?? 0}; sugestão por nome: ${counts.suggested_name ?? 0}; ambíguos: ${counts.ambiguous ?? 0}; sem vínculo: ${counts.unmatched ?? 0}`);
+  console.log(`Relatório salvo em ${resolvedOutput}`);
+}
+
+async function applyUserMap(mapPath) {
+  await assertTargetReady();
+  const resolvedMap = path.resolve(mapPath);
+  if (!fs.existsSync(resolvedMap)) throw new Error(`Arquivo de de/para não encontrado: ${resolvedMap}`);
+
+  const mappings = JSON.parse(fs.readFileSync(resolvedMap, 'utf8'));
+  if (!Array.isArray(mappings) || mappings.length === 0) {
+    throw new Error('O de/para deve ser um array JSON não vazio.');
+  }
+
+  const seenLegacyIds = new Set();
+  for (const mapping of mappings) {
+    if (!Number.isInteger(mapping.legacy_id) || mapping.legacy_id <= 0) {
+      throw new Error('Cada item precisa de legacy_id inteiro e positivo.');
+    }
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(mapping.profile_id ?? '')) {
+      throw new Error(`profile_id inválido para o usuário legado ${mapping.legacy_id}.`);
+    }
+    if (seenLegacyIds.has(mapping.legacy_id)) throw new Error(`legacy_id duplicado no arquivo: ${mapping.legacy_id}.`);
+    seenLegacyIds.add(mapping.legacy_id);
+  }
+
+  await target.query('BEGIN');
+  try {
+    const validation = await target.query(
+      `WITH input AS (
+         SELECT legacy_id, profile_id
+         FROM jsonb_to_recordset($1::jsonb) AS row(legacy_id bigint, profile_id uuid)
+       )
+       SELECT input.legacy_id, input.profile_id,
+              user_map.id IS NOT NULL AS legacy_exists,
+              profile.id IS NOT NULL AS profile_exists
+       FROM input
+       LEFT JOIN public.cs_cx_user_map user_map
+         ON user_map.legacy_id = input.legacy_id AND user_map.source_present
+       LEFT JOIN public.profiles profile ON profile.id = input.profile_id`,
+      [JSON.stringify(mappings)],
+    );
+    const invalid = validation.rows.filter((row) => !row.legacy_exists || !row.profile_exists);
+    if (invalid.length) {
+      throw new Error(`De/para contém ${invalid.length} vínculo(s) inexistente(s) no destino.`);
+    }
+
+    const result = await target.query(
+      `WITH input AS (
+         SELECT legacy_id, profile_id
+         FROM jsonb_to_recordset($1::jsonb) AS row(legacy_id bigint, profile_id uuid)
+       )
+       UPDATE public.cs_cx_user_map user_map
+       SET profile_id = input.profile_id
+       FROM input
+       WHERE user_map.legacy_id = input.legacy_id
+         AND user_map.source_present
+       RETURNING user_map.legacy_id`,
+      [JSON.stringify(mappings)],
+    );
+    if (result.rowCount !== mappings.length) throw new Error('Nem todos os vínculos foram aplicados.');
+    await target.query('COMMIT');
+    console.log(`${result.rowCount} vínculo(s) de usuário aplicado(s) no projeto ${projectRef}.`);
+  } catch (error) {
+    await target.query('ROLLBACK');
     throw error;
   }
 }
@@ -748,6 +924,17 @@ function key(value) {
 
 function connectionOptions(connectionString, ssl) {
   return { connectionString, ssl: ssl ? { rejectUnauthorized: false } : undefined };
+}
+
+function resolveProjectRef(databaseUrl, apiUrl) {
+  try {
+    const apiHost = apiUrl ? new URL(apiUrl).hostname : '';
+    if (apiHost.endsWith('.supabase.co')) return apiHost.split('.')[0];
+    const username = decodeURIComponent(new URL(databaseUrl).username);
+    return username.includes('.') ? username.split('.').at(-1) : null;
+  } catch {
+    return null;
+  }
 }
 
 function loadDotEnv() {
