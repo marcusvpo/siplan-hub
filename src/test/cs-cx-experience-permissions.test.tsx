@@ -12,16 +12,16 @@ vi.mock("@/hooks/useCsCxCore", () => ({
 vi.mock("@/hooks/useCsCxExperience", () => ({
   CS_CX_VISIT_STATUSES: ["aberto", "emandamento", "concluido", "reaberto"],
   useCsCxVisits: () => ({
-    visits: [{
-      id: "visit-1", legacy_id: 1, registry_office_id: "office-1", visitor_profile_id: "profile-1",
+    visits: Array.from({ length: 12 }, (_, index) => ({
+      id: `visit-${index + 1}`, legacy_id: index + 1, registry_office_id: "office-1", visitor_profile_id: "profile-1",
       visit_date: "2026-08-10", start_time: "09:00:00", end_time: "11:00:00", status: "aberto",
-      objective: "Acompanhar operação", general_notes: null, origin: "legacy",
-      registry_office: { id: "office-1", name: "Cartório Central" }, visitor: { id: "profile-1", full_name: "Bruno" },
+      objective: index === 0 ? "Acompanhar operação" : `Objetivo da visita ${index + 1}`, general_notes: null, origin: "legacy",
+      registry_office: { id: "office-1", name: index === 0 ? "Cartório Central" : `Cartório ${index + 1}` }, visitor: { id: "profile-1", full_name: index === 0 ? "Bruno" : `Visitante ${index + 1}` },
       checklist: [], pending_items: [{
-        id: "pending-1", title: "Revisar cadastro", description: "Conferir dados", priority: "media",
+        id: `pending-${index + 1}`, title: "Revisar cadastro", description: "Conferir dados", priority: "media",
         category: null, notes: null, due_date: null, status: "pendente", request_id: null,
       }], attachments: [],
-    }],
+    })),
     profiles: [{ id: "profile-1", full_name: "Bruno" }], isLoading: false, error: null, refetch: vi.fn(),
     saveVisit: mutation, setVisitStatus: mutation, toggleChecklist: mutation,
     saveChecklistItem: mutation, deleteChecklistItem: mutation, savePendingItem: mutation,
@@ -63,9 +63,20 @@ describe("CS/CX visitas e NPS — permissões", () => {
     expect(screen.getByRole("button", { name: /nova visita/i })).toBeInTheDocument();
   });
 
+  it("pagina a lista de visitas em blocos compactos", () => {
+    renderPage(<CsCxVisits />, []);
+    expect(screen.getByLabelText("Mostrando 1 a 5 de 12 visitas")).toBeInTheDocument();
+    expect(screen.queryByText("Objetivo da visita 6")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /próxima página/i }));
+
+    expect(screen.getByText("Objetivo da visita 6")).toBeInTheDocument();
+    expect(screen.getByLabelText("Mostrando 6 a 10 de 12 visitas")).toBeInTheDocument();
+  });
+
   it("exige permissão de solicitações para gerar uma a partir da visita", () => {
     const { rerender } = renderPage(<CsCxVisits />, ["cs_cx_visitas:edit"]);
-    fireEvent.click(screen.getByRole("button", { name: /detalhes/i }));
+    fireEvent.click(screen.getAllByRole("button", { name: /detalhes/i })[0]);
     expect(screen.queryByRole("button", { name: /gerar solicitação/i })).not.toBeInTheDocument();
 
     hasPermission.mockImplementation((resource: string, action: string) => [
