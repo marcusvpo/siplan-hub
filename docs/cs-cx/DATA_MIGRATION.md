@@ -112,7 +112,21 @@ pela `service_role`, deduplica por cartório/respondente/dia e audita a inclusã
 
 A migration cria o bucket privado `cs-cx-attachments`. Nesta etapa são migrados os
 metadados; os binários permanecem no compartilhamento legado até a rotina dedicada
-de cópia e checksum ser homologada. O campo `storage_path` fica nulo até essa cópia.
+de cópia e checksum ser executada. Configure localmente `SUPABASE_SERVICE_ROLE_KEY`
+e, se necessário, `CS_CX_LEGACY_UPLOADS_PATH`. Nunca use a chave pública para esta
+operação e nunca versione a service role.
+
+```bash
+# Copia somente arquivos ausentes, relê o objeto e compara SHA-256
+npm run migrate:cs-cx-files -- --apply --confirm-project=PROJECT_REF
+
+# Auditoria posterior, sem escrita
+npm run migrate:cs-cx-files
+```
+
+O caminho no bucket é determinístico; uma reexecução não duplica arquivos. O campo
+`storage_path` só é preenchido depois que o conteúdo remoto é relido com checksum
+idêntico ao arquivo da VM.
 
 ## Usuários
 

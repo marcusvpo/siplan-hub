@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 const root = process.cwd();
 const runner = readFileSync(resolve(root, "scripts/prepare-cs-cx-schema.mjs"), "utf8");
 const migrator = readFileSync(resolve(root, "scripts/migrate-cs-cx.mjs"), "utf8");
+const fileMigrator = readFileSync(resolve(root, "scripts/migrate-cs-cx-files.mjs"), "utf8");
 const workflow = readFileSync(resolve(root, ".github/workflows/supabase-migrations.yml"), "utf8");
 const migrations = [...runner.matchAll(/'((?:20260811|20260812)\d+_cs_cx_[^']+\.sql)'/g)]
   .map((match) => match[1]);
@@ -46,5 +47,14 @@ describe("preflight do schema CS/CX", () => {
     expect(migrator).toContain("jsonb_to_recordset");
     expect(migrator).toContain("await target.query('BEGIN')");
     expect(migrator).toContain("await target.query('ROLLBACK')");
+  });
+
+  it("copia anexos históricos com confirmação e checksum", () => {
+    expect(fileMigrator).toContain("SUPABASE_SERVICE_ROLE_KEY");
+    expect(fileMigrator).toContain("--confirm-project=");
+    expect(fileMigrator).toContain("createHash('sha256')");
+    expect(fileMigrator).toContain("upsert: false");
+    expect(fileMigrator).toContain("if (apply && !attachment.storage_path)");
+    expect(fileMigrator).not.toMatch(/console\.log\([^\n]*serviceRoleKey/);
   });
 });
