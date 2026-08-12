@@ -73,6 +73,7 @@ import {
   NpsInvitationsPanel,
   NpsQuestionnairesPanel,
 } from "@/components/cs-cx/NpsSurveyManagement";
+import { NpsAnalyticsPanel } from "@/components/cs-cx/NpsAnalytics";
 import { answerLabel } from "@/lib/cs-cx-nps-survey";
 
 const emptyForm: CsCxNpsInput = {
@@ -372,6 +373,9 @@ export default function CsCxNps() {
           <TabsTrigger className="h-7" value="responses">
             Respostas
           </TabsTrigger>
+          <TabsTrigger className="h-7" value="analytics">
+            Análises
+          </TabsTrigger>
           <TabsTrigger className="h-7" value="invitations">
             Solicitações
           </TabsTrigger>
@@ -525,6 +529,9 @@ export default function CsCxNps() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+        <TabsContent value="analytics" className="mt-3">
+          <NpsAnalyticsPanel responses={responses} canGenerate={canCreate} />
         </TabsContent>
         <TabsContent
           forceMount
