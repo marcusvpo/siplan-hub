@@ -33,6 +33,7 @@ Aplicar, nesta ordem:
 5. `20260811113000_cs_cx_contacts_appointments.sql`
 6. `20260812100000_cs_cx_routines.sql`
 7. `20260812101000_cs_cx_visits_nps.sql`
+8. `20260812102000_cs_cx_advanced_operations.sql`
 
 Configurar as URLs sem commitá-las:
 

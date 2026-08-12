@@ -30,8 +30,8 @@ Este documento é a matriz de controle da migração do sistema Flask em
 | Contatos | lista, filtros, criação, edição, exclusão, produtos, estatísticas e PDFs | em migração; lista, CRUD, filtros e indicadores básicos implementados |
 | Agendamentos | lista, calendário, criação, edição, realização, conclusão, cancelamento, remarcação, impressão e PDF | em migração; lista, calendário, CRUD e mudanças de estado implementados |
 | Rotinas | aplicações, configuração, análise, histórico, modelos, itens, categorias, tipos, reordenação, relatórios e PDF | em migração; schema e carga incremental preparados, aplicações, análise de itens e catálogo de modelos implementados |
-| Visitas | criação, edição, checklist, pendências, anexos, geração de solicitações, status e PDF | em migração; schema e carga incremental preparados, lista, CRUD, status, checklist e leitura de pendências implementados |
-| NPS | respostas, importação, classificação, estatísticas, histórico, reatribuição, webhook, exclusão e PDF | em migração; schema e carga incremental preparados, respostas, classificação automática, indicadores e histórico implementados |
+| Visitas | criação, edição, checklist, pendências, anexos, geração de solicitações, status e PDF | em migração; lista, CRUD, status, checklist, pendências, anexos nativos e geração transacional de solicitações implementados; cópia dos binários legados e PDF pendentes |
+| NPS | respostas, importação, classificação, estatísticas, histórico, reatribuição, webhook, exclusão e PDF | em migração; respostas, classificação, indicadores, histórico, reatribuição por edição e importação CSV idempotente implementados; XLSX, webhook e PDF pendentes |
 | Notificações | lista, leitura individual e leitura em lote | inventariado; integrar com notifications existente |
 | Administração | usuários, perfis, permissões, logs, prioridades, estatísticas, PDF e Excel | fundação; identidade será integrada ao RBAC do Hub |
 
