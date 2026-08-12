@@ -80,7 +80,10 @@ function renderPage(page: React.ReactNode, permissions: string[]) {
 }
 
 describe("CS/CX — ações por permissão", () => {
-  beforeEach(() => hasPermission.mockReset());
+  beforeEach(() => {
+    hasPermission.mockReset();
+    mutation.mutateAsync.mockReset();
+  });
 
   it("mantém cartórios visíveis e esconde escrita sem permissão", () => {
     renderPage(<CsCxRegistryOffices />, []);
@@ -127,5 +130,20 @@ describe("CS/CX — ações por permissão", () => {
 
     fireEvent.keyDown(window, { key: "Escape" });
     expect(screen.getByRole("button", { name: /abrir quadro em tela cheia/i })).toBeInTheDocument();
+  });
+
+  it("arrasta uma solicitação para outra coluna e atualiza o status", () => {
+    renderPage(<CsCxRequests />, ["cs_cx_registros:edit"]);
+    fireEvent.mouseDown(screen.getByRole("tab", { name: /quadro/i }), { button: 0, ctrlKey: false });
+    const card = screen.getByLabelText("Arrastar CH-123");
+    const target = screen.getByLabelText("Projeto: 0 solicitações");
+    const dataTransfer = { effectAllowed: "none", dropEffect: "none", setData: vi.fn() };
+
+    fireEvent.dragStart(card, { dataTransfer });
+    fireEvent.dragOver(target, { dataTransfer });
+    expect(target).toHaveClass("ring-2");
+    fireEvent.drop(target, { dataTransfer });
+
+    expect(mutation.mutateAsync).toHaveBeenCalledWith({ id: "request-1", status: "Projeto" });
   });
 });

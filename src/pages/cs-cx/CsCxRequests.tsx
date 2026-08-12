@@ -6,6 +6,7 @@ import {
   ClipboardList,
   Columns3,
   Database,
+  GripVertical,
   List,
   Maximize2,
   MoreHorizontal,
@@ -55,6 +56,45 @@ const emptyForm: CsCxRequestInput = {
 };
 
 const DEFAULT_PAGE_SIZE = 5;
+
+const REQUEST_STATUS_STYLES: Record<string, { column: string; header: string; badge: string; card: string }> = {
+  Aguardando: {
+    column: "border-amber-200 bg-amber-50/40 dark:border-amber-900/70 dark:bg-amber-950/15",
+    header: "border-amber-200 bg-amber-100/70 text-amber-950 dark:border-amber-900/70 dark:bg-amber-950/40 dark:text-amber-100",
+    badge: "bg-amber-200/80 text-amber-900 dark:bg-amber-900 dark:text-amber-100",
+    card: "border-l-2 border-l-amber-400 bg-amber-50/30 dark:border-l-amber-600 dark:bg-amber-950/10",
+  },
+  Projeto: {
+    column: "border-violet-200 bg-violet-50/40 dark:border-violet-900/70 dark:bg-violet-950/15",
+    header: "border-violet-200 bg-violet-100/70 text-violet-950 dark:border-violet-900/70 dark:bg-violet-950/40 dark:text-violet-100",
+    badge: "bg-violet-200/80 text-violet-900 dark:bg-violet-900 dark:text-violet-100",
+    card: "border-l-2 border-l-violet-400 bg-violet-50/30 dark:border-l-violet-600 dark:bg-violet-950/10",
+  },
+  Desenvolvimento: {
+    column: "border-blue-200 bg-blue-50/40 dark:border-blue-900/70 dark:bg-blue-950/15",
+    header: "border-blue-200 bg-blue-100/70 text-blue-950 dark:border-blue-900/70 dark:bg-blue-950/40 dark:text-blue-100",
+    badge: "bg-blue-200/80 text-blue-900 dark:bg-blue-900 dark:text-blue-100",
+    card: "border-l-2 border-l-blue-400 bg-blue-50/30 dark:border-l-blue-600 dark:bg-blue-950/10",
+  },
+  "Em andamento": {
+    column: "border-cyan-200 bg-cyan-50/40 dark:border-cyan-900/70 dark:bg-cyan-950/15",
+    header: "border-cyan-200 bg-cyan-100/70 text-cyan-950 dark:border-cyan-900/70 dark:bg-cyan-950/40 dark:text-cyan-100",
+    badge: "bg-cyan-200/80 text-cyan-900 dark:bg-cyan-900 dark:text-cyan-100",
+    card: "border-l-2 border-l-cyan-400 bg-cyan-50/30 dark:border-l-cyan-600 dark:bg-cyan-950/10",
+  },
+  Finalizado: {
+    column: "border-emerald-200 bg-emerald-50/40 dark:border-emerald-900/70 dark:bg-emerald-950/15",
+    header: "border-emerald-200 bg-emerald-100/70 text-emerald-950 dark:border-emerald-900/70 dark:bg-emerald-950/40 dark:text-emerald-100",
+    badge: "bg-emerald-200/80 text-emerald-900 dark:bg-emerald-900 dark:text-emerald-100",
+    card: "border-l-2 border-l-emerald-400 bg-emerald-50/30 dark:border-l-emerald-600 dark:bg-emerald-950/10",
+  },
+  Negado: {
+    column: "border-rose-200 bg-rose-50/40 dark:border-rose-900/70 dark:bg-rose-950/15",
+    header: "border-rose-200 bg-rose-100/70 text-rose-950 dark:border-rose-900/70 dark:bg-rose-950/40 dark:text-rose-100",
+    badge: "bg-rose-200/80 text-rose-900 dark:bg-rose-900 dark:text-rose-100",
+    card: "border-l-2 border-l-rose-400 bg-rose-50/30 dark:border-l-rose-600 dark:bg-rose-950/10",
+  },
+};
 
 export default function CsCxRequests() {
   const { requests, isLoading, error, refetch, saveRequest, updateStatus, deleteRequest } = useCsCxRequests();
@@ -238,6 +278,19 @@ function PaginationBar({ currentPage, pageSize, totalItems, totalPages, onPageCh
 
 function RequestBoard({ requests, canEdit, onEdit, onStatusChange }: { requests: CsCxRequest[]; canEdit: boolean; onEdit: (request: CsCxRequest) => void; onStatusChange: (request: CsCxRequest, status: string) => void }) {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [draggedRequestId, setDraggedRequestId] = useState<string | null>(null);
+  const [dragOverStatus, setDragOverStatus] = useState<string | null>(null);
+
+  const finishDrag = () => {
+    setDraggedRequestId(null);
+    setDragOverStatus(null);
+  };
+
+  const dropRequest = (status: string) => {
+    const request = requests.find((item) => item.id === draggedRequestId);
+    finishDrag();
+    if (request && request.status !== status) void onStatusChange(request, status);
+  };
 
   useEffect(() => {
     if (!isFullscreen) return;
@@ -265,7 +318,7 @@ function RequestBoard({ requests, canEdit, onEdit, onStatusChange }: { requests:
       <div className="flex shrink-0 items-center justify-between gap-3">
         <div>
           <p className="text-sm font-semibold">Fluxo das solicitações</p>
-          <p className="text-[11px] text-muted-foreground">Role cada coluna separadamente. Arraste a barra inferior para navegar entre os status.</p>
+          <p className="text-[11px] text-muted-foreground">{canEdit ? "Arraste os cartões entre as colunas para alterar o status." : "Role cada coluna separadamente para consultar as solicitações."}</p>
         </div>
         <Button
           type="button"
@@ -286,20 +339,62 @@ function RequestBoard({ requests, canEdit, onEdit, onStatusChange }: { requests:
       )}>
         {CS_CX_REQUEST_STATUSES.map((status) => {
           const items = requests.filter((request) => request.status === status);
+          const styles = REQUEST_STATUS_STYLES[status];
+          const isDropTarget = canEdit && dragOverStatus === status && requests.find((item) => item.id === draggedRequestId)?.status !== status;
           return (
-            <div key={status} aria-label={`${status}: ${items.length} solicitações`} className="flex h-full w-[260px] shrink-0 flex-col overflow-hidden rounded-lg border bg-background">
-              <div className="flex h-10 shrink-0 items-center justify-between border-b px-3">
+            <div
+              key={status}
+              aria-label={`${status}: ${items.length} solicitações`}
+              className={cn(
+                "flex h-full w-[260px] shrink-0 flex-col overflow-hidden rounded-lg border transition-all",
+                styles.column,
+                isDropTarget && "scale-[0.99] border-rose-400 bg-rose-50/80 ring-2 ring-rose-400 ring-offset-1 dark:border-rose-500 dark:bg-rose-950/30 dark:ring-rose-500",
+              )}
+              onDragEnter={(event) => {
+                if (!canEdit || !draggedRequestId) return;
+                event.preventDefault();
+                setDragOverStatus(status);
+              }}
+              onDragOver={(event) => {
+                if (!canEdit || !draggedRequestId) return;
+                event.preventDefault();
+                event.dataTransfer.dropEffect = "move";
+                setDragOverStatus(status);
+              }}
+              onDrop={(event) => {
+                event.preventDefault();
+                if (canEdit) dropRequest(status);
+              }}
+            >
+              <div className={cn("flex h-10 shrink-0 items-center justify-between border-b px-3", styles.header)}>
                 <span className="truncate text-xs font-semibold">{status}</span>
-                <Badge variant="secondary" className="h-5 min-w-6 justify-center px-1.5 text-[10px]">{items.length}</Badge>
+                <Badge className={cn("h-5 min-w-6 justify-center border-0 px-1.5 text-[10px] hover:bg-inherit", styles.badge)}>{items.length}</Badge>
               </div>
               <div aria-label={`Solicitações em ${status}`} className="min-h-0 flex-1 space-y-1.5 overflow-y-auto p-1.5">
                 {items.length === 0 ? (
                   <div className="rounded-md border border-dashed p-4 text-center text-[11px] text-muted-foreground">Sem itens</div>
                 ) : items.map((request) => (
-                  <Card key={request.id} className="shadow-none">
+                  <Card
+                    key={request.id}
+                    draggable={canEdit}
+                    aria-label={canEdit ? `Arrastar ${request.ticket_number || "solicitação"}` : undefined}
+                    className={cn(
+                      "shadow-none transition-opacity",
+                      styles.card,
+                      canEdit && "cursor-grab active:cursor-grabbing",
+                      draggedRequestId === request.id && "opacity-40",
+                    )}
+                    onDragStart={(event) => {
+                      if (!canEdit) return;
+                      event.dataTransfer.effectAllowed = "move";
+                      event.dataTransfer.setData("text/plain", request.id);
+                      setDraggedRequestId(request.id);
+                    }}
+                    onDragEnd={finishDrag}
+                  >
                     <CardHeader className="space-y-1 p-2 pb-1.5">
                       <div className="flex items-center justify-between gap-2">
-                        <Badge variant="outline" className="h-5 max-w-[180px] truncate px-1.5 font-mono text-[9px]">{request.ticket_number || `#${request.legacy_id ?? request.id.slice(0, 6)}`}</Badge>
+                        <div className="flex min-w-0 items-center gap-1"><GripVertical className={cn("h-3.5 w-3.5 shrink-0 text-muted-foreground", !canEdit && "hidden")} /><Badge variant="outline" className="h-5 max-w-[165px] truncate bg-background/70 px-1.5 font-mono text-[9px]">{request.ticket_number || `#${request.legacy_id ?? request.id.slice(0, 6)}`}</Badge></div>
                         {canEdit && <Button aria-label={`Editar ${request.ticket_number || "solicitação"}`} variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => onEdit(request)}><Pencil className="h-3 w-3" /></Button>}
                       </div>
                       <CardTitle className="line-clamp-2 text-xs leading-4" title={request.description ?? ""}>{request.description || "Sem descrição"}</CardTitle>

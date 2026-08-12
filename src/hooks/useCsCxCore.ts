@@ -262,7 +262,21 @@ export function useCsCxRequests() {
         .eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => invalidateCore(queryClient),
+    onMutate: async ({ id, status }) => {
+      const queryKey = ["cs-cx", "requests"];
+      await queryClient.cancelQueries({ queryKey });
+      const previousRequests = queryClient.getQueryData<CsCxRequest[]>(queryKey);
+      queryClient.setQueryData<CsCxRequest[]>(queryKey, (current) => current?.map((request) => (
+        request.id === id ? { ...request, status } : request
+      )));
+      return { previousRequests };
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previousRequests) {
+        queryClient.setQueryData(["cs-cx", "requests"], context.previousRequests);
+      }
+    },
+    onSettled: () => invalidateCore(queryClient),
   });
 
   const deleteRequest = useMutation({
