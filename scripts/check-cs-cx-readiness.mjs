@@ -1,15 +1,18 @@
-import fs from 'node:fs';
-import pg from 'pg';
+import fs from "node:fs";
+import pg from "pg";
 
 const { Client } = pg;
-const EXPECTED_TABLES = 25;
+const EXPECTED_TABLES = 27;
 
 loadDotEnv();
 const targetUrl = process.env.SUPABASE_DB_URL;
 const apiUrl = process.env.VITE_SUPABASE_URL;
-if (!targetUrl || !apiUrl) fail('Defina SUPABASE_DB_URL e VITE_SUPABASE_URL no ambiente ou .env.');
+if (!targetUrl || !apiUrl)
+  fail("Defina SUPABASE_DB_URL e VITE_SUPABASE_URL no ambiente ou .env.");
 
-const target = new Client(connectionOptions(targetUrl, process.env.CS_CX_TARGET_SSL !== 'false'));
+const target = new Client(
+  connectionOptions(targetUrl, process.env.CS_CX_TARGET_SSL !== "false"),
+);
 await target.connect();
 try {
   const schema = await target.query(`
@@ -57,6 +60,7 @@ try {
     WHERE permission.resource = 'menu_cs_cx' OR permission.resource LIKE 'cs_cx_%'
   `);
   const webhook = await probeNpsWebhook(apiUrl);
+  const publicNps = await probePublicNps(apiUrl);
 
   const schemaRow = schema.rows[0];
   const runRow = migration.rows[0];
@@ -64,23 +68,57 @@ try {
   const attachmentRow = attachments.rows[0];
   const permissionRow = permissions.rows[0];
   const checks = [
-    ['Schema', schemaRow.total === EXPECTED_TABLES && schemaRow.with_rls === EXPECTED_TABLES && schemaRow.mapping_exceptions,
-      `${schemaRow.total}/${EXPECTED_TABLES} tabelas; RLS ${schemaRow.with_rls}/${EXPECTED_TABLES}; exceções de usuário ${schemaRow.mapping_exceptions ? 'OK' : 'ausentes'}`],
-    ['Carga', runRow?.status === 'completed' && ['initial', 'delta'].includes(runRow.mode),
-      runRow ? `${runRow.mode}/${runRow.status}; ${runRow.completed_at?.toISOString() ?? 'sem conclusão'}` : 'ausente'],
-    ['Usuários', userRow.pending === 0,
-      `${userRow.linked}/${userRow.eligible} ativos elegíveis vinculados; ${userRow.ignored} ignorado(s); ${userRow.pending} pendente(s)`],
-    ['Anexos', attachmentRow.copied === attachmentRow.total,
-      `${attachmentRow.copied}/${attachmentRow.total} copiado(s)`],
-    ['Permissões admin', permissionRow.total > 0 && permissionRow.admin_linked === permissionRow.total,
-      `${permissionRow.admin_linked}/${permissionRow.total}`],
-    ['Webhook NPS', webhook.deployed && webhook.protected,
-      `HTTP ${webhook.status}; ${webhook.deployed ? 'implantado' : 'ausente'}; ${webhook.protected ? 'protegido' : 'proteção não confirmada'}`],
+    [
+      "Schema",
+      schemaRow.total === EXPECTED_TABLES &&
+        schemaRow.with_rls === EXPECTED_TABLES &&
+        schemaRow.mapping_exceptions,
+      `${schemaRow.total}/${EXPECTED_TABLES} tabelas; RLS ${schemaRow.with_rls}/${EXPECTED_TABLES}; exceções de usuário ${schemaRow.mapping_exceptions ? "OK" : "ausentes"}`,
+    ],
+    [
+      "Carga",
+      runRow?.status === "completed" &&
+        ["initial", "delta"].includes(runRow.mode),
+      runRow
+        ? `${runRow.mode}/${runRow.status}; ${runRow.completed_at?.toISOString() ?? "sem conclusão"}`
+        : "ausente",
+    ],
+    [
+      "Usuários",
+      userRow.pending === 0,
+      `${userRow.linked}/${userRow.eligible} ativos elegíveis vinculados; ${userRow.ignored} ignorado(s); ${userRow.pending} pendente(s)`,
+    ],
+    [
+      "Anexos",
+      attachmentRow.copied === attachmentRow.total,
+      `${attachmentRow.copied}/${attachmentRow.total} copiado(s)`,
+    ],
+    [
+      "Permissões admin",
+      permissionRow.total > 0 &&
+        permissionRow.admin_linked === permissionRow.total,
+      `${permissionRow.admin_linked}/${permissionRow.total}`,
+    ],
+    [
+      "Webhook NPS",
+      webhook.deployed && webhook.protected,
+      `HTTP ${webhook.status}; ${webhook.deployed ? "implantado" : "ausente"}; ${webhook.protected ? "protegido" : "proteção não confirmada"}`,
+    ],
+    [
+      "NPS publico",
+      publicNps.deployed && publicNps.cors,
+      `HTTP ${publicNps.status}; ${publicNps.deployed ? "implantado" : "ausente"}; CORS ${publicNps.cors ? "OK" : "pendente"}`,
+    ],
   ];
 
-  for (const [label, ok, detail] of checks) console.log(`${ok ? 'OK' : 'PENDENTE'} - ${label}: ${detail}`);
+  for (const [label, ok, detail] of checks)
+    console.log(`${ok ? "OK" : "PENDENTE"} - ${label}: ${detail}`);
   const pending = checks.filter(([, ok]) => !ok).length;
-  console.log(pending === 0 ? 'READY - CS/CX pronto para homologação humana.' : `NOT_READY - ${pending} gate(s) pendente(s).`);
+  console.log(
+    pending === 0
+      ? "READY - CS/CX pronto para homologação humana."
+      : `NOT_READY - ${pending} gate(s) pendente(s).`,
+  );
   process.exitCode = pending === 0 ? 0 : 2;
 } finally {
   await target.end();
@@ -88,11 +126,14 @@ try {
 
 async function probeNpsWebhook(publicUrl) {
   try {
-    const response = await fetch(`${publicUrl.replace(/\/$/, '')}/functions/v1/cs-cx-nps-webhook`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: '{}',
-    });
+    const response = await fetch(
+      `${publicUrl.replace(/\/$/, "")}/functions/v1/cs-cx-nps-webhook`,
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: "{}",
+      },
+    );
     return {
       status: response.status,
       deployed: response.status !== 404,
@@ -103,16 +144,39 @@ async function probeNpsWebhook(publicUrl) {
   }
 }
 
+async function probePublicNps(publicUrl) {
+  try {
+    const response = await fetch(
+      `${publicUrl.replace(/\/$/, "")}/functions/v1/cs-cx-nps-public`,
+      {
+        method: "OPTIONS",
+      },
+    );
+    return {
+      status: response.status,
+      deployed: response.status !== 404,
+      cors:
+        response.status === 204 &&
+        response.headers.get("access-control-allow-origin") === "*",
+    };
+  } catch {
+    return { status: 0, deployed: false, cors: false };
+  }
+}
+
 function connectionOptions(connectionString, ssl) {
-  return { connectionString, ssl: ssl ? { rejectUnauthorized: false } : undefined };
+  return {
+    connectionString,
+    ssl: ssl ? { rejectUnauthorized: false } : undefined,
+  };
 }
 
 function loadDotEnv() {
-  if (!fs.existsSync('.env')) return;
-  for (const line of fs.readFileSync('.env', 'utf8').split(/\r?\n/)) {
+  if (!fs.existsSync(".env")) return;
+  for (const line of fs.readFileSync(".env", "utf8").split(/\r?\n/)) {
     const match = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
     if (!match || process.env[match[1]]) continue;
-    process.env[match[1]] = match[2].replace(/^(['"])(.*)\1$/, '$2');
+    process.env[match[1]] = match[2].replace(/^(['"])(.*)\1$/, "$2");
   }
 }
 
