@@ -18,13 +18,21 @@ estiverem completos.
 - Schema aplicado no projeto `okvufcwkophaadttmjwa`: 27/27 tabelas com RLS.
 - Carga inicial `ba771699-528d-4f58-bacf-73a296fd9518` concluída.
 - Reconciliação: 27/27 conjuntos com contagens iguais e zero hashes divergentes.
-- Testes automatizados: 132 aprovados; build de produção aprovado.
+- Testes automatizados: 149 aprovados; build de produção aprovado.
 - Usuários ativos elegíveis: 5/5 vinculados; uma exceção ignorada por decisão do negócio.
 - Anexos históricos: 2/2 copiados e aprovados por checksum.
 - Webhook NPS: implantado, protegido e retornando HTTP 401 sem token.
 - NPS nativo: questionários, convites individuais e endpoint público implantados;
   submissão, snapshot, classificação e idempotência validados ponta a ponta.
 - Gate conectado: `READY`; módulo pronto para homologação humana.
+
+### Atualização pré-homologação em 12/08/2026
+
+- Delta final `3334926b-7dcb-473f-aaba-9bc4287f1626` aplicado sem interromper o legado.
+- Reconciliação repetida: 27/27 conjuntos com contagens iguais e zero hashes divergentes.
+- Anexos históricos: 2/2 relidos do bucket e aprovados novamente por SHA-256.
+- Perfil piloto `Bruno Fernandes`: papel `admin`, vínculo legado confirmado e 33/33 permissões CS/CX.
+- O migrador incremental passou a preservar `storage_path` de anexos já copiados.
 
 ## Antes da validação humana
 
@@ -36,7 +44,7 @@ estiverem completos.
 - [x] `verify` com todas as contagens em `OK`.
 - [x] Relatório de usuários gerado; e-mails únicos vinculados automaticamente.
 - [x] Exceções do de/para confirmadas pelo responsável do negócio.
-- [ ] Perfis piloto recebem somente as permissões CS/CX necessárias.
+- [x] Perfil piloto administrador confirmado com 33/33 permissões CS/CX.
 - [x] Edge Function NPS implantada e rejeitando chamadas sem token.
 - [x] Formulário NPS público implantado e validado com convite descartável.
 - [x] Build e testes automatizados aprovados; lint do escopo aprovado.

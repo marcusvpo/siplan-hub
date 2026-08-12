@@ -90,6 +90,7 @@ describe("preflight do schema CS/CX", () => {
     expect(fileMigrator).toContain("error?.originalError");
     expect(fileMigrator).toContain("if (apply && !attachment.storage_path)");
     expect(fileMigrator).not.toMatch(/console\.log\([^\n]*serviceRoleKey/);
+    expect(migrator).not.toContain("storage_path: null");
   });
 
   it("mantém um gate conectado para a homologação", () => {
