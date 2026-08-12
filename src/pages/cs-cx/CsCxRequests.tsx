@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   CalendarClock,
   ChevronLeft,
@@ -7,7 +7,9 @@ import {
   Columns3,
   Database,
   List,
+  Maximize2,
   MoreHorizontal,
+  Minimize2,
   Pencil,
   Plus,
   RefreshCw,
@@ -235,10 +237,86 @@ function PaginationBar({ currentPage, pageSize, totalItems, totalPages, onPageCh
 }
 
 function RequestBoard({ requests, canEdit, onEdit, onStatusChange }: { requests: CsCxRequest[]; canEdit: boolean; onEdit: (request: CsCxRequest) => void; onStatusChange: (request: CsCxRequest, status: string) => void }) {
-  return <div className="flex gap-4 overflow-x-auto pb-4">{CS_CX_REQUEST_STATUSES.map((status) => {
-    const items = requests.filter((request) => request.status === status);
-    return <div key={status} className="w-72 shrink-0 rounded-xl border bg-muted/20"><div className="flex items-center justify-between border-b p-3"><span className="text-sm font-semibold">{status}</span><Badge variant="secondary">{items.length}</Badge></div><div className="space-y-2 p-2">{items.length === 0 ? <div className="rounded-lg border border-dashed p-5 text-center text-xs text-muted-foreground">Sem itens</div> : items.map((request) => <Card key={request.id} className="shadow-sm"><CardHeader className="space-y-1 p-3 pb-2"><div className="flex items-center justify-between"><Badge variant="outline" className="font-mono text-[10px]">{request.ticket_number || `#${request.legacy_id ?? request.id.slice(0, 6)}`}</Badge>{canEdit && <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEdit(request)}><Pencil className="h-3.5 w-3.5" /></Button>}</div><CardTitle className="line-clamp-2 text-sm">{request.description || "Sem descrição"}</CardTitle></CardHeader><CardContent className="space-y-2 p-3 pt-0"><p className="truncate text-xs text-muted-foreground">{request.registry_office?.name ?? "Cartório não informado"}</p>{canEdit && <Select value={request.status ?? "Aguardando"} onValueChange={(value) => void onStatusChange(request, value)}><SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger><SelectContent>{CS_CX_REQUEST_STATUSES.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent></Select>}</CardContent></Card>)}</div></div>;
-  })}</div>;
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    if (!isFullscreen) return;
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsFullscreen(false);
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [isFullscreen]);
+
+  return (
+    <section
+      aria-label="Quadro de solicitações"
+      className={cn(
+        "flex min-h-0 flex-col gap-2",
+        isFullscreen && "fixed inset-0 z-50 bg-background p-3 sm:p-4",
+      )}
+    >
+      <div className="flex shrink-0 items-center justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold">Fluxo das solicitações</p>
+          <p className="text-[11px] text-muted-foreground">Role cada coluna separadamente. Arraste a barra inferior para navegar entre os status.</p>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-8 shrink-0 gap-2"
+          aria-label={isFullscreen ? "Sair da tela cheia" : "Abrir quadro em tela cheia"}
+          onClick={() => setIsFullscreen((current) => !current)}
+        >
+          {isFullscreen ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+          <span className="hidden sm:inline">{isFullscreen ? "Sair da tela cheia" : "Tela cheia"}</span>
+        </Button>
+      </div>
+
+      <div className={cn(
+        "flex h-[calc(100vh-340px)] min-h-[380px] max-h-[620px] gap-2 overflow-x-auto overscroll-contain rounded-lg border bg-muted/10 p-2",
+        isFullscreen && "h-auto max-h-none flex-1",
+      )}>
+        {CS_CX_REQUEST_STATUSES.map((status) => {
+          const items = requests.filter((request) => request.status === status);
+          return (
+            <div key={status} aria-label={`${status}: ${items.length} solicitações`} className="flex h-full w-[260px] shrink-0 flex-col overflow-hidden rounded-lg border bg-background">
+              <div className="flex h-10 shrink-0 items-center justify-between border-b px-3">
+                <span className="truncate text-xs font-semibold">{status}</span>
+                <Badge variant="secondary" className="h-5 min-w-6 justify-center px-1.5 text-[10px]">{items.length}</Badge>
+              </div>
+              <div aria-label={`Solicitações em ${status}`} className="min-h-0 flex-1 space-y-1.5 overflow-y-auto p-1.5">
+                {items.length === 0 ? (
+                  <div className="rounded-md border border-dashed p-4 text-center text-[11px] text-muted-foreground">Sem itens</div>
+                ) : items.map((request) => (
+                  <Card key={request.id} className="shadow-none">
+                    <CardHeader className="space-y-1 p-2 pb-1.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <Badge variant="outline" className="h-5 max-w-[180px] truncate px-1.5 font-mono text-[9px]">{request.ticket_number || `#${request.legacy_id ?? request.id.slice(0, 6)}`}</Badge>
+                        {canEdit && <Button aria-label={`Editar ${request.ticket_number || "solicitação"}`} variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => onEdit(request)}><Pencil className="h-3 w-3" /></Button>}
+                      </div>
+                      <CardTitle className="line-clamp-2 text-xs leading-4" title={request.description ?? ""}>{request.description || "Sem descrição"}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-1.5 p-2 pt-0">
+                      <p className="truncate text-[10px] leading-4 text-muted-foreground" title={request.registry_office?.name}>{request.registry_office?.name ?? "Cartório não informado"}</p>
+                      {canEdit && <Select value={request.status ?? "Aguardando"} onValueChange={(value) => void onStatusChange(request, value)}><SelectTrigger className="h-7 text-[11px]"><SelectValue /></SelectTrigger><SelectContent>{CS_CX_REQUEST_STATUSES.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent></Select>}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
 }
 
 function StatusBadge({ status }: { status: string | null }) {

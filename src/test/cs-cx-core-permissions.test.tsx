@@ -115,4 +115,17 @@ describe("CS/CX — ações por permissão", () => {
     expect(screen.getByText("CH-105")).toBeInTheDocument();
     expect(screen.getByLabelText("Mostrando 6 a 10 de 12 solicitações")).toBeInTheDocument();
   });
+
+  it("abre o quadro compacto em tela cheia e fecha com Esc", () => {
+    renderPage(<CsCxRequests />, []);
+    const boardTab = screen.getByRole("tab", { name: /quadro/i });
+    fireEvent.mouseDown(boardTab, { button: 0, ctrlKey: false });
+
+    expect(screen.getByLabelText("Solicitações em Aguardando")).toHaveClass("overflow-y-auto");
+    fireEvent.click(screen.getByRole("button", { name: /abrir quadro em tela cheia/i }));
+    expect(screen.getByRole("button", { name: /sair da tela cheia/i })).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(screen.getByRole("button", { name: /abrir quadro em tela cheia/i })).toBeInTheDocument();
+  });
 });
