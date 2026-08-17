@@ -1,7 +1,7 @@
 # SiplanHUB — VM Worker (geração automática de modelos)
 
 Worker que roda na VM Linux e conecta a aba 5 (Modelos Editor) do SiplanHUB ao gerador de
-modelos do Orion (Claude Code + skill `criar-modelo-mesclado`).
+modelos do Orion (Codex CLI + skill `criar-modelo-mesclado`).
 
 Quando o analista sobe um documento do cliente na aba 5 e clica em "Gerar modelo automático",
 o SiplanHUB enfileira um job. Este worker puxa o job, roda a skill em modo headless autônomo, e
@@ -21,8 +21,9 @@ devolve o `modelo.json` gerado direto para a coluna "Modelos Disponíveis (JSON)
 | `dtc_ai_jobs` | **Preencher por voz** (ditado → transcrição → texto profissional) | `voice_note` | [FUNCIONALIDADE_VOZ.md](../docs/FUNCIONALIDADE_VOZ.md) |
 | `copilot_jobs` | Copiloto Operacional (chat sobre o portfólio) + digest diário | — | [FUNCIONALIDADE_COPILOTO.md](../docs/FUNCIONALIDADE_COPILOTO.md) |
 
-Os jobs de modelos rodam o Claude dentro de `/opt/Orion.Modelos` (com a skill). Os demais rodam o
-Claude em tarefas de texto puro. **Voz** depende adicionalmente de `whisper.cpp` + `ffmpeg` na VM
+Os jobs de modelos rodam o Codex dentro de `/opt/Orion.Modelos` (com a skill). O provedor das
+tarefas de texto puro continua configurado separadamente por `LLM_PROVIDER`. **Voz** depende
+adicionalmente de `whisper.cpp` + `ffmpeg` na VM
 (ver seção própria abaixo).
 
 </details>
@@ -35,7 +36,7 @@ Claude em tarefas de texto puro. **Voz** depende adicionalmente de `whisper.cpp`
                                                           |  (Realtime + polling, so saida)
                                                           v
                                                  [worker na VM, como 'administrator']
-   baixa o doc do cliente -> roda:  claude --dangerously-skip-permissions -p "/criar-modelo-mesclado ..."
+   baixa o doc do cliente -> roda: codex exec --json --ephemeral "$criar-modelo-mesclado ..."
    (autonomo, dentro de /opt/Orion.Modelos) -> localiza o modelo.json em modelos_criados
    -> sobe no bucket -> project_files -> append em projects.modelos_editor_available_files -> done
                                                           |
@@ -51,9 +52,8 @@ Claude em tarefas de texto puro. **Voz** depende adicionalmente de `whisper.cpp`
 <details>
 <summary><b>Decisoes de ambiente (importante)</b></summary>
 
-- Roda como `administrator` (nao-root). Motivos: (1) o Claude Code recusa
-  `--dangerously-skip-permissions` como root; (2) o `administrator` tem credencial do Claude em
-  `~/.claude`. Como o projeto `/opt/Orion.Modelos` e do root, foi concedida ACL de escrita ao
+- Roda como `administrator` (nao-root), que possui a autenticacao do Codex em `~/.codex`.
+  Como o projeto `/opt/Orion.Modelos` e do root, foi concedida ACL de escrita ao
   `administrator` (a posse continua do root — o uso manual como root segue funcionando):
 
   ```bash
@@ -61,23 +61,22 @@ Claude em tarefas de texto puro. **Voz** depende adicionalmente de `whisper.cpp`
   sudo setfacl -R -d -m u:administrator:rwx /opt/Orion.Modelos
   ```
 
-- Confianca do workspace: o `administrator` precisa ter aceitado a confianca do projeto uma vez
-  (interativo: `cd /opt/Orion.Modelos && <claude bin>` -> "Yes, I trust this folder").
 - Node 22 isolado via nvm (`/home/administrator/.nvm/...`) — o Node 18 do sistema (usado por
   servicos em `/var/www`) nao e tocado.
-- **Binario do Claude:** por padrao o worker **descobre sozinho** o binario nativo mais novo da
-  extensao do VS Code (`~/.vscode-server/extensions/anthropic.claude-code-*`). Assim, quando a
-  extensao atualiza e o numero de versao no caminho muda, **nao quebra** — pega a versao nova
-  automaticamente. `CLAUDE_BIN` no `.env` continua sendo um override opcional (se setado e existir,
-  tem prioridade); `VSCODE_EXT_DIR` permite apontar outra pasta de extensoes.
+- **Binario do Codex:** instalado como dependencia fixa do `vm-worker`, em
+  `node_modules/.bin/codex`; `CODEX_BIN` permite override.
+- **Skill Codex:** no inicio de cada job o worker instala/atualiza automaticamente
+  `.agents/skills/criar-modelo-mesclado/SKILL.md` dentro do Orion.Modelos. O wrapper carrega a skill
+  original de `.claude/skills`, aplica as regras headless e elimina perguntas/confirmacoes.
 
 </details>
 
 <details>
 <summary><b>Requisitos</b></summary>
 
-- Node.js 20+ (aqui: 22 via nvm) na VM.
-- Claude Code instalado e autenticado para o `administrator`.
+- Node.js 22 via nvm na VM.
+- Codex autenticado para o `administrator` (`codex login`) ou `CODEX_API_KEY` injetada somente no
+  ambiente do servico.
 - Ambiente da skill saudavel: `cd /opt/Orion.Modelos && python3 tools/onboard_check.py` deve passar
   (LibreOffice, API Orion `http://10.0.10.61:8702`, tools).
 - Chave secreta do Supabase (so no `.env`, nunca commitada). Use a chave nova, revogavel,
@@ -91,7 +90,7 @@ Claude em tarefas de texto puro. **Voz** depende adicionalmente de `whisper.cpp`
 
 ```bash
 cd vm-worker
-cp .env.example .env      # preencha SUPABASE_SECRET_KEY (sb_secret_...) e confira CLAUDE_BIN
+cp .env.example .env      # preencha SUPABASE_SECRET_KEY; MODEL_LLM_PROVIDER=codex ja e o padrao
 npm install               # com o Node 22 (nvm use 22)
 ```
 
@@ -214,6 +213,10 @@ aparecer `papeis=models` num e `papeis=ai` no outro, ambos com `Realtime: SUBSCR
 | `JOB_TIMEOUT_MS` | Timeout de uma geracao (padrao 1800000 = 30 min). |
 | `MAX_ATTEMPTS` | Tentativas antes de marcar erro definitivo (padrao 3). |
 | `HEARTBEAT_INTERVAL_MS` | Intervalo do heartbeat (selo online/offline na tela). Padrao 30000. |
+| `MODEL_LLM_PROVIDER` | Agente do gerador de modelos: `codex` (padrao) ou `claude` (rollback). |
+| `CODEX_BIN` | (Opcional) Override do Codex CLI; padrao `node_modules/.bin/codex`. |
+| `MODEL_CODEX_MODEL` | (Opcional) Modelo Codex; vazio usa o padrao da conta/configuracao. |
+| `CODEX_SANDBOX` | Sandbox do job de modelo; padrao `danger-full-access` na VM dedicada. |
 | `CLAUDE_BIN` | (Opcional) Override do binario do Claude Code. Se ausente, auto-descobre o mais novo da extensao. |
 | `VSCODE_EXT_DIR` | (Opcional) Pasta de extensoes do VS Code (padrao `~/.vscode-server/extensions`). |
 | `ORION_PROJECT_DIR` | Projeto onde a skill roda (padrao `/opt/Orion.Modelos`). |
@@ -312,7 +315,7 @@ A skill salva em `modelos_criados/<codigo>/<cartorio>/modelo.json` (nome do cart
 <details>
 <summary><b>Andamento ao vivo e saude do worker</b></summary>
 
-- **Andamento ao vivo:** o worker roda o Claude com `--output-format stream-json` e transmite cada
+- **Andamento ao vivo:** o worker roda o Codex com `codex exec --json` e transmite cada
   passo (texto do agente, chamadas de ferramenta) para as colunas `progress` / `progress_log` do
   job. O frontend mostra esse feed ao vivo (via Realtime) ao clicar no badge "Gerando...".
 - **Heartbeat:** o worker faz upsert periodico em `model_worker_heartbeat` (a cada
@@ -320,8 +323,8 @@ A skill salva em `modelos_criados/<codigo>/<cartorio>/modelo.json` (nome do cart
   SIGTERM, marca `stopping` para o selo cair na hora.
 - **Recuperacao no boot:** ao iniciar, qualquer job preso em `processing` deste worker (orfao de um
   restart) volta para a fila imediatamente, sem esperar o timeout do reaper.
-- **Cancelamento:** durante a geracao o worker checa `cancel_requested` do job a cada ~5s; se o
-  usuario cancelou pela tela, mata o Claude e marca o job como `cancelled`.
+- **Cancelamento:** durante a geracao o worker checa `cancel_requested` do job a cada ~2,5s; se o
+  usuario cancelou pela tela, encerra o Codex e marca o job como `cancelled`.
 - **Watchdog:** `scripts/worker-watchdog.sh` (cron do root, a cada 2 min) reinicia o servico se ele
   estiver totalmente parado. Complementa o `Restart=always` do systemd (que cobre crashes).
   Instalacao: ver o cabecalho do proprio script.

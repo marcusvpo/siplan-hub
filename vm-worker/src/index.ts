@@ -109,10 +109,10 @@ async function markError(table: "model_generation_jobs" | "dtc_ai_jobs" | "copil
     .then(undefined, (e) => console.error("Falha ao marcar erro:", e));
 }
 
-// Assinatura de "acabaram os tokens": o Claude encerra com "session/usage limit"
-// (ex.: "You've hit your session limit · resets 11:10pm"). NAO e bug do modelo,
+// Assinatura de "acabaram os tokens": Codex/Claude encerram com mensagens de
+// session/usage/rate limit. NAO e bug do modelo,
 // entao nao vale marcar erro definitivo -> vale reenfileirar e retentar depois.
-const QUOTA_LIMIT_RE = /(session|usage) limit|hit your (session|usage) limit|limite de (sess|uso)/i;
+const QUOTA_LIMIT_RE = /(session|usage|rate) limit|hit your (session|usage) limit|limite de (sess|uso|taxa)|insufficient_quota|quota (exceeded|exhausted)/i;
 function isQuotaExhausted(message: string): boolean {
   return QUOTA_LIMIT_RE.test(message);
 }
@@ -139,7 +139,7 @@ async function requeueForQuota(
       attempts: Math.max(0, attempts - 1), // desfaz o incremento do claim
       retry_after: retryAfter,
       error_message: null,
-      progress: `Limite de sessao do Claude atingido (tokens esgotados). Retomarei automaticamente assim que os tokens voltarem (nova tentativa em ~${minutes} min).`,
+      progress: `Limite de uso da IA atingido (tokens esgotados). Retomarei automaticamente assim que os tokens voltarem (nova tentativa em ~${minutes} min).`,
     })
     .eq("id", id)
     .then(undefined, (e) => console.error("Falha ao reenfileirar por quota:", e));
@@ -372,7 +372,8 @@ async function main() {
   const roles = [config.workerRoles.models && "models", config.workerRoles.ai && "ai"].filter(Boolean).join("+") || "nenhum";
   console.log(`SiplanHUB VM worker iniciado (worker_id=${config.workerId}, papeis=${roles}).`);
   console.log(`Bucket=${config.bucket} | poll=${config.pollIntervalMs}ms | timeout=${config.jobTimeoutMs}ms`);
-  console.log(`Claude bin: ${config.claudeBin}`);
+  console.log(`Modelos: provider=${config.modelLlmProvider} | Codex bin=${config.codexBin}`);
+  if (config.modelLlmProvider === "claude") console.log(`Rollback Claude bin: ${config.claudeBin}`);
 
   installShutdownHandlers();
 

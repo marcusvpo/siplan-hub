@@ -1004,7 +1004,7 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                 </DialogContent>
             </Dialog>
 
-            {/* Andamento ao vivo da geração (o que o Claude está fazendo na VM) */}
+            {/* Andamento ao vivo da geração (o que o agente de IA está fazendo na VM) */}
             <Dialog open={!!progressJob} onOpenChange={(open) => !open && setProgressJobId(null)}>
                 <DialogContent className="max-w-5xl w-[94vw] max-h-[90vh] flex flex-col overflow-hidden">
                     <DialogHeader className="shrink-0">
