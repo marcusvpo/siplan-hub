@@ -13,7 +13,7 @@ Ele retorna código `0` somente quando schema/RLS, carga, usuários, anexos,
 permissões administrativas, o webhook NPS protegido e o endpoint NPS público
 estiverem completos.
 
-## Estado em 12/08/2026
+## Estado em 17/08/2026
 
 - Schema aplicado no projeto `okvufcwkophaadttmjwa`: 27/27 tabelas com RLS.
 - Carga inicial `ba771699-528d-4f58-bacf-73a296fd9518` concluída.
@@ -33,6 +33,17 @@ estiverem completos.
 - Anexos históricos: 2/2 relidos do bucket e aprovados novamente por SHA-256.
 - Perfil piloto `Bruno Fernandes`: papel `admin`, vínculo legado confirmado e 33/33 permissões CS/CX.
 - O migrador incremental passou a preservar `storage_path` de anexos já copiados.
+
+### Atualização pré-homologação em 17/08/2026
+
+- Delta `3014d7dd-e173-4d94-8e50-e4064d86ce03` aplicado com o legado em produção.
+- Reconciliação repetida: 27/27 conjuntos com contagens iguais e zero hashes divergentes.
+- Carga atual: 98 cartórios, 246 vínculos cartório-produto, 427 contatos e 43 respostas NPS.
+- Usuários: 5/5 ativos elegíveis vinculados, uma exceção ignorada e zero pendências.
+- Anexos históricos: 2/2 aprovados novamente por SHA-256.
+- O migrador passou a reconciliar vínculos cartório-produto pelo par estável, inclusive quando
+  o legado recria o relacionamento com outro ID.
+- Gate conectado: `READY` para homologação humana.
 
 ## Antes da validação humana
 

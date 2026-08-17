@@ -105,6 +105,7 @@ const TABLES = [
   {
     source: 'cartorio_produtos',
     target: 'cs_cx_registry_office_products',
+    conflict: ['registry_office_id', 'product_id'],
     query: `SELECT id, cartorio_id, produto_id, data_implantacao, data_criacao
       FROM cartorio_produtos ORDER BY id`,
     map: (row, maps) => ({
