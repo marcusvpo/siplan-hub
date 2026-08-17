@@ -4,6 +4,7 @@ import path from "node:path";
 import { supabase } from "./supabase.js";
 import { config, Job } from "./config.js";
 import { runSkill, ProgressStep } from "./runSkill.js";
+import { ensureCodexModelSkill } from "./codexModelSkill.js";
 
 // Mantem apenas os ultimos N passos no banco (evita payloads gigantes no Realtime).
 const MAX_LOG_STEPS = 80;
@@ -44,11 +45,13 @@ async function findJsonAfter(dir: string, since: number): Promise<string[]> {
 }
 
 function buildPrompt(inputPath: string, cartorioSlug: string, name: string, descricao: string): string {
-  return `/criar-modelo-mesclado
+  return `$criar-modelo-mesclado
 
 O documento do cliente esta em ${inputPath}.
 
 Execute o fluxo COMPLETO de forma TOTALMENTE AUTONOMA (headless), sem me fazer nenhuma pergunta e sem parar para confirmacao. Sempre que a skill pedir uma decisao (tipo do modelo, exemplo-base, mapeamento de variavel ambiguo, modalidade, nome/descricao do cartorio), ESCOLHA VOCE MESMO a opcao recomendada/mais provavel e siga em frente ate finalizar.
+
+Esta instrucao de modo headless substitui todos os passos AskUserQuestion/confirmacao da skill original. Resolva tambem a verificacao final na propria sessao se nao houver subagente disponivel.
 
 Ao final, gere o pacote de importacao (modelo.json via tools/empacotar_modelo.py). Metadados: nome do cartorio "${cartorioSlug}", name "${name}", descricao "${descricao}".
 
@@ -118,11 +121,21 @@ export async function processJob(job: Job): Promise<void> {
   const inputPath = path.join(jobDir, sanitize(job.source_file_name) || "documento");
   await writeFile(inputPath, Buffer.from(await blob.arrayBuffer()));
 
-  // 2. Rodar a skill de forma autonoma, transmitindo cada passo ao vivo
+  // 2. Preparar e rodar a skill de forma autonoma, transmitindo cada passo ao vivo
   const baseName = path.basename(job.source_file_name, path.extname(job.source_file_name));
   const startTime = Date.now();
   const prompt = buildPrompt(inputPath, cartorioSlug, baseName, cliente);
-  pushStep("Iniciando o Claude para gerar o modelo...");
+  if (config.modelLlmProvider !== "codex" && config.modelLlmProvider !== "claude") {
+    throw new Error(
+      `MODEL_LLM_PROVIDER invalido: ${config.modelLlmProvider}. Use codex (padrao) ou claude (rollback).`
+    );
+  }
+  const modelProvider = config.modelLlmProvider as "codex" | "claude";
+  if (modelProvider === "codex") {
+    pushStep("Preparando a skill automatica do Codex...");
+    await ensureCodexModelSkill(config.orionProjectDir);
+  }
+  pushStep(`Iniciando o ${modelProvider === "codex" ? "Codex" : "Claude"} para gerar o modelo...`);
   await flushProgress(true);
 
   // Checagem de cancelamento (o frontend liga cancel_requested)
@@ -138,7 +151,14 @@ export async function processJob(job: Job): Promise<void> {
   const { transcript, resultText, code, stderr, cancelled } = await runSkill(
     prompt,
     (step) => record(step),
-    shouldCancel
+    shouldCancel,
+    {
+      provider: modelProvider,
+      model: modelProvider === "codex" ? config.modelCodexModel || undefined : undefined,
+      cwd: config.orionProjectDir,
+      addDirs: [jobDir],
+      allowOllamaFallback: false,
+    }
   );
   await flushProgress(true);
 
@@ -158,7 +178,7 @@ export async function processJob(job: Job): Promise<void> {
     // limit") pode vir em qualquer um dos dois, e o loop principal detecta por essa
     // assinatura para reenfileirar (em vez de marcar erro definitivo).
     const tail = `${stderr}\n${transcript}`.slice(-1500);
-    throw new Error(`Claude encerrou com codigo ${code}. Fim da saida: ${tail}`);
+    throw new Error(`${modelProvider === "codex" ? "Codex" : "Claude"} encerrou com codigo ${code}. Fim da saida: ${tail}`);
   }
 
   // 3. Localizar o modelo.json gerado (via marcador JSON_GERADO= ou por mtime)

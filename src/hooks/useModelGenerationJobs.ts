@@ -156,7 +156,7 @@ export function useModelGenerationJobs(projectId?: string) {
   }, [projectId, queryClient]);
 
   // Cancelar um job: pending -> cancela direto; processing -> pede cancelamento
-  // (o worker checa cancel_requested e mata o Claude em instantes).
+  // (o worker checa cancel_requested e encerra o agente de IA em instantes).
   const cancelJob = async (job: ModelGenerationJob) => {
     try {
       if (job.status === "pending") {

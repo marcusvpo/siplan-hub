@@ -60,6 +60,26 @@ export function getClaudeBin(): string {
   return cachedClaudeBin;
 }
 
+// Resolve o Codex CLI instalado como dependencia local do worker. CODEX_BIN
+// continua disponivel para instalacoes globais/customizadas na VM.
+function resolveCodexBin(): string {
+  const explicit = process.env.CODEX_BIN;
+  if (explicit) return explicit;
+
+  const localBin = path.join(
+    process.cwd(),
+    "node_modules",
+    ".bin",
+    process.platform === "win32" ? "codex.cmd" : "codex"
+  );
+  if (existsSync(localBin)) return localBin;
+  return "codex";
+}
+
+export function getCodexBin(): string {
+  return resolveCodexBin();
+}
+
 // Papeis deste worker: quais filas ele processa. Permite rodar 2 processos na
 // MESMA assinatura (custo zero) sem que a geracao de modelo (lenta, ate 30 min)
 // bloqueie melhorar-texto/voz/copiloto.
@@ -139,7 +159,8 @@ export const config = {
   // Diretorio neutro para rodar o copiloto/digest (sem CLAUDE.md/skills do Orion).
   copilotCwd: ensureCopilotCwd(),
 
-  // Provedor de LLM para tarefas de texto/voz/copiloto: 'ollama' (default/local) ou 'claude'
+  // Provedor de LLM para tarefas de texto/voz/copiloto. Mantido separado do
+  // gerador de modelos, que precisa de um agente com ferramentas/skills.
   llmProvider: (process.env.LLM_PROVIDER || "ollama").toLowerCase(),
   ollamaHost: process.env.OLLAMA_HOST || "http://127.0.0.1:11434",
   ollamaModel: process.env.OLLAMA_MODEL || "llama3.1",
@@ -161,8 +182,13 @@ export const config = {
   whisperLanguage: process.env.WHISPER_LANGUAGE || "pt",
   ffmpegBin: process.env.FFMPEG_BIN || "ffmpeg",
 
-  // Geracao headless (Claude Code + skill criar-modelo-mesclado)
-  // Valor inicial (log de boot). O spawn usa getClaudeBin(), que revalida.
+  // Geracao headless de modelos. Codex e o padrao; Claude fica disponivel
+  // como rollback temporario por MODEL_LLM_PROVIDER=claude.
+  modelLlmProvider: (process.env.MODEL_LLM_PROVIDER || "codex").toLowerCase(),
+  modelCodexModel: process.env.MODEL_CODEX_MODEL || "",
+  codexSandbox: process.env.CODEX_SANDBOX || "danger-full-access",
+  codexBin: getCodexBin(),
+  // Compatibilidade/rollback Claude. O spawn revalida o binario a cada uso.
   claudeBin: getClaudeBin(),
   orionProjectDir,
   modelosCriadosDir: process.env.MODELOS_CRIADOS_DIR || path.join(orionProjectDir, "modelos_criados"),
