@@ -315,6 +315,7 @@ function runCodex(
       "exec",
       "--json",
       "--ephemeral",
+      "--skip-git-repo-check",
       "--sandbox",
       config.codexSandbox,
       "-C",
