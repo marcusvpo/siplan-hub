@@ -346,7 +346,7 @@ export interface ModelosEditorStageV2 {
 // Geracao automatica de modelos JSON via worker na VM (fila de trabalho)
 export type ModelJobStatus = 'pending' | 'processing' | 'done' | 'error' | 'cancelled';
 
-// Um passo do andamento ao vivo (o que o Claude esta fazendo na VM)
+// Um passo do andamento ao vivo (o que o agente de IA esta fazendo na VM)
 export interface ModelProgressStep {
   at: string; // ISO timestamp
   text: string;
