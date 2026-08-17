@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Clock3, Database, MoreHorizontal, Pencil, Plus, RefreshCw, Search, Trash2, XCircle } from "lucide-react";
+import { CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Clock3, Database, FileDown, MoreHorizontal, Pencil, Plus, RefreshCw, Search, Trash2, XCircle } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import { CS_CX_APPOINTMENT_STATUSES, CS_CX_APPOINTMENT_TYPES, type CsCxAppointme
 import { usePermissions } from "@/hooks/usePermissions";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { generateCsCxAppointmentsPdf } from "@/lib/cs-cx-engagement-pdf";
 
 const TYPE_LABELS: Record<string, string> = { REUNIAO: "Reunião", CALL: "Call", VISITA: "Visita", OUTRO: "Outro" };
 const STATUS_LABELS: Record<string, string> = { AGENDADO: "Agendado", REALIZADO: "Realizado", CANCELADO: "Cancelado", REMARCADO: "Remarcado", CONCLUIDO: "Concluído" };
@@ -38,6 +39,9 @@ export default function CsCxAppointments() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [responsibleFilter, setResponsibleFilter] = useState("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
@@ -47,6 +51,7 @@ export default function CsCxAppointments() {
   const [action, setAction] = useState<{ appointment: CsCxAppointment; status: string } | null>(null);
   const [actionResult, setActionResult] = useState("");
   const [rescheduledAt, setRescheduledAt] = useState("");
+  const [isExporting, setIsExporting] = useState(false);
 
   const canCreate = hasPermission("cs_cx_agendamentos", "create");
   const canEdit = hasPermission("cs_cx_agendamentos", "edit");
@@ -57,9 +62,15 @@ export default function CsCxAppointments() {
     return appointments.filter((appointment) => {
       const matchesSearch = !term || [appointment.title, appointment.description, appointment.location, appointment.registry_office?.name, appointment.contact?.contact_person, appointment.responsible?.full_name]
         .some((value) => value?.toLocaleLowerCase("pt-BR").includes(term));
-      return matchesSearch && (statusFilter === "all" || appointment.status === statusFilter) && (typeFilter === "all" || appointment.appointment_type === typeFilter);
+      const date = localDateKey(appointment.starts_at);
+      return matchesSearch
+        && (statusFilter === "all" || appointment.status === statusFilter)
+        && (typeFilter === "all" || appointment.appointment_type === typeFilter)
+        && (responsibleFilter === "all" || appointment.responsible_profile_id === responsibleFilter)
+        && (!dateFrom || date >= dateFrom)
+        && (!dateTo || date <= dateTo);
     });
-  }, [appointments, search, statusFilter, typeFilter]);
+  }, [appointments, search, statusFilter, typeFilter, responsibleFilter, dateFrom, dateTo]);
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, totalPages);
   const pagedAppointments = useMemo(
@@ -70,6 +81,9 @@ export default function CsCxAppointments() {
   const updateSearch = (value: string) => { setSearch(value); setPage(1); };
   const updateStatusFilter = (value: string) => { setStatusFilter(value); setPage(1); };
   const updateTypeFilter = (value: string) => { setTypeFilter(value); setPage(1); };
+  const updateResponsibleFilter = (value: string) => { setResponsibleFilter(value); setPage(1); };
+  const updateDateFrom = (value: string) => { setDateFrom(value); setPage(1); };
+  const updateDateTo = (value: string) => { setDateTo(value); setPage(1); };
   const updatePageSize = (value: string) => { setPageSize(Number(value)); setPage(1); };
 
   const openCreate = () => { setForm(defaultForm()); setDialogOpen(true); };
@@ -106,6 +120,23 @@ export default function CsCxAppointments() {
     catch (mutationError) { toast({ title: "Não foi possível excluir", description: errorMessage(mutationError), variant: "destructive" }); }
   };
 
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      await generateCsCxAppointmentsPdf(filtered, [
+        responsibleFilter === "all" ? "Todos os responsáveis" : `Responsável: ${profiles.find((profile) => profile.id === responsibleFilter)?.full_name ?? "Selecionado"}`,
+        statusFilter === "all" ? "Todos os status" : `Status: ${STATUS_LABELS[statusFilter] ?? statusFilter}`,
+        typeFilter === "all" ? "Todos os tipos" : `Tipo: ${TYPE_LABELS[typeFilter] ?? typeFilter}`,
+        dateFrom ? `De ${formatDateOnly(dateFrom)}` : "Sem data inicial",
+        dateTo ? `Até ${formatDateOnly(dateTo)}` : "Sem data final",
+      ].join(" · "));
+    } catch (exportError) {
+      toast({ title: "Não foi possível gerar o PDF", description: errorMessage(exportError), variant: "destructive" });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const now = new Date();
   const upcoming = appointments.filter((item) => new Date(item.starts_at) >= now && ["AGENDADO", "REMARCADO"].includes(item.status)).length;
   const overdue = appointments.filter((item) => new Date(item.starts_at) < now && item.status === "AGENDADO").length;
@@ -113,10 +144,10 @@ export default function CsCxAppointments() {
   const availableContacts = contacts.filter((contact) => !form.registry_office_id || contact.registry_office_id === form.registry_office_id);
 
   return <div className="container mx-auto max-w-[1600px] space-y-4 px-4 py-4 lg:px-6">
-    <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center"><div className="flex items-center gap-2"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-300"><CalendarDays className="h-4 w-4" /></span><div><h1 className="text-2xl font-black leading-none tracking-tight">Agendamentos</h1><p className="mt-1 text-xs text-muted-foreground">Agenda de reuniões, calls, visitas e demais compromissos</p></div></div>{canCreate && <Button size="sm" onClick={openCreate} className="gap-2"><Plus className="h-4 w-4" />Novo agendamento</Button>}</div>
+    <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center"><div className="flex items-center gap-2"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-300"><CalendarDays className="h-4 w-4" /></span><div><h1 className="text-2xl font-black leading-none tracking-tight">Agendamentos</h1><p className="mt-1 text-xs text-muted-foreground">Agenda de reuniões, calls, visitas e demais compromissos</p></div></div><div className="flex gap-2"><Button size="sm" variant="outline" disabled={!filtered.length || isExporting} onClick={() => void handleExport()}><FileDown className="mr-2 h-4 w-4" />Exportar PDF</Button>{canCreate && <Button size="sm" onClick={openCreate} className="gap-2"><Plus className="h-4 w-4" />Novo agendamento</Button>}</div></div>
     <div className="grid gap-2 sm:grid-cols-3"><Metric label="Próximos" value={upcoming} icon={Clock3} /><Metric label="Vencidos" value={overdue} icon={XCircle} /><Metric label="Concluídos" value={appointments.filter((item) => ["REALIZADO", "CONCLUIDO"].includes(item.status)).length} icon={CheckCircle2} /></div>
     <Card><CardContent className="space-y-3 p-3">
-      <div className="grid gap-2 lg:grid-cols-[minmax(260px,1fr)_190px_180px]"><div className="relative"><Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" /><Input value={search} onChange={(event) => updateSearch(event.target.value)} placeholder="Buscar título, cartório, local ou responsável..." className="h-9 pl-9" /></div><Select value={statusFilter} onValueChange={updateStatusFilter}><SelectTrigger className="h-9"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Todos os status</SelectItem>{CS_CX_APPOINTMENT_STATUSES.map((status) => <SelectItem key={status} value={status}>{STATUS_LABELS[status]}</SelectItem>)}</SelectContent></Select><Select value={typeFilter} onValueChange={updateTypeFilter}><SelectTrigger className="h-9"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Todos os tipos</SelectItem>{CS_CX_APPOINTMENT_TYPES.map((type) => <SelectItem key={type} value={type}>{TYPE_LABELS[type]}</SelectItem>)}</SelectContent></Select></div>
+      <div className="grid gap-2 xl:grid-cols-[minmax(230px,1fr)_185px_165px_150px_145px_145px]"><div className="relative"><Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" /><Input value={search} onChange={(event) => updateSearch(event.target.value)} placeholder="Buscar título, cartório, local ou responsável..." className="h-9 pl-9" /></div><Select value={responsibleFilter} onValueChange={updateResponsibleFilter}><SelectTrigger className="h-9"><SelectValue placeholder="Responsável" /></SelectTrigger><SelectContent><SelectItem value="all">Todos os responsáveis</SelectItem>{profiles.map((profile) => <SelectItem key={profile.id} value={profile.id}>{profile.full_name || profile.email || "Usuário"}</SelectItem>)}</SelectContent></Select><Select value={statusFilter} onValueChange={updateStatusFilter}><SelectTrigger className="h-9"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Todos os status</SelectItem>{CS_CX_APPOINTMENT_STATUSES.map((status) => <SelectItem key={status} value={status}>{STATUS_LABELS[status]}</SelectItem>)}</SelectContent></Select><Select value={typeFilter} onValueChange={updateTypeFilter}><SelectTrigger className="h-9"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Todos os tipos</SelectItem>{CS_CX_APPOINTMENT_TYPES.map((type) => <SelectItem key={type} value={type}>{TYPE_LABELS[type]}</SelectItem>)}</SelectContent></Select><Input className="h-9" aria-label="Data inicial do agendamento" type="date" value={dateFrom} onChange={(event) => updateDateFrom(event.target.value)} /><Input className="h-9" aria-label="Data final do agendamento" type="date" value={dateTo} onChange={(event) => updateDateTo(event.target.value)} /></div>
       {isLoading ? <LoadingRows /> : dataError ? <DataError error={dataError} onRetry={() => void refetch()} /> : <Tabs defaultValue="list"><TabsList className="h-9"><TabsTrigger className="h-7" value="list">Lista</TabsTrigger><TabsTrigger className="h-7" value="calendar">Calendário</TabsTrigger></TabsList><TabsContent value="list" className="mt-3 space-y-3"><AppointmentTable appointments={pagedAppointments} canEdit={canEdit} canDelete={canDelete} onEdit={openEdit} onAction={openAction} onDelete={setDeleting} /><AppointmentPaginationBar currentPage={currentPage} pageSize={pageSize} totalItems={filtered.length} totalPages={totalPages} onPageChange={setPage} onPageSizeChange={updatePageSize} /></TabsContent><TabsContent value="calendar" className="mt-3"><MonthCalendar month={month} onMonthChange={setMonth} appointments={filtered} onEdit={canEdit ? openEdit : undefined} /></TabsContent></Tabs>}
     </CardContent></Card>
 
@@ -165,4 +196,5 @@ function DataError({ error, onRetry }: { error: unknown; onRetry: () => void }) 
 function toDateTimeLocal(date: Date) { const offset = date.getTimezoneOffset() * 60_000; return new Date(date.getTime() - offset).toISOString().slice(0, 16); }
 function localDateKey(value: string) { const date = new Date(value); const year = date.getFullYear(); const month = String(date.getMonth() + 1).padStart(2, "0"); const day = String(date.getDate()).padStart(2, "0"); return `${year}-${month}-${day}`; }
 function formatDateTime(value: string) { return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value)); }
+function formatDateOnly(value: string) { return new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" }).format(new Date(`${value}T00:00:00Z`)); }
 function errorMessage(error: unknown) { return error instanceof Error ? error.message : "Erro inesperado."; }

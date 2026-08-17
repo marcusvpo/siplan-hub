@@ -32,6 +32,7 @@ vi.mock("@/hooks/useCsCxCore", async (importOriginal) => {
         products: [],
       })),
       products: [],
+      profiles: [{ id: "profile-1", full_name: "Bruno", email: null }],
       isLoading: false,
       error: null,
       refetch: vi.fn(),
@@ -105,6 +106,15 @@ describe("CS/CX — ações por permissão", () => {
 
     expect(screen.getByText("Cartório 6")).toBeInTheDocument();
     expect(screen.getByLabelText("Mostrando 6 a 10 de 12 cartórios")).toBeInTheDocument();
+  });
+
+  it("permite visualizar o cadastro do cartório sem permissão de edição", () => {
+    renderPage(<CsCxRegistryOffices />, []);
+    fireEvent.click(screen.getByRole("button", { name: /visualizar cartório central/i }));
+
+    expect(screen.getByText("Cadastro do cartório")).toBeInTheDocument();
+    expect(screen.getByText(/visualização completa, sem alteração/i)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /editar cadastro/i })).not.toBeInTheDocument();
   });
 
   it("mantém solicitações visíveis e esconde escrita sem permissão", () => {

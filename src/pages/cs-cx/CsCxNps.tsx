@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import {
   CalendarRange,
+  Building2,
+  CircleHelp,
   ChevronLeft,
   ChevronRight,
   Eye,
@@ -72,6 +74,7 @@ import {
 } from "@/components/cs-cx/NpsSurveyManagement";
 import { NpsAnalyticsPanel } from "@/components/cs-cx/NpsAnalytics";
 import { answerLabel } from "@/lib/cs-cx-nps-survey";
+import { useCsCxRegistryOffices } from "@/hooks/useCsCxCore";
 const CLASS_LABELS: Record<string, string> = {
   PROMOTOR: "Promotor",
   NEUTRO: "Neutro",
@@ -88,6 +91,7 @@ export default function CsCxNps() {
     refetch,
     deleteResponse,
   } = useCsCxNps();
+  const { offices } = useCsCxRegistryOffices();
   const { hasPermission } = usePermissions();
   const { toast } = useToast();
   const [search, setSearch] = useState("");
@@ -100,6 +104,7 @@ export default function CsCxNps() {
   const [isExporting, setIsExporting] = useState(false);
   const [requestOpen, setRequestOpen] = useState(false);
   const [viewing, setViewing] = useState<CsCxNpsResponse | null>(null);
+  const [activeTab, setActiveTab] = useState("analytics");
   const canCreate = hasPermission("cs_cx_nps", "create");
   const canDelete = hasPermission("cs_cx_nps", "delete");
 
@@ -189,6 +194,19 @@ export default function CsCxNps() {
   const nps = responses.length
     ? Math.round(((promoters - detractors) / responses.length) * 1000) / 10
     : 0;
+  const evaluatedOfficeIds = new Set(responses.map((response) => response.registry_office_id).filter(Boolean));
+  const evaluatedOfficeNames = new Set(responses.map((response) => normalizeOfficeName(response.registry_office?.name ?? response.respondent_office)));
+  const activeOffices = offices.filter((office) => office.active);
+  const evaluatedOffices = activeOffices.filter((office) =>
+    evaluatedOfficeIds.has(office.id) || evaluatedOfficeNames.has(normalizeOfficeName(office.name)),
+  ).length;
+  const notEvaluatedOffices = Math.max(0, activeOffices.length - evaluatedOffices);
+
+  function showClassification(value: "PROMOTOR" | "NEUTRO" | "DETRATOR") {
+    setClassification(value);
+    setResponsePage(1);
+    setActiveTab("responses");
+  }
 
   async function handleDelete() {
     if (!deleting) return;
@@ -280,13 +298,15 @@ export default function CsCxNps() {
           </CardContent>
         </Card>
       )}
-      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <Metric icon={Star} label="NPS geral" value={nps} />
-        <Metric icon={Smile} label="Promotores" value={promoters} />
-        <Metric icon={Meh} label="Neutros" value={neutrals} />
-        <Metric icon={Frown} label="Detratores" value={detractors} />
+        <Metric icon={Smile} label="Promotores" value={promoters} active={classification === "PROMOTOR" && activeTab === "responses"} onClick={() => showClassification("PROMOTOR")} />
+        <Metric icon={Meh} label="Neutros" value={neutrals} active={classification === "NEUTRO" && activeTab === "responses"} onClick={() => showClassification("NEUTRO")} />
+        <Metric icon={Frown} label="Detratores" value={detractors} active={classification === "DETRATOR" && activeTab === "responses"} onClick={() => showClassification("DETRATOR")} />
+        <Metric icon={Building2} label="Cartórios avaliados" value={evaluatedOffices} />
+        <Metric icon={CircleHelp} label="Cartórios não avaliados" value={notEvaluatedOffices} />
       </div>
-      <Tabs defaultValue="analytics">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="h-9">
           <TabsTrigger className="h-7" value="analytics">
             Análises
@@ -681,13 +701,17 @@ function Metric({
   icon: Icon,
   label,
   value,
+  onClick,
+  active = false,
 }: {
   icon: typeof Star;
   label: string;
   value: number;
+  onClick?: () => void;
+  active?: boolean;
 }) {
-  return (
-    <Card>
+  const card = (
+    <Card className={active ? "border-rose-400 ring-1 ring-rose-200" : undefined}>
       <CardContent className="flex items-center gap-2.5 px-3 py-2.5">
         <div className="rounded-lg bg-rose-50 p-1.5 text-rose-600 dark:bg-rose-950/40">
           <Icon className="h-4 w-4" />
@@ -701,6 +725,7 @@ function Metric({
       </CardContent>
     </Card>
   );
+  return onClick ? <button type="button" className="rounded-lg text-left transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-pressed={active} onClick={onClick}>{card}</button> : card;
 }
 function NpsPaginationBar({
   currentPage,
@@ -887,4 +912,8 @@ function formatDateOnly(value: string) {
 }
 function messageOf(error: unknown) {
   return error instanceof Error ? error.message : "Erro inesperado.";
+}
+
+function normalizeOfficeName(value?: string | null) {
+  return (value ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLocaleLowerCase("pt-BR");
 }

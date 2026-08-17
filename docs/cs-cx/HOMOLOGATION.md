@@ -15,10 +15,10 @@ estiverem completos.
 
 ## Estado em 17/08/2026
 
-- Schema aplicado no projeto `okvufcwkophaadttmjwa`: 27/27 tabelas com RLS.
+- Schema aplicado no projeto `okvufcwkophaadttmjwa`: 29/29 tabelas com RLS.
 - Carga inicial `ba771699-528d-4f58-bacf-73a296fd9518` concluída.
 - Reconciliação: 27/27 conjuntos com contagens iguais e zero hashes divergentes.
-- Testes automatizados: 149 aprovados; build de produção aprovado.
+- Testes automatizados: 155 aprovados; build de produção aprovado.
 - Usuários ativos elegíveis: 5/5 vinculados; uma exceção ignorada por decisão do negócio.
 - Anexos históricos: 2/2 copiados e aprovados por checksum.
 - Webhook NPS: implantado, protegido e retornando HTTP 401 sem token.
@@ -45,12 +45,26 @@ estiverem completos.
   o legado recria o relacionamento com outro ID.
 - Gate conectado: `READY` para homologação humana.
 
+### Ajustes recebidos na validação em 17/08/2026
+
+- Contatos: relatório PDF, filtro por responsável e múltiplos produtos por interação.
+- Agendamentos: relatório PDF e filtros por responsável e período.
+- Visitas: filtro por período incluído na tela e no PDF.
+- NPS: indicadores de cartórios avaliados/não avaliados e atalhos dos cartões de
+  promotores, neutros e detratores para as respectivas respostas.
+- Cartórios: visualização completa em modo somente leitura e responsáveis por
+  produto implantado.
+- Migration incremental aplicada: 29/29 tabelas com RLS; 427/427 contatos
+  retroalimentados com produto principal e nenhuma inconsistência.
+- API REST, tipagem, 155 testes automatizados e build de produção aprovados.
+- Gate conectado repetido após os ajustes: `READY`.
+
 ## Antes da validação humana
 
 - [x] Credencial local `SUPABASE_DB_URL` válida, sem envio por chat ou commit.
 - [x] `npm run prepare:cs-cx -- --static` aprovado.
 - [x] Diagnóstico conectado do schema aprovado.
-- [x] Pacote controlado das 14 migrations aplicado e validado.
+- [x] Pacote controlado das 17 migrations aplicado e validado.
 - [x] Carga inicial concluída sem erro.
 - [x] `verify` com todas as contagens em `OK`.
 - [x] Relatório de usuários gerado; e-mails únicos vinculados automaticamente.
@@ -64,8 +78,9 @@ estiverem completos.
 
 ## Roteiro da validação humana
 
-Validar no mínimo: visão geral, solicitações/lista/Kanban, cartórios e produtos,
-contatos, agenda/calendário, rotinas e histórico, visitas/checklists/pendências,
+Validar no mínimo: visão geral, solicitações/lista/Kanban, cartórios, produtos e
+responsáveis por produto, contatos com múltiplos produtos, agenda/calendário,
+rotinas e histórico, visitas/checklists/pendências,
 NPS, relatórios e administração de rotinas. No NPS, criar/editar um questionário,
 gerar um link para um contato piloto, responder sem login e confirmar a entrada
 automática da resposta no HUB. Conferir também filtros, criação, edição,

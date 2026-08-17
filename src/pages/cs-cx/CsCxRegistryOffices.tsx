@@ -4,6 +4,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Database,
+  Eye,
   MoreHorizontal,
   PackageCheck,
   Pencil,
@@ -29,6 +30,12 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 import { type CsCxRegistryOffice, useCsCxRegistryOffices } from "@/hooks/useCsCxCore";
+import { CsCxMultiSelect } from "@/components/cs-cx/CsCxMultiSelect";
+
+interface OfficeProductForm {
+  implementation_date: string;
+  responsible_profile_ids: string[];
+}
 
 interface OfficeForm {
   id?: string;
@@ -37,7 +44,7 @@ interface OfficeForm {
   contact_details: string;
   notes: string;
   active: boolean;
-  products: Record<string, string>;
+  products: Record<string, OfficeProductForm>;
 }
 
 const emptyForm: OfficeForm = {
@@ -52,7 +59,7 @@ const emptyForm: OfficeForm = {
 const DEFAULT_PAGE_SIZE = 5;
 
 export default function CsCxRegistryOffices() {
-  const { offices, products, isLoading, error, refetch, saveOffice, deleteOffice } = useCsCxRegistryOffices();
+  const { offices, products, profiles, isLoading, error, refetch, saveOffice, deleteOffice } = useCsCxRegistryOffices();
   const { hasPermission } = usePermissions();
   const { toast } = useToast();
   const [search, setSearch] = useState("");
@@ -62,6 +69,7 @@ export default function CsCxRegistryOffices() {
   const [form, setForm] = useState<OfficeForm>(emptyForm);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState<CsCxRegistryOffice | null>(null);
+  const [viewing, setViewing] = useState<CsCxRegistryOffice | null>(null);
 
   const canCreate = hasPermission("cs_cx_cartorios", "create");
   const canEdit = hasPermission("cs_cx_cartorios", "edit");
@@ -100,7 +108,10 @@ export default function CsCxRegistryOffices() {
       contact_details: office.contact_details ?? "",
       notes: office.notes ?? "",
       active: office.active,
-      products: Object.fromEntries(office.products.map((item) => [item.product_id, item.implementation_date ?? ""])),
+      products: Object.fromEntries(office.products.map((item) => [item.product_id, {
+        implementation_date: item.implementation_date ?? "",
+        responsible_profile_ids: item.responsibles.map((responsible) => responsible.profile_id),
+      }])),
     });
     setDialogOpen(true);
   };
@@ -111,9 +122,10 @@ export default function CsCxRegistryOffices() {
     try {
       await saveOffice.mutateAsync({
         ...form,
-        products: Object.entries(form.products).map(([product_id, implementation_date]) => ({
+        products: Object.entries(form.products).map(([product_id, product]) => ({
           product_id,
-          implementation_date: implementation_date || null,
+          implementation_date: product.implementation_date || null,
+          responsible_profile_ids: product.responsible_profile_ids,
         })),
       });
       setDialogOpen(false);
@@ -177,7 +189,7 @@ export default function CsCxRegistryOffices() {
             <div className="space-y-3">
             <div className="overflow-x-auto rounded-lg border">
               <Table>
-                <TableHeader><TableRow><TableHead className="h-9 px-3 text-xs">Cartório</TableHead><TableHead className="h-9 px-3 text-xs">Código SAP</TableHead><TableHead className="h-9 px-3 text-xs">Produtos</TableHead><TableHead className="h-9 px-3 text-xs">Status</TableHead><TableHead className="h-9 w-12 px-2" /></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead className="h-9 px-3 text-xs">Cartório</TableHead><TableHead className="h-9 px-3 text-xs">Código SAP</TableHead><TableHead className="h-9 px-3 text-xs">Produtos</TableHead><TableHead className="h-9 px-3 text-xs">Status</TableHead><TableHead className="h-9 w-24 px-2" /></TableRow></TableHeader>
                 <TableBody>
                   {pagedOffices.length === 0 ? (
                     <TableRow><TableCell colSpan={5} className="h-24 text-center text-muted-foreground">Nenhum cartório encontrado.</TableCell></TableRow>
@@ -188,7 +200,7 @@ export default function CsCxRegistryOffices() {
                       <TableCell className="px-3 py-2"><ProductBadges office={office} /></TableCell>
                       <TableCell className="px-3 py-2"><Badge variant={office.active ? "default" : "outline"} className="h-5 text-[10px]">{office.active ? "Ativo" : "Inativo"}</Badge></TableCell>
                       <TableCell className="px-2 py-1">
-                        {(canEdit || canDelete) && <DropdownMenu><DropdownMenuTrigger asChild><Button size="icon" variant="ghost" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /><span className="sr-only">Ações</span></Button></DropdownMenuTrigger><DropdownMenuContent align="end">{canEdit && <DropdownMenuItem onClick={() => openEdit(office)}><Pencil className="mr-2 h-4 w-4" />Editar</DropdownMenuItem>}{canDelete && <DropdownMenuItem onClick={() => setDeleting(office)} className="text-destructive"><Trash2 className="mr-2 h-4 w-4" />Excluir</DropdownMenuItem>}</DropdownMenuContent></DropdownMenu>}
+                        <div className="flex justify-end"><Button size="icon" variant="ghost" className="h-8 w-8" aria-label={`Visualizar ${office.name}`} onClick={() => setViewing(office)}><Eye className="h-4 w-4" /></Button>{(canEdit || canDelete) && <DropdownMenu><DropdownMenuTrigger asChild><Button size="icon" variant="ghost" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /><span className="sr-only">Ações</span></Button></DropdownMenuTrigger><DropdownMenuContent align="end">{canEdit && <DropdownMenuItem onClick={() => openEdit(office)}><Pencil className="mr-2 h-4 w-4" />Editar</DropdownMenuItem>}{canDelete && <DropdownMenuItem onClick={() => setDeleting(office)} className="text-destructive"><Trash2 className="mr-2 h-4 w-4" />Excluir</DropdownMenuItem>}</DropdownMenuContent></DropdownMenu>}</div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -212,22 +224,34 @@ export default function CsCxRegistryOffices() {
             <Field label="Contatos"><Input placeholder="Telefones, celulares ou e-mails" value={form.contact_details} onChange={(event) => setForm({ ...form, contact_details: event.target.value })} /></Field>
             <Field label="Observações"><Textarea value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} /></Field>
             <div className="space-y-3 rounded-lg border p-4">
-              <div><Label>Produtos implantados</Label><p className="text-xs text-muted-foreground">Selecione o produto e informe a data quando disponível.</p></div>
+              <div><Label>Produtos implantados e responsáveis</Label><p className="text-xs text-muted-foreground">Selecione o produto, informe a data e vincule um ou mais responsáveis.</p></div>
               {products.length === 0 ? <p className="text-sm text-muted-foreground">Nenhum produto ativo carregado.</p> : products.map((product) => {
                 const checked = Object.prototype.hasOwnProperty.call(form.products, product.id);
-                return <div key={product.id} className="grid items-center gap-3 rounded-md bg-muted/30 p-2 sm:grid-cols-[1fr_170px]">
+                return <div key={product.id} className="grid items-center gap-3 rounded-md bg-muted/30 p-2 lg:grid-cols-[minmax(140px,0.7fr)_170px_minmax(220px,1fr)]">
                   <label className="flex cursor-pointer items-center gap-2 text-sm"><Checkbox checked={checked} onCheckedChange={(value) => setForm((current) => {
                     const selected = { ...current.products };
-                    if (value) selected[product.id] = selected[product.id] ?? ""; else delete selected[product.id];
+                    if (value) selected[product.id] = selected[product.id] ?? { implementation_date: "", responsible_profile_ids: [] }; else delete selected[product.id];
                     return { ...current, products: selected };
                   })} />{product.name}</label>
-                  <Input type="date" disabled={!checked} value={form.products[product.id] ?? ""} onChange={(event) => setForm((current) => ({ ...current, products: { ...current.products, [product.id]: event.target.value } }))} />
+                  <Input aria-label={`Data de implantação de ${product.name}`} type="date" disabled={!checked} value={form.products[product.id]?.implementation_date ?? ""} onChange={(event) => setForm((current) => ({ ...current, products: { ...current.products, [product.id]: { ...current.products[product.id], implementation_date: event.target.value } } }))} />
+                  <CsCxMultiSelect ariaLabel={`Responsáveis por ${product.name}`} options={profiles.map((profile) => ({ value: profile.id, label: profile.full_name || profile.email || "Usuário" }))} values={form.products[product.id]?.responsible_profile_ids ?? []} onChange={(responsible_profile_ids) => setForm((current) => ({ ...current, products: { ...current.products, [product.id]: { ...current.products[product.id], responsible_profile_ids } } }))} placeholder="Responsáveis pelo produto" searchPlaceholder="Buscar responsável..." disabled={!checked} />
                 </div>;
               })}
             </div>
             <label className="flex items-center justify-between rounded-lg border p-3"><div><span className="text-sm font-medium">Cartório ativo</span><p className="text-xs text-muted-foreground">Inativos permanecem no histórico.</p></div><Switch checked={form.active} onCheckedChange={(active) => setForm({ ...form, active })} /></label>
             <DialogFooter><Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button><Button type="submit" disabled={saveOffice.isPending}>{saveOffice.isPending ? "Salvando..." : "Salvar cartório"}</Button></DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!viewing} onOpenChange={(open) => !open && setViewing(null)}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader><DialogTitle>Cadastro do cartório</DialogTitle><DialogDescription>Visualização completa, sem alteração dos dados.</DialogDescription></DialogHeader>
+          {viewing && <div className="space-y-4">
+            <div className="grid gap-3 rounded-lg border p-3 sm:grid-cols-2"><ReadOnlyField label="Cartório" value={viewing.name} /><ReadOnlyField label="Código SAP" value={viewing.sap_code || "Não informado"} /><ReadOnlyField label="Status" value={viewing.active ? "Ativo" : "Inativo"} /><ReadOnlyField label="Origem" value={viewing.origin === "legacy" ? "Sistema legado" : "Siplan HUB"} /><div className="sm:col-span-2"><ReadOnlyField label="Contatos" value={viewing.contact_details || "Não informados"} /></div><div className="sm:col-span-2"><ReadOnlyField label="Observações" value={viewing.notes || "Não informadas"} /></div></div>
+            <div className="space-y-2"><Label>Produtos e responsáveis</Label>{viewing.products.length ? viewing.products.map((product) => <div key={product.id} className="rounded-lg border p-3"><div className="flex flex-wrap items-center justify-between gap-2"><span className="font-medium">{product.product?.name ?? "Produto"}</span><span className="text-xs text-muted-foreground">Implantação: {product.implementation_date ? formatDate(product.implementation_date) : "não informada"}</span></div><div className="mt-2 flex flex-wrap gap-1">{product.responsibles.length ? product.responsibles.map((responsible) => <Badge key={responsible.id} variant="secondary">{responsible.profile?.full_name || responsible.profile?.email || "Usuário removido"}</Badge>) : <span className="text-xs text-muted-foreground">Nenhum responsável vinculado.</span>}</div></div>) : <p className="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">Nenhum produto implantado.</p>}</div>
+          </div>}
+          <DialogFooter><Button type="button" variant="outline" onClick={() => setViewing(null)}>Fechar</Button>{viewing && canEdit && <Button type="button" onClick={() => { const office = viewing; setViewing(null); openEdit(office); }}><Pencil className="mr-2 h-4 w-4" />Editar cadastro</Button>}</DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -247,6 +271,9 @@ function ProductBadges({ office }: { office: CsCxRegistryOffice }) {
   const visible = office.products.slice(0, 3);
   return <div className="flex max-w-md flex-wrap gap-1">{visible.map((item) => <Badge key={item.id} variant="secondary" className="h-5 max-w-36 truncate px-1.5 text-[10px] font-normal" title={item.product?.name}>{item.product?.name ?? "Produto"}</Badge>)}{office.products.length > visible.length && <Badge variant="outline" className="h-5 px-1.5 text-[10px]">+{office.products.length - visible.length}</Badge>}</div>;
 }
+
+function ReadOnlyField({ label, value }: { label: string; value: string }) { return <div><p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</p><p className="mt-0.5 whitespace-pre-wrap text-sm">{value}</p></div>; }
+function formatDate(value: string) { return new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" }).format(new Date(`${value}T00:00:00Z`)); }
 
 function OfficePaginationBar({ currentPage, pageSize, totalItems, totalPages, onPageChange, onPageSizeChange }: { currentPage: number; pageSize: number; totalItems: number; totalPages: number; onPageChange: (page: number) => void; onPageSizeChange: (size: string) => void }) {
   const firstItem = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
