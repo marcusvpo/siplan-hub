@@ -2,7 +2,7 @@ import fs from "node:fs";
 import pg from "pg";
 
 const { Client } = pg;
-const EXPECTED_TABLES = 27;
+const EXPECTED_TABLES = 29;
 
 loadDotEnv();
 const targetUrl = process.env.SUPABASE_DB_URL;
@@ -54,6 +54,11 @@ try {
                AND public
                AND file_size_limit = 5242880
            ) AS nps_questionnaire_themes
+           ,to_regclass('public.cs_cx_contact_products') IS NOT NULL
+             AND to_regclass('public.cs_cx_registry_office_product_responsibles') IS NOT NULL
+             AND to_regprocedure('public.cs_cx_save_contact(uuid,date,text,text,uuid[],text,text,uuid,text)') IS NOT NULL
+             AND to_regprocedure('public.cs_cx_save_registry_office_v2(uuid,text,text,text,text,boolean,jsonb,jsonb)') IS NOT NULL
+             AS customer_relationships
     FROM pg_tables
     WHERE schemaname = 'public' AND tablename LIKE 'cs_cx_%'
   `);
@@ -102,7 +107,8 @@ try {
       "Schema",
       schemaRow.total === EXPECTED_TABLES &&
         schemaRow.with_rls === EXPECTED_TABLES &&
-        schemaRow.mapping_exceptions,
+        schemaRow.mapping_exceptions &&
+        schemaRow.customer_relationships,
       `${schemaRow.total}/${EXPECTED_TABLES} tabelas; RLS ${schemaRow.with_rls}/${EXPECTED_TABLES}; exceções de usuário ${schemaRow.mapping_exceptions ? "OK" : "ausentes"}`,
     ],
     [

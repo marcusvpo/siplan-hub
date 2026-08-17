@@ -41,6 +41,8 @@ vi.mock("@/hooks/useCsCxEngagement", () => ({
       updated_at: null,
       origin: "legacy",
       product: { id: "product-1", name: "Orion" },
+      products: [{ id: "product-1", name: "Orion", is_primary: true }],
+      author: { id: "profile-1", full_name: "Bruno", email: null },
       registry_office: { id: "office-1", name: "Cartório Central" },
     })),
     isLoading: false,
@@ -120,6 +122,15 @@ describe("CS/CX contatos e agendamentos — permissões", () => {
     expect(screen.getByLabelText("Mostrando 6 a 10 de 12 contatos")).toBeInTheDocument();
   });
 
+  it("oferece relatório, filtro por responsável e seleção de vários produtos", () => {
+    renderPage(<CsCxContacts />, ["cs_cx_contatos:create"]);
+    expect(screen.getByRole("button", { name: /exportar pdf/i })).toBeInTheDocument();
+    expect(screen.getByText("Todos os responsáveis")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /novo contato/i }));
+    expect(screen.getByRole("combobox", { name: /produtos do contato/i })).toBeInTheDocument();
+  });
+
   it("mantém agenda em leitura e esconde criação", () => {
     renderPage(<CsCxAppointments />, []);
     expect(screen.getByText("Reunião de acompanhamento")).toBeInTheDocument();
@@ -140,5 +151,13 @@ describe("CS/CX contatos e agendamentos — permissões", () => {
 
     expect(screen.getByText("Agendamento 6")).toBeInTheDocument();
     expect(screen.getByLabelText("Mostrando 6 a 10 de 12 agendamentos")).toBeInTheDocument();
+  });
+
+  it("oferece relatório e filtros de responsável e período nos agendamentos", () => {
+    renderPage(<CsCxAppointments />, []);
+    expect(screen.getByRole("button", { name: /exportar pdf/i })).toBeInTheDocument();
+    expect(screen.getByText("Todos os responsáveis")).toBeInTheDocument();
+    expect(screen.getByLabelText("Data inicial do agendamento")).toBeInTheDocument();
+    expect(screen.getByLabelText("Data final do agendamento")).toBeInTheDocument();
   });
 });

@@ -15,6 +15,19 @@ export interface CsCxOfficeProduct {
   product_id: string;
   implementation_date: string | null;
   product: CsCxProduct | null;
+  responsibles: CsCxProductResponsible[];
+}
+
+export interface CsCxResponsibleProfile {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+}
+
+export interface CsCxProductResponsible {
+  id: string;
+  profile_id: string;
+  profile: CsCxResponsibleProfile | null;
 }
 
 export interface CsCxRegistryOffice {
@@ -37,7 +50,11 @@ export interface RegistryOfficeInput {
   contact_details?: string;
   notes?: string;
   active: boolean;
-  products: Array<{ product_id: string; implementation_date: string | null }>;
+  products: Array<{
+    product_id: string;
+    implementation_date: string | null;
+    responsible_profile_ids: string[];
+  }>;
 }
 
 export const CS_CX_REQUEST_STATUSES = [
@@ -92,7 +109,13 @@ interface RawOffice extends Omit<CsCxRegistryOffice, "products"> {
     id: string;
     product_id: string;
     implementation_date: string | null;
+    source_present: boolean;
     cs_cx_products: CsCxProduct | null;
+    cs_cx_registry_office_product_responsibles?: Array<{
+      id: string;
+      profile_id: string;
+      profiles: CsCxResponsibleProfile | null;
+    }>;
   }>;
 }
 
@@ -112,8 +135,14 @@ export function useCsCxRegistryOffices() {
           id, legacy_id, name, sap_code, active, contact_details, notes,
           origin, created_at,
           cs_cx_registry_office_products (
-            id, product_id, implementation_date,
-            cs_cx_products (id, name, product_code)
+            id, product_id, implementation_date, source_present,
+            cs_cx_products (id, name, product_code),
+            cs_cx_registry_office_product_responsibles (
+              id, profile_id,
+              profiles!cs_cx_registry_office_product_responsibles_profile_id_fkey (
+                id, full_name, email
+              )
+            )
           )
         `)
         .eq("source_present", true)
@@ -122,11 +151,16 @@ export function useCsCxRegistryOffices() {
 
       return ((data ?? []) as unknown as RawOffice[]).map((office) => ({
         ...office,
-        products: (office.cs_cx_registry_office_products ?? []).map((link) => ({
+        products: (office.cs_cx_registry_office_products ?? []).filter((link) => link.source_present).map((link) => ({
           id: link.id,
           product_id: link.product_id,
           implementation_date: link.implementation_date,
           product: link.cs_cx_products,
+          responsibles: (link.cs_cx_registry_office_product_responsibles ?? []).map((responsible) => ({
+            id: responsible.id,
+            profile_id: responsible.profile_id,
+            profile: responsible.profiles,
+          })),
         })),
       })) satisfies CsCxRegistryOffice[];
     },
@@ -146,16 +180,37 @@ export function useCsCxRegistryOffices() {
     },
   });
 
+  const profilesQuery = useQuery({
+    queryKey: ["cs-cx", "profile-options"],
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("profiles")
+        .select("id, full_name, email")
+        .order("full_name");
+      if (error) throw error;
+      return (data ?? []) as CsCxResponsibleProfile[];
+    },
+  });
+
   const saveOffice = useMutation({
     mutationFn: async (input: RegistryOfficeInput) => {
-      const { data, error } = await db.rpc("cs_cx_save_registry_office", {
+      const { data, error } = await db.rpc("cs_cx_save_registry_office_v2", {
         p_id: input.id ?? null,
         p_name: input.name,
         p_sap_code: emptyToNull(input.sap_code),
         p_contact_details: emptyToNull(input.contact_details),
         p_notes: emptyToNull(input.notes),
         p_active: input.active,
-        p_products: input.products,
+        p_products: input.products.map(({ product_id, implementation_date }) => ({
+          product_id,
+          implementation_date,
+        })),
+        p_responsibles: input.products.flatMap((product) =>
+          product.responsible_profile_ids.map((profile_id) => ({
+            product_id: product.product_id,
+            profile_id,
+          })),
+        ),
       });
       if (error) throw error;
       return data as string;
@@ -174,8 +229,9 @@ export function useCsCxRegistryOffices() {
   return {
     offices: officesQuery.data ?? [],
     products: productsQuery.data ?? [],
-    isLoading: officesQuery.isLoading || productsQuery.isLoading,
-    error: officesQuery.error ?? productsQuery.error,
+    profiles: profilesQuery.data ?? [],
+    isLoading: officesQuery.isLoading || productsQuery.isLoading || profilesQuery.isLoading,
+    error: officesQuery.error ?? productsQuery.error ?? profilesQuery.error,
     refetch: officesQuery.refetch,
     saveOffice,
     deleteOffice,

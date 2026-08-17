@@ -188,6 +188,12 @@ describe("CS/CX visitas e NPS — permissões", () => {
     ).toBeInTheDocument();
   });
 
+  it("filtra visitas por período", () => {
+    renderPage(<CsCxVisits />, []);
+    expect(screen.getByLabelText("Data inicial da visita")).toBeInTheDocument();
+    expect(screen.getByLabelText("Data final da visita")).toBeInTheDocument();
+  });
+
   it("exige permissão de solicitações para gerar uma a partir da visita", () => {
     const { rerender } = renderPage(<CsCxVisits />, ["cs_cx_visitas:edit"]);
     fireEvent.click(screen.getAllByRole("button", { name: /detalhes/i })[0]);
@@ -286,6 +292,17 @@ describe("CS/CX visitas e NPS — permissões", () => {
     }
     expect(screen.getByText("Neutro")).toHaveClass("bg-warning");
     expect(screen.getByText("Detrator")).toHaveClass("bg-critical");
+  });
+
+  it("resume cartórios avaliados e abre a lista ao clicar na classificação", () => {
+    renderPage(<CsCxNps />, []);
+    expect(screen.getByText("Cartórios avaliados")).toBeInTheDocument();
+    expect(screen.getByText("Cartórios não avaliados")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /promotores/i }));
+    expect(screen.getByRole("tab", { name: /respostas/i })).toHaveAttribute("data-state", "active");
+    expect(screen.getByText("Maria")).toBeInTheDocument();
+    expect(screen.queryByText("Neutro")).not.toBeInTheDocument();
   });
 
   it("pagina respostas e histórico de NPS em blocos compactos", () => {

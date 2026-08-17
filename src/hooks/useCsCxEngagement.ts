@@ -20,7 +20,9 @@ export interface CsCxContact {
   updated_at: string | null;
   origin: "legacy" | "hub";
   product: { id: string; name: string } | null;
+  products: Array<{ id: string; name: string; is_primary: boolean }>;
   registry_office: { id: string; name: string } | null;
+  author: { id: string; full_name: string | null; email: string | null } | null;
 }
 
 export interface CsCxContactInput {
@@ -28,7 +30,7 @@ export interface CsCxContactInput {
   contact_date: string;
   notes?: string;
   pending_items?: string;
-  product_id: string;
+  product_ids: string[];
   contact_person: string;
   contact_details?: string;
   registry_office_id: string;
@@ -86,9 +88,15 @@ export interface CsCxProfileOption {
   email: string | null;
 }
 
-interface RawContact extends Omit<CsCxContact, "product" | "registry_office"> {
+interface RawContact extends Omit<CsCxContact, "product" | "products" | "registry_office" | "author"> {
   cs_cx_products: { id: string; name: string } | null;
   cs_cx_registry_offices: { id: string; name: string } | null;
+  profiles: { id: string; full_name: string | null; email: string | null } | null;
+  cs_cx_contact_products?: Array<{
+    product_id: string;
+    is_primary: boolean;
+    cs_cx_products: { id: string; name: string } | null;
+  }>;
 }
 
 interface RawAppointment extends Omit<CsCxAppointment, "registry_office" | "contact" | "responsible"> {
@@ -109,43 +117,52 @@ export function useCsCxContacts() {
           contact_person, contact_details, registry_office_id, ticket_number,
           author_profile_id, created_at, updated_at, origin,
           cs_cx_products (id, name),
-          cs_cx_registry_offices (id, name)
+          cs_cx_registry_offices (id, name),
+          profiles!cs_cx_contacts_author_profile_id_fkey (id, full_name, email),
+          cs_cx_contact_products (
+            product_id, is_primary,
+            cs_cx_products (id, name)
+          )
         `)
         .eq("source_present", true)
         .order("contact_date", { ascending: false });
       if (error) throw error;
-      return ((data ?? []) as unknown as RawContact[]).map((contact) => ({
-        ...contact,
-        product: contact.cs_cx_products,
-        registry_office: contact.cs_cx_registry_offices,
-      })) satisfies CsCxContact[];
+      return ((data ?? []) as unknown as RawContact[]).map((contact) => {
+        const products = (contact.cs_cx_contact_products ?? [])
+          .filter((link) => link.cs_cx_products)
+          .map((link) => ({
+            id: link.cs_cx_products!.id,
+            name: link.cs_cx_products!.name,
+            is_primary: link.is_primary,
+          }));
+        return {
+          ...contact,
+          product: contact.cs_cx_products,
+          products: products.length
+            ? products
+            : contact.cs_cx_products
+              ? [{ ...contact.cs_cx_products, is_primary: true }]
+              : [],
+          registry_office: contact.cs_cx_registry_offices,
+          author: contact.profiles,
+        };
+      }) satisfies CsCxContact[];
     },
   });
 
   const saveContact = useMutation({
     mutationFn: async (input: CsCxContactInput) => {
-      const payload = {
-        contact_date: input.contact_date,
-        notes: emptyToNull(input.notes),
-        pending_items: emptyToNull(input.pending_items),
-        product_id: input.product_id,
-        contact_person: input.contact_person.trim(),
-        contact_details: emptyToNull(input.contact_details),
-        registry_office_id: input.registry_office_id,
-        ticket_number: emptyToNull(input.ticket_number),
-      };
-      if (input.id) {
-        const { data, error } = await db.from("cs_cx_contacts").update(payload).eq("id", input.id).select().single();
-        if (error) throw error;
-        return data;
-      }
-      const user = await currentUser();
-      const { data, error } = await db.from("cs_cx_contacts").insert({
-        ...payload,
-        author_profile_id: user.id,
-        origin: "hub",
-        source_present: true,
-      }).select().single();
+      const { data, error } = await db.rpc("cs_cx_save_contact", {
+        p_id: input.id ?? null,
+        p_contact_date: input.contact_date,
+        p_notes: emptyToNull(input.notes),
+        p_pending_items: emptyToNull(input.pending_items),
+        p_product_ids: input.product_ids,
+        p_contact_person: input.contact_person.trim(),
+        p_contact_details: emptyToNull(input.contact_details),
+        p_registry_office_id: input.registry_office_id,
+        p_ticket_number: emptyToNull(input.ticket_number),
+      });
       if (error) throw error;
       return data;
     },

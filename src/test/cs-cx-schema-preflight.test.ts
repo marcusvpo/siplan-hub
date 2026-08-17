@@ -27,7 +27,7 @@ const migrations = [
   ...new Set(
     [
       ...runner.matchAll(
-        /["']((?:20260811|20260812)\d+_cs_cx_[^"']+\.sql)["']/g,
+        /["']((?:20260811|20260812|20260817)\d+_cs_cx_[^"']+\.sql)["']/g,
       ),
     ].map((match) => match[1]),
   ),
@@ -35,7 +35,7 @@ const migrations = [
 
 describe("preflight do schema CS/CX", () => {
   it("mantém uma lista explícita e existente de migrations", () => {
-    expect(migrations).toHaveLength(16);
+    expect(migrations).toHaveLength(17);
     expect(new Set(migrations).size).toBe(migrations.length);
     for (const migration of migrations) {
       expect(
@@ -141,5 +141,22 @@ describe("preflight do schema CS/CX", () => {
     expect(migration).toContain("'cs-cx-nps-assets'");
     expect(migration).toContain("file_size_limit");
     expect(migration).not.toMatch(/FOR (?:UPDATE|DELETE) TO authenticated/);
+  });
+
+  it("suporta produtos por contato e responsáveis por cartório/produto", () => {
+    const migration = readFileSync(
+      resolve(
+        root,
+        "supabase/migrations/20260817130000_cs_cx_customer_relationships.sql",
+      ),
+      "utf8",
+    );
+
+    expect(migration).toContain("CREATE TABLE IF NOT EXISTS public.cs_cx_contact_products");
+    expect(migration).toContain("public.cs_cx_registry_office_product_responsibles");
+    expect(migration).toContain("CREATE OR REPLACE FUNCTION public.cs_cx_save_contact");
+    expect(migration).toContain("CREATE OR REPLACE FUNCTION public.cs_cx_save_registry_office_v2");
+    expect(migration).toMatch(/ALTER TABLE public\.cs_cx_contact_products ENABLE ROW LEVEL SECURITY/);
+    expect(migration).toMatch(/ALTER TABLE public\.cs_cx_registry_office_product_responsibles ENABLE ROW LEVEL SECURITY/);
   });
 });
