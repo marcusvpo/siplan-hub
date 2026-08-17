@@ -67,7 +67,7 @@ Catálogo dos custom hooks, stores Zustand e contexto de autenticação, organiz
 <details>
 <summary><b>7. Worker na VM e funcionalidades de IA</b></summary>
 
-Um único worker na VM Linux processa todas as filas de IA do app (Claude headless + whisper.cpp).
+Um único worker na VM Linux processa todas as filas de IA do app (Codex/Claude/Ollama + whisper.cpp).
 Setup, systemd, autodeploy, segurança e as filas processadas.
 
 - **Worker (visão geral, setup, deploy):** [../vm-worker/README.md](../vm-worker/README.md)
