@@ -184,7 +184,10 @@ export function NpsAnalyticsPanel({
     ...office,
     rankingLabel: `${office.name}|${formatRankingDate(office.latestResponseAt)}`,
   }));
-  const attentionClients = analytics.attentionClients.slice(0, 10);
+  const attentionClients = analytics.attentionClients.slice(0, 10).map((client) => ({
+    ...client,
+    attentionLabel: `${client.name}|${formatRankingDate(client.respondedAt)}`,
+  }));
   const officeRankingDomain: [number, number] = officeRanking.some(
     (office) => office.nps < 0,
   )
@@ -573,16 +576,19 @@ export function NpsAnalyticsPanel({
                       />
                       <YAxis
                         type="category"
-                        dataKey="name"
+                        dataKey="attentionLabel"
                         width={180}
                         tickLine={false}
                         axisLine={false}
-                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9 }}
-                        tickFormatter={(value: string) =>
-                          value.length > 28 ? `${value.slice(0, 28)}…` : value
-                        }
+                        tick={<DatedNpsAxisTick dateLabel="Resposta" />}
                       />
-                      <Tooltip contentStyle={tooltipStyle} />
+                      <Tooltip
+                        contentStyle={tooltipStyle}
+                        labelFormatter={(value) => {
+                          const [name, date] = String(value).split("|");
+                          return `${name} · Resposta: ${date}`;
+                        }}
+                      />
                       <Bar dataKey="score" name="Nota" radius={4}>
                         {attentionClients.map((client) => (
                           <Cell
@@ -622,7 +628,7 @@ export function NpsAnalyticsPanel({
                   <button
                     key={feedback.id}
                     type="button"
-                    aria-label={`Analisar resposta de ${feedback.office}`}
+                    aria-label={`Analisar resposta de ${feedback.office} em ${formatResponseDate(feedback.respondedAt)}`}
                     className="block w-full rounded-md border p-2 text-left transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
                     onClick={() => setDrilldown({
                       kind: "response",
@@ -632,12 +638,17 @@ export function NpsAnalyticsPanel({
                     })}
                   >
                     <div className="mb-1 flex items-center justify-between gap-2">
-                      <p className="truncate text-[10px] font-semibold">
-                        {feedback.office}
-                      </p>
+                      <div className="min-w-0">
+                        <p className="truncate text-[10px] font-semibold">
+                          {feedback.office}
+                        </p>
+                        <p className="mt-0.5 text-[9px] text-muted-foreground">
+                          Respondida em {formatResponseDate(feedback.respondedAt)}
+                        </p>
+                      </div>
                       <Badge
                         variant="outline"
-                        className={classificationClass(feedback.classification)}
+                        className={`shrink-0 ${classificationClass(feedback.classification)}`}
                       >
                         Nota {feedback.score}
                       </Badge>
@@ -686,7 +697,7 @@ export function NpsAnalyticsPanel({
                       width={180}
                       tickLine={false}
                       axisLine={false}
-                      tick={<OfficeRankingTick />}
+                      tick={<DatedNpsAxisTick dateLabel="Última NPS" />}
                     />
                     <ReferenceLine x={0} stroke="hsl(var(--muted-foreground))" />
                     <Tooltip
@@ -1137,13 +1148,19 @@ function formatRankingDate(value: string) {
   }).format(new Date(value));
 }
 
-interface OfficeRankingTickProps {
+interface DatedNpsAxisTickProps {
   x?: number;
   y?: number;
   payload?: { value?: string };
+  dateLabel: string;
 }
 
-function OfficeRankingTick({ x = 0, y = 0, payload }: OfficeRankingTickProps) {
+function DatedNpsAxisTick({
+  x = 0,
+  y = 0,
+  payload,
+  dateLabel,
+}: DatedNpsAxisTickProps) {
   const [rawName = "", date = ""] = String(payload?.value ?? "").split("|");
   const name = rawName.length > 28 ? `${rawName.slice(0, 28)}…` : rawName;
 
@@ -1153,7 +1170,7 @@ function OfficeRankingTick({ x = 0, y = 0, payload }: OfficeRankingTickProps) {
         {name}
       </text>
       <text x={-8} y={7} textAnchor="end" fill="hsl(var(--muted-foreground))" fontSize={8}>
-        Última NPS: {date}
+        {dateLabel}: {date}
       </text>
     </g>
   );
