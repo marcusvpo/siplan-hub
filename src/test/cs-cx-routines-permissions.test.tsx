@@ -49,7 +49,7 @@ vi.mock("@/hooks/useCsCxRoutines", () => ({
         analyzed_at: null,
         model_item: {
           id: `item-${index + 1}`,
-          name: "Reconhecimento de firma",
+          name: index === 0 ? "Reconhecimento de firma" : `Item ${index + 1}`,
           description: null,
           sort_order: 0,
           required: true,
@@ -145,10 +145,15 @@ describe("CS/CX rotinas — permissões", () => {
 
   it("abre a visão consolidada do cartório e permite informar a data da análise", () => {
     renderPage(["cs_cx_rotinas:edit"]);
+    expect(screen.queryByRole("button", { name: /^itens$/i })).not.toBeInTheDocument();
     fireEvent.click(screen.getAllByRole("button", { name: /analisar cartório e suas rotinas/i })[0]);
 
-    expect(screen.getByText("Rotinas do cartório")).toBeInTheDocument();
-    expect(screen.getByText(/visão consolidada para análise/i)).toBeInTheDocument();
+    expect(screen.getByText("Análise das rotinas do cartório")).toBeInTheDocument();
+    expect(screen.getByLabelText("Buscar itens da análise")).toBeInTheDocument();
+    expect(screen.getByLabelText("Mostrando 1 a 5 de 12 itens da análise")).toBeInTheDocument();
+    expect(screen.queryByText("Item 6")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /próxima página de itens da análise/i }));
+    expect(screen.getByText("Item 6")).toBeInTheDocument();
     fireEvent.click(screen.getAllByRole("button", { name: /editar/i })[0]);
     expect(screen.getByLabelText("Data da análise")).toBeInTheDocument();
   });
