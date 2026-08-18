@@ -58,7 +58,7 @@ vi.mock("@/hooks/useCsCxCore", async (importOriginal) => {
         requested_on: index === 0 ? "2026-08-01" : "2026-07-01",
         expected_delivery_on: null,
         delivered_on: null,
-        status: "Aguardando",
+        status: index === 1 ? "Projeto" : index === 2 ? "Desenvolvimento" : index === 3 ? "Em andamento" : index === 4 ? "Finalizado" : "Aguardando",
         notes: null,
         registry_office_id: "office-1",
         author_profile_id: null,
@@ -157,6 +157,23 @@ describe("CS/CX — ações por permissão", () => {
     expect(screen.getByLabelText("Mostrando 6 a 10 de 12 solicitações")).toBeInTheDocument();
   });
 
+  it("filtra a lista ao clicar nos cards de resumo", () => {
+    renderPage(<CsCxRequests />, []);
+
+    const executionCard = screen.getByRole("button", { name: /filtrar por em execução: 3 solicitações/i });
+    fireEvent.click(executionCard);
+
+    expect(executionCard).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByLabelText("Mostrando 1 a 3 de 3 solicitações")).toBeInTheDocument();
+    expect(screen.getByText("CH-101")).toBeInTheDocument();
+    expect(screen.getByText("CH-102")).toBeInTheDocument();
+    expect(screen.getByText("CH-103")).toBeInTheDocument();
+    expect(screen.queryByText("CH-123")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /filtrar por total: 12 solicitações/i }));
+    expect(screen.getByLabelText("Mostrando 1 a 5 de 12 solicitações")).toBeInTheDocument();
+  });
+
   it("filtra solicitações por período e imprime somente o resultado", async () => {
     const openWindow = vi.spyOn(window, "open").mockReturnValue(null);
     renderPage(<CsCxRequests />, []);
@@ -193,7 +210,7 @@ describe("CS/CX — ações por permissão", () => {
     renderPage(<CsCxRequests />, ["cs_cx_registros:edit"]);
     fireEvent.mouseDown(screen.getByRole("tab", { name: /quadro/i }), { button: 0, ctrlKey: false });
     const card = screen.getByLabelText("Arrastar CH-123");
-    const target = screen.getByLabelText("Projeto: 0 solicitações");
+    const target = screen.getByLabelText("Projeto: 1 solicitações");
     const dataTransfer = { effectAllowed: "none", dropEffect: "none", setData: vi.fn() };
 
     fireEvent.dragStart(card, { dataTransfer });
