@@ -18,6 +18,8 @@ vi.mock("@/lib/cs-cx-requests-report", () => ({
 }));
 
 const mutation = { mutateAsync: vi.fn(), isPending: false };
+const updateObservationMutation = { mutateAsync: vi.fn(), isPending: false };
+const deleteObservationMutation = { mutateAsync: vi.fn(), isPending: false };
 
 vi.mock("@/hooks/useCsCxCore", async (importOriginal) => {
   const original = await importOriginal<typeof import("@/hooks/useCsCxCore")>();
@@ -79,6 +81,8 @@ vi.mock("@/hooks/useCsCxCore", async (importOriginal) => {
       refetch: vi.fn(),
       saveRequest: mutation,
       updateStatus: mutation,
+      updateRequestObservation: updateObservationMutation,
+      deleteRequestObservation: deleteObservationMutation,
       deleteRequest: mutation,
     }),
   };
@@ -98,6 +102,8 @@ describe("CS/CX — ações por permissão", () => {
   beforeEach(() => {
     hasPermission.mockReset();
     mutation.mutateAsync.mockReset();
+    updateObservationMutation.mutateAsync.mockReset();
+    deleteObservationMutation.mutateAsync.mockReset();
     printRequestsReport.mockReset();
     printRequestsReport.mockResolvedValue(undefined);
   });
@@ -229,5 +235,24 @@ describe("CS/CX — ações por permissão", () => {
     expect(screen.getByText("Histórico de observações")).toBeInTheDocument();
     expect(screen.getByText("Primeiro retorno")).toBeInTheDocument();
     expect(screen.getByText("Nova observação")).toBeInTheDocument();
+  });
+
+  it("edita e exclui observações anteriores com as permissões corretas", async () => {
+    renderPage(<CsCxRequests />, ["cs_cx_registros:edit", "cs_cx_registros:delete"]);
+    fireEvent.mouseDown(screen.getByRole("tab", { name: /quadro/i }), { button: 0, ctrlKey: false });
+    fireEvent.click(screen.getByRole("button", { name: "Editar CH-123" }));
+
+    expect(screen.getByRole("dialog")).toHaveClass("sm:max-w-5xl");
+    fireEvent.click(screen.getByRole("button", { name: "Editar observação" }));
+    fireEvent.change(screen.getByLabelText("Texto da observação"), { target: { value: "Retorno revisado" } });
+    fireEvent.click(screen.getByRole("button", { name: "Salvar observação" }));
+
+    await waitFor(() => expect(updateObservationMutation.mutateAsync).toHaveBeenCalledWith({ id: "update-1", observation: "Retorno revisado" }));
+
+    fireEvent.click(screen.getByRole("button", { name: "Excluir observação" }));
+    expect(screen.getByText("Excluir esta observação?")).toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole("button", { name: "Excluir observação" }).at(-1)!);
+
+    await waitFor(() => expect(deleteObservationMutation.mutateAsync).toHaveBeenCalledWith("update-1"));
   });
 });

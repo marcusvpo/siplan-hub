@@ -39,6 +39,7 @@ import {
   type CsCxRequest,
   type CsCxRequestInput,
   type CsCxRequestStatusConfig,
+  type CsCxRequestUpdate,
   useCsCxRegistryOffices,
   useCsCxRequests,
 } from "@/hooks/useCsCxCore";
@@ -126,7 +127,7 @@ const REQUEST_TONE_STYLES: Record<string, { column: string; header: string; badg
 };
 
 export default function CsCxRequests() {
-  const { requests, statuses = FALLBACK_STATUS_CONFIGS, isLoading, error, refetch, saveRequest, updateStatus, deleteRequest } = useCsCxRequests();
+  const { requests, statuses = FALLBACK_STATUS_CONFIGS, isLoading, error, refetch, saveRequest, updateStatus, updateRequestObservation, deleteRequestObservation, deleteRequest } = useCsCxRequests();
   const { offices, error: officesError } = useCsCxRegistryOffices();
   const { hasPermission } = usePermissions();
   const { toast } = useToast();
@@ -140,6 +141,9 @@ export default function CsCxRequests() {
   const [form, setForm] = useState<CsCxRequestInput>(emptyForm);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState<CsCxRequest | null>(null);
+  const [editingObservation, setEditingObservation] = useState<CsCxRequestUpdate | null>(null);
+  const [observationText, setObservationText] = useState("");
+  const [deletingObservation, setDeletingObservation] = useState<CsCxRequestUpdate | null>(null);
   const [isPrinting, setIsPrinting] = useState(false);
 
   const canCreate = hasPermission("cs_cx_registros", "create");
@@ -198,11 +202,17 @@ export default function CsCxRequests() {
   }, [offices, officeFilter, periodEnd, periodStart, search, statusFilter]);
 
   const openCreate = () => {
+    setEditingObservation(null);
+    setObservationText("");
+    setDeletingObservation(null);
     setForm({ ...emptyForm, requested_on: new Date().toISOString().slice(0, 10) });
     setDialogOpen(true);
   };
 
   const openEdit = (request: CsCxRequest) => {
+    setEditingObservation(null);
+    setObservationText("");
+    setDeletingObservation(null);
     setForm({
       id: request.id,
       ticket_number: request.ticket_number ?? "",
@@ -225,7 +235,7 @@ export default function CsCxRequests() {
     if (!form.description.trim() || !form.registry_office_id) return;
     try {
       await saveRequest.mutateAsync(form);
-      setDialogOpen(false);
+      changeDialogOpen(false);
       toast({ title: "Solicitação salva", description: "Os dados foram atualizados com sucesso." });
     } catch (mutationError) {
       toast({ title: "Não foi possível salvar", description: errorMessage(mutationError), variant: "destructive" });
@@ -250,6 +260,48 @@ export default function CsCxRequests() {
       toast({ title: "Solicitação excluída" });
     } catch (mutationError) {
       toast({ title: "Não foi possível excluir", description: errorMessage(mutationError), variant: "destructive" });
+    }
+  };
+
+  const startObservationEdit = (update: CsCxRequestUpdate) => {
+    setEditingObservation(update);
+    setObservationText(update.observation);
+  };
+
+  const cancelObservationEdit = () => {
+    setEditingObservation(null);
+    setObservationText("");
+  };
+
+  const saveObservationEdit = async () => {
+    const observation = observationText.trim();
+    if (!editingObservation || !observation) return;
+    try {
+      await updateRequestObservation.mutateAsync({ id: editingObservation.id, observation });
+      cancelObservationEdit();
+      toast({ title: "Observação atualizada", description: "O histórico foi atualizado com sucesso." });
+    } catch (mutationError) {
+      toast({ title: "Não foi possível atualizar a observação", description: errorMessage(mutationError), variant: "destructive" });
+    }
+  };
+
+  const confirmObservationDelete = async () => {
+    if (!deletingObservation) return;
+    try {
+      await deleteRequestObservation.mutateAsync(deletingObservation.id);
+      if (editingObservation?.id === deletingObservation.id) cancelObservationEdit();
+      setDeletingObservation(null);
+      toast({ title: "Observação excluída" });
+    } catch (mutationError) {
+      toast({ title: "Não foi possível excluir a observação", description: errorMessage(mutationError), variant: "destructive" });
+    }
+  };
+
+  const changeDialogOpen = (open: boolean) => {
+    setDialogOpen(open);
+    if (!open) {
+      cancelObservationEdit();
+      setDeletingObservation(null);
     }
   };
 
@@ -309,8 +361,8 @@ export default function CsCxRequests() {
         </CardContent>
       </Card>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-3xl">
+      <Dialog open={dialogOpen} onOpenChange={changeDialogOpen}>
+        <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-5xl">
           <DialogHeader><DialogTitle>{form.id ? "Editar solicitação" : "Nova solicitação"}</DialogTitle><DialogDescription>Campos preservados do fluxo de registros do SistemaRegistro.</DialogDescription></DialogHeader>
           <form onSubmit={submit} className="space-y-5">
             <div className="grid gap-4 sm:grid-cols-2">
@@ -329,15 +381,24 @@ export default function CsCxRequests() {
               <Field label="Entrega"><Input type="date" value={form.delivered_on} onChange={(event) => setForm({ ...form, delivered_on: event.target.value })} /></Field>
             </div>
             <Field label="Status"><Select value={form.status} onValueChange={(value) => setForm({ ...form, status: value })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{statusNames.map((status) => <SelectItem key={status} value={status}>{status}</SelectItem>)}</SelectContent></Select></Field>
-            {currentRequest && <div className="space-y-2"><div className="flex items-center gap-2"><MessageSquareText className="h-4 w-4 text-rose-500" /><Label>Histórico de observações</Label><Badge variant="secondary" className="h-5 text-[10px]">{currentRequest.updates?.length ?? 0}</Badge></div><div className="max-h-48 space-y-2 overflow-y-auto rounded-lg border bg-muted/20 p-2">{currentRequest.updates?.length ? currentRequest.updates.map((update) => <div key={update.id} className="rounded-md border bg-background px-3 py-2"><p className="whitespace-pre-wrap text-sm">{update.observation}</p><p className="mt-1 text-[11px] text-muted-foreground">{update.author?.full_name || update.author?.email || (update.origin === "legacy" ? "Sistema legado" : "Usuário removido")} · {formatDateTime(update.occurred_at)}</p></div>) : <p className="py-3 text-center text-xs text-muted-foreground">Nenhuma observação registrada.</p>}</div></div>}
+            {currentRequest && <div className="space-y-2"><div className="flex items-center gap-2"><MessageSquareText className="h-4 w-4 text-rose-500" /><Label>Histórico de observações</Label><Badge variant="secondary" className="h-5 text-[10px]">{currentRequest.updates?.length ?? 0}</Badge></div><div className="max-h-64 space-y-2 overflow-y-auto rounded-lg border bg-muted/20 p-2">{currentRequest.updates?.length ? currentRequest.updates.map((update) => {
+              const isEditing = editingObservation?.id === update.id;
+              return <div key={update.id} className="rounded-md border bg-background px-3 py-2">
+                {isEditing ? <div className="space-y-2"><Textarea aria-label="Texto da observação" autoFocus value={observationText} onChange={(event) => setObservationText(event.target.value)} className="min-h-24" /><div className="flex justify-end gap-2"><Button type="button" size="sm" variant="outline" onClick={cancelObservationEdit}>Cancelar</Button><Button type="button" size="sm" disabled={!observationText.trim() || updateRequestObservation.isPending} onClick={() => void saveObservationEdit()}>{updateRequestObservation.isPending ? "Salvando..." : "Salvar observação"}</Button></div></div> : <div className="flex gap-3"><div className="min-w-0 flex-1"><p className="whitespace-pre-wrap text-sm">{update.observation}</p><p className="mt-1 text-[11px] text-muted-foreground">{update.author?.full_name || update.author?.email || (update.origin === "legacy" ? "Sistema legado" : "Usuário removido")} · {formatDateTime(update.occurred_at)}</p></div>{(canEdit || canDelete) && <div className="flex shrink-0 items-start gap-1">{canEdit && <Button type="button" variant="ghost" size="icon" className="h-8 w-8" aria-label="Editar observação" onClick={() => startObservationEdit(update)}><Pencil className="h-4 w-4" /></Button>}{canDelete && <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" aria-label="Excluir observação" onClick={() => setDeletingObservation(update)}><Trash2 className="h-4 w-4" /></Button>}</div>}</div>}
+              </div>;
+            }) : <p className="py-3 text-center text-xs text-muted-foreground">Nenhuma observação registrada.</p>}</div></div>}
             <Field label={currentRequest ? "Nova observação" : "Observação inicial"}><Textarea value={form.new_observation ?? ""} onChange={(event) => setForm({ ...form, new_observation: event.target.value })} placeholder="A observação será adicionada ao histórico sem apagar as anteriores." /></Field>
-            <DialogFooter><Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button><Button type="submit" disabled={saveRequest.isPending}>{saveRequest.isPending ? "Salvando..." : "Salvar solicitação"}</Button></DialogFooter>
+            <DialogFooter><Button type="button" variant="outline" onClick={() => changeDialogOpen(false)}>Cancelar</Button><Button type="submit" disabled={saveRequest.isPending}>{saveRequest.isPending ? "Salvando..." : "Salvar solicitação"}</Button></DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
 
       <AlertDialog open={!!deleting} onOpenChange={(open) => !open && setDeleting(null)}>
         <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Excluir esta solicitação?</AlertDialogTitle><AlertDialogDescription>Essa ação remove o registro do HUB. Enquanto o sistema legado for a fonte oficial, itens importados podem reaparecer na próxima sincronização.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction onClick={() => void confirmDelete()} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Excluir</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!deletingObservation} onOpenChange={(open) => !open && setDeletingObservation(null)}>
+        <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Excluir esta observação?</AlertDialogTitle><AlertDialogDescription>Essa ação remove definitivamente a observação do histórico da solicitação.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction disabled={deleteRequestObservation.isPending} onClick={() => void confirmObservationDelete()} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{deleteRequestObservation.isPending ? "Excluindo..." : "Excluir observação"}</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
       </AlertDialog>
     </div>
   );

@@ -35,7 +35,7 @@ const migrations = [
 
 describe("preflight do schema CS/CX", () => {
   it("mantém uma lista explícita e existente de migrations", () => {
-    expect(migrations).toHaveLength(20);
+    expect(migrations).toHaveLength(21);
     expect(new Set(migrations).size).toBe(migrations.length);
     for (const migration of migrations) {
       expect(
@@ -174,6 +174,17 @@ describe("preflight do schema CS/CX", () => {
     expect(migration).toContain("CREATE OR REPLACE FUNCTION public.cs_cx_save_registry_office_v3");
     expect(migration).toMatch(/ALTER TABLE public\.cs_cx_request_statuses ENABLE ROW LEVEL SECURITY/);
     expect(migration).toMatch(/ALTER TABLE public\.cs_cx_request_updates ENABLE ROW LEVEL SECURITY/);
+  });
+
+  it("permite editar observações das solicitações com autorização", () => {
+    const migration = readFileSync(
+      resolve(root, "supabase/migrations/20260818200000_cs_cx_request_update_editing.sql"),
+      "utf8",
+    );
+
+    expect(migration).toContain("ON public.cs_cx_request_updates FOR UPDATE TO authenticated");
+    expect(migration).toContain("public.has_permission(auth.uid(), 'cs_cx_registros', 'edit')");
+    expect(migration).toContain("GRANT UPDATE ON public.cs_cx_request_updates TO authenticated");
   });
 
   it("versiona a análise em massa das rotinas do cartório", () => {
