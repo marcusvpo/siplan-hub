@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowDown,
-  ArrowRight,
   ArrowUp,
   Boxes,
   Layers3,
@@ -10,11 +9,9 @@ import {
   Plus,
   RefreshCw,
   Settings2,
-  ShieldCheck,
   Tags,
   Trash2,
   TriangleAlert,
-  Users,
   Workflow,
 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -40,6 +37,7 @@ import {
 import { usePermissions } from "@/hooks/usePermissions";
 import { useToast } from "@/hooks/use-toast";
 import { type CsCxRequestStatusConfig, useCsCxRequestStatusAdmin } from "@/hooks/useCsCxCore";
+import { CsCxAccessPanel } from "@/components/cs-cx/CsCxAccessPanel";
 
 type CatalogKind = "category" | "type";
 type DeleteTarget =
@@ -78,8 +76,6 @@ export default function CsCxAdmin() {
   const [statusOpen, setStatusOpen] = useState(false);
   const [statusForm, setStatusForm] = useState(EMPTY_STATUS);
   const [deletingStatus, setDeletingStatus] = useState<CsCxRequestStatusConfig | null>(null);
-  const canViewUsers = hasPermission("users", "view");
-  const canViewRoles = hasPermission("roles", "view");
 
   useEffect(() => {
     if (!selectedModelId && admin.models.length) setSelectedModelId(admin.models[0].id);
@@ -295,7 +291,7 @@ export default function CsCxAdmin() {
         <TabsContent value="categories"><CatalogPanel kind="category" items={admin.categories} canManage={canManage} onEdit={(item) => openCatalog("category", item)} onCreate={() => openCatalog("category")} onDelete={(item) => setDeleting({ kind: "category", id: item.id, name: item.name })} /></TabsContent>
         <TabsContent value="types"><CatalogPanel kind="type" items={admin.types} canManage={canManage} onEdit={(item) => openCatalog("type", item)} onCreate={() => openCatalog("type")} onDelete={(item) => setDeleting({ kind: "type", id: item.id, name: item.name })} /></TabsContent>
         <TabsContent value="statuses"><Card><CardHeader className="px-4 pb-2 pt-3"><div className="flex items-center justify-between gap-3"><div><CardTitle className="text-sm">Status das solicitações</CardTitle><CardDescription className="text-xs">Defina as colunas disponíveis no quadro. Sustentação e FastTrack já estão incluídos.</CardDescription></div>{canManage && <Button size="sm" className="h-8" onClick={() => openStatus()}><Plus className="mr-1.5 h-4 w-4" />Novo status</Button>}</div></CardHeader><CardContent className="grid gap-2 px-4 pb-4 md:grid-cols-2 xl:grid-cols-3">{statusAdmin.statuses.map((status) => <div key={status.id} className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5"><div className="flex min-w-0 items-center gap-2"><span className={`h-3 w-3 shrink-0 rounded-full ${statusColorClass(status.color)}`} /><div className="min-w-0"><p className="truncate text-sm font-semibold">{status.name}</p><p className="text-[11px] text-muted-foreground">Ordem {status.sort_order}{status.is_system ? " · padrão" : ""}</p></div></div><div className="flex items-center gap-1"><Badge variant={status.active ? "default" : "secondary"} className="h-5 px-1.5 text-[10px]">{status.active ? "Ativo" : "Inativo"}</Badge>{canManage && <><Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Editar status ${status.name}`} onClick={() => openStatus(status)}><Pencil className="h-4 w-4" /></Button><Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Excluir status ${status.name}`} onClick={() => setDeletingStatus(status)}><Trash2 className="h-4 w-4 text-destructive" /></Button></>}</div></div>)}</CardContent></Card></TabsContent>
-        <TabsContent value="access"><Card><CardHeader className="px-4 pb-2 pt-3"><CardTitle className="text-sm">Controle de acesso</CardTitle><CardDescription className="text-xs">A administração de identidades é centralizada no Siplan HUB e vale também para o módulo CS/CX.</CardDescription></CardHeader><CardContent className="grid gap-3 px-4 pb-4 md:grid-cols-2"><AccessCard icon={Users} title="Usuários" description="Cadastre usuários e acompanhe seus vínculos e situação de acesso." href="/admin/users" enabled={canViewUsers} /><AccessCard icon={ShieldCheck} title="Perfis de acesso" description="Configure perfis e permissões de visualização, criação, edição e gestão." href="/admin/roles" enabled={canViewRoles} /></CardContent></Card></TabsContent>
+        <TabsContent value="access"><CsCxAccessPanel canManage={canManage} /></TabsContent>
       </Tabs>
 
       <Dialog open={modelOpen} onOpenChange={setModelOpen}><DialogContent className="sm:max-w-xl"><DialogHeader><DialogTitle>{modelForm.id ? "Editar modelo" : "Novo modelo"}</DialogTitle><DialogDescription>Defina o modelo e os produtos aos quais ele se aplica.</DialogDescription></DialogHeader><div className="space-y-4"><div><Label htmlFor="model-name">Nome</Label><Input id="model-name" value={modelForm.name} onChange={(event) => setModelForm((current) => ({ ...current, name: event.target.value }))} /></div><div><Label htmlFor="model-description">Descrição</Label><Textarea id="model-description" value={modelForm.description} onChange={(event) => setModelForm((current) => ({ ...current, description: event.target.value }))} /></div><div><Label>Produtos</Label><div className="mt-2 grid max-h-40 gap-2 overflow-y-auto rounded-lg border p-3 sm:grid-cols-2">{admin.products.map((product) => <label key={product.id} className="flex items-center gap-2 text-sm"><Checkbox checked={modelForm.productIds.includes(product.id)} onCheckedChange={(checked) => setModelForm((current) => ({ ...current, productIds: checked ? [...current.productIds, product.id] : current.productIds.filter((id) => id !== product.id) }))} />{product.name}</label>)}</div></div><div className="flex items-center justify-between rounded-lg border p-3"><Label htmlFor="model-active">Modelo ativo</Label><Switch id="model-active" checked={modelForm.active} onCheckedChange={(active) => setModelForm((current) => ({ ...current, active }))} /></div></div><DialogFooter><Button variant="outline" onClick={() => setModelOpen(false)}>Cancelar</Button><Button disabled={!modelForm.name.trim() || admin.saveModel.isPending} onClick={handleModelSave}>Salvar modelo</Button></DialogFooter></DialogContent></Dialog>
@@ -326,10 +322,6 @@ function CatalogPanel({ kind, items, canManage, onCreate, onEdit, onDelete }: {
 
 function Metric({ icon: Icon, label, value }: { icon: typeof Boxes; label: string; value: number }) {
   return <Card><CardContent className="flex items-center gap-2.5 px-3 py-2.5"><div className="rounded-lg bg-rose-50 p-1.5 text-rose-600 dark:bg-rose-950/40"><Icon className="h-4 w-4" /></div><div><p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</p><p className="text-xl font-black leading-6">{value}</p></div></CardContent></Card>;
-}
-
-function AccessCard({ icon: Icon, title, description, href, enabled }: { icon: typeof Users; title: string; description: string; href: string; enabled: boolean }) {
-  return <div className="flex items-center gap-3 rounded-lg border p-4"><div className="rounded-lg bg-rose-50 p-2 text-rose-600 dark:bg-rose-950/40"><Icon className="h-5 w-5" /></div><div className="min-w-0 flex-1"><h3 className="text-sm font-semibold">{title}</h3><p className="text-xs text-muted-foreground">{description}</p></div>{enabled ? <Button variant="outline" size="sm" asChild><a href={href}>Abrir<ArrowRight className="ml-2 h-4 w-4" /></a></Button> : <Badge variant="secondary">Sem acesso</Badge>}</div>;
 }
 
 const STATUS_COLORS = [

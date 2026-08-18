@@ -70,6 +70,31 @@ vi.mock("@/hooks/useCsCxCore", () => ({
   }),
 }));
 
+vi.mock("@/hooks/useCsCxAccess", () => ({
+  useCsCxAccess: () => ({
+    users: [{
+      user_id: "user-1",
+      full_name: "Usuária CS/CX",
+      email: "cscx@siplan.com.br",
+      global_role: "user",
+      access_profile_id: "profile-1",
+      access_profile_name: "Operacional CS/CX",
+      active: true,
+      is_hub_admin: false,
+    }],
+    candidates: [],
+    profiles: [{ id: "profile-1", name: "Operacional CS/CX", description: "Somente módulo", active: true, permission_ids: ["permission-1"], user_count: 1 }],
+    permissions: [{ id: "permission-1", resource: "cs_cx_registros", action: "view", description: "Visualizar solicitações" }],
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+    saveProfile: mutation,
+    deleteProfile: mutation,
+    assignUser: mutation,
+    removeUser: mutation,
+  }),
+}));
+
 import CsCxAdmin from "@/pages/cs-cx/CsCxAdmin";
 
 describe("CS/CX administração — permissões", () => {
@@ -98,5 +123,17 @@ describe("CS/CX administração — permissões", () => {
     expect(screen.getByText("Sustentação")).toBeInTheDocument();
     expect(screen.getByText("FastTrack")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /novo status/i })).toBeInTheDocument();
+  });
+
+  it("mantém usuários e perfis restritos ao CS/CX", () => {
+    hasPermission.mockImplementation((resource: string, action: string) => resource === "cs_cx_admin" && ["view", "manage"].includes(action));
+    render(<CsCxAdmin />);
+
+    fireEvent.mouseDown(screen.getByRole("tab", { name: /usuários e permissões/i }), { button: 0, ctrlKey: false });
+
+    expect(screen.getByText("Usuária CS/CX")).toBeInTheDocument();
+    expect(screen.getByText(/não alteram o perfil global/i)).toBeInTheDocument();
+    expect(document.querySelector('a[href="/admin/users"]')).not.toBeInTheDocument();
+    expect(document.querySelector('a[href="/admin/roles"]')).not.toBeInTheDocument();
   });
 });

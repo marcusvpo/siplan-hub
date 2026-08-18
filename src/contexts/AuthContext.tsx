@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Session, User } from "@supabase/supabase-js";
+import { Session, User, type SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AuthContext, UserRole, Permission } from "./AuthContextValue";
+
+const authDb = supabase as unknown as SupabaseClient;
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -180,34 +182,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchPermissions = async (roleName: string) => {
     try {
-      const { data, error } = await supabase
-        .from("app_roles")
-        .select(`
-          name,
-          app_role_permissions (
-            app_permissions (
-              resource,
-              action
+      const [globalResult, csCxResult] = await Promise.all([
+        supabase
+          .from("app_roles")
+          .select(`
+            name,
+            app_role_permissions (
+              app_permissions (
+                resource,
+                action
+              )
             )
-          )
-        `)
-        .eq("name", roleName)
-        .single();
+          `)
+          .eq("name", roleName)
+          .single(),
+        authDb.rpc("cs_cx_get_my_permissions"),
+      ]);
 
-      if (error) {
-        console.error("Error fetching permissions:", error);
-        setPermissions([]);
-        return;
-      }
+      if (globalResult.error) console.error("Error fetching global permissions:", globalResult.error);
+      if (csCxResult.error) console.error("Error fetching CS/CX permissions:", csCxResult.error);
 
-      if (data && data.app_role_permissions) {
-        const perms: Permission[] = data.app_role_permissions
+      const globalPermissions: Permission[] = globalResult.data?.app_role_permissions
           .map((rp: { app_permissions: unknown }) => rp.app_permissions as unknown as Permission)
-          .filter(Boolean);
-        setPermissions(perms);
-      } else {
-        setPermissions([]);
+          .filter(Boolean) ?? [];
+      const csCxPermissions = (csCxResult.data ?? []) as Permission[];
+      const uniquePermissions = new Map<string, Permission>();
+      for (const permission of [...globalPermissions, ...csCxPermissions]) {
+        uniquePermissions.set(`${permission.resource}:${permission.action}`, permission);
       }
+      setPermissions([...uniquePermissions.values()]);
     } catch (error) {
       console.error("Exception fetching permissions:", error);
       setPermissions([]);
