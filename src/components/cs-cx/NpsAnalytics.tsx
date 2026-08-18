@@ -101,6 +101,7 @@ type NpsDrilldown =
   | { kind: "classification"; value: CsCxNpsResponse["classification"]; title: string; description: string }
   | { kind: "office"; value: string; title: string; description: string }
   | { kind: "month"; value: string; title: string; description: string }
+  | { kind: "score"; value: string; title: string; description: string }
   | { kind: "response"; value: string; title: string; description: string };
 
 export function NpsAnalyticsPanel({
@@ -180,6 +181,7 @@ export function NpsAnalyticsPanel({
     { name: "Detratores", value: analytics.detractors, classification: "DETRATOR", color: DISTRIBUTION_COLORS[2] },
   ];
   const officeRanking = analytics.byOffice.slice(0, 12);
+  const attentionClients = analytics.attentionClients.slice(0, 10);
   const officeRankingDomain: [number, number] = officeRanking.some(
     (office) => office.nps < 0,
   )
@@ -218,6 +220,15 @@ export function NpsAnalyticsPanel({
       value: key,
       title: `NPS de ${label}`,
       description: "Clientes e indicadores que compõem este ponto da evolução mensal.",
+    });
+  }
+
+  function openScore(score: number) {
+    setDrilldown({
+      kind: "score",
+      value: String(score),
+      title: `Clientes com nota ${score}`,
+      description: `Respostas com nota ${score} no recorte atual.`,
     });
   }
 
@@ -532,6 +543,119 @@ export function NpsAnalyticsPanel({
           <div className="grid gap-2.5 xl:grid-cols-[1.45fr_1fr]">
             <Card>
               <CardHeader className="px-3 py-2">
+                <CardTitle className="flex items-center gap-1.5 text-xs">
+                  <TrendingDown className="h-3.5 w-3.5 text-rose-500" />
+                  Clientes que precisam de atenção
+                </CardTitle>
+                <CardDescription className="text-[10px]">
+                  Pior nota de cada cartório, da menor para a maior · clique para detalhar
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="h-[310px] px-2 pb-2 pt-0">
+                {attentionClients.length ? (
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                    <BarChart
+                      data={attentionClients}
+                      layout="vertical"
+                      margin={{ top: 4, right: 34, bottom: 8, left: 8 }}
+                    >
+                      <CartesianGrid horizontal={false} stroke="hsl(var(--border))" />
+                      <XAxis
+                        type="number"
+                        domain={[0, 10]}
+                        ticks={[0, 2, 4, 6, 8, 10]}
+                        tickLine={false}
+                        axisLine={false}
+                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9 }}
+                      />
+                      <YAxis
+                        type="category"
+                        dataKey="name"
+                        width={180}
+                        tickLine={false}
+                        axisLine={false}
+                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9 }}
+                        tickFormatter={(value: string) =>
+                          value.length > 28 ? `${value.slice(0, 28)}…` : value
+                        }
+                      />
+                      <Tooltip contentStyle={tooltipStyle} />
+                      <Bar dataKey="score" name="Nota" radius={4}>
+                        {attentionClients.map((client) => (
+                          <Cell
+                            key={client.key}
+                            fill={scoreColor(client.score)}
+                            className="cursor-pointer outline-none"
+                            onClick={() => openOffice(client.officeId, client.name)}
+                          />
+                        ))}
+                        <LabelList
+                          dataKey="score"
+                          position="right"
+                          fill="hsl(var(--foreground))"
+                          fontSize={9}
+                          fontWeight={600}
+                        />
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
+                    Nenhum cliente com nota entre 0 e 8 neste recorte.
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="px-3 py-2">
+                <CardTitle className="flex items-center gap-1.5 text-xs">
+                  <MessageSquareText className="h-3.5 w-3.5 text-rose-500" />
+                  Voz do cliente
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="max-h-[310px] space-y-1.5 overflow-y-auto px-3 pb-3 pt-0">
+                {analytics.feedback.slice(0, 12).map((feedback) => (
+                  <button
+                    key={feedback.id}
+                    type="button"
+                    aria-label={`Analisar resposta de ${feedback.office}`}
+                    className="block w-full rounded-md border p-2 text-left transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+                    onClick={() => setDrilldown({
+                      kind: "response",
+                      value: feedback.id,
+                      title: feedback.office,
+                      description: "Detalhes da resposta selecionada.",
+                    })}
+                  >
+                    <div className="mb-1 flex items-center justify-between gap-2">
+                      <p className="truncate text-[10px] font-semibold">
+                        {feedback.office}
+                      </p>
+                      <Badge
+                        variant="outline"
+                        className={classificationClass(feedback.classification)}
+                      >
+                        Nota {feedback.score}
+                      </Badge>
+                    </div>
+                    <p className="line-clamp-3 text-[10px] leading-relaxed text-muted-foreground">
+                      {feedback.reason || feedback.suggestion}
+                    </p>
+                  </button>
+                ))}
+                {!analytics.feedback.length && (
+                  <p className="py-12 text-center text-xs text-muted-foreground">
+                    Não há comentários textuais neste recorte.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid gap-2.5 xl:grid-cols-[1.45fr_1fr]">
+            <Card>
+              <CardHeader className="px-3 py-2">
                 <CardTitle className="text-xs">Ranking de NPS por cartório</CardTitle>
                 <CardDescription className="text-[10px]">
                   Do maior para o menor · clique em uma barra para detalhar
@@ -590,46 +714,51 @@ export function NpsAnalyticsPanel({
 
             <Card>
               <CardHeader className="px-3 py-2">
-                <CardTitle className="flex items-center gap-1.5 text-xs">
-                  <MessageSquareText className="h-3.5 w-3.5 text-rose-500" />
-                  Voz do cliente
-                </CardTitle>
+                <CardTitle className="text-xs">Distribuição por nota</CardTitle>
+                <CardDescription className="text-[10px]">
+                  Volume de respostas de 0 a 10 · clique em uma barra para detalhar
+                </CardDescription>
               </CardHeader>
-              <CardContent className="max-h-[310px] space-y-1.5 overflow-y-auto px-3 pb-3 pt-0">
-                {analytics.feedback.slice(0, 12).map((feedback) => (
-                  <button
-                    key={feedback.id}
-                    type="button"
-                    aria-label={`Analisar resposta de ${feedback.office}`}
-                    className="block w-full rounded-md border p-2 text-left transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
-                    onClick={() => setDrilldown({
-                      kind: "response",
-                      value: feedback.id,
-                      title: feedback.office,
-                      description: "Detalhes da resposta selecionada.",
-                    })}
+              <CardContent className="h-[310px] px-2 pb-2 pt-0">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                  <BarChart
+                    data={analytics.scoreDistribution}
+                    margin={{ top: 18, right: 8, bottom: 8, left: 0 }}
                   >
-                    <div className="mb-1 flex items-center justify-between gap-2">
-                      <p className="truncate text-[10px] font-semibold">
-                        {feedback.office}
-                      </p>
-                      <Badge
-                        variant="outline"
-                        className={classificationClass(feedback.classification)}
-                      >
-                        Nota {feedback.score}
-                      </Badge>
-                    </div>
-                    <p className="line-clamp-3 text-[10px] leading-relaxed text-muted-foreground">
-                      {feedback.reason || feedback.suggestion}
-                    </p>
-                  </button>
-                ))}
-                {!analytics.feedback.length && (
-                  <p className="py-12 text-center text-xs text-muted-foreground">
-                    Não há comentários textuais neste recorte.
-                  </p>
-                )}
+                    <CartesianGrid vertical={false} stroke="hsl(var(--border))" />
+                    <XAxis
+                      dataKey="label"
+                      tickLine={false}
+                      axisLine={false}
+                      tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9 }}
+                    />
+                    <YAxis
+                      allowDecimals={false}
+                      tickLine={false}
+                      axisLine={false}
+                      width={28}
+                      tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9 }}
+                    />
+                    <Tooltip contentStyle={tooltipStyle} />
+                    <Bar dataKey="responses" name="Respostas" radius={[4, 4, 0, 0]}>
+                      {analytics.scoreDistribution.map((item) => (
+                        <Cell
+                          key={item.score}
+                          fill={scoreColor(item.score)}
+                          className="cursor-pointer outline-none"
+                          onClick={() => openScore(item.score)}
+                        />
+                      ))}
+                      <LabelList
+                        dataKey="responses"
+                        position="top"
+                        fill="hsl(var(--foreground))"
+                        fontSize={9}
+                        fontWeight={600}
+                      />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
               </CardContent>
             </Card>
           </div>
@@ -961,10 +1090,17 @@ function classificationClass(classification: CsCxNpsResponse["classification"]) 
   return "border-amber-200 bg-amber-50 text-[9px] text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300";
 }
 
+function scoreColor(score: number) {
+  if (score <= 6) return "#e11d48";
+  if (score <= 8) return "#f59e0b";
+  return "#10b981";
+}
+
 function matchesDrilldown(response: CsCxNpsResponse, drilldown: NpsDrilldown) {
   if (drilldown.kind === "classification") return response.classification === drilldown.value;
   if (drilldown.kind === "office") return (response.registry_office_id || responseOfficeName(response)) === drilldown.value;
   if (drilldown.kind === "month") return response.responded_at.slice(0, 7) === drilldown.value;
+  if (drilldown.kind === "score") return response.score === Number(drilldown.value);
   return response.id === drilldown.value;
 }
 

@@ -32,6 +32,23 @@ export interface NpsFeedbackItem {
   suggestion: string | null;
 }
 
+export interface NpsAttentionClient {
+  key: string;
+  officeId: string;
+  name: string;
+  score: number;
+  classification: CsCxNpsResponse["classification"];
+  respondedAt: string;
+  reason: string | null;
+  suggestion: string | null;
+}
+
+export interface NpsScoreDistribution {
+  score: number;
+  label: string;
+  responses: number;
+}
+
 export interface NpsQuestionAnalytics {
   key: string;
   title: string;
@@ -53,6 +70,8 @@ export interface NpsAnalytics {
   officesCount: number;
   monthly: NpsAnalyticsPoint[];
   byOffice: NpsOfficeAnalytics[];
+  attentionClients: NpsAttentionClient[];
+  scoreDistribution: NpsScoreDistribution[];
   feedback: NpsFeedbackItem[];
   additionalQuestions: NpsQuestionAnalytics[];
   trendDelta: number | null;
@@ -222,6 +241,38 @@ export function buildNpsAnalytics(
         left.name.localeCompare(right.name, "pt-BR"),
     );
 
+  const attentionClients = [...officeGroups.values()]
+    .map((group) => {
+      const worstResponse = [...group.responses].sort(
+        (left, right) =>
+          left.score - right.score ||
+          right.responded_at.localeCompare(left.responded_at),
+      )[0];
+      return {
+        key: group.id,
+        officeId: group.id,
+        name: group.name,
+        score: worstResponse.score,
+        classification: worstResponse.classification,
+        respondedAt: worstResponse.responded_at,
+        reason: worstResponse.score_reason?.trim() || null,
+        suggestion: worstResponse.improvement_suggestion?.trim() || null,
+      } satisfies NpsAttentionClient;
+    })
+    .filter((client) => client.score <= 8)
+    .sort(
+      (left, right) =>
+        left.score - right.score ||
+        right.respondedAt.localeCompare(left.respondedAt) ||
+        left.name.localeCompare(right.name, "pt-BR"),
+    );
+
+  const scoreDistribution = Array.from({ length: 11 }, (_, score) => ({
+    score,
+    label: String(score),
+    responses: filtered.filter((response) => response.score === score).length,
+  }));
+
   const feedback = filtered
     .filter(
       (response) =>
@@ -275,6 +326,8 @@ export function buildNpsAnalytics(
     officesCount: byOffice.length,
     monthly,
     byOffice,
+    attentionClients,
+    scoreDistribution,
     feedback,
     additionalQuestions,
     trendDelta:
@@ -312,6 +365,7 @@ export function buildNpsAiSource(
         left.name.localeCompare(right.name, "pt-BR"),
     )
     .slice(0, 5);
+  const attentionClients = analytics.attentionClients.slice(0, 10);
   const feedback = analytics.feedback.slice(0, 100);
   const omitted = Math.max(0, analytics.feedback.length - feedback.length);
 
@@ -338,6 +392,14 @@ export function buildNpsAiSource(
             `- ${office.name}: NPS ${office.nps}, nota média ${office.averageScore}, ${office.responses} resposta(s), ${office.detractors} detrator(es) e ${office.neutrals} neutro(s).`,
         )
       : ["- Nenhum cartório no recorte."]),
+    "",
+    "**Clientes com as menores notas**",
+    ...(attentionClients.length
+      ? attentionClients.map(
+          (client) =>
+            `- ${client.name}: nota ${client.score}, ${client.classification}. ${client.reason ? `Motivo: ${compact(client.reason, 300)}.` : "Motivo não informado."}`,
+        )
+      : ["- Nenhum cliente com nota entre 0 e 8 no recorte."]),
     "",
     "**Voz do cliente disponível para análise**",
     ...(feedback.length

@@ -362,6 +362,9 @@ describe("CS/CX visitas e NPS — permissões", () => {
   it("exibe o BI de NPS e restringe a geração com IA pela permissão", () => {
     const { rerender } = renderPage(<CsCxNps />, []);
     expect(screen.getByText("Evolução mensal do NPS")).toBeInTheDocument();
+    expect(screen.getByText("Clientes que precisam de atenção")).toBeInTheDocument();
+    expect(screen.getByText("Ranking de NPS por cartório")).toBeInTheDocument();
+    expect(screen.getByText("Distribuição por nota")).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /gerar relatório com ia/i }),
     ).not.toBeInTheDocument();

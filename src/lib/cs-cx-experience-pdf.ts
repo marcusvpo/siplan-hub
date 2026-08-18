@@ -103,9 +103,20 @@ export async function generateCsCxNpsAnalysisPdf(
     ]),
   });
 
+  if (analytics.attentionClients.length) {
+    blocks.push({
+      title: "CLIENTES QUE PRECISAM DE ATENÇÃO",
+      subtitle: "Pior nota de cada cartório, ordenada da menor para a maior",
+      rows: analytics.attentionClients.map((client) => [
+        client.name,
+        `Nota ${client.score} · ${client.classification} · ${client.reason || "Motivo não informado"}`,
+      ]),
+    });
+  }
+
   blocks.push({
     title: "DESEMPENHO POR CARTÓRIO",
-    subtitle: "Ordenado do menor para o maior NPS",
+    subtitle: "Ordenado do maior para o menor NPS",
     rows: analytics.byOffice.map((office) => [
       office.name,
       `NPS ${office.nps} · Nota média ${office.averageScore} · ${office.responses} resposta(s) · ${office.promoters} promotor(es) · ${office.neutrals} neutro(s) · ${office.detractors} detrator(es)`,
