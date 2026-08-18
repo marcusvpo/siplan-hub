@@ -365,6 +365,7 @@ describe("CS/CX visitas e NPS — permissões", () => {
     expect(screen.getByText("Clientes que precisam de atenção")).toBeInTheDocument();
     expect(screen.getByText("Ranking de NPS por cartório")).toBeInTheDocument();
     expect(screen.getByText("Distribuição por nota")).toBeInTheDocument();
+    expect(screen.getAllByText(/respondida em/i).length).toBeGreaterThan(0);
     expect(
       screen.queryByRole("button", { name: /gerar relatório com ia/i }),
     ).not.toBeInTheDocument();
