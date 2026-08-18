@@ -33,6 +33,13 @@ describe("BI de NPS", () => {
       nps: 0,
     });
     expect(analytics.feedback[0].classification).toBe("DETRATOR");
+    expect(analytics.attentionClients.map((client) => [client.name, client.score])).toEqual([
+      ["Cartório A", 0],
+      ["Cartório B", 8],
+    ]);
+    expect(analytics.scoreDistribution.find((item) => item.score === 0)?.responses).toBe(1);
+    expect(analytics.scoreDistribution.find((item) => item.score === 8)?.responses).toBe(1);
+    expect(analytics.scoreDistribution.find((item) => item.score === 10)?.responses).toBe(1);
   });
 
   it("filtra por período e cartório", () => {
@@ -64,6 +71,7 @@ describe("BI de NPS", () => {
 
     expect(source).toContain("Demora no retorno");
     expect(source).toContain("Cartório A");
+    expect(source).toContain("Clientes com as menores notas");
     expect(source).not.toContain("Maria");
     expect(source).not.toContain("João");
   });
