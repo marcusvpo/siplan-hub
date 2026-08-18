@@ -20,10 +20,13 @@ import {
   BarChart3,
   BrainCircuit,
   Building2,
+  ChevronLeft,
+  ChevronRight,
   Download,
   Loader2,
   MessageSquareText,
   RefreshCw,
+  Search,
   Sparkles,
   Star,
   TrendingDown,
@@ -40,6 +43,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -49,6 +59,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import type { CsCxNpsResponse } from "@/hooks/useCsCxExperience";
 import { useCsCxNpsAiReport } from "@/hooks/useCsCxNpsAiReport";
 import { useModelWorkerStatus } from "@/hooks/useModelGenerationJobs";
@@ -77,6 +95,13 @@ const tooltipStyle = {
 };
 
 const DISTRIBUTION_COLORS = ["#10b981", "#f59e0b", "#e11d48"];
+const DETAIL_PAGE_SIZE = 5;
+
+type NpsDrilldown =
+  | { kind: "classification"; value: CsCxNpsResponse["classification"]; title: string; description: string }
+  | { kind: "office"; value: string; title: string; description: string }
+  | { kind: "month"; value: string; title: string; description: string }
+  | { kind: "response"; value: string; title: string; description: string };
 
 export function NpsAnalyticsPanel({
   responses,
@@ -85,6 +110,7 @@ export function NpsAnalyticsPanel({
   const [filters, setFilters] =
     useState<NpsAnalyticsFilters>(EMPTY_NPS_FILTERS);
   const [isExporting, setIsExporting] = useState(false);
+  const [drilldown, setDrilldown] = useState<NpsDrilldown | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   const { online: workerOnline } = useModelWorkerStatus();
@@ -143,10 +169,15 @@ export function NpsAnalyticsPanel({
     user?.id,
   );
 
-  const distribution = [
-    { name: "Promotores", value: analytics.promoters },
-    { name: "Neutros", value: analytics.neutrals },
-    { name: "Detratores", value: analytics.detractors },
+  const distribution: Array<{
+    name: string;
+    value: number;
+    classification: CsCxNpsResponse["classification"];
+    color: string;
+  }> = [
+    { name: "Promotores", value: analytics.promoters, classification: "PROMOTOR", color: DISTRIBUTION_COLORS[0] },
+    { name: "Neutros", value: analytics.neutrals, classification: "NEUTRO", color: DISTRIBUTION_COLORS[1] },
+    { name: "Detratores", value: analytics.detractors, classification: "DETRATOR", color: DISTRIBUTION_COLORS[2] },
   ];
   const officeRanking = analytics.byOffice.slice(0, 12);
   const officeRankingDomain: [number, number] = officeRanking.some(
@@ -162,6 +193,33 @@ export function NpsAnalyticsPanel({
       : officeRankingDomain[1] === 0
         ? [-100, -75, -50, -25, 0]
         : [-100, -50, 0, 50, 100];
+
+  function openClassification(item: (typeof distribution)[number]) {
+    setDrilldown({
+      kind: "classification",
+      value: item.classification,
+      title: `Clientes ${item.name.toLocaleLowerCase("pt-BR")}`,
+      description: `Respostas classificadas como ${item.name.toLocaleLowerCase("pt-BR")} no recorte atual.`,
+    });
+  }
+
+  function openOffice(officeId: string, name: string) {
+    setDrilldown({
+      kind: "office",
+      value: officeId,
+      title: name,
+      description: "Desempenho e respostas deste cartório no recorte atual.",
+    });
+  }
+
+  function openMonth(key: string, label: string) {
+    setDrilldown({
+      kind: "month",
+      value: key,
+      title: `NPS de ${label}`,
+      description: "Clientes e indicadores que compõem este ponto da evolução mensal.",
+    });
+  }
 
   async function handleGenerate() {
     if (!analytics.total || active) return;
@@ -350,12 +408,20 @@ export function NpsAnalyticsPanel({
             <Card>
               <CardHeader className="px-3 py-2">
                 <CardTitle className="text-xs">Evolução mensal do NPS</CardTitle>
+                <CardDescription className="text-[10px]">Clique em um ponto para analisar os clientes do mês</CardDescription>
               </CardHeader>
               <CardContent className="h-[250px] px-2 pb-2 pt-0">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart
                     data={analytics.monthly}
                     margin={{ top: 12, right: 20, bottom: 0, left: 0 }}
+                    className="cursor-pointer"
+                    onClick={(event) => {
+                      const point = event?.activePayload?.[0]?.payload as
+                        | (typeof analytics.monthly)[number]
+                        | undefined;
+                      if (point) openMonth(point.key, point.label);
+                    }}
                   >
                     <CartesianGrid vertical={false} stroke="hsl(var(--border))" />
                     <XAxis
@@ -413,29 +479,52 @@ export function NpsAnalyticsPanel({
             <Card>
               <CardHeader className="px-3 py-2">
                 <CardTitle className="text-xs">Distribuição das respostas</CardTitle>
+                <CardDescription className="text-[10px]">Clique em uma cor para ver os respectivos clientes</CardDescription>
               </CardHeader>
-              <CardContent className="h-[250px] px-2 pb-2 pt-0">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={distribution}
-                      dataKey="value"
-                      nameKey="name"
-                      innerRadius={52}
-                      outerRadius={82}
-                      paddingAngle={2}
+              <CardContent className="px-2 pb-2 pt-0">
+                <div className="h-[185px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={distribution}
+                        dataKey="value"
+                        nameKey="name"
+                        innerRadius={48}
+                        outerRadius={76}
+                        paddingAngle={2}
+                      >
+                        {distribution.map((item) => (
+                          <Cell
+                            key={item.name}
+                            fill={item.color}
+                            className="cursor-pointer outline-none"
+                            onClick={() => openClassification(item)}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip contentStyle={tooltipStyle} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="grid grid-cols-3 gap-1">
+                  {distribution.map((item) => (
+                    <button
+                      key={item.name}
+                      type="button"
+                      aria-label={`Analisar ${item.name}`}
+                      onClick={() => openClassification(item)}
+                      className="rounded-md border px-1.5 py-1.5 text-left transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
                     >
-                      {distribution.map((item, index) => (
-                        <Cell
-                          key={item.name}
-                          fill={DISTRIBUTION_COLORS[index]}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip contentStyle={tooltipStyle} />
-                    <Legend wrapperStyle={{ fontSize: 10 }} />
-                  </PieChart>
-                </ResponsiveContainer>
+                      <span className="flex items-center gap-1 text-[9px] font-medium text-muted-foreground">
+                        <span className="h-2 w-2 shrink-0 rounded-sm" style={{ backgroundColor: item.color }} />
+                        <span className="truncate">{item.name}</span>
+                      </span>
+                      <span className="mt-0.5 block text-xs font-bold">
+                        {item.value} <span className="font-normal text-muted-foreground">({percentage(item.value, analytics.total)}%)</span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -445,7 +534,7 @@ export function NpsAnalyticsPanel({
               <CardHeader className="px-3 py-2">
                 <CardTitle className="text-xs">Ranking de NPS por cartório</CardTitle>
                 <CardDescription className="text-[10px]">
-                  Do maior para o menor · até 12 cartórios
+                  Do maior para o menor · clique em uma barra para detalhar
                 </CardDescription>
               </CardHeader>
               <CardContent className="h-[310px] px-2 pb-2 pt-0">
@@ -479,7 +568,12 @@ export function NpsAnalyticsPanel({
                     <Tooltip contentStyle={tooltipStyle} />
                     <Bar dataKey="nps" name="NPS" radius={4}>
                       {officeRanking.map((office) => (
-                        <Cell key={office.key} fill={officeNpsColor(office.nps)} />
+                        <Cell
+                          key={office.key}
+                          fill={officeNpsColor(office.nps)}
+                          className="cursor-pointer outline-none"
+                          onClick={() => openOffice(office.officeId, office.name)}
+                        />
                       ))}
                       <LabelList
                         dataKey="nps"
@@ -503,7 +597,18 @@ export function NpsAnalyticsPanel({
               </CardHeader>
               <CardContent className="max-h-[310px] space-y-1.5 overflow-y-auto px-3 pb-3 pt-0">
                 {analytics.feedback.slice(0, 12).map((feedback) => (
-                  <div key={feedback.id} className="rounded-md border p-2">
+                  <button
+                    key={feedback.id}
+                    type="button"
+                    aria-label={`Analisar resposta de ${feedback.office}`}
+                    className="block w-full rounded-md border p-2 text-left transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+                    onClick={() => setDrilldown({
+                      kind: "response",
+                      value: feedback.id,
+                      title: feedback.office,
+                      description: "Detalhes da resposta selecionada.",
+                    })}
+                  >
                     <div className="mb-1 flex items-center justify-between gap-2">
                       <p className="truncate text-[10px] font-semibold">
                         {feedback.office}
@@ -518,7 +623,7 @@ export function NpsAnalyticsPanel({
                     <p className="line-clamp-3 text-[10px] leading-relaxed text-muted-foreground">
                       {feedback.reason || feedback.suggestion}
                     </p>
-                  </div>
+                  </button>
                 ))}
                 {!analytics.feedback.length && (
                   <p className="py-12 text-center text-xs text-muted-foreground">
@@ -641,8 +746,147 @@ export function NpsAnalyticsPanel({
           </Card>
         </>
       )}
+
+      {drilldown && (
+        <NpsDrilldownDialog
+          drilldown={drilldown}
+          responses={analytics.responses}
+          onClose={() => setDrilldown(null)}
+        />
+      )}
     </div>
   );
+}
+
+function NpsDrilldownDialog({
+  drilldown,
+  responses,
+  onClose,
+}: {
+  drilldown: NpsDrilldown;
+  responses: CsCxNpsResponse[];
+  onClose: () => void;
+}) {
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const selectedResponses = useMemo(
+    () => responses
+      .filter((response) => matchesDrilldown(response, drilldown))
+      .sort((left, right) => right.responded_at.localeCompare(left.responded_at)),
+    [drilldown, responses],
+  );
+  const detailAnalytics = useMemo(
+    () => buildNpsAnalytics(selectedResponses, EMPTY_NPS_FILTERS),
+    [selectedResponses],
+  );
+  const searchedResponses = useMemo(() => {
+    const term = search.trim().toLocaleLowerCase("pt-BR");
+    if (!term) return selectedResponses;
+    return selectedResponses.filter((response) => [
+      response.respondent_name,
+      responseOfficeName(response),
+      response.score_reason,
+      response.improvement_suggestion,
+      String(response.score),
+      classificationLabel(response.classification),
+    ].some((value) => value?.toLocaleLowerCase("pt-BR").includes(term)));
+  }, [search, selectedResponses]);
+  const totalPages = Math.max(1, Math.ceil(searchedResponses.length / DETAIL_PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pagedResponses = searchedResponses.slice(
+    (currentPage - 1) * DETAIL_PAGE_SIZE,
+    currentPage * DETAIL_PAGE_SIZE,
+  );
+  const firstItem = searchedResponses.length ? (currentPage - 1) * DETAIL_PAGE_SIZE + 1 : 0;
+  const lastItem = Math.min(currentPage * DETAIL_PAGE_SIZE, searchedResponses.length);
+
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="flex max-h-[92vh] flex-col overflow-hidden sm:max-w-6xl">
+        <DialogHeader className="shrink-0 pr-8">
+          <DialogTitle>{drilldown.title}</DialogTitle>
+          <DialogDescription>{drilldown.description}</DialogDescription>
+        </DialogHeader>
+
+        <div className="grid shrink-0 grid-cols-2 gap-2 lg:grid-cols-4">
+          <AnalyticsMetric icon={Users} label="Respostas" value={detailAnalytics.total} />
+          <AnalyticsMetric icon={Building2} label="Cartórios" value={detailAnalytics.officesCount} />
+          <AnalyticsMetric icon={Star} label="NPS" value={detailAnalytics.nps} tone={npsTone(detailAnalytics.nps)} />
+          <AnalyticsMetric icon={BarChart3} label="Nota média" value={detailAnalytics.averageScore} suffix="/10" />
+        </div>
+
+        <div className="grid shrink-0 grid-cols-3 gap-2">
+          <ClassificationSummary label="Promotores" value={detailAnalytics.promoters} total={detailAnalytics.total} tone="positive" />
+          <ClassificationSummary label="Neutros" value={detailAnalytics.neutrals} total={detailAnalytics.total} tone="neutral" />
+          <ClassificationSummary label="Detratores" value={detailAnalytics.detractors} total={detailAnalytics.total} tone="negative" />
+        </div>
+
+        <div className="relative shrink-0">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            aria-label="Buscar clientes no detalhamento"
+            value={search}
+            onChange={(event) => { setSearch(event.target.value); setPage(1); }}
+            placeholder="Buscar cliente, cartório, nota ou comentário..."
+            className="h-9 pl-9"
+          />
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-auto rounded-lg border">
+          <Table>
+            <TableHeader className="sticky top-0 z-10 bg-background">
+              <TableRow>
+                <TableHead className="h-9 min-w-[120px] text-xs">Data</TableHead>
+                <TableHead className="h-9 min-w-[180px] text-xs">Cartório</TableHead>
+                <TableHead className="h-9 min-w-[150px] text-xs">Cliente</TableHead>
+                <TableHead className="h-9 min-w-[130px] text-xs">Avaliação</TableHead>
+                <TableHead className="h-9 min-w-[320px] text-xs">Voz do cliente</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {!pagedResponses.length ? (
+                <TableRow><TableCell colSpan={5} className="h-28 text-center text-sm text-muted-foreground">Nenhum cliente encontrado neste recorte.</TableCell></TableRow>
+              ) : pagedResponses.map((response) => (
+                <TableRow key={response.id}>
+                  <TableCell className="px-3 py-2 text-xs">{formatResponseDate(response.responded_at)}</TableCell>
+                  <TableCell className="px-3 py-2 text-xs font-semibold">{responseOfficeName(response)}</TableCell>
+                  <TableCell className="px-3 py-2 text-xs">{response.respondent_name || "Não informado"}</TableCell>
+                  <TableCell className="px-3 py-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base font-black">{response.score}</span>
+                      <Badge variant="outline" className={classificationClass(response.classification)}>{classificationLabel(response.classification)}</Badge>
+                    </div>
+                  </TableCell>
+                  <TableCell className="space-y-1 px-3 py-2 text-[11px] leading-relaxed">
+                    <p><span className="font-semibold">Motivo:</span> {response.score_reason?.trim() || "Não informado"}</p>
+                    {response.improvement_suggestion?.trim() && <p className="text-muted-foreground"><span className="font-semibold text-foreground">Sugestão:</span> {response.improvement_suggestion}</p>}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+
+        <div className="flex shrink-0 flex-col gap-2 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <span>Mostrando <strong className="text-foreground">{firstItem}–{lastItem}</strong> de <strong className="text-foreground">{searchedResponses.length}</strong> cliente(s)</span>
+          <div className="flex items-center justify-end gap-2">
+            <span>Página {currentPage} de {totalPages}</span>
+            <Button type="button" variant="outline" size="icon" className="h-8 w-8" aria-label="Página anterior do detalhamento" disabled={currentPage <= 1} onClick={() => setPage(currentPage - 1)}><ChevronLeft className="h-4 w-4" /></Button>
+            <Button type="button" variant="outline" size="icon" className="h-8 w-8" aria-label="Próxima página do detalhamento" disabled={currentPage >= totalPages} onClick={() => setPage(currentPage + 1)}><ChevronRight className="h-4 w-4" /></Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ClassificationSummary({ label, value, total, tone }: { label: string; value: number; total: number; tone: "positive" | "neutral" | "negative" }) {
+  const styles = {
+    positive: "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-300",
+    neutral: "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300",
+    negative: "border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-300",
+  }[tone];
+  return <div className={`rounded-md border px-3 py-2 ${styles}`}><p className="text-[9px] font-semibold uppercase tracking-wide">{label}</p><p className="text-sm font-black">{value} <span className="font-medium opacity-75">({percentage(value, total)}%)</span></p></div>;
 }
 
 function AnalyticsMetric({
@@ -704,6 +948,34 @@ function classificationClass(classification: CsCxNpsResponse["classification"]) 
   if (classification === "DETRATOR")
     return "border-rose-200 bg-rose-50 text-[9px] text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300";
   return "border-amber-200 bg-amber-50 text-[9px] text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300";
+}
+
+function matchesDrilldown(response: CsCxNpsResponse, drilldown: NpsDrilldown) {
+  if (drilldown.kind === "classification") return response.classification === drilldown.value;
+  if (drilldown.kind === "office") return (response.registry_office_id || responseOfficeName(response)) === drilldown.value;
+  if (drilldown.kind === "month") return response.responded_at.slice(0, 7) === drilldown.value;
+  return response.id === drilldown.value;
+}
+
+function responseOfficeName(response: CsCxNpsResponse) {
+  return response.registry_office?.name || response.respondent_office || "Cartório não informado";
+}
+
+function classificationLabel(classification: CsCxNpsResponse["classification"]) {
+  if (classification === "PROMOTOR") return "Promotor";
+  if (classification === "DETRATOR") return "Detrator";
+  return "Neutro";
+}
+
+function percentage(value: number, total: number) {
+  return total ? Math.round((value / total) * 100) : 0;
+}
+
+function formatResponseDate(value: string) {
+  return new Intl.DateTimeFormat("pt-BR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(new Date(value));
 }
 
 function messageOf(error: unknown) {
