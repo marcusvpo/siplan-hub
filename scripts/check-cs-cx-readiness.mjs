@@ -65,6 +65,8 @@ try {
              AND to_regprocedure('public.cs_cx_save_registry_office_v3(uuid,text,text,text,text,boolean,jsonb,jsonb,uuid)') IS NOT NULL
              AND to_regprocedure('public.cs_cx_set_routine_item(uuid,boolean,text,timestamp with time zone)') IS NOT NULL
              AS operational_review
+           ,to_regprocedure('public.cs_cx_set_routine_items_bulk(uuid,boolean,text,timestamp with time zone)') IS NOT NULL
+             AS bulk_routine_analysis
     FROM pg_tables
     WHERE schemaname = 'public' AND tablename LIKE 'cs_cx_%'
   `);
@@ -115,7 +117,8 @@ try {
         schemaRow.with_rls === EXPECTED_TABLES &&
         schemaRow.mapping_exceptions &&
         schemaRow.customer_relationships &&
-        schemaRow.operational_review,
+        schemaRow.operational_review &&
+        schemaRow.bulk_routine_analysis,
       `${schemaRow.total}/${EXPECTED_TABLES} tabelas; RLS ${schemaRow.with_rls}/${EXPECTED_TABLES}; exceções de usuário ${schemaRow.mapping_exceptions ? "OK" : "ausentes"}`,
     ],
     [

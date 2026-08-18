@@ -26,7 +26,7 @@ const STATUS_OPTIONS = [
 const DEFAULT_PAGE_SIZE = 5;
 
 export default function CsCxRoutines() {
-  const { models, routines, history, isLoading, error, refetch, applyRoutine, setRoutineItem, deleteRoutine } = useCsCxRoutines();
+  const { models, routines, history, isLoading, error, refetch, applyRoutine, setRoutineItem, setAllRoutineItems, deleteRoutine } = useCsCxRoutines();
   const { offices } = useCsCxRegistryOffices();
   const { hasPermission } = usePermissions();
   const { toast } = useToast();
@@ -46,6 +46,10 @@ export default function CsCxRoutines() {
   const [analysisSearch, setAnalysisSearch] = useState("");
   const [analysisPage, setAnalysisPage] = useState(1);
   const [analysisPageSize, setAnalysisPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [bulkAnalysisOpen, setBulkAnalysisOpen] = useState(false);
+  const [bulkStatus, setBulkStatus] = useState("analisar");
+  const [bulkNotes, setBulkNotes] = useState("");
+  const [bulkAnalysisDate, setBulkAnalysisDate] = useState(todayKey());
   const [deleting, setDeleting] = useState<CsCxOfficeRoutine | null>(null);
   const [exportingRoutineId, setExportingRoutineId] = useState<string | null>(null);
   const [historySearch, setHistorySearch] = useState("");
@@ -172,6 +176,14 @@ export default function CsCxRoutines() {
     setOpenedOfficeId(null);
     setAnalysisSearch("");
     setAnalysisPage(1);
+    setBulkAnalysisOpen(false);
+  }
+
+  function openBulkAnalysis() {
+    setBulkStatus("analisar");
+    setBulkNotes("");
+    setBulkAnalysisDate(todayKey());
+    setBulkAnalysisOpen(true);
   }
 
   async function handleApply() {
@@ -205,6 +217,22 @@ export default function CsCxRoutines() {
       toast({ title: "Análise atualizada" });
     } catch (mutationError) {
       toast({ title: "Não foi possível atualizar o item", description: messageOf(mutationError), variant: "destructive" });
+    }
+  }
+
+  async function handleBulkAnalysisSave() {
+    if (!openedOfficeId) return;
+    try {
+      const changed = await setAllRoutineItems.mutateAsync({
+        registryOfficeId: openedOfficeId,
+        active: bulkStatus === "ativo" ? true : bulkStatus === "inativo" ? false : null,
+        analysisNotes: bulkNotes,
+        analyzedAt: bulkAnalysisDate,
+      });
+      setBulkAnalysisOpen(false);
+      toast({ title: "Análise em massa concluída", description: `${changed} item${changed === 1 ? "" : "s"} atualizado${changed === 1 ? "" : "s"}.` });
+    } catch (mutationError) {
+      toast({ title: "Não foi possível atualizar todas as rotinas", description: messageOf(mutationError), variant: "destructive" });
     }
   }
 
@@ -315,7 +343,7 @@ export default function CsCxRoutines() {
       <Dialog open={applyOpen} onOpenChange={setApplyOpen}><DialogContent><DialogHeader><DialogTitle>Aplicar rotina</DialogTitle><DialogDescription>Vincule um modelo e todos os seus itens a um cartório.</DialogDescription></DialogHeader><div className="space-y-4"><div><Label>Cartório</Label><Select value={applyForm.registryOfficeId} onValueChange={(value) => setApplyForm((current) => ({ ...current, registryOfficeId: value }))}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{offices.map((office) => <SelectItem key={office.id} value={office.id}>{office.name}</SelectItem>)}</SelectContent></Select></div><div><Label>Modelo</Label><Select value={applyForm.routineModelId} onValueChange={(value) => setApplyForm((current) => ({ ...current, routineModelId: value }))}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{models.filter((model) => model.active).map((model) => <SelectItem key={model.id} value={model.id}>{model.name}</SelectItem>)}</SelectContent></Select></div><div><Label htmlFor="routine-notes">Observações</Label><Textarea id="routine-notes" value={applyForm.notes} onChange={(event) => setApplyForm((current) => ({ ...current, notes: event.target.value }))} /></div></div><DialogFooter><Button variant="outline" onClick={() => setApplyOpen(false)}>Cancelar</Button><Button disabled={!applyForm.registryOfficeId || !applyForm.routineModelId || applyRoutine.isPending} onClick={handleApply}>Aplicar</Button></DialogFooter></DialogContent></Dialog>
 
       <Dialog open={Boolean(openedOfficeId)} onOpenChange={(open) => !open && closeOfficeAnalysis()}>
-        <DialogContent className="flex max-h-[90vh] flex-col overflow-hidden sm:max-w-5xl">
+        <DialogContent className="flex max-h-[94vh] flex-col overflow-hidden sm:max-w-6xl">
           <DialogHeader>
             <DialogTitle>Análise das rotinas do cartório</DialogTitle>
             <DialogDescription>{openedOfficeRoutines[0]?.registry_office?.name ?? "Cartório"} · consulte e analise os itens sem sair da lista principal.</DialogDescription>
@@ -327,15 +355,18 @@ export default function CsCxRoutines() {
             <AnalysisMetric label="Analisados" value={analysisTotals.analyzed} />
           </div>
 
-          <div className="relative">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              aria-label="Buscar itens da análise"
-              className="h-9 pl-9"
-              placeholder="Buscar item, modelo, categoria ou tipo..."
-              value={analysisSearch}
-              onChange={(event) => updateAnalysisSearch(event.target.value)}
-            />
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                aria-label="Buscar itens da análise"
+                className="h-9 pl-9"
+                placeholder="Buscar item, modelo, categoria ou tipo..."
+                value={analysisSearch}
+                onChange={(event) => updateAnalysisSearch(event.target.value)}
+              />
+            </div>
+            {canEdit && <Button type="button" className="h-9" onClick={openBulkAnalysis}><ListChecks className="mr-2 h-4 w-4" />Alterar status de todos</Button>}
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto pr-1">
@@ -362,6 +393,25 @@ export default function CsCxRoutines() {
             onPageSizeChange={updateAnalysisPageSize}
           />
           <DialogFooter><Button variant="outline" onClick={closeOfficeAnalysis}>Fechar</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={bulkAnalysisOpen} onOpenChange={setBulkAnalysisOpen}>
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Alterar status de todas as rotinas</DialogTitle>
+            <DialogDescription>
+              A alteração será aplicada aos {analysisTotals.items} itens vinculados a {openedOfficeRoutines[0]?.registry_office?.name ?? "este cartório"}, independentemente da busca ou página atual.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div><Label>Status</Label><Select value={bulkStatus} onValueChange={setBulkStatus}><SelectTrigger aria-label="Status de todas as rotinas"><SelectValue /></SelectTrigger><SelectContent>{STATUS_OPTIONS.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent></Select></div>
+              <div><Label htmlFor="bulk-analysis-date">Data da análise</Label><Input id="bulk-analysis-date" type="date" required value={bulkAnalysisDate} onChange={(event) => setBulkAnalysisDate(event.target.value)} /></div>
+            </div>
+            <div><Label htmlFor="bulk-analysis-notes">Observação da análise</Label><Textarea id="bulk-analysis-notes" value={bulkNotes} onChange={(event) => setBulkNotes(event.target.value)} placeholder="Esta observação será registrada em todos os itens." /></div>
+          </div>
+          <DialogFooter><Button variant="outline" onClick={() => setBulkAnalysisOpen(false)}>Cancelar</Button><Button disabled={!bulkAnalysisDate || !analysisTotals.items || setAllRoutineItems.isPending} onClick={handleBulkAnalysisSave}>Salvar em todos ({analysisTotals.items})</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
