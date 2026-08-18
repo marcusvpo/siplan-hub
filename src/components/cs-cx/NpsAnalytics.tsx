@@ -24,6 +24,7 @@ import {
   ChevronRight,
   Download,
   Loader2,
+  Maximize2,
   MessageSquareText,
   RefreshCw,
   Search,
@@ -77,7 +78,9 @@ import {
   buildNpsAnalytics,
   EMPTY_NPS_FILTERS,
   npsFilterDescription,
+  type NpsAttentionClient,
   type NpsAnalyticsFilters,
+  type NpsOfficeAnalytics,
 } from "@/lib/cs-cx-nps-analytics";
 import { generateCsCxNpsAnalysisPdf } from "@/lib/cs-cx-experience-pdf";
 
@@ -104,6 +107,10 @@ type NpsDrilldown =
   | { kind: "score"; value: string; title: string; description: string }
   | { kind: "response"; value: string; title: string; description: string };
 
+type ExpandedNpsChart = "attention" | "ranking";
+type AttentionChartItem = NpsAttentionClient & { attentionLabel: string };
+type RankingChartItem = NpsOfficeAnalytics & { rankingLabel: string };
+
 export function NpsAnalyticsPanel({
   responses,
   canGenerate,
@@ -112,6 +119,7 @@ export function NpsAnalyticsPanel({
     useState<NpsAnalyticsFilters>(EMPTY_NPS_FILTERS);
   const [isExporting, setIsExporting] = useState(false);
   const [drilldown, setDrilldown] = useState<NpsDrilldown | null>(null);
+  const [expandedChart, setExpandedChart] = useState<ExpandedNpsChart | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   const { online: workerOnline } = useModelWorkerStatus();
@@ -180,27 +188,16 @@ export function NpsAnalyticsPanel({
     { name: "Neutros", value: analytics.neutrals, classification: "NEUTRO", color: DISTRIBUTION_COLORS[1] },
     { name: "Detratores", value: analytics.detractors, classification: "DETRATOR", color: DISTRIBUTION_COLORS[2] },
   ];
-  const officeRanking = analytics.byOffice.slice(0, 12).map((office) => ({
+  const fullOfficeRanking: RankingChartItem[] = analytics.byOffice.map((office) => ({
     ...office,
     rankingLabel: `${office.name}|${formatRankingDate(office.latestResponseAt)}`,
   }));
-  const attentionClients = analytics.attentionClients.slice(0, 10).map((client) => ({
+  const officeRanking = fullOfficeRanking.slice(0, 12);
+  const fullAttentionClients: AttentionChartItem[] = analytics.attentionClients.map((client) => ({
     ...client,
     attentionLabel: `${client.name}|${formatRankingDate(client.respondedAt)}`,
   }));
-  const officeRankingDomain: [number, number] = officeRanking.some(
-    (office) => office.nps < 0,
-  )
-    ? officeRanking.some((office) => office.nps > 0)
-      ? [-100, 100]
-      : [-100, 0]
-    : [0, 100];
-  const officeRankingTicks =
-    officeRankingDomain[0] === 0
-      ? [0, 25, 50, 75, 100]
-      : officeRankingDomain[1] === 0
-        ? [-100, -75, -50, -25, 0]
-        : [-100, -50, 0, 50, 100];
+  const attentionClients = fullAttentionClients.slice(0, 10);
 
   function openClassification(item: (typeof distribution)[number]) {
     setDrilldown({
@@ -548,73 +545,30 @@ export function NpsAnalyticsPanel({
 
           <div className="grid gap-2.5 xl:grid-cols-[1.45fr_1fr]">
             <Card>
-              <CardHeader className="px-3 py-2">
-                <CardTitle className="flex items-center gap-1.5 text-xs">
-                  <TrendingDown className="h-3.5 w-3.5 text-rose-500" />
-                  Clientes que precisam de atenção
-                </CardTitle>
-                <CardDescription className="text-[10px]">
-                  Pior nota de cada cartório, da menor para a maior · clique para detalhar
-                </CardDescription>
+              <CardHeader className="flex flex-row items-start justify-between gap-2 space-y-0 px-3 py-2">
+                <div>
+                  <CardTitle className="flex items-center gap-1.5 text-xs">
+                    <TrendingDown className="h-3.5 w-3.5 text-rose-500" />
+                    Clientes que precisam de atenção
+                  </CardTitle>
+                  <CardDescription className="text-[10px]">
+                    Pior nota de cada cartório, da menor para a maior · clique para detalhar
+                  </CardDescription>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 shrink-0 gap-1 px-2 text-[10px]"
+                  aria-label="Ampliar clientes que precisam de atenção"
+                  onClick={() => setExpandedChart("attention")}
+                >
+                  <Maximize2 className="h-3.5 w-3.5" />
+                  Tela cheia
+                </Button>
               </CardHeader>
               <CardContent className="h-[310px] px-2 pb-2 pt-0">
-                {attentionClients.length ? (
-                  <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                    <BarChart
-                      data={attentionClients}
-                      layout="vertical"
-                      margin={{ top: 4, right: 34, bottom: 8, left: 8 }}
-                    >
-                      <CartesianGrid horizontal={false} stroke="hsl(var(--border))" />
-                      <XAxis
-                        type="number"
-                        domain={[0, 10]}
-                        ticks={[0, 2, 4, 6, 8, 10]}
-                        tickLine={false}
-                        axisLine={false}
-                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9 }}
-                      />
-                      <YAxis
-                        type="category"
-                        dataKey="attentionLabel"
-                        width={180}
-                        interval={0}
-                        minTickGap={0}
-                        tickLine={false}
-                        axisLine={false}
-                        tick={<DatedNpsAxisTick dateLabel="Resposta" />}
-                      />
-                      <Tooltip
-                        contentStyle={tooltipStyle}
-                        labelFormatter={(value) => {
-                          const [name, date] = String(value).split("|");
-                          return `${name} · Resposta: ${date}`;
-                        }}
-                      />
-                      <Bar dataKey="score" name="Nota" radius={4}>
-                        {attentionClients.map((client) => (
-                          <Cell
-                            key={client.key}
-                            fill={scoreColor(client.score)}
-                            className="cursor-pointer outline-none"
-                            onClick={() => openOffice(client.officeId, client.name)}
-                          />
-                        ))}
-                        <LabelList
-                          dataKey="score"
-                          position="right"
-                          fill="hsl(var(--foreground))"
-                          fontSize={9}
-                          fontWeight={600}
-                        />
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
-                    Nenhum cliente com nota entre 0 e 8 neste recorte.
-                  </div>
-                )}
+                <AttentionClientsChart data={attentionClients} onOpenOffice={openOffice} />
               </CardContent>
             </Card>
 
@@ -671,65 +625,27 @@ export function NpsAnalyticsPanel({
 
           <div className="grid gap-2.5 xl:grid-cols-[1.45fr_1fr]">
             <Card>
-              <CardHeader className="px-3 py-2">
-                <CardTitle className="text-xs">Ranking de NPS por cartório</CardTitle>
-                <CardDescription className="text-[10px]">
-                  Maior NPS primeiro · empates: resposta mais recente · clique para detalhar
-                </CardDescription>
+              <CardHeader className="flex flex-row items-start justify-between gap-2 space-y-0 px-3 py-2">
+                <div>
+                  <CardTitle className="text-xs">Ranking de NPS por cartório</CardTitle>
+                  <CardDescription className="text-[10px]">
+                    Maior NPS primeiro · empates: resposta mais recente · clique para detalhar
+                  </CardDescription>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 shrink-0 gap-1 px-2 text-[10px]"
+                  aria-label="Ampliar ranking de NPS por cartório"
+                  onClick={() => setExpandedChart("ranking")}
+                >
+                  <Maximize2 className="h-3.5 w-3.5" />
+                  Tela cheia
+                </Button>
               </CardHeader>
               <CardContent className="h-[310px] px-2 pb-2 pt-0">
-                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                  <BarChart
-                    data={officeRanking}
-                    layout="vertical"
-                    margin={{ top: 4, right: 34, bottom: 8, left: 8 }}
-                  >
-                    <CartesianGrid horizontal={false} stroke="hsl(var(--border))" />
-                    <XAxis
-                      type="number"
-                      domain={officeRankingDomain}
-                      ticks={officeRankingTicks}
-                      tickLine={false}
-                      axisLine={false}
-                      tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9 }}
-                    />
-                    <YAxis
-                      type="category"
-                      dataKey="rankingLabel"
-                      width={180}
-                      interval={0}
-                      minTickGap={0}
-                      tickLine={false}
-                      axisLine={false}
-                      tick={<DatedNpsAxisTick dateLabel="Última NPS" />}
-                    />
-                    <ReferenceLine x={0} stroke="hsl(var(--muted-foreground))" />
-                    <Tooltip
-                      contentStyle={tooltipStyle}
-                      labelFormatter={(value) => {
-                        const [name, date] = String(value).split("|");
-                        return `${name} · Última NPS: ${date}`;
-                      }}
-                    />
-                    <Bar dataKey="nps" name="NPS" radius={4}>
-                      {officeRanking.map((office) => (
-                        <Cell
-                          key={office.key}
-                          fill={officeNpsColor(office.nps)}
-                          className="cursor-pointer outline-none"
-                          onClick={() => openOffice(office.officeId, office.name)}
-                        />
-                      ))}
-                      <LabelList
-                        dataKey="nps"
-                        position="right"
-                        fill="hsl(var(--foreground))"
-                        fontSize={9}
-                        fontWeight={600}
-                      />
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
+                <OfficeRankingChart data={officeRanking} onOpenOffice={openOffice} />
               </CardContent>
             </Card>
 
@@ -897,6 +813,19 @@ export function NpsAnalyticsPanel({
         </>
       )}
 
+      {expandedChart && (
+        <NpsExpandedChartDialog
+          chart={expandedChart}
+          attentionClients={fullAttentionClients}
+          officeRanking={fullOfficeRanking}
+          onClose={() => setExpandedChart(null)}
+          onOpenOffice={(officeId, name) => {
+            setExpandedChart(null);
+            openOffice(officeId, name);
+          }}
+        />
+      )}
+
       {drilldown && (
         <NpsDrilldownDialog
           key={`${drilldown.kind}:${drilldown.value}`}
@@ -910,6 +839,208 @@ export function NpsAnalyticsPanel({
         />
       )}
     </div>
+  );
+}
+
+function AttentionClientsChart({
+  data,
+  onOpenOffice,
+}: {
+  data: AttentionChartItem[];
+  onOpenOffice: (officeId: string, name: string) => void;
+}) {
+  if (!data.length) {
+    return (
+      <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
+        Nenhum cliente com nota entre 0 e 8 neste recorte.
+      </div>
+    );
+  }
+
+  return (
+    <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+      <BarChart
+        data={data}
+        layout="vertical"
+        margin={{ top: 4, right: 34, bottom: 8, left: 8 }}
+      >
+        <CartesianGrid horizontal={false} stroke="hsl(var(--border))" />
+        <XAxis
+          type="number"
+          domain={[0, 10]}
+          ticks={[0, 2, 4, 6, 8, 10]}
+          tickLine={false}
+          axisLine={false}
+          tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9 }}
+        />
+        <YAxis
+          type="category"
+          dataKey="attentionLabel"
+          width={180}
+          interval={0}
+          minTickGap={0}
+          tickLine={false}
+          axisLine={false}
+          tick={<DatedNpsAxisTick dateLabel="Resposta" />}
+        />
+        <Tooltip
+          contentStyle={tooltipStyle}
+          labelFormatter={(value) => {
+            const [name, date] = String(value).split("|");
+            return `${name} · Resposta: ${date}`;
+          }}
+        />
+        <Bar dataKey="score" name="Nota" radius={4}>
+          {data.map((client) => (
+            <Cell
+              key={client.key}
+              fill={scoreColor(client.score)}
+              className="cursor-pointer outline-none"
+              onClick={() => onOpenOffice(client.officeId, client.name)}
+            />
+          ))}
+          <LabelList
+            dataKey="score"
+            position="right"
+            fill="hsl(var(--foreground))"
+            fontSize={9}
+            fontWeight={600}
+          />
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+function OfficeRankingChart({
+  data,
+  onOpenOffice,
+}: {
+  data: RankingChartItem[];
+  onOpenOffice: (officeId: string, name: string) => void;
+}) {
+  const domain: [number, number] = data.some((office) => office.nps < 0)
+    ? data.some((office) => office.nps > 0)
+      ? [-100, 100]
+      : [-100, 0]
+    : [0, 100];
+  const ticks = domain[0] === 0
+    ? [0, 25, 50, 75, 100]
+    : domain[1] === 0
+      ? [-100, -75, -50, -25, 0]
+      : [-100, -50, 0, 50, 100];
+
+  if (!data.length) {
+    return (
+      <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
+        Nenhum cartório avaliado neste recorte.
+      </div>
+    );
+  }
+
+  return (
+    <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+      <BarChart
+        data={data}
+        layout="vertical"
+        margin={{ top: 4, right: 34, bottom: 8, left: 8 }}
+      >
+        <CartesianGrid horizontal={false} stroke="hsl(var(--border))" />
+        <XAxis
+          type="number"
+          domain={domain}
+          ticks={ticks}
+          tickLine={false}
+          axisLine={false}
+          tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9 }}
+        />
+        <YAxis
+          type="category"
+          dataKey="rankingLabel"
+          width={180}
+          interval={0}
+          minTickGap={0}
+          tickLine={false}
+          axisLine={false}
+          tick={<DatedNpsAxisTick dateLabel="Última NPS" />}
+        />
+        <ReferenceLine x={0} stroke="hsl(var(--muted-foreground))" />
+        <Tooltip
+          contentStyle={tooltipStyle}
+          labelFormatter={(value) => {
+            const [name, date] = String(value).split("|");
+            return `${name} · Última NPS: ${date}`;
+          }}
+        />
+        <Bar dataKey="nps" name="NPS" radius={4}>
+          {data.map((office) => (
+            <Cell
+              key={office.key}
+              fill={officeNpsColor(office.nps)}
+              className="cursor-pointer outline-none"
+              onClick={() => onOpenOffice(office.officeId, office.name)}
+            />
+          ))}
+          <LabelList
+            dataKey="nps"
+            position="right"
+            fill="hsl(var(--foreground))"
+            fontSize={9}
+            fontWeight={600}
+          />
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+function NpsExpandedChartDialog({
+  chart,
+  attentionClients,
+  officeRanking,
+  onClose,
+  onOpenOffice,
+}: {
+  chart: ExpandedNpsChart;
+  attentionClients: AttentionChartItem[];
+  officeRanking: RankingChartItem[];
+  onClose: () => void;
+  onOpenOffice: (officeId: string, name: string) => void;
+}) {
+  const isAttention = chart === "attention";
+  const total = isAttention ? attentionClients.length : officeRanking.length;
+  const chartHeight = Math.max(560, total * 38);
+
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="flex h-[92vh] max-h-[92vh] max-w-[96vw] flex-col overflow-hidden p-4 sm:max-w-[96vw] sm:p-5">
+        <DialogHeader className="shrink-0 pr-10">
+          <DialogTitle>
+            {isAttention ? "Clientes que precisam de atenção" : "Ranking de NPS por cartório"}
+          </DialogTitle>
+          <DialogDescription>
+            {isAttention
+              ? "Todos os clientes com nota entre 0 e 8, ordenados da menor para a maior nota."
+              : "Todos os cartórios, ordenados pelo maior NPS e pela resposta mais recente nos empates."}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="flex shrink-0 items-center justify-between gap-3 text-xs text-muted-foreground">
+          <span>{total} cartório(s) no recorte</span>
+          <span>Clique em uma barra para abrir os detalhes</span>
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-auto rounded-lg border bg-card p-2">
+          <div className="min-w-[820px]" style={{ height: chartHeight }}>
+            {isAttention ? (
+              <AttentionClientsChart data={attentionClients} onOpenOffice={onOpenOffice} />
+            ) : (
+              <OfficeRankingChart data={officeRanking} onOpenOffice={onOpenOffice} />
+            )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

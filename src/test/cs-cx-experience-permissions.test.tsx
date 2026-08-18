@@ -379,6 +379,29 @@ describe("CS/CX visitas e NPS — permissões", () => {
     ).toBeInTheDocument();
   });
 
+  it("amplia os gráficos estratégicos com rolagem interna", () => {
+    renderPage(<CsCxNps />, []);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /ampliar clientes que precisam de atenção/i }),
+    );
+    let dialog = screen.getByRole("dialog");
+    expect(
+      within(dialog).getByRole("heading", { name: /clientes que precisam de atenção/i }),
+    ).toBeInTheDocument();
+    expect(within(dialog).getByText(/todos os clientes com nota entre 0 e 8/i)).toBeInTheDocument();
+
+    fireEvent.click(within(dialog).getByRole("button", { name: /close/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /ampliar ranking de NPS por cartório/i }),
+    );
+    dialog = screen.getByRole("dialog");
+    expect(
+      within(dialog).getByRole("heading", { name: /ranking de NPS por cartório/i }),
+    ).toBeInTheDocument();
+    expect(within(dialog).getByText(/todos os cartórios, ordenados pelo maior NPS/i)).toBeInTheDocument();
+  });
+
   it("abre o detalhamento analítico dos clientes pela cor do NPS", () => {
     renderPage(<CsCxNps />, []);
 
