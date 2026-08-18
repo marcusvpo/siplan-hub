@@ -20,6 +20,7 @@ export interface NpsAnalyticsPoint {
 export interface NpsOfficeAnalytics extends NpsAnalyticsPoint {
   officeId: string;
   name: string;
+  latestResponseAt: string;
 }
 
 export interface NpsFeedbackItem {
@@ -232,11 +233,17 @@ export function buildNpsAnalytics(
       officeId: group.id,
       name: group.name,
       label: group.name,
+      latestResponseAt: group.responses.reduce(
+        (latest, response) =>
+          response.responded_at > latest ? response.responded_at : latest,
+        "",
+      ),
       ...metrics(group.responses),
     }))
     .sort(
       (left, right) =>
         right.nps - left.nps ||
+        right.latestResponseAt.localeCompare(left.latestResponseAt) ||
         right.responses - left.responses ||
         left.name.localeCompare(right.name, "pt-BR"),
     );

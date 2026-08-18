@@ -658,7 +658,7 @@ export function NpsAnalyticsPanel({
               <CardHeader className="px-3 py-2">
                 <CardTitle className="text-xs">Ranking de NPS por cartório</CardTitle>
                 <CardDescription className="text-[10px]">
-                  Do maior para o menor · clique em uma barra para detalhar
+                  Maior NPS primeiro · empates: resposta mais recente · clique para detalhar
                 </CardDescription>
               </CardHeader>
               <CardContent className="h-[310px] px-2 pb-2 pt-0">
