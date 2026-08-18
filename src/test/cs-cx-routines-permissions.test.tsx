@@ -145,7 +145,7 @@ describe("CS/CX rotinas — permissões", () => {
 
   it("abre a visão consolidada do cartório e permite informar a data da análise", () => {
     renderPage(["cs_cx_rotinas:edit"]);
-    fireEvent.click(screen.getAllByRole("button", { name: /abrir cartório e suas rotinas/i })[0]);
+    fireEvent.click(screen.getAllByRole("button", { name: /analisar cartório e suas rotinas/i })[0]);
 
     expect(screen.getByText("Rotinas do cartório")).toBeInTheDocument();
     expect(screen.getByText(/visão consolidada para análise/i)).toBeInTheDocument();
