@@ -23,6 +23,7 @@ const MIGRATIONS = [
   "20260817130000_cs_cx_customer_relationships.sql",
   "20260818130000_cs_cx_operational_review.sql",
   "20260818181000_cs_cx_bulk_routine_analysis.sql",
+  "20260818190000_cs_cx_scoped_access.sql",
 ];
 const FEATURE_MIGRATIONS = new Map([
   ["cs_cx_user_map.mapping_ignored", "20260812107000_cs_cx_user_mapping_exceptions.sql"],
@@ -32,6 +33,7 @@ const FEATURE_MIGRATIONS = new Map([
   ["cs_cx customer relationships", "20260817130000_cs_cx_customer_relationships.sql"],
   ["cs_cx operational review", "20260818130000_cs_cx_operational_review.sql"],
   ["cs_cx bulk routine analysis", "20260818181000_cs_cx_bulk_routine_analysis.sql"],
+  ["cs_cx scoped access", "20260818190000_cs_cx_scoped_access.sql"],
 ]);
 const EXPECTED_TABLES = [
   "cs_cx_user_map",
@@ -65,6 +67,9 @@ const EXPECTED_TABLES = [
   "cs_cx_registry_office_product_responsibles",
   "cs_cx_request_statuses",
   "cs_cx_request_updates",
+  "cs_cx_access_profiles",
+  "cs_cx_access_profile_permissions",
+  "cs_cx_user_access",
 ];
 const BASE_TABLES = EXPECTED_TABLES.slice(0, 25);
 const EXPECTED_RESOURCES = [
@@ -256,6 +261,13 @@ async function getMissingFeatures() {
       AS operational_review
     ,to_regprocedure('public.cs_cx_set_routine_items_bulk(uuid,boolean,text,timestamp with time zone)') IS NOT NULL
       AS bulk_routine_analysis
+    ,to_regclass('public.cs_cx_access_profiles') IS NOT NULL
+      AND to_regclass('public.cs_cx_access_profile_permissions') IS NOT NULL
+      AND to_regclass('public.cs_cx_user_access') IS NOT NULL
+      AND to_regprocedure('public.cs_cx_get_my_permissions()') IS NOT NULL
+      AND to_regprocedure('public.cs_cx_save_access_profile(uuid,text,text,boolean,uuid[])') IS NOT NULL
+      AND to_regprocedure('public.cs_cx_assign_user_access(uuid,uuid,boolean)') IS NOT NULL
+      AS scoped_access
   `);
   const missing = [];
   if (!result.rows[0].mapping_ignored)
@@ -272,6 +284,8 @@ async function getMissingFeatures() {
     missing.push("cs_cx operational review");
   if (!result.rows[0].bulk_routine_analysis)
     missing.push("cs_cx bulk routine analysis");
+  if (!result.rows[0].scoped_access)
+    missing.push("cs_cx scoped access");
   return missing;
 }
 

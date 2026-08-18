@@ -35,7 +35,7 @@ const migrations = [
 
 describe("preflight do schema CS/CX", () => {
   it("mantém uma lista explícita e existente de migrations", () => {
-    expect(migrations).toHaveLength(19);
+    expect(migrations).toHaveLength(20);
     expect(new Set(migrations).size).toBe(migrations.length);
     for (const migration of migrations) {
       expect(
@@ -186,5 +186,20 @@ describe("preflight do schema CS/CX", () => {
     expect(migration).toContain("JOIN public.cs_cx_office_routines");
     expect(migration).toContain("INSERT INTO public.cs_cx_routine_history");
     expect(migration).toContain("public.has_permission(auth.uid(), 'cs_cx_rotinas', 'edit')");
+  });
+
+  it("isola usuários e perfis de acesso do CS/CX", () => {
+    const migration = readFileSync(
+      resolve(root, "supabase/migrations/20260818190000_cs_cx_scoped_access.sql"),
+      "utf8",
+    );
+
+    expect(migration).toContain("CREATE TABLE IF NOT EXISTS public.cs_cx_access_profiles");
+    expect(migration).toContain("CREATE TABLE IF NOT EXISTS public.cs_cx_user_access");
+    expect(migration).toContain("CREATE OR REPLACE FUNCTION public.cs_cx_get_my_permissions");
+    expect(migration).toContain("CREATE OR REPLACE FUNCTION public.cs_cx_save_access_profile");
+    expect(migration).toMatch(/permission\.resource LIKE 'cs\\_cx\\_%'/);
+    expect(migration).toContain("O perfil contém permissões fora do módulo CS/CX");
+    expect(migration).not.toContain("UPDATE public.profiles\n    SET role");
   });
 });
