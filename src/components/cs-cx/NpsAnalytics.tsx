@@ -578,6 +578,8 @@ export function NpsAnalyticsPanel({
                         type="category"
                         dataKey="attentionLabel"
                         width={180}
+                        interval={0}
+                        minTickGap={0}
                         tickLine={false}
                         axisLine={false}
                         tick={<DatedNpsAxisTick dateLabel="Resposta" />}
@@ -695,6 +697,8 @@ export function NpsAnalyticsPanel({
                       type="category"
                       dataKey="rankingLabel"
                       width={180}
+                      interval={0}
+                      minTickGap={0}
                       tickLine={false}
                       axisLine={false}
                       tick={<DatedNpsAxisTick dateLabel="Última NPS" />}
