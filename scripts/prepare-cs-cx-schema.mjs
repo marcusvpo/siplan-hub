@@ -22,6 +22,7 @@ const MIGRATIONS = [
   "20260812110000_cs_cx_nps_questionnaire_themes.sql",
   "20260817130000_cs_cx_customer_relationships.sql",
   "20260818130000_cs_cx_operational_review.sql",
+  "20260818181000_cs_cx_bulk_routine_analysis.sql",
 ];
 const FEATURE_MIGRATIONS = new Map([
   ["cs_cx_user_map.mapping_ignored", "20260812107000_cs_cx_user_mapping_exceptions.sql"],
@@ -30,6 +31,7 @@ const FEATURE_MIGRATIONS = new Map([
   ["cs_cx_nps_questionnaire themes", "20260812110000_cs_cx_nps_questionnaire_themes.sql"],
   ["cs_cx customer relationships", "20260817130000_cs_cx_customer_relationships.sql"],
   ["cs_cx operational review", "20260818130000_cs_cx_operational_review.sql"],
+  ["cs_cx bulk routine analysis", "20260818181000_cs_cx_bulk_routine_analysis.sql"],
 ]);
 const EXPECTED_TABLES = [
   "cs_cx_user_map",
@@ -252,6 +254,8 @@ async function getMissingFeatures() {
       AND to_regprocedure('public.cs_cx_save_registry_office_v3(uuid,text,text,text,text,boolean,jsonb,jsonb,uuid)') IS NOT NULL
       AND to_regprocedure('public.cs_cx_set_routine_item(uuid,boolean,text,timestamp with time zone)') IS NOT NULL
       AS operational_review
+    ,to_regprocedure('public.cs_cx_set_routine_items_bulk(uuid,boolean,text,timestamp with time zone)') IS NOT NULL
+      AS bulk_routine_analysis
   `);
   const missing = [];
   if (!result.rows[0].mapping_ignored)
@@ -266,6 +270,8 @@ async function getMissingFeatures() {
     missing.push("cs_cx customer relationships");
   if (!result.rows[0].operational_review)
     missing.push("cs_cx operational review");
+  if (!result.rows[0].bulk_routine_analysis)
+    missing.push("cs_cx bulk routine analysis");
   return missing;
 }
 

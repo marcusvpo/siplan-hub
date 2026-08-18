@@ -35,7 +35,7 @@ const migrations = [
 
 describe("preflight do schema CS/CX", () => {
   it("mantém uma lista explícita e existente de migrations", () => {
-    expect(migrations).toHaveLength(18);
+    expect(migrations).toHaveLength(19);
     expect(new Set(migrations).size).toBe(migrations.length);
     for (const migration of migrations) {
       expect(
@@ -174,5 +174,17 @@ describe("preflight do schema CS/CX", () => {
     expect(migration).toContain("CREATE OR REPLACE FUNCTION public.cs_cx_save_registry_office_v3");
     expect(migration).toMatch(/ALTER TABLE public\.cs_cx_request_statuses ENABLE ROW LEVEL SECURITY/);
     expect(migration).toMatch(/ALTER TABLE public\.cs_cx_request_updates ENABLE ROW LEVEL SECURITY/);
+  });
+
+  it("versiona a análise em massa das rotinas do cartório", () => {
+    const migration = readFileSync(
+      resolve(root, "supabase/migrations/20260818181000_cs_cx_bulk_routine_analysis.sql"),
+      "utf8",
+    );
+
+    expect(migration).toContain("CREATE OR REPLACE FUNCTION public.cs_cx_set_routine_items_bulk");
+    expect(migration).toContain("JOIN public.cs_cx_office_routines");
+    expect(migration).toContain("INSERT INTO public.cs_cx_routine_history");
+    expect(migration).toContain("public.has_permission(auth.uid(), 'cs_cx_rotinas', 'edit')");
   });
 });

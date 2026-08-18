@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 const hasPermission = vi.fn();
 const mutation = { mutateAsync: vi.fn(), isPending: false };
+const bulkMutation = { mutateAsync: vi.fn(), isPending: false };
 
 vi.mock("@/hooks/usePermissions", () => ({
   usePermissions: () => ({ hasPermission }),
@@ -82,6 +83,7 @@ vi.mock("@/hooks/useCsCxRoutines", () => ({
     refetch: vi.fn(),
     applyRoutine: mutation,
     setRoutineItem: mutation,
+    setAllRoutineItems: bulkMutation,
     deleteRoutine: mutation,
   }),
 }));
@@ -96,7 +98,11 @@ function renderPage(permissions: string[]) {
 }
 
 describe("CS/CX rotinas — permissões", () => {
-  beforeEach(() => hasPermission.mockReset());
+  beforeEach(() => {
+    hasPermission.mockReset();
+    mutation.mutateAsync.mockReset();
+    bulkMutation.mutateAsync.mockReset().mockResolvedValue(12);
+  });
 
   it("mantém os dados visíveis sem liberar escrita", () => {
     renderPage([]);
@@ -156,5 +162,23 @@ describe("CS/CX rotinas — permissões", () => {
     expect(screen.getByText("Item 6")).toBeInTheDocument();
     fireEvent.click(screen.getAllByRole("button", { name: /editar/i })[0]);
     expect(screen.getByLabelText("Data da análise")).toBeInTheDocument();
+  });
+
+  it("aplica o mesmo status a todos os itens do cartório", async () => {
+    renderPage(["cs_cx_rotinas:edit"]);
+    fireEvent.click(screen.getAllByRole("button", { name: /analisar cartório e suas rotinas/i })[0]);
+    fireEvent.click(screen.getByRole("button", { name: /alterar status de todos/i }));
+
+    expect(screen.getByRole("heading", { name: "Alterar status de todas as rotinas" })).toBeInTheDocument();
+    expect(screen.getByText(/aplicada aos 12 itens/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /salvar em todos \(12\)/i }));
+
+    await waitFor(() => {
+      expect(bulkMutation.mutateAsync).toHaveBeenCalledWith(expect.objectContaining({
+        registryOfficeId: "office-1",
+        active: null,
+        analysisNotes: "",
+      }));
+    });
   });
 });

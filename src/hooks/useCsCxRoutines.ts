@@ -315,6 +315,20 @@ export function useCsCxRoutines() {
     onSuccess: () => invalidateRoutines(queryClient),
   });
 
+  const setAllRoutineItems = useMutation({
+    mutationFn: async (input: { registryOfficeId: string; active: boolean | null; analysisNotes?: string; analyzedAt: string }) => {
+      const { data, error } = await db.rpc("cs_cx_set_routine_items_bulk", {
+        p_registry_office_id: input.registryOfficeId,
+        p_active: input.active,
+        p_analysis_notes: emptyToNull(input.analysisNotes),
+        p_analyzed_at: `${input.analyzedAt}T12:00:00`,
+      });
+      if (error) throw error;
+      return Number(data ?? 0);
+    },
+    onSuccess: () => invalidateRoutines(queryClient),
+  });
+
   const deleteRoutine = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await db.from("cs_cx_office_routines").delete().eq("id", id);
@@ -332,6 +346,7 @@ export function useCsCxRoutines() {
     refetch: async () => Promise.all([modelsQuery.refetch(), routinesQuery.refetch(), historyQuery.refetch()]),
     applyRoutine,
     setRoutineItem,
+    setAllRoutineItems,
     deleteRoutine,
   };
 }
