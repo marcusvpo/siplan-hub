@@ -68,6 +68,7 @@ import {
 import { usePermissions } from "@/hooks/usePermissions";
 import { useToast } from "@/hooks/use-toast";
 import { generateCsCxNpsPdf } from "@/lib/cs-cx-experience-pdf";
+import { cn } from "@/lib/utils";
 import {
   NpsInvitationsPanel,
   NpsQuestionnairesPanel,
@@ -300,7 +301,7 @@ export default function CsCxNps() {
           </CardContent>
         </Card>
       )}
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid auto-rows-fr gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <Metric icon={Star} label="NPS geral" value={nps} />
         <Metric icon={Smile} label="Promotores" value={promoters} active={classification === "PROMOTOR" && activeTab === "responses"} onClick={() => showClassification("PROMOTOR")} />
         <Metric icon={Meh} label="Neutros" value={neutrals} active={classification === "NEUTRO" && activeTab === "responses"} onClick={() => showClassification("NEUTRO")} />
@@ -721,13 +722,13 @@ function Metric({
   active?: boolean;
 }) {
   const card = (
-    <Card className={active ? "border-rose-400 ring-1 ring-rose-200" : undefined}>
-      <CardContent className="flex items-center gap-2.5 px-3 py-2.5">
-        <div className="rounded-lg bg-rose-50 p-1.5 text-rose-600 dark:bg-rose-950/40">
+    <Card className={cn("h-full min-h-[76px]", active && "border-rose-400 ring-1 ring-rose-200")}>
+      <CardContent className="flex h-full items-center gap-2.5 px-3 py-2.5">
+        <div className="shrink-0 rounded-lg bg-rose-50 p-1.5 text-rose-600 dark:bg-rose-950/40">
           <Icon className="h-4 w-4" />
         </div>
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+        <div className="min-w-0 flex-1">
+          <p className="flex min-h-6 items-center text-[10px] font-semibold uppercase leading-3 tracking-wide text-muted-foreground">
             {label}
           </p>
           <p className="text-xl font-black leading-6">{value}</p>
@@ -735,7 +736,7 @@ function Metric({
       </CardContent>
     </Card>
   );
-  return onClick ? <button type="button" className="rounded-lg text-left transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-pressed={active} onClick={onClick}>{card}</button> : card;
+  return onClick ? <button type="button" className="h-full w-full rounded-lg text-left transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-pressed={active} onClick={onClick}>{card}</button> : card;
 }
 function NpsPaginationBar({
   currentPage,
