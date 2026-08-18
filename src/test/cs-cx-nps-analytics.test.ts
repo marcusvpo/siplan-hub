@@ -28,9 +28,10 @@ describe("BI de NPS", () => {
     });
     expect(analytics.monthly.map((month) => month.responses)).toEqual([2, 1]);
     expect(analytics.byOffice[0]).toMatchObject({
-      name: "Cartório A",
-      responses: 2,
+      name: "Cartório B",
+      responses: 1,
       nps: 0,
+      latestResponseAt: "2026-02-05T12:00:00Z",
     });
     expect(analytics.feedback[0].classification).toBe("DETRATOR");
     expect(analytics.attentionClients.map((client) => [client.name, client.score])).toEqual([
@@ -52,18 +53,21 @@ describe("BI de NPS", () => {
     expect(filtered.map((item) => item.id)).toEqual(["3"]);
   });
 
-  it("ordena o ranking de cartórios do maior NPS para o menor", () => {
+  it("ordena o ranking por NPS e usa a resposta mais recente no empate", () => {
     const ranking = buildNpsAnalytics([
-      response("high", "office-high", "Cartório Promotor", "2026-02-03T12:00:00Z", 10, "PROMOTOR", "Excelente", "Maria"),
+      response("high-old", "office-high-old", "Cartório Promotor antigo", "2026-02-03T12:00:00Z", 10, "PROMOTOR", "Excelente", "Maria"),
+      response("high-new", "office-high-new", "Cartório Promotor recente", "2026-03-03T12:00:00Z", 10, "PROMOTOR", "Excelente", "Bruna"),
       response("neutral", "office-neutral", "Cartório Neutro", "2026-02-02T12:00:00Z", 8, "NEUTRO", "Regular", "Ana"),
       response("low", "office-low", "Cartório Detrator", "2026-02-01T12:00:00Z", 2, "DETRATOR", "Ruim", "João"),
     ]).byOffice;
 
     expect(ranking.map((office) => [office.name, office.nps])).toEqual([
-      ["Cartório Promotor", 100],
+      ["Cartório Promotor recente", 100],
+      ["Cartório Promotor antigo", 100],
       ["Cartório Neutro", 0],
       ["Cartório Detrator", -100],
     ]);
+    expect(ranking[0].latestResponseAt).toBe("2026-03-03T12:00:00Z");
   });
 
   it("prepara evidências para a IA sem expor o nome do respondente", () => {

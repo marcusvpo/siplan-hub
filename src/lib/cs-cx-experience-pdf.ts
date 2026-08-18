@@ -116,7 +116,7 @@ export async function generateCsCxNpsAnalysisPdf(
 
   blocks.push({
     title: "DESEMPENHO POR CARTÓRIO",
-    subtitle: "Ordenado do maior para o menor NPS",
+    subtitle: "Maior NPS primeiro; empates pela resposta mais recente",
     rows: analytics.byOffice.map((office) => [
       office.name,
       `NPS ${office.nps} · Nota média ${office.averageScore} · ${office.responses} resposta(s) · ${office.promoters} promotor(es) · ${office.neutrals} neutro(s) · ${office.detractors} detrator(es)`,
