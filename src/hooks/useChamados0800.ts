@@ -470,6 +470,7 @@ export function useSolicitarSyncChamados0800() {
  * Consulta de Chamados. O fluxo tradicional de chamados_0800 nao e alterado.
  */
 export interface ProcessoVendaSyncFilters {
+  clientCodes?: string[] | null;
   clientNames?: string[] | null;
   product?: string | null;
   nature?: string | null;
@@ -524,6 +525,7 @@ export function useSolicitarSyncProcessoVenda() {
           p_start_date: startDate,
           p_end_date: endDate,
           p_filters: {
+            client_codes: filters.clientCodes ?? [],
             client_names: filters.clientNames ?? [],
             product: filters.product ?? null,
             nature: filters.nature ?? null,
@@ -583,6 +585,7 @@ export function useSolicitarSyncProcessoVenda() {
 export interface ChamadosSearchFilters {
   startDate?: string | null;
   endDate?: string | null;
+  clientCodes?: string[] | null;
   clientNames?: string[] | null;
   product?: string | null;
   nature?: string | null;
@@ -597,6 +600,7 @@ function createChamadosSearchQuery(
   {
     startDate,
     endDate,
+    clientCodes,
     clientNames,
     product,
     nature,
@@ -612,7 +616,11 @@ function createChamadosSearchQuery(
 
   if (startDate) q = q.gte("data_abertura", startDate);
   if (endDate) q = q.lte("data_abertura", endDate);
-  if (clientNames && clientNames.length > 0) q = q.in("nome_cliente", clientNames);
+  if (clientCodes && clientCodes.length > 0) {
+    q = q.in("codigo_cliente", clientCodes);
+  } else if (clientNames && clientNames.length > 0) {
+    q = q.in("nome_cliente", clientNames);
+  }
   if (ticketNumbers && ticketNumbers.length > 0) q = q.in("numero_chamado", ticketNumbers);
 
   q = q.ilike("software", getOrionProductPattern(product));
@@ -719,6 +727,7 @@ export async function fetchAllChamadosForReport(
 export function useChamadosSearch({
   startDate,
   endDate,
+  clientCodes,
   clientNames,
   product,
   nature,
@@ -733,6 +742,7 @@ export function useChamadosSearch({
       "chamadosSearch",
       startDate,
       endDate,
+      clientCodes,
       clientNames,
       product,
       nature,
@@ -752,6 +762,7 @@ export function useChamadosSearch({
         {
           startDate,
           endDate,
+          clientCodes,
           clientNames,
           product,
           nature,

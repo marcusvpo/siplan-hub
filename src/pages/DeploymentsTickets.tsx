@@ -46,6 +46,12 @@ const FILTER_SYNC_DEBOUNCE_MS = 700;
 const FILTER_SYNC_FRESHNESS_MS = 5 * 60_000;
 const MAX_SYNC_SNAPSHOT_TICKETS = 250;
 
+interface ChamadosClientOption {
+  codigoCliente: string | null;
+  nomeCliente: string;
+  aliases: string[];
+}
+
 export default function DeploymentsTickets() {
   const defaultDateRange = useMemo(() => getDefaultChamadosDateRange(), []);
 
@@ -83,13 +89,137 @@ export default function DeploymentsTickets() {
   const { solicitarSync: solicitarSyncPeriodo, syncing: syncingPeriodo } =
     useSolicitarSyncProcessoVenda();
 
+  const { data: clientOptions = [], isLoading: loadingClients } = useQuery<ChamadosClientOption[]>({
+    // Versao do cache alterada quando a RPC passou a usar o catalogo rapido de
+    // aliases. Evita preservar por cinco minutos o fallback incompleto.
+    queryKey: ["chamadosClientOptions", "catalog-v1"],
+    queryFn: async () => {
+      // 1. Tenta a RPC para performance
+      try {
+        const { data, error } = await supabase.rpc("get_chamados_client_options");
+        if (error) throw error;
+        if (data && Array.isArray(data) && data.length > 0) {
+          return data
+            .filter((row) => Boolean(row.nome_cliente))
+            .map((row) => ({
+              codigoCliente: row.codigo_cliente ?? null,
+              nomeCliente: row.nome_cliente,
+              aliases: Array.isArray(row.aliases) ? row.aliases.filter(Boolean) : [row.nome_cliente],
+            }))
+            .sort((a, b) => a.nomeCliente.localeCompare(b.nomeCliente, "pt-BR"));
+        }
+      } catch (e) {
+        console.warn("RPC get_chamados_client_options falhou:", e);
+      }
+
+      // 2. Tenta obter diretamente da tabela chamados_processo_venda
+      try {
+        const { data, error } = await supabase
+          .from("chamados_processo_venda")
+          .select("nome_cliente")
+          .ilike("software", getOrionProductPattern("todos"));
+        if (!error && data) {
+          const names = data.map((row: { nome_cliente?: string | null }) => row.nome_cliente).filter(Boolean);
+          if (names.length > 0) {
+            return [...new Set(names)]
+              .map((name) => ({
+                codigoCliente: null,
+                nomeCliente: name as string,
+                aliases: [name as string],
+              }))
+              .sort((a, b) => a.nomeCliente.localeCompare(b.nomeCliente, "pt-BR"));
+          }
+        }
+      } catch (e) {
+        console.warn("Consulta direta à tabela chamados_processo_venda falhou:", e);
+      }
+
+      // 3. Fallback final na tabela projects
+      try {
+        const { data: projs, error: projsErr } = await supabase
+          .from("projects")
+          .select("client_name")
+          .eq("is_deleted", false)
+          .ilike("system_type", "%orion%");
+        if (!projsErr && projs) {
+          const names = projs.map((p: { client_name?: string | null }) => p.client_name).filter(Boolean);
+          return [...new Set(names)]
+            .map((name) => ({
+              codigoCliente: null,
+              nomeCliente: name as string,
+              aliases: [name as string],
+            }))
+            .sort((a, b) => a.nomeCliente.localeCompare(b.nomeCliente, "pt-BR"));
+        }
+      } catch (e) {
+        console.error("Todos os fallbacks para obter lista de clientes falharam:", e);
+      }
+
+      return [];
+    },
+    staleTime: 5 * 60_000,
+  });
+
+  const clients = useMemo(
+    () => clientOptions.map((option) => option.nomeCliente),
+    [clientOptions],
+  );
+  const clientOptionByName = useMemo(
+    () => new Map(clientOptions.map((option) => [option.nomeCliente, option])),
+    [clientOptions],
+  );
+  const clientOptionByAlias = useMemo(() => {
+    const optionsByAlias = new Map<string, ChamadosClientOption>();
+    for (const option of clientOptions) {
+      optionsByAlias.set(normalizeSearchText(option.nomeCliente), option);
+      for (const alias of option.aliases) {
+        optionsByAlias.set(normalizeSearchText(alias), option);
+      }
+    }
+    return optionsByAlias;
+  }, [clientOptions]);
+  const canonicalSelectedClients = useMemo(
+    () => [...new Set(selectedClients.map((client) => (
+      clientOptionByAlias.get(normalizeSearchText(client))?.nomeCliente ?? client
+    )))],
+    [clientOptionByAlias, selectedClients],
+  );
+  const selectedClientCodes = useMemo(
+    () => [...new Set(canonicalSelectedClients
+      .map((client) => clientOptionByAlias.get(normalizeSearchText(client))?.codigoCliente)
+      .filter((code): code is string => Boolean(code)))],
+    [canonicalSelectedClients, clientOptionByAlias],
+  );
+  const selectedClientFilterNames = useMemo(
+    () => [...new Set(canonicalSelectedClients.flatMap((client) => {
+      const option = clientOptionByAlias.get(normalizeSearchText(client));
+      return option ? [option.nomeCliente, ...option.aliases] : [client];
+    }))],
+    [canonicalSelectedClients, clientOptionByAlias],
+  );
+
+  // Uma aba aberta pode manter um alias antigo em memoria. Quando as opcoes
+  // chegam, converte a selecao para o nome atual antes do proximo sync.
+  useEffect(() => {
+    if (clientOptions.length === 0 || selectedClients.length === 0) return;
+
+    if (canonicalSelectedClients.length !== selectedClients.length
+      || canonicalSelectedClients.some((client, index) => client !== selectedClients[index])) {
+      setSelectedClients(canonicalSelectedClients);
+      setPage(1);
+    }
+  }, [canonicalSelectedClients, clientOptions.length, selectedClients]);
+
   const syncFilters = useMemo<ProcessoVendaSyncFilters>(() => ({
-    clientNames: selectedClients.length > 0 ? selectedClients : null,
+    clientCodes: selectedClientCodes.length > 0 ? selectedClientCodes : null,
+    // Os aliases mantem compatibilidade com workers anteriores; os workers
+    // atualizados priorizam clientCodes e deixam de depender do nome.
+    clientNames: selectedClientFilterNames.length > 0 ? selectedClientFilterNames : null,
     product: produto,
     nature: natureza,
     statuses: selectedStatuses.length > 0 ? selectedStatuses : null,
     searchTerm: busca || null,
-  }), [selectedClients, produto, natureza, selectedStatuses, busca]);
+  }), [selectedClientCodes, selectedClientFilterNames, produto, natureza, selectedStatuses, busca]);
 
   const filterSyncKey = useMemo(
     () => JSON.stringify([dataInicio, dataFim, syncFilters]),
@@ -98,6 +228,7 @@ export default function DeploymentsTickets() {
 
   useEffect(() => {
     if (!dataInicio || !dataFim || dataInicio > dataFim) return;
+    if (selectedClients.length > 0 && loadingClients) return;
     // A abertura da tela usa o espelho horario imediatamente. O worker so e
     // acionado depois que o usuario realmente altera algum filtro.
     if (firstFilterSync.current) {
@@ -138,62 +269,18 @@ export default function DeploymentsTickets() {
     }, FILTER_SYNC_DEBOUNCE_MS);
 
     return () => window.clearTimeout(timer);
-  }, [dataInicio, dataFim, filterSyncKey, solicitarSyncPeriodo, syncFilters]);
-
-  const { data: clients = [], isLoading: loadingClients } = useQuery<string[]>({
-    queryKey: ["distinctProcessoVendaClients"],
-    queryFn: async () => {
-      // 1. Tenta a RPC para performance
-      try {
-        const { data, error } = await supabase.rpc("get_distinct_chamados_clientes");
-        if (!error && data && Array.isArray(data) && data.length > 0) {
-          return data
-            .map((row) => row.nome_cliente)
-            .filter((name): name is string => Boolean(name))
-            .sort((a, b) => a.localeCompare(b, "pt-BR"));
-        }
-      } catch (e) {
-        console.warn("RPC get_distinct_chamados_clientes falhou:", e);
-      }
-
-      // 2. Tenta obter diretamente da tabela chamados_processo_venda
-      try {
-        const { data, error } = await supabase
-          .from("chamados_processo_venda")
-          .select("nome_cliente")
-          .ilike("software", getOrionProductPattern("todos"));
-        if (!error && data) {
-          const names = data.map((row: { nome_cliente?: string | null }) => row.nome_cliente).filter(Boolean);
-          if (names.length > 0) {
-            return [...new Set(names)].sort();
-          }
-        }
-      } catch (e) {
-        console.warn("Consulta direta à tabela chamados_processo_venda falhou:", e);
-      }
-
-      // 3. Fallback final na tabela projects
-      try {
-        const { data: projs, error: projsErr } = await supabase
-          .from("projects")
-          .select("client_name")
-          .eq("is_deleted", false)
-          .ilike("system_type", "%orion%");
-        if (!projsErr && projs) {
-          const names = projs.map((p: { client_name?: string | null }) => p.client_name).filter(Boolean);
-          return [...new Set(names)].sort();
-        }
-      } catch (e) {
-        console.error("Todos os fallbacks para obter lista de clientes falharam:", e);
-      }
-
-      return [];
-    },
-    staleTime: 5 * 60_000,
-  });
+  }, [
+    dataInicio,
+    dataFim,
+    filterSyncKey,
+    loadingClients,
+    selectedClients.length,
+    solicitarSyncPeriodo,
+    syncFilters,
+  ]);
 
   const { data: naturezas = [], isLoading: loadingNaturezas } = useQuery<string[]>({
-    queryKey: ["distinctProcessoVendaNaturezas", dataInicio, dataFim, selectedClients, produto],
+    queryKey: ["distinctProcessoVendaNaturezas", dataInicio, dataFim, selectedClientCodes, selectedClientFilterNames, produto],
     queryFn: async () => {
       let q = supabase
         .from("chamados_processo_venda")
@@ -203,7 +290,11 @@ export default function DeploymentsTickets() {
 
       if (dataInicio) q = q.gte("data_abertura", dataInicio);
       if (dataFim) q = q.lte("data_abertura", dataFim);
-      if (selectedClients.length > 0) q = q.in("nome_cliente", selectedClients);
+      if (selectedClientCodes.length > 0) {
+        q = q.in("codigo_cliente", selectedClientCodes);
+      } else if (selectedClientFilterNames.length > 0) {
+        q = q.in("nome_cliente", selectedClientFilterNames);
+      }
 
       const { data, error } = await q;
       if (error) throw error;
@@ -227,7 +318,8 @@ export default function DeploymentsTickets() {
   const { chamados, totalCount, isLoading, error } = useChamadosSearch({
     startDate: dataInicio || null,
     endDate: dataFim || null,
-    clientNames: selectedClients.length > 0 ? selectedClients : null,
+    clientCodes: selectedClientCodes.length > 0 ? selectedClientCodes : null,
+    clientNames: selectedClientFilterNames.length > 0 ? selectedClientFilterNames : null,
     product: produto,
     nature: natureza,
     searchTerm: busca || null,
@@ -323,7 +415,8 @@ export default function DeploymentsTickets() {
       const reportSearchFilters = {
         startDate: dataInicio,
         endDate: dataFim,
-        clientNames: selectedClients.length > 0 ? selectedClients : null,
+        clientCodes: selectedClientCodes.length > 0 ? selectedClientCodes : null,
+        clientNames: selectedClientFilterNames.length > 0 ? selectedClientFilterNames : null,
         product: produto,
         nature: natureza,
         searchTerm: busca || null,
@@ -717,13 +810,20 @@ export default function DeploymentsTickets() {
                     <CommandList className="max-h-[220px] overflow-y-auto">
                       <CommandEmpty>Nenhum cliente encontrado.</CommandEmpty>
                       <CommandGroup>
-                        {clients.map((client) => (
-                          <CommandItem
-                            key={client}
-                            value={client.toLowerCase()}
-                            className="py-1.5 text-xs"
-                            onSelect={() => toggleClient(client)}
-                          >
+                        {clients.map((client) => {
+                          const option = clientOptionByName.get(client);
+                          const searchValue = [
+                            client,
+                            option?.codigoCliente,
+                            ...(option?.aliases ?? []),
+                          ].filter(Boolean).join(" ").toLowerCase();
+                          return (
+                            <CommandItem
+                              key={client}
+                              value={searchValue}
+                              className="py-1.5 text-xs"
+                              onSelect={() => toggleClient(client)}
+                            >
                             <div className="flex items-center gap-1.5 w-full">
                               <div className={cn(
                                 "flex h-3.5 w-3.5 items-center justify-center rounded border border-primary/50 transition-colors",
@@ -737,8 +837,9 @@ export default function DeploymentsTickets() {
                               </div>
                               <span className="truncate">{client}</span>
                             </div>
-                          </CommandItem>
-                        ))}
+                            </CommandItem>
+                          );
+                        })}
                       </CommandGroup>
                     </CommandList>
                   </Command>
@@ -927,7 +1028,8 @@ export default function DeploymentsTickets() {
           filters={{
             startDate: dataInicio || null,
             endDate: dataFim || null,
-            clientNames: selectedClients.length > 0 ? selectedClients : null,
+            clientCodes: selectedClientCodes.length > 0 ? selectedClientCodes : null,
+            clientNames: selectedClientFilterNames.length > 0 ? selectedClientFilterNames : null,
             product: produto,
             nature: natureza,
             searchTerm: busca || null,
