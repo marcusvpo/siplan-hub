@@ -14,9 +14,11 @@ import {
   MessageSquareText,
   Pencil,
   Plus,
+  Printer,
   RefreshCw,
   Search,
   Trash2,
+  X,
 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +43,7 @@ import {
   useCsCxRequests,
 } from "@/hooks/useCsCxCore";
 import { cn } from "@/lib/utils";
+import { printCsCxRequestsReport } from "@/lib/cs-cx-requests-report";
 
 const emptyForm: CsCxRequestInput = {
   ticket_number: "",
@@ -128,11 +131,14 @@ export default function CsCxRequests() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [officeFilter, setOfficeFilter] = useState("all");
+  const [periodStart, setPeriodStart] = useState("");
+  const [periodEnd, setPeriodEnd] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [form, setForm] = useState<CsCxRequestInput>(emptyForm);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState<CsCxRequest | null>(null);
+  const [isPrinting, setIsPrinting] = useState(false);
 
   const canCreate = hasPermission("cs_cx_registros", "create");
   const canEdit = hasPermission("cs_cx_registros", "edit");
@@ -153,9 +159,12 @@ export default function CsCxRequests() {
         .some((value) => value?.toLocaleLowerCase("pt-BR").includes(term));
       const matchesStatus = statusFilter === "all" || request.status === statusFilter;
       const matchesOffice = officeFilter === "all" || request.registry_office_id === officeFilter;
-      return matchesSearch && matchesStatus && matchesOffice;
+      const requestDate = request.requested_on ?? request.created_at?.slice(0, 10) ?? "";
+      const matchesPeriod = (!periodStart && !periodEnd)
+        || (Boolean(requestDate) && (!periodStart || requestDate >= periodStart) && (!periodEnd || requestDate <= periodEnd));
+      return matchesSearch && matchesStatus && matchesOffice && matchesPeriod;
     });
-  }, [requests, search, statusFilter, officeFilter]);
+  }, [requests, search, statusFilter, officeFilter, periodStart, periodEnd]);
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, totalPages);
   const pagedRequests = useMemo(
@@ -166,7 +175,22 @@ export default function CsCxRequests() {
   const updateSearch = (value: string) => { setSearch(value); setPage(1); };
   const updateStatusFilter = (value: string) => { setStatusFilter(value); setPage(1); };
   const updateOfficeFilter = (value: string) => { setOfficeFilter(value); setPage(1); };
+  const updatePeriodStart = (value: string) => { setPeriodStart(value); setPage(1); };
+  const updatePeriodEnd = (value: string) => { setPeriodEnd(value); setPage(1); };
   const updatePageSize = (value: string) => { setPageSize(Number(value)); setPage(1); };
+
+  const reportFilterDescription = useMemo(() => {
+    const office = offices.find((item) => item.id === officeFilter)?.name;
+    const period = periodStart || periodEnd
+      ? `Período da solicitação: ${periodStart ? formatDate(periodStart) : "início"} até ${periodEnd ? formatDate(periodEnd) : "hoje"}`
+      : "Período da solicitação: todos";
+    return [
+      period,
+      `Status: ${statusFilter === "all" ? "todos" : statusFilter}`,
+      `Cartório: ${office ?? "todos"}`,
+      ...(search.trim() ? [`Busca: ${search.trim()}`] : []),
+    ].join(" · ");
+  }, [offices, officeFilter, periodEnd, periodStart, search, statusFilter]);
 
   const openCreate = () => {
     setForm({ ...emptyForm, requested_on: new Date().toISOString().slice(0, 10) });
@@ -224,6 +248,25 @@ export default function CsCxRequests() {
     }
   };
 
+  const printReport = async () => {
+    const targetWindow = window.open("", "_blank");
+    if (targetWindow) {
+      targetWindow.opener = null;
+      targetWindow.document.title = "Preparando relatório de solicitações";
+      targetWindow.document.body.innerHTML = '<p style="font:14px Arial;padding:24px">Preparando relatório para impressão...</p>';
+    }
+    setIsPrinting(true);
+    try {
+      await printCsCxRequestsReport(filtered, reportFilterDescription, targetWindow);
+      if (!targetWindow) toast({ title: "Relatório gerado", description: "O navegador bloqueou a janela de impressão; o PDF foi baixado." });
+    } catch (reportError) {
+      targetWindow?.close();
+      toast({ title: "Não foi possível gerar o relatório", description: errorMessage(reportError), variant: "destructive" });
+    } finally {
+      setIsPrinting(false);
+    }
+  };
+
   const dataError = error ?? officesError;
 
   return (
@@ -232,7 +275,7 @@ export default function CsCxRequests() {
         <div>
           <div className="flex items-center gap-2"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-300"><ClipboardList className="h-4 w-4" /></span><div><h1 className="text-2xl font-black leading-none tracking-tight">Solicitações</h1><p className="mt-1 text-xs text-muted-foreground">Registros operacionais dos cartórios</p></div></div>
         </div>
-        {canCreate && <Button size="sm" onClick={openCreate} className="gap-2"><Plus className="h-4 w-4" /> Nova solicitação</Button>}
+        <div className="flex flex-wrap gap-2"><Button size="sm" variant="outline" disabled={!filtered.length || isPrinting} onClick={() => void printReport()} className="gap-2"><Printer className="h-4 w-4" />{isPrinting ? "Gerando..." : "Imprimir relatório"}</Button>{canCreate && <Button size="sm" onClick={openCreate} className="gap-2"><Plus className="h-4 w-4" /> Nova solicitação</Button>}</div>
       </div>
 
       <div className="grid gap-2 grid-cols-2 lg:grid-cols-4">
@@ -244,10 +287,11 @@ export default function CsCxRequests() {
 
       <Card>
         <CardContent className="space-y-3 p-3">
-          <div className="grid gap-2 lg:grid-cols-[minmax(260px,1fr)_180px_240px]">
+          <div className="grid gap-2 lg:grid-cols-2 xl:grid-cols-[minmax(260px,1fr)_170px_220px_340px]">
             <div className="relative"><Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" /><Input value={search} onChange={(event) => updateSearch(event.target.value)} placeholder="Buscar chamado, descrição, módulo ou responsável..." className="h-9 pl-9" /></div>
             <Select value={statusFilter} onValueChange={updateStatusFilter}><SelectTrigger className="h-9"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Todos os status</SelectItem>{statusNames.map((status) => <SelectItem key={status} value={status}>{status}</SelectItem>)}</SelectContent></Select>
             <Select value={officeFilter} onValueChange={updateOfficeFilter}><SelectTrigger className="h-9"><SelectValue placeholder="Todos os cartórios" /></SelectTrigger><SelectContent><SelectItem value="all">Todos os cartórios</SelectItem>{offices.map((office) => <SelectItem key={office.id} value={office.id}>{office.name}</SelectItem>)}</SelectContent></Select>
+            <div className="flex h-9 items-center gap-1 rounded-md border bg-background px-2" title="Período da solicitação"><CalendarClock className="h-4 w-4 shrink-0 text-muted-foreground" /><span className="shrink-0 text-[10px] font-semibold uppercase text-muted-foreground">Período</span><Input aria-label="Período inicial da solicitação" type="date" value={periodStart} max={periodEnd || undefined} onChange={(event) => updatePeriodStart(event.target.value)} className="h-7 min-w-0 border-0 px-1 text-xs shadow-none focus-visible:ring-0" /><span className="text-[11px] text-muted-foreground">até</span><Input aria-label="Período final da solicitação" type="date" value={periodEnd} min={periodStart || undefined} onChange={(event) => updatePeriodEnd(event.target.value)} className="h-7 min-w-0 border-0 px-1 text-xs shadow-none focus-visible:ring-0" />{(periodStart || periodEnd) && <Button type="button" variant="ghost" size="icon" className="h-6 w-6 shrink-0" aria-label="Limpar período" onClick={() => { setPeriodStart(""); setPeriodEnd(""); setPage(1); }}><X className="h-3.5 w-3.5" /></Button>}</div>
           </div>
 
           {isLoading ? <LoadingRows /> : dataError ? <DataError error={dataError} onRetry={() => void refetch()} /> : (

@@ -4,6 +4,7 @@ import type { NpsAnalytics } from "@/lib/cs-cx-nps-analytics";
 export type CsCxReportRow = [label: string, value: string];
 export interface CsCxReportBlock { title: string; subtitle: string; rows: CsCxReportRow[] }
 export interface CsCxSummaryItem { label: string; value: string | number }
+export interface CsCxPdfOutputOptions { mode?: "download" | "print"; targetWindow?: Window | null }
 
 const STATUS_LABELS: Record<string, string> = {
   aberto: "Aberta", emandamento: "Em andamento", concluido: "Concluída", reaberto: "Reaberta",
@@ -169,7 +170,7 @@ export async function generateCsCxNpsAnalysisPdf(
   );
 }
 
-export async function generateCsCxPdfReport(title: string, filterDescription: string, summary: CsCxSummaryItem[], blocks: CsCxReportBlock[], filename: string) {
+export async function generateCsCxPdfReport(title: string, filterDescription: string, summary: CsCxSummaryItem[], blocks: CsCxReportBlock[], filename: string, output: CsCxPdfOutputOptions = {}) {
   if (!blocks.length) throw new Error("Não há dados no filtro atual para exportar.");
   const { jsPDF } = await import("jspdf");
   const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
@@ -266,6 +267,16 @@ export async function generateCsCxPdfReport(title: string, filterDescription: st
     pdf.setFontSize(7);
     pdf.setTextColor(110, 120, 135);
     pdf.text(`Página ${page} de ${pages}`, pageWidth - margin, pageHeight - 6, { align: "right" });
+  }
+  if (output.mode === "print") {
+    pdf.autoPrint();
+    const blobUrl = URL.createObjectURL(pdf.output("blob"));
+    if (output.targetWindow && !output.targetWindow.closed) {
+      output.targetWindow.location.replace(blobUrl);
+      window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+      return;
+    }
+    URL.revokeObjectURL(blobUrl);
   }
   pdf.save(filename);
 }
