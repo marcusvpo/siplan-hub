@@ -180,7 +180,10 @@ export function NpsAnalyticsPanel({
     { name: "Neutros", value: analytics.neutrals, classification: "NEUTRO", color: DISTRIBUTION_COLORS[1] },
     { name: "Detratores", value: analytics.detractors, classification: "DETRATOR", color: DISTRIBUTION_COLORS[2] },
   ];
-  const officeRanking = analytics.byOffice.slice(0, 12);
+  const officeRanking = analytics.byOffice.slice(0, 12).map((office) => ({
+    ...office,
+    rankingLabel: `${office.name}|${formatRankingDate(office.latestResponseAt)}`,
+  }));
   const attentionClients = analytics.attentionClients.slice(0, 10);
   const officeRankingDomain: [number, number] = officeRanking.some(
     (office) => office.nps < 0,
@@ -679,17 +682,20 @@ export function NpsAnalyticsPanel({
                     />
                     <YAxis
                       type="category"
-                      dataKey="name"
+                      dataKey="rankingLabel"
                       width={180}
                       tickLine={false}
                       axisLine={false}
-                      tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9 }}
-                      tickFormatter={(value: string) =>
-                        value.length > 28 ? `${value.slice(0, 28)}…` : value
-                      }
+                      tick={<OfficeRankingTick />}
                     />
                     <ReferenceLine x={0} stroke="hsl(var(--muted-foreground))" />
-                    <Tooltip contentStyle={tooltipStyle} />
+                    <Tooltip
+                      contentStyle={tooltipStyle}
+                      labelFormatter={(value) => {
+                        const [name, date] = String(value).split("|");
+                        return `${name} · Última NPS: ${date}`;
+                      }}
+                    />
                     <Bar dataKey="nps" name="NPS" radius={4}>
                       {officeRanking.map((office) => (
                         <Cell
@@ -1123,6 +1129,34 @@ function formatResponseDate(value: string) {
     dateStyle: "short",
     timeStyle: "short",
   }).format(new Date(value));
+}
+
+function formatRankingDate(value: string) {
+  return new Intl.DateTimeFormat("pt-BR", {
+    dateStyle: "short",
+  }).format(new Date(value));
+}
+
+interface OfficeRankingTickProps {
+  x?: number;
+  y?: number;
+  payload?: { value?: string };
+}
+
+function OfficeRankingTick({ x = 0, y = 0, payload }: OfficeRankingTickProps) {
+  const [rawName = "", date = ""] = String(payload?.value ?? "").split("|");
+  const name = rawName.length > 28 ? `${rawName.slice(0, 28)}…` : rawName;
+
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <text x={-8} y={-4} textAnchor="end" fill="hsl(var(--foreground))" fontSize={9}>
+        {name}
+      </text>
+      <text x={-8} y={7} textAnchor="end" fill="hsl(var(--muted-foreground))" fontSize={8}>
+        Última NPS: {date}
+      </text>
+    </g>
+  );
 }
 
 function messageOf(error: unknown) {
