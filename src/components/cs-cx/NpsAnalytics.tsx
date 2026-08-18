@@ -749,9 +749,14 @@ export function NpsAnalyticsPanel({
 
       {drilldown && (
         <NpsDrilldownDialog
+          key={`${drilldown.kind}:${drilldown.value}`}
           drilldown={drilldown}
           responses={analytics.responses}
           onClose={() => setDrilldown(null)}
+          onSelectClassification={(classification) => {
+            const item = distribution.find((entry) => entry.classification === classification);
+            if (item) openClassification(item);
+          }}
         />
       )}
     </div>
@@ -762,10 +767,12 @@ function NpsDrilldownDialog({
   drilldown,
   responses,
   onClose,
+  onSelectClassification,
 }: {
   drilldown: NpsDrilldown;
   responses: CsCxNpsResponse[];
   onClose: () => void;
+  onSelectClassification: (classification: CsCxNpsResponse["classification"]) => void;
 }) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -778,6 +785,10 @@ function NpsDrilldownDialog({
   const detailAnalytics = useMemo(
     () => buildNpsAnalytics(selectedResponses, EMPTY_NPS_FILTERS),
     [selectedResponses],
+  );
+  const contextAnalytics = useMemo(
+    () => buildNpsAnalytics(responses, EMPTY_NPS_FILTERS),
+    [responses],
   );
   const searchedResponses = useMemo(() => {
     const term = search.trim().toLocaleLowerCase("pt-BR");
@@ -816,9 +827,9 @@ function NpsDrilldownDialog({
         </div>
 
         <div className="grid shrink-0 grid-cols-3 gap-2">
-          <ClassificationSummary label="Promotores" value={detailAnalytics.promoters} total={detailAnalytics.total} tone="positive" />
-          <ClassificationSummary label="Neutros" value={detailAnalytics.neutrals} total={detailAnalytics.total} tone="neutral" />
-          <ClassificationSummary label="Detratores" value={detailAnalytics.detractors} total={detailAnalytics.total} tone="negative" />
+          <ClassificationSummary label="Promotores" value={contextAnalytics.promoters} total={contextAnalytics.total} tone="positive" active={drilldown.kind === "classification" && drilldown.value === "PROMOTOR"} onClick={() => onSelectClassification("PROMOTOR")} />
+          <ClassificationSummary label="Neutros" value={contextAnalytics.neutrals} total={contextAnalytics.total} tone="neutral" active={drilldown.kind === "classification" && drilldown.value === "NEUTRO"} onClick={() => onSelectClassification("NEUTRO")} />
+          <ClassificationSummary label="Detratores" value={contextAnalytics.detractors} total={contextAnalytics.total} tone="negative" active={drilldown.kind === "classification" && drilldown.value === "DETRATOR"} onClick={() => onSelectClassification("DETRATOR")} />
         </div>
 
         <div className="relative shrink-0">
@@ -880,13 +891,13 @@ function NpsDrilldownDialog({
   );
 }
 
-function ClassificationSummary({ label, value, total, tone }: { label: string; value: number; total: number; tone: "positive" | "neutral" | "negative" }) {
+function ClassificationSummary({ label, value, total, tone, active, onClick }: { label: string; value: number; total: number; tone: "positive" | "neutral" | "negative"; active: boolean; onClick: () => void }) {
   const styles = {
     positive: "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-300",
     neutral: "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300",
     negative: "border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-300",
   }[tone];
-  return <div className={`rounded-md border px-3 py-2 ${styles}`}><p className="text-[9px] font-semibold uppercase tracking-wide">{label}</p><p className="text-sm font-black">{value} <span className="font-medium opacity-75">({percentage(value, total)}%)</span></p></div>;
+  return <button type="button" aria-label={`Exibir clientes ${label.toLocaleLowerCase("pt-BR")}`} aria-pressed={active} disabled={!value} onClick={onClick} className={`rounded-md border px-3 py-2 text-left transition-all hover:-translate-y-0.5 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 disabled:cursor-not-allowed disabled:opacity-50 ${styles} ${active ? "ring-2 ring-current ring-offset-2" : ""}`}><p className="text-[9px] font-semibold uppercase tracking-wide">{label}</p><p className="text-sm font-black">{value} <span className="font-medium opacity-75">({percentage(value, total)}%)</span></p></button>;
 }
 
 function AnalyticsMetric({
