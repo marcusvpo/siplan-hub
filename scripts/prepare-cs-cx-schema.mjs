@@ -24,6 +24,7 @@ const MIGRATIONS = [
   "20260818130000_cs_cx_operational_review.sql",
   "20260818181000_cs_cx_bulk_routine_analysis.sql",
   "20260818190000_cs_cx_scoped_access.sql",
+  "20260818200000_cs_cx_request_update_editing.sql",
 ];
 const FEATURE_MIGRATIONS = new Map([
   ["cs_cx_user_map.mapping_ignored", "20260812107000_cs_cx_user_mapping_exceptions.sql"],
@@ -34,6 +35,7 @@ const FEATURE_MIGRATIONS = new Map([
   ["cs_cx operational review", "20260818130000_cs_cx_operational_review.sql"],
   ["cs_cx bulk routine analysis", "20260818181000_cs_cx_bulk_routine_analysis.sql"],
   ["cs_cx scoped access", "20260818190000_cs_cx_scoped_access.sql"],
+  ["cs_cx request update editing", "20260818200000_cs_cx_request_update_editing.sql"],
 ]);
 const EXPECTED_TABLES = [
   "cs_cx_user_map",
@@ -268,6 +270,15 @@ async function getMissingFeatures() {
       AND to_regprocedure('public.cs_cx_save_access_profile(uuid,text,text,boolean,uuid[])') IS NOT NULL
       AND to_regprocedure('public.cs_cx_assign_user_access(uuid,uuid,boolean)') IS NOT NULL
       AS scoped_access
+    ,has_table_privilege('authenticated', 'public.cs_cx_request_updates', 'UPDATE')
+      AND EXISTS (
+        SELECT 1 FROM pg_policies
+        WHERE schemaname = 'public'
+          AND tablename = 'cs_cx_request_updates'
+          AND policyname = 'cs_cx_request_updates_edit'
+          AND cmd = 'UPDATE'
+          AND ('authenticated' = ANY(roles) OR 'public' = ANY(roles))
+      ) AS request_update_editing
   `);
   const missing = [];
   if (!result.rows[0].mapping_ignored)
@@ -286,6 +297,8 @@ async function getMissingFeatures() {
     missing.push("cs_cx bulk routine analysis");
   if (!result.rows[0].scoped_access)
     missing.push("cs_cx scoped access");
+  if (!result.rows[0].request_update_editing)
+    missing.push("cs_cx request update editing");
   return missing;
 }
 

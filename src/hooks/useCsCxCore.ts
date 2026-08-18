@@ -362,6 +362,25 @@ export function useCsCxRequests() {
     onSettled: () => invalidateCore(queryClient),
   });
 
+  const updateRequestObservation = useMutation({
+    mutationFn: async ({ id, observation }: { id: string; observation: string }) => {
+      const { error } = await db
+        .from("cs_cx_request_updates")
+        .update({ observation })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => invalidateCore(queryClient),
+  });
+
+  const deleteRequestObservation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await db.from("cs_cx_request_updates").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => invalidateCore(queryClient),
+  });
+
   const deleteRequest = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await db.from("cs_cx_requests").delete().eq("id", id);
@@ -378,6 +397,8 @@ export function useCsCxRequests() {
     refetch: async () => Promise.all([requestsQuery.refetch(), statusesQuery.refetch()]),
     saveRequest,
     updateStatus,
+    updateRequestObservation,
+    deleteRequestObservation,
     deleteRequest,
   };
 }
