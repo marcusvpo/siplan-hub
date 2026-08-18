@@ -386,5 +386,11 @@ describe("CS/CX visitas e NPS — permissões", () => {
     expect(within(dialog).getByText("Detrator")).toBeInTheDocument();
     expect(within(dialog).getByLabelText(/buscar clientes no detalhamento/i)).toBeInTheDocument();
     expect(within(dialog).getByText(/1–1/)).toBeInTheDocument();
+
+    fireEvent.click(within(dialog).getByRole("button", { name: /exibir clientes promotores/i }));
+    const updatedDialog = screen.getByRole("dialog");
+    expect(within(updatedDialog).getByRole("heading", { name: /clientes promotores/i })).toBeInTheDocument();
+    expect(within(updatedDialog).getByText("Maria")).toBeInTheDocument();
+    expect(within(updatedDialog).getByRole("button", { name: /exibir clientes promotores/i })).toHaveAttribute("aria-pressed", "true");
   });
 });
