@@ -162,6 +162,34 @@ interface RawAdminItem extends Omit<CsCxRoutineModelItem, "category" | "routine_
   cs_cx_routine_types: { id: string; name: string } | null;
 }
 
+async function fetchAllRoutineConfigs() {
+  const pageSize = 1000;
+  const rows: RawConfig[] = [];
+
+  for (let from = 0; ; from += pageSize) {
+    const { data, error } = await db
+      .from("cs_cx_office_routine_items")
+      .select(`
+        id, office_routine_id, active, notes, analysis_notes, analyzed_at,
+        cs_cx_routine_model_items (
+          id, name, description, sort_order, required,
+          cs_cx_routine_categories (id, name, display_color),
+          cs_cx_routine_types (id, name)
+        )
+      `)
+      .eq("source_present", true)
+      .order("id")
+      .range(from, from + pageSize - 1);
+    if (error) throw error;
+
+    const page = (data ?? []) as unknown as RawConfig[];
+    rows.push(...page);
+    if (page.length < pageSize) break;
+  }
+
+  return rows;
+}
+
 export function useCsCxRoutines() {
   const queryClient = useQueryClient();
 
@@ -196,7 +224,7 @@ export function useCsCxRoutines() {
   const routinesQuery = useQuery({
     queryKey: ["cs-cx", "office-routines"],
     queryFn: async () => {
-      const [routineResult, configResult] = await Promise.all([
+      const [routineResult, configs] = await Promise.all([
         db
           .from("cs_cx_office_routines")
           .select(`
@@ -207,22 +235,10 @@ export function useCsCxRoutines() {
           `)
           .eq("source_present", true)
           .order("applied_at", { ascending: false }),
-        db
-          .from("cs_cx_office_routine_items")
-          .select(`
-            id, office_routine_id, active, notes, analysis_notes, analyzed_at,
-            cs_cx_routine_model_items (
-              id, name, description, sort_order, required,
-              cs_cx_routine_categories (id, name, display_color),
-              cs_cx_routine_types (id, name)
-            )
-          `)
-          .eq("source_present", true),
+        fetchAllRoutineConfigs(),
       ]);
       if (routineResult.error) throw routineResult.error;
-      if (configResult.error) throw configResult.error;
 
-      const configs = (configResult.data ?? []) as unknown as RawConfig[];
       return ((routineResult.data ?? []) as unknown as RawRoutine[]).map((routine) => ({
         ...routine,
         registry_office: routine.cs_cx_registry_offices,
