@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Activity, ArrowRight, CalendarDays, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ClipboardCheck, Clock3, Database, Eye, FileDown, ListChecks, Pencil, Plus, RefreshCw, Search, Trash2, TriangleAlert } from "lucide-react";
+import { Activity, ArrowRight, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, ClipboardCheck, Clock3, Database, Eye, FileDown, ListChecks, Pencil, Plus, RefreshCw, Search, Trash2, TriangleAlert } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,6 @@ export default function CsCxRoutines() {
   const [applicationPageSize, setApplicationPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [modelPage, setModelPage] = useState(1);
   const [modelPageSize, setModelPageSize] = useState(DEFAULT_PAGE_SIZE);
-  const [expanded, setExpanded] = useState<string | null>(null);
   const [applyOpen, setApplyOpen] = useState(false);
   const [applyForm, setApplyForm] = useState({ registryOfficeId: "", routineModelId: "", notes: "" });
   const [editingItem, setEditingItem] = useState<{ routine: CsCxOfficeRoutine; item: CsCxRoutineItemConfig } | null>(null);
@@ -44,6 +43,9 @@ export default function CsCxRoutines() {
   const [itemNotes, setItemNotes] = useState("");
   const [itemAnalysisDate, setItemAnalysisDate] = useState(todayKey());
   const [openedOfficeId, setOpenedOfficeId] = useState<string | null>(null);
+  const [analysisSearch, setAnalysisSearch] = useState("");
+  const [analysisPage, setAnalysisPage] = useState(1);
+  const [analysisPageSize, setAnalysisPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [deleting, setDeleting] = useState<CsCxOfficeRoutine | null>(null);
   const [exportingRoutineId, setExportingRoutineId] = useState<string | null>(null);
   const [historySearch, setHistorySearch] = useState("");
@@ -56,7 +58,36 @@ export default function CsCxRoutines() {
   const canCreate = hasPermission("cs_cx_rotinas", "create");
   const canEdit = hasPermission("cs_cx_rotinas", "edit");
   const canDelete = hasPermission("cs_cx_rotinas", "delete");
-  const openedOfficeRoutines = openedOfficeId ? routines.filter((routine) => routine.registry_office_id === openedOfficeId) : [];
+  const openedOfficeRoutines = useMemo(
+    () => openedOfficeId ? routines.filter((routine) => routine.registry_office_id === openedOfficeId) : [],
+    [openedOfficeId, routines],
+  );
+  const openedOfficeItems = useMemo(() => {
+    const term = analysisSearch.trim().toLocaleLowerCase("pt-BR");
+    return openedOfficeRoutines
+      .flatMap((routine) => routine.items.map((item) => ({ routine, item })))
+      .filter(({ routine, item }) => !term || [
+        routine.routine_model?.name,
+        item.model_item?.name,
+        item.model_item?.category?.name,
+        item.model_item?.routine_type?.name,
+        item.analysis_notes,
+      ].some((value) => value?.toLocaleLowerCase("pt-BR").includes(term)));
+  }, [analysisSearch, openedOfficeRoutines]);
+  const analysisTotalPages = Math.max(1, Math.ceil(openedOfficeItems.length / analysisPageSize));
+  const currentAnalysisPage = Math.min(analysisPage, analysisTotalPages);
+  const pagedOfficeItems = useMemo(
+    () => openedOfficeItems.slice((currentAnalysisPage - 1) * analysisPageSize, currentAnalysisPage * analysisPageSize),
+    [analysisPageSize, currentAnalysisPage, openedOfficeItems],
+  );
+  const analysisTotals = useMemo(() => {
+    const items = openedOfficeRoutines.flatMap((routine) => routine.items);
+    return {
+      routines: openedOfficeRoutines.length,
+      items: items.length,
+      analyzed: items.filter((item) => item.analyzed_at).length,
+    };
+  }, [openedOfficeRoutines]);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLocaleLowerCase("pt-BR");
@@ -128,6 +159,20 @@ export default function CsCxRoutines() {
   const updateHistoryStart = (value: string) => { setHistoryStart(value); setHistoryPage(1); };
   const updateHistoryEnd = (value: string) => { setHistoryEnd(value); setHistoryPage(1); };
   const updateHistoryPageSize = (value: string) => { setHistoryPageSize(Number(value)); setHistoryPage(1); };
+  const updateAnalysisSearch = (value: string) => { setAnalysisSearch(value); setAnalysisPage(1); };
+  const updateAnalysisPageSize = (value: string) => { setAnalysisPageSize(Number(value)); setAnalysisPage(1); };
+
+  function openOfficeAnalysis(officeId: string) {
+    setOpenedOfficeId(officeId);
+    setAnalysisSearch("");
+    setAnalysisPage(1);
+  }
+
+  function closeOfficeAnalysis() {
+    setOpenedOfficeId(null);
+    setAnalysisSearch("");
+    setAnalysisPage(1);
+  }
 
   async function handleApply() {
     try {
@@ -211,13 +256,11 @@ export default function CsCxRoutines() {
 
           <div className="space-y-2">
             {pagedRoutines.map((routine) => {
-              const isExpanded = expanded === routine.id;
               const analyzed = routine.items.filter((item) => item.analyzed_at).length;
               const completed = routine.items.length > 0 && analyzed === routine.items.length;
               const lastAnalysis = latestAnalysisDate(routine);
               return <Card key={routine.id}>
-                <CardHeader className="px-4 py-3"><div className="flex flex-col justify-between gap-2 md:flex-row md:items-center"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><CardTitle className="truncate text-sm" title={routine.registry_office?.name ?? "Cartório removido"}>{routine.registry_office?.name ?? "Cartório removido"}</CardTitle><Badge variant="outline" className={completed ? "h-5 border-emerald-200 bg-emerald-50 px-1.5 text-[10px] text-emerald-700" : "h-5 border-amber-200 bg-amber-50 px-1.5 text-[10px] text-amber-700"}>{completed && <CheckCircle2 className="mr-1 h-3 w-3" />}{completed ? "Análise concluída" : "Análise pendente"}</Badge></div><CardDescription className="mt-0.5 text-xs">{routine.routine_model?.name ?? "Modelo removido"} · {analyzed}/{routine.items.length} itens analisados · {lastAnalysis ? `última análise em ${formatDate(lastAnalysis)}` : `aplicado em ${formatDate(routine.applied_at)}`}</CardDescription></div><div className="flex flex-wrap items-center gap-1.5">{routine.origin === "legacy" && <Badge variant="outline" className="h-5 px-1.5 text-[10px]">Legado</Badge>}<Button variant="outline" size="sm" className="h-8 px-2.5" aria-label="Analisar cartório e suas rotinas" onClick={() => setOpenedOfficeId(routine.registry_office_id)}><Eye className="mr-1.5 h-4 w-4" />Analisar cartório</Button><Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Exportar PDF da rotina" disabled={exportingRoutineId === routine.id} onClick={() => handleRoutinePdf(routine)}><FileDown className="h-4 w-4" /></Button><Button variant="outline" size="sm" className="h-8" onClick={() => setExpanded(isExpanded ? null : routine.id)}>{isExpanded ? <ChevronUp className="mr-1.5 h-3.5 w-3.5" /> : <ChevronDown className="mr-1.5 h-3.5 w-3.5" />}{isExpanded ? "Ocultar" : "Itens"}</Button>{canDelete && <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Desvincular rotina" onClick={() => setDeleting(routine)}><Trash2 className="h-4 w-4 text-destructive" /></Button>}</div></div></CardHeader>
-                {isExpanded && <CardContent className="space-y-1.5 border-t px-3 py-2.5">{routine.notes && <p className="mb-2 line-clamp-2 text-xs text-muted-foreground" title={routine.notes}>{routine.notes}</p>}{routine.items.map((item) => <RoutineItemRow key={item.id} routine={routine} item={item} canEdit={canEdit} onEdit={openItem} />)}</CardContent>}
+                <CardHeader className="px-4 py-3"><div className="flex flex-col justify-between gap-2 md:flex-row md:items-center"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><CardTitle className="truncate text-sm" title={routine.registry_office?.name ?? "Cartório removido"}>{routine.registry_office?.name ?? "Cartório removido"}</CardTitle><Badge variant="outline" className={completed ? "h-5 border-emerald-200 bg-emerald-50 px-1.5 text-[10px] text-emerald-700" : "h-5 border-amber-200 bg-amber-50 px-1.5 text-[10px] text-amber-700"}>{completed && <CheckCircle2 className="mr-1 h-3 w-3" />}{completed ? "Análise concluída" : "Análise pendente"}</Badge></div><CardDescription className="mt-0.5 text-xs">{routine.routine_model?.name ?? "Modelo removido"} · {analyzed}/{routine.items.length} itens analisados · {lastAnalysis ? `última análise em ${formatDate(lastAnalysis)}` : `aplicado em ${formatDate(routine.applied_at)}`}</CardDescription></div><div className="flex flex-wrap items-center gap-1.5">{routine.origin === "legacy" && <Badge variant="outline" className="h-5 px-1.5 text-[10px]">Legado</Badge>}<Button variant="outline" size="sm" className="h-8 px-2.5" aria-label="Analisar cartório e suas rotinas" onClick={() => openOfficeAnalysis(routine.registry_office_id)}><Eye className="mr-1.5 h-4 w-4" />Analisar cartório</Button><Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Exportar PDF da rotina" disabled={exportingRoutineId === routine.id} onClick={() => handleRoutinePdf(routine)}><FileDown className="h-4 w-4" /></Button>{canDelete && <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Desvincular rotina" onClick={() => setDeleting(routine)}><Trash2 className="h-4 w-4 text-destructive" /></Button>}</div></div></CardHeader>
               </Card>;
             })}
             {!filtered.length && <Card><CardContent className="py-12 text-center text-sm text-muted-foreground">Nenhuma rotina encontrada.</CardContent></Card>}
@@ -271,7 +314,56 @@ export default function CsCxRoutines() {
 
       <Dialog open={applyOpen} onOpenChange={setApplyOpen}><DialogContent><DialogHeader><DialogTitle>Aplicar rotina</DialogTitle><DialogDescription>Vincule um modelo e todos os seus itens a um cartório.</DialogDescription></DialogHeader><div className="space-y-4"><div><Label>Cartório</Label><Select value={applyForm.registryOfficeId} onValueChange={(value) => setApplyForm((current) => ({ ...current, registryOfficeId: value }))}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{offices.map((office) => <SelectItem key={office.id} value={office.id}>{office.name}</SelectItem>)}</SelectContent></Select></div><div><Label>Modelo</Label><Select value={applyForm.routineModelId} onValueChange={(value) => setApplyForm((current) => ({ ...current, routineModelId: value }))}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{models.filter((model) => model.active).map((model) => <SelectItem key={model.id} value={model.id}>{model.name}</SelectItem>)}</SelectContent></Select></div><div><Label htmlFor="routine-notes">Observações</Label><Textarea id="routine-notes" value={applyForm.notes} onChange={(event) => setApplyForm((current) => ({ ...current, notes: event.target.value }))} /></div></div><DialogFooter><Button variant="outline" onClick={() => setApplyOpen(false)}>Cancelar</Button><Button disabled={!applyForm.registryOfficeId || !applyForm.routineModelId || applyRoutine.isPending} onClick={handleApply}>Aplicar</Button></DialogFooter></DialogContent></Dialog>
 
-      <Dialog open={Boolean(openedOfficeId)} onOpenChange={(open) => !open && setOpenedOfficeId(null)}><DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl"><DialogHeader><DialogTitle>Rotinas do cartório</DialogTitle><DialogDescription>{openedOfficeRoutines[0]?.registry_office?.name ?? "Cartório"} · visão consolidada para análise.</DialogDescription></DialogHeader><div className="space-y-3">{openedOfficeRoutines.map((routine) => { const analyzed = routine.items.filter((item) => item.analyzed_at).length; const completed = routine.items.length > 0 && analyzed === routine.items.length; return <div key={routine.id} className="rounded-lg border"><div className="flex flex-wrap items-center justify-between gap-2 border-b bg-muted/20 px-3 py-2"><div><p className="text-sm font-semibold">{routine.routine_model?.name ?? "Modelo removido"}</p><p className="text-[11px] text-muted-foreground">{analyzed}/{routine.items.length} analisados · aplicado em {formatDate(routine.applied_at)}</p></div><Badge variant="outline" className={completed ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-amber-200 bg-amber-50 text-amber-700"}>{completed ? "Concluída" : "Pendente"}</Badge></div><div className="space-y-1.5 p-2">{routine.items.map((item) => <RoutineItemRow key={item.id} routine={routine} item={item} canEdit={canEdit} onEdit={openItem} />)}</div></div>; })}</div><DialogFooter><Button variant="outline" onClick={() => setOpenedOfficeId(null)}>Fechar</Button></DialogFooter></DialogContent></Dialog>
+      <Dialog open={Boolean(openedOfficeId)} onOpenChange={(open) => !open && closeOfficeAnalysis()}>
+        <DialogContent className="flex max-h-[90vh] flex-col overflow-hidden sm:max-w-5xl">
+          <DialogHeader>
+            <DialogTitle>Análise das rotinas do cartório</DialogTitle>
+            <DialogDescription>{openedOfficeRoutines[0]?.registry_office?.name ?? "Cartório"} · consulte e analise os itens sem sair da lista principal.</DialogDescription>
+          </DialogHeader>
+
+          <div className="grid grid-cols-3 gap-2">
+            <AnalysisMetric label="Rotinas" value={analysisTotals.routines} />
+            <AnalysisMetric label="Itens" value={analysisTotals.items} />
+            <AnalysisMetric label="Analisados" value={analysisTotals.analyzed} />
+          </div>
+
+          <div className="relative">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              aria-label="Buscar itens da análise"
+              className="h-9 pl-9"
+              placeholder="Buscar item, modelo, categoria ou tipo..."
+              value={analysisSearch}
+              onChange={(event) => updateAnalysisSearch(event.target.value)}
+            />
+          </div>
+
+          <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+            <div className="space-y-1.5">
+              {pagedOfficeItems.map(({ routine, item }) => (
+                <RoutineItemRow key={item.id} routine={routine} item={item} canEdit={canEdit} onEdit={openItem} />
+              ))}
+              {!openedOfficeItems.length && (
+                <div className="rounded-lg border border-dashed py-10 text-center text-sm text-muted-foreground">
+                  Nenhum item encontrado para esta busca.
+                </div>
+              )}
+            </div>
+          </div>
+
+          <RoutinePaginationBar
+            currentPage={currentAnalysisPage}
+            pageSize={analysisPageSize}
+            totalItems={openedOfficeItems.length}
+            totalPages={analysisTotalPages}
+            itemLabel="itens da análise"
+            selectLabel="Itens da análise por página"
+            onPageChange={setAnalysisPage}
+            onPageSizeChange={updateAnalysisPageSize}
+          />
+          <DialogFooter><Button variant="outline" onClick={closeOfficeAnalysis}>Fechar</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={Boolean(editingItem)} onOpenChange={(open) => !open && setEditingItem(null)}><DialogContent><DialogHeader><DialogTitle>Analisar item</DialogTitle><DialogDescription>{editingItem?.routine.registry_office?.name} · {editingItem?.item.model_item?.name}</DialogDescription></DialogHeader><div className="space-y-4"><div className="grid gap-4 sm:grid-cols-2"><div><Label>Status</Label><Select value={itemStatus} onValueChange={setItemStatus}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{STATUS_OPTIONS.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent></Select></div><div><Label htmlFor="analysis-date">Data da análise</Label><Input id="analysis-date" type="date" required value={itemAnalysisDate} onChange={(event) => setItemAnalysisDate(event.target.value)} /></div></div><div><Label htmlFor="analysis-notes">Observação da análise</Label><Textarea id="analysis-notes" value={itemNotes} onChange={(event) => setItemNotes(event.target.value)} /></div></div><DialogFooter><Button variant="outline" onClick={() => setEditingItem(null)}>Cancelar</Button><Button disabled={!itemAnalysisDate || setRoutineItem.isPending} onClick={handleItemSave}>Salvar análise</Button></DialogFooter></DialogContent></Dialog>
 
@@ -284,8 +376,12 @@ function Metric({ icon: Icon, label, value }: { icon: typeof Database; label: st
   return <Card><CardContent className="flex items-center gap-2.5 px-3 py-2.5"><div className="rounded-lg bg-rose-50 p-1.5 text-rose-600 dark:bg-rose-950/40"><Icon className="h-4 w-4" /></div><div><p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</p><p className="text-xl font-black leading-6">{value}</p></div></CardContent></Card>;
 }
 
+function AnalysisMetric({ label, value }: { label: string; value: number }) {
+  return <div className="rounded-lg border bg-muted/20 px-3 py-2"><p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</p><p className="text-lg font-black leading-6">{value}</p></div>;
+}
+
 function RoutineItemRow({ routine, item, canEdit, onEdit }: { routine: CsCxOfficeRoutine; item: CsCxRoutineItemConfig; canEdit: boolean; onEdit: (routine: CsCxOfficeRoutine, item: CsCxRoutineItemConfig) => void }) {
-  return <div className="flex flex-col justify-between gap-2 rounded-md border px-3 py-2 md:flex-row md:items-center"><div className="min-w-0"><div className="flex flex-wrap items-center gap-1.5"><span className="text-sm font-medium">{item.model_item?.name ?? "Item removido"}</span>{item.model_item?.required && <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">Obrigatório</Badge>}{item.model_item?.category && <Badge variant="outline" className="h-5 px-1.5 text-[10px]" style={{ borderColor: item.model_item.category.display_color }}>{item.model_item.category.name}</Badge>}</div><p className="mt-0.5 truncate text-[11px] leading-4 text-muted-foreground">{item.model_item?.routine_type?.name}{item.analysis_notes ? ` · ${item.analysis_notes}` : ""}</p></div><div className="flex flex-wrap items-center gap-1.5">{item.analyzed_at && <span className="flex items-center gap-1 text-[11px] text-muted-foreground"><CalendarDays className="h-3 w-3" />{formatDate(item.analyzed_at)}</span>}<StatusBadge active={item.active} />{canEdit && <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => onEdit(routine, item)}><Pencil className="mr-1.5 h-3.5 w-3.5" />Editar</Button>}</div></div>;
+  return <div className="flex flex-col justify-between gap-2 rounded-md border px-3 py-2 md:flex-row md:items-center"><div className="min-w-0"><div className="flex flex-wrap items-center gap-1.5"><span className="text-sm font-medium">{item.model_item?.name ?? "Item removido"}</span>{item.model_item?.required && <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">Obrigatório</Badge>}{item.model_item?.category && <Badge variant="outline" className="h-5 px-1.5 text-[10px]" style={{ borderColor: item.model_item.category.display_color }}>{item.model_item.category.name}</Badge>}</div><p className="mt-0.5 truncate text-[11px] leading-4 text-muted-foreground">{routine.routine_model?.name ?? "Modelo removido"}{item.model_item?.routine_type ? ` · ${item.model_item.routine_type.name}` : ""}{item.analysis_notes ? ` · ${item.analysis_notes}` : ""}</p></div><div className="flex flex-wrap items-center gap-1.5">{item.analyzed_at && <span className="flex items-center gap-1 text-[11px] text-muted-foreground"><CalendarDays className="h-3 w-3" />{formatDate(item.analyzed_at)}</span>}<StatusBadge active={item.active} />{canEdit && <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => onEdit(routine, item)}><Pencil className="mr-1.5 h-3.5 w-3.5" />Editar</Button>}</div></div>;
 }
 
 function StatusBadge({ active }: { active: boolean | null }) {
