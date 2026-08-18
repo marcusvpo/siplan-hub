@@ -57,6 +57,7 @@ interface ProcessoVendaSyncRequest {
 }
 
 interface ProcessoVendaSyncFilters {
+  client_codes?: string[];
   client_names?: string[];
   product?: string | null;
   nature?: string | null;
@@ -160,6 +161,7 @@ function normalizeProcessoVendaFilters(
   filters?: ProcessoVendaSyncFilters | null
 ): ProcessoVendaSyncFilters {
   return {
+    client_codes: cleanFilterValues(filters?.client_codes),
     client_names: cleanFilterValues(filters?.client_names),
     product: typeof filters?.product === "string" ? filters.product.trim() : null,
     nature: typeof filters?.nature === "string" ? filters.nature.trim() : null,
@@ -453,7 +455,16 @@ async function runProcessoVendaOnce(
       "DataAberturaChamado < DATEADD(DAY, 1, @endDate)",
     ];
 
-    if (filters.client_names && filters.client_names.length > 0) {
+    if (filters.client_codes && filters.client_codes.length > 0) {
+      const parameters = filters.client_codes.map((clientCode, index) => {
+        const name = `clientCode${index}`;
+        chamadoRequest.input(name, sql.NVarChar(100), clientCode);
+        return `@${name}`;
+      });
+      whereClauses.push(
+        `LTRIM(RTRIM(codigoCliente)) COLLATE Latin1_General_CI_AI IN (${parameters.join(", ")})`
+      );
+    } else if (filters.client_names && filters.client_names.length > 0) {
       const parameters = filters.client_names.map((client, index) => {
         const name = `client${index}`;
         chamadoRequest.input(name, sql.NVarChar(500), client);
