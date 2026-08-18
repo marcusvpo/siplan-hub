@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
 const hasPermission = vi.fn();
+const { printRequestsReport } = vi.hoisted(() => ({ printRequestsReport: vi.fn() }));
 
 vi.mock("@/hooks/usePermissions", () => ({
   usePermissions: () => ({ hasPermission }),
@@ -10,6 +11,10 @@ vi.mock("@/hooks/usePermissions", () => ({
 
 vi.mock("@/hooks/use-toast", () => ({
   useToast: () => ({ toast: vi.fn() }),
+}));
+
+vi.mock("@/lib/cs-cx-requests-report", () => ({
+  printCsCxRequestsReport: printRequestsReport,
 }));
 
 const mutation = { mutateAsync: vi.fn(), isPending: false };
@@ -50,7 +55,7 @@ vi.mock("@/hooks/useCsCxCore", async (importOriginal) => {
         module: "Notas",
         requester: "Maria",
         responsible: "João",
-        requested_on: "2026-08-01",
+        requested_on: index === 0 ? "2026-08-01" : "2026-07-01",
         expected_delivery_on: null,
         delivered_on: null,
         status: "Aguardando",
@@ -93,6 +98,8 @@ describe("CS/CX — ações por permissão", () => {
   beforeEach(() => {
     hasPermission.mockReset();
     mutation.mutateAsync.mockReset();
+    printRequestsReport.mockReset();
+    printRequestsReport.mockResolvedValue(undefined);
   });
 
   it("mantém cartórios visíveis e esconde escrita sem permissão", () => {
@@ -148,6 +155,24 @@ describe("CS/CX — ações por permissão", () => {
 
     expect(screen.getByText("CH-105")).toBeInTheDocument();
     expect(screen.getByLabelText("Mostrando 6 a 10 de 12 solicitações")).toBeInTheDocument();
+  });
+
+  it("filtra solicitações por período e imprime somente o resultado", async () => {
+    const openWindow = vi.spyOn(window, "open").mockReturnValue(null);
+    renderPage(<CsCxRequests />, []);
+
+    fireEvent.change(screen.getByLabelText("Período inicial da solicitação"), { target: { value: "2026-08-01" } });
+    fireEvent.change(screen.getByLabelText("Período final da solicitação"), { target: { value: "2026-08-31" } });
+
+    expect(screen.getByLabelText("Mostrando 1 a 1 de 1 solicitações")).toBeInTheDocument();
+    expect(screen.getByText("CH-123")).toBeInTheDocument();
+    expect(screen.queryByText("CH-101")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /imprimir relatório/i }));
+    await waitFor(() => expect(printRequestsReport).toHaveBeenCalledTimes(1));
+    expect(printRequestsReport.mock.calls[0][0]).toHaveLength(1);
+    expect(printRequestsReport.mock.calls[0][1]).toContain("01/08/2026 até 31/08/2026");
+    openWindow.mockRestore();
   });
 
   it("abre o quadro compacto em tela cheia e fecha com Esc", () => {
