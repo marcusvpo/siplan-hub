@@ -60,6 +60,8 @@ const emptyForm: CsCxRequestInput = {
 };
 
 const DEFAULT_PAGE_SIZE = 5;
+const EXECUTION_FILTER_VALUE = "__execution";
+const EXECUTION_STATUSES = ["Projeto", "Desenvolvimento", "Em andamento"];
 
 const REQUEST_STATUS_STYLES: Record<string, { column: string; header: string; badge: string; card: string }> = {
   Aguardando: {
@@ -157,7 +159,10 @@ export default function CsCxRequests() {
     return requests.filter((request) => {
       const matchesSearch = !term || [request.ticket_number, request.description, request.module, request.requester, request.responsible, request.registry_office?.name, ...(request.updates ?? []).map((update) => update.observation)]
         .some((value) => value?.toLocaleLowerCase("pt-BR").includes(term));
-      const matchesStatus = statusFilter === "all" || request.status === statusFilter;
+      const matchesStatus = statusFilter === "all"
+        || (statusFilter === EXECUTION_FILTER_VALUE
+          ? EXECUTION_STATUSES.includes(request.status ?? "")
+          : request.status === statusFilter);
       const matchesOffice = officeFilter === "all" || request.registry_office_id === officeFilter;
       const requestDate = request.requested_on ?? request.created_at?.slice(0, 10) ?? "";
       const matchesPeriod = (!periodStart && !periodEnd)
@@ -186,7 +191,7 @@ export default function CsCxRequests() {
       : "Período da solicitação: todos";
     return [
       period,
-      `Status: ${statusFilter === "all" ? "todos" : statusFilter}`,
+      `Status: ${statusFilter === "all" ? "todos" : statusFilter === EXECUTION_FILTER_VALUE ? "Em execução" : statusFilter}`,
       `Cartório: ${office ?? "todos"}`,
       ...(search.trim() ? [`Busca: ${search.trim()}`] : []),
     ].join(" · ");
@@ -279,17 +284,17 @@ export default function CsCxRequests() {
       </div>
 
       <div className="grid gap-2 grid-cols-2 lg:grid-cols-4">
-        <Metric label="Total" value={requests.length} />
-        <Metric label="Aguardando" value={requests.filter((item) => item.status === "Aguardando").length} />
-        <Metric label="Em execução" value={requests.filter((item) => ["Projeto", "Desenvolvimento", "Em andamento"].includes(item.status ?? "")).length} />
-        <Metric label="Finalizadas" value={requests.filter((item) => item.status === "Finalizado").length} />
+        <Metric label="Total" value={requests.length} active={statusFilter === "all"} onClick={() => updateStatusFilter("all")} />
+        <Metric label="Aguardando" value={requests.filter((item) => item.status === "Aguardando").length} active={statusFilter === "Aguardando"} onClick={() => updateStatusFilter("Aguardando")} />
+        <Metric label="Em execução" value={requests.filter((item) => EXECUTION_STATUSES.includes(item.status ?? "")).length} active={statusFilter === EXECUTION_FILTER_VALUE} onClick={() => updateStatusFilter(EXECUTION_FILTER_VALUE)} />
+        <Metric label="Finalizadas" value={requests.filter((item) => item.status === "Finalizado").length} active={statusFilter === "Finalizado"} onClick={() => updateStatusFilter("Finalizado")} />
       </div>
 
       <Card>
         <CardContent className="space-y-3 p-3">
           <div className="grid gap-2 lg:grid-cols-2 xl:grid-cols-[minmax(260px,1fr)_170px_220px_340px]">
             <div className="relative"><Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" /><Input value={search} onChange={(event) => updateSearch(event.target.value)} placeholder="Buscar chamado, descrição, módulo ou responsável..." className="h-9 pl-9" /></div>
-            <Select value={statusFilter} onValueChange={updateStatusFilter}><SelectTrigger className="h-9"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Todos os status</SelectItem>{statusNames.map((status) => <SelectItem key={status} value={status}>{status}</SelectItem>)}</SelectContent></Select>
+            <Select value={statusFilter} onValueChange={updateStatusFilter}><SelectTrigger className="h-9"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Todos os status</SelectItem><SelectItem value={EXECUTION_FILTER_VALUE}>Em execução (grupo)</SelectItem>{statusNames.map((status) => <SelectItem key={status} value={status}>{status}</SelectItem>)}</SelectContent></Select>
             <Select value={officeFilter} onValueChange={updateOfficeFilter}><SelectTrigger className="h-9"><SelectValue placeholder="Todos os cartórios" /></SelectTrigger><SelectContent><SelectItem value="all">Todos os cartórios</SelectItem>{offices.map((office) => <SelectItem key={office.id} value={office.id}>{office.name}</SelectItem>)}</SelectContent></Select>
             <div className="flex h-9 items-center gap-1 rounded-md border bg-background px-2" title="Período da solicitação"><CalendarClock className="h-4 w-4 shrink-0 text-muted-foreground" /><span className="shrink-0 text-[10px] font-semibold uppercase text-muted-foreground">Período</span><Input aria-label="Período inicial da solicitação" type="date" value={periodStart} max={periodEnd || undefined} onChange={(event) => updatePeriodStart(event.target.value)} className="h-7 min-w-0 border-0 px-1 text-xs shadow-none focus-visible:ring-0" /><span className="text-[11px] text-muted-foreground">até</span><Input aria-label="Período final da solicitação" type="date" value={periodEnd} min={periodStart || undefined} onChange={(event) => updatePeriodEnd(event.target.value)} className="h-7 min-w-0 border-0 px-1 text-xs shadow-none focus-visible:ring-0" />{(periodStart || periodEnd) && <Button type="button" variant="ghost" size="icon" className="h-6 w-6 shrink-0" aria-label="Limpar período" onClick={() => { setPeriodStart(""); setPeriodEnd(""); setPage(1); }}><X className="h-3.5 w-3.5" /></Button>}</div>
           </div>
@@ -497,8 +502,8 @@ function StatusBadge({ status }: { status: string | null }) {
   return <Badge variant="outline" className={cn(status === "Finalizado" && "border-emerald-200 bg-emerald-50 text-emerald-700", status === "Negado" && "border-red-200 bg-red-50 text-red-700", ["Projeto", "Desenvolvimento", "Em andamento"].includes(status ?? "") && "border-blue-200 bg-blue-50 text-blue-700", status === "Sustentação" && "border-orange-200 bg-orange-50 text-orange-700", status === "FastTrack" && "border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700")}>{status || "Aguardando"}</Badge>;
 }
 
-function Metric({ label, value }: { label: string; value: number }) {
-  return <Card><CardContent className="flex items-center justify-between px-3 py-2.5"><div><p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</p><p className="text-xl font-bold leading-6">{value}</p></div><CalendarClock className="h-4 w-4 text-rose-500" /></CardContent></Card>;
+function Metric({ label, value, active, onClick }: { label: string; value: number; active: boolean; onClick: () => void }) {
+  return <button type="button" aria-label={`Filtrar por ${label}: ${value} solicitações`} aria-pressed={active} onClick={onClick} className="rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"><Card className={cn("h-full transition-colors hover:border-rose-300 hover:bg-rose-50/40", active && "border-rose-400 bg-rose-50 ring-1 ring-rose-300 dark:bg-rose-950/20")}><CardContent className="flex items-center justify-between px-3 py-2.5"><div><p className={cn("text-[10px] font-semibold uppercase tracking-wide text-muted-foreground", active && "text-rose-700 dark:text-rose-300")}>{label}</p><p className="text-xl font-bold leading-6">{value}</p></div><CalendarClock className={cn("h-4 w-4 text-rose-500", active && "fill-rose-100")} /></CardContent></Card></button>;
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
