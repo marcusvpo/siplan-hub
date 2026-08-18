@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 
 const hasPermission = vi.fn();
 const mutation = { mutateAsync: vi.fn(), mutate: vi.fn(), isPending: false };
@@ -302,7 +302,7 @@ describe("CS/CX visitas e NPS — permissões", () => {
     expect(screen.getByText("Cartórios avaliados")).toBeInTheDocument();
     expect(screen.getByText("Cartórios não avaliados")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /promotores/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^promotores/i }));
     expect(screen.getByRole("tab", { name: /respostas/i })).toHaveAttribute("data-state", "active");
     expect(screen.getByText("Maria")).toBeInTheDocument();
     expect(screen.queryByText("Neutro")).not.toBeInTheDocument();
@@ -373,5 +373,18 @@ describe("CS/CX visitas e NPS — permissões", () => {
     expect(
       screen.getByRole("button", { name: /gerar relatório com ia/i }),
     ).toBeInTheDocument();
+  });
+
+  it("abre o detalhamento analítico dos clientes pela cor do NPS", () => {
+    renderPage(<CsCxNps />, []);
+
+    fireEvent.click(screen.getByRole("button", { name: /analisar detratores/i }));
+
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByRole("heading", { name: /clientes detratores/i })).toBeInTheDocument();
+    expect(within(dialog).getByText("Respondente 3")).toBeInTheDocument();
+    expect(within(dialog).getByText("Detrator")).toBeInTheDocument();
+    expect(within(dialog).getByLabelText(/buscar clientes no detalhamento/i)).toBeInTheDocument();
+    expect(within(dialog).getByText(/1–1/)).toBeInTheDocument();
   });
 });
