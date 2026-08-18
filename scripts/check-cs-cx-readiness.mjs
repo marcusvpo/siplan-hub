@@ -2,7 +2,7 @@ import fs from "node:fs";
 import pg from "pg";
 
 const { Client } = pg;
-const EXPECTED_TABLES = 29;
+const EXPECTED_TABLES = 31;
 
 loadDotEnv();
 const targetUrl = process.env.SUPABASE_DB_URL;
@@ -59,6 +59,12 @@ try {
              AND to_regprocedure('public.cs_cx_save_contact(uuid,date,text,text,uuid[],text,text,uuid,text)') IS NOT NULL
              AND to_regprocedure('public.cs_cx_save_registry_office_v2(uuid,text,text,text,text,boolean,jsonb,jsonb)') IS NOT NULL
              AS customer_relationships
+           ,to_regclass('public.cs_cx_request_statuses') IS NOT NULL
+             AND to_regclass('public.cs_cx_request_updates') IS NOT NULL
+             AND to_regprocedure('public.cs_cx_save_request_v2(uuid,text,text,text,text,text,date,date,date,text,uuid,text)') IS NOT NULL
+             AND to_regprocedure('public.cs_cx_save_registry_office_v3(uuid,text,text,text,text,boolean,jsonb,jsonb,uuid)') IS NOT NULL
+             AND to_regprocedure('public.cs_cx_set_routine_item(uuid,boolean,text,timestamp with time zone)') IS NOT NULL
+             AS operational_review
     FROM pg_tables
     WHERE schemaname = 'public' AND tablename LIKE 'cs_cx_%'
   `);
@@ -108,7 +114,8 @@ try {
       schemaRow.total === EXPECTED_TABLES &&
         schemaRow.with_rls === EXPECTED_TABLES &&
         schemaRow.mapping_exceptions &&
-        schemaRow.customer_relationships,
+        schemaRow.customer_relationships &&
+        schemaRow.operational_review,
       `${schemaRow.total}/${EXPECTED_TABLES} tabelas; RLS ${schemaRow.with_rls}/${EXPECTED_TABLES}; exceções de usuário ${schemaRow.mapping_exceptions ? "OK" : "ausentes"}`,
     ],
     [

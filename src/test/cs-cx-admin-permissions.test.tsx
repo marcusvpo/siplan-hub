@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 const hasPermission = vi.fn();
 const mutation = { mutateAsync: vi.fn(), isPending: false };
@@ -56,6 +56,20 @@ vi.mock("@/hooks/useCsCxRoutines", () => ({
   }),
 }));
 
+vi.mock("@/hooks/useCsCxCore", () => ({
+  useCsCxRequestStatusAdmin: () => ({
+    statuses: [
+      { id: "status-1", name: "Sustentação", color: "orange", sort_order: 50, active: true, is_system: false },
+      { id: "status-2", name: "FastTrack", color: "fuchsia", sort_order: 60, active: true, is_system: false },
+    ],
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+    saveStatus: mutation,
+    deleteStatus: mutation,
+  }),
+}));
+
 import CsCxAdmin from "@/pages/cs-cx/CsCxAdmin";
 
 describe("CS/CX administração — permissões", () => {
@@ -79,5 +93,10 @@ describe("CS/CX administração — permissões", () => {
     expect(screen.getByRole("button", { name: "Criar modelo" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Novo item/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Editar Reconhecimento de firma" })).toBeInTheDocument();
+
+    fireEvent.mouseDown(screen.getByRole("tab", { name: /status das solicitações/i }), { button: 0, ctrlKey: false });
+    expect(screen.getByText("Sustentação")).toBeInTheDocument();
+    expect(screen.getByText("FastTrack")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /novo status/i })).toBeInTheDocument();
   });
 });

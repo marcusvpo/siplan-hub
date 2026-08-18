@@ -27,7 +27,7 @@ const migrations = [
   ...new Set(
     [
       ...runner.matchAll(
-        /["']((?:20260811|20260812|20260817)\d+_cs_cx_[^"']+\.sql)["']/g,
+        /["']((?:20260811|20260812|20260817|20260818)\d+_cs_cx_[^"']+\.sql)["']/g,
       ),
     ].map((match) => match[1]),
   ),
@@ -35,7 +35,7 @@ const migrations = [
 
 describe("preflight do schema CS/CX", () => {
   it("mantém uma lista explícita e existente de migrations", () => {
-    expect(migrations).toHaveLength(17);
+    expect(migrations).toHaveLength(18);
     expect(new Set(migrations).size).toBe(migrations.length);
     for (const migration of migrations) {
       expect(
@@ -158,5 +158,21 @@ describe("preflight do schema CS/CX", () => {
     expect(migration).toContain("CREATE OR REPLACE FUNCTION public.cs_cx_save_registry_office_v2");
     expect(migration).toMatch(/ALTER TABLE public\.cs_cx_contact_products ENABLE ROW LEVEL SECURITY/);
     expect(migration).toMatch(/ALTER TABLE public\.cs_cx_registry_office_product_responsibles ENABLE ROW LEVEL SECURITY/);
+  });
+
+  it("versiona os ajustes da homologação operacional", () => {
+    const migration = readFileSync(
+      resolve(root, "supabase/migrations/20260818130000_cs_cx_operational_review.sql"),
+      "utf8",
+    );
+
+    expect(migration).toContain("CREATE TABLE IF NOT EXISTS public.cs_cx_request_statuses");
+    expect(migration).toContain("CREATE TABLE IF NOT EXISTS public.cs_cx_request_updates");
+    expect(migration).toContain("'Sustentação'");
+    expect(migration).toContain("'FastTrack'");
+    expect(migration).toContain("CREATE OR REPLACE FUNCTION public.cs_cx_save_request_v2");
+    expect(migration).toContain("CREATE OR REPLACE FUNCTION public.cs_cx_save_registry_office_v3");
+    expect(migration).toMatch(/ALTER TABLE public\.cs_cx_request_statuses ENABLE ROW LEVEL SECURITY/);
+    expect(migration).toMatch(/ALTER TABLE public\.cs_cx_request_updates ENABLE ROW LEVEL SECURITY/);
   });
 });

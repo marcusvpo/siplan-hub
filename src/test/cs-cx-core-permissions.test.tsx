@@ -29,6 +29,8 @@ vi.mock("@/hooks/useCsCxCore", async (importOriginal) => {
         notes: null,
         origin: "legacy",
         created_at: null,
+        analyst_profile_id: index === 0 ? "profile-1" : null,
+        analyst: index === 0 ? { id: "profile-1", full_name: "Bruno", email: null } : null,
         products: [],
       })),
       products: [],
@@ -59,7 +61,14 @@ vi.mock("@/hooks/useCsCxCore", async (importOriginal) => {
         updated_at: null,
         origin: "legacy",
         registry_office: { id: "office-1", name: "Cartório Central" },
+        updates: index === 0 ? [{ id: "update-1", observation: "Primeiro retorno", author_profile_id: "profile-1", occurred_at: "2026-08-10T15:00:00Z", origin: "hub", author: { id: "profile-1", full_name: "Bruno", email: null } }] : [],
       })),
+      statuses: [
+        { id: "status-1", name: "Aguardando", color: "amber", sort_order: 10, active: true, is_system: true },
+        { id: "status-2", name: "Projeto", color: "violet", sort_order: 20, active: true, is_system: true },
+        { id: "status-3", name: "Sustentação", color: "orange", sort_order: 30, active: true, is_system: false },
+        { id: "status-4", name: "FastTrack", color: "fuchsia", sort_order: 40, active: true, is_system: false },
+      ],
       isLoading: false,
       error: null,
       refetch: vi.fn(),
@@ -89,6 +98,7 @@ describe("CS/CX — ações por permissão", () => {
   it("mantém cartórios visíveis e esconde escrita sem permissão", () => {
     renderPage(<CsCxRegistryOffices />, []);
     expect(screen.getByText("Cartório Central")).toBeInTheDocument();
+    expect(screen.getByText("Bruno")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /novo cartório/i })).not.toBeInTheDocument();
   });
 
@@ -167,5 +177,15 @@ describe("CS/CX — ações por permissão", () => {
     fireEvent.drop(target, { dataTransfer });
 
     expect(mutation.mutateAsync).toHaveBeenCalledWith({ id: "request-1", status: "Projeto" });
+  });
+
+  it("exibe os novos status e preserva observações anteriores na edição", () => {
+    renderPage(<CsCxRequests />, ["cs_cx_registros:edit"]);
+    fireEvent.mouseDown(screen.getByRole("tab", { name: /quadro/i }), { button: 0, ctrlKey: false });
+    fireEvent.click(screen.getByRole("button", { name: "Editar CH-123" }));
+
+    expect(screen.getByText("Histórico de observações")).toBeInTheDocument();
+    expect(screen.getByText("Primeiro retorno")).toBeInTheDocument();
+    expect(screen.getByText("Nova observação")).toBeInTheDocument();
   });
 });
