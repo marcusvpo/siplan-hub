@@ -287,11 +287,12 @@ export function useCsCxRoutines() {
   });
 
   const setRoutineItem = useMutation({
-    mutationFn: async (input: { id: string; active: boolean | null; analysisNotes?: string }) => {
+    mutationFn: async (input: { id: string; active: boolean | null; analysisNotes?: string; analyzedAt: string }) => {
       const { error } = await db.rpc("cs_cx_set_routine_item", {
         p_config_id: input.id,
         p_active: input.active,
         p_analysis_notes: emptyToNull(input.analysisNotes),
+        p_analyzed_at: `${input.analyzedAt}T12:00:00`,
       });
       if (error) throw error;
     },

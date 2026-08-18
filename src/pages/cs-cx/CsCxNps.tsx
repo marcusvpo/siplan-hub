@@ -105,6 +105,7 @@ export default function CsCxNps() {
   const [requestOpen, setRequestOpen] = useState(false);
   const [viewing, setViewing] = useState<CsCxNpsResponse | null>(null);
   const [activeTab, setActiveTab] = useState("analytics");
+  const [officeCoverage, setOfficeCoverage] = useState<"evaluated" | "not-evaluated" | null>(null);
   const canCreate = hasPermission("cs_cx_nps", "create");
   const canDelete = hasPermission("cs_cx_nps", "delete");
 
@@ -197,10 +198,11 @@ export default function CsCxNps() {
   const evaluatedOfficeIds = new Set(responses.map((response) => response.registry_office_id).filter(Boolean));
   const evaluatedOfficeNames = new Set(responses.map((response) => normalizeOfficeName(response.registry_office?.name ?? response.respondent_office)));
   const activeOffices = offices.filter((office) => office.active);
-  const evaluatedOffices = activeOffices.filter((office) =>
+  const evaluatedOfficeList = activeOffices.filter((office) =>
     evaluatedOfficeIds.has(office.id) || evaluatedOfficeNames.has(normalizeOfficeName(office.name)),
-  ).length;
-  const notEvaluatedOffices = Math.max(0, activeOffices.length - evaluatedOffices);
+  );
+  const notEvaluatedOfficeList = activeOffices.filter((office) => !evaluatedOfficeList.some((evaluated) => evaluated.id === office.id));
+  const coverageOffices = officeCoverage === "evaluated" ? evaluatedOfficeList : notEvaluatedOfficeList;
 
   function showClassification(value: "PROMOTOR" | "NEUTRO" | "DETRATOR") {
     setClassification(value);
@@ -303,8 +305,8 @@ export default function CsCxNps() {
         <Metric icon={Smile} label="Promotores" value={promoters} active={classification === "PROMOTOR" && activeTab === "responses"} onClick={() => showClassification("PROMOTOR")} />
         <Metric icon={Meh} label="Neutros" value={neutrals} active={classification === "NEUTRO" && activeTab === "responses"} onClick={() => showClassification("NEUTRO")} />
         <Metric icon={Frown} label="Detratores" value={detractors} active={classification === "DETRATOR" && activeTab === "responses"} onClick={() => showClassification("DETRATOR")} />
-        <Metric icon={Building2} label="Cartórios avaliados" value={evaluatedOffices} />
-        <Metric icon={CircleHelp} label="Cartórios não avaliados" value={notEvaluatedOffices} />
+        <Metric icon={Building2} label="Cartórios avaliados" value={evaluatedOfficeList.length} active={officeCoverage === "evaluated"} onClick={() => setOfficeCoverage("evaluated")} />
+        <Metric icon={CircleHelp} label="Cartórios não avaliados" value={notEvaluatedOfficeList.length} active={officeCoverage === "not-evaluated"} onClick={() => setOfficeCoverage("not-evaluated")} />
       </div>
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="h-9">
@@ -613,6 +615,14 @@ export default function CsCxNps() {
           </Card>
         </TabsContent>
       </Tabs>
+      <Dialog open={Boolean(officeCoverage)} onOpenChange={(open) => !open && setOfficeCoverage(null)}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader><DialogTitle>{officeCoverage === "evaluated" ? "Cartórios avaliados" : "Cartórios ainda não avaliados"}</DialogTitle><DialogDescription>{officeCoverage === "evaluated" ? "Cartórios ativos que já possuem ao menos uma resposta NPS." : "Cartórios ativos sem resposta NPS vinculada; use esta lista para planejar os próximos envios."}</DialogDescription></DialogHeader>
+          <div className="overflow-hidden rounded-lg border">
+            <Table><TableHeader><TableRow><TableHead>Cartório</TableHead><TableHead>Responsável</TableHead>{officeCoverage === "evaluated" && <TableHead className="text-right">Respostas</TableHead>}</TableRow></TableHeader><TableBody>{coverageOffices.length ? coverageOffices.map((office) => { const responseCount = responses.filter((response) => response.registry_office_id === office.id || normalizeOfficeName(response.registry_office?.name ?? response.respondent_office) === normalizeOfficeName(office.name)).length; return <TableRow key={office.id}><TableCell className="font-medium">{office.name}</TableCell><TableCell>{office.analyst?.full_name || office.analyst?.email || "Não informado"}</TableCell>{officeCoverage === "evaluated" && <TableCell className="text-right font-semibold">{responseCount}</TableCell>}</TableRow>; }) : <TableRow><TableCell colSpan={officeCoverage === "evaluated" ? 3 : 2} className="h-24 text-center text-muted-foreground">Nenhum cartório nesta situação.</TableCell></TableRow>}</TableBody></Table>
+          </div>
+        </DialogContent>
+      </Dialog>
       <AlertDialog
         open={Boolean(deleting)}
         onOpenChange={(open) => !open && setDeleting(null)}

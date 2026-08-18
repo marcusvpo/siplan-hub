@@ -40,6 +40,8 @@ export interface CsCxRegistryOffice {
   notes: string | null;
   origin: "legacy" | "hub";
   created_at: string | null;
+  analyst_profile_id: string | null;
+  analyst: CsCxResponsibleProfile | null;
   products: CsCxOfficeProduct[];
 }
 
@@ -49,6 +51,7 @@ export interface RegistryOfficeInput {
   sap_code?: string;
   contact_details?: string;
   notes?: string;
+  analyst_profile_id?: string;
   active: boolean;
   products: Array<{
     product_id: string;
@@ -62,11 +65,31 @@ export const CS_CX_REQUEST_STATUSES = [
   "Projeto",
   "Desenvolvimento",
   "Em andamento",
+  "Sustentação",
+  "FastTrack",
   "Finalizado",
   "Negado",
 ] as const;
 
-export type CsCxRequestStatus = (typeof CS_CX_REQUEST_STATUSES)[number];
+export type CsCxRequestStatus = string;
+
+export interface CsCxRequestStatusConfig {
+  id: string;
+  name: string;
+  color: string;
+  sort_order: number;
+  active: boolean;
+  is_system: boolean;
+}
+
+export interface CsCxRequestUpdate {
+  id: string;
+  observation: string;
+  author_profile_id: string | null;
+  occurred_at: string;
+  origin: "legacy" | "hub";
+  author: CsCxResponsibleProfile | null;
+}
 
 export interface CsCxRequest {
   id: string;
@@ -87,6 +110,7 @@ export interface CsCxRequest {
   updated_at: string | null;
   origin: "legacy" | "hub";
   registry_office: { id: string; name: string } | null;
+  updates: CsCxRequestUpdate[];
 }
 
 export interface CsCxRequestInput {
@@ -100,11 +124,12 @@ export interface CsCxRequestInput {
   expected_delivery_on?: string;
   delivered_on?: string;
   status: string;
-  notes?: string;
+  new_observation?: string;
   registry_office_id: string;
 }
 
-interface RawOffice extends Omit<CsCxRegistryOffice, "products"> {
+interface RawOffice extends Omit<CsCxRegistryOffice, "products" | "analyst"> {
+  profiles: CsCxResponsibleProfile | null;
   cs_cx_registry_office_products?: Array<{
     id: string;
     product_id: string;
@@ -119,8 +144,11 @@ interface RawOffice extends Omit<CsCxRegistryOffice, "products"> {
   }>;
 }
 
-interface RawRequest extends Omit<CsCxRequest, "registry_office"> {
+interface RawRequest extends Omit<CsCxRequest, "registry_office" | "updates"> {
   cs_cx_registry_offices: { id: string; name: string } | null;
+  cs_cx_request_updates?: Array<Omit<CsCxRequestUpdate, "author"> & {
+    profiles: CsCxResponsibleProfile | null;
+  }>;
 }
 
 export function useCsCxRegistryOffices() {
@@ -133,7 +161,8 @@ export function useCsCxRegistryOffices() {
         .from("cs_cx_registry_offices")
         .select(`
           id, legacy_id, name, sap_code, active, contact_details, notes,
-          origin, created_at,
+          origin, created_at, analyst_profile_id,
+          profiles!cs_cx_registry_offices_analyst_profile_id_fkey (id, full_name, email),
           cs_cx_registry_office_products (
             id, product_id, implementation_date, source_present,
             cs_cx_products (id, name, product_code),
@@ -151,6 +180,7 @@ export function useCsCxRegistryOffices() {
 
       return ((data ?? []) as unknown as RawOffice[]).map((office) => ({
         ...office,
+        analyst: office.profiles,
         products: (office.cs_cx_registry_office_products ?? []).filter((link) => link.source_present).map((link) => ({
           id: link.id,
           product_id: link.product_id,
@@ -194,13 +224,14 @@ export function useCsCxRegistryOffices() {
 
   const saveOffice = useMutation({
     mutationFn: async (input: RegistryOfficeInput) => {
-      const { data, error } = await db.rpc("cs_cx_save_registry_office_v2", {
+      const { data, error } = await db.rpc("cs_cx_save_registry_office_v3", {
         p_id: input.id ?? null,
         p_name: input.name,
         p_sap_code: emptyToNull(input.sap_code),
         p_contact_details: emptyToNull(input.contact_details),
         p_notes: emptyToNull(input.notes),
         p_active: input.active,
+        p_analyst_profile_id: input.analyst_profile_id || null,
         p_products: input.products.map(({ product_id, implementation_date }) => ({
           product_id,
           implementation_date,
@@ -251,7 +282,11 @@ export function useCsCxRequests() {
           responsible, requested_on, expected_delivery_on, delivered_on,
           status, notes, registry_office_id, author_profile_id, created_at,
           updated_at, origin,
-          cs_cx_registry_offices (id, name)
+          cs_cx_registry_offices (id, name),
+          cs_cx_request_updates (
+            id, observation, author_profile_id, occurred_at, origin,
+            profiles!cs_cx_request_updates_author_profile_id_fkey (id, full_name, email)
+          )
         `)
         .eq("source_present", true)
         .order("updated_at", { ascending: false });
@@ -260,52 +295,44 @@ export function useCsCxRequests() {
       return ((data ?? []) as unknown as RawRequest[]).map((request) => ({
         ...request,
         registry_office: request.cs_cx_registry_offices,
+        updates: (request.cs_cx_request_updates ?? [])
+          .map((update) => ({ ...update, author: update.profiles }))
+          .sort((a, b) => b.occurred_at.localeCompare(a.occurred_at)),
       })) satisfies CsCxRequest[];
+    },
+  });
+
+  const statusesQuery = useQuery({
+    queryKey: ["cs-cx", "request-statuses"],
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("cs_cx_request_statuses")
+        .select("id, name, color, sort_order, active, is_system")
+        .order("sort_order")
+        .order("name");
+      if (error) throw error;
+      return (data ?? []) as CsCxRequestStatusConfig[];
     },
   });
 
   const saveRequest = useMutation({
     mutationFn: async (input: CsCxRequestInput) => {
-      const payload = {
-        ticket_number: emptyToNull(input.ticket_number),
-        description: emptyToNull(input.description),
-        module: emptyToNull(input.module),
-        requester: emptyToNull(input.requester),
-        responsible: emptyToNull(input.responsible),
-        requested_on: emptyToNull(input.requested_on),
-        expected_delivery_on: emptyToNull(input.expected_delivery_on),
-        delivered_on: emptyToNull(input.delivered_on),
-        status: input.status,
-        notes: emptyToNull(input.notes),
-        registry_office_id: input.registry_office_id,
-        updated_at: new Date().toISOString(),
-      };
-
-      if (input.id) {
-        const { data, error } = await db
-          .from("cs_cx_requests")
-          .update(payload)
-          .eq("id", input.id)
-          .select()
-          .single();
-        if (error) throw error;
-        return data;
-      }
-
-      const { data: authData, error: authError } = await supabase.auth.getUser();
-      if (authError) throw authError;
-      const { data, error } = await db
-        .from("cs_cx_requests")
-        .insert({
-          ...payload,
-          author_profile_id: authData.user?.id ?? null,
-          origin: "hub",
-          source_present: true,
-        })
-        .select()
-        .single();
+      const { data, error } = await db.rpc("cs_cx_save_request_v2", {
+        p_id: input.id ?? null,
+        p_ticket_number: emptyToNull(input.ticket_number),
+        p_description: input.description,
+        p_module: emptyToNull(input.module),
+        p_requester: emptyToNull(input.requester),
+        p_responsible: emptyToNull(input.responsible),
+        p_requested_on: emptyToNull(input.requested_on),
+        p_expected_delivery_on: emptyToNull(input.expected_delivery_on),
+        p_delivered_on: emptyToNull(input.delivered_on),
+        p_status: input.status,
+        p_registry_office_id: input.registry_office_id,
+        p_new_observation: emptyToNull(input.new_observation),
+      });
       if (error) throw error;
-      return data;
+      return data as string;
     },
     onSuccess: () => invalidateCore(queryClient),
   });
@@ -345,13 +372,52 @@ export function useCsCxRequests() {
 
   return {
     requests: requestsQuery.data ?? [],
-    isLoading: requestsQuery.isLoading,
-    error: requestsQuery.error,
-    refetch: requestsQuery.refetch,
+    statuses: statusesQuery.data ?? CS_CX_REQUEST_STATUSES.map((name, index) => ({ id: name, name, color: "slate", sort_order: index, active: true, is_system: true })),
+    isLoading: requestsQuery.isLoading || statusesQuery.isLoading,
+    error: requestsQuery.error ?? statusesQuery.error,
+    refetch: async () => Promise.all([requestsQuery.refetch(), statusesQuery.refetch()]),
     saveRequest,
     updateStatus,
     deleteRequest,
   };
+}
+
+export function useCsCxRequestStatusAdmin() {
+  const queryClient = useQueryClient();
+  const query = useQuery({
+    queryKey: ["cs-cx", "request-statuses"],
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("cs_cx_request_statuses")
+        .select("id, name, color, sort_order, active, is_system")
+        .order("sort_order")
+        .order("name");
+      if (error) throw error;
+      return (data ?? []) as CsCxRequestStatusConfig[];
+    },
+  });
+  const saveStatus = useMutation({
+    mutationFn: async (input: { id?: string; name: string; color: string; active: boolean; sort_order: number }) => {
+      const { data, error } = await db.rpc("cs_cx_save_request_status", {
+        p_id: input.id ?? null,
+        p_name: input.name,
+        p_color: input.color,
+        p_active: input.active,
+        p_sort_order: input.sort_order,
+      });
+      if (error) throw error;
+      return data as string;
+    },
+    onSuccess: () => invalidateCore(queryClient),
+  });
+  const deleteStatus = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await db.rpc("cs_cx_delete_request_status", { p_id: id });
+      if (error) throw error;
+    },
+    onSuccess: () => invalidateCore(queryClient),
+  });
+  return { statuses: query.data ?? [], isLoading: query.isLoading, error: query.error, refetch: query.refetch, saveStatus, deleteStatus };
 }
 
 function emptyToNull(value?: string) {

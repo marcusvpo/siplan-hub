@@ -142,4 +142,14 @@ describe("CS/CX rotinas — permissões", () => {
     fireEvent.click(screen.getByRole("button", { name: /próxima página de registros/i }));
     expect(screen.getByText("Responsável 6")).toBeInTheDocument();
   });
+
+  it("abre a visão consolidada do cartório e permite informar a data da análise", () => {
+    renderPage(["cs_cx_rotinas:edit"]);
+    fireEvent.click(screen.getAllByRole("button", { name: /abrir cartório e suas rotinas/i })[0]);
+
+    expect(screen.getByText("Rotinas do cartório")).toBeInTheDocument();
+    expect(screen.getByText(/visão consolidada para análise/i)).toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole("button", { name: /editar/i })[0]);
+    expect(screen.getByLabelText("Data da análise")).toBeInTheDocument();
+  });
 });

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowDown,
+  ArrowRight,
   ArrowUp,
   Boxes,
   Layers3,
@@ -9,9 +10,12 @@ import {
   Plus,
   RefreshCw,
   Settings2,
+  ShieldCheck,
   Tags,
   Trash2,
   TriangleAlert,
+  Users,
+  Workflow,
 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +39,7 @@ import {
 } from "@/hooks/useCsCxRoutines";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useToast } from "@/hooks/use-toast";
+import { type CsCxRequestStatusConfig, useCsCxRequestStatusAdmin } from "@/hooks/useCsCxCore";
 
 type CatalogKind = "category" | "type";
 type DeleteTarget =
@@ -54,9 +59,11 @@ const EMPTY_ITEM = {
   defaultStatus: "analyze",
 };
 const EMPTY_CATALOG = { kind: "category" as CatalogKind, id: "", name: "", description: "", active: true, color: "#6c757d" };
+const EMPTY_STATUS = { id: "", name: "", color: "slate", active: true, sort_order: 0 };
 
 export default function CsCxAdmin() {
   const admin = useCsCxRoutineAdmin();
+  const statusAdmin = useCsCxRequestStatusAdmin();
   const { hasPermission } = usePermissions();
   const { toast } = useToast();
   const canManage = hasPermission("cs_cx_admin", "manage");
@@ -68,6 +75,11 @@ export default function CsCxAdmin() {
   const [catalogOpen, setCatalogOpen] = useState(false);
   const [catalogForm, setCatalogForm] = useState(EMPTY_CATALOG);
   const [deleting, setDeleting] = useState<DeleteTarget | null>(null);
+  const [statusOpen, setStatusOpen] = useState(false);
+  const [statusForm, setStatusForm] = useState(EMPTY_STATUS);
+  const [deletingStatus, setDeletingStatus] = useState<CsCxRequestStatusConfig | null>(null);
+  const canViewUsers = hasPermission("users", "view");
+  const canViewRoles = hasPermission("roles", "view");
 
   useEffect(() => {
     if (!selectedModelId && admin.models.length) setSelectedModelId(admin.models[0].id);
@@ -206,7 +218,33 @@ export default function CsCxAdmin() {
     }
   }
 
-  if (admin.isLoading) {
+  function openStatus(status?: CsCxRequestStatusConfig) {
+    setStatusForm(status ? { id: status.id, name: status.name, color: status.color, active: status.active, sort_order: status.sort_order } : { ...EMPTY_STATUS, sort_order: (statusAdmin.statuses.at(-1)?.sort_order ?? 0) + 10 });
+    setStatusOpen(true);
+  }
+
+  async function handleStatusSave() {
+    try {
+      await statusAdmin.saveStatus.mutateAsync({ ...statusForm, id: statusForm.id || undefined });
+      setStatusOpen(false);
+      toast({ title: statusForm.id ? "Status atualizado" : "Status criado" });
+    } catch (error) {
+      showError(toast, "Não foi possível salvar o status", error);
+    }
+  }
+
+  async function handleStatusDelete() {
+    if (!deletingStatus) return;
+    try {
+      await statusAdmin.deleteStatus.mutateAsync(deletingStatus.id);
+      setDeletingStatus(null);
+      toast({ title: "Status excluído" });
+    } catch (error) {
+      showError(toast, "Não foi possível excluir o status", error);
+    }
+  }
+
+  if (admin.isLoading || statusAdmin.isLoading) {
     return <div className="container mx-auto max-w-[1600px] space-y-4 px-4 py-4 lg:px-6"><Skeleton className="h-20 w-full" /><Skeleton className="h-72 w-full" /></div>;
   }
 
@@ -215,21 +253,23 @@ export default function CsCxAdmin() {
       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
         <div className="flex items-center gap-2">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-300"><Settings2 className="h-4 w-4" /></span>
-          <div><h1 className="text-2xl font-black leading-none tracking-tight">Administração de rotinas</h1><p className="mt-1 text-xs text-muted-foreground">Gerencie modelos, itens, categorias, tipos e produtos vinculados</p></div>
+          <div><h1 className="text-2xl font-black leading-none tracking-tight">Administração CS/CX</h1><p className="mt-1 text-xs text-muted-foreground">Gerencie rotinas, status, usuários e perfis de acesso</p></div>
         </div>
         {!canManage && <Badge variant="outline">Somente leitura</Badge>}
       </div>
 
       {admin.error && <Card className="border-destructive/40"><CardContent className="flex items-center justify-between gap-3 p-3"><div className="flex items-center gap-2 text-sm text-destructive"><TriangleAlert className="h-4 w-4" />{messageOf(admin.error)}</div><Button variant="outline" size="sm" onClick={() => admin.refetch()}><RefreshCw className="mr-2 h-4 w-4" />Tentar novamente</Button></CardContent></Card>}
+      {statusAdmin.error && <Card className="border-destructive/40"><CardContent className="flex items-center justify-between gap-3 p-3"><div className="flex items-center gap-2 text-sm text-destructive"><TriangleAlert className="h-4 w-4" />{messageOf(statusAdmin.error)}</div><Button variant="outline" size="sm" onClick={() => statusAdmin.refetch()}><RefreshCw className="mr-2 h-4 w-4" />Tentar novamente</Button></CardContent></Card>}
 
-      <div className="grid gap-2 sm:grid-cols-3">
+      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
         <Metric icon={Layers3} label="Modelos" value={admin.models.length} />
         <Metric icon={Tags} label="Categorias" value={admin.categories.length} />
         <Metric icon={ListChecks} label="Itens" value={admin.items.length} />
+        <Metric icon={Workflow} label="Status" value={statusAdmin.statuses.length} />
       </div>
 
       <Tabs defaultValue="models">
-        <TabsList className="h-9"><TabsTrigger className="h-7" value="models">Modelos e itens</TabsTrigger><TabsTrigger className="h-7" value="categories">Categorias</TabsTrigger><TabsTrigger className="h-7" value="types">Tipos</TabsTrigger></TabsList>
+        <TabsList className="h-9 max-w-full justify-start overflow-x-auto"><TabsTrigger className="h-7" value="models">Modelos e itens</TabsTrigger><TabsTrigger className="h-7" value="categories">Categorias</TabsTrigger><TabsTrigger className="h-7" value="types">Tipos</TabsTrigger><TabsTrigger className="h-7" value="statuses">Status das solicitações</TabsTrigger><TabsTrigger className="h-7" value="access">Usuários e permissões</TabsTrigger></TabsList>
 
         <TabsContent value="models" className="mt-3 grid gap-3 lg:grid-cols-[280px_minmax(0,1fr)]">
           <Card className="min-h-0">
@@ -254,6 +294,8 @@ export default function CsCxAdmin() {
 
         <TabsContent value="categories"><CatalogPanel kind="category" items={admin.categories} canManage={canManage} onEdit={(item) => openCatalog("category", item)} onCreate={() => openCatalog("category")} onDelete={(item) => setDeleting({ kind: "category", id: item.id, name: item.name })} /></TabsContent>
         <TabsContent value="types"><CatalogPanel kind="type" items={admin.types} canManage={canManage} onEdit={(item) => openCatalog("type", item)} onCreate={() => openCatalog("type")} onDelete={(item) => setDeleting({ kind: "type", id: item.id, name: item.name })} /></TabsContent>
+        <TabsContent value="statuses"><Card><CardHeader className="px-4 pb-2 pt-3"><div className="flex items-center justify-between gap-3"><div><CardTitle className="text-sm">Status das solicitações</CardTitle><CardDescription className="text-xs">Defina as colunas disponíveis no quadro. Sustentação e FastTrack já estão incluídos.</CardDescription></div>{canManage && <Button size="sm" className="h-8" onClick={() => openStatus()}><Plus className="mr-1.5 h-4 w-4" />Novo status</Button>}</div></CardHeader><CardContent className="grid gap-2 px-4 pb-4 md:grid-cols-2 xl:grid-cols-3">{statusAdmin.statuses.map((status) => <div key={status.id} className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5"><div className="flex min-w-0 items-center gap-2"><span className={`h-3 w-3 shrink-0 rounded-full ${statusColorClass(status.color)}`} /><div className="min-w-0"><p className="truncate text-sm font-semibold">{status.name}</p><p className="text-[11px] text-muted-foreground">Ordem {status.sort_order}{status.is_system ? " · padrão" : ""}</p></div></div><div className="flex items-center gap-1"><Badge variant={status.active ? "default" : "secondary"} className="h-5 px-1.5 text-[10px]">{status.active ? "Ativo" : "Inativo"}</Badge>{canManage && <><Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Editar status ${status.name}`} onClick={() => openStatus(status)}><Pencil className="h-4 w-4" /></Button><Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Excluir status ${status.name}`} onClick={() => setDeletingStatus(status)}><Trash2 className="h-4 w-4 text-destructive" /></Button></>}</div></div>)}</CardContent></Card></TabsContent>
+        <TabsContent value="access"><Card><CardHeader className="px-4 pb-2 pt-3"><CardTitle className="text-sm">Controle de acesso</CardTitle><CardDescription className="text-xs">A administração de identidades é centralizada no Siplan HUB e vale também para o módulo CS/CX.</CardDescription></CardHeader><CardContent className="grid gap-3 px-4 pb-4 md:grid-cols-2"><AccessCard icon={Users} title="Usuários" description="Cadastre usuários e acompanhe seus vínculos e situação de acesso." href="/admin/users" enabled={canViewUsers} /><AccessCard icon={ShieldCheck} title="Perfis de acesso" description="Configure perfis e permissões de visualização, criação, edição e gestão." href="/admin/roles" enabled={canViewRoles} /></CardContent></Card></TabsContent>
       </Tabs>
 
       <Dialog open={modelOpen} onOpenChange={setModelOpen}><DialogContent className="sm:max-w-xl"><DialogHeader><DialogTitle>{modelForm.id ? "Editar modelo" : "Novo modelo"}</DialogTitle><DialogDescription>Defina o modelo e os produtos aos quais ele se aplica.</DialogDescription></DialogHeader><div className="space-y-4"><div><Label htmlFor="model-name">Nome</Label><Input id="model-name" value={modelForm.name} onChange={(event) => setModelForm((current) => ({ ...current, name: event.target.value }))} /></div><div><Label htmlFor="model-description">Descrição</Label><Textarea id="model-description" value={modelForm.description} onChange={(event) => setModelForm((current) => ({ ...current, description: event.target.value }))} /></div><div><Label>Produtos</Label><div className="mt-2 grid max-h-40 gap-2 overflow-y-auto rounded-lg border p-3 sm:grid-cols-2">{admin.products.map((product) => <label key={product.id} className="flex items-center gap-2 text-sm"><Checkbox checked={modelForm.productIds.includes(product.id)} onCheckedChange={(checked) => setModelForm((current) => ({ ...current, productIds: checked ? [...current.productIds, product.id] : current.productIds.filter((id) => id !== product.id) }))} />{product.name}</label>)}</div></div><div className="flex items-center justify-between rounded-lg border p-3"><Label htmlFor="model-active">Modelo ativo</Label><Switch id="model-active" checked={modelForm.active} onCheckedChange={(active) => setModelForm((current) => ({ ...current, active }))} /></div></div><DialogFooter><Button variant="outline" onClick={() => setModelOpen(false)}>Cancelar</Button><Button disabled={!modelForm.name.trim() || admin.saveModel.isPending} onClick={handleModelSave}>Salvar modelo</Button></DialogFooter></DialogContent></Dialog>
@@ -262,7 +304,10 @@ export default function CsCxAdmin() {
 
       <Dialog open={catalogOpen} onOpenChange={setCatalogOpen}><DialogContent><DialogHeader><DialogTitle>{catalogForm.id ? "Editar" : "Criar"} {catalogForm.kind === "category" ? "categoria" : "tipo"}</DialogTitle></DialogHeader><div className="space-y-4"><div><Label htmlFor="catalog-name">Nome</Label><Input id="catalog-name" value={catalogForm.name} onChange={(event) => setCatalogForm((current) => ({ ...current, name: event.target.value }))} /></div><div><Label htmlFor="catalog-description">Descrição</Label><Textarea id="catalog-description" value={catalogForm.description} onChange={(event) => setCatalogForm((current) => ({ ...current, description: event.target.value }))} /></div>{catalogForm.kind === "category" && <div><Label htmlFor="catalog-color">Cor de exibição</Label><div className="mt-1 flex gap-2"><Input id="catalog-color" type="color" className="w-14 p-1" value={catalogForm.color} onChange={(event) => setCatalogForm((current) => ({ ...current, color: event.target.value }))} /><Input value={catalogForm.color} onChange={(event) => setCatalogForm((current) => ({ ...current, color: event.target.value }))} /></div></div>}<div className="flex items-center justify-between rounded-lg border p-3"><Label htmlFor="catalog-active">Cadastro ativo</Label><Switch id="catalog-active" checked={catalogForm.active} onCheckedChange={(active) => setCatalogForm((current) => ({ ...current, active }))} /></div></div><DialogFooter><Button variant="outline" onClick={() => setCatalogOpen(false)}>Cancelar</Button><Button disabled={!catalogForm.name.trim() || admin.saveCategory.isPending || admin.saveType.isPending} onClick={handleCatalogSave}>Salvar</Button></DialogFooter></DialogContent></Dialog>
 
+      <Dialog open={statusOpen} onOpenChange={setStatusOpen}><DialogContent><DialogHeader><DialogTitle>{statusForm.id ? "Editar status" : "Novo status"}</DialogTitle><DialogDescription>O nome aparece na lista, nos filtros e como coluna do quadro Kanban.</DialogDescription></DialogHeader><div className="space-y-4"><div><Label htmlFor="status-name">Nome</Label><Input id="status-name" value={statusForm.name} onChange={(event) => setStatusForm((current) => ({ ...current, name: event.target.value }))} /></div><div className="grid gap-4 sm:grid-cols-2"><div><Label>Cor</Label><Select value={statusForm.color} onValueChange={(color) => setStatusForm((current) => ({ ...current, color }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{STATUS_COLORS.map((color) => <SelectItem key={color.value} value={color.value}>{color.label}</SelectItem>)}</SelectContent></Select></div><div><Label htmlFor="status-order">Ordem no quadro</Label><Input id="status-order" type="number" value={statusForm.sort_order} onChange={(event) => setStatusForm((current) => ({ ...current, sort_order: Number(event.target.value) }))} /></div></div><div className="flex items-center justify-between rounded-lg border p-3"><div><Label htmlFor="status-active">Status ativo</Label><p className="text-xs text-muted-foreground">Inativos não aparecem para novos registros.</p></div><Switch id="status-active" checked={statusForm.active} onCheckedChange={(active) => setStatusForm((current) => ({ ...current, active }))} /></div></div><DialogFooter><Button variant="outline" onClick={() => setStatusOpen(false)}>Cancelar</Button><Button disabled={!statusForm.name.trim() || statusAdmin.saveStatus.isPending} onClick={handleStatusSave}>Salvar status</Button></DialogFooter></DialogContent></Dialog>
+
       <AlertDialog open={Boolean(deleting)} onOpenChange={(open) => !open && setDeleting(null)}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Excluir “{deleting?.name}”?</AlertDialogTitle><AlertDialogDescription>{deleting?.kind === "item" ? "As configurações deste item nas rotinas aplicadas também serão removidas e a ação ficará registrada no histórico." : deleting?.kind === "model" ? "Modelos que já possuem aplicações não podem ser excluídos." : "Cadastros utilizados por itens não podem ser excluídos."}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction onClick={handleDelete}>Excluir</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
+      <AlertDialog open={Boolean(deletingStatus)} onOpenChange={(open) => !open && setDeletingStatus(null)}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Excluir “{deletingStatus?.name}”?</AlertDialogTitle><AlertDialogDescription>Status em uso não podem ser excluídos. Nesse caso, inative o status para preservar as solicitações existentes.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction onClick={handleStatusDelete}>Excluir</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
     </div>
   );
 }
@@ -281,6 +326,26 @@ function CatalogPanel({ kind, items, canManage, onCreate, onEdit, onDelete }: {
 
 function Metric({ icon: Icon, label, value }: { icon: typeof Boxes; label: string; value: number }) {
   return <Card><CardContent className="flex items-center gap-2.5 px-3 py-2.5"><div className="rounded-lg bg-rose-50 p-1.5 text-rose-600 dark:bg-rose-950/40"><Icon className="h-4 w-4" /></div><div><p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</p><p className="text-xl font-black leading-6">{value}</p></div></CardContent></Card>;
+}
+
+function AccessCard({ icon: Icon, title, description, href, enabled }: { icon: typeof Users; title: string; description: string; href: string; enabled: boolean }) {
+  return <div className="flex items-center gap-3 rounded-lg border p-4"><div className="rounded-lg bg-rose-50 p-2 text-rose-600 dark:bg-rose-950/40"><Icon className="h-5 w-5" /></div><div className="min-w-0 flex-1"><h3 className="text-sm font-semibold">{title}</h3><p className="text-xs text-muted-foreground">{description}</p></div>{enabled ? <Button variant="outline" size="sm" asChild><a href={href}>Abrir<ArrowRight className="ml-2 h-4 w-4" /></a></Button> : <Badge variant="secondary">Sem acesso</Badge>}</div>;
+}
+
+const STATUS_COLORS = [
+  { value: "slate", label: "Cinza" },
+  { value: "amber", label: "Amarelo" },
+  { value: "violet", label: "Violeta" },
+  { value: "blue", label: "Azul" },
+  { value: "cyan", label: "Ciano" },
+  { value: "orange", label: "Laranja" },
+  { value: "fuchsia", label: "Rosa" },
+  { value: "emerald", label: "Verde" },
+  { value: "red", label: "Vermelho" },
+];
+
+function statusColorClass(color: string) {
+  return ({ slate: "bg-slate-500", amber: "bg-amber-500", violet: "bg-violet-500", blue: "bg-blue-500", cyan: "bg-cyan-500", orange: "bg-orange-500", fuchsia: "bg-fuchsia-500", emerald: "bg-emerald-500", red: "bg-red-500" } as Record<string, string>)[color] ?? "bg-slate-500";
 }
 
 function statusLabel(active: boolean | null) {

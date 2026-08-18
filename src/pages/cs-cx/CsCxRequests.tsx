@@ -11,6 +11,7 @@ import {
   Maximize2,
   MoreHorizontal,
   Minimize2,
+  MessageSquareText,
   Pencil,
   Plus,
   RefreshCw,
@@ -33,9 +34,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 import {
-  CS_CX_REQUEST_STATUSES,
   type CsCxRequest,
   type CsCxRequestInput,
+  type CsCxRequestStatusConfig,
   useCsCxRegistryOffices,
   useCsCxRequests,
 } from "@/hooks/useCsCxCore";
@@ -51,7 +52,7 @@ const emptyForm: CsCxRequestInput = {
   expected_delivery_on: "",
   delivered_on: "",
   status: "Aguardando",
-  notes: "",
+  new_observation: "",
   registry_office_id: "",
 };
 
@@ -82,6 +83,18 @@ const REQUEST_STATUS_STYLES: Record<string, { column: string; header: string; ba
     badge: "bg-cyan-200/80 text-cyan-900 dark:bg-cyan-900 dark:text-cyan-100",
     card: "border-l-2 border-l-cyan-400 bg-cyan-50/30 dark:border-l-cyan-600 dark:bg-cyan-950/10",
   },
+  "Sustentação": {
+    column: "border-orange-200 bg-orange-50/40 dark:border-orange-900/70 dark:bg-orange-950/15",
+    header: "border-orange-200 bg-orange-100/70 text-orange-950 dark:border-orange-900/70 dark:bg-orange-950/40 dark:text-orange-100",
+    badge: "bg-orange-200/80 text-orange-900 dark:bg-orange-900 dark:text-orange-100",
+    card: "border-l-2 border-l-orange-400 bg-orange-50/30 dark:border-l-orange-600 dark:bg-orange-950/10",
+  },
+  FastTrack: {
+    column: "border-fuchsia-200 bg-fuchsia-50/40 dark:border-fuchsia-900/70 dark:bg-fuchsia-950/15",
+    header: "border-fuchsia-200 bg-fuchsia-100/70 text-fuchsia-950 dark:border-fuchsia-900/70 dark:bg-fuchsia-950/40 dark:text-fuchsia-100",
+    badge: "bg-fuchsia-200/80 text-fuchsia-900 dark:bg-fuchsia-900 dark:text-fuchsia-100",
+    card: "border-l-2 border-l-fuchsia-400 bg-fuchsia-50/30 dark:border-l-fuchsia-600 dark:bg-fuchsia-950/10",
+  },
   Finalizado: {
     column: "border-emerald-200 bg-emerald-50/40 dark:border-emerald-900/70 dark:bg-emerald-950/15",
     header: "border-emerald-200 bg-emerald-100/70 text-emerald-950 dark:border-emerald-900/70 dark:bg-emerald-950/40 dark:text-emerald-100",
@@ -96,8 +109,19 @@ const REQUEST_STATUS_STYLES: Record<string, { column: string; header: string; ba
   },
 };
 
+const REQUEST_TONE_STYLES: Record<string, { column: string; header: string; badge: string; card: string }> = {
+  amber: REQUEST_STATUS_STYLES.Aguardando,
+  violet: REQUEST_STATUS_STYLES.Projeto,
+  blue: REQUEST_STATUS_STYLES.Desenvolvimento,
+  cyan: REQUEST_STATUS_STYLES["Em andamento"],
+  orange: REQUEST_STATUS_STYLES.Sustentação,
+  fuchsia: REQUEST_STATUS_STYLES.FastTrack,
+  emerald: REQUEST_STATUS_STYLES.Finalizado,
+  red: REQUEST_STATUS_STYLES.Negado,
+};
+
 export default function CsCxRequests() {
-  const { requests, isLoading, error, refetch, saveRequest, updateStatus, deleteRequest } = useCsCxRequests();
+  const { requests, statuses = FALLBACK_STATUS_CONFIGS, isLoading, error, refetch, saveRequest, updateStatus, deleteRequest } = useCsCxRequests();
   const { offices, error: officesError } = useCsCxRegistryOffices();
   const { hasPermission } = usePermissions();
   const { toast } = useToast();
@@ -113,11 +137,19 @@ export default function CsCxRequests() {
   const canCreate = hasPermission("cs_cx_registros", "create");
   const canEdit = hasPermission("cs_cx_registros", "edit");
   const canDelete = hasPermission("cs_cx_registros", "delete");
+  const boardStatuses = useMemo(() => {
+    const configured = statuses.filter((status) => status.active);
+    const used = requests.map((request) => request.status).filter((status): status is string => Boolean(status));
+    const missing = used.filter((name) => !configured.some((status) => status.name === name));
+    return [...configured, ...[...new Set(missing)].map((name, index) => ({ id: name, name, color: "slate", sort_order: 1000 + index, active: true, is_system: false }))];
+  }, [requests, statuses]);
+  const statusNames = boardStatuses.map((status) => status.name);
+  const currentRequest = form.id ? requests.find((request) => request.id === form.id) ?? null : null;
 
   const filtered = useMemo(() => {
     const term = search.trim().toLocaleLowerCase("pt-BR");
     return requests.filter((request) => {
-      const matchesSearch = !term || [request.ticket_number, request.description, request.module, request.requester, request.responsible, request.registry_office?.name]
+      const matchesSearch = !term || [request.ticket_number, request.description, request.module, request.requester, request.responsible, request.registry_office?.name, ...(request.updates ?? []).map((update) => update.observation)]
         .some((value) => value?.toLocaleLowerCase("pt-BR").includes(term));
       const matchesStatus = statusFilter === "all" || request.status === statusFilter;
       const matchesOffice = officeFilter === "all" || request.registry_office_id === officeFilter;
@@ -153,7 +185,7 @@ export default function CsCxRequests() {
       expected_delivery_on: request.expected_delivery_on ?? "",
       delivered_on: request.delivered_on ?? "",
       status: request.status ?? "Aguardando",
-      notes: request.notes ?? "",
+      new_observation: "",
       registry_office_id: request.registry_office_id,
     });
     setDialogOpen(true);
@@ -214,7 +246,7 @@ export default function CsCxRequests() {
         <CardContent className="space-y-3 p-3">
           <div className="grid gap-2 lg:grid-cols-[minmax(260px,1fr)_180px_240px]">
             <div className="relative"><Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" /><Input value={search} onChange={(event) => updateSearch(event.target.value)} placeholder="Buscar chamado, descrição, módulo ou responsável..." className="h-9 pl-9" /></div>
-            <Select value={statusFilter} onValueChange={updateStatusFilter}><SelectTrigger className="h-9"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Todos os status</SelectItem>{CS_CX_REQUEST_STATUSES.map((status) => <SelectItem key={status} value={status}>{status}</SelectItem>)}</SelectContent></Select>
+            <Select value={statusFilter} onValueChange={updateStatusFilter}><SelectTrigger className="h-9"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Todos os status</SelectItem>{statusNames.map((status) => <SelectItem key={status} value={status}>{status}</SelectItem>)}</SelectContent></Select>
             <Select value={officeFilter} onValueChange={updateOfficeFilter}><SelectTrigger className="h-9"><SelectValue placeholder="Todos os cartórios" /></SelectTrigger><SelectContent><SelectItem value="all">Todos os cartórios</SelectItem>{offices.map((office) => <SelectItem key={office.id} value={office.id}>{office.name}</SelectItem>)}</SelectContent></Select>
           </div>
 
@@ -222,7 +254,7 @@ export default function CsCxRequests() {
             <Tabs defaultValue="list">
               <TabsList className="h-9"><TabsTrigger value="list" className="h-7 gap-2"><List className="h-3.5 w-3.5" />Lista</TabsTrigger><TabsTrigger value="board" className="h-7 gap-2"><Columns3 className="h-3.5 w-3.5" />Quadro</TabsTrigger></TabsList>
               <TabsContent value="list" className="mt-3 space-y-3"><RequestTable requests={pagedRequests} canEdit={canEdit} canDelete={canDelete} onEdit={openEdit} onDelete={setDeleting} /><PaginationBar currentPage={currentPage} pageSize={pageSize} totalItems={filtered.length} totalPages={totalPages} onPageChange={setPage} onPageSizeChange={updatePageSize} /></TabsContent>
-              <TabsContent value="board" className="mt-3"><RequestBoard requests={filtered} canEdit={canEdit} onEdit={openEdit} onStatusChange={changeStatus} /></TabsContent>
+              <TabsContent value="board" className="mt-3"><RequestBoard requests={filtered} statuses={boardStatuses} canEdit={canEdit} onEdit={openEdit} onStatusChange={changeStatus} /></TabsContent>
             </Tabs>
           )}
         </CardContent>
@@ -247,10 +279,9 @@ export default function CsCxRequests() {
               <Field label="Previsão"><Input type="date" value={form.expected_delivery_on} onChange={(event) => setForm({ ...form, expected_delivery_on: event.target.value })} /></Field>
               <Field label="Entrega"><Input type="date" value={form.delivered_on} onChange={(event) => setForm({ ...form, delivered_on: event.target.value })} /></Field>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Status"><Select value={form.status} onValueChange={(value) => setForm({ ...form, status: value })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{CS_CX_REQUEST_STATUSES.map((status) => <SelectItem key={status} value={status}>{status}</SelectItem>)}</SelectContent></Select></Field>
-              <Field label="Observações"><Textarea value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} /></Field>
-            </div>
+            <Field label="Status"><Select value={form.status} onValueChange={(value) => setForm({ ...form, status: value })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{statusNames.map((status) => <SelectItem key={status} value={status}>{status}</SelectItem>)}</SelectContent></Select></Field>
+            {currentRequest && <div className="space-y-2"><div className="flex items-center gap-2"><MessageSquareText className="h-4 w-4 text-rose-500" /><Label>Histórico de observações</Label><Badge variant="secondary" className="h-5 text-[10px]">{currentRequest.updates?.length ?? 0}</Badge></div><div className="max-h-48 space-y-2 overflow-y-auto rounded-lg border bg-muted/20 p-2">{currentRequest.updates?.length ? currentRequest.updates.map((update) => <div key={update.id} className="rounded-md border bg-background px-3 py-2"><p className="whitespace-pre-wrap text-sm">{update.observation}</p><p className="mt-1 text-[11px] text-muted-foreground">{update.author?.full_name || update.author?.email || (update.origin === "legacy" ? "Sistema legado" : "Usuário removido")} · {formatDateTime(update.occurred_at)}</p></div>) : <p className="py-3 text-center text-xs text-muted-foreground">Nenhuma observação registrada.</p>}</div></div>}
+            <Field label={currentRequest ? "Nova observação" : "Observação inicial"}><Textarea value={form.new_observation ?? ""} onChange={(event) => setForm({ ...form, new_observation: event.target.value })} placeholder="A observação será adicionada ao histórico sem apagar as anteriores." /></Field>
             <DialogFooter><Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button><Button type="submit" disabled={saveRequest.isPending}>{saveRequest.isPending ? "Salvando..." : "Salvar solicitação"}</Button></DialogFooter>
           </form>
         </DialogContent>
@@ -276,7 +307,7 @@ function PaginationBar({ currentPage, pageSize, totalItems, totalPages, onPageCh
   return <div className="flex flex-col gap-2 border-t pt-3 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between"><span aria-label={`Mostrando ${firstItem} a ${lastItem} de ${totalItems} solicitações`}>Mostrando <strong className="font-semibold text-foreground">{firstItem}–{lastItem}</strong> de <strong className="font-semibold text-foreground">{totalItems}</strong></span><div className="flex flex-wrap items-center gap-2"><span>Por página</span><Select value={String(pageSize)} onValueChange={onPageSizeChange}><SelectTrigger aria-label="Itens por página" className="h-8 w-[72px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="5">5</SelectItem><SelectItem value="10">10</SelectItem><SelectItem value="20">20</SelectItem><SelectItem value="50">50</SelectItem></SelectContent></Select><span className="min-w-[92px] text-center">Página {currentPage} de {totalPages}</span><Button type="button" variant="outline" size="icon" className="h-8 w-8" aria-label="Página anterior" disabled={currentPage <= 1} onClick={() => onPageChange(currentPage - 1)}><ChevronLeft className="h-4 w-4" /></Button><Button type="button" variant="outline" size="icon" className="h-8 w-8" aria-label="Próxima página" disabled={currentPage >= totalPages} onClick={() => onPageChange(currentPage + 1)}><ChevronRight className="h-4 w-4" /></Button></div></div>;
 }
 
-function RequestBoard({ requests, canEdit, onEdit, onStatusChange }: { requests: CsCxRequest[]; canEdit: boolean; onEdit: (request: CsCxRequest) => void; onStatusChange: (request: CsCxRequest, status: string) => void }) {
+function RequestBoard({ requests, statuses, canEdit, onEdit, onStatusChange }: { requests: CsCxRequest[]; statuses: CsCxRequestStatusConfig[]; canEdit: boolean; onEdit: (request: CsCxRequest) => void; onStatusChange: (request: CsCxRequest, status: string) => void }) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [draggedRequestId, setDraggedRequestId] = useState<string | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<string | null>(null);
@@ -340,9 +371,10 @@ function RequestBoard({ requests, canEdit, onEdit, onStatusChange }: { requests:
         "flex h-[calc(100vh-340px)] min-h-[380px] max-h-[620px] gap-2 overflow-x-auto overscroll-contain rounded-lg border bg-muted/10 p-2",
         isFullscreen && "h-auto max-h-none flex-1",
       )}>
-        {CS_CX_REQUEST_STATUSES.map((status) => {
+        {statuses.map((statusConfig) => {
+          const status = statusConfig.name;
           const items = requests.filter((request) => request.status === status);
-          const styles = REQUEST_STATUS_STYLES[status];
+          const styles = REQUEST_TONE_STYLES[statusConfig.color] ?? REQUEST_STATUS_STYLES[status] ?? NEUTRAL_STATUS_STYLES;
           const isDropTarget = canEdit && dragOverStatus === status && requests.find((item) => item.id === draggedRequestId)?.status !== status;
           return (
             <div
@@ -404,7 +436,7 @@ function RequestBoard({ requests, canEdit, onEdit, onStatusChange }: { requests:
                     </CardHeader>
                     <CardContent className="space-y-1.5 p-2 pt-0">
                       <p className="truncate text-[10px] leading-4 text-muted-foreground" title={request.registry_office?.name}>{request.registry_office?.name ?? "Cartório não informado"}</p>
-                      {canEdit && <Select value={request.status ?? "Aguardando"} onValueChange={(value) => void onStatusChange(request, value)}><SelectTrigger className="h-7 text-[11px]"><SelectValue /></SelectTrigger><SelectContent>{CS_CX_REQUEST_STATUSES.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent></Select>}
+                      {canEdit && <Select value={request.status ?? "Aguardando"} onValueChange={(value) => void onStatusChange(request, value)}><SelectTrigger className="h-7 text-[11px]"><SelectValue /></SelectTrigger><SelectContent>{statuses.map((item) => <SelectItem key={item.id} value={item.name}>{item.name}</SelectItem>)}</SelectContent></Select>}
                     </CardContent>
                   </Card>
                 ))}
@@ -418,7 +450,7 @@ function RequestBoard({ requests, canEdit, onEdit, onStatusChange }: { requests:
 }
 
 function StatusBadge({ status }: { status: string | null }) {
-  return <Badge variant="outline" className={cn(status === "Finalizado" && "border-emerald-200 bg-emerald-50 text-emerald-700", status === "Negado" && "border-red-200 bg-red-50 text-red-700", ["Projeto", "Desenvolvimento", "Em andamento"].includes(status ?? "") && "border-blue-200 bg-blue-50 text-blue-700")}>{status || "Aguardando"}</Badge>;
+  return <Badge variant="outline" className={cn(status === "Finalizado" && "border-emerald-200 bg-emerald-50 text-emerald-700", status === "Negado" && "border-red-200 bg-red-50 text-red-700", ["Projeto", "Desenvolvimento", "Em andamento"].includes(status ?? "") && "border-blue-200 bg-blue-50 text-blue-700", status === "Sustentação" && "border-orange-200 bg-orange-50 text-orange-700", status === "FastTrack" && "border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700")}>{status || "Aguardando"}</Badge>;
 }
 
 function Metric({ label, value }: { label: string; value: number }) {
@@ -441,6 +473,19 @@ function formatDate(value: string | null) {
   if (!value) return "—";
   return new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" }).format(new Date(`${value}T00:00:00Z`));
 }
+
+function formatDateTime(value: string) {
+  return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value));
+}
+
+const NEUTRAL_STATUS_STYLES = {
+  column: "border-slate-200 bg-slate-50/40 dark:border-slate-800 dark:bg-slate-950/15",
+  header: "border-slate-200 bg-slate-100/70 text-slate-950 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100",
+  badge: "bg-slate-200/80 text-slate-900 dark:bg-slate-800 dark:text-slate-100",
+  card: "border-l-2 border-l-slate-400 bg-slate-50/30 dark:border-l-slate-600 dark:bg-slate-950/10",
+};
+
+const FALLBACK_STATUS_CONFIGS: CsCxRequestStatusConfig[] = ["Aguardando", "Projeto", "Desenvolvimento", "Em andamento", "Sustentação", "FastTrack", "Finalizado", "Negado"].map((name, index) => ({ id: name, name, color: "slate", sort_order: index, active: true, is_system: true }));
 
 function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Erro inesperado.";

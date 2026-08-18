@@ -24,7 +24,10 @@ vi.mock("@/hooks/useCsCxNpsAiReport", () => ({
 }));
 vi.mock("@/hooks/useCsCxCore", () => ({
   useCsCxRegistryOffices: () => ({
-    offices: [{ id: "office-1", name: "Cartório Central", active: true }],
+    offices: [
+      { id: "office-1", name: "Cartório Central", active: true, analyst: { id: "profile-1", full_name: "Bruno", email: null } },
+      { id: "office-2", name: "Cartório Sem Resposta", active: true, analyst: null },
+    ],
   }),
 }));
 vi.mock("@/hooks/useCsCxEngagement", () => ({
@@ -303,6 +306,18 @@ describe("CS/CX visitas e NPS — permissões", () => {
     expect(screen.getByRole("tab", { name: /respostas/i })).toHaveAttribute("data-state", "active");
     expect(screen.getByText("Maria")).toBeInTheDocument();
     expect(screen.queryByText("Neutro")).not.toBeInTheDocument();
+  });
+
+  it("abre as relações de cartórios avaliados e não avaliados", () => {
+    renderPage(<CsCxNps />, []);
+    fireEvent.click(screen.getByRole("button", { name: /cartórios avaliados/i }));
+    expect(screen.getByRole("heading", { name: "Cartórios avaliados" })).toBeInTheDocument();
+    expect(screen.getAllByText("Cartório Central").length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole("button", { name: /close/i }));
+
+    fireEvent.click(screen.getByRole("button", { name: /cartórios não avaliados/i }));
+    expect(screen.getByRole("heading", { name: /cartórios ainda não avaliados/i })).toBeInTheDocument();
+    expect(screen.getByText("Cartório Sem Resposta")).toBeInTheDocument();
   });
 
   it("pagina respostas e histórico de NPS em blocos compactos", () => {

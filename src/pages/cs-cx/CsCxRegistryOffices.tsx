@@ -44,6 +44,7 @@ interface OfficeForm {
   contact_details: string;
   notes: string;
   active: boolean;
+  analyst_profile_id: string;
   products: Record<string, OfficeProductForm>;
 }
 
@@ -53,6 +54,7 @@ const emptyForm: OfficeForm = {
   contact_details: "",
   notes: "",
   active: true,
+  analyst_profile_id: "",
   products: {},
 };
 
@@ -78,7 +80,7 @@ export default function CsCxRegistryOffices() {
   const filtered = useMemo(() => {
     const term = search.trim().toLocaleLowerCase("pt-BR");
     return offices.filter((office) => {
-      const matchesSearch = !term || [office.name, office.sap_code, office.contact_details]
+      const matchesSearch = !term || [office.name, office.sap_code, office.contact_details, office.analyst?.full_name, office.analyst?.email]
         .some((value) => value?.toLocaleLowerCase("pt-BR").includes(term));
       const matchesStatus = status === "all" || (status === "active" ? office.active : !office.active);
       return matchesSearch && matchesStatus;
@@ -108,6 +110,7 @@ export default function CsCxRegistryOffices() {
       contact_details: office.contact_details ?? "",
       notes: office.notes ?? "",
       active: office.active,
+      analyst_profile_id: office.analyst_profile_id ?? "",
       products: Object.fromEntries(office.products.map((item) => [item.product_id, {
         implementation_date: item.implementation_date ?? "",
         responsible_profile_ids: item.responsibles.map((responsible) => responsible.profile_id),
@@ -189,13 +192,14 @@ export default function CsCxRegistryOffices() {
             <div className="space-y-3">
             <div className="overflow-x-auto rounded-lg border">
               <Table>
-                <TableHeader><TableRow><TableHead className="h-9 px-3 text-xs">Cartório</TableHead><TableHead className="h-9 px-3 text-xs">Código SAP</TableHead><TableHead className="h-9 px-3 text-xs">Produtos</TableHead><TableHead className="h-9 px-3 text-xs">Status</TableHead><TableHead className="h-9 w-24 px-2" /></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead className="h-9 px-3 text-xs">Cartório</TableHead><TableHead className="h-9 px-3 text-xs">Responsável</TableHead><TableHead className="h-9 px-3 text-xs">Código SAP</TableHead><TableHead className="h-9 px-3 text-xs">Produtos</TableHead><TableHead className="h-9 px-3 text-xs">Status</TableHead><TableHead className="h-9 w-24 px-2" /></TableRow></TableHeader>
                 <TableBody>
                   {pagedOffices.length === 0 ? (
-                    <TableRow><TableCell colSpan={5} className="h-24 text-center text-muted-foreground">Nenhum cartório encontrado.</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={6} className="h-24 text-center text-muted-foreground">Nenhum cartório encontrado.</TableCell></TableRow>
                   ) : pagedOffices.map((office) => (
                     <TableRow key={office.id}>
                       <TableCell className="px-3 py-2"><div className="font-medium">{office.name}</div><div className="max-w-sm truncate text-[11px] leading-4 text-muted-foreground">{office.contact_details || "Contato não informado"}</div></TableCell>
+                      <TableCell className="px-3 py-2"><div className="text-sm">{office.analyst?.full_name || office.analyst?.email || "—"}</div></TableCell>
                       <TableCell className="px-3 py-2">{office.sap_code || "—"}</TableCell>
                       <TableCell className="px-3 py-2"><ProductBadges office={office} /></TableCell>
                       <TableCell className="px-3 py-2"><Badge variant={office.active ? "default" : "outline"} className="h-5 text-[10px]">{office.active ? "Ativo" : "Inativo"}</Badge></TableCell>
@@ -221,6 +225,7 @@ export default function CsCxRegistryOffices() {
               <Field label="Nome *"><Input required value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></Field>
               <Field label="Código SAP"><Input value={form.sap_code} onChange={(event) => setForm({ ...form, sap_code: event.target.value })} /></Field>
             </div>
+            <Field label="Responsável pelo cartório"><Select value={form.analyst_profile_id || "none"} onValueChange={(value) => setForm({ ...form, analyst_profile_id: value === "none" ? "" : value })}><SelectTrigger><SelectValue placeholder="Selecione o responsável" /></SelectTrigger><SelectContent><SelectItem value="none">Não informado</SelectItem>{profiles.map((profile) => <SelectItem key={profile.id} value={profile.id}>{profile.full_name || profile.email || "Usuário"}</SelectItem>)}</SelectContent></Select></Field>
             <Field label="Contatos"><Input placeholder="Telefones, celulares ou e-mails" value={form.contact_details} onChange={(event) => setForm({ ...form, contact_details: event.target.value })} /></Field>
             <Field label="Observações"><Textarea value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} /></Field>
             <div className="space-y-3 rounded-lg border p-4">
@@ -248,7 +253,7 @@ export default function CsCxRegistryOffices() {
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader><DialogTitle>Cadastro do cartório</DialogTitle><DialogDescription>Visualização completa, sem alteração dos dados.</DialogDescription></DialogHeader>
           {viewing && <div className="space-y-4">
-            <div className="grid gap-3 rounded-lg border p-3 sm:grid-cols-2"><ReadOnlyField label="Cartório" value={viewing.name} /><ReadOnlyField label="Código SAP" value={viewing.sap_code || "Não informado"} /><ReadOnlyField label="Status" value={viewing.active ? "Ativo" : "Inativo"} /><ReadOnlyField label="Origem" value={viewing.origin === "legacy" ? "Sistema legado" : "Siplan HUB"} /><div className="sm:col-span-2"><ReadOnlyField label="Contatos" value={viewing.contact_details || "Não informados"} /></div><div className="sm:col-span-2"><ReadOnlyField label="Observações" value={viewing.notes || "Não informadas"} /></div></div>
+            <div className="grid gap-3 rounded-lg border p-3 sm:grid-cols-2"><ReadOnlyField label="Cartório" value={viewing.name} /><ReadOnlyField label="Responsável" value={viewing.analyst?.full_name || viewing.analyst?.email || "Não informado"} /><ReadOnlyField label="Código SAP" value={viewing.sap_code || "Não informado"} /><ReadOnlyField label="Status" value={viewing.active ? "Ativo" : "Inativo"} /><ReadOnlyField label="Origem" value={viewing.origin === "legacy" ? "Sistema legado" : "Siplan HUB"} /><div className="sm:col-span-2"><ReadOnlyField label="Contatos" value={viewing.contact_details || "Não informados"} /></div><div className="sm:col-span-2"><ReadOnlyField label="Observações" value={viewing.notes || "Não informadas"} /></div></div>
             <div className="space-y-2"><Label>Produtos e responsáveis</Label>{viewing.products.length ? viewing.products.map((product) => <div key={product.id} className="rounded-lg border p-3"><div className="flex flex-wrap items-center justify-between gap-2"><span className="font-medium">{product.product?.name ?? "Produto"}</span><span className="text-xs text-muted-foreground">Implantação: {product.implementation_date ? formatDate(product.implementation_date) : "não informada"}</span></div><div className="mt-2 flex flex-wrap gap-1">{product.responsibles.length ? product.responsibles.map((responsible) => <Badge key={responsible.id} variant="secondary">{responsible.profile?.full_name || responsible.profile?.email || "Usuário removido"}</Badge>) : <span className="text-xs text-muted-foreground">Nenhum responsável vinculado.</span>}</div></div>) : <p className="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">Nenhum produto implantado.</p>}</div>
           </div>}
           <DialogFooter><Button type="button" variant="outline" onClick={() => setViewing(null)}>Fechar</Button>{viewing && canEdit && <Button type="button" onClick={() => { const office = viewing; setViewing(null); openEdit(office); }}><Pencil className="mr-2 h-4 w-4" />Editar cadastro</Button>}</DialogFooter>
