@@ -1,8 +1,26 @@
-import { useCallback, useEffect, useRef } from "react";
-import { FileText, ImagePlus, Paperclip, Tag, X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  Bold,
+  Code2,
+  FileCheck2,
+  FileClock,
+  FileText,
+  FileWarning,
+  Heading2,
+  ImagePlus,
+  Italic,
+  Link2,
+  List,
+  ListOrdered,
+  Paperclip,
+  Quote,
+  Tag,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import {
   formatSdAttachmentSize,
   SD_ATTACHMENT_MAX_COUNT,
@@ -20,6 +38,7 @@ interface SolutionRichTextEditorProps {
   onAddAttachments?: (files: File[]) => void;
   onRemoveAttachment?: (attachment: SdAnexo) => void;
   onRemovePendingAttachment?: (file: File) => void;
+  attachmentUpload?: { fileName: string; completed: number; total: number } | null;
   disabled?: boolean;
 }
 
@@ -32,12 +51,14 @@ export function SolutionRichTextEditor({
   onAddAttachments,
   onRemoveAttachment,
   onRemovePendingAttachment,
+  attachmentUpload,
   disabled = false,
 }: SolutionRichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const attachmentInputRef = useRef<HTMLInputElement>(null);
   const lastEmittedValue = useRef<string | null>(null);
+  const [draggingFiles, setDraggingFiles] = useState(false);
 
   useEffect(() => {
     if (!editorRef.current) return;
@@ -141,9 +162,7 @@ export function SolutionRichTextEditor({
     reader.readAsDataURL(file);
   };
 
-  const handleAttachments = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = Array.from(event.target.files || []);
-    event.target.value = "";
+  const addAttachments = (selectedFiles: File[]) => {
     if (selectedFiles.length === 0 || !onAddAttachments) return;
 
     const availableSlots = Math.max(
@@ -168,12 +187,116 @@ export function SolutionRichTextEditor({
     if (validFiles.length > 0) onAddAttachments(validFiles);
   };
 
+  const handleAttachments = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(event.target.files || []);
+    event.target.value = "";
+    addAttachments(selectedFiles);
+  };
+
+  const runEditorCommand = (command: string, value?: string) => {
+    if (disabled || !editorRef.current) return;
+    editorRef.current.focus();
+    document.execCommand(command, false, value);
+    emitChange();
+  };
+
+  const formatCodeBlock = () => {
+    if (disabled || !editorRef.current) return;
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
+      toast.info("Selecione o código que deseja transformar em bloco técnico.");
+      return;
+    }
+    const range = selection.getRangeAt(0);
+    const commonNode = range.commonAncestorContainer;
+    const commonElement = commonNode.nodeType === Node.ELEMENT_NODE
+      ? commonNode as Element
+      : commonNode.parentElement;
+    if (!commonElement || !editorRef.current.contains(commonElement)) return;
+
+    const pre = document.createElement("pre");
+    const code = document.createElement("code");
+    code.textContent = selection.toString();
+    pre.append(code);
+    range.deleteContents();
+    range.insertNode(pre);
+    pre.after(document.createElement("p"));
+    selection.removeAllRanges();
+    emitChange();
+  };
+
+  const insertLink = () => {
+    if (disabled || !editorRef.current) return;
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
+      toast.info("Selecione um texto antes de inserir o link.");
+      return;
+    }
+    const savedRange = selection.getRangeAt(0).cloneRange();
+    const url = window.prompt("Informe o endereço do link:", "https://");
+    if (!url) return;
+    if (!/^(https?:\/\/|mailto:)/i.test(url)) {
+      toast.error("Use um endereço iniciado por http://, https:// ou mailto:.");
+      return;
+    }
+    selection.removeAllRanges();
+    selection.addRange(savedRange);
+    runEditorCommand("createLink", url);
+  };
+
   const hasAttachments = attachments.length > 0 || pendingAttachments.length > 0;
 
   return (
     <div className="space-y-3">
-      <div className="overflow-hidden rounded-lg border bg-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+      <div
+        className={`relative overflow-hidden rounded-lg border bg-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 ${draggingFiles ? "border-primary ring-2 ring-primary/20" : ""}`}
+        onDragEnter={(event) => {
+          event.preventDefault();
+          if (!disabled) setDraggingFiles(true);
+        }}
+        onDragOver={(event) => event.preventDefault()}
+        onDragLeave={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+            setDraggingFiles(false);
+          }
+        }}
+        onDrop={(event) => {
+          event.preventDefault();
+          setDraggingFiles(false);
+          if (!disabled) addAttachments(Array.from(event.dataTransfer.files));
+        }}
+      >
+        {draggingFiles && (
+          <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-background/90 text-sm font-semibold text-primary">
+            Solte os arquivos para anexar
+          </div>
+        )}
         <div className="flex flex-wrap items-center gap-2 border-b bg-muted/40 px-3 py-2">
+          <Button type="button" variant="ghost" size="icon" className="h-8 w-8" title="Título" disabled={disabled} onMouseDown={(event) => event.preventDefault()} onClick={() => runEditorCommand("formatBlock", "h2")}>
+            <Heading2 className="h-4 w-4" />
+          </Button>
+          <Button type="button" variant="ghost" size="icon" className="h-8 w-8" title="Negrito" disabled={disabled} onMouseDown={(event) => event.preventDefault()} onClick={() => runEditorCommand("bold")}>
+            <Bold className="h-4 w-4" />
+          </Button>
+          <Button type="button" variant="ghost" size="icon" className="h-8 w-8" title="Itálico" disabled={disabled} onMouseDown={(event) => event.preventDefault()} onClick={() => runEditorCommand("italic")}>
+            <Italic className="h-4 w-4" />
+          </Button>
+          <Button type="button" variant="ghost" size="icon" className="h-8 w-8" title="Lista" disabled={disabled} onMouseDown={(event) => event.preventDefault()} onClick={() => runEditorCommand("insertUnorderedList")}>
+            <List className="h-4 w-4" />
+          </Button>
+          <Button type="button" variant="ghost" size="icon" className="h-8 w-8" title="Lista numerada" disabled={disabled} onMouseDown={(event) => event.preventDefault()} onClick={() => runEditorCommand("insertOrderedList")}>
+            <ListOrdered className="h-4 w-4" />
+          </Button>
+          <Button type="button" variant="ghost" size="icon" className="h-8 w-8" title="Citação" disabled={disabled} onMouseDown={(event) => event.preventDefault()} onClick={() => runEditorCommand("formatBlock", "blockquote")}>
+            <Quote className="h-4 w-4" />
+          </Button>
+          <Button type="button" variant="ghost" size="icon" className="h-8 w-8" title="Bloco de código" disabled={disabled} onMouseDown={(event) => event.preventDefault()} onClick={formatCodeBlock}>
+            <Code2 className="h-4 w-4" />
+          </Button>
+          <Button type="button" variant="ghost" size="icon" className="h-8 w-8" title="Inserir link" disabled={disabled} onMouseDown={(event) => event.preventDefault()} onClick={insertLink}>
+            <Link2 className="h-4 w-4" />
+          </Button>
+          <div className="h-5 w-px bg-border" />
           <Button
             type="button"
             variant="ghost"
@@ -243,8 +366,19 @@ export function SolutionRichTextEditor({
                     </p>
                     <p className="text-[11px] text-muted-foreground">
                       {formatSdAttachmentSize(attachment.tamanho_bytes)}
+                      {attachment.verificacao_status === "seguro" && " · Verificado"}
+                      {attachment.verificacao_status === "pendente" && " · Verificação pendente"}
+                      {attachment.verificacao_status === "suspeito" && " · Bloqueado"}
+                      {attachment.verificacao_status === "erro" && " · Verificação incompleta"}
                     </p>
                   </div>
+                  {attachment.verificacao_status === "seguro" ? (
+                    <FileCheck2 className="h-4 w-4 shrink-0 text-emerald-500" />
+                  ) : attachment.verificacao_status === "suspeito" ? (
+                    <FileWarning className="h-4 w-4 shrink-0 text-destructive" />
+                  ) : (
+                    <FileClock className="h-4 w-4 shrink-0 text-amber-500" />
+                  )}
                   <Button
                     type="button"
                     variant="ghost"
@@ -281,6 +415,18 @@ export function SolutionRichTextEditor({
                 </div>
               ))}
             </div>
+            {attachmentUpload && (
+              <div className="space-y-1.5 rounded-md border bg-background px-3 py-2">
+                <div className="flex justify-between gap-3 text-[11px] text-muted-foreground">
+                  <span className="truncate">Enviando {attachmentUpload.fileName}</span>
+                  <span>{attachmentUpload.completed}/{attachmentUpload.total}</span>
+                </div>
+                <Progress
+                  value={(attachmentUpload.completed / Math.max(attachmentUpload.total, 1)) * 100}
+                  className="h-1.5"
+                />
+              </div>
+            )}
           </div>
         )}
       </div>

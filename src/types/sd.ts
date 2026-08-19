@@ -29,6 +29,24 @@ export interface SdAnexo {
   tamanho_bytes: number;
   criado_em: string;
   criado_por: string | null;
+  verificacao_status: SdAttachmentVerificationStatus;
+  verificacao_metodo: string | null;
+  verificacao_detalhes: string | null;
+  verificado_em: string | null;
+}
+
+export type SdAttachmentVerificationStatus =
+  | "pendente"
+  | "seguro"
+  | "suspeito"
+  | "erro";
+
+export type SdSolutionStatus = "rascunho" | "publicado" | "desatualizado";
+
+export interface SdProfile {
+  id: string;
+  full_name: string | null;
+  email: string | null;
 }
 
 export interface SdSolucao {
@@ -42,9 +60,44 @@ export interface SdSolucao {
   atualizado_em: string | null;
   criado_por: string | null;
   atualizado_por: string | null;
+  status: SdSolutionStatus;
+  responsavel_id: string | null;
+  revisado_em: string | null;
+  proxima_revisao_em: string | null;
+  versao: number;
+  visualizacoes: number;
+  votos_uteis: number;
+  votos_nao_uteis: number;
   sistema?: Pick<SdSistema, "id" | "nome"> | null;
   rotina?: Pick<SdRotina, "id" | "nome"> | null;
+  responsavel?: SdProfile | null;
   anexos?: SdAnexo[];
+}
+
+export interface SdSolutionVersion {
+  id: string;
+  solucao_id: string;
+  versao: number;
+  titulo: string;
+  descricao: string | null;
+  sistema_id: string;
+  rotina_id: string | null;
+  palavras_chave: string[];
+  status: SdSolutionStatus;
+  responsavel_id: string | null;
+  revisado_em: string | null;
+  proxima_revisao_em: string | null;
+  criado_em: string;
+  criado_por: string | null;
+  autor?: SdProfile | null;
+}
+
+export interface SdSolutionFeedback {
+  solucao_id: string;
+  usuario_id: string;
+  util: boolean;
+  criado_em: string;
+  atualizado_em: string;
 }
 
 export interface SdSistemaComRotinas extends SdSistema {
@@ -57,4 +110,8 @@ export interface SdSolucaoPayload {
   sistema_id: string;
   rotina_id: string | null;
   palavras_chave: string[];
+  status: SdSolutionStatus;
+  responsavel_id: string | null;
+  revisado_em: string | null;
+  proxima_revisao_em: string | null;
 }
