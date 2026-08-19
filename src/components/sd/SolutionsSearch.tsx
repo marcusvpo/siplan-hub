@@ -203,14 +203,14 @@ export function SolutionsSearch({ refreshKey, onOpen }: SolutionsSearchProps) {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-3">
       <div className="relative">
-        <Search className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+        <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Buscar por título, descrição, sistema, rotina ou palavra-chave..."
-          className="h-12 pl-11 text-base"
+          className="h-10 pl-10 text-sm"
         />
       </div>
 
@@ -247,7 +247,7 @@ export function SolutionsSearch({ refreshKey, onOpen }: SolutionsSearchProps) {
 
       {showFilters && (
         <Card>
-          <CardContent className="grid gap-4 pt-6 sm:grid-cols-2">
+          <CardContent className="grid gap-3 pt-4 sm:grid-cols-2">
             <Select
               value={systemId || "all"}
               onValueChange={(value) => setSystemId(value === "all" ? "" : value)}
@@ -309,7 +309,7 @@ export function SolutionsSearch({ refreshKey, onOpen }: SolutionsSearchProps) {
           </CardContent>
         </Card>
       ) : !selectedFamilyId ? (
-        <div className="space-y-3">
+        <div className="space-y-2">
           <p className="text-sm text-muted-foreground">
             {familyGroups.length}{" "}
             {familyGroups.length === 1 ? "família encontrada" : "famílias encontradas"}
@@ -326,7 +326,7 @@ export function SolutionsSearch({ refreshKey, onOpen }: SolutionsSearchProps) {
                   if (event.key === "Enter" || event.key === " ") setSelectedFamilyId(family.id);
                 }}
               >
-                <CardContent className="flex h-full flex-col p-5">
+                <CardContent className="flex h-full flex-col p-4">
                   <div className="flex items-start gap-3">
                     <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                       <FolderTree className="h-5 w-5" />
@@ -341,7 +341,7 @@ export function SolutionsSearch({ refreshKey, onOpen }: SolutionsSearchProps) {
                       </p>
                     </div>
                   </div>
-                  <div className="mt-4 flex flex-wrap gap-1.5">
+                  <div className="mt-3 flex flex-wrap gap-1.5">
                     {family.systems.slice(0, 4).map((system) => (
                       <Badge key={system.id} variant="secondary">{system.nome}</Badge>
                     ))}
@@ -349,7 +349,7 @@ export function SolutionsSearch({ refreshKey, onOpen }: SolutionsSearchProps) {
                       <Badge variant="outline">+{family.systems.length - 4}</Badge>
                     )}
                   </div>
-                  <div className="mt-auto flex items-center justify-between border-t pt-4 text-xs text-muted-foreground">
+                  <div className="mt-auto flex items-center justify-between border-t pt-3 text-xs text-muted-foreground">
                     <span>{family.systems.length} {family.systems.length === 1 ? "sistema" : "sistemas"}</span>
                     <span>{family.solutions.length} {family.solutions.length === 1 ? "solução" : "soluções"}</span>
                   </div>
