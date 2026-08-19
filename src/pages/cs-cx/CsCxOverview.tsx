@@ -130,24 +130,24 @@ export default function CsCxOverview() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
           {visibleAreas.map((area) => {
             const Icon = area.icon;
             return (
               <Card key={area.path} className="group flex h-full flex-col border-muted/70 transition-all hover:-translate-y-0.5 hover:border-rose-300 hover:shadow-md dark:hover:border-rose-900">
-                <CardHeader className="flex-row items-start gap-4 space-y-0">
-                  <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-rose-600 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300">
-                    <Icon className="h-5 w-5" />
+                <CardHeader className="flex-row items-start gap-3 space-y-0 p-4 pb-2">
+                  <div className="rounded-lg border border-rose-200 bg-rose-50 p-2.5 text-rose-600 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300">
+                    <Icon className="h-[18px] w-[18px]" />
                   </div>
-                  <div className="space-y-1">
-                    <CardTitle className="text-base">{area.title}</CardTitle>
-                    <CardDescription className="text-xs leading-relaxed">
+                  <div className="space-y-0.5">
+                    <CardTitle className="text-sm">{area.title}</CardTitle>
+                    <CardDescription className="text-xs leading-5">
                       {area.description}
                     </CardDescription>
                   </div>
                 </CardHeader>
-                <CardContent className="mt-auto flex justify-end pt-0">
-                  <Button asChild variant="ghost" size="sm" className="gap-1 text-xs group-hover:text-rose-600 dark:group-hover:text-rose-300">
+                <CardContent className="mt-auto flex justify-end px-4 pb-3 pt-0">
+                  <Button asChild variant="ghost" size="sm" className="h-7 gap-1 px-2 text-xs group-hover:text-rose-600 dark:group-hover:text-rose-300">
                     <Link to={area.path}>
                       Acessar
                       <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
