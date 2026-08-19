@@ -3,6 +3,7 @@ import {
   Building2,
   ChevronLeft,
   ChevronRight,
+  CircleOff,
   Database,
   Eye,
   MoreHorizontal,
@@ -166,7 +167,7 @@ export default function CsCxRegistryOffices() {
       <div className="grid gap-2 sm:grid-cols-3">
         <Metric label="Total" value={offices.length} icon={Building2} />
         <Metric label="Ativos" value={offices.filter((office) => office.active).length} icon={PackageCheck} />
-        <Metric label="Importados do legado" value={offices.filter((office) => office.origin === "legacy").length} icon={Database} />
+        <Metric label="Inativos" value={offices.filter((office) => !office.active).length} icon={CircleOff} />
       </div>
 
       <Card>

@@ -112,6 +112,8 @@ describe("CS/CX — ações por permissão", () => {
     renderPage(<CsCxRegistryOffices />, []);
     expect(screen.getByText("Cartório Central")).toBeInTheDocument();
     expect(screen.getByText("Bruno")).toBeInTheDocument();
+    expect(screen.getByText("Inativos")).toBeInTheDocument();
+    expect(screen.queryByText("Importados do legado")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /novo cartório/i })).not.toBeInTheDocument();
   });
 
