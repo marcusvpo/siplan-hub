@@ -6,7 +6,14 @@ import type { SdSolucao } from "@/types/sd";
 const serviceMocks = vi.hoisted(() => ({
   deleteSdSolution: vi.fn(),
   getSdAttachmentDownloadUrl: vi.fn(),
+  getSdAttachmentPreviewUrl: vi.fn(),
   getSdSolution: vi.fn(),
+  getMySdSolutionFeedback: vi.fn(),
+  listSdSolutionVersions: vi.fn(),
+  registerSdSolutionView: vi.fn(),
+  requestSdAttachmentScan: vi.fn(),
+  restoreSdSolutionVersion: vi.fn(),
+  setMySdSolutionFeedback: vi.fn(),
 }));
 
 vi.mock("@/hooks/usePermissions", () => ({
@@ -26,6 +33,14 @@ const solution: SdSolucao = {
   atualizado_em: "2026-08-19T12:00:00Z",
   criado_por: null,
   atualizado_por: null,
+  status: "publicado",
+  responsavel_id: null,
+  revisado_em: "2026-08-19",
+  proxima_revisao_em: "2027-02-15",
+  versao: 1,
+  visualizacoes: 3,
+  votos_uteis: 2,
+  votos_nao_uteis: 0,
   sistema: { id: "system-1", nome: "SiplanPRO" },
   rotina: null,
   anexos: [
@@ -38,6 +53,10 @@ const solution: SdSolucao = {
       tamanho_bytes: 1536,
       criado_em: "2026-08-19T12:00:00Z",
       criado_por: null,
+      verificacao_status: "seguro",
+      verificacao_metodo: "local_signature",
+      verificacao_detalhes: null,
+      verificado_em: "2026-08-19T12:01:00Z",
     },
   ],
 };
@@ -49,6 +68,10 @@ describe("SolutionDetails", () => {
     serviceMocks.getSdSolution.mockResolvedValue(solution);
     serviceMocks.getSdAttachmentDownloadUrl.mockReset();
     serviceMocks.getSdAttachmentDownloadUrl.mockResolvedValue("https://storage.test/anexo");
+    serviceMocks.getSdAttachmentPreviewUrl.mockResolvedValue("https://storage.test/anexo");
+    serviceMocks.getMySdSolutionFeedback.mockResolvedValue(null);
+    serviceMocks.listSdSolutionVersions.mockResolvedValue([]);
+    serviceMocks.registerSdSolutionView.mockResolvedValue(3);
     Object.defineProperty(window, "innerWidth", { configurable: true, value: 1200 });
   });
 
