@@ -35,6 +35,7 @@ import {
   FileCheck,
   Sparkles,
   Headset,
+  LifeBuoy,
 } from "lucide-react";
 import {
   Collapsible,
@@ -75,6 +76,9 @@ export function AppSidebar() {
   const [isImplantadoresOpen, setIsImplantadoresOpen] = useState(
     location.pathname.startsWith("/implantadores"),
   );
+  const [isSdOpen, setIsSdOpen] = useState(
+    location.pathname.startsWith("/sd"),
+  );
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -90,6 +94,7 @@ export function AppSidebar() {
   const canViewComercial = hasPermission("menu_comercial", "view");
   const canViewConversao = hasPermission("menu_conversao", "view");
   const canViewOrion = hasPermission("menu_orion", "view");
+  const canViewSd = hasPermission("menu_sd", "view");
   const canViewDashboardView = hasPermission("dashboard_view", "view");
   const canViewKanban = hasPermission("kanban", "view");
   const canViewPosPanorama = hasPermission("pos_panorama", "view");
@@ -130,6 +135,7 @@ export function AppSidebar() {
     ["conversion_home", "/conversion"],
     ["conversion_engines", "/conversion/engines"],
   );
+  const rotaSd = primeiraRota(["sd_solutions", "/sd/solucoes"]);
   const rotaOrion = primeiraRota(
     ["orion_dashboard", "/orion-tn-models/dashboard"],
     ["orion_projects", "/orion-tn-models/projects"],
@@ -149,6 +155,7 @@ export function AppSidebar() {
   const mostrarCalendario = canViewCalendario && !!rotaCalendario;
   const mostrarComercial = canViewComercial && !!rotaComercial;
   const mostrarConversao = canViewConversao && !!rotaConversao;
+  const mostrarSd = canViewSd && !!rotaSd;
   const mostrarOrion = canViewOrion && !!rotaOrion;
   const mostrarImplantadores = canViewImplantadores && !!rotaImplantadores;
   
@@ -696,6 +703,68 @@ export function AppSidebar() {
             </Link>
           )}
         </div>
+        )}
+
+        {/* SD Group */}
+        {mostrarSd && (
+          <div className="px-2">
+            {!collapsed ? (
+              <Collapsible
+                open={isSdOpen}
+                onOpenChange={setIsSdOpen}
+                className="space-y-1"
+              >
+                <CollapsibleTrigger asChild>
+                  <Button
+                    variant={
+                      location.pathname.startsWith("/sd")
+                        ? "secondary"
+                        : "ghost"
+                    }
+                    className="w-full justify-between hover:bg-muted/50"
+                    title="SD"
+                  >
+                    <div className="flex items-center gap-3">
+                      <LifeBuoy className="h-5 w-5" />
+                      <span>SD</span>
+                    </div>
+                    <ChevronDown
+                      className={cn(
+                        "h-4 w-4 transition-transform",
+                        isSdOpen ? "rotate-180" : "",
+                      )}
+                    />
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-1 pl-4 animate-in slide-in-from-top-2">
+                  <div className="pb-2 pt-1">
+                    {can("sd_solutions") && (
+                      <Link to="/sd/solucoes">
+                        <Button
+                          variant={isActive("/sd/solucoes") ? "secondary" : "ghost"}
+                          size="sm"
+                          className="h-9 w-full justify-start gap-3"
+                        >
+                          <BookOpen className="h-4 w-4" />
+                          <span>Soluções</span>
+                        </Button>
+                      </Link>
+                    )}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            ) : (
+              <Link to={rotaSd!}>
+                <Button
+                  variant={location.pathname.startsWith("/sd") ? "secondary" : "ghost"}
+                  className="w-full justify-center px-0"
+                  title="SD (Soluções)"
+                >
+                  <LifeBuoy className="h-5 w-5" />
+                </Button>
+              </Link>
+            )}
+          </div>
         )}
 
         {/* OrionTN Models */}
