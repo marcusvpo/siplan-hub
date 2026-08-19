@@ -52,9 +52,7 @@ const ConversionEngines = lazy(
   () => import("./pages/conversion/ConversionEngines"),
 );
 const SdSolutions = lazy(() => import("./pages/sd/Solutions"));
-const OrionTNModels = lazy(
-  () => import("./pages/conversion/OrionTNModels"),
-);
+const OrionTNModels = lazy(() => import("./pages/conversion/OrionTNModels"));
 const OrionTNProjects = lazy(
   () => import("./pages/conversion/OrionTNProjects"),
 );
@@ -64,33 +62,48 @@ const OrionTNDashboard = lazy(
 
 // Implantadores Pages (lazy)
 const Implantadores = lazy(() => import("./pages/implantadores/Implantadores"));
-const ImplantadoresAderencia = lazy(() =>
-  import("./pages/implantadores/EditarFormAderencia"),
+const ImplantadoresAderencia = lazy(
+  () => import("./pages/implantadores/EditarFormAderencia"),
 );
-const AderenciasFinalizadas = lazy(() =>
-  import("./pages/implantadores/AderenciasFinalizadas"),
+const AderenciasFinalizadas = lazy(
+  () => import("./pages/implantadores/AderenciasFinalizadas"),
 );
-const ImplantadoresHomologation = lazy(() =>
-  import("./pages/implantadores/ImplantadoresHomologation"),
+const ImplantadoresHomologation = lazy(
+  () => import("./pages/implantadores/ImplantadoresHomologation"),
 );
-const CommercialChecklists = lazy(() =>
-  import("./pages/commercial/CommercialChecklists"),
+const CommercialChecklists = lazy(
+  () => import("./pages/commercial/CommercialChecklists"),
 );
-const EditarChecklistComercial = lazy(() =>
-  import("./pages/commercial/EditarChecklistComercial"),
+const EditarChecklistComercial = lazy(
+  () => import("./pages/commercial/EditarChecklistComercial"),
 );
-const PublicChecklist = lazy(() =>
-  import("./pages/public/PublicChecklist"),
+const PublicChecklist = lazy(() => import("./pages/public/PublicChecklist"));
+const PublicInfraCollection = lazy(
+  () => import("./pages/public/PublicInfraCollection"),
 );
-const PublicInfraCollection = lazy(() =>
-  import("./pages/public/PublicInfraCollection"),
+const PublicNpsResponse = lazy(
+  () => import("./pages/public/PublicNpsResponse"),
 );
-const TreinamentoPlaceholder = lazy(() =>
-  import("./pages/implantadores/TreinamentoPlaceholder"),
+const TreinamentoPlaceholder = lazy(
+  () => import("./pages/implantadores/TreinamentoPlaceholder"),
 );
-const TransicaoPlaceholder = lazy(() =>
-  import("./pages/implantadores/TransicaoPlaceholder"),
+const TransicaoPlaceholder = lazy(
+  () => import("./pages/implantadores/TransicaoPlaceholder"),
 );
+
+// CS/CX Pages (lazy)
+const CsCxOverview = lazy(() => import("./pages/cs-cx/CsCxOverview"));
+const CsCxRequests = lazy(() => import("./pages/cs-cx/CsCxRequests"));
+const CsCxRegistryOffices = lazy(
+  () => import("./pages/cs-cx/CsCxRegistryOffices"),
+);
+const CsCxContacts = lazy(() => import("./pages/cs-cx/CsCxContacts"));
+const CsCxAppointments = lazy(() => import("./pages/cs-cx/CsCxAppointments"));
+const CsCxRoutines = lazy(() => import("./pages/cs-cx/CsCxRoutines"));
+const CsCxVisits = lazy(() => import("./pages/cs-cx/CsCxVisits"));
+const CsCxNps = lazy(() => import("./pages/cs-cx/CsCxNps"));
+const CsCxAdmin = lazy(() => import("./pages/cs-cx/CsCxAdmin"));
+const CsCxReports = lazy(() => import("./pages/cs-cx/CsCxReports"));
 
 // Admin Pages (lazy)
 const AdminLayout = lazy(() => import("./layouts/AdminLayout"));
@@ -130,7 +143,8 @@ const PageLoader = () => (
 );
 
 const ProjectAdherenceRouteWrapper = () => {
-  const isPrintMode = new URLSearchParams(window.location.search).get("print") === "true";
+  const isPrintMode =
+    new URLSearchParams(window.location.search).get("print") === "true";
 
   if (isPrintMode) {
     return (
@@ -152,7 +166,6 @@ const ProjectAdherenceRouteWrapper = () => {
     </ProtectedRoute>
   );
 };
-
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -200,10 +213,17 @@ const App = () => (
                 }
               />
               <Route
+                path="/nps/responder/:token"
+                element={
+                  <Suspense fallback={<PageLoader />}>
+                    <PublicNpsResponse />
+                  </Suspense>
+                }
+              />
+              <Route
                 path="/projects/:id/adherence"
                 element={<ProjectAdherenceRouteWrapper />}
               />
-
 
               {/* Admin Routes */}
               <Route
@@ -491,7 +511,9 @@ const App = () => (
                           />
                           <Route
                             path="/commercial/deployment-forms"
-                            element={<Navigate to="/commercial/checklists" replace />}
+                            element={
+                              <Navigate to="/commercial/checklists" replace />
+                            }
                           />
                           <Route
                             path="/commercial/checklists"
@@ -613,6 +635,86 @@ const App = () => (
                             element={
                               <RequirePermission resource="implantadores_transicao">
                                 <TransicaoPlaceholder />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/cs-cx"
+                            element={
+                              <RequirePermission resource="cs_cx_home">
+                                <CsCxOverview />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/cs-cx/registros"
+                            element={
+                              <RequirePermission resource="cs_cx_registros">
+                                <CsCxRequests />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/cs-cx/cartorios"
+                            element={
+                              <RequirePermission resource="cs_cx_cartorios">
+                                <CsCxRegistryOffices />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/cs-cx/contatos"
+                            element={
+                              <RequirePermission resource="cs_cx_contatos">
+                                <CsCxContacts />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/cs-cx/agendamentos"
+                            element={
+                              <RequirePermission resource="cs_cx_agendamentos">
+                                <CsCxAppointments />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/cs-cx/rotinas"
+                            element={
+                              <RequirePermission resource="cs_cx_rotinas">
+                                <CsCxRoutines />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/cs-cx/visitas"
+                            element={
+                              <RequirePermission resource="cs_cx_visitas">
+                                <CsCxVisits />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/cs-cx/nps"
+                            element={
+                              <RequirePermission resource="cs_cx_nps">
+                                <CsCxNps />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/cs-cx/relatorios"
+                            element={
+                              <RequirePermission resource="cs_cx_reports">
+                                <CsCxReports />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/cs-cx/admin"
+                            element={
+                              <RequirePermission resource="cs_cx_admin">
+                                <CsCxAdmin />
                               </RequirePermission>
                             }
                           />

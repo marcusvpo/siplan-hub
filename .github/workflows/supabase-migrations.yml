@@ -1,38 +1,33 @@
-name: Aplicar migrations do Supabase
+name: Validar migrations do Supabase
 
-# Aplica automaticamente as migrations novas quando um push em main mexe em
-# supabase/migrations/. Tambem pode ser rodado manualmente (workflow_dispatch).
-#
-# ATENCAO (baseline unico antes do primeiro uso): migrations ja aplicadas na mao
-# (via SQL editor) NAO estao no historico do Supabase. Sem baseline, o "db push"
-# tentaria re-aplica-las e falharia (ex.: CREATE POLICY / ALTER PUBLICATION).
-# Antes de habilitar, marque as ja aplicadas como aplicadas:
-#   supabase link --project-ref <ref>
-#   supabase migration list                     # veja o que consta como remoto
-#   supabase migration repair --status applied <VERSAO>   # para cada uma ja aplicada
-# Depois disso, novas migrations passam a ser aplicadas sozinhas por este workflow.
+# O banco de produção ainda não possui baseline confiável em schema_migrations.
+# Portanto este workflow apenas valida os arquivos. A aplicação integral das
+# migrations permanece bloqueada até o baseline completo ser reconciliado.
 
 on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "supabase/migrations/**"
+      - "scripts/prepare-cs-cx-schema.mjs"
   push:
     branches: [main]
     paths:
       - "supabase/migrations/**"
+      - "scripts/prepare-cs-cx-schema.mjs"
   workflow_dispatch:
 
 jobs:
-  migrate:
+  validate:
     runs-on: ubuntu-latest
-    env:
-      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
-      - uses: supabase/setup-cli@v1
+      - uses: actions/setup-node@v4
         with:
-          version: latest
+          node-version: 20
+          cache: npm
 
-      - name: Link ao projeto
-        run: supabase link --project-ref "${{ secrets.SUPABASE_PROJECT_ID }}" --password "${{ secrets.SUPABASE_DB_PASSWORD }}"
-
-      - name: Aplicar migrations pendentes
-        run: supabase db push --password "${{ secrets.SUPABASE_DB_PASSWORD }}"
+      - run: npm ci
+      - name: Validar pacote transacional CS/CX
+        run: npm run prepare:cs-cx -- --static

@@ -1,1 +1,7 @@
 project_id = "okvufcwkophaadttmjwa"
+
+[functions.cs-cx-nps-webhook]
+verify_jwt = false
+
+[functions.cs-cx-nps-public]
+verify_jwt = false

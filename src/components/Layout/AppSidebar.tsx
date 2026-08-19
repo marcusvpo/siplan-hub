@@ -36,6 +36,11 @@ import {
   Sparkles,
   Headset,
   LifeBuoy,
+  Building2,
+  ListChecks,
+  MapPin,
+  Star,
+  Settings2,
 } from "lucide-react";
 import {
   Collapsible,
@@ -79,6 +84,9 @@ export function AppSidebar() {
   const [isSdOpen, setIsSdOpen] = useState(
     location.pathname.startsWith("/sd"),
   );
+  const [isCsCxOpen, setIsCsCxOpen] = useState(
+    location.pathname.startsWith("/cs-cx"),
+  );
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -100,6 +108,7 @@ export function AppSidebar() {
   const canViewPosPanorama = hasPermission("pos_panorama", "view");
   const canViewPosPanoramaGeral = hasPermission("pos_panorama_geral", "view");
   const canViewImplantadores = hasPermission("menu_implantadores", "view");
+  const canViewCsCx = hasPermission("menu_cs_cx", "view");
   const can = (resource: string) => hasPermission(resource, "view");
 
   // Ter o menu não significa ter as telas dentro dele. Sem isto, um perfil com
@@ -149,6 +158,18 @@ export function AppSidebar() {
     ["implantadores_treinamento", "/implantadores/treinamento"],
     ["implantadores_transicao", "/implantadores/transicao"],
   );
+  const rotaCsCx = primeiraRota(
+    ["cs_cx_home", "/cs-cx"],
+    ["cs_cx_registros", "/cs-cx/registros"],
+    ["cs_cx_cartorios", "/cs-cx/cartorios"],
+    ["cs_cx_contatos", "/cs-cx/contatos"],
+    ["cs_cx_agendamentos", "/cs-cx/agendamentos"],
+    ["cs_cx_rotinas", "/cs-cx/rotinas"],
+    ["cs_cx_visitas", "/cs-cx/visitas"],
+    ["cs_cx_nps", "/cs-cx/nps"],
+    ["cs_cx_reports", "/cs-cx/relatorios"],
+    ["cs_cx_admin", "/cs-cx/admin"],
+  );
 
   const mostrarDashboard = !!rotaDashboard;
   const mostrarImplantacao = canViewImplantacao && !!rotaImplantacao;
@@ -158,6 +179,7 @@ export function AppSidebar() {
   const mostrarSd = canViewSd && !!rotaSd;
   const mostrarOrion = canViewOrion && !!rotaOrion;
   const mostrarImplantadores = canViewImplantadores && !!rotaImplantadores;
+  const mostrarCsCx = canViewCsCx && !!rotaCsCx;
   
   const logoSrc = isDark
     ? "/assets/Siplan_logo_branco.png"
@@ -994,6 +1016,153 @@ export function AppSidebar() {
                 title="Implantadores"
               >
                 <Users className="h-5 w-5" />
+              </Button>
+            </Link>
+          )}
+        </div>
+        )}
+
+        {/* CS/CX Group */}
+        {mostrarCsCx && (
+        <div className="px-2">
+          {!collapsed ? (
+            <Collapsible
+              open={isCsCxOpen}
+              onOpenChange={setIsCsCxOpen}
+              className="space-y-1"
+            >
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant={
+                    location.pathname.startsWith("/cs-cx")
+                      ? "secondary"
+                      : "ghost"
+                  }
+                  className="w-full justify-between hover:bg-muted/50"
+                  title="CS/CX"
+                >
+                  <div className="flex items-center gap-3">
+                    <Headset className="h-5 w-5" />
+                    <span>CS/CX</span>
+                  </div>
+                  <ChevronDown
+                    className={cn(
+                      "h-4 w-4 transition-transform",
+                      isCsCxOpen ? "transform rotate-180" : "",
+                    )}
+                  />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-1 pl-4 animate-in slide-in-from-top-2">
+                <div className="pt-1 pb-1">
+                  <div className="px-4 py-2">
+                    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-2">
+                      Operacional
+                    </span>
+                    {can("cs_cx_home") && (
+                    <Link to="/cs-cx">
+                      <Button variant={isActive("/cs-cx") ? "secondary" : "ghost"} size="sm" className="w-full justify-start gap-3 h-9">
+                        <LayoutDashboard className="h-4 w-4" />
+                        <span className="text-xs font-medium">Visão Geral</span>
+                      </Button>
+                    </Link>
+                    )}
+                    {can("cs_cx_registros") && (
+                    <Link to="/cs-cx/registros">
+                      <Button variant={isActive("/cs-cx/registros") ? "secondary" : "ghost"} size="sm" className="w-full justify-start gap-3 h-9">
+                        <ClipboardList className="h-4 w-4" />
+                        <span className="text-xs font-medium">Solicitações</span>
+                      </Button>
+                    </Link>
+                    )}
+                    {can("cs_cx_cartorios") && (
+                    <Link to="/cs-cx/cartorios">
+                      <Button variant={isActive("/cs-cx/cartorios") ? "secondary" : "ghost"} size="sm" className="w-full justify-start gap-3 h-9">
+                        <Building2 className="h-4 w-4" />
+                        <span className="text-xs font-medium">Cartórios</span>
+                      </Button>
+                    </Link>
+                    )}
+                    {can("cs_cx_contatos") && (
+                    <Link to="/cs-cx/contatos">
+                      <Button variant={isActive("/cs-cx/contatos") ? "secondary" : "ghost"} size="sm" className="w-full justify-start gap-3 h-9">
+                        <Contact className="h-4 w-4" />
+                        <span className="text-xs font-medium">Contatos</span>
+                      </Button>
+                    </Link>
+                    )}
+                    {can("cs_cx_agendamentos") && (
+                    <Link to="/cs-cx/agendamentos">
+                      <Button variant={isActive("/cs-cx/agendamentos") ? "secondary" : "ghost"} size="sm" className="w-full justify-start gap-3 h-9">
+                        <CalendarIcon className="h-4 w-4" />
+                        <span className="text-xs font-medium">Agendamentos</span>
+                      </Button>
+                    </Link>
+                    )}
+                  </div>
+
+                  <div className="px-4 py-2 border-t border-border/40">
+                    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-2">
+                      Acompanhamento
+                    </span>
+                    {can("cs_cx_rotinas") && (
+                    <Link to="/cs-cx/rotinas">
+                      <Button variant={isActive("/cs-cx/rotinas") ? "secondary" : "ghost"} size="sm" className="w-full justify-start gap-3 h-9">
+                        <ListChecks className="h-4 w-4" />
+                        <span className="text-xs font-medium">Rotinas</span>
+                      </Button>
+                    </Link>
+                    )}
+                    {can("cs_cx_visitas") && (
+                    <Link to="/cs-cx/visitas">
+                      <Button variant={isActive("/cs-cx/visitas") ? "secondary" : "ghost"} size="sm" className="w-full justify-start gap-3 h-9">
+                        <MapPin className="h-4 w-4" />
+                        <span className="text-xs font-medium">Visitas</span>
+                      </Button>
+                    </Link>
+                    )}
+                    {can("cs_cx_nps") && (
+                    <Link to="/cs-cx/nps">
+                      <Button variant={isActive("/cs-cx/nps") ? "secondary" : "ghost"} size="sm" className="w-full justify-start gap-3 h-9">
+                        <Star className="h-4 w-4" />
+                        <span className="text-xs font-medium">NPS</span>
+                      </Button>
+                    </Link>
+                    )}
+                  </div>
+
+                  <div className="px-4 py-2 border-t border-border/40">
+                    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-2">
+                      Gestão
+                    </span>
+                    {can("cs_cx_reports") && (
+                    <Link to="/cs-cx/relatorios">
+                      <Button variant={isActive("/cs-cx/relatorios") ? "secondary" : "ghost"} size="sm" className="w-full justify-start gap-3 h-9">
+                        <BarChart3 className="h-4 w-4" />
+                        <span className="text-xs font-medium">Relatórios</span>
+                      </Button>
+                    </Link>
+                    )}
+                    {can("cs_cx_admin") && (
+                    <Link to="/cs-cx/admin">
+                      <Button variant={isActive("/cs-cx/admin") ? "secondary" : "ghost"} size="sm" className="w-full justify-start gap-3 h-9">
+                        <Settings2 className="h-4 w-4" />
+                        <span className="text-xs font-medium">Administração</span>
+                      </Button>
+                    </Link>
+                    )}
+                  </div>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          ) : (
+            <Link to={rotaCsCx!}>
+              <Button
+                variant={location.pathname.startsWith("/cs-cx") ? "secondary" : "ghost"}
+                className="w-full justify-center px-0"
+                title="CS/CX"
+              >
+                <Headset className="h-5 w-5" />
               </Button>
             </Link>
           )}
