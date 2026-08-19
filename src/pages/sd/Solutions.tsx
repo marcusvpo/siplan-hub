@@ -126,6 +126,7 @@ export default function Solutions() {
           setTab("create");
         }}
         onDeleted={() => setRefreshKey((current) => current + 1)}
+        onUpdated={() => setRefreshKey((current) => current + 1)}
       />
     </div>
   );

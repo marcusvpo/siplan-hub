@@ -2,21 +2,21 @@ import { supabase } from "@/integrations/supabase/client";
 import type {
   SdAnexo,
   SdFamilia,
+  SdProfile,
   SdRotina,
   SdSistema,
   SdSistemaComRotinas,
   SdSolucao,
+  SdSolutionFeedback,
+  SdSolutionVersion,
   SdSolucaoPayload,
 } from "@/types/sd";
 
 const SOLUTION_SELECT = `
   *,
   sistema:sd_sistemas!sd_solucoes_sistema_id_fkey(id, nome),
-  rotina:sd_rotinas!sd_solucoes_rotina_id_fkey(id, nome)
-`;
-
-const SOLUTION_DETAILS_SELECT = `
-  ${SOLUTION_SELECT},
+  rotina:sd_rotinas!sd_solucoes_rotina_id_fkey(id, nome),
+  responsavel:profiles!sd_solucoes_responsavel_id_fkey(id, full_name, email),
   anexos:sd_solucao_anexos!sd_solucao_anexos_solucao_id_fkey(*)
 `;
 
@@ -43,6 +43,15 @@ export async function listSdFamilies(): Promise<SdFamilia[]> {
 
   if (error) throw error;
   return (data || []) as SdFamilia[];
+}
+
+export async function listSdProfiles(): Promise<SdProfile[]> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, full_name, email")
+    .order("full_name", { nullsFirst: false });
+  if (error) throw error;
+  return (data || []) as SdProfile[];
 }
 
 export async function listSdRoutines(systemId?: string): Promise<SdRotina[]> {
@@ -83,7 +92,7 @@ export async function listSdSolutions(filters?: {
 export async function getSdSolution(id: string): Promise<SdSolucao | null> {
   const { data, error } = await supabase
     .from("sd_solucoes")
-    .select(SOLUTION_DETAILS_SELECT)
+    .select(SOLUTION_SELECT)
     .eq("id", id)
     .maybeSingle();
 
@@ -169,7 +178,9 @@ export async function uploadSdSolutionAttachment(
     throw error;
   }
 
-  return data as SdAnexo;
+  const attachment = data as SdAnexo;
+  const scannedAttachment = await requestSdAttachmentScan(attachment.id).catch(() => null);
+  return scannedAttachment || attachment;
 }
 
 export async function deleteSdSolutionAttachment(attachment: SdAnexo): Promise<void> {
@@ -185,6 +196,9 @@ export async function deleteSdSolutionAttachment(attachment: SdAnexo): Promise<v
 }
 
 export async function getSdAttachmentDownloadUrl(attachment: SdAnexo): Promise<string> {
+  if (attachment.verificacao_status === "suspeito") {
+    throw new Error("Este anexo foi bloqueado pela verificação de segurança.");
+  }
   const { data, error } = await supabase.storage
     .from(SD_ATTACHMENTS_BUCKET)
     .createSignedUrl(attachment.caminho_storage, 60, {
@@ -192,6 +206,98 @@ export async function getSdAttachmentDownloadUrl(attachment: SdAnexo): Promise<s
     });
   if (error) throw error;
   return data.signedUrl;
+}
+
+export async function getSdAttachmentPreviewUrl(attachment: SdAnexo): Promise<string> {
+  if (attachment.verificacao_status === "suspeito") {
+    throw new Error("Este anexo foi bloqueado pela verificação de segurança.");
+  }
+  const { data, error } = await supabase.storage
+    .from(SD_ATTACHMENTS_BUCKET)
+    .createSignedUrl(attachment.caminho_storage, 180);
+  if (error) throw error;
+  return data.signedUrl;
+}
+
+export async function requestSdAttachmentScan(attachmentId: string): Promise<SdAnexo | null> {
+  const { error: invokeError } = await supabase.functions.invoke("scan-sd-attachment", {
+    body: { attachmentId },
+  });
+  if (invokeError) return null;
+
+  const { data, error } = await supabase
+    .from("sd_solucao_anexos")
+    .select("*")
+    .eq("id", attachmentId)
+    .maybeSingle();
+  if (error) throw error;
+  return data as SdAnexo | null;
+}
+
+export async function listSdSolutionVersions(solutionId: string): Promise<SdSolutionVersion[]> {
+  const { data, error } = await supabase
+    .from("sd_solucao_versoes")
+    .select(`
+      *,
+      autor:profiles!sd_solucao_versoes_criado_por_fkey(id, full_name, email)
+    `)
+    .eq("solucao_id", solutionId)
+    .order("versao", { ascending: false });
+  if (error) throw error;
+  return (data || []) as unknown as SdSolutionVersion[];
+}
+
+export async function restoreSdSolutionVersion(versionId: string): Promise<void> {
+  const { error } = await supabase.rpc("restore_sd_solution_version", {
+    target_version_id: versionId,
+  });
+  if (error) throw error;
+}
+
+export async function registerSdSolutionView(solutionId: string): Promise<number> {
+  const { data, error } = await supabase.rpc("register_sd_solution_view", {
+    target_solution_id: solutionId,
+  });
+  if (error) throw error;
+  return Number(data || 0);
+}
+
+export async function getMySdSolutionFeedback(
+  solutionId: string,
+): Promise<SdSolutionFeedback | null> {
+  const { data, error } = await supabase
+    .from("sd_solucao_feedback")
+    .select("*")
+    .eq("solucao_id", solutionId)
+    .maybeSingle();
+  if (error) throw error;
+  return data as SdSolutionFeedback | null;
+}
+
+export async function setMySdSolutionFeedback(
+  solutionId: string,
+  useful: boolean | null,
+): Promise<void> {
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  if (authError || !authData.user) throw authError || new Error("Usuário não autenticado.");
+
+  if (useful === null) {
+    const { error } = await supabase
+      .from("sd_solucao_feedback")
+      .delete()
+      .eq("solucao_id", solutionId)
+      .eq("usuario_id", authData.user.id);
+    if (error) throw error;
+    return;
+  }
+
+  const { error } = await supabase
+    .from("sd_solucao_feedback")
+    .upsert(
+      { solucao_id: solutionId, usuario_id: authData.user.id, util: useful },
+      { onConflict: "solucao_id,usuario_id" },
+    );
+  if (error) throw error;
 }
 
 export async function createSdSystem(name: string): Promise<void> {

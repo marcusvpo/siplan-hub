@@ -388,4 +388,43 @@
   .sd-solution-content a {
     @apply text-primary underline underline-offset-2;
   }
+
+  .sd-rich-editor h1,
+  .sd-solution-content h1 {
+    @apply mb-3 mt-5 text-2xl font-bold first:mt-0;
+  }
+
+  .sd-rich-editor h2,
+  .sd-solution-content h2 {
+    @apply mb-2 mt-5 text-xl font-bold first:mt-0;
+  }
+
+  .sd-rich-editor h3,
+  .sd-solution-content h3 {
+    @apply mb-2 mt-4 text-lg font-semibold first:mt-0;
+  }
+
+  .sd-rich-editor blockquote,
+  .sd-solution-content blockquote {
+    @apply my-3 border-l-4 border-primary/40 bg-muted/50 py-2 pl-4 italic text-muted-foreground;
+  }
+
+  .sd-rich-editor pre,
+  .sd-solution-content pre {
+    @apply relative my-4 overflow-x-auto rounded-lg border border-slate-700 bg-slate-950 p-4 pt-11 text-sm leading-relaxed text-slate-100 shadow-sm;
+  }
+
+  .sd-rich-editor code,
+  .sd-solution-content code {
+    @apply font-mono;
+  }
+
+  .sd-copy-code {
+    @apply absolute right-2 top-2 rounded border border-slate-600 bg-slate-800 px-2.5 py-1 text-xs text-slate-200 transition-colors hover:bg-slate-700 hover:text-white;
+  }
+
+  .sd-code-keyword { @apply font-semibold text-fuchsia-300; }
+  .sd-code-string { @apply text-emerald-300; }
+  .sd-code-number { @apply text-amber-300; }
+  .sd-code-comment { @apply italic text-slate-400; }
 }
