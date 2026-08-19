@@ -5,6 +5,7 @@ import type { SdSolucao } from "@/types/sd";
 
 const serviceMocks = vi.hoisted(() => ({
   deleteSdSolution: vi.fn(),
+  getSdAttachmentDownloadUrl: vi.fn(),
   getSdSolution: vi.fn(),
 }));
 
@@ -27,6 +28,18 @@ const solution: SdSolucao = {
   atualizado_por: null,
   sistema: { id: "system-1", nome: "SiplanPRO" },
   rotina: null,
+  anexos: [
+    {
+      id: "attachment-1",
+      solucao_id: "solution-1",
+      nome_arquivo: "ajuste-certificado.sql",
+      caminho_storage: "solution-1/attachment-1-ajuste-certificado.sql",
+      tipo_mime: "application/sql",
+      tamanho_bytes: 1536,
+      criado_em: "2026-08-19T12:00:00Z",
+      criado_por: null,
+    },
+  ],
 };
 
 describe("SolutionDetails", () => {
@@ -34,6 +47,8 @@ describe("SolutionDetails", () => {
     localStorage.clear();
     serviceMocks.getSdSolution.mockReset();
     serviceMocks.getSdSolution.mockResolvedValue(solution);
+    serviceMocks.getSdAttachmentDownloadUrl.mockReset();
+    serviceMocks.getSdAttachmentDownloadUrl.mockResolvedValue("https://storage.test/anexo");
     Object.defineProperty(window, "innerWidth", { configurable: true, value: 1200 });
   });
 
@@ -87,5 +102,29 @@ describe("SolutionDetails", () => {
 
     fireEvent.doubleClick(handle);
     expect(panel).toHaveStyle({ width: "672px" });
+  });
+
+  it("exibe e baixa anexos usando uma URL assinada", async () => {
+    const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+    render(
+      <SolutionDetails
+        solutionId="solution-1"
+        onClose={vi.fn()}
+        onEdit={vi.fn()}
+        onDeleted={vi.fn()}
+      />,
+    );
+
+    expect(await screen.findByText("ajuste-certificado.sql")).toBeInTheDocument();
+    expect(screen.getByText("1.5 KB · application/sql")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Baixar" }));
+
+    await waitFor(() => {
+      expect(serviceMocks.getSdAttachmentDownloadUrl).toHaveBeenCalledWith(
+        solution.anexos?.[0],
+      );
+      expect(click).toHaveBeenCalledOnce();
+    });
+    click.mockRestore();
   });
 });
