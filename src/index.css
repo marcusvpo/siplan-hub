@@ -362,4 +362,30 @@
     content: attr(data-placeholder);
     @apply text-muted-foreground opacity-60 pointer-events-none;
   }
+
+  .sd-rich-editor img,
+  .sd-solution-content img {
+    @apply my-3 max-w-full rounded-lg border shadow-sm;
+  }
+
+  .sd-rich-editor .sd-keyword,
+  .sd-solution-content .sd-keyword {
+    @apply cursor-pointer rounded bg-primary/15 px-1 py-0.5 font-medium text-primary;
+  }
+
+  .sd-solution-content p {
+    @apply mb-3 last:mb-0;
+  }
+
+  .sd-solution-content ul {
+    @apply mb-3 list-disc space-y-1 pl-6;
+  }
+
+  .sd-solution-content ol {
+    @apply mb-3 list-decimal space-y-1 pl-6;
+  }
+
+  .sd-solution-content a {
+    @apply text-primary underline underline-offset-2;
+  }
 }

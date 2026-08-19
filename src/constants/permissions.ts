@@ -28,6 +28,7 @@ export type PermissionCategory =
   | "Calendário"
   | "Comercial"
   | "Conversão"
+  | "SD"
   | "Implantadores"
   | "CS/CX"
   | "Modelos Editor OrionTN"
@@ -42,6 +43,7 @@ export const PERMISSION_CATEGORY_ORDER: PermissionCategory[] = [
   "Calendário",
   "Comercial",
   "Conversão",
+  "SD",
   "Implantadores",
   "CS/CX",
   "Modelos Editor OrionTN",
@@ -99,6 +101,10 @@ export const PERMISSION_RESOURCES: PermissionResourceDef[] = [
   { resource: "menu_conversao", label: "Menu Conversão", category: "Conversão", actions: ["view"] },
   { resource: "conversion_home", label: "Gestão de Atividades", category: "Conversão", actions: ["view", "edit", "delete", "execute"] },
   { resource: "conversion_engines", label: "Motores de Conversão", category: "Conversão", actions: ["view", "edit"] },
+
+  // SD
+  { resource: "menu_sd", label: "Menu SD", category: "SD", actions: ["view"] },
+  { resource: "sd_solutions", label: "SD - Soluções", category: "SD", actions: ["view", "create", "edit", "delete", "manage"] },
 
   // Implantadores
   { resource: "menu_implantadores", label: "Menu Implantadores", category: "Implantadores", actions: ["view"] },
