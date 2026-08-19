@@ -21,18 +21,20 @@ import {
     FolderClosed,
     FileCheck,
     Headset,
+    LifeBuoy,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 export interface MenuItem {
     title: string;
-    icon: any;
+    icon: LucideIcon;
     path?: string;
     description?: string;
     permissionKey?: string; // resource key used for permission check (e.g. "menu_implantacao")
     subItems?: {
         title: string;
         path: string;
-        icon: any;
+        icon: LucideIcon;
         description?: string;
         permissionKey?: string;
     }[];
@@ -195,6 +197,21 @@ export const menuItems: MenuItem[] = [
                 icon: Cog,
                 description: "Configuração de scripts de migração",
                 permissionKey: "conversion_engines",
+            },
+        ],
+    },
+    {
+        title: "SD",
+        icon: LifeBuoy,
+        description: "Base de conhecimento da equipe de suporte",
+        permissionKey: "menu_sd",
+        subItems: [
+            {
+                title: "Soluções",
+                path: "/sd/solucoes",
+                icon: BookOpen,
+                description: "Busca e cadastro de soluções técnicas",
+                permissionKey: "sd_solutions",
             },
         ],
     },
