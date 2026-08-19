@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import {
   Building2,
+  CalendarClock,
   ChevronLeft,
   ChevronRight,
   CircleOff,
@@ -13,6 +14,7 @@ import {
   RefreshCw,
   Search,
   Trash2,
+  X,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -61,12 +63,39 @@ const emptyForm: OfficeForm = {
 
 const DEFAULT_PAGE_SIZE = 5;
 
+interface RegistryOfficeFilters {
+  search: string;
+  status: string;
+  responsibleProfileId: string;
+  productIds: string[];
+  dateFrom: string;
+  dateTo: string;
+}
+
+export function matchesRegistryOfficeFilters(office: CsCxRegistryOffice, filters: RegistryOfficeFilters) {
+  const term = filters.search.trim().toLocaleLowerCase("pt-BR");
+  const matchesSearch = !term || [office.name, office.sap_code, office.contact_details, office.analyst?.full_name, office.analyst?.email]
+    .some((value) => value?.toLocaleLowerCase("pt-BR").includes(term));
+  const matchesStatus = filters.status === "all" || (filters.status === "active" ? office.active : !office.active);
+  const matchesResponsible = filters.responsibleProfileId === "all" || office.analyst_profile_id === filters.responsibleProfileId;
+  const matchesProducts = filters.productIds.length === 0
+    || office.products.some((product) => filters.productIds.includes(product.product_id));
+  const createdDate = office.created_at?.slice(0, 10) ?? "";
+  const matchesPeriod = (!filters.dateFrom && !filters.dateTo)
+    || (Boolean(createdDate) && (!filters.dateFrom || createdDate >= filters.dateFrom) && (!filters.dateTo || createdDate <= filters.dateTo));
+  return matchesSearch && matchesStatus && matchesResponsible && matchesProducts && matchesPeriod;
+}
+
 export default function CsCxRegistryOffices() {
   const { offices, products, profiles, isLoading, error, refetch, saveOffice, deleteOffice } = useCsCxRegistryOffices();
   const { hasPermission } = usePermissions();
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
+  const [responsibleFilter, setResponsibleFilter] = useState("all");
+  const [productFilters, setProductFilters] = useState<string[]>([]);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [form, setForm] = useState<OfficeForm>(emptyForm);
@@ -78,15 +107,27 @@ export default function CsCxRegistryOffices() {
   const canEdit = hasPermission("cs_cx_cartorios", "edit");
   const canDelete = hasPermission("cs_cx_cartorios", "delete");
 
+  const responsibleOptions = useMemo(() => {
+    const assignedProfileIds = new Set(offices.map((office) => office.analyst_profile_id).filter(Boolean));
+    return profiles
+      .filter((profile) => assignedProfileIds.has(profile.id))
+      .sort((left, right) => (left.full_name || left.email || "").localeCompare(
+        right.full_name || right.email || "",
+        "pt-BR",
+      ));
+  }, [offices, profiles]);
+
   const filtered = useMemo(() => {
-    const term = search.trim().toLocaleLowerCase("pt-BR");
-    return offices.filter((office) => {
-      const matchesSearch = !term || [office.name, office.sap_code, office.contact_details, office.analyst?.full_name, office.analyst?.email]
-        .some((value) => value?.toLocaleLowerCase("pt-BR").includes(term));
-      const matchesStatus = status === "all" || (status === "active" ? office.active : !office.active);
-      return matchesSearch && matchesStatus;
-    });
-  }, [offices, search, status]);
+    const filters: RegistryOfficeFilters = {
+      search,
+      status,
+      responsibleProfileId: responsibleFilter,
+      productIds: productFilters,
+      dateFrom,
+      dateTo,
+    };
+    return offices.filter((office) => matchesRegistryOfficeFilters(office, filters));
+  }, [dateFrom, dateTo, offices, productFilters, responsibleFilter, search, status]);
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, totalPages);
   const pagedOffices = useMemo(
@@ -96,6 +137,10 @@ export default function CsCxRegistryOffices() {
 
   const updateSearch = (value: string) => { setSearch(value); setPage(1); };
   const updateStatus = (value: string) => { setStatus(value); setPage(1); };
+  const updateResponsibleFilter = (value: string) => { setResponsibleFilter(value); setPage(1); };
+  const updateProductFilters = (values: string[]) => { setProductFilters(values); setPage(1); };
+  const updateDateFrom = (value: string) => { setDateFrom(value); setPage(1); };
+  const updateDateTo = (value: string) => { setDateTo(value); setPage(1); };
   const updatePageSize = (value: string) => { setPageSize(Number(value)); setPage(1); };
 
   const openCreate = () => {
@@ -165,9 +210,9 @@ export default function CsCxRegistryOffices() {
       </div>
 
       <div className="grid gap-2 sm:grid-cols-3">
-        <Metric label="Total" value={offices.length} icon={Building2} />
-        <Metric label="Ativos" value={offices.filter((office) => office.active).length} icon={PackageCheck} />
-        <Metric label="Inativos" value={offices.filter((office) => !office.active).length} icon={CircleOff} />
+        <Metric label="Total" value={filtered.length} icon={Building2} />
+        <Metric label="Ativos" value={filtered.filter((office) => office.active).length} icon={PackageCheck} />
+        <Metric label="Inativos" value={filtered.filter((office) => !office.active).length} icon={CircleOff} />
       </div>
 
       <Card>
@@ -185,6 +230,40 @@ export default function CsCxRegistryOffices() {
                 <SelectItem value="inactive">Inativos</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+          <div className="grid gap-2 md:grid-cols-[180px_minmax(200px,1fr)_minmax(310px,auto)]">
+            <Select value={responsibleFilter} onValueChange={updateResponsibleFilter}>
+              <SelectTrigger aria-label="Filtrar cartórios por responsável" className="h-9">
+                <SelectValue placeholder="Responsável" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os responsáveis</SelectItem>
+                {responsibleOptions.map((profile) => (
+                  <SelectItem key={profile.id} value={profile.id}>
+                    {profile.full_name || profile.email || "Usuário"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="[&_button]:h-9">
+              <CsCxMultiSelect
+                ariaLabel="Filtrar cartórios por produtos"
+                options={products.map((product) => ({ value: product.id, label: product.name }))}
+                values={productFilters}
+                onChange={updateProductFilters}
+                placeholder="Todos os produtos"
+                searchPlaceholder="Buscar produto..."
+                emptyText="Nenhum produto encontrado."
+              />
+            </div>
+            <div className="flex h-9 min-w-0 items-center gap-1 rounded-md border bg-background px-2" title="Período de cadastro">
+              <CalendarClock aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <span className="sr-only">Período de cadastro</span>
+              <Input aria-label="Cadastro inicial do cartório" type="date" value={dateFrom} max={dateTo || undefined} onChange={(event) => updateDateFrom(event.target.value)} className="h-7 min-w-0 flex-1 border-0 px-1 text-xs shadow-none focus-visible:ring-0" />
+              <span className="shrink-0 text-[11px] text-muted-foreground">até</span>
+              <Input aria-label="Cadastro final do cartório" type="date" value={dateTo} min={dateFrom || undefined} onChange={(event) => updateDateTo(event.target.value)} className="h-7 min-w-0 flex-1 border-0 px-1 text-xs shadow-none focus-visible:ring-0" />
+              {(dateFrom || dateTo) && <Button type="button" variant="ghost" size="icon" className="h-6 w-6 shrink-0" aria-label="Limpar período de cadastro" onClick={() => { setDateFrom(""); setDateTo(""); setPage(1); }}><X className="h-3.5 w-3.5" /></Button>}
+            </div>
           </div>
 
           {isLoading ? <LoadingRows /> : error ? (

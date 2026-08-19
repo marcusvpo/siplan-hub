@@ -31,17 +31,36 @@ vi.mock("@/hooks/useCsCxCore", async (importOriginal) => {
         legacy_id: 10 + index,
         name: index === 0 ? "Cartório Central" : `Cartório ${index + 1}`,
         sap_code: `SAP-${index + 1}`,
-        active: true,
+        active: index !== 11,
         contact_details: null,
         notes: null,
         origin: "legacy",
-        created_at: null,
-        analyst_profile_id: index === 0 ? "profile-1" : null,
-        analyst: index === 0 ? { id: "profile-1", full_name: "Bruno", email: null } : null,
-        products: [],
+        created_at: index === 0 ? "2026-08-10T12:00:00Z" : index === 1 ? "2026-07-15T12:00:00Z" : "2026-06-01T12:00:00Z",
+        analyst_profile_id: index === 0 ? "profile-1" : index === 1 ? "profile-2" : null,
+        analyst: index === 0
+          ? { id: "profile-1", full_name: "Bruno", email: null }
+          : index === 1
+            ? { id: "profile-2", full_name: "Henrique", email: null }
+            : null,
+        products: index === 0
+          ? [{ id: "link-tn", product_id: "product-tn", implementation_date: null, product: { id: "product-tn", name: "OrionTN", product_code: "TN" }, responsibles: [] }]
+          : index === 1
+            ? [{ id: "link-pro", product_id: "product-pro", implementation_date: null, product: { id: "product-pro", name: "OrionPRO", product_code: "PRO" }, responsibles: [] }]
+            : index === 2
+              ? [
+                { id: "link-tn-3", product_id: "product-tn", implementation_date: null, product: { id: "product-tn", name: "OrionTN", product_code: "TN" }, responsibles: [] },
+                { id: "link-pro-3", product_id: "product-pro", implementation_date: null, product: { id: "product-pro", name: "OrionPRO", product_code: "PRO" }, responsibles: [] },
+              ]
+              : [],
       })),
-      products: [],
-      profiles: [{ id: "profile-1", full_name: "Bruno", email: null }],
+      products: [
+        { id: "product-tn", name: "OrionTN", product_code: "TN" },
+        { id: "product-pro", name: "OrionPRO", product_code: "PRO" },
+      ],
+      profiles: [
+        { id: "profile-1", full_name: "Bruno", email: null },
+        { id: "profile-2", full_name: "Henrique", email: null },
+      ],
       isLoading: false,
       error: null,
       refetch: vi.fn(),
@@ -88,7 +107,7 @@ vi.mock("@/hooks/useCsCxCore", async (importOriginal) => {
   };
 });
 
-import CsCxRegistryOffices from "@/pages/cs-cx/CsCxRegistryOffices";
+import CsCxRegistryOffices, { matchesRegistryOfficeFilters } from "@/pages/cs-cx/CsCxRegistryOffices";
 import CsCxRequests from "@/pages/cs-cx/CsCxRequests";
 
 function renderPage(page: React.ReactNode, permissions: string[]) {
@@ -131,6 +150,46 @@ describe("CS/CX — ações por permissão", () => {
 
     expect(screen.getByText("Cartório 6")).toBeInTheDocument();
     expect(screen.getByLabelText("Mostrando 6 a 10 de 12 cartórios")).toBeInTheDocument();
+  });
+
+  it("filtra cartórios por responsável, produtos combinados e período", async () => {
+    renderPage(<CsCxRegistryOffices />, []);
+
+    fireEvent.keyDown(screen.getByRole("combobox", { name: "Filtrar cartórios por responsável" }), { key: "ArrowDown" });
+    fireEvent.click(await screen.findByRole("option", { name: "Henrique" }));
+    expect(screen.getByText("Cartório 2")).toBeInTheDocument();
+    expect(screen.queryByText("Cartório Central")).not.toBeInTheDocument();
+
+    fireEvent.keyDown(screen.getByRole("combobox", { name: "Filtrar cartórios por responsável" }), { key: "ArrowDown" });
+    fireEvent.click(await screen.findByRole("option", { name: "Todos os responsáveis" }));
+    expect(screen.getByRole("combobox", { name: "Filtrar cartórios por produtos" })).toBeInTheDocument();
+
+    const officeWithOrionTn = {
+      products: [{ product_id: "product-tn" }],
+    } as Parameters<typeof matchesRegistryOfficeFilters>[0];
+    const officeWithOrionPro = {
+      products: [{ product_id: "product-pro" }],
+    } as Parameters<typeof matchesRegistryOfficeFilters>[0];
+    const officeWithAnotherProduct = {
+      products: [{ product_id: "product-other" }],
+    } as Parameters<typeof matchesRegistryOfficeFilters>[0];
+    const combinedProductFilters = {
+      search: "",
+      status: "all",
+      responsibleProfileId: "all",
+      productIds: ["product-tn", "product-pro"],
+      dateFrom: "",
+      dateTo: "",
+    };
+    expect(matchesRegistryOfficeFilters(officeWithOrionTn, combinedProductFilters)).toBe(true);
+    expect(matchesRegistryOfficeFilters(officeWithOrionPro, combinedProductFilters)).toBe(true);
+    expect(matchesRegistryOfficeFilters(officeWithAnotherProduct, combinedProductFilters)).toBe(false);
+
+    fireEvent.change(screen.getByLabelText("Cadastro inicial do cartório"), { target: { value: "2026-08-01" } });
+    fireEvent.change(screen.getByLabelText("Cadastro final do cartório"), { target: { value: "2026-08-31" } });
+    expect(screen.getByText("Cartório Central")).toBeInTheDocument();
+    expect(screen.queryByText("Cartório 2")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Mostrando 1 a 1 de 1 cartórios")).toBeInTheDocument();
   });
 
   it("permite visualizar o cadastro do cartório sem permissão de edição", () => {
