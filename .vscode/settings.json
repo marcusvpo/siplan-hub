@@ -1,3 +1,9 @@
 {
-  "css.lint.unknownAtRules": "ignore"
+  "css.lint.unknownAtRules": "ignore",
+  "deno.enable": true,
+  "deno.enablePaths": ["supabase/functions"],
+  "deno.suggest.imports.hosts": {
+    "https://deno.land": true,
+    "https://esm.sh": true
+  }
 }
