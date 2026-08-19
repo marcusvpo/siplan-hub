@@ -30,6 +30,7 @@ export type PermissionCategory =
   | "Conversão"
   | "SD"
   | "Implantadores"
+  | "CS/CX"
   | "Modelos Editor OrionTN"
   | "Copiloto"
   | "Administração";
@@ -44,6 +45,7 @@ export const PERMISSION_CATEGORY_ORDER: PermissionCategory[] = [
   "Conversão",
   "SD",
   "Implantadores",
+  "CS/CX",
   "Modelos Editor OrionTN",
   "Copiloto",
   "Administração",
@@ -113,6 +115,19 @@ export const PERMISSION_RESOURCES: PermissionResourceDef[] = [
   { resource: "implantadores_treinamento", label: "Roteiro de Treinamento", category: "Implantadores", actions: ["view"] },
   { resource: "implantadores_transicao", label: "Documento de Transição", category: "Implantadores", actions: ["view", "edit", "execute"] },
   { resource: "templates", label: "Templates de Formulários", category: "Implantadores", actions: ["manage"] },
+
+  // CS/CX
+  { resource: "menu_cs_cx", label: "Menu CS/CX", category: "CS/CX", actions: ["view"] },
+  { resource: "cs_cx_home", label: "CS/CX - Visão Geral", category: "CS/CX", actions: ["view"] },
+  { resource: "cs_cx_registros", label: "CS/CX - Solicitações", category: "CS/CX", actions: ["view", "create", "edit", "delete"] },
+  { resource: "cs_cx_cartorios", label: "CS/CX - Cartórios", category: "CS/CX", actions: ["view", "create", "edit", "delete"] },
+  { resource: "cs_cx_contatos", label: "CS/CX - Contatos", category: "CS/CX", actions: ["view", "create", "edit", "delete"] },
+  { resource: "cs_cx_agendamentos", label: "CS/CX - Agendamentos", category: "CS/CX", actions: ["view", "create", "edit", "delete"] },
+  { resource: "cs_cx_rotinas", label: "CS/CX - Rotinas", category: "CS/CX", actions: ["view", "create", "edit", "delete"] },
+  { resource: "cs_cx_visitas", label: "CS/CX - Visitas", category: "CS/CX", actions: ["view", "create", "edit", "delete"] },
+  { resource: "cs_cx_nps", label: "CS/CX - NPS", category: "CS/CX", actions: ["view", "create", "edit", "delete"] },
+  { resource: "cs_cx_reports", label: "CS/CX - Relatórios", category: "CS/CX", actions: ["view"] },
+  { resource: "cs_cx_admin", label: "CS/CX - Administração", category: "CS/CX", actions: ["view", "manage"] },
 
   // Modelos Editor OrionTN
   // Dashboard e Projetos são leitura; a edição via ProjectModal cai em projects.edit.

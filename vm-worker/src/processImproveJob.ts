@@ -258,6 +258,35 @@ ${json}
 === FIM DOS DADOS ===`;
 }
 
+function buildNpsAnalysisPrompt(source: string): string {
+  return `Voce e um analista senior de Customer Success preparando um relatorio executivo de NPS para a gestao. Abaixo esta um recorte consolidado com indicadores, evolucao mensal, cartorios, comentarios de clientes e um plano de acao inicial calculado pelo Siplan HUB.
+
+Transforme o conteudo em um parecer objetivo, acionavel e facil de apresentar para a diretoria, mantendo EXATAMENTE estas secoes:
+**Resumo executivo**
+**Indicadores e tendencia**
+**Cartorios prioritarios**
+**Voz do cliente**
+**Plano de acao recomendado**
+**Limitacoes da analise**
+
+REGRAS:
+- Baseie-se SOMENTE no recorte fornecido. NAO invente fatos, causas, numeros, percentuais, clientes ou comentarios.
+- Preserve todos os numeros usados na conclusao e diferencie evidencia de hipotese.
+- Considere o tamanho da amostra antes de afirmar tendencia ou comparar cartorios.
+- Sintetize os comentarios em temas somente quando houver evidencia textual; nao exponha nomes de respondentes.
+- Priorize de 3 a 6 acoes concretas, indicando objetivo e ordem sugerida.
+- Se nao houver dados suficientes para uma conclusao, diga isso explicitamente.
+- Portugues do Brasil, tom executivo, profissional e direto.
+
+FORMATACAO (Markdown leve): mantenha as 6 secoes em **negrito**; use listas com "- ". Nao use titulos com #, tabelas nem blocos de codigo.
+
+Responda SOMENTE com o relatorio.
+
+=== RECORTE CONSOLIDADO DE NPS ===
+${source}
+=== FIM DO RECORTE ===`;
+}
+
 /**
  * Pipeline de um job 'improve_text' (ja marcado 'processing' pelo claim):
  * le o texto de entrada (input_text) -> roda o Claude para reescrever ->
@@ -297,15 +326,21 @@ export async function processImproveJob(job: DtcJob): Promise<void> {
 
   const isSummary = job.job_type === "summary_blocks";
   const isTicketsAnalysis = job.job_type === "tickets_analysis";
+  const isNpsAnalysis =
+    job.job_type === "improve_text" &&
+    job.target_field?.startsWith("nps_analysis:");
   const isParecer =
     job.job_type === "pos_parecer" ||
     job.job_type === "panorama_parecer" ||
-    isTicketsAnalysis;
+    isTicketsAnalysis ||
+    isNpsAnalysis;
   const isPanorama = job.job_type === "panorama_parecer";
 
   pushStep(
     isParecer
-      ? isTicketsAnalysis
+      ? isNpsAnalysis
+        ? "Lendo os indicadores e comentarios de NPS..."
+        : isTicketsAnalysis
         ? "Lendo os indicadores e chamados do filtro..."
         : "Lendo os chamados do periodo do pos..."
       : isSummary
@@ -321,7 +356,9 @@ export async function processImproveJob(job: DtcJob): Promise<void> {
   if (text.replace(/[^a-zA-Z0-9]/g, "").length < 10) {
     throw new Error(
       isParecer
-        ? "Nao ha chamados suficientes para gerar um parecer."
+        ? isNpsAnalysis
+          ? "Nao ha respostas de NPS suficientes para gerar o relatorio."
+          : "Nao ha chamados suficientes para gerar um parecer."
         : isSummary
         ? "Nao ha texto suficiente nos blocos para gerar um resumo."
         : "O texto e muito curto para ser melhorado."
@@ -331,7 +368,9 @@ export async function processImproveJob(job: DtcJob): Promise<void> {
   // 2. Rodar o Claude para reescrever/resumir
   pushStep(
     isParecer
-      ? isTicketsAnalysis
+      ? isNpsAnalysis
+        ? "Analisando tendencias, riscos e voz do cliente..."
+        : isTicketsAnalysis
         ? "Analisando riscos, recorrencias e solucoes..."
         : "Gerando o parecer com IA..."
       : isSummary
@@ -354,7 +393,7 @@ export async function processImproveJob(job: DtcJob): Promise<void> {
   // do recorte dentro do JSON (payload.projetos). Best-effort — sem contexto o
   // parecer sai normalmente.
   let contextoProjetos = "";
-  if (isParecer && !isTicketsAnalysis) {
+  if (isParecer && !isTicketsAnalysis && !isNpsAnalysis) {
     pushStep("Lendo as etapas dos projetos (conversao, aderencia, DTC)...");
     await flushProgress(true);
     if (isPanorama) {
@@ -371,7 +410,9 @@ export async function processImproveJob(job: DtcJob): Promise<void> {
     }
   }
 
-  const prompt = isTicketsAnalysis
+  const prompt = isNpsAnalysis
+    ? buildNpsAnalysisPrompt(text)
+    : isTicketsAnalysis
     ? buildTicketsAnalysisPrompt(text)
     : isPanorama
     ? buildPanoramaParecerPrompt(text, contextoProjetos)
@@ -439,7 +480,9 @@ export async function processImproveJob(job: DtcJob): Promise<void> {
 
   // 3. Concluir job com o texto gerado
   pushStep(
-    isParecer
+    isNpsAnalysis
+      ? "Relatorio de NPS pronto!"
+      : isParecer
       ? "Parecer pronto!"
       : isSummary
       ? "Resumo pronto! Revise antes de aplicar."
@@ -457,5 +500,7 @@ export async function processImproveJob(job: DtcJob): Promise<void> {
     .eq("id", job.id);
   if (doneError) throw new Error(`Falha ao concluir job: ${doneError.message}`);
 
-  console.log(`[${isSummary ? "summary" : "improve"} ${job.id}] concluido (${improved.length} chars)`);
+  console.log(
+    `[${isNpsAnalysis ? "nps-analysis" : isSummary ? "summary" : "improve"} ${job.id}] concluido (${improved.length} chars)`,
+  );
 }
