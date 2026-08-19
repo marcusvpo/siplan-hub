@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type {
+  SdFamilia,
   SdRotina,
   SdSistema,
   SdSistemaComRotinas,
@@ -16,11 +17,24 @@ const SOLUTION_SELECT = `
 export async function listSdSystems(): Promise<SdSistema[]> {
   const { data, error } = await supabase
     .from("sd_sistemas")
-    .select("*")
+    .select(`
+      *,
+      familia:sd_familias!sd_sistemas_familia_id_fkey(id, nome, descricao)
+    `)
     .order("nome");
 
   if (error) throw error;
   return (data || []) as SdSistema[];
+}
+
+export async function listSdFamilies(): Promise<SdFamilia[]> {
+  const { data, error } = await supabase
+    .from("sd_familias")
+    .select("*")
+    .order("nome");
+
+  if (error) throw error;
+  return (data || []) as SdFamilia[];
 }
 
 export async function listSdRoutines(systemId?: string): Promise<SdRotina[]> {
@@ -105,6 +119,41 @@ export async function updateSdSystem(id: string, name: string): Promise<void> {
 
 export async function deleteSdSystem(id: string): Promise<void> {
   const { error } = await supabase.from("sd_sistemas").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export async function updateSdSystemFamily(
+  id: string,
+  familyId: string | null,
+): Promise<void> {
+  const { error } = await supabase
+    .from("sd_sistemas")
+    .update({ familia_id: familyId })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+export async function createSdFamily(name: string, description: string | null): Promise<void> {
+  const { error } = await supabase
+    .from("sd_familias")
+    .insert({ nome: name, descricao: description });
+  if (error) throw error;
+}
+
+export async function updateSdFamily(
+  id: string,
+  name: string,
+  description: string | null,
+): Promise<void> {
+  const { error } = await supabase
+    .from("sd_familias")
+    .update({ nome: name, descricao: description })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteSdFamily(id: string): Promise<void> {
+  const { error } = await supabase.from("sd_familias").delete().eq("id", id);
   if (error) throw error;
 }
 

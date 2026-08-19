@@ -1,7 +1,16 @@
+export interface SdFamilia {
+  id: string;
+  nome: string;
+  descricao: string | null;
+  criado_em: string;
+}
+
 export interface SdSistema {
   id: string;
   nome: string;
+  familia_id: string | null;
   criado_em: string;
+  familia?: Pick<SdFamilia, "id" | "nome" | "descricao"> | null;
 }
 
 export interface SdRotina {

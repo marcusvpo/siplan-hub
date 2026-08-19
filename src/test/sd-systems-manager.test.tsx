@@ -38,6 +38,7 @@ const systems: SdSistemaComRotinas[] = [...expectedNames]
   .map((nome, index) => ({
     id: `system-${index}`,
     nome,
+    familia_id: null,
     criado_em: "2026-08-19T12:00:00Z",
     rotinas: [],
   }));

@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   filterSdSolutions,
+  groupSdSolutionsByFamily,
   normalizeSdSearch,
+  SD_UNASSIGNED_FAMILY_ID,
   sanitizeSdSolutionHtml,
 } from "@/lib/sd-solutions";
-import type { SdSolucao } from "@/types/sd";
+import type { SdFamilia, SdSistema, SdSolucao } from "@/types/sd";
 
 const solution: SdSolucao = {
   id: "solution-1",
@@ -20,6 +22,16 @@ const solution: SdSolucao = {
   sistema: { id: "system-1", nome: "SiplanPRO" },
   rotina: { id: "routine-1", nome: "Certidões" },
 };
+
+const families: SdFamilia[] = [
+  { id: "family-2", nome: "Tributos", descricao: null, criado_em: "2026-08-19T12:00:00Z" },
+  { id: "family-1", nome: "Atendimento", descricao: "Produtos de atendimento", criado_em: "2026-08-19T12:00:00Z" },
+];
+
+const systems: SdSistema[] = [
+  { id: "system-2", nome: "Zulu", familia_id: null, criado_em: "2026-08-19T12:00:00Z" },
+  { id: "system-1", nome: "SiplanPRO", familia_id: "family-1", criado_em: "2026-08-19T12:00:00Z" },
+];
 
 describe("SD solutions", () => {
   it("normaliza acentos e caixa na busca", () => {
@@ -49,5 +61,25 @@ describe("SD solutions", () => {
   it("converte o destaque legado de palavras-chave", () => {
     const safe = sanitizeSdSolutionHtml('<span class="kw-mark">assinador</span>');
     expect(safe).toBe('<span class="sd-keyword">assinador</span>');
+  });
+
+  it("agrupa soluções por família em ordem alfabética e preserva sistemas sem família", () => {
+    const groups = groupSdSolutionsByFamily(families, systems, [solution]);
+
+    expect(groups.map((group) => group.nome)).toEqual([
+      "Atendimento",
+      "Tributos",
+      "Sem família",
+    ]);
+    expect(groups[0].solutions).toEqual([solution]);
+    expect(groups[0].systems.map((system) => system.nome)).toEqual(["SiplanPRO"]);
+    expect(groups[2].id).toBe(SD_UNASSIGNED_FAMILY_ID);
+    expect(groups[2].systems.map((system) => system.nome)).toEqual(["Zulu"]);
+  });
+
+  it("oculta famílias sem soluções quando há uma busca ativa", () => {
+    const groups = groupSdSolutionsByFamily(families, systems, [solution], true);
+
+    expect(groups.map((group) => group.nome)).toEqual(["Atendimento"]);
   });
 });
