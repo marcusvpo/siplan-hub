@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { BookOpenText, Plus, Search, Settings2 } from "lucide-react";
+import { BookOpenText, FolderTree, Plus, Search, Settings2 } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
+import { FamiliesManager } from "@/components/sd/FamiliesManager";
 import { SolutionDetails } from "@/components/sd/SolutionDetails";
 import { SolutionForm } from "@/components/sd/SolutionForm";
 import { SolutionsSearch } from "@/components/sd/SolutionsSearch";
@@ -9,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { usePermissions } from "@/hooks/usePermissions";
 import type { SdSolucao } from "@/types/sd";
 
-type SolutionsTab = "search" | "create" | "manage";
+type SolutionsTab = "search" | "families" | "create" | "manage";
 
 export default function Solutions() {
   const { hasPermission } = usePermissions();
@@ -24,6 +25,7 @@ export default function Solutions() {
 
   useEffect(() => {
     if (tab === "create" && !canCreate && !editingSolution) setTab("search");
+    if (tab === "families" && !canManage) setTab("search");
     if (tab === "manage" && !canManage) setTab("search");
   }, [canCreate, canManage, editingSolution, tab]);
 
@@ -64,6 +66,12 @@ export default function Solutions() {
               Buscar
             </TabsTrigger>
             {canManage && (
+              <TabsTrigger value="families" className="gap-2 px-4 py-2">
+                <FolderTree className="h-4 w-4" />
+                Famílias
+              </TabsTrigger>
+            )}
+            {canManage && (
               <TabsTrigger value="manage" className="gap-2 px-4 py-2">
                 <Settings2 className="h-4 w-4" />
                 Sistemas e rotinas
@@ -97,6 +105,10 @@ export default function Solutions() {
                 setTab("search");
               }}
             />
+          </TabsContent>
+
+          <TabsContent value="families" className="mt-0">
+            <FamiliesManager onChanged={() => setRefreshKey((current) => current + 1)} />
           </TabsContent>
 
           <TabsContent value="manage" className="mt-0">
