@@ -18,6 +18,7 @@ import {
 } from "@/components/ProjectManagement/Chamado0800DetailDialog";
 import { useModelWorkerStatus } from "@/hooks/useModelGenerationJobs";
 import { MarkdownLite, markdownLiteToHtml } from "@/components/MarkdownLite";
+import { PosAiAssistantSection } from "@/components/ProjectManagement/PosAiAssistantSection";
 import { toast } from "sonner";
 import {
   RefreshCw,
@@ -397,42 +398,11 @@ export function PosImplantacaoTab({ project }: PosImplantacaoTabProps) {
     }
   };
 
-  // ----- Estados vazios -----
-  if (parametrosIncompletos) {
-    return (
-      <Card>
-        <CardContent className="py-10 text-center text-sm text-muted-foreground">
-          Para gerar a análise, o projeto precisa do <strong>nº do chamado</strong> válido e da{" "}
-          <strong>data de início do Pós-Implantação</strong> (etapa 7, aba Etapas).
-        </CardContent>
-      </Card>
-    );
-  }
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-16 text-muted-foreground text-sm gap-2">
-        <Loader2 className="h-4 w-4 animate-spin" /> Carregando chamados do período…
-      </div>
-    );
-  }
-  if (error) {
-    return (
-      <Card>
-        <CardContent className="py-10 text-center text-sm text-red-600">
-          Erro ao carregar os chamados do espelho 0800.
-        </CardContent>
-      </Card>
-    );
-  }
-  if (!clienteResolvido) {
-    return (
-      <Card>
-        <CardContent className="py-10 text-center text-sm text-muted-foreground">
-          Cliente ainda não sincronizado com o 0800 — o espelho atualiza a cada ~5 min.
-        </CardContent>
-      </Card>
-    );
-  }
+  const isOrionTN =
+    project.systemType === "Orion TN" ||
+    project.systemType === "OrionTN" ||
+    project.systemType === "Modelos TN" ||
+    project.products?.includes("Orion TN");
 
   const tiles = [
     { label: "Chamados no pós", value: String(stats.total), sub: undefined as string | undefined, icon: Headset },
@@ -466,12 +436,41 @@ export function PosImplantacaoTab({ project }: PosImplantacaoTabProps) {
     : { texto: "bem acima da carteira — atenção", classe: "text-red-600 dark:text-red-400" };
 
   return (
-    <div className="space-y-4 [--viz-bar:#2a78d6] dark:[--viz-bar:#3987e5]">
-      {/* Cabecalho: periodo analisado + acoes */}
-      <div className="flex items-center justify-between gap-2 flex-wrap">
-        <p className="text-sm text-muted-foreground">
-          Chamados 0800 de <strong>{project.systemType}</strong> abertos pelo cliente durante o
-          pós-implantação
+    <div className="space-y-6 [--viz-bar:#2a78d6] dark:[--viz-bar:#3987e5]">
+      {/* Seção Assistente com IA Pós-Implantação (exclusivo Orion TN) */}
+      {isOrionTN && <PosAiAssistantSection project={project} />}
+
+      {/* Seção Análise de Chamados 0800 */}
+      {parametrosIncompletos ? (
+        <Card>
+          <CardContent className="py-10 text-center text-sm text-muted-foreground">
+            Para gerar a análise, o projeto precisa do <strong>nº do chamado</strong> válido e da{" "}
+            <strong>data de início do Pós-Implantação</strong> (etapa 7, aba Etapas).
+          </CardContent>
+        </Card>
+      ) : isLoading ? (
+        <div className="flex items-center justify-center py-16 text-muted-foreground text-sm gap-2">
+          <Loader2 className="h-4 w-4 animate-spin" /> Carregando chamados do período…
+        </div>
+      ) : error ? (
+        <Card>
+          <CardContent className="py-10 text-center text-sm text-red-600">
+            Erro ao carregar os chamados do espelho 0800.
+          </CardContent>
+        </Card>
+      ) : !clienteResolvido ? (
+        <Card>
+          <CardContent className="py-10 text-center text-sm text-muted-foreground">
+            Cliente ainda não sincronizado com o 0800 — o espelho atualiza a cada ~5 min.
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {/* Cabecalho: periodo analisado + acoes */}
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <p className="text-sm text-muted-foreground">
+              Chamados 0800 de <strong>{project.systemType}</strong> abertos pelo cliente durante o
+              pós-implantação
           {post?.status !== "done" && " (em andamento — período corre até hoje)"}.
         </p>
         <span className="flex items-center gap-2 text-[11px] text-muted-foreground">
@@ -862,8 +861,10 @@ export function PosImplantacaoTab({ project }: PosImplantacaoTabProps) {
           )}
         </>
       )}
-
-      <Chamado0800DetailDialog chamado={selecionado} onClose={() => setSelecionado(null)} />
     </div>
-  );
+  )}
+
+  <Chamado0800DetailDialog chamado={selecionado} onClose={() => setSelecionado(null)} />
+</div>
+);
 }

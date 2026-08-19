@@ -136,9 +136,10 @@ export const PERMISSION_RESOURCES: PermissionResourceDef[] = [
   { resource: "orion_projects", label: "Orion - Projetos", category: "Modelos Editor OrionTN", actions: ["view"] },
   { resource: "orion_editor", label: "Orion - Editor de Modelos", category: "Modelos Editor OrionTN", actions: ["view", "edit"] },
 
-  // Copiloto
+  // Copiloto & Assistentes IA
   { resource: "copilot_admin", label: "Copiloto - Acessos e Cotas (Admin)", category: "Copiloto", actions: ["view", "manage"] },
   { resource: "copilot_usage", label: "Copiloto - Uso (Admin)", category: "Copiloto", actions: ["view"] },
+  { resource: "pos_ai_logs", label: "Assistente IA Pós - Logs & Analytics (Admin)", category: "Copiloto", actions: ["view"] },
 
   // Administração
   { resource: "admin_panel", label: "Acesso ao Painel Administrativo", category: "Administração", actions: ["view"] },
