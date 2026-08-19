@@ -65,10 +65,10 @@ export default function Solutions() {
               <Search className="h-4 w-4" />
               Buscar
             </TabsTrigger>
-            {canManage && (
-              <TabsTrigger value="families" className="gap-2 px-4 py-2">
-                <FolderTree className="h-4 w-4" />
-                Famílias
+            {(canCreate || editingSolution) && (
+              <TabsTrigger value="create" className="gap-2 px-4 py-2">
+                <Plus className="h-4 w-4" />
+                {editingSolution ? "Editar" : "Cadastrar"}
               </TabsTrigger>
             )}
             {canManage && (
@@ -77,10 +77,10 @@ export default function Solutions() {
                 Sistemas e rotinas
               </TabsTrigger>
             )}
-            {(canCreate || editingSolution) && (
-              <TabsTrigger value="create" className="gap-2 px-4 py-2">
-                <Plus className="h-4 w-4" />
-                {editingSolution ? "Editar" : "Cadastrar"}
+            {canManage && (
+              <TabsTrigger value="families" className="gap-2 px-4 py-2">
+                <FolderTree className="h-4 w-4" />
+                Famílias
               </TabsTrigger>
             )}
           </TabsList>
