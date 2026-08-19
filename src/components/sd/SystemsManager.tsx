@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   AlertCircle,
   Check,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
   FolderTree,
   Loader2,
@@ -43,6 +44,12 @@ type DeleteTarget =
   | { type: "system"; item: SdSistema }
   | { type: "routine"; item: SdRotina; systemName: string };
 
+const SYSTEMS_PER_PAGE = 4;
+const systemNameCollator = new Intl.Collator("pt-BR", {
+  numeric: true,
+  sensitivity: "base",
+});
+
 function errorCode(error: unknown): string | undefined {
   if (typeof error !== "object" || error === null || !("code" in error)) return undefined;
   return String(error.code);
@@ -51,6 +58,7 @@ function errorCode(error: unknown): string | undefined {
 export function SystemsManager() {
   const { hasPermission } = usePermissions();
   const [systems, setSystems] = useState<SdSistemaComRotinas[]>([]);
+  const [page, setPage] = useState(1);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -66,6 +74,20 @@ export function SystemsManager() {
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
 
   const allowed = hasPermission("sd_solutions", "manage");
+  const sortedSystems = useMemo(
+    () => [...systems].sort((left, right) => systemNameCollator.compare(left.nome, right.nome)),
+    [systems],
+  );
+  const totalPages = Math.max(1, Math.ceil(sortedSystems.length / SYSTEMS_PER_PAGE));
+  const currentPage = Math.min(page, totalPages);
+  const paginatedSystems = sortedSystems.slice(
+    (currentPage - 1) * SYSTEMS_PER_PAGE,
+    currentPage * SYSTEMS_PER_PAGE,
+  );
+
+  useEffect(() => {
+    if (page !== currentPage) setPage(currentPage);
+  }, [currentPage, page]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -225,7 +247,7 @@ export function SystemsManager() {
           </div>
         ) : (
           <div className="space-y-2">
-            {systems.map((system) => {
+            {paginatedSystems.map((system) => {
               const isExpanded = expanded.has(system.id);
               const isEditing = editingSystem?.id === system.id;
               return (
@@ -269,7 +291,9 @@ export function SystemsManager() {
                     ) : (
                       <>
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium">{system.nome}</p>
+                          <p data-testid="sd-system-name" className="truncate text-sm font-medium">
+                            {system.nome}
+                          </p>
                           <p className="text-xs text-muted-foreground">
                             {system.rotinas.length} {system.rotinas.length === 1 ? "rotina" : "rotinas"}
                           </p>
@@ -390,6 +414,45 @@ export function SystemsManager() {
                 </div>
               );
             })}
+            {sortedSystems.length > SYSTEMS_PER_PAGE && (
+              <div className="flex flex-col gap-3 border-t pt-4 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+                <span>
+                  Mostrando{" "}
+                  <strong className="font-semibold text-foreground">
+                    {(currentPage - 1) * SYSTEMS_PER_PAGE + 1}–
+                    {Math.min(currentPage * SYSTEMS_PER_PAGE, sortedSystems.length)}
+                  </strong>{" "}
+                  de <strong className="font-semibold text-foreground">{sortedSystems.length}</strong> sistemas
+                </span>
+                <div className="flex items-center gap-2">
+                  <span className="min-w-24 text-center">
+                    Página {currentPage} de {totalPages}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    aria-label="Página anterior de sistemas"
+                    disabled={currentPage <= 1}
+                    onClick={() => setPage(currentPage - 1)}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    aria-label="Próxima página de sistemas"
+                    disabled={currentPage >= totalPages}
+                    onClick={() => setPage(currentPage + 1)}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </CardContent>
