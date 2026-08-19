@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type {
+  SdAnexo,
   SdFamilia,
   SdRotina,
   SdSistema,
@@ -13,6 +14,13 @@ const SOLUTION_SELECT = `
   sistema:sd_sistemas!sd_solucoes_sistema_id_fkey(id, nome),
   rotina:sd_rotinas!sd_solucoes_rotina_id_fkey(id, nome)
 `;
+
+const SOLUTION_DETAILS_SELECT = `
+  ${SOLUTION_SELECT},
+  anexos:sd_solucao_anexos!sd_solucao_anexos_solucao_id_fkey(*)
+`;
+
+const SD_ATTACHMENTS_BUCKET = "sd-solution-attachments";
 
 export async function listSdSystems(): Promise<SdSistema[]> {
   const { data, error } = await supabase
@@ -75,7 +83,7 @@ export async function listSdSolutions(filters?: {
 export async function getSdSolution(id: string): Promise<SdSolucao | null> {
   const { data, error } = await supabase
     .from("sd_solucoes")
-    .select(SOLUTION_SELECT)
+    .select(SOLUTION_DETAILS_SELECT)
     .eq("id", id)
     .maybeSingle();
 
@@ -83,9 +91,14 @@ export async function getSdSolution(id: string): Promise<SdSolucao | null> {
   return data as unknown as SdSolucao | null;
 }
 
-export async function createSdSolution(payload: SdSolucaoPayload): Promise<void> {
-  const { error } = await supabase.from("sd_solucoes").insert(payload);
+export async function createSdSolution(payload: SdSolucaoPayload): Promise<string> {
+  const { data, error } = await supabase
+    .from("sd_solucoes")
+    .insert(payload)
+    .select("id")
+    .single();
   if (error) throw error;
+  return data.id as string;
 }
 
 export async function updateSdSolution(
@@ -100,8 +113,85 @@ export async function updateSdSolution(
 }
 
 export async function deleteSdSolution(id: string): Promise<void> {
+  const { data: attachments, error: attachmentsError } = await supabase
+    .from("sd_solucao_anexos")
+    .select("caminho_storage")
+    .eq("solucao_id", id);
+  if (attachmentsError) throw attachmentsError;
+
   const { error } = await supabase.from("sd_solucoes").delete().eq("id", id);
   if (error) throw error;
+
+  const paths = (attachments || []).map((attachment) => attachment.caminho_storage as string);
+  if (paths.length > 0) {
+    await supabase.storage.from(SD_ATTACHMENTS_BUCKET).remove(paths);
+  }
+}
+
+function attachmentStorageName(fileName: string): string {
+  const normalized = fileName
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9._-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(-120);
+  return normalized || "anexo";
+}
+
+export async function uploadSdSolutionAttachment(
+  solutionId: string,
+  file: File,
+): Promise<SdAnexo> {
+  const uniqueId = crypto.randomUUID();
+  const storagePath = `${solutionId}/${uniqueId}-${attachmentStorageName(file.name)}`;
+  const { error: uploadError } = await supabase.storage
+    .from(SD_ATTACHMENTS_BUCKET)
+    .upload(storagePath, file, {
+      contentType: file.type || "application/octet-stream",
+      upsert: false,
+    });
+  if (uploadError) throw uploadError;
+
+  const { data, error } = await supabase
+    .from("sd_solucao_anexos")
+    .insert({
+      solucao_id: solutionId,
+      nome_arquivo: file.name,
+      caminho_storage: storagePath,
+      tipo_mime: file.type || null,
+      tamanho_bytes: file.size,
+    })
+    .select("*")
+    .single();
+
+  if (error) {
+    await supabase.storage.from(SD_ATTACHMENTS_BUCKET).remove([storagePath]);
+    throw error;
+  }
+
+  return data as SdAnexo;
+}
+
+export async function deleteSdSolutionAttachment(attachment: SdAnexo): Promise<void> {
+  const { error } = await supabase
+    .from("sd_solucao_anexos")
+    .delete()
+    .eq("id", attachment.id);
+  if (error) throw error;
+
+  await supabase.storage
+    .from(SD_ATTACHMENTS_BUCKET)
+    .remove([attachment.caminho_storage]);
+}
+
+export async function getSdAttachmentDownloadUrl(attachment: SdAnexo): Promise<string> {
+  const { data, error } = await supabase.storage
+    .from(SD_ATTACHMENTS_BUCKET)
+    .createSignedUrl(attachment.caminho_storage, 60, {
+      download: attachment.nome_arquivo,
+    });
+  if (error) throw error;
+  return data.signedUrl;
 }
 
 export async function createSdSystem(name: string): Promise<void> {

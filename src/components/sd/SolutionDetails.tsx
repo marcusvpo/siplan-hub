@@ -3,9 +3,12 @@ import {
   CalendarDays,
   Check,
   Clock3,
+  Download,
+  FileText,
   FolderTree,
   Loader2,
   Pencil,
+  Paperclip,
   Server,
   Share2,
   Tag,
@@ -32,9 +35,14 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { usePermissions } from "@/hooks/usePermissions";
+import { formatSdAttachmentSize } from "@/lib/sd-attachments";
 import { sanitizeSdSolutionHtml } from "@/lib/sd-solutions";
-import { deleteSdSolution, getSdSolution } from "@/services/sd-solutions";
-import type { SdSolucao } from "@/types/sd";
+import {
+  deleteSdSolution,
+  getSdAttachmentDownloadUrl,
+  getSdSolution,
+} from "@/services/sd-solutions";
+import type { SdAnexo, SdSolucao } from "@/types/sd";
 
 interface SolutionDetailsProps {
   solutionId: string | null;
@@ -79,6 +87,7 @@ export function SolutionDetails({
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [downloadingAttachmentId, setDownloadingAttachmentId] = useState<string | null>(null);
   const [panelWidth, setPanelWidth] = useState(() => {
     const savedWidth = Number(localStorage.getItem(PANEL_WIDTH_KEY));
     return clampPanelWidth(savedWidth >= MIN_PANEL_WIDTH ? savedWidth : DEFAULT_PANEL_WIDTH);
@@ -173,6 +182,24 @@ export function SolutionDetails({
       toast.error("Não foi possível excluir a solução.");
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const downloadAttachment = async (attachment: SdAnexo) => {
+    setDownloadingAttachmentId(attachment.id);
+    try {
+      const signedUrl = await getSdAttachmentDownloadUrl(attachment);
+      const link = document.createElement("a");
+      link.href = signedUrl;
+      link.download = attachment.nome_arquivo;
+      link.rel = "noopener";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch {
+      toast.error("Não foi possível baixar o anexo.");
+    } finally {
+      setDownloadingAttachmentId(null);
     }
   };
 
@@ -327,6 +354,54 @@ export function SolutionDetails({
                   </p>
                 )}
               </div>
+
+              {solution.anexos && solution.anexos.length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm font-semibold">
+                    <Paperclip className="h-4 w-4 text-primary" />
+                    Anexos
+                    <Badge variant="secondary">{solution.anexos.length}</Badge>
+                  </div>
+                  <div className="space-y-2">
+                    {[...solution.anexos]
+                      .sort((a, b) => a.nome_arquivo.localeCompare(b.nome_arquivo, "pt-BR"))
+                      .map((attachment) => (
+                        <div
+                          key={attachment.id}
+                          className="flex min-w-0 items-center gap-3 rounded-lg border bg-card px-4 py-3"
+                        >
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                            <FileText className="h-4 w-4" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium" title={attachment.nome_arquivo}>
+                              {attachment.nome_arquivo}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {formatSdAttachmentSize(attachment.tamanho_bytes)}
+                              {attachment.tipo_mime ? ` · ${attachment.tipo_mime}` : ""}
+                            </p>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="shrink-0 gap-2"
+                            disabled={downloadingAttachmentId === attachment.id}
+                            onClick={() => void downloadAttachment(attachment)}
+                          >
+                            {downloadingAttachmentId === attachment.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Download className="h-4 w-4" />
+                            )}
+                            Baixar
+                          </Button>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </SheetContent>

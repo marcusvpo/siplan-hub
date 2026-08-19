@@ -16,11 +16,13 @@ import {
 import { usePermissions } from "@/hooks/usePermissions";
 import {
   createSdSolution,
+  deleteSdSolutionAttachment,
   listSdRoutines,
   listSdSystems,
   updateSdSolution,
+  uploadSdSolutionAttachment,
 } from "@/services/sd-solutions";
-import type { SdRotina, SdSistema, SdSolucao } from "@/types/sd";
+import type { SdAnexo, SdRotina, SdSistema, SdSolucao } from "@/types/sd";
 import { SolutionRichTextEditor } from "./SolutionRichTextEditor";
 
 interface SolutionFormProps {
@@ -38,6 +40,10 @@ export function SolutionForm({ solution, onSaved, onCancelEdit }: SolutionFormPr
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [keywords, setKeywords] = useState<string[]>([]);
+  const [attachments, setAttachments] = useState<SdAnexo[]>([]);
+  const [pendingAttachments, setPendingAttachments] = useState<File[]>([]);
+  const [removedAttachments, setRemovedAttachments] = useState<SdAnexo[]>([]);
+  const [persistedSolutionId, setPersistedSolutionId] = useState<string | null>(null);
   const [loadingOptions, setLoadingOptions] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -59,6 +65,14 @@ export function SolutionForm({ solution, onSaved, onCancelEdit }: SolutionFormPr
     setTitle(solution?.titulo || "");
     setDescription(solution?.descricao || "");
     setKeywords(solution?.palavras_chave || []);
+    setAttachments(
+      [...(solution?.anexos || [])].sort((a, b) =>
+        a.nome_arquivo.localeCompare(b.nome_arquivo, "pt-BR"),
+      ),
+    );
+    setPendingAttachments([]);
+    setRemovedAttachments([]);
+    setPersistedSolutionId(solution?.id || null);
     setError("");
   }, [solution]);
 
@@ -90,6 +104,10 @@ export function SolutionForm({ solution, onSaved, onCancelEdit }: SolutionFormPr
     setTitle("");
     setDescription("");
     setKeywords([]);
+    setAttachments([]);
+    setPendingAttachments([]);
+    setRemovedAttachments([]);
+    setPersistedSolutionId(null);
     setError("");
   };
 
@@ -105,6 +123,7 @@ export function SolutionForm({ solution, onSaved, onCancelEdit }: SolutionFormPr
     }
 
     setSaving(true);
+    let contentSaved = false;
     try {
       const payload = {
         titulo: title.trim(),
@@ -114,14 +133,44 @@ export function SolutionForm({ solution, onSaved, onCancelEdit }: SolutionFormPr
         palavras_chave: keywords,
       };
 
-      if (solution) await updateSdSolution(solution.id, payload);
-      else await createSdSolution(payload);
+      let targetSolutionId = solution?.id || persistedSolutionId;
+      if (solution) {
+        await updateSdSolution(solution.id, payload);
+        contentSaved = true;
+      } else if (!targetSolutionId) {
+        targetSolutionId = await createSdSolution(payload);
+        setPersistedSolutionId(targetSolutionId);
+        contentSaved = true;
+      }
+
+      if (!targetSolutionId) throw new Error("Solução sem identificador após o salvamento.");
+
+      for (const attachment of [...removedAttachments]) {
+        await deleteSdSolutionAttachment(attachment);
+        setRemovedAttachments((current) =>
+          current.filter((item) => item.id !== attachment.id),
+        );
+      }
+
+      for (const file of [...pendingAttachments]) {
+        const uploadedAttachment = await uploadSdSolutionAttachment(targetSolutionId, file);
+        setAttachments((current) =>
+          [...current, uploadedAttachment].sort((a, b) =>
+            a.nome_arquivo.localeCompare(b.nome_arquivo, "pt-BR"),
+          ),
+        );
+        setPendingAttachments((current) => current.filter((item) => item !== file));
+      }
 
       toast.success(editing ? "Solução atualizada." : "Solução cadastrada.");
       clearForm();
       onSaved();
     } catch {
-      setError("Não foi possível salvar a solução. Tente novamente.");
+      setError(
+        contentSaved || persistedSolutionId
+          ? "A solução foi salva, mas não foi possível concluir todos os anexos. Tente salvar novamente."
+          : "Não foi possível salvar a solução. Tente novamente.",
+      );
     } finally {
       setSaving(false);
     }
@@ -211,6 +260,25 @@ export function SolutionForm({ solution, onSaved, onCancelEdit }: SolutionFormPr
           <SolutionRichTextEditor
             value={description}
             keywords={keywords}
+            attachments={attachments}
+            pendingAttachments={pendingAttachments}
+            disabled={saving}
+            onAddAttachments={(files) => {
+              setPendingAttachments((current) => [...current, ...files]);
+            }}
+            onRemoveAttachment={(attachment) => {
+              setAttachments((current) =>
+                current.filter((item) => item.id !== attachment.id),
+              );
+              setRemovedAttachments((current) =>
+                current.some((item) => item.id === attachment.id)
+                  ? current
+                  : [...current, attachment],
+              );
+            }}
+            onRemovePendingAttachment={(file) => {
+              setPendingAttachments((current) => current.filter((item) => item !== file));
+            }}
             onChange={(html, nextKeywords) => {
               setDescription(html);
               setKeywords(nextKeywords);
@@ -218,6 +286,7 @@ export function SolutionForm({ solution, onSaved, onCancelEdit }: SolutionFormPr
           />
           <p className="text-xs text-muted-foreground">
             Selecione um trecho e use “Marcar seleção” para incluí-lo na busca por palavras-chave.
+            Você também pode anexar até 10 arquivos de 20 MB; formatos executáveis são bloqueados.
           </p>
         </div>
 

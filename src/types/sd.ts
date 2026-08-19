@@ -20,6 +20,17 @@ export interface SdRotina {
   criado_em: string;
 }
 
+export interface SdAnexo {
+  id: string;
+  solucao_id: string;
+  nome_arquivo: string;
+  caminho_storage: string;
+  tipo_mime: string | null;
+  tamanho_bytes: number;
+  criado_em: string;
+  criado_por: string | null;
+}
+
 export interface SdSolucao {
   id: string;
   titulo: string;
@@ -33,6 +44,7 @@ export interface SdSolucao {
   atualizado_por: string | null;
   sistema?: Pick<SdSistema, "id" | "nome"> | null;
   rotina?: Pick<SdRotina, "id" | "nome"> | null;
+  anexos?: SdAnexo[];
 }
 
 export interface SdSistemaComRotinas extends SdSistema {
