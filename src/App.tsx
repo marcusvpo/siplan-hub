@@ -51,6 +51,7 @@ const Conversion = lazy(() => import("./pages/conversion/Conversion"));
 const ConversionEngines = lazy(
   () => import("./pages/conversion/ConversionEngines"),
 );
+const SdSolutions = lazy(() => import("./pages/sd/Solutions"));
 const OrionTNModels = lazy(() => import("./pages/conversion/OrionTNModels"));
 const OrionTNProjects = lazy(
   () => import("./pages/conversion/OrionTNProjects"),
@@ -562,6 +563,14 @@ const App = () => (
                             element={
                               <RequirePermission resource="orion_dashboard">
                                 <OrionTNDashboard />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/sd/solucoes"
+                            element={
+                              <RequirePermission resource="sd_solutions">
+                                <SdSolutions />
                               </RequirePermission>
                             }
                           />
