@@ -140,4 +140,93 @@ suite("invariantes de RLS (banco real)", () => {
     `);
     expect(rows).toEqual([]);
   });
+
+  it("respostas NPS nao podem ser incluidas, importadas ou alteradas por usuarios", async () => {
+    const { rows } = await client.query(`
+      select
+        has_table_privilege(
+          'authenticated',
+          'public.cs_cx_nps_responses',
+          'INSERT'
+        ) as can_insert,
+        has_table_privilege(
+          'authenticated',
+          'public.cs_cx_nps_responses',
+          'UPDATE'
+        ) as can_update,
+        has_function_privilege(
+          'authenticated',
+          'public.cs_cx_import_nps(uuid,jsonb)',
+          'EXECUTE'
+        ) as can_import,
+        exists (
+          select 1
+          from pg_policies
+          where schemaname = 'public'
+            and tablename = 'cs_cx_nps_responses'
+            and cmd in ('INSERT', 'UPDATE', 'ALL')
+            and ('authenticated' = any(roles) or 'public' = any(roles))
+        ) as has_write_policy
+    `);
+
+    expect(rows).toEqual([
+      {
+        can_insert: false,
+        can_update: false,
+        can_import: false,
+        has_write_policy: false,
+      },
+    ]);
+  });
+
+  it("temas NPS usam imagens publicas imutaveis e entram no snapshot", async () => {
+    const { rows } = await client.query(`
+      select
+        exists (
+          select 1 from information_schema.columns
+          where table_schema = 'public'
+            and table_name = 'cs_cx_nps_questionnaires'
+            and column_name = 'theme'
+        ) as has_theme,
+        exists (
+          select 1 from storage.buckets
+          where id = 'cs-cx-nps-assets'
+            and public
+            and file_size_limit = 5242880
+            and allowed_mime_types @> array[
+              'image/jpeg', 'image/png', 'image/webp'
+            ]::text[]
+        ) as safe_bucket,
+        exists (
+          select 1 from pg_policies
+          where schemaname = 'storage'
+            and tablename = 'objects'
+            and policyname = 'cs_cx_nps_assets_insert'
+            and cmd = 'INSERT'
+        ) as can_upload,
+        not exists (
+          select 1 from pg_policies
+          where schemaname = 'storage'
+            and tablename = 'objects'
+            and policyname like 'cs_cx_nps_assets_%'
+            and cmd in ('UPDATE', 'DELETE', 'ALL')
+        ) as assets_immutable,
+        pg_get_functiondef(
+          to_regprocedure(
+            'public.cs_cx_create_nps_invitation(uuid,uuid,uuid,text,text,timestamptz)'
+          )
+        ) as invitation_definition
+    `);
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      has_theme: true,
+      safe_bucket: true,
+      can_upload: true,
+      assets_immutable: true,
+    });
+    expect(rows[0].invitation_definition).toMatch(
+      /'theme'(?:::text)?,\s*questionnaire\.theme/,
+    );
+  });
 });
