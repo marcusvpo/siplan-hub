@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlertCircle, CheckCircle2, Loader2, Save } from "lucide-react";
+import { AlertCircle, CalendarCheck2, CheckCircle2, Loader2, Save } from "lucide-react";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -14,15 +14,24 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useAuth } from "@/hooks/useAuth";
 import {
   createSdSolution,
   deleteSdSolutionAttachment,
   listSdRoutines,
+  listSdProfiles,
   listSdSystems,
   updateSdSolution,
   uploadSdSolutionAttachment,
 } from "@/services/sd-solutions";
-import type { SdAnexo, SdRotina, SdSistema, SdSolucao } from "@/types/sd";
+import type {
+  SdAnexo,
+  SdProfile,
+  SdRotina,
+  SdSistema,
+  SdSolucao,
+  SdSolutionStatus,
+} from "@/types/sd";
 import { SolutionRichTextEditor } from "./SolutionRichTextEditor";
 
 interface SolutionFormProps {
@@ -33,19 +42,30 @@ interface SolutionFormProps {
 
 export function SolutionForm({ solution, onSaved, onCancelEdit }: SolutionFormProps) {
   const { hasPermission } = usePermissions();
+  const { user } = useAuth();
   const [systems, setSystems] = useState<SdSistema[]>([]);
+  const [profiles, setProfiles] = useState<SdProfile[]>([]);
   const [routines, setRoutines] = useState<SdRotina[]>([]);
   const [systemId, setSystemId] = useState("");
   const [routineId, setRoutineId] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [keywords, setKeywords] = useState<string[]>([]);
+  const [status, setStatus] = useState<SdSolutionStatus>("publicado");
+  const [responsibleId, setResponsibleId] = useState("");
+  const [reviewedAt, setReviewedAt] = useState<string | null>(null);
+  const [nextReviewDate, setNextReviewDate] = useState("");
   const [attachments, setAttachments] = useState<SdAnexo[]>([]);
   const [pendingAttachments, setPendingAttachments] = useState<File[]>([]);
   const [removedAttachments, setRemovedAttachments] = useState<SdAnexo[]>([]);
   const [persistedSolutionId, setPersistedSolutionId] = useState<string | null>(null);
   const [loadingOptions, setLoadingOptions] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [attachmentUpload, setAttachmentUpload] = useState<{
+    fileName: string;
+    completed: number;
+    total: number;
+  } | null>(null);
   const [error, setError] = useState("");
 
   const editing = Boolean(solution);
@@ -53,9 +73,12 @@ export function SolutionForm({ solution, onSaved, onCancelEdit }: SolutionFormPr
 
   useEffect(() => {
     setLoadingOptions(true);
-    listSdSystems()
-      .then(setSystems)
-      .catch(() => setError("Não foi possível carregar os sistemas."))
+    Promise.all([listSdSystems(), listSdProfiles()])
+      .then(([systemItems, profileItems]) => {
+        setSystems(systemItems);
+        setProfiles(profileItems);
+      })
+      .catch(() => setError("Não foi possível carregar os sistemas e responsáveis."))
       .finally(() => setLoadingOptions(false));
   }, []);
 
@@ -65,6 +88,13 @@ export function SolutionForm({ solution, onSaved, onCancelEdit }: SolutionFormPr
     setTitle(solution?.titulo || "");
     setDescription(solution?.descricao || "");
     setKeywords(solution?.palavras_chave || []);
+    setStatus(solution?.status || "publicado");
+    setResponsibleId(solution?.responsavel_id || user?.id || "");
+    setReviewedAt(solution?.revisado_em || new Date().toISOString());
+    setNextReviewDate(
+      solution?.proxima_revisao_em
+        || new Date(Date.now() + 180 * 86400000).toISOString().slice(0, 10),
+    );
     setAttachments(
       [...(solution?.anexos || [])].sort((a, b) =>
         a.nome_arquivo.localeCompare(b.nome_arquivo, "pt-BR"),
@@ -74,7 +104,7 @@ export function SolutionForm({ solution, onSaved, onCancelEdit }: SolutionFormPr
     setRemovedAttachments([]);
     setPersistedSolutionId(solution?.id || null);
     setError("");
-  }, [solution]);
+  }, [solution, user?.id]);
 
   useEffect(() => {
     if (!systemId) {
@@ -104,10 +134,15 @@ export function SolutionForm({ solution, onSaved, onCancelEdit }: SolutionFormPr
     setTitle("");
     setDescription("");
     setKeywords([]);
+    setStatus("publicado");
+    setResponsibleId(user?.id || "");
+    setReviewedAt(new Date().toISOString());
+    setNextReviewDate(new Date(Date.now() + 180 * 86400000).toISOString().slice(0, 10));
     setAttachments([]);
     setPendingAttachments([]);
     setRemovedAttachments([]);
     setPersistedSolutionId(null);
+    setAttachmentUpload(null);
     setError("");
   };
 
@@ -131,6 +166,10 @@ export function SolutionForm({ solution, onSaved, onCancelEdit }: SolutionFormPr
         sistema_id: systemId,
         rotina_id: routineId || null,
         palavras_chave: keywords,
+        status,
+        responsavel_id: responsibleId || null,
+        revisado_em: reviewedAt,
+        proxima_revisao_em: nextReviewDate || null,
       };
 
       let targetSolutionId = solution?.id || persistedSolutionId;
@@ -152,7 +191,13 @@ export function SolutionForm({ solution, onSaved, onCancelEdit }: SolutionFormPr
         );
       }
 
-      for (const file of [...pendingAttachments]) {
+      const filesToUpload = [...pendingAttachments];
+      for (const [fileIndex, file] of filesToUpload.entries()) {
+        setAttachmentUpload({
+          fileName: file.name,
+          completed: fileIndex,
+          total: filesToUpload.length,
+        });
         const uploadedAttachment = await uploadSdSolutionAttachment(targetSolutionId, file);
         setAttachments((current) =>
           [...current, uploadedAttachment].sort((a, b) =>
@@ -160,6 +205,9 @@ export function SolutionForm({ solution, onSaved, onCancelEdit }: SolutionFormPr
           ),
         );
         setPendingAttachments((current) => current.filter((item) => item !== file));
+        setAttachmentUpload((current) => current
+          ? { ...current, completed: fileIndex + 1 }
+          : null);
       }
 
       toast.success(editing ? "Solução atualizada." : "Solução cadastrada.");
@@ -172,6 +220,7 @@ export function SolutionForm({ solution, onSaved, onCancelEdit }: SolutionFormPr
           : "Não foi possível salvar a solução. Tente novamente.",
       );
     } finally {
+      setAttachmentUpload(null);
       setSaving(false);
     }
   };
@@ -188,7 +237,7 @@ export function SolutionForm({ solution, onSaved, onCancelEdit }: SolutionFormPr
   }
 
   return (
-    <Card className="mx-auto max-w-4xl">
+    <Card className="mx-auto max-w-5xl">
       <CardHeader>
         <CardTitle>{editing ? "Editar solução" : "Cadastrar solução"}</CardTitle>
         <CardDescription>
@@ -255,6 +304,74 @@ export function SolutionForm({ solution, onSaved, onCancelEdit }: SolutionFormPr
           />
         </div>
 
+        <div className="grid gap-5 rounded-xl border bg-muted/20 p-4 md:grid-cols-3">
+          <div className="space-y-2">
+            <Label htmlFor="sd-status">Status</Label>
+            <Select value={status} onValueChange={(value) => setStatus(value as SdSolutionStatus)}>
+              <SelectTrigger id="sd-status">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="rascunho">Rascunho</SelectItem>
+                <SelectItem value="publicado">Publicado</SelectItem>
+                <SelectItem value="desatualizado">Desatualizado</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="sd-responsible">Responsável</Label>
+            <Select
+              value={responsibleId || "none"}
+              onValueChange={(value) => setResponsibleId(value === "none" ? "" : value)}
+            >
+              <SelectTrigger id="sd-responsible">
+                <SelectValue placeholder="Sem responsável" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Sem responsável</SelectItem>
+                {profiles.map((profile) => (
+                  <SelectItem key={profile.id} value={profile.id}>
+                    {profile.full_name || profile.email || "Usuário sem nome"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="sd-next-review">Próxima revisão</Label>
+            <Input
+              id="sd-next-review"
+              type="date"
+              value={nextReviewDate}
+              onChange={(event) => setNextReviewDate(event.target.value)}
+            />
+          </div>
+
+          <div className="flex items-center justify-between gap-3 md:col-span-3">
+            <p className="text-xs text-muted-foreground">
+              Última revisão: {reviewedAt
+                ? new Intl.DateTimeFormat("pt-BR").format(new Date(reviewedAt))
+                : "não informada"}
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => {
+                setReviewedAt(new Date().toISOString());
+                setNextReviewDate(new Date(Date.now() + 180 * 86400000).toISOString().slice(0, 10));
+                if (status === "desatualizado") setStatus("publicado");
+              }}
+            >
+              <CalendarCheck2 className="h-4 w-4" />
+              Marcar como revisada hoje
+            </Button>
+          </div>
+        </div>
+
         <div className="space-y-2">
           <Label>Descrição da solução</Label>
           <SolutionRichTextEditor
@@ -263,6 +380,7 @@ export function SolutionForm({ solution, onSaved, onCancelEdit }: SolutionFormPr
             attachments={attachments}
             pendingAttachments={pendingAttachments}
             disabled={saving}
+            attachmentUpload={attachmentUpload}
             onAddAttachments={(files) => {
               setPendingAttachments((current) => [...current, ...files]);
             }}

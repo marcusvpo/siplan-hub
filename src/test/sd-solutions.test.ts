@@ -5,6 +5,9 @@ import {
   normalizeSdSearch,
   SD_UNASSIGNED_FAMILY_ID,
   sanitizeSdSolutionHtml,
+  sdSolutionExcerpt,
+  sortSdSolutions,
+  splitSdHighlightedText,
 } from "@/lib/sd-solutions";
 import type { SdFamilia, SdSistema, SdSolucao } from "@/types/sd";
 
@@ -19,6 +22,14 @@ const solution: SdSolucao = {
   atualizado_em: "2026-08-19T12:00:00Z",
   criado_por: null,
   atualizado_por: null,
+  status: "publicado",
+  responsavel_id: null,
+  revisado_em: "2026-08-19T12:00:00Z",
+  proxima_revisao_em: "2027-02-15",
+  versao: 1,
+  visualizacoes: 3,
+  votos_uteis: 2,
+  votos_nao_uteis: 0,
   sistema: { id: "system-1", nome: "SiplanPRO" },
   rotina: { id: "routine-1", nome: "Certidões" },
 };
@@ -81,5 +92,26 @@ describe("SD solutions", () => {
     const groups = groupSdSolutionsByFamily(families, systems, [solution], true);
 
     expect(groups.map((group) => group.nome)).toEqual(["Atendimento"]);
+  });
+
+  it("ordena por relevância, acesso e utilidade", () => {
+    const popular: SdSolucao = {
+      ...solution,
+      id: "solution-2",
+      titulo: "Procedimento genérico",
+      visualizacoes: 40,
+      votos_uteis: 10,
+    };
+
+    expect(sortSdSolutions([popular, solution], "relevancia", "emissao")[0]).toBe(solution);
+    expect(sortSdSolutions([solution, popular], "acessadas", "")[0]).toBe(popular);
+    expect(sortSdSolutions([solution, popular], "uteis", "")[0]).toBe(popular);
+  });
+
+  it("destaca a busca sem perder acentos e recorta a descrição ao redor do termo", () => {
+    const parts = splitSdHighlightedText("Emissão de certidão", "emissao");
+    expect(parts.find((part) => part.match)?.text).toBe("Emissão");
+    expect(sdSolutionExcerpt(`<p>${"início ".repeat(40)}assinador digital</p>`, "assinador"))
+      .toContain("assinador");
   });
 });

@@ -3,12 +3,14 @@ import {
   ArrowLeft,
   BookOpenText,
   ChevronRight,
+  Eye,
   FolderTree,
   Inbox,
   Loader2,
   RotateCcw,
   Search,
   SlidersHorizontal,
+  ThumbsUp,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -26,7 +28,12 @@ import { useDebounce } from "@/hooks/use-debounce";
 import {
   filterSdSolutions,
   groupSdSolutionsByFamily,
-  stripHtml,
+  isSdSolutionReviewOverdue,
+  SD_SOLUTION_STATUS,
+  sdSolutionExcerpt,
+  sortSdSolutions,
+  splitSdHighlightedText,
+  type SdSolutionSort,
 } from "@/lib/sd-solutions";
 import {
   listSdFamilies,
@@ -52,11 +59,28 @@ function formatDate(value: string | null): string {
 
 interface SolutionCardProps {
   solution: SdSolucao;
+  search: string;
   onOpen: (solution: SdSolucao) => void;
 }
 
-function SolutionCard({ solution, onOpen }: SolutionCardProps) {
-  const plainDescription = stripHtml(solution.descricao);
+function HighlightedText({ value, search }: { value: string; search: string }) {
+  return (
+    <>
+      {splitSdHighlightedText(value, search).map((part, index) =>
+        part.match ? (
+          <mark key={`${part.text}-${index}`} className="rounded bg-primary/15 px-0.5 text-inherit">
+            {part.text}
+          </mark>
+        ) : part.text,
+      )}
+    </>
+  );
+}
+
+function SolutionCard({ solution, search, onOpen }: SolutionCardProps) {
+  const descriptionExcerpt = sdSolutionExcerpt(solution.descricao, search);
+  const overdue = isSdSolutionReviewOverdue(solution);
+  const statusConfig = SD_SOLUTION_STATUS[solution.status];
 
   return (
     <Card
@@ -75,17 +99,22 @@ function SolutionCard({ solution, onOpen }: SolutionCardProps) {
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">
             <h3 className="line-clamp-2 font-semibold leading-snug group-hover:text-primary">
-              {solution.titulo}
+              <HighlightedText value={solution.titulo} search={search} />
             </h3>
             <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
           </div>
           <div className="mt-2 flex flex-wrap gap-2">
             {solution.sistema && <Badge>{solution.sistema.nome}</Badge>}
             {solution.rotina && <Badge variant="outline">{solution.rotina.nome}</Badge>}
+            {(solution.status !== "publicado" || overdue) && (
+              <Badge variant="outline" className={overdue ? SD_SOLUTION_STATUS.desatualizado.className : statusConfig.className}>
+                {overdue ? "Revisão vencida" : statusConfig.label}
+              </Badge>
+            )}
           </div>
-          {plainDescription && (
+          {descriptionExcerpt && (
             <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
-              {plainDescription}
+              <HighlightedText value={descriptionExcerpt} search={search} />
             </p>
           )}
           <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
@@ -96,7 +125,11 @@ function SolutionCard({ solution, onOpen }: SolutionCardProps) {
                 </span>
               ))}
             </div>
-            <span>{formatDate(solution.atualizado_em || solution.criado_em)}</span>
+            <div className="flex items-center gap-3">
+              <span className="flex items-center gap-1"><Eye className="h-3.5 w-3.5" />{solution.visualizacoes}</span>
+              <span className="flex items-center gap-1"><ThumbsUp className="h-3.5 w-3.5" />{solution.votos_uteis}</span>
+              <span>{formatDate(solution.atualizado_em || solution.criado_em)}</span>
+            </div>
           </div>
         </div>
       </CardContent>
@@ -113,6 +146,8 @@ export function SolutionsSearch({ refreshKey, onOpen }: SolutionsSearchProps) {
   const [routineId, setRoutineId] = useState("");
   const [search, setSearch] = useState("");
   const [selectedFamilyId, setSelectedFamilyId] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sort, setSort] = useState<SdSolutionSort>("relevancia");
   const [showFilters, setShowFilters] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -166,24 +201,34 @@ export function SolutionsSearch({ refreshKey, onOpen }: SolutionsSearchProps) {
   }, [systemId, routineId, refreshKey]);
 
   const filteredSolutions = useMemo(
-    () => filterSdSolutions(solutions, debouncedSearch),
-    [solutions, debouncedSearch],
+    () => filterSdSolutions(solutions, debouncedSearch).filter((solution) =>
+      statusFilter === "all" || solution.status === statusFilter,
+    ),
+    [solutions, debouncedSearch, statusFilter],
   );
-  const hasActiveSearch = Boolean(systemId || routineId || debouncedSearch.trim());
+  const sortedSolutions = useMemo(
+    () => sortSdSolutions(filteredSolutions, sort, debouncedSearch),
+    [filteredSolutions, sort, debouncedSearch],
+  );
+  const hasActiveSearch = Boolean(
+    systemId || routineId || debouncedSearch.trim() || statusFilter !== "all",
+  );
   const allFamilyGroups = useMemo(
     () => groupSdSolutionsByFamily(families, systems, solutions),
     [families, systems, solutions],
   );
   const familyGroups = useMemo(
-    () => groupSdSolutionsByFamily(families, systems, filteredSolutions, hasActiveSearch),
-    [families, systems, filteredSolutions, hasActiveSearch],
+    () => groupSdSolutionsByFamily(families, systems, sortedSolutions, hasActiveSearch),
+    [families, systems, sortedSolutions, hasActiveSearch],
   );
   const selectedFamily = allFamilyGroups.find((family) => family.id === selectedFamilyId);
   const selectedSystemIds = new Set(selectedFamily?.systems.map((system) => system.id) || []);
-  const visibleSolutions = filteredSolutions.filter((solution) =>
+  const visibleSolutions = sortedSolutions.filter((solution) =>
     selectedSystemIds.has(solution.sistema_id),
   );
-  const hasFilters = Boolean(systemId || routineId || search.trim() || selectedFamilyId);
+  const hasFilters = Boolean(
+    systemId || routineId || search.trim() || selectedFamilyId || statusFilter !== "all",
+  );
 
   useEffect(() => {
     if (
@@ -200,6 +245,7 @@ export function SolutionsSearch({ refreshKey, onOpen }: SolutionsSearchProps) {
     setRoutineId("");
     setSearch("");
     setSelectedFamilyId("");
+    setStatusFilter("all");
   };
 
   return (
@@ -209,7 +255,7 @@ export function SolutionsSearch({ refreshKey, onOpen }: SolutionsSearchProps) {
         <Input
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          placeholder="Buscar por título, descrição, sistema, rotina ou palavra-chave..."
+          placeholder="Buscar por título, descrição, sistema, rotina, anexo ou palavra-chave..."
           className="h-10 pl-10 text-sm"
         />
       </div>
@@ -243,11 +289,24 @@ export function SolutionsSearch({ refreshKey, onOpen }: SolutionsSearchProps) {
             Limpar
           </Button>
         )}
+        <div className="ml-auto min-w-44">
+          <Select value={sort} onValueChange={(value) => setSort(value as SdSolutionSort)}>
+            <SelectTrigger className="h-9" aria-label="Ordenar soluções">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="relevancia">Mais relevantes</SelectItem>
+              <SelectItem value="recentes">Mais recentes</SelectItem>
+              <SelectItem value="acessadas">Mais acessadas</SelectItem>
+              <SelectItem value="uteis">Mais úteis</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {showFilters && (
         <Card>
-          <CardContent className="grid gap-3 pt-4 sm:grid-cols-2">
+          <CardContent className="grid gap-3 pt-4 sm:grid-cols-3">
             <Select
               value={systemId || "all"}
               onValueChange={(value) => setSystemId(value === "all" ? "" : value)}
@@ -262,6 +321,18 @@ export function SolutionsSearch({ refreshKey, onOpen }: SolutionsSearchProps) {
                     {system.nome}
                   </SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger aria-label="Filtrar por status">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os status</SelectItem>
+                <SelectItem value="publicado">Publicados</SelectItem>
+                <SelectItem value="rascunho">Rascunhos</SelectItem>
+                <SelectItem value="desatualizado">Desatualizados</SelectItem>
               </SelectContent>
             </Select>
 
@@ -397,7 +468,12 @@ export function SolutionsSearch({ refreshKey, onOpen }: SolutionsSearchProps) {
           ) : (
             <div className="grid gap-3 lg:grid-cols-2">
               {visibleSolutions.map((solution) => (
-                <SolutionCard key={solution.id} solution={solution} onOpen={onOpen} />
+                <SolutionCard
+                  key={solution.id}
+                  solution={solution}
+                  search={debouncedSearch}
+                  onOpen={onOpen}
+                />
               ))}
             </div>
           )}
