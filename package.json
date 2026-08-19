@@ -7,7 +7,11 @@
     "dev": "vite",
     "build": "vite build",
     "build:dev": "vite build --mode development",
+    "check:cs-cx": "node scripts/check-cs-cx-readiness.mjs",
     "lint": "eslint .",
+    "migrate:cs-cx": "node scripts/migrate-cs-cx.mjs",
+    "migrate:cs-cx-files": "node scripts/migrate-cs-cx-files.mjs",
+    "prepare:cs-cx": "node scripts/prepare-cs-cx-schema.mjs",
     "preview": "vite preview",
     "test": "vitest run"
   },

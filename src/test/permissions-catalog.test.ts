@@ -74,6 +74,26 @@ describe("catálogo de permissões", () => {
     expect(getResourceCategory("chamados_query")).toBe("Dashboard");
   });
 
+  it("mantém todas as áreas migradas dentro do menu CS/CX", () => {
+    const csCx = menuItems.find((item) => item.title === "CS/CX");
+    const expected = [
+      "cs_cx_home",
+      "cs_cx_registros",
+      "cs_cx_cartorios",
+      "cs_cx_contatos",
+      "cs_cx_agendamentos",
+      "cs_cx_rotinas",
+      "cs_cx_visitas",
+      "cs_cx_nps",
+      "cs_cx_reports",
+      "cs_cx_admin",
+    ];
+
+    expect(csCx?.permissionKey).toBe("menu_cs_cx");
+    expect(csCx?.subItems?.map((sub) => sub.permissionKey)).toEqual(expected);
+    expect(getResourceCategory("cs_cx_home")).toBe("CS/CX");
+  });
+
   it("cai em 'Outros' para recurso desconhecido, sem quebrar", () => {
     expect(getResourceCategory("recurso_inexistente")).toBe("Outros");
     expect(getResourceLabel("recurso_inexistente")).toBe("recurso_inexistente");
