@@ -17,3 +17,9 @@ Object.defineProperty(window, "matchMedia", {
     dispatchEvent: vi.fn(),
   }),
 });
+
+// Radix Select rola a opção ativa; jsdom não implementa esta API.
+Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+  configurable: true,
+  value: vi.fn(),
+});
