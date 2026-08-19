@@ -43,18 +43,27 @@ export function PosChatHistorySidebar({
 }: PosChatHistorySidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Filter sessions by query
+  // 1. Sort all sessions strictly newest first (by last_message_at DESC, then started_at DESC)
+  const sortedSessions = useMemo(() => {
+    return [...sessions].sort((a, b) => {
+      const timeA = new Date(a.last_message_at || a.started_at).getTime();
+      const timeB = new Date(b.last_message_at || b.started_at).getTime();
+      return timeB - timeA;
+    });
+  }, [sessions]);
+
+  // 2. Filter sessions by query
   const filteredSessions = useMemo(() => {
-    if (!searchQuery.trim()) return sessions;
+    if (!searchQuery.trim()) return sortedSessions;
     const q = searchQuery.toLowerCase().trim();
-    return sessions.filter(
+    return sortedSessions.filter(
       (s) =>
         s.first_message.toLowerCase().includes(q) ||
         (s.last_message && s.last_message.toLowerCase().includes(q))
     );
-  }, [sessions, searchQuery]);
+  }, [sortedSessions, searchQuery]);
 
-  // Group sessions by date
+  // 3. Group sessions by date, maintaining strict newest-first order within each group
   const groupedSessions = useMemo(() => {
     const groups: { [key: string]: PosChatSession[] } = {
       Hoje: [],
@@ -76,6 +85,15 @@ export function PosChatHistorySidebar({
       } else {
         groups["Mais antigas"].push(s);
       }
+    });
+
+    // Ensure items within each group are strictly sorted newest first
+    Object.keys(groups).forEach((key) => {
+      groups[key].sort((a, b) => {
+        const timeA = new Date(a.last_message_at || a.started_at).getTime();
+        const timeB = new Date(b.last_message_at || b.started_at).getTime();
+        return timeB - timeA;
+      });
     });
 
     return groups;

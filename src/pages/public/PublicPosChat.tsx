@@ -38,40 +38,39 @@ import { ptBR } from "date-fns/locale";
  * Detects if an assistant message is merely a triage / menu selection list
  * (e.g. asking the user to choose 1, 2, 3) rather than a full step-by-step resolution.
  */
-export function isTriageMessage(content: string): boolean {
+export function isTriageMessage(content: string, assistantIndex?: number): boolean {
   if (!content) return false;
-  const lower = content.toLowerCase();
 
-  // If message has a video or step-by-step instructions, it's definitely a full resolution
-  if (
-    content.includes("iframe.mediadelivery.net") ||
-    content.includes("mediadelivery.net") ||
-    /Passo a passo:|Parte \d+:|Etapa \d+:/i.test(content)
-  ) {
-    return false;
+  // The first assistant message in any session is ALWAYS the initial triage menu
+  if (assistantIndex === 0) {
+    return true;
   }
 
-  // Triage phrases where the assistant only prompts the user to select an option number
-  const triagePhrases = [
-    "digite o número",
-    "digite o numero",
-    "responda com o número",
-    "responda com o numero",
-    "selecione o número",
-    "selecione uma das",
-    "escolha uma das",
-    "escolha o número",
-    "qual das opções",
-    "diga o número",
-    "diga o numero",
-    "opção desejada",
-    "opcao desejada",
-    "encontrei as seguintes rotinas",
-    "identifiquei as seguintes rotinas",
-    "rotinas abaixo",
-  ];
+  const lower = content.toLowerCase();
 
-  return triagePhrases.some((phrase) => lower.includes(phrase));
+  // If the message explicitly mentions being Step 1 or asks to choose an option, it's triage
+  if (
+    lower.includes("esta é a etapa 1") ||
+    lower.includes("etapa 1") ||
+    lower.includes("não vou fornecer o passo a passo ainda") ||
+    lower.includes("nao vou fornecer o passo a passo ainda") ||
+    lower.includes("diga qual opção deseja") ||
+    lower.includes("diga qual opcao deseja") ||
+    lower.includes("digite o número") ||
+    lower.includes("digite o numero") ||
+    lower.includes("digite 1 ou 2") ||
+    lower.includes("digite 1, 2") ||
+    lower.includes("selecione uma das rotinas") ||
+    lower.includes("selecione uma das opções") ||
+    lower.includes("escolha uma das opções") ||
+    lower.includes("para te orientar, aqui vão as opções") ||
+    lower.includes("aqui vão as opções encontradas") ||
+    lower.includes("opções encontradas:")
+  ) {
+    return true;
+  }
+
+  return false;
 }
 
 const QUICK_PROMPTS = [
@@ -138,16 +137,26 @@ export default function PublicPosChat() {
     const textToSend = (overrideText || inputText).trim();
     if (!textToSend || isGenerating) return;
 
-    // Check if there is an unrated assistant message in the conversation
-    const lastAssistantMsg = [...messages].reverse().find((m) => m.role === "assistant");
+    // Check assistant messages in conversation
+    const assistantMessages = messages.filter((m) => m.role === "assistant");
+    const lastAssistantMsg = assistantMessages[assistantMessages.length - 1];
 
-    // Only require feedback if the last assistant message was a substantive resolution
-    // (i.e. NOT a triage / option-list message where the user is just picking a number)
-    if (
+    // Check if user input is an option selection (e.g. "1", "2", "3", "1)", "opção 1", etc.)
+    const isOptionChoice = /^(?:opç[aã]o\s*)?[0-9]{1,2}\)?$/i.test(textToSend);
+
+    // Only require feedback if:
+    // 1. There are at least 2 assistant messages in the conversation (meaning a tutorial/resolution was already delivered)
+    // 2. The user is NOT just submitting an option number choice
+    // 3. The last assistant message was NOT a triage message
+    // 4. The last assistant message has not been rated yet
+    const shouldPromptFeedback =
+      assistantMessages.length >= 2 &&
+      !isOptionChoice &&
       lastAssistantMsg &&
       !lastAssistantMsg.feedback &&
-      !isTriageMessage(lastAssistantMsg.content)
-    ) {
+      !isTriageMessage(lastAssistantMsg.content, assistantMessages.length - 1);
+
+    if (shouldPromptFeedback) {
       setLastUnratedAssistantId(lastAssistantMsg.id);
       setPendingMessageText(textToSend);
       setFeedbackModalOpen(true);
@@ -273,6 +282,8 @@ export default function PublicPosChat() {
       </div>
     );
   }
+
+  const assistantMessages = messages.filter((m) => m.role === "assistant");
 
   return (
     <div className="h-[100dvh] flex flex-col bg-slate-100/70 dark:bg-neutral-950 text-foreground font-sans overflow-hidden">
@@ -460,15 +471,22 @@ export default function PublicPosChat() {
 
               {/* Render Messages */}
               {!isLoadingHistory &&
-                messages.map((m) => (
-                  <MessageItem
-                    key={m.id}
-                    message={m}
-                    copiedId={copiedId}
-                    onCopy={handleCopyMessage}
-                    onFeedback={submitFeedback}
-                  />
-                ))}
+                messages.map((m) => {
+                  const asstIdx =
+                    m.role === "assistant"
+                      ? assistantMessages.findIndex((item) => item.id === m.id)
+                      : -1;
+                  return (
+                    <MessageItem
+                      key={m.id}
+                      message={m}
+                      assistantIndex={asstIdx}
+                      copiedId={copiedId}
+                      onCopy={handleCopyMessage}
+                      onFeedback={submitFeedback}
+                    />
+                  );
+                })}
 
               {/* WhatsApp-like Typing Indicator */}
               {isGenerating && (
@@ -559,17 +577,19 @@ export default function PublicPosChat() {
 // Single Message Bubble Component
 function MessageItem({
   message,
+  assistantIndex,
   copiedId,
   onCopy,
   onFeedback,
 }: {
   message: PosChatMessage;
+  assistantIndex?: number;
   copiedId: string | null;
   onCopy: (id: string, content: string) => void;
   onFeedback: (id: string, fb: "helpful" | "unhelpful") => void;
 }) {
   const isUser = message.role === "user";
-  const isTriage = !isUser && isTriageMessage(message.content);
+  const isTriage = !isUser && (assistantIndex === 0 || isTriageMessage(message.content, assistantIndex));
 
   return (
     <div

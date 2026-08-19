@@ -6,9 +6,33 @@ interface BunnyVideoPlayerProps {
   title?: string;
 }
 
+/**
+ * Ensures Bunny.net stream embed URL has autoplay=false and preload=true
+ * so it never auto-plays without user interaction.
+ */
+export function formatBunnyEmbedUrl(rawUrl: string): string {
+  if (!rawUrl) return rawUrl;
+  try {
+    const parsed = new URL(rawUrl);
+    parsed.searchParams.set("autoplay", "false");
+    if (!parsed.searchParams.has("preload")) {
+      parsed.searchParams.set("preload", "true");
+    }
+    return parsed.toString();
+  } catch {
+    if (rawUrl.includes("?")) {
+      const cleaned = rawUrl.replace(/([?&])autoplay=[^&]*/gi, "");
+      return `${cleaned}${cleaned.includes("?") ? "&" : "?"}autoplay=false&preload=true`;
+    }
+    return `${rawUrl}?autoplay=false&preload=true`;
+  }
+}
+
 export const BunnyVideoPlayer: React.FC<BunnyVideoPlayerProps> = ({ url, title }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+
+  const embedUrl = formatBunnyEmbedUrl(url);
 
   // Clean title if it contains emojis or prefix already
   const displayTitle = title ? title.replace(/^[▶️🎬🎥\s]+/, "").trim() : "Videoaula Tutorial - Orion TN";
@@ -58,11 +82,11 @@ export const BunnyVideoPlayer: React.FC<BunnyVideoPlayerProps> = ({ url, title }
           </div>
         ) : (
           <iframe
-            src={url}
+            src={embedUrl}
             title={displayTitle || "Videoaula Orion TN"}
             loading="lazy"
             className="absolute top-0 left-0 w-full h-full border-0"
-            allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+            allow="accelerometer; gyroscope; encrypted-media; picture-in-picture;"
             allowFullScreen
             onLoad={() => setIsLoading(false)}
             onError={() => {

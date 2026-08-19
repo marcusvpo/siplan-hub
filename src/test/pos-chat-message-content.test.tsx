@@ -6,6 +6,7 @@ import {
   isBunnyStreamUrl,
 } from "@/components/pos-chat/PosChatMessageContent";
 import { isTriageMessage } from "@/pages/public/PublicPosChat";
+import { formatBunnyEmbedUrl } from "@/components/pos-chat/BunnyVideoPlayer";
 
 describe("PosChatMessageContent & BunnyVideoPlayer", () => {
   it("correctly identifies Bunny.net stream URLs", () => {
@@ -23,6 +24,14 @@ describe("PosChatMessageContent & BunnyVideoPlayer", () => {
     expect(isBunnyStreamUrl("")).toBe(false);
   });
 
+  it("enforces autoplay=false and preload=true on Bunny embed URLs", () => {
+    const formatted = formatBunnyEmbedUrl(
+      "https://iframe.mediadelivery.net/embed/467408/bb9395dc-a4e9-4140-92ba-bd8195e75c82?t=0"
+    );
+    expect(formatted).toContain("autoplay=false");
+    expect(formatted).toContain("preload=true");
+  });
+
   it("identifies triage messages vs substantive step-by-step resolution answers", () => {
     const triageMsg = `Olá! Para te ajudar da melhor forma, encontrei as seguintes rotinas no sistema. Por favor, digite o número da opção desejada:
 
@@ -34,6 +43,23 @@ describe("PosChatMessageContent & BunnyVideoPlayer", () => {
 Se a sua dúvida for outra, fique à vontade para me dar mais detalhes!`;
 
     expect(isTriageMessage(triageMsg)).toBe(true);
+    expect(isTriageMessage(triageMsg, 0)).toBe(true);
+
+    const promptV3TriageMsg = `Ótimo! Para te ajudar a consultar protocolos de notas no Orion TN, selecione uma das rotinas abaixo. Cada opção traz um caminho distinto conforme o que você precisa.
+
+Para te orientar, aqui vão as opções encontradas:
+
+1) ID: D-3.43 — Título: Consultar Protocolos
+- Descrição: Origina uma busca avançada de protocolos com múltiplos filtros.
+- Vídeo: tem_video: false
+
+2) ID: V-6.1.4 — Título: Consulta Avançada de Protocolos com Mais Filtros
+- Descrição: Edição e consulta avançadas na tela de Consulta de Protocolos.
+
+Observação: Esta é a Etapa 1. Não vou fornecer o passo a passo ainda. Diga qual opção deseja (digite 1 ou 2) e eu envio o passo a passo completo correspondente.`;
+
+    expect(isTriageMessage(promptV3TriageMsg)).toBe(true);
+    expect(isTriageMessage(promptV3TriageMsg, 0)).toBe(true);
 
     const resolutionMsg = `R-23.0 - Como Realizar a Distribuição de Produtos no Estoque
 
@@ -46,20 +72,18 @@ Passo a passo:
 
 ▶️ Assista ao tutorial: [[Aquisição e Distribuição - Orion TN]](https://iframe.mediadelivery.net/embed/467408/bb9395dc-a4e9-4140-92ba-bd8195e75c82?t=0)`;
 
-    expect(isTriageMessage(resolutionMsg)).toBe(false);
+    expect(isTriageMessage(resolutionMsg, 1)).toBe(false);
   });
 
-  it("intercepts double-bracket video link and renders iframe player", () => {
+  it("intercepts double-bracket video link and renders iframe player without autoplay", () => {
     const markdown = `▶️ Assista ao tutorial: [[Aquisição e Distribuição - Orion TN]](https://iframe.mediadelivery.net/embed/467408/bb9395dc-a4e9-4140-92ba-bd8195e75c82?t=0)`;
 
     render(<PosChatMessageContent content={markdown} />);
 
     const iframe = document.querySelector("iframe");
     expect(iframe).toBeInTheDocument();
-    expect(iframe).toHaveAttribute(
-      "src",
-      "https://iframe.mediadelivery.net/embed/467408/bb9395dc-a4e9-4140-92ba-bd8195e75c82?t=0"
-    );
+    expect(iframe?.getAttribute("src")).toContain("autoplay=false");
+    expect(iframe?.getAttribute("src")).toContain("https://iframe.mediadelivery.net/embed/467408/bb9395dc-a4e9-4140-92ba-bd8195e75c82");
     expect(screen.getByText(/Aquisição e Distribuição - Orion TN/i)).toBeInTheDocument();
   });
 
@@ -139,10 +163,8 @@ Nós preparamos uma videoaula detalhada mostrando o passo a passo desta rotina n
     // Check video iframe
     const iframe = document.querySelector("iframe");
     expect(iframe).toBeInTheDocument();
-    expect(iframe).toHaveAttribute(
-      "src",
-      "https://iframe.mediadelivery.net/embed/467408/41549f54-b53a-4703-9765-3d5e2c8d221b?t=0"
-    );
+    expect(iframe?.getAttribute("src")).toContain("autoplay=false");
+    expect(iframe?.getAttribute("src")).toContain("https://iframe.mediadelivery.net/embed/467408/41549f54-b53a-4703-9765-3d5e2c8d221b");
   });
 
   it("renders Exemplo B (multi-part video) with both iframes stacked", () => {
@@ -163,14 +185,10 @@ Essa rotina conta com uma videoaula em etapas para facilitar seu aprendizado:
 
     const iframes = document.querySelectorAll("iframe");
     expect(iframes.length).toBe(2);
-    expect(iframes[0]).toHaveAttribute(
-      "src",
-      "https://iframe.mediadelivery.net/embed/467408/8b0225b8-ab00-44a2-a03e-5a3cb3f07f99?t=0"
-    );
-    expect(iframes[1]).toHaveAttribute(
-      "src",
-      "https://iframe.mediadelivery.net/embed/467408/76bede7b-b314-4776-9e6f-3af28af1b54d?t=0"
-    );
+    expect(iframes[0]?.getAttribute("src")).toContain("autoplay=false");
+    expect(iframes[1]?.getAttribute("src")).toContain("autoplay=false");
+    expect(iframes[0]?.getAttribute("src")).toContain("https://iframe.mediadelivery.net/embed/467408/8b0225b8-ab00-44a2-a03e-5a3cb3f07f99");
+    expect(iframes[1]?.getAttribute("src")).toContain("https://iframe.mediadelivery.net/embed/467408/76bede7b-b314-4776-9e6f-3af28af1b54d");
   });
 
   it("keeps regular external links as anchor tags opening in new tab", () => {

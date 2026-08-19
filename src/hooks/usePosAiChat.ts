@@ -133,7 +133,7 @@ export function usePosAiChat(optionsOrId?: string | UsePosAiChatOptions) {
     };
   }, [projectId]);
 
-  // 2. Fetch list of past sessions for the sidebar
+  // 2. Fetch list of past sessions for the sidebar (Strictly sorted newest first)
   const loadSessions = useCallback(async () => {
     if (!projectId) return;
     setIsLoadingSessions(true);
@@ -149,7 +149,12 @@ export function usePosAiChat(optionsOrId?: string | UsePosAiChatOptions) {
       }
 
       if (data) {
-        setSessions(data as PosChatSession[]);
+        const sorted = (data as PosChatSession[]).sort((a, b) => {
+          const tA = new Date(a.last_message_at || a.started_at).getTime();
+          const tB = new Date(b.last_message_at || b.started_at).getTime();
+          return tB - tA;
+        });
+        setSessions(sorted);
       }
     } catch (err) {
       console.error("Failed to fetch sessions:", err);
@@ -242,16 +247,46 @@ export function usePosAiChat(optionsOrId?: string | UsePosAiChatOptions) {
       return;
     }
 
+    const now = new Date().toISOString();
     const tempUserMsgId = crypto.randomUUID();
     const tempUserMsg: PosChatMessage = {
       id: tempUserMsgId,
       role: "user",
       content: trimmed,
-      created_at: new Date().toISOString(),
+      created_at: now,
     };
 
     setMessages((prev) => [...prev, tempUserMsg]);
     setIsGenerating(true);
+
+    // Optimistically update sessions list immediately with current session at the very top
+    setSessions((prev) => {
+      const existingIdx = prev.findIndex((s) => s.session_id === sessionId);
+      if (existingIdx >= 0) {
+        const item: PosChatSession = {
+          ...prev[existingIdx],
+          last_message: trimmed,
+          last_message_at: now,
+          total_messages: prev[existingIdx].total_messages + 1,
+          user_messages: prev[existingIdx].user_messages + 1,
+        };
+        const rest = prev.filter((s) => s.session_id !== sessionId);
+        return [item, ...rest];
+      } else {
+        const newItem: PosChatSession = {
+          session_id: sessionId,
+          first_message: trimmed,
+          last_message: trimmed,
+          total_messages: 1,
+          user_messages: 1,
+          started_at: now,
+          last_message_at: now,
+          helpful_count: 0,
+          unhelpful_count: 0,
+        };
+        return [newItem, ...prev];
+      }
+    });
 
     try {
       const { data, error } = await supabase.functions.invoke("pos-assistant-chat", {
@@ -289,7 +324,23 @@ export function usePosAiChat(optionsOrId?: string | UsePosAiChatOptions) {
         return [...updated, assistantMsg];
       });
 
-      // Refresh sessions in sidebar so the new conversation appears
+      // Update sessions list with assistant reply and keep at top
+      setSessions((prev) => {
+        const existingIdx = prev.findIndex((s) => s.session_id === sessionId);
+        if (existingIdx >= 0) {
+          const item: PosChatSession = {
+            ...prev[existingIdx],
+            last_message: data.reply,
+            last_message_at: new Date().toISOString(),
+            total_messages: prev[existingIdx].total_messages + 1,
+          };
+          const rest = prev.filter((s) => s.session_id !== sessionId);
+          return [item, ...rest];
+        }
+        return prev;
+      });
+
+      // Synchronize with database
       loadSessions();
     } catch (err) {
       console.error("Error sending message:", err);
