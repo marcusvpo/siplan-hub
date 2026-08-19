@@ -1,14 +1,25 @@
 import { useCallback, useEffect, useRef } from "react";
-import { ImagePlus, Tag, X } from "lucide-react";
+import { FileText, ImagePlus, Paperclip, Tag, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  formatSdAttachmentSize,
+  SD_ATTACHMENT_MAX_COUNT,
+  validateSdAttachment,
+} from "@/lib/sd-attachments";
 import { sanitizeSdSolutionHtml } from "@/lib/sd-solutions";
+import type { SdAnexo } from "@/types/sd";
 
 interface SolutionRichTextEditorProps {
   value: string;
   keywords: string[];
   onChange: (html: string, keywords: string[]) => void;
+  attachments?: SdAnexo[];
+  pendingAttachments?: File[];
+  onAddAttachments?: (files: File[]) => void;
+  onRemoveAttachment?: (attachment: SdAnexo) => void;
+  onRemovePendingAttachment?: (file: File) => void;
   disabled?: boolean;
 }
 
@@ -16,10 +27,16 @@ export function SolutionRichTextEditor({
   value,
   keywords,
   onChange,
+  attachments = [],
+  pendingAttachments = [],
+  onAddAttachments,
+  onRemoveAttachment,
+  onRemovePendingAttachment,
   disabled = false,
 }: SolutionRichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const attachmentInputRef = useRef<HTMLInputElement>(null);
   const lastEmittedValue = useRef<string | null>(null);
 
   useEffect(() => {
@@ -124,6 +141,35 @@ export function SolutionRichTextEditor({
     reader.readAsDataURL(file);
   };
 
+  const handleAttachments = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(event.target.files || []);
+    event.target.value = "";
+    if (selectedFiles.length === 0 || !onAddAttachments) return;
+
+    const availableSlots = Math.max(
+      0,
+      SD_ATTACHMENT_MAX_COUNT - attachments.length - pendingAttachments.length,
+    );
+    if (availableSlots === 0) {
+      toast.error(`Cada solução pode ter no máximo ${SD_ATTACHMENT_MAX_COUNT} anexos.`);
+      return;
+    }
+
+    const validFiles: File[] = [];
+    for (const file of selectedFiles.slice(0, availableSlots)) {
+      const validationError = validateSdAttachment(file);
+      if (validationError) toast.error(validationError);
+      else validFiles.push(file);
+    }
+
+    if (selectedFiles.length > availableSlots) {
+      toast.error(`Cada solução pode ter no máximo ${SD_ATTACHMENT_MAX_COUNT} anexos.`);
+    }
+    if (validFiles.length > 0) onAddAttachments(validFiles);
+  };
+
+  const hasAttachments = attachments.length > 0 || pendingAttachments.length > 0;
+
   return (
     <div className="space-y-3">
       <div className="overflow-hidden rounded-lg border bg-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
@@ -134,10 +180,22 @@ export function SolutionRichTextEditor({
             size="sm"
             className="h-8 gap-2"
             disabled={disabled}
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => imageInputRef.current?.click()}
           >
             <ImagePlus className="h-4 w-4" />
             Inserir imagem
+          </Button>
+          <div className="h-5 w-px bg-border" />
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-8 gap-2"
+            disabled={disabled}
+            onClick={() => attachmentInputRef.current?.click()}
+          >
+            <Paperclip className="h-4 w-4" />
+            Inserir anexo
           </Button>
           <div className="h-5 w-px bg-border" />
           <Button
@@ -166,14 +224,80 @@ export function SolutionRichTextEditor({
           onInput={emitChange}
           onClick={handleEditorClick}
         />
+
+        {hasAttachments && (
+          <div className="space-y-2 border-t bg-muted/20 px-4 py-3">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-xs font-semibold">Anexos</span>
+              <span className="text-xs text-muted-foreground">
+                {attachments.length + pendingAttachments.length}/{SD_ATTACHMENT_MAX_COUNT}
+              </span>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {attachments.map((attachment) => (
+                <div key={attachment.id} className="flex min-w-0 items-center gap-2 rounded-md border bg-background px-3 py-2">
+                  <FileText className="h-4 w-4 shrink-0 text-primary" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-medium" title={attachment.nome_arquivo}>
+                      {attachment.nome_arquivo}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {formatSdAttachmentSize(attachment.tamanho_bytes)}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
+                    disabled={disabled}
+                    aria-label={`Remover anexo ${attachment.nome_arquivo}`}
+                    onClick={() => onRemoveAttachment?.(attachment)}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              ))}
+              {pendingAttachments.map((file, index) => (
+                <div key={`${file.name}-${file.size}-${index}`} className="flex min-w-0 items-center gap-2 rounded-md border border-primary/20 bg-primary/5 px-3 py-2">
+                  <FileText className="h-4 w-4 shrink-0 text-primary" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-medium" title={file.name}>{file.name}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {formatSdAttachmentSize(file.size)} · A enviar
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
+                    disabled={disabled}
+                    aria-label={`Remover anexo pendente ${file.name}`}
+                    onClick={() => onRemovePendingAttachment?.(file)}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <input
-        ref={fileInputRef}
+        ref={imageInputRef}
         type="file"
         accept="image/*"
         className="hidden"
         onChange={handleImage}
+      />
+      <input
+        ref={attachmentInputRef}
+        type="file"
+        multiple
+        className="hidden"
+        onChange={handleAttachments}
       />
 
       {keywords.length > 0 && (
