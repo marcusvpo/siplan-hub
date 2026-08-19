@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   CalendarDays,
   Check,
@@ -43,6 +43,19 @@ interface SolutionDetailsProps {
   onDeleted: () => void;
 }
 
+const PANEL_WIDTH_KEY = "sd-solution-details-width";
+const MIN_PANEL_WIDTH = 520;
+const DEFAULT_PANEL_WIDTH = 672;
+const PANEL_VIEWPORT_MARGIN = 0.92;
+
+function maxPanelWidth(): number {
+  return Math.round(window.innerWidth * PANEL_VIEWPORT_MARGIN);
+}
+
+function clampPanelWidth(width: number): number {
+  return Math.max(MIN_PANEL_WIDTH, Math.min(width, maxPanelWidth()));
+}
+
 function longDate(value: string | null): string {
   if (!value) return "—";
   return new Intl.DateTimeFormat("pt-BR", {
@@ -66,6 +79,51 @@ export function SolutionDetails({
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [panelWidth, setPanelWidth] = useState(() => {
+    const savedWidth = Number(localStorage.getItem(PANEL_WIDTH_KEY));
+    return clampPanelWidth(savedWidth >= MIN_PANEL_WIDTH ? savedWidth : DEFAULT_PANEL_WIDTH);
+  });
+  const [resizing, setResizing] = useState(false);
+
+  const handleResizeMove = useCallback((event: PointerEvent) => {
+    setPanelWidth(clampPanelWidth(window.innerWidth - event.clientX));
+  }, []);
+
+  const handleResizeEnd = useCallback(() => {
+    setResizing(false);
+  }, []);
+
+  useEffect(() => {
+    if (!resizing) return;
+
+    const previousUserSelect = document.body.style.userSelect;
+    const previousCursor = document.body.style.cursor;
+    document.body.style.userSelect = "none";
+    document.body.style.cursor = "col-resize";
+    window.addEventListener("pointermove", handleResizeMove);
+    window.addEventListener("pointerup", handleResizeEnd);
+    window.addEventListener("pointercancel", handleResizeEnd);
+    window.addEventListener("blur", handleResizeEnd);
+
+    return () => {
+      document.body.style.userSelect = previousUserSelect;
+      document.body.style.cursor = previousCursor;
+      window.removeEventListener("pointermove", handleResizeMove);
+      window.removeEventListener("pointerup", handleResizeEnd);
+      window.removeEventListener("pointercancel", handleResizeEnd);
+      window.removeEventListener("blur", handleResizeEnd);
+    };
+  }, [handleResizeEnd, handleResizeMove, resizing]);
+
+  useEffect(() => {
+    if (!resizing) localStorage.setItem(PANEL_WIDTH_KEY, String(panelWidth));
+  }, [panelWidth, resizing]);
+
+  useEffect(() => {
+    const handleWindowResize = () => setPanelWidth((current) => clampPanelWidth(current));
+    window.addEventListener("resize", handleWindowResize);
+    return () => window.removeEventListener("resize", handleWindowResize);
+  }, []);
 
   useEffect(() => {
     if (!solutionId) {
@@ -121,7 +179,46 @@ export function SolutionDetails({
   return (
     <>
       <Sheet open={Boolean(solutionId)} onOpenChange={(open) => !open && onClose()}>
-        <SheetContent className="w-full sm:max-w-2xl">
+        <SheetContent
+          style={{ width: panelWidth, maxWidth: `${PANEL_VIEWPORT_MARGIN * 100}vw` }}
+          className={`w-full sm:max-w-none ${resizing ? "transition-none" : ""}`}
+        >
+          <div
+            role="separator"
+            aria-label="Redimensionar painel de detalhes"
+            aria-orientation="vertical"
+            aria-valuemin={MIN_PANEL_WIDTH}
+            aria-valuemax={maxPanelWidth()}
+            aria-valuenow={panelWidth}
+            tabIndex={0}
+            className="group absolute -left-1 top-0 z-50 hidden h-full w-2 cursor-col-resize touch-none outline-none sm:block"
+            title="Arraste para redimensionar; duplo clique restaura o tamanho padrão"
+            onPointerDown={(event) => {
+              event.preventDefault();
+              setResizing(true);
+            }}
+            onDoubleClick={() => setPanelWidth(clampPanelWidth(DEFAULT_PANEL_WIDTH))}
+            onKeyDown={(event) => {
+              if (event.key === "ArrowLeft") {
+                event.preventDefault();
+                setPanelWidth((current) => clampPanelWidth(current + 32));
+              } else if (event.key === "ArrowRight") {
+                event.preventDefault();
+                setPanelWidth((current) => clampPanelWidth(current - 32));
+              } else if (event.key === "Home") {
+                event.preventDefault();
+                setPanelWidth(clampPanelWidth(DEFAULT_PANEL_WIDTH));
+              }
+            }}
+          >
+            <span className="absolute left-1/2 top-1/2 h-16 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-border transition-colors group-hover:bg-primary group-focus:bg-primary" />
+          </div>
+          {!solution && (
+            <SheetHeader className="sr-only">
+              <SheetTitle>{loading ? "Carregando solução" : "Solução não encontrada"}</SheetTitle>
+              <SheetDescription>Detalhes da solução cadastrada no SD</SheetDescription>
+            </SheetHeader>
+          )}
           {loading ? (
             <div className="flex h-full items-center justify-center text-muted-foreground">
               <Loader2 className="h-6 w-6 animate-spin" />
