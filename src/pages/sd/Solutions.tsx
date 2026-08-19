@@ -63,16 +63,16 @@ export default function Solutions() {
               <Search className="h-4 w-4" />
               Buscar
             </TabsTrigger>
-            {(canCreate || editingSolution) && (
-              <TabsTrigger value="create" className="gap-2 px-4 py-2">
-                <Plus className="h-4 w-4" />
-                {editingSolution ? "Editar" : "Cadastrar"}
-              </TabsTrigger>
-            )}
             {canManage && (
               <TabsTrigger value="manage" className="gap-2 px-4 py-2">
                 <Settings2 className="h-4 w-4" />
                 Sistemas e rotinas
+              </TabsTrigger>
+            )}
+            {(canCreate || editingSolution) && (
+              <TabsTrigger value="create" className="gap-2 px-4 py-2">
+                <Plus className="h-4 w-4" />
+                {editingSolution ? "Editar" : "Cadastrar"}
               </TabsTrigger>
             )}
           </TabsList>
