@@ -19,6 +19,7 @@ import {
   ArrowLeft,
   Sparkles,
   BarChart3,
+  Bot,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -76,6 +77,7 @@ export default function AdminLayout() {
     { href: "/admin/roles", label: "Perfis de Acesso", icon: Shield, resource: "roles" },
     { href: "/admin/copilot", label: "Copiloto", icon: Sparkles, resource: "copilot_admin" },
     { href: "/admin/copilot-usage", label: "Uso do Copiloto", icon: BarChart3, resource: "copilot_usage" },
+    { href: "/admin/pos-ai-logs", label: "Logs Assistente IA", icon: Bot, resource: "pos_ai_logs" },
     { href: "/admin/teams-config", label: "Configurações do Time", icon: Settings2, resource: "teams" },
     { href: "/admin/inactive-users", label: "Usuários Inativos", icon: UserMinus, resource: "inactive_users" },
     { href: "/admin/vacations", label: "Férias", icon: Palmtree, resource: "vacations" },

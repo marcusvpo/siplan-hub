@@ -84,6 +84,9 @@ const PublicInfraCollection = lazy(
 const PublicNpsResponse = lazy(
   () => import("./pages/public/PublicNpsResponse"),
 );
+const PublicPosChat = lazy(() =>
+  import("./pages/public/PublicPosChat"),
+);
 const TreinamentoPlaceholder = lazy(
   () => import("./pages/implantadores/TreinamentoPlaceholder"),
 );
@@ -132,6 +135,7 @@ const PosPanoramaGeral = lazy(() => import("./pages/PosPanoramaGeral"));
 const Copilot = lazy(() => import("./pages/Copilot"));
 const CopilotAccess = lazy(() => import("./pages/admin/CopilotAccess"));
 const CopilotUsage = lazy(() => import("./pages/admin/CopilotUsage"));
+const PosAiLogs = lazy(() => import("./pages/admin/PosAiLogs"));
 
 const queryClient = new QueryClient();
 
@@ -209,6 +213,14 @@ const App = () => (
                 element={
                   <Suspense fallback={<PageLoader />}>
                     <PublicInfraCollection />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/public/pos-chat/:id"
+                element={
+                  <Suspense fallback={<PageLoader />}>
+                    <PublicPosChat />
                   </Suspense>
                 }
               />
@@ -340,6 +352,16 @@ const App = () => (
                     <Suspense fallback={<PageLoader />}>
                       <RequirePermission resource="copilot_usage">
                         <CopilotUsage />
+                      </RequirePermission>
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="pos-ai-logs"
+                  element={
+                    <Suspense fallback={<PageLoader />}>
+                      <RequirePermission resource="pos_ai_logs">
+                        <PosAiLogs />
                       </RequirePermission>
                     </Suspense>
                   }
