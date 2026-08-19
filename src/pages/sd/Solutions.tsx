@@ -41,16 +41,16 @@ export default function Solutions() {
 
   return (
     <div className="min-h-full bg-background">
-      <div className="mx-auto w-full max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8">
-        <div className="overflow-hidden rounded-2xl border bg-gradient-to-br from-primary/10 via-background to-background p-6 shadow-sm sm:p-8">
-          <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
-              <BookOpenText className="h-6 w-6" />
+      <div className="mx-auto w-full max-w-7xl space-y-5 px-4 pb-4 pt-3 sm:px-6 sm:pb-6 sm:pt-4 lg:px-8 lg:pb-8">
+        <div className="overflow-hidden rounded-2xl border bg-gradient-to-br from-primary/10 via-background to-background p-5 shadow-sm sm:px-6 sm:py-5">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
+              <BookOpenText className="h-5 w-5" />
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">SD</p>
-              <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">Soluções</h1>
-              <p className="mt-2 max-w-2xl text-sm text-muted-foreground sm:text-base">
+              <h1 className="mt-0.5 text-2xl font-bold tracking-tight">Soluções</h1>
+              <p className="mt-1.5 max-w-2xl text-sm text-muted-foreground">
                 Consulte e compartilhe procedimentos técnicos usados pela equipe de suporte.
               </p>
             </div>
