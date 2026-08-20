@@ -36,7 +36,13 @@ export function CsCxAccessPanel({ canManage }: { canManage: boolean }) {
       (groups[permission.resource] ??= []).push(permission);
       return groups;
     }, {});
-    Object.values(grouped).forEach((group) => group.sort((a, b) => ACTION_ORDER.indexOf(a.action) - ACTION_ORDER.indexOf(b.action)));
+    Object.values(grouped).forEach((group) =>
+      group.sort(
+        (a, b) =>
+          ACTION_ORDER.indexOf(a.action.trim().toLowerCase()) -
+          ACTION_ORDER.indexOf(b.action.trim().toLowerCase()),
+      ),
+    );
     return grouped;
   }, [permissions]);
 
