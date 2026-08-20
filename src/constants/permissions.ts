@@ -19,7 +19,9 @@ export type PermissionAction =
   | "manage"
   | "execute"
   | "upload"
-  | "download";
+  | "download"
+  | "view_others"
+  | "manage_others";
 
 export type PermissionCategory =
   | "Dashboard"
@@ -119,14 +121,14 @@ export const PERMISSION_RESOURCES: PermissionResourceDef[] = [
   // CS/CX
   { resource: "menu_cs_cx", label: "Menu CS/CX", category: "CS/CX", actions: ["view"] },
   { resource: "cs_cx_home", label: "CS/CX - Visão Geral", category: "CS/CX", actions: ["view"] },
-  { resource: "cs_cx_registros", label: "CS/CX - Solicitações", category: "CS/CX", actions: ["view", "create", "edit", "delete"] },
-  { resource: "cs_cx_cartorios", label: "CS/CX - Cartórios", category: "CS/CX", actions: ["view", "create", "edit", "delete"] },
-  { resource: "cs_cx_contatos", label: "CS/CX - Contatos", category: "CS/CX", actions: ["view", "create", "edit", "delete"] },
-  { resource: "cs_cx_agendamentos", label: "CS/CX - Agendamentos", category: "CS/CX", actions: ["view", "create", "edit", "delete"] },
-  { resource: "cs_cx_rotinas", label: "CS/CX - Rotinas", category: "CS/CX", actions: ["view", "create", "edit", "delete"] },
-  { resource: "cs_cx_visitas", label: "CS/CX - Visitas", category: "CS/CX", actions: ["view", "create", "edit", "delete"] },
-  { resource: "cs_cx_nps", label: "CS/CX - NPS", category: "CS/CX", actions: ["view", "create", "edit", "delete"] },
-  { resource: "cs_cx_reports", label: "CS/CX - Relatórios", category: "CS/CX", actions: ["view"] },
+  { resource: "cs_cx_registros", label: "CS/CX - Solicitações", category: "CS/CX", actions: ["view", "create", "edit", "delete", "view_others", "manage_others"] },
+  { resource: "cs_cx_cartorios", label: "CS/CX - Cartórios", category: "CS/CX", actions: ["view", "create", "edit", "delete", "view_others", "manage_others"] },
+  { resource: "cs_cx_contatos", label: "CS/CX - Contatos", category: "CS/CX", actions: ["view", "create", "edit", "delete", "view_others", "manage_others"] },
+  { resource: "cs_cx_agendamentos", label: "CS/CX - Agendamentos", category: "CS/CX", actions: ["view", "create", "edit", "delete", "view_others", "manage_others"] },
+  { resource: "cs_cx_rotinas", label: "CS/CX - Rotinas", category: "CS/CX", actions: ["view", "create", "edit", "delete", "view_others", "manage_others"] },
+  { resource: "cs_cx_visitas", label: "CS/CX - Visitas", category: "CS/CX", actions: ["view", "create", "edit", "delete", "view_others", "manage_others"] },
+  { resource: "cs_cx_nps", label: "CS/CX - NPS", category: "CS/CX", actions: ["view", "create", "edit", "delete", "view_others", "manage_others"] },
+  { resource: "cs_cx_reports", label: "CS/CX - Relatórios", category: "CS/CX", actions: ["view", "view_others"] },
   { resource: "cs_cx_admin", label: "CS/CX - Administração", category: "CS/CX", actions: ["view", "manage"] },
 
   // Modelos Editor OrionTN
@@ -164,6 +166,8 @@ export const ACTION_LABELS: Record<PermissionAction, string> = {
   execute: "Executar Ação",
   upload: "Enviar Arquivos",
   download: "Baixar Arquivos",
+  view_others: "Visualizar lançamentos de outros usuários",
+  manage_others: "Editar/excluir lançamentos de outros usuários",
 };
 
 const RESOURCE_LABELS: Record<string, string> = Object.fromEntries(

@@ -9,7 +9,7 @@ vi.mock("@/hooks/usePermissions", () => ({
 }));
 vi.mock("@/hooks/use-toast", () => ({ useToast: () => ({ toast: vi.fn() }) }));
 vi.mock("@/hooks/useAuth", () => ({
-  useAuth: () => ({ user: { id: "user-1" } }),
+  useAuth: () => ({ user: { id: "profile-1" } }),
 }));
 vi.mock("@/hooks/useModelGenerationJobs", () => ({
   useModelWorkerStatus: () => ({ online: true, busy: false, status: null }),
@@ -63,6 +63,7 @@ vi.mock("@/hooks/useCsCxExperience", () => ({
         index === 0 ? "Acompanhar operação" : `Objetivo da visita ${index + 1}`,
       general_notes: null,
       origin: "legacy",
+      created_by: "profile-1",
       registry_office: {
         id: "office-1",
         name: index === 0 ? "Cartório Central" : `Cartório ${index + 1}`,
@@ -119,6 +120,7 @@ vi.mock("@/hooks/useCsCxExperience", () => ({
       classification:
         index === 1 ? "NEUTRO" : index === 2 ? "DETRATOR" : "PROMOTOR",
       origin: "legacy",
+      owner_profile_id: "profile-1",
       registry_office: {
         id: "office-1",
         name: index === 0 ? "Cartório Central" : `Cartório ${index + 1}`,

@@ -8,6 +8,9 @@ const mutation = { mutateAsync: vi.fn(), isPending: false };
 vi.mock("@/hooks/usePermissions", () => ({
   usePermissions: () => ({ hasPermission }),
 }));
+vi.mock("@/hooks/useAuth", () => ({
+  useAuth: () => ({ user: { id: "profile-1" } }),
+}));
 
 vi.mock("@/hooks/use-toast", () => ({
   useToast: () => ({ toast: vi.fn() }),
@@ -36,7 +39,7 @@ vi.mock("@/hooks/useCsCxEngagement", () => ({
       contact_details: index === 0 ? "maria@exemplo.com" : `pessoa${index + 1}@exemplo.com`,
       registry_office_id: "office-1",
       ticket_number: null,
-      author_profile_id: null,
+      author_profile_id: "profile-1",
       created_at: null,
       updated_at: null,
       origin: "legacy",

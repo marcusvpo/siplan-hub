@@ -30,6 +30,7 @@ export interface CsCxNpsQuestionnaire extends NpsQuestionnaireSnapshot {
   is_default: boolean;
   created_at: string;
   updated_at: string;
+  created_by: string | null;
 }
 
 export type NpsInvitationStatus =
@@ -49,6 +50,7 @@ export interface CsCxNpsInvitation {
   responded_at: string | null;
   response_id: string | null;
   created_at: string;
+  created_by: string | null;
   registry_office: { id: string; name: string } | null;
   contact: { id: string; contact_person: string } | null;
   questionnaire: { id: string; title: string } | null;

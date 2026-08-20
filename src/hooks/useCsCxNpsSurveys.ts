@@ -55,7 +55,7 @@ export function useCsCxNpsSurveys() {
       const { data, error } = await db
         .from("cs_cx_nps_questionnaires")
         .select(
-          "id, title, description, questions, theme, is_active, is_default, created_at, updated_at",
+          "id, title, description, questions, theme, is_active, is_default, created_at, updated_at, created_by",
         )
         .order("is_default", { ascending: false })
         .order("updated_at", { ascending: false });
@@ -73,7 +73,7 @@ export function useCsCxNpsSurveys() {
           `
         id, public_token, questionnaire_id, registry_office_id, contact_id,
         recipient_name, recipient_email, questionnaire_snapshot, status,
-        expires_at, responded_at, response_id, created_at,
+        expires_at, responded_at, response_id, created_at, created_by,
         cs_cx_registry_offices (id, name),
         cs_cx_contacts (id, contact_person),
         cs_cx_nps_questionnaires (id, title)

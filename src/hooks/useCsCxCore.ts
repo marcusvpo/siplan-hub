@@ -40,6 +40,7 @@ export interface CsCxRegistryOffice {
   notes: string | null;
   origin: "legacy" | "hub";
   created_at: string | null;
+  created_by: string | null;
   analyst_profile_id: string | null;
   analyst: CsCxResponsibleProfile | null;
   products: CsCxOfficeProduct[];
@@ -161,7 +162,7 @@ export function useCsCxRegistryOffices() {
         .from("cs_cx_registry_offices")
         .select(`
           id, legacy_id, name, sap_code, active, contact_details, notes,
-          origin, created_at, analyst_profile_id,
+          origin, created_at, created_by, analyst_profile_id,
           profiles!cs_cx_registry_offices_analyst_profile_id_fkey (id, full_name, email),
           cs_cx_registry_office_products (
             id, product_id, implementation_date, source_present,

@@ -61,11 +61,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  type CsCxNpsResponse,
-  useCsCxNps,
-} from "@/hooks/useCsCxExperience";
-import { usePermissions } from "@/hooks/usePermissions";
+import { type CsCxNpsResponse, useCsCxNps } from "@/hooks/useCsCxExperience";
+import { useCsCxRecordPermissions } from "@/hooks/useCsCxRecordPermissions";
 import { useToast } from "@/hooks/use-toast";
 import { generateCsCxNpsPdf } from "@/lib/cs-cx-experience-pdf";
 import { cn } from "@/lib/utils";
@@ -84,16 +81,11 @@ const CLASS_LABELS: Record<string, string> = {
 const DEFAULT_PAGE_SIZE = 5;
 
 export default function CsCxNps() {
-  const {
-    responses,
-    history,
-    isLoading,
-    error,
-    refetch,
-    deleteResponse,
-  } = useCsCxNps();
+  const { responses, history, isLoading, error, refetch, deleteResponse } =
+    useCsCxNps();
   const { offices } = useCsCxRegistryOffices();
-  const { hasPermission } = usePermissions();
+  const { canCreate, canDeleteRecord } =
+    useCsCxRecordPermissions("cs_cx_nps");
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [classification, setClassification] = useState("all");
@@ -106,9 +98,9 @@ export default function CsCxNps() {
   const [requestOpen, setRequestOpen] = useState(false);
   const [viewing, setViewing] = useState<CsCxNpsResponse | null>(null);
   const [activeTab, setActiveTab] = useState("analytics");
-  const [officeCoverage, setOfficeCoverage] = useState<"evaluated" | "not-evaluated" | null>(null);
-  const canCreate = hasPermission("cs_cx_nps", "create");
-  const canDelete = hasPermission("cs_cx_nps", "delete");
+  const [officeCoverage, setOfficeCoverage] = useState<
+    "evaluated" | "not-evaluated" | null
+  >(null);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLocaleLowerCase("pt-BR");
@@ -196,14 +188,30 @@ export default function CsCxNps() {
   const nps = responses.length
     ? Math.round(((promoters - detractors) / responses.length) * 1000) / 10
     : 0;
-  const evaluatedOfficeIds = new Set(responses.map((response) => response.registry_office_id).filter(Boolean));
-  const evaluatedOfficeNames = new Set(responses.map((response) => normalizeOfficeName(response.registry_office?.name ?? response.respondent_office)));
-  const activeOffices = offices.filter((office) => office.active);
-  const evaluatedOfficeList = activeOffices.filter((office) =>
-    evaluatedOfficeIds.has(office.id) || evaluatedOfficeNames.has(normalizeOfficeName(office.name)),
+  const evaluatedOfficeIds = new Set(
+    responses.map((response) => response.registry_office_id).filter(Boolean),
   );
-  const notEvaluatedOfficeList = activeOffices.filter((office) => !evaluatedOfficeList.some((evaluated) => evaluated.id === office.id));
-  const coverageOffices = officeCoverage === "evaluated" ? evaluatedOfficeList : notEvaluatedOfficeList;
+  const evaluatedOfficeNames = new Set(
+    responses.map((response) =>
+      normalizeOfficeName(
+        response.registry_office?.name ?? response.respondent_office,
+      ),
+    ),
+  );
+  const activeOffices = offices.filter((office) => office.active);
+  const evaluatedOfficeList = activeOffices.filter(
+    (office) =>
+      evaluatedOfficeIds.has(office.id) ||
+      evaluatedOfficeNames.has(normalizeOfficeName(office.name)),
+  );
+  const notEvaluatedOfficeList = activeOffices.filter(
+    (office) =>
+      !evaluatedOfficeList.some((evaluated) => evaluated.id === office.id),
+  );
+  const coverageOffices =
+    officeCoverage === "evaluated"
+      ? evaluatedOfficeList
+      : notEvaluatedOfficeList;
 
   function showClassification(value: "PROMOTOR" | "NEUTRO" | "DETRATOR") {
     setClassification(value);
@@ -303,11 +311,41 @@ export default function CsCxNps() {
       )}
       <div className="grid auto-rows-fr gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <Metric icon={Star} label="NPS geral" value={nps} />
-        <Metric icon={Smile} label="Promotores" value={promoters} active={classification === "PROMOTOR" && activeTab === "responses"} onClick={() => showClassification("PROMOTOR")} />
-        <Metric icon={Meh} label="Neutros" value={neutrals} active={classification === "NEUTRO" && activeTab === "responses"} onClick={() => showClassification("NEUTRO")} />
-        <Metric icon={Frown} label="Detratores" value={detractors} active={classification === "DETRATOR" && activeTab === "responses"} onClick={() => showClassification("DETRATOR")} />
-        <Metric icon={Building2} label="Cartórios avaliados" value={evaluatedOfficeList.length} active={officeCoverage === "evaluated"} onClick={() => setOfficeCoverage("evaluated")} />
-        <Metric icon={CircleHelp} label="Cartórios não avaliados" value={notEvaluatedOfficeList.length} active={officeCoverage === "not-evaluated"} onClick={() => setOfficeCoverage("not-evaluated")} />
+        <Metric
+          icon={Smile}
+          label="Promotores"
+          value={promoters}
+          active={classification === "PROMOTOR" && activeTab === "responses"}
+          onClick={() => showClassification("PROMOTOR")}
+        />
+        <Metric
+          icon={Meh}
+          label="Neutros"
+          value={neutrals}
+          active={classification === "NEUTRO" && activeTab === "responses"}
+          onClick={() => showClassification("NEUTRO")}
+        />
+        <Metric
+          icon={Frown}
+          label="Detratores"
+          value={detractors}
+          active={classification === "DETRATOR" && activeTab === "responses"}
+          onClick={() => showClassification("DETRATOR")}
+        />
+        <Metric
+          icon={Building2}
+          label="Cartórios avaliados"
+          value={evaluatedOfficeList.length}
+          active={officeCoverage === "evaluated"}
+          onClick={() => setOfficeCoverage("evaluated")}
+        />
+        <Metric
+          icon={CircleHelp}
+          label="Cartórios não avaliados"
+          value={notEvaluatedOfficeList.length}
+          active={officeCoverage === "not-evaluated"}
+          onClick={() => setOfficeCoverage("not-evaluated")}
+        />
       </div>
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="h-9">
@@ -416,7 +454,7 @@ export default function CsCxNps() {
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
-                          {canDelete && (
+                          {canDeleteRecord(response.owner_profile_id) && (
                             <Button
                               variant="ghost"
                               size="icon"
@@ -489,7 +527,8 @@ export default function CsCxNps() {
                     <CardDescription className="mt-0.5 max-w-3xl text-xs leading-relaxed">
                       Consolidações importadas do sistema anterior. Cada linha
                       representa o resultado de um cartório em um período; as
-                      respostas atuais ficam na aba Respostas e no BI de Análises.
+                      respostas atuais ficam na aba Respostas e no BI de
+                      Análises.
                     </CardDescription>
                   </div>
                 </div>
@@ -616,11 +655,75 @@ export default function CsCxNps() {
           </Card>
         </TabsContent>
       </Tabs>
-      <Dialog open={Boolean(officeCoverage)} onOpenChange={(open) => !open && setOfficeCoverage(null)}>
+      <Dialog
+        open={Boolean(officeCoverage)}
+        onOpenChange={(open) => !open && setOfficeCoverage(null)}
+      >
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
-          <DialogHeader><DialogTitle>{officeCoverage === "evaluated" ? "Cartórios avaliados" : "Cartórios ainda não avaliados"}</DialogTitle><DialogDescription>{officeCoverage === "evaluated" ? "Cartórios ativos que já possuem ao menos uma resposta NPS." : "Cartórios ativos sem resposta NPS vinculada; use esta lista para planejar os próximos envios."}</DialogDescription></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>
+              {officeCoverage === "evaluated"
+                ? "Cartórios avaliados"
+                : "Cartórios ainda não avaliados"}
+            </DialogTitle>
+            <DialogDescription>
+              {officeCoverage === "evaluated"
+                ? "Cartórios ativos que já possuem ao menos uma resposta NPS."
+                : "Cartórios ativos sem resposta NPS vinculada; use esta lista para planejar os próximos envios."}
+            </DialogDescription>
+          </DialogHeader>
           <div className="overflow-hidden rounded-lg border">
-            <Table><TableHeader><TableRow><TableHead>Cartório</TableHead><TableHead>Responsável</TableHead>{officeCoverage === "evaluated" && <TableHead className="text-right">Respostas</TableHead>}</TableRow></TableHeader><TableBody>{coverageOffices.length ? coverageOffices.map((office) => { const responseCount = responses.filter((response) => response.registry_office_id === office.id || normalizeOfficeName(response.registry_office?.name ?? response.respondent_office) === normalizeOfficeName(office.name)).length; return <TableRow key={office.id}><TableCell className="font-medium">{office.name}</TableCell><TableCell>{office.analyst?.full_name || office.analyst?.email || "Não informado"}</TableCell>{officeCoverage === "evaluated" && <TableCell className="text-right font-semibold">{responseCount}</TableCell>}</TableRow>; }) : <TableRow><TableCell colSpan={officeCoverage === "evaluated" ? 3 : 2} className="h-24 text-center text-muted-foreground">Nenhum cartório nesta situação.</TableCell></TableRow>}</TableBody></Table>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Cartório</TableHead>
+                  <TableHead>Responsável</TableHead>
+                  {officeCoverage === "evaluated" && (
+                    <TableHead className="text-right">Respostas</TableHead>
+                  )}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {coverageOffices.length ? (
+                  coverageOffices.map((office) => {
+                    const responseCount = responses.filter(
+                      (response) =>
+                        response.registry_office_id === office.id ||
+                        normalizeOfficeName(
+                          response.registry_office?.name ??
+                            response.respondent_office,
+                        ) === normalizeOfficeName(office.name),
+                    ).length;
+                    return (
+                      <TableRow key={office.id}>
+                        <TableCell className="font-medium">
+                          {office.name}
+                        </TableCell>
+                        <TableCell>
+                          {office.analyst?.full_name ||
+                            office.analyst?.email ||
+                            "Não informado"}
+                        </TableCell>
+                        {officeCoverage === "evaluated" && (
+                          <TableCell className="text-right font-semibold">
+                            {responseCount}
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    );
+                  })
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={officeCoverage === "evaluated" ? 3 : 2}
+                      className="h-24 text-center text-muted-foreground"
+                    >
+                      Nenhum cartório nesta situação.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </div>
         </DialogContent>
       </Dialog>
@@ -659,19 +762,30 @@ export default function CsCxNps() {
           {viewing && (
             <div className="space-y-3">
               <div className="grid gap-2 rounded-lg border bg-muted/20 p-3 sm:grid-cols-2">
-                <ReadOnlyField label="Data" value={formatDate(viewing.responded_at)} />
+                <ReadOnlyField
+                  label="Data"
+                  value={formatDate(viewing.responded_at)}
+                />
                 <ReadOnlyField
                   label="Cartório"
-                  value={viewing.registry_office?.name ?? viewing.respondent_office}
+                  value={
+                    viewing.registry_office?.name ?? viewing.respondent_office
+                  }
                 />
-                <ReadOnlyField label="Respondente" value={viewing.respondent_name} />
+                <ReadOnlyField
+                  label="Respondente"
+                  value={viewing.respondent_name}
+                />
                 <ReadOnlyField
                   label="Resultado"
                   value={`Nota ${viewing.score} · ${CLASS_LABELS[viewing.classification]}`}
                 />
               </div>
               {viewing.score_reason && (
-                <ReadOnlyAnswer label="Motivo da nota" value={viewing.score_reason} />
+                <ReadOnlyAnswer
+                  label="Motivo da nota"
+                  value={viewing.score_reason}
+                />
               )}
               {viewing.improvement_suggestion && (
                 <ReadOnlyAnswer
@@ -698,7 +812,10 @@ export default function CsCxNps() {
                   </p>
                 )}
               <p className="text-[10px] text-muted-foreground">
-                Origem: {viewing.origin === "legacy" ? "sistema legado" : "formulário do Siplan HUB"}
+                Origem:{" "}
+                {viewing.origin === "legacy"
+                  ? "sistema legado"
+                  : "formulário do Siplan HUB"}
               </p>
             </div>
           )}
@@ -722,7 +839,12 @@ function Metric({
   active?: boolean;
 }) {
   const card = (
-    <Card className={cn("h-full min-h-[76px]", active && "border-rose-400 ring-1 ring-rose-200")}>
+    <Card
+      className={cn(
+        "h-full min-h-[76px]",
+        active && "border-rose-400 ring-1 ring-rose-200",
+      )}
+    >
       <CardContent className="flex h-full items-center gap-2.5 px-3 py-2.5">
         <div className="shrink-0 rounded-lg bg-rose-50 p-1.5 text-rose-600 dark:bg-rose-950/40">
           <Icon className="h-4 w-4" />
@@ -736,7 +858,18 @@ function Metric({
       </CardContent>
     </Card>
   );
-  return onClick ? <button type="button" className="h-full w-full rounded-lg text-left transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-pressed={active} onClick={onClick}>{card}</button> : card;
+  return onClick ? (
+    <button
+      type="button"
+      className="h-full w-full rounded-lg text-left transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      aria-pressed={active}
+      onClick={onClick}
+    >
+      {card}
+    </button>
+  ) : (
+    card
+  );
 }
 function NpsPaginationBar({
   currentPage,
@@ -926,5 +1059,9 @@ function messageOf(error: unknown) {
 }
 
 function normalizeOfficeName(value?: string | null) {
-  return (value ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLocaleLowerCase("pt-BR");
+  return (value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLocaleLowerCase("pt-BR");
 }

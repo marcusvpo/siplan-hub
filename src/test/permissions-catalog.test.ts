@@ -94,6 +94,26 @@ describe("catálogo de permissões", () => {
     expect(getResourceCategory("cs_cx_home")).toBe("CS/CX");
   });
 
+  it("expõe controle de lançamentos de terceiros nos cards operacionais do CS/CX", () => {
+    const ownedResources = [
+      "cs_cx_registros",
+      "cs_cx_cartorios",
+      "cs_cx_contatos",
+      "cs_cx_agendamentos",
+      "cs_cx_rotinas",
+      "cs_cx_visitas",
+      "cs_cx_nps",
+    ];
+    const byResource = new Map(PERMISSION_RESOURCES.map((item) => [item.resource, item]));
+
+    ownedResources.forEach((resource) => {
+      expect(byResource.get(resource)?.actions).toEqual(
+        expect.arrayContaining(["view_others", "manage_others"]),
+      );
+    });
+    expect(byResource.get("cs_cx_reports")?.actions).toContain("view_others");
+  });
+
   it("cai em 'Outros' para recurso desconhecido, sem quebrar", () => {
     expect(getResourceCategory("recurso_inexistente")).toBe("Outros");
     expect(getResourceLabel("recurso_inexistente")).toBe("recurso_inexistente");

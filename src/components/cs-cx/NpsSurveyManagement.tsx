@@ -60,7 +60,7 @@ import {
   effectiveInvitationStatus,
   useCsCxNpsSurveys,
 } from "@/hooks/useCsCxNpsSurveys";
-import { usePermissions } from "@/hooks/usePermissions";
+import { useCsCxRecordPermissions } from "@/hooks/useCsCxRecordPermissions";
 import { useToast } from "@/hooks/use-toast";
 import {
   DEFAULT_NPS_QUESTIONS,
@@ -104,7 +104,8 @@ export function NpsInvitationsPanel({
     useCsCxNpsSurveys();
   const { offices } = useCsCxRegistryOffices();
   const { contacts } = useCsCxContacts();
-  const { hasPermission } = usePermissions();
+  const { canCreate, canEditRecord } =
+    useCsCxRecordPermissions("cs_cx_nps");
   const { toast } = useToast();
   const [page, setPage] = useState(1);
   const [officeId, setOfficeId] = useState("");
@@ -114,8 +115,6 @@ export function NpsInvitationsPanel({
   const [recipientEmail, setRecipientEmail] = useState("");
   const [validDays, setValidDays] = useState("15");
   const [generatedLink, setGeneratedLink] = useState("");
-  const canCreate = hasPermission("cs_cx_nps", "create");
-  const canEdit = hasPermission("cs_cx_nps", "edit");
   const activeQuestionnaires = questionnaires.filter((item) => item.is_active);
   const filteredContacts = contacts.filter(
     (contact) => contact.registry_office_id === officeId,
@@ -269,7 +268,8 @@ export function NpsInvitationsPanel({
                         >
                           <Copy className="h-4 w-4" />
                         </Button>
-                        {canEdit && status === "PENDENTE" && (
+                        {canEditRecord(invitation.created_by) &&
+                          status === "PENDENTE" && (
                           <Button
                             variant="ghost"
                             size="icon"
@@ -478,7 +478,8 @@ export function NpsQuestionnairesPanel() {
     setQuestionnaireActive,
     setDefaultQuestionnaire,
   } = useCsCxNpsSurveys();
-  const { hasPermission } = usePermissions();
+  const { canCreate, canEditRecord } =
+    useCsCxRecordPermissions("cs_cx_nps");
   const { toast } = useToast();
   const [editing, setEditing] = useState<CsCxNpsQuestionnaire | "new" | null>(
     null,
@@ -489,17 +490,13 @@ export function NpsQuestionnairesPanel() {
     DEFAULT_NPS_QUESTIONS,
   );
   const [isDefault, setIsDefault] = useState(false);
-  const [theme, setTheme] = useState<NpsQuestionnaireTheme>(
-    DEFAULT_NPS_THEME,
-  );
+  const [theme, setTheme] = useState<NpsQuestionnaireTheme>(DEFAULT_NPS_THEME);
   const [backgroundFile, setBackgroundFile] = useState<File | null>(null);
   const [backgroundPreviewUrl, setBackgroundPreviewUrl] = useState<
     string | null
   >(null);
   const [newType, setNewType] =
     useState<Exclude<NpsQuestionType, "nps">>("text");
-  const canCreate = hasPermission("cs_cx_nps", "create");
-  const canEdit = hasPermission("cs_cx_nps", "edit");
 
   useEffect(() => {
     if (!backgroundFile || typeof URL.createObjectURL !== "function") {
@@ -525,9 +522,7 @@ export function NpsQuestionnairesPanel() {
     );
     setIsDefault(item === "new" ? !questionnaires.length : item.is_default);
     setTheme(
-      item === "new"
-        ? { ...DEFAULT_NPS_THEME }
-        : normalizeNpsTheme(item.theme),
+      item === "new" ? { ...DEFAULT_NPS_THEME } : normalizeNpsTheme(item.theme),
     );
     setBackgroundFile(null);
   }
@@ -644,7 +639,7 @@ export function NpsQuestionnairesPanel() {
                   {item.questions.length} pergunta(s)
                 </p>
               </div>
-              {canEdit && (
+              {canEditRecord(item.created_by) && (
                 <div className="flex shrink-0">
                   <Button
                     variant="ghost"
@@ -782,7 +777,10 @@ export function NpsQuestionnairesPanel() {
                     <Field label="Imagem de fundo (JPG, PNG ou WEBP, até 5 MB)">
                       <div className="flex flex-wrap gap-2">
                         <Button variant="outline" size="sm" asChild>
-                          <label htmlFor="nps-background-image" className="cursor-pointer">
+                          <label
+                            htmlFor="nps-background-image"
+                            className="cursor-pointer"
+                          >
                             <ImageUp className="mr-2 h-4 w-4" />
                             Escolher imagem
                           </label>
@@ -1043,7 +1041,9 @@ function NpsThemePreview({
         className="relative mt-1 min-h-52 overflow-hidden rounded-xl border bg-cover bg-center p-5"
         style={{
           backgroundColor: normalized.background_color,
-          backgroundImage: backgroundUrl ? `url("${backgroundUrl}")` : undefined,
+          backgroundImage: backgroundUrl
+            ? `url("${backgroundUrl}")`
+            : undefined,
         }}
       >
         {backgroundUrl && (
