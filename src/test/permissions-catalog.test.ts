@@ -5,6 +5,7 @@ import { menuItems } from "@/constants/menuItems";
 import {
   PERMISSION_CATEGORY_ORDER,
   PERMISSION_RESOURCES,
+  getActionLabel,
   getResourceCategory,
   getResourceLabel,
 } from "@/constants/permissions";
@@ -25,6 +26,14 @@ function sourceFiles(dir: string): string[] {
 }
 
 describe("catálogo de permissões", () => {
+  it("nunca expõe nomes técnicos das ações aos usuários", () => {
+    expect(getActionLabel("view_others")).toBe("Ver registros de outros usuários");
+    expect(getActionLabel(" manage_others ")).toBe(
+      "Editar ou excluir registros de outros usuários",
+    );
+    expect(getActionLabel("future_action")).toBe("Future action");
+  });
+
   it("não repete recursos", () => {
     expect(catalogResources.size).toBe(PERMISSION_RESOURCES.length);
   });

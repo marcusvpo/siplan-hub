@@ -166,8 +166,8 @@ export const ACTION_LABELS: Record<PermissionAction, string> = {
   execute: "Executar Ação",
   upload: "Enviar Arquivos",
   download: "Baixar Arquivos",
-  view_others: "Visualizar lançamentos de outros usuários",
-  manage_others: "Editar/excluir lançamentos de outros usuários",
+  view_others: "Ver registros de outros usuários",
+  manage_others: "Editar ou excluir registros de outros usuários",
 };
 
 const RESOURCE_LABELS: Record<string, string> = Object.fromEntries(
@@ -183,7 +183,14 @@ export function getResourceLabel(resource: string): string {
 }
 
 export function getActionLabel(action: string): string {
-  return ACTION_LABELS[action as PermissionAction] || action;
+  const normalizedAction = action.trim().toLowerCase();
+  const knownLabel = ACTION_LABELS[normalizedAction as PermissionAction];
+  if (knownLabel) return knownLabel;
+
+  const readableFallback = normalizedAction.replace(/[_-]+/g, " ").trim();
+  return readableFallback
+    ? readableFallback.charAt(0).toUpperCase() + readableFallback.slice(1)
+    : "Permissão";
 }
 
 /** Recurso ainda não catalogado cai em "Outros" para não sumir da tela. */
