@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Activity, ArrowRight, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, ClipboardCheck, Clock3, Database, Eye, FileDown, ListChecks, Pencil, Plus, RefreshCw, Search, Trash2, TriangleAlert } from "lucide-react";
+import { ArrowRight, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, ClipboardCheck, Clock3, Database, Eye, FileDown, ListChecks, Pencil, Plus, RefreshCw, Search, Trash2, TriangleAlert } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,46 @@ const STATUS_OPTIONS = [
   { value: "inativo", label: "Inativo" },
 ] as const;
 const DEFAULT_PAGE_SIZE = 5;
+
+export interface CsCxOfficeRoutineSummary {
+  registryOfficeId: string;
+  registryOfficeName: string;
+  routines: CsCxOfficeRoutine[];
+  activeItems: number;
+  inactiveItems: number;
+  pendingItems: number;
+  totalItems: number;
+  lastAnalysis: string | null;
+  analyzed: boolean;
+}
+
+export function summarizeOfficeRoutines(routines: CsCxOfficeRoutine[]): CsCxOfficeRoutineSummary[] {
+  const grouped = new Map<string, CsCxOfficeRoutine[]>();
+  routines.forEach((routine) => {
+    const current = grouped.get(routine.registry_office_id) ?? [];
+    current.push(routine);
+    grouped.set(routine.registry_office_id, current);
+  });
+
+  return [...grouped.entries()].map(([registryOfficeId, officeRoutines]) => {
+    const items = officeRoutines.flatMap((routine) => routine.items);
+    const analysisDates = items
+      .map((item) => item.analyzed_at)
+      .filter((value): value is string => Boolean(value))
+      .sort();
+    return {
+      registryOfficeId,
+      registryOfficeName: officeRoutines[0]?.registry_office?.name ?? "Cartório removido",
+      routines: officeRoutines,
+      activeItems: items.filter((item) => item.active === true).length,
+      inactiveItems: items.filter((item) => item.active === false).length,
+      pendingItems: items.filter((item) => item.active === null).length,
+      totalItems: items.length,
+      lastAnalysis: analysisDates.at(-1) ?? null,
+      analyzed: items.length > 0 && items.every((item) => Boolean(item.analyzed_at)),
+    };
+  });
+}
 
 export default function CsCxRoutines() {
   const { models, routines, history, isLoading, error, refetch, applyRoutine, setRoutineItem, setAllRoutineItems, deleteRoutine } = useCsCxRoutines();
@@ -93,19 +133,22 @@ export default function CsCxRoutines() {
     };
   }, [openedOfficeRoutines]);
 
-  const filtered = useMemo(() => {
+  const officeSummaries = useMemo(() => summarizeOfficeRoutines(routines), [routines]);
+  const filteredOffices = useMemo(() => {
     const term = search.trim().toLocaleLowerCase("pt-BR");
-    return routines.filter((routine) => {
-      const matchesTerm = !term || [routine.registry_office?.name, routine.routine_model?.name, routine.notes]
-        .some((value) => value?.toLocaleLowerCase("pt-BR").includes(term));
-      return matchesTerm && (officeFilter === "all" || routine.registry_office_id === officeFilter);
+    return officeSummaries.filter((summary) => {
+      const matchesTerm = !term || [
+        summary.registryOfficeName,
+        ...summary.routines.flatMap((routine) => [routine.routine_model?.name, routine.notes]),
+      ].some((value) => value?.toLocaleLowerCase("pt-BR").includes(term));
+      return matchesTerm && (officeFilter === "all" || summary.registryOfficeId === officeFilter);
     });
-  }, [officeFilter, routines, search]);
-  const applicationTotalPages = Math.max(1, Math.ceil(filtered.length / applicationPageSize));
+  }, [officeFilter, officeSummaries, search]);
+  const applicationTotalPages = Math.max(1, Math.ceil(filteredOffices.length / applicationPageSize));
   const currentApplicationPage = Math.min(applicationPage, applicationTotalPages);
-  const pagedRoutines = useMemo(
-    () => filtered.slice((currentApplicationPage - 1) * applicationPageSize, currentApplicationPage * applicationPageSize),
-    [applicationPageSize, currentApplicationPage, filtered],
+  const pagedOfficeSummaries = useMemo(
+    () => filteredOffices.slice((currentApplicationPage - 1) * applicationPageSize, currentApplicationPage * applicationPageSize),
+    [applicationPageSize, currentApplicationPage, filteredOffices],
   );
   const modelTotalPages = Math.max(1, Math.ceil(models.length / modelPageSize));
   const currentModelPage = Math.min(modelPage, modelTotalPages);
@@ -115,14 +158,13 @@ export default function CsCxRoutines() {
   );
 
   const totals = useMemo(() => {
-    const items = routines.flatMap((routine) => routine.items);
+    const analyzed = officeSummaries.filter((summary) => summary.analyzed).length;
     return {
-      applications: routines.length,
-      active: items.filter((item) => item.active === true).length,
-      inactive: items.filter((item) => item.active === false).length,
-      pending: items.filter((item) => item.active === null).length,
+      offices: officeSummaries.length,
+      analyzed,
+      notAnalyzed: officeSummaries.length - analyzed,
     };
-  }, [routines]);
+  }, [officeSummaries]);
 
   const historyActions = useMemo(
     () => [...new Set(history.map((entry) => entry.action))].sort((a, b) => actionLabel(a).localeCompare(actionLabel(b), "pt-BR")),
@@ -270,11 +312,10 @@ export default function CsCxRoutines() {
 
       {error && <Card className="border-destructive/40"><CardContent className="flex items-center justify-between gap-3 p-3"><div className="flex items-center gap-2 text-sm text-destructive"><TriangleAlert className="h-4 w-4" />{messageOf(error)}</div><Button variant="outline" size="sm" onClick={() => refetch()}><RefreshCw className="mr-2 h-4 w-4" />Tentar novamente</Button></CardContent></Card>}
 
-      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-        <Metric icon={Database} label="Aplicações" value={totals.applications} />
-        <Metric icon={CheckCircle2} label="Itens ativos" value={totals.active} />
-        <Metric icon={Activity} label="Itens inativos" value={totals.inactive} />
-        <Metric icon={ClipboardCheck} label="A analisar" value={totals.pending} />
+      <div className="grid gap-2 sm:grid-cols-3">
+        <Metric icon={Database} label="Cartórios com rotinas" value={totals.offices} />
+        <Metric icon={CheckCircle2} label="Analisados" value={totals.analyzed} />
+        <Metric icon={ClipboardCheck} label="Não analisados" value={totals.notAnalyzed} />
       </div>
 
       <Tabs defaultValue="applications" className="space-y-3">
@@ -282,18 +323,66 @@ export default function CsCxRoutines() {
         <TabsContent value="applications" className="space-y-3">
           <Card><CardContent className="grid gap-2 p-3 md:grid-cols-[minmax(260px,1fr)_260px]"><div className="relative"><Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" /><Input value={search} onChange={(event) => updateSearch(event.target.value)} placeholder="Buscar cartório, modelo ou observação..." className="h-9 pl-9" /></div><Select value={officeFilter} onValueChange={updateOfficeFilter}><SelectTrigger className="h-9"><SelectValue placeholder="Todos os cartórios" /></SelectTrigger><SelectContent><SelectItem value="all">Todos os cartórios</SelectItem>{offices.map((office) => <SelectItem key={office.id} value={office.id}>{office.name}</SelectItem>)}</SelectContent></Select></CardContent></Card>
 
-          <div className="space-y-2">
-            {pagedRoutines.map((routine) => {
-              const analyzed = routine.items.filter((item) => item.analyzed_at).length;
-              const completed = routine.items.length > 0 && analyzed === routine.items.length;
-              const lastAnalysis = latestAnalysisDate(routine);
-              return <Card key={routine.id}>
-                <CardHeader className="px-4 py-3"><div className="flex flex-col justify-between gap-2 md:flex-row md:items-center"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><CardTitle className="truncate text-sm" title={routine.registry_office?.name ?? "Cartório removido"}>{routine.registry_office?.name ?? "Cartório removido"}</CardTitle><Badge variant="outline" className={completed ? "h-5 border-emerald-200 bg-emerald-50 px-1.5 text-[10px] text-emerald-700" : "h-5 border-amber-200 bg-amber-50 px-1.5 text-[10px] text-amber-700"}>{completed && <CheckCircle2 className="mr-1 h-3 w-3" />}{completed ? "Análise concluída" : "Análise pendente"}</Badge></div><CardDescription className="mt-0.5 text-xs">{routine.routine_model?.name ?? "Modelo removido"} · {analyzed}/{routine.items.length} itens analisados · {lastAnalysis ? `última análise em ${formatDate(lastAnalysis)}` : `aplicado em ${formatDate(routine.applied_at)}`}</CardDescription></div><div className="flex flex-wrap items-center gap-1.5">{routine.origin === "legacy" && <Badge variant="outline" className="h-5 px-1.5 text-[10px]">Legado</Badge>}<Button variant="outline" size="sm" className="h-8 px-2.5" aria-label="Analisar cartório e suas rotinas" onClick={() => openOfficeAnalysis(routine.registry_office_id)}><Eye className="mr-1.5 h-4 w-4" />Analisar cartório</Button><Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Exportar PDF da rotina" disabled={exportingRoutineId === routine.id} onClick={() => handleRoutinePdf(routine)}><FileDown className="h-4 w-4" /></Button>{canDelete && <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Desvincular rotina" onClick={() => setDeleting(routine)}><Trash2 className="h-4 w-4 text-destructive" /></Button>}</div></div></CardHeader>
-              </Card>;
-            })}
-            {!filtered.length && <Card><CardContent className="py-12 text-center text-sm text-muted-foreground">Nenhuma rotina encontrada.</CardContent></Card>}
-          </div>
-          <RoutinePaginationBar currentPage={currentApplicationPage} pageSize={applicationPageSize} totalItems={filtered.length} totalPages={applicationTotalPages} itemLabel="aplicações" selectLabel="Aplicações por página" onPageChange={setApplicationPage} onPageSizeChange={updateApplicationPageSize} />
+          <Card>
+            <CardHeader className="px-3 py-2.5">
+              <CardTitle className="text-sm">Cartórios e suas rotinas</CardTitle>
+              <CardDescription className="text-xs">Visão consolidada dos itens e da situação da análise por cartório.</CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="h-9 min-w-56 px-3 text-xs">Cartório</TableHead>
+                      <TableHead className="h-9 px-3 text-center text-xs">Rotinas</TableHead>
+                      <TableHead className="h-9 px-3 text-center text-xs">Itens ativos</TableHead>
+                      <TableHead className="h-9 px-3 text-center text-xs">Itens inativos</TableHead>
+                      <TableHead className="h-9 min-w-32 px-3 text-xs">Data da análise</TableHead>
+                      <TableHead className="h-9 min-w-32 px-3 text-xs">Status</TableHead>
+                      <TableHead className="h-9 min-w-52 px-3 text-right text-xs">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {pagedOfficeSummaries.map((summary) => (
+                      <TableRow key={summary.registryOfficeId}>
+                        <TableCell className="px-3 py-2">
+                          <p className="font-medium">{summary.registryOfficeName}</p>
+                          <p className="max-w-72 truncate text-[11px] leading-4 text-muted-foreground" title={summary.routines.map((routine) => routine.routine_model?.name ?? "Modelo removido").join(", ")}>
+                            {summary.routines.map((routine) => routine.routine_model?.name ?? "Modelo removido").join(", ")}
+                          </p>
+                        </TableCell>
+                        <TableCell className="px-3 py-2 text-center"><Badge variant="secondary" className="h-5 min-w-7 justify-center px-1.5 text-[10px]">{summary.routines.length}</Badge></TableCell>
+                        <TableCell className="px-3 py-2 text-center"><Badge variant="outline" className="h-5 min-w-7 justify-center border-emerald-200 bg-emerald-50 px-1.5 text-[10px] text-emerald-700">{summary.activeItems}</Badge></TableCell>
+                        <TableCell className="px-3 py-2 text-center"><Badge variant="outline" className="h-5 min-w-7 justify-center border-rose-200 bg-rose-50 px-1.5 text-[10px] text-rose-700">{summary.inactiveItems}</Badge></TableCell>
+                        <TableCell className="whitespace-nowrap px-3 py-2 text-xs">
+                          {summary.lastAnalysis ? <span className="inline-flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />{formatDate(summary.lastAnalysis)}</span> : <span className="text-muted-foreground">Não analisado</span>}
+                        </TableCell>
+                        <TableCell className="px-3 py-2">
+                          <Badge variant="outline" className={summary.analyzed ? "h-5 border-emerald-200 bg-emerald-50 px-1.5 text-[10px] text-emerald-700" : "h-5 border-amber-200 bg-amber-50 px-1.5 text-[10px] text-amber-700"}>
+                            {summary.analyzed && <CheckCircle2 className="mr-1 h-3 w-3" />}{summary.analyzed ? "Analisado" : "Não analisado"}
+                          </Badge>
+                          {!summary.analyzed && summary.pendingItems > 0 && <p className="mt-0.5 text-[10px] text-muted-foreground">{summary.pendingItems} pendente{summary.pendingItems === 1 ? "" : "s"}</p>}
+                        </TableCell>
+                        <TableCell className="px-3 py-2">
+                          <div className="flex flex-wrap items-center justify-end gap-1">
+                            <Button variant="outline" size="sm" className="h-8 px-2.5" aria-label={`Analisar ${summary.registryOfficeName} e suas rotinas`} onClick={() => openOfficeAnalysis(summary.registryOfficeId)}><Eye className="mr-1.5 h-4 w-4" />Analisar cartório</Button>
+                            {summary.routines.map((routine) => (
+                              <div key={routine.id} className="flex items-center">
+                                <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Exportar PDF da rotina ${routine.routine_model?.name ?? "sem nome"}`} title={`Exportar ${routine.routine_model?.name ?? "rotina"}`} disabled={exportingRoutineId === routine.id} onClick={() => handleRoutinePdf(routine)}><FileDown className="h-4 w-4" /></Button>
+                                {canDelete && <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Desvincular rotina ${routine.routine_model?.name ?? "sem nome"}`} title={`Desvincular ${routine.routine_model?.name ?? "rotina"}`} onClick={() => setDeleting(routine)}><Trash2 className="h-4 w-4 text-destructive" /></Button>}
+                              </div>
+                            ))}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {!filteredOffices.length && <TableRow><TableCell colSpan={7} className="h-28 text-center text-sm text-muted-foreground">Nenhuma rotina encontrada.</TableCell></TableRow>}
+                  </TableBody>
+                </Table>
+              </div>
+              <div className="px-3 pb-3"><RoutinePaginationBar currentPage={currentApplicationPage} pageSize={applicationPageSize} totalItems={filteredOffices.length} totalPages={applicationTotalPages} itemLabel="cartórios" selectLabel="Cartórios por página" onPageChange={setApplicationPage} onPageSizeChange={updateApplicationPageSize} /></div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="models" className="space-y-3">
@@ -490,10 +579,6 @@ function localDateKey(value: string) {
 
 function todayKey() {
   return localDateKey(new Date().toISOString());
-}
-
-function latestAnalysisDate(routine: CsCxOfficeRoutine) {
-  return routine.items.map((item) => item.analyzed_at).filter((value): value is string => Boolean(value)).sort().at(-1) ?? null;
 }
 
 function messageOf(error: unknown) {

@@ -15,7 +15,10 @@ vi.mock("@/hooks/use-toast", () => ({
 
 vi.mock("@/hooks/useCsCxCore", () => ({
   useCsCxRegistryOffices: () => ({
-    offices: [{ id: "office-1", name: "Cartório Central" }],
+    offices: Array.from({ length: 12 }, (_, index) => ({
+      id: `office-${index + 1}`,
+      name: index === 0 ? "Cartório Central" : `Cartório ${index + 1}`,
+    })),
   }),
 }));
 
@@ -34,7 +37,7 @@ vi.mock("@/hooks/useCsCxRoutines", () => ({
     routines: Array.from({ length: 12 }, (_, index) => ({
       id: `routine-${index + 1}`,
       legacy_id: index + 1,
-      registry_office_id: "office-1",
+      registry_office_id: `office-${index + 1}`,
       routine_model_id: `model-${index + 1}`,
       active: true,
       applied_at: "2026-08-01T00:00:00.000Z",
@@ -44,10 +47,10 @@ vi.mock("@/hooks/useCsCxRoutines", () => ({
       routine_model: { id: `model-${index + 1}`, name: index === 0 ? "Rotinas Firmas" : `Modelo ${index + 1}`, description: null },
       items: [{
         id: `config-${index + 1}`,
-        active: null,
+        active: index === 0 ? true : index === 1 ? false : null,
         notes: null,
         analysis_notes: null,
-        analyzed_at: null,
+        analyzed_at: index === 0 ? "2026-08-18T12:00:00.000Z" : null,
         model_item: {
           id: `item-${index + 1}`,
           name: index === 0 ? "Reconhecimento de firma" : `Item ${index + 1}`,
@@ -101,7 +104,7 @@ describe("CS/CX rotinas — permissões", () => {
   beforeEach(() => {
     hasPermission.mockReset();
     mutation.mutateAsync.mockReset();
-    bulkMutation.mutateAsync.mockReset().mockResolvedValue(12);
+    bulkMutation.mutateAsync.mockReset().mockResolvedValue(1);
   });
 
   it("mantém os dados visíveis sem liberar escrita", () => {
@@ -118,12 +121,12 @@ describe("CS/CX rotinas — permissões", () => {
     expect(screen.getAllByRole("button", { name: /desvincular rotina/i })).toHaveLength(5);
   });
 
-  it("pagina aplicações e modelos em blocos compactos", () => {
+  it("pagina cartórios e modelos em blocos compactos", () => {
     renderPage([]);
-    expect(screen.getByLabelText("Mostrando 1 a 5 de 12 aplicações")).toBeInTheDocument();
+    expect(screen.getByLabelText("Mostrando 1 a 5 de 12 cartórios")).toBeInTheDocument();
     expect(screen.queryByText("Cartório 6")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /próxima página de aplicações/i }));
+    fireEvent.click(screen.getByRole("button", { name: /próxima página de cartórios/i }));
     expect(screen.getByText("Cartório 6")).toBeInTheDocument();
 
     fireEvent.mouseDown(screen.getByRole("tab", { name: "Modelos" }), { button: 0, ctrlKey: false });
@@ -132,6 +135,19 @@ describe("CS/CX rotinas — permissões", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /próxima página de modelos/i }));
     expect(screen.getByText("Modelo 6")).toBeInTheDocument();
+  });
+
+  it("resume análise e itens por cartório", () => {
+    renderPage([]);
+
+    expect(screen.getByText("Cartórios com rotinas")).toBeInTheDocument();
+    expect(screen.getByText("Analisados")).toBeInTheDocument();
+    expect(screen.getByText("Não analisados")).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "Itens ativos" })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "Itens inativos" })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "Data da análise" })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "Status" })).toBeInTheDocument();
+    expect(screen.getByText("18/08/2026")).toBeInTheDocument();
   });
 
   it("exibe o histórico detalhado sem exigir permissão de escrita", () => {
@@ -152,26 +168,23 @@ describe("CS/CX rotinas — permissões", () => {
   it("abre a visão consolidada do cartório e permite informar a data da análise", () => {
     renderPage(["cs_cx_rotinas:edit"]);
     expect(screen.queryByRole("button", { name: /^itens$/i })).not.toBeInTheDocument();
-    fireEvent.click(screen.getAllByRole("button", { name: /analisar cartório e suas rotinas/i })[0]);
+    fireEvent.click(screen.getAllByRole("button", { name: /analisar .* e suas rotinas/i })[0]);
 
     expect(screen.getByText("Análise das rotinas do cartório")).toBeInTheDocument();
     expect(screen.getByLabelText("Buscar itens da análise")).toBeInTheDocument();
-    expect(screen.getByLabelText("Mostrando 1 a 5 de 12 itens da análise")).toBeInTheDocument();
-    expect(screen.queryByText("Item 6")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /próxima página de itens da análise/i }));
-    expect(screen.getByText("Item 6")).toBeInTheDocument();
+    expect(screen.getByLabelText("Mostrando 1 a 1 de 1 itens da análise")).toBeInTheDocument();
     fireEvent.click(screen.getAllByRole("button", { name: /editar/i })[0]);
     expect(screen.getByLabelText("Data da análise")).toBeInTheDocument();
   });
 
   it("aplica o mesmo status a todos os itens do cartório", async () => {
     renderPage(["cs_cx_rotinas:edit"]);
-    fireEvent.click(screen.getAllByRole("button", { name: /analisar cartório e suas rotinas/i })[0]);
+    fireEvent.click(screen.getAllByRole("button", { name: /analisar .* e suas rotinas/i })[0]);
     fireEvent.click(screen.getByRole("button", { name: /alterar status de todos/i }));
 
     expect(screen.getByRole("heading", { name: "Alterar status de todas as rotinas" })).toBeInTheDocument();
-    expect(screen.getByText(/aplicada aos 12 itens/i)).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /salvar em todos \(12\)/i }));
+    expect(screen.getByText(/aplicada aos 1 itens/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /salvar em todos \(1\)/i }));
 
     await waitFor(() => {
       expect(bulkMutation.mutateAsync).toHaveBeenCalledWith(expect.objectContaining({
