@@ -1,5 +1,6 @@
 import type { CsCxOfficeRoutine, CsCxRoutineModel } from "@/hooks/useCsCxRoutines";
 import { generateCsCxPdfReport, type CsCxReportBlock, type CsCxReportRow } from "@/lib/cs-cx-experience-pdf";
+import { formatRoutineObservations } from "@/lib/cs-cx-routine-observations";
 import { downloadXlsxWorkbook, type XlsxSheet } from "@/lib/xlsx-export";
 
 export interface RoutineReportAnalytics {
@@ -74,8 +75,12 @@ export async function generateCsCxRoutinesPdf(routines: CsCxOfficeRoutine[], fil
     rows: [
       ["Configurações", `${routine.items.length} total · ${routine.items.filter((item) => item.active === true).length} ativas · ${routine.items.filter((item) => item.active === null).length} a analisar`],
       ["Descrição do modelo", routine.routine_model?.description ?? "Sem descrição"],
-      ["Observações", routine.notes ?? "Não informadas"],
-      ["Itens", routine.items.map((item) => `${item.model_item?.name ?? "Item removido"} (${statusLabel(item.active)})`).join("; ") || "Nenhum item"],
+      ["Observações antes da análise", reportObservationValue(routine.notes)],
+      ...routine.items.flatMap((item) => [
+        [`Item: ${item.model_item?.name ?? "Item removido"}`, statusLabel(item.active)] as CsCxReportRow,
+        ...(item.notes ? [["Antes da análise", reportObservationValue(item.notes)] as CsCxReportRow] : []),
+        ...(item.analysis_notes ? [["Depois da análise", reportObservationValue(item.analysis_notes)] as CsCxReportRow] : []),
+      ]),
     ],
   }));
   await generateCsCxPdfReport(
@@ -131,7 +136,7 @@ export function buildCsCxRoutinesWorkbook(routines: CsCxOfficeRoutine[], models:
     {
       name: "Aplicações por Cartório",
       rows: [
-        ["ID", "Cartório", "Modelo", "Status", "Total Configurações", "Configurações Ativas", "A Analisar", "Data Aplicação", "Observação", "Origem"],
+        ["ID", "Cartório", "Modelo", "Status", "Total Configurações", "Configurações Ativas", "A Analisar", "Data Aplicação", "Observações antes da análise", "Origem"],
         ...routines.map((routine) => [
           routine.legacy_id ?? routine.id,
           routine.registry_office?.name ?? "Cartório removido",
@@ -141,7 +146,7 @@ export function buildCsCxRoutinesWorkbook(routines: CsCxOfficeRoutine[], models:
           routine.items.filter((item) => item.active === true).length,
           routine.items.filter((item) => item.active === null).length,
           formatDateTime(routine.applied_at),
-          routine.notes ?? "",
+          formatRoutineObservations(routine.notes),
           routine.origin === "legacy" ? "Legado" : "HUB",
         ]),
       ],
@@ -149,7 +154,7 @@ export function buildCsCxRoutinesWorkbook(routines: CsCxOfficeRoutine[], models:
     {
       name: "Configurações por Item",
       rows: [
-        ["Cartório", "Modelo", "Item", "Categoria", "Tipo", "Status", "Obrigatório", "Data Análise", "Observação da Análise"],
+        ["Cartório", "Modelo", "Item", "Categoria", "Tipo", "Status", "Obrigatório", "Data Análise", "Observações antes da análise", "Observações depois da análise"],
         ...routines.flatMap((routine) => routine.items.map((item) => [
           routine.registry_office?.name ?? "Cartório removido",
           routine.routine_model?.name ?? "Modelo removido",
@@ -159,7 +164,8 @@ export function buildCsCxRoutinesWorkbook(routines: CsCxOfficeRoutine[], models:
           statusLabel(item.active),
           yesNo(Boolean(item.model_item?.required)),
           item.analyzed_at ? formatDateTime(item.analyzed_at) : "",
-          item.analysis_notes ?? item.notes ?? "",
+          formatRoutineObservations(item.notes),
+          formatRoutineObservations(item.analysis_notes),
         ])),
       ],
     },
@@ -182,7 +188,8 @@ function routineBlocks(routine: CsCxOfficeRoutine): CsCxReportBlock[] {
     subtitle: `${items.length} configuração(ões)`,
     rows: items.flatMap((item) => [
       [item.model_item?.name ?? "Item removido", `${item.model_item?.routine_type?.name ?? "Sem tipo"} · ${statusLabel(item.active)}${item.model_item?.required ? " · Obrigatório" : ""}`] as CsCxReportRow,
-      ...((item.analysis_notes || item.notes) ? [["Observações", item.analysis_notes ?? item.notes ?? ""] as CsCxReportRow] : []),
+      ...(item.notes ? [["Observações antes da análise", reportObservationValue(item.notes)] as CsCxReportRow] : []),
+      ...(item.analysis_notes ? [["Observações depois da análise", reportObservationValue(item.analysis_notes)] as CsCxReportRow] : []),
     ]),
   }));
   return [
@@ -192,7 +199,7 @@ function routineBlocks(routine: CsCxOfficeRoutine): CsCxReportBlock[] {
       rows: [
         ["Modelo", routine.routine_model?.name ?? "Modelo removido"],
         ["Data da aplicação", formatDateTime(routine.applied_at)],
-        ["Observações", routine.notes ?? "Não informadas"],
+        ["Observações antes da análise", reportObservationValue(routine.notes)],
       ],
     },
     ...categoryBlocks,
@@ -201,6 +208,10 @@ function routineBlocks(routine: CsCxOfficeRoutine): CsCxReportBlock[] {
 
 function statusLabel(active: boolean | null) {
   return active === true ? "Ativo" : active === false ? "Inativo" : "Analisar";
+}
+
+function reportObservationValue(value: string | null | undefined) {
+  return formatRoutineObservations(value) || "Não informadas";
 }
 
 function yesNo(value: boolean) { return value ? "Sim" : "Não"; }
