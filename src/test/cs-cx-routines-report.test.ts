@@ -4,6 +4,7 @@ import JSZip from "jszip";
 import { describe, expect, it } from "vitest";
 import type { CsCxOfficeRoutine, CsCxRoutineModel } from "@/hooks/useCsCxRoutines";
 import { buildCsCxRoutinesWorkbook, buildRoutineReportAnalytics } from "@/lib/cs-cx-routines-report";
+import { encodeRoutineObservations } from "@/lib/cs-cx-routine-observations";
 import { buildXlsxWorkbook } from "@/lib/xlsx-export";
 
 const models: CsCxRoutineModel[] = [{
@@ -37,6 +38,18 @@ describe("relatórios de rotinas CS/CX", () => {
     expect(sheets.map((sheet) => sheet.name)).toEqual(["Resumo Geral", "Modelos de Rotina", "Aplicações por Cartório", "Configurações por Item"]);
     expect(sheets[2].rows[1]).toContain("Cartório Central");
     expect(sheets[3].rows).toHaveLength(4);
+  });
+
+  it("separa observações anteriores e posteriores na planilha", () => {
+    const routinesWithObservations = structuredClone(routines);
+    routinesWithObservations[0].items[0].notes = encodeRoutineObservations(["Cenário inicial", "Orientação apresentada"]);
+    routinesWithObservations[0].items[0].analysis_notes = encodeRoutineObservations(["Cliente aprovou", "Retorno agendado"]);
+
+    const itemSheet = buildCsCxRoutinesWorkbook(routinesWithObservations, models)[3];
+    expect(itemSheet.rows[0]).toContain("Observações antes da análise");
+    expect(itemSheet.rows[0]).toContain("Observações depois da análise");
+    expect(itemSheet.rows[1]).toContain("1. Cenário inicial\n2. Orientação apresentada");
+    expect(itemSheet.rows[1]).toContain("1. Cliente aprovou\n2. Retorno agendado");
   });
 
   it("gera um XLSX válido com abas e conteúdo escapado", async () => {

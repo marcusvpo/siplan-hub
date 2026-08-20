@@ -303,11 +303,13 @@ export function useCsCxRoutines() {
   });
 
   const setRoutineItem = useMutation({
-    mutationFn: async (input: { id: string; active: boolean | null; analysisNotes?: string; analyzedAt: string }) => {
-      const { error } = await db.rpc("cs_cx_set_routine_item", {
+    mutationFn: async (input: { id: string; active: boolean | null; notes?: string; analysisNotes?: string; historyNotes?: string; analyzedAt: string }) => {
+      const { error } = await db.rpc("cs_cx_set_routine_item_v2", {
         p_config_id: input.id,
         p_active: input.active,
+        p_notes: emptyToNull(input.notes),
         p_analysis_notes: emptyToNull(input.analysisNotes),
+        p_history_notes: emptyToNull(input.historyNotes),
         p_analyzed_at: `${input.analyzedAt}T12:00:00`,
       });
       if (error) throw error;
@@ -316,11 +318,12 @@ export function useCsCxRoutines() {
   });
 
   const setAllRoutineItems = useMutation({
-    mutationFn: async (input: { registryOfficeId: string; active: boolean | null; analysisNotes?: string; analyzedAt: string }) => {
-      const { data, error } = await db.rpc("cs_cx_set_routine_items_bulk", {
+    mutationFn: async (input: { registryOfficeId: string; active: boolean | null; analysisNotes?: string; historyNotes?: string; analyzedAt: string }) => {
+      const { data, error } = await db.rpc("cs_cx_set_routine_items_bulk_v2", {
         p_registry_office_id: input.registryOfficeId,
         p_active: input.active,
         p_analysis_notes: emptyToNull(input.analysisNotes),
+        p_history_notes: emptyToNull(input.historyNotes),
         p_analyzed_at: `${input.analyzedAt}T12:00:00`,
       });
       if (error) throw error;

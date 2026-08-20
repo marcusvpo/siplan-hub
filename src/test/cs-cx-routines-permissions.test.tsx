@@ -121,6 +121,15 @@ describe("CS/CX rotinas — permissões", () => {
     expect(screen.getAllByRole("button", { name: /desvincular rotina/i })).toHaveLength(5);
   });
 
+  it("permite adicionar várias observações ao aplicar uma rotina", () => {
+    renderPage(["cs_cx_rotinas:create"]);
+    fireEvent.click(screen.getByRole("button", { name: /aplicar rotina/i }));
+
+    expect(screen.getByLabelText("Observações antes da análise 1")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /adicionar observação$/i }));
+    expect(screen.getByLabelText("Observações antes da análise 2")).toBeInTheDocument();
+  });
+
   it("pagina cartórios e modelos em blocos compactos", () => {
     renderPage([]);
     expect(screen.getByLabelText("Mostrando 1 a 5 de 12 cartórios")).toBeInTheDocument();
@@ -175,6 +184,26 @@ describe("CS/CX rotinas — permissões", () => {
     expect(screen.getByLabelText("Mostrando 1 a 1 de 1 itens da análise")).toBeInTheDocument();
     fireEvent.click(screen.getAllByRole("button", { name: /editar/i })[0]);
     expect(screen.getByLabelText("Data da análise")).toBeInTheDocument();
+  });
+
+  it("salva observações separadas antes e depois da análise", async () => {
+    renderPage(["cs_cx_rotinas:edit"]);
+    fireEvent.click(screen.getAllByRole("button", { name: /analisar .* e suas rotinas/i })[0]);
+    fireEvent.click(screen.getAllByRole("button", { name: /editar/i })[0]);
+
+    fireEvent.change(screen.getByLabelText("Observações antes da análise 1"), { target: { value: "Cenário anterior" } });
+    fireEvent.change(screen.getByLabelText("Observações depois da análise 1"), { target: { value: "Resultado da análise" } });
+    fireEvent.click(screen.getByRole("button", { name: /adicionar observação da análise/i }));
+    fireEvent.change(screen.getByLabelText("Observações depois da análise 2"), { target: { value: "Próximo acompanhamento" } });
+    fireEvent.click(screen.getByRole("button", { name: /salvar análise/i }));
+
+    await waitFor(() => {
+      expect(mutation.mutateAsync).toHaveBeenCalledWith(expect.objectContaining({
+        notes: expect.stringContaining("Cenário anterior"),
+        analysisNotes: expect.stringContaining("Resultado da análise"),
+        historyNotes: expect.stringContaining("Próximo acompanhamento"),
+      }));
+    });
   });
 
   it("aplica o mesmo status a todos os itens do cartório", async () => {

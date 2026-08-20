@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ArrowRight, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, ClipboardCheck, Clock3, Database, Eye, FileDown, ListChecks, Pencil, Plus, RefreshCw, Search, Trash2, TriangleAlert } from "lucide-react";
+import { ArrowRight, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, ClipboardCheck, Clock3, Database, Eye, FileDown, ListChecks, Pencil, Plus, RefreshCw, Search, Trash2, TriangleAlert, X } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import { type CsCxOfficeRoutine, type CsCxRoutineItemConfig, useCsCxRoutines } f
 import { usePermissions } from "@/hooks/usePermissions";
 import { useToast } from "@/hooks/use-toast";
 import { generateCsCxRoutinePdf } from "@/lib/cs-cx-routines-report";
+import { decodeRoutineObservations, encodeRoutineObservations, normalizeRoutineObservations } from "@/lib/cs-cx-routine-observations";
 
 const STATUS_OPTIONS = [
   { value: "analisar", label: "Analisar" },
@@ -77,10 +78,11 @@ export default function CsCxRoutines() {
   const [modelPage, setModelPage] = useState(1);
   const [modelPageSize, setModelPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [applyOpen, setApplyOpen] = useState(false);
-  const [applyForm, setApplyForm] = useState({ registryOfficeId: "", routineModelId: "", notes: "" });
+  const [applyForm, setApplyForm] = useState({ registryOfficeId: "", routineModelId: "", observations: [""] });
   const [editingItem, setEditingItem] = useState<{ routine: CsCxOfficeRoutine; item: CsCxRoutineItemConfig } | null>(null);
   const [itemStatus, setItemStatus] = useState("analisar");
-  const [itemNotes, setItemNotes] = useState("");
+  const [itemBeforeObservations, setItemBeforeObservations] = useState<string[]>([""]);
+  const [itemAfterObservations, setItemAfterObservations] = useState<string[]>([""]);
   const [itemAnalysisDate, setItemAnalysisDate] = useState(todayKey());
   const [openedOfficeId, setOpenedOfficeId] = useState<string | null>(null);
   const [analysisSearch, setAnalysisSearch] = useState("");
@@ -88,7 +90,7 @@ export default function CsCxRoutines() {
   const [analysisPageSize, setAnalysisPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [bulkAnalysisOpen, setBulkAnalysisOpen] = useState(false);
   const [bulkStatus, setBulkStatus] = useState("analisar");
-  const [bulkNotes, setBulkNotes] = useState("");
+  const [bulkObservations, setBulkObservations] = useState<string[]>([""]);
   const [bulkAnalysisDate, setBulkAnalysisDate] = useState(todayKey());
   const [deleting, setDeleting] = useState<CsCxOfficeRoutine | null>(null);
   const [exportingRoutineId, setExportingRoutineId] = useState<string | null>(null);
@@ -223,16 +225,20 @@ export default function CsCxRoutines() {
 
   function openBulkAnalysis() {
     setBulkStatus("analisar");
-    setBulkNotes("");
+    setBulkObservations([""]);
     setBulkAnalysisDate(todayKey());
     setBulkAnalysisOpen(true);
   }
 
   async function handleApply() {
     try {
-      await applyRoutine.mutateAsync(applyForm);
+      await applyRoutine.mutateAsync({
+        registryOfficeId: applyForm.registryOfficeId,
+        routineModelId: applyForm.routineModelId,
+        notes: encodeRoutineObservations(applyForm.observations),
+      });
       setApplyOpen(false);
-      setApplyForm({ registryOfficeId: "", routineModelId: "", notes: "" });
+      setApplyForm({ registryOfficeId: "", routineModelId: "", observations: [""] });
       toast({ title: "Rotina aplicada", description: "Os itens do modelo foram vinculados ao cartório." });
     } catch (mutationError) {
       toast({ title: "Não foi possível aplicar a rotina", description: messageOf(mutationError), variant: "destructive" });
@@ -242,7 +248,8 @@ export default function CsCxRoutines() {
   function openItem(routine: CsCxOfficeRoutine, item: CsCxRoutineItemConfig) {
     setEditingItem({ routine, item });
     setItemStatus(item.active === true ? "ativo" : item.active === false ? "inativo" : "analisar");
-    setItemNotes(item.analysis_notes ?? "");
+    setItemBeforeObservations(withEmptyObservation(decodeRoutineObservations(item.notes)));
+    setItemAfterObservations(withEmptyObservation(decodeRoutineObservations(item.analysis_notes)));
     setItemAnalysisDate(item.analyzed_at ? localDateKey(item.analyzed_at) : todayKey());
   }
 
@@ -252,7 +259,9 @@ export default function CsCxRoutines() {
       await setRoutineItem.mutateAsync({
         id: editingItem.item.id,
         active: itemStatus === "ativo" ? true : itemStatus === "inativo" ? false : null,
-        analysisNotes: itemNotes,
+        notes: encodeRoutineObservations(itemBeforeObservations),
+        analysisNotes: encodeRoutineObservations(itemAfterObservations),
+        historyNotes: formatObservationHistory(itemBeforeObservations, itemAfterObservations),
         analyzedAt: itemAnalysisDate,
       });
       setEditingItem(null);
@@ -268,7 +277,8 @@ export default function CsCxRoutines() {
       const changed = await setAllRoutineItems.mutateAsync({
         registryOfficeId: openedOfficeId,
         active: bulkStatus === "ativo" ? true : bulkStatus === "inativo" ? false : null,
-        analysisNotes: bulkNotes,
+        analysisNotes: encodeRoutineObservations(bulkObservations),
+        historyNotes: formatObservationHistory([], bulkObservations),
         analyzedAt: bulkAnalysisDate,
       });
       setBulkAnalysisOpen(false);
@@ -429,7 +439,7 @@ export default function CsCxRoutines() {
         </TabsContent>
       </Tabs>
 
-      <Dialog open={applyOpen} onOpenChange={setApplyOpen}><DialogContent><DialogHeader><DialogTitle>Aplicar rotina</DialogTitle><DialogDescription>Vincule um modelo e todos os seus itens a um cartório.</DialogDescription></DialogHeader><div className="space-y-4"><div><Label>Cartório</Label><Select value={applyForm.registryOfficeId} onValueChange={(value) => setApplyForm((current) => ({ ...current, registryOfficeId: value }))}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{offices.map((office) => <SelectItem key={office.id} value={office.id}>{office.name}</SelectItem>)}</SelectContent></Select></div><div><Label>Modelo</Label><Select value={applyForm.routineModelId} onValueChange={(value) => setApplyForm((current) => ({ ...current, routineModelId: value }))}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{models.filter((model) => model.active).map((model) => <SelectItem key={model.id} value={model.id}>{model.name}</SelectItem>)}</SelectContent></Select></div><div><Label htmlFor="routine-notes">Observações</Label><Textarea id="routine-notes" value={applyForm.notes} onChange={(event) => setApplyForm((current) => ({ ...current, notes: event.target.value }))} /></div></div><DialogFooter><Button variant="outline" onClick={() => setApplyOpen(false)}>Cancelar</Button><Button disabled={!applyForm.registryOfficeId || !applyForm.routineModelId || applyRoutine.isPending} onClick={handleApply}>Aplicar</Button></DialogFooter></DialogContent></Dialog>
+      <Dialog open={applyOpen} onOpenChange={setApplyOpen}><DialogContent className="sm:max-w-2xl"><DialogHeader><DialogTitle>Aplicar rotina</DialogTitle><DialogDescription>Vincule um modelo e registre uma ou mais observações anteriores à análise.</DialogDescription></DialogHeader><div className="space-y-4"><div><Label>Cartório</Label><Select value={applyForm.registryOfficeId} onValueChange={(value) => setApplyForm((current) => ({ ...current, registryOfficeId: value }))}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{offices.map((office) => <SelectItem key={office.id} value={office.id}>{office.name}</SelectItem>)}</SelectContent></Select></div><div><Label>Modelo</Label><Select value={applyForm.routineModelId} onValueChange={(value) => setApplyForm((current) => ({ ...current, routineModelId: value }))}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{models.filter((model) => model.active).map((model) => <SelectItem key={model.id} value={model.id}>{model.name}</SelectItem>)}</SelectContent></Select></div><ObservationListEditor label="Observações antes da análise" observations={applyForm.observations} onChange={(observations) => setApplyForm((current) => ({ ...current, observations }))} addLabel="Adicionar observação" /></div><DialogFooter><Button variant="outline" onClick={() => setApplyOpen(false)}>Cancelar</Button><Button disabled={!applyForm.registryOfficeId || !applyForm.routineModelId || applyRoutine.isPending} onClick={handleApply}>Aplicar</Button></DialogFooter></DialogContent></Dialog>
 
       <Dialog open={Boolean(openedOfficeId)} onOpenChange={(open) => !open && closeOfficeAnalysis()}>
         <DialogContent className="flex max-h-[94vh] flex-col overflow-hidden sm:max-w-6xl">
@@ -498,13 +508,13 @@ export default function CsCxRoutines() {
               <div><Label>Status</Label><Select value={bulkStatus} onValueChange={setBulkStatus}><SelectTrigger aria-label="Status de todas as rotinas"><SelectValue /></SelectTrigger><SelectContent>{STATUS_OPTIONS.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent></Select></div>
               <div><Label htmlFor="bulk-analysis-date">Data da análise</Label><Input id="bulk-analysis-date" type="date" required value={bulkAnalysisDate} onChange={(event) => setBulkAnalysisDate(event.target.value)} /></div>
             </div>
-            <div><Label htmlFor="bulk-analysis-notes">Observação da análise</Label><Textarea id="bulk-analysis-notes" value={bulkNotes} onChange={(event) => setBulkNotes(event.target.value)} placeholder="Esta observação será registrada em todos os itens." /></div>
+            <ObservationListEditor label="Observações depois da análise" observations={bulkObservations} onChange={setBulkObservations} addLabel="Adicionar observação" description="As observações serão registradas em todos os itens do cartório." />
           </div>
           <DialogFooter><Button variant="outline" onClick={() => setBulkAnalysisOpen(false)}>Cancelar</Button><Button disabled={!bulkAnalysisDate || !analysisTotals.items || setAllRoutineItems.isPending} onClick={handleBulkAnalysisSave}>Salvar em todos ({analysisTotals.items})</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={Boolean(editingItem)} onOpenChange={(open) => !open && setEditingItem(null)}><DialogContent><DialogHeader><DialogTitle>Analisar item</DialogTitle><DialogDescription>{editingItem?.routine.registry_office?.name} · {editingItem?.item.model_item?.name}</DialogDescription></DialogHeader><div className="space-y-4"><div className="grid gap-4 sm:grid-cols-2"><div><Label>Status</Label><Select value={itemStatus} onValueChange={setItemStatus}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{STATUS_OPTIONS.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent></Select></div><div><Label htmlFor="analysis-date">Data da análise</Label><Input id="analysis-date" type="date" required value={itemAnalysisDate} onChange={(event) => setItemAnalysisDate(event.target.value)} /></div></div><div><Label htmlFor="analysis-notes">Observação da análise</Label><Textarea id="analysis-notes" value={itemNotes} onChange={(event) => setItemNotes(event.target.value)} /></div></div><DialogFooter><Button variant="outline" onClick={() => setEditingItem(null)}>Cancelar</Button><Button disabled={!itemAnalysisDate || setRoutineItem.isPending} onClick={handleItemSave}>Salvar análise</Button></DialogFooter></DialogContent></Dialog>
+      <Dialog open={Boolean(editingItem)} onOpenChange={(open) => !open && setEditingItem(null)}><DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-3xl"><DialogHeader><DialogTitle>Analisar item</DialogTitle><DialogDescription>{editingItem?.routine.registry_office?.name} · {editingItem?.item.model_item?.name}</DialogDescription></DialogHeader><div className="space-y-4"><div className="grid gap-4 sm:grid-cols-2"><div><Label>Status</Label><Select value={itemStatus} onValueChange={setItemStatus}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{STATUS_OPTIONS.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent></Select></div><div><Label htmlFor="analysis-date">Data da análise</Label><Input id="analysis-date" type="date" required value={itemAnalysisDate} onChange={(event) => setItemAnalysisDate(event.target.value)} /></div></div><div className="grid gap-4 lg:grid-cols-2"><ObservationListEditor label="Observações antes da análise" observations={itemBeforeObservations} onChange={setItemBeforeObservations} addLabel="Adicionar observação anterior" /><ObservationListEditor label="Observações depois da análise" observations={itemAfterObservations} onChange={setItemAfterObservations} addLabel="Adicionar observação da análise" /></div></div><DialogFooter><Button variant="outline" onClick={() => setEditingItem(null)}>Cancelar</Button><Button disabled={!itemAnalysisDate || setRoutineItem.isPending} onClick={handleItemSave}>Salvar análise</Button></DialogFooter></DialogContent></Dialog>
 
       <AlertDialog open={Boolean(deleting)} onOpenChange={(open) => !open && setDeleting(null)}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Desvincular rotina?</AlertDialogTitle><AlertDialogDescription>O vínculo com {deleting?.registry_office?.name}, suas análises e configurações serão excluídos do HUB.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction onClick={handleDelete}>Desvincular</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
     </div>
@@ -519,8 +529,20 @@ function AnalysisMetric({ label, value }: { label: string; value: number }) {
   return <div className="rounded-lg border bg-muted/20 px-3 py-2"><p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</p><p className="text-lg font-black leading-6">{value}</p></div>;
 }
 
+function ObservationListEditor({ label, observations, onChange, addLabel, description }: { label: string; observations: string[]; onChange: (observations: string[]) => void; addLabel: string; description?: string }) {
+  const visibleObservations = observations.length ? observations : [""];
+  const updateObservation = (index: number, value: string) => onChange(visibleObservations.map((observation, currentIndex) => currentIndex === index ? value : observation));
+  const removeObservation = (index: number) => {
+    const next = visibleObservations.filter((_, currentIndex) => currentIndex !== index);
+    onChange(next.length ? next : [""]);
+  };
+  return <div className="space-y-2 rounded-lg border bg-muted/10 p-3"><div><Label>{label}</Label>{description && <p className="mt-0.5 text-[11px] text-muted-foreground">{description}</p>}</div><div className="space-y-2">{visibleObservations.map((observation, index) => <div key={index} className="flex items-start gap-2"><span className="mt-2.5 w-5 shrink-0 text-right text-xs font-medium text-muted-foreground">{index + 1}.</span><Textarea aria-label={`${label} ${index + 1}`} className="min-h-20 resize-y" value={observation} onChange={(event) => updateObservation(index, event.target.value)} placeholder="Digite a observação..." /><Button type="button" variant="ghost" size="icon" className="mt-1 h-8 w-8 shrink-0" aria-label={`Remover ${label.toLocaleLowerCase("pt-BR")} ${index + 1}`} disabled={visibleObservations.length === 1 && !observation} onClick={() => removeObservation(index)}><X className="h-4 w-4 text-destructive" /></Button></div>)}</div><Button type="button" variant="outline" size="sm" className="h-8 w-full border-dashed" onClick={() => onChange([...visibleObservations, ""])}><Plus className="mr-1.5 h-3.5 w-3.5" />{addLabel}</Button></div>;
+}
+
 function RoutineItemRow({ routine, item, canEdit, onEdit }: { routine: CsCxOfficeRoutine; item: CsCxRoutineItemConfig; canEdit: boolean; onEdit: (routine: CsCxOfficeRoutine, item: CsCxRoutineItemConfig) => void }) {
-  return <div className="flex flex-col justify-between gap-2 rounded-md border px-3 py-2 md:flex-row md:items-center"><div className="min-w-0"><div className="flex flex-wrap items-center gap-1.5"><span className="text-sm font-medium">{item.model_item?.name ?? "Item removido"}</span>{item.model_item?.required && <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">Obrigatório</Badge>}{item.model_item?.category && <Badge variant="outline" className="h-5 px-1.5 text-[10px]" style={{ borderColor: item.model_item.category.display_color }}>{item.model_item.category.name}</Badge>}</div><p className="mt-0.5 truncate text-[11px] leading-4 text-muted-foreground">{routine.routine_model?.name ?? "Modelo removido"}{item.model_item?.routine_type ? ` · ${item.model_item.routine_type.name}` : ""}{item.analysis_notes ? ` · ${item.analysis_notes}` : ""}</p></div><div className="flex flex-wrap items-center gap-1.5">{item.analyzed_at && <span className="flex items-center gap-1 text-[11px] text-muted-foreground"><CalendarDays className="h-3 w-3" />{formatDate(item.analyzed_at)}</span>}<StatusBadge active={item.active} />{canEdit && <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => onEdit(routine, item)}><Pencil className="mr-1.5 h-3.5 w-3.5" />Editar</Button>}</div></div>;
+  const beforeCount = decodeRoutineObservations(item.notes).length;
+  const afterCount = decodeRoutineObservations(item.analysis_notes).length;
+  return <div className="flex flex-col justify-between gap-2 rounded-md border px-3 py-2 md:flex-row md:items-center"><div className="min-w-0"><div className="flex flex-wrap items-center gap-1.5"><span className="text-sm font-medium">{item.model_item?.name ?? "Item removido"}</span>{item.model_item?.required && <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">Obrigatório</Badge>}{item.model_item?.category && <Badge variant="outline" className="h-5 px-1.5 text-[10px]" style={{ borderColor: item.model_item.category.display_color }}>{item.model_item.category.name}</Badge>}</div><p className="mt-0.5 truncate text-[11px] leading-4 text-muted-foreground">{routine.routine_model?.name ?? "Modelo removido"}{item.model_item?.routine_type ? ` · ${item.model_item.routine_type.name}` : ""}{beforeCount || afterCount ? ` · Observações: ${beforeCount} antes / ${afterCount} depois` : ""}</p></div><div className="flex flex-wrap items-center gap-1.5">{item.analyzed_at && <span className="flex items-center gap-1 text-[11px] text-muted-foreground"><CalendarDays className="h-3 w-3" />{formatDate(item.analyzed_at)}</span>}<StatusBadge active={item.active} />{canEdit && <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => onEdit(routine, item)}><Pencil className="mr-1.5 h-3.5 w-3.5" />Editar</Button>}</div></div>;
 }
 
 function StatusBadge({ active }: { active: boolean | null }) {
@@ -579,6 +601,19 @@ function localDateKey(value: string) {
 
 function todayKey() {
   return localDateKey(new Date().toISOString());
+}
+
+function withEmptyObservation(observations: string[]) {
+  return observations.length ? observations : [""];
+}
+
+function formatObservationHistory(before: string[], after: string[]) {
+  const beforeLines = normalizeRoutineObservations(before);
+  const afterLines = normalizeRoutineObservations(after);
+  return [
+    ...(beforeLines.length ? [`Antes da análise:\n${beforeLines.map((observation) => `- ${observation}`).join("\n")}`] : []),
+    ...(afterLines.length ? [`Depois da análise:\n${afterLines.map((observation) => `- ${observation}`).join("\n")}`] : []),
+  ].join("\n\n");
 }
 
 function messageOf(error: unknown) {
