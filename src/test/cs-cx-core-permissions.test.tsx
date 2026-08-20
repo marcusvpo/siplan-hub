@@ -8,6 +8,9 @@ const { printRequestsReport } = vi.hoisted(() => ({ printRequestsReport: vi.fn()
 vi.mock("@/hooks/usePermissions", () => ({
   usePermissions: () => ({ hasPermission }),
 }));
+vi.mock("@/hooks/useAuth", () => ({
+  useAuth: () => ({ user: { id: "profile-1" } }),
+}));
 
 vi.mock("@/hooks/use-toast", () => ({
   useToast: () => ({ toast: vi.fn() }),
@@ -36,6 +39,7 @@ vi.mock("@/hooks/useCsCxCore", async (importOriginal) => {
         notes: null,
         origin: "legacy",
         created_at: index === 0 ? "2026-08-10T12:00:00Z" : index === 1 ? "2026-07-15T12:00:00Z" : "2026-06-01T12:00:00Z",
+        created_by: "profile-1",
         analyst_profile_id: index === 0 ? "profile-1" : index === 1 ? "profile-2" : null,
         analyst: index === 0
           ? { id: "profile-1", full_name: "Bruno", email: null }
@@ -82,7 +86,7 @@ vi.mock("@/hooks/useCsCxCore", async (importOriginal) => {
         status: index === 1 ? "Projeto" : index === 2 ? "Desenvolvimento" : index === 3 ? "Em andamento" : index === 4 ? "Finalizado" : "Aguardando",
         notes: null,
         registry_office_id: "office-1",
-        author_profile_id: null,
+        author_profile_id: "profile-1",
         created_at: null,
         updated_at: null,
         origin: "legacy",

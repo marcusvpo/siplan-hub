@@ -8,6 +8,9 @@ const bulkMutation = { mutateAsync: vi.fn(), isPending: false };
 vi.mock("@/hooks/usePermissions", () => ({
   usePermissions: () => ({ hasPermission }),
 }));
+vi.mock("@/hooks/useAuth", () => ({
+  useAuth: () => ({ user: { id: "profile-1" } }),
+}));
 
 vi.mock("@/hooks/use-toast", () => ({
   useToast: () => ({ toast: vi.fn() }),
@@ -41,6 +44,7 @@ vi.mock("@/hooks/useCsCxRoutines", () => ({
       routine_model_id: `model-${index + 1}`,
       active: true,
       applied_at: "2026-08-01T00:00:00.000Z",
+      applied_by: "profile-1",
       notes: null,
       origin: "legacy",
       registry_office: { id: "office-1", name: index === 0 ? "Cartório Central" : `Cartório ${index + 1}` },

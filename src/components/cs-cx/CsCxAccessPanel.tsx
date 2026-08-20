@@ -17,6 +17,7 @@ import { type CsCxAccessProfile, useCsCxAccess } from "@/hooks/useCsCxAccess";
 import { useToast } from "@/hooks/use-toast";
 
 const EMPTY_PROFILE = { id: "", name: "", description: "", active: true, permissionIds: [] as string[] };
+const ACTION_ORDER = ["view", "create", "edit", "delete", "view_others", "manage_others", "manage"];
 
 export function CsCxAccessPanel({ canManage }: { canManage: boolean }) {
   const access = useCsCxAccess(canManage);
@@ -31,10 +32,12 @@ export function CsCxAccessPanel({ canManage }: { canManage: boolean }) {
   const permissions = access.permissions;
 
   const permissionsByResource = useMemo(() => {
-    return permissions.reduce<Record<string, typeof permissions>>((groups, permission) => {
+    const grouped = permissions.reduce<Record<string, typeof permissions>>((groups, permission) => {
       (groups[permission.resource] ??= []).push(permission);
       return groups;
     }, {});
+    Object.values(grouped).forEach((group) => group.sort((a, b) => ACTION_ORDER.indexOf(a.action) - ACTION_ORDER.indexOf(b.action)));
+    return grouped;
   }, [permissions]);
 
   function openProfile(profile?: CsCxAccessProfile) {

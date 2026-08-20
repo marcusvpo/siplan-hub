@@ -59,6 +59,7 @@ export interface CsCxVisit {
   objective: string;
   general_notes: string | null;
   origin: "legacy" | "hub";
+  created_by: string | null;
   registry_office: { id: string; name: string } | null;
   visitor: { id: string; full_name: string | null } | null;
   checklist: CsCxVisitChecklistItem[];
@@ -120,6 +121,7 @@ export interface CsCxNpsResponse {
   improvement_suggestion: string | null;
   classification: "PROMOTOR" | "NEUTRO" | "DETRATOR";
   origin: "legacy" | "hub";
+  owner_profile_id: string | null;
   invitation_id: string | null;
   questionnaire_id: string | null;
   questionnaire_snapshot: NpsQuestionnaireSnapshot | null;
@@ -168,7 +170,7 @@ export function useCsCxVisits() {
             .select(
               `
           id, legacy_id, registry_office_id, visitor_profile_id, visit_date,
-          start_time, end_time, status, objective, general_notes, origin,
+          start_time, end_time, status, objective, general_notes, origin, created_by,
           cs_cx_registry_offices (id, name),
           profiles!cs_cx_visits_visitor_profile_id_fkey (id, full_name)
         `,
@@ -493,7 +495,7 @@ export function useCsCxNps() {
           `
         id, legacy_id, registry_office_id, responded_at, respondent_name,
         respondent_office, score, score_reason, improvement_suggestion,
-        classification, origin, invitation_id, questionnaire_id,
+        classification, origin, invitation_id, questionnaire_id, owner_profile_id,
         questionnaire_snapshot, answers, cs_cx_registry_offices (id, name)
       `,
         )

@@ -109,6 +109,7 @@ export interface CsCxOfficeRoutine {
   applied_at: string;
   notes: string | null;
   origin: "legacy" | "hub";
+  applied_by: string | null;
   registry_office: { id: string; name: string } | null;
   routine_model: { id: string; name: string; description: string | null } | null;
   items: CsCxRoutineItemConfig[];
@@ -229,7 +230,7 @@ export function useCsCxRoutines() {
           .from("cs_cx_office_routines")
           .select(`
             id, legacy_id, registry_office_id, routine_model_id, active,
-            applied_at, notes, origin,
+            applied_at, notes, origin, applied_by,
             cs_cx_registry_offices (id, name),
             cs_cx_routine_models (id, name, description)
           `)
