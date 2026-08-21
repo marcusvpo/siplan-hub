@@ -5,10 +5,14 @@ import { toast } from "sonner";
 import {
   parseMasterDocument,
   updateArticleInDocument,
+  insertNewArticleIntoDocument,
+  deleteArticleFromDocument,
+  normalizeMarkdown,
 } from "@/services/markdownKnowledgeService";
 import { computeTextDiff, formatBackupFilePath } from "@/services/diffService";
 import type {
   KnowledgeArticle,
+  KnowledgeArticleMetadata,
   KnowledgeSyncLog,
   KnowledgeVersion,
   MasterKnowledgeDocument,
@@ -33,6 +37,7 @@ export function useKnowledgeBase() {
   // Local draft body of the currently active article
   const [draftBody, setDraftBody] = useState<string>("");
   const [isDirty, setIsDirty] = useState(false);
+  const initialBodyRef = useRef<string>("");
 
   // Guarda de alterações não salvas
   const [pendingArticleId, setPendingArticleId] = useState<string | null>(null);
@@ -121,10 +126,11 @@ export function useKnowledgeBase() {
     return docData.articles.find((a) => a.id === selectedArticleId) || docData.articles[0];
   }, [docData, selectedArticleId]);
 
-  // Sincronizar o draftBody ao mudar de artigo
+  // Sincronizar o draftBody ao mudar de artigo garantindo baseline limpo
   useEffect(() => {
     if (selectedArticle) {
       setDraftBody(selectedArticle.body);
+      initialBodyRef.current = ""; // Reset baseline para receber o primeiro render do editor
       setIsDirty(false);
     }
   }, [selectedArticle?.id]);
@@ -134,12 +140,13 @@ export function useKnowledgeBase() {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (isDirty) {
         e.preventDefault();
-        e.returnValue = "";
+        e.returnValue = "Existem alterações não salvas no tutorial. Deseja realmente sair?";
+        return e.returnValue;
       }
     };
 
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("beforeunload", handleBeforeUnload, { capture: true });
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload, { capture: true });
   }, [isDirty]);
 
   // Limpeza de timers de polling ao desmontar
@@ -178,12 +185,26 @@ export function useKnowledgeBase() {
     setIsUnsavedDialogOpen(false);
   }, []);
 
-  // Handler para atualizar o corpo no editor
+  // Handler para atualizar o corpo no editor com dirty check estrito por interação real do usuário
   const handleBodyChange = useCallback(
-    (newMarkdown: string) => {
+    (newMarkdown: string, isUserAction?: boolean) => {
       setDraftBody(newMarkdown);
+
+      // 1. Se ainda não capturamos o baseline formatado pelo TipTap para este artigo:
+      if (!initialBodyRef.current) {
+        initialBodyRef.current = normalizeMarkdown(newMarkdown);
+        setIsDirty(false);
+        return;
+      }
+
+      // 2. Se a chamada não foi iniciada por foco/interação do usuário, não marca dirty
+      if (isUserAction === false) {
+        return;
+      }
+
       if (selectedArticle) {
-        const hasChanged = newMarkdown.trim() !== selectedArticle.body.trim();
+        const normalizedNew = normalizeMarkdown(newMarkdown);
+        const hasChanged = normalizedNew !== initialBodyRef.current;
         setIsDirty(hasChanged);
       }
     },
@@ -307,7 +328,6 @@ export function useKnowledgeBase() {
 
           if (attempts >= maxAttempts) {
             if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
-            // Se passar de 45s, avisa que segue em background
             setSaveStep("synced");
             setIsDirty(false);
             queryClient.invalidateQueries({ queryKey: ["assistant_knowledge_versions"] });
@@ -323,7 +343,7 @@ export function useKnowledgeBase() {
     [queryClient],
   );
 
-  // 5. Mutação de Salvamento com Feedback em Tempo Real
+  // 5. Mutação de Salvamento de Artigo Existente
   const saveMutation = useMutation({
     mutationFn: async ({
       articleId,
@@ -431,6 +451,9 @@ export function useKnowledgeBase() {
         startSyncStatusPolling(generatedVersionId, versionTag);
       }
 
+      initialBodyRef.current = normalizeMarkdown(updatedBody);
+      setIsDirty(false);
+
       return {
         articleId,
         backupPath,
@@ -449,7 +472,264 @@ export function useKnowledgeBase() {
     },
   });
 
-  // 6. Mutação para Restauração / Rollback de uma Versão Antiga
+  // 6. Mutação para Criar e Cadastrar Nova Rotina
+  const createRoutineMutation = useMutation({
+    mutationFn: async ({
+      metadata,
+      body,
+      sectionIndex,
+      hasVideo,
+      customSummary,
+    }: {
+      metadata: KnowledgeArticleMetadata;
+      body: string;
+      sectionIndex: number;
+      hasVideo: boolean;
+      customSummary?: string;
+    }) => {
+      if (!docData) throw new Error("Documento não carregado");
+
+      setSaveStep("saving_storage");
+      setSyncErrorMessage(null);
+      setSyncedFileId(null);
+
+      // 1. Obter o próximo número sequencial de versão
+      let nextVersionNum = 1;
+      try {
+        const { data: numData } = await supabase.rpc("get_next_knowledge_version_number");
+        if (typeof numData === "number") {
+          nextVersionNum = numData;
+        }
+      } catch (err) {
+        console.warn("Erro ao obter número de versão sequencial:", err);
+      }
+
+      // 2. Salvar backup do arquivo anterior intacto na pasta backup/
+      const backupPath = formatBackupFilePath(nextVersionNum, "OrionTN pos");
+      const previousBlob = new Blob([docData.rawContent], {
+        type: "text/markdown;charset=utf-8",
+      });
+
+      const { error: backupError } = await supabase.storage
+        .from(STORAGE_BUCKET)
+        .upload(backupPath, previousBlob, {
+          upsert: true,
+          contentType: "text/markdown",
+        });
+
+      if (backupError) {
+        throw new Error(`Falha ao criar cópia de segurança em ${backupPath}: ${backupError.message}`);
+      }
+
+      // 3. Inserir cirurgicamente a nova rotina no documento mestre
+      const finalFileContent = insertNewArticleIntoDocument(docData.rawContent, {
+        metadata,
+        body,
+        sectionIndex,
+        hasVideo,
+      });
+
+      // 4. Upload para o Supabase Storage na raiz
+      const contentBlob = new Blob([finalFileContent], {
+        type: "text/markdown;charset=utf-8",
+      });
+
+      const { error: uploadError } = await supabase.storage
+        .from(STORAGE_BUCKET)
+        .upload(STORAGE_FILE_PATH, contentBlob, {
+          upsert: true,
+          contentType: "text/markdown",
+        });
+
+      if (uploadError) {
+        throw new Error(`Erro ao salvar arquivo com nova rotina no Storage: ${uploadError.message}`);
+      }
+
+      // 5. Registrar versão e acionar trigger no banco
+      const summaryText =
+        customSummary && customSummary.trim() !== ""
+          ? customSummary.trim()
+          : `Cadastrada nova rotina ${metadata.id}: ${metadata.titulo}`;
+
+      let generatedVersionId: string | null = null;
+      try {
+        const { data: vId } = await supabase.rpc("register_knowledge_version" as any, {
+          p_backup_file_path: backupPath,
+          p_article_id: metadata.id,
+          p_article_title: metadata.titulo,
+          p_summary_changes: summaryText,
+          p_diff_summary: {
+            action: "create_routine",
+            article_id: metadata.id,
+            title: metadata.titulo,
+          } as any,
+          p_content_size_bytes: contentBlob.size,
+          p_is_restoration: false,
+          p_metadata: {
+            created_article_id: metadata.id,
+            article_tags: metadata.tags || [],
+            has_video: hasVideo,
+            author_email: user?.email,
+          },
+        });
+        generatedVersionId = vId as unknown as string;
+      } catch (logErr) {
+        console.warn("Aviso ao registrar versão no banco:", logErr);
+      }
+
+      const versionTag = `v${nextVersionNum}`;
+
+      // 6. Entrar na etapa de sincronização com a OpenAI
+      setSaveStep("syncing_openai");
+      if (generatedVersionId) {
+        setActiveVersionId(generatedVersionId);
+        startSyncStatusPolling(generatedVersionId, versionTag);
+      }
+
+      // Atualizar cache e selecionar o novo artigo criado
+      await queryClient.invalidateQueries({ queryKey: ["assistant_knowledge_doc"] });
+      setSelectedArticleId(metadata.id);
+
+      return {
+        articleId: metadata.id,
+        versionId: generatedVersionId,
+        versionTag,
+      };
+    },
+    onError: (err: Error) => {
+      setSaveStep("failed");
+      setSyncErrorMessage(err.message);
+      toast.error("Falha ao cadastrar nova rotina", {
+        description: err.message,
+      });
+    },
+  });
+
+  // 7. Mutação para Excluir Completamente uma Rotina
+  const deleteRoutineMutation = useMutation({
+    mutationFn: async (articleId: string) => {
+      if (!docData) throw new Error("Documento não carregado");
+
+      const targetArticle = docData.articles.find(
+        (a) => a.id.trim().toLowerCase() === articleId.trim().toLowerCase(),
+      );
+      if (!targetArticle) throw new Error(`Rotina com ID "${articleId}" não encontrada.`);
+
+      setSaveStep("saving_storage");
+      setSyncErrorMessage(null);
+      setSyncedFileId(null);
+
+      // 1. Obter próximo número sequencial de versão
+      let nextVersionNum = 1;
+      try {
+        const { data: numData } = await supabase.rpc("get_next_knowledge_version_number");
+        if (typeof numData === "number") {
+          nextVersionNum = numData;
+        }
+      } catch (err) {
+        console.warn("Erro ao obter número de versão:", err);
+      }
+
+      // 2. Salvar backup do estado anterior
+      const backupPath = formatBackupFilePath(nextVersionNum, "OrionTN pos");
+      const previousBlob = new Blob([docData.rawContent], {
+        type: "text/markdown;charset=utf-8",
+      });
+
+      const { error: backupError } = await supabase.storage
+        .from(STORAGE_BUCKET)
+        .upload(backupPath, previousBlob, {
+          upsert: true,
+          contentType: "text/markdown",
+        });
+
+      if (backupError) {
+        throw new Error(`Falha ao criar backup em ${backupPath}: ${backupError.message}`);
+      }
+
+      // 3. Remover cirurgicamente a rotina do documento mestre
+      const finalFileContent = deleteArticleFromDocument(docData.rawContent, articleId);
+
+      // 4. Upload do arquivo atualizado
+      const contentBlob = new Blob([finalFileContent], {
+        type: "text/markdown;charset=utf-8",
+      });
+
+      const { error: uploadError } = await supabase.storage
+        .from(STORAGE_BUCKET)
+        .upload(STORAGE_FILE_PATH, contentBlob, {
+          upsert: true,
+          contentType: "text/markdown",
+        });
+
+      if (uploadError) {
+        throw new Error(`Erro ao salvar arquivo atualizado no Storage: ${uploadError.message}`);
+      }
+
+      // 5. Registrar versão de exclusão no banco
+      const summaryText = `Excluída rotina ${targetArticle.id}: ${targetArticle.titulo}`;
+      let generatedVersionId: string | null = null;
+      try {
+        const { data: vId } = await supabase.rpc("register_knowledge_version" as any, {
+          p_backup_file_path: backupPath,
+          p_article_id: targetArticle.id,
+          p_article_title: targetArticle.titulo,
+          p_summary_changes: summaryText,
+          p_diff_summary: {
+            action: "delete_routine",
+            deleted_article_id: targetArticle.id,
+            deleted_article_title: targetArticle.titulo,
+          } as any,
+          p_content_size_bytes: contentBlob.size,
+          p_is_restoration: false,
+          p_metadata: {
+            deleted_article_id: targetArticle.id,
+            author_email: user?.email,
+          },
+        });
+        generatedVersionId = vId as unknown as string;
+      } catch (logErr) {
+        console.warn("Aviso ao registrar versão de exclusão no banco:", logErr);
+      }
+
+      const versionTag = `v${nextVersionNum}`;
+
+      // 6. Entrar na etapa de sincronização com a OpenAI
+      setSaveStep("syncing_openai");
+      if (generatedVersionId) {
+        setActiveVersionId(generatedVersionId);
+        startSyncStatusPolling(generatedVersionId, versionTag);
+      }
+
+      // 7. Selecionar o próximo artigo remanescente
+      const remaining = docData.articles.filter(
+        (a) => a.id.trim().toLowerCase() !== articleId.trim().toLowerCase(),
+      );
+      if (remaining.length > 0) {
+        setSelectedArticleId(remaining[0].id);
+      } else {
+        setSelectedArticleId(null);
+      }
+      setIsDirty(false);
+
+      await queryClient.invalidateQueries({ queryKey: ["assistant_knowledge_doc"] });
+
+      return {
+        deletedArticleId: targetArticle.id,
+        versionId: generatedVersionId,
+        versionTag,
+      };
+    },
+    onError: (err: Error) => {
+      setSaveStep("failed");
+      setSyncErrorMessage(err.message);
+      toast.error("Falha ao excluir rotina", {
+        description: err.message,
+      });
+    },
+  });
+
+  // 8. Mutação para Restauração / Rollback de uma Versão Antiga
   const restoreVersionMutation = useMutation({
     mutationFn: async (version: KnowledgeVersion) => {
       if (!version.backup_file_path) {
@@ -608,7 +888,16 @@ export function useKnowledgeBase() {
     isLoadingVersions,
     refetchVersions,
     saveCurrentArticle,
-    isSaving: saveMutation.isPending || saveStep === "saving_storage" || saveStep === "syncing_openai",
+    createNewRoutine: createRoutineMutation.mutateAsync,
+    isCreatingRoutine: createRoutineMutation.isPending,
+    deleteRoutine: deleteRoutineMutation.mutateAsync,
+    isDeletingRoutine: deleteRoutineMutation.isPending,
+    isSaving:
+      saveMutation.isPending ||
+      createRoutineMutation.isPending ||
+      deleteRoutineMutation.isPending ||
+      saveStep === "saving_storage" ||
+      saveStep === "syncing_openai",
     restoreVersion: restoreVersionMutation.mutateAsync,
     isRestoring: restoreVersionMutation.isPending,
     getBackupDownloadUrl,

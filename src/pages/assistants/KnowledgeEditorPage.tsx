@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   CloudUpload,
   Bot,
@@ -15,6 +16,7 @@ import {
   History,
   Loader2,
   AlertTriangle,
+  PlusCircle,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -28,8 +30,12 @@ import { ArticleNavigator } from "@/components/knowledge/ArticleNavigator";
 import { SavePublishModal } from "@/components/knowledge/SavePublishModal";
 import { VersionHistoryDrawer } from "@/components/knowledge/VersionHistoryDrawer";
 import { UnsavedChangesDialog } from "@/components/knowledge/UnsavedChangesDialog";
+import { CreateRoutineModal } from "@/components/knowledge/CreateRoutineModal";
+import type { KnowledgeArticleMetadata } from "@/types/knowledge";
 
 export default function KnowledgeEditorPage() {
+  const navigate = useNavigate();
+
   const {
     articles,
     filteredArticles,
@@ -57,6 +63,10 @@ export default function KnowledgeEditorPage() {
     versions,
     isLoadingVersions,
     saveCurrentArticle,
+    createNewRoutine,
+    isCreatingRoutine,
+    deleteRoutine,
+    isDeletingRoutine,
     isSaving,
     restoreVersion,
     isRestoring,
@@ -73,6 +83,55 @@ export default function KnowledgeEditorPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isHistoryDrawerOpen, setIsHistoryDrawerOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [pendingNavigationPath, setPendingNavigationPath] = useState<string | null>(null);
+
+  // 1. Interceptar cliques em links de navegação do menu lateral quando houver alterações pendentes
+  useEffect(() => {
+    if (!isDirty) return;
+
+    const handleGlobalClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      const anchor = target?.closest("a");
+
+      if (anchor && anchor.href && !anchor.target) {
+        try {
+          const targetUrl = new URL(anchor.href, window.location.origin);
+          // Se estiver navegando para outra página/rota fora desta tela
+          if (targetUrl.pathname !== window.location.pathname) {
+            e.preventDefault();
+            e.stopPropagation();
+            setPendingNavigationPath(targetUrl.pathname + targetUrl.search + targetUrl.hash);
+          }
+        } catch {
+          // Ignorar URLs inválidas
+        }
+      }
+    };
+
+    window.addEventListener("click", handleGlobalClick, { capture: true });
+    return () => window.removeEventListener("click", handleGlobalClick, { capture: true });
+  }, [isDirty]);
+
+  // 2. Interceptar botão voltar/avançar do navegador (History PopState)
+  useEffect(() => {
+    if (!isDirty) return;
+
+    const handlePopState = () => {
+      if (isDirty) {
+        const confirmLeave = window.confirm(
+          "Existem alterações não salvas no tutorial. Deseja realmente sair e descartar as modificações?",
+        );
+        if (!confirmLeave) {
+          window.history.pushState(null, "", window.location.href);
+        }
+      }
+    };
+
+    window.history.pushState(null, "", window.location.href);
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [isDirty]);
 
   const handleSaveClick = () => {
     setIsConfirmModalOpen(true);
@@ -86,7 +145,40 @@ export default function KnowledgeEditorPage() {
     }
   };
 
-  // 1. Loading State com Skeletons
+  const handleCreateRoutine = async (params: {
+    metadata: KnowledgeArticleMetadata;
+    body: string;
+    sectionIndex: number;
+    hasVideo: boolean;
+    customSummary?: string;
+  }) => {
+    setIsCreateModalOpen(false);
+    setIsConfirmModalOpen(true);
+    return createNewRoutine(params);
+  };
+
+  const handleDeleteRoutine = async (articleId: string) => {
+    setIsConfirmModalOpen(true);
+    return deleteRoutine(articleId);
+  };
+
+  const handleConfirmDiscard = () => {
+    if (pendingNavigationPath) {
+      const dest = pendingNavigationPath;
+      setPendingNavigationPath(null);
+      confirmDiscardAndSwitch();
+      navigate(dest);
+      return;
+    }
+    confirmDiscardAndSwitch();
+  };
+
+  const handleCancelDiscard = () => {
+    setPendingNavigationPath(null);
+    cancelArticleSwitch();
+  };
+
+  // 3. Loading State com Skeletons
   if (isLoading) {
     return (
       <div className="flex flex-col h-[calc(100vh-4rem)] p-6 space-y-6">
@@ -119,7 +211,7 @@ export default function KnowledgeEditorPage() {
     );
   }
 
-  // 2. Error State
+  // 4. Error State
   if (isError || !selectedArticle) {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-4rem)] p-6 text-center space-y-4">
@@ -154,6 +246,8 @@ export default function KnowledgeEditorPage() {
       })
     : null;
 
+  const isAnyUnsavedAlertOpen = isUnsavedDialogOpen || Boolean(pendingNavigationPath);
+
   return (
     <div className="flex flex-col h-[calc(100vh-4.2rem)] overflow-hidden bg-background">
       {/* Header Superior */}
@@ -181,7 +275,7 @@ export default function KnowledgeEditorPage() {
           </div>
         </div>
 
-        {/* Status, Auditoria, Histórico & Ação Principal */}
+        {/* Status, Auditoria, Histórico, Nova Rotina & Ação Principal */}
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Indicador de Status Dinâmico */}
           {isDirty ? (
@@ -218,6 +312,19 @@ export default function KnowledgeEditorPage() {
             </Badge>
           )}
 
+          {/* Botão + Nova Rotina */}
+          <Button
+            type="button"
+            variant="default"
+            size="sm"
+            onClick={() => setIsCreateModalOpen(true)}
+            className="gap-1.5 text-xs h-9 bg-primary/90 hover:bg-primary text-primary-foreground font-bold shadow-xs"
+            title="Cadastrar uma nova rotina/tutorial na base de conhecimento"
+          >
+            <PlusCircle className="h-4 w-4" />
+            <span>Nova Rotina</span>
+          </Button>
+
           {/* Botão Biblioteca de Versões & Backups */}
           <Button
             type="button"
@@ -243,7 +350,7 @@ export default function KnowledgeEditorPage() {
             </div>
           )}
 
-          {/* Botão de Ação Primária */}
+          {/* Botão de Salvar Alterações Atuais */}
           <Button
             type="button"
             size="sm"
@@ -288,6 +395,7 @@ export default function KnowledgeEditorPage() {
             onTagChange={setSelectedTag}
             allTags={allTags}
             isDirty={isDirty}
+            onOpenCreateModal={() => setIsCreateModalOpen(true)}
           />
         </aside>
 
@@ -316,8 +424,12 @@ export default function KnowledgeEditorPage() {
           </div>
 
           <div className="p-6 md:p-8 max-w-5xl mx-auto w-full space-y-6">
-            {/* Card de Metadados Read-Only (Proteção YAML) */}
-            <ArticleMetadataCard article={selectedArticle} />
+            {/* Card de Metadados Read-Only (Proteção YAML + 3 Pontinhos para Excluir) */}
+            <ArticleMetadataCard
+              article={selectedArticle}
+              onDeleteRoutine={handleDeleteRoutine}
+              isDeleting={isDeletingRoutine || isSaving}
+            />
 
             {/* Editor TipTap WYSIWYG Estilo Notion */}
             <div className="space-y-2">
@@ -340,6 +452,16 @@ export default function KnowledgeEditorPage() {
           </div>
         </main>
       </div>
+
+      {/* Modal de Cadastro de Nova Rotina com Preenchimento por IA */}
+      <CreateRoutineModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        articles={articles}
+        sections={sections}
+        onCreateRoutine={handleCreateRoutine}
+        isCreating={isCreatingRoutine || isSaving}
+      />
 
       {/* Modal de Confirmação e Publicação com Feedback em Tempo Real */}
       <SavePublishModal
@@ -366,12 +488,13 @@ export default function KnowledgeEditorPage() {
         getBackupDownloadUrl={getBackupDownloadUrl}
       />
 
-      {/* Diálogo de Proteção Contra Perda de Alterações Não Salvas */}
+      {/* Diálogo de Proteção Contra Perda de Alterações Não Salvas (Interno e Rotas Globais) */}
       <UnsavedChangesDialog
-        isOpen={isUnsavedDialogOpen}
-        onConfirmDiscard={confirmDiscardAndSwitch}
-        onCancel={cancelArticleSwitch}
+        isOpen={isAnyUnsavedAlertOpen}
+        onConfirmDiscard={handleConfirmDiscard}
+        onCancel={handleCancelDiscard}
         articleId={selectedArticle?.id}
+        isNavigatingAway={Boolean(pendingNavigationPath)}
       />
     </div>
   );

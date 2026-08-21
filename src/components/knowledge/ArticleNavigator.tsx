@@ -8,6 +8,7 @@ import {
   Layers,
   Sparkles,
   X,
+  PlusCircle,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -37,6 +38,7 @@ interface ArticleNavigatorProps {
   onTagChange: (tag: string | "all") => void;
   allTags: string[];
   isDirty?: boolean;
+  onOpenCreateModal?: () => void;
 }
 
 export function ArticleNavigator({
@@ -53,6 +55,7 @@ export function ArticleNavigator({
   onTagChange,
   allTags,
   isDirty,
+  onOpenCreateModal,
 }: ArticleNavigatorProps) {
   const videoCount = useMemo(() => {
     return articles.filter((a) => a.metadata.video?.tem_video).length;
@@ -73,6 +76,19 @@ export function ArticleNavigator({
             <Badge variant="secondary" className="font-mono text-[11px]">
               {filteredArticles.length}/{articles.length}
             </Badge>
+            {onOpenCreateModal && (
+              <Button
+                type="button"
+                size="sm"
+                variant="default"
+                onClick={onOpenCreateModal}
+                className="h-6 px-2 text-[11px] font-bold gap-1 bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs"
+                title="Cadastrar nova rotina no Orion TN"
+              >
+                <PlusCircle className="h-3 w-3" />
+                <span>Nova</span>
+              </Button>
+            )}
           </div>
         </div>
 
@@ -138,27 +154,39 @@ export function ArticleNavigator({
                 key={tag}
                 variant={selectedTag === tag ? "default" : "outline"}
                 size="sm"
-                className="h-6 px-2 text-[11px] shrink-0"
+                className="h-6 px-2 text-[11px] shrink-0 font-mono"
                 onClick={() => onTagChange(tag)}
               >
-                {tag}
+                #{tag}
               </Button>
             ))}
           </div>
         )}
       </div>
 
-      {/* Lista de Artigos */}
-      <ScrollArea className="flex-1">
-        <div className="p-2 space-y-1">
+      {/* Lista de Artigos Scrollável */}
+      <ScrollArea className="flex-1 px-2 py-2">
+        <div className="space-y-1">
           {filteredArticles.length === 0 ? (
-            <div className="p-6 text-center text-xs text-muted-foreground">
-              Nenhum tutorial encontrado com os filtros atuais.
+            <div className="p-8 text-center text-xs text-muted-foreground space-y-2">
+              <Layers className="h-8 w-8 mx-auto text-muted-foreground/50" />
+              <p>Nenhum tutorial encontrado com os filtros atuais.</p>
+              {onOpenCreateModal && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onOpenCreateModal}
+                  className="mt-2 text-xs gap-1.5"
+                >
+                  <PlusCircle className="h-3.5 w-3.5" />
+                  Criar Nova Rotina
+                </Button>
+              )}
             </div>
           ) : (
             filteredArticles.map((article) => {
               const isSelected = article.id === selectedArticleId;
-              const hasVideo = article.metadata.video?.tem_video;
+              const hasVideo = Boolean(article.metadata.video?.tem_video);
 
               return (
                 <button
@@ -166,60 +194,68 @@ export function ArticleNavigator({
                   type="button"
                   onClick={() => onSelectArticle(article.id)}
                   className={cn(
-                    "w-full text-left p-2.5 rounded-lg text-xs transition-all border group relative",
+                    "w-full text-left p-2.5 rounded-lg transition-all text-xs space-y-1 relative group border border-transparent",
                     isSelected
-                      ? "bg-primary/10 border-primary/40 text-foreground shadow-xs font-medium"
-                      : "bg-background/40 hover:bg-muted/60 border-transparent text-muted-foreground hover:text-foreground",
+                      ? "bg-primary/10 border-primary/30 text-foreground font-semibold shadow-xs"
+                      : "hover:bg-muted/70 text-muted-foreground hover:text-foreground",
                   )}
                 >
-                  <div className="flex items-center justify-between gap-1.5 mb-1">
-                    <div className="flex items-center gap-1.5">
-                      <Badge
-                        variant={isSelected ? "default" : "outline"}
-                        className={cn(
-                          "font-mono text-[10px] px-1.5 py-0 h-4 font-bold",
-                          isSelected
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted text-muted-foreground border-border",
-                        )}
-                      >
-                        {article.id}
-                      </Badge>
-                      {isSelected && isDirty && (
+                  {/* Barra lateral destacada para o item selecionado */}
+                  {isSelected && (
+                    <span className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r bg-primary" />
+                  )}
+
+                  {/* ID e Badges */}
+                  <div className="flex items-center justify-between gap-1.5">
+                    <span
+                      className={cn(
+                        "font-mono font-bold text-[11px] px-1.5 py-0.5 rounded",
+                        isSelected
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-foreground group-hover:bg-muted/90",
+                      )}
+                    >
+                      {article.id}
+                    </span>
+
+                    <div className="flex items-center gap-1">
+                      {hasVideo && (
                         <span
-                          className="h-2 w-2 rounded-full bg-amber-500 animate-pulse"
-                          title="Alterações não salvas neste artigo"
-                        />
+                          className="text-primary hover:text-primary/80 flex items-center gap-0.5 text-[10px] font-medium"
+                          title="Possui vídeo tutorial do Bunny.net"
+                        >
+                          <Video className="h-3 w-3" />
+                        </span>
+                      )}
+                      {isSelected && isDirty && (
+                        <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" title="Alterações não salvas" />
                       )}
                     </div>
-
-                    {hasVideo && (
-                      <span
-                        className="flex items-center gap-1 text-[10px] text-rose-500 bg-rose-500/10 px-1.5 py-0.2 rounded-sm"
-                        title="Possui vídeo tutorial Bunny.net"
-                      >
-                        <Video className="h-3 w-3" />
-                        Vídeo
-                      </span>
-                    )}
                   </div>
 
-                  <p className="line-clamp-2 text-xs font-semibold leading-snug text-foreground/90 group-hover:text-foreground">
+                  {/* Título do Artigo */}
+                  <p
+                    className={cn(
+                      "line-clamp-2 leading-snug",
+                      isSelected ? "text-foreground font-semibold" : "text-foreground/90 font-normal"
+                    )}
+                  >
                     {article.metadata.titulo || article.titulo}
                   </p>
 
+                  {/* Tags em Linha */}
                   {article.metadata.tags && article.metadata.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-1.5">
-                      {article.metadata.tags.slice(0, 2).map((t) => (
+                    <div className="flex items-center gap-1 overflow-hidden pt-0.5">
+                      {article.metadata.tags.slice(0, 2).map((tag) => (
                         <span
-                          key={t}
-                          className="text-[10px] px-1 py-0 rounded bg-muted/70 text-muted-foreground font-normal"
+                          key={tag}
+                          className="text-[10px] text-muted-foreground font-mono truncate max-w-[110px]"
                         >
-                          {t}
+                          #{tag}
                         </span>
                       ))}
                       {article.metadata.tags.length > 2 && (
-                        <span className="text-[10px] text-muted-foreground/70">
+                        <span className="text-[10px] text-muted-foreground font-mono">
                           +{article.metadata.tags.length - 2}
                         </span>
                       )}

@@ -21,6 +21,8 @@ import {
   Heading4,
   List,
   ListOrdered,
+  Indent,
+  Outdent,
   Quote,
   Table as TableIcon,
   Minus,
@@ -44,7 +46,7 @@ import { cn } from "@/lib/utils";
 
 interface MarkdownTiptapEditorProps {
   value: string;
-  onChange: (markdown: string) => void;
+  onChange: (markdown: string, isUserAction?: boolean) => void;
   disabled?: boolean;
   placeholder?: string;
   className?: string;
@@ -63,6 +65,21 @@ export function MarkdownTiptapEditor({
       StarterKit.configure({
         heading: {
           levels: [1, 2, 3, 4],
+        },
+        bulletList: {
+          HTMLAttributes: {
+            class: "list-disc pl-6 my-2.5 space-y-1",
+          },
+        },
+        orderedList: {
+          HTMLAttributes: {
+            class: "list-decimal pl-6 my-2.5 space-y-1",
+          },
+        },
+        listItem: {
+          HTMLAttributes: {
+            class: "leading-relaxed my-0.5",
+          },
         },
         codeBlock: {
           HTMLAttributes: {
@@ -112,10 +129,11 @@ export function MarkdownTiptapEditor({
       }),
     ],
     content: value,
-    onUpdate: ({ editor: currentEditor }) => {
+    onUpdate: ({ editor: currentEditor, transaction }) => {
       // Obter markdown nativo com tiptap-markdown
       const markdown = (currentEditor.storage as any).markdown?.getMarkdown?.() || currentEditor.getHTML();
-      onChange(markdown);
+      const isUserAction = currentEditor.isFocused || Boolean(transaction.getMeta("pointer"));
+      onChange(markdown, isUserAction);
     },
   });
 
@@ -323,7 +341,7 @@ export function MarkdownTiptapEditor({
 
         <Separator orientation="vertical" className="mx-1 h-5" />
 
-        {/* Lists & Blocks */}
+        {/* Lists & Indentation */}
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
@@ -337,7 +355,7 @@ export function MarkdownTiptapEditor({
               <List className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Lista com Marcadores</TooltipContent>
+          <TooltipContent>Lista com Marcadores / Tópicos</TooltipContent>
         </Tooltip>
 
         <Tooltip>
@@ -353,7 +371,39 @@ export function MarkdownTiptapEditor({
               <ListOrdered className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Lista Numerada (Passo a Passo)</TooltipContent>
+          <TooltipContent>Lista Numerada (Passo a Passo 1, 2, 3...)</TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => editor.chain().focus().sinkListItem("listItem").run()}
+              disabled={disabled || !editor.can().sinkListItem("listItem")}
+            >
+              <Indent className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Aumentar Recuo (Subtópico / Tab)</TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => editor.chain().focus().liftListItem("listItem").run()}
+              disabled={disabled || !editor.can().liftListItem("listItem")}
+            >
+              <Outdent className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Diminuir Recuo (Shift+Tab)</TooltipContent>
         </Tooltip>
 
         <Tooltip>
@@ -385,12 +435,12 @@ export function MarkdownTiptapEditor({
               <Minus className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Divisor Horizontal</TooltipContent>
+          <TooltipContent>Linha Divisória</TooltipContent>
         </Tooltip>
 
         <Separator orientation="vertical" className="mx-1 h-5" />
 
-        {/* Links & Tables */}
+        {/* Links */}
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
@@ -404,7 +454,7 @@ export function MarkdownTiptapEditor({
               <LinkIcon className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Inserir Link</TooltipContent>
+          <TooltipContent>Inserir / Editar Link</TooltipContent>
         </Tooltip>
 
         {editor.isActive("link") && (
@@ -414,37 +464,36 @@ export function MarkdownTiptapEditor({
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-destructive"
+                className="h-8 w-8"
                 onClick={() => editor.chain().focus().unsetLink().run()}
                 disabled={disabled}
               >
-                <Unlink className="h-4 w-4" />
+                <Unlink className="h-4 w-4 text-destructive" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Remover Link</TooltipContent>
           </Tooltip>
         )}
 
+        <Separator orientation="vertical" className="mx-1 h-5" />
+
+        {/* Tabela */}
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               type="button"
-              variant="ghost"
+              variant={editor.isActive("table") ? "secondary" : "ghost"}
               size="icon"
               className="h-8 w-8"
               onClick={() =>
-                editor
-                  .chain()
-                  .focus()
-                  .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
-                  .run()
+                editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
               }
               disabled={disabled}
             >
               <TableIcon className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Inserir Tabela (3x3)</TooltipContent>
+          <TooltipContent>Inserir Tabela 3x3</TooltipContent>
         </Tooltip>
 
         <Separator orientation="vertical" className="mx-1 h-5" />
