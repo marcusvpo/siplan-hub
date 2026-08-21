@@ -34,6 +34,7 @@ export type PermissionCategory =
   | "Implantadores"
   | "CS/CX"
   | "Modelos Editor OrionTN"
+  | "Assistentes"
   | "Copiloto"
   | "Administração";
 
@@ -49,6 +50,7 @@ export const PERMISSION_CATEGORY_ORDER: PermissionCategory[] = [
   "Implantadores",
   "CS/CX",
   "Modelos Editor OrionTN",
+  "Assistentes",
   "Copiloto",
   "Administração",
 ];
@@ -137,6 +139,10 @@ export const PERMISSION_RESOURCES: PermissionResourceDef[] = [
   { resource: "orion_dashboard", label: "Orion - Dashboard", category: "Modelos Editor OrionTN", actions: ["view"] },
   { resource: "orion_projects", label: "Orion - Projetos", category: "Modelos Editor OrionTN", actions: ["view"] },
   { resource: "orion_editor", label: "Orion - Editor de Modelos", category: "Modelos Editor OrionTN", actions: ["view", "edit"] },
+
+  // Assistentes
+  { resource: "menu_assistentes", label: "Menu Assistentes", category: "Assistentes", actions: ["view"] },
+  { resource: "assistants_knowledge", label: "Base de Conhecimento Orion TN", category: "Assistentes", actions: ["view", "edit", "manage"] },
 
   // Copiloto & Assistentes IA
   { resource: "copilot_admin", label: "Copiloto - Acessos e Cotas (Admin)", category: "Copiloto", actions: ["view", "manage"] },

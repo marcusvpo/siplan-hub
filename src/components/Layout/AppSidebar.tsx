@@ -41,6 +41,7 @@ import {
   MapPin,
   Star,
   Settings2,
+  Bot,
 } from "lucide-react";
 import {
   Collapsible,
@@ -87,6 +88,9 @@ export function AppSidebar() {
   const [isCsCxOpen, setIsCsCxOpen] = useState(
     location.pathname.startsWith("/cs-cx"),
   );
+  const [isAssistentesOpen, setIsAssistentesOpen] = useState(
+    location.pathname.startsWith("/assistentes"),
+  );
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -103,6 +107,7 @@ export function AppSidebar() {
   const canViewConversao = hasPermission("menu_conversao", "view");
   const canViewOrion = hasPermission("menu_orion", "view");
   const canViewSd = hasPermission("menu_sd", "view");
+  const canViewAssistentes = hasPermission("menu_assistentes", "view");
   const canViewDashboardView = hasPermission("dashboard_view", "view");
   const canViewKanban = hasPermission("kanban", "view");
   const canViewPosPanorama = hasPermission("pos_panorama", "view");
@@ -170,6 +175,9 @@ export function AppSidebar() {
     ["cs_cx_reports", "/cs-cx/relatorios"],
     ["cs_cx_admin", "/cs-cx/admin"],
   );
+  const rotaAssistentes = primeiraRota(
+    ["assistants_knowledge", "/assistentes/conhecimento"],
+  );
 
   const mostrarDashboard = !!rotaDashboard;
   const mostrarImplantacao = canViewImplantacao && !!rotaImplantacao;
@@ -180,6 +188,7 @@ export function AppSidebar() {
   const mostrarOrion = canViewOrion && !!rotaOrion;
   const mostrarImplantadores = canViewImplantadores && !!rotaImplantadores;
   const mostrarCsCx = canViewCsCx && !!rotaCsCx;
+  const mostrarAssistentes = canViewAssistentes && !!rotaAssistentes;
   
   const logoSrc = isDark
     ? "/assets/Siplan_logo_branco.png"
@@ -1163,6 +1172,82 @@ export function AppSidebar() {
                 title="CS/CX"
               >
                 <Headset className="h-5 w-5" />
+              </Button>
+            </Link>
+          )}
+        </div>
+        )}
+
+        {/* Assistentes Group */}
+        {mostrarAssistentes && (
+        <div className="px-2">
+          {!collapsed ? (
+            <Collapsible
+              open={isAssistentesOpen}
+              onOpenChange={setIsAssistentesOpen}
+              className="space-y-1"
+            >
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant={
+                    location.pathname.startsWith("/assistentes")
+                      ? "secondary"
+                      : "ghost"
+                  }
+                  className="w-full justify-between hover:bg-muted/50"
+                  title="Assistentes"
+                >
+                  <div className="flex items-center gap-3">
+                    <Bot className="h-5 w-5" />
+                    <span>Assistentes</span>
+                  </div>
+                  <ChevronDown
+                    className={cn(
+                      "h-4 w-4 transition-transform",
+                      isAssistentesOpen ? "transform rotate-180" : "",
+                    )}
+                  />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-1 pl-4 animate-in slide-in-from-top-2">
+                <div className="pt-1 pb-1">
+                  <div className="px-4 py-2">
+                    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-2">
+                      Base de Conhecimento
+                    </span>
+                    {can("assistants_knowledge") && (
+                    <Link to="/assistentes/conhecimento">
+                      <Button
+                        variant={
+                          location.pathname.startsWith("/assistentes/conhecimento") ||
+                          location.pathname.startsWith("/assistentes/base-conhecimento")
+                            ? "secondary"
+                            : "ghost"
+                        }
+                        size="sm"
+                        className="w-full justify-start gap-3 h-9"
+                      >
+                        <BookOpen className="h-4 w-4" />
+                        <span className="text-xs font-medium">Orion TN</span>
+                      </Button>
+                    </Link>
+                    )}
+                  </div>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          ) : (
+            <Link to={rotaAssistentes!}>
+              <Button
+                variant={
+                  location.pathname.startsWith("/assistentes")
+                    ? "secondary"
+                    : "ghost"
+                }
+                className="w-full justify-center px-0"
+                title="Assistentes (Base de Conhecimento)"
+              >
+                <Bot className="h-5 w-5" />
               </Button>
             </Link>
           )}
