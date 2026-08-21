@@ -67,6 +67,7 @@ export interface PosAiHourlyDistributionItem {
 export interface PosAiAdminLogItem {
   id: string;
   project_id: string;
+  visitor_id?: string | null;
   client_name: string;
   system_type: string;
   session_id: string;
@@ -155,7 +156,7 @@ export function usePosAiAdminAnalytics(projectId?: string | null, days: number =
         throw error;
       }
 
-      return (
+      const analytics = (
         data || {
           kpis: {
             total_messages: 0,
@@ -188,7 +189,30 @@ export function usePosAiAdminAnalytics(projectId?: string | null, days: number =
           unhelpful_responses: [],
           logs: [],
         }
+      ) as PosAiAdminAnalyticsData;
+
+      if (!analytics.logs.length) return analytics;
+
+      const { data: messageVisitors, error: messageVisitorsError } = await supabase
+        .from("pos_ai_chat_messages")
+        .select("id, visitor_id")
+        .in("id", analytics.logs.map((log) => log.id));
+
+      if (messageVisitorsError) throw messageVisitorsError;
+
+      const visitorByMessage = new Map(
+        (messageVisitors as unknown as Array<{ id: string; visitor_id: string | null }>).map(
+          (message) => [message.id, message.visitor_id],
+        ),
       );
+
+      return {
+        ...analytics,
+        logs: analytics.logs.map((log) => ({
+          ...log,
+          visitor_id: visitorByMessage.get(log.id) ?? null,
+        })),
+      };
     },
     staleTime: 1000 * 30, // 30 seconds
   });
