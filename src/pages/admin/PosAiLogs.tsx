@@ -427,22 +427,24 @@ export default function PosAiLogs() {
   }, [latencyDist]);
 
   return (
-    <div className="space-y-6 p-4 sm:p-6 max-w-[1600px] mx-auto font-sans">
+    <div className="mx-auto max-w-[1600px] space-y-4 p-3 font-sans sm:p-4 lg:p-5">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4">
-        <div>
+      <div className="grid gap-3 border-b pb-3 xl:grid-cols-[minmax(340px,1fr)_auto] xl:items-center">
+        <div className="min-w-0">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-600/10 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400 shadow-xs">
-              <Bot className="h-5 w-5" />
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-rose-600/10 text-rose-600 shadow-xs dark:bg-rose-900/30 dark:text-rose-400">
+              <Bot className="h-4 w-4" />
             </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-                Logs & Analytics do Assistente IA
-                <Badge variant="outline" className="bg-rose-500/10 text-rose-600 border-rose-200 dark:border-rose-800 text-[10px] font-semibold">
+            <div className="min-w-0">
+              <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                <h1 className="truncate text-lg font-bold tracking-tight text-foreground sm:text-xl">
+                  Logs & Analytics do Assistente IA
+                </h1>
+                <Badge variant="outline" className="shrink-0 border-rose-200 bg-rose-500/10 px-1.5 py-0 text-[9px] font-semibold text-rose-600 dark:border-rose-800">
                   Orion TN · GPT-5-nano
                 </Badge>
-              </h1>
-              <p className="text-xs sm:text-sm text-muted-foreground">
+              </div>
+              <p className="mt-0.5 truncate text-xs text-muted-foreground">
                 Auditoria de conversas, custos em USD ($), telemetria de tokens e satisfação dos clientes
               </p>
             </div>
@@ -450,10 +452,10 @@ export default function PosAiLogs() {
         </div>
 
         {/* Global Controls */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-1.5 sm:flex sm:flex-wrap xl:flex-nowrap xl:justify-end">
           {/* Project Filter (Activated Only) */}
           <Select value={selectedProject} onValueChange={handleProjectChange}>
-            <SelectTrigger className="w-[220px] sm:w-[280px] h-9 text-xs">
+            <SelectTrigger className="col-span-3 h-8 w-full text-xs sm:w-[250px]">
               <Building2 className="h-3.5 w-3.5 mr-1.5 text-rose-600 shrink-0" />
               <SelectValue placeholder="Selecione o Cartório" />
             </SelectTrigger>
@@ -471,7 +473,7 @@ export default function PosAiLogs() {
 
           {/* Period Filter */}
           <Select value={days} onValueChange={setDays}>
-            <SelectTrigger className="w-[140px] sm:w-[160px] h-9 text-xs">
+            <SelectTrigger className="h-8 w-full text-xs sm:w-[145px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -487,9 +489,10 @@ export default function PosAiLogs() {
           <Button
             type="button"
             variant="outline"
-            size="sm"
-            className="h-9 gap-1 text-xs"
+            size="icon"
+            className="h-8 w-8 shrink-0"
             onClick={() => void Promise.all([refetch(), refetchVisitorAnalytics()])}
+            title="Atualizar métricas"
             disabled={
               isLoading ||
               isRefetching ||
@@ -502,20 +505,21 @@ export default function PosAiLogs() {
                 isRefetching || isVisitorAnalyticsRefetching ? "animate-spin" : ""
               }`}
             />
-            <span className="hidden sm:inline">Atualizar</span>
+            <span className="sr-only">Atualizar métricas</span>
           </Button>
 
           {/* Export CSV */}
           <Button
             type="button"
             variant="outline"
-            size="sm"
-            className="h-9 gap-1 text-xs"
+            size="icon"
+            className="h-8 w-8 shrink-0"
             onClick={handleExportCsv}
             disabled={!logs.length}
+            title="Exportar CSV"
           >
             <Download className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Exportar CSV</span>
+            <span className="sr-only">Exportar CSV</span>
           </Button>
         </div>
       </div>
