@@ -338,17 +338,29 @@ export function serializeArticleToMarkdown(
   // Configuração condicional de vídeo Bunny.net
   if (hasVideo && metadata.video && metadata.video.tem_video) {
     const v = metadata.video;
+    const startSecs =
+      typeof v.video_start_seconds === "number"
+        ? v.video_start_seconds
+        : parseTimestampToSeconds(v.video_timestamp || "00:00");
+
+    const cleanTimestamp = v.video_timestamp?.trim() || "00:00";
+    const cleanLibId = v.bunny_library_id?.trim() || "467408";
+    const cleanVidId = v.bunny_video_id?.trim() || "";
+    const cleanEmbedUrl =
+      v.video_url?.trim() ||
+      (cleanLibId && cleanVidId
+        ? `https://iframe.mediadelivery.net/embed/${cleanLibId}/${cleanVidId}?t=${startSecs}`
+        : "");
+
     yamlObj.video = {
       tem_video: true,
-      bunny_library_id: v.bunny_library_id?.trim() || "354152",
-      bunny_video_id: v.bunny_video_id?.trim() || "",
+      bunny_library_id: cleanLibId,
+      bunny_video_id: cleanVidId,
       video_title: v.video_title?.trim() || metadata.titulo.trim(),
-      video_url: v.video_url?.trim() || "",
-      video_timestamp: v.video_timestamp?.trim() || "00:00",
+      video_url: cleanEmbedUrl,
+      video_timestamp: cleanTimestamp,
+      video_start_seconds: startSecs,
     };
-    if (typeof v.video_start_seconds === "number") {
-      (yamlObj.video as any).video_start_seconds = v.video_start_seconds;
-    }
   }
 
   // Gerar YAML com js-yaml garantindo formatação limpa e legível
@@ -510,5 +522,24 @@ export function normalizeMarkdown(str: string): string {
     .map((line) => line.trimEnd())
     .join("\n")
     .trim();
+}
+
+/**
+ * Converte timestamp textual (ex: "02:30", "01:15:00", "45") para segundos inteiros.
+ */
+export function parseTimestampToSeconds(ts: string): number {
+  if (!ts) return 0;
+  const parts = ts.trim().split(":").map((p) => parseInt(p, 10));
+  if (parts.some(isNaN)) return 0;
+  if (parts.length === 3) {
+    return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  }
+  if (parts.length === 2) {
+    return parts[0] * 60 + parts[1];
+  }
+  if (parts.length === 1) {
+    return parts[0];
+  }
+  return 0;
 }
 

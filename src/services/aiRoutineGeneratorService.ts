@@ -126,35 +126,43 @@ function generateHeuristicMetadata({
   // Gerar tags a partir de palavras-chave do texto
   const textLower = bodyMarkdown.toLowerCase();
   const tagKeywords: Record<string, string> = {
-    certidão: "certidao",
-    "inteiro teor": "inteiro_teor",
-    casamento: "casamento",
-    nascimento: "nascimento",
-    óbito: "obito",
-    firma: "reconhecimento_firma",
-    autenticação: "autenticacao",
-    selo: "selagem",
-    livro: "livros",
-    "registro civil": "registro_civil",
-    notas: "notas",
-    procuração: "procuracao",
-    escritura: "escritura",
-    cancelamento: "cancelamento",
-    recibo: "recibo",
-    caixa: "caixa",
-    relatório: "relatorios",
-    backup: "backup",
-    orçamento: "orcamentos",
-    desistência: "desistencia",
-    consulta: "consulta",
-    orion: "orion_tn",
+    "inteiro teor": "Certidões",
+    certidão: "Certidões",
+    casamento: "Registro Civil",
+    nascimento: "Registro Civil",
+    óbito: "Registro Civil",
+    firma: "Reconhecimento de Firma",
+    autenticação: "Autenticação",
+    selo: "Selagem",
+    livro: "Livros",
+    "registro civil": "Registro Civil",
+    notas: "Notas",
+    procuração: "Procurações",
+    escritura: "Escrituras",
+    cancelamento: "Cancelamentos",
+    recibo: "Financeiro",
+    caixa: "Caixa",
+    relatório: "Relatórios",
+    backup: "Configurações",
+    configuração: "Configurações",
+    orçamento: "Orçamentos",
+    negócio: "Negócios",
+    cadastro: "Cadastros",
+    desistência: "Atendimento",
+    consulta: "Consultas",
+    balcão: "Balcão",
   };
 
-  const detectedTags = new Set<string>(["orion_tn"]);
+  const detectedTags = new Set<string>();
   for (const [kw, tag] of Object.entries(tagKeywords)) {
     if (textLower.includes(kw)) {
       detectedTags.add(tag);
     }
+  }
+
+  if (detectedTags.size === 0) {
+    detectedTags.add("Procedimentos");
+    detectedTags.add("Configurações");
   }
 
   // Objetivo

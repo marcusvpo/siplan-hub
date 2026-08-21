@@ -42,7 +42,7 @@ REGRAS:
 2. **sectionIndex e secao:** DEVE ser 5 e "SEÇÃO PRINCIPAL 5: Rotinas atualizadas via Siplan HUB".
 3. **titulo:** Um título claro, profissional e direto, começando normalmente com verbos de ação como "Como...", "Emissão de...", "Configuração de...", "Cadastro de...", "Gerenciamento de...".
 4. **objetivo:** Um resumo conciso de 1 ou 2 frases explicando o que esse procedimento resolve para o usuário final do cartório.
-5. **tags:** Lista de 4 a 8 tags em minúsculas (snake_case ou simples), como: "orion_tn", "registro_civil", "balcao", "notas", "certidao", "cancelamento", etc.
+5. **tags:** Lista de 3 a 6 tags de categorização operacional em português com inicial maiúscula no padrão do documento (ex: "Configurações", "Negócios", "Cadastros", "Notas", "Balcão", "Orçamentos", "Certidões", "Financeiro", "Atendimento", etc.). NUNCA use prefixos como "#" ou termos genéricos em minúsculas como "orion_tn".
 6. **perguntas_usuario:** Lista de 3 a 6 perguntas reais que um atendente de cartório faria para encontrar este tutorial (ex: "Como faço para gerenciar orçamentos?", "Onde lanço a certidão de casamento?").
 7. **sinonimos:** Lista de 3 a 6 termos de busca e palavras-chave alternativas.
 
