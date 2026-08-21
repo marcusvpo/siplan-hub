@@ -143,11 +143,11 @@ export const PERMISSION_RESOURCES: PermissionResourceDef[] = [
   // Assistentes
   { resource: "menu_assistentes", label: "Menu Assistentes", category: "Assistentes", actions: ["view"] },
   { resource: "assistants_knowledge", label: "Base de Conhecimento Orion TN", category: "Assistentes", actions: ["view", "edit", "manage"] },
+  { resource: "pos_ai_logs", label: "Pós-Implantação - Logs & Analytics", category: "Assistentes", actions: ["view", "manage"] },
 
   // Copiloto & Assistentes IA
   { resource: "copilot_admin", label: "Copiloto - Acessos e Cotas (Admin)", category: "Copiloto", actions: ["view", "manage"] },
   { resource: "copilot_usage", label: "Copiloto - Uso (Admin)", category: "Copiloto", actions: ["view"] },
-  { resource: "pos_ai_logs", label: "Assistente IA Pós - Logs & Analytics (Admin)", category: "Copiloto", actions: ["view"] },
 
   // Administração
   { resource: "admin_panel", label: "Acesso ao Painel Administrativo", category: "Administração", actions: ["view"] },

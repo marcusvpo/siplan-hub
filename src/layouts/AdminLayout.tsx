@@ -19,7 +19,6 @@ import {
   ArrowLeft,
   Sparkles,
   BarChart3,
-  Bot,
   PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react";
@@ -108,7 +107,6 @@ export default function AdminLayout() {
     { href: "/admin/roles", label: "Perfis de Acesso", icon: Shield, resource: "roles" },
     { href: "/admin/copilot", label: "Copiloto", icon: Sparkles, resource: "copilot_admin" },
     { href: "/admin/copilot-usage", label: "Uso do Copiloto", icon: BarChart3, resource: "copilot_usage" },
-    { href: "/admin/pos-ai-logs", label: "Logs Assistente IA", icon: Bot, resource: "pos_ai_logs" },
     { href: "/admin/teams-config", label: "Configurações do Time", icon: Settings2, resource: "teams" },
     { href: "/admin/inactive-users", label: "Usuários Inativos", icon: UserMinus, resource: "inactive_users" },
     { href: "/admin/vacations", label: "Férias", icon: Palmtree, resource: "vacations" },
@@ -301,14 +299,7 @@ export default function AdminLayout() {
               "Painel Administrativo"}
           </h1>
         </header>
-        <main
-          className={cn(
-            "flex-1 overflow-y-auto",
-            location.pathname.startsWith("/admin/pos-ai-logs")
-              ? "px-3 pb-3 pt-0 sm:px-4 sm:pb-4 lg:px-8 lg:pb-8"
-              : "p-3 sm:p-4 lg:p-8",
-          )}
-        >
+        <main className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-8">
           <Outlet />
         </main>
       </div>

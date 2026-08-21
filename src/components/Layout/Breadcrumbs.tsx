@@ -14,6 +14,8 @@ export function Breadcrumbs() {
     homologation: "Homologação",
     dashboard: "Dashboard",
     "orion-tn-models": "Modelos Orion TN",
+    assistentes: "Assistentes",
+    logs: "Logs & Analytics",
   };
 
   const getBreadcrumbName = (value: string) => {
