@@ -67,7 +67,8 @@ adicionalmente de `whisper.cpp` + `ffmpeg` na VM
   `node_modules/.bin/codex`; `CODEX_BIN` permite override.
 - **Skill Codex:** no inicio de cada job o worker instala/atualiza automaticamente
   `.agents/skills/criar-modelo-mesclado/SKILL.md` dentro do Orion.Modelos. O wrapper carrega a skill
-  original de `.claude/skills`, aplica as regras headless e elimina perguntas/confirmacoes.
+  nativa de `.codex/skills` (com fallback para a instalacao legada em `.claude/skills`), aplica as
+  regras headless e elimina perguntas/confirmacoes.
 
 </details>
 
