@@ -34,12 +34,14 @@ import {
   PowerOff,
   AlertTriangle,
   RotateCcw,
+  UsersRound,
 } from "lucide-react";
 import { toast } from "sonner";
 import { usePosAiProjectSummary } from "@/hooks/usePosAiProjectSummary";
 import { PosChatMessageContent } from "@/components/pos-chat/PosChatMessageContent";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { usePosChatVisitorStats } from "@/hooks/usePosChatVisitorStats";
 
 interface PosAiAssistantSectionProps {
   project: ProjectV2;
@@ -55,6 +57,7 @@ export function PosAiAssistantSection({ project }: PosAiAssistantSectionProps) {
   const [deactivating, setDeactivating] = useState(false);
   const [isLocallyActivated, setIsLocallyActivated] = useState<boolean | null>(null);
   const { data: summary, isLoading } = usePosAiProjectSummary(project.id);
+  const { data: visitorStats = [] } = usePosChatVisitorStats(project.id);
 
   // Status computation
   const rawEnabled = (project.customFields as Record<string, unknown>)?.pos_assistant_enabled;
@@ -89,8 +92,11 @@ export function PosAiAssistantSection({ project }: PosAiAssistantSectionProps) {
       toast.success("Assistente de Pós-Implantação ativado com sucesso!");
       queryClient.invalidateQueries({ queryKey: ["projectsList"] });
       queryClient.invalidateQueries({ queryKey: ["projectDetails", project.id] });
-    } catch (err: any) {
-      toast.error("Erro ao ativar assistente: " + (err.message || "Erro desconhecido"));
+    } catch (err: unknown) {
+      toast.error(
+        "Erro ao ativar assistente: " +
+          (err instanceof Error ? err.message : "Erro desconhecido")
+      );
     } finally {
       setActivating(false);
     }
@@ -118,8 +124,11 @@ export function PosAiAssistantSection({ project }: PosAiAssistantSectionProps) {
       toast.success("Acesso ao assistente encerrado com sucesso.");
       queryClient.invalidateQueries({ queryKey: ["projectsList"] });
       queryClient.invalidateQueries({ queryKey: ["projectDetails", project.id] });
-    } catch (err: any) {
-      toast.error("Erro ao desativar assistente: " + (err.message || "Erro desconhecido"));
+    } catch (err: unknown) {
+      toast.error(
+        "Erro ao desativar assistente: " +
+          (err instanceof Error ? err.message : "Erro desconhecido")
+      );
     } finally {
       setDeactivating(false);
     }
@@ -276,7 +285,13 @@ export function PosAiAssistantSection({ project }: PosAiAssistantSectionProps) {
                   }`}
                 >
                   <div className="flex items-center justify-between text-[11px] font-semibold text-muted-foreground">
-                    <span>{m.role === "user" ? "Cliente" : "Assistente IA"}</span>
+                    <span>
+                      {m.role === "user"
+                        ? m.visitor_name
+                          ? `${m.visitor_name} · ${m.visitor_sector || "Setor não informado"}`
+                          : "Cliente"
+                        : "Assistente IA"}
+                    </span>
                     <span>{m.created_at ? format(new Date(m.created_at), "dd/MM HH:mm", { locale: ptBR }) : ""}</span>
                   </div>
                   <div className="text-foreground leading-relaxed pt-0.5">
@@ -419,8 +434,8 @@ export function PosAiAssistantSection({ project }: PosAiAssistantSectionProps) {
                 <Clock className="h-3.5 w-3.5 text-amber-500" />
               </div>
               <p className="text-sm font-semibold mt-1 truncate">
-                {summary.last_message_at
-                  ? format(new Date(summary.last_message_at), "dd/MM 'às' HH:mm", { locale: ptBR })
+                {summary.last_interaction
+                  ? format(new Date(summary.last_interaction), "dd/MM 'às' HH:mm", { locale: ptBR })
                   : "Nenhum ainda"}
               </p>
               <p className="text-[10px] text-muted-foreground">Atividade recente</p>
@@ -429,6 +444,51 @@ export function PosAiAssistantSection({ project }: PosAiAssistantSectionProps) {
         ) : (
           <div className="p-4 rounded-lg bg-muted/40 border border-dashed text-center text-xs text-muted-foreground">
             O assistente está ativado. O link acima já pode ser enviado ao cliente para atendimento no pós-implantação.
+          </div>
+        )}
+
+        {visitorStats.length > 0 && (
+          <div className="rounded-xl border bg-card/60 p-3">
+            <div className="mb-2.5 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400">
+                  <UsersRound className="h-3.5 w-3.5" />
+                </span>
+                <div>
+                  <p className="text-xs font-semibold">Uso por pessoa</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    Perguntas, conversas e consumo individual
+                  </p>
+                </div>
+              </div>
+              <Badge variant="secondary" className="text-[10px]">
+                {visitorStats.length} usuário{visitorStats.length === 1 ? "" : "s"}
+              </Badge>
+            </div>
+
+            <div className="grid gap-1.5">
+              {visitorStats.slice(0, 6).map((visitorStat) => (
+                <div
+                  key={visitorStat.visitor_id}
+                  className="flex items-center justify-between gap-3 rounded-lg border border-border/70 bg-background/70 px-2.5 py-2"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-xs font-semibold">{visitorStat.name}</p>
+                    <p className="truncate text-[10px] text-muted-foreground">
+                      {visitorStat.sector} · {Number(visitorStat.user_messages)} pergunta{Number(visitorStat.user_messages) === 1 ? "" : "s"} · {Number(visitorStat.total_sessions)} conversa{Number(visitorStat.total_sessions) === 1 ? "" : "s"}
+                    </p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">
+                      ${Number(visitorStat.estimated_cost_usd || 0).toFixed(4)}
+                    </p>
+                    <p className="text-[9px] text-muted-foreground">
+                      {Number(visitorStat.total_tokens || 0).toLocaleString("pt-BR")} tokens
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
@@ -522,7 +582,10 @@ export function PosAiAssistantSection({ project }: PosAiAssistantSectionProps) {
                       <span className="flex items-center gap-1">
                         {m.role === "user" ? (
                           <>
-                            <User className="h-3 w-3" /> Cliente
+                            <User className="h-3 w-3" />
+                            {m.visitor_name
+                              ? `${m.visitor_name} · ${m.visitor_sector || "Setor não informado"}`
+                              : "Cliente"}
                           </>
                         ) : (
                           <>
