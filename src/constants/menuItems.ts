@@ -391,6 +391,13 @@ export const menuItems: MenuItem[] = [
                 description: "Revisão e atualização de tutoriais do Orion TN",
                 permissionKey: "assistants_knowledge",
             },
+            {
+                title: "Logs & Analytics Pós-Implantação",
+                path: "/assistentes/logs",
+                icon: BarChart3,
+                description: "Conversas, custos, usuários e gestão dos links dos chats",
+                permissionKey: "pos_ai_logs",
+            },
         ],
     },
 ];

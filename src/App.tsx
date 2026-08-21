@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { SonnerToaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { lazy, Suspense } from "react";
 
 // Imports críticos (imediatos - usados no first load)
@@ -149,6 +149,11 @@ const PageLoader = () => (
   </div>
 );
 
+const LegacyPosAiLogsRedirect = () => {
+  const location = useLocation();
+  return <Navigate to={`/assistentes/logs${location.search}`} replace />;
+};
+
 const ProjectAdherenceRouteWrapper = () => {
   const isPrintMode =
     new URLSearchParams(window.location.search).get("print") === "true";
@@ -239,6 +244,8 @@ const App = () => (
                 path="/projects/:id/adherence"
                 element={<ProjectAdherenceRouteWrapper />}
               />
+
+              <Route path="/admin/pos-ai-logs" element={<LegacyPosAiLogsRedirect />} />
 
               {/* Admin Routes */}
               <Route
@@ -355,16 +362,6 @@ const App = () => (
                     <Suspense fallback={<PageLoader />}>
                       <RequirePermission resource="copilot_usage">
                         <CopilotUsage />
-                      </RequirePermission>
-                    </Suspense>
-                  }
-                />
-                <Route
-                  path="pos-ai-logs"
-                  element={
-                    <Suspense fallback={<PageLoader />}>
-                      <RequirePermission resource="pos_ai_logs">
-                        <PosAiLogs />
                       </RequirePermission>
                     </Suspense>
                   }
@@ -604,6 +601,14 @@ const App = () => (
                             element={
                               <RequirePermission resource="assistants_knowledge">
                                 <KnowledgeEditorPage />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/assistentes/logs"
+                            element={
+                              <RequirePermission resource="pos_ai_logs">
+                                <PosAiLogs />
                               </RequirePermission>
                             }
                           />

@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import type { PosAiChatLink } from "@/hooks/usePosAiChatLinks";
+import { usePermissions } from "@/hooks/usePermissions";
 
 interface PosAiChatLinksManagerProps {
   links: PosAiChatLink[];
@@ -51,6 +52,8 @@ export function PosAiChatLinksManager({
   onViewLogs,
 }: PosAiChatLinksManagerProps) {
   const queryClient = useQueryClient();
+  const { hasPermission } = usePermissions();
+  const canManageLinks = hasPermission("pos_ai_logs", "manage");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("active");
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -144,6 +147,7 @@ export function PosAiChatLinksManager({
                   {inactiveCount} encerrado{inactiveCount === 1 ? "" : "s"}
                 </Badge>
               )}
+              {!canManageLinks && <Badge variant="outline" className="text-[10px]">Somente leitura</Badge>}
             </div>
             <p className="mt-0.5 text-[11px] text-muted-foreground">
               Copie, abra ou controle o acesso dos links exclusivos de cada cartório.
@@ -257,7 +261,7 @@ export function PosAiChatLinksManager({
                         <MessageSquareText className="h-3 w-3 text-blue-600" />
                         Conversas
                       </Button>
-                      {link.enabled ? (
+                      {canManageLinks && (link.enabled ? (
                         <Button
                           type="button"
                           variant="outline"
@@ -284,7 +288,7 @@ export function PosAiChatLinksManager({
                           )}
                           Reativar
                         </Button>
-                      )}
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -294,7 +298,7 @@ export function PosAiChatLinksManager({
         )}
       </CardContent>
 
-      <Dialog open={Boolean(linkToDeactivate)} onOpenChange={(open) => !open && setLinkToDeactivate(null)}>
+      <Dialog open={canManageLinks && Boolean(linkToDeactivate)} onOpenChange={(open) => !open && setLinkToDeactivate(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base">
