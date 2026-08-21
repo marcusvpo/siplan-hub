@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -19,6 +19,8 @@ import { useAuth } from "@/hooks/useAuth";
 const STORAGE_BUCKET = "assistant-oriontn-doc";
 const STORAGE_FILE_PATH = "OrionTN pos.md";
 
+export type SaveStep = "idle" | "saving_storage" | "syncing_openai" | "synced" | "failed";
+
 export function useKnowledgeBase() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -35,6 +37,13 @@ export function useKnowledgeBase() {
   // Guarda de alterações não salvas
   const [pendingArticleId, setPendingArticleId] = useState<string | null>(null);
   const [isUnsavedDialogOpen, setIsUnsavedDialogOpen] = useState(false);
+
+  // Estado detalhado de progresso do salvamento + sincronização OpenAI
+  const [saveStep, setSaveStep] = useState<SaveStep>("idle");
+  const [activeVersionId, setActiveVersionId] = useState<string | null>(null);
+  const [syncErrorMessage, setSyncErrorMessage] = useState<string | null>(null);
+  const [syncedFileId, setSyncedFileId] = useState<string | null>(null);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // 1. Download & parse o documento mestre do Supabase Storage
   const {
@@ -62,7 +71,7 @@ export function useKnowledgeBase() {
     gcTime: 30 * 60 * 1000,
   });
 
-  // 2. Buscar lista completa de versões e backups (Biblioteca de Versões)
+  // 2. Buscar lista completa de versões e backups
   const {
     data: versions = [],
     isLoading: isLoadingVersions,
@@ -82,7 +91,7 @@ export function useKnowledgeBase() {
 
       return (data as unknown as KnowledgeVersion[]) || [];
     },
-    staleTime: 60 * 1000,
+    staleTime: 30 * 1000,
   });
 
   // 3. Buscar último log de sincronização para exibir no Header
@@ -102,7 +111,7 @@ export function useKnowledgeBase() {
       }
       return (data as unknown as KnowledgeSyncLog) ?? null;
     },
-    staleTime: 60 * 1000,
+    staleTime: 30 * 1000,
   });
 
   // Artigo selecionado
@@ -133,6 +142,13 @@ export function useKnowledgeBase() {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [isDirty]);
 
+  // Limpeza de timers de polling ao desmontar
+  useEffect(() => {
+    return () => {
+      if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+    };
+  }, []);
+
   // Handler para trocar de artigo com verificação de alterações não salvas
   const handleSelectArticle = useCallback(
     (targetArticleId: string) => {
@@ -148,7 +164,6 @@ export function useKnowledgeBase() {
     [isDirty, selectedArticleId],
   );
 
-  // Confirmar descarte de alterações não salvas e mudar de artigo
   const confirmDiscardAndSwitch = useCallback(() => {
     if (pendingArticleId) {
       setSelectedArticleId(pendingArticleId);
@@ -192,17 +207,14 @@ export function useKnowledgeBase() {
     if (!docData) return [];
 
     return docData.articles.filter((article) => {
-      // Filtro por seção
       if (selectedSectionIndex !== "all" && article.sectionIndex !== selectedSectionIndex) {
         return false;
       }
 
-      // Filtro por tag
       if (selectedTag !== "all" && !article.metadata.tags.includes(selectedTag)) {
         return false;
       }
 
-      // Filtro por termo de busca (ID, Título, Objetivo, Tags, Perguntas, Sinônimos)
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
         const matchId = article.id.toLowerCase().includes(q);
@@ -238,7 +250,80 @@ export function useKnowledgeBase() {
     return computeTextDiff(selectedArticle.body, draftBody);
   }, [selectedArticle, draftBody]);
 
-  // 4. Mutação de Salvamento com Backup Automático e Versionamento
+  // 4. Polling Ativo para Acompanhar o Status da Sincronização OpenAI no n8n
+  const startSyncStatusPolling = useCallback(
+    (versionId: string, versionTag: string) => {
+      let attempts = 0;
+      const maxAttempts = 18; // 18 * 2.5s = ~45s máximo
+
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+
+      pollingIntervalRef.current = setInterval(async () => {
+        attempts++;
+
+        try {
+          const { data, error } = await supabase
+            .from("assistant_knowledge_versions" as any)
+            .select("webhook_sync_status, metadata")
+            .eq("id", versionId)
+            .maybeSingle();
+
+          if (error) {
+            console.warn("Erro no polling de sincronização:", error.message);
+            return;
+          }
+
+          const status = (data as any)?.webhook_sync_status;
+          const meta = (data as any)?.metadata || {};
+
+          if (status === "synced") {
+            if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+            setSaveStep("synced");
+            setSyncedFileId(meta.openai_file_id || null);
+            setIsDirty(false);
+
+            queryClient.invalidateQueries({ queryKey: ["assistant_knowledge_doc"] });
+            queryClient.invalidateQueries({ queryKey: ["assistant_knowledge_versions"] });
+            queryClient.invalidateQueries({ queryKey: ["assistant_knowledge_last_sync"] });
+
+            toast.success(`Versão ${versionTag} indexada com sucesso na OpenAI!`, {
+              description: `A base de conhecimento foi atualizada com Zero Downtime.`,
+            });
+            return;
+          }
+
+          if (status === "failed") {
+            if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+            setSaveStep("failed");
+            setSyncErrorMessage(meta.error || "A automação no n8n reportou falha na indexação.");
+            queryClient.invalidateQueries({ queryKey: ["assistant_knowledge_versions"] });
+            toast.error("Falha na sincronização com a OpenAI", {
+              description: meta.error || "Ocorreu um erro durante a indexação no n8n.",
+            });
+            return;
+          }
+
+          if (attempts >= maxAttempts) {
+            if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+            // Se passar de 45s, avisa que segue em background
+            setSaveStep("synced");
+            setIsDirty(false);
+            queryClient.invalidateQueries({ queryKey: ["assistant_knowledge_versions"] });
+            toast.info(`Versão ${versionTag} salva!`, {
+              description: "A indexação na OpenAI continua em processamento em segundo plano.",
+            });
+          }
+        } catch (err) {
+          console.warn("Falha no polling:", err);
+        }
+      }, 2500);
+    },
+    [queryClient],
+  );
+
+  // 5. Mutação de Salvamento com Feedback em Tempo Real
   const saveMutation = useMutation({
     mutationFn: async ({
       articleId,
@@ -254,6 +339,10 @@ export function useKnowledgeBase() {
       const currentArticle = docData.articles.find((a) => a.id === articleId);
       if (!currentArticle) throw new Error("Artigo não localizado");
 
+      setSaveStep("saving_storage");
+      setSyncErrorMessage(null);
+      setSyncedFileId(null);
+
       // 1. Obter o próximo número sequencial de versão
       let nextVersionNum = 1;
       try {
@@ -262,7 +351,7 @@ export function useKnowledgeBase() {
           nextVersionNum = numData;
         }
       } catch (err) {
-        console.warn("Erro ao obter número de versão sequencial via RPC:", err);
+        console.warn("Erro ao obter número de versão sequencial:", err);
       }
 
       // 2. Salvar backup do arquivo anterior intacto na pasta backup/
@@ -312,9 +401,10 @@ export function useKnowledgeBase() {
           ? customSummary.trim()
           : diff.changeSummary || `Atualizado tutorial ${articleId}`;
 
-      // 6. Registrar versão e auditoria no banco de dados via RPC
+      // 6. Registrar versão e acionar trigger no banco com status 'syncing'
+      let generatedVersionId: string | null = null;
       try {
-        await supabase.rpc("register_knowledge_version" as any, {
+        const { data: vId } = await supabase.rpc("register_knowledge_version" as any, {
           p_backup_file_path: backupPath,
           p_article_id: articleId,
           p_article_title: currentArticle.titulo,
@@ -327,44 +417,48 @@ export function useKnowledgeBase() {
             article_tags: currentArticle.metadata.tags || [],
           },
         });
+        generatedVersionId = vId as unknown as string;
       } catch (logErr) {
         console.warn("Aviso ao registrar versão no banco:", logErr);
+      }
+
+      const versionTag = `v${nextVersionNum}`;
+
+      // 7. Entrar na etapa de sincronização com a OpenAI
+      setSaveStep("syncing_openai");
+      if (generatedVersionId) {
+        setActiveVersionId(generatedVersionId);
+        startSyncStatusPolling(generatedVersionId, versionTag);
       }
 
       return {
         articleId,
         backupPath,
-        versionTag: `v${nextVersionNum}`,
+        versionId: generatedVersionId,
+        versionTag,
         contentSize: contentBlob.size,
         updatedAt: new Date().toISOString(),
       };
     },
-    onSuccess: (data) => {
-      setIsDirty(false);
-      queryClient.invalidateQueries({ queryKey: ["assistant_knowledge_doc"] });
-      queryClient.invalidateQueries({ queryKey: ["assistant_knowledge_versions"] });
-      queryClient.invalidateQueries({ queryKey: ["assistant_knowledge_last_sync"] });
-
-      toast.success(
-        `Versão ${data.versionTag} salva e publicada na OpenAI com sucesso!`,
-        {
-          description: `Backup salvo em ${data.backupPath}.`,
-        },
-      );
-    },
     onError: (err: Error) => {
+      setSaveStep("failed");
+      setSyncErrorMessage(err.message);
       toast.error("Falha ao salvar alterações", {
         description: err.message,
       });
     },
   });
 
-  // 5. Mutação para Restauração / Rollback de uma Versão Antiga
+  // 6. Mutação para Restauração / Rollback de uma Versão Antiga
   const restoreVersionMutation = useMutation({
     mutationFn: async (version: KnowledgeVersion) => {
       if (!version.backup_file_path) {
         throw new Error("Caminho do arquivo de backup não encontrado nesta versão.");
       }
+
+      setSaveStep("saving_storage");
+      setSyncErrorMessage(null);
+      setSyncedFileId(null);
 
       // 1. Baixar o arquivo de backup selecionado do Storage
       const { data: backupBlob, error: downloadBackupErr } = await supabase.storage
@@ -417,8 +511,9 @@ export function useKnowledgeBase() {
       }
 
       // 4. Registrar a nova versão de restauração no banco
+      let generatedVersionId: string | null = null;
       try {
-        await supabase.rpc("register_knowledge_version" as any, {
+        const { data: vId } = await supabase.rpc("register_knowledge_version" as any, {
           p_backup_file_path: preRollbackBackupPath,
           p_article_id: version.article_id || null,
           p_article_title: version.article_title || null,
@@ -433,36 +528,33 @@ export function useKnowledgeBase() {
             author_email: user?.email,
           },
         });
+        generatedVersionId = vId as unknown as string;
       } catch (err) {
         console.warn("Aviso ao registrar log de restauração:", err);
       }
 
+      const versionTag = `v${nextVersionNum}`;
+      setSaveStep("syncing_openai");
+      if (generatedVersionId) {
+        setActiveVersionId(generatedVersionId);
+        startSyncStatusPolling(generatedVersionId, versionTag);
+      }
+
       return {
         restoredVersionTag: version.version_tag,
-        newVersionTag: `v${nextVersionNum}`,
+        newVersionTag: versionTag,
+        versionId: generatedVersionId,
       };
     },
-    onSuccess: (data) => {
-      setIsDirty(false);
-      queryClient.invalidateQueries({ queryKey: ["assistant_knowledge_doc"] });
-      queryClient.invalidateQueries({ queryKey: ["assistant_knowledge_versions"] });
-      queryClient.invalidateQueries({ queryKey: ["assistant_knowledge_last_sync"] });
-
-      toast.success(
-        `Base restaurada com sucesso para o estado da ${data.restoredVersionTag}!`,
-        {
-          description: `Nova versão ${data.newVersionTag} gerada e sincronizada com a IA.`,
-        },
-      );
-    },
     onError: (err: Error) => {
+      setSaveStep("failed");
+      setSyncErrorMessage(err.message);
       toast.error("Falha ao restaurar versão", {
         description: err.message,
       });
     },
   });
 
-  // Função utilitária para obter a URL pública ou download de um backup
   const getBackupDownloadUrl = useCallback((backupPath: string) => {
     const { data } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(backupPath);
     return data.publicUrl;
@@ -479,6 +571,13 @@ export function useKnowledgeBase() {
     },
     [selectedArticle, draftBody, saveMutation],
   );
+
+  const resetSaveState = useCallback(() => {
+    setSaveStep("idle");
+    setActiveVersionId(null);
+    setSyncErrorMessage(null);
+    setSyncedFileId(null);
+  }, []);
 
   return {
     docData,
@@ -509,10 +608,15 @@ export function useKnowledgeBase() {
     isLoadingVersions,
     refetchVersions,
     saveCurrentArticle,
-    isSaving: saveMutation.isPending,
+    isSaving: saveMutation.isPending || saveStep === "saving_storage" || saveStep === "syncing_openai",
     restoreVersion: restoreVersionMutation.mutateAsync,
     isRestoring: restoreVersionMutation.isPending,
     getBackupDownloadUrl,
+    // Realtime Save & Sync Status
+    saveStep,
+    syncErrorMessage,
+    syncedFileId,
+    resetSaveState,
     // Guarda de alterações não salvas
     isUnsavedDialogOpen,
     confirmDiscardAndSwitch,

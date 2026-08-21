@@ -53,7 +53,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Isolar lista de IDs de arquivos vinculados atualmente na Vector Store antes do novo upload\nconst currentFiles = $input.first().json.data || [];\nconst existingFileIds = currentFiles.map(f => f.id).filter(Boolean);\n\n// Extrai metadados recebidos do webhook com suporte a payload direto ou evento de tabela (record)\nconst webhookBody = $node[\"Webhook - Atualização Base Orion TN\"].json.body || {};\nconst record = webhookBody.record || {};\n\nconst bucket = record.bucket || webhookBody.bucket || 'assistant-oriontn-doc';\nconst filePath = record.file_path || webhookBody.file_path || 'OrionTN pos.md';\nconst versionTag = record.version_tag || webhookBody.version_tag || 'v1';\nconst articleId = record.article_id || webhookBody.article_id || '';\nconst summaryChanges = record.summary_changes || webhookBody.summary_changes || '';\nconst author = record.author_name || webhookBody.updated_by_name || record.author_email || webhookBody.updated_by || '';\n\nreturn [{\n  json: {\n    existing_file_ids: existingFileIds,\n    existing_files_count: existingFileIds.length,\n    vector_store_id: 'vs_6a85e00895f081918844a28887a34a17',\n    bucket,\n    file_path: filePath,\n    version_tag: versionTag,\n    article_id: articleId,\n    summary_changes: summaryChanges,\n    author\n  }\n}];"
+        "jsCode": "// Isolar lista de IDs de arquivos vinculados atualmente na Vector Store antes do novo upload\nconst currentFiles = $input.first().json.data || [];\nconst existingFileIds = currentFiles.map(f => f.id).filter(Boolean);\n\n// Extrai metadados recebidos do webhook com suporte a payload direto ou evento de tabela (record)\nconst webhookBody = $node[\"Webhook - Atualização Base Orion TN\"].json.body || {};\nconst record = webhookBody.record || {};\n\nconst versionId = record.id || webhookBody.version_id || '';\nconst bucket = record.bucket || webhookBody.bucket || 'assistant-oriontn-doc';\nconst filePath = record.file_path || webhookBody.file_path || 'OrionTN pos.md';\nconst versionTag = record.version_tag || webhookBody.version_tag || 'v1';\nconst articleId = record.article_id || webhookBody.article_id || '';\nconst summaryChanges = record.summary_changes || webhookBody.summary_changes || '';\nconst author = record.author_name || webhookBody.updated_by_name || record.author_email || webhookBody.updated_by || '';\n\nreturn [{\n  json: {\n    existing_file_ids: existingFileIds,\n    existing_files_count: existingFileIds.length,\n    vector_store_id: 'vs_6a85e00895f081918844a28887a34a17',\n    version_id: versionId,\n    bucket,\n    file_path: filePath,\n    version_tag: versionTag,\n    article_id: articleId,\n    summary_changes: summaryChanges,\n    author\n  }\n}];"
       },
       "id": "store-old-file-ids",
       "name": "Guardar Lista de Arquivos Antigos",
@@ -310,7 +310,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Cruzamento do estado inicial com o novo arquivo recém-indexado\n// ZERO DOWNTIME: Expurgamos apenas os arquivos antigos mapeados no início que NÃO sejam o novo ativo\nconst oldFileIds = $node[\"Guardar Lista de Arquivos Antigos\"].json.existing_file_ids || [];\nconst newFileId = $node[\"Upload para OpenAI Files API\"].json.id;\nconst vectorStoreId = \"vs_6a85e00895f081918844a28887a34a17\";\n\nconst obsoleteIds = oldFileIds.filter(id => id && id !== newFileId);\n\nif (obsoleteIds.length === 0) {\n  return [{\n    json: {\n      has_obsolete_files: false,\n      total_obsolete: 0,\n      new_file_id: newFileId,\n      vector_store_id: vectorStoreId,\n      message: \"Nenhum arquivo anterior obsoleto para expurgar.\"\n    }\n  }];\n}\n\nreturn obsoleteIds.map(oldId => ({\n  json: {\n    has_obsolete_files: true,\n    old_file_id: oldId,\n    new_file_id: newFileId,\n    vector_store_id: vectorStoreId,\n    total_obsolete: obsoleteIds.length\n  }\n}));"
+        "jsCode": "// Cruzamento do estado inicial com o novo arquivo recém-indexado\n// ZERO DOWNTIME: Expurgamos apenas os arquivos antigos mapeados no início que NÃO sejam o novo ativo\nconst oldFileIds = $node[\"Guardar Lista de Arquivos Antigos\"].json.existing_file_ids || [];\nconst newFileId = $node[\"Upload para OpenAI Files API\"].json.id;\nconst vectorStoreId = \"vs_6a85e00895f081918844a28887a34a17\";\n\n// Filtrar estritamente arquivos antigos diferentes do novo\nconst obsoleteIds = oldFileIds.filter(id => id && id !== newFileId);\n\nif (obsoleteIds.length === 0) {\n  return [{\n    json: {\n      has_obsolete_files: false,\n      total_obsolete: 0,\n      new_file_id: newFileId,\n      vector_store_id: vectorStoreId,\n      message: \"Nenhum arquivo anterior obsoleto para expurgar.\"\n    }\n  }];\n}\n\nreturn obsoleteIds.map(oldId => ({\n  json: {\n    has_obsolete_files: true,\n    old_file_id: oldId,\n    new_file_id: newFileId,\n    vector_store_id: vectorStoreId,\n    total_obsolete: obsoleteIds.length\n  }\n}));"
       },
       "id": "filter-obsolete-files",
       "name": "Isolar Arquivos Obsoletos para Exclusão",
@@ -384,14 +384,15 @@
           "id": "",
           "name": "OpenAI account"
         }
-      }
+      },
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
         "method": "DELETE",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "openAiApi",
-        "url": "=https://api.openai.com/v1/files/{{ $json.old_file_id }}",
+        "url": "=https://api.openai.com/v1/files/{{ $json.id || $node[\"Isolar Arquivos Obsoletos para Exclusão\"].json.old_file_id }}",
         "sendHeaders": true,
         "options": {}
       },
@@ -408,7 +409,80 @@
           "id": "",
           "name": "OpenAI account"
         }
-      }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "url": "https://okvufcwkophaadttmjwa.supabase.co/rest/v1/rpc/update_knowledge_version_sync_status",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_version_id\": \"{{ $node[\"Guardar Lista de Arquivos Antigos\"].json.version_id }}\",\n  \"p_status\": \"synced\",\n  \"p_metadata\": {\n    \"openai_file_id\": \"{{ $node[\"Upload para OpenAI Files API\"].json.id }}\",\n    \"vector_store_id\": \"vs_6a85e00895f081918844a28887a34a17\",\n    \"indexed_at\": \"{{ $now.toISO() }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "update-supabase-success",
+      "name": "Atualizar Status Sucesso no Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3460,
+        220
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "",
+          "name": "Supabase account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "url": "https://okvufcwkophaadttmjwa.supabase.co/rest/v1/rpc/update_knowledge_version_sync_status",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_version_id\": \"{{ $node[\"Guardar Lista de Arquivos Antigos\"].json.version_id }}\",\n  \"p_status\": \"failed\",\n  \"p_metadata\": {\n    \"error\": \"Timeout na indexação da OpenAI Vector Store após múltiplas tentativas\",\n    \"failed_at\": \"{{ $now.toISO() }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "update-supabase-error",
+      "name": "Atualizar Status Erro no Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2780,
+        500
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "",
+          "name": "Supabase account"
+        }
+      },
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -423,8 +497,8 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        3500,
-        300
+        3680,
+        220
       ]
     },
     {
@@ -440,8 +514,8 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        2780,
-        600
+        3000,
+        500
       ]
     }
   ],
@@ -585,7 +659,7 @@
         ],
         [
           {
-            "node": "Responder Erro / Timeout",
+            "node": "Atualizar Status Erro no Supabase",
             "type": "main",
             "index": 0
           }
@@ -614,7 +688,7 @@
         ],
         [
           {
-            "node": "Responder Sucesso ao Webhook",
+            "node": "Atualizar Status Sucesso no Supabase",
             "type": "main",
             "index": 0
           }
@@ -636,7 +710,29 @@
       "main": [
         [
           {
+            "node": "Atualizar Status Sucesso no Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar Status Sucesso no Supabase": {
+      "main": [
+        [
+          {
             "node": "Responder Sucesso ao Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar Status Erro no Supabase": {
+      "main": [
+        [
+          {
+            "node": "Responder Erro / Timeout",
             "type": "main",
             "index": 0
           }
