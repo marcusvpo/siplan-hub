@@ -166,9 +166,9 @@ export function ArticleMetadataCard({
                 <Badge
                   key={tag}
                   variant="secondary"
-                  className="font-mono text-[11px] font-normal text-foreground/90 bg-muted/80 hover:bg-muted"
+                  className="text-[11px] font-normal text-foreground/90 bg-muted/80 hover:bg-muted"
                 >
-                  #{tag}
+                  {tag}
                 </Badge>
               ))}
             </div>
