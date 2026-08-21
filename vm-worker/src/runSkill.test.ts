@@ -56,12 +56,12 @@ test("remove segredos operacionais do ambiente do Codex", () => {
   assert.equal(env.ANTHROPIC_API_KEY, undefined);
 });
 
-test("instala skill Codex headless ao lado da skill original", async () => {
+test("instala wrapper Codex apontando para a skill nativa em .codex", async () => {
   const tempRoot = await mkdtemp(path.join(os.tmpdir(), "siplan-codex-skill-"));
   try {
     const originalDir = path.join(
       tempRoot,
-      ".claude",
+      ".codex",
       "skills",
       "criar-modelo-mesclado"
     );
@@ -71,9 +71,48 @@ test("instala skill Codex headless ao lado da skill original", async () => {
     const installed = await ensureCodexModelSkill(tempRoot);
     const content = await readFile(installed, "utf-8");
     assert.match(content, /name: criar-modelo-mesclado/);
+    assert.match(content, /\.codex\/skills\/criar-modelo-mesclado\/SKILL\.md/);
+    assert.doesNotMatch(content, /\.claude\/skills\/criar-modelo-mesclado/);
     assert.match(content, /Nunca pedir entrada, confirmacao ou aprovacao/);
 
     assert.equal(await ensureCodexModelSkill(tempRoot), installed);
+  } finally {
+    await rm(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test("mantem compatibilidade com a skill legada em .claude", async () => {
+  const tempRoot = await mkdtemp(path.join(os.tmpdir(), "siplan-claude-skill-"));
+  try {
+    const originalDir = path.join(
+      tempRoot,
+      ".claude",
+      "skills",
+      "criar-modelo-mesclado"
+    );
+    await mkdir(originalDir, { recursive: true });
+    await writeFile(path.join(originalDir, "SKILL.md"), "# Skill legada\n", "utf-8");
+
+    const installed = await ensureCodexModelSkill(tempRoot);
+    const content = await readFile(installed, "utf-8");
+    assert.match(content, /\.claude\/skills\/criar-modelo-mesclado\/SKILL\.md/);
+  } finally {
+    await rm(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test("informa todos os caminhos quando a skill do modelo nao existe", async () => {
+  const tempRoot = await mkdtemp(path.join(os.tmpdir(), "siplan-missing-skill-"));
+  try {
+    await assert.rejects(
+      ensureCodexModelSkill(tempRoot),
+      (error: unknown) => {
+        assert.ok(error instanceof Error);
+        assert.match(error.message, /\.codex.*criar-modelo-mesclado.*SKILL\.md/);
+        assert.match(error.message, /\.claude.*criar-modelo-mesclado.*SKILL\.md/);
+        return true;
+      }
+    );
   } finally {
     await rm(tempRoot, { recursive: true, force: true });
   }

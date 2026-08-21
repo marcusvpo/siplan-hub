@@ -1,7 +1,14 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-const MANAGED_SKILL = `---
+const MODEL_SKILL_PARTS = ["skills", "criar-modelo-mesclado", "SKILL.md"];
+const MODEL_SKILL_SOURCES = [
+  [".codex", ...MODEL_SKILL_PARTS],
+  [".claude", ...MODEL_SKILL_PARTS],
+] as const;
+
+function buildManagedSkill(sourceRelativePath: string): string {
+  return `---
 name: criar-modelo-mesclado
 description: Transformar documentos de clientes (DOCX, ODT, PDF, DOC ou RTF) em modelos Orion RTF/ODT e no modelo.json de importacao. Usar no gerador automatico do SiplanHUB e sempre que for preciso executar o fluxo criar-modelo-mesclado de forma autonoma.
 ---
@@ -14,10 +21,10 @@ headless, automatico ou autonomo.
 ## Fonte de verdade
 
 1. Ler por completo, antes de agir, o arquivo
-   \`.claude/skills/criar-modelo-mesclado/SKILL.md\` da raiz do repositorio.
-2. Ler \`CLAUDE.md\` e \`AGENTS.md\`. Tratar as regras de dominio do primeiro
-   como regras do projeto tambem no Codex.
-3. Seguir as fases, validadores, linters e scripts da skill original. Nao
+   \`${sourceRelativePath}\` da raiz do repositorio, incluindo as referencias que
+   ele declarar obrigatorias.
+2. Ler \`AGENTS.md\` e demais instrucoes de projeto existentes.
+3. Seguir as fases, validadores, linters e scripts da skill fonte. Nao
    reimplementar empacotamento manualmente.
 
 ## Contrato headless obrigatorio
@@ -41,11 +48,12 @@ existente na skill original:
 
 ## Verificacao sem subagente obrigatorio
 
-Na Fase 5, ler por completo \`.claude/agents/verificador-modelo.md\` e executar a
-auditoria na propria sessao. Rodar todos os validadores deterministas exigidos,
-comparar o resultado com o documento do cliente e corrigir ate obter aprovacao.
-Usar subagente apenas se estiver disponivel e se isso nao interromper o modo
-headless; sua ausencia nunca bloqueia o fluxo.
+Na fase de verificacao definida pela skill fonte, ler por completo o verificador
+indicado por ela e executar a auditoria na propria sessao. Rodar todos os
+validadores deterministas exigidos, comparar o resultado com o documento do
+cliente e corrigir ate obter aprovacao. Usar subagente apenas se estiver
+disponivel e se isso nao interromper o modo headless; sua ausencia nunca bloqueia
+o fluxo.
 
 ## Entrega ao worker
 
@@ -55,6 +63,7 @@ headless; sua ausencia nunca bloqueia o fluxo.
 - Encerrar imprimindo exatamente uma linha no formato:
   \`JSON_GERADO=<caminho absoluto do modelo.json>\`.
 `;
+}
 
 /**
  * Instala/atualiza a skill de compatibilidade Codex dentro do Orion.Modelos.
@@ -62,21 +71,32 @@ headless; sua ausencia nunca bloqueia o fluxo.
  * apenas descoberta pelo Codex e as regras do worker headless.
  */
 export async function ensureCodexModelSkill(projectDir: string): Promise<string> {
-  const original = path.join(
-    projectDir,
-    ".claude",
-    "skills",
-    "criar-modelo-mesclado",
-    "SKILL.md"
-  );
-  try {
-    await readFile(original, "utf-8");
-  } catch {
-    throw new Error(`Skill original criar-modelo-mesclado nao encontrada em ${original}`);
+  let source: string | undefined;
+  let sourceRelativePath: string | undefined;
+  const searched: string[] = [];
+
+  for (const parts of MODEL_SKILL_SOURCES) {
+    const candidate = path.join(projectDir, ...parts);
+    searched.push(candidate);
+    try {
+      await readFile(candidate, "utf-8");
+      source = candidate;
+      sourceRelativePath = parts.join("/");
+      break;
+    } catch {
+      // Tenta a proxima instalacao suportada.
+    }
+  }
+
+  if (!source || !sourceRelativePath) {
+    throw new Error(
+      `Skill criar-modelo-mesclado nao encontrada. Caminhos verificados: ${searched.join(", ")}`
+    );
   }
 
   const targetDir = path.join(projectDir, ".agents", "skills", "criar-modelo-mesclado");
   const target = path.join(targetDir, "SKILL.md");
+  const managedSkill = buildManagedSkill(sourceRelativePath);
   await mkdir(targetDir, { recursive: true });
 
   let current = "";
@@ -85,8 +105,10 @@ export async function ensureCodexModelSkill(projectDir: string): Promise<string>
   } catch {
     // Primeira instalacao.
   }
-  if (current !== MANAGED_SKILL) await writeFile(target, MANAGED_SKILL, "utf-8");
+  if (current !== managedSkill) await writeFile(target, managedSkill, "utf-8");
   return target;
 }
 
-export const CODEX_MODEL_SKILL_CONTENT = MANAGED_SKILL;
+export const CODEX_MODEL_SKILL_CONTENT = buildManagedSkill(
+  ".codex/skills/criar-modelo-mesclado/SKILL.md"
+);
