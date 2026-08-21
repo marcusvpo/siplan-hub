@@ -64,6 +64,9 @@ import {
   Calendar,
   Eye,
   UsersRound,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -108,6 +111,8 @@ const FEEDBACK_COLORS = {
   none: "hsl(215, 16%, 47%)",
 };
 
+const LIBRARY_PAGE_SIZE = 10;
+
 interface MessagePair {
   id: string;
   project_id: string;
@@ -135,6 +140,8 @@ export default function PosAiLogs() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [feedbackFilter, setFeedbackFilter] = useState<string>("all");
   const [visitorFilter, setVisitorFilter] = useState<string>("all");
+  const [libraryPage, setLibraryPage] = useState(1);
+  const [expandedPairIds, setExpandedPairIds] = useState<Set<string>>(() => new Set());
   const [inspectingLog, setInspectingLog] = useState<
     PosAiAdminLogItem | PosAiFeedbackItem | PosAiLatencyRankItem | MessagePair | null
   >(null);
@@ -378,6 +385,86 @@ export default function PosAiLogs() {
       return true;
     });
   }, [logs, libraryMode, feedbackFilter, searchTerm, visitorFilter]);
+
+  const libraryTotalItems =
+    libraryMode === "pairs" ? filteredPairs.length : filteredLogs.length;
+  const libraryTotalPages = Math.max(
+    1,
+    Math.ceil(libraryTotalItems / LIBRARY_PAGE_SIZE),
+  );
+
+  const paginatedPairs = useMemo(() => {
+    const start = (libraryPage - 1) * LIBRARY_PAGE_SIZE;
+    return filteredPairs.slice(start, start + LIBRARY_PAGE_SIZE);
+  }, [filteredPairs, libraryPage]);
+
+  const paginatedLogs = useMemo(() => {
+    const start = (libraryPage - 1) * LIBRARY_PAGE_SIZE;
+    return filteredLogs.slice(start, start + LIBRARY_PAGE_SIZE);
+  }, [filteredLogs, libraryPage]);
+
+  useEffect(() => {
+    setLibraryPage(1);
+    setExpandedPairIds(new Set());
+  }, [days, feedbackFilter, libraryMode, searchTerm, selectedProject, visitorFilter]);
+
+  useEffect(() => {
+    if (libraryPage > libraryTotalPages) {
+      setLibraryPage(libraryTotalPages);
+      setExpandedPairIds(new Set());
+    }
+  }, [libraryPage, libraryTotalPages]);
+
+  const togglePair = (pairId: string) => {
+    setExpandedPairIds((current) => {
+      const next = new Set(current);
+      if (next.has(pairId)) next.delete(pairId);
+      else next.add(pairId);
+      return next;
+    });
+  };
+
+  const changeLibraryPage = (nextPage: number) => {
+    setLibraryPage(Math.min(Math.max(nextPage, 1), libraryTotalPages));
+    setExpandedPairIds(new Set());
+  };
+
+  const libraryPagination =
+    libraryTotalPages > 1 ? (
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-3 text-[11px] text-muted-foreground">
+        <span>
+          {(libraryPage - 1) * LIBRARY_PAGE_SIZE + 1}–
+          {Math.min(libraryPage * LIBRARY_PAGE_SIZE, libraryTotalItems)} de {libraryTotalItems}
+        </span>
+        <div className="flex items-center gap-1.5">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-7 px-2"
+            disabled={libraryPage === 1}
+            onClick={() => changeLibraryPage(libraryPage - 1)}
+            aria-label="Página anterior"
+          >
+            <ChevronLeft className="h-3.5 w-3.5" />
+          </Button>
+          <span className="min-w-20 text-center font-medium text-foreground">
+            Página {libraryPage} de {libraryTotalPages}
+          </span>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-7 px-2"
+            disabled={libraryPage === libraryTotalPages}
+            onClick={() => changeLibraryPage(libraryPage + 1)}
+            aria-label="Próxima página"
+          >
+            <ChevronRight className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      </div>
+    ) : null;
 
   // Export CSV
   const handleExportCsv = () => {
@@ -1199,24 +1286,32 @@ export default function PosAiLogs() {
                           Nenhum diálogo encontrado com os filtros aplicados.
                         </div>
                       ) : (
-                        filteredPairs.map((pair) => (
+                        paginatedPairs.map((pair) => {
+                          const isExpanded = expandedPairIds.has(pair.id);
+
+                          return (
                           <div
                             key={pair.id}
-                            className="p-4 rounded-xl border bg-card/70 hover:border-slate-300 dark:hover:border-neutral-700 transition-all space-y-3 shadow-xs"
+                            className="overflow-hidden rounded-xl border bg-card/70 px-4 shadow-xs transition-colors hover:border-slate-300 dark:hover:border-neutral-700"
                           >
                             {/* Card Header: Cartório, Data, Custo $, Latência, Feedback */}
-                            <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-2.5 text-xs">
-                              <div className="flex items-center gap-2">
-                                <span className="font-bold text-foreground flex items-center gap-1.5">
-                                  <Building2 className="h-3.5 w-3.5 text-rose-600" />
-                                  {pair.client_name}
-                                </span>
-                                <span className="text-[11px] text-muted-foreground">
-                                  · {pair.created_at ? format(new Date(pair.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : ""}
-                                </span>
+                            <div className={`flex flex-wrap items-center justify-between gap-2 py-3 text-xs ${isExpanded ? "border-b" : ""}`}>
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-bold text-foreground flex items-center gap-1.5">
+                                    <Building2 className="h-3.5 w-3.5 text-rose-600" />
+                                    {pair.client_name}
+                                  </span>
+                                  <span className="text-[11px] text-muted-foreground">
+                                    · {pair.created_at ? format(new Date(pair.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : ""}
+                                  </span>
+                                </div>
+                                <p className="mt-1 truncate text-[11px] text-muted-foreground">
+                                  {pair.user_message?.content || "Conversa sem pergunta registrada"}
+                                </p>
                               </div>
 
-                              <div className="flex items-center gap-2">
+                              <div className="flex flex-wrap items-center gap-1.5">
                                 {/* Cost in USD */}
                                 {pair.estimated_cost_usd !== undefined && pair.estimated_cost_usd > 0 && (
                                   <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-300 font-mono text-[11px] py-0.5">
@@ -1259,9 +1354,38 @@ export default function PosAiLogs() {
                                 >
                                   <Eye className="h-3 w-3 mr-1" /> Detalhes
                                 </Button>
+
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 gap-1 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+                                  onClick={() => togglePair(pair.id)}
+                                  aria-expanded={isExpanded}
+                                  aria-label={isExpanded ? "Recolher conversa" : "Expandir conversa"}
+                                >
+                                  <span className="hidden sm:inline">
+                                    {isExpanded ? "Recolher" : "Expandir"}
+                                  </span>
+                                  <ChevronDown
+                                    className={`h-3.5 w-3.5 transition-transform duration-300 ${
+                                      isExpanded ? "rotate-180" : ""
+                                    }`}
+                                  />
+                                </Button>
                               </div>
                             </div>
 
+                            <div
+                              className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${
+                                isExpanded
+                                  ? "grid-rows-[1fr] opacity-100"
+                                  : "grid-rows-[0fr] opacity-0"
+                              }`}
+                              aria-hidden={!isExpanded}
+                            >
+                              <div className="overflow-hidden">
+                                <div className="space-y-3 pb-4 pt-3">
                             {/* Section 1: User Question */}
                             {pair.user_message && (
                               <div className="flex items-start gap-2.5 p-3 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
@@ -1304,16 +1428,22 @@ export default function PosAiLogs() {
                                 💬 Comentário do cliente: &quot;{pair.feedback_comment}&quot;
                               </div>
                             )}
+                                </div>
+                              </div>
+                            </div>
                           </div>
-                        ))
+                          );
+                        })
                       )}
+                      {libraryPagination}
                     </div>
                   )}
 
                   {/* MODE 2, 3, 4: TABLE VIEW */}
                   {libraryMode !== "pairs" && (
-                    <div className="overflow-x-auto max-h-[600px]">
-                      <Table>
+                    <div className="space-y-3">
+                      <div className="max-h-[600px] overflow-x-auto">
+                        <Table>
                         <TableHeader className="sticky top-0 bg-card z-10">
                           <TableRow className="text-xs">
                             <TableHead className="w-[130px]">Data/Hora</TableHead>
@@ -1328,7 +1458,7 @@ export default function PosAiLogs() {
                           </TableRow>
                         </TableHeader>
                         <TableBody className="text-xs">
-                          {filteredLogs.map((log) => {
+                          {paginatedLogs.map((log) => {
                             const isUser = log.role === "user";
                             return (
                               <TableRow
@@ -1419,7 +1549,9 @@ export default function PosAiLogs() {
                             );
                           })}
                         </TableBody>
-                      </Table>
+                        </Table>
+                      </div>
+                      {libraryPagination}
                     </div>
                   )}
                 </CardContent>
