@@ -8,6 +8,8 @@ export interface PosChatRecentMessage {
   content: string;
   feedback?: "helpful" | "unhelpful" | null;
   feedback_comment?: string | null;
+  visitor_name?: string | null;
+  visitor_sector?: string | null;
   created_at: string;
 }
 

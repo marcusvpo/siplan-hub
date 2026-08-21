@@ -30,10 +30,10 @@ Deno.serve(async (req: Request) => {
 
     // 1. Action: feedback
     if (action === "feedback") {
-      const { message_id, feedback, comment } = body;
-      if (!message_id || !feedback) {
+      const { message_id, visitor_id, feedback, comment } = body;
+      if (!message_id || !visitor_id || !feedback) {
         return new Response(
-          JSON.stringify({ error: "message_id e feedback são obrigatórios" }),
+          JSON.stringify({ error: "message_id, visitor_id e feedback são obrigatórios" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
@@ -45,6 +45,8 @@ Deno.serve(async (req: Request) => {
           feedback_comment: comment || null,
         })
         .eq("id", message_id)
+        .eq("visitor_id", visitor_id)
+        .eq("role", "assistant")
         .select()
         .single();
 
@@ -57,11 +59,11 @@ Deno.serve(async (req: Request) => {
     }
 
     // 2. Action: chat
-    const { project_id, session_id, message, previous_response_id } = body;
+    const { project_id, visitor_id, session_id, message, previous_response_id } = body;
 
-    if (!project_id || !session_id || !message?.trim()) {
+    if (!project_id || !visitor_id || !session_id || !message?.trim()) {
       return new Response(
-        JSON.stringify({ error: "project_id, session_id e message são obrigatórios" }),
+        JSON.stringify({ error: "project_id, visitor_id, session_id e message são obrigatórios" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -81,11 +83,31 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    const { data: visitor, error: visitorError } = await supabaseAdmin
+      .from("pos_ai_chat_visitors")
+      .select("id")
+      .eq("id", visitor_id)
+      .eq("project_id", project_id)
+      .maybeSingle();
+
+    if (visitorError || !visitor) {
+      return new Response(
+        JSON.stringify({ error: "Usuário não identificado para este cartório" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    await supabaseAdmin
+      .from("pos_ai_chat_visitors")
+      .update({ last_seen_at: new Date().toISOString() })
+      .eq("id", visitor_id);
+
     // Record user message in DB
     const { data: userMsg, error: userMsgErr } = await supabaseAdmin
       .from("pos_ai_chat_messages")
       .insert({
         project_id,
+        visitor_id,
         session_id,
         role: "user",
         content: message.trim(),
@@ -188,6 +210,7 @@ Deno.serve(async (req: Request) => {
       .from("pos_ai_chat_messages")
       .insert({
         project_id,
+        visitor_id,
         session_id,
         role: "assistant",
         content: replyText,
