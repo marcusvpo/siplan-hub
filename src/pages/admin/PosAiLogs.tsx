@@ -111,7 +111,7 @@ const FEEDBACK_COLORS = {
   none: "hsl(215, 16%, 47%)",
 };
 
-const LIBRARY_PAGE_SIZE = 10;
+const LIBRARY_PAGE_SIZE = 4;
 
 interface MessagePair {
   id: string;
