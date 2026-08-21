@@ -20,22 +20,53 @@ import {
   Sparkles,
   BarChart3,
   Bot,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/hooks/use-theme";
 import { activityLogger } from "@/services/activityLogger";
 
+const ADMIN_SIDEBAR_COLLAPSED_KEY = "admin-sidebar-collapsed";
+
 export default function AdminLayout() {
   const { user, role, loading, permissionsLoaded, signOut } = useAuth();
   const { canManageUsers, hasPermission } = usePermissions();
   const { theme } = useTheme();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem(ADMIN_SIDEBAR_COLLAPSED_KEY) === "true";
+  });
   const location = useLocation();
+  const userId = user?.id;
+
+  useEffect(() => {
+    window.localStorage.setItem(
+      ADMIN_SIDEBAR_COLLAPSED_KEY,
+      String(sidebarCollapsed),
+    );
+  }, [sidebarCollapsed]);
+
+  useEffect(() => {
+    setMobileSidebarOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!mobileSidebarOpen) return;
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMobileSidebarOpen(false);
+    };
+
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [mobileSidebarOpen]);
 
   // Heartbeat to keep user marked as online while in admin area
   useEffect(() => {
-    if (!user || loading || !permissionsLoaded) return;
+    if (!userId || loading || !permissionsLoaded) return;
 
     const sendHeartbeat = () => {
       activityLogger.log({
@@ -53,7 +84,7 @@ export default function AdminLayout() {
     const interval = setInterval(sendHeartbeat, 10 * 60 * 1000);
 
     return () => clearInterval(interval);
-  }, [user?.id, loading, permissionsLoaded]);
+  }, [userId, loading, permissionsLoaded]);
 
   if (loading || !permissionsLoaded) {
     return (
@@ -87,17 +118,26 @@ export default function AdminLayout() {
   ].filter((item) => hasPermission(item.resource, "view"));
 
   return (
-    <div className="min-h-[100dvh] bg-muted/10 flex overflow-hidden">
+    <div className="flex h-[100dvh] min-h-[100dvh] overflow-hidden bg-muted/10">
       {/* Sidebar */}
       <aside
+        aria-label="Navegação administrativa"
+        data-collapsed={sidebarCollapsed}
+        data-mobile-open={mobileSidebarOpen}
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 bg-card border-r shadow-sm transition-transform duration-300 ease-in-out lg:translate-x-0 lg:relative lg:inset-auto",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full",
+          "fixed inset-y-0 left-0 z-50 w-64 border-r bg-card shadow-xl transition-[transform,width] duration-300 ease-out lg:relative lg:inset-auto lg:z-auto lg:translate-x-0 lg:shadow-sm",
+          mobileSidebarOpen ? "translate-x-0" : "-translate-x-full",
+          sidebarCollapsed ? "lg:w-[72px]" : "lg:w-64",
         )}
       >
-        <div className="h-full flex flex-col">
-          <div className="h-16 flex items-center px-6 border-b">
-            <div className="flex items-center gap-2">
+        <div className="flex h-full flex-col">
+          <div
+            className={cn(
+              "flex h-16 shrink-0 items-center border-b px-4 transition-[padding] duration-300",
+              sidebarCollapsed ? "lg:justify-center lg:px-2" : "lg:px-6",
+            )}
+          >
+            <div className={cn("flex min-w-0 items-center", sidebarCollapsed && "lg:hidden")}>
               <img
                 src={
                   theme === "dark" ||
@@ -107,23 +147,43 @@ export default function AdminLayout() {
                     : "/assets/Siplan_logo.png"
                 }
                 alt="Siplan Logo"
-                className="h-8 w-auto object-contain drop-shadow-md transition-all"
+                className="h-8 w-auto max-w-[150px] object-contain drop-shadow-md transition-all"
               />
-              <span className="font-bold text-xl tracking-tight text-primary sr-only">
-                Siplan Admin
-              </span>
             </div>
             <Button
               variant="ghost"
               size="icon"
-              className="ml-auto lg:hidden"
-              onClick={() => setSidebarOpen(false)}
+              className="ml-auto shrink-0 lg:hidden"
+              onClick={() => setMobileSidebarOpen(false)}
+              aria-label="Fechar menu lateral"
             >
               <X className="h-5 w-5" />
             </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                "hidden shrink-0 lg:inline-flex",
+                !sidebarCollapsed && "ml-auto",
+              )}
+              onClick={() => setSidebarCollapsed((current) => !current)}
+              aria-label={sidebarCollapsed ? "Expandir menu lateral" : "Recolher menu lateral"}
+              title={sidebarCollapsed ? "Expandir menu lateral" : "Recolher menu lateral"}
+            >
+              {sidebarCollapsed ? (
+                <PanelLeftOpen className="h-5 w-5" />
+              ) : (
+                <PanelLeftClose className="h-5 w-5" />
+              )}
+            </Button>
           </div>
 
-          <div className="flex-1 py-6 px-4 space-y-1">
+          <nav
+            className={cn(
+              "flex-1 space-y-1 overflow-y-auto overflow-x-hidden px-3 py-5 transition-[padding] duration-300",
+              sidebarCollapsed && "lg:px-2",
+            )}
+          >
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive =
@@ -139,26 +199,49 @@ export default function AdminLayout() {
                 >
                   <Button
                     variant={isActive ? "secondary" : "ghost"}
+                    title={sidebarCollapsed ? item.label : undefined}
+                    aria-label={sidebarCollapsed ? item.label : undefined}
                     className={cn(
-                      "w-full justify-start mb-1",
+                      "mb-1 w-full justify-start overflow-hidden transition-[padding] duration-300",
+                      sidebarCollapsed && "lg:justify-center lg:px-0",
                       isActive &&
                         "bg-primary/10 text-primary hover:bg-primary/20",
                     )}
                   >
-                    <Icon className="mr-2 h-4 w-4" />
-                    {item.label}
+                    <Icon
+                      className={cn(
+                        "h-4 w-4 shrink-0 mr-2",
+                        sidebarCollapsed && "lg:mr-0",
+                      )}
+                    />
+                    <span className={cn("truncate", sidebarCollapsed && "lg:sr-only")}>
+                      {item.label}
+                    </span>
                   </Button>
                 </Link>
               );
             })}
-          </div>
+          </nav>
 
-          <div className="p-4 border-t space-y-2">
-            <div className="flex items-center gap-3 px-2 mb-4">
-              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs uppercase">
+          <div
+            className={cn(
+              "shrink-0 space-y-2 border-t p-4 transition-[padding] duration-300",
+              sidebarCollapsed && "lg:px-2",
+            )}
+          >
+            <div
+              className={cn(
+                "mb-4 flex items-center gap-3 px-2",
+                sidebarCollapsed && "lg:justify-center lg:px-0",
+              )}
+            >
+              <div
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold uppercase text-primary"
+                title={sidebarCollapsed ? user.email || "Usuário" : undefined}
+              >
                 {user.email?.substring(0, 2) || "U"}
               </div>
-              <div className="flex-1 overflow-hidden">
+              <div className={cn("flex-1 overflow-hidden", sidebarCollapsed && "lg:hidden")}>
                 <p className="text-sm font-medium truncate">{user.email}</p>
                 <p className="text-xs text-muted-foreground capitalize">
                   {role === "admin" ? "Administrador" : role === "user" ? "Usuário Padrão" : role || "Sem Papel"}
@@ -169,33 +252,47 @@ export default function AdminLayout() {
             <Link to="/">
               <Button
                 variant="outline"
-                className="w-full justify-start text-muted-foreground hover:text-foreground"
+                title={sidebarCollapsed ? "Acessar Sistema" : undefined}
+                className={cn(
+                  "w-full justify-start overflow-hidden text-muted-foreground hover:text-foreground",
+                  sidebarCollapsed && "lg:justify-center lg:px-0",
+                )}
               >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Acessar Sistema
+                <ArrowLeft className={cn("h-4 w-4 shrink-0 mr-2", sidebarCollapsed && "lg:mr-0")} />
+                <span className={cn("truncate", sidebarCollapsed && "lg:sr-only")}>
+                  Acessar Sistema
+                </span>
               </Button>
             </Link>
 
             <Button
               variant="outline"
-              className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/20"
+              title={sidebarCollapsed ? "Sair" : undefined}
+              className={cn(
+                "w-full justify-start overflow-hidden border-destructive/20 text-destructive hover:bg-destructive/10 hover:text-destructive",
+                sidebarCollapsed && "lg:justify-center lg:px-0",
+              )}
               onClick={() => signOut()}
             >
-              <LogOut className="mr-2 h-4 w-4" />
-              Sair
+              <LogOut className={cn("h-4 w-4 shrink-0 mr-2", sidebarCollapsed && "lg:mr-0")} />
+              <span className={cn("truncate", sidebarCollapsed && "lg:sr-only")}>
+                Sair
+              </span>
             </Button>
           </div>
         </div>
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-16 border-b bg-card/50 backdrop-blur-sm flex items-center px-4 lg:px-8 sticky top-0 z-40">
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center border-b bg-card/80 px-3 backdrop-blur-sm sm:px-4 lg:px-6">
           <Button
             variant="ghost"
             size="icon"
-            className="mr-4 lg:hidden"
-            onClick={() => setSidebarOpen(true)}
+            className="mr-2 lg:hidden"
+            onClick={() => setMobileSidebarOpen(true)}
+            aria-label="Abrir menu lateral"
+            aria-expanded={mobileSidebarOpen}
           >
             <Menu className="h-5 w-5" />
           </Button>
@@ -204,17 +301,18 @@ export default function AdminLayout() {
               "Painel Administrativo"}
           </h1>
         </header>
-        <main className="flex-1 p-4 lg:p-8 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-8">
           <Outlet />
         </main>
       </div>
 
       {/* Overlay for mobile sidebar */}
-      {sidebarOpen && (
-        <div
-          aria-hidden="true"
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
+      {mobileSidebarOpen && (
+        <button
+          type="button"
+          aria-label="Fechar menu lateral"
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-[1px] transition-opacity lg:hidden"
+          onClick={() => setMobileSidebarOpen(false)}
         />
       )}
     </div>
