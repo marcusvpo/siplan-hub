@@ -134,6 +134,7 @@ export default function PosAiLogs() {
   const [libraryMode, setLibraryMode] = useState<"pairs" | "assistant" | "user" | "all">("pairs");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [feedbackFilter, setFeedbackFilter] = useState<string>("all");
+  const [visitorFilter, setVisitorFilter] = useState<string>("all");
   const [inspectingLog, setInspectingLog] = useState<
     PosAiAdminLogItem | PosAiFeedbackItem | PosAiLatencyRankItem | MessagePair | null
   >(null);
@@ -213,6 +214,31 @@ export default function PosAiLogs() {
       );
   }, [activeProjects, projectsActivityList]);
 
+  const libraryVisitorOptions = useMemo(() => {
+    const activeVisitorIds = new Set(
+      logs.map((log) => log.visitor_id).filter((id): id is string => Boolean(id)),
+    );
+
+    return (visitorAnalytics?.by_user || [])
+      .filter((visitor) => activeVisitorIds.has(visitor.visitor_id))
+      .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+  }, [logs, visitorAnalytics?.by_user]);
+
+  const hasUnidentifiedLibraryLogs = useMemo(
+    () => logs.some((log) => !log.visitor_id),
+    [logs],
+  );
+
+  useEffect(() => {
+    if (
+      visitorFilter !== "all" &&
+      visitorFilter !== "unidentified" &&
+      !libraryVisitorOptions.some((visitor) => visitor.visitor_id === visitorFilter)
+    ) {
+      setVisitorFilter("all");
+    }
+  }, [libraryVisitorOptions, visitorFilter]);
+
   // Group logs into Dialog Pairs (User Question ➡️ Assistant Reply)
   const messagePairs = useMemo(() => {
     const pairs: MessagePair[] = [];
@@ -287,6 +313,18 @@ export default function PosAiLogs() {
   // Filtered pairs for the Library
   const filteredPairs = useMemo(() => {
     return messagePairs.filter((pair) => {
+      const pairVisitorId =
+        pair.user_message?.visitor_id ?? pair.assistant_message?.visitor_id ?? null;
+
+      if (visitorFilter === "unidentified" && pairVisitorId) return false;
+      if (
+        visitorFilter !== "all" &&
+        visitorFilter !== "unidentified" &&
+        pairVisitorId !== visitorFilter
+      ) {
+        return false;
+      }
+
       // Feedback filter
       if (feedbackFilter === "helpful" && pair.feedback !== "helpful") return false;
       if (feedbackFilter === "unhelpful" && pair.feedback !== "unhelpful") return false;
@@ -306,13 +344,22 @@ export default function PosAiLogs() {
 
       return true;
     });
-  }, [messagePairs, feedbackFilter, searchTerm]);
+  }, [messagePairs, feedbackFilter, searchTerm, visitorFilter]);
 
   // Filter raw logs for table view
   const filteredLogs = useMemo(() => {
     return logs.filter((log) => {
       if (libraryMode === "assistant" && log.role !== "assistant") return false;
       if (libraryMode === "user" && log.role !== "user") return false;
+
+      if (visitorFilter === "unidentified" && log.visitor_id) return false;
+      if (
+        visitorFilter !== "all" &&
+        visitorFilter !== "unidentified" &&
+        log.visitor_id !== visitorFilter
+      ) {
+        return false;
+      }
 
       if (feedbackFilter === "helpful" && log.feedback !== "helpful") return false;
       if (feedbackFilter === "unhelpful" && log.feedback !== "unhelpful") return false;
@@ -330,7 +377,7 @@ export default function PosAiLogs() {
 
       return true;
     });
-  }, [logs, libraryMode, feedbackFilter, searchTerm]);
+  }, [logs, libraryMode, feedbackFilter, searchTerm, visitorFilter]);
 
   // Export CSV
   const handleExportCsv = () => {
@@ -1114,6 +1161,29 @@ export default function PosAiLogs() {
                           <SelectItem value="helpful">Apenas Útil</SelectItem>
                           <SelectItem value="unhelpful">Não Ajudou</SelectItem>
                           <SelectItem value="with_comment">Com Comentário</SelectItem>
+                        </SelectContent>
+                      </Select>
+
+                      {/* Visitor filter */}
+                      <Select value={visitorFilter} onValueChange={setVisitorFilter}>
+                        <SelectTrigger
+                          aria-label="Filtrar por usuário"
+                          className="h-8 w-full text-xs sm:w-44"
+                        >
+                          <User className="mr-1 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                          <SelectValue placeholder="Usuário" />
+                        </SelectTrigger>
+                        <SelectContent className="max-w-[340px]">
+                          <SelectItem value="all">Todos os usuários</SelectItem>
+                          {libraryVisitorOptions.map((visitor) => (
+                            <SelectItem key={visitor.visitor_id} value={visitor.visitor_id}>
+                              {visitor.name} · {visitor.sector}
+                              {selectedProject === "all" ? ` · ${visitor.client_name}` : ""}
+                            </SelectItem>
+                          ))}
+                          {hasUnidentifiedLibraryLogs && (
+                            <SelectItem value="unidentified">Não identificado</SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
