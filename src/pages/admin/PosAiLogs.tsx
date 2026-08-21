@@ -67,6 +67,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Link2,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -93,7 +94,9 @@ import {
   PosAiLatencyRankItem,
 } from "@/hooks/usePosAiAdminAnalytics";
 import { usePosAiVisitorAnalytics } from "@/hooks/usePosAiVisitorAnalytics";
+import { usePosAiChatLinks } from "@/hooks/usePosAiChatLinks";
 import { PosAiVisitorAnalytics } from "@/components/Admin/PosAiVisitorAnalytics";
+import { PosAiChatLinksManager } from "@/components/Admin/PosAiChatLinksManager";
 import { PosChatMessageContent } from "@/components/pos-chat/PosChatMessageContent";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -169,6 +172,8 @@ export default function PosAiLogs() {
   } = usePosAiVisitorAnalytics(projectIdParam, Number(days));
 
   const { data: activeProjects } = useActivePosAiProjectsList();
+  const { data: chatLinks = [], isLoading: isChatLinksLoading } = usePosAiChatLinks();
+  const activeChatLinksCount = chatLinks.filter((link) => link.enabled).length;
 
   // Synchronize URL param
   const handleProjectChange = (val: string) => {
@@ -820,7 +825,7 @@ export default function PosAiLogs() {
 
           {/* Navigation Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:grid-cols-3 xl:grid-cols-5">
+            <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:grid-cols-3 xl:grid-cols-6">
               <TabsTrigger value="overview" className="text-xs gap-1.5">
                 <Gauge className="h-3.5 w-3.5" />
                 Visão Geral & Gráficos
@@ -841,7 +846,23 @@ export default function PosAiLogs() {
                 <UsersRound className="h-3.5 w-3.5 text-violet-600" />
                 Usuários & Setores ({visitorAnalytics?.kpis.active_users || 0})
               </TabsTrigger>
+              <TabsTrigger value="chat-links" className="text-xs gap-1.5">
+                <Link2 className="h-3.5 w-3.5 text-cyan-600" />
+                Links dos Chats ({activeChatLinksCount})
+              </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="chat-links" className="space-y-4">
+              <PosAiChatLinksManager
+                links={chatLinks}
+                isLoading={isChatLinksLoading}
+                selectedProject={selectedProject}
+                onViewLogs={(projectId) => {
+                  handleProjectChange(projectId);
+                  setActiveTab("library");
+                }}
+              />
+            </TabsContent>
 
             <TabsContent value="visitors" className="space-y-4">
               <PosAiVisitorAnalytics
