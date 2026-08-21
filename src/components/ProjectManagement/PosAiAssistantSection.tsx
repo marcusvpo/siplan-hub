@@ -150,7 +150,7 @@ export function PosAiAssistantSection({ project }: PosAiAssistantSectionProps) {
   };
 
   const handleViewLogs = () => {
-    navigate(`/admin/pos-ai-logs?projectId=${project.id}`);
+    navigate(`/assistentes/logs?projectId=${project.id}`);
   };
 
   // 1. Initial State: Not yet activated

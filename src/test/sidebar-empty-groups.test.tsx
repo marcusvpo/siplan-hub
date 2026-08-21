@@ -51,6 +51,11 @@ describe("Home — grupo sem subitem acessível", () => {
     expect(screen.queryByText("Comercial")).not.toBeInTheDocument();
   });
 
+  it("mostra Assistentes para quem pode visualizar os logs de IA", () => {
+    renderHome(["menu_assistentes:view", "pos_ai_logs:view"]);
+    expect(screen.getByText("Assistentes")).toBeInTheDocument();
+  });
+
   it("não mostra nada de módulo para perfil sem permissão alguma", () => {
     renderHome([]);
     expect(screen.queryByText("Implantação")).not.toBeInTheDocument();
