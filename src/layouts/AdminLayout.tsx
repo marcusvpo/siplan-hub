@@ -301,7 +301,14 @@ export default function AdminLayout() {
               "Painel Administrativo"}
           </h1>
         </header>
-        <main className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-8">
+        <main
+          className={cn(
+            "flex-1 overflow-y-auto",
+            location.pathname.startsWith("/admin/pos-ai-logs")
+              ? "px-3 pb-3 pt-0 sm:px-4 sm:pb-4 lg:px-8 lg:pb-8"
+              : "p-3 sm:p-4 lg:p-8",
+          )}
+        >
           <Outlet />
         </main>
       </div>
