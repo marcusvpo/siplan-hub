@@ -5,6 +5,14 @@ export type CsCxReportRow = [label: string, value: string];
 export interface CsCxReportBlock { title: string; subtitle: string; rows: CsCxReportRow[] }
 export interface CsCxSummaryItem { label: string; value: string | number }
 export interface CsCxPdfOutputOptions { mode?: "download" | "print"; targetWindow?: Window | null }
+export interface CsCxReportRowLayout {
+  labelLines: string[];
+  valueLines: string[];
+  labelWidth: number;
+  valueWidth: number;
+  valueOffset: number;
+  height: number;
+}
 
 const STATUS_LABELS: Record<string, string> = {
   aberto: "Aberta", emandamento: "Em andamento", concluido: "Concluída", reaberto: "Reaberta",
@@ -252,19 +260,26 @@ export async function generateCsCxPdfReport(title: string, filterDescription: st
     y += 15;
 
     block.rows.forEach(([label, value]) => {
-      const lines = pdf.splitTextToSize(clean(value), contentWidth - 36) as string[];
-      const height = Math.max(6, lines.length * 3.4 + 2);
-      ensureSpace(height);
+      // Mede ambas as colunas com a fonte mais larga usada na linha. O valor,
+      // desenhado em peso normal, fica com uma pequena margem adicional.
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(7.2);
+      const row = calculateCsCxReportRowLayout(
+        label,
+        value,
+        contentWidth,
+        (text, maxWidth) => pdf.splitTextToSize(text, maxWidth) as string[],
+      );
+      ensureSpace(row.height);
+      pdf.setFont("helvetica", "bold");
       pdf.setTextColor(70, 80, 95);
-      pdf.text(clean(label), margin + 2, y + 3.2);
+      pdf.text(row.labelLines, margin + 2, y + 3.2);
       pdf.setFont("helvetica", "normal");
       pdf.setTextColor(45, 55, 70);
-      pdf.text(lines, margin + 34, y + 3.2);
+      pdf.text(row.valueLines, margin + 2 + row.valueOffset, y + 3.2);
       pdf.setDrawColor(235, 238, 243);
-      pdf.line(margin, y + height - 0.5, pageWidth - margin, y + height - 0.5);
-      y += height;
+      pdf.line(margin, y + row.height - 0.5, pageWidth - margin, y + row.height - 0.5);
+      y += row.height;
     });
     y += 5;
   });
@@ -290,6 +305,31 @@ export async function generateCsCxPdfReport(title: string, filterDescription: st
     URL.revokeObjectURL(blobUrl);
   }
   pdf.save(filename);
+}
+
+export function calculateCsCxReportRowLayout(
+  label: string,
+  value: string,
+  contentWidth: number,
+  splitText: (text: string, maxWidth: number) => string[],
+): CsCxReportRowLayout {
+  const horizontalInset = 2;
+  const columnGap = 4;
+  const innerWidth = contentWidth - horizontalInset * 2;
+  const labelWidth = Math.min(52, Math.max(36, innerWidth * 0.3));
+  const valueWidth = innerWidth - labelWidth - columnGap;
+  const labelLines = splitText(clean(label), labelWidth);
+  const valueLines = splitText(clean(value), valueWidth);
+  const lineHeight = 3.4;
+
+  return {
+    labelLines,
+    valueLines,
+    labelWidth,
+    valueWidth,
+    valueOffset: labelWidth + columnGap,
+    height: Math.max(6, Math.max(labelLines.length, valueLines.length) * lineHeight + 2),
+  };
 }
 
 function clean(value: string) {
