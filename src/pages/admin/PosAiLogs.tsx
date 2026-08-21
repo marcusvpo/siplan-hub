@@ -1032,75 +1032,81 @@ export default function PosAiLogs() {
             {/* TAB 2: BIBLIOTECA DE REGISTRO DE MENSAGENS */}
             <TabsContent value="library" className="space-y-4">
               <Card>
-                <CardHeader className="py-4 px-5 border-b">
-                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-                    <div>
-                      <CardTitle className="text-base font-semibold flex items-center gap-2">
-                        <span>Biblioteca de Registro de Mensagens</span>
-                        <Badge variant="secondary" className="text-xs">
+                <CardHeader className="border-b px-4 py-3">
+                  <div className="grid gap-2.5 xl:grid-cols-[minmax(300px,1fr)_auto] xl:items-center">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <CardTitle className="text-sm font-semibold">
+                          Biblioteca de Registro de Mensagens
+                        </CardTitle>
+                        <Badge variant="secondary" className="h-5 px-2 text-[10px]">
                           {libraryMode === "pairs"
                             ? `${filteredPairs.length} interações completas`
                             : `${filteredLogs.length} registros`}
                         </Badge>
-                      </CardTitle>
-                      <CardDescription className="text-xs">
-                        Visão estruturada de turnos de diálogo, métricas individuais de custo em dólares ($), latência e avaliações
+                      </div>
+                      <CardDescription className="mt-0.5 text-[11px] leading-4">
+                        Turnos de diálogo com custo, latência e avaliações por interação.
                       </CardDescription>
                     </div>
 
                     {/* View Modes & Filters */}
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="grid grid-cols-2 gap-1.5 sm:flex sm:flex-wrap sm:items-center xl:flex-nowrap xl:justify-end">
                       {/* Search Input */}
-                      <div className="relative w-full sm:w-60">
-                        <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                      <div className="relative col-span-2 w-full sm:w-52 xl:w-56">
+                        <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-muted-foreground" />
                         <Input
+                          aria-label="Buscar na biblioteca de registros"
                           placeholder="Buscar por dúvida, resposta..."
                           value={searchTerm}
                           onChange={(e) => setSearchTerm(e.target.value)}
-                          className="h-9 pl-8 text-xs"
+                          className="h-8 pl-8 text-xs"
                         />
                       </div>
 
                       {/* Mode Selector */}
-                      <div className="flex rounded-lg border bg-muted/40 p-0.5">
+                      <div className="col-span-2 flex rounded-lg border bg-muted/40 p-0.5 sm:col-span-1">
                         <button
                           type="button"
                           onClick={() => setLibraryMode("pairs")}
-                          className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
+                          className={`flex h-7 items-center gap-1 rounded-md px-2 text-[11px] font-medium transition-colors ${
                             libraryMode === "pairs"
                               ? "bg-background text-foreground shadow-xs"
                               : "text-muted-foreground hover:text-foreground"
                           }`}
                         >
-                          💬 Diálogos (Pares)
+                          <MessageCircle className="h-3 w-3" />
+                          Diálogos
                         </button>
                         <button
                           type="button"
                           onClick={() => setLibraryMode("assistant")}
-                          className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
+                          className={`flex h-7 items-center gap-1 rounded-md px-2 text-[11px] font-medium transition-colors ${
                             libraryMode === "assistant"
                               ? "bg-background text-foreground shadow-xs"
                               : "text-muted-foreground hover:text-foreground"
                           }`}
                         >
-                          🤖 Respostas IA
+                          <Bot className="h-3 w-3" />
+                          Respostas IA
                         </button>
                         <button
                           type="button"
                           onClick={() => setLibraryMode("user")}
-                          className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
+                          className={`flex h-7 items-center gap-1 rounded-md px-2 text-[11px] font-medium transition-colors ${
                             libraryMode === "user"
                               ? "bg-background text-foreground shadow-xs"
                               : "text-muted-foreground hover:text-foreground"
                           }`}
                         >
-                          👤 Dúvidas Cliente
+                          <User className="h-3 w-3" />
+                          Dúvidas
                         </button>
                       </div>
 
                       {/* Feedback filter */}
                       <Select value={feedbackFilter} onValueChange={setFeedbackFilter}>
-                        <SelectTrigger className="w-[125px] h-9 text-xs">
+                        <SelectTrigger aria-label="Filtrar por avaliação" className="h-8 w-full text-xs sm:w-[125px]">
                           <SelectValue placeholder="Avaliação" />
                         </SelectTrigger>
                         <SelectContent>
