@@ -13,6 +13,8 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   History,
+  Loader2,
+  AlertTriangle,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -59,6 +61,10 @@ export default function KnowledgeEditorPage() {
     restoreVersion,
     isRestoring,
     getBackupDownloadUrl,
+    saveStep,
+    syncErrorMessage,
+    syncedFileId,
+    resetSaveState,
     isUnsavedDialogOpen,
     confirmDiscardAndSwitch,
     cancelArticleSwitch,
@@ -75,9 +81,8 @@ export default function KnowledgeEditorPage() {
   const handleConfirmSave = async (customSummary?: string) => {
     try {
       await saveCurrentArticle(customSummary);
-      setIsConfirmModalOpen(false);
     } catch {
-      // O hook ja trata os toasts de erro
+      // O modal de progresso exibirá a mensagem de erro
     }
   };
 
@@ -139,7 +144,9 @@ export default function KnowledgeEditorPage() {
     );
   }
 
-  const latestVersionTag = versions.length > 0 ? versions[0].version_tag : "v2.1.0";
+  const latestVersion = versions.length > 0 ? versions[0] : null;
+  const latestVersionTag = latestVersion ? latestVersion.version_tag : "v2.1.0";
+  const latestSyncStatus = latestVersion ? latestVersion.webhook_sync_status : "synced";
 
   const formattedLastSync = lastSyncLog?.created_at
     ? format(new Date(lastSyncLog.created_at), "dd/MM/yyyy 'às' HH:mm", {
@@ -176,7 +183,7 @@ export default function KnowledgeEditorPage() {
 
         {/* Status, Auditoria, Histórico & Ação Principal */}
         <div className="flex flex-wrap items-center gap-2.5">
-          {/* Indicador de Status */}
+          {/* Indicador de Status Dinâmico */}
           {isDirty ? (
             <Badge
               variant="outline"
@@ -184,6 +191,22 @@ export default function KnowledgeEditorPage() {
             >
               <span className="h-2 w-2 rounded-full bg-amber-500" />
               Alterações Pendentes
+            </Badge>
+          ) : saveStep === "syncing_openai" || latestSyncStatus === "syncing" ? (
+            <Badge
+              variant="outline"
+              className="gap-1.5 border-primary/40 bg-primary/10 text-primary font-semibold py-1 px-2.5 shadow-xs animate-pulse"
+            >
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              Sincronizando com OpenAI...
+            </Badge>
+          ) : latestSyncStatus === "failed" ? (
+            <Badge
+              variant="outline"
+              className="gap-1.5 border-rose-500/40 bg-rose-500/10 text-rose-600 dark:text-rose-400 font-semibold py-1 px-2.5 shadow-xs"
+            >
+              <AlertTriangle className="h-3.5 w-3.5" />
+              Falha na Sincronização OpenAI
             </Badge>
           ) : (
             <Badge
@@ -228,8 +251,17 @@ export default function KnowledgeEditorPage() {
             disabled={isSaving}
             className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-md hover:shadow-lg transition-all h-9 px-4"
           >
-            <CloudUpload className="h-4 w-4" />
-            <span>Salvar e Publicar na IA</span>
+            {isSaving ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Processando...</span>
+              </>
+            ) : (
+              <>
+                <CloudUpload className="h-4 w-4" />
+                <span>Salvar e Publicar na IA</span>
+              </>
+            )}
           </Button>
         </div>
       </header>
@@ -309,7 +341,7 @@ export default function KnowledgeEditorPage() {
         </main>
       </div>
 
-      {/* Modal de Confirmação e Publicação */}
+      {/* Modal de Confirmação e Publicação com Feedback em Tempo Real */}
       <SavePublishModal
         isOpen={isConfirmModalOpen}
         onClose={() => setIsConfirmModalOpen(false)}
@@ -317,6 +349,10 @@ export default function KnowledgeEditorPage() {
         article={selectedArticle}
         isSaving={isSaving}
         diffSummary={currentDiffSummary}
+        saveStep={saveStep}
+        syncErrorMessage={syncErrorMessage}
+        syncedFileId={syncedFileId}
+        onResetSaveState={resetSaveState}
       />
 
       {/* Drawer da Biblioteca de Versões e Backups */}

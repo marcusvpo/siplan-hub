@@ -25,6 +25,9 @@ import {
   FileCode2,
   Sparkles,
   Layers,
+  CheckCircle2,
+  AlertTriangle,
+  Loader2,
 } from "lucide-react";
 import { VersionDetailModal } from "./VersionDetailModal";
 import { RestoreVersionModal } from "./RestoreVersionModal";
@@ -92,7 +95,7 @@ export function VersionHistoryDrawer({
                     Biblioteca de Versões & Backups
                   </SheetTitle>
                   <SheetDescription className="text-xs text-muted-foreground">
-                    Histórico auditável com cópias de segurança automáticas
+                    Histórico auditável com cópias de segurança automáticas e status na OpenAI
                   </SheetDescription>
                 </div>
               </div>
@@ -156,7 +159,7 @@ export function VersionHistoryDrawer({
 
                       {/* Top Bar da Versão */}
                       <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5 flex-wrap">
                           <Badge className="font-mono text-xs font-black bg-primary text-primary-foreground">
                             {version.version_tag}
                           </Badge>
@@ -165,6 +168,25 @@ export function VersionHistoryDrawer({
                               Rollback
                             </Badge>
                           )}
+
+                          {/* Status de Sincronização na OpenAI */}
+                          {version.webhook_sync_status === "synced" ? (
+                            <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 gap-1">
+                              <CheckCircle2 className="h-2.5 w-2.5" />
+                              OpenAI OK
+                            </Badge>
+                          ) : version.webhook_sync_status === "syncing" || version.webhook_sync_status === "pending" ? (
+                            <Badge variant="outline" className="text-[10px] bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 gap-1 animate-pulse">
+                              <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                              Indexando...
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-[10px] bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30 gap-1">
+                              <AlertTriangle className="h-2.5 w-2.5" />
+                              Falha OpenAI
+                            </Badge>
+                          )}
+
                           <span className="text-[11px] text-muted-foreground" title={formattedDate}>
                             {relativeTime}
                           </span>
