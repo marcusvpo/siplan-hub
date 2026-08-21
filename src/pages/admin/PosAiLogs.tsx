@@ -561,7 +561,7 @@ export default function PosAiLogs() {
   }, [latencyDist]);
 
   return (
-    <div className="mx-auto max-w-[1600px] space-y-4 p-3 font-sans sm:p-4 lg:p-5">
+    <div className="mx-auto max-w-[1600px] space-y-4 px-3 pb-3 pt-1.5 font-sans sm:px-4 sm:pb-4 sm:pt-2 lg:px-5 lg:pb-5 lg:pt-2.5">
       {/* Header */}
       <div className="grid gap-3 border-b pb-3 xl:grid-cols-[minmax(340px,1fr)_auto] xl:items-center">
         <div className="min-w-0">
@@ -660,29 +660,29 @@ export default function PosAiLogs() {
 
       {/* Selected Project Banner */}
       {selectedProject !== "all" && selectedProjectInfo && (
-        <div className="flex items-center justify-between p-3 rounded-xl bg-rose-50/80 dark:bg-rose-950/25 border border-rose-200/80 dark:border-rose-900/60 animate-in fade-in-50">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <span className="flex h-7 w-7 rounded-lg bg-rose-600 text-white items-center justify-center shrink-0">
-              <Building2 className="h-4 w-4" />
+        <div className="flex items-center justify-between gap-2 rounded-lg border border-rose-200/80 bg-rose-50/80 px-3 py-2 animate-in fade-in-50 dark:border-rose-900/60 dark:bg-rose-950/25">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-rose-600 text-white">
+              <Building2 className="h-3.5 w-3.5" />
             </span>
-            <div className="min-w-0">
-              <p className="text-xs font-bold text-foreground truncate">
-                Filtrando métricas de: {selectedProjectInfo.client_name || (selectedProjectInfo as any).name}
-              </p>
-              <p className="text-[11px] text-muted-foreground">
-                Exibindo apenas custos e interações deste cartório.
-              </p>
-            </div>
+            <p className="min-w-0 truncate text-[11px] text-foreground">
+              <span className="font-bold">Cartório filtrado:</span>{" "}
+              {selectedProjectInfo.client_name || (selectedProjectInfo as any).name}
+              <span className="hidden text-muted-foreground lg:inline">
+                {" "}· Custos e interações deste cartório
+              </span>
+            </p>
           </div>
           <Button
             type="button"
             variant="ghost"
             size="sm"
             onClick={handleClearProjectFilter}
-            className="h-7 text-xs text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/40 gap-1 shrink-0"
+            className="h-6 shrink-0 gap-1 px-2 text-[11px] text-rose-700 hover:bg-rose-100 dark:text-rose-300 dark:hover:bg-rose-900/40"
           >
             <X className="h-3 w-3" />
-            Ver todos os cartórios
+            <span className="sm:hidden">Ver todos</span>
+            <span className="hidden sm:inline">Ver todos os cartórios</span>
           </Button>
         </div>
       )}
