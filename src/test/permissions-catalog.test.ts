@@ -103,6 +103,16 @@ describe("catálogo de permissões", () => {
     expect(getResourceCategory("cs_cx_home")).toBe("CS/CX");
   });
 
+  it("mantém os logs de IA dentro de Assistentes e fora do painel administrativo", () => {
+    const assistants = menuItems.find((item) => item.title === "Assistentes");
+    const logs = assistants?.subItems?.find((sub) => sub.permissionKey === "pos_ai_logs");
+    const permission = PERMISSION_RESOURCES.find((item) => item.resource === "pos_ai_logs");
+
+    expect(logs?.path).toBe("/assistentes/logs");
+    expect(permission?.category).toBe("Assistentes");
+    expect(permission?.actions).toEqual(["view", "manage"]);
+  });
+
   it("expõe controle de lançamentos de terceiros nos cards operacionais do CS/CX", () => {
     const ownedResources = [
       "cs_cx_registros",
