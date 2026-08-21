@@ -16,6 +16,7 @@ interface UnsavedChangesDialogProps {
   onConfirmDiscard: () => void;
   onCancel: () => void;
   articleId?: string;
+  isNavigatingAway?: boolean;
 }
 
 export function UnsavedChangesDialog({
@@ -23,6 +24,7 @@ export function UnsavedChangesDialog({
   onConfirmDiscard,
   onCancel,
   articleId,
+  isNavigatingAway = false,
 }: UnsavedChangesDialogProps) {
   return (
     <AlertDialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
@@ -36,8 +38,10 @@ export function UnsavedChangesDialog({
           </div>
           <AlertDialogDescription className="text-xs text-muted-foreground leading-relaxed">
             Você possui modificações em andamento no tutorial{" "}
-            <span className="font-mono font-bold text-foreground">{articleId}</span> que ainda
-            não foram publicadas. Se trocar de artigo agora, essas alterações serão perdidas.
+            {articleId && (
+              <span className="font-mono font-bold text-foreground">{articleId}</span>
+            )}{" "}
+            que ainda não foram publicadas. Se {isNavigatingAway ? "sair desta tela" : "trocar de rotina"} agora, todas as suas edições serão descartadas permanentemente.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="gap-2 sm:gap-0">
@@ -48,7 +52,7 @@ export function UnsavedChangesDialog({
             onClick={onConfirmDiscard}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90 text-xs font-semibold"
           >
-            Descartar Alterações
+            Descartar Alterações e Sair
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

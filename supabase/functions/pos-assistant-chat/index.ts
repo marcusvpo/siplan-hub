@@ -7,8 +7,6 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") ?? "";
-
 const PROMPT_ID = "pmpt_6a85e041a0e08196a659d0560497de3402bd152c918f12f4";
 const PROMPT_VERSION = "3";
 const VECTOR_STORE_ID = "vs_6a85e00895f081918844a28887a34a17";
@@ -151,6 +149,17 @@ Deno.serve(async (req: Request) => {
       openAiPayload.previous_response_id = previous_response_id;
     }
 
+    const openAiApiKey = Deno.env.get("OPENAI_API_KEY")?.trim();
+    if (!openAiApiKey) {
+      console.error("OPENAI_API_KEY is not configured in Supabase Secrets");
+      return new Response(
+        JSON.stringify({
+          error: "Chave da API da OpenAI não configurada (OPENAI_API_KEY). Configure o secret no Supabase.",
+        }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Start timing for latency measurement
     const startTime = performance.now();
 
@@ -159,7 +168,7 @@ Deno.serve(async (req: Request) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
+        Authorization: `Bearer ${openAiApiKey}`,
       },
       body: JSON.stringify(openAiPayload),
     });
