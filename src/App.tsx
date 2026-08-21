@@ -136,6 +136,9 @@ const Copilot = lazy(() => import("./pages/Copilot"));
 const CopilotAccess = lazy(() => import("./pages/admin/CopilotAccess"));
 const CopilotUsage = lazy(() => import("./pages/admin/CopilotUsage"));
 const PosAiLogs = lazy(() => import("./pages/admin/PosAiLogs"));
+const KnowledgeEditorPage = lazy(
+  () => import("./pages/assistants/KnowledgeEditorPage"),
+);
 
 const queryClient = new QueryClient();
 
@@ -594,6 +597,20 @@ const App = () => (
                               <RequirePermission resource="sd_solutions">
                                 <SdSolutions />
                               </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/assistentes/conhecimento"
+                            element={
+                              <RequirePermission resource="assistants_knowledge">
+                                <KnowledgeEditorPage />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/assistentes/base-conhecimento/orion-tn"
+                            element={
+                              <Navigate to="/assistentes/conhecimento" replace />
                             }
                           />
                           <Route

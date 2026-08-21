@@ -27,6 +27,7 @@ import {
     MapPin,
     Star,
     Settings2,
+    Bot,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -374,6 +375,21 @@ export const menuItems: MenuItem[] = [
                 icon: Settings2,
                 description: "Configurações e cadastros do módulo",
                 permissionKey: "cs_cx_admin",
+            },
+        ],
+    },
+    {
+        title: "Assistentes",
+        icon: Bot,
+        description: "Base de conhecimento e configurações de assistentes IA",
+        permissionKey: "menu_assistentes",
+        subItems: [
+            {
+                title: "Base de Conhecimento Orion TN",
+                path: "/assistentes/conhecimento",
+                icon: BookOpen,
+                description: "Revisão e atualização de tutoriais do Orion TN",
+                permissionKey: "assistants_knowledge",
             },
         ],
     },
