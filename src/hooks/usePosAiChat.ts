@@ -14,6 +14,7 @@ export interface PosChatMessage {
 
 export interface PosChatSession {
   session_id: string;
+  title?: string | null;
   first_message: string;
   last_message?: string | null;
   total_messages: number;
@@ -36,11 +37,56 @@ export interface ProjectPublicInfo {
 
 export interface UsePosAiChatOptions {
   projectId: string;
+  visitorId?: string;
+}
+
+interface SessionActionResult {
+  success?: boolean;
+  error?: string;
+  title?: string;
+}
+
+export function formatPosChatTranscript(
+  messages: PosChatMessage[],
+  options: { title: string; clientName: string; systemType: string }
+) {
+  const header = [
+    options.title,
+    `Cliente: ${options.clientName}`,
+    `Sistema: ${options.systemType}`,
+    `Exportado em: ${new Date().toLocaleString("pt-BR")}`,
+    "",
+    "------------------------------------------------------------",
+    "",
+  ];
+
+  const transcript = messages.flatMap((message) => [
+    `${message.role === "user" ? "CLIENTE" : "ASSISTENTE"} — ${new Date(
+      message.created_at
+    ).toLocaleString("pt-BR")}`,
+    message.content,
+    "",
+  ]);
+
+  return [...header, ...transcript].join("\n").trimEnd() + "\n";
+}
+
+function safeTranscriptFilename(title: string) {
+  const normalized = title
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .toLowerCase()
+    .slice(0, 60);
+
+  return `${normalized || "conversa"}.txt`;
 }
 
 export function usePosAiChat(optionsOrId?: string | UsePosAiChatOptions) {
   const projectId =
     typeof optionsOrId === "string" ? optionsOrId : optionsOrId?.projectId || "";
+  const visitorId = typeof optionsOrId === "string" ? "" : optionsOrId?.visitorId || "";
 
   const [projectInfo, setProjectInfo] = useState<ProjectPublicInfo | null>(null);
   const [isLoadingProject, setIsLoadingProject] = useState(true);
@@ -52,6 +98,7 @@ export function usePosAiChat(optionsOrId?: string | UsePosAiChatOptions) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [sessionId, setSessionId] = useState<string>(() => crypto.randomUUID());
   const previousResponseIdRef = useRef<string | null>(null);
+  const previousVisitorIdRef = useRef(visitorId);
 
   const [sessions, setSessions] = useState<PosChatSession[]>([]);
   const [isLoadingSessions, setIsLoadingSessions] = useState(false);
@@ -115,9 +162,11 @@ export function usePosAiChat(optionsOrId?: string | UsePosAiChatOptions) {
             setIsAccessDisabled(info.pos_assistant_enabled === false);
           }
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (isMounted) {
-          setProjectError(err.message || "Erro ao carregar informações do projeto");
+          setProjectError(
+            err instanceof Error ? err.message : "Erro ao carregar informações do projeto"
+          );
         }
       } finally {
         if (isMounted) {
@@ -135,12 +184,16 @@ export function usePosAiChat(optionsOrId?: string | UsePosAiChatOptions) {
 
   // 2. Fetch list of past sessions for the sidebar (Strictly sorted newest first)
   const loadSessions = useCallback(async () => {
-    if (!projectId) return;
+    if (!projectId || !visitorId) {
+      setSessions([]);
+      return;
+    }
     setIsLoadingSessions(true);
 
     try {
-      const { data, error } = await supabase.rpc("get_pos_chat_project_sessions", {
+      const { data, error } = await supabase.rpc("get_pos_chat_visitor_sessions", {
         p_project_id: projectId,
+        p_visitor_id: visitorId,
       });
 
       if (error) {
@@ -161,27 +214,38 @@ export function usePosAiChat(optionsOrId?: string | UsePosAiChatOptions) {
     } finally {
       setIsLoadingSessions(false);
     }
-  }, [projectId]);
+  }, [projectId, visitorId]);
 
   useEffect(() => {
-    if (projectId) {
+    if (projectId && visitorId) {
       loadSessions();
+    } else {
+      setSessions([]);
     }
-  }, [projectId, loadSessions]);
+  }, [projectId, visitorId, loadSessions]);
+
+  useEffect(() => {
+    if (previousVisitorIdRef.current === visitorId) return;
+
+    previousVisitorIdRef.current = visitorId;
+    setSessionId(crypto.randomUUID());
+    setMessages([]);
+    setSessions([]);
+    previousResponseIdRef.current = null;
+  }, [visitorId]);
 
   // 3. Load message history for active session
   const loadHistoryForSession = useCallback(
     async (targetSessionId: string) => {
-      if (!projectId || !targetSessionId) return;
+      if (!projectId || !visitorId || !targetSessionId) return;
       setIsLoadingHistory(true);
 
       try {
-        const { data, error } = await supabase
-          .from("pos_ai_chat_messages")
-          .select("id, role, content, response_id, feedback, feedback_comment, created_at")
-          .eq("project_id", projectId)
-          .eq("session_id", targetSessionId)
-          .order("created_at", { ascending: true });
+        const { data, error } = await supabase.rpc("get_pos_chat_session_messages", {
+          p_project_id: projectId,
+          p_session_id: targetSessionId,
+          p_visitor_id: visitorId,
+        });
 
         if (error) {
           console.error("Error loading chat history:", error);
@@ -218,7 +282,7 @@ export function usePosAiChat(optionsOrId?: string | UsePosAiChatOptions) {
         setIsLoadingHistory(false);
       }
     },
-    [projectId]
+    [projectId, visitorId]
   );
 
   // 4. Select an existing conversation from sidebar
@@ -240,7 +304,7 @@ export function usePosAiChat(optionsOrId?: string | UsePosAiChatOptions) {
   // 6. Send a message to AI assistant
   const sendMessage = async (text: string) => {
     const trimmed = text.trim();
-    if (!trimmed || isGenerating || !projectId || !sessionId) return;
+    if (!trimmed || isGenerating || !projectId || !visitorId || !sessionId) return;
 
     if (isAccessDisabled) {
       toast.error("O acesso ao assistente de pós-implantação deste cartório foi encerrado.");
@@ -275,6 +339,7 @@ export function usePosAiChat(optionsOrId?: string | UsePosAiChatOptions) {
       } else {
         const newItem: PosChatSession = {
           session_id: sessionId,
+          title: trimmed,
           first_message: trimmed,
           last_message: trimmed,
           total_messages: 1,
@@ -293,6 +358,7 @@ export function usePosAiChat(optionsOrId?: string | UsePosAiChatOptions) {
         body: {
           action: "chat",
           project_id: projectId,
+          visitor_id: visitorId,
           session_id: sessionId,
           message: trimmed,
           previous_response_id: previousResponseIdRef.current,
@@ -374,8 +440,11 @@ export function usePosAiChat(optionsOrId?: string | UsePosAiChatOptions) {
     );
 
     try {
-      const { error } = await (supabase.rpc as any)("save_pos_chat_feedback", {
+      if (!visitorId) return;
+
+      const { error } = await supabase.rpc("save_pos_chat_feedback_for_visitor", {
         p_message_id: messageId,
+        p_visitor_id: visitorId,
         p_feedback: feedback,
         p_comment: comment || null,
       });
@@ -385,6 +454,7 @@ export function usePosAiChat(optionsOrId?: string | UsePosAiChatOptions) {
           body: {
             action: "feedback",
             message_id: messageId,
+            visitor_id: visitorId,
             feedback,
             comment,
           },
@@ -405,6 +475,111 @@ export function usePosAiChat(optionsOrId?: string | UsePosAiChatOptions) {
     }
   };
 
+  const renameSession = async (targetSessionId: string, title: string) => {
+    const normalizedTitle = title.trim().replace(/\s+/g, " ");
+    if (!normalizedTitle || normalizedTitle.length > 120) {
+      toast.error("Informe um título com até 120 caracteres.");
+      return false;
+    }
+
+    try {
+      if (!visitorId) return false;
+
+      const { data, error } = await supabase.rpc("rename_pos_chat_visitor_session", {
+        p_project_id: projectId,
+        p_session_id: targetSessionId,
+        p_visitor_id: visitorId,
+        p_title: normalizedTitle,
+      });
+      const result = data as SessionActionResult | null;
+
+      if (error || !result?.success) {
+        throw new Error(result?.error || error?.message || "Não foi possível renomear a conversa.");
+      }
+
+      setSessions((prev) =>
+        prev.map((session) =>
+          session.session_id === targetSessionId
+            ? { ...session, title: result.title || normalizedTitle }
+            : session
+        )
+      );
+      toast.success("Conversa renomeada.");
+      return true;
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Não foi possível renomear a conversa.");
+      return false;
+    }
+  };
+
+  const deleteSession = async (targetSessionId: string) => {
+    try {
+      if (!visitorId) return false;
+
+      const { data, error } = await supabase.rpc("delete_pos_chat_visitor_session", {
+        p_project_id: projectId,
+        p_session_id: targetSessionId,
+        p_visitor_id: visitorId,
+      });
+      const result = data as SessionActionResult | null;
+
+      if (error || !result?.success) {
+        throw new Error(result?.error || error?.message || "Não foi possível excluir a conversa.");
+      }
+
+      setSessions((prev) => prev.filter((session) => session.session_id !== targetSessionId));
+
+      if (targetSessionId === sessionId) {
+        setSessionId(crypto.randomUUID());
+        setMessages([]);
+        previousResponseIdRef.current = null;
+      }
+
+      toast.success("Conversa excluída.");
+      return true;
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Não foi possível excluir a conversa.");
+      return false;
+    }
+  };
+
+  const exportSession = async (targetSessionId: string) => {
+    try {
+      if (!visitorId) return false;
+
+      const { data, error } = await supabase.rpc("get_pos_chat_session_messages", {
+        p_project_id: projectId,
+        p_session_id: targetSessionId,
+        p_visitor_id: visitorId,
+      });
+
+      if (error || !data?.length) {
+        throw new Error(error?.message || "A conversa não possui mensagens para exportar.");
+      }
+
+      const session = sessions.find((item) => item.session_id === targetSessionId);
+      const title = session?.title || session?.first_message || "Conversa";
+      const transcript = formatPosChatTranscript(data as PosChatMessage[], {
+        title,
+        clientName: projectInfo?.client_name || "Cartório",
+        systemType: projectInfo?.system_type || "Orion TN",
+      });
+      const url = URL.createObjectURL(new Blob([transcript], { type: "text/plain;charset=utf-8" }));
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = safeTranscriptFilename(title);
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+      toast.success("Conversa exportada.");
+      return true;
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Não foi possível exportar a conversa.");
+      return false;
+    }
+  };
+
   return {
     projectInfo,
     isLoadingProject,
@@ -420,6 +595,9 @@ export function usePosAiChat(optionsOrId?: string | UsePosAiChatOptions) {
     submitFeedback,
     resetSession,
     selectSession,
+    renameSession,
+    deleteSession,
+    exportSession,
     reloadHistory: () => loadHistoryForSession(sessionId),
     reloadSessions: loadSessions,
   };

@@ -4,6 +4,31 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   MessageSquare,
   Plus,
   Search,
@@ -11,37 +36,53 @@ import {
   ThumbsUp,
   ThumbsDown,
   X,
-  Sparkles,
-  ChevronRight,
   PanelLeftClose,
+  PanelLeftOpen,
   Bot,
   History,
+  MoreHorizontal,
+  Pencil,
+  Download,
+  Trash2,
+  Loader2,
 } from "lucide-react";
 import { format, isToday, isYesterday, isAfter, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 interface PosChatHistorySidebarProps {
   isOpen: boolean;
+  onOpen: () => void;
   onClose: () => void;
   sessions: PosChatSession[];
   currentSessionId: string;
   onSelectSession: (sessionId: string) => void;
   onNewSession: () => void;
+  onRenameSession: (sessionId: string, title: string) => Promise<boolean>;
+  onDeleteSession: (sessionId: string) => Promise<boolean>;
+  onExportSession: (sessionId: string) => Promise<boolean>;
   cartorioName?: string;
   isMobile?: boolean;
 }
 
 export function PosChatHistorySidebar({
   isOpen,
+  onOpen,
   onClose,
   sessions,
   currentSessionId,
   onSelectSession,
   onNewSession,
+  onRenameSession,
+  onDeleteSession,
+  onExportSession,
   cartorioName,
   isMobile = false,
 }: PosChatHistorySidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [renameTarget, setRenameTarget] = useState<PosChatSession | null>(null);
+  const [renameTitle, setRenameTitle] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<PosChatSession | null>(null);
+  const [pendingAction, setPendingAction] = useState<"rename" | "delete" | null>(null);
 
   // 1. Sort all sessions strictly newest first (by last_message_at DESC, then started_at DESC)
   const sortedSessions = useMemo(() => {
@@ -58,6 +99,7 @@ export function PosChatHistorySidebar({
     const q = searchQuery.toLowerCase().trim();
     return sortedSessions.filter(
       (s) =>
+        (s.title && s.title.toLowerCase().includes(q)) ||
         s.first_message.toLowerCase().includes(q) ||
         (s.last_message && s.last_message.toLowerCase().includes(q))
     );
@@ -99,15 +141,80 @@ export function PosChatHistorySidebar({
     return groups;
   }, [filteredSessions]);
 
-  if (!isOpen) return null;
+  const handleRename = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!renameTarget || !renameTitle.trim() || pendingAction) return;
+
+    setPendingAction("rename");
+    const success = await onRenameSession(renameTarget.session_id, renameTitle);
+    setPendingAction(null);
+    if (success) setRenameTarget(null);
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget || pendingAction) return;
+
+    setPendingAction("delete");
+    const success = await onDeleteSession(deleteTarget.session_id);
+    setPendingAction(null);
+    if (success) setDeleteTarget(null);
+  };
+
+  if (isMobile && !isOpen) return null;
+
+  if (!isMobile && !isOpen) {
+    return (
+      <aside
+        className="flex h-full w-14 shrink-0 flex-col overflow-hidden border-r border-slate-200 bg-white transition-[width] duration-300 ease-in-out motion-reduce:transition-none dark:border-neutral-800 dark:bg-neutral-900"
+        aria-label="Histórico de conversas"
+      >
+        <div className="flex h-full w-14 flex-col items-center gap-2 py-3 animate-in fade-in duration-300">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={onOpen}
+            className="h-9 w-9 rounded-xl text-muted-foreground hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40"
+            aria-label="Exibir histórico de conversas"
+            title="Exibir histórico de conversas"
+          >
+            <PanelLeftOpen className="h-4 w-4" />
+          </Button>
+
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={onNewSession}
+            className="h-9 w-9 rounded-xl text-muted-foreground hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40"
+            aria-label="Iniciar nova conversa"
+            title="Iniciar nova conversa"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+
+          <div className="flex-1" />
+
+          <div
+            className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400"
+            title={cartorioName || "Assistente Siplan"}
+          >
+            <Bot className="h-4 w-4" />
+          </div>
+        </div>
+      </aside>
+    );
+  }
 
   return (
+    <>
     <aside
       className={`${
         isMobile
           ? "fixed inset-y-0 left-0 z-50 w-80 max-w-[85vw] shadow-2xl animate-in slide-in-from-left duration-200"
           : "w-80 shrink-0 border-r"
-      } flex flex-col h-full bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 transition-all z-30`}
+      } flex flex-col h-full overflow-hidden bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 transition-[width] duration-300 ease-in-out motion-reduce:transition-none z-30`}
+      aria-label="Histórico de conversas"
     >
       {/* Sidebar Header */}
       <div className="p-3.5 border-b border-slate-200 dark:border-neutral-800 space-y-3">
@@ -132,7 +239,8 @@ export function PosChatHistorySidebar({
             size="icon"
             onClick={onClose}
             className="h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground"
-            title="Fechar histórico"
+            aria-label={isMobile ? "Fechar histórico" : "Ocultar histórico"}
+            title={isMobile ? "Fechar histórico" : "Ocultar histórico"}
           >
             {isMobile ? <X className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
           </Button>
@@ -196,75 +304,117 @@ export function PosChatHistorySidebar({
                     const isSelected = session.session_id === currentSessionId;
                     const started = new Date(session.last_message_at || session.started_at);
 
+                    const sessionTitle = session.title || session.first_message || "Conversa";
+
                     return (
-                      <button
+                      <div
                         key={session.session_id}
-                        type="button"
-                        onClick={() => {
-                          onSelectSession(session.session_id);
-                          if (isMobile) onClose();
-                        }}
-                        className={`w-full text-left p-2.5 rounded-xl text-xs transition-all flex items-start gap-2.5 group cursor-pointer ${
+                        className={`w-full rounded-xl text-xs transition-all flex items-stretch group ${
                           isSelected
                             ? "bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-rose-950 dark:text-rose-100 shadow-2xs font-medium"
                             : "hover:bg-slate-100 dark:hover:bg-neutral-800/80 text-foreground border border-transparent"
                         }`}
                       >
-                        <div
-                          className={`h-7 w-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
-                            isSelected
-                              ? "bg-rose-600 text-white"
-                              : "bg-slate-100 dark:bg-neutral-800 text-muted-foreground group-hover:text-rose-600"
-                          }`}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onSelectSession(session.session_id);
+                            if (isMobile) onClose();
+                          }}
+                          className="flex min-w-0 flex-1 items-start gap-2.5 p-2.5 pr-1 text-left cursor-pointer"
                         >
-                          <MessageSquare className="h-3.5 w-3.5" />
-                        </div>
+                          <span
+                            className={`h-7 w-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
+                              isSelected
+                                ? "bg-rose-600 text-white"
+                                : "bg-slate-100 dark:bg-neutral-800 text-muted-foreground group-hover:text-rose-600"
+                            }`}
+                          >
+                            <MessageSquare className="h-3.5 w-3.5" />
+                          </span>
 
-                        <div className="flex-1 min-w-0 space-y-1">
-                          <p className="font-semibold text-xs leading-snug line-clamp-2">
-                            {session.first_message || "Conversa"}
-                          </p>
-
-                          <div className="flex items-center justify-between text-[10px] text-muted-foreground pt-0.5">
-                            <span className="flex items-center gap-1">
-                              <Clock className="h-2.5 w-2.5 opacity-70" />
-                              {format(started, isToday(started) ? "HH:mm" : "dd/MM HH:mm", {
-                                locale: ptBR,
-                              })}
+                          <span className="flex-1 min-w-0 space-y-1">
+                            <span className="block font-semibold text-xs leading-snug line-clamp-2">
+                              {sessionTitle}
                             </span>
 
-                            <div className="flex items-center gap-1.5">
-                              {session.helpful_count && session.helpful_count > 0 ? (
-                                <span className="text-emerald-600 font-bold" title="Avaliada como útil">
-                                  <ThumbsUp className="h-2.5 w-2.5 inline" />
-                                </span>
-                              ) : null}
-                              {session.unhelpful_count && session.unhelpful_count > 0 ? (
-                                <span className="text-rose-600 font-bold" title="Avaliada como não ajudou">
-                                  <ThumbsDown className="h-2.5 w-2.5 inline" />
-                                </span>
-                              ) : null}
+                            <span className="flex items-center justify-between text-[10px] text-muted-foreground pt-0.5">
+                              <span className="flex items-center gap-1">
+                                <Clock className="h-2.5 w-2.5 opacity-70" />
+                                {format(started, isToday(started) ? "HH:mm" : "dd/MM HH:mm", {
+                                  locale: ptBR,
+                                })}
+                              </span>
 
-                              <Badge
-                                variant="outline"
-                                className={`text-[9px] px-1 py-0 h-4 ${
-                                  isSelected
-                                    ? "bg-rose-100 dark:bg-rose-900/60 text-rose-700 dark:text-rose-300 border-rose-300"
-                                    : "text-muted-foreground border-slate-200 dark:border-neutral-700"
-                                }`}
-                              >
-                                {session.total_messages} msgs
-                              </Badge>
-                            </div>
-                          </div>
-                        </div>
+                              <span className="flex items-center gap-1.5">
+                                {session.helpful_count && session.helpful_count > 0 ? (
+                                  <span className="text-emerald-600 font-bold" title="Avaliada como útil">
+                                    <ThumbsUp className="h-2.5 w-2.5 inline" />
+                                  </span>
+                                ) : null}
+                                {session.unhelpful_count && session.unhelpful_count > 0 ? (
+                                  <span className="text-rose-600 font-bold" title="Avaliada como não ajudou">
+                                    <ThumbsDown className="h-2.5 w-2.5 inline" />
+                                  </span>
+                                ) : null}
 
-                        <ChevronRight
-                          className={`h-4 w-4 shrink-0 self-center transition-transform ${
-                            isSelected ? "text-rose-600" : "text-muted-foreground opacity-0 group-hover:opacity-100"
-                          }`}
-                        />
-                      </button>
+                                <Badge
+                                  variant="outline"
+                                  className={`text-[9px] px-1 py-0 h-4 ${
+                                    isSelected
+                                      ? "bg-rose-100 dark:bg-rose-900/60 text-rose-700 dark:text-rose-300 border-rose-300"
+                                      : "text-muted-foreground border-slate-200 dark:border-neutral-700"
+                                  }`}
+                                >
+                                  {session.total_messages} msgs
+                                </Badge>
+                              </span>
+                            </span>
+                          </span>
+                        </button>
+
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 self-start mt-2 mr-1 shrink-0 rounded-lg text-muted-foreground opacity-60 hover:opacity-100 focus:opacity-100"
+                              aria-label={`Ações da conversa ${sessionTitle}`}
+                              title="Gerenciar conversa"
+                            >
+                              <MoreHorizontal className="h-3.5 w-3.5" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-44">
+                            <DropdownMenuItem
+                              className="cursor-pointer gap-2 text-xs"
+                              onSelect={() => {
+                                setRenameTarget(session);
+                                setRenameTitle(sessionTitle);
+                              }}
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                              Renomear
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="cursor-pointer gap-2 text-xs"
+                              onSelect={() => void onExportSession(session.session_id)}
+                            >
+                              <Download className="h-3.5 w-3.5" />
+                              Exportar .txt
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="cursor-pointer gap-2 text-xs text-destructive focus:text-destructive"
+                              onSelect={() => setDeleteTarget(session)}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                              Excluir
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     );
                   })}
                 </div>
@@ -282,5 +432,77 @@ export function PosChatHistorySidebar({
         </div>
       )}
     </aside>
+
+    <Dialog
+      open={Boolean(renameTarget)}
+      onOpenChange={(open) => {
+        if (!open && !pendingAction) setRenameTarget(null);
+      }}
+    >
+      <DialogContent className="max-w-sm">
+        <form onSubmit={handleRename} className="space-y-4">
+          <DialogHeader>
+            <DialogTitle>Renomear conversa</DialogTitle>
+            <DialogDescription>
+              Use um título curto para localizar esta conversa no histórico.
+            </DialogDescription>
+          </DialogHeader>
+          <Input
+            value={renameTitle}
+            onChange={(event) => setRenameTitle(event.target.value)}
+            maxLength={120}
+            placeholder="Título da conversa"
+            aria-label="Título da conversa"
+            autoFocus
+          />
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setRenameTarget(null)}
+              disabled={Boolean(pendingAction)}
+            >
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={!renameTitle.trim() || Boolean(pendingAction)}>
+              {pendingAction === "rename" && <Loader2 className="h-4 w-4 animate-spin" />}
+              Salvar
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+
+    <AlertDialog
+      open={Boolean(deleteTarget)}
+      onOpenChange={(open) => {
+        if (!open && !pendingAction) setDeleteTarget(null);
+      }}
+    >
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Excluir esta conversa?</AlertDialogTitle>
+          <AlertDialogDescription>
+            “{deleteTarget?.title || deleteTarget?.first_message || "Conversa"}” e todas as suas
+            mensagens serão removidas permanentemente. Esta ação não pode ser desfeita.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={Boolean(pendingAction)}>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={(event) => {
+              event.preventDefault();
+              void handleDelete();
+            }}
+            disabled={Boolean(pendingAction)}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {pendingAction === "delete" && <Loader2 className="h-4 w-4 animate-spin" />}
+            Excluir conversa
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
