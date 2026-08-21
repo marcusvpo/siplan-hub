@@ -63,6 +63,7 @@ import {
   BarChart3,
   Calendar,
   Eye,
+  UsersRound,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -88,6 +89,8 @@ import {
   PosAiFeedbackItem,
   PosAiLatencyRankItem,
 } from "@/hooks/usePosAiAdminAnalytics";
+import { usePosAiVisitorAnalytics } from "@/hooks/usePosAiVisitorAnalytics";
+import { PosAiVisitorAnalytics } from "@/components/Admin/PosAiVisitorAnalytics";
 import { PosChatMessageContent } from "@/components/pos-chat/PosChatMessageContent";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -150,6 +153,12 @@ export default function PosAiLogs() {
     projectIdParam,
     Number(days)
   );
+  const {
+    data: visitorAnalytics,
+    isLoading: isVisitorAnalyticsLoading,
+    refetch: refetchVisitorAnalytics,
+    isRefetching: isVisitorAnalyticsRefetching,
+  } = usePosAiVisitorAnalytics(projectIdParam, Number(days));
 
   const { data: activeProjects } = useActivePosAiProjectsList();
 
@@ -480,10 +489,19 @@ export default function PosAiLogs() {
             variant="outline"
             size="sm"
             className="h-9 gap-1 text-xs"
-            onClick={() => refetch()}
-            disabled={isLoading || isRefetching}
+            onClick={() => void Promise.all([refetch(), refetchVisitorAnalytics()])}
+            disabled={
+              isLoading ||
+              isRefetching ||
+              isVisitorAnalyticsLoading ||
+              isVisitorAnalyticsRefetching
+            }
           >
-            <RefreshCw className={`h-3.5 w-3.5 ${isRefetching ? "animate-spin" : ""}`} />
+            <RefreshCw
+              className={`h-3.5 w-3.5 ${
+                isRefetching || isVisitorAnalyticsRefetching ? "animate-spin" : ""
+              }`}
+            />
             <span className="hidden sm:inline">Atualizar</span>
           </Button>
 
@@ -661,7 +679,7 @@ export default function PosAiLogs() {
 
           {/* Navigation Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full sm:w-auto">
+            <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:grid-cols-3 xl:grid-cols-5">
               <TabsTrigger value="overview" className="text-xs gap-1.5">
                 <Gauge className="h-3.5 w-3.5" />
                 Visão Geral & Gráficos
@@ -678,7 +696,19 @@ export default function PosAiLogs() {
                 <Clock className="h-3.5 w-3.5 text-blue-600" />
                 Performance & Latência
               </TabsTrigger>
+              <TabsTrigger value="visitors" className="text-xs gap-1.5">
+                <UsersRound className="h-3.5 w-3.5 text-violet-600" />
+                Usuários & Setores ({visitorAnalytics?.kpis.active_users || 0})
+              </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="visitors" className="space-y-4">
+              <PosAiVisitorAnalytics
+                data={visitorAnalytics}
+                isLoading={isVisitorAnalyticsLoading}
+                showProject={selectedProject === "all"}
+              />
+            </TabsContent>
 
             {/* TAB 1: VISÃO GERAL & GRÁFICOS */}
             <TabsContent value="overview" className="space-y-4">
