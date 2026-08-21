@@ -5,10 +5,9 @@
       "parameters": {
         "httpMethod": "POST",
         "path": "update-openai-vector-store",
-        "responseMode": "responseNode",
-        "options": {
-          "rawBody": false
-        }
+        "responseMode": "onReceived",
+        "responseData": "allEntries",
+        "options": {}
       },
       "id": "webhook-trigger",
       "name": "Webhook - Atualização Base Orion TN",
@@ -483,40 +482,6 @@
         }
       },
       "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "respondWith": "json",
-        "responseBody": "={\n  \"status\": \"success\",\n  \"message\": \"Base de conhecimento Orion TN sincronizada com sucesso na OpenAI Vector Store com Zero Downtime!\",\n  \"vector_store_id\": \"vs_6a85e00895f081918844a28887a34a17\",\n  \"new_file_id\": \"{{ $node[\"Upload para OpenAI Files API\"].json.id }}\",\n  \"version_tag\": \"{{ $node[\"Guardar Lista de Arquivos Antigos\"].json.version_tag }}\",\n  \"article_id\": \"{{ $node[\"Guardar Lista de Arquivos Antigos\"].json.article_id }}\",\n  \"summary_changes\": \"{{ $node[\"Guardar Lista de Arquivos Antigos\"].json.summary_changes }}\",\n  \"author\": \"{{ $node[\"Guardar Lista de Arquivos Antigos\"].json.author }}\",\n  \"indexed_at\": \"{{ $now.toISO() }}\"\n}",
-        "options": {
-          "responseCode": 200
-        }
-      },
-      "id": "respond-success",
-      "name": "Responder Sucesso ao Webhook",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.1,
-      "position": [
-        3680,
-        220
-      ]
-    },
-    {
-      "parameters": {
-        "respondWith": "json",
-        "responseBody": "={\n  \"status\": \"error\",\n  \"message\": \"Timeout na indexação do arquivo na OpenAI Vector Store após múltiplas tentativas.\",\n  \"vector_store_id\": \"vs_6a85e00895f081918844a28887a34a17\",\n  \"new_file_id\": \"{{ $node[\"Iniciar Polling de Indexação\"].json.new_file_id }}\",\n  \"last_status\": \"{{ $json.status }}\"\n}",
-        "options": {
-          "responseCode": 500
-        }
-      },
-      "id": "respond-timeout",
-      "name": "Responder Erro / Timeout",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.1,
-      "position": [
-        3000,
-        500
-      ]
     }
   ],
   "connections": {
@@ -711,28 +676,6 @@
         [
           {
             "node": "Atualizar Status Sucesso no Supabase",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Atualizar Status Sucesso no Supabase": {
-      "main": [
-        [
-          {
-            "node": "Responder Sucesso ao Webhook",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Atualizar Status Erro no Supabase": {
-      "main": [
-        [
-          {
-            "node": "Responder Erro / Timeout",
             "type": "main",
             "index": 0
           }
