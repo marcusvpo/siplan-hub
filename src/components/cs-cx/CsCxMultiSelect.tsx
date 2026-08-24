@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { normalizeSearchText } from "@/utils/normalize-search";
 
 export interface CsCxMultiSelectOption {
   value: string;
@@ -66,7 +67,15 @@ export function CsCxMultiSelect({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-        <Command>
+        <Command
+          filter={(optionValue, search) =>
+            normalizeSearchText(optionValue).includes(
+              normalizeSearchText(search),
+            )
+              ? 1
+              : 0
+          }
+        >
           <CommandInput placeholder={searchPlaceholder} />
           <CommandList>
             <CommandEmpty>{emptyText}</CommandEmpty>
