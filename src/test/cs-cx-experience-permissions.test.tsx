@@ -37,7 +37,18 @@ vi.mock("@/hooks/useCsCxNpsSurveys", () => ({
   effectiveInvitationStatus: (invitation: { status: string }) =>
     invitation.status,
   useCsCxNpsSurveys: () => ({
-    questionnaires: [],
+    questionnaires: [
+      {
+        id: "q-default",
+        title: "Pesquisa de satisfação Siplan",
+        questions: [],
+        theme: {},
+        is_active: true,
+        is_default: true,
+        created_at: "2026-08-01T00:00:00Z",
+        updated_at: "2026-08-01T00:00:00Z",
+      },
+    ],
     invitations: [],
     createInvitation: mutation,
     cancelInvitation: mutation,
@@ -246,6 +257,12 @@ describe("CS/CX visitas e NPS — permissões", () => {
     expect(
       screen.queryByRole("button", { name: /importar arquivo/i }),
     ).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /solicitar nps/i }));
+    expect(screen.getByText(/Gere um link individual/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Pesquisa de satisfação Siplan · Padrão/i),
+    ).toBeInTheDocument();
   });
 
   it("oferece personalização visual por questionário", () => {
