@@ -20,8 +20,10 @@ import {
   BarChart3,
   BrainCircuit,
   Building2,
+  Check,
   ChevronLeft,
   ChevronRight,
+  ChevronsUpDown,
   Download,
   Loader2,
   Maximize2,
@@ -38,6 +40,14 @@ import { MarkdownLite } from "@/components/MarkdownLite";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
   Card,
   CardContent,
   CardDescription,
@@ -53,6 +63,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -83,6 +98,8 @@ import {
   type NpsOfficeAnalytics,
 } from "@/lib/cs-cx-nps-analytics";
 import { generateCsCxNpsAnalysisPdf } from "@/lib/cs-cx-experience-pdf";
+import { cn } from "@/lib/utils";
+import { normalizeSearchText } from "@/utils/normalize-search";
 
 interface NpsAnalyticsPanelProps {
   responses: CsCxNpsResponse[];
@@ -312,25 +329,17 @@ export function NpsAnalyticsPanel({
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px]">Cartório</Label>
-            <Select
+            <Label htmlFor="nps-bi-office" className="text-[11px]">
+              Cartório
+            </Label>
+            <OfficeFilterCombobox
+              id="nps-bi-office"
+              offices={offices}
               value={filters.officeId}
-              onValueChange={(officeId) =>
+              onChange={(officeId) =>
                 setFilters((current) => ({ ...current, officeId }))
               }
-            >
-              <SelectTrigger className="h-8">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os cartórios</SelectItem>
-                {offices.map((office) => (
-                  <SelectItem key={office.id} value={office.id}>
-                    {office.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            />
           </div>
           <div className="flex gap-2">
             <Button
@@ -839,6 +848,98 @@ export function NpsAnalyticsPanel({
         />
       )}
     </div>
+  );
+}
+
+function OfficeFilterCombobox({
+  id,
+  offices,
+  value,
+  onChange,
+}: {
+  id: string;
+  offices: Array<{ id: string; name: string }>;
+  value: string;
+  onChange: (officeId: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const selectedOffice = offices.find((office) => office.id === value);
+  const label = selectedOffice?.name ?? "Todos os cartórios";
+
+  const selectOffice = (officeId: string) => {
+    onChange(officeId);
+    setOpen(false);
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          id={id}
+          type="button"
+          variant="outline"
+          role="combobox"
+          aria-label="Filtrar NPS por cartório"
+          aria-expanded={open}
+          className="h-8 w-full justify-between px-3 font-normal"
+        >
+          <span className="truncate">{label}</span>
+          <ChevronsUpDown className="ml-2 h-3.5 w-3.5 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        align="start"
+        className="w-[var(--radix-popover-trigger-width)] p-0"
+      >
+        <Command
+          filter={(optionValue, search) =>
+            normalizeSearchText(optionValue).includes(
+              normalizeSearchText(search),
+            )
+              ? 1
+              : 0
+          }
+        >
+          <CommandInput
+            aria-label="Buscar cartório pelo nome"
+            placeholder="Buscar cartório..."
+            className="h-9"
+          />
+          <CommandList className="max-h-72">
+            <CommandEmpty>Nenhum cartório encontrado.</CommandEmpty>
+            <CommandGroup>
+              <CommandItem
+                value="Todos os cartórios"
+                onSelect={() => selectOffice("all")}
+              >
+                <Check
+                  className={cn(
+                    "mr-2 h-4 w-4",
+                    value === "all" ? "opacity-100" : "opacity-0",
+                  )}
+                />
+                Todos os cartórios
+              </CommandItem>
+              {offices.map((office) => (
+                <CommandItem
+                  key={office.id}
+                  value={office.name}
+                  onSelect={() => selectOffice(office.id)}
+                >
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      value === office.id ? "opacity-100" : "opacity-0",
+                    )}
+                  />
+                  {office.name}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }
 

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { encodeAppointmentObservations } from "@/lib/cs-cx-appointment-observations";
 
 const db = supabase as unknown as SupabaseClient;
 
@@ -50,6 +51,9 @@ export interface CsCxAppointment {
   status: string;
   registry_office_id: string | null;
   contact_id: string | null;
+  is_lead: boolean;
+  lead_office_name: string | null;
+  lead_contact_name: string | null;
   responsible_profile_id: string | null;
   created_by: string | null;
   description: string | null;
@@ -75,10 +79,13 @@ export interface CsCxAppointmentInput {
   status: string;
   registry_office_id?: string;
   contact_id?: string;
+  is_lead?: boolean;
+  lead_office_name?: string;
+  lead_contact_name?: string;
   responsible_profile_id: string;
   description?: string;
   location?: string;
-  notes?: string;
+  observations?: string[];
   result?: string;
 }
 
@@ -197,6 +204,7 @@ export function useCsCxAppointments() {
         .select(`
           id, legacy_id, title, starts_at, duration_minutes, appointment_type,
           status, registry_office_id, contact_id, responsible_profile_id,
+          is_lead, lead_office_name, lead_contact_name,
           created_by, description, location, notes, result, realized_at,
           canceled_at, created_at, updated_at, origin,
           cs_cx_registry_offices (id, name),
@@ -232,12 +240,23 @@ export function useCsCxAppointments() {
         duration_minutes: input.duration_minutes,
         appointment_type: input.appointment_type,
         status: input.status,
-        registry_office_id: emptyToNull(input.registry_office_id),
-        contact_id: emptyToNull(input.contact_id),
+        registry_office_id: input.is_lead
+          ? null
+          : emptyToNull(input.registry_office_id),
+        contact_id: input.is_lead ? null : emptyToNull(input.contact_id),
+        is_lead: Boolean(input.is_lead),
+        lead_office_name: input.is_lead
+          ? emptyToNull(input.lead_office_name)
+          : null,
+        lead_contact_name: input.is_lead
+          ? emptyToNull(input.lead_contact_name)
+          : null,
         responsible_profile_id: input.responsible_profile_id,
         description: emptyToNull(input.description),
         location: emptyToNull(input.location),
-        notes: emptyToNull(input.notes),
+        notes: emptyToNull(
+          encodeAppointmentObservations(input.observations ?? []),
+        ),
         result: emptyToNull(input.result),
       };
       if (input.id) {

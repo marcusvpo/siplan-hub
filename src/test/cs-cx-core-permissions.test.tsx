@@ -21,6 +21,8 @@ vi.mock("@/lib/cs-cx-requests-report", () => ({
 }));
 
 const mutation = { mutateAsync: vi.fn(), isPending: false };
+const routineMutation = { mutateAsync: vi.fn(), isPending: false };
+const deleteRoutineMutation = { mutateAsync: vi.fn(), isPending: false };
 const updateObservationMutation = { mutateAsync: vi.fn(), isPending: false };
 const deleteObservationMutation = { mutateAsync: vi.fn(), isPending: false };
 
@@ -46,6 +48,14 @@ vi.mock("@/hooks/useCsCxCore", async (importOriginal) => {
           : index === 1
             ? { id: "profile-2", full_name: "Henrique", email: null }
             : null,
+        responsibles: index === 0
+          ? [
+            { id: "office-responsible-1", profile_id: "profile-1", profile: { id: "profile-1", full_name: "Bruno", email: null } },
+            { id: "office-responsible-2", profile_id: "profile-2", profile: { id: "profile-2", full_name: "Henrique", email: null } },
+          ]
+          : index === 1
+            ? [{ id: "office-responsible-3", profile_id: "profile-2", profile: { id: "profile-2", full_name: "Henrique", email: null } }]
+            : [],
         products: index === 0
           ? [{ id: "link-tn", product_id: "product-tn", implementation_date: null, product: { id: "product-tn", name: "OrionTN", product_code: "TN" }, responsibles: [] }]
           : index === 1
@@ -111,6 +121,33 @@ vi.mock("@/hooks/useCsCxCore", async (importOriginal) => {
   };
 });
 
+vi.mock("@/hooks/useCsCxRoutines", () => ({
+  useCsCxRoutineLinks: () => ({
+    models: [
+      {
+        id: "routine-model-tn",
+        name: "Checklist de Rotinas OrionTN",
+        active: true,
+      },
+      {
+        id: "routine-model-pro",
+        name: "Checklist de Rotinas OrionPRO",
+        active: true,
+      },
+    ],
+    routines: [
+      {
+        id: "office-routine-1",
+        registry_office_id: "office-1",
+        routine_model_id: "routine-model-tn",
+        applied_by: "profile-1",
+      },
+    ],
+    applyRoutine: routineMutation,
+    deleteRoutine: deleteRoutineMutation,
+  }),
+}));
+
 import CsCxRegistryOffices, { matchesRegistryOfficeFilters } from "@/pages/cs-cx/CsCxRegistryOffices";
 import CsCxRequests from "@/pages/cs-cx/CsCxRequests";
 
@@ -125,6 +162,8 @@ describe("CS/CX — ações por permissão", () => {
   beforeEach(() => {
     hasPermission.mockReset();
     mutation.mutateAsync.mockReset();
+    routineMutation.mutateAsync.mockReset();
+    deleteRoutineMutation.mutateAsync.mockReset();
     updateObservationMutation.mutateAsync.mockReset();
     deleteObservationMutation.mutateAsync.mockReset();
     printRequestsReport.mockReset();
@@ -145,6 +184,60 @@ describe("CS/CX — ações por permissão", () => {
     expect(screen.getByRole("button", { name: /novo cartório/i })).toBeInTheDocument();
   });
 
+  it("vincula um checklist de rotina ao criar um cartório", async () => {
+    mutation.mutateAsync.mockResolvedValueOnce("office-new");
+    renderPage(<CsCxRegistryOffices />, [
+      "cs_cx_cartorios:create",
+      "cs_cx_rotinas:create",
+    ]);
+
+    fireEvent.click(screen.getByRole("button", { name: /novo cartório/i }));
+    fireEvent.change(screen.getByLabelText("Nome do cartório"), {
+      target: { value: "Miguelópolis - TNPT" },
+    });
+    fireEvent.click(
+      screen.getByRole("combobox", {
+        name: /checklists de rotinas do cartório/i,
+      }),
+    );
+    fireEvent.change(
+      screen.getByPlaceholderText(/buscar checklist de rotina/i),
+      { target: { value: "oriontn" } },
+    );
+    fireEvent.click(
+      screen.getByRole("option", { name: /checklist de rotinas oriontn/i }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: /salvar cartório/i }));
+
+    await waitFor(() =>
+      expect(routineMutation.mutateAsync).toHaveBeenCalledWith({
+        registryOfficeId: "office-new",
+        routineModelId: "routine-model-tn",
+      }),
+    );
+  });
+
+  it("carrega os checklists já vinculados ao editar o cartório", async () => {
+    renderPage(<CsCxRegistryOffices />, [
+      "cs_cx_cartorios:edit",
+      "cs_cx_rotinas:create",
+      "cs_cx_rotinas:delete",
+    ]);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /visualizar cartório central/i }),
+    );
+    fireEvent.click(
+      await screen.findByRole("button", { name: /editar cadastro/i }),
+    );
+
+    expect(
+      screen.getByRole("combobox", {
+        name: /checklists de rotinas do cartório/i,
+      }),
+    ).toHaveTextContent("Checklist de Rotinas OrionTN");
+  });
+
   it("pagina a lista de cartórios em blocos compactos", () => {
     renderPage(<CsCxRegistryOffices />, []);
     expect(screen.getByLabelText("Mostrando 1 a 5 de 12 cartórios")).toBeInTheDocument();
@@ -162,7 +255,7 @@ describe("CS/CX — ações por permissão", () => {
     fireEvent.keyDown(screen.getByRole("combobox", { name: "Filtrar cartórios por responsável" }), { key: "ArrowDown" });
     fireEvent.click(await screen.findByRole("option", { name: "Henrique" }));
     expect(screen.getByText("Cartório 2")).toBeInTheDocument();
-    expect(screen.queryByText("Cartório Central")).not.toBeInTheDocument();
+    expect(screen.getByText("Cartório Central")).toBeInTheDocument();
 
     fireEvent.keyDown(screen.getByRole("combobox", { name: "Filtrar cartórios por responsável" }), { key: "ArrowDown" });
     fireEvent.click(await screen.findByRole("option", { name: "Todos os responsáveis" }));
