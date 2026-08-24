@@ -246,6 +246,27 @@ describe("CS/CX visitas e NPS — permissões", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("busca o cartório pelo nome no filtro das análises", () => {
+    renderPage(<CsCxNps />, []);
+
+    fireEvent.click(
+      screen.getByRole("combobox", { name: "Filtrar NPS por cartório" }),
+    );
+    const searchInput = screen.getByPlaceholderText("Buscar cartório...");
+    fireEvent.change(searchInput, { target: { value: "cartorio 12" } });
+
+    const officeOption = screen.getByRole("option", { name: "Cartório 12" });
+    expect(officeOption).toBeInTheDocument();
+    expect(
+      screen.queryByRole("option", { name: "Todos os cartórios" }),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(officeOption);
+    expect(
+      screen.getByRole("combobox", { name: "Filtrar NPS por cartório" }),
+    ).toHaveTextContent("Cartório 12");
+  });
+
   it("permite solicitar NPS sem liberar inclusão ou importação de respostas", () => {
     renderPage(<CsCxNps />, ["cs_cx_nps:create"]);
     expect(

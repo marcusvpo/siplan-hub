@@ -23,3 +23,16 @@ Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
   configurable: true,
   value: vi.fn(),
 });
+
+// cmdk observa o tamanho da lista de resultados; jsdom não oferece ResizeObserver.
+class ResizeObserverMock {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
+
+Object.defineProperty(globalThis, "ResizeObserver", {
+  configurable: true,
+  writable: true,
+  value: ResizeObserverMock,
+});

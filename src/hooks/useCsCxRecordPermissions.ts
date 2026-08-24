@@ -15,8 +15,13 @@ export function canAccessCsCxRecord(
   ownerId: string | null | undefined,
   currentUserId: string | null | undefined,
   othersAllowed: boolean,
+  additionalOwnerIds: string[] = [],
 ) {
-  return baseAllowed && (Boolean(ownerId && currentUserId && ownerId === currentUserId) || othersAllowed);
+  const belongsToCurrentUser = Boolean(
+    currentUserId &&
+      (ownerId === currentUserId || additionalOwnerIds.includes(currentUserId)),
+  );
+  return baseAllowed && (belongsToCurrentUser || othersAllowed);
 }
 
 export function useCsCxRecordPermissions(resource: CsCxOwnedResource) {
@@ -30,9 +35,27 @@ export function useCsCxRecordPermissions(resource: CsCxOwnedResource) {
     canCreate: hasPermission(resource, "create"),
     canViewOthers: hasPermission(resource, "view_others"),
     canManageOthers,
-    canEditRecord: (ownerId: string | null | undefined) =>
-      canAccessCsCxRecord(canEdit, ownerId, user?.id, canManageOthers),
-    canDeleteRecord: (ownerId: string | null | undefined) =>
-      canAccessCsCxRecord(canDelete, ownerId, user?.id, canManageOthers),
+    canEditRecord: (
+      ownerId: string | null | undefined,
+      additionalOwnerIds: string[] = [],
+    ) =>
+      canAccessCsCxRecord(
+        canEdit,
+        ownerId,
+        user?.id,
+        canManageOthers,
+        additionalOwnerIds,
+      ),
+    canDeleteRecord: (
+      ownerId: string | null | undefined,
+      additionalOwnerIds: string[] = [],
+    ) =>
+      canAccessCsCxRecord(
+        canDelete,
+        ownerId,
+        user?.id,
+        canManageOthers,
+        additionalOwnerIds,
+      ),
   };
 }

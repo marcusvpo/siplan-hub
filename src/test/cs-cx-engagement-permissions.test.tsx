@@ -69,7 +69,7 @@ vi.mock("@/hooks/useCsCxEngagement", () => ({
       created_by: "profile-1",
       description: null,
       location: "Online",
-      notes: null,
+      notes: index === 0 ? "Observação cadastrada" : null,
       result: null,
       realized_at: null,
       canceled_at: null,
@@ -143,6 +143,38 @@ describe("CS/CX contatos e agendamentos — permissões", () => {
   it("libera criação de agendamentos com a permissão correta", () => {
     renderPage(<CsCxAppointments />, ["cs_cx_agendamentos:create"]);
     expect(screen.getByRole("button", { name: /novo agendamento/i })).toBeInTheDocument();
+  });
+
+  it("permite informar cartório e contato livres para um cliente lead", () => {
+    renderPage(<CsCxAppointments />, ["cs_cx_agendamentos:create"]);
+    fireEvent.click(screen.getByRole("button", { name: /novo agendamento/i }));
+
+    expect(screen.queryByLabelText("Cartório do lead")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("switch", { name: /cliente lead/i }));
+
+    expect(screen.getByLabelText("Cartório do lead")).toBeRequired();
+    expect(screen.getByLabelText("Contato do lead")).toBeRequired();
+    expect(screen.queryByText("Sem cartório")).not.toBeInTheDocument();
+    expect(screen.queryByText("Sem contato")).not.toBeInTheDocument();
+  });
+
+  it("permite adicionar e remover várias observações no agendamento", () => {
+    renderPage(<CsCxAppointments />, ["cs_cx_agendamentos:create"]);
+    fireEvent.click(screen.getByRole("button", { name: /novo agendamento/i }));
+
+    expect(screen.getByLabelText("Observação 1")).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Observação 1"), {
+      target: { value: "Confirmar participantes" },
+    });
+    fireEvent.click(
+      screen.getByRole("button", { name: /adicionar observação/i }),
+    );
+
+    expect(screen.getByLabelText("Observação 2")).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("button", { name: /remover observação 1/i }),
+    );
+    expect(screen.getByLabelText("Observação 1")).toHaveValue("");
   });
 
   it("pagina a lista de agendamentos em blocos compactos", () => {

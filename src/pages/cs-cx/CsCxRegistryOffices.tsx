@@ -70,6 +70,7 @@ import {
   type CsCxRegistryOffice,
   useCsCxRegistryOffices,
 } from "@/hooks/useCsCxCore";
+import { useCsCxRoutineLinks } from "@/hooks/useCsCxRoutines";
 import { CsCxMultiSelect } from "@/components/cs-cx/CsCxMultiSelect";
 
 interface OfficeProductForm {
@@ -84,8 +85,9 @@ interface OfficeForm {
   contact_details: string;
   notes: string;
   active: boolean;
-  analyst_profile_id: string;
+  responsible_profile_ids: string[];
   products: Record<string, OfficeProductForm>;
+  routine_model_ids: string[];
 }
 
 const emptyForm: OfficeForm = {
@@ -94,8 +96,9 @@ const emptyForm: OfficeForm = {
   contact_details: "",
   notes: "",
   active: true,
-  analyst_profile_id: "",
+  responsible_profile_ids: [],
   products: {},
+  routine_model_ids: [],
 };
 
 const DEFAULT_PAGE_SIZE = 5;
@@ -120,15 +123,19 @@ export function matchesRegistryOfficeFilters(
       office.name,
       office.sap_code,
       office.contact_details,
-      office.analyst?.full_name,
-      office.analyst?.email,
+      ...office.responsibles.flatMap((responsible) => [
+        responsible.profile?.full_name,
+        responsible.profile?.email,
+      ]),
     ].some((value) => value?.toLocaleLowerCase("pt-BR").includes(term));
   const matchesStatus =
     filters.status === "all" ||
     (filters.status === "active" ? office.active : !office.active);
   const matchesResponsible =
     filters.responsibleProfileId === "all" ||
-    office.analyst_profile_id === filters.responsibleProfileId;
+    office.responsibles.some(
+      (responsible) => responsible.profile_id === filters.responsibleProfileId,
+    );
   const matchesProducts =
     filters.productIds.length === 0 ||
     office.products.some((product) =>
@@ -160,8 +167,18 @@ export default function CsCxRegistryOffices() {
     saveOffice,
     deleteOffice,
   } = useCsCxRegistryOffices();
+  const {
+    models: routineModels,
+    routines: officeRoutines,
+    applyRoutine,
+    deleteRoutine,
+  } = useCsCxRoutineLinks();
   const { canCreate, canEditRecord, canDeleteRecord } =
     useCsCxRecordPermissions("cs_cx_cartorios");
+  const {
+    canCreate: canCreateRoutine,
+    canDeleteRecord: canDeleteRoutineRecord,
+  } = useCsCxRecordPermissions("cs_cx_rotinas");
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
@@ -175,10 +192,26 @@ export default function CsCxRegistryOffices() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState<CsCxRegistryOffice | null>(null);
   const [viewing, setViewing] = useState<CsCxRegistryOffice | null>(null);
+  const formOfficeRoutines = useMemo(
+    () =>
+      form.id
+        ? officeRoutines.filter(
+            (routine) => routine.registry_office_id === form.id,
+          )
+        : [],
+    [form.id, officeRoutines],
+  );
+  const canManageRoutineLinks =
+    canCreateRoutine ||
+    formOfficeRoutines.some((routine) =>
+      canDeleteRoutineRecord(routine.applied_by),
+    );
 
   const responsibleOptions = useMemo(() => {
     const assignedProfileIds = new Set(
-      offices.map((office) => office.analyst_profile_id).filter(Boolean),
+      offices.flatMap((office) =>
+        office.responsibles.map((responsible) => responsible.profile_id),
+      ),
     );
     return profiles
       .filter((profile) => assignedProfileIds.has(profile.id))
@@ -260,7 +293,9 @@ export default function CsCxRegistryOffices() {
       contact_details: office.contact_details ?? "",
       notes: office.notes ?? "",
       active: office.active,
-      analyst_profile_id: office.analyst_profile_id ?? "",
+      responsible_profile_ids: office.responsibles.map(
+        (responsible) => responsible.profile_id,
+      ),
       products: Object.fromEntries(
         office.products.map((item) => [
           item.product_id,
@@ -272,6 +307,9 @@ export default function CsCxRegistryOffices() {
           },
         ]),
       ),
+      routine_model_ids: officeRoutines
+        .filter((routine) => routine.registry_office_id === office.id)
+        .map((routine) => routine.routine_model_id),
     });
     setDialogOpen(true);
   };
@@ -279,9 +317,11 @@ export default function CsCxRegistryOffices() {
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!form.name.trim()) return;
+    let officeWasSaved = false;
     try {
-      await saveOffice.mutateAsync({
-        ...form,
+      const { routine_model_ids, ...officeForm } = form;
+      const savedOfficeId = await saveOffice.mutateAsync({
+        ...officeForm,
         products: Object.entries(form.products).map(
           ([product_id, product]) => ({
             product_id,
@@ -290,14 +330,50 @@ export default function CsCxRegistryOffices() {
           }),
         ),
       });
+      officeWasSaved = true;
+
+      const registryOfficeId = savedOfficeId || form.id;
+      if (!registryOfficeId) {
+        throw new Error("O cartório foi salvo, mas o identificador não foi retornado.");
+      }
+
+      const existingRoutines = officeRoutines.filter(
+        (routine) => routine.registry_office_id === registryOfficeId,
+      );
+      const existingModelIds = new Set(
+        existingRoutines.map((routine) => routine.routine_model_id),
+      );
+      const selectedModelIds = new Set(routine_model_ids);
+      const routinesToApply = canCreateRoutine
+        ? routine_model_ids.filter((modelId) => !existingModelIds.has(modelId))
+        : [];
+      const routinesToDelete = existingRoutines.filter(
+        (routine) =>
+          !selectedModelIds.has(routine.routine_model_id) &&
+          canDeleteRoutineRecord(routine.applied_by),
+      );
+
+      await Promise.all([
+        ...routinesToApply.map((routineModelId) =>
+          applyRoutine.mutateAsync({ registryOfficeId, routineModelId }),
+        ),
+        ...routinesToDelete.map((routine) =>
+          deleteRoutine.mutateAsync(routine.id),
+        ),
+      ]);
       setDialogOpen(false);
       toast({
         title: "Cartório salvo",
-        description: "Cadastro e produtos atualizados com sucesso.",
+        description:
+          routinesToApply.length || routinesToDelete.length
+            ? "Cadastro, produtos e checklists de rotinas atualizados com sucesso."
+            : "Cadastro e produtos atualizados com sucesso.",
       });
     } catch (mutationError) {
       toast({
-        title: "Não foi possível salvar",
+        title: officeWasSaved
+          ? "Cartório salvo, mas as rotinas não foram atualizadas"
+          : "Não foi possível salvar",
         description: errorMessage(mutationError),
         variant: "destructive",
       });
@@ -475,7 +551,7 @@ export default function CsCxRegistryOffices() {
                         Cartório
                       </TableHead>
                       <TableHead className="h-9 px-3 text-xs">
-                        Responsável
+                        Responsáveis
                       </TableHead>
                       <TableHead className="h-9 px-3 text-xs">
                         Código SAP
@@ -508,11 +584,7 @@ export default function CsCxRegistryOffices() {
                             </div>
                           </TableCell>
                           <TableCell className="px-3 py-2">
-                            <div className="text-sm">
-                              {office.analyst?.full_name ||
-                                office.analyst?.email ||
-                                "—"}
-                            </div>
+                            <ResponsibleBadges office={office} />
                           </TableCell>
                           <TableCell className="px-3 py-2">
                             {office.sap_code || "—"}
@@ -539,8 +611,14 @@ export default function CsCxRegistryOffices() {
                               >
                                 <Eye className="h-4 w-4" />
                               </Button>
-                              {(canEditRecord(office.created_by) ||
-                                canDeleteRecord(office.created_by)) && (
+                              {(canEditRecord(
+                                office.created_by,
+                                office.responsibles.map((item) => item.profile_id),
+                              ) ||
+                                canDeleteRecord(
+                                  office.created_by,
+                                  office.responsibles.map((item) => item.profile_id),
+                                )) && (
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
                                     <Button
@@ -553,7 +631,10 @@ export default function CsCxRegistryOffices() {
                                     </Button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end">
-                                    {canEditRecord(office.created_by) && (
+                                    {canEditRecord(
+                                      office.created_by,
+                                      office.responsibles.map((item) => item.profile_id),
+                                    ) && (
                                       <DropdownMenuItem
                                         onClick={() => openEdit(office)}
                                       >
@@ -561,7 +642,10 @@ export default function CsCxRegistryOffices() {
                                         Editar
                                       </DropdownMenuItem>
                                     )}
-                                    {canDeleteRecord(office.created_by) && (
+                                    {canDeleteRecord(
+                                      office.created_by,
+                                      office.responsibles.map((item) => item.profile_id),
+                                    ) && (
                                       <DropdownMenuItem
                                         onClick={() => setDeleting(office)}
                                         className="text-destructive"
@@ -608,6 +692,7 @@ export default function CsCxRegistryOffices() {
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Nome *">
                 <Input
+                  aria-label="Nome do cartório"
                   required
                   value={form.name}
                   onChange={(event) =>
@@ -624,28 +709,27 @@ export default function CsCxRegistryOffices() {
                 />
               </Field>
             </div>
-            <Field label="Responsável pelo cartório">
-              <Select
-                value={form.analyst_profile_id || "none"}
-                onValueChange={(value) =>
-                  setForm({
-                    ...form,
-                    analyst_profile_id: value === "none" ? "" : value,
-                  })
+            <Field label="Responsáveis pelo cartório">
+              <CsCxMultiSelect
+                ariaLabel="Responsáveis pelo cartório"
+                options={profiles.map((profile) => ({
+                  value: profile.id,
+                  label: profile.full_name || profile.email || "Usuário",
+                }))}
+                values={form.responsible_profile_ids}
+                onChange={(responsible_profile_ids) =>
+                  setForm((current) => ({
+                    ...current,
+                    responsible_profile_ids,
+                  }))
                 }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o responsável" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Não informado</SelectItem>
-                  {profiles.map((profile) => (
-                    <SelectItem key={profile.id} value={profile.id}>
-                      {profile.full_name || profile.email || "Usuário"}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                placeholder="Selecione um ou mais responsáveis"
+                searchPlaceholder="Buscar responsável..."
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Todos os selecionados poderão visualizar os dados deste cartório,
+                conforme as permissões do módulo.
+              </p>
             </Field>
             <Field label="Contatos">
               <Input
@@ -757,6 +841,65 @@ export default function CsCxRegistryOffices() {
                 })
               )}
             </div>
+            <div className="space-y-2 rounded-lg border p-4">
+              <div>
+                <Label>Checklists de rotinas</Label>
+                <p className="text-xs text-muted-foreground">
+                  Vincule um ou mais modelos de rotina a este cartório. A busca
+                  aceita o nome do checklist.
+                </p>
+              </div>
+              <CsCxMultiSelect
+                ariaLabel="Checklists de rotinas do cartório"
+                options={routineModels
+                  .filter(
+                    (model) =>
+                      model.active || form.routine_model_ids.includes(model.id),
+                  )
+                  .map((model) => ({
+                    value: model.id,
+                    label: model.name,
+                  }))}
+                values={form.routine_model_ids}
+                onChange={(requestedModelIds) => {
+                  const existingByModel = new Map(
+                    formOfficeRoutines.map((routine) => [
+                      routine.routine_model_id,
+                      routine,
+                    ]),
+                  );
+                  const protectedModelIds = formOfficeRoutines
+                    .filter(
+                      (routine) =>
+                        !canDeleteRoutineRecord(routine.applied_by),
+                    )
+                    .map((routine) => routine.routine_model_id);
+                  const allowedModelIds = canCreateRoutine
+                    ? requestedModelIds
+                    : requestedModelIds.filter((modelId) =>
+                        existingByModel.has(modelId),
+                      );
+
+                  setForm((current) => ({
+                    ...current,
+                    routine_model_ids: [
+                      ...new Set([
+                        ...allowedModelIds,
+                        ...protectedModelIds,
+                      ]),
+                    ],
+                  }));
+                }}
+                placeholder="Selecione um ou mais checklists"
+                searchPlaceholder="Buscar checklist de rotina..."
+                disabled={!canManageRoutineLinks}
+              />
+              {!canManageRoutineLinks && (
+                <p className="text-xs text-muted-foreground">
+                  Você não possui permissão para alterar vínculos de rotinas.
+                </p>
+              )}
+            </div>
             <label className="flex items-center justify-between rounded-lg border p-3">
               <div>
                 <span className="text-sm font-medium">Cartório ativo</span>
@@ -801,12 +944,8 @@ export default function CsCxRegistryOffices() {
               <div className="grid gap-3 rounded-lg border p-3 sm:grid-cols-2">
                 <ReadOnlyField label="Cartório" value={viewing.name} />
                 <ReadOnlyField
-                  label="Responsável"
-                  value={
-                    viewing.analyst?.full_name ||
-                    viewing.analyst?.email ||
-                    "Não informado"
-                  }
+                  label="Responsáveis"
+                  value={responsibleNames(viewing).join(", ") || "Não informados"}
                 />
                 <ReadOnlyField
                   label="Código SAP"
@@ -886,7 +1025,11 @@ export default function CsCxRegistryOffices() {
             >
               Fechar
             </Button>
-            {viewing && canEditRecord(viewing.created_by) && (
+            {viewing &&
+              canEditRecord(
+                viewing.created_by,
+                viewing.responsibles.map((item) => item.profile_id),
+              ) && (
               <Button
                 type="button"
                 onClick={() => {
@@ -974,6 +1117,41 @@ function ProductBadges({ office }: { office: CsCxRegistryOffice }) {
       {office.products.length > visible.length && (
         <Badge variant="outline" className="h-5 px-1.5 text-[10px]">
           +{office.products.length - visible.length}
+        </Badge>
+      )}
+    </div>
+  );
+}
+
+function responsibleNames(office: CsCxRegistryOffice) {
+  return office.responsibles.map(
+    (responsible) =>
+      responsible.profile?.full_name ||
+      responsible.profile?.email ||
+      "Usuário removido",
+  );
+}
+
+function ResponsibleBadges({ office }: { office: CsCxRegistryOffice }) {
+  const names = responsibleNames(office);
+  if (!names.length) {
+    return <span className="text-xs text-muted-foreground">Não informado</span>;
+  }
+  const visible = names.slice(0, 2);
+  return (
+    <div className="flex max-w-xs flex-wrap gap-1" title={names.join(", ")}>
+      {visible.map((name, index) => (
+        <Badge
+          key={`${name}-${index}`}
+          variant="outline"
+          className="h-5 max-w-36 truncate px-1.5 text-[10px] font-normal"
+        >
+          {name}
+        </Badge>
+      ))}
+      {names.length > visible.length && (
+        <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
+          +{names.length - visible.length}
         </Badge>
       )}
     </div>

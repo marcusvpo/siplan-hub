@@ -111,8 +111,25 @@ export interface CsCxOfficeRoutine {
   origin: "legacy" | "hub";
   applied_by: string | null;
   registry_office: { id: string; name: string } | null;
-  routine_model: { id: string; name: string; description: string | null } | null;
+  routine_model: {
+    id: string;
+    name: string;
+    description: string | null;
+  } | null;
   items: CsCxRoutineItemConfig[];
+}
+
+export interface CsCxRoutineLink {
+  id: string;
+  registry_office_id: string;
+  routine_model_id: string;
+  applied_by: string | null;
+}
+
+export interface CsCxRoutineLinkModel {
+  id: string;
+  name: string;
+  active: boolean;
 }
 
 export interface CsCxRoutineHistory {
@@ -136,13 +153,23 @@ export interface CsCxRoutineHistory {
 }
 
 interface RawModel extends Omit<CsCxRoutineModel, "products" | "item_count"> {
-  cs_cx_routine_model_products?: Array<{ source_present: boolean; cs_cx_products: { id: string; name: string } | null }>;
+  cs_cx_routine_model_products?: Array<{
+    source_present: boolean;
+    cs_cx_products: { id: string; name: string } | null;
+  }>;
   cs_cx_routine_model_items?: Array<{ source_present: boolean }>;
 }
 
-interface RawRoutine extends Omit<CsCxOfficeRoutine, "registry_office" | "routine_model" | "items"> {
+interface RawRoutine extends Omit<
+  CsCxOfficeRoutine,
+  "registry_office" | "routine_model" | "items"
+> {
   cs_cx_registry_offices: { id: string; name: string } | null;
-  cs_cx_routine_models: { id: string; name: string; description: string | null } | null;
+  cs_cx_routine_models: {
+    id: string;
+    name: string;
+    description: string | null;
+  } | null;
 }
 
 interface RawConfig extends Omit<CsCxRoutineItemConfig, "model_item"> {
@@ -153,13 +180,24 @@ interface RawConfig extends Omit<CsCxRoutineItemConfig, "model_item"> {
     description: string | null;
     sort_order: number;
     required: boolean;
-    cs_cx_routine_categories: { id: string; name: string; display_color: string } | null;
+    cs_cx_routine_categories: {
+      id: string;
+      name: string;
+      display_color: string;
+    } | null;
     cs_cx_routine_types: { id: string; name: string } | null;
   } | null;
 }
 
-interface RawAdminItem extends Omit<CsCxRoutineModelItem, "category" | "routine_type"> {
-  cs_cx_routine_categories: { id: string; name: string; display_color: string } | null;
+interface RawAdminItem extends Omit<
+  CsCxRoutineModelItem,
+  "category" | "routine_type"
+> {
+  cs_cx_routine_categories: {
+    id: string;
+    name: string;
+    display_color: string;
+  } | null;
   cs_cx_routine_types: { id: string; name: string } | null;
 }
 
@@ -170,14 +208,16 @@ async function fetchAllRoutineConfigs() {
   for (let from = 0; ; from += pageSize) {
     const { data, error } = await db
       .from("cs_cx_office_routine_items")
-      .select(`
+      .select(
+        `
         id, office_routine_id, active, notes, analysis_notes, analyzed_at,
         cs_cx_routine_model_items (
           id, name, description, sort_order, required,
           cs_cx_routine_categories (id, name, display_color),
           cs_cx_routine_types (id, name)
         )
-      `)
+      `,
+      )
       .eq("source_present", true)
       .order("id")
       .range(from, from + pageSize - 1);
@@ -199,14 +239,16 @@ export function useCsCxRoutines() {
     queryFn: async () => {
       const { data, error } = await db
         .from("cs_cx_routine_models")
-        .select(`
+        .select(
+          `
           id, legacy_id, name, description, active, origin,
           cs_cx_routine_model_products (
             source_present,
             cs_cx_products (id, name)
           ),
           cs_cx_routine_model_items (source_present)
-        `)
+        `,
+        )
         .eq("source_present", true)
         .order("name");
       if (error) throw error;
@@ -216,8 +258,12 @@ export function useCsCxRoutines() {
         products: (model.cs_cx_routine_model_products ?? [])
           .filter((link) => link.source_present)
           .map((link) => link.cs_cx_products)
-          .filter((product): product is { id: string; name: string } => Boolean(product)),
-        item_count: (model.cs_cx_routine_model_items ?? []).filter((item) => item.source_present).length,
+          .filter((product): product is { id: string; name: string } =>
+            Boolean(product),
+          ),
+        item_count: (model.cs_cx_routine_model_items ?? []).filter(
+          (item) => item.source_present,
+        ).length,
       })) satisfies CsCxRoutineModel[];
     },
   });
@@ -228,36 +274,46 @@ export function useCsCxRoutines() {
       const [routineResult, configs] = await Promise.all([
         db
           .from("cs_cx_office_routines")
-          .select(`
+          .select(
+            `
             id, legacy_id, registry_office_id, routine_model_id, active,
             applied_at, notes, origin, applied_by,
             cs_cx_registry_offices (id, name),
             cs_cx_routine_models (id, name, description)
-          `)
+          `,
+          )
           .eq("source_present", true)
           .order("applied_at", { ascending: false }),
         fetchAllRoutineConfigs(),
       ]);
       if (routineResult.error) throw routineResult.error;
 
-      return ((routineResult.data ?? []) as unknown as RawRoutine[]).map((routine) => ({
-        ...routine,
-        registry_office: routine.cs_cx_registry_offices,
-        routine_model: routine.cs_cx_routine_models,
-        items: configs
-          .filter((config) => config.office_routine_id === routine.id)
-          .map((config) => ({
-            ...config,
-            model_item: config.cs_cx_routine_model_items
-              ? {
-                  ...config.cs_cx_routine_model_items,
-                  category: config.cs_cx_routine_model_items.cs_cx_routine_categories,
-                  routine_type: config.cs_cx_routine_model_items.cs_cx_routine_types,
-                }
-              : null,
-          }))
-          .sort((a, b) => (a.model_item?.sort_order ?? 0) - (b.model_item?.sort_order ?? 0)),
-      })) satisfies CsCxOfficeRoutine[];
+      return ((routineResult.data ?? []) as unknown as RawRoutine[]).map(
+        (routine) => ({
+          ...routine,
+          registry_office: routine.cs_cx_registry_offices,
+          routine_model: routine.cs_cx_routine_models,
+          items: configs
+            .filter((config) => config.office_routine_id === routine.id)
+            .map((config) => ({
+              ...config,
+              model_item: config.cs_cx_routine_model_items
+                ? {
+                    ...config.cs_cx_routine_model_items,
+                    category:
+                      config.cs_cx_routine_model_items.cs_cx_routine_categories,
+                    routine_type:
+                      config.cs_cx_routine_model_items.cs_cx_routine_types,
+                  }
+                : null,
+            }))
+            .sort(
+              (a, b) =>
+                (a.model_item?.sort_order ?? 0) -
+                (b.model_item?.sort_order ?? 0),
+            ),
+        }),
+      ) satisfies CsCxOfficeRoutine[];
     },
   });
 
@@ -270,12 +326,14 @@ export function useCsCxRoutines() {
       for (let from = 0; ; from += pageSize) {
         const { data, error } = await db
           .from("cs_cx_routine_history")
-          .select(`
+          .select(
+            `
             id, legacy_id, office_routine_id, model_item_id, action,
             previous_status, new_status, notes, legacy_user_id,
             actor_profile_id, occurred_at, ip_address, origin,
             registry_office_name, routine_model_name, model_item_name, actor_name
-          `)
+          `,
+          )
           .eq("source_present", true)
           .order("occurred_at", { ascending: false })
           .range(from, from + pageSize - 1);
@@ -291,7 +349,11 @@ export function useCsCxRoutines() {
   });
 
   const applyRoutine = useMutation({
-    mutationFn: async (input: { registryOfficeId: string; routineModelId: string; notes?: string }) => {
+    mutationFn: async (input: {
+      registryOfficeId: string;
+      routineModelId: string;
+      notes?: string;
+    }) => {
       const { data, error } = await db.rpc("cs_cx_apply_routine", {
         p_registry_office_id: input.registryOfficeId,
         p_routine_model_id: input.routineModelId,
@@ -304,7 +366,14 @@ export function useCsCxRoutines() {
   });
 
   const setRoutineItem = useMutation({
-    mutationFn: async (input: { id: string; active: boolean | null; notes?: string; analysisNotes?: string; historyNotes?: string; analyzedAt: string }) => {
+    mutationFn: async (input: {
+      id: string;
+      active: boolean | null;
+      notes?: string;
+      analysisNotes?: string;
+      historyNotes?: string;
+      analyzedAt: string;
+    }) => {
       const { error } = await db.rpc("cs_cx_set_routine_item_v2", {
         p_config_id: input.id,
         p_active: input.active,
@@ -319,10 +388,18 @@ export function useCsCxRoutines() {
   });
 
   const setAllRoutineItems = useMutation({
-    mutationFn: async (input: { registryOfficeId: string; active: boolean | null; analysisNotes?: string; historyNotes?: string; analyzedAt: string }) => {
-      const { data, error } = await db.rpc("cs_cx_set_routine_items_bulk_v2", {
+    mutationFn: async (input: {
+      registryOfficeId: string;
+      routineModelIds?: string[];
+      active: boolean | null;
+      analysisNotes?: string;
+      historyNotes?: string;
+      analyzedAt: string;
+    }) => {
+      const { data, error } = await db.rpc("cs_cx_set_routine_items_bulk_v3", {
         p_registry_office_id: input.registryOfficeId,
         p_active: input.active,
+        p_routine_model_ids: input.routineModelIds ?? null,
         p_analysis_notes: emptyToNull(input.analysisNotes),
         p_history_notes: emptyToNull(input.historyNotes),
         p_analyzed_at: `${input.analyzedAt}T12:00:00`,
@@ -335,7 +412,10 @@ export function useCsCxRoutines() {
 
   const deleteRoutine = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await db.from("cs_cx_office_routines").delete().eq("id", id);
+      const { error } = await db
+        .from("cs_cx_office_routines")
+        .delete()
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => invalidateRoutines(queryClient),
@@ -345,12 +425,85 @@ export function useCsCxRoutines() {
     models: modelsQuery.data ?? [],
     routines: routinesQuery.data ?? [],
     history: historyQuery.data ?? [],
-    isLoading: modelsQuery.isLoading || routinesQuery.isLoading || historyQuery.isLoading,
+    isLoading:
+      modelsQuery.isLoading ||
+      routinesQuery.isLoading ||
+      historyQuery.isLoading,
     error: modelsQuery.error ?? routinesQuery.error ?? historyQuery.error,
-    refetch: async () => Promise.all([modelsQuery.refetch(), routinesQuery.refetch(), historyQuery.refetch()]),
+    refetch: async () =>
+      Promise.all([
+        modelsQuery.refetch(),
+        routinesQuery.refetch(),
+        historyQuery.refetch(),
+      ]),
     applyRoutine,
     setRoutineItem,
     setAllRoutineItems,
+    deleteRoutine,
+  };
+}
+
+export function useCsCxRoutineLinks() {
+  const queryClient = useQueryClient();
+
+  const modelsQuery = useQuery({
+    queryKey: ["cs-cx", "routine-link-models"],
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("cs_cx_routine_models")
+        .select("id, name, active")
+        .eq("source_present", true)
+        .order("name");
+      if (error) throw error;
+      return (data ?? []) as CsCxRoutineLinkModel[];
+    },
+  });
+
+  const linksQuery = useQuery({
+    queryKey: ["cs-cx", "office-routine-links"],
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("cs_cx_office_routines")
+        .select("id, registry_office_id, routine_model_id, applied_by")
+        .eq("source_present", true);
+      if (error) throw error;
+      return (data ?? []) as CsCxRoutineLink[];
+    },
+  });
+
+  const applyRoutine = useMutation({
+    mutationFn: async (input: {
+      registryOfficeId: string;
+      routineModelId: string;
+    }) => {
+      const { data, error } = await db.rpc("cs_cx_apply_routine", {
+        p_registry_office_id: input.registryOfficeId,
+        p_routine_model_id: input.routineModelId,
+        p_notes: null,
+      });
+      if (error) throw error;
+      return data as string;
+    },
+    onSuccess: () => invalidateRoutines(queryClient),
+  });
+
+  const deleteRoutine = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await db
+        .from("cs_cx_office_routines")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => invalidateRoutines(queryClient),
+  });
+
+  return {
+    models: modelsQuery.data ?? [],
+    routines: linksQuery.data ?? [],
+    isLoading: modelsQuery.isLoading || linksQuery.isLoading,
+    error: modelsQuery.error ?? linksQuery.error,
+    applyRoutine,
     deleteRoutine,
   };
 }
@@ -361,17 +514,25 @@ export function useCsCxRoutineAdmin() {
   const adminQuery = useQuery({
     queryKey: ["cs-cx", "routine-admin"],
     queryFn: async () => {
-      const [modelsResult, categoriesResult, typesResult, itemsResult, productsResult] = await Promise.all([
+      const [
+        modelsResult,
+        categoriesResult,
+        typesResult,
+        itemsResult,
+        productsResult,
+      ] = await Promise.all([
         db
           .from("cs_cx_routine_models")
-          .select(`
+          .select(
+            `
             id, legacy_id, name, description, active, origin,
             cs_cx_routine_model_products (
               source_present,
               cs_cx_products (id, name)
             ),
             cs_cx_routine_model_items (source_present)
-          `)
+          `,
+          )
           .eq("source_present", true)
           .order("name"),
         db
@@ -386,12 +547,14 @@ export function useCsCxRoutineAdmin() {
           .order("name"),
         db
           .from("cs_cx_routine_model_items")
-          .select(`
+          .select(
+            `
             id, routine_model_id, name, description, category_id, routine_type_id,
             sort_order, required, default_active, origin,
             cs_cx_routine_categories (id, name, display_color),
             cs_cx_routine_types (id, name)
-          `)
+          `,
+          )
           .eq("source_present", true)
           .order("sort_order"),
         db
@@ -402,35 +565,61 @@ export function useCsCxRoutineAdmin() {
           .order("name"),
       ]);
 
-      const firstError = [modelsResult, categoriesResult, typesResult, itemsResult, productsResult]
-        .find((result) => result.error)?.error;
+      const firstError = [
+        modelsResult,
+        categoriesResult,
+        typesResult,
+        itemsResult,
+        productsResult,
+      ].find((result) => result.error)?.error;
       if (firstError) throw firstError;
 
-      const items = ((itemsResult.data ?? []) as unknown as RawAdminItem[]).map((item) => ({
-        ...item,
-        category: item.cs_cx_routine_categories,
-        routine_type: item.cs_cx_routine_types,
-      })) satisfies CsCxRoutineModelItem[];
+      const items = ((itemsResult.data ?? []) as unknown as RawAdminItem[]).map(
+        (item) => ({
+          ...item,
+          category: item.cs_cx_routine_categories,
+          routine_type: item.cs_cx_routine_types,
+        }),
+      ) satisfies CsCxRoutineModelItem[];
 
       return {
-        models: ((modelsResult.data ?? []) as unknown as RawModel[]).map((model) => ({
-          ...model,
-          products: (model.cs_cx_routine_model_products ?? [])
-            .filter((link) => link.source_present)
-            .map((link) => link.cs_cx_products)
-            .filter((product): product is { id: string; name: string } => Boolean(product)),
-          item_count: (model.cs_cx_routine_model_items ?? []).filter((item) => item.source_present).length,
-        })) satisfies CsCxRoutineModel[],
-        categories: ((categoriesResult.data ?? []) as Omit<CsCxRoutineCategory, "item_count">[]).map((category) => ({
+        models: ((modelsResult.data ?? []) as unknown as RawModel[]).map(
+          (model) => ({
+            ...model,
+            products: (model.cs_cx_routine_model_products ?? [])
+              .filter((link) => link.source_present)
+              .map((link) => link.cs_cx_products)
+              .filter((product): product is { id: string; name: string } =>
+                Boolean(product),
+              ),
+            item_count: (model.cs_cx_routine_model_items ?? []).filter(
+              (item) => item.source_present,
+            ).length,
+          }),
+        ) satisfies CsCxRoutineModel[],
+        categories: (
+          (categoriesResult.data ?? []) as Omit<
+            CsCxRoutineCategory,
+            "item_count"
+          >[]
+        ).map((category) => ({
           ...category,
-          item_count: items.filter((item) => item.category_id === category.id).length,
+          item_count: items.filter((item) => item.category_id === category.id)
+            .length,
         })),
-        types: ((typesResult.data ?? []) as Omit<CsCxRoutineType, "item_count">[]).map((routineType) => ({
+        types: (
+          (typesResult.data ?? []) as Omit<CsCxRoutineType, "item_count">[]
+        ).map((routineType) => ({
           ...routineType,
-          item_count: items.filter((item) => item.routine_type_id === routineType.id).length,
+          item_count: items.filter(
+            (item) => item.routine_type_id === routineType.id,
+          ).length,
         })),
         items,
-        products: (productsResult.data ?? []) as Array<{ id: string; name: string }>,
+        products: (productsResult.data ?? []) as Array<{
+          id: string;
+          name: string;
+        }>,
       };
     },
   });
@@ -452,7 +641,9 @@ export function useCsCxRoutineAdmin() {
 
   const deleteModel = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await db.rpc("cs_cx_delete_routine_model", { p_id: id });
+      const { error } = await db.rpc("cs_cx_delete_routine_model", {
+        p_id: id,
+      });
       if (error) throw error;
     },
     onSuccess: () => invalidateRoutines(queryClient),
@@ -478,7 +669,9 @@ export function useCsCxRoutineAdmin() {
 
   const deleteItem = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await db.rpc("cs_cx_delete_routine_model_item", { p_id: id });
+      const { error } = await db.rpc("cs_cx_delete_routine_model_item", {
+        p_id: id,
+      });
       if (error) throw error;
     },
     onSuccess: () => invalidateRoutines(queryClient),
@@ -505,7 +698,9 @@ export function useCsCxRoutineAdmin() {
       };
       const request = input.id
         ? db.from("cs_cx_routine_categories").update(payload).eq("id", input.id)
-        : db.from("cs_cx_routine_categories").insert({ ...payload, origin: "hub", source_present: true });
+        : db
+            .from("cs_cx_routine_categories")
+            .insert({ ...payload, origin: "hub", source_present: true });
       const { error } = await request;
       if (error) throw error;
     },
@@ -514,7 +709,10 @@ export function useCsCxRoutineAdmin() {
 
   const deleteCategory = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await db.from("cs_cx_routine_categories").delete().eq("id", id);
+      const { error } = await db
+        .from("cs_cx_routine_categories")
+        .delete()
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => invalidateRoutines(queryClient),
@@ -529,7 +727,9 @@ export function useCsCxRoutineAdmin() {
       };
       const request = input.id
         ? db.from("cs_cx_routine_types").update(payload).eq("id", input.id)
-        : db.from("cs_cx_routine_types").insert({ ...payload, origin: "hub", source_present: true });
+        : db
+            .from("cs_cx_routine_types")
+            .insert({ ...payload, origin: "hub", source_present: true });
       const { error } = await request;
       if (error) throw error;
     },
@@ -538,7 +738,10 @@ export function useCsCxRoutineAdmin() {
 
   const deleteType = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await db.from("cs_cx_routine_types").delete().eq("id", id);
+      const { error } = await db
+        .from("cs_cx_routine_types")
+        .delete()
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => invalidateRoutines(queryClient),
