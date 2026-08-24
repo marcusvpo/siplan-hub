@@ -30,6 +30,12 @@ export interface CsCxProductResponsible {
   profile: CsCxResponsibleProfile | null;
 }
 
+export interface CsCxOfficeResponsible {
+  id: string;
+  profile_id: string;
+  profile: CsCxResponsibleProfile | null;
+}
+
 export interface CsCxRegistryOffice {
   id: string;
   legacy_id: number | null;
@@ -43,6 +49,7 @@ export interface CsCxRegistryOffice {
   created_by: string | null;
   analyst_profile_id: string | null;
   analyst: CsCxResponsibleProfile | null;
+  responsibles: CsCxOfficeResponsible[];
   products: CsCxOfficeProduct[];
 }
 
@@ -52,7 +59,7 @@ export interface RegistryOfficeInput {
   sap_code?: string;
   contact_details?: string;
   notes?: string;
-  analyst_profile_id?: string;
+  responsible_profile_ids: string[];
   active: boolean;
   products: Array<{
     product_id: string;
@@ -129,8 +136,13 @@ export interface CsCxRequestInput {
   registry_office_id: string;
 }
 
-interface RawOffice extends Omit<CsCxRegistryOffice, "products" | "analyst"> {
+interface RawOffice extends Omit<CsCxRegistryOffice, "products" | "analyst" | "responsibles"> {
   profiles: CsCxResponsibleProfile | null;
+  cs_cx_registry_office_responsibles?: Array<{
+    id: string;
+    profile_id: string;
+    profiles: CsCxResponsibleProfile | null;
+  }>;
   cs_cx_registry_office_products?: Array<{
     id: string;
     product_id: string;
@@ -164,6 +176,12 @@ export function useCsCxRegistryOffices() {
           id, legacy_id, name, sap_code, active, contact_details, notes,
           origin, created_at, created_by, analyst_profile_id,
           profiles!cs_cx_registry_offices_analyst_profile_id_fkey (id, full_name, email),
+          cs_cx_registry_office_responsibles (
+            id, profile_id,
+            profiles!cs_cx_registry_office_responsibles_profile_id_fkey (
+              id, full_name, email
+            )
+          ),
           cs_cx_registry_office_products (
             id, product_id, implementation_date, source_present,
             cs_cx_products (id, name, product_code),
@@ -182,6 +200,11 @@ export function useCsCxRegistryOffices() {
       return ((data ?? []) as unknown as RawOffice[]).map((office) => ({
         ...office,
         analyst: office.profiles,
+        responsibles: (office.cs_cx_registry_office_responsibles ?? []).map((responsible) => ({
+          id: responsible.id,
+          profile_id: responsible.profile_id,
+          profile: responsible.profiles,
+        })),
         products: (office.cs_cx_registry_office_products ?? []).filter((link) => link.source_present).map((link) => ({
           id: link.id,
           product_id: link.product_id,
@@ -225,14 +248,14 @@ export function useCsCxRegistryOffices() {
 
   const saveOffice = useMutation({
     mutationFn: async (input: RegistryOfficeInput) => {
-      const { data, error } = await db.rpc("cs_cx_save_registry_office_v3", {
+      const { data, error } = await db.rpc("cs_cx_save_registry_office_v4", {
         p_id: input.id ?? null,
         p_name: input.name,
         p_sap_code: emptyToNull(input.sap_code),
         p_contact_details: emptyToNull(input.contact_details),
         p_notes: emptyToNull(input.notes),
         p_active: input.active,
-        p_analyst_profile_id: input.analyst_profile_id || null,
+        p_responsible_profile_ids: input.responsible_profile_ids,
         p_products: input.products.map(({ product_id, implementation_date }) => ({
           product_id,
           implementation_date,

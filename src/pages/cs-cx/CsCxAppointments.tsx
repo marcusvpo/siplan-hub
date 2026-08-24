@@ -53,6 +53,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -76,6 +77,8 @@ import { useCsCxRecordPermissions } from "@/hooks/useCsCxRecordPermissions";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { generateCsCxAppointmentsPdf } from "@/lib/cs-cx-engagement-pdf";
+import { deduplicateAppointmentContacts } from "@/lib/cs-cx-appointment-contacts";
+import { decodeAppointmentObservations } from "@/lib/cs-cx-appointment-observations";
 
 const TYPE_LABELS: Record<string, string> = {
   REUNIAO: "Reunião",
@@ -103,10 +106,13 @@ function defaultForm(): CsCxAppointmentInput {
     status: "AGENDADO",
     registry_office_id: "",
     contact_id: "",
+    is_lead: false,
+    lead_office_name: "",
+    lead_contact_name: "",
     responsible_profile_id: "",
     description: "",
     location: "",
-    notes: "",
+    observations: [""],
     result: "",
   };
 }
@@ -158,6 +164,8 @@ export default function CsCxAppointments() {
           appointment.location,
           appointment.registry_office?.name,
           appointment.contact?.contact_person,
+          appointment.lead_office_name,
+          appointment.lead_contact_name,
           appointment.responsible?.full_name,
         ].some((value) => value?.toLocaleLowerCase("pt-BR").includes(term));
       const date = localDateKey(appointment.starts_at);
@@ -230,10 +238,15 @@ export default function CsCxAppointments() {
       status: appointment.status,
       registry_office_id: appointment.registry_office_id ?? "",
       contact_id: appointment.contact_id ?? "",
+      is_lead: appointment.is_lead,
+      lead_office_name: appointment.lead_office_name ?? "",
+      lead_contact_name: appointment.lead_contact_name ?? "",
       responsible_profile_id: appointment.responsible_profile_id ?? "",
       description: appointment.description ?? "",
       location: appointment.location ?? "",
-      notes: appointment.notes ?? "",
+      observations: withEmptyObservation(
+        decodeAppointmentObservations(appointment.notes),
+      ),
       result: appointment.result ?? "",
     });
     setDialogOpen(true);
@@ -241,7 +254,13 @@ export default function CsCxAppointments() {
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!form.title.trim() || !form.starts_at || !form.responsible_profile_id)
+    if (
+      !form.title.trim() ||
+      !form.starts_at ||
+      !form.responsible_profile_id ||
+      (form.is_lead &&
+        (!form.lead_office_name?.trim() || !form.lead_contact_name?.trim()))
+    )
       return;
     try {
       await saveAppointment.mutateAsync(form);
@@ -340,10 +359,14 @@ export default function CsCxAppointments() {
     (item) => new Date(item.starts_at) < now && item.status === "AGENDADO",
   ).length;
   const dataError = error ?? contactsError ?? officesError;
-  const availableContacts = contacts.filter(
-    (contact) =>
-      !form.registry_office_id ||
-      contact.registry_office_id === form.registry_office_id,
+  const availableContacts = useMemo(
+    () =>
+      deduplicateAppointmentContacts(
+        contacts,
+        form.registry_office_id ?? "",
+        form.contact_id ?? "",
+      ),
+    [contacts, form.contact_id, form.registry_office_id],
   );
 
   return (
@@ -510,7 +533,7 @@ export default function CsCxAppointments() {
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-3xl">
-          <DialogHeader>
+          <DialogHeader className="sm:pr-44">
             <DialogTitle>
               {form.id ? "Editar agendamento" : "Novo agendamento"}
             </DialogTitle>
@@ -518,6 +541,29 @@ export default function CsCxAppointments() {
               Informe data, responsável e contexto do compromisso.
             </DialogDescription>
           </DialogHeader>
+          <div className="flex items-center justify-between gap-3 rounded-lg border bg-muted/30 px-3 py-2 sm:absolute sm:right-14 sm:top-4 sm:justify-start">
+            <Switch
+              id="appointment-lead"
+              checked={Boolean(form.is_lead)}
+              onCheckedChange={(isLead) =>
+                setForm((current) => ({
+                  ...current,
+                  is_lead: isLead,
+                  registry_office_id: "",
+                  contact_id: "",
+                  lead_office_name: isLead
+                    ? current.lead_office_name
+                    : "",
+                  lead_contact_name: isLead
+                    ? current.lead_contact_name
+                    : "",
+                }))
+              }
+            />
+            <Label htmlFor="appointment-lead" className="cursor-pointer text-sm">
+              Cliente lead
+            </Label>
+          </div>
           <form onSubmit={submit} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Título *">
@@ -594,53 +640,83 @@ export default function CsCxAppointments() {
               </Field>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Cartório">
-                <Select
-                  value={form.registry_office_id || "none"}
-                  onValueChange={(value) =>
-                    setForm({
-                      ...form,
-                      registry_office_id: value === "none" ? "" : value,
-                      contact_id: "",
-                    })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Sem cartório</SelectItem>
-                    {offices.map((office) => (
-                      <SelectItem key={office.id} value={office.id}>
-                        {office.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <Field label={form.is_lead ? "Cartório do lead *" : "Cartório"}>
+                {form.is_lead ? (
+                  <Input
+                    required
+                    aria-label="Cartório do lead"
+                    placeholder="Digite o nome do cartório"
+                    value={form.lead_office_name}
+                    onChange={(event) =>
+                      setForm({
+                        ...form,
+                        lead_office_name: event.target.value,
+                      })
+                    }
+                  />
+                ) : (
+                  <Select
+                    value={form.registry_office_id || "none"}
+                    onValueChange={(value) =>
+                      setForm({
+                        ...form,
+                        registry_office_id: value === "none" ? "" : value,
+                        contact_id: "",
+                      })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Sem cartório</SelectItem>
+                      {offices.map((office) => (
+                        <SelectItem key={office.id} value={office.id}>
+                          {office.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </Field>
-              <Field label="Contato">
-                <Select
-                  value={form.contact_id || "none"}
-                  onValueChange={(value) =>
-                    setForm({
-                      ...form,
-                      contact_id: value === "none" ? "" : value,
-                    })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Sem contato</SelectItem>
-                    {availableContacts.map((contact) => (
-                      <SelectItem key={contact.id} value={contact.id}>
-                        {contact.contact_person} —{" "}
-                        {contact.registry_office?.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <Field label={form.is_lead ? "Contato do lead *" : "Contato"}>
+                {form.is_lead ? (
+                  <Input
+                    required
+                    aria-label="Contato do lead"
+                    placeholder="Digite o nome do contato"
+                    value={form.lead_contact_name}
+                    onChange={(event) =>
+                      setForm({
+                        ...form,
+                        lead_contact_name: event.target.value,
+                      })
+                    }
+                  />
+                ) : (
+                  <Select
+                    value={form.contact_id || "none"}
+                    onValueChange={(value) =>
+                      setForm({
+                        ...form,
+                        contact_id: value === "none" ? "" : value,
+                      })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Sem contato</SelectItem>
+                      {availableContacts.map((contact) => (
+                        <SelectItem key={contact.id} value={contact.id}>
+                          {contact.contact_person} —{" "}
+                          {contact.registry_office?.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </Field>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -678,14 +754,12 @@ export default function CsCxAppointments() {
                 }
               />
             </Field>
-            <Field label="Observações">
-              <Textarea
-                value={form.notes}
-                onChange={(event) =>
-                  setForm({ ...form, notes: event.target.value })
-                }
-              />
-            </Field>
+            <AppointmentObservationsEditor
+              observations={form.observations ?? [""]}
+              onChange={(observations) =>
+                setForm((current) => ({ ...current, observations }))
+              }
+            />
             <DialogFooter>
               <Button
                 type="button"
@@ -840,15 +914,23 @@ function AppointmentTable({
                 <TableCell className="px-3 py-2">
                   <div
                     className="max-w-52 truncate text-sm"
-                    title={item.registry_office?.name}
+                    title={appointmentOfficeName(item)}
                   >
-                    {item.registry_office?.name || "—"}
+                    <span>{appointmentOfficeName(item) || "—"}</span>
+                    {item.is_lead && (
+                      <Badge
+                        variant="outline"
+                        className="ml-1.5 h-5 px-1.5 text-[10px] font-normal text-amber-700"
+                      >
+                        Lead
+                      </Badge>
+                    )}
                   </div>
                   <div
                     className="max-w-52 truncate text-[11px] leading-4 text-muted-foreground"
-                    title={item.contact?.contact_person}
+                    title={appointmentContactName(item)}
                   >
-                    {item.contact?.contact_person || "Sem contato vinculado"}
+                    {appointmentContactName(item) || "Sem contato vinculado"}
                   </div>
                 </TableCell>
                 <TableCell
@@ -1102,6 +1184,18 @@ function MonthCalendar({
   );
 }
 
+function appointmentOfficeName(appointment: CsCxAppointment) {
+  return appointment.is_lead
+    ? appointment.lead_office_name
+    : appointment.registry_office?.name;
+}
+
+function appointmentContactName(appointment: CsCxAppointment) {
+  return appointment.is_lead
+    ? appointment.lead_contact_name
+    : appointment.contact?.contact_person;
+}
+
 function StatusBadge({ appointment }: { appointment: CsCxAppointment }) {
   const overdue =
     appointment.status === "AGENDADO" &&
@@ -1149,6 +1243,78 @@ function Metric({
     </Card>
   );
 }
+function AppointmentObservationsEditor({
+  observations,
+  onChange,
+}: {
+  observations: string[];
+  onChange: (observations: string[]) => void;
+}) {
+  const visibleObservations = observations.length ? observations : [""];
+  const updateObservation = (index: number, value: string) =>
+    onChange(
+      visibleObservations.map((observation, currentIndex) =>
+        currentIndex === index ? value : observation,
+      ),
+    );
+  const removeObservation = (index: number) => {
+    const next = visibleObservations.filter(
+      (_, currentIndex) => currentIndex !== index,
+    );
+    onChange(next.length ? next : [""]);
+  };
+
+  return (
+    <div className="space-y-2 rounded-lg border bg-muted/10 p-3">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <Label>Observações</Label>
+          <p className="text-xs text-muted-foreground">
+            Registre cada observação separadamente.
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-8 shrink-0 border-dashed"
+          onClick={() => onChange([...visibleObservations, ""])}
+        >
+          <Plus className="mr-1.5 h-3.5 w-3.5" />
+          Adicionar observação
+        </Button>
+      </div>
+      <div className="space-y-2">
+        {visibleObservations.map((observation, index) => (
+          <div key={index} className="flex items-start gap-2">
+            <span className="mt-2.5 w-5 shrink-0 text-right text-xs font-medium text-muted-foreground">
+              {index + 1}.
+            </span>
+            <Textarea
+              aria-label={`Observação ${index + 1}`}
+              className="min-h-20 resize-y"
+              value={observation}
+              onChange={(event) => updateObservation(index, event.target.value)}
+              placeholder="Digite a observação..."
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="mt-1 h-8 w-8 shrink-0"
+              aria-label={`Remover observação ${index + 1}`}
+              disabled={visibleObservations.length === 1 && !observation}
+              onClick={() => removeObservation(index)}
+            >
+              <Trash2 className="h-4 w-4 text-destructive" />
+            </Button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function Field({
   label,
   children,
@@ -1199,6 +1365,10 @@ function DataError({
 function toDateTimeLocal(date: Date) {
   const offset = date.getTimezoneOffset() * 60_000;
   return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+}
+
+function withEmptyObservation(observations: string[]) {
+  return observations.length ? observations : [""];
 }
 function localDateKey(value: string) {
   const date = new Date(value);
