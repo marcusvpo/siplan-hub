@@ -67,6 +67,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Link2,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -93,7 +94,9 @@ import {
   PosAiLatencyRankItem,
 } from "@/hooks/usePosAiAdminAnalytics";
 import { usePosAiVisitorAnalytics } from "@/hooks/usePosAiVisitorAnalytics";
+import { usePosAiChatLinks } from "@/hooks/usePosAiChatLinks";
 import { PosAiVisitorAnalytics } from "@/components/Admin/PosAiVisitorAnalytics";
+import { PosAiChatLinksManager } from "@/components/Admin/PosAiChatLinksManager";
 import { PosChatMessageContent } from "@/components/pos-chat/PosChatMessageContent";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -169,6 +172,8 @@ export default function PosAiLogs() {
   } = usePosAiVisitorAnalytics(projectIdParam, Number(days));
 
   const { data: activeProjects } = useActivePosAiProjectsList();
+  const { data: chatLinks = [], isLoading: isChatLinksLoading } = usePosAiChatLinks();
+  const activeChatLinksCount = chatLinks.filter((link) => link.enabled).length;
 
   // Synchronize URL param
   const handleProjectChange = (val: string) => {
@@ -561,7 +566,7 @@ export default function PosAiLogs() {
   }, [latencyDist]);
 
   return (
-    <div className="mx-auto max-w-[1600px] space-y-4 px-3 pb-3 pt-1.5 font-sans sm:px-4 sm:pb-4 sm:pt-2 lg:px-5 lg:pb-5 lg:pt-2.5">
+    <div className="mx-auto max-w-[1600px] space-y-2 px-3 pb-3 pt-1.5 font-sans sm:px-4 sm:pb-4 lg:px-5 lg:pb-5">
       {/* Header */}
       <div className="grid gap-3 border-b pb-3 xl:grid-cols-[minmax(340px,1fr)_auto] xl:items-center">
         <div className="min-w-0">
@@ -660,12 +665,15 @@ export default function PosAiLogs() {
 
       {/* Selected Project Banner */}
       {selectedProject !== "all" && selectedProjectInfo && (
-        <div className="flex items-center justify-between gap-2 rounded-lg border border-rose-200/80 bg-rose-50/80 px-3 py-2 animate-in fade-in-50 dark:border-rose-900/60 dark:bg-rose-950/25">
-          <div className="flex min-w-0 items-center gap-2">
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-rose-600 text-white">
-              <Building2 className="h-3.5 w-3.5" />
+        <div
+          data-density="compact"
+          className="flex items-center justify-between gap-1.5 rounded-md border border-rose-200/80 bg-rose-50/80 px-2 py-1 animate-in fade-in-50 dark:border-rose-900/60 dark:bg-rose-950/25"
+        >
+          <div className="flex min-w-0 items-center gap-1.5">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-rose-600 text-white">
+              <Building2 className="h-3 w-3" />
             </span>
-            <p className="min-w-0 truncate text-[11px] text-foreground">
+            <p className="min-w-0 truncate text-[10px] leading-none text-foreground sm:text-[11px]">
               <span className="font-bold">Cartório filtrado:</span>{" "}
               {selectedProjectInfo.client_name || (selectedProjectInfo as any).name}
               <span className="hidden text-muted-foreground lg:inline">
@@ -678,9 +686,9 @@ export default function PosAiLogs() {
             variant="ghost"
             size="sm"
             onClick={handleClearProjectFilter}
-            className="h-6 shrink-0 gap-1 px-2 text-[11px] text-rose-700 hover:bg-rose-100 dark:text-rose-300 dark:hover:bg-rose-900/40"
+            className="h-5 shrink-0 gap-1 px-1.5 text-[10px] text-rose-700 hover:bg-rose-100 dark:text-rose-300 dark:hover:bg-rose-900/40"
           >
-            <X className="h-3 w-3" />
+            <X className="h-2.5 w-2.5" />
             <span className="sm:hidden">Ver todos</span>
             <span className="hidden sm:inline">Ver todos os cartórios</span>
           </Button>
@@ -817,7 +825,7 @@ export default function PosAiLogs() {
 
           {/* Navigation Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:grid-cols-3 xl:grid-cols-5">
+            <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:grid-cols-3 xl:grid-cols-6">
               <TabsTrigger value="overview" className="text-xs gap-1.5">
                 <Gauge className="h-3.5 w-3.5" />
                 Visão Geral & Gráficos
@@ -838,7 +846,23 @@ export default function PosAiLogs() {
                 <UsersRound className="h-3.5 w-3.5 text-violet-600" />
                 Usuários & Setores ({visitorAnalytics?.kpis.active_users || 0})
               </TabsTrigger>
+              <TabsTrigger value="chat-links" className="text-xs gap-1.5">
+                <Link2 className="h-3.5 w-3.5 text-cyan-600" />
+                Links dos Chats ({activeChatLinksCount})
+              </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="chat-links" className="space-y-4">
+              <PosAiChatLinksManager
+                links={chatLinks}
+                isLoading={isChatLinksLoading}
+                selectedProject={selectedProject}
+                onViewLogs={(projectId) => {
+                  handleProjectChange(projectId);
+                  setActiveTab("library");
+                }}
+              />
+            </TabsContent>
 
             <TabsContent value="visitors" className="space-y-4">
               <PosAiVisitorAnalytics

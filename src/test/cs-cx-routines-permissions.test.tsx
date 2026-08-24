@@ -4,6 +4,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 const hasPermission = vi.fn();
 const mutation = { mutateAsync: vi.fn(), isPending: false };
 const bulkMutation = { mutateAsync: vi.fn(), isPending: false };
+let includeSecondProductRoutine = false;
 
 vi.mock("@/hooks/usePermissions", () => ({
   usePermissions: () => ({ hasPermission }),
@@ -18,9 +19,14 @@ vi.mock("@/hooks/use-toast", () => ({
 
 vi.mock("@/hooks/useCsCxCore", () => ({
   useCsCxRegistryOffices: () => ({
-    offices: Array.from({ length: 12 }, (_, index) => ({
+    offices: Array.from({ length: 13 }, (_, index) => ({
       id: `office-${index + 1}`,
-      name: index === 0 ? "Cartório Central" : `Cartório ${index + 1}`,
+      name:
+        index === 0
+          ? "Cartório Central"
+          : index === 12
+            ? "Miguelópolis - TNPT"
+            : `Cartório ${index + 1}`,
     })),
   }),
 }));
@@ -34,38 +40,102 @@ vi.mock("@/hooks/useCsCxRoutines", () => ({
       description: "Modelo principal",
       active: true,
       origin: "legacy",
-      products: [{ id: "product-1", name: "Orion" }],
+      products: [
+        index === 1
+          ? { id: "product-2", name: "OrionPRO" }
+          : { id: "product-1", name: "OrionTN" },
+      ],
       item_count: 1,
     })),
-    routines: Array.from({ length: 12 }, (_, index) => ({
-      id: `routine-${index + 1}`,
-      legacy_id: index + 1,
-      registry_office_id: `office-${index + 1}`,
-      routine_model_id: `model-${index + 1}`,
-      active: true,
-      applied_at: "2026-08-01T00:00:00.000Z",
-      applied_by: "profile-1",
-      notes: null,
-      origin: "legacy",
-      registry_office: { id: "office-1", name: index === 0 ? "Cartório Central" : `Cartório ${index + 1}` },
-      routine_model: { id: `model-${index + 1}`, name: index === 0 ? "Rotinas Firmas" : `Modelo ${index + 1}`, description: null },
-      items: [{
-        id: `config-${index + 1}`,
-        active: index === 0 ? true : index === 1 ? false : null,
+    routines: [
+      ...Array.from({ length: 12 }, (_, index) => ({
+        id: `routine-${index + 1}`,
+        legacy_id: index + 1,
+        registry_office_id: `office-${index + 1}`,
+        routine_model_id: `model-${index + 1}`,
+        active: true,
+        applied_at: "2026-08-01T00:00:00.000Z",
+        applied_by: "profile-1",
         notes: null,
-        analysis_notes: null,
-        analyzed_at: index === 0 ? "2026-08-18T12:00:00.000Z" : null,
-        model_item: {
-          id: `item-${index + 1}`,
-          name: index === 0 ? "Reconhecimento de firma" : `Item ${index + 1}`,
-          description: null,
-          sort_order: 0,
-          required: true,
-          category: { id: "category-1", name: "Operacional", display_color: "#ad0505" },
-          routine_type: { id: "type-1", name: "Firmas" },
+        origin: "legacy",
+        registry_office: {
+          id: "office-1",
+          name: index === 0 ? "Cartório Central" : `Cartório ${index + 1}`,
         },
-      }],
-    })),
+        routine_model: {
+          id: `model-${index + 1}`,
+          name: index === 0 ? "Rotinas Firmas" : `Modelo ${index + 1}`,
+          description: null,
+        },
+        items: [
+          {
+            id: `config-${index + 1}`,
+            active: index === 0 ? true : index === 1 ? false : null,
+            notes:
+              index === 0 ? "Configuração atual informada pelo cliente" : null,
+            analysis_notes: index === 0 ? "Ajustar na próxima visita" : null,
+            analyzed_at: index === 0 ? "2026-08-18T12:00:00.000Z" : null,
+            model_item: {
+              id: `item-${index + 1}`,
+              name:
+                index === 0 ? "Reconhecimento de firma" : `Item ${index + 1}`,
+              description: null,
+              sort_order: 0,
+              required: true,
+              category: {
+                id: "category-1",
+                name: "Operacional",
+                display_color: "#ad0505",
+              },
+              routine_type: { id: "type-1", name: "Firmas" },
+            },
+          },
+        ],
+      })),
+      ...(includeSecondProductRoutine
+        ? [
+            {
+              id: "routine-office-1-pro",
+              legacy_id: null,
+              registry_office_id: "office-1",
+              routine_model_id: "model-2",
+              active: true,
+              applied_at: "2026-08-02T00:00:00.000Z",
+              applied_by: "profile-1",
+              notes: null,
+              origin: "hub",
+              registry_office: { id: "office-1", name: "Cartório Central" },
+              routine_model: {
+                id: "model-2",
+                name: "Modelo 2",
+                description: null,
+              },
+              items: [
+                {
+                  id: "config-office-1-pro",
+                  active: null,
+                  notes: null,
+                  analysis_notes: null,
+                  analyzed_at: null,
+                  model_item: {
+                    id: "item-office-1-pro",
+                    name: "Item exclusivo OrionPRO",
+                    description: null,
+                    sort_order: 0,
+                    required: true,
+                    category: {
+                      id: "category-1",
+                      name: "Operacional",
+                      display_color: "#ad0505",
+                    },
+                    routine_type: { id: "type-1", name: "Firmas" },
+                  },
+                },
+              ],
+            },
+          ]
+        : []),
+    ],
     history: Array.from({ length: 12 }, (_, index) => ({
       id: `history-${index + 1}`,
       legacy_id: index + 10,
@@ -80,8 +150,10 @@ vi.mock("@/hooks/useCsCxRoutines", () => ({
       occurred_at: "2026-08-10T13:30:00.000Z",
       ip_address: "10.0.10.9",
       origin: "legacy",
-      registry_office_name: index === 0 ? "Cartório Central" : `Cartório ${index + 1}`,
-      routine_model_name: index === 0 ? "Rotinas Firmas" : `Modelo ${index + 1}`,
+      registry_office_name:
+        index === 0 ? "Cartório Central" : `Cartório ${index + 1}`,
+      routine_model_name:
+        index === 0 ? "Rotinas Firmas" : `Modelo ${index + 1}`,
       model_item_name: "Reconhecimento de firma",
       actor_name: index === 0 ? "Bruno Fernandes" : `Responsável ${index + 1}`,
     })),
@@ -106,6 +178,7 @@ function renderPage(permissions: string[]) {
 
 describe("CS/CX rotinas — permissões", () => {
   beforeEach(() => {
+    includeSecondProductRoutine = false;
     hasPermission.mockReset();
     mutation.mutateAsync.mockReset();
     bulkMutation.mutateAsync.mockReset().mockResolvedValue(1);
@@ -114,39 +187,89 @@ describe("CS/CX rotinas — permissões", () => {
   it("mantém os dados visíveis sem liberar escrita", () => {
     renderPage([]);
     expect(screen.getByText("Cartório Central")).toBeInTheDocument();
-    expect(screen.getAllByRole("button", { name: /exportar pdf da rotina/i })).toHaveLength(5);
-    expect(screen.queryByRole("button", { name: /aplicar rotina/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /desvincular rotina/i })).not.toBeInTheDocument();
+    expect(
+      screen.getAllByRole("button", { name: /exportar pdf da rotina/i }),
+    ).toHaveLength(5);
+    expect(
+      screen.queryByRole("button", { name: /aplicar rotina/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /desvincular rotina/i }),
+    ).not.toBeInTheDocument();
   });
 
   it("libera aplicação e exclusão com as permissões corretas", () => {
     renderPage(["cs_cx_rotinas:create", "cs_cx_rotinas:delete"]);
-    expect(screen.getByRole("button", { name: /aplicar rotina/i })).toBeInTheDocument();
-    expect(screen.getAllByRole("button", { name: /desvincular rotina/i })).toHaveLength(5);
+    expect(
+      screen.getByRole("button", { name: /aplicar rotina/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getAllByRole("button", { name: /desvincular rotina/i }),
+    ).toHaveLength(5);
   });
 
   it("permite adicionar várias observações ao aplicar uma rotina", () => {
     renderPage(["cs_cx_rotinas:create"]);
     fireEvent.click(screen.getByRole("button", { name: /aplicar rotina/i }));
 
-    expect(screen.getByLabelText("Observações antes da análise 1")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /adicionar observação$/i }));
-    expect(screen.getByLabelText("Observações antes da análise 2")).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("Observações antes da análise 1"),
+    ).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("button", { name: /adicionar observação$/i }),
+    );
+    expect(
+      screen.getByLabelText("Observações antes da análise 2"),
+    ).toBeInTheDocument();
+  });
+
+  it("encontra cartório sem rotina e abre a aplicação com ele selecionado", () => {
+    renderPage(["cs_cx_rotinas:create"]);
+
+    fireEvent.change(
+      screen.getByPlaceholderText(/buscar cartório, modelo ou observação/i),
+      { target: { value: "miguelopolis" } },
+    );
+
+    expect(screen.getByText("Miguelópolis - TNPT")).toBeInTheDocument();
+    expect(screen.getByText("Nenhuma rotina vinculada")).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /aplicar rotina em miguelópolis - tnpt/i,
+      }),
+    );
+
+    expect(
+      screen.getByRole("combobox", {
+        name: /selecionar cartório para aplicar rotina/i,
+      }),
+    ).toHaveTextContent("Miguelópolis - TNPT");
   });
 
   it("pagina cartórios e modelos em blocos compactos", () => {
     renderPage([]);
-    expect(screen.getByLabelText("Mostrando 1 a 5 de 12 cartórios")).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("Mostrando 1 a 5 de 12 cartórios"),
+    ).toBeInTheDocument();
     expect(screen.queryByText("Cartório 6")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /próxima página de cartórios/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /próxima página de cartórios/i }),
+    );
     expect(screen.getByText("Cartório 6")).toBeInTheDocument();
 
-    fireEvent.mouseDown(screen.getByRole("tab", { name: "Modelos" }), { button: 0, ctrlKey: false });
-    expect(screen.getByLabelText("Mostrando 1 a 5 de 12 modelos")).toBeInTheDocument();
+    fireEvent.mouseDown(screen.getByRole("tab", { name: "Modelos" }), {
+      button: 0,
+      ctrlKey: false,
+    });
+    expect(
+      screen.getByLabelText("Mostrando 1 a 5 de 12 modelos"),
+    ).toBeInTheDocument();
     expect(screen.queryByText("Modelo 6")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /próxima página de modelos/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /próxima página de modelos/i }),
+    );
     expect(screen.getByText("Modelo 6")).toBeInTheDocument();
   });
 
@@ -156,75 +279,181 @@ describe("CS/CX rotinas — permissões", () => {
     expect(screen.getByText("Cartórios com rotinas")).toBeInTheDocument();
     expect(screen.getByText("Analisados")).toBeInTheDocument();
     expect(screen.getByText("Não analisados")).toBeInTheDocument();
-    expect(screen.getByRole("columnheader", { name: "Itens ativos" })).toBeInTheDocument();
-    expect(screen.getByRole("columnheader", { name: "Itens inativos" })).toBeInTheDocument();
-    expect(screen.getByRole("columnheader", { name: "Data da análise" })).toBeInTheDocument();
-    expect(screen.getByRole("columnheader", { name: "Status" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", { name: "Itens ativos" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", { name: "Itens inativos" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", { name: "Data da análise" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", { name: "Status" }),
+    ).toBeInTheDocument();
     expect(screen.getByText("18/08/2026")).toBeInTheDocument();
   });
 
   it("exibe o histórico detalhado sem exigir permissão de escrita", () => {
     renderPage([]);
-    fireEvent.mouseDown(screen.getByRole("tab", { name: "Histórico" }), { button: 0, ctrlKey: false });
+    fireEvent.mouseDown(screen.getByRole("tab", { name: "Histórico" }), {
+      button: 0,
+      ctrlKey: false,
+    });
 
     expect(screen.getByText("Bruno Fernandes")).toBeInTheDocument();
     expect(screen.getByText("Item ativado")).toBeInTheDocument();
     expect(screen.getByText("Validado com o cliente")).toBeInTheDocument();
-    expect(screen.getByLabelText("Data inicial do histórico")).toBeInTheDocument();
-    expect(screen.getByLabelText("Mostrando 1 a 5 de 12 registros")).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("Data inicial do histórico"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("Mostrando 1 a 5 de 12 registros"),
+    ).toBeInTheDocument();
     expect(screen.queryByText("Responsável 6")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /próxima página de registros/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /próxima página de registros/i }),
+    );
     expect(screen.getByText("Responsável 6")).toBeInTheDocument();
   });
 
   it("abre a visão consolidada do cartório e permite informar a data da análise", () => {
     renderPage(["cs_cx_rotinas:edit"]);
-    expect(screen.queryByRole("button", { name: /^itens$/i })).not.toBeInTheDocument();
-    fireEvent.click(screen.getAllByRole("button", { name: /analisar .* e suas rotinas/i })[0]);
+    expect(
+      screen.queryByRole("button", { name: /^itens$/i }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(
+      screen.getAllByRole("button", { name: /analisar .* e suas rotinas/i })[0],
+    );
 
-    expect(screen.getByText("Análise das rotinas do cartório")).toBeInTheDocument();
-    expect(screen.getByLabelText("Buscar itens da análise")).toBeInTheDocument();
-    expect(screen.getByLabelText("Mostrando 1 a 1 de 1 itens da análise")).toBeInTheDocument();
+    expect(
+      screen.getByText("Análise das rotinas do cartório"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("Buscar itens da análise"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("Mostrando 1 a 1 de 1 itens da análise"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Rotina e observações")).toBeInTheDocument();
+    expect(screen.getAllByText("Ideal").length).toBeGreaterThan(0);
+    const fullscreenButton = screen.getByRole("button", {
+      name: "Abrir análise em tela cheia",
+    });
+    fireEvent.click(fullscreenButton);
+    expect(
+      screen.getByRole("button", { name: "Sair da análise em tela cheia" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("dialog")).toHaveClass("h-[calc(100vh-1rem)]");
+    expect(
+      screen.getByText("Configuração atual informada pelo cliente"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Ajustar na próxima visita")).toBeInTheDocument();
+    expect(
+      screen.queryByText("Rotinas Firmas · Firmas"),
+    ).not.toBeInTheDocument();
     fireEvent.click(screen.getAllByRole("button", { name: /editar/i })[0]);
     expect(screen.getByLabelText("Data da análise")).toBeInTheDocument();
   });
 
   it("salva observações separadas antes e depois da análise", async () => {
     renderPage(["cs_cx_rotinas:edit"]);
-    fireEvent.click(screen.getAllByRole("button", { name: /analisar .* e suas rotinas/i })[0]);
+    fireEvent.click(
+      screen.getAllByRole("button", { name: /analisar .* e suas rotinas/i })[0],
+    );
     fireEvent.click(screen.getAllByRole("button", { name: /editar/i })[0]);
 
-    fireEvent.change(screen.getByLabelText("Observações antes da análise 1"), { target: { value: "Cenário anterior" } });
-    fireEvent.change(screen.getByLabelText("Observações depois da análise 1"), { target: { value: "Resultado da análise" } });
-    fireEvent.click(screen.getByRole("button", { name: /adicionar observação da análise/i }));
-    fireEvent.change(screen.getByLabelText("Observações depois da análise 2"), { target: { value: "Próximo acompanhamento" } });
+    fireEvent.change(screen.getByLabelText("Observações antes da análise 1"), {
+      target: { value: "Cenário anterior" },
+    });
+    fireEvent.change(screen.getByLabelText("Observações depois da análise 1"), {
+      target: { value: "Resultado da análise" },
+    });
+    fireEvent.click(
+      screen.getByRole("button", { name: /adicionar observação da análise/i }),
+    );
+    fireEvent.change(screen.getByLabelText("Observações depois da análise 2"), {
+      target: { value: "Próximo acompanhamento" },
+    });
     fireEvent.click(screen.getByRole("button", { name: /salvar análise/i }));
 
     await waitFor(() => {
-      expect(mutation.mutateAsync).toHaveBeenCalledWith(expect.objectContaining({
-        notes: expect.stringContaining("Cenário anterior"),
-        analysisNotes: expect.stringContaining("Resultado da análise"),
-        historyNotes: expect.stringContaining("Próximo acompanhamento"),
-      }));
+      expect(mutation.mutateAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          notes: expect.stringContaining("Cenário anterior"),
+          analysisNotes: expect.stringContaining("Resultado da análise"),
+          historyNotes: expect.stringContaining("Próximo acompanhamento"),
+        }),
+      );
+    });
+  });
+
+  it("separa as rotinas por produto e limita a alteração em massa à aba", async () => {
+    includeSecondProductRoutine = true;
+    renderPage(["cs_cx_rotinas:edit"]);
+    fireEvent.click(
+      screen.getAllByRole("button", { name: /analisar .* e suas rotinas/i })[0],
+    );
+
+    const orionProTab = screen.getByRole("tab", { name: /orionpro/i });
+    const orionTnTab = screen.getByRole("tab", { name: /oriontn/i });
+    expect(orionProTab).toHaveAttribute("data-state", "active");
+    expect(screen.getByText("Item exclusivo OrionPRO")).toBeInTheDocument();
+    expect(
+      screen.queryByText("Reconhecimento de firma"),
+    ).not.toBeInTheDocument();
+
+    fireEvent.mouseDown(orionTnTab, { button: 0, ctrlKey: false });
+    expect(screen.getByText("Reconhecimento de firma")).toBeInTheDocument();
+    expect(
+      screen.queryByText("Item exclusivo OrionPRO"),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /alterar status do oriontn/i }),
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: /salvar em oriontn \(1\)/i }),
+    );
+
+    await waitFor(() => {
+      expect(bulkMutation.mutateAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          registryOfficeId: "office-1",
+          routineModelIds: ["model-1"],
+        }),
+      );
     });
   });
 
   it("aplica o mesmo status a todos os itens do cartório", async () => {
     renderPage(["cs_cx_rotinas:edit"]);
-    fireEvent.click(screen.getAllByRole("button", { name: /analisar .* e suas rotinas/i })[0]);
-    fireEvent.click(screen.getByRole("button", { name: /alterar status de todos/i }));
+    fireEvent.click(
+      screen.getAllByRole("button", { name: /analisar .* e suas rotinas/i })[0],
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: /alterar status de todos/i }),
+    );
 
-    expect(screen.getByRole("heading", { name: "Alterar status de todas as rotinas" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        name: "Alterar status de todas as rotinas",
+      }),
+    ).toBeInTheDocument();
     expect(screen.getByText(/aplicada aos 1 itens/i)).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /salvar em todos \(1\)/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /salvar em todos \(1\)/i }),
+    );
 
     await waitFor(() => {
-      expect(bulkMutation.mutateAsync).toHaveBeenCalledWith(expect.objectContaining({
-        registryOfficeId: "office-1",
-        active: null,
-        analysisNotes: "",
-      }));
+      expect(bulkMutation.mutateAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          registryOfficeId: "office-1",
+          active: null,
+          analysisNotes: "",
+        }),
+      );
     });
   });
 });

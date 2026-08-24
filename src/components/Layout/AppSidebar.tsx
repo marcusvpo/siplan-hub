@@ -177,6 +177,7 @@ export function AppSidebar() {
   );
   const rotaAssistentes = primeiraRota(
     ["assistants_knowledge", "/assistentes/conhecimento"],
+    ["pos_ai_logs", "/assistentes/logs"],
   );
 
   const mostrarDashboard = !!rotaDashboard;
@@ -1211,11 +1212,11 @@ export function AppSidebar() {
               </CollapsibleTrigger>
               <CollapsibleContent className="space-y-1 pl-4 animate-in slide-in-from-top-2">
                 <div className="pt-1 pb-1">
+                  {can("assistants_knowledge") && (
                   <div className="px-4 py-2">
                     <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-2">
                       Base de Conhecimento
                     </span>
-                    {can("assistants_knowledge") && (
                     <Link to="/assistentes/conhecimento">
                       <Button
                         variant={
@@ -1231,8 +1232,29 @@ export function AppSidebar() {
                         <span className="text-xs font-medium">Orion TN</span>
                       </Button>
                     </Link>
-                    )}
                   </div>
+                  )}
+                  {can("pos_ai_logs") && (
+                    <div className="px-4 py-2">
+                      <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-2">
+                        Pós-Implantação
+                      </span>
+                      <Link to="/assistentes/logs">
+                        <Button
+                          variant={
+                            location.pathname === "/assistentes/logs"
+                              ? "secondary"
+                              : "ghost"
+                          }
+                          size="sm"
+                          className="w-full justify-start gap-3 h-9"
+                        >
+                          <BarChart3 className="h-4 w-4" />
+                          <span className="text-xs font-medium">Logs & Analytics</span>
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
                 </div>
               </CollapsibleContent>
             </Collapsible>
@@ -1245,7 +1267,7 @@ export function AppSidebar() {
                     : "ghost"
                 }
                 className="w-full justify-center px-0"
-                title="Assistentes (Base de Conhecimento)"
+                title="Assistentes"
               >
                 <Bot className="h-5 w-5" />
               </Button>

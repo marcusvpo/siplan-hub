@@ -1,4 +1,5 @@
 import type { CsCxAppointment, CsCxContact } from "@/hooks/useCsCxEngagement";
+import { formatAppointmentObservations } from "@/lib/cs-cx-appointment-observations";
 import { generateCsCxPdfReport, type CsCxReportBlock, type CsCxReportRow } from "@/lib/cs-cx-experience-pdf";
 
 const APPOINTMENT_TYPE_LABELS: Record<string, string> = {
@@ -53,12 +54,26 @@ export async function generateCsCxAppointmentsPdf(appointments: CsCxAppointment[
     subtitle: `${formatDateTime(appointment.starts_at)} · ${APPOINTMENT_STATUS_LABELS[appointment.status] ?? appointment.status}`,
     rows: [
       ["Responsável", appointment.responsible?.full_name || appointment.responsible?.email || "Não vinculado"],
-      ["Cartório", appointment.registry_office?.name || "Não vinculado"],
-      ["Contato", appointment.contact?.contact_person || "Não vinculado"],
+      [
+        "Cartório",
+        appointment.is_lead
+          ? appointment.lead_office_name || "Não informado"
+          : appointment.registry_office?.name || "Não vinculado",
+      ],
+      [
+        "Contato",
+        appointment.is_lead
+          ? appointment.lead_contact_name || "Não informado"
+          : appointment.contact?.contact_person || "Não vinculado",
+      ],
       ["Tipo", APPOINTMENT_TYPE_LABELS[appointment.appointment_type] ?? appointment.appointment_type],
       ["Duração", `${appointment.duration_minutes} minutos`],
       ["Local", appointment.location || "Não informado"],
       ["Descrição", appointment.description || "Não informada"],
+      [
+        "Observações",
+        formatAppointmentObservations(appointment.notes) || "Não informadas",
+      ],
       ["Resultado", appointment.result || "Não informado"],
     ],
   }));
