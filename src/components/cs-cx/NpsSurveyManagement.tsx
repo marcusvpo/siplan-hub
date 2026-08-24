@@ -141,6 +141,16 @@ export function NpsInvitationsPanel({
     );
   }, [requestOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => {
+    if (requestOpen && !questionnaireId && activeQuestionnaires.length > 0) {
+      setQuestionnaireId(
+        activeQuestionnaires.find((item) => item.is_default)?.id ??
+          activeQuestionnaires[0]?.id ??
+          "",
+      );
+    }
+  }, [requestOpen, questionnaireId, activeQuestionnaires]);
+
   function selectContact(value: string) {
     setContactId(value);
     if (value === "none") return;
@@ -412,12 +422,18 @@ export function NpsInvitationsPanel({
                       <SelectValue placeholder="Selecione" />
                     </SelectTrigger>
                     <SelectContent>
-                      {activeQuestionnaires.map((item) => (
-                        <SelectItem key={item.id} value={item.id}>
-                          {item.title}
-                          {item.is_default ? " · Padrão" : ""}
+                      {activeQuestionnaires.length === 0 ? (
+                        <SelectItem value="_none" disabled>
+                          Nenhum questionário ativo disponível
                         </SelectItem>
-                      ))}
+                      ) : (
+                        activeQuestionnaires.map((item) => (
+                          <SelectItem key={item.id} value={item.id}>
+                            {item.title}
+                            {item.is_default ? " · Padrão" : ""}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                 </Field>
