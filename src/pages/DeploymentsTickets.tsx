@@ -647,27 +647,29 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
         </div>
         
         <div className="flex items-center gap-1.5">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-7 gap-1.5 px-2 text-[10px]"
-            onClick={handleGeneratePdf}
-            disabled={generatingPdf || syncingPeriodo || !dataInicio || !dataFim || dataInicio > dataFim}
-            title={activeView === "analysis"
-              ? "Gerar PDF executivo com gráficos e parecer da IA"
-              : "Gerar PDF com todos os chamados filtrados"}
-          >
-            {generatingPdf ? (
-              <Loader2 className="h-3 w-3 animate-spin" />
-            ) : (
-              <FileDown className="h-3 w-3" />
-            )}
-            {generatingPdf
-              ? "Gerando PDF..."
-              : activeView === "analysis"
-              ? "Relatório da análise"
-              : "Relatório PDF"}
-          </Button>
+          {activeView !== "sla" && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 gap-1.5 px-2 text-[10px]"
+              onClick={handleGeneratePdf}
+              disabled={generatingPdf || syncingPeriodo || !dataInicio || !dataFim || dataInicio > dataFim}
+              title={activeView === "analysis"
+                ? "Gerar PDF executivo com gráficos e parecer da IA"
+                : "Gerar PDF com todos os chamados filtrados"}
+            >
+              {generatingPdf ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <FileDown className="h-3 w-3" />
+              )}
+              {generatingPdf
+                ? "Gerando PDF..."
+                : activeView === "analysis"
+                ? "Relatório da análise"
+                : "Relatório PDF"}
+            </Button>
+          )}
 
           {/* Indicador de Status/Sync rápido */}
           <Badge variant="outline" className="px-2 py-0 font-normal text-[10px] text-muted-foreground flex items-center gap-1.5 h-5">
@@ -1298,6 +1300,18 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
             searchTerm: busca || null,
             statuses: selectedStatuses.length > 0 ? selectedStatuses : null,
             ticketNumbers: syncedTicketNumbers,
+          }}
+          reportFilters={{
+            catalog,
+            startDate: dataInicio,
+            endDate: dataFim,
+            clients: selectedClients,
+            product: produto,
+            products: selectedLegacyProducts,
+            softwares: selectedLegacySoftware,
+            nature: natureza,
+            statuses: selectedStatuses,
+            searchTerm: busca,
           }}
         />
       )}

@@ -26,9 +26,10 @@ export function elapsedHours(from: Date | null, to: Date | null): number | null 
 export function formatSlaDuration(hours: number | null): string {
   if (hours === null || !Number.isFinite(hours)) return "Não calculado";
   if (hours < 1) return `${Math.max(1, Math.round(hours * 60))} min`;
-  if (hours < 24) return `${hours.toFixed(hours < 10 ? 1 : 0)} h`;
-  const days = Math.floor(hours / 24);
-  const remainingHours = Math.round(hours % 24);
+  const roundedHours = Math.round(hours);
+  if (roundedHours < 24) return `${hours < 10 ? hours.toFixed(1) : roundedHours} h`;
+  const days = Math.floor(roundedHours / 24);
+  const remainingHours = roundedHours % 24;
   return remainingHours > 0 ? `${days} d ${remainingHours} h` : `${days} d`;
 }
 

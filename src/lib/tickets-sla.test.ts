@@ -37,6 +37,7 @@ describe("tickets SLA", () => {
     const end = parseSlaDate("2026-08-02T10:00:00");
     expect(elapsedHours(start, end)).toBe(26);
     expect(formatSlaDuration(26)).toBe("1 d 2 h");
+    expect(formatSlaDuration(71.99)).toBe("3 d");
   });
 
   it("ordena os trâmites por data e sequência", () => {
