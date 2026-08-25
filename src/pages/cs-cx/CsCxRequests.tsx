@@ -96,6 +96,7 @@ const emptyForm: CsCxRequestInput = {
 
 const DEFAULT_PAGE_SIZE = 5;
 const EXECUTION_FILTER_VALUE = "__execution";
+const UNASSIGNED_RESPONSIBLE_FILTER_VALUE = "__unassigned";
 const EXECUTION_STATUSES = ["Projeto", "Desenvolvimento", "Em andamento"];
 
 const REQUEST_STATUS_STYLES: Record<
@@ -207,6 +208,7 @@ export default function CsCxRequests() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [officeFilter, setOfficeFilter] = useState("all");
+  const [responsibleFilter, setResponsibleFilter] = useState("all");
   const [periodStart, setPeriodStart] = useState("");
   const [periodEnd, setPeriodEnd] = useState("");
   const [page, setPage] = useState(1);
@@ -245,6 +247,19 @@ export default function CsCxRequests() {
   const currentRequest = form.id
     ? (requests.find((request) => request.id === form.id) ?? null)
     : null;
+  const responsibleOptions = useMemo(() => {
+    const names = new Map<string, string>();
+    requests.forEach((request) => {
+      const name = request.responsible?.trim();
+      if (name) names.set(name.toLocaleLowerCase("pt-BR"), name);
+    });
+    return [...names.entries()]
+      .sort(([, left], [, right]) => left.localeCompare(right, "pt-BR"))
+      .map(([value, label]) => ({ value, label }));
+  }, [requests]);
+  const hasUnassignedResponsible = requests.some(
+    (request) => !request.responsible?.trim(),
+  );
 
   const filtered = useMemo(() => {
     const term = search.trim().toLocaleLowerCase("pt-BR");
@@ -267,6 +282,12 @@ export default function CsCxRequests() {
           : request.status === statusFilter);
       const matchesOffice =
         officeFilter === "all" || request.registry_office_id === officeFilter;
+      const responsible = request.responsible?.trim();
+      const matchesResponsible =
+        responsibleFilter === "all" ||
+        (responsibleFilter === UNASSIGNED_RESPONSIBLE_FILTER_VALUE
+          ? !responsible
+          : responsible?.toLocaleLowerCase("pt-BR") === responsibleFilter);
       const requestDate =
         request.requested_on ?? request.created_at?.slice(0, 10) ?? "";
       const matchesPeriod =
@@ -274,9 +295,15 @@ export default function CsCxRequests() {
         (Boolean(requestDate) &&
           (!periodStart || requestDate >= periodStart) &&
           (!periodEnd || requestDate <= periodEnd));
-      return matchesSearch && matchesStatus && matchesOffice && matchesPeriod;
+      return (
+        matchesSearch &&
+        matchesStatus &&
+        matchesOffice &&
+        matchesResponsible &&
+        matchesPeriod
+      );
     });
-  }, [requests, search, statusFilter, officeFilter, periodStart, periodEnd]);
+  }, [requests, search, statusFilter, officeFilter, responsibleFilter, periodStart, periodEnd]);
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, totalPages);
   const pagedRequests = useMemo(
@@ -294,6 +321,10 @@ export default function CsCxRequests() {
   };
   const updateOfficeFilter = (value: string) => {
     setOfficeFilter(value);
+    setPage(1);
+  };
+  const updateResponsibleFilter = (value: string) => {
+    setResponsibleFilter(value);
     setPage(1);
   };
   const updatePeriodStart = (value: string) => {
@@ -319,9 +350,10 @@ export default function CsCxRequests() {
       period,
       `Status: ${statusFilter === "all" ? "todos" : statusFilter === EXECUTION_FILTER_VALUE ? "Em execução" : statusFilter}`,
       `Cartório: ${office ?? "todos"}`,
+      `Responsável: ${responsibleFilter === "all" ? "todos" : responsibleFilter === UNASSIGNED_RESPONSIBLE_FILTER_VALUE ? "sem responsável" : responsibleOptions.find((item) => item.value === responsibleFilter)?.label ?? responsibleFilter}`,
       ...(search.trim() ? [`Busca: ${search.trim()}`] : []),
     ].join(" · ");
-  }, [offices, officeFilter, periodEnd, periodStart, search, statusFilter]);
+  }, [offices, officeFilter, periodEnd, periodStart, responsibleFilter, responsibleOptions, search, statusFilter]);
 
   const openCreate = () => {
     setEditingObservation(null);
@@ -568,7 +600,7 @@ export default function CsCxRequests() {
 
       <Card>
         <CardContent className="space-y-3 p-3">
-          <div className="grid gap-2 lg:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_160px_200px_360px]">
+          <div className="grid gap-2 lg:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_150px_190px_190px_350px]">
             <div className="relative">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
@@ -603,6 +635,30 @@ export default function CsCxRequests() {
                 {offices.map((office) => (
                   <SelectItem key={office.id} value={office.id}>
                     {office.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value={responsibleFilter}
+              onValueChange={updateResponsibleFilter}
+            >
+              <SelectTrigger
+                aria-label="Filtrar solicitações por responsável"
+                className="h-9"
+              >
+                <SelectValue placeholder="Todos os responsáveis" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os responsáveis</SelectItem>
+                {hasUnassignedResponsible && (
+                  <SelectItem value={UNASSIGNED_RESPONSIBLE_FILTER_VALUE}>
+                    Sem responsável
+                  </SelectItem>
+                )}
+                {responsibleOptions.map((responsible) => (
+                  <SelectItem key={responsible.value} value={responsible.value}>
+                    {responsible.label}
                   </SelectItem>
                 ))}
               </SelectContent>

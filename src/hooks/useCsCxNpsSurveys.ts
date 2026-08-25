@@ -16,9 +16,10 @@ const db = supabase as unknown as SupabaseClient;
 
 interface RawInvitation extends Omit<
   CsCxNpsInvitation,
-  "registry_office" | "contact" | "questionnaire"
+  "registry_office" | "product" | "contact" | "questionnaire"
 > {
   cs_cx_registry_offices: { id: string; name: string } | null;
+  cs_cx_products: { id: string; name: string; product_code: string | null } | null;
   cs_cx_contacts: { id: string; contact_person: string } | null;
   cs_cx_nps_questionnaires: { id: string; title: string } | null;
 }
@@ -32,6 +33,7 @@ export interface SaveQuestionnaireInput extends NpsQuestionnaireSnapshot {
 export interface CreateNpsInvitationInput {
   questionnaire_id: string;
   registry_office_id: string;
+  product_id: string;
   contact_id?: string;
   recipient_name: string;
   recipient_email?: string;
@@ -71,10 +73,11 @@ export function useCsCxNpsSurveys() {
         .from("cs_cx_nps_invitations")
         .select(
           `
-        id, public_token, questionnaire_id, registry_office_id, contact_id,
+        id, public_token, questionnaire_id, registry_office_id, product_id, contact_id,
         recipient_name, recipient_email, questionnaire_snapshot, status,
         expires_at, responded_at, response_id, created_at, created_by,
         cs_cx_registry_offices (id, name),
+        cs_cx_products (id, name, product_code),
         cs_cx_contacts (id, contact_person),
         cs_cx_nps_questionnaires (id, title)
       `,
@@ -85,6 +88,7 @@ export function useCsCxNpsSurveys() {
         ...invitation,
         status: effectiveInvitationStatus(invitation),
         registry_office: invitation.cs_cx_registry_offices,
+        product: invitation.cs_cx_products,
         contact: invitation.cs_cx_contacts,
         questionnaire: invitation.cs_cx_nps_questionnaires,
       })) satisfies CsCxNpsInvitation[];
@@ -174,6 +178,7 @@ export function useCsCxNpsSurveys() {
       const { data, error } = await db.rpc("cs_cx_create_nps_invitation", {
         p_questionnaire_id: input.questionnaire_id,
         p_registry_office_id: input.registry_office_id,
+        p_product_id: input.product_id,
         p_contact_id: input.contact_id || null,
         p_recipient_name: input.recipient_name,
         p_recipient_email: input.recipient_email || null,

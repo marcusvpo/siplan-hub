@@ -5,9 +5,11 @@ import {
   Boxes,
   Layers3,
   ListChecks,
+  Package,
   Pencil,
   Plus,
   RefreshCw,
+  Search,
   Settings2,
   Tags,
   Trash2,
@@ -32,6 +34,7 @@ import {
   type CsCxRoutineModel,
   type CsCxRoutineModelItem,
   type CsCxRoutineType,
+  type CsCxProduct,
   useCsCxRoutineAdmin,
 } from "@/hooks/useCsCxRoutines";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -58,6 +61,7 @@ const EMPTY_ITEM = {
 };
 const EMPTY_CATALOG = { kind: "category" as CatalogKind, id: "", name: "", description: "", active: true, color: "#6c757d" };
 const EMPTY_STATUS = { id: "", name: "", color: "slate", active: true, sort_order: 0 };
+const EMPTY_PRODUCT = { id: "", name: "", productCode: "", description: "", active: true };
 
 export default function CsCxAdmin() {
   const admin = useCsCxRoutineAdmin();
@@ -76,6 +80,9 @@ export default function CsCxAdmin() {
   const [statusOpen, setStatusOpen] = useState(false);
   const [statusForm, setStatusForm] = useState(EMPTY_STATUS);
   const [deletingStatus, setDeletingStatus] = useState<CsCxRequestStatusConfig | null>(null);
+  const [productOpen, setProductOpen] = useState(false);
+  const [productForm, setProductForm] = useState(EMPTY_PRODUCT);
+  const [productSearch, setProductSearch] = useState("");
 
   useEffect(() => {
     if (!selectedModelId && admin.models.length) setSelectedModelId(admin.models[0].id);
@@ -240,6 +247,33 @@ export default function CsCxAdmin() {
     }
   }
 
+  function openProduct(product?: CsCxProduct) {
+    setProductForm(product ? {
+      id: product.id,
+      name: product.name,
+      productCode: product.product_code ?? "",
+      description: product.description ?? "",
+      active: product.active,
+    } : EMPTY_PRODUCT);
+    setProductOpen(true);
+  }
+
+  async function handleProductSave() {
+    try {
+      await admin.saveProduct.mutateAsync({
+        id: productForm.id || undefined,
+        name: productForm.name,
+        productCode: productForm.productCode,
+        description: productForm.description,
+        active: productForm.active,
+      });
+      setProductOpen(false);
+      toast({ title: productForm.id ? "Produto atualizado" : "Produto criado" });
+    } catch (error) {
+      showError(toast, "Não foi possível salvar o produto", error);
+    }
+  }
+
   if (admin.isLoading || statusAdmin.isLoading) {
     return <div className="container mx-auto max-w-[1600px] space-y-4 px-4 py-4 lg:px-6"><Skeleton className="h-20 w-full" /><Skeleton className="h-72 w-full" /></div>;
   }
@@ -257,15 +291,16 @@ export default function CsCxAdmin() {
       {admin.error && <Card className="border-destructive/40"><CardContent className="flex items-center justify-between gap-3 p-3"><div className="flex items-center gap-2 text-sm text-destructive"><TriangleAlert className="h-4 w-4" />{messageOf(admin.error)}</div><Button variant="outline" size="sm" onClick={() => admin.refetch()}><RefreshCw className="mr-2 h-4 w-4" />Tentar novamente</Button></CardContent></Card>}
       {statusAdmin.error && <Card className="border-destructive/40"><CardContent className="flex items-center justify-between gap-3 p-3"><div className="flex items-center gap-2 text-sm text-destructive"><TriangleAlert className="h-4 w-4" />{messageOf(statusAdmin.error)}</div><Button variant="outline" size="sm" onClick={() => statusAdmin.refetch()}><RefreshCw className="mr-2 h-4 w-4" />Tentar novamente</Button></CardContent></Card>}
 
-      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
         <Metric icon={Layers3} label="Modelos" value={admin.models.length} />
+        <Metric icon={Package} label="Produtos" value={admin.products.length} />
         <Metric icon={Tags} label="Categorias" value={admin.categories.length} />
         <Metric icon={ListChecks} label="Itens" value={admin.items.length} />
         <Metric icon={Workflow} label="Status" value={statusAdmin.statuses.length} />
       </div>
 
       <Tabs defaultValue="models">
-        <TabsList className="h-9 max-w-full justify-start overflow-x-auto"><TabsTrigger className="h-7" value="models">Modelos e itens</TabsTrigger><TabsTrigger className="h-7" value="categories">Categorias</TabsTrigger><TabsTrigger className="h-7" value="types">Tipos</TabsTrigger><TabsTrigger className="h-7" value="statuses">Status das solicitações</TabsTrigger><TabsTrigger className="h-7" value="access">Usuários e permissões</TabsTrigger></TabsList>
+        <TabsList className="h-9 max-w-full justify-start overflow-x-auto"><TabsTrigger className="h-7" value="models">Modelos e itens</TabsTrigger><TabsTrigger className="h-7" value="products">Produtos</TabsTrigger><TabsTrigger className="h-7" value="categories">Categorias</TabsTrigger><TabsTrigger className="h-7" value="types">Tipos</TabsTrigger><TabsTrigger className="h-7" value="statuses">Status das solicitações</TabsTrigger><TabsTrigger className="h-7" value="access">Usuários e permissões</TabsTrigger></TabsList>
 
         <TabsContent value="models" className="mt-3 grid gap-3 lg:grid-cols-[280px_minmax(0,1fr)]">
           <Card className="min-h-0">
@@ -288,13 +323,16 @@ export default function CsCxAdmin() {
           </Card>
         </TabsContent>
 
+        <TabsContent value="products"><ProductPanel products={admin.products} search={productSearch} onSearchChange={setProductSearch} canManage={canManage} onCreate={() => openProduct()} onEdit={openProduct} /></TabsContent>
         <TabsContent value="categories"><CatalogPanel kind="category" items={admin.categories} canManage={canManage} onEdit={(item) => openCatalog("category", item)} onCreate={() => openCatalog("category")} onDelete={(item) => setDeleting({ kind: "category", id: item.id, name: item.name })} /></TabsContent>
         <TabsContent value="types"><CatalogPanel kind="type" items={admin.types} canManage={canManage} onEdit={(item) => openCatalog("type", item)} onCreate={() => openCatalog("type")} onDelete={(item) => setDeleting({ kind: "type", id: item.id, name: item.name })} /></TabsContent>
         <TabsContent value="statuses"><Card><CardHeader className="px-4 pb-2 pt-3"><div className="flex items-center justify-between gap-3"><div><CardTitle className="text-sm">Status das solicitações</CardTitle><CardDescription className="text-xs">Defina as colunas disponíveis no quadro. Sustentação e FastTrack já estão incluídos.</CardDescription></div>{canManage && <Button size="sm" className="h-8" onClick={() => openStatus()}><Plus className="mr-1.5 h-4 w-4" />Novo status</Button>}</div></CardHeader><CardContent className="grid gap-2 px-4 pb-4 md:grid-cols-2 xl:grid-cols-3">{statusAdmin.statuses.map((status) => <div key={status.id} className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5"><div className="flex min-w-0 items-center gap-2"><span className={`h-3 w-3 shrink-0 rounded-full ${statusColorClass(status.color)}`} /><div className="min-w-0"><p className="truncate text-sm font-semibold">{status.name}</p><p className="text-[11px] text-muted-foreground">Ordem {status.sort_order}{status.is_system ? " · padrão" : ""}</p></div></div><div className="flex items-center gap-1"><Badge variant={status.active ? "default" : "secondary"} className="h-5 px-1.5 text-[10px]">{status.active ? "Ativo" : "Inativo"}</Badge>{canManage && <><Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Editar status ${status.name}`} onClick={() => openStatus(status)}><Pencil className="h-4 w-4" /></Button><Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Excluir status ${status.name}`} onClick={() => setDeletingStatus(status)}><Trash2 className="h-4 w-4 text-destructive" /></Button></>}</div></div>)}</CardContent></Card></TabsContent>
         <TabsContent value="access"><CsCxAccessPanel canManage={canManage} /></TabsContent>
       </Tabs>
 
-      <Dialog open={modelOpen} onOpenChange={setModelOpen}><DialogContent className="sm:max-w-xl"><DialogHeader><DialogTitle>{modelForm.id ? "Editar modelo" : "Novo modelo"}</DialogTitle><DialogDescription>Defina o modelo e os produtos aos quais ele se aplica.</DialogDescription></DialogHeader><div className="space-y-4"><div><Label htmlFor="model-name">Nome</Label><Input id="model-name" value={modelForm.name} onChange={(event) => setModelForm((current) => ({ ...current, name: event.target.value }))} /></div><div><Label htmlFor="model-description">Descrição</Label><Textarea id="model-description" value={modelForm.description} onChange={(event) => setModelForm((current) => ({ ...current, description: event.target.value }))} /></div><div><Label>Produtos</Label><div className="mt-2 grid max-h-40 gap-2 overflow-y-auto rounded-lg border p-3 sm:grid-cols-2">{admin.products.map((product) => <label key={product.id} className="flex items-center gap-2 text-sm"><Checkbox checked={modelForm.productIds.includes(product.id)} onCheckedChange={(checked) => setModelForm((current) => ({ ...current, productIds: checked ? [...current.productIds, product.id] : current.productIds.filter((id) => id !== product.id) }))} />{product.name}</label>)}</div></div><div className="flex items-center justify-between rounded-lg border p-3"><Label htmlFor="model-active">Modelo ativo</Label><Switch id="model-active" checked={modelForm.active} onCheckedChange={(active) => setModelForm((current) => ({ ...current, active }))} /></div></div><DialogFooter><Button variant="outline" onClick={() => setModelOpen(false)}>Cancelar</Button><Button disabled={!modelForm.name.trim() || admin.saveModel.isPending} onClick={handleModelSave}>Salvar modelo</Button></DialogFooter></DialogContent></Dialog>
+      <Dialog open={modelOpen} onOpenChange={setModelOpen}><DialogContent className="sm:max-w-xl"><DialogHeader><DialogTitle>{modelForm.id ? "Editar modelo" : "Novo modelo"}</DialogTitle><DialogDescription>Defina o modelo e os produtos aos quais ele se aplica.</DialogDescription></DialogHeader><div className="space-y-4"><div><Label htmlFor="model-name">Nome</Label><Input id="model-name" value={modelForm.name} onChange={(event) => setModelForm((current) => ({ ...current, name: event.target.value }))} /></div><div><Label htmlFor="model-description">Descrição</Label><Textarea id="model-description" value={modelForm.description} onChange={(event) => setModelForm((current) => ({ ...current, description: event.target.value }))} /></div><div><Label>Produtos</Label><div className="mt-2 grid max-h-40 gap-2 overflow-y-auto rounded-lg border p-3 sm:grid-cols-2">{admin.products.filter((product) => product.active || modelForm.productIds.includes(product.id)).map((product) => <label key={product.id} className="flex items-center gap-2 text-sm"><Checkbox checked={modelForm.productIds.includes(product.id)} onCheckedChange={(checked) => setModelForm((current) => ({ ...current, productIds: checked ? [...current.productIds, product.id] : current.productIds.filter((id) => id !== product.id) }))} />{product.name}{!product.active && <span className="text-xs text-muted-foreground">(inativo)</span>}</label>)}</div></div><div className="flex items-center justify-between rounded-lg border p-3"><Label htmlFor="model-active">Modelo ativo</Label><Switch id="model-active" checked={modelForm.active} onCheckedChange={(active) => setModelForm((current) => ({ ...current, active }))} /></div></div><DialogFooter><Button variant="outline" onClick={() => setModelOpen(false)}>Cancelar</Button><Button disabled={!modelForm.name.trim() || admin.saveModel.isPending} onClick={handleModelSave}>Salvar modelo</Button></DialogFooter></DialogContent></Dialog>
+
+      <Dialog open={productOpen} onOpenChange={setProductOpen}><DialogContent><DialogHeader><DialogTitle>{productForm.id ? "Editar produto" : "Novo produto"}</DialogTitle><DialogDescription>Cadastre os produtos usados nos cartórios, contatos e checklists de rotinas.</DialogDescription></DialogHeader><div className="space-y-4"><div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_160px]"><div><Label htmlFor="product-name">Nome *</Label><Input id="product-name" autoFocus value={productForm.name} onChange={(event) => setProductForm((current) => ({ ...current, name: event.target.value }))} placeholder="Ex.: OrionTN" /></div><div><Label htmlFor="product-code">Código</Label><Input id="product-code" value={productForm.productCode} onChange={(event) => setProductForm((current) => ({ ...current, productCode: event.target.value }))} placeholder="Ex.: TN" /></div></div><div><Label htmlFor="product-description">Descrição</Label><Textarea id="product-description" value={productForm.description} onChange={(event) => setProductForm((current) => ({ ...current, description: event.target.value }))} placeholder="Resumo opcional do produto" /></div><div className="flex items-center justify-between rounded-lg border p-3"><div><Label htmlFor="product-active">Produto ativo</Label><p className="text-xs text-muted-foreground">Produtos inativos permanecem no histórico, mas não aparecem em novos vínculos.</p></div><Switch id="product-active" checked={productForm.active} onCheckedChange={(active) => setProductForm((current) => ({ ...current, active }))} /></div></div><DialogFooter><Button variant="outline" onClick={() => setProductOpen(false)}>Cancelar</Button><Button disabled={!productForm.name.trim() || admin.saveProduct.isPending} onClick={handleProductSave}>Salvar produto</Button></DialogFooter></DialogContent></Dialog>
 
       <Dialog open={itemOpen} onOpenChange={setItemOpen}><DialogContent className="sm:max-w-xl"><DialogHeader><DialogTitle>{itemForm.id ? "Editar item" : "Novo item"}</DialogTitle><DialogDescription>Novos itens são propagados automaticamente às aplicações ativas do modelo.</DialogDescription></DialogHeader><div className="space-y-4"><div><Label htmlFor="item-name">Nome</Label><Input id="item-name" value={itemForm.name} onChange={(event) => setItemForm((current) => ({ ...current, name: event.target.value }))} /></div><div><Label htmlFor="item-description">Descrição</Label><Textarea id="item-description" value={itemForm.description} onChange={(event) => setItemForm((current) => ({ ...current, description: event.target.value }))} /></div><div className="grid gap-4 sm:grid-cols-2"><div><Label>Categoria</Label><Select value={itemForm.categoryId} onValueChange={(categoryId) => setItemForm((current) => ({ ...current, categoryId }))}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{admin.categories.filter((item) => item.active || item.id === itemForm.categoryId).map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}</SelectContent></Select></div><div><Label>Tipo</Label><Select value={itemForm.routineTypeId} onValueChange={(routineTypeId) => setItemForm((current) => ({ ...current, routineTypeId }))}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{admin.types.filter((item) => item.active || item.id === itemForm.routineTypeId).map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}</SelectContent></Select></div></div><div className="grid gap-4 sm:grid-cols-2"><div><Label>Status padrão</Label><Select value={itemForm.defaultStatus} onValueChange={(defaultStatus) => setItemForm((current) => ({ ...current, defaultStatus }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="analyze">Analisar</SelectItem><SelectItem value="active">Ativo</SelectItem><SelectItem value="inactive">Inativo</SelectItem></SelectContent></Select></div><div className="flex items-center justify-between rounded-lg border p-3"><Label htmlFor="item-required">Obrigatório</Label><Switch id="item-required" checked={itemForm.required} onCheckedChange={(required) => setItemForm((current) => ({ ...current, required }))} /></div></div></div><DialogFooter><Button variant="outline" onClick={() => setItemOpen(false)}>Cancelar</Button><Button disabled={!itemForm.name.trim() || !itemForm.categoryId || !itemForm.routineTypeId || admin.saveItem.isPending} onClick={handleItemSave}>Salvar item</Button></DialogFooter></DialogContent></Dialog>
 
@@ -305,6 +343,60 @@ export default function CsCxAdmin() {
       <AlertDialog open={Boolean(deleting)} onOpenChange={(open) => !open && setDeleting(null)}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Excluir “{deleting?.name}”?</AlertDialogTitle><AlertDialogDescription>{deleting?.kind === "item" ? "As configurações deste item nas rotinas aplicadas também serão removidas e a ação ficará registrada no histórico." : deleting?.kind === "model" ? "Modelos que já possuem aplicações não podem ser excluídos." : "Cadastros utilizados por itens não podem ser excluídos."}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction onClick={handleDelete}>Excluir</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
       <AlertDialog open={Boolean(deletingStatus)} onOpenChange={(open) => !open && setDeletingStatus(null)}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Excluir “{deletingStatus?.name}”?</AlertDialogTitle><AlertDialogDescription>Status em uso não podem ser excluídos. Nesse caso, inative o status para preservar as solicitações existentes.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction onClick={handleStatusDelete}>Excluir</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
     </div>
+  );
+}
+
+function ProductPanel({ products, search, onSearchChange, canManage, onCreate, onEdit }: {
+  products: CsCxProduct[];
+  search: string;
+  onSearchChange: (value: string) => void;
+  canManage: boolean;
+  onCreate: () => void;
+  onEdit: (product: CsCxProduct) => void;
+}) {
+  const normalizedSearch = search.trim().toLocaleLowerCase("pt-BR");
+  const filteredProducts = products.filter((product) =>
+    !normalizedSearch ||
+    product.name.toLocaleLowerCase("pt-BR").includes(normalizedSearch) ||
+    product.product_code?.toLocaleLowerCase("pt-BR").includes(normalizedSearch) ||
+    product.description?.toLocaleLowerCase("pt-BR").includes(normalizedSearch),
+  );
+
+  return (
+    <Card>
+      <CardHeader className="px-4 pb-2 pt-3">
+        <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+          <div>
+            <CardTitle className="text-sm">Produtos</CardTitle>
+            <CardDescription className="text-xs">Cadastre e mantenha os produtos usados em todo o módulo CS/CX.</CardDescription>
+          </div>
+          {canManage && <Button className="h-8" size="sm" onClick={onCreate}><Plus className="mr-1.5 h-4 w-4" />Novo produto</Button>}
+        </div>
+        <div className="relative mt-2 max-w-md">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input aria-label="Buscar produtos" className="h-9 pl-9" value={search} onChange={(event) => onSearchChange(event.target.value)} placeholder="Buscar por nome, código ou descrição..." />
+        </div>
+      </CardHeader>
+      <CardContent className="grid max-h-[calc(100vh-350px)] gap-2 overflow-y-auto px-4 pb-4 md:grid-cols-2 xl:grid-cols-3">
+        {filteredProducts.map((product) => (
+          <div key={product.id} className="flex items-start justify-between gap-3 rounded-lg border px-3 py-2.5">
+            <div className="flex min-w-0 items-start gap-2.5">
+              <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-300"><Package className="h-4 w-4" /></span>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-1.5"><h3 className="truncate text-sm font-semibold" title={product.name}>{product.name}</h3>{product.product_code && <Badge variant="outline" className="h-5 px-1.5 font-mono text-[10px]">{product.product_code}</Badge>}</div>
+                <p className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground">{product.description || "Sem descrição"}</p>
+                {product.origin === "legacy" && <p className="mt-1 text-[10px] text-muted-foreground">Sincronizado do sistema legado</p>}
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-1">
+              <Badge variant={product.active ? "default" : "secondary"} className="h-5 px-1.5 text-[10px] font-normal">{product.active ? "Ativo" : "Inativo"}</Badge>
+              {canManage && <Button className="h-8 w-8" variant="ghost" size="icon" aria-label={`Editar produto ${product.name}`} onClick={() => onEdit(product)}><Pencil className="h-4 w-4" /></Button>}
+            </div>
+          </div>
+        ))}
+        {!filteredProducts.length && <div className="col-span-full py-10 text-center text-sm text-muted-foreground">{products.length ? "Nenhum produto corresponde à busca." : "Nenhum produto cadastrado."}</div>}
+      </CardContent>
+    </Card>
   );
 }
 

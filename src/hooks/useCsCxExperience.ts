@@ -113,6 +113,7 @@ export interface CsCxNpsResponse {
   id: string;
   legacy_id: number | null;
   registry_office_id: string;
+  product_id: string | null;
   responded_at: string;
   respondent_name: string;
   respondent_office: string;
@@ -127,6 +128,7 @@ export interface CsCxNpsResponse {
   questionnaire_snapshot: NpsQuestionnaireSnapshot | null;
   answers: NpsAnswers;
   registry_office: { id: string; name: string } | null;
+  product: { id: string; name: string; product_code: string | null } | null;
 }
 
 export interface CsCxNpsHistory {
@@ -150,8 +152,9 @@ interface RawVisit extends Omit<
   profiles: { id: string; full_name: string | null } | null;
 }
 
-interface RawNps extends Omit<CsCxNpsResponse, "registry_office"> {
+interface RawNps extends Omit<CsCxNpsResponse, "registry_office" | "product"> {
   cs_cx_registry_offices: { id: string; name: string } | null;
+  cs_cx_products: { id: string; name: string; product_code: string | null } | null;
 }
 
 interface RawNpsHistory extends Omit<CsCxNpsHistory, "registry_office"> {
@@ -493,10 +496,11 @@ export function useCsCxNps() {
         .from("cs_cx_nps_responses")
         .select(
           `
-        id, legacy_id, registry_office_id, responded_at, respondent_name,
+        id, legacy_id, registry_office_id, product_id, responded_at, respondent_name,
         respondent_office, score, score_reason, improvement_suggestion,
         classification, origin, invitation_id, questionnaire_id, owner_profile_id,
-        questionnaire_snapshot, answers, cs_cx_registry_offices (id, name)
+        questionnaire_snapshot, answers, cs_cx_registry_offices (id, name),
+        cs_cx_products (id, name, product_code)
       `,
         )
         .eq("source_present", true)
@@ -505,6 +509,7 @@ export function useCsCxNps() {
       return ((data ?? []) as unknown as RawNps[]).map((response) => ({
         ...response,
         registry_office: response.cs_cx_registry_offices,
+        product: response.cs_cx_products,
       })) satisfies CsCxNpsResponse[];
     },
     refetchInterval: 15_000,
@@ -543,6 +548,17 @@ export function useCsCxNps() {
     onSuccess: () => invalidateExperience(queryClient),
   });
 
+  const updateResponseProduct = useMutation({
+    mutationFn: async ({ id, productId }: { id: string; productId: string }) => {
+      const { error } = await db.rpc("cs_cx_update_nps_response_product", {
+        p_response_id: id,
+        p_product_id: productId,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => invalidateExperience(queryClient),
+  });
+
   return {
     responses: responsesQuery.data ?? [],
     history: historyQuery.data ?? [],
@@ -550,6 +566,7 @@ export function useCsCxNps() {
     error: responsesQuery.error ?? historyQuery.error,
     refetch: responsesQuery.refetch,
     deleteResponse,
+    updateResponseProduct,
   };
 }
 

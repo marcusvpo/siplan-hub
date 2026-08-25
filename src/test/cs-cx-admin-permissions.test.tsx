@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 const hasPermission = vi.fn();
 const mutation = { mutateAsync: vi.fn(), isPending: false };
@@ -40,7 +40,7 @@ vi.mock("@/hooks/useCsCxRoutines", () => ({
       category: { id: "category-1", name: "Operacional", display_color: "#ad0505" },
       routine_type: { id: "type-1", name: "Firmas" },
     }],
-    products: [{ id: "product-1", name: "Orion" }],
+    products: [{ id: "product-1", legacy_id: 1, product_code: "TN", name: "OrionTN", description: "Sistema para notas", active: true, origin: "legacy" }],
     isLoading: false,
     error: null,
     refetch: vi.fn(),
@@ -53,6 +53,7 @@ vi.mock("@/hooks/useCsCxRoutines", () => ({
     deleteCategory: mutation,
     saveType: mutation,
     deleteType: mutation,
+    saveProduct: mutation,
   }),
 }));
 
@@ -98,7 +99,10 @@ vi.mock("@/hooks/useCsCxAccess", () => ({
 import CsCxAdmin from "@/pages/cs-cx/CsCxAdmin";
 
 describe("CS/CX administração — permissões", () => {
-  beforeEach(() => hasPermission.mockReset());
+  beforeEach(() => {
+    hasPermission.mockReset();
+    mutation.mutateAsync.mockReset();
+  });
 
   it("exibe os modelos e itens em modo somente leitura", () => {
     hasPermission.mockReturnValue(false);
@@ -123,6 +127,36 @@ describe("CS/CX administração — permissões", () => {
     expect(screen.getByText("Sustentação")).toBeInTheDocument();
     expect(screen.getByText("FastTrack")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /novo status/i })).toBeInTheDocument();
+  });
+
+  it("permite criar e editar produtos na nova aba", async () => {
+    hasPermission.mockImplementation((resource: string, action: string) => resource === "cs_cx_admin" && action === "manage");
+    render(<CsCxAdmin />);
+
+    fireEvent.mouseDown(screen.getByRole("tab", { name: "Produtos" }), { button: 0, ctrlKey: false });
+    expect(screen.getByText("OrionTN")).toBeInTheDocument();
+    expect(screen.getByText("TN")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /novo produto/i }));
+    fireEvent.change(screen.getByLabelText("Nome *"), { target: { value: "SiplanPRO" } });
+    fireEvent.change(screen.getByLabelText("Código"), { target: { value: "pro" } });
+    fireEvent.change(screen.getByLabelText("Descrição"), { target: { value: "Gestão integrada" } });
+    fireEvent.click(screen.getByRole("button", { name: "Salvar produto" }));
+
+    await waitFor(() => {
+      expect(mutation.mutateAsync).toHaveBeenCalledWith({
+        id: undefined,
+        name: "SiplanPRO",
+        productCode: "pro",
+        description: "Gestão integrada",
+        active: true,
+      });
+    });
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: "Editar produto OrionTN" }));
+    expect(screen.getByDisplayValue("OrionTN")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Sistema para notas")).toBeInTheDocument();
   });
 
   it("mantém usuários e perfis restritos ao CS/CX", () => {

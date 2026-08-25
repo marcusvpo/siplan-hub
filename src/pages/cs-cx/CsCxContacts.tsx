@@ -348,7 +348,7 @@ export default function CsCxContacts() {
 
       <Card>
         <CardContent className="space-y-3 p-3">
-          <div className="grid gap-2 xl:grid-cols-[minmax(240px,1fr)_190px_170px_180px_145px_145px]">
+          <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-[minmax(240px,1fr)_190px_170px] 2xl:grid-cols-[minmax(240px,1fr)_190px_170px_180px_145px_145px]">
             <div className="relative">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
