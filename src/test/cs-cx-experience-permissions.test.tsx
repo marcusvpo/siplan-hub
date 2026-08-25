@@ -25,8 +25,25 @@ vi.mock("@/hooks/useCsCxNpsAiReport", () => ({
 vi.mock("@/hooks/useCsCxCore", () => ({
   useCsCxRegistryOffices: () => ({
     offices: [
-      { id: "office-1", name: "Cartório Central", active: true, analyst: { id: "profile-1", full_name: "Bruno", email: null } },
-      { id: "office-2", name: "Cartório Sem Resposta", active: true, analyst: null },
+      {
+        id: "office-1",
+        name: "Cartório Central",
+        active: true,
+        analyst: { id: "profile-1", full_name: "Bruno", email: null },
+        products: [
+          {
+            id: "office-product-1",
+            product_id: "product-1",
+            product: { id: "product-1", name: "OrionTN", product_code: "ORIONTN" },
+            responsibles: [],
+          },
+        ],
+      },
+      { id: "office-2", name: "Cartório Sem Resposta", active: true, analyst: null, products: [] },
+    ],
+    products: [
+      { id: "product-1", name: "OrionTN", product_code: "ORIONTN" },
+      { id: "product-2", name: "OrionPRO", product_code: "ORIONPRO" },
     ],
   }),
 }));
@@ -110,6 +127,7 @@ vi.mock("@/hooks/useCsCxExperience", () => ({
       id: `nps-${index + 1}`,
       legacy_id: index + 1,
       registry_office_id: "office-1",
+      product_id: index % 2 === 0 ? "product-1" : "product-2",
       responded_at: "2026-08-10T12:00:00Z",
       respondent_name: index === 0 ? "Maria" : `Respondente ${index + 1}`,
       respondent_office:
@@ -125,6 +143,10 @@ vi.mock("@/hooks/useCsCxExperience", () => ({
         id: "office-1",
         name: index === 0 ? "Cartório Central" : `Cartório ${index + 1}`,
       },
+      product:
+        index % 2 === 0
+          ? { id: "product-1", name: "OrionTN", product_code: "ORIONTN" }
+          : { id: "product-2", name: "OrionPRO", product_code: "ORIONPRO" },
     })),
     history: Array.from({ length: 7 }, (_, index) => ({
       id: `history-${index + 1}`,
@@ -143,6 +165,7 @@ vi.mock("@/hooks/useCsCxExperience", () => ({
     refetch: vi.fn(),
     saveResponse: mutation,
     deleteResponse: mutation,
+    updateResponseProduct: mutation,
     importResponses: mutation,
   }),
 }));
@@ -256,6 +279,36 @@ describe("CS/CX visitas e NPS — permissões", () => {
     ).toHaveTextContent("Cartório 12");
   });
 
+  it("filtra as análises de NPS pelo produto avaliado", () => {
+    renderPage(<CsCxNps />, []);
+
+    fireEvent.click(
+      screen.getByRole("combobox", { name: "Filtrar NPS por produto" }),
+    );
+    expect(screen.getByRole("option", { name: "OrionTN" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "OrionPRO" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("option", { name: "OrionTN" }));
+
+    expect(
+      screen.getByRole("combobox", { name: "Filtrar NPS por produto" }),
+    ).toHaveTextContent("OrionTN");
+  });
+
+  it("exige um produto vinculado ao cartório ao solicitar NPS", () => {
+    renderPage(<CsCxNps />, ["cs_cx_nps:create"]);
+    fireEvent.click(screen.getByRole("button", { name: /solicitar nps/i }));
+
+    fireEvent.click(screen.getByRole("combobox", { name: /cartório\/cliente/i }));
+    fireEvent.click(screen.getByRole("option", { name: "Cartório Central" }));
+
+    const productSelect = screen.getByRole("combobox", {
+      name: "Produto avaliado",
+    });
+    expect(productSelect).toBeEnabled();
+    fireEvent.click(productSelect);
+    expect(screen.getByRole("option", { name: "OrionTN" })).toBeInTheDocument();
+  });
+
   it("permite solicitar NPS sem liberar inclusão ou importação de respostas", () => {
     renderPage(<CsCxNps />, ["cs_cx_nps:create"]);
     expect(
@@ -304,6 +357,30 @@ describe("CS/CX visitas e NPS — permissões", () => {
     expect(screen.getByText("Visualizar resposta NPS")).toBeInTheDocument();
     expect(screen.getByText(/somente leitura/i)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /salvar/i })).not.toBeInTheDocument();
+  });
+
+  it("permite corrigir somente o produto da resposta NPS", () => {
+    renderPage(<CsCxNps />, ["cs_cx_nps:edit"]);
+    fireEvent.mouseDown(screen.getByRole("tab", { name: /respostas/i }), {
+      button: 0,
+      ctrlKey: false,
+    });
+
+    fireEvent.click(
+      screen.getAllByRole("button", {
+        name: /corrigir produto da resposta/i,
+      })[0],
+    );
+
+    const dialog = screen.getByRole("dialog");
+    expect(
+      within(dialog).getByRole("heading", {
+        name: /corrigir produto da avaliação/i,
+      }),
+    ).toBeInTheDocument();
+    expect(within(dialog).getByText(/nota, respostas e comentários/i)).toBeInTheDocument();
+    expect(within(dialog).queryByLabelText(/nota/i)).not.toBeInTheDocument();
+    expect(within(dialog).queryByLabelText(/comentário/i)).not.toBeInTheDocument();
   });
 
   it("diferencia visualmente promotores, neutros e detratores", () => {

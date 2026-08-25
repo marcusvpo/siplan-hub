@@ -10,6 +10,7 @@ import {
   Frown,
   Link2,
   Meh,
+  Pencil,
   RefreshCw,
   Search,
   Smile,
@@ -81,14 +82,22 @@ const CLASS_LABELS: Record<string, string> = {
 const DEFAULT_PAGE_SIZE = 5;
 
 export default function CsCxNps() {
-  const { responses, history, isLoading, error, refetch, deleteResponse } =
-    useCsCxNps();
-  const { offices } = useCsCxRegistryOffices();
-  const { canCreate, canDeleteRecord } =
+  const {
+    responses,
+    history,
+    isLoading,
+    error,
+    refetch,
+    deleteResponse,
+    updateResponseProduct,
+  } = useCsCxNps();
+  const { offices, products } = useCsCxRegistryOffices();
+  const { canCreate, canEditRecord, canDeleteRecord } =
     useCsCxRecordPermissions("cs_cx_nps");
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [classification, setClassification] = useState("all");
+  const [responseProductId, setResponseProductId] = useState("all");
   const [responsePage, setResponsePage] = useState(1);
   const [responsePageSize, setResponsePageSize] = useState(DEFAULT_PAGE_SIZE);
   const [historyPage, setHistoryPage] = useState(1);
@@ -97,6 +106,9 @@ export default function CsCxNps() {
   const [isExporting, setIsExporting] = useState(false);
   const [requestOpen, setRequestOpen] = useState(false);
   const [viewing, setViewing] = useState<CsCxNpsResponse | null>(null);
+  const [correctingProduct, setCorrectingProduct] =
+    useState<CsCxNpsResponse | null>(null);
+  const [correctedProductId, setCorrectedProductId] = useState("");
   const [activeTab, setActiveTab] = useState("analytics");
   const [officeCoverage, setOfficeCoverage] = useState<
     "evaluated" | "not-evaluated" | null
@@ -111,14 +123,19 @@ export default function CsCxNps() {
             response.respondent_name,
             response.respondent_office,
             response.registry_office?.name,
+            response.product?.name,
             response.score_reason,
           ].some((value) =>
             value?.toLocaleLowerCase("pt-BR").includes(term),
           )) &&
         (classification === "all" ||
-          response.classification === classification),
+          response.classification === classification) &&
+        (responseProductId === "all" ||
+          (responseProductId === "unassigned"
+            ? !response.product_id
+            : response.product_id === responseProductId)),
     );
-  }, [classification, responses, search]);
+  }, [classification, responseProductId, responses, search]);
   const responseTotalPages = Math.max(
     1,
     Math.ceil(filtered.length / responsePageSize),
@@ -166,6 +183,10 @@ export default function CsCxNps() {
   };
   const updateClassification = (value: string) => {
     setClassification(value);
+    setResponsePage(1);
+  };
+  const updateResponseProductFilter = (value: string) => {
+    setResponseProductId(value);
     setResponsePage(1);
   };
   const updateResponsePageSize = (value: string) => {
@@ -233,6 +254,24 @@ export default function CsCxNps() {
       });
     }
   }
+  async function handleCorrectProduct() {
+    if (!correctingProduct || !correctedProductId) return;
+    try {
+      await updateResponseProduct.mutateAsync({
+        id: correctingProduct.id,
+        productId: correctedProductId,
+      });
+      setCorrectingProduct(null);
+      setCorrectedProductId("");
+      toast({ title: "Produto da avaliação atualizado" });
+    } catch (mutationError) {
+      toast({
+        title: "Não foi possível atualizar o produto",
+        description: messageOf(mutationError),
+        variant: "destructive",
+      });
+    }
+  }
   async function handleExport() {
     setIsExporting(true);
     try {
@@ -241,6 +280,11 @@ export default function CsCxNps() {
           ? "Todas as classificações"
           : `Classificação: ${CLASS_LABELS[classification] ?? classification}`,
         search.trim() ? `Busca: ${search.trim()}` : "Sem filtro de busca",
+        responseProductId === "all"
+          ? "Todos os produtos"
+          : responseProductId === "unassigned"
+            ? "Produto não informado"
+            : `Produto: ${products.find((product) => product.id === responseProductId)?.name ?? "não encontrado"}`,
       ];
       await generateCsCxNpsPdf(filtered, filters.join(" · "));
     } catch (exportError) {
@@ -367,7 +411,7 @@ export default function CsCxNps() {
         </TabsList>
         <TabsContent value="responses" className="mt-3 space-y-3">
           <Card>
-            <CardContent className="grid gap-2 p-3 md:grid-cols-[minmax(260px,1fr)_220px]">
+            <CardContent className="grid gap-2 p-3 md:grid-cols-2 xl:grid-cols-[minmax(260px,1fr)_200px_200px]">
               <div className="relative">
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -391,6 +435,26 @@ export default function CsCxNps() {
                   <SelectItem value="DETRATOR">Detratores</SelectItem>
                 </SelectContent>
               </Select>
+              <Select
+                value={responseProductId}
+                onValueChange={updateResponseProductFilter}
+              >
+                <SelectTrigger
+                  className="h-9"
+                  aria-label="Filtrar respostas por produto"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os produtos</SelectItem>
+                  {products.map((product) => (
+                    <SelectItem key={product.id} value={product.id}>
+                      {product.name}
+                    </SelectItem>
+                  ))}
+                  <SelectItem value="unassigned">Sem produto (legado)</SelectItem>
+                </SelectContent>
+              </Select>
             </CardContent>
           </Card>
           <Card>
@@ -400,6 +464,7 @@ export default function CsCxNps() {
                   <TableRow>
                     <TableHead>Data</TableHead>
                     <TableHead>Cartório</TableHead>
+                    <TableHead>Produto</TableHead>
                     <TableHead>Respondente</TableHead>
                     <TableHead>Nota</TableHead>
                     <TableHead>Classificação</TableHead>
@@ -422,6 +487,11 @@ export default function CsCxNps() {
                       >
                         {response.registry_office?.name ??
                           response.respondent_office}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {response.product?.name ?? "Sem produto"}
+                        </Badge>
                       </TableCell>
                       <TableCell
                         className="max-w-48 truncate"
@@ -454,6 +524,20 @@ export default function CsCxNps() {
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
+                          {canEditRecord(response.owner_profile_id) && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              aria-label="Corrigir produto da resposta"
+                              onClick={() => {
+                                setCorrectingProduct(response);
+                                setCorrectedProductId(response.product_id ?? "");
+                              }}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          )}
                           {canDeleteRecord(response.owner_profile_id) && (
                             <Button
                               variant="ghost"
@@ -472,7 +556,7 @@ export default function CsCxNps() {
                   {!filtered.length && (
                     <TableRow>
                       <TableCell
-                        colSpan={7}
+                        colSpan={8}
                         className="h-24 text-center text-sm text-muted-foreground"
                       >
                         Nenhuma resposta encontrada.
@@ -497,7 +581,11 @@ export default function CsCxNps() {
           </Card>
         </TabsContent>
         <TabsContent value="analytics" className="mt-3">
-          <NpsAnalyticsPanel responses={responses} canGenerate={canCreate} />
+          <NpsAnalyticsPanel
+            responses={responses}
+            products={products}
+            canGenerate={canCreate}
+          />
         </TabsContent>
         <TabsContent
           forceMount
@@ -773,6 +861,10 @@ export default function CsCxNps() {
                   }
                 />
                 <ReadOnlyField
+                  label="Produto avaliado"
+                  value={viewing.product?.name ?? "Sem produto informado"}
+                />
+                <ReadOnlyField
                   label="Respondente"
                   value={viewing.respondent_name}
                 />
@@ -819,6 +911,70 @@ export default function CsCxNps() {
               </p>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={Boolean(correctingProduct)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setCorrectingProduct(null);
+            setCorrectedProductId("");
+          }
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Corrigir produto da avaliação</DialogTitle>
+            <DialogDescription>
+              Apenas o produto será alterado. Nota, respostas e comentários
+              permanecerão intactos.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <label
+              className="text-sm font-medium"
+              htmlFor="nps-correct-product"
+            >
+              Produto avaliado
+            </label>
+            <Select
+              value={correctedProductId}
+              onValueChange={setCorrectedProductId}
+            >
+              <SelectTrigger id="nps-correct-product">
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent>
+                {(offices.find(
+                  (office) =>
+                    office.id === correctingProduct?.registry_office_id,
+                )?.products ?? [])
+                  .filter((item) => item.product)
+                  .map((item) => (
+                    <SelectItem key={item.product_id} value={item.product_id}>
+                      {item.product?.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setCorrectingProduct(null);
+                setCorrectedProductId("");
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              disabled={!correctedProductId || updateResponseProduct.isPending}
+              onClick={handleCorrectProduct}
+            >
+              Salvar produto
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

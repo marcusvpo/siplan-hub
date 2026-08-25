@@ -4,6 +4,7 @@ export interface NpsAnalyticsFilters {
   startDate: string;
   endDate: string;
   officeId: string;
+  productId: string;
 }
 
 export interface NpsAnalyticsPoint {
@@ -82,7 +83,12 @@ export const EMPTY_NPS_FILTERS: NpsAnalyticsFilters = {
   startDate: "",
   endDate: "",
   officeId: "all",
+  productId: "all",
 };
+
+export function npsRankingMinPointSize(value: number) {
+  return value === 0 ? 8 : 0;
+}
 
 const monthFormatter = new Intl.DateTimeFormat("pt-BR", {
   month: "short",
@@ -141,7 +147,11 @@ export function filterNpsResponses(
       (!filters.startDate || responseDate >= filters.startDate) &&
       (!filters.endDate || responseDate <= filters.endDate) &&
       (filters.officeId === "all" ||
-        response.registry_office_id === filters.officeId)
+        response.registry_office_id === filters.officeId) &&
+      (filters.productId === "all" ||
+        (filters.productId === "unassigned"
+          ? !response.product_id
+          : response.product_id === filters.productId))
     );
   });
 }
@@ -350,12 +360,13 @@ export function buildNpsAnalytics(
 export function npsFilterDescription(
   filters: NpsAnalyticsFilters,
   office?: string,
+  product?: string,
 ) {
   const period =
     filters.startDate || filters.endDate
       ? `${formatDate(filters.startDate) || "início"} a ${formatDate(filters.endDate) || "hoje"}`
       : "Todo o período";
-  return `${period} · ${office || "Todos os cartórios"}`;
+  return `${period} · ${office || "Todos os cartórios"} · ${product || "Todos os produtos"}`;
 }
 
 export function buildNpsAiSource(

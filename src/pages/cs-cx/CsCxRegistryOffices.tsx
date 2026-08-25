@@ -11,6 +11,7 @@ import {
   PackageCheck,
   Pencil,
   Plus,
+  Printer,
   RefreshCw,
   Search,
   Trash2,
@@ -72,6 +73,7 @@ import {
 } from "@/hooks/useCsCxCore";
 import { useCsCxRoutineLinks } from "@/hooks/useCsCxRoutines";
 import { CsCxMultiSelect } from "@/components/cs-cx/CsCxMultiSelect";
+import { printCsCxRegistryOfficesReport } from "@/lib/cs-cx-registry-offices-report";
 
 interface OfficeProductForm {
   implementation_date: string;
@@ -192,6 +194,7 @@ export default function CsCxRegistryOffices() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState<CsCxRegistryOffice | null>(null);
   const [viewing, setViewing] = useState<CsCxRegistryOffice | null>(null);
+  const [isPrinting, setIsPrinting] = useState(false);
   const formOfficeRoutines = useMemo(
     () =>
       form.id
@@ -250,6 +253,26 @@ export default function CsCxRegistryOffices() {
     () => filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize),
     [filtered, currentPage, pageSize],
   );
+  const reportFilterDescription = useMemo(() => {
+    const responsible = profiles.find(
+      (profile) => profile.id === responsibleFilter,
+    );
+    const selectedProducts = products
+      .filter((product) => productFilters.includes(product.id))
+      .map((product) => product.name);
+    const period =
+      dateFrom || dateTo
+        ? `Cadastro: ${dateFrom ? formatDate(dateFrom) : "início"} até ${dateTo ? formatDate(dateTo) : "hoje"}`
+        : "Cadastro: qualquer período";
+
+    return [
+      period,
+      `Status: ${status === "active" ? "ativos" : status === "inactive" ? "inativos" : "todos"}`,
+      `Responsável: ${responsible?.full_name || responsible?.email || "todos"}`,
+      `Produtos: ${selectedProducts.length ? selectedProducts.join(", ") : "todos"}`,
+      ...(search.trim() ? [`Busca: ${search.trim()}`] : []),
+    ].join(" · ");
+  }, [dateFrom, dateTo, productFilters, products, profiles, responsibleFilter, search, status]);
 
   const updateSearch = (value: string) => {
     setSearch(value);
@@ -396,6 +419,40 @@ export default function CsCxRegistryOffices() {
     }
   };
 
+  const printOffices = async () => {
+    const targetWindow = window.open("", "_blank");
+    if (targetWindow) {
+      targetWindow.opener = null;
+      targetWindow.document.title = "Preparando listagem de cartórios";
+      targetWindow.document.body.innerHTML =
+        '<p style="font:14px Arial;padding:24px">Preparando listagem para impressão...</p>';
+    }
+    setIsPrinting(true);
+    try {
+      await printCsCxRegistryOfficesReport(
+        filtered,
+        reportFilterDescription,
+        targetWindow,
+      );
+      if (!targetWindow) {
+        toast({
+          title: "Listagem gerada",
+          description:
+            "O navegador bloqueou a janela de impressão; o PDF foi baixado.",
+        });
+      }
+    } catch (reportError) {
+      targetWindow?.close();
+      toast({
+        title: "Não foi possível imprimir a listagem",
+        description: errorMessage(reportError),
+        variant: "destructive",
+      });
+    } finally {
+      setIsPrinting(false);
+    }
+  };
+
   return (
     <div className="container mx-auto max-w-[1600px] space-y-4 px-4 py-4 lg:px-6">
       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
@@ -412,11 +469,23 @@ export default function CsCxRegistryOffices() {
             </p>
           </div>
         </div>
-        {canCreate && (
-          <Button size="sm" onClick={openCreate} className="gap-2">
-            <Plus className="h-4 w-4" /> Novo cartório
+        <div className="flex flex-wrap gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={!filtered.length || isPrinting}
+            onClick={() => void printOffices()}
+            className="gap-2"
+          >
+            <Printer className="h-4 w-4" />
+            {isPrinting ? "Gerando..." : "Imprimir listagem"}
           </Button>
-        )}
+          {canCreate && (
+            <Button size="sm" onClick={openCreate} className="gap-2">
+              <Plus className="h-4 w-4" /> Novo cartório
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="grid gap-2 sm:grid-cols-3">

@@ -41,6 +41,7 @@ export interface CsCxNpsInvitation {
   public_token: string;
   questionnaire_id: string;
   registry_office_id: string;
+  product_id: string | null;
   contact_id: string | null;
   recipient_name: string;
   recipient_email: string | null;
@@ -52,6 +53,7 @@ export interface CsCxNpsInvitation {
   created_at: string;
   created_by: string | null;
   registry_office: { id: string; name: string } | null;
+  product: { id: string; name: string; product_code: string | null } | null;
   contact: { id: string; contact_person: string } | null;
   questionnaire: { id: string; title: string } | null;
 }
@@ -59,6 +61,8 @@ export interface CsCxNpsInvitation {
 export interface PublicNpsInvitation {
   status: NpsInvitationStatus;
   office_name?: string;
+  product_id?: string;
+  product_name?: string;
   recipient_name?: string;
   expires_at?: string;
   questionnaire?: NpsQuestionnaireSnapshot;

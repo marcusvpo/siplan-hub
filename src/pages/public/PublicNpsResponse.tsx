@@ -170,6 +170,16 @@ export default function PublicNpsResponse() {
               <p className="font-bold text-slate-900">
                 {invitation.office_name}
               </p>
+              {invitation.product_name && (
+                <>
+                  <span className="mt-2 block text-slate-500">
+                    Produto avaliado
+                  </span>
+                  <p className="font-bold text-slate-900">
+                    {invitation.product_name}
+                  </p>
+                </>
+              )}
             </div>
           </div>
 
