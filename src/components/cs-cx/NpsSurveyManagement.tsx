@@ -109,6 +109,7 @@ export function NpsInvitationsPanel({
   const { toast } = useToast();
   const [page, setPage] = useState(1);
   const [officeId, setOfficeId] = useState("");
+  const [productId, setProductId] = useState("");
   const [contactId, setContactId] = useState("none");
   const [questionnaireId, setQuestionnaireId] = useState("");
   const [recipientName, setRecipientName] = useState("");
@@ -119,6 +120,15 @@ export function NpsInvitationsPanel({
   const filteredContacts = contacts.filter(
     (contact) => contact.registry_office_id === officeId,
   );
+  const selectedOffice = offices.find((office) => office.id === officeId);
+  const availableProducts = (selectedOffice?.products ?? [])
+    .filter((item) => item.product)
+    .sort((left, right) =>
+      (left.product?.name ?? "").localeCompare(
+        right.product?.name ?? "",
+        "pt-BR",
+      ),
+    );
   const totalPages = Math.max(1, Math.ceil(invitations.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
   const paged = invitations.slice(
@@ -130,6 +140,7 @@ export function NpsInvitationsPanel({
     if (!requestOpen) return;
     setGeneratedLink("");
     setOfficeId("");
+    setProductId("");
     setContactId("none");
     setRecipientName("");
     setRecipientEmail("");
@@ -162,6 +173,7 @@ export function NpsInvitationsPanel({
       const invitation = await createInvitation.mutateAsync({
         questionnaire_id: questionnaireId,
         registry_office_id: officeId,
+        product_id: productId,
         contact_id: contactId === "none" ? undefined : contactId,
         recipient_name: recipientName,
         recipient_email: recipientEmail,
@@ -218,6 +230,7 @@ export function NpsInvitationsPanel({
             <TableHeader>
               <TableRow>
                 <TableHead>Cliente</TableHead>
+                <TableHead>Produto</TableHead>
                 <TableHead>Destinatário</TableHead>
                 <TableHead>Questionário</TableHead>
                 <TableHead>Criado</TableHead>
@@ -233,6 +246,11 @@ export function NpsInvitationsPanel({
                   <TableRow key={invitation.id}>
                     <TableCell className="max-w-64 truncate font-medium">
                       {invitation.registry_office?.name}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">
+                        {invitation.product?.name ?? "Sem produto"}
+                      </Badge>
                     </TableCell>
                     <TableCell>
                       <p className="font-medium">{invitation.recipient_name}</p>
@@ -288,7 +306,7 @@ export function NpsInvitationsPanel({
               {!invitations.length && (
                 <TableRow>
                   <TableCell
-                    colSpan={7}
+                    colSpan={8}
                     className="h-28 text-center text-sm text-muted-foreground"
                   >
                     Nenhuma solicitação criada. Use “Solicitar NPS” para gerar o
@@ -349,11 +367,12 @@ export function NpsInvitationsPanel({
                   value={officeId}
                   onValueChange={(value) => {
                     setOfficeId(value);
+                    setProductId("");
                     setContactId("none");
                     setRecipientName("");
                   }}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger aria-label="Cartório/cliente">
                     <SelectValue placeholder="Selecione" />
                   </SelectTrigger>
                   <SelectContent>
@@ -364,6 +383,30 @@ export function NpsInvitationsPanel({
                           {office.name}
                         </SelectItem>
                       ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+              <Field label="Produto avaliado">
+                <Select
+                  value={productId}
+                  disabled={!officeId || !availableProducts.length}
+                  onValueChange={setProductId}
+                >
+                  <SelectTrigger aria-label="Produto avaliado">
+                    <SelectValue
+                      placeholder={
+                        officeId && !availableProducts.length
+                          ? "Nenhum produto vinculado"
+                          : "Selecione"
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableProducts.map((item) => (
+                      <SelectItem key={item.product_id} value={item.product_id}>
+                        {item.product?.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </Field>
@@ -449,6 +492,7 @@ export function NpsInvitationsPanel({
                 disabled={
                   !canCreate ||
                   !officeId ||
+                  !productId ||
                   !questionnaireId ||
                   !recipientName.trim() ||
                   createInvitation.isPending

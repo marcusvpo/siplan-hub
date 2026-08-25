@@ -3,7 +3,10 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
 const hasPermission = vi.fn();
-const { printRequestsReport } = vi.hoisted(() => ({ printRequestsReport: vi.fn() }));
+const { printOfficesReport, printRequestsReport } = vi.hoisted(() => ({
+  printOfficesReport: vi.fn(),
+  printRequestsReport: vi.fn(),
+}));
 
 vi.mock("@/hooks/usePermissions", () => ({
   usePermissions: () => ({ hasPermission }),
@@ -18,6 +21,10 @@ vi.mock("@/hooks/use-toast", () => ({
 
 vi.mock("@/lib/cs-cx-requests-report", () => ({
   printCsCxRequestsReport: printRequestsReport,
+}));
+
+vi.mock("@/lib/cs-cx-registry-offices-report", () => ({
+  printCsCxRegistryOfficesReport: printOfficesReport,
 }));
 
 const mutation = { mutateAsync: vi.fn(), isPending: false };
@@ -89,7 +96,7 @@ vi.mock("@/hooks/useCsCxCore", async (importOriginal) => {
         description: index === 0 ? "Ajustar integração" : `Solicitação ${index + 1}`,
         module: "Notas",
         requester: "Maria",
-        responsible: "João",
+        responsible: index === 1 ? "Henrique Troiano" : index === 2 ? "" : "João",
         requested_on: index === 0 ? "2026-08-01" : "2026-07-01",
         expected_delivery_on: null,
         delivered_on: null,
@@ -166,6 +173,8 @@ describe("CS/CX — ações por permissão", () => {
     deleteRoutineMutation.mutateAsync.mockReset();
     updateObservationMutation.mutateAsync.mockReset();
     deleteObservationMutation.mutateAsync.mockReset();
+    printOfficesReport.mockReset();
+    printOfficesReport.mockResolvedValue(undefined);
     printRequestsReport.mockReset();
     printRequestsReport.mockResolvedValue(undefined);
   });
@@ -247,6 +256,18 @@ describe("CS/CX — ações por permissão", () => {
 
     expect(screen.getByText("Cartório 6")).toBeInTheDocument();
     expect(screen.getByLabelText("Mostrando 6 a 10 de 12 cartórios")).toBeInTheDocument();
+  });
+
+  it("imprime todos os cartórios filtrados, não apenas a página atual", async () => {
+    const openWindow = vi.spyOn(window, "open").mockReturnValue(null);
+    renderPage(<CsCxRegistryOffices />, []);
+
+    fireEvent.click(screen.getByRole("button", { name: /imprimir listagem/i }));
+
+    await waitFor(() => expect(printOfficesReport).toHaveBeenCalledTimes(1));
+    expect(printOfficesReport.mock.calls[0][0]).toHaveLength(12);
+    expect(printOfficesReport.mock.calls[0][1]).toContain("Status: todos");
+    openWindow.mockRestore();
   });
 
   it("filtra cartórios por responsável, produtos combinados e período", async () => {
@@ -336,6 +357,27 @@ describe("CS/CX — ações por permissão", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /filtrar por total: 12 solicitações/i }));
     expect(screen.getByLabelText("Mostrando 1 a 5 de 12 solicitações")).toBeInTheDocument();
+  });
+
+  it("filtra solicitações pelo responsável selecionado", async () => {
+    renderPage(<CsCxRequests />, []);
+
+    const responsibleFilter = screen.getByRole("combobox", {
+      name: "Filtrar solicitações por responsável",
+    });
+    fireEvent.keyDown(responsibleFilter, { key: "ArrowDown" });
+    fireEvent.click(
+      await screen.findByRole("option", { name: "Henrique Troiano" }),
+    );
+
+    expect(screen.getByLabelText("Mostrando 1 a 1 de 1 solicitações")).toBeInTheDocument();
+    expect(screen.getByText("CH-101")).toBeInTheDocument();
+    expect(screen.queryByText("CH-123")).not.toBeInTheDocument();
+
+    fireEvent.keyDown(responsibleFilter, { key: "ArrowDown" });
+    fireEvent.click(await screen.findByRole("option", { name: "Sem responsável" }));
+    expect(screen.getByText("CH-102")).toBeInTheDocument();
+    expect(screen.queryByText("CH-101")).not.toBeInTheDocument();
   });
 
   it("filtra solicitações por período e imprime somente o resultado", async () => {

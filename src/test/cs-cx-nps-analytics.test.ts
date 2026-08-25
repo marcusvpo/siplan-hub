@@ -4,6 +4,7 @@ import {
   buildNpsAiSource,
   buildNpsAnalytics,
   filterNpsResponses,
+  npsRankingMinPointSize,
 } from "@/lib/cs-cx-nps-analytics";
 
 const responses: CsCxNpsResponse[] = [
@@ -48,9 +49,31 @@ describe("BI de NPS", () => {
       startDate: "2026-02-01",
       endDate: "2026-02-28",
       officeId: "office-b",
+      productId: "all",
     });
 
     expect(filtered.map((item) => item.id)).toEqual(["3"]);
+  });
+
+  it("separa as avaliações pelo produto selecionado", () => {
+    const productResponses = [
+      { ...responses[0], product_id: "orion-tn", product: { id: "orion-tn", name: "OrionTN", product_code: "ORIONTN" } },
+      { ...responses[1], product_id: "orion-pro", product: { id: "orion-pro", name: "OrionPRO", product_code: "ORIONPRO" } },
+      responses[2],
+    ];
+
+    expect(filterNpsResponses(productResponses, {
+      startDate: "",
+      endDate: "",
+      officeId: "all",
+      productId: "orion-tn",
+    }).map((item) => item.id)).toEqual(["1"]);
+    expect(filterNpsResponses(productResponses, {
+      startDate: "",
+      endDate: "",
+      officeId: "all",
+      productId: "unassigned",
+    }).map((item) => item.id)).toEqual(["3"]);
   });
 
   it("ordena o ranking por NPS e usa a resposta mais recente no empate", () => {
@@ -68,6 +91,12 @@ describe("BI de NPS", () => {
       ["Cartório Detrator", -100],
     ]);
     expect(ranking[0].latestResponseAt).toBe("2026-03-03T12:00:00Z");
+  });
+
+  it("mantém NPS zero visível como marcador sem distorcer outros valores", () => {
+    expect(npsRankingMinPointSize(0)).toBe(8);
+    expect(npsRankingMinPointSize(100)).toBe(0);
+    expect(npsRankingMinPointSize(-100)).toBe(0);
   });
 
   it("prepara evidências para a IA sem expor o nome do respondente", () => {
@@ -127,6 +156,7 @@ function response(
     id,
     legacy_id: null,
     registry_office_id: registryOfficeId,
+    product_id: null,
     responded_at: respondedAt,
     respondent_name: respondent,
     respondent_office: office,
@@ -140,5 +170,6 @@ function response(
     questionnaire_snapshot: null,
     answers: {},
     registry_office: { id: registryOfficeId, name: office },
+    product: null,
   };
 }
