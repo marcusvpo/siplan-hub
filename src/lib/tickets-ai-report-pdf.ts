@@ -1,6 +1,6 @@
 import type { ChamadoReportRow } from "@/hooks/useChamados0800";
 import type { ChamadosReportFilters } from "@/lib/chamados-report-pdf";
-import { formatOrionProductLabel } from "@/lib/chamados-product-filter";
+import { getChamadosProductLabel } from "@/lib/chamados-catalog";
 import {
   buildTicketsAiAnalytics,
   ticketDaysOpen,
@@ -53,7 +53,8 @@ export async function generateTicketsAiAnalysisPdf(
 
   const { jsPDF } = await import("jspdf");
   const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
-  const analytics = buildTicketsAiAnalytics(rows);
+  const catalog = filters.catalog ?? "orion";
+  const analytics = buildTicketsAiAnalytics(rows, catalog);
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
   const marginX = 12;
@@ -102,7 +103,13 @@ export async function generateTicketsAiAnalysisPdf(
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(16);
   pdf.setTextColor(20, 25, 35);
-  pdf.text("Análise de Chamados IA - Ellevo/0800", marginX, y);
+  pdf.text(
+    catalog === "legacy"
+      ? "Análise de Chamados IA - Ellevo/0800 - Legado"
+      : "Análise de Chamados IA - Ellevo/0800",
+    marginX,
+    y,
+  );
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(7.5);
   pdf.setTextColor(...MUTED);
@@ -111,13 +118,16 @@ export async function generateTicketsAiAnalysisPdf(
   });
   y += 6;
 
-  const productLabel =
-    !filters.product || filters.product === "todos"
-      ? "Todos os produtos Orion"
-      : formatOrionProductLabel(filters.product);
+  const productLabel = catalog === "legacy"
+    ? filters.products?.length ? filters.products.join(", ") : "Todos os produtos"
+    : getChamadosProductLabel(filters.product, catalog);
+  const softwareLabel = filters.softwares?.length
+    ? filters.softwares.join(", ")
+    : "Todos os softwares";
   const filterText = [
     `Período: ${formatDate(filters.startDate)} a ${formatDate(filters.endDate)}`,
     `Produto: ${productLabel}`,
+    ...(catalog === "legacy" ? [`Software: ${softwareLabel}`] : []),
     `Natureza: ${!filters.nature || filters.nature === "todas" ? "Todas" : filters.nature}`,
     `Status: ${filters.statuses.length ? filters.statuses.join(", ") : "Todos"}`,
     `Clientes: ${summarizeClients(filters.clients)}`,
@@ -373,5 +383,5 @@ export async function generateTicketsAiAnalysisPdf(
     pdf.text(`Página ${page} de ${totalPages}`, pageWidth - marginX, pageHeight - 5, { align: "right" });
   }
 
-  pdf.save(`analise-chamados-ia-${localIsoDate()}.pdf`);
+  pdf.save(`analise-chamados-ia${catalog === "legacy" ? "-legado" : ""}-${localIsoDate()}.pdf`);
 }

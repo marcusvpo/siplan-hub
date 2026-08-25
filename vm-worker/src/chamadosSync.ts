@@ -48,8 +48,11 @@ interface ProjectRow {
   post_end_date: string | null;
 }
 
+type ProcessoVendaScope = "processo_venda" | "processo_venda_legado";
+
 interface ProcessoVendaSyncRequest {
   id: string;
+  scope: ProcessoVendaScope;
   start_date: string;
   end_date: string;
   requested_by: string | null;
@@ -60,6 +63,8 @@ interface ProcessoVendaSyncFilters {
   client_codes?: string[];
   client_names?: string[];
   product?: string | null;
+  products?: string[];
+  softwares?: string[];
   nature?: string | null;
   statuses?: string[];
   search_term?: string | null;
@@ -69,6 +74,53 @@ interface ProcessoVendaSyncResult {
   detail: string;
   ticketNumbers: string[];
 }
+
+const PROCESSO_VENDA_SCOPES: ProcessoVendaScope[] = [
+  "processo_venda",
+  "processo_venda_legado",
+];
+
+const PROCESSO_VENDA_CATALOGS: Record<ProcessoVendaScope, {
+  sourceView: string;
+  label: string;
+  legacy: boolean;
+}> = {
+  processo_venda: {
+    sourceView: "dbo.vw_2026_HUB_CONSULTA_CHAMADOS_ORION",
+    label: "orion",
+    legacy: false,
+  },
+  processo_venda_legado: {
+    sourceView: `(
+      SELECT DISTINCT
+             c.NumeroChamado,
+             c.CardCode0800 AS codigoCliente,
+             cliente.NomeCliente,
+             cliente.NomeCliente AS RazaoSocialCliente,
+             c.TituloChamado,
+             CAST(c.DescricaoChamado AS nvarchar(max)) AS descricaotramite,
+             c.natureza AS Natureza,
+             c.StatusChamado,
+             c.Software,
+             c.Produto,
+             c.DataAberturaChamado,
+             c.DataEncerramentoChamado AS SolDataFechamento
+      FROM dbo.vw_2026_ChamadosTodosStatus AS c
+      CROSS APPLY (
+        VALUES (
+          CASE
+            WHEN CHARINDEX(' - Chamado:', c.ClienteChamado) > 0
+              THEN LEFT(c.ClienteChamado, CHARINDEX(' - Chamado:', c.ClienteChamado) - 1)
+            ELSE c.ClienteChamado
+          END
+        )
+      ) AS cliente (NomeCliente)
+      WHERE LTRIM(RTRIM(c.Produto)) IN ('Siplan', 'Control-M', 'Global')
+    ) AS chamados_legado`,
+    label: "legado",
+    legacy: true,
+  },
+};
 
 interface ProcessoVendaRunControl {
   cancelled: boolean;
@@ -164,6 +216,8 @@ function normalizeProcessoVendaFilters(
     client_codes: cleanFilterValues(filters?.client_codes),
     client_names: cleanFilterValues(filters?.client_names),
     product: typeof filters?.product === "string" ? filters.product.trim() : null,
+    products: cleanFilterValues(filters?.products),
+    softwares: cleanFilterValues(filters?.softwares),
     nature: typeof filters?.nature === "string" ? filters.nature.trim() : null,
     statuses: cleanFilterValues(filters?.statuses)
       .map((status) => normalizeChamadoStatus(status))
@@ -432,8 +486,10 @@ async function runProcessoVendaOnce(
   startDate: string,
   endDate: string,
   requestedFilters: ProcessoVendaSyncFilters = {},
-  control?: ProcessoVendaRunControl
+  control?: ProcessoVendaRunControl,
+  scope: ProcessoVendaScope = "processo_venda",
 ): Promise<ProcessoVendaSyncResult> {
+  const catalog = PROCESSO_VENDA_CATALOGS[scope];
   const pool = await new sql.ConnectionPool({
     server: config.mssqlHost,
     port: config.mssqlPort,
@@ -475,12 +531,35 @@ async function runProcessoVendaOnce(
       );
     }
 
-    const productPattern = getWorkerOrionProductPattern(filters.product);
-    if (productPattern) {
-      chamadoRequest.input("softwarePattern", sql.NVarChar(100), productPattern);
-      whereClauses.push(
-        "LTRIM(RTRIM(Software)) COLLATE Latin1_General_CI_AI LIKE @softwarePattern"
-      );
+    if (catalog.legacy) {
+      if (filters.products && filters.products.length > 0) {
+        const parameters = filters.products.map((product, index) => {
+          const name = `product${index}`;
+          chamadoRequest.input(name, sql.NVarChar(100), product);
+          return `@${name}`;
+        });
+        whereClauses.push(
+          `LTRIM(RTRIM(Produto)) COLLATE Latin1_General_CI_AI IN (${parameters.join(", ")})`
+        );
+      }
+      if (filters.softwares && filters.softwares.length > 0) {
+        const parameters = filters.softwares.map((software, index) => {
+          const name = `software${index}`;
+          chamadoRequest.input(name, sql.NVarChar(300), software);
+          return `@${name}`;
+        });
+        whereClauses.push(
+          `LTRIM(RTRIM(Software)) COLLATE Latin1_General_CI_AI IN (${parameters.join(", ")})`
+        );
+      }
+    } else {
+      const productPattern = getWorkerOrionProductPattern(filters.product);
+      if (productPattern) {
+        chamadoRequest.input("softwarePattern", sql.NVarChar(100), productPattern);
+        whereClauses.push(
+          "LTRIM(RTRIM(Software)) COLLATE Latin1_General_CI_AI LIKE @softwarePattern"
+        );
+      }
     }
 
     if (filters.nature && filters.nature.toLowerCase() !== "todas") {
@@ -515,14 +594,14 @@ async function runProcessoVendaOnce(
       whereClauses.push(`(${searchParts.join(" OR ")})`);
     }
 
-    // View exclusiva da Consulta de Chamados: ja entrega uma linha por chamado,
-    // somente produtos Orion e sem o join 1:N de itens de venda/faturamento.
+    // A view do catalogo ja entrega uma linha por chamado e sem o join 1:N de
+    // itens de venda/faturamento.
     // O periodo continua no SQL para o otimizador consultar apenas a janela.
     const res = await executeControlledQuery<ProcessoVendaViewRow>(chamadoRequest, `
       SELECT NumeroChamado, codigoCliente, NomeCliente, RazaoSocialCliente,
              TituloChamado, descricaotramite, Natureza, StatusChamado,
              Software, Produto, DataAberturaChamado, SolDataFechamento
-      FROM dbo.vw_2026_HUB_CONSULTA_CHAMADOS_ORION
+      FROM ${catalog.sourceView}
       WHERE ${whereClauses.join("\n        AND ")}
     `, control);
 
@@ -590,7 +669,6 @@ async function runProcessoVendaOnce(
         FROM plataformaellevo..vw_ChamadosTodosStatus_Tramites_Tempos
         WHERE DataAberturaChamado >= @startDate
           AND DataAberturaChamado < DATEADD(DAY, 1, @endDate)
-          AND LTRIM(RTRIM(Software)) LIKE 'Orion%'
           AND CONVERT(varchar(50), NumeroChamado) IN (${ticketParameters.join(", ")})
           AND SequenciaTramite IS NOT NULL
           AND NULLIF(LTRIM(RTRIM(CAST(descricaotramite AS nvarchar(max)))), '') IS NOT NULL
@@ -643,7 +721,7 @@ async function runProcessoVendaOnce(
     const detail =
       `${rows.length} chamados e ${tramites.length} tramites sincronizados ` +
       `no periodo ${startDate} a ${endDate}`;
-    console.log(`[processo-venda-sync] ok: ${detail}`);
+    console.log(`[processo-venda-sync:${catalog.label}] ok: ${detail}`);
     return { detail, ticketNumbers };
   } finally {
     await pool.close();
@@ -673,8 +751,8 @@ function isoDateDaysAgo(days: number): string {
 async function getPendingProcessoVendaRequest(): Promise<ProcessoVendaSyncRequest | null> {
   const { data, error } = await supabase
     .from("chamados_sync_requests")
-    .select("id, start_date, end_date, requested_by, filters")
-    .eq("scope", "processo_venda")
+    .select("id, scope, start_date, end_date, requested_by, filters")
+    .in("scope", PROCESSO_VENDA_SCOPES)
     .eq("status", "pending")
     .order("created_at", { ascending: true })
     .limit(1)
@@ -691,7 +769,7 @@ async function recoverInterruptedProcessoVendaRequests(): Promise<void> {
       detail: "Retomada apos reinicio do worker.",
       finished_at: null,
     })
-    .eq("scope", "processo_venda")
+    .in("scope", PROCESSO_VENDA_SCOPES)
     .eq("status", "processing");
   if (error) throw new Error(`recover processo venda requests: ${error.message}`);
 }
@@ -699,8 +777,8 @@ async function recoverInterruptedProcessoVendaRequests(): Promise<void> {
 async function supersedeDuplicatePendingRequests(): Promise<void> {
   const { data, error } = await supabase
     .from("chamados_sync_requests")
-    .select("id, requested_by, created_at")
-    .eq("scope", "processo_venda")
+    .select("id, scope, requested_by, created_at")
+    .in("scope", PROCESSO_VENDA_SCOPES)
     .eq("status", "pending")
     .order("created_at", { ascending: false });
   if (error) throw new Error(`coalesce processo venda requests: ${error.message}`);
@@ -708,7 +786,7 @@ async function supersedeDuplicatePendingRequests(): Promise<void> {
   const newestByRequester = new Set<string>();
   const supersededIds: string[] = [];
   for (const row of data || []) {
-    const requesterKey = row.requested_by || "__sem_solicitante__";
+    const requesterKey = `${row.scope}:${row.requested_by || "__sem_solicitante__"}`;
     if (newestByRequester.has(requesterKey)) supersededIds.push(row.id);
     else newestByRequester.add(requesterKey);
   }
@@ -826,7 +904,8 @@ export function startProcessoVendaSync(): void {
             request.start_date,
             request.end_date,
             request.filters || {},
-            control
+            control,
+            request.scope,
           );
           await resolveProcessoVendaRequest(
             request.id,
@@ -870,12 +949,11 @@ export function startProcessoVendaSync(): void {
     };
     activeProcessoVendaGeneralControl = control;
     try {
-      await runProcessoVendaOnce(
-        isoDateDaysAgo(Math.max(config.processoVendaSyncDays - 1, 0)),
-        isoDateDaysAgo(0),
-        {},
-        control
-      );
+      const startDate = isoDateDaysAgo(Math.max(config.processoVendaSyncDays - 1, 0));
+      const endDate = isoDateDaysAgo(0);
+      for (const scope of PROCESSO_VENDA_SCOPES) {
+        await runProcessoVendaOnce(startDate, endDate, {}, control, scope);
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       if (control.cancelled) {
@@ -916,14 +994,21 @@ export function startProcessoVendaSync(): void {
         event: "INSERT",
         schema: "public",
         table: "chamados_sync_requests",
-        filter: "scope=eq.processo_venda",
       },
       (payload) => {
-        const inserted = payload.new as { id?: string; requested_by?: string | null };
+        const inserted = payload.new as {
+          id?: string;
+          requested_by?: string | null;
+          scope?: string;
+        };
+        if (!PROCESSO_VENDA_SCOPES.includes(inserted.scope as ProcessoVendaScope)) {
+          return;
+        }
         const active = activeProcessoVendaRequest;
         if (
           active
           && inserted.id !== active.request.id
+          && inserted.scope === active.request.scope
           && inserted.requested_by
           && inserted.requested_by === active.request.requested_by
         ) {

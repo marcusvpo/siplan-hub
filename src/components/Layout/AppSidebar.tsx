@@ -68,7 +68,7 @@ export function AppSidebar() {
   }, [location.pathname, isMobile, setOpenMobile]);
   const [isDashboardOpen, setIsDashboardOpen] = useState(
     location.pathname.startsWith("/dashboard") ||
-      location.pathname === "/deployments/tickets",
+      location.pathname.startsWith("/deployments/tickets"),
   );
   const [isImplantacaoOpen, setIsImplantacaoOpen] = useState(false);
   const [isCalendarioOpen, setIsCalendarioOpen] = useState(false);
@@ -128,6 +128,7 @@ export function AppSidebar() {
     ["pos_panorama", "/dashboard/pos-implantacao"],
     ["pos_panorama_geral", "/dashboard/pos-panorama-geral"],
     ["chamados_query", "/deployments/tickets"],
+    ["chamados_legacy_query", "/deployments/tickets-legacy"],
   );
   const rotaImplantacao = primeiraRota(
     ["projects", "/projects"],
@@ -361,6 +362,18 @@ export function AppSidebar() {
                       </Button>
                     </Link>
                   )}
+                  {can("chamados_legacy_query") && (
+                    <Link to="/deployments/tickets-legacy">
+                      <Button
+                        variant={isActive("/deployments/tickets-legacy") ? "secondary" : "ghost"}
+                        size="sm"
+                        className="w-full justify-start gap-3 h-9"
+                      >
+                        <ClipboardList className="h-4 w-4" />
+                        <span>Chamados (Legado)</span>
+                      </Button>
+                    </Link>
+                  )}
                 </div>
               </CollapsibleContent>
             </Collapsible>
@@ -369,7 +382,8 @@ export function AppSidebar() {
               <Button
                 variant={
                   location.pathname.startsWith("/dashboard") ||
-                    isActive("/deployments/tickets")
+                    isActive("/deployments/tickets") ||
+                    isActive("/deployments/tickets-legacy")
                     ? "secondary"
                     : "ghost"
                 }

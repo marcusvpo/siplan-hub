@@ -30,9 +30,15 @@ import {
 } from "@/lib/chamados-date-range";
 import {
   CHAMADOS_ORION_PRODUCTS,
-  formatOrionProductLabel,
   getOrionProductPattern,
 } from "@/lib/chamados-product-filter";
+import {
+  CHAMADOS_CATALOG_CONFIG,
+  CHAMADOS_LEGACY_PRODUCT_GROUPS,
+  LEGACY_PRODUCT_FAMILIES,
+  formatChamadosProductLabel,
+  type ChamadosCatalog,
+} from "@/lib/chamados-catalog";
 import { CHAMADO_STATUS_OPTIONS } from "@/lib/chamados-status";
 import { generateChamadosReportPdf } from "@/lib/chamados-report-pdf";
 import {
@@ -52,7 +58,100 @@ interface ChamadosClientOption {
   aliases: string[];
 }
 
-export default function DeploymentsTickets() {
+interface DeploymentsTicketsProps {
+  catalog?: ChamadosCatalog;
+}
+
+interface TicketFilterOption {
+  value: string;
+  label: string;
+}
+
+function TicketFilterMultiSelect({
+  values,
+  options,
+  placeholder,
+  searchPlaceholder,
+  onChange,
+  disabled = false,
+}: {
+  values: string[];
+  options: TicketFilterOption[];
+  placeholder: string;
+  searchPlaceholder: string;
+  onChange: (values: string[]) => void;
+  disabled?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const selectedLabels = options
+    .filter((option) => values.includes(option.value))
+    .map((option) => option.label);
+  const label = selectedLabels.length === 0
+    ? placeholder
+    : selectedLabels.length === 1
+      ? selectedLabels[0]
+      : `${selectedLabels.length} selecionados`;
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          disabled={disabled}
+          className="h-7 w-full justify-between px-2 font-normal text-[11px]"
+        >
+          <span className={cn("truncate", values.length === 0 && "text-muted-foreground")}>{label}</span>
+          <ChevronsUpDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+        <Command filter={(value, search) => (
+          normalizeSearchText(value).includes(normalizeSearchText(search)) ? 1 : 0
+        )}>
+          <CommandInput placeholder={searchPlaceholder} className="h-8 text-xs" />
+          <CommandList className="max-h-[260px] overflow-y-auto">
+            <CommandEmpty>Nenhuma opção encontrada.</CommandEmpty>
+            <CommandGroup>
+              <CommandItem
+                value={placeholder}
+                className="py-1.5 text-xs"
+                onSelect={() => onChange([])}
+              >
+                <Check className={cn("mr-2 h-3.5 w-3.5", values.length === 0 ? "opacity-100" : "opacity-0")} />
+                {placeholder}
+              </CommandItem>
+              {options.map((option) => {
+                const selected = values.includes(option.value);
+                return (
+                  <CommandItem
+                    key={option.value}
+                    value={option.label}
+                    className="py-1.5 text-xs"
+                    onSelect={() => onChange(
+                      selected
+                        ? values.filter((value) => value !== option.value)
+                        : [...values, option.value],
+                    )}
+                  >
+                    <Check className={cn("mr-2 h-3.5 w-3.5", selected ? "opacity-100" : "opacity-0")} />
+                    {option.label}
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTicketsProps) {
+  const catalogConfig = CHAMADOS_CATALOG_CONFIG[catalog];
+  const isLegacy = catalog === "legacy";
   const defaultDateRange = useMemo(() => getDefaultChamadosDateRange(), []);
 
   // Filtros
@@ -60,6 +159,8 @@ export default function DeploymentsTickets() {
   const [dataFim, setDataFim] = useState<string>(defaultDateRange.endDate);
   const [selectedClients, setSelectedClients] = useState<string[]>([]);
   const [produto, setProduto] = useState<string>("todos");
+  const [selectedLegacyProducts, setSelectedLegacyProducts] = useState<string[]>([]);
+  const [selectedLegacySoftware, setSelectedLegacySoftware] = useState<string[]>([]);
   const [natureza, setNatureza] = useState<string>("todas");
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [busca, setBusca] = useState<string>("");
@@ -87,16 +188,34 @@ export default function DeploymentsTickets() {
   }>());
   const syncingRanges = useRef(new Set<string>());
   const { solicitarSync: solicitarSyncPeriodo, syncing: syncingPeriodo } =
-    useSolicitarSyncProcessoVenda();
+    useSolicitarSyncProcessoVenda(catalog);
+
+  const legacyProductOptions = useMemo<TicketFilterOption[]>(
+    () => LEGACY_PRODUCT_FAMILIES.map((family) => ({ value: family, label: family })),
+    [],
+  );
+  const legacySoftwareOptions = useMemo<TicketFilterOption[]>(() => {
+    const selectedFamilies = selectedLegacyProducts.length > 0
+      ? new Set(selectedLegacyProducts)
+      : null;
+    const systems = CHAMADOS_LEGACY_PRODUCT_GROUPS
+      .filter((group) => !selectedFamilies || selectedFamilies.has(group.family))
+      .flatMap((group) => [...group.products]);
+    return [...new Set(systems)]
+      .sort((left, right) => left.localeCompare(right, "pt-BR"))
+      .map((software) => ({ value: software, label: software }));
+  }, [selectedLegacyProducts]);
 
   const { data: clientOptions = [], isLoading: loadingClients } = useQuery<ChamadosClientOption[]>({
     // Versao do cache alterada quando a RPC passou a usar o catalogo rapido de
     // aliases. Evita preservar por cinco minutos o fallback incompleto.
-    queryKey: ["chamadosClientOptions", "catalog-v1"],
+    queryKey: ["chamadosClientOptions", catalog, "catalog-v1"],
     queryFn: async () => {
       // 1. Tenta a RPC para performance
       try {
-        const { data, error } = await supabase.rpc("get_chamados_client_options");
+        const { data, error } = await supabase.rpc(
+          isLegacy ? "get_chamados_legacy_client_options" : "get_chamados_client_options"
+        );
         if (error) throw error;
         if (data && Array.isArray(data) && data.length > 0) {
           return data
@@ -114,10 +233,13 @@ export default function DeploymentsTickets() {
 
       // 2. Tenta obter diretamente da tabela chamados_processo_venda
       try {
-        const { data, error } = await supabase
+        let query = supabase
           .from("chamados_processo_venda")
-          .select("nome_cliente")
-          .ilike("software", getOrionProductPattern("todos"));
+          .select("nome_cliente");
+        query = isLegacy
+          ? query.in("produto", [...LEGACY_PRODUCT_FAMILIES])
+          : query.ilike("software", getOrionProductPattern("todos"));
+        const { data, error } = await query;
         if (!error && data) {
           const names = data.map((row: { nome_cliente?: string | null }) => row.nome_cliente).filter(Boolean);
           if (names.length > 0) {
@@ -134,7 +256,9 @@ export default function DeploymentsTickets() {
         console.warn("Consulta direta à tabela chamados_processo_venda falhou:", e);
       }
 
-      // 3. Fallback final na tabela projects
+      if (isLegacy) return [];
+
+      // 3. Fallback final na tabela projects (somente catÃ¡logo Orion)
       try {
         const { data: projs, error: projsErr } = await supabase
           .from("projects")
@@ -216,14 +340,26 @@ export default function DeploymentsTickets() {
     // atualizados priorizam clientCodes e deixam de depender do nome.
     clientNames: selectedClientFilterNames.length > 0 ? selectedClientFilterNames : null,
     product: produto,
+    products: isLegacy && selectedLegacyProducts.length > 0 ? selectedLegacyProducts : null,
+    softwares: isLegacy && selectedLegacySoftware.length > 0 ? selectedLegacySoftware : null,
     nature: natureza,
     statuses: selectedStatuses.length > 0 ? selectedStatuses : null,
     searchTerm: busca || null,
-  }), [selectedClientCodes, selectedClientFilterNames, produto, natureza, selectedStatuses, busca]);
+  }), [
+    busca,
+    isLegacy,
+    natureza,
+    produto,
+    selectedClientCodes,
+    selectedClientFilterNames,
+    selectedLegacyProducts,
+    selectedLegacySoftware,
+    selectedStatuses,
+  ]);
 
   const filterSyncKey = useMemo(
-    () => JSON.stringify([dataInicio, dataFim, syncFilters]),
-    [dataInicio, dataFim, syncFilters]
+    () => JSON.stringify([catalog, dataInicio, dataFim, syncFilters]),
+    [catalog, dataInicio, dataFim, syncFilters]
   );
 
   useEffect(() => {
@@ -280,13 +416,36 @@ export default function DeploymentsTickets() {
   ]);
 
   const { data: naturezas = [], isLoading: loadingNaturezas } = useQuery<string[]>({
-    queryKey: ["distinctProcessoVendaNaturezas", dataInicio, dataFim, selectedClientCodes, selectedClientFilterNames, produto],
+    queryKey: [
+      "distinctProcessoVendaNaturezas",
+      catalog,
+      dataInicio,
+      dataFim,
+      selectedClientCodes,
+      selectedClientFilterNames,
+      produto,
+      selectedLegacyProducts,
+      selectedLegacySoftware,
+    ],
     queryFn: async () => {
       let q = supabase
         .from("chamados_processo_venda")
         .select("natureza")
-        .not("natureza", "is", null)
-        .ilike("software", getOrionProductPattern(produto));
+        .not("natureza", "is", null);
+
+      if (isLegacy) {
+        q = q.in(
+          "produto",
+          selectedLegacyProducts.length > 0
+            ? selectedLegacyProducts
+            : [...LEGACY_PRODUCT_FAMILIES],
+        );
+        if (selectedLegacySoftware.length > 0) {
+          q = q.in("software", selectedLegacySoftware);
+        }
+      } else {
+        q = q.ilike("software", getOrionProductPattern(produto));
+      }
 
       if (dataInicio) q = q.gte("data_abertura", dataInicio);
       if (dataFim) q = q.lte("data_abertura", dataFim);
@@ -316,11 +475,14 @@ export default function DeploymentsTickets() {
 
   // Query principal dos chamados usando o hook recém-criado
   const { chamados, totalCount, isLoading, error } = useChamadosSearch({
+    catalog,
     startDate: dataInicio || null,
     endDate: dataFim || null,
     clientCodes: selectedClientCodes.length > 0 ? selectedClientCodes : null,
     clientNames: selectedClientFilterNames.length > 0 ? selectedClientFilterNames : null,
     product: produto,
+    products: isLegacy && selectedLegacyProducts.length > 0 ? selectedLegacyProducts : null,
+    softwares: isLegacy && selectedLegacySoftware.length > 0 ? selectedLegacySoftware : null,
     nature: natureza,
     searchTerm: busca || null,
     statuses: selectedStatuses.length > 0 ? selectedStatuses : null,
@@ -356,6 +518,8 @@ export default function DeploymentsTickets() {
     setDataFim(defaultDateRange.endDate);
     setSelectedClients([]);
     setProduto("todos");
+    setSelectedLegacyProducts([]);
+    setSelectedLegacySoftware([]);
     setNatureza("todas");
     setSelectedStatuses([]);
     setBusca("");
@@ -404,20 +568,26 @@ export default function DeploymentsTickets() {
       );
 
       const reportFilters = {
+        catalog,
         startDate: dataInicio,
         endDate: dataFim,
         clients: selectedClients,
         product: produto,
+        products: selectedLegacyProducts,
+        softwares: selectedLegacySoftware,
         nature: natureza,
         statuses: selectedStatuses,
         searchTerm: busca,
       };
       const reportSearchFilters = {
+        catalog,
         startDate: dataInicio,
         endDate: dataFim,
         clientCodes: selectedClientCodes.length > 0 ? selectedClientCodes : null,
         clientNames: selectedClientFilterNames.length > 0 ? selectedClientFilterNames : null,
         product: produto,
+        products: isLegacy && selectedLegacyProducts.length > 0 ? selectedLegacyProducts : null,
+        softwares: isLegacy && selectedLegacySoftware.length > 0 ? selectedLegacySoftware : null,
         nature: natureza,
         searchTerm: busca || null,
         statuses: selectedStatuses.length > 0 ? selectedStatuses : null,
@@ -468,10 +638,10 @@ export default function DeploymentsTickets() {
         <div className="flex flex-col lg:flex-row lg:items-baseline gap-x-3">
           <h1 className="text-lg font-bold flex items-center gap-1.5 text-foreground whitespace-nowrap">
             <ClipboardList className="h-4 w-4 text-primary" style={{ color: "hsl(346, 84%, 45%)" }} />
-            Consulta de Chamados (Ellevo/0800)
+            {catalogConfig.title}
           </h1>
           <p className="text-[10px] text-muted-foreground leading-tight">
-            Pesquise e consulte o histórico de chamados sincronizados do Ellevo de forma global e consolidada.
+            {catalogConfig.description}
           </p>
         </div>
         
@@ -523,7 +693,7 @@ export default function DeploymentsTickets() {
                 Período padrão: últimos 30 dias; datas anteriores consultam somente a faixa escolhida na origem.
               </span>
             </div>
-            {(dataInicio !== defaultDateRange.startDate || dataFim !== defaultDateRange.endDate || selectedClients.length > 0 || produto !== "todos" || natureza !== "todas" || selectedStatuses.length > 0 || busca) && (
+            {(dataInicio !== defaultDateRange.startDate || dataFim !== defaultDateRange.endDate || selectedClients.length > 0 || produto !== "todos" || selectedLegacyProducts.length > 0 || selectedLegacySoftware.length > 0 || natureza !== "todas" || selectedStatuses.length > 0 || busca) && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -539,7 +709,10 @@ export default function DeploymentsTickets() {
           {/* Grid de Filtros: Linha 1 compacta, Linha 2 com Clientes (Full Width) */}
           <div className="space-y-1.5">
             {/* Linha 1: Datas, Produto, Natureza, Status, Busca */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-1.5">
+            <div className={cn(
+              "grid grid-cols-1 gap-1.5 sm:grid-cols-2 md:grid-cols-3",
+              isLegacy ? "xl:grid-cols-7" : "xl:grid-cols-6",
+            )}>
               {/* Data Início */}
               <div className="space-y-0">
                 <label className="text-[10px] leading-none font-medium text-muted-foreground">
@@ -568,29 +741,67 @@ export default function DeploymentsTickets() {
                 />
               </div>
 
-              {/* Produto */}
-              <div className="space-y-0">
-                <label className="text-[10px] leading-none font-medium text-muted-foreground">Produto / Software</label>
-                <Select 
-                  value={produto} 
-                  onValueChange={(val) => {
-                    setProduto(val);
-                    setNatureza("todas");
-                    setPage(1);
-                  }}
-                >
-                  <SelectTrigger className="w-full text-[11px] h-7">
-                    <SelectValue placeholder="Selecione o produto" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CHAMADOS_ORION_PRODUCTS.map((p) => (
-                      <SelectItem key={p.value} value={p.value}>
-                        {p.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {isLegacy ? (
+                <>
+                  <div className="space-y-0">
+                    <label className="text-[10px] leading-none font-medium text-muted-foreground">Produto</label>
+                    <TicketFilterMultiSelect
+                      values={selectedLegacyProducts}
+                      options={legacyProductOptions}
+                      placeholder="Todos os produtos"
+                      searchPlaceholder="Buscar produto..."
+                      onChange={(values) => {
+                        const allowedSoftware = new Set<string>(
+                          CHAMADOS_LEGACY_PRODUCT_GROUPS
+                            .filter((group) => values.length === 0 || values.includes(group.family))
+                            .flatMap((group) => [...group.products]),
+                        );
+                        setSelectedLegacyProducts(values);
+                        setSelectedLegacySoftware((current) => current.filter((item) => allowedSoftware.has(item)));
+                        setNatureza("todas");
+                        setPage(1);
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-0">
+                    <label className="text-[10px] leading-none font-medium text-muted-foreground">Software</label>
+                    <TicketFilterMultiSelect
+                      values={selectedLegacySoftware}
+                      options={legacySoftwareOptions}
+                      placeholder="Todos os softwares"
+                      searchPlaceholder="Buscar software..."
+                      onChange={(values) => {
+                        setSelectedLegacySoftware(values);
+                        setNatureza("todas");
+                        setPage(1);
+                      }}
+                    />
+                  </div>
+                </>
+              ) : (
+                <div className="space-y-0">
+                  <label className="text-[10px] leading-none font-medium text-muted-foreground">Produto / Software</label>
+                  <Select
+                    value={produto}
+                    onValueChange={(val) => {
+                      setProduto(val);
+                      setNatureza("todas");
+                      setPage(1);
+                    }}
+                  >
+                    <SelectTrigger className="h-7 w-full text-[11px]">
+                      <SelectValue placeholder="Selecione o produto" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CHAMADOS_ORION_PRODUCTS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               {/* Natureza */}
               <div className="space-y-0">
@@ -892,6 +1103,9 @@ export default function DeploymentsTickets() {
                     <TableHead className="h-9 min-w-[200px] px-3 text-xs">Serventia / Cliente</TableHead>
                     <TableHead className="h-9 min-w-[150px] px-3 text-xs">Natureza</TableHead>
                     <TableHead className="h-9 w-[140px] px-3 text-xs">Produto</TableHead>
+                    {isLegacy && (
+                      <TableHead className="h-9 min-w-[180px] px-3 text-xs">Software</TableHead>
+                    )}
                     <TableHead className="h-9 w-[120px] px-3 text-center text-xs">Status</TableHead>
                     <TableHead className="h-9 w-[120px] px-3 text-xs">Abertura</TableHead>
                     <TableHead className="h-9 w-[80px] px-3 text-center text-xs">Ações</TableHead>
@@ -916,9 +1130,16 @@ export default function DeploymentsTickets() {
                       <TableCell className="max-w-[180px] truncate px-3 py-2 text-xs font-normal text-muted-foreground" title={chamado.natureza}>
                         {chamado.natureza || "—"}
                       </TableCell>
-                      <TableCell className="px-3 py-2 text-xs" title={chamado.software}>
-                        {formatOrionProductLabel(chamado.software)}
+                      <TableCell className="px-3 py-2 text-xs" title={isLegacy ? chamado.produto : chamado.software}>
+                        {isLegacy
+                          ? chamado.produto || "—"
+                          : formatChamadosProductLabel(chamado.software, catalog)}
                       </TableCell>
+                      {isLegacy && (
+                        <TableCell className="px-3 py-2 text-xs" title={chamado.software}>
+                          {chamado.software || "—"}
+                        </TableCell>
+                      )}
                       <TableCell className="px-3 py-2 text-center">
                         <Badge className={cn("pointer-events-none px-1.5 py-0 text-[9px] font-semibold", statusBadgeClass(chamado.status))}>
                           {chamado.status || "—"}
@@ -1016,21 +1237,26 @@ export default function DeploymentsTickets() {
             chamado={selectedChamado}
             onClose={() => setSelectedChamado(null)}
             showTramites
+            catalog={catalog}
           />
         )}
         </>
       ) : (
         <TicketsAiAnalysis
           active
+          catalog={catalog}
           filterKey={filterSyncKey}
           syncedAt={syncSnapshot?.key === filterSyncKey ? syncSnapshot.syncedAt : undefined}
           syncing={syncingPeriodo}
           filters={{
+            catalog,
             startDate: dataInicio || null,
             endDate: dataFim || null,
             clientCodes: selectedClientCodes.length > 0 ? selectedClientCodes : null,
             clientNames: selectedClientFilterNames.length > 0 ? selectedClientFilterNames : null,
             product: produto,
+            products: isLegacy && selectedLegacyProducts.length > 0 ? selectedLegacyProducts : null,
+            softwares: isLegacy && selectedLegacySoftware.length > 0 ? selectedLegacySoftware : null,
             nature: natureza,
             searchTerm: busca || null,
             statuses: selectedStatuses.length > 0 ? selectedStatuses : null,
@@ -1041,6 +1267,8 @@ export default function DeploymentsTickets() {
             endDate: dataFim,
             clients: selectedClients,
             product: produto,
+            products: selectedLegacyProducts,
+            softwares: selectedLegacySoftware,
             nature: natureza,
             statuses: selectedStatuses,
             searchTerm: busca,

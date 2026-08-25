@@ -1,5 +1,5 @@
 import type { Chamado0800, ChamadoReportRow } from "@/hooks/useChamados0800";
-import { formatOrionProductLabel } from "@/lib/chamados-product-filter";
+import { formatChamadosProductLabel, type ChamadosCatalog } from "@/lib/chamados-catalog";
 
 export interface TicketsAnalyticsItem {
   name: string;
@@ -73,7 +73,10 @@ function countBy(rows: Chamado0800[], selector: (row: Chamado0800) => string) {
     );
 }
 
-export function buildTicketsAiAnalytics(rows: ChamadoReportRow[]): TicketsAiAnalytics {
+export function buildTicketsAiAnalytics(
+  rows: ChamadoReportRow[],
+  catalog: ChamadosCatalog = "orion",
+): TicketsAiAnalytics {
   const completed = rows.filter(isTicketCompleted);
   const open = rows.filter((row) => !isTicketCompleted(row));
   const bugLike = rows.filter(isTicketBugLike);
@@ -135,7 +138,7 @@ export function buildTicketsAiAnalytics(rows: ChamadoReportRow[]): TicketsAiAnal
     byNature: countBy(rows, (row) => row.natureza || "Não informado"),
     byClient: countBy(rows, (row) => row.nomeCliente || "Não informado"),
     byProduct: countBy(rows, (row) =>
-      formatOrionProductLabel(row.software || row.produto)
+      formatChamadosProductLabel(row.software || row.produto, catalog)
     ),
     aging: agingBuckets,
     monthlyFlow: [...monthly.entries()]

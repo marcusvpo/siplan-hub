@@ -1,11 +1,18 @@
 import type { Chamado0800, ChamadoReportRow } from "@/hooks/useChamados0800";
-import { formatOrionProductLabel } from "@/lib/chamados-product-filter";
+import {
+  formatChamadosProductLabel,
+  getChamadosProductLabel,
+  type ChamadosCatalog,
+} from "@/lib/chamados-catalog";
 
 export interface ChamadosReportFilters {
+  catalog?: ChamadosCatalog;
   startDate?: string | null;
   endDate?: string | null;
   clients: string[];
   product?: string | null;
+  products?: string[];
+  softwares?: string[];
   nature?: string | null;
   statuses: string[];
   searchTerm?: string | null;
@@ -75,10 +82,16 @@ export async function generateChamadosReportPdf(
   const lineHeight = 3.2;
   let y = 0;
 
-  const productLabel =
-    !filters.product || filters.product === "todos"
-      ? "Todos os produtos Orion"
-      : formatOrionProductLabel(filters.product);
+  const catalog = filters.catalog ?? "orion";
+  const productLabel = catalog === "legacy"
+    ? filters.products?.length ? filters.products.join(", ") : "Todos os produtos"
+    : getChamadosProductLabel(filters.product, catalog);
+  const softwareLabel = filters.softwares?.length
+    ? filters.softwares.join(", ")
+    : "Todos os softwares";
+  const reportTitle = catalog === "legacy"
+    ? "Relatório de Chamados - Ellevo/0800 - Legado"
+    : "Relatório de Chamados - Ellevo/0800";
   const natureLabel =
     !filters.nature || filters.nature === "todas" ? "Todas" : filters.nature;
   const statusLabel = filters.statuses.length > 0 ? filters.statuses.join(", ") : "Todos";
@@ -173,7 +186,7 @@ export async function generateChamadosReportPdf(
     pdf.setFont("helvetica", "bold");
     pdf.setFontSize(16);
     pdf.setTextColor(20, 25, 35);
-    pdf.text("Relatório de Chamados - Ellevo/0800", marginX, y);
+    pdf.text(reportTitle, marginX, y);
 
     pdf.setFont("helvetica", "normal");
     pdf.setFontSize(8);
@@ -188,6 +201,7 @@ export async function generateChamadosReportPdf(
     const filterDescription = [
       `Período: ${formatDate(filters.startDate)} a ${formatDate(filters.endDate)}`,
       `Produto: ${productLabel}`,
+      ...(catalog === "legacy" ? [`Software: ${softwareLabel}`] : []),
       `Natureza: ${text(natureLabel)}`,
       `Status: ${text(statusLabel)}`,
       `Clientes: ${text(summarizeClients(filters.clients))}`,
@@ -205,15 +219,26 @@ export async function generateChamadosReportPdf(
     drawNatureSummary();
   };
 
-  const columns = [
-    { label: "Chamado", width: 20, value: (item: Chamado0800) => `#${item.numeroChamado}` },
-    { label: "Serventia / Cliente", width: 62, value: (item: Chamado0800) => text(item.nomeCliente) },
-    { label: "Título", width: 62, value: (item: Chamado0800) => text(item.titulo) },
-    { label: "Natureza", width: 40, value: (item: Chamado0800) => text(item.natureza) },
-    { label: "Produto", width: 28, value: (item: Chamado0800) => formatOrionProductLabel(item.software) },
-    { label: "Status", width: 32, value: (item: Chamado0800) => text(item.status) },
-    { label: "Abertura", width: 23, value: (item: Chamado0800) => formatDate(item.dataAbertura) },
-  ];
+  const columns = catalog === "legacy"
+    ? [
+        { label: "Chamado", width: 18, value: (item: Chamado0800) => `#${item.numeroChamado}` },
+        { label: "Serventia / Cliente", width: 50, value: (item: Chamado0800) => text(item.nomeCliente) },
+        { label: "Título", width: 48, value: (item: Chamado0800) => text(item.titulo) },
+        { label: "Natureza", width: 32, value: (item: Chamado0800) => text(item.natureza) },
+        { label: "Produto", width: 22, value: (item: Chamado0800) => text(item.produto) },
+        { label: "Software", width: 42, value: (item: Chamado0800) => text(item.software) },
+        { label: "Status", width: 28, value: (item: Chamado0800) => text(item.status) },
+        { label: "Abertura", width: 22, value: (item: Chamado0800) => formatDate(item.dataAbertura) },
+      ]
+    : [
+        { label: "Chamado", width: 20, value: (item: Chamado0800) => `#${item.numeroChamado}` },
+        { label: "Serventia / Cliente", width: 62, value: (item: Chamado0800) => text(item.nomeCliente) },
+        { label: "Título", width: 62, value: (item: Chamado0800) => text(item.titulo) },
+        { label: "Natureza", width: 40, value: (item: Chamado0800) => text(item.natureza) },
+        { label: "Produto", width: 28, value: (item: Chamado0800) => formatChamadosProductLabel(item.software, catalog) },
+        { label: "Status", width: 32, value: (item: Chamado0800) => text(item.status) },
+        { label: "Abertura", width: 23, value: (item: Chamado0800) => formatDate(item.dataAbertura) },
+      ];
   const tableWidth = columns.reduce((total, column) => total + column.width, 0);
 
   const drawTableHeader = () => {
@@ -240,7 +265,7 @@ export async function generateChamadosReportPdf(
     pdf.setFont("helvetica", "bold");
     pdf.setFontSize(9);
     pdf.setTextColor(45, 55, 70);
-    pdf.text("Relatório de Chamados - continuação", marginX, y);
+    pdf.text(`${reportTitle} - continuação`, marginX, y);
     pdf.setFont("helvetica", "normal");
     pdf.setFontSize(7);
     pdf.setTextColor(100, 110, 125);
@@ -391,5 +416,5 @@ export async function generateChamadosReportPdf(
     });
   }
 
-  pdf.save(`relatorio-chamados-${localIsoDate()}.pdf`);
+  pdf.save(`relatorio-chamados${catalog === "legacy" ? "-legado" : ""}-${localIsoDate()}.pdf`);
 }

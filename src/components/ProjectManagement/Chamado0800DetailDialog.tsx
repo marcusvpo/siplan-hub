@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import { formatOrionProductLabel } from "@/lib/chamados-product-filter";
+import { formatChamadosProductLabel, type ChamadosCatalog } from "@/lib/chamados-catalog";
 import { Chamado0800, useChamadoTramites } from "@/hooks/useChamados0800";
 import { Clock3, Loader2, User } from "lucide-react";
 import {
@@ -51,6 +51,7 @@ interface Chamado0800DetailDialogProps {
   chamado: Chamado0800 | null;
   onClose: () => void;
   showTramites?: boolean;
+  catalog?: ChamadosCatalog;
 }
 
 /** Modal de detalhes de um chamado 0800 (usado na etapa 7 e na Análise Pós). */
@@ -58,6 +59,7 @@ export function Chamado0800DetailDialog({
   chamado,
   onClose,
   showTramites = false,
+  catalog = "orion",
 }: Chamado0800DetailDialogProps) {
   const { tramites, isLoading: tramitesLoading, error: tramitesError } =
     useChamadoTramites(chamado?.numeroChamado, showTramites);
@@ -126,7 +128,7 @@ export function Chamado0800DetailDialog({
               {chamado.produto && (
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Produto</p>
-                  <p>{formatOrionProductLabel(chamado.produto)}</p>
+                  <p>{formatChamadosProductLabel(chamado.produto, catalog)}</p>
                 </div>
               )}
               {chamado.software && (

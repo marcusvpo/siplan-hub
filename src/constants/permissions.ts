@@ -70,6 +70,7 @@ export const PERMISSION_RESOURCES: PermissionResourceDef[] = [
   { resource: "pos_panorama", label: "Dashboard - Panorama Pós-Implantação", category: "Dashboard", actions: ["view"] },
   { resource: "pos_panorama_geral", label: "Dashboard - Panorama Geral (pós histórico)", category: "Dashboard", actions: ["view"] },
   { resource: "chamados_query", label: "Consultar Chamados", category: "Dashboard", actions: ["view"] },
+  { resource: "chamados_legacy_query", label: "Consultar Chamados - Legado", category: "Dashboard", actions: ["view"] },
 
   // Implantação & Projetos
   { resource: "menu_implantacao", label: "Menu Implantação", category: "Implantação & Projetos", actions: ["view"] },

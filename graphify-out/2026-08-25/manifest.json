@@ -2780,8 +2780,8 @@
     "semantic_hash": ""
   },
   "vm-worker/src/chamadosSync.ts": {
-    "mtime": 1787694873.0881934,
-    "ast_hash": "d5171214146029625a7bbbe13320c459",
+    "mtime": 1787694285.7810936,
+    "ast_hash": "9a569e9ec0aa701286c33fd34397f53b",
     "semantic_hash": ""
   },
   "docs/PERMISSOES_RBAC.md": {
@@ -3550,8 +3550,8 @@
     "semantic_hash": ""
   },
   "src/test/chamados-legacy-catalog.test.ts": {
-    "mtime": 1787694873.0891967,
-    "ast_hash": "a7dcf2057ad0b4f9661b07c496bc5c6c",
+    "mtime": 1787694436.0685914,
+    "ast_hash": "cd1ea09280495c71b478948c03fdbc19",
     "semantic_hash": ""
   },
   "src/test/chamados-product-filter.test.ts": {

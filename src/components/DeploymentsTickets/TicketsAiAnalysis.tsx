@@ -39,7 +39,7 @@ import {
 import { useTicketsAiAnalysis } from "@/hooks/useTicketsAiAnalysis";
 import { useModelWorkerStatus } from "@/hooks/useModelGenerationJobs";
 import { useAuth } from "@/hooks/useAuth";
-import { formatOrionProductLabel } from "@/lib/chamados-product-filter";
+import { formatChamadosProductLabel, type ChamadosCatalog } from "@/lib/chamados-catalog";
 import {
   buildTicketsAiAnalytics,
   isTicketBugLike,
@@ -53,6 +53,7 @@ const CHART_COLOR = "hsl(346, 84%, 45%)";
 
 interface TicketsAiAnalysisProps {
   active: boolean;
+  catalog?: ChamadosCatalog;
   filterKey: string;
   syncedAt?: number;
   syncing: boolean;
@@ -62,6 +63,8 @@ interface TicketsAiAnalysisProps {
     endDate: string;
     clients: string[];
     product: string;
+    products: string[];
+    softwares: string[];
     nature: string;
     statuses: string[];
     searchTerm: string;
@@ -85,6 +88,7 @@ const truncate = (value?: string, max = 500): string | null => {
 
 export function TicketsAiAnalysis({
   active,
+  catalog = "orion",
   filterKey,
   syncedAt,
   syncing,
@@ -108,7 +112,7 @@ export function TicketsAiAnalysis({
     queryFn: () => fetchAllChamados(filters),
   });
 
-  const analytics = useMemo(() => buildTicketsAiAnalytics(rows), [rows]);
+  const analytics = useMemo(() => buildTicketsAiAnalytics(rows, catalog), [catalog, rows]);
 
   useEffect(() => {
     onAnalysisResultChange?.(
@@ -133,7 +137,7 @@ export function TicketsAiAnalysis({
         descricao_abertura: truncate(row.descricao, 350),
         natureza: row.natureza || null,
         status: row.status || null,
-        produto: formatOrionProductLabel(row.software || row.produto),
+        produto: formatChamadosProductLabel(row.software || row.produto, catalog),
         abertura: row.dataAbertura || null,
         encerramento: row.dataEncerramento || null,
         dias_em_aberto: isTicketCompleted(row) ? null : ticketDaysOpen(row.dataAbertura),
@@ -367,6 +371,7 @@ export function TicketsAiAnalysis({
         chamado={selectedChamado}
         onClose={() => setSelectedChamado(null)}
         showTramites
+        catalog={catalog}
       />
     </div>
   );
