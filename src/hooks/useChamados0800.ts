@@ -1,6 +1,11 @@
 import { useCallback, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  CHAMADOS_CATALOG_CONFIG,
+  LEGACY_PRODUCT_FAMILIES,
+  type ChamadosCatalog,
+} from "@/lib/chamados-catalog";
 import { getOrionProductPattern } from "@/lib/chamados-product-filter";
 import { CHAMADO_STATUS_OPTIONS, isChamadoStatus } from "@/lib/chamados-status";
 
@@ -473,6 +478,8 @@ export interface ProcessoVendaSyncFilters {
   clientCodes?: string[] | null;
   clientNames?: string[] | null;
   product?: string | null;
+  products?: string[] | null;
+  softwares?: string[] | null;
   nature?: string | null;
   statuses?: string[] | null;
   searchTerm?: string | null;
@@ -500,7 +507,7 @@ export function isProcessoVendaSyncSupersededError(error: unknown): boolean {
       && error.code === PROCESSO_VENDA_SYNC_SUPERSEDED);
 }
 
-export function useSolicitarSyncProcessoVenda() {
+export function useSolicitarSyncProcessoVenda(catalog: ChamadosCatalog = "orion") {
   const queryClient = useQueryClient();
   const [syncing, setSyncing] = useState(false);
   const latestRequestVersion = useRef(0);
@@ -520,7 +527,7 @@ export function useSolicitarSyncProcessoVenda() {
     setSyncing(true);
     try {
       const { data: requestId, error } = await supabase.rpc(
-        "request_processo_venda_sync",
+        CHAMADOS_CATALOG_CONFIG[catalog].syncRpc,
         {
           p_start_date: startDate,
           p_end_date: endDate,
@@ -528,6 +535,8 @@ export function useSolicitarSyncProcessoVenda() {
             client_codes: filters.clientCodes ?? [],
             client_names: filters.clientNames ?? [],
             product: filters.product ?? null,
+            products: filters.products ?? [],
+            softwares: filters.softwares ?? [],
             nature: filters.nature ?? null,
             statuses: filters.statuses ?? [],
             search_term: filters.searchTerm?.trim() || null,
@@ -555,8 +564,8 @@ export function useSolicitarSyncProcessoVenda() {
           await Promise.all([
             queryClient.invalidateQueries({ queryKey: ["chamadosSearch"] }),
             queryClient.invalidateQueries({ queryKey: ["ticketsAiDashboard"] }),
-            queryClient.invalidateQueries({ queryKey: ["distinctProcessoVendaClients"] }),
-            queryClient.invalidateQueries({ queryKey: ["distinctProcessoVendaNaturezas"] }),
+            queryClient.invalidateQueries({ queryKey: ["chamadosClientOptions", catalog] }),
+            queryClient.invalidateQueries({ queryKey: ["distinctProcessoVendaNaturezas", catalog] }),
           ]);
           return {
             ticketNumbers: Array.isArray(row.result_ticket_ids)
@@ -577,17 +586,20 @@ export function useSolicitarSyncProcessoVenda() {
         setSyncing(false);
       }
     }
-  }, [queryClient]);
+  }, [catalog, queryClient]);
 
   return { solicitarSync, syncing };
 }
 
 export interface ChamadosSearchFilters {
+  catalog?: ChamadosCatalog;
   startDate?: string | null;
   endDate?: string | null;
   clientCodes?: string[] | null;
   clientNames?: string[] | null;
   product?: string | null;
+  products?: string[] | null;
+  softwares?: string[] | null;
   nature?: string | null;
   searchTerm?: string | null;
   statuses?: string[] | null;
@@ -603,10 +615,13 @@ function createChamadosSearchQuery(
     clientCodes,
     clientNames,
     product,
+    products,
+    softwares,
     nature,
     searchTerm,
     statuses,
     ticketNumbers,
+    catalog = "orion",
   }: ChamadosSearchFilters,
   withCount = false
 ) {
@@ -623,7 +638,15 @@ function createChamadosSearchQuery(
   }
   if (ticketNumbers && ticketNumbers.length > 0) q = q.in("numero_chamado", ticketNumbers);
 
-  q = q.ilike("software", getOrionProductPattern(product));
+  if (catalog === "legacy") {
+    q = q.in(
+      "produto",
+      products && products.length > 0 ? products : [...LEGACY_PRODUCT_FAMILIES],
+    );
+    if (softwares && softwares.length > 0) q = q.in("software", softwares);
+  } else {
+    q = q.ilike("software", getOrionProductPattern(product));
+  }
   if (nature && nature !== "todas") q = q.eq("natureza", nature);
 
   const validStatuses = (statuses ?? []).filter(isChamadoStatus);
@@ -725,11 +748,14 @@ export async function fetchAllChamadosForReport(
 }
 
 export function useChamadosSearch({
+  catalog = "orion",
   startDate,
   endDate,
   clientCodes,
   clientNames,
   product,
+  products,
+  softwares,
   nature,
   searchTerm,
   statuses,
@@ -740,11 +766,14 @@ export function useChamadosSearch({
   const query = useQuery({
     queryKey: [
       "chamadosSearch",
+      catalog,
       startDate,
       endDate,
       clientCodes,
       clientNames,
       product,
+      products,
+      softwares,
       nature,
       searchTerm,
       statuses,
@@ -765,10 +794,13 @@ export function useChamadosSearch({
           clientCodes,
           clientNames,
           product,
+          products,
+          softwares,
           nature,
           searchTerm,
           statuses,
           ticketNumbers,
+          catalog,
         },
         true
       );

@@ -88,6 +88,13 @@ export const menuItems: MenuItem[] = [
                 description: "Busca de chamados 0800 por cliente, período e produto",
                 permissionKey: "chamados_query",
             },
+            {
+                title: "Chamados (Legado)",
+                path: "/deployments/tickets-legacy",
+                icon: ClipboardList,
+                description: "Busca de chamados Ellevo das famílias Control-M, Global e Siplan",
+                permissionKey: "chamados_legacy_query",
+            },
         ],
     },
     {
