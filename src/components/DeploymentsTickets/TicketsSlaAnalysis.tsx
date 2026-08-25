@@ -20,6 +20,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   fetchAllChamados,
   type Chamado0800,
   type ChamadosSearchFilters,
@@ -36,8 +43,6 @@ import type { ChamadosReportFilters } from "@/lib/chamados-report-pdf";
 import { generateTicketsSlaReportPdf } from "@/lib/tickets-sla-report-pdf";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-
-const PAGE_SIZE = 50;
 
 interface TicketsSlaAnalysisProps {
   active: boolean;
@@ -196,6 +201,7 @@ export function TicketsSlaAnalysis({
   const [firstResponseHours, setFirstResponseHours] = useState(8);
   const [resolutionDays, setResolutionDays] = useState(5);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
   const [generatingPdf, setGeneratingPdf] = useState(false);
   const { data: rows = [], isLoading, error } = useQuery({
     queryKey: ["ticketsSlaAnalysis", filterKey, syncedAt],
@@ -212,8 +218,8 @@ export function TicketsSlaAnalysis({
     return summary;
   }, { within: 0, outside: 0, inProgress: 0 }), [resolutionDays, rows]);
 
-  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
-  const visibleRows = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
+  const visibleRows = rows.slice((page - 1) * pageSize, page * pageSize);
 
   useEffect(() => {
     setPage(1);
@@ -317,13 +323,37 @@ export function TicketsSlaAnalysis({
             </div>
           )}
 
-          {rows.length > PAGE_SIZE && (
-            <div className="mt-3 flex items-center justify-between border-t pt-3 text-[10px] text-muted-foreground">
-              <span>Exibindo {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, rows.length)} de {rows.length}</span>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="icon" className="h-7 w-7" disabled={page === 1} onClick={() => setPage((current) => Math.max(1, current - 1))}><ChevronLeft className="h-3.5 w-3.5" /></Button>
-                <span>Página <strong className="text-foreground">{page}</strong> de {totalPages}</span>
-                <Button variant="outline" size="icon" className="h-7 w-7" disabled={page === totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))}><ChevronRight className="h-3.5 w-3.5" /></Button>
+          {rows.length > 0 && (
+            <div className="mt-3 flex flex-col items-center justify-between gap-3 border-t pt-3 text-[10px] text-muted-foreground sm:flex-row">
+              <span>Exibindo {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, rows.length)} de {rows.length}</span>
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <div className="flex items-center gap-1.5">
+                  <span>Exibir</span>
+                  <Select
+                    value={String(pageSize)}
+                    onValueChange={(value) => {
+                      setPageSize(Number(value));
+                      setPage(1);
+                    }}
+                  >
+                    <SelectTrigger className="h-7 w-[68px] text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[5, 10, 15, 25, 50].map((size) => (
+                        <SelectItem key={size} value={String(size)}>{size}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <span>por página</span>
+                </div>
+                {totalPages > 1 && (
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="icon" className="h-7 w-7" disabled={page === 1} onClick={() => setPage((current) => Math.max(1, current - 1))}><ChevronLeft className="h-3.5 w-3.5" /></Button>
+                    <span>Página <strong className="text-foreground">{page}</strong> de {totalPages}</span>
+                    <Button variant="outline" size="icon" className="h-7 w-7" disabled={page === totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))}><ChevronRight className="h-3.5 w-3.5" /></Button>
+                  </div>
+                )}
               </div>
             </div>
           )}

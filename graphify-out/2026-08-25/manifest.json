@@ -2960,8 +2960,8 @@
     "semantic_hash": ""
   },
   "src/pages/DeploymentsTickets.tsx": {
-    "mtime": 1787695960.243677,
-    "ast_hash": "4458976cd6fdd83737b4c11bb62746f3",
+    "mtime": 1787697119.2428818,
+    "ast_hash": "f31173a8759279dae8bbeaaebb9cd450",
     "semantic_hash": ""
   },
   "src/utils/adherence-helpers.ts": {
@@ -4175,23 +4175,28 @@
     "semantic_hash": ""
   },
   "src/components/DeploymentsTickets/TicketsSlaAnalysis.tsx": {
-    "mtime": 1787696046.5560665,
-    "ast_hash": "663282c6ea057b1d2d377bb6cd1e909d",
+    "mtime": 1787697109.388414,
+    "ast_hash": "53b37ff328c985c38f80cebc6558939f",
     "semantic_hash": ""
   },
   "src/lib/tickets-sla.test.ts": {
-    "mtime": 1787696070.3850384,
-    "ast_hash": "43116e76866bff6ac4f0417c1989cd05",
+    "mtime": 1787697124.6528668,
+    "ast_hash": "58454ac3871cc8ecfe44f10da527aa8d",
     "semantic_hash": ""
   },
   "src/lib/tickets-sla.ts": {
-    "mtime": 1787696000.4099774,
-    "ast_hash": "8b0f973d8420e5dbb830ba61b9f2ea40",
+    "mtime": 1787697124.6503696,
+    "ast_hash": "37c43b881344ea10795ff855229615b5",
     "semantic_hash": ""
   },
   "supabase/migrations/20260825223000_chamados_sla_timestamps.sql": {
     "mtime": 1787695859.445126,
     "ast_hash": "bc49599c1dcefd44cf6c89156313d489",
+    "semantic_hash": ""
+  },
+  "src/lib/tickets-sla-report-pdf.ts": {
+    "mtime": 1787697095.6319597,
+    "ast_hash": "036f3b009f4491027b27e730fa8d2731",
     "semantic_hash": ""
   }
 }
