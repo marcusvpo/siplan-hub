@@ -34,6 +34,16 @@ export interface CsCxRoutineType {
   item_count: number;
 }
 
+export interface CsCxProduct {
+  id: string;
+  legacy_id: number | null;
+  product_code: string | null;
+  name: string;
+  description: string | null;
+  active: boolean;
+  origin: "legacy" | "hub";
+}
+
 export interface CsCxRoutineModelItem {
   id: string;
   routine_model_id: string;
@@ -79,6 +89,14 @@ export interface RoutineCategoryInput {
 export interface RoutineTypeInput {
   id?: string;
   name: string;
+  description?: string;
+  active: boolean;
+}
+
+export interface ProductInput {
+  id?: string;
+  name: string;
+  productCode?: string;
   description?: string;
   active: boolean;
 }
@@ -559,9 +577,8 @@ export function useCsCxRoutineAdmin() {
           .order("sort_order"),
         db
           .from("cs_cx_products")
-          .select("id, name")
+          .select("id, legacy_id, product_code, name, description, active, origin")
           .eq("source_present", true)
-          .eq("active", true)
           .order("name"),
       ]);
 
@@ -616,10 +633,7 @@ export function useCsCxRoutineAdmin() {
           ).length,
         })),
         items,
-        products: (productsResult.data ?? []) as Array<{
-          id: string;
-          name: string;
-        }>,
+        products: (productsResult.data ?? []) as CsCxProduct[],
       };
     },
   });
@@ -747,6 +761,43 @@ export function useCsCxRoutineAdmin() {
     onSuccess: () => invalidateRoutines(queryClient),
   });
 
+  const saveProduct = useMutation({
+    mutationFn: async (input: ProductInput) => {
+      const name = input.name.trim();
+      const productCode = emptyToNull(input.productCode)?.toUpperCase() ?? null;
+      const duplicate = (adminQuery.data?.products ?? []).find(
+        (product) =>
+          product.id !== input.id &&
+          (product.name.trim().toLocaleLowerCase("pt-BR") ===
+            name.toLocaleLowerCase("pt-BR") ||
+            (productCode !== null &&
+              product.product_code?.trim().toUpperCase() === productCode)),
+      );
+      if (duplicate) {
+        throw new Error(
+          duplicate.name.toLocaleLowerCase("pt-BR") ===
+            name.toLocaleLowerCase("pt-BR")
+            ? "Já existe um produto com este nome."
+            : "Já existe um produto com este código.",
+        );
+      }
+
+      const payload = {
+        name,
+        product_code: productCode,
+        description: emptyToNull(input.description),
+        active: input.active,
+        source_present: true,
+      };
+      const request = input.id
+        ? db.from("cs_cx_products").update(payload).eq("id", input.id)
+        : db.from("cs_cx_products").insert({ ...payload, origin: "hub" });
+      const { error } = await request;
+      if (error) throw error;
+    },
+    onSuccess: () => invalidateRoutines(queryClient),
+  });
+
   return {
     models: adminQuery.data?.models ?? [],
     categories: adminQuery.data?.categories ?? [],
@@ -765,6 +816,7 @@ export function useCsCxRoutineAdmin() {
     deleteCategory,
     saveType,
     deleteType,
+    saveProduct,
   };
 }
 

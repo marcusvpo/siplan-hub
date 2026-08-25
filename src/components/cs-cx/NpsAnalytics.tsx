@@ -84,6 +84,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { CsCxNpsResponse } from "@/hooks/useCsCxExperience";
+import type { CsCxProduct } from "@/hooks/useCsCxCore";
 import { useCsCxNpsAiReport } from "@/hooks/useCsCxNpsAiReport";
 import { useModelWorkerStatus } from "@/hooks/useModelGenerationJobs";
 import { useAuth } from "@/hooks/useAuth";
@@ -93,6 +94,7 @@ import {
   buildNpsAnalytics,
   EMPTY_NPS_FILTERS,
   npsFilterDescription,
+  npsRankingMinPointSize,
   type NpsAttentionClient,
   type NpsAnalyticsFilters,
   type NpsOfficeAnalytics,
@@ -103,6 +105,7 @@ import { normalizeSearchText } from "@/utils/normalize-search";
 
 interface NpsAnalyticsPanelProps {
   responses: CsCxNpsResponse[];
+  products: CsCxProduct[];
   canGenerate: boolean;
 }
 
@@ -130,6 +133,7 @@ type RankingChartItem = NpsOfficeAnalytics & { rankingLabel: string };
 
 export function NpsAnalyticsPanel({
   responses,
+  products,
   canGenerate,
 }: NpsAnalyticsPanelProps) {
   const [filters, setFilters] =
@@ -163,6 +167,9 @@ export function NpsAnalyticsPanel({
   const selectedOffice = offices.find(
     (office) => office.id === filters.officeId,
   );
+  const selectedProduct = products.find(
+    (product) => product.id === filters.productId,
+  );
   const analytics = useMemo(
     () => buildNpsAnalytics(responses, filters),
     [filters, responses],
@@ -170,6 +177,9 @@ export function NpsAnalyticsPanel({
   const filterDescription = npsFilterDescription(
     filters,
     selectedOffice?.name,
+    filters.productId === "unassigned"
+      ? "Sem produto"
+      : selectedProduct?.name,
   );
   const source = useMemo(
     () => buildNpsAiSource(analytics, filterDescription),
@@ -291,7 +301,7 @@ export function NpsAnalyticsPanel({
   return (
     <div className="space-y-2.5">
       <Card>
-        <CardContent className="grid gap-2 p-3 lg:grid-cols-[160px_160px_minmax(220px,1fr)_auto] lg:items-end">
+        <CardContent className="grid gap-2 p-3 md:grid-cols-2 xl:grid-cols-[145px_145px_minmax(190px,1fr)_180px_auto] xl:items-end">
           <div className="space-y-1">
             <Label htmlFor="nps-bi-start" className="text-[11px]">
               Data inicial
@@ -341,6 +351,34 @@ export function NpsAnalyticsPanel({
               }
             />
           </div>
+          <div className="space-y-1">
+            <Label htmlFor="nps-bi-product" className="text-[11px]">
+              Produto
+            </Label>
+            <Select
+              value={filters.productId}
+              onValueChange={(productId) =>
+                setFilters((current) => ({ ...current, productId }))
+              }
+            >
+              <SelectTrigger
+                id="nps-bi-product"
+                className="h-8"
+                aria-label="Filtrar NPS por produto"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os produtos</SelectItem>
+                {products.map((product) => (
+                  <SelectItem key={product.id} value={product.id}>
+                    {product.name}
+                  </SelectItem>
+                ))}
+                <SelectItem value="unassigned">Sem produto (legado)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="flex gap-2">
             <Button
               type="button"
@@ -350,7 +388,8 @@ export function NpsAnalyticsPanel({
               disabled={
                 !filters.startDate &&
                 !filters.endDate &&
-                filters.officeId === "all"
+                filters.officeId === "all" &&
+                filters.productId === "all"
               }
               onClick={() => setFilters({ ...EMPTY_NPS_FILTERS })}
             >
@@ -1073,7 +1112,12 @@ function OfficeRankingChart({
             return `${name} · Última NPS: ${date}`;
           }}
         />
-        <Bar dataKey="nps" name="NPS" radius={4}>
+        <Bar
+          dataKey="nps"
+          name="NPS"
+          radius={4}
+          minPointSize={npsRankingMinPointSize}
+        >
           {data.map((office) => (
             <Cell
               key={office.key}

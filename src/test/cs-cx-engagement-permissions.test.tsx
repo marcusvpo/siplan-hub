@@ -134,6 +134,16 @@ describe("CS/CX contatos e agendamentos — permissões", () => {
     expect(screen.getByRole("combobox", { name: /produtos do contato/i })).toBeInTheDocument();
   });
 
+  it("mantém o período em duas linhas antes de telas 2xl", () => {
+    renderPage(<CsCxContacts />, []);
+
+    const filters = screen.getByLabelText("Data final").parentElement;
+    expect(filters).toHaveClass("xl:grid-cols-[minmax(240px,1fr)_190px_170px]");
+    expect(filters).toHaveClass(
+      "2xl:grid-cols-[minmax(240px,1fr)_190px_170px_180px_145px_145px]",
+    );
+  });
+
   it("mantém agenda em leitura e esconde criação", () => {
     renderPage(<CsCxAppointments />, []);
     expect(screen.getByText("Reunião de acompanhamento")).toBeInTheDocument();

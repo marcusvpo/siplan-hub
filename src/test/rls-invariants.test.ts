@@ -212,8 +212,13 @@ suite("invariantes de RLS (banco real)", () => {
             and cmd in ('UPDATE', 'DELETE', 'ALL')
         ) as assets_immutable,
         pg_get_functiondef(
-          to_regprocedure(
-            'public.cs_cx_create_nps_invitation(uuid,uuid,uuid,text,text,timestamptz)'
+          coalesce(
+            to_regprocedure(
+              'public.cs_cx_create_nps_invitation(uuid,uuid,uuid,uuid,text,text,timestamptz)'
+            ),
+            to_regprocedure(
+              'public.cs_cx_create_nps_invitation(uuid,uuid,uuid,text,text,timestamptz)'
+            )
           )
         ) as invitation_definition
     `);
