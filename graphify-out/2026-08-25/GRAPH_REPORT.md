@@ -1,11 +1,11 @@
 # Graph Report - siplan-hub  (2026-08-25)
 
 ## Corpus Check
-- 821 files · ~971,752 words
+- 821 files · ~971,826 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 5388 nodes · 11834 edges · 399 communities (307 shown, 92 thin omitted)
+- 5388 nodes · 11834 edges · 398 communities (306 shown, 92 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 164 edges (avg confidence: 0.71)
 - Token cost: 0 input · 0 output
 
@@ -348,7 +348,6 @@
 - 🚀 Guia Técnico: Sincronização Contínua e Rotação da Vector Store OpenAI com Zero Downtime — Siplan HUB
 - VersionHistoryDrawer.tsx
 - usePosPanorama.ts
-- ImplementerPhase1Fichas.tsx
 - toast.tsx
 - cs-cx-nps-survey.ts
 - processJob.ts
@@ -431,7 +430,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (399 total, 92 thin omitted)
+## Communities (398 total, 92 thin omitted)
 
 ### Community 0 - "Conversion Issues & Post Forms"
 Cohesion: 0.09
@@ -514,8 +513,8 @@ Cohesion: 0.11
 Nodes (18): 📋 1. Descrição Geral do Fluxo, 1. Nó Microsoft SQL (Deduplicação via Query), 🛠️ 2. Configuração do Webhook no Supabase (Trigger), 2. Nó Code (JavaScript - Agrupamento Idempotente por `p_ticket_number`), 3. Chamada da RPC `upsert_project_from_0800` no Supabase (Nó HTTP Request), ⚙️ 3. Configuração Passo a Passo do Nó IF no n8n, ✉️ 4. Modelo do E-mail (HTML Premium), 🧪 5. Scripts de Simulação e Testes (Supabase) (+10 more)
 
 ### Community 20 - "Commercial & Conversion Hooks"
-Cohesion: 0.06
-Nodes (41): ImplementerAllCartoriosTable(), ImplementerAllCartoriosTableProps, healthColors, healthLabels, ImplementerChartsProps, statusColors, statusLabels, ImplementerHeaderBanner() (+33 more)
+Cohesion: 0.05
+Nodes (52): ImplementerAllCartoriosTable(), ImplementerAllCartoriosTableProps, healthColors, healthLabels, ImplementerChartsProps, statusColors, statusLabels, ImplementerHeaderBanner() (+44 more)
 
 ### Community 21 - "Worker package.json"
 Cohesion: 0.09
@@ -542,8 +541,8 @@ Cohesion: 0.20
 Nodes (17): AiTarget, Block, blockTextLen(), blockToPlain(), escapeHtml(), fmtDate(), inlineHtml(), lexToHtml() (+9 more)
 
 ### Community 28 - "Project Modal & Kanban"
-Cohesion: 0.08
-Nodes (36): CalendarControls(), CalendarLegend(), DeploymentDetailsDialog(), ProjectModal(), CustomTheme, RoadmapManager(), RoadmapManagerProps, RoadmapSettings (+28 more)
+Cohesion: 0.07
+Nodes (38): CalendarControls(), CalendarLegend(), MarkdownTiptapEditorProps, DeploymentDetailsDialog(), ProjectModal(), CustomTheme, RoadmapManager(), RoadmapManagerProps (+30 more)
 
 ### Community 29 - "Commercial/Public Checklists"
 Cohesion: 0.12
@@ -578,8 +577,8 @@ Cohesion: 0.02
 Nodes (92): Communities (123 total, 21 thin omitted), Community 0 - "Playwright Runner & Benchmarks", Community 10 - "Siplan Hub Domain Docs", Community 11 - "Error Handling & KPI Patterns", Community 12 - "Interview Analyzer (Python)", Community 13 - "Strict tsconfig", Community 14 - "Project Modal & Roadmap Tabs", Community 15 - "Editor Toolbar & UI Inputs" (+84 more)
 
 ### Community 37 - "sd-solutions.ts"
-Cohesion: 0.11
-Nodes (38): errorCode(), FamiliesManager(), SolutionForm(), DeleteTarget, errorCode(), systemNameCollator, SystemsManager(), attachmentStorageName() (+30 more)
+Cohesion: 0.13
+Nodes (21): DeleteTarget, errorCode(), systemNameCollator, SystemsManager(), createSdRoutine(), createSdSystem(), deleteSdRoutine(), deleteSdSystem() (+13 more)
 
 ### Community 38 - "Files Tab & Accordion"
 Cohesion: 0.06
@@ -590,8 +589,8 @@ Cohesion: 0.22
 Nodes (6): RoadmapData, RoadmapPage(), StageConfig, StageData, STAGES_CONFIG, TimelineItem()
 
 ### Community 40 - "Deployment Template & Stage Forms"
-Cohesion: 0.15
-Nodes (21): CsCxMultiSelectOption, CsCxMultiSelectProps, COLORS, FONT_SIZES, MarkdownTiptapEditorProps, ReportsFiltersProps, AutocompleteInputProps, Command (+13 more)
+Cohesion: 0.09
+Nodes (35): CsCxMultiSelectOption, CsCxMultiSelectProps, COLORS, FONT_SIZES, ReportsFiltersProps, AutocompleteInputProps, Command, CommandDialogProps (+27 more)
 
 ### Community 41 - "Theme Provider"
 Cohesion: 0.19
@@ -615,7 +614,7 @@ Nodes (21): DashboardKPI(), DashboardKPIProps, DashboardReport(), DashboardRepor
 
 ### Community 46 - "SolutionsSearch.tsx"
 Cohesion: 0.11
-Nodes (34): SolutionDetailsProps, SolutionFormProps, formatDate(), HighlightedText(), SolutionCard(), SolutionCardProps, SolutionsSearch(), SolutionsSearchProps (+26 more)
+Nodes (35): SolutionDetailsProps, SolutionFormProps, formatDate(), HighlightedText(), SolutionCard(), SolutionCardProps, SolutionsSearch(), SolutionsSearchProps (+27 more)
 
 ### Community 47 - "Improve-Text AI Jobs"
 Cohesion: 0.04
@@ -1394,12 +1393,12 @@ Cohesion: 0.10
 Nodes (20): ActivePosAiProjectOption, PosAiAdminAnalyticsData, PosAiAdminKpis, PosAiAdminLogItem, PosAiAdminProjectItem, PosAiAdminTimelineItem, PosAiFeedbackItem, PosAiHourlyDistributionItem (+12 more)
 
 ### Community 319 - "CsCxRoutines.tsx"
-Cohesion: 0.15
-Nodes (16): ActionBadge(), actionLabel(), CsCxRoutines(), formatDate(), formatDateTime(), getRoutineProductOptions(), hasStatusTransition(), includeOfficesWithoutRoutines() (+8 more)
+Cohesion: 0.36
+Nodes (9): SolutionForm(), attachmentStorageName(), createSdSolution(), deleteSdSolutionAttachment(), listSdProfiles(), listSdRoutines(), listSdSystems(), updateSdSolution() (+1 more)
 
 ### Community 320 - "SolutionDetails.tsx"
-Cohesion: 0.18
-Nodes (19): attachmentSecurity(), clampPanelWidth(), longDate(), maxPanelWidth(), shortDate(), SolutionDetails(), canPreviewSdAttachment(), deleteSdSolution() (+11 more)
+Cohesion: 0.15
+Nodes (26): errorCode(), FamiliesManager(), attachmentSecurity(), clampPanelWidth(), longDate(), maxPanelWidth(), shortDate(), SolutionDetails() (+18 more)
 
 ### Community 321 - "useCsCxExperience.ts"
 Cohesion: 0.13
@@ -1484,10 +1483,6 @@ Nodes (10): RestoreVersionModal(), VersionDetailModal(), SheetContent, SheetCont
 ### Community 341 - "usePosPanorama.ts"
 Cohesion: 0.21
 Nodes (10): Chamado0800DetailDialogProps, PosSaudeBadge(), Chamado0800, ParecerPosJob, ChamadoPanorama, JanelaPos, PosPanoramaData, PosSaude (+2 more)
-
-### Community 342 - "ImplementerPhase1Fichas.tsx"
-Cohesion: 0.23
-Nodes (11): ImplementerPhase1ConsolidatedTableProps, daysBetweenStr(), formatCurrency(), formatDate(), ImplementerPhase1Fichas(), ImplementerPhase1FichasProps, priorityLabels, satisfactionLabels (+3 more)
 
 ### Community 343 - "toast.tsx"
 Cohesion: 0.24
@@ -1625,7 +1620,7 @@ Nodes (3): compilerOptions, allowJs, lib
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `cn()` connect `Dashboard Table & Pagination` to `Conversion Post Feed & Drawer`, `FormRenderer.tsx`, `Checklist & Visual Question Builder`, `Charts, KPI & Reports`, `filterStore.ts`, `Calendar Grid & Drag-Drop`, `Notification Bell & Dropdown`, `Sidebar Components`, `Distribution/Workload Charts`, `Deployment Form Fields`, `use-toast Reducer`, `Project Modal & Kanban`, `Commercial/Public Checklists`, `Predictability & Bottlenecks`, `Post Observations Editor`, `ProtectedRoute.tsx`, `Deployment Template & Stage Forms`, `Theme Provider`, `LogsTab.tsx`, `Health Badge & Pipeline Status`, `useTeams.ts`, `usePublicChecklist.ts`, `CsCxRegistryOffices.tsx`, `PipelineStatus.tsx`, `Roadmap Page`, `ProjectDistributionChart.tsx`, `Login`, `CsCxRoutines.tsx`, `PosPanorama.tsx`, `index.ts`, `useCsCxNpsSurveys.ts`, `PublicNpsResponse.tsx`, `normalizeSearchText`, `Reports.tsx`, `text`, `editor.tsx`, `VersionHistoryDrawer.tsx`, `usePosPanorama.ts`, `toast.tsx`, `GlobalMetrics.tsx`, `NpsAnalytics.tsx`, `useProjectForm.ts`, `ConversionPostFeed.tsx`, `CsCxAppointments`, `SimpleMarkdown.tsx`?**
+- **Why does `cn()` connect `Dashboard Table & Pagination` to `Conversion Post Feed & Drawer`, `FormRenderer.tsx`, `Checklist & Visual Question Builder`, `Charts, KPI & Reports`, `filterStore.ts`, `Calendar Grid & Drag-Drop`, `Notification Bell & Dropdown`, `Sidebar Components`, `Distribution/Workload Charts`, `Deployment Form Fields`, `use-toast Reducer`, `Project Modal & Kanban`, `Commercial/Public Checklists`, `Predictability & Bottlenecks`, `Post Observations Editor`, `ProtectedRoute.tsx`, `Deployment Template & Stage Forms`, `Theme Provider`, `LogsTab.tsx`, `Health Badge & Pipeline Status`, `useTeams.ts`, `usePublicChecklist.ts`, `CsCxRegistryOffices.tsx`, `PipelineStatus.tsx`, `Roadmap Page`, `ProjectDistributionChart.tsx`, `Login`, `PosPanorama.tsx`, `index.ts`, `useCsCxNpsSurveys.ts`, `PublicNpsResponse.tsx`, `normalizeSearchText`, `Reports.tsx`, `text`, `editor.tsx`, `VersionHistoryDrawer.tsx`, `usePosPanorama.ts`, `toast.tsx`, `GlobalMetrics.tsx`, `NpsAnalytics.tsx`, `useProjectForm.ts`, `ConversionPostFeed.tsx`, `CsCxAppointments`, `SimpleMarkdown.tsx`?**
   _High betweenness centrality (0.037) - this node is a cross-community bridge._
 - **Why does `err()` connect `Checklist & Visual Question Builder` to `VM Worker Job Queue`, `FormRenderer.tsx`, `filterStore.ts`, `Notification Bell & Dropdown`, `Distribution/Workload Charts`, `use-toast Reducer`, `Project Modal & Kanban`, `Commercial Page & Hooks`, `Main Layout & Theme Toggle`, `Post Observations Editor`, `Health Badge & Pipeline Status`, `LogsTab.tsx`, `chamadosSync.ts`, `Improve-Text AI Jobs`, `Login`, `PosPanorama.tsx`, `index.ts`, `tickets-ai-report-pdf.ts`, `usePosAiChat.ts`, `useHomologationEvents.ts`?**
   _High betweenness centrality (0.031) - this node is a cross-community bridge._

@@ -197,6 +197,8 @@ interface ProcessoVendaViewRow {
   Produto: string | null;
   DataAberturaChamado: Date | null;
   SolDataFechamento: Date | null;
+  DataAberturaIso: string | null;
+  DataEncerramentoIso: string | null;
 }
 
 function cleanFilterValues(values?: unknown): string[] {
@@ -600,7 +602,9 @@ async function runProcessoVendaOnce(
     const res = await executeControlledQuery<ProcessoVendaViewRow>(chamadoRequest, `
       SELECT NumeroChamado, codigoCliente, NomeCliente, RazaoSocialCliente,
              TituloChamado, descricaotramite, Natureza, StatusChamado,
-             Software, Produto, DataAberturaChamado, SolDataFechamento
+             Software, Produto, DataAberturaChamado, SolDataFechamento,
+             CONVERT(varchar(19), DataAberturaChamado, 126) AS DataAberturaIso,
+             CONVERT(varchar(19), SolDataFechamento, 126) AS DataEncerramentoIso
       FROM ${catalog.sourceView}
       WHERE ${whereClauses.join("\n        AND ")}
     `, control);
@@ -620,8 +624,10 @@ async function runProcessoVendaOnce(
       status: normalizeChamadoStatus(r.StatusChamado) || "Não iniciado",
       software: r.Software || null,
       produto: r.Produto || null,
-      data_abertura: toIsoDate(r.DataAberturaChamado),
-      data_encerramento: toIsoDate(r.SolDataFechamento),
+      data_abertura: r.DataAberturaIso?.slice(0, 10) || toIsoDate(r.DataAberturaChamado),
+      data_encerramento: r.DataEncerramentoIso?.slice(0, 10) || toIsoDate(r.SolDataFechamento),
+      aberto_em: r.DataAberturaIso || null,
+      encerrado_em: r.DataEncerramentoIso || null,
       synced_at: new Date().toISOString(),
     }));
 
