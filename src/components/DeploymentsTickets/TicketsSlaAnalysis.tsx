@@ -7,6 +7,7 @@ import {
   ChevronRight,
   CircleAlert,
   Clock3,
+  FileDown,
   Loader2,
   MessageSquareText,
   Timer,
@@ -31,7 +32,10 @@ import {
   getResolutionSlaState,
   parseSlaDate,
 } from "@/lib/tickets-sla";
+import type { ChamadosReportFilters } from "@/lib/chamados-report-pdf";
+import { generateTicketsSlaReportPdf } from "@/lib/tickets-sla-report-pdf";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 const PAGE_SIZE = 50;
 
@@ -41,6 +45,7 @@ interface TicketsSlaAnalysisProps {
   syncedAt?: number;
   syncing: boolean;
   filters: Omit<ChamadosSearchFilters, "page" | "pageSize">;
+  reportFilters: ChamadosReportFilters;
 }
 
 function formatDateTime(value?: string): string {
@@ -186,10 +191,12 @@ export function TicketsSlaAnalysis({
   syncedAt,
   syncing,
   filters,
+  reportFilters,
 }: TicketsSlaAnalysisProps) {
   const [firstResponseHours, setFirstResponseHours] = useState(8);
   const [resolutionDays, setResolutionDays] = useState(5);
   const [page, setPage] = useState(1);
+  const [generatingPdf, setGeneratingPdf] = useState(false);
   const { data: rows = [], isLoading, error } = useQuery({
     queryKey: ["ticketsSlaAnalysis", filterKey, syncedAt],
     enabled: active && !syncing,
@@ -216,6 +223,33 @@ export function TicketsSlaAnalysis({
     setPage((current) => Math.min(current, totalPages));
   }, [totalPages]);
 
+  const handleGeneratePdf = async () => {
+    if (rows.length === 0) {
+      toast.info("Nenhum chamado encontrado para gerar o relatório de SLA.");
+      return;
+    }
+
+    setGeneratingPdf(true);
+    const toastId = "tickets-sla-report-pdf";
+    try {
+      toast.loading("Montando o relatório de tempos e SLA...", { id: toastId });
+      await generateTicketsSlaReportPdf(rows, {
+        ...reportFilters,
+        firstResponseHours,
+        resolutionDays,
+      });
+      toast.success(`Relatório de SLA gerado com ${rows.length} chamado(s).`, { id: toastId });
+    } catch (pdfError) {
+      console.error("Erro ao gerar relatório de SLA:", pdfError);
+      toast.error(
+        pdfError instanceof Error ? pdfError.message : "Não foi possível gerar o relatório de SLA.",
+        { id: toastId },
+      );
+    } finally {
+      setGeneratingPdf(false);
+    }
+  };
+
   return (
     <div className="space-y-3">
       <Card className="border-muted/80 shadow-sm">
@@ -224,6 +258,18 @@ export function TicketsSlaAnalysis({
             <h2 className="flex items-center gap-1.5 text-sm font-bold"><Timer className="h-4 w-4 text-primary" />Tempos de atendimento e SLA</h2>
             <p className="mt-0.5 text-[10px] text-muted-foreground">Cálculo em horas e dias corridos. Ajuste os limites conforme o contrato analisado.</p>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 gap-1.5 px-2 text-[10px]"
+            onClick={handleGeneratePdf}
+            disabled={generatingPdf || syncing || isLoading || rows.length === 0}
+          >
+            {generatingPdf
+              ? <Loader2 className="h-3 w-3 animate-spin" />
+              : <FileDown className="h-3 w-3" />}
+            {generatingPdf ? "Gerando PDF..." : "Relatório SLA"}
+          </Button>
           <label className="space-y-1 text-[10px] font-medium text-muted-foreground">
             SLA primeiro atendimento (horas)
             <Input type="number" min={1} max={720} value={firstResponseHours} onChange={(event) => setFirstResponseHours(Math.max(1, Number(event.target.value) || 1))} className="h-7 w-28 text-xs" />
