@@ -2770,8 +2770,8 @@
     "semantic_hash": ""
   },
   "src/hooks/useChamados0800.ts": {
-    "mtime": 1787694285.7709665,
-    "ast_hash": "22aa1661fd135d11385474273fc16a2e",
+    "mtime": 1787695859.4406214,
+    "ast_hash": "41d4834946c4dd5dff9aa75d0092ab66",
     "semantic_hash": ""
   },
   "supabase/migrations/20260716120000_chamados_0800_mirror.sql": {
@@ -2780,8 +2780,8 @@
     "semantic_hash": ""
   },
   "vm-worker/src/chamadosSync.ts": {
-    "mtime": 1787694873.0881934,
-    "ast_hash": "d5171214146029625a7bbbe13320c459",
+    "mtime": 1787695859.439626,
+    "ast_hash": "cfc0b651e62e757e62f0ffaa17e44abc",
     "semantic_hash": ""
   },
   "docs/PERMISSOES_RBAC.md": {
@@ -2960,8 +2960,8 @@
     "semantic_hash": ""
   },
   "src/pages/DeploymentsTickets.tsx": {
-    "mtime": 1787694575.025537,
-    "ast_hash": "fd4310fe0a4351702b90985530f33a9e",
+    "mtime": 1787695960.243677,
+    "ast_hash": "4458976cd6fdd83737b4c11bb62746f3",
     "semantic_hash": ""
   },
   "src/utils/adherence-helpers.ts": {
@@ -4172,6 +4172,26 @@
   "docs/cs-cx/MIGRATION_PARITY.md": {
     "mtime": 1787147936.5007336,
     "ast_hash": "5ffa7bcfd02bc09889440fbd346506c6",
+    "semantic_hash": ""
+  },
+  "src/components/DeploymentsTickets/TicketsSlaAnalysis.tsx": {
+    "mtime": 1787696046.5560665,
+    "ast_hash": "663282c6ea057b1d2d377bb6cd1e909d",
+    "semantic_hash": ""
+  },
+  "src/lib/tickets-sla.test.ts": {
+    "mtime": 1787696070.3850384,
+    "ast_hash": "43116e76866bff6ac4f0417c1989cd05",
+    "semantic_hash": ""
+  },
+  "src/lib/tickets-sla.ts": {
+    "mtime": 1787696000.4099774,
+    "ast_hash": "8b0f973d8420e5dbb830ba61b9f2ea40",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260825223000_chamados_sla_timestamps.sql": {
+    "mtime": 1787695859.445126,
+    "ast_hash": "bc49599c1dcefd44cf6c89156313d489",
     "semantic_hash": ""
   }
 }

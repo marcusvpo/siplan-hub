@@ -23,6 +23,8 @@ export interface Chamado0800 {
   equipeResponsavel?: string;
   dataAbertura?: string;
   dataEncerramento?: string;
+  abertoEm?: string;
+  encerradoEm?: string;
   syncedAt?: string;
   /** Tema curto gerado por IA no worker ("selo digital", "livro caixa"...).
    * undefined = ainda nao classificado; "interno" nunca chega aqui (filtrado). */
@@ -111,6 +113,8 @@ export const mapChamado0800 = (c: any): Chamado0800 => ({
   equipeResponsavel: c.equipe_responsavel ?? undefined,
   dataAbertura: c.data_abertura ?? undefined,
   dataEncerramento: c.data_encerramento ?? undefined,
+  abertoEm: c.aberto_em ?? undefined,
+  encerradoEm: c.encerrado_em ?? undefined,
   syncedAt: c.synced_at ?? undefined,
   tema: c.tema_ia && c.tema_ia !== "interno" ? c.tema_ia : undefined,
 });
