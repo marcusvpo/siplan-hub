@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
 const hasPermission = vi.fn();
@@ -21,6 +21,7 @@ vi.mock("@/hooks/useCsCxCore", () => ({
     offices: [
       { id: "office-1", name: "Cartório Central", active: true },
       { id: "office-2", name: "Cartório Norte", active: true },
+      { id: "office-3", name: "Cartório Sul", active: true },
     ],
     products: [{ id: "product-1", name: "Orion", product_code: "ORI" }],
     error: null,
@@ -34,13 +35,18 @@ vi.mock("@/hooks/useCsCxEngagement", () => ({
     contacts: Array.from({ length: 12 }, (_, index) => ({
       id: `contact-${index + 1}`,
       legacy_id: index + 1,
-      contact_date: "2026-08-10",
+      contact_date:
+        index === 11
+          ? new Date(Date.now() - 100 * 24 * 60 * 60 * 1000)
+              .toISOString()
+              .slice(0, 10)
+          : new Date().toISOString().slice(0, 10),
       notes: "Contato produtivo",
       pending_items: null,
       product_id: "product-1",
       contact_person: index === 0 ? "Maria" : `Pessoa ${index + 1}`,
       contact_details: index === 0 ? "maria@exemplo.com" : `pessoa${index + 1}@exemplo.com`,
-      registry_office_id: "office-1",
+      registry_office_id: index === 11 ? "office-3" : "office-1",
       ticket_number: null,
       author_profile_id: "profile-1",
       created_at: null,
@@ -49,7 +55,10 @@ vi.mock("@/hooks/useCsCxEngagement", () => ({
       product: { id: "product-1", name: "Orion" },
       products: [{ id: "product-1", name: "Orion", is_primary: true }],
       author: { id: "profile-1", full_name: "Bruno", email: null },
-      registry_office: { id: "office-1", name: "Cartório Central" },
+      registry_office:
+        index === 11
+          ? { id: "office-3", name: "Cartório Sul" }
+          : { id: "office-1", name: "Cartório Central" },
     })),
     isLoading: false,
     error: null,
@@ -156,6 +165,37 @@ describe("CS/CX contatos e agendamentos — permissões", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /novo contato/i }));
     expect(screen.getByRole("combobox", { name: /produtos do contato/i })).toBeInTheDocument();
+  });
+
+  it("exibe o painel de cartórios que precisam de atenção", () => {
+    renderPage(<CsCxContacts />, []);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /painel de atenção/i }),
+    );
+
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toHaveTextContent("Cartórios que precisam de atenção");
+    expect(dialog).toHaveTextContent("Cartório Norte");
+    expect(dialog).toHaveTextContent("Nunca registrado");
+    expect(dialog).toHaveTextContent("Cartório Sul");
+    expect(dialog).toHaveTextContent("90+ dias");
+    expect(dialog).toHaveTextContent("A atenção começa após 30 dias");
+  });
+
+  it("inicia um contato pelo painel com o cartório preenchido", () => {
+    renderPage(<CsCxContacts />, ["cs_cx_contatos:create"]);
+    fireEvent.click(
+      screen.getByRole("button", { name: /painel de atenção/i }),
+    );
+    const northRow = screen.getByText("Cartório Norte").closest("tr");
+    expect(northRow).not.toBeNull();
+    fireEvent.click(within(northRow!).getByRole("button", { name: /registrar contato/i }));
+
+    expect(screen.getByRole("dialog")).toHaveTextContent("Novo contato");
+    expect(
+      screen.getByRole("combobox", { name: /cartórios do contato/i }),
+    ).toHaveTextContent("Cartório Norte");
   });
 
   it("cria o mesmo contato para vários cartórios em uma única confirmação", async () => {

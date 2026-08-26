@@ -364,7 +364,6 @@
   "362": "cs-cx-schema-preflight.test.ts",
   "363": "useAuditLogs.ts",
   "364": "chamados-date-range.ts",
-  "365": "require-permission.test.tsx",
   "366": "DeploymentsLegacyTickets.tsx",
   "367": "KnowledgeEditorPage.tsx",
   "368": "check-cs-cx-readiness.mjs",
@@ -382,6 +381,7 @@
   "380": "ImplementerPDFExport.tsx",
   "381": "ImplementerPhaseMetrics.tsx",
   "382": "chamados-client-options-migration.test.ts",
+  "383": "OverviewChart.tsx",
   "384": "cs-cx-record-ownership-migration.test.ts",
   "385": "index.ts",
   "386": "chamados-client-code-filter.test.ts",
@@ -396,5 +396,7 @@
   "395": "pos-chat-visitor-migration.test.ts",
   "396": "index.ts",
   "397": "index.ts",
-  "398": "runSkill.test.ts"
+  "398": "runSkill.test.ts",
+  "399": "CollapsibleFieldSection.tsx",
+  "400": "calculations.ts"
 }
