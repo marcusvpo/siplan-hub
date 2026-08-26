@@ -91,8 +91,9 @@ export async function generateDailyDigest(): Promise<void> {
   const prompt = buildDigestPrompt(portfolio, issues, hoje);
 
   const { resultText, code } = await runSkill(prompt, undefined, undefined, {
-    model: config.copilotModel || undefined,
+    model: config.copilotCodexModel || undefined,
     cwd: config.copilotCwd,
+    allowOllamaFallback: true,
   });
   const content = (resultText || "").trim();
   if (code !== 0 || !content) return;

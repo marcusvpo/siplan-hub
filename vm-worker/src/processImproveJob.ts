@@ -289,7 +289,7 @@ ${source}
 
 /**
  * Pipeline de um job 'improve_text' (ja marcado 'processing' pelo claim):
- * le o texto de entrada (input_text) -> roda o Claude para reescrever ->
+ * le o texto de entrada (input_text) -> roda o Codex para reescrever ->
  * grava o texto melhorado em result_text -> done. Lanca em falha; o loop
  * principal marca o job como 'error'.
  */
@@ -365,7 +365,7 @@ export async function processImproveJob(job: DtcJob): Promise<void> {
     );
   }
 
-  // 2. Rodar o Claude para reescrever/resumir
+  // 2. Rodar o Codex para reescrever/resumir
   pushStep(
     isParecer
       ? isNpsAnalysis
@@ -421,11 +421,15 @@ export async function processImproveJob(job: DtcJob): Promise<void> {
     : isSummary
     ? buildSummaryPrompt(text)
     : buildImprovePrompt(text);
-  let { resultText, transcript, code, stderr, cancelled } = await runSkill(
+  const { resultText, transcript, code, stderr, cancelled } = await runSkill(
     prompt,
     (step) => record(step),
     shouldCancel,
-    { model: config.dtcModel || undefined }
+    {
+      model: config.dtcCodexModel || undefined,
+      cwd: config.copilotCwd,
+      allowOllamaFallback: true,
+    }
   );
   await flushProgress(true);
 
@@ -440,42 +444,14 @@ export async function processImproveJob(job: DtcJob): Promise<void> {
     return;
   }
 
-  // Fallback: bateu o limite de sessao da assinatura e ha API key -> tenta via API.
-  const hitSessionLimit = /(session|usage) limit|hit your (session|usage) limit|limite de sess/i.test(
-    `${stderr}\n${transcript}\n${resultText}`
-  );
-  if (code !== 0 && hitSessionLimit && config.fallbackApiKey) {
-    pushStep("Limite de sessao atingido. Tentando novamente via API...", "system");
-    await flushProgress(true);
-    ({ resultText, transcript, code, stderr, cancelled } = await runSkill(
-      prompt,
-      (step) => record(step),
-      shouldCancel,
-      { model: config.dtcModel || undefined, env: { ANTHROPIC_API_KEY: config.fallbackApiKey } }
-    ));
-    await flushProgress(true);
-    if (cancelled) {
-      await supabase
-        .from("dtc_ai_jobs")
-        .update({ status: "cancelled", finished_at: new Date().toISOString(), cancel_requested: false })
-        .eq("id", job.id);
-      return;
-    }
-  }
-
   if (code !== 0) {
-    if (hitSessionLimit && !config.fallbackApiKey) {
-      throw new Error(
-        "Limite de sessao do Claude atingido na VM. Aguarde o reset ou configure DTC_FALLBACK_API_KEY no .env para cobrar via API."
-      );
-    }
     const tail = (stderr || transcript || "").slice(-1200);
-    throw new Error(`Claude encerrou com codigo ${code}. Fim da saida: ${tail}`);
+    throw new Error(`Motor de IA encerrou com codigo ${code}. Fim da saida: ${tail}`);
   }
 
   const improved = (resultText || "").trim();
   if (!improved) {
-    throw new Error(`O Claude nao retornou texto. Fim da saida: ${(transcript || "").slice(-800)}`);
+    throw new Error(`O motor de IA nao retornou texto. Fim da saida: ${(transcript || "").slice(-800)}`);
   }
 
   // 3. Concluir job com o texto gerado

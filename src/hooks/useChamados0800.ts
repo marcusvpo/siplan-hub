@@ -373,7 +373,7 @@ export interface ParecerPosJob {
 /**
  * Parecer IA da Analise Pos-Implantacao: enfileira um job 'pos_parecer' na fila
  * dtc_ai_jobs (input_text = JSON compacto dos chamados do periodo); o vm-worker
- * roda o Claude e devolve o texto em result_text. A query faz polling enquanto
+ * roda o Codex (com fallback Ollama) e devolve o texto em result_text. A query faz polling enquanto
  * houver job ativo e guarda o ultimo parecer concluido do projeto.
  */
 export function useParecerPos(projectId?: string) {

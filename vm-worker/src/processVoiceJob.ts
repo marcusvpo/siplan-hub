@@ -12,7 +12,7 @@ const PROGRESS_FLUSH_MS = 2500;
 
 // Prompt de polimento de ditado por voz. Diferente do 'improve_text' comum: a
 // entrada e uma transcricao bruta de fala (sem pontuacao confiavel, com hesitacoes,
-// repeticoes e possiveis erros do reconhecimento). Pedimos ao Claude que limpe e
+// repeticoes e possiveis erros do reconhecimento). Pedimos ao Codex que limpe e
 // eleve, mas SEM inventar fatos.
 function buildVoicePrompt(transcript: string): string {
   return `Voce e um redator profissional. O TEXTO ORIGINAL abaixo e a transcricao bruta de um audio ditado por um analista de implantacao (fala espontanea, transcrita automaticamente). Reescreva-o como um relato escrito rico, claro, bem estruturado, bem pontuado e com portugues formal e profissional.
@@ -66,10 +66,10 @@ function runCommand(
 /**
  * Pipeline de um job 'voice_note' (ja marcado 'processing' pelo claim):
  * baixa o audio do Storage -> converte para WAV 16kHz mono com ffmpeg ->
- * transcreve LOCALMENTE com whisper.cpp -> passa a transcricao pelo Claude para
+ * transcreve LOCALMENTE com whisper.cpp -> passa a transcricao pelo Codex para
  * gerar um texto profissional -> grava em result_text -> done.
  *
- * Claude Code headless nao ingere audio: quem "ouve" e o whisper.cpp; o Claude
+ * O Codex nao ingere o audio neste fluxo: quem "ouve" e o whisper.cpp; o agente
  * apenas eleva o texto transcrito. Lanca em falha; o loop principal marca 'error'.
  */
 export async function processVoiceJob(job: DtcJob): Promise<void> {
@@ -166,7 +166,7 @@ export async function processVoiceJob(job: DtcJob): Promise<void> {
       throw new Error("Nao consegui entender o audio. Grave novamente em ambiente mais silencioso.");
     }
 
-    // 4. Elevar a transcricao com o Claude (mesmo que ja roda na VM)
+    // 4. Elevar a transcricao com Codex (Ollama assume se o Codex estiver indisponivel)
     pushStep("Gerando o texto profissional com IA...");
     await flushProgress(true);
 
@@ -180,11 +180,15 @@ export async function processVoiceJob(job: DtcJob): Promise<void> {
     };
 
     const prompt = buildVoicePrompt(transcript);
-    let { resultText, transcript: log, code, stderr, cancelled } = await runSkill(
+    const { resultText, transcript: log, code, stderr, cancelled } = await runSkill(
       prompt,
       (step) => record(step),
       shouldCancel,
-      { model: config.dtcModel || undefined }
+      {
+        model: config.dtcCodexModel || undefined,
+        cwd: config.copilotCwd,
+        allowOllamaFallback: true,
+      }
     );
     await flushProgress(true);
 
@@ -199,40 +203,12 @@ export async function processVoiceJob(job: DtcJob): Promise<void> {
       return;
     }
 
-    // Fallback: limite de sessao da assinatura + API key -> tenta via API.
-    const hitSessionLimit = /(session|usage) limit|hit your (session|usage) limit|limite de sess/i.test(
-      `${stderr}\n${log}\n${resultText}`
-    );
-    if (code !== 0 && hitSessionLimit && config.fallbackApiKey) {
-      pushStep("Limite de sessao atingido. Tentando novamente via API...", "system");
-      await flushProgress(true);
-      ({ resultText, transcript: log, code, stderr, cancelled } = await runSkill(
-        prompt,
-        (step) => record(step),
-        shouldCancel,
-        { model: config.dtcModel || undefined, env: { ANTHROPIC_API_KEY: config.fallbackApiKey } }
-      ));
-      await flushProgress(true);
-      if (cancelled) {
-        await supabase
-          .from("dtc_ai_jobs")
-          .update({ status: "cancelled", finished_at: new Date().toISOString(), cancel_requested: false })
-          .eq("id", job.id);
-        return;
-      }
-    }
-
     if (code !== 0) {
-      if (hitSessionLimit && !config.fallbackApiKey) {
-        throw new Error(
-          "Limite de sessao do Claude atingido na VM. Aguarde o reset ou configure DTC_FALLBACK_API_KEY no .env para cobrar via API."
-        );
-      }
       const tail = (stderr || log || "").slice(-1200);
-      throw new Error(`Claude encerrou com codigo ${code}. Fim da saida: ${tail}`);
+      throw new Error(`Motor de IA encerrou com codigo ${code}. Fim da saida: ${tail}`);
     }
 
-    // Se o Claude nao devolveu nada, cai para a transcricao crua (melhor que vazio).
+    // Se nenhum motor devolveu texto, cai para a transcricao crua (melhor que vazio).
     const generated = (resultText || "").trim() || transcript;
 
     pushStep("Texto pronto! Revise antes de aplicar.", "result");

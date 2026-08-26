@@ -64,7 +64,7 @@ const mapJob = (j: any): CopilotJob => ({
 /**
  * Copiloto Operacional: chat com IA sobre o portfolio de projetos.
  * O frontend apenas enfileira a pergunta (copilot_jobs); o mesmo worker da VM que
- * gera modelos monta o contexto dos projetos, roda o Claude e devolve a resposta.
+ * gera modelos monta o contexto dos projetos, roda o Codex e devolve a resposta.
  * Acesso e cota diaria de tokens sao controlados por copilot_access (tela admin).
  */
 export function useCopilot() {

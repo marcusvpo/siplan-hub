@@ -63,7 +63,7 @@ interface VoiceDictationButtonProps {
 /**
  * Botao de ditado por voz para campos de texto rico. Grava o audio no navegador
  * (MediaRecorder, funciona em PC e mobile), sobe para o Storage e enfileira um job
- * 'voice_note'. O worker transcreve com whisper.cpp e eleva com o Claude; o texto
+ * 'voice_note'. O worker transcreve com whisper.cpp e eleva com Codex/Ollama; o texto
  * gerado aparece num preview onde o analista escolhe anexar ou substituir.
  */
 export function VoiceDictationButton({
@@ -112,7 +112,7 @@ export function VoiceDictationButton({
   };
 
   // Legenda ao vivo via Web Speech API. Roda em PARALELO ao MediaRecorder e serve
-  // so de preview (rascunho cru). O texto FINAL continua vindo do whisper+Claude.
+  // so de preview (rascunho cru). O texto FINAL continua vindo do whisper+IA.
   const startLiveCaption = () => {
     const SR = getSpeechRecognition();
     if (!SR) return; // navegador sem suporte -> segue so com o batch

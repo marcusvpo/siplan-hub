@@ -25,7 +25,7 @@ const mapJob = (item: any): DtcAiJob => ({
 /**
  * Fila de geracao com IA das "Consideracoes finais" (aba Relato Tecnico, item 6).
  * O frontend apenas enfileira o job; o mesmo worker da VM que gera modelos le o DTC,
- * roda o Claude e devolve o texto em result_text. Quando o job vira 'done', o
+ * roda o Codex (com fallback Ollama) e devolve o texto em result_text. Quando o job vira 'done', o
  * callback onResult recebe o texto para o componente injetar no editor (revisao).
  */
 export function useDtcAiJobs(

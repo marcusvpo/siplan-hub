@@ -5,7 +5,7 @@
 > O job `voice_note` (transcrição de áudio) **não** é coberto aqui — tem documentação própria.
 
 Todos os três botões usam a mesma fila (`dtc_ai_jobs`), o mesmo worker da VM
-(systemd `siplan-model-worker`) e a mesma CLI do Claude Code headless. O que muda
+(systemd `siplan-model-worker`) e o mesmo executor Codex, com fallback Ollama. O que muda
 entre eles é o `job_type`, o prompt e a origem do texto de entrada.
 
 ---
@@ -43,10 +43,8 @@ Supabase (o worker faz apenas conexões de saída: Realtime/WebSocket outbound).
    |                                        |<-- RPC claim_dtc_ai_job (FOR UPDATE ----|  reivindica 1 job:
    |                                        |    SKIP LOCKED) -> status 'processing'  |  status='processing', attempts+1
    |                                        |                                        |
-   |                                        |                                        |-- roda Claude Code headless
-   |                                        |                                        |   (assinatura, sem API key;
-   |                                        |                                        |    --dangerously-skip-permissions
-   |                                        |                                        |    --output-format stream-json)
+   |                                        |                                        |-- roda Codex CLI (JSONL)
+   |                                        |                                        |   ou Ollama no fallback
    |                                        |                                        |
    |<-- Realtime (progress / progress_log) -+<---------------------------------------|  grava progresso a cada ~2,5s
    |   [feed ao vivo no badge "Gerando..."] |                                        |
@@ -59,7 +57,7 @@ Supabase (o worker faz apenas conexões de saída: Realtime/WebSocket outbound).
 ```
 
 Pontos-chave:
-- **Único worker, um Claude por vez.** O worker drena as filas sob um flag `busy`
+- **Único worker, um agente por vez.** O worker drena as filas sob um flag `busy`
   (`claimAndProcess` em `vm-worker/src/index.ts`); prioriza modelos e intercala com
   os jobs DTC e do Copiloto.
 - **Claim atômico.** `claim_dtc_ai_job` usa `FOR UPDATE SKIP LOCKED` — garante um
@@ -157,7 +155,7 @@ qualquer outro (inclui 'dtc_summary')          -> processDtcJob
    Lexical (`lexToText`). **Filtra dados sensíveis** (`SENSITIVE`: senha/login/chave/host/
    IP/porta etc.) — nunca vazam no resumo. O analista da implantação vem da etapa 6
    (`implementation_phase1.responsible`), nunca da etapa 7.
-3. Roda o Claude (`runSkill`) com o prompt de "Considerações finais" (3 a 7 parágrafos,
+3. Roda o Codex (`runSkill`) com o prompt de "Considerações finais" (3 a 7 parágrafos,
    Markdown leve, validando explicitamente etapas não concluídas como pendência).
 4. Grava `result_text`, `status='done'`.
 
@@ -179,27 +177,16 @@ escolhe o prompt:
 
 ### Modelo, execução e fallback
 
-- **Modelo:** `config.dtcModel` (`vm-worker/src/config.ts`) = **`sonnet`** por padrão
-  (tarefa leve → modelo mais rápido). Override via env `DTC_MODEL`. Passado ao
-  `runSkill` como `--model`.
-- **Execução (`runSkill`, `vm-worker/src/runSkill.ts`):** `spawn` do binário do Claude
-  Code com `--dangerously-skip-permissions -p <prompt> --output-format stream-json
-  --verbose [--model sonnet]`, `cwd = ORION_PROJECT_DIR`. Roda pela **assinatura**
-  (sem API key no caso normal). Parseia o NDJSON linha a linha, emitindo cada passo
-  (texto do agente e chamadas de ferramenta) via `onProgress`.
-- **Fallback de limite de sessão:** se o Claude encerrar com `code != 0` e a saída
-  casar com "session/usage limit / limite de sess..." **e** houver `DTC_FALLBACK_API_KEY`
-  configurada, o worker **repete** a chamada injetando `ANTHROPIC_API_KEY` no ambiente
-  (cobra via API em vez da assinatura). Sem a chave configurada, lança erro pedindo
-  para aguardar o reset ou configurar `DTC_FALLBACK_API_KEY`.
-- **Auto-retry por cota (nível fila):** se o erro que sobe ao `index.ts` for de limite
-  de sessão (`isQuotaExhausted`), o job **não** vira `error`: `requeueForQuota` devolve
-  para `pending`, desfaz o `attempts+1`, define `retry_after = agora + QUOTA_RETRY_MS`
-  (padrão 15 min) e escreve uma mensagem em `progress`. O worker retenta sozinho quando
-  os tokens voltam. Ou seja: há **duas** camadas de recuperação de cota — o fallback
-  imediato via API (se houver chave) e o reenfileiramento agendado.
-- **Cancelamento:** `runSkill` verifica `cancel_requested` a cada ~5s; se pedido, mata
-  o Claude (`SIGKILL`), o job vira `cancelled` e `cancel_requested` volta a `false`.
+- **Modelo Codex:** `config.dtcCodexModel`; vazio usa a configuração atual da CLI. Override
+  via `DTC_CODEX_MODEL` ou `CODEX_MODEL`.
+- **Execução:** `codex exec --json --ephemeral`, sandbox `read-only`, com progresso JSONL.
+  A autenticação vem de `codex login` e não de uma chave exposta ao processo do job.
+- **Fallback automático:** saída não zero, limite, indisponibilidade ou falha de spawn do
+  Codex acionam `runOllama()` com `OLLAMA_MODEL`. A troca é registrada no progresso.
+- **Falha dupla:** somente se Codex e Ollama falharem o erro sobe ao `index.ts`; limites
+  reconhecidos ainda podem ser reenfileirados por `requeueForQuota`.
+- **Cancelamento:** `runSkill` verifica `cancel_requested` a cada ~2,5s; se pedido, encerra
+  o processo, o job vira `cancelled` e `cancel_requested` volta a `false`.
 - **Progresso ao vivo:** flush em `progress`/`progress_log`/`progress_updated_at` a
   cada ~2,5s (`PROGRESS_FLUSH_MS`), mantendo só os últimos 80 passos (`MAX_LOG_STEPS`)
   para não estourar o payload do Realtime.
@@ -225,7 +212,7 @@ escolhe o prompt:
   `input_text`. Mesma mecânica de Realtime + polling + `onResult`.
 
 Ambos os hooks cancelam assim: se `pending`, marcam direto `status='cancelled'`; se
-`processing`, setam `cancel_requested=true` (o worker mata o Claude).
+`processing`, setam `cancel_requested=true` (o worker encerra o motor de IA).
 
 ### Componente `ObservationsWithAI` — `src/components/ProjectManagement/Forms/ObservationsWithAI.tsx`
 
@@ -253,19 +240,20 @@ O mesmo padrão manter/substituir vale para `dtc_summary` (Considerações Finai
 ## 6. Instalação / configuração
 
 **Não há infraestrutura nova além do worker de modelos** — é o mesmo processo, a mesma
-VM, a mesma CLI do Claude e a mesma chave do Supabase. Variáveis relevantes no `.env`
+VM, o mesmo Codex/Ollama e a mesma chave do Supabase. Variáveis relevantes no `.env`
 do worker (`vm-worker/`):
 
 | Variável | Padrão | Papel nesta funcionalidade |
 |---|---|---|
-| `DTC_MODEL` | `sonnet` | Modelo usado nos 3 jobs de texto. |
-| `DTC_FALLBACK_API_KEY` | `""` (vazio) | Se definida, habilita o fallback via API quando bate o limite de sessão. Opcional. |
+| Motor principal | `codex` | Fixo no executor do worker. |
+| `DTC_CODEX_MODEL` | vazio | Modelo Codex dos jobs de texto; herda `CODEX_MODEL`/CLI. |
+| `OLLAMA_HOST` / `OLLAMA_MODEL` | local / `llama3.1` | Contingência automática para falhas do Codex. |
 | `QUOTA_RETRY_MS` | `900000` (15 min) | Intervalo do reenfileiramento automático por cota. |
 | `JOB_TIMEOUT_MS` | `1800000` (30 min) | Timeout de uma geração. |
 | `MAX_ATTEMPTS` | `3` | Tentativas antes de erro definitivo. |
 | `SUPABASE_URL` / `SUPABASE_SECRET_KEY` | — | Conexão do worker (mesmas do worker de modelos). |
 
-As demais variáveis (`CLAUDE_BIN`/auto-descoberta, `POLL_INTERVAL_MS`,
+As demais variáveis (`CODEX_BIN`, `CODEX_SANDBOX`, `POLL_INTERVAL_MS`,
 `HEARTBEAT_INTERVAL_MS`, `WORKER_ID`, `ORION_PROJECT_DIR` etc.) são as mesmas descritas
 em `vm-worker/README.md`. Nenhuma dependência extra (whisper/ffmpeg são só do
 `voice_note`).
@@ -275,8 +263,7 @@ em `vm-worker/README.md`. Nenhuma dependência extra (whisper/ffmpeg são só do
 ## 7. Onde está rodando atualmente
 
 - **Worker:** VM Linux, serviço **systemd `siplan-model-worker`**, rodando como usuário
-  **`administrator`** (não-root — o Claude Code recusa `--dangerously-skip-permissions`
-  como root e o `administrator` tem a credencial em `~/.claude`). **Node 22 via nvm** +
+  **`administrator`**, que mantém a credencial do Codex em `~/.codex`. **Node 22 via nvm** +
   **tsx** executando `src/index.ts`. `WorkingDirectory=/home/administrator/vm-worker`.
 - **Autodeploy:** `scripts/auto-deploy.sh` no cron do root, **a cada 5 min**, baixa os
   fontes mais novos de `vm-worker/src` do branch **`main`** (API pública do GitHub) e
@@ -303,29 +290,29 @@ Linhas úteis: `[dtc <id>]`, `[improve <id>]`, `[summary <id>]` (início/conclu�
 
 | Sintoma | Causa provável | Ação |
 |---|---|---|
-| Job fica em `pending` e volta com mensagem "Limite de sessão... retomarei automaticamente" | Limite de sessão/tokens da assinatura do Claude na VM. | Aguardar o reset (retry automático a cada `QUOTA_RETRY_MS`), ou configurar `DTC_FALLBACK_API_KEY` para cobrar via API. |
-| Job vira `error` "Limite de sessão do Claude atingido na VM" | Bateu o limite e **não** há fallback configurado (erro veio de dentro do `processImprove/DtcJob`). | Configurar `DTC_FALLBACK_API_KEY` ou aguardar reset e reprocessar. |
+| Progresso mostra `Continuando com Ollama local` | Codex falhou, ficou sem cota ou inacessível. | O job continua; revisar `codex login status` se recorrente. |
+| Job vira `error` depois do fallback | Codex e Ollama falharam. | Conferir autenticação Codex, `ollama serve` e `ollama list`. |
 | Job preso em `processing` (worker morreu) | Crash/restart no meio da geração. | O **reaper** (`requeue_stuck_dtc_ai_jobs`) devolve para a fila após `JOB_TIMEOUT_MS`; no boot, a recuperação faz isso na hora. |
 | Botão de IA desabilitado | Worker offline (heartbeat) ou texto curto demais. | Conferir `journalctl`/selo "Gerador offline"; garantir texto mínimo. |
-| `spawn ... ENOENT` do Claude | Extensão do VS Code atualizou e mudou o caminho do binário. | `config.getClaudeBin()` revalida e re-descobre sozinho; se persistir, conferir/definir `CLAUDE_BIN`. |
+| `spawn ... ENOENT` do Codex | Dependência ausente ou `CODEX_BIN` inválido. | Rodar `npm install` no worker e conferir `CODEX_BIN`. |
 | "Este projeto ainda não possui dados de transição (DTC)" (dtc_summary) | `custom_fields.dtc` vazio. | Preencher o Relato Técnico antes de gerar. |
 
 **Como cancelar:** pela própria tela. Job `pending` → marcado `cancelled` direto;
-job `processing` → seta `cancel_requested=true` e o worker mata o Claude em até ~5s.
+job `processing` → seta `cancel_requested=true` e o worker encerra o motor em até ~2,5s.
 
 ---
 
 ## 9. Migração de VM
 
 **Não requer nada específico além do setup do worker de modelos.** Estes jobs usam a
-**mesma CLI do Claude Code** e a **mesma infra** do gerador de modelos — sem dependências
+**mesma CLI do Codex** e a **mesma infra** do gerador de modelos — sem dependências
 extras (whisper.cpp/ffmpeg são exclusivos do `voice_note`). Para migrar, basta seguir o
 `vm-worker/README.md`:
 
-1. Node 22 via nvm; Claude Code instalado e **autenticado** para o `administrator`
-   (assinatura, sem API key no caminho normal).
+1. Node 22 via nvm; Codex instalado pelo `npm install` e autenticado com `codex login` para o
+   `administrator`; Ollama ativo com o modelo de contingência baixado.
 2. `.env` com `SUPABASE_URL` e `SUPABASE_SECRET_KEY` (`sb_secret_...`, perm `600`,
-   dono `administrator`). Opcionalmente `DTC_MODEL` e `DTC_FALLBACK_API_KEY`.
+   dono `administrator`). Opcionalmente `DTC_CODEX_MODEL`/`CODEX_MODEL`.
 3. Unit systemd `siplan-model-worker` (User=administrator, Node 22 + tsx).
 4. Autodeploy (cron do root) para acompanhar o branch `main`.
 
@@ -340,10 +327,8 @@ Aplicar as migrations `20260707200000`, `20260707210000`, `20260707220000` e
   service_role legado) só no `.env` da VM (perm `600`, dono `administrator`). **Ignora
   RLS.** Se vazar, revogar e gerar outra no painel — sem tocar no resto.
 - **Frontend** usa só a chave publishable/`anon` (enfileira o job e lê status via RLS).
-- **`DTC_FALLBACK_API_KEY`** (se usada) é uma `ANTHROPIC_API_KEY` — tratar com o mesmo
-  cuidado da chave do Supabase; fica só no `.env`.
 - **Filtro de dados sensíveis** no `dtc_summary`: `buildContext` remove senhas, logins,
-  chaves, host/IP/porta etc. do contexto enviado ao Claude — dados de conexão não vazam
+  chaves, host/IP/porta etc. do contexto enviado ao motor — dados de conexão não vazam
   no resumo.
-- **O worker roda um agente com `--dangerously-skip-permissions`** — sem supervisão, com
-  escrita no projeto (`ORION_PROJECT_DIR`). Manter a VM e o `.env` restritos.
+- **Texto roda em sandbox `read-only`**. Apenas a geração de modelos usa
+  `MODEL_CODEX_SANDBOX=danger-full-access`, com escrita no projeto Orion.

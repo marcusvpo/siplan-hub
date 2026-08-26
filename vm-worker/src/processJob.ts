@@ -125,17 +125,9 @@ export async function processJob(job: Job): Promise<void> {
   const baseName = path.basename(job.source_file_name, path.extname(job.source_file_name));
   const startTime = Date.now();
   const prompt = buildPrompt(inputPath, cartorioSlug, baseName, cliente);
-  if (config.modelLlmProvider !== "codex" && config.modelLlmProvider !== "claude") {
-    throw new Error(
-      `MODEL_LLM_PROVIDER invalido: ${config.modelLlmProvider}. Use codex (padrao) ou claude (rollback).`
-    );
-  }
-  const modelProvider = config.modelLlmProvider as "codex" | "claude";
-  if (modelProvider === "codex") {
-    pushStep("Preparando a skill automatica do Codex...");
-    await ensureCodexModelSkill(config.orionProjectDir);
-  }
-  pushStep(`Iniciando o ${modelProvider === "codex" ? "Codex" : "Claude"} para gerar o modelo...`);
+  pushStep("Preparando a skill automatica do Codex...");
+  await ensureCodexModelSkill(config.orionProjectDir);
+  pushStep("Iniciando o Codex para gerar o modelo...");
   await flushProgress(true);
 
   // Checagem de cancelamento (o frontend liga cancel_requested)
@@ -153,11 +145,12 @@ export async function processJob(job: Job): Promise<void> {
     (step) => record(step),
     shouldCancel,
     {
-      provider: modelProvider,
-      model: modelProvider === "codex" ? config.modelCodexModel || undefined : undefined,
+      provider: "codex",
+      model: config.modelCodexModel || undefined,
       cwd: config.orionProjectDir,
       addDirs: [jobDir],
       allowOllamaFallback: false,
+      sandbox: config.modelCodexSandbox,
     }
   );
   await flushProgress(true);
@@ -178,7 +171,7 @@ export async function processJob(job: Job): Promise<void> {
     // limit") pode vir em qualquer um dos dois, e o loop principal detecta por essa
     // assinatura para reenfileirar (em vez de marcar erro definitivo).
     const tail = `${stderr}\n${transcript}`.slice(-1500);
-    throw new Error(`${modelProvider === "codex" ? "Codex" : "Claude"} encerrou com codigo ${code}. Fim da saida: ${tail}`);
+    throw new Error(`Codex encerrou com codigo ${code}. Fim da saida: ${tail}`);
   }
 
   // 3. Localizar o modelo.json gerado (via marcador JSON_GERADO= ou por mtime)
