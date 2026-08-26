@@ -22,6 +22,7 @@ describe("SLA oficial da Consulta de Chamados", () => {
 
   it("consulta os relógios oficiais sem alterar o SQL Server", () => {
     expect(worker).toContain("plataformaellevo.dbo.Solicitacao");
+    expect(worker).toContain("c.Severidade AS Criticidade");
     expect(worker).toContain("solicitacao.DataPrevistaPriResp");
     expect(worker).toContain("solicitacao.SolVencimento");
     expect(worker).toContain("solicitacao.VencimentoPausado");

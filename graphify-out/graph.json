@@ -7040,7 +7040,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_dashboard_dashboardtable",
-      "community": 232,
+      "community": 336,
       "norm_label": "dashboardtable.tsx"
     },
     {
@@ -7050,7 +7050,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "src_components_dashboard_dashboardtable_dashboardtableprops",
-      "community": 232,
+      "community": 336,
       "norm_label": "dashboardtableprops"
     },
     {
@@ -7060,7 +7060,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "src_components_dashboard_dashboardtable_dashboardtable",
-      "community": 232,
+      "community": 336,
       "norm_label": "dashboardtable()"
     },
     {
@@ -7070,7 +7070,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_dashboard_healthbadge",
-      "community": 232,
+      "community": 8,
       "norm_label": "healthbadge.tsx"
     },
     {
@@ -7080,7 +7080,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_components_dashboard_healthbadge_healthbadgeprops",
-      "community": 232,
+      "community": 8,
       "norm_label": "healthbadgeprops"
     },
     {
@@ -7090,7 +7090,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_components_dashboard_healthbadge_healthbadge",
-      "community": 232,
+      "community": 336,
       "norm_label": "healthbadge()"
     },
     {
@@ -7130,7 +7130,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_dashboard_pipelinestatus",
-      "community": 232,
+      "community": 336,
       "norm_label": "pipelinestatus.tsx"
     },
     {
@@ -7140,7 +7140,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_components_dashboard_pipelinestatus_pipelinestatusprops",
-      "community": 232,
+      "community": 336,
       "norm_label": "pipelinestatusprops"
     },
     {
@@ -7150,7 +7150,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_components_dashboard_pipelinestatus_pipelinestatus",
-      "community": 232,
+      "community": 336,
       "norm_label": "pipelinestatus()"
     },
     {
@@ -7160,7 +7160,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_dashboard_projectdetailsmodal",
-      "community": 232,
+      "community": 343,
       "norm_label": "projectdetailsmodal.tsx"
     },
     {
@@ -7170,7 +7170,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "src_components_dashboard_projectdetailsmodal_projectdetailsmodalprops",
-      "community": 232,
+      "community": 343,
       "norm_label": "projectdetailsmodalprops"
     },
     {
@@ -7180,7 +7180,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "src_components_dashboard_projectdetailsmodal_projectdetailsmodal",
-      "community": 232,
+      "community": 343,
       "norm_label": "projectdetailsmodal()"
     },
     {
@@ -8090,7 +8090,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_projectmanagement_deploymentcard",
-      "community": 22,
+      "community": 336,
       "norm_label": "deploymentcard.tsx"
     },
     {
@@ -8100,7 +8100,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_components_projectmanagement_deploymentcard_deploymentcardprops",
-      "community": 22,
+      "community": 336,
       "norm_label": "deploymentcardprops"
     },
     {
@@ -8110,7 +8110,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "src_components_projectmanagement_deploymentcard_deploymentcard",
-      "community": 22,
+      "community": 336,
       "norm_label": "deploymentcard()"
     },
     {
@@ -8130,7 +8130,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "src_components_projectmanagement_deploymentdetailsdialog_deploymentdetailsdialogprops",
-      "community": 232,
+      "community": 336,
       "norm_label": "deploymentdetailsdialogprops"
     },
     {
@@ -8140,7 +8140,7 @@
       "source_location": "L57",
       "_origin": "ast",
       "id": "src_components_projectmanagement_deploymentdetailsdialog_deploymentdetailsdialog",
-      "community": 22,
+      "community": 336,
       "norm_label": "deploymentdetailsdialog()"
     },
     {
@@ -8500,7 +8500,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_projectmanagement_forms_projectheaderform",
-      "community": 232,
+      "community": 336,
       "norm_label": "projectheaderform.tsx"
     },
     {
@@ -8510,7 +8510,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_components_projectmanagement_forms_projectheaderform_projectheaderformprops",
-      "community": 232,
+      "community": 336,
       "norm_label": "projectheaderformprops"
     },
     {
@@ -8520,7 +8520,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_components_projectmanagement_forms_projectheaderform_projectheaderform",
-      "community": 232,
+      "community": 336,
       "norm_label": "projectheaderform()"
     },
     {
@@ -8530,7 +8530,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_projectmanagement_forms_stagecard",
-      "community": 356,
+      "community": 134,
       "norm_label": "stagecard.tsx"
     },
     {
@@ -8870,7 +8870,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "src_components_projectmanagement_posaiassistantsection_posaiassistantsectionprops",
-      "community": 232,
+      "community": 336,
       "norm_label": "posaiassistantsectionprops"
     },
     {
@@ -8970,7 +8970,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "src_components_projectmanagement_projectmodal_projectmodalprops",
-      "community": 232,
+      "community": 336,
       "norm_label": "projectmodalprops"
     },
     {
@@ -9090,7 +9090,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_components_projectmanagement_tabs_chamado0800tab_chamado0800tabprops",
-      "community": 232,
+      "community": 336,
       "norm_label": "chamado0800tabprops"
     },
     {
@@ -9120,7 +9120,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "src_components_projectmanagement_tabs_editprojecttab_tabprops",
-      "community": 232,
+      "community": 336,
       "norm_label": "tabprops"
     },
     {
@@ -9140,7 +9140,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_projectmanagement_tabs_filestab",
-      "community": 356,
+      "community": 134,
       "norm_label": "filestab.tsx"
     },
     {
@@ -9150,7 +9150,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "src_components_projectmanagement_tabs_filestab_tabprops",
-      "community": 232,
+      "community": 336,
       "norm_label": "tabprops"
     },
     {
@@ -9180,7 +9180,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "src_components_projectmanagement_tabs_generalinfotab_tabprops",
-      "community": 232,
+      "community": 336,
       "norm_label": "tabprops"
     },
     {
@@ -9210,7 +9210,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_components_projectmanagement_tabs_logstab_logstabprops",
-      "community": 232,
+      "community": 336,
       "norm_label": "logstabprops"
     },
     {
@@ -9350,7 +9350,7 @@
       "source_location": "L88",
       "_origin": "ast",
       "id": "src_components_projectmanagement_tabs_stepstab_tabprops",
-      "community": 232,
+      "community": 336,
       "norm_label": "tabprops"
     },
     {
@@ -9440,7 +9440,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "src_components_reports_globalmetrics_globalmetricsprops",
-      "community": 232,
+      "community": 336,
       "norm_label": "globalmetricsprops"
     },
     {
@@ -9470,7 +9470,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_components_reports_healthdistribution_healthdistributionprops",
-      "community": 232,
+      "community": 336,
       "norm_label": "healthdistributionprops"
     },
     {
@@ -10290,7 +10290,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_components_reports_individual_projectheaderstats_projectheaderstatsprops",
-      "community": 232,
+      "community": 336,
       "norm_label": "projectheaderstatsprops"
     },
     {
@@ -10320,7 +10320,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "src_components_reports_individual_projectselector_projectselectorprops",
-      "community": 232,
+      "community": 336,
       "norm_label": "projectselectorprops"
     },
     {
@@ -10350,7 +10350,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_components_reports_individual_stageanalysistimeline_stageanalysistimelineprops",
-      "community": 232,
+      "community": 336,
       "norm_label": "stageanalysistimelineprops"
     },
     {
@@ -10410,7 +10410,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_components_reports_statusdistribution_statusdistributionprops",
-      "community": 232,
+      "community": 336,
       "norm_label": "statusdistributionprops"
     },
     {
@@ -10700,7 +10700,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_commercial_deploymentformfields",
-      "community": 356,
+      "community": 134,
       "norm_label": "deploymentformfields.tsx"
     },
     {
@@ -10710,7 +10710,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_components_commercial_deploymentformfields_props",
-      "community": 356,
+      "community": 134,
       "norm_label": "props"
     },
     {
@@ -10720,7 +10720,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "src_components_commercial_deploymentformfields_sectioncard",
-      "community": 356,
+      "community": 134,
       "norm_label": "sectioncard()"
     },
     {
@@ -10730,7 +10730,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "src_components_commercial_deploymentformfields_rl",
-      "community": 356,
+      "community": 134,
       "norm_label": "rl()"
     },
     {
@@ -10740,7 +10740,7 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "src_components_commercial_deploymentformfields_ol",
-      "community": 356,
+      "community": 134,
       "norm_label": "ol()"
     },
     {
@@ -10750,7 +10750,7 @@
       "source_location": "L59",
       "_origin": "ast",
       "id": "src_components_commercial_deploymentformfields_checkrow",
-      "community": 356,
+      "community": 134,
       "norm_label": "checkrow()"
     },
     {
@@ -10760,7 +10760,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "src_components_commercial_deploymentformfields_radiorow",
-      "community": 356,
+      "community": 134,
       "norm_label": "radiorow()"
     },
     {
@@ -10770,7 +10770,7 @@
       "source_location": "L76",
       "_origin": "ast",
       "id": "src_components_commercial_deploymentformfields_yesno",
-      "community": 356,
+      "community": 134,
       "norm_label": "yesno()"
     },
     {
@@ -10780,7 +10780,7 @@
       "source_location": "L90",
       "_origin": "ast",
       "id": "src_components_commercial_deploymentformfields_formatphone",
-      "community": 356,
+      "community": 134,
       "norm_label": "formatphone()"
     },
     {
@@ -10790,7 +10790,7 @@
       "source_location": "L100",
       "_origin": "ast",
       "id": "src_components_commercial_deploymentformfields_deploymentformfields",
-      "community": 356,
+      "community": 134,
       "norm_label": "deploymentformfields()"
     },
     {
@@ -11880,7 +11880,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_knowledge_markdowntiptapeditor",
-      "community": 134,
+      "community": 29,
       "norm_label": "markdowntiptapeditor.tsx"
     },
     {
@@ -11890,7 +11890,7 @@
       "source_location": "L47",
       "_origin": "ast",
       "id": "src_components_knowledge_markdowntiptapeditor_markdowntiptapeditorprops",
-      "community": 134,
+      "community": 29,
       "norm_label": "markdowntiptapeditorprops"
     },
     {
@@ -12820,7 +12820,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_ui_accordion",
-      "community": 356,
+      "community": 134,
       "norm_label": "accordion.tsx"
     },
     {
@@ -12830,7 +12830,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_components_ui_accordion_accordionitem",
-      "community": 356,
+      "community": 134,
       "norm_label": "accordionitem"
     },
     {
@@ -12840,7 +12840,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "src_components_ui_accordion_accordiontrigger",
-      "community": 356,
+      "community": 134,
       "norm_label": "accordiontrigger"
     },
     {
@@ -12850,7 +12850,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "src_components_ui_accordion_accordioncontent",
-      "community": 356,
+      "community": 134,
       "norm_label": "accordioncontent"
     },
     {
@@ -13370,7 +13370,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_ui_checkbox",
-      "community": 356,
+      "community": 134,
       "norm_label": "checkbox.tsx"
     },
     {
@@ -13380,7 +13380,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_components_ui_checkbox_checkbox",
-      "community": 356,
+      "community": 134,
       "norm_label": "checkbox"
     },
     {
@@ -14080,7 +14080,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_ui_separator",
-      "community": 134,
+      "community": 29,
       "norm_label": "separator.tsx"
     },
     {
@@ -14090,7 +14090,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_components_ui_separator_separator",
-      "community": 134,
+      "community": 29,
       "norm_label": "separator"
     },
     {
@@ -14840,7 +14840,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_ui_tooltip",
-      "community": 232,
+      "community": 336,
       "norm_label": "tooltip.tsx"
     },
     {
@@ -14850,7 +14850,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_components_ui_tooltip_tooltipcontent",
-      "community": 232,
+      "community": 336,
       "norm_label": "tooltipcontent"
     },
     {
@@ -18480,7 +18480,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_hooks_useprojectform_useprojectformreturn",
-      "community": 232,
+      "community": 336,
       "norm_label": "useprojectformreturn"
     },
     {
@@ -18600,7 +18600,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "src_hooks_useprojectsv2_useprojectsv2",
-      "community": 22,
+      "community": 336,
       "norm_label": "useprojectsv2()"
     },
     {
@@ -21900,7 +21900,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "src_pages_compareprojects_compareprojects",
-      "community": 22,
+      "community": 336,
       "norm_label": "compareprojects()"
     },
     {
@@ -22080,7 +22080,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "src_pages_latestdeployments_latestdeployments",
-      "community": 22,
+      "community": 336,
       "norm_label": "latestdeployments()"
     },
     {
@@ -22110,7 +22110,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_pages_nextdeployments",
-      "community": 22,
+      "community": 336,
       "norm_label": "nextdeployments.tsx"
     },
     {
@@ -22120,7 +22120,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "src_pages_nextdeployments_deploymentitem",
-      "community": 22,
+      "community": 336,
       "norm_label": "deploymentitem"
     },
     {
@@ -22130,7 +22130,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "src_pages_nextdeployments_nextdeployments",
-      "community": 22,
+      "community": 336,
       "norm_label": "nextdeployments()"
     },
     {
@@ -22440,7 +22440,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_pages_reports_reports",
-      "community": 22,
+      "community": 336,
       "norm_label": "reports()"
     },
     {
@@ -22830,7 +22830,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_pages_admin_rolesmanagement",
-      "community": 356,
+      "community": 134,
       "norm_label": "rolesmanagement.tsx"
     },
     {
@@ -22840,7 +22840,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "src_pages_admin_rolesmanagement_approle",
-      "community": 356,
+      "community": 134,
       "norm_label": "approle"
     },
     {
@@ -22850,7 +22850,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "src_pages_admin_rolesmanagement_apppermission",
-      "community": 356,
+      "community": 134,
       "norm_label": "apppermission"
     },
     {
@@ -23380,7 +23380,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_pages_conversion_oriontndashboard",
-      "community": 22,
+      "community": 336,
       "norm_label": "oriontndashboard.tsx"
     },
     {
@@ -23390,7 +23390,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "src_pages_conversion_oriontndashboard_status_config",
-      "community": 22,
+      "community": 336,
       "norm_label": "status_config"
     },
     {
@@ -23400,7 +23400,7 @@
       "source_location": "L65",
       "_origin": "ast",
       "id": "src_pages_conversion_oriontndashboard_oriontndashboard",
-      "community": 22,
+      "community": 336,
       "norm_label": "oriontndashboard()"
     },
     {
@@ -23410,7 +23410,7 @@
       "source_location": "L473",
       "_origin": "ast",
       "id": "src_pages_conversion_oriontndashboard_kpicard",
-      "community": 22,
+      "community": 336,
       "norm_label": "kpicard()"
     },
     {
@@ -26480,7 +26480,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_stores_projectstore",
-      "community": 232,
+      "community": 336,
       "norm_label": "projectstore.ts"
     },
     {
@@ -26490,7 +26490,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_stores_projectstore_projectstore",
-      "community": 232,
+      "community": 336,
       "norm_label": "projectstore"
     },
     {
@@ -26500,7 +26500,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_stores_projectstore_useprojectstore",
-      "community": 232,
+      "community": 336,
       "norm_label": "useprojectstore"
     },
     {
@@ -28180,7 +28180,7 @@
       "source_location": "L67",
       "_origin": "ast",
       "id": "src_types_projectv2_projectv2",
-      "community": 232,
+      "community": 336,
       "norm_label": "projectv2"
     },
     {
@@ -29130,7 +29130,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_utils_calculations",
-      "community": 232,
+      "community": 336,
       "norm_label": "calculations.ts"
     },
     {
@@ -29140,7 +29140,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_utils_calculations_calculatehealthscore",
-      "community": 232,
+      "community": 336,
       "norm_label": "calculatehealthscore()"
     },
     {
@@ -29150,7 +29150,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "src_utils_calculations_getdayssinceupdate",
-      "community": 232,
+      "community": 336,
       "norm_label": "getdayssinceupdate()"
     },
     {
@@ -29160,7 +29160,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "src_utils_calculations_getrelativetime",
-      "community": 232,
+      "community": 336,
       "norm_label": "getrelativetime()"
     },
     {
@@ -30993,7 +30993,7 @@
       "label": "ProcessoVendaRunControl",
       "file_type": "code",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L125",
+      "source_location": "L132",
       "_origin": "ast",
       "id": "vm_worker_src_chamadossync_processovendaruncontrol",
       "community": 43,
@@ -31003,7 +31003,7 @@
       "label": "ProcessoVendaSyncCancelledError",
       "file_type": "code",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L131",
+      "source_location": "L138",
       "_origin": "ast",
       "id": "vm_worker_src_chamadossync_processovendasynccancellederror",
       "community": 43,
@@ -31013,7 +31013,7 @@
       "label": ".constructor()",
       "file_type": "code",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L132",
+      "source_location": "L139",
       "_origin": "ast",
       "id": "vm_worker_src_chamadossync_processovendasynccancellederror_constructor",
       "community": 43,
@@ -31023,7 +31023,7 @@
       "label": "cancelProcessoVendaRun()",
       "file_type": "code",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L138",
+      "source_location": "L145",
       "_origin": "ast",
       "id": "vm_worker_src_chamadossync_cancelprocessovendarun",
       "community": 43,
@@ -31033,7 +31033,7 @@
       "label": "assertProcessoVendaRunActive()",
       "file_type": "code",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L152",
+      "source_location": "L159",
       "_origin": "ast",
       "id": "vm_worker_src_chamadossync_assertprocessovendarunactive",
       "community": 43,
@@ -31043,7 +31043,7 @@
       "label": "executeControlledQuery()",
       "file_type": "code",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L158",
+      "source_location": "L165",
       "_origin": "ast",
       "id": "vm_worker_src_chamadossync_executecontrolledquery",
       "community": 43,
@@ -31053,7 +31053,7 @@
       "label": "ProcessoVendaTramiteRow",
       "file_type": "code",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L175",
+      "source_location": "L182",
       "_origin": "ast",
       "id": "vm_worker_src_chamadossync_processovendatramiterow",
       "community": 43,
@@ -31063,7 +31063,7 @@
       "label": "ProcessoVendaViewRow",
       "file_type": "code",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L187",
+      "source_location": "L194",
       "_origin": "ast",
       "id": "vm_worker_src_chamadossync_processovendaviewrow",
       "community": 43,
@@ -31073,7 +31073,7 @@
       "label": "ProcessoVendaOfficialSlaRow",
       "file_type": "code",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L204",
+      "source_location": "L211",
       "_origin": "ast",
       "id": "vm_worker_src_chamadossync_processovendaofficialslarow",
       "community": 43,
@@ -31083,7 +31083,7 @@
       "label": "cleanFilterValues()",
       "file_type": "code",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L220",
+      "source_location": "L227",
       "_origin": "ast",
       "id": "vm_worker_src_chamadossync_cleanfiltervalues",
       "community": 43,
@@ -31093,7 +31093,7 @@
       "label": "normalizeProcessoVendaFilters()",
       "file_type": "code",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L230",
+      "source_location": "L237",
       "_origin": "ast",
       "id": "vm_worker_src_chamadossync_normalizeprocessovendafilters",
       "community": 43,
@@ -31103,7 +31103,7 @@
       "label": "getWorkerOrionProductPattern()",
       "file_type": "code",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L250",
+      "source_location": "L257",
       "_origin": "ast",
       "id": "vm_worker_src_chamadossync_getworkerorionproductpattern",
       "community": 43,
@@ -31113,7 +31113,7 @@
       "label": "decodeDescricao()",
       "file_type": "code",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L278",
+      "source_location": "L285",
       "_origin": "ast",
       "id": "vm_worker_src_chamadossync_decodedescricao",
       "community": 43,
@@ -31123,7 +31123,7 @@
       "label": "cleanNomeCliente()",
       "file_type": "code",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L309",
+      "source_location": "L316",
       "_origin": "ast",
       "id": "vm_worker_src_chamadossync_cleannomecliente",
       "community": 43,
@@ -31133,7 +31133,7 @@
       "label": "toIsoDate()",
       "file_type": "code",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L314",
+      "source_location": "L321",
       "_origin": "ast",
       "id": "vm_worker_src_chamadossync_toisodate",
       "community": 43,
@@ -31143,7 +31143,7 @@
       "label": "mapRow()",
       "file_type": "code",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L318",
+      "source_location": "L325",
       "_origin": "ast",
       "id": "vm_worker_src_chamadossync_maprow",
       "community": 43,
@@ -31153,7 +31153,7 @@
       "label": "upsertChamados()",
       "file_type": "code",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L339",
+      "source_location": "L346",
       "_origin": "ast",
       "id": "vm_worker_src_chamadossync_upsertchamados",
       "community": 43,
@@ -31163,7 +31163,7 @@
       "label": "runOnce()",
       "file_type": "code",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L348",
+      "source_location": "L355",
       "_origin": "ast",
       "id": "vm_worker_src_chamadossync_runonce",
       "community": 43,
@@ -31173,7 +31173,7 @@
       "label": "resolvePendingRequests()",
       "file_type": "code",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L442",
+      "source_location": "L449",
       "_origin": "ast",
       "id": "vm_worker_src_chamadossync_resolvependingrequests",
       "community": 43,
@@ -31183,7 +31183,7 @@
       "label": "startChamadosSync()",
       "file_type": "code",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L456",
+      "source_location": "L463",
       "_origin": "ast",
       "id": "vm_worker_src_chamadossync_startchamadossync",
       "community": 43,
@@ -31193,7 +31193,7 @@
       "label": "runProcessoVendaOnce()",
       "file_type": "code",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L503",
+      "source_location": "L510",
       "_origin": "ast",
       "id": "vm_worker_src_chamadossync_runprocessovendaonce",
       "community": 43,
@@ -31203,7 +31203,7 @@
       "label": "isoDateDaysAgo()",
       "file_type": "code",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L836",
+      "source_location": "L843",
       "_origin": "ast",
       "id": "vm_worker_src_chamadossync_isodatedaysago",
       "community": 43,
@@ -31213,7 +31213,7 @@
       "label": "getPendingProcessoVendaRequest()",
       "file_type": "code",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L843",
+      "source_location": "L850",
       "_origin": "ast",
       "id": "vm_worker_src_chamadossync_getpendingprocessovendarequest",
       "community": 43,
@@ -31223,7 +31223,7 @@
       "label": "recoverInterruptedProcessoVendaRequests()",
       "file_type": "code",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L856",
+      "source_location": "L863",
       "_origin": "ast",
       "id": "vm_worker_src_chamadossync_recoverinterruptedprocessovendarequests",
       "community": 43,
@@ -31233,7 +31233,7 @@
       "label": "supersedeDuplicatePendingRequests()",
       "file_type": "code",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L869",
+      "source_location": "L876",
       "_origin": "ast",
       "id": "vm_worker_src_chamadossync_supersededuplicatependingrequests",
       "community": 43,
@@ -31243,7 +31243,7 @@
       "label": "claimProcessoVendaRequest()",
       "file_type": "code",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L908",
+      "source_location": "L915",
       "_origin": "ast",
       "id": "vm_worker_src_chamadossync_claimprocessovendarequest",
       "community": 43,
@@ -31253,7 +31253,7 @@
       "label": "cancelActiveRequestWhenSuperseded()",
       "file_type": "code",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L920",
+      "source_location": "L927",
       "_origin": "ast",
       "id": "vm_worker_src_chamadossync_cancelactiverequestwhensuperseded",
       "community": 43,
@@ -31263,7 +31263,7 @@
       "label": "resolveProcessoVendaRequest()",
       "file_type": "code",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L939",
+      "source_location": "L946",
       "_origin": "ast",
       "id": "vm_worker_src_chamadossync_resolveprocessovendarequest",
       "community": 43,
@@ -31273,7 +31273,7 @@
       "label": "startProcessoVendaSync()",
       "file_type": "code",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L958",
+      "source_location": "L965",
       "_origin": "ast",
       "id": "vm_worker_src_chamadossync_startprocessovendasync",
       "community": 43,
@@ -50346,7 +50346,7 @@
       "source_location": "L153",
       "_origin": "ast",
       "id": "docs_telas_02_conversao_orion_tn_3_dashboard_modelos_editor",
-      "community": 336,
+      "community": 65,
       "norm_label": "3. dashboard \u2014 modelos editor"
     },
     {
@@ -50356,7 +50356,7 @@
       "source_location": "L158",
       "_origin": "ast",
       "id": "docs_telas_02_conversao_orion_tn_objetivo_158",
-      "community": 336,
+      "community": 65,
       "norm_label": "objetivo"
     },
     {
@@ -50366,7 +50366,7 @@
       "source_location": "L161",
       "_origin": "ast",
       "id": "docs_telas_02_conversao_orion_tn_dados_e_hooks_161",
-      "community": 336,
+      "community": 65,
       "norm_label": "dados e hooks"
     },
     {
@@ -50376,7 +50376,7 @@
       "source_location": "L169",
       "_origin": "ast",
       "id": "docs_telas_02_conversao_orion_tn_componentes_principais_169",
-      "community": 336,
+      "community": 65,
       "norm_label": "componentes principais"
     },
     {
@@ -50386,7 +50386,7 @@
       "source_location": "L177",
       "_origin": "ast",
       "id": "docs_telas_02_conversao_orion_tn_fluxos_e_intera\u00e7\u00f5es_177",
-      "community": 336,
+      "community": 65,
       "norm_label": "fluxos e interacoes"
     },
     {
@@ -50396,7 +50396,7 @@
       "source_location": "L181",
       "_origin": "ast",
       "id": "docs_telas_02_conversao_orion_tn_regras_de_neg\u00f3cio_e_estados_181",
-      "community": 336,
+      "community": 65,
       "norm_label": "regras de negocio e estados"
     },
     {
@@ -50406,7 +50406,7 @@
       "source_location": "L187",
       "_origin": "ast",
       "id": "docs_telas_02_conversao_orion_tn_pontos_de_manuten\u00e7\u00e3o_187",
-      "community": 336,
+      "community": 65,
       "norm_label": "pontos de manutencao"
     },
     {
@@ -50416,7 +50416,7 @@
       "source_location": "L193",
       "_origin": "ast",
       "id": "docs_telas_02_conversao_orion_tn_4_projetos_oriontn",
-      "community": 337,
+      "community": 65,
       "norm_label": "4. projetos oriontn"
     },
     {
@@ -50426,7 +50426,7 @@
       "source_location": "L198",
       "_origin": "ast",
       "id": "docs_telas_02_conversao_orion_tn_objetivo_198",
-      "community": 337,
+      "community": 65,
       "norm_label": "objetivo"
     },
     {
@@ -50436,7 +50436,7 @@
       "source_location": "L201",
       "_origin": "ast",
       "id": "docs_telas_02_conversao_orion_tn_dados_e_hooks_201",
-      "community": 337,
+      "community": 65,
       "norm_label": "dados e hooks"
     },
     {
@@ -50446,7 +50446,7 @@
       "source_location": "L208",
       "_origin": "ast",
       "id": "docs_telas_02_conversao_orion_tn_componentes_principais_208",
-      "community": 337,
+      "community": 65,
       "norm_label": "componentes principais"
     },
     {
@@ -50456,7 +50456,7 @@
       "source_location": "L214",
       "_origin": "ast",
       "id": "docs_telas_02_conversao_orion_tn_fluxos_e_intera\u00e7\u00f5es_214",
-      "community": 337,
+      "community": 65,
       "norm_label": "fluxos e interacoes"
     },
     {
@@ -50466,7 +50466,7 @@
       "source_location": "L220",
       "_origin": "ast",
       "id": "docs_telas_02_conversao_orion_tn_regras_de_neg\u00f3cio_e_estados_220",
-      "community": 337,
+      "community": 65,
       "norm_label": "regras de negocio e estados"
     },
     {
@@ -50476,7 +50476,7 @@
       "source_location": "L226",
       "_origin": "ast",
       "id": "docs_telas_02_conversao_orion_tn_pontos_de_manuten\u00e7\u00e3o_226",
-      "community": 337,
+      "community": 65,
       "norm_label": "pontos de manutencao"
     },
     {
@@ -50486,7 +50486,7 @@
       "source_location": "L233",
       "_origin": "ast",
       "id": "docs_telas_02_conversao_orion_tn_5_modelos_editor_workspace",
-      "community": 65,
+      "community": 337,
       "norm_label": "5. modelos editor (workspace)"
     },
     {
@@ -50496,7 +50496,7 @@
       "source_location": "L238",
       "_origin": "ast",
       "id": "docs_telas_02_conversao_orion_tn_objetivo_238",
-      "community": 65,
+      "community": 337,
       "norm_label": "objetivo"
     },
     {
@@ -50506,7 +50506,7 @@
       "source_location": "L241",
       "_origin": "ast",
       "id": "docs_telas_02_conversao_orion_tn_dados_e_hooks_241",
-      "community": 65,
+      "community": 337,
       "norm_label": "dados e hooks"
     },
     {
@@ -50516,7 +50516,7 @@
       "source_location": "L251",
       "_origin": "ast",
       "id": "docs_telas_02_conversao_orion_tn_componentes_principais_251",
-      "community": 65,
+      "community": 337,
       "norm_label": "componentes principais"
     },
     {
@@ -50526,7 +50526,7 @@
       "source_location": "L261",
       "_origin": "ast",
       "id": "docs_telas_02_conversao_orion_tn_fluxos_e_intera\u00e7\u00f5es_261",
-      "community": 65,
+      "community": 337,
       "norm_label": "fluxos e interacoes"
     },
     {
@@ -50536,7 +50536,7 @@
       "source_location": "L268",
       "_origin": "ast",
       "id": "docs_telas_02_conversao_orion_tn_gera\u00e7\u00e3o_autom\u00e1tica_de_modelos_worker_na_vm",
-      "community": 65,
+      "community": 337,
       "norm_label": "geracao automatica de modelos (worker na vm)"
     },
     {
@@ -50546,7 +50546,7 @@
       "source_location": "L285",
       "_origin": "ast",
       "id": "docs_telas_02_conversao_orion_tn_regras_de_neg\u00f3cio_e_estados_285",
-      "community": 65,
+      "community": 337,
       "norm_label": "regras de negocio e estados"
     },
     {
@@ -50556,7 +50556,7 @@
       "source_location": "L299",
       "_origin": "ast",
       "id": "docs_telas_02_conversao_orion_tn_pontos_de_manuten\u00e7\u00e3o_299",
-      "community": 65,
+      "community": 337,
       "norm_label": "pontos de manutencao"
     },
     {
@@ -57722,7 +57722,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L148",
+      "source_location": "L155",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync_cancelprocessovendarun",
       "target": "agent_skills_typescript_expert_references_utility_types_err"
@@ -57733,7 +57733,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L470",
+      "source_location": "L477",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync_startchamadossync",
       "target": "agent_skills_typescript_expert_references_utility_types_err"
@@ -57744,7 +57744,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L1009",
+      "source_location": "L1016",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync_startprocessovendasync",
       "target": "agent_skills_typescript_expert_references_utility_types_err"
@@ -157962,7 +157962,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L241",
+      "source_location": "L248",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync_normalizeprocessovendafilters",
       "target": "vm_worker_src_chamadosstatus_normalizechamadostatus",
@@ -157973,7 +157973,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L640",
+      "source_location": "L647",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync_runprocessovendaonce",
       "target": "vm_worker_src_chamadosstatus_normalizechamadostatus",
@@ -157983,7 +157983,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L152",
+      "source_location": "L159",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync",
       "target": "vm_worker_src_chamadossync_assertprocessovendarunactive",
@@ -157993,7 +157993,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L920",
+      "source_location": "L927",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync",
       "target": "vm_worker_src_chamadossync_cancelactiverequestwhensuperseded",
@@ -158003,7 +158003,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L138",
+      "source_location": "L145",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync",
       "target": "vm_worker_src_chamadossync_cancelprocessovendarun",
@@ -158013,7 +158013,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L908",
+      "source_location": "L915",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync",
       "target": "vm_worker_src_chamadossync_claimprocessovendarequest",
@@ -158023,7 +158023,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L220",
+      "source_location": "L227",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync",
       "target": "vm_worker_src_chamadossync_cleanfiltervalues",
@@ -158033,7 +158033,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L309",
+      "source_location": "L316",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync",
       "target": "vm_worker_src_chamadossync_cleannomecliente",
@@ -158043,7 +158043,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L278",
+      "source_location": "L285",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync",
       "target": "vm_worker_src_chamadossync_decodedescricao",
@@ -158053,7 +158053,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L158",
+      "source_location": "L165",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync",
       "target": "vm_worker_src_chamadossync_executecontrolledquery",
@@ -158063,7 +158063,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L843",
+      "source_location": "L850",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync",
       "target": "vm_worker_src_chamadossync_getpendingprocessovendarequest",
@@ -158073,7 +158073,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L250",
+      "source_location": "L257",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync",
       "target": "vm_worker_src_chamadossync_getworkerorionproductpattern",
@@ -158083,7 +158083,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L836",
+      "source_location": "L843",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync",
       "target": "vm_worker_src_chamadossync_isodatedaysago",
@@ -158093,7 +158093,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L318",
+      "source_location": "L325",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync",
       "target": "vm_worker_src_chamadossync_maprow",
@@ -158103,7 +158103,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L230",
+      "source_location": "L237",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync",
       "target": "vm_worker_src_chamadossync_normalizeprocessovendafilters",
@@ -158133,7 +158133,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L204",
+      "source_location": "L211",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync",
       "target": "vm_worker_src_chamadossync_processovendaofficialslarow",
@@ -158143,7 +158143,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L125",
+      "source_location": "L132",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync",
       "target": "vm_worker_src_chamadossync_processovendaruncontrol",
@@ -158163,7 +158163,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L131",
+      "source_location": "L138",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync",
       "target": "vm_worker_src_chamadossync_processovendasynccancellederror",
@@ -158203,7 +158203,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L175",
+      "source_location": "L182",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync",
       "target": "vm_worker_src_chamadossync_processovendatramiterow",
@@ -158213,7 +158213,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L187",
+      "source_location": "L194",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync",
       "target": "vm_worker_src_chamadossync_processovendaviewrow",
@@ -158233,7 +158233,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L856",
+      "source_location": "L863",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync",
       "target": "vm_worker_src_chamadossync_recoverinterruptedprocessovendarequests",
@@ -158243,7 +158243,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L442",
+      "source_location": "L449",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync",
       "target": "vm_worker_src_chamadossync_resolvependingrequests",
@@ -158253,7 +158253,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L939",
+      "source_location": "L946",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync",
       "target": "vm_worker_src_chamadossync_resolveprocessovendarequest",
@@ -158263,7 +158263,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L348",
+      "source_location": "L355",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync",
       "target": "vm_worker_src_chamadossync_runonce",
@@ -158273,7 +158273,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L503",
+      "source_location": "L510",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync",
       "target": "vm_worker_src_chamadossync_runprocessovendaonce",
@@ -158283,7 +158283,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L456",
+      "source_location": "L463",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync",
       "target": "vm_worker_src_chamadossync_startchamadossync",
@@ -158293,7 +158293,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L958",
+      "source_location": "L965",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync",
       "target": "vm_worker_src_chamadossync_startprocessovendasync",
@@ -158303,7 +158303,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L869",
+      "source_location": "L876",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync",
       "target": "vm_worker_src_chamadossync_supersededuplicatependingrequests",
@@ -158313,7 +158313,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L314",
+      "source_location": "L321",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync",
       "target": "vm_worker_src_chamadossync_toisodate",
@@ -158323,7 +158323,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L339",
+      "source_location": "L346",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync",
       "target": "vm_worker_src_chamadossync_upsertchamados",
@@ -158400,7 +158400,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L1096",
+      "source_location": "L1103",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync_startprocessovendasync",
       "target": "vm_worker_src_chamadossync_processo_venda_scopes"
@@ -158409,7 +158409,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L132",
+      "source_location": "L139",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync_processovendasynccancellederror",
       "target": "vm_worker_src_chamadossync_processovendasynccancellederror_constructor",
@@ -158420,7 +158420,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L932",
+      "source_location": "L939",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync_cancelactiverequestwhensuperseded",
       "target": "vm_worker_src_chamadossync_cancelprocessovendarun",
@@ -158431,7 +158431,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L972",
+      "source_location": "L979",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync_startprocessovendasync",
       "target": "vm_worker_src_chamadossync_cancelprocessovendarun",
@@ -158442,7 +158442,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L163",
+      "source_location": "L170",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync_executecontrolledquery",
       "target": "vm_worker_src_chamadossync_assertprocessovendarunactive",
@@ -158453,7 +158453,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L628",
+      "source_location": "L635",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync_runprocessovendaonce",
       "target": "vm_worker_src_chamadossync_assertprocessovendarunactive",
@@ -158464,7 +158464,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L234",
+      "source_location": "L241",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync_normalizeprocessovendafilters",
       "target": "vm_worker_src_chamadossync_cleanfiltervalues",
@@ -158475,7 +158475,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L522",
+      "source_location": "L529",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync_runprocessovendaonce",
       "target": "vm_worker_src_chamadossync_normalizeprocessovendafilters",
@@ -158486,7 +158486,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L574",
+      "source_location": "L581",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync_runprocessovendaonce",
       "target": "vm_worker_src_chamadossync_getworkerorionproductpattern",
@@ -158497,51 +158497,51 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L326",
-      "weight": 1.0,
-      "source": "vm_worker_src_chamadossync_maprow",
-      "target": "vm_worker_src_chamadossync_decodedescricao",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L638",
-      "weight": 1.0,
-      "source": "vm_worker_src_chamadossync_runprocessovendaonce",
-      "target": "vm_worker_src_chamadossync_decodedescricao",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L323",
-      "weight": 1.0,
-      "source": "vm_worker_src_chamadossync_maprow",
-      "target": "vm_worker_src_chamadossync_cleannomecliente",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L633",
-      "weight": 1.0,
-      "source": "vm_worker_src_chamadossync_runprocessovendaonce",
-      "target": "vm_worker_src_chamadossync_cleannomecliente",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "vm-worker/src/chamadosSync.ts",
       "source_location": "L333",
+      "weight": 1.0,
+      "source": "vm_worker_src_chamadossync_maprow",
+      "target": "vm_worker_src_chamadossync_decodedescricao",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "vm-worker/src/chamadosSync.ts",
+      "source_location": "L645",
+      "weight": 1.0,
+      "source": "vm_worker_src_chamadossync_runprocessovendaonce",
+      "target": "vm_worker_src_chamadossync_decodedescricao",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "vm-worker/src/chamadosSync.ts",
+      "source_location": "L330",
+      "weight": 1.0,
+      "source": "vm_worker_src_chamadossync_maprow",
+      "target": "vm_worker_src_chamadossync_cleannomecliente",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "vm-worker/src/chamadosSync.ts",
+      "source_location": "L640",
+      "weight": 1.0,
+      "source": "vm_worker_src_chamadossync_runprocessovendaonce",
+      "target": "vm_worker_src_chamadossync_cleannomecliente",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "vm-worker/src/chamadosSync.ts",
+      "source_location": "L340",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync_maprow",
       "target": "vm_worker_src_chamadossync_toisodate",
@@ -158552,7 +158552,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L417",
+      "source_location": "L424",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync_runonce",
       "target": "vm_worker_src_chamadossync_toisodate",
@@ -158563,7 +158563,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L643",
+      "source_location": "L650",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync_runprocessovendaonce",
       "target": "vm_worker_src_chamadossync_toisodate",
@@ -158574,7 +158574,7 @@
       "context": "argument",
       "confidence": "INFERRED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L425",
+      "source_location": "L432",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync_runonce",
       "target": "vm_worker_src_chamadossync_maprow",
@@ -158585,7 +158585,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L426",
+      "source_location": "L433",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync_runonce",
       "target": "vm_worker_src_chamadossync_upsertchamados",
@@ -158596,7 +158596,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L465",
+      "source_location": "L472",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync_startchamadossync",
       "target": "vm_worker_src_chamadossync_runonce",
@@ -158607,7 +158607,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L466",
+      "source_location": "L473",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync_startchamadossync",
       "target": "vm_worker_src_chamadossync_resolvependingrequests",
@@ -158640,7 +158640,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L995",
+      "source_location": "L1002",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync_startprocessovendasync",
       "target": "vm_worker_src_chamadossync_runprocessovendaonce",
@@ -158651,7 +158651,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L1044",
+      "source_location": "L1051",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync_startprocessovendasync",
       "target": "vm_worker_src_chamadossync_isodatedaysago",
@@ -158662,7 +158662,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L981",
+      "source_location": "L988",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync_startprocessovendasync",
       "target": "vm_worker_src_chamadossync_getpendingprocessovendarequest",
@@ -158673,7 +158673,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L1071",
+      "source_location": "L1078",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync_startprocessovendasync",
       "target": "vm_worker_src_chamadossync_recoverinterruptedprocessovendarequests",
@@ -158684,7 +158684,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L980",
+      "source_location": "L987",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync_startprocessovendasync",
       "target": "vm_worker_src_chamadossync_supersededuplicatependingrequests",
@@ -158695,7 +158695,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L983",
+      "source_location": "L990",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync_startprocessovendasync",
       "target": "vm_worker_src_chamadossync_claimprocessovendarequest",
@@ -158706,7 +158706,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L967",
+      "source_location": "L974",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync_startprocessovendasync",
       "target": "vm_worker_src_chamadossync_cancelactiverequestwhensuperseded",
@@ -158717,7 +158717,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/chamadosSync.ts",
-      "source_location": "L1002",
+      "source_location": "L1009",
       "weight": 1.0,
       "source": "vm_worker_src_chamadossync_startprocessovendasync",
       "target": "vm_worker_src_chamadossync_resolveprocessovendarequest",
@@ -182743,5 +182743,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "b7087b2f66a109003f75ffd57e7e1f423a0d5f52"
+  "built_at_commit": "40dc85faeccb228eb34a4e7a8f20cd325c39bd75"
 }

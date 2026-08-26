@@ -43,11 +43,9 @@ describe("catálogo da Consulta de Chamados Legado", () => {
     const worker = readSource("vm-worker/src/chamadosSync.ts");
     const hook = readSource("src/hooks/useChamados0800.ts");
     const page = readSource("src/pages/DeploymentsTickets.tsx");
-    const sourceView = readSource(
-      "vm-worker/sql/vw_2026_HUB_CONSULTA_CHAMADOS_LEGADO.sql",
-    );
-
-    expect(worker).toContain("dbo.vw_2026_ChamadosTodosStatus AS c");
+    expect(worker).toContain("plataformaellevo.dbo.vw_ChamadosTodosStatus AS c WITH (NOLOCK)");
+    expect(worker).toContain("c.CodPN AS codigoCliente");
+    expect(worker).toContain("c.DataAberturaChamadoComHoras AS DataAberturaChamado");
     expect(worker).toContain("IN ('Siplan', 'Control-M', 'Global')");
     expect(worker).toContain('"processo_venda_legado"');
     expect(worker).toContain("filters.products");
@@ -56,7 +54,14 @@ describe("catálogo da Consulta de Chamados Legado", () => {
     expect(hook).toContain("softwares?: string[] | null");
     expect(page).toContain(">Produto</label>");
     expect(page).toContain(">Software</label>");
-    expect(sourceView).toContain("CREATE OR ALTER VIEW dbo.vw_2026_HUB_CONSULTA_CHAMADOS_LEGADO");
-    expect(sourceView).toContain("IN ('Siplan', 'Control-M', 'Global')");
+    expect(worker).not.toContain('sourceView: "dbo.vw_2026_HUB_CONSULTA_CHAMADOS_ORION"');
+  });
+
+  it("consulta periodos historicos sem prender o catalogo ao ano atual", () => {
+    const worker = readSource("vm-worker/src/chamadosSync.ts");
+
+    expect(worker).toContain("A view historica do Ellevo cobre chamados desde 2020");
+    expect(worker).toContain("DataAberturaChamado >= @startDate");
+    expect(worker).toContain("DataAberturaChamado < DATEADD(DAY, 1, @endDate)");
   });
 });
