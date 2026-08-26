@@ -12,6 +12,7 @@ import {
 export interface TicketsSlaReportFilters extends ChamadosReportFilters {
   firstResponseHours: number;
   resolutionDays: number;
+  slaClassification?: string;
 }
 
 function safeText(value?: string | null): string {
@@ -83,6 +84,7 @@ export async function generateTicketsSlaReportPdf(
       : []),
     `Natureza: ${!filters.nature || filters.nature === "todas" ? "Todas" : safeText(filters.nature)}`,
     `Status: ${safeText(summarize(filters.statuses, "Todos"))}`,
+    `Classificação SLA: ${safeText(filters.slaClassification || "Todos")}`,
     `Clientes: ${safeText(summarize(filters.clients, "Todos"))}`,
     `Busca: ${safeText(filters.searchTerm)}`,
   ].join("  |  ");

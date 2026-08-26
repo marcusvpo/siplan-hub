@@ -53,6 +53,8 @@ interface TicketsSlaAnalysisProps {
   reportFilters: ChamadosReportFilters;
 }
 
+type SlaCardFilter = "all" | "within" | "outside" | "inProgress";
+
 function formatDateTime(value?: string): string {
   const date = parseSlaDate(value);
   if (!date) return "—";
@@ -202,6 +204,7 @@ export function TicketsSlaAnalysis({
   const [resolutionDays, setResolutionDays] = useState(5);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
+  const [slaCardFilter, setSlaCardFilter] = useState<SlaCardFilter>("all");
   const [generatingPdf, setGeneratingPdf] = useState(false);
   const { data: rows = [], isLoading, error } = useQuery({
     queryKey: ["ticketsSlaAnalysis", filterKey, syncedAt],
@@ -218,19 +221,29 @@ export function TicketsSlaAnalysis({
     return summary;
   }, { within: 0, outside: 0, inProgress: 0 }), [resolutionDays, rows]);
 
-  const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
-  const visibleRows = rows.slice((page - 1) * pageSize, page * pageSize);
+  const filteredRows = useMemo(() => rows.filter((chamado) => {
+    if (slaCardFilter === "all") return true;
+    const state = getResolutionSlaState(chamado, resolutionDays);
+    if (slaCardFilter === "within") return state.label === "Dentro do SLA";
+    if (slaCardFilter === "outside") {
+      return state.label === "Fora do SLA" || state.label === "SLA estourado";
+    }
+    return state.label === "SLA em curso";
+  }), [resolutionDays, rows, slaCardFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
+  const visibleRows = filteredRows.slice((page - 1) * pageSize, page * pageSize);
 
   useEffect(() => {
     setPage(1);
-  }, [filterKey]);
+  }, [filterKey, resolutionDays, slaCardFilter]);
 
   useEffect(() => {
     setPage((current) => Math.min(current, totalPages));
   }, [totalPages]);
 
   const handleGeneratePdf = async () => {
-    if (rows.length === 0) {
+    if (filteredRows.length === 0) {
       toast.info("Nenhum chamado encontrado para gerar o relatório de SLA.");
       return;
     }
@@ -239,12 +252,18 @@ export function TicketsSlaAnalysis({
     const toastId = "tickets-sla-report-pdf";
     try {
       toast.loading("Montando o relatório de tempos e SLA...", { id: toastId });
-      await generateTicketsSlaReportPdf(rows, {
+      await generateTicketsSlaReportPdf(filteredRows, {
         ...reportFilters,
         firstResponseHours,
         resolutionDays,
+        slaClassification: {
+          all: "Todos",
+          within: "Dentro do SLA",
+          outside: "Fora / estourado",
+          inProgress: "SLA em curso",
+        }[slaCardFilter],
       });
-      toast.success(`Relatório de SLA gerado com ${rows.length} chamado(s).`, { id: toastId });
+      toast.success(`Relatório de SLA gerado com ${filteredRows.length} chamado(s).`, { id: toastId });
     } catch (pdfError) {
       console.error("Erro ao gerar relatório de SLA:", pdfError);
       toast.error(
@@ -269,7 +288,7 @@ export function TicketsSlaAnalysis({
             size="sm"
             className="h-7 gap-1.5 px-2 text-[10px]"
             onClick={handleGeneratePdf}
-            disabled={generatingPdf || syncing || isLoading || rows.length === 0}
+            disabled={generatingPdf || syncing || isLoading || filteredRows.length === 0}
           >
             {generatingPdf
               ? <Loader2 className="h-3 w-3 animate-spin" />
@@ -289,17 +308,29 @@ export function TicketsSlaAnalysis({
 
       <div className="grid gap-2 sm:grid-cols-4">
         {[
-          { label: "Chamados analisados", value: rows.length, icon: MessageSquareText, color: "text-primary" },
-          { label: "Dentro do SLA", value: metrics.within, icon: CheckCircle2, color: "text-emerald-600" },
-          { label: "Fora/estourado", value: metrics.outside, icon: CircleAlert, color: "text-rose-600" },
-          { label: "SLA em curso", value: metrics.inProgress, icon: Clock3, color: "text-blue-600" },
+          { filter: "all" as const, label: "Chamados analisados", value: rows.length, icon: MessageSquareText, color: "text-primary" },
+          { filter: "within" as const, label: "Dentro do SLA", value: metrics.within, icon: CheckCircle2, color: "text-emerald-600" },
+          { filter: "outside" as const, label: "Fora/estourado", value: metrics.outside, icon: CircleAlert, color: "text-rose-600" },
+          { filter: "inProgress" as const, label: "SLA em curso", value: metrics.inProgress, icon: Clock3, color: "text-blue-600" },
         ].map((item) => (
-          <Card key={item.label} className="border-muted/80 shadow-sm">
-            <CardContent className="flex items-center gap-2 p-3">
-              <item.icon className={cn("h-4 w-4", item.color)} />
-              <div><p className="text-base font-bold leading-none">{item.value}</p><p className="mt-1 text-[9px] text-muted-foreground">{item.label}</p></div>
-            </CardContent>
-          </Card>
+          <button
+            key={item.filter}
+            type="button"
+            aria-pressed={slaCardFilter === item.filter}
+            aria-label={`Filtrar por ${item.label}`}
+            onClick={() => setSlaCardFilter(item.filter)}
+            className="rounded-xl text-left outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          >
+            <Card className={cn(
+              "h-full cursor-pointer border-muted/80 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md",
+              slaCardFilter === item.filter && "border-primary/70 bg-primary/[0.03] ring-1 ring-primary/25",
+            )}>
+              <CardContent className="flex items-center gap-2 p-3">
+                <item.icon className={cn("h-4 w-4", item.color)} />
+                <div><p className="text-base font-bold leading-none">{item.value}</p><p className="mt-1 text-[9px] text-muted-foreground">{item.label}</p></div>
+              </CardContent>
+            </Card>
+          </button>
         ))}
       </div>
 
@@ -315,6 +346,8 @@ export function TicketsSlaAnalysis({
             <p className="py-14 text-center text-xs text-destructive">Não foi possível carregar os chamados para análise.</p>
           ) : rows.length === 0 ? (
             <p className="py-14 text-center text-xs text-muted-foreground">Nenhum chamado encontrado no filtro atual.</p>
+          ) : filteredRows.length === 0 ? (
+            <p className="py-14 text-center text-xs text-muted-foreground">Nenhum chamado encontrado nesta classificação de SLA.</p>
           ) : (
             <div className="space-y-1.5">
               {visibleRows.map((chamado) => (
@@ -323,9 +356,9 @@ export function TicketsSlaAnalysis({
             </div>
           )}
 
-          {rows.length > 0 && (
+          {filteredRows.length > 0 && (
             <div className="mt-3 flex flex-col items-center justify-between gap-3 border-t pt-3 text-[10px] text-muted-foreground sm:flex-row">
-              <span>Exibindo {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, rows.length)} de {rows.length}</span>
+              <span>Exibindo {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, filteredRows.length)} de {filteredRows.length}</span>
               <div className="flex flex-wrap items-center justify-center gap-3">
                 <div className="flex items-center gap-1.5">
                   <span>Exibir</span>
