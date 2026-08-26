@@ -15,6 +15,7 @@ export interface CopilotHistoryItem {
 
 interface SelectHistoryOptions {
   currentCreatedAt?: string | null;
+  currentQuestion?: string | null;
   maxTurns?: number;
   maxChars?: number;
   sessionGapMs?: number;
@@ -34,6 +35,7 @@ export function selectCopilotHistory(
   const sessionGapMs = options.sessionGapMs ?? DEFAULT_SESSION_GAP_MS;
   const currentMs = Date.parse(options.currentCreatedAt || "");
   let newerMs = Number.isFinite(currentMs) ? currentMs : Date.now();
+  const currentQuestion = String(options.currentQuestion || "").replace(/\s+/g, " ").trim().toLowerCase();
   let usedChars = 0;
   const selectedNewestFirst: CopilotHistoryItem[] = [];
 
@@ -49,6 +51,7 @@ export function selectCopilotHistory(
     const question = String(row.question || "").trim();
     const resultText = String(row.result_text || "").trim();
     if (!question || !resultText) continue;
+    if (currentQuestion && question.replace(/\s+/g, " ").toLowerCase() === currentQuestion) continue;
 
     const itemChars = question.length + resultText.length;
     if (usedChars + itemChars > maxChars) break;

@@ -227,6 +227,7 @@ aparecer `papeis=models` num e `papeis=ai` no outro, ambos com `Realtime: SUBSCR
 | `ENTRADA_DIR` | Onde o worker baixa o doc do cliente (padrao `/home/administrator/siplan_entrada`). |
 | `DTC_CODEX_MODEL` | (Opcional) Override Codex para DTC, melhorar texto e voz. |
 | `COPILOT_CODEX_MODEL` | (Opcional) Override Codex para chat e digest do Copiloto. |
+| `COPILOT_CODEX_REASONING_EFFORT` | Esforco do chat (`low` por padrao para reduzir latencia). |
 | `CHAMADOS_TEMA_CODEX_MODEL` | (Opcional) Override Codex para classificacao de chamados. |
 | `COPILOT_CWD` | Diretorio neutro onde o copiloto roda a CLI (padrao `<tmp>/siplan-copilot`). |
 | `OLLAMA_HOST` / `OLLAMA_MODEL` | Servico e modelo local usados no fallback automatico de texto. |
