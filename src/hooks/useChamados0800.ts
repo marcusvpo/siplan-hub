@@ -489,6 +489,53 @@ export interface ProcessoVendaSyncFilters {
   searchTerm?: string | null;
 }
 
+/**
+ * Busca o histórico completo de vários chamados em lotes. Usado por relatórios
+ * analíticos para evitar uma requisição individual (N+1) por chamado.
+ */
+export async function fetchChamadosTramites(
+  numerosChamados: string[]
+): Promise<Map<string, ChamadoTramite[]>> {
+  const tramitesPorChamado = new Map<string, ChamadoTramite[]>();
+  const numerosUnicos = [...new Set(numerosChamados.filter(Boolean))];
+  const ticketBatchSize = 100;
+  const rowBatchSize = 1000;
+
+  for (const numeroChamado of numerosUnicos) {
+    tramitesPorChamado.set(numeroChamado, []);
+  }
+
+  for (let ticketFrom = 0; ticketFrom < numerosUnicos.length; ticketFrom += ticketBatchSize) {
+    const ticketBatch = numerosUnicos.slice(ticketFrom, ticketFrom + ticketBatchSize);
+
+    for (let rowFrom = 0; ; rowFrom += rowBatchSize) {
+      const { data, error } = await supabase
+        .from("chamados_processo_venda_tramites")
+        .select(
+          "numero_chamado, sequencia_tramite, numero_tramite, data_tramite, responsavel, equipe_responsavel, atividade, descricao"
+        )
+        .in("numero_chamado", ticketBatch)
+        .order("numero_chamado", { ascending: true })
+        .order("data_tramite", { ascending: true, nullsFirst: false })
+        .order("sequencia_tramite", { ascending: true })
+        .range(rowFrom, rowFrom + rowBatchSize - 1);
+
+      if (error) throw error;
+      const batch = data ?? [];
+      for (const tramite of batch) {
+        const numeroChamado = String(tramite.numero_chamado);
+        const chamadosTramites = tramitesPorChamado.get(numeroChamado) ?? [];
+        chamadosTramites.push(mapChamadoTramite(tramite));
+        tramitesPorChamado.set(numeroChamado, chamadosTramites);
+      }
+
+      if (batch.length < rowBatchSize) break;
+    }
+  }
+
+  return tramitesPorChamado;
+}
+
 export interface ProcessoVendaSyncResult {
   ticketNumbers: string[];
 }
