@@ -70,6 +70,7 @@ import {
 import { useCsCxRecordPermissions } from "@/hooks/useCsCxRecordPermissions";
 import { useToast } from "@/hooks/use-toast";
 import { CsCxMultiSelect } from "@/components/cs-cx/CsCxMultiSelect";
+import { ContactAttentionDashboard } from "@/components/cs-cx/ContactAttentionDashboard";
 import { generateCsCxContactsPdf } from "@/lib/cs-cx-engagement-pdf";
 import { cn } from "@/lib/utils";
 
@@ -210,6 +211,15 @@ export default function CsCxContacts() {
     setDialogOpen(true);
   };
 
+  const openCreateForOffice = (officeId: string) => {
+    setForm({
+      ...emptyForm,
+      contact_date: new Date().toISOString().slice(0, 10),
+    });
+    setRegistryOfficeIds([officeId]);
+    setDialogOpen(true);
+  };
+
   const openEdit = (contact: CsCxContact) => {
     setForm({
       id: contact.id,
@@ -334,7 +344,14 @@ export default function CsCxContacts() {
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
+          <ContactAttentionDashboard
+            contacts={contacts}
+            offices={offices}
+            canCreate={canCreate}
+            onFilterOffice={updateOfficeFilter}
+            onRegisterContact={openCreateForOffice}
+          />
           <Button
             size="sm"
             variant="outline"
