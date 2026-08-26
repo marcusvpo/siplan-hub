@@ -1665,8 +1665,8 @@
     "semantic_hash": "f197a9f0666e63ed79a154fcc1bfa86f"
   },
   "vm-worker/src/config.ts": {
-    "mtime": 1787756327.5275936,
-    "ast_hash": "645b20deca09cc15d024276c3c07fc64",
+    "mtime": 1787757311.93492,
+    "ast_hash": "7b9e4879bd6b5768da7bc95960d6cda5",
     "semantic_hash": ""
   },
   "vm-worker/src/index.ts": {
@@ -2550,8 +2550,8 @@
     "semantic_hash": ""
   },
   "vm-worker/src/processCopilotJob.ts": {
-    "mtime": 1787755804.3934617,
-    "ast_hash": "7162510150615f2a767c61afc95a74a5",
+    "mtime": 1787757395.9309418,
+    "ast_hash": "b5d7d20df62a0d782feebd3fba65ecf3",
     "semantic_hash": ""
   },
   ".agent/skills/n8n-expert-siplanhub/SKILL.md": {
@@ -2690,8 +2690,8 @@
     "semantic_hash": ""
   },
   "docs/FUNCIONALIDADE_COPILOTO.md": {
-    "mtime": 1787756108.6212683,
-    "ast_hash": "486fd696f6925c2647aae86900838c2a",
+    "mtime": 1787757311.951991,
+    "ast_hash": "5e79af9cc987a275a4e9a11f9e3a2c5c",
     "semantic_hash": ""
   },
   "docs/FUNCIONALIDADE_GERAR_COM_IA.md": {
@@ -4150,8 +4150,8 @@
     "semantic_hash": ""
   },
   "vm-worker/src/runSkill.test.ts": {
-    "mtime": 1787756354.079396,
-    "ast_hash": "248ed27c72a87c52b073e10ce03b92e7",
+    "mtime": 1787757311.9449608,
+    "ast_hash": "0b385034cf7856aa315395ff559a57d6",
     "semantic_hash": ""
   },
   "docs/automacoes/sincronizacao_vector_store_openai.md": {
@@ -4197,6 +4197,11 @@
   "src/lib/tickets-sla-report-pdf.ts": {
     "mtime": 1787754753.0067515,
     "ast_hash": "2bb2566c4090dedf396ffd89bf3d4a25",
+    "semantic_hash": ""
+  },
+  "vm-worker/src/copilotHistory.ts": {
+    "mtime": 1787757311.93492,
+    "ast_hash": "0b602c27e0df82d80e3e90a3ec1c5c83",
     "semantic_hash": ""
   }
 }

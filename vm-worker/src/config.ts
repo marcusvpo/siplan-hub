@@ -183,6 +183,7 @@ export interface CopilotJob {
   question: string;
   status: string;
   attempts: number;
+  created_at?: string | null;
   // Escopo opcional do portfolio: 'ativos' (so projetos com etapa nao concluida)
   // ou 'todos'/vazio (portfolio inteiro).
   scope?: string | null;
