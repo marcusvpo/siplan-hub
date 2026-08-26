@@ -5,13 +5,11 @@ import {
 import type { ChamadosReportFilters } from "@/lib/chamados-report-pdf";
 import {
   formatSlaDuration,
-  getResolutionSlaState,
+  getOfficialSlaState,
   parseSlaDate,
 } from "@/lib/tickets-sla";
 
 export interface TicketsSlaReportFilters extends ChamadosReportFilters {
-  firstResponseHours: number;
-  resolutionDays: number;
   slaClassification?: string;
 }
 
@@ -66,12 +64,11 @@ export async function generateTicketsSlaReportPdf(
     : "Relatório de Tempos e SLA - Ellevo/0800";
   let y = 0;
 
-  const states = chamados.map((chamado) => getResolutionSlaState(chamado, filters.resolutionDays));
-  const within = states.filter((state) => state.label === "Dentro do SLA").length;
-  const outside = states.filter((state) => (
-    state.label === "Fora do SLA" || state.label === "SLA estourado"
-  )).length;
-  const inProgress = states.filter((state) => state.label === "SLA em curso").length;
+  const states = chamados.map((chamado) => getOfficialSlaState(chamado));
+  const within = states.filter((state) => state.classification === "within").length;
+  const outside = states.filter((state) => state.classification === "outside").length;
+  const inProgress = states.filter((state) => state.classification === "inProgress").length;
+  const unavailable = states.filter((state) => state.classification === "unavailable").length;
 
   const productLabel = filters.catalog === "legacy"
     ? summarize(filters.products || [], "Todos os produtos")
@@ -95,7 +92,7 @@ export async function generateTicketsSlaReportPdf(
     value: number,
     accent: [number, number, number],
   ) => {
-    const width = 63.75;
+    const width = 51;
     pdf.setFillColor(248, 250, 252);
     pdf.setDrawColor(225, 230, 237);
     pdf.roundedRect(x, y, width, 12, 1.5, 1.5, "FD");
@@ -112,13 +109,15 @@ export async function generateTicketsSlaReportPdf(
   };
 
   const columns = [
-    { label: "Chamado", width: 20, value: (item: Chamado0800) => `#${item.numeroChamado}` },
-    { label: "Cliente / serventia", width: 55, value: (item: Chamado0800) => safeText(item.nomeCliente) },
-    { label: "Título", width: 70, value: (item: Chamado0800) => safeText(item.titulo) },
-    { label: "Abertura", width: 33, value: (item: Chamado0800) => formatDateTime(item.abertoEm || item.dataAbertura) },
-    { label: "Encerramento", width: 33, value: (item: Chamado0800) => formatDateTime(item.encerradoEm || item.dataEncerramento) },
-    { label: "Duração", width: 25, value: (item: Chamado0800) => formatSlaDuration(getResolutionSlaState(item, filters.resolutionDays).hours) },
-    { label: "SLA resolução", width: 31, value: (item: Chamado0800) => getResolutionSlaState(item, filters.resolutionDays).label },
+    { label: "Chamado", width: 18, value: (item: Chamado0800) => `#${item.numeroChamado}` },
+    { label: "Cliente / serventia", width: 42, value: (item: Chamado0800) => safeText(item.nomeCliente) },
+    { label: "Título", width: 48, value: (item: Chamado0800) => safeText(item.titulo) },
+    { label: "Criticidade", width: 27, value: (item: Chamado0800) => safeText(item.criticidade) },
+    { label: "Abertura", width: 27, value: (item: Chamado0800) => formatDateTime(item.abertoEm || item.dataAbertura) },
+    { label: "Encerramento", width: 27, value: (item: Chamado0800) => formatDateTime(item.encerradoEm || item.dataEncerramento) },
+    { label: "Vencimento", width: 27, value: (item: Chamado0800) => formatDateTime(item.slaVencimentoEm) },
+    { label: "Duração", width: 20, value: (item: Chamado0800) => formatSlaDuration(getOfficialSlaState(item).hours) },
+    { label: "SLA oficial", width: 31, value: (item: Chamado0800) => getOfficialSlaState(item).label },
   ];
 
   const drawTableHeader = () => {
@@ -163,20 +162,17 @@ export async function generateTicketsSlaReportPdf(
 
     pdf.setFontSize(8);
     pdf.setTextColor(45, 55, 70);
-    pdf.text(
-      `Parâmetros: primeiro atendimento ${filters.firstResponseHours} h | resolução ${filters.resolutionDays} dia(s) corridos`,
-      marginX,
-      y,
-    );
+    pdf.text("Prazos oficiais do Ellevo: criticidade, calendário, equipe vigente, ajustes e pausas da origem.", marginX, y);
     y += 4;
     const filterLines = pdf.splitTextToSize(filterDescription, pageWidth - marginX * 2) as string[];
     pdf.text(filterLines, marginX, y);
     y += filterLines.length * 3.5 + 3;
 
     drawSummaryCard(marginX, "Chamados analisados", chamados.length, [190, 0, 48]);
-    drawSummaryCard(marginX + 67.75, "Dentro do SLA", within, [5, 150, 105]);
-    drawSummaryCard(marginX + 135.5, "Fora / estourado", outside, [225, 29, 72]);
-    drawSummaryCard(marginX + 203.25, "SLA em curso", inProgress, [37, 99, 235]);
+    drawSummaryCard(marginX + 54, "Dentro do SLA", within, [5, 150, 105]);
+    drawSummaryCard(marginX + 108, "Fora / vencido", outside, [225, 29, 72]);
+    drawSummaryCard(marginX + 162, "SLA em curso / pausado", inProgress, [37, 99, 235]);
+    drawSummaryCard(marginX + 216, "Sem SLA na origem", unavailable, [100, 116, 139]);
     y += 16;
     drawTableHeader();
   };
@@ -212,9 +208,10 @@ export async function generateTicketsSlaReportPdf(
       if (columnIndex === 0) {
         pdf.setTextColor(190, 0, 48);
       } else if (columnIndex === columns.length - 1) {
-        const label = getResolutionSlaState(item, filters.resolutionDays).label;
-        if (label === "Dentro do SLA") pdf.setTextColor(5, 130, 90);
-        else if (label === "SLA em curso") pdf.setTextColor(37, 99, 235);
+        const state = getOfficialSlaState(item);
+        if (state.classification === "within") pdf.setTextColor(5, 130, 90);
+        else if (state.classification === "inProgress") pdf.setTextColor(37, 99, 235);
+        else if (state.classification === "unavailable") pdf.setTextColor(100, 110, 125);
         else pdf.setTextColor(190, 18, 60);
       } else {
         pdf.setTextColor(30, 38, 50);

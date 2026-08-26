@@ -5,7 +5,7 @@ import {
   chronologicalTramites,
   elapsedHours,
   formatSlaDuration,
-  getResolutionSlaState,
+  getOfficialSlaState,
   parseSlaDate,
 } from "@/lib/tickets-sla";
 import type { TicketsSlaReportFilters } from "@/lib/tickets-sla-report-pdf";
@@ -144,9 +144,9 @@ export async function generateTicketsSlaAnalyticalReportPdf(
   pdf.text("chamados detalhados", marginX + 7, y + 16);
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(8);
-  pdf.text(`SLA primeiro atendimento: ${filters.firstResponseHours} h`, marginX + 67, y + 9);
-  pdf.text(`SLA resolução: ${filters.resolutionDays} dia(s)`, marginX + 67, y + 15);
-  pdf.text("Inclui tempos por área, transferências e todas as descrições dos trâmites.", marginX + 142, y + 12);
+  pdf.text("SLA automático: prazos e pausas oficiais do Ellevo", marginX + 67, y + 9);
+  pdf.text("Alterações manuais de vencimento são sinalizadas para auditoria", marginX + 67, y + 15);
+  pdf.text("Inclui áreas, transferências e trâmites completos.", marginX + 178, y + 12);
   y += 31;
 
   drawSectionTitle("Filtros aplicados");
@@ -164,7 +164,7 @@ export async function generateTicketsSlaAnalyticalReportPdf(
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(8);
   pdf.setTextColor(55, 65, 80);
-  const methodology = "Os tempos são corridos. O tempo por área é estimado pela equipe registrada em cada trâmite. Como o Ellevo não registra separadamente os eventos de envio e aceite, uma transferência corresponde ao intervalo entre o último trâmite da área de origem e o primeiro trâmite da área de destino.";
+  const methodology = "O SLA usa os prazos oficiais do Ellevo, considerando criticidade, calendário, equipe, ajustes e o indicador de pausa da origem. Transferir de equipe não pausa o prazo por inferência. O tempo por área é estimado pelos trâmites; como não há eventos separados de envio e aceite, uma transferência corresponde ao intervalo entre o último trâmite da origem e o primeiro da área de destino.";
   const methodologyLines = pdf.splitTextToSize(methodology, contentWidth) as string[];
   pdf.text(methodologyLines, marginX, y);
 
@@ -176,16 +176,16 @@ export async function generateTicketsSlaAnalyticalReportPdf(
 
     const timeline = chronologicalTramites(tramites);
     const flow = buildTicketFlowAnalysis(chamado, timeline);
-    const resolution = getResolutionSlaState(chamado, filters.resolutionDays);
+    const resolution = getOfficialSlaState(chamado);
     const openedAt = parseSlaDate(chamado.abertoEm || chamado.dataAbertura);
-    const firstResponse = timeline.find((item) => (
-      parseSlaDate(item.dataTramite)
-      && Boolean(item.responsavel || item.equipeResponsavel || item.atividade)
-    ));
-    const firstResponseElapsed = elapsedHours(openedAt, parseSlaDate(firstResponse?.dataTramite));
-    const firstResponseState = firstResponseElapsed === null
-      ? "Sem atendimento identificado"
-      : firstResponseElapsed <= filters.firstResponseHours ? "Dentro do SLA" : "Fora do SLA";
+    const firstResponseElapsed = elapsedHours(openedAt, resolution.firstResponse.completedAt);
+    const firstResponseState = {
+      met: "Dentro do SLA",
+      breached: "Fora do SLA",
+      pending: "Aguardando retorno",
+      paused: "Pausado",
+      unavailable: "Sem prazo na origem",
+    }[resolution.firstResponse.status];
 
     pdf.setFont("helvetica", "bold");
     pdf.setFontSize(14);
@@ -211,6 +211,8 @@ export async function generateTicketsSlaAnalyticalReportPdf(
 
     const metadata = [
       `Status: ${safeText(chamado.status)}`,
+      `Criticidade: ${safeText(chamado.criticidade)}`,
+      `Equipe atual: ${safeText(chamado.equipeResponsavel)}`,
       `Produto: ${safeText(chamado.produto)}`,
       `Software: ${safeText(chamado.software)}`,
       `Abertura: ${formatDateTime(chamado.abertoEm || chamado.dataAbertura)}`,
@@ -223,11 +225,11 @@ export async function generateTicketsSlaAnalyticalReportPdf(
 
     const summary = [
       `Tempo total: ${formatSlaDuration(resolution.hours)}`,
-      `SLA resolução: ${resolution.label}`,
+      `SLA oficial: ${resolution.label}`,
       `Primeiro atendimento: ${formatSlaDuration(firstResponseElapsed)} (${firstResponseState})`,
-      `Transferências: ${flow.transfers.length}`,
-      `Movimentações: ${timeline.length}`,
-      `Maior permanência: ${flow.bottleneck ? `${flow.bottleneck.area} - ${formatSlaDuration(flow.bottleneck.hours)}` : "-"}`,
+      `Prazo primeiro retorno: ${formatDateTime(chamado.slaPrimeiraRespostaPrevistaEm)}`,
+      `Vencimento vigente: ${formatDateTime(chamado.slaVencimentoEm)}`,
+      `Fase: ${resolution.phaseLabel}${chamado.slaVencimentoManual ? " · vencimento manual" : ""}`,
     ];
     const summaryWidth = (contentWidth - 6) / 3;
     summary.forEach((value, index) => {

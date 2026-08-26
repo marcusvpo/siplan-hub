@@ -4,14 +4,9 @@ import {
   chronologicalTramites,
   elapsedHours,
   formatSlaDuration,
-  getResolutionSlaState,
+  getOfficialSlaState,
   parseSlaDate,
 } from "@/lib/tickets-sla";
-
-interface TicketSlaDetailOptions {
-  firstResponseHours: number;
-  resolutionDays: number;
-}
 
 function safeText(value?: string | null): string {
   return (value?.trim() || "-")
@@ -40,7 +35,6 @@ function localIsoDate(date = new Date()): string {
 export async function generateTicketSlaDetailPdf(
   chamado: Chamado0800,
   tramites: ChamadoTramite[],
-  options: TicketSlaDetailOptions,
 ): Promise<void> {
   const { jsPDF } = await import("jspdf");
   const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
@@ -51,16 +45,16 @@ export async function generateTicketSlaDetailPdf(
   const bottomMargin = 14;
   const timeline = chronologicalTramites(tramites);
   const flow = buildTicketFlowAnalysis(chamado, timeline);
-  const resolution = getResolutionSlaState(chamado, options.resolutionDays);
+  const resolution = getOfficialSlaState(chamado);
   const openedAt = parseSlaDate(chamado.abertoEm || chamado.dataAbertura);
-  const firstResponse = timeline.find((item) => (
-    parseSlaDate(item.dataTramite)
-    && Boolean(item.responsavel || item.equipeResponsavel || item.atividade)
-  ));
-  const firstResponseElapsed = elapsedHours(openedAt, parseSlaDate(firstResponse?.dataTramite));
-  const firstResponseLabel = firstResponseElapsed === null
-    ? "Sem atendimento identificado"
-    : firstResponseElapsed <= options.firstResponseHours ? "Dentro do SLA" : "Fora do SLA";
+  const firstResponseElapsed = elapsedHours(openedAt, resolution.firstResponse.completedAt);
+  const firstResponseLabel = {
+    met: "Dentro do SLA",
+    breached: "Fora do SLA",
+    pending: "Aguardando retorno",
+    paused: "Pausado",
+    unavailable: "Sem prazo na origem",
+  }[resolution.firstResponse.status];
   let y = 0;
 
   const drawTopBar = () => {
@@ -123,10 +117,14 @@ export async function generateTicketSlaDetailPdf(
 
     const metadata = [
       `Status: ${safeText(chamado.status)}`,
+      `Criticidade: ${safeText(chamado.criticidade)}`,
+      `Equipe atual: ${safeText(chamado.equipeResponsavel)}`,
       `Produto: ${safeText(chamado.produto)}`,
       `Software: ${safeText(chamado.software)}`,
       `Abertura: ${formatDateTime(chamado.abertoEm || chamado.dataAbertura)}`,
       `Encerramento: ${formatDateTime(chamado.encerradoEm || chamado.dataEncerramento)}`,
+      `Vencimento manual no Ellevo: ${chamado.slaVencimentoManual ? "Sim" : "Não"}`,
+      `Vencimento pausado: ${chamado.slaVencimentoPausado ? "Sim" : "Não"}`,
     ].join("  |  ");
     const metadataLines = pdf.splitTextToSize(metadata, contentWidth) as string[];
     pdf.setTextColor(75, 85, 100);
@@ -137,11 +135,11 @@ export async function generateTicketSlaDetailPdf(
   const drawSummaryCards = () => {
     const cards = [
       { label: "Tempo total", value: formatSlaDuration(resolution.hours), accent: [190, 0, 48] as const },
-      { label: "SLA resolução", value: resolution.label, accent: [5, 150, 105] as const },
+      { label: "SLA oficial", value: resolution.label, accent: [5, 150, 105] as const },
       { label: "Primeiro atendimento", value: formatSlaDuration(firstResponseElapsed), accent: [37, 99, 235] as const },
-      { label: "SLA primeiro atendimento", value: firstResponseLabel, accent: [225, 29, 72] as const },
-      { label: "Transferências", value: String(flow.transfers.length), accent: [124, 58, 237] as const },
-      { label: "Maior permanência", value: flow.bottleneck ? `${flow.bottleneck.area} · ${formatSlaDuration(flow.bottleneck.hours)}` : "-", accent: [217, 119, 6] as const },
+      { label: "SLA primeiro atendimento", value: `${firstResponseLabel} · prazo ${formatDateTime(chamado.slaPrimeiraRespostaPrevistaEm)}`, accent: [225, 29, 72] as const },
+      { label: "Vencimento vigente", value: formatDateTime(chamado.slaVencimentoEm), accent: [124, 58, 237] as const },
+      { label: "Fase atual", value: resolution.phaseLabel, accent: [217, 119, 6] as const },
     ];
     const gap = 3;
     const cardWidth = (contentWidth - gap * 2) / 3;

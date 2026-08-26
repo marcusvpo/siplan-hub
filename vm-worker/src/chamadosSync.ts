@@ -201,6 +201,22 @@ interface ProcessoVendaViewRow {
   DataEncerramentoIso: string | null;
 }
 
+interface ProcessoVendaOfficialSlaRow {
+  NumeroChamado: string | number;
+  Criticidade: string | null;
+  EquipeResponsavelChamado: string | null;
+  PrimeiraRespostaPrevistaIso: string | null;
+  PrimeiraRespostaRealIso: string | null;
+  VencimentoIso: string | null;
+  VencimentoPausado: boolean | null;
+  VencimentoInformadoManualmente: boolean | null;
+  TempoPrimeiraRespostaMinutos: number | null;
+  TempoVencimentoMinutos: number | null;
+  TempoRestanteMinutos: number | null;
+  RetornoPrevistoIso: string | null;
+  RetornoRealIso: string | null;
+}
+
 function cleanFilterValues(values?: unknown): string[] {
   if (!Array.isArray(values)) return [];
   return [...new Set(
@@ -631,13 +647,83 @@ async function runProcessoVendaOnce(
       synced_at: new Date().toISOString(),
     }));
 
-    if (rows.length > 0) {
+    // O Ellevo já calcula primeira resposta, vencimento, pausas e ajustes de
+    // calendário. Espelhamos esses valores oficiais em vez de recalculá-los no
+    // navegador. A view base fornece criticidade/equipe e Solicitacao fornece
+    // os relógios vigentes, inclusive alterações manuais auditáveis.
+    const slaPorChamado = new Map<string, ProcessoVendaOfficialSlaRow>();
+    const slaTicketBatchSize = 500;
+    const numerosChamados = [...new Set(rows.map((row) => row.numero_chamado))];
+    for (let from = 0; from < numerosChamados.length; from += slaTicketBatchSize) {
+      assertProcessoVendaRunActive(control);
+      const batch = numerosChamados.slice(from, from + slaTicketBatchSize);
+      const slaRequest = pool.request();
+      const ticketParameters = batch.map((ticket, index) => {
+        const name = `slaTicket${index}`;
+        slaRequest.input(name, sql.VarChar(50), ticket);
+        return `@${name}`;
+      });
+      const slaResult = await executeControlledQuery<ProcessoVendaOfficialSlaRow>(slaRequest, `
+        WITH chamado_meta AS (
+          SELECT CONVERT(varchar(50), c.NumeroChamado) AS NumeroChamado,
+                 c.Criticidade,
+                 c.EquipeResponsavelChamado,
+                 ROW_NUMBER() OVER (
+                   PARTITION BY c.NumeroChamado
+                   ORDER BY c.DataTramite DESC
+                 ) AS rn
+          FROM dbo.vw_2026_ChamadosTodosStatus AS c
+          WHERE CONVERT(varchar(50), c.NumeroChamado) IN (${ticketParameters.join(", ")})
+        )
+        SELECT meta.NumeroChamado,
+               meta.Criticidade,
+               meta.EquipeResponsavelChamado,
+               CONVERT(varchar(19), solicitacao.DataPrevistaPriResp, 126) AS PrimeiraRespostaPrevistaIso,
+               CONVERT(varchar(19), solicitacao.DataRealPriResp, 126) AS PrimeiraRespostaRealIso,
+               CONVERT(varchar(19), solicitacao.SolVencimento, 126) AS VencimentoIso,
+               solicitacao.VencimentoPausado,
+               solicitacao.VencimentoInformadoManualmente,
+               solicitacao.TempoPriResp AS TempoPrimeiraRespostaMinutos,
+               solicitacao.SLAVlCalculado AS TempoVencimentoMinutos,
+               solicitacao.TempoRestanteVencimento AS TempoRestanteMinutos,
+               CONVERT(varchar(19), solicitacao.DataPrevistaRetorno, 126) AS RetornoPrevistoIso,
+               CONVERT(varchar(19), solicitacao.DataRealRetorno, 126) AS RetornoRealIso
+        FROM chamado_meta AS meta
+        LEFT JOIN plataformaellevo.dbo.Solicitacao AS solicitacao
+          ON CONVERT(varchar(50), solicitacao.SolID) = meta.NumeroChamado
+        WHERE meta.rn = 1
+      `, control);
+      for (const sla of slaResult.recordset) {
+        slaPorChamado.set(String(sla.NumeroChamado), sla);
+      }
+    }
+
+    const rowsComSla = rows.map((row) => {
+      const sla = slaPorChamado.get(row.numero_chamado);
+      return {
+        ...row,
+        criticidade: sla?.Criticidade || null,
+        equipe_responsavel: sla?.EquipeResponsavelChamado || null,
+        sla_primeira_resposta_prevista_em: sla?.PrimeiraRespostaPrevistaIso || null,
+        sla_primeira_resposta_real_em: sla?.PrimeiraRespostaRealIso || null,
+        sla_vencimento_em: sla?.VencimentoIso || null,
+        sla_vencimento_pausado: sla?.VencimentoPausado === true,
+        sla_vencimento_manual: sla?.VencimentoInformadoManualmente === true,
+        sla_tempo_primeira_resposta_minutos: sla?.TempoPrimeiraRespostaMinutos ?? null,
+        sla_tempo_vencimento_minutos: sla?.TempoVencimentoMinutos ?? null,
+        sla_tempo_restante_minutos: sla?.TempoRestanteMinutos ?? null,
+        sla_retorno_previsto_em: sla?.RetornoPrevistoIso || null,
+        sla_retorno_real_em: sla?.RetornoRealIso || null,
+      };
+    });
+
+    if (rowsComSla.length > 0) {
       // Upsert em lotes de 200 na tabela chamados_processo_venda
-      for (let i = 0; i < rows.length; i += 200) {
+      for (let i = 0; i < rowsComSla.length; i += 200) {
         assertProcessoVendaRunActive(control);
         const { error } = await supabase
           .from("chamados_processo_venda")
-          .upsert(rows.slice(i, i + 200), { onConflict: "numero_chamado" });
+          .upsert(rowsComSla.slice(i, i + 200), { onConflict: "numero_chamado" });
         if (error) throw new Error(`upsert chamados_processo_venda: ${error.message}`);
       }
     }
@@ -646,7 +732,7 @@ async function runProcessoVendaOnce(
     // view base do Ellevo, que possui uma linha por tramite. SequenciaTramite e
     // a chave estavel; SELECT DISTINCT elimina repeticoes causadas pelos joins
     // internos da view sem descartar movimentacoes diferentes.
-    const ticketNumbers = [...new Set(rows.map((row) => row.numero_chamado))];
+    const ticketNumbers = [...new Set(rowsComSla.map((row) => row.numero_chamado))];
     const tramiteRows: ProcessoVendaTramiteRow[] = [];
     const tramiteTicketBatchSize = 500;
 

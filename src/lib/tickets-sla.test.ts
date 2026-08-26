@@ -6,7 +6,7 @@ import {
   chronologicalTramites,
   elapsedHours,
   formatSlaDuration,
-  getResolutionSlaState,
+  getOfficialSlaState,
   parseSlaDate,
 } from "@/lib/tickets-sla";
 
@@ -19,18 +19,48 @@ const chamado = (overrides: Partial<Chamado0800> = {}): Chamado0800 => ({
 });
 
 describe("tickets SLA", () => {
-  it("classifica chamados concluídos dentro e fora do prazo", () => {
-    expect(getResolutionSlaState(chamado(), 5).label).toBe("Dentro do SLA");
-    expect(getResolutionSlaState(chamado({ encerradoEm: "2026-08-07T08:00:00" }), 5).label)
-      .toBe("Fora do SLA");
+  it("usa a primeira resposta oficial antes do atendimento", () => {
+    const now = new Date("2026-08-01T10:00:00");
+    const pending = chamado({
+      status: "Não iniciado",
+      encerradoEm: undefined,
+      slaPrimeiraRespostaPrevistaEm: "2026-08-01T11:00:00",
+      slaVencimentoEm: "2026-08-02T18:00:00",
+    });
+    expect(getOfficialSlaState(pending, now).label).toBe("Aguardando retorno");
+    expect(getOfficialSlaState(pending, new Date("2026-08-01T12:00:00")).label)
+      .toBe("Retorno fora do SLA");
   });
 
-  it("classifica chamados abertos em curso ou estourados", () => {
-    const now = new Date("2026-08-04T08:00:00");
-    expect(getResolutionSlaState(chamado({ status: "Em andamento", encerradoEm: undefined }), 5, now).label)
+  it("troca para o vencimento oficial depois da primeira resposta", () => {
+    const base = chamado({
+      status: "Em andamento",
+      encerradoEm: undefined,
+      slaPrimeiraRespostaPrevistaEm: "2026-08-01T10:00:00",
+      slaPrimeiraRespostaRealEm: "2026-08-01T09:00:00",
+      slaVencimentoEm: "2026-08-03T18:00:00",
+    });
+    expect(getOfficialSlaState(base, new Date("2026-08-02T08:00:00")).label)
       .toBe("SLA em curso");
-    expect(getResolutionSlaState(chamado({ status: "Em andamento", encerradoEm: undefined }), 2, now).label)
-      .toBe("SLA estourado");
+    expect(getOfficialSlaState(base, new Date("2026-08-04T08:00:00")).label)
+      .toBe("SLA vencido");
+  });
+
+  it("classifica conclusão e respeita somente a pausa oficial", () => {
+    const official = {
+      slaPrimeiraRespostaPrevistaEm: "2026-08-01T10:00:00",
+      slaPrimeiraRespostaRealEm: "2026-08-01T09:00:00",
+      slaVencimentoEm: "2026-08-05T18:00:00",
+    };
+    expect(getOfficialSlaState(chamado(official)).label).toBe("Dentro do SLA");
+    expect(getOfficialSlaState(chamado({ ...official, encerradoEm: "2026-08-06T08:00:00" })).label)
+      .toBe("Fora do SLA");
+    expect(getOfficialSlaState(chamado({
+      ...official,
+      status: "Em andamento",
+      encerradoEm: undefined,
+      slaVencimentoPausado: true,
+    }), new Date("2026-08-10T08:00:00")).label).toBe("SLA pausado");
   });
 
   it("calcula e formata durações", () => {
