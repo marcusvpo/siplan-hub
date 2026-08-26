@@ -193,6 +193,7 @@ Comum a todas as filas. Faz `spawn` de `codex exec --json --ephemeral` (adiciona
 - **O que faz:** gera um **resumo executivo do portfólio do dia** (5–8 bullets em markdown, cobrindo projetos em risco/atrasados, gargalos por etapa, pendências críticas e destaques) e grava em `copilot_digests`.
 - **Idempotente:** se já existe linha para `for_date = hoje`, não faz nada. O `upsert` usa `onConflict: 'for_date', ignoreDuplicates: true`.
 - **Fonte:** mesma montagem de contexto do chat (`projectLine`/`issueLine` importadas de `processCopilotJob.ts`), mesmo modelo/cwd neutro.
+- **Linguagem acessivel:** o prompt manda traduzir etapas e status internos para frases naturais. Uma camada deterministica (`copilotLanguage.ts`) impede que notacoes como `pos=todo` ou `ambiente=in-progress(...)` cheguem ao usuario; o frontend aplica a mesma traducao aos resumos antigos ja salvos.
 - **Quando roda:** disparado por `maybeDailyDigest()` em `index.ts`, dentro do tick de polling — **só quando o worker está ocioso** (`!busy`) e **a partir das 6h** (`new Date().getHours() >= 6`, evita gerar de madrugada). Como é idempotente, roda de fato uma vez por dia; nos ticks seguintes retorna cedo. É **best-effort** (erros só logam).
 - **Onde aparece:** o hook `useCopilot` lê o digest mais recente (`copilot_digests`) e `CopilotChat` mostra o bloco "Resumo do dia" quando o chat está vazio.
 

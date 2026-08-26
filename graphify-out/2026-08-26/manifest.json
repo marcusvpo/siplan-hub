@@ -1665,8 +1665,8 @@
     "semantic_hash": "f197a9f0666e63ed79a154fcc1bfa86f"
   },
   "vm-worker/src/config.ts": {
-    "mtime": 1787757311.93492,
-    "ast_hash": "7b9e4879bd6b5768da7bc95960d6cda5",
+    "mtime": 1787758262.6522114,
+    "ast_hash": "83c48de0741ecad724aa0fa0436702a6",
     "semantic_hash": ""
   },
   "vm-worker/src/index.ts": {
@@ -1690,8 +1690,8 @@
     "semantic_hash": ""
   },
   "vm-worker/src/runSkill.ts": {
-    "mtime": 1787756327.529593,
-    "ast_hash": "2ec33ce6708d1eec40a88dc4845b47a4",
+    "mtime": 1787758262.6592855,
+    "ast_hash": "f9ec3b4f6d5e4da5713ad0509289c62a",
     "semantic_hash": ""
   },
   "vm-worker/src/supabase.ts": {
@@ -2455,8 +2455,8 @@
     "semantic_hash": "a9b03494151fe90e5decd2405400e106"
   },
   "vm-worker/README.md": {
-    "mtime": 1787756334.5692077,
-    "ast_hash": "8e63b64917da25bddc3e9662ba4093f3",
+    "mtime": 1787758367.8833523,
+    "ast_hash": "4099883bc96fd05452a3edfaa1311905",
     "semantic_hash": ""
   },
   "assets/Siplan_logo.png": {
@@ -2550,8 +2550,8 @@
     "semantic_hash": ""
   },
   "vm-worker/src/processCopilotJob.ts": {
-    "mtime": 1787757395.9309418,
-    "ast_hash": "b5d7d20df62a0d782feebd3fba65ecf3",
+    "mtime": 1787758321.6922748,
+    "ast_hash": "7c5e5d5339a5c9f2ee5922c55e6c18db",
     "semantic_hash": ""
   },
   ".agent/skills/n8n-expert-siplanhub/SKILL.md": {
@@ -2690,8 +2690,8 @@
     "semantic_hash": ""
   },
   "docs/FUNCIONALIDADE_COPILOTO.md": {
-    "mtime": 1787757311.951991,
-    "ast_hash": "5e79af9cc987a275a4e9a11f9e3a2c5c",
+    "mtime": 1787758367.886361,
+    "ast_hash": "8c0f241ee0c93453bb6066c634a40487",
     "semantic_hash": ""
   },
   "docs/FUNCIONALIDADE_GERAR_COM_IA.md": {
@@ -4150,8 +4150,8 @@
     "semantic_hash": ""
   },
   "vm-worker/src/runSkill.test.ts": {
-    "mtime": 1787757311.9449608,
-    "ast_hash": "0b385034cf7856aa315395ff559a57d6",
+    "mtime": 1787758444.0739155,
+    "ast_hash": "80e19caa1cd7ee098ffe8a420058251d",
     "semantic_hash": ""
   },
   "docs/automacoes/sincronizacao_vector_store_openai.md": {
@@ -4200,8 +4200,13 @@
     "semantic_hash": ""
   },
   "vm-worker/src/copilotHistory.ts": {
-    "mtime": 1787757311.93492,
-    "ast_hash": "0b602c27e0df82d80e3e90a3ec1c5c83",
+    "mtime": 1787758262.6486747,
+    "ast_hash": "0c4220fdac0506812d896da77c0e251a",
+    "semantic_hash": ""
+  },
+  "vm-worker/src/copilotContext.ts": {
+    "mtime": 1787758262.6476736,
+    "ast_hash": "27e36635eb908ecd3a77d69fd038f26f",
     "semantic_hash": ""
   }
 }

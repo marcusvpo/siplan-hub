@@ -12,6 +12,16 @@ const { buildCodexChildEnv, parseCodexEvent, runSkill } = await import("./runSki
 const { ensureCodexModelSkill } = await import("./codexModelSkill.js");
 const { selectCopilotHistory } = await import("./copilotHistory.js");
 const { detectCopilotQuestionContext } = await import("./copilotContext.js");
+const { humanizeCopilotText } = await import("./copilotLanguage.js");
+
+test("traduz a notacao interna do copiloto para linguagem de negocio", () => {
+  assert.equal(
+    humanizeCopilotText(
+      "- Cartorio Exemplo :: pos=todo | implantacao=done(Joana Silva)[01/07-05/07] | ambiente=in-progress(Luciane Lima)[03/07]"
+    ),
+    "- Cartorio Exemplo — Pós-implantação: Não iniciado; Implantação e treinamento: Concluído (responsável: Joana Silva; período: 01/07 a 05/07); Preparação do ambiente: Em andamento (responsável: Luciane Lima; data: 03/07)"
+  );
+});
 
 test("envia ao copiloto somente os blocos relacionados com a pergunta", () => {
   assert.deepEqual(

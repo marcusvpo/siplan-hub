@@ -3,6 +3,7 @@ import { config, CopilotJob } from "./config.js";
 import { runSkill, ProgressStep } from "./runSkill.js";
 import { selectCopilotHistory } from "./copilotHistory.js";
 import { CopilotStagePrefix, detectCopilotQuestionContext } from "./copilotContext.js";
+import { humanizeCopilotText } from "./copilotLanguage.js";
 
 // Mantem apenas os ultimos N passos no banco (evita payloads gigantes no Realtime).
 const MAX_LOG_STEPS = 80;
@@ -136,6 +137,10 @@ Cada linha do portfolio e um projeto (cliente/cartorio) com o status de cada eta
 
 Regras:
 - Responda em portugues do Brasil, de forma direta e objetiva.
+- Escreva para qualquer pessoa entender, sem depender de conhecimento tecnico do sistema.
+- Nunca exponha a notacao compacta do portfolio nem codigos internos como todo, in-progress, done, blocked, waiting_adjustment, status_geral, pos= ou implantacao=. Traduza-os para linguagem natural: nao iniciado, em andamento, concluido, bloqueado ou aguardando ajustes.
+- Use os nomes completos das etapas em portugues: infraestrutura, aderencia, conversao de dados, preparacao do ambiente, modelos do sistema, implantacao e treinamento e pos-implantacao.
+- Quando mencionar responsavel ou data, integre a informacao em uma frase natural. Explique siglas ou termos tecnicos indispensaveis na primeira ocorrencia.
 - ATRASO: uma etapa esta atrasada quando a data de fim ja passou (anterior a hoje) E o status nao esta concluido. Use a data de hoje para decidir isso.
 - Considere "travado/pendente/parado" as etapas cujo status indique nao concluido (ex.: pendente, em andamento, bloqueado) e "concluido" as finalizadas (ex.: concluido, finalizado, adequado).
 - Ao citar um projeto, escreva o nome do cartorio EXATAMENTE como aparece no portfolio (o sistema transforma o nome em link automaticamente).
@@ -435,6 +440,7 @@ export async function processCopilotJob(job: CopilotJob): Promise<void> {
     if (items.length) followups = items.join("|");
     answer = answer.slice(0, fm.index).trim();
   }
+  answer = humanizeCopilotText(answer);
 
   // 5. Concluir
   pushStep("Resposta pronta.", "result");
