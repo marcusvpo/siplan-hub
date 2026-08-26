@@ -1,5 +1,5 @@
 import type { Chamado0800, ChamadoTramite } from "@/hooks/useChamados0800";
-import { isTicketCompleted } from "@/lib/tickets-ai-analytics";
+import { isTicketCompleted, normalizeTicketText } from "@/lib/tickets-ai-analytics";
 
 const HOUR_MS = 60 * 60 * 1000;
 
@@ -7,6 +7,29 @@ export interface ResolutionSlaState {
   hours: number | null;
   label: "Dentro do SLA" | "Fora do SLA" | "SLA em curso" | "SLA estourado" | "Sem datas";
   className: string;
+}
+
+export interface TicketAreaTime {
+  area: string;
+  hours: number;
+  intervals: number;
+}
+
+export interface TicketAreaTransfer {
+  fromArea: string;
+  toArea: string;
+  transferredAt?: string;
+  waitHours: number | null;
+  activity?: string;
+  responsible?: string;
+}
+
+export interface TicketFlowAnalysis {
+  areaTimes: TicketAreaTime[];
+  transfers: TicketAreaTransfer[];
+  bottleneck: TicketAreaTime | null;
+  longestTransfer: TicketAreaTransfer | null;
+  totalTrackedHours: number;
 }
 
 export function parseSlaDate(value?: string, endOfDay = false): Date | null {
@@ -66,4 +89,91 @@ export function chronologicalTramites(tramites: ChamadoTramite[]): ChamadoTramit
     const rightTime = parseSlaDate(right.dataTramite)?.getTime() ?? Number.MAX_SAFE_INTEGER;
     return leftTime - rightTime || left.sequenciaTramite - right.sequenciaTramite;
   });
+}
+
+function tramiteArea(tramite: ChamadoTramite): string {
+  return tramite.equipeResponsavel?.trim() || "Área não informada";
+}
+
+/**
+ * Estima o tempo percorrido em cada área a partir da equipe registrada nos
+ * trâmites. Como a origem não possui eventos separados de envio e aceite, o
+ * intervalo de transferência corresponde ao tempo entre o último trâmite da
+ * área anterior e o primeiro trâmite da área seguinte.
+ */
+export function buildTicketFlowAnalysis(
+  chamado: Chamado0800,
+  tramites: ChamadoTramite[],
+  now = new Date(),
+): TicketFlowAnalysis {
+  const timeline = chronologicalTramites(tramites).filter((tramite) => (
+    parseSlaDate(tramite.dataTramite) !== null
+  ));
+  const openedAt = parseSlaDate(chamado.abertoEm || chamado.dataAbertura);
+  const closedAt = parseSlaDate(
+    chamado.encerradoEm || chamado.dataEncerramento,
+    !chamado.encerradoEm,
+  );
+  const endpoint = isTicketCompleted(chamado) && closedAt ? closedAt : now;
+  const areaTotals = new Map<string, { hours: number; intervals: number }>();
+  const transfers: TicketAreaTransfer[] = [];
+
+  const addAreaInterval = (area: string, from: Date | null, to: Date | null) => {
+    const hours = elapsedHours(from, to);
+    if (hours === null) return;
+    const current = areaTotals.get(area) || { hours: 0, intervals: 0 };
+    current.hours += hours;
+    current.intervals += 1;
+    areaTotals.set(area, current);
+  };
+
+  if (timeline.length === 0) {
+    addAreaInterval("Aguardando primeiro atendimento", openedAt, endpoint);
+  } else {
+    const firstAt = parseSlaDate(timeline[0].dataTramite);
+    addAreaInterval("Aguardando primeiro atendimento", openedAt, firstAt);
+
+    for (let index = 0; index < timeline.length - 1; index += 1) {
+      const current = timeline[index];
+      const next = timeline[index + 1];
+      const currentAt = parseSlaDate(current.dataTramite);
+      const nextAt = parseSlaDate(next.dataTramite);
+      const currentArea = tramiteArea(current);
+      const nextArea = tramiteArea(next);
+      const intervalHours = elapsedHours(currentAt, nextAt);
+      addAreaInterval(currentArea, currentAt, nextAt);
+
+      if (normalizeTicketText(currentArea) !== normalizeTicketText(nextArea)) {
+        transfers.push({
+          fromArea: currentArea,
+          toArea: nextArea,
+          transferredAt: next.dataTramite,
+          waitHours: intervalHours,
+          activity: next.atividade,
+          responsible: next.responsavel,
+        });
+      }
+    }
+
+    const last = timeline[timeline.length - 1];
+    addAreaInterval(tramiteArea(last), parseSlaDate(last.dataTramite), endpoint);
+  }
+
+  const areaTimes = [...areaTotals.entries()]
+    .map(([area, value]) => ({ area, ...value }))
+    .sort((left, right) => right.hours - left.hours || left.area.localeCompare(right.area, "pt-BR"));
+  const longestTransfer = transfers.reduce<TicketAreaTransfer | null>((longest, transfer) => {
+    if (transfer.waitHours === null) return longest;
+    return !longest || longest.waitHours === null || transfer.waitHours > longest.waitHours
+      ? transfer
+      : longest;
+  }, null);
+
+  return {
+    areaTimes,
+    transfers,
+    bottleneck: areaTimes[0] || null,
+    longestTransfer,
+    totalTrackedHours: areaTimes.reduce((total, area) => total + area.hours, 0),
+  };
 }

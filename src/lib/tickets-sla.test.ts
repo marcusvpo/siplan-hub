@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { Chamado0800, ChamadoTramite } from "@/hooks/useChamados0800";
 import {
+  buildTicketFlowAnalysis,
   chronologicalTramites,
   elapsedHours,
   formatSlaDuration,
@@ -48,5 +49,27 @@ describe("tickets SLA", () => {
     ];
     expect(chronologicalTramites(tramites).map((item) => item.sequenciaTramite))
       .toEqual([1, 2, 3]);
+  });
+
+  it("calcula permanência por área e transferências entre equipes", () => {
+    const tramites: ChamadoTramite[] = [
+      { sequenciaTramite: 1, dataTramite: "2026-08-01T10:00:00", equipeResponsavel: "SD" },
+      { sequenciaTramite: 2, dataTramite: "2026-08-01T14:00:00", equipeResponsavel: "Sustentação" },
+      { sequenciaTramite: 3, dataTramite: "2026-08-02T14:00:00", equipeResponsavel: "Sustentação" },
+      { sequenciaTramite: 4, dataTramite: "2026-08-02T18:00:00", equipeResponsavel: "SD" },
+    ];
+    const result = buildTicketFlowAnalysis(chamado({
+      encerradoEm: "2026-08-03T08:00:00",
+    }), tramites);
+
+    expect(result.transfers.map((transfer) => `${transfer.fromArea} -> ${transfer.toArea}`))
+      .toEqual(["SD -> Sustentação", "Sustentação -> SD"]);
+    expect(result.areaTimes).toEqual([
+      { area: "Sustentação", hours: 28, intervals: 2 },
+      { area: "SD", hours: 18, intervals: 2 },
+      { area: "Aguardando primeiro atendimento", hours: 2, intervals: 1 },
+    ]);
+    expect(result.bottleneck?.area).toBe("Sustentação");
+    expect(result.totalTrackedHours).toBe(48);
   });
 });

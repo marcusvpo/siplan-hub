@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
+  ArrowRight,
+  Building2,
   CheckCircle2,
   ChevronDown,
   ChevronLeft,
@@ -33,6 +35,7 @@ import {
   useChamadoTramites,
 } from "@/hooks/useChamados0800";
 import {
+  buildTicketFlowAnalysis,
   chronologicalTramites,
   elapsedHours,
   formatSlaDuration,
@@ -40,6 +43,7 @@ import {
   parseSlaDate,
 } from "@/lib/tickets-sla";
 import type { ChamadosReportFilters } from "@/lib/chamados-report-pdf";
+import { generateTicketSlaDetailPdf } from "@/lib/tickets-sla-detail-pdf";
 import { generateTicketsSlaReportPdf } from "@/lib/tickets-sla-report-pdf";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -75,8 +79,13 @@ function TicketSlaRow({
   firstResponseHours: number;
 }) {
   const [open, setOpen] = useState(false);
+  const [generatingDetailPdf, setGeneratingDetailPdf] = useState(false);
   const { tramites, isLoading, error } = useChamadoTramites(chamado.numeroChamado, open);
   const timeline = useMemo(() => chronologicalTramites(tramites), [tramites]);
+  const flowAnalysis = useMemo(
+    () => buildTicketFlowAnalysis(chamado, timeline),
+    [chamado, timeline],
+  );
   const resolution = getResolutionSlaState(chamado, resolutionDays);
   const openedAt = parseSlaDate(chamado.abertoEm || chamado.dataAbertura);
   const firstResponse = timeline.find((item) => (
@@ -98,6 +107,27 @@ function TicketSlaRow({
     (largest, gap) => gap !== null && (largest === null || gap > largest) ? gap : largest,
     null,
   );
+
+  const handleGenerateDetailPdf = async () => {
+    setGeneratingDetailPdf(true);
+    const toastId = `ticket-sla-detail-${chamado.numeroChamado}`;
+    try {
+      toast.loading(`Montando análise detalhada do chamado #${chamado.numeroChamado}...`, { id: toastId });
+      await generateTicketSlaDetailPdf(chamado, timeline, {
+        firstResponseHours,
+        resolutionDays,
+      });
+      toast.success("Relatório detalhado gerado.", { id: toastId });
+    } catch (pdfError) {
+      console.error("Erro ao gerar relatório detalhado do chamado:", pdfError);
+      toast.error(
+        pdfError instanceof Error ? pdfError.message : "Não foi possível gerar o relatório detalhado.",
+        { id: toastId },
+      );
+    } finally {
+      setGeneratingDetailPdf(false);
+    }
+  };
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
@@ -127,7 +157,26 @@ function TicketSlaRow({
               <p className="py-6 text-center text-xs text-destructive">Não foi possível carregar os trâmites.</p>
             ) : (
               <>
-                <div className="mb-4 grid gap-2 sm:grid-cols-3">
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p className="text-xs font-semibold">Análise do fluxo do atendimento</p>
+                    <p className="text-[10px] text-muted-foreground">Tempos estimados pela equipe registrada em cada trâmite.</p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 gap-1.5 px-2 text-[10px]"
+                    onClick={handleGenerateDetailPdf}
+                    disabled={generatingDetailPdf}
+                  >
+                    {generatingDetailPdf
+                      ? <Loader2 className="h-3 w-3 animate-spin" />
+                      : <FileDown className="h-3 w-3" />}
+                    {generatingDetailPdf ? "Gerando..." : "Relatório detalhado"}
+                  </Button>
+                </div>
+
+                <div className="mb-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
                   <div className="rounded-md border bg-background p-2.5">
                     <p className="text-[9px] font-semibold uppercase text-muted-foreground">Primeiro atendimento</p>
                     <p className="mt-1 text-sm font-bold">{formatSlaDuration(firstResponseElapsed)}</p>
@@ -150,9 +199,73 @@ function TicketSlaRow({
                     <p className="mt-1 text-[10px] text-muted-foreground">Entre abertura e trâmites consecutivos</p>
                   </div>
                   <div className="rounded-md border bg-background p-2.5">
+                    <p className="text-[9px] font-semibold uppercase text-muted-foreground">Transferências</p>
+                    <p className="mt-1 text-sm font-bold">{flowAnalysis.transfers.length}</p>
+                    <p className="mt-1 truncate text-[10px] text-muted-foreground" title={flowAnalysis.longestTransfer ? `${flowAnalysis.longestTransfer.fromArea} → ${flowAnalysis.longestTransfer.toArea}` : undefined}>
+                      {flowAnalysis.longestTransfer
+                        ? `Maior: ${formatSlaDuration(flowAnalysis.longestTransfer.waitHours)}`
+                        : "Nenhuma troca de área"}
+                    </p>
+                  </div>
+                  <div className="rounded-md border bg-background p-2.5">
+                    <p className="text-[9px] font-semibold uppercase text-muted-foreground">Maior permanência</p>
+                    <p className="mt-1 truncate text-sm font-bold" title={flowAnalysis.bottleneck?.area}>{flowAnalysis.bottleneck?.area || "—"}</p>
+                    <p className="mt-1 text-[10px] text-muted-foreground">{formatSlaDuration(flowAnalysis.bottleneck?.hours ?? null)}</p>
+                  </div>
+                  <div className="rounded-md border bg-background p-2.5">
                     <p className="text-[9px] font-semibold uppercase text-muted-foreground">Movimentações</p>
                     <p className="mt-1 text-sm font-bold">{timeline.length}</p>
                     <p className="mt-1 text-[10px] text-muted-foreground">Trâmites sincronizados</p>
+                  </div>
+                </div>
+
+                <div className="mb-4 grid gap-3 lg:grid-cols-2">
+                  <div className="rounded-lg border bg-background p-3">
+                    <h3 className="flex items-center gap-1.5 text-xs font-semibold"><Building2 className="h-3.5 w-3.5 text-primary" />Tempo acumulado por área</h3>
+                    <div className="mt-2 space-y-2">
+                      {flowAnalysis.areaTimes.map((area) => {
+                        const participation = flowAnalysis.totalTrackedHours > 0
+                          ? Math.round((area.hours / flowAnalysis.totalTrackedHours) * 100)
+                          : 0;
+                        return (
+                          <div key={area.area}>
+                            <div className="mb-1 flex items-center justify-between gap-3 text-[10px]">
+                              <span className="truncate font-medium" title={area.area}>{area.area}</span>
+                              <span className="shrink-0 font-semibold">{formatSlaDuration(area.hours)} · {participation}%</span>
+                            </div>
+                            <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                              <div className="h-full rounded-full bg-primary" style={{ width: `${Math.max(participation, 1)}%` }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="rounded-lg border bg-background p-3">
+                    <h3 className="flex items-center gap-1.5 text-xs font-semibold"><ArrowRight className="h-3.5 w-3.5 text-primary" />Transferências entre áreas</h3>
+                    <p className="mt-1 text-[9px] leading-relaxed text-muted-foreground">Estimativa entre o último trâmite da origem e o primeiro da área de destino; o Ellevo não registra envio e aceite separadamente.</p>
+                    {flowAnalysis.transfers.length === 0 ? (
+                      <p className="py-5 text-center text-[10px] text-muted-foreground">Nenhuma troca de área identificada.</p>
+                    ) : (
+                      <div className="mt-2 max-h-52 space-y-1.5 overflow-y-auto pr-1">
+                        {flowAnalysis.transfers.map((transfer, index) => (
+                          <div key={`${transfer.transferredAt}-${index}`} className="rounded-md border bg-muted/20 p-2">
+                            <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-semibold">
+                              <span>{transfer.fromArea}</span>
+                              <ArrowRight className="h-3 w-3 text-primary" />
+                              <span>{transfer.toArea}</span>
+                              <Badge variant="outline" className="ml-auto h-4 px-1.5 text-[9px]">{formatSlaDuration(transfer.waitHours)}</Badge>
+                            </div>
+                            <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[9px] text-muted-foreground">
+                              <span>{formatDateTime(transfer.transferredAt)}</span>
+                              {transfer.activity && <span>{transfer.activity}</span>}
+                              {transfer.responsible && <span>{transfer.responsible}</span>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 
