@@ -77,7 +77,7 @@ export function CsCxMultiSelect({
           }
         >
           <CommandInput placeholder={searchPlaceholder} />
-          <CommandList>
+          <CommandList onWheel={(event) => event.stopPropagation()}>
             <CommandEmpty>{emptyText}</CommandEmpty>
             <CommandGroup>
               {options.map((option) => {
