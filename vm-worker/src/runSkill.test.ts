@@ -11,6 +11,19 @@ process.env.OLLAMA_HOST = "http://127.0.0.1:1";
 const { buildCodexChildEnv, parseCodexEvent, runSkill } = await import("./runSkill.js");
 const { ensureCodexModelSkill } = await import("./codexModelSkill.js");
 const { selectCopilotHistory } = await import("./copilotHistory.js");
+const { detectCopilotQuestionContext } = await import("./copilotContext.js");
+
+test("envia ao copiloto somente os blocos relacionados com a pergunta", () => {
+  assert.deepEqual(
+    detectCopilotQuestionContext("Quais projetos estao parados na implantacao?"),
+    { stages: ["implementation"], includeConversionIssues: false, includeChamadosPos: false }
+  );
+  assert.deepEqual(
+    detectCopilotQuestionContext("Quais bugs e chamados 0800 estao abertos no pos-implantacao?"),
+    { stages: ["post"], includeConversionIssues: false, includeChamadosPos: true }
+  );
+  assert.equal(detectCopilotQuestionContext("Resuma o portfolio").stages.length, 7);
+});
 
 test("isola o historico do copiloto por sessao e prioriza as mensagens recentes", () => {
   const rows = [
@@ -33,6 +46,14 @@ test("isola o historico do copiloto por sessao e prioriza as mensagens recentes"
       maxChars: "mais recente".length + "resposta recente".length,
     }),
     [{ question: "mais recente", result_text: "resposta recente" }]
+  );
+
+  assert.deepEqual(
+    selectCopilotHistory(rows, {
+      currentCreatedAt: "2026-08-26T15:05:00Z",
+      currentQuestion: "mais recente",
+    }),
+    [{ question: "anterior", result_text: "resposta anterior" }]
   );
 });
 
@@ -183,6 +204,7 @@ test(
       {
         provider: "codex",
         cwd: process.cwd(),
+        reasoningEffort: "low",
         allowOllamaFallback: false,
       }
     );

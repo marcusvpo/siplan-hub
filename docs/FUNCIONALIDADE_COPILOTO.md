@@ -159,13 +159,13 @@ Runtime separado em `vm-worker/`. O roteamento está em `vm-worker/src/index.ts`
 1. **Cota (2ª barreira):** lê `copilot_access`. Lança erro se `!enabled` ou se `tokens_used_today >= daily_token_limit` no dia corrente.
 2. **Contexto do portfólio (retrieval ESTRUTURADO, sem embeddings):**
    - Lê `projects` (até `MAX_PROJECTS = 800`, ordenado por `client_name`).
-   - `projectLine()` gera **uma linha compacta por projeto** com o status de cada etapa. As etapas mapeadas (prefixo de coluna → rótulo) são: `infra`→infra, `adherence`→aderencia, `conversion`→conversao, `environment`→ambiente, `modelos_editor`→modelos, `implementation`→implantacao, `post`→pos. Formato de cada etapa: `etapa=status(responsavel)[inicio-fim]` (datas `dd/mm`). Também inclui `status_geral`.
+   - `detectCopilotQuestionContext()` identifica as etapas citadas na pergunta. `projectLine()` gera **uma linha compacta por projeto** somente com essas etapas; perguntas genéricas recebem o portfólio completo. As etapas mapeadas são: `infra`→infra, `adherence`→aderencia, `conversion`→conversao, `environment`→ambiente, `modelos_editor`→modelos, `implementation`→implantacao, `post`→pos. Formato: `etapa=status(responsavel)[inicio-fim]` (datas `dd/mm`).
    - **Não envia o `id`** do projeto — o front reconstrói o link `/projects/ID` casando o nome do cartório (economia de ~36 chars/linha).
    - **Escopo:** se `job.scope === 'ativos'`, filtra por `isActiveProject()` (tem ao menos uma etapa não concluída; regex `CONCLUIDO_RE = /conclu|finaliz|adequ|entregue|ok\b/i`). Caso contrário, portfólio inteiro.
    - Corta em `MAX_CONTEXT_CHARS = 130000` (avisa "lista truncada").
-3. **Pendências de conversão:** lê `conversion_issues` com `status IN ('open','in_progress')` (até 100, por prioridade). `issueLine()` gera uma linha compacta por pendência, casando `project_id` com o nome do cartório.
-4. **Histórico multi-turno:** prioriza as mensagens mais novas do próprio usuário, inclui até 5 trocas `done` (teto de 8.000 caracteres) e encerra o contexto ao encontrar um intervalo superior a 2 horas. Assim, perguntas de acompanhamento funcionam sem contaminar uma conversa nova com assuntos antigos.
-5. **Roda o Codex:** `buildPrompt()` monta um único prompt (instruções + portfólio + pendências + histórico + pergunta). Chama `runSkill(..., { provider: "codex", model: config.copilotCodexModel, cwd: config.copilotCwd, allowOllamaFallback: true })`. O prompt embute as regras de negócio: definição de "atrasado" (data-fim no passado + status não concluído usando a data de hoje), "travado/pendente", citar o nome do cartório **exatamente** (para virar link), e emitir na última linha `[[FOLLOWUPS]] a | b | c`.
+3. **Fontes sob demanda:** só lê `conversion_issues` quando a pergunta envolve conversão/pendências; só monta o bloco de chamados 0800 quando a pergunta envolve suporte, bugs ou chamados.
+4. **Histórico multi-turno:** prioriza as mensagens mais novas do próprio usuário, inclui até 5 trocas `done` (teto de 8.000 caracteres), ignora a resposta anterior quando a mesma pergunta é repetida e encerra o contexto ao encontrar um intervalo superior a 2 horas.
+5. **Roda o Codex:** `buildPrompt()` monta o prompt e chama `runSkill(..., { provider: "codex", reasoningEffort: "low", allowOllamaFallback: true })`. O esforço pode ser ajustado por `COPILOT_CODEX_REASONING_EFFORT`; geração de modelos mantém sua configuração independente.
 6. **Fallback local:** qualquer falha não cancelada do Codex aciona o Ollama; a troca aparece no `progress_log`.
 7. **Progresso ao vivo:** cada passo do motor é gravado em `progress`/`progress_log` (flush a cada `PROGRESS_FLUSH_MS = 2500`, mantendo os últimos `MAX_LOG_STEPS = 80`), empurrado por Realtime.
 8. **Cancelamento:** a cada ~2,5s checa `cancel_requested`; se marcado, encerra o processo e grava `cancelled`.
@@ -239,11 +239,12 @@ Passos:
 
 ### Variáveis de ambiente (`.env` do worker)
 
-Além das já existentes (`SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `CODEX_BIN`, `OLLAMA_HOST`, etc. — ver `vm-worker/README.md`), o Copiloto adiciona **duas opcionais**:
+Além das já existentes (`SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `CODEX_BIN`, `OLLAMA_HOST`, etc. — ver `vm-worker/README.md`), o Copiloto adiciona **três opcionais**:
 
 | Variável | Padrão | Descrição |
 |---|---|---|
 | `COPILOT_CODEX_MODEL` | vazio | Modelo usado no chat e no digest; vazio herda `CODEX_MODEL`/configuração da CLI. |
+| `COPILOT_CODEX_REASONING_EFFORT` | `low` | Esforço de raciocínio das consultas do chat; pode ser `minimal`, `low`, `medium`, `high` ou `xhigh`. |
 | `COPILOT_CWD` | `<os.tmpdir()>/siplan-copilot` | Diretório neutro onde a CLI roda (sem instruções/skills do Orion). Criado no boot. |
 
 Ambas têm default seguro — **não é obrigatório setar nada** para o Copiloto funcionar.

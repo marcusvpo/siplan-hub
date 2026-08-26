@@ -2,6 +2,7 @@ import { supabase } from "./supabase.js";
 import { config, CopilotJob } from "./config.js";
 import { runSkill, ProgressStep } from "./runSkill.js";
 import { selectCopilotHistory } from "./copilotHistory.js";
+import { CopilotStagePrefix, detectCopilotQuestionContext } from "./copilotContext.js";
 
 // Mantem apenas os ultimos N passos no banco (evita payloads gigantes no Realtime).
 const MAX_LOG_STEPS = 80;
@@ -53,11 +54,12 @@ function short(v: unknown, n = 40): string {
 }
 
 // Monta UMA linha compacta por projeto com o status de cada etapa (+ responsavel/periodo).
-export function projectLine(proj: AnyObj): string {
+export function projectLine(proj: AnyObj, stagePrefixes?: readonly CopilotStagePrefix[]): string {
   const client = short(proj.client_name, 60) || "(sem nome)";
   const ticket = short(proj.ticket_number, 20);
   const parts: string[] = [];
   for (const [prefix, label] of STAGES) {
+    if (stagePrefixes && !stagePrefixes.includes(prefix as CopilotStagePrefix)) continue;
     const status = short(proj[`${prefix}_status`], 24);
     if (!status) continue;
     const resp = short(proj[`${prefix}_responsible`], 24);
@@ -188,7 +190,8 @@ export async function processCopilotJob(job: CopilotJob): Promise<void> {
   const record = (step: ProgressStep): void => {
     currentText = step.text;
     steps.push(step);
-    void flushProgress(false);
+    const providerChanged = /Sessao Codex|Ollama|Codex indisponivel/i.test(step.text);
+    void flushProgress(providerChanged);
   };
   const pushStep = (text: string, kind: ProgressStep["kind"] = "system"): void =>
     record({ at: new Date().toISOString(), text, kind });
@@ -217,6 +220,7 @@ export async function processCopilotJob(job: CopilotJob): Promise<void> {
   pushStep("Lendo o portfolio de projetos...");
   await flushProgress(true);
 
+  const questionContext = detectCopilotQuestionContext(job.question);
   const PROJECT_PORTFOLIO_FIELDS =
     "id, client_name, ticket_number, system_type, infra_status, infra_responsible, infra_start_date, infra_end_date, adherence_status, adherence_responsible, adherence_start_date, adherence_end_date, conversion_status, conversion_responsible, conversion_start_date, conversion_end_date, environment_status, environment_responsible, environment_start_date, environment_end_date, modelos_editor_status, modelos_editor_responsible, modelos_editor_start_date, modelos_editor_end_date, implementation_status, implementation_responsible, implementation_start_date, implementation_end_date, post_status, post_responsible, post_start_date, post_end_date";
 
@@ -234,7 +238,7 @@ export async function processCopilotJob(job: CopilotJob): Promise<void> {
   let chars = 0;
   let truncated = false;
   for (const proj of scoped) {
-    const line = projectLine(proj);
+    const line = projectLine(proj, questionContext.stages);
     if (chars + line.length > MAX_CONTEXT_CHARS) {
       truncated = true;
       break;
@@ -256,24 +260,28 @@ export async function processCopilotJob(job: CopilotJob): Promise<void> {
   }
 
   // 2b. Pendencias de conversao em aberto (fonte extra: conversao/bloqueios).
-  const clientById = new Map<string, string>();
-  for (const p of projects || []) {
-    if (p.id) clientById.set(p.id, short(p.client_name, 60) || "(sem nome)");
+  let issuesText = "";
+  if (questionContext.includeConversionIssues) {
+    const clientById = new Map<string, string>();
+    for (const p of projects || []) {
+      if (p.id) clientById.set(p.id, short(p.client_name, 60) || "(sem nome)");
+    }
+    const { data: issueRows } = await supabase
+      .from("conversion_issues")
+      .select("project_id, title, status, priority")
+      .in("status", ["open", "in_progress"])
+      .order("priority", { ascending: false })
+      .limit(100);
+    issuesText = (issueRows || []).map((i) => issueLine(i, clientById)).join("\n");
   }
-  const { data: issueRows } = await supabase
-    .from("conversion_issues")
-    .select("project_id, title, status, priority")
-    .in("status", ["open", "in_progress"])
-    .order("priority", { ascending: false })
-    .limit(100);
-  const issuesText = (issueRows || []).map((i) => issueLine(i, clientById)).join("\n");
 
   // 2c. Chamados 0800 no pos (espelho chamados_0800): visao compacta por projeto
   //     em pos — total, abertos, criticos e temas IA mais frequentes. Best-effort:
   //     falha aqui nao derruba o copiloto, so responde sem esse bloco.
   let chamadosPosText = "";
-  try {
-    const normProd = (s: string): string => (s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  if (questionContext.includeChamadosPos) {
+    try {
+      const normProd = (s: string): string => (s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
     const emPos = (projects || []).filter(
       (p) => p.post_start_date && /^\d{4,}$/.test(String(p.ticket_number || "").trim())
     );
@@ -337,8 +345,9 @@ export async function processCopilotJob(job: CopilotJob): Promise<void> {
         chamadosPosText = linhas.join("\n");
       }
     }
-  } catch {
-    /* sem o bloco de chamados o copiloto segue normal */
+    } catch {
+      /* sem o bloco de chamados o copiloto segue normal */
+    }
   }
 
   // 3. Historico recente (chat multi-turno): ultimas trocas concluidas do usuario.
@@ -355,6 +364,7 @@ export async function processCopilotJob(job: CopilotJob): Promise<void> {
 
   const history: HistoryItem[] = selectCopilotHistory(historyRows || [], {
     currentCreatedAt,
+    currentQuestion: job.question,
   });
 
   // 4. Rodar o Codex; se estiver indisponivel, o executor usa Ollama local.
@@ -376,6 +386,7 @@ export async function processCopilotJob(job: CopilotJob): Promise<void> {
     await runSkill(prompt, (step) => record(step), shouldCancel, {
       provider: "codex",
       model: config.copilotCodexModel || undefined,
+      reasoningEffort: config.copilotCodexReasoningEffort,
       cwd: config.copilotCwd,
       allowOllamaFallback: true,
     });

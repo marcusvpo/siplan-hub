@@ -115,6 +115,9 @@ export const config = {
     process.env.CHAMADOS_TEMA_CODEX_MODEL || process.env.CODEX_MODEL || "",
   dtcCodexModel: process.env.DTC_CODEX_MODEL || process.env.CODEX_MODEL || "",
   copilotCodexModel: process.env.COPILOT_CODEX_MODEL || process.env.CODEX_MODEL || "",
+  // Consultas operacionais usam dados estruturados; low reduz latencia e tokens
+  // de raciocinio sem afetar a configuracao da geracao de modelos.
+  copilotCodexReasoningEffort: process.env.COPILOT_CODEX_REASONING_EFFORT || "low",
   // Diretorio neutro para rodar o copiloto/digest (sem instrucoes/skills do Orion).
   copilotCwd: ensureCopilotCwd(),
 

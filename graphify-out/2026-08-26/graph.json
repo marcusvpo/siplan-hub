@@ -7400,7 +7400,7 @@
       "source_location": "L47",
       "_origin": "ast",
       "id": "src_components_deploymentstickets_ticketsslaanalysis_ticketsslaanalysisprops",
-      "community": 341,
+      "community": 363,
       "norm_label": "ticketsslaanalysisprops"
     },
     {
@@ -8090,7 +8090,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_projectmanagement_deploymentcard",
-      "community": 8,
+      "community": 315,
       "norm_label": "deploymentcard.tsx"
     },
     {
@@ -8100,7 +8100,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_components_projectmanagement_deploymentcard_deploymentcardprops",
-      "community": 8,
+      "community": 315,
       "norm_label": "deploymentcardprops"
     },
     {
@@ -8110,7 +8110,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "src_components_projectmanagement_deploymentcard_deploymentcard",
-      "community": 8,
+      "community": 315,
       "norm_label": "deploymentcard()"
     },
     {
@@ -17450,7 +17450,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_hooks_usehomologationevents",
-      "community": 308,
+      "community": 330,
       "norm_label": "usehomologationevents.ts"
     },
     {
@@ -17460,7 +17460,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_hooks_usehomologationevents_homologationevent",
-      "community": 308,
+      "community": 330,
       "norm_label": "homologationevent"
     },
     {
@@ -17470,7 +17470,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "src_hooks_usehomologationevents_rawevent",
-      "community": 308,
+      "community": 330,
       "norm_label": "rawevent"
     },
     {
@@ -17480,7 +17480,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "src_hooks_usehomologationevents_mapevent",
-      "community": 308,
+      "community": 330,
       "norm_label": "mapevent()"
     },
     {
@@ -17490,7 +17490,7 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "src_hooks_usehomologationevents_usehomologationevents",
-      "community": 308,
+      "community": 330,
       "norm_label": "usehomologationevents()"
     },
     {
@@ -19090,7 +19090,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_lib_chamados_report_pdf_chamadosreportfilters",
-      "community": 341,
+      "community": 363,
       "norm_label": "chamadosreportfilters"
     },
     {
@@ -21140,7 +21140,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_lib_tickets_sla_report_pdf_ticketsslareportfilters",
-      "community": 341,
+      "community": 363,
       "norm_label": "ticketsslareportfilters"
     },
     {
@@ -22880,7 +22880,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_pages_commercial_customertimeline",
-      "community": 315,
+      "community": 29,
       "norm_label": "customertimeline.tsx"
     },
     {
@@ -22890,7 +22890,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "src_pages_commercial_customertimeline_timelineevent",
-      "community": 315,
+      "community": 29,
       "norm_label": "timelineevent"
     },
     {
@@ -24870,7 +24870,7 @@
       "source_location": "L91",
       "_origin": "ast",
       "id": "src_pages_implantadores_implantadoreshomologation_implantadoreshomologation",
-      "community": 308,
+      "community": 330,
       "norm_label": "implantadoreshomologation()"
     },
     {
@@ -46506,7 +46506,7 @@
       "source_location": "L153",
       "_origin": "ast",
       "id": "docs_funcionalidade_copiloto_4_worker",
-      "community": 11,
+      "community": 308,
       "norm_label": "4. worker"
     },
     {
@@ -46516,7 +46516,7 @@
       "source_location": "L157",
       "_origin": "ast",
       "id": "docs_funcionalidade_copiloto_processcopilotjob_ts_pipeline_de_uma_pergunta",
-      "community": 11,
+      "community": 308,
       "norm_label": "`processcopilotjob.ts` \u2014 pipeline de uma pergunta"
     },
     {
@@ -46526,7 +46526,7 @@
       "source_location": "L175",
       "_origin": "ast",
       "id": "docs_funcionalidade_copiloto_modelo_e_diret\u00f3rio_neutro_config_ts",
-      "community": 11,
+      "community": 308,
       "norm_label": "modelo e diretorio neutro (`config.ts`)"
     },
     {
@@ -46536,7 +46536,7 @@
       "source_location": "L187",
       "_origin": "ast",
       "id": "docs_funcionalidade_copiloto_runskill_ts_codex_principal_ollama_fallback",
-      "community": 11,
+      "community": 308,
       "norm_label": "`runskill.ts` \u2014 codex principal, ollama fallback"
     },
     {
@@ -46546,7 +46546,7 @@
       "source_location": "L191",
       "_origin": "ast",
       "id": "docs_funcionalidade_copiloto_processcopilotdigest_ts_resumo_di\u00e1rio",
-      "community": 11,
+      "community": 308,
       "norm_label": "`processcopilotdigest.ts` \u2014 resumo diario"
     },
     {
@@ -157636,7 +157636,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "vm-worker/src/processCopilotJob.ts",
-      "source_location": "L354",
+      "source_location": "L356",
       "weight": 1.0,
       "source": "vm_worker_src_processcopilotjob_processcopilotjob",
       "target": "vm_worker_src_copilothistory_selectcopilothistory"
@@ -158684,7 +158684,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "vm-worker/src/processCopilotJob.ts",
-      "source_location": "L372",
+      "source_location": "L374",
       "weight": 1.0,
       "source": "vm_worker_src_processcopilotjob_processcopilotjob",
       "target": "vm_worker_src_processcopilotjob_buildprompt",
@@ -158696,7 +158696,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "vm-worker/src/processCopilotJob.ts",
-      "source_location": "L374",
+      "source_location": "L376",
       "weight": 1.0,
       "source": "vm_worker_src_processcopilotjob_processcopilotjob",
       "target": "vm_worker_src_runskill_runskill"

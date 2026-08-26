@@ -2550,8 +2550,8 @@
     "semantic_hash": ""
   },
   "vm-worker/src/processCopilotJob.ts": {
-    "mtime": 1787757311.940441,
-    "ast_hash": "afd00731c7976a1c9e221ab54c3756ea",
+    "mtime": 1787757395.9309418,
+    "ast_hash": "b5d7d20df62a0d782feebd3fba65ecf3",
     "semantic_hash": ""
   },
   ".agent/skills/n8n-expert-siplanhub/SKILL.md": {

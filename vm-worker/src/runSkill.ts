@@ -17,6 +17,7 @@ export interface RunSkillOptions {
   addDirs?: string[]; // diretorios adicionais liberados para escrita no Codex
   allowOllamaFallback?: boolean;
   sandbox?: string;
+  reasoningEffort?: string;
 }
 
 export interface RunSkillResult {
@@ -297,6 +298,9 @@ function runCodex(
     for (const dir of options.addDirs || []) args.push("--add-dir", dir);
     if (options.model && !["sonnet", "haiku", "opus"].includes(options.model.toLowerCase())) {
       args.push("--model", options.model);
+    }
+    if (/^(minimal|low|medium|high|xhigh)$/.test(options.reasoningEffort || "")) {
+      args.push("--config", `model_reasoning_effort="${options.reasoningEffort}"`);
     }
     args.push(prompt);
 

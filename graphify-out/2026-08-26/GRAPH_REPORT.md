@@ -1,7 +1,7 @@
 # Graph Report - siplan-hub  (2026-08-26)
 
 ## Corpus Check
-- 827 files · ~974,018 words
+- 827 files · ~974,026 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -451,7 +451,7 @@ Nodes (21): AdherenceStageFormProps, EnvironmentStageFormProps, InfraStageFormPr
 
 ### Community 8 - "Charts, KPI & Reports"
 Cohesion: 0.04
-Nodes (89): dateFormatter, integerFormatter, usdFormatter, ProjectStatusChart(), ProjectStatusChartProps, STATUS_LABELS, formatAction(), RecentActivity() (+81 more)
+Nodes (87): dateFormatter, integerFormatter, usdFormatter, ProjectStatusChart(), ProjectStatusChartProps, STATUS_LABELS, formatAction(), RecentActivity() (+79 more)
 
 ### Community 9 - "Notification Bell & Dropdown"
 Cohesion: 0.11
@@ -462,8 +462,8 @@ Cohesion: 0.14
 Nodes (24): CalendarControls(), CalendarGrid(), CalendarGridProps, DayDroppableZone(), CalendarLegend(), DraggableTeamMember(), DraggableTeamMemberProps, CalendarEventPill() (+16 more)
 
 ### Community 11 - "Modal/Tab Prop Types"
-Cohesion: 0.06
-Nodes (31): 10. Segurança, 1. Visão geral, 2. Arquitetura / fluxo, 3. Banco de dados, 4. Worker, 5. Frontend, 6. Instalação / configuração, 7. Onde está rodando atualmente (+23 more)
+Cohesion: 0.08
+Nodes (26): 10. Segurança, 1. Visão geral, 2. Arquitetura / fluxo, 3. Banco de dados, 5. Frontend, 6. Instalação / configuração, 7. Onde está rodando atualmente, 8. Manutenção / troubleshooting (+18 more)
 
 ### Community 12 - "Adherence Form Renderer"
 Cohesion: 0.07
@@ -530,8 +530,8 @@ Cohesion: 0.15
 Nodes (15): ArticleMetadataCard(), ArticleMetadataCardProps, ArticleNavigator(), ArticleNavigatorProps, BunnyVideoModal(), BunnyVideoModalProps, CreateRoutineModalProps, SavePublishModal() (+7 more)
 
 ### Community 29 - "Commercial/Public Checklists"
-Cohesion: 0.20
-Nodes (12): ScrollArea, Client, Contact, Project, useCommercial(), getMarqueeStyle(), CommercialBlockers(), getBlockers() (+4 more)
+Cohesion: 0.18
+Nodes (13): ScrollArea, Client, Contact, Project, useCommercial(), getMarqueeStyle(), CommercialBlockers(), getBlockers() (+5 more)
 
 ### Community 30 - "Commercial Page & Hooks"
 Cohesion: 0.25
@@ -1339,7 +1339,7 @@ Nodes (8): CreateRoutineModal(), GeneratedRoutineMetadata, generateHeuristicMeta
 
 ### Community 308 - "useImproveTextJobs.ts"
 Cohesion: 0.40
-Nodes (5): HomologationEvent, mapEvent(), RawEvent, useHomologationEvents(), ImplantadoresHomologation()
+Nodes (5): 4. Worker, Modelo e diretório neutro (`config.ts`), `processCopilotDigest.ts` — resumo diário, `processCopilotJob.ts` — pipeline de uma pergunta, `runSkill.ts` — Codex principal, Ollama fallback
 
 ### Community 309 - "calendar.tsx"
 Cohesion: 0.29
@@ -1363,7 +1363,7 @@ Nodes (36): CS_CX_REQUEST_STATUSES, CsCxOfficeProduct, CsCxOfficeResponsible, Cs
 
 ### Community 315 - "cs-cx-nps-analytics.ts"
 Cohesion: 0.05
-Nodes (75): STATUS_COLORS, STATUS_LABELS, ConversionIssuesTab(), ConversionIssuesTabProps, PRIORITIES, STATUSES, ConversionPostDrawer(), ConversionPostDrawerProps (+67 more)
+Nodes (76): STATUS_COLORS, STATUS_LABELS, ConversionIssuesTab(), ConversionIssuesTabProps, PRIORITIES, STATUSES, ConversionPostDrawer(), ConversionPostDrawerProps (+68 more)
 
 ### Community 316 - "prepare-cs-cx-schema.mjs"
 Cohesion: 0.11
@@ -1422,8 +1422,8 @@ Cohesion: 0.30
 Nodes (15): AnyObj, buildContext(), buildPrompt(), buildStagesSection(), dumpStageExtras(), fmtDate(), humanVal(), lexToText() (+7 more)
 
 ### Community 330 - "PublicNpsResponse.tsx"
-Cohesion: 0.09
-Nodes (26): CompactQueueCard(), CompactQueueCardProps, ConversionPostFeed(), ConversionPostFeedProps, formatPostDate(), getInitials(), groupPostsByDate(), POST_TYPE_CONFIG (+18 more)
+Cohesion: 0.08
+Nodes (31): CompactQueueCard(), CompactQueueCardProps, ConversionPostFeed(), ConversionPostFeedProps, formatPostDate(), getInitials(), groupPostsByDate(), POST_TYPE_CONFIG (+23 more)
 
 ### Community 331 - "normalizeSearchText"
 Cohesion: 0.18
@@ -1458,8 +1458,8 @@ Cohesion: 0.24
 Nodes (9): CopilotChat(), CopilotChatProps, fmtDateTime(), linkifyProjects(), loadSaved(), SUGESTOES, renderInline(), renderLink() (+1 more)
 
 ### Community 341 - "usePosPanorama.ts"
-Cohesion: 0.21
-Nodes (22): formatDateTime(), SlaCardFilter, TicketSlaRow(), TicketsSlaAnalysis(), TicketsSlaAnalysisProps, ChamadoTramite, useChamadoTramites(), ChamadosReportFilters (+14 more)
+Cohesion: 0.24
+Nodes (19): formatDateTime(), SlaCardFilter, TicketSlaRow(), TicketsSlaAnalysis(), ChamadoTramite, useChamadoTramites(), chronologicalTramites(), elapsedHours() (+11 more)
 
 ### Community 342 - "cs-cx-nps-public.test.ts"
 Cohesion: 0.27
@@ -1518,8 +1518,8 @@ Cohesion: 0.25
 Nodes (7): fileMigrator, migrations, migrator, readiness, root, runner, workflow
 
 ### Community 363 - "ChamadosCatalog"
-Cohesion: 0.50
-Nodes (5): TicketsAiAnalysisProps, Chamado0800DetailDialogProps, ChamadosSearchFilters, ChamadosCatalog, DeploymentsTicketsProps
+Cohesion: 0.32
+Nodes (8): TicketsAiAnalysisProps, TicketsSlaAnalysisProps, Chamado0800DetailDialogProps, ChamadosSearchFilters, ChamadosCatalog, ChamadosReportFilters, TicketsSlaReportFilters, DeploymentsTicketsProps
 
 ### Community 367 - "jspdf"
 Cohesion: 0.50
@@ -1549,9 +1549,9 @@ Nodes (3): compilerOptions, allowJs, lib
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `cn()` connect `cs-cx-nps-analytics.ts` to `Conversion Post Feed & Drawer`, `Queue Card & Project Info`, `Checklist & Visual Question Builder`, `FormRenderer.tsx`, `Charts, KPI & Reports`, `Notification Bell & Dropdown`, `Calendar Grid & Drag-Drop`, `GEMINI.md`, `Sidebar Components`, `Custom Widgets & Sheet`, `Dashboard Table & Pagination`, `App Sidebar & Protected Route`, `Distribution/Workload Charts`, `Deployment Form Fields`, `Project Transformers & Stages`, `use-toast Reducer`, `Project Modal & Kanban`, `Commercial/Public Checklists`, `Predictability & Bottlenecks`, `Main Layout & Theme Toggle`, `5. Contatos & Clientes`, `Roadmap Page`, `Deployment Template & Stage Forms`, `LogsTab.tsx`, `PipelineStatus.tsx`, `CsCxRegistryOffices.tsx`, `usePublicChecklist.ts`, `useImproveTextJobs.ts`, `ProjectDistributionChart.tsx`, `Login`, `useCsCxCore.ts`, `ProjectAdherenceForm.tsx`, `PublicNpsResponse.tsx`, `normalizeSearchText`, `chamados-catalog.ts`, `Módulo Comercial — Documentação por Tela`, `VersionHistoryDrawer.tsx`, `usePosPanorama.ts`, `🗄️ Configuração Local do Supabase (Ambiente de Desenvolvimento)`, `Módulo: Núcleo — Dashboard e Projetos`, `CsCxAdmin`?**
+- **Why does `cn()` connect `cs-cx-nps-analytics.ts` to `Conversion Post Feed & Drawer`, `Queue Card & Project Info`, `Checklist & Visual Question Builder`, `FormRenderer.tsx`, `Charts, KPI & Reports`, `Notification Bell & Dropdown`, `Calendar Grid & Drag-Drop`, `GEMINI.md`, `Sidebar Components`, `Custom Widgets & Sheet`, `Dashboard Table & Pagination`, `App Sidebar & Protected Route`, `Distribution/Workload Charts`, `Deployment Form Fields`, `Project Transformers & Stages`, `use-toast Reducer`, `Project Modal & Kanban`, `Commercial/Public Checklists`, `Predictability & Bottlenecks`, `Main Layout & Theme Toggle`, `5. Contatos & Clientes`, `Roadmap Page`, `Deployment Template & Stage Forms`, `LogsTab.tsx`, `PipelineStatus.tsx`, `CsCxRegistryOffices.tsx`, `usePublicChecklist.ts`, `ProjectDistributionChart.tsx`, `Login`, `useCsCxCore.ts`, `ProjectAdherenceForm.tsx`, `PublicNpsResponse.tsx`, `normalizeSearchText`, `chamados-catalog.ts`, `Módulo Comercial — Documentação por Tela`, `VersionHistoryDrawer.tsx`, `usePosPanorama.ts`, `🗄️ Configuração Local do Supabase (Ambiente de Desenvolvimento)`, `Módulo: Núcleo — Dashboard e Projetos`, `CsCxAdmin`?**
   _High betweenness centrality (0.035) - this node is a cross-community bridge._
-- **Why does `err()` connect `VM Worker Job Queue` to `Conversion Post Feed & Drawer`, `FormRenderer.tsx`, `Notification Bell & Dropdown`, `Deployment Form Fields`, `use-toast Reducer`, `Commercial Page & Hooks`, `PipelineStatus.tsx`, `chamadosSync.ts`, `Improve-Text AI Jobs`, `ProtectedRoute.tsx`, `useImproveTextJobs.ts`, `Login`, `cs-cx-nps-analytics.ts`, `ProjectAdherenceForm.tsx`, `index.ts`, `PublicNpsResponse.tsx`, `Módulo: Núcleo — Dashboard e Projetos`, `jspdf`, `CsCxAdmin`, `pos-chat-visitor-dialog.test.tsx`?**
+- **Why does `err()` connect `VM Worker Job Queue` to `Conversion Post Feed & Drawer`, `FormRenderer.tsx`, `Notification Bell & Dropdown`, `Deployment Form Fields`, `use-toast Reducer`, `Commercial Page & Hooks`, `PipelineStatus.tsx`, `chamadosSync.ts`, `Improve-Text AI Jobs`, `ProtectedRoute.tsx`, `Login`, `cs-cx-nps-analytics.ts`, `ProjectAdherenceForm.tsx`, `index.ts`, `PublicNpsResponse.tsx`, `Módulo: Núcleo — Dashboard e Projetos`, `jspdf`, `CsCxAdmin`, `pos-chat-visitor-dialog.test.tsx`?**
   _High betweenness centrality (0.027) - this node is a cross-community bridge._
 - **Why does `dependencies` connect `Auth Context` to `PosPanorama.tsx`, `xlsx-export.ts`, `FormRenderer.tsx`, `Página 404 (Not Found)`, `jspdf`, `sonner.tsx`?**
   _High betweenness centrality (0.020) - this node is a cross-community bridge._
