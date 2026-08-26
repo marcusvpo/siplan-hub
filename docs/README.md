@@ -67,13 +67,13 @@ Catálogo dos custom hooks, stores Zustand e contexto de autenticação, organiz
 <details>
 <summary><b>7. Worker na VM e funcionalidades de IA</b></summary>
 
-Um único worker na VM Linux processa todas as filas de IA do app (Codex/Claude/Ollama + whisper.cpp).
+Um único worker na VM Linux processa todas as filas de IA do app (Codex principal, Ollama fallback + whisper.cpp).
 Setup, systemd, autodeploy, segurança e as filas processadas.
 
 - **Worker (visão geral, setup, deploy):** [../vm-worker/README.md](../vm-worker/README.md)
 - **Geração automática de modelos** (aba 5, skill `criar-modelo-mesclado`): [../vm-worker/README.md](../vm-worker/README.md)
 - **"Gerar com IA" / Melhorar texto / Resumo** (fila `dtc_ai_jobs`): [FUNCIONALIDADE_GERAR_COM_IA.md](FUNCIONALIDADE_GERAR_COM_IA.md)
-- **Preencher por voz** (ditado → whisper.cpp → Claude): [FUNCIONALIDADE_VOZ.md](FUNCIONALIDADE_VOZ.md)
+- **Preencher por voz** (ditado → whisper.cpp → Codex/Ollama): [FUNCIONALIDADE_VOZ.md](FUNCIONALIDADE_VOZ.md)
 - **Copiloto Operacional** (chat sobre o portfólio, fila `copilot_jobs`): [FUNCIONALIDADE_COPILOTO.md](FUNCIONALIDADE_COPILOTO.md)
 
 </details>

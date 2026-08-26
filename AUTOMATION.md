@@ -38,7 +38,7 @@ heartbeat no Supabase e avisa no Teams se estiver velho (> 15 min) ou "stopping"
 - `TEAMS_WEBHOOK` — URL de Incoming Webhook do canal do Teams (opcional; sem ela o alerta
   fica só no log da Action).
 
-## 5. Modelo do resumo / fallback (env na VM, no `.env` do worker)
-- `DTC_MODEL` — modelo do resumo (padrão `sonnet`; `haiku` mais rápido, `opus` mais caro/lento).
-- `DTC_FALLBACK_API_KEY` — se o Claude bater o limite de sessão da assinatura, o resumo tenta
-  de novo cobrando via API com essa chave. Sem ela, o job falha com mensagem clara.
+## 5. Motor de IA / fallback (env na VM, no `.env` do worker)
+- Codex é o motor principal fixo do worker; não requer variável de seleção.
+- `DTC_CODEX_MODEL` — override opcional; vazio herda `CODEX_MODEL`/configuração da CLI.
+- `OLLAMA_HOST` e `OLLAMA_MODEL` — fallback local automático quando o Codex falha ou fica sem cota.

@@ -30,7 +30,7 @@ async function sendHeartbeat(status: "idle" | "busy" | "stopping", note?: string
 
 /**
  * Recuperacao no boot: como so existe um worker, qualquer job em 'processing'
- * apos um restart esta orfao (o Claude foi morto junto). Devolve para a fila
+ * apos um restart esta orfao (o agente foi morto junto). Devolve para a fila
  * imediatamente (sem esperar o timeout de 30 min do reaper), respeitando MAX_ATTEMPTS.
  */
 async function recoverOwnStuckJobs(): Promise<void> {
@@ -109,7 +109,7 @@ async function markError(table: "model_generation_jobs" | "dtc_ai_jobs" | "copil
     .then(undefined, (e) => console.error("Falha ao marcar erro:", e));
 }
 
-// Assinatura de "acabaram os tokens": Codex/Claude encerram com mensagens de
+// Assinatura de "acabaram os tokens": Codex encerra com mensagens de
 // session/usage/rate limit. NAO e bug do modelo,
 // entao nao vale marcar erro definitivo -> vale reenfileirar e retentar depois.
 const QUOTA_LIMIT_RE = /(session|usage|rate) limit|hit your (session|usage) limit|limite de (sess|uso|taxa)|insufficient_quota|quota (exceeded|exhausted)/i;
@@ -282,7 +282,7 @@ async function claimOneCopilotJob(): Promise<boolean> {
 
 /**
  * Drena as filas de forma atomica (FOR UPDATE SKIP LOCKED no banco), um job por
- * vez, sob o mesmo flag `busy` (so um Claude roda por vez). Prioriza modelos e
+ * vez, sob o mesmo flag `busy` (so um agente roda por vez). Prioriza modelos e
  * intercala com jobs de resumo (DTC) e do Copiloto ate todas as filas esvaziarem.
  */
 async function claimAndProcess(): Promise<void> {
@@ -297,7 +297,7 @@ async function claimAndProcess(): Promise<void> {
       if (config.workerRoles.ai) {
         if (await claimOneDtcJob()) continue;
         if (await claimOneCopilotJob()) continue;
-        // Menor prioridade: classificar temas dos chamados 0800 (lotes haiku).
+        // Menor prioridade: classificar temas dos chamados 0800.
         if (await classifyPendingChamados()) continue;
       }
       return; // nenhuma fila deste worker tem job pendente
@@ -310,7 +310,7 @@ async function claimAndProcess(): Promise<void> {
 
 /**
  * Resumo diario do portfolio: gera 1x/dia (a partir das 6h) quando o worker esta
- * ocioso. Usa o mesmo flag `busy` para nao rodar dois Claude ao mesmo tempo.
+ * ocioso. Usa o mesmo flag `busy` para nao rodar dois agentes ao mesmo tempo.
  */
 async function maybeDailyDigest(): Promise<void> {
   if (busy) return;
@@ -372,8 +372,7 @@ async function main() {
   const roles = [config.workerRoles.models && "models", config.workerRoles.ai && "ai"].filter(Boolean).join("+") || "nenhum";
   console.log(`SiplanHUB VM worker iniciado (worker_id=${config.workerId}, papeis=${roles}).`);
   console.log(`Bucket=${config.bucket} | poll=${config.pollIntervalMs}ms | timeout=${config.jobTimeoutMs}ms`);
-  console.log(`Modelos: provider=${config.modelLlmProvider} | Codex bin=${config.codexBin}`);
-  if (config.modelLlmProvider === "claude") console.log(`Rollback Claude bin: ${config.claudeBin}`);
+  console.log(`IA: principal=codex | fallback=ollama:${config.ollamaModel} | Codex bin=${config.codexBin}`);
 
   installShutdownHandlers();
 
@@ -385,7 +384,7 @@ async function main() {
   await recoverOwnStuckJobs();
 
   // 0c. Espelho de chamados 0800 (Ellevo -> chamados_0800). Timer proprio, nao
-  //     disputa o flag `busy` (nao envolve Claude). No-op sem MSSQL_* no .env.
+  //     disputa o flag `busy` (nao envolve IA). No-op sem MSSQL_* no .env.
   startChamadosSync();
   startProcessoVendaSync();
 

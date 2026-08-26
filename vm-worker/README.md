@@ -21,8 +21,9 @@ devolve o `modelo.json` gerado direto para a coluna "Modelos Disponíveis (JSON)
 | `dtc_ai_jobs` | **Preencher por voz** (ditado → transcrição → texto profissional) | `voice_note` | [FUNCIONALIDADE_VOZ.md](../docs/FUNCIONALIDADE_VOZ.md) |
 | `copilot_jobs` | Copiloto Operacional (chat sobre o portfólio) + digest diário | — | [FUNCIONALIDADE_COPILOTO.md](../docs/FUNCIONALIDADE_COPILOTO.md) |
 
-Os jobs de modelos rodam o Codex dentro de `/opt/Orion.Modelos` (com a skill). O provedor das
-tarefas de texto puro continua configurado separadamente por `LLM_PROVIDER`. **Voz** depende
+Os jobs de modelos rodam o Codex dentro de `/opt/Orion.Modelos` (com a skill). Texto, voz,
+classificacao e copiloto tambem usam Codex; nessas tarefas, o Ollama local assume automaticamente
+se a CLI falhar ou ficar sem cota. **Voz** depende
 adicionalmente de `whisper.cpp` + `ffmpeg` na VM
 (ver seção própria abaixo).
 
@@ -76,8 +77,10 @@ adicionalmente de `whisper.cpp` + `ffmpeg` na VM
 <summary><b>Requisitos</b></summary>
 
 - Node.js 22 via nvm na VM.
-- Codex autenticado para o `administrator` (`codex login`) ou `CODEX_API_KEY` injetada somente no
-  ambiente do servico.
+- Codex autenticado para o `administrator` (`codex login`). Para conta de API, execute uma vez
+  `printf '%s' "$OPENAI_API_KEY" | codex login --with-api-key` e depois remova a chave do ambiente.
+- Ollama ativo com o modelo de contingencia baixado (`ollama pull llama3.1`). Sem Ollama, apenas o
+  fallback fica indisponivel; o Codex continua sendo o motor principal.
 - Ambiente da skill saudavel: `cd /opt/Orion.Modelos && python3 tools/onboard_check.py` deve passar
   (LibreOffice, API Orion `http://10.0.10.61:8702`, tools).
 - Chave secreta do Supabase (so no `.env`, nunca commitada). Use a chave nova, revogavel,
@@ -91,7 +94,7 @@ adicionalmente de `whisper.cpp` + `ffmpeg` na VM
 
 ```bash
 cd vm-worker
-cp .env.example .env      # preencha SUPABASE_SECRET_KEY; MODEL_LLM_PROVIDER=codex ja e o padrao
+cp .env.example .env      # preencha SUPABASE_SECRET_KEY e autentique o Codex
 npm install               # com o Node 22 (nvm use 22)
 ```
 
@@ -194,7 +197,7 @@ aparecer `papeis=models` num e `papeis=ai` no outro, ambos com `Realtime: SUBSCR
 
 1. Copiar os arquivos atualizados de `vm-worker/` para `/home/administrator/vm-worker/`.
 2. `cd /home/administrator/vm-worker && nvm use 22 && npm install` (se mudaram deps).
-3. Conferir o `.env` (SUPABASE_SECRET_KEY, CLAUDE_BIN, ORION_PROJECT_DIR, ENTRADA_DIR).
+3. Conferir o `.env` (SUPABASE_SECRET_KEY, CODEX_BIN, ORION_PROJECT_DIR, ENTRADA_DIR e Ollama).
 4. `sudo systemctl restart siplan-model-worker` e acompanhar `journalctl -u siplan-model-worker -f`.
    - No log de saude deve aparecer: `SiplanHUB VM worker iniciado`, `Realtime: SUBSCRIBED`, e 0 erros ocioso.
 
@@ -214,19 +217,19 @@ aparecer `papeis=models` num e `papeis=ai` no outro, ambos com `Realtime: SUBSCR
 | `JOB_TIMEOUT_MS` | Timeout de uma geracao (padrao 1800000 = 30 min). |
 | `MAX_ATTEMPTS` | Tentativas antes de marcar erro definitivo (padrao 3). |
 | `HEARTBEAT_INTERVAL_MS` | Intervalo do heartbeat (selo online/offline na tela). Padrao 30000. |
-| `MODEL_LLM_PROVIDER` | Agente do gerador de modelos: `codex` (padrao) ou `claude` (rollback). |
 | `CODEX_BIN` | (Opcional) Override do Codex CLI; padrao `node_modules/.bin/codex`. |
+| `CODEX_MODEL` | (Opcional) Modelo Codex comum; vazio usa o padrao da conta/configuracao. |
 | `MODEL_CODEX_MODEL` | (Opcional) Modelo Codex; vazio usa o padrao da conta/configuracao. |
-| `CODEX_SANDBOX` | Sandbox do job de modelo; padrao `danger-full-access` na VM dedicada. |
-| `CLAUDE_BIN` | (Opcional) Override do binario do Claude Code. Se ausente, auto-descobre o mais novo da extensao. |
-| `VSCODE_EXT_DIR` | (Opcional) Pasta de extensoes do VS Code (padrao `~/.vscode-server/extensions`). |
+| `CODEX_SANDBOX` | Sandbox de texto/copiloto; padrao `read-only`. |
+| `MODEL_CODEX_SANDBOX` | Sandbox da geracao de modelos; padrao `danger-full-access` na VM dedicada. |
 | `ORION_PROJECT_DIR` | Projeto onde a skill roda (padrao `/opt/Orion.Modelos`). |
 | `MODELOS_CRIADOS_DIR` | Pasta de saida dos JSONs (padrao `<ORION_PROJECT_DIR>/modelos_criados`). |
 | `ENTRADA_DIR` | Onde o worker baixa o doc do cliente (padrao `/home/administrator/siplan_entrada`). |
-| `DTC_MODEL` | Modelo do Claude nas tarefas de texto (padrao `sonnet`). |
-| `DTC_FALLBACK_API_KEY` | (Opcional) API key p/ fallback quando a assinatura bate o limite de sessao. |
-| `COPILOT_MODEL` | Modelo do Copiloto Operacional (padrao `haiku`). |
+| `DTC_CODEX_MODEL` | (Opcional) Override Codex para DTC, melhorar texto e voz. |
+| `COPILOT_CODEX_MODEL` | (Opcional) Override Codex para chat e digest do Copiloto. |
+| `CHAMADOS_TEMA_CODEX_MODEL` | (Opcional) Override Codex para classificacao de chamados. |
 | `COPILOT_CWD` | Diretorio neutro onde o copiloto roda a CLI (padrao `<tmp>/siplan-copilot`). |
+| `OLLAMA_HOST` / `OLLAMA_MODEL` | Servico e modelo local usados no fallback automatico de texto. |
 | `WHISPER_BIN` | (Voz) Binario do whisper.cpp (ex.: `/opt/whisper.cpp/build/bin/whisper-cli`). |
 | `WHISPER_MODEL` | (Voz) Arquivo ggml do modelo (ex.: `.../ggml-large-v3-turbo.bin`). |
 | `WHISPER_LANGUAGE` | (Voz) Idioma forcado (padrao `pt`). |
@@ -248,7 +251,7 @@ aparecer `papeis=models` num e `papeis=ai` no outro, ambos com `Realtime: SUBSCR
 
 `src/chamadosSync.ts` consulta a view `vw_2026_ChamadosTodosStatus` no SQL Server interno
 (`MSSQL_HOST`) e upserta o resultado deduplicado em `public.chamados_0800` no Supabase. Nao usa
-Claude nem entra nas filas: e um timer proprio (5 min) + atendimento imediato quando o front
+IA nem entra nas filas: e um timer proprio (5 min) + atendimento imediato quando o front
 insere um pedido em `chamados_sync_requests` (botao "sincronizar agora" do card de Pos, via
 Realtime). Escopo: chamados de origem dos projetos (`projects.ticket_number`) + chamados dos
 clientes com pos-implantacao ativa (janela = menor `post_start_date`; sai do escopo
@@ -261,8 +264,8 @@ deve aparecer `[chamados-sync] ativo: ... (+ sync sob demanda via Realtime)` e, 
 `[chamados-sync] desligado`.
 
 **Classificacao de temas (IA).** `src/chamadosClassify.ts` roda como a fila de MENOR prioridade do
-worker dono do sync: pega lotes de chamados com `tema_ia` null e pede ao Claude (haiku,
-`CHAMADOS_TEMA_MODEL`) um tema curto por chamado ("selo digital", "livro caixa"...), reusando os
+worker dono do sync: pega lotes de chamados com `tema_ia` null e pede ao Codex (com fallback Ollama,
+`CHAMADOS_TEMA_CODEX_MODEL`) um tema curto por chamado ("selo digital", "livro caixa"...), reusando os
 temas ja existentes para agrupar recorrencia entre cartorios (tela Panorama Pos-Implantacao).
 Naturezas internas (nova implantacao/negociacao comercial) recebem `tema_ia='interno'` sem gastar
 IA. Log: `[chamados-tema] lote ok: N/M classificados`.
@@ -277,8 +280,8 @@ qualitativo em `result_text`.
 <summary><b>Transcricao de voz (whisper.cpp) — dependencia do "Preencher por voz"</b></summary>
 
 Os jobs `voice_note` (fila `dtc_ai_jobs`) transcrevem o audio **localmente** com `whisper.cpp` e
-depois elevam o texto com o Claude. Requer, **so nesta VM**, `ffmpeg` + `whisper.cpp` + um modelo ggml.
-O Claude Code headless **nao ingere audio** — quem transcreve e o whisper.cpp.
+depois elevam o texto com Codex/Ollama. Requer, **so nesta VM**, `ffmpeg` + `whisper.cpp` + um modelo ggml.
+Neste fluxo o agente **nao ingere audio** — quem transcreve e o whisper.cpp.
 
 Instalar (uma vez, como root):
 

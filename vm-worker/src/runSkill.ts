@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { config, getClaudeBin, getCodexBin } from "./config.js";
+import { config, getCodexBin } from "./config.js";
 
 export interface ProgressStep {
   at: string; // ISO timestamp
@@ -10,33 +10,13 @@ export interface ProgressStep {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyObj = any;
 
-// Traduz um tool_use do Claude em uma frase curta e legivel para o analista.
-function describeTool(name: string, input: AnyObj): string {
-  const s = (v: unknown, n = 90) => String(v ?? "").replace(/\s+/g, " ").trim().slice(0, n);
-  const base = (p?: string) => (p ? String(p).split(/[\\/]/).pop() : "") || "";
-  switch (name) {
-    case "Bash": return `Executando comando: ${s(input?.command)}`;
-    case "Read": return `Lendo arquivo: ${base(input?.file_path)}`;
-    case "Write": return `Escrevendo arquivo: ${base(input?.file_path)}`;
-    case "Edit":
-    case "MultiEdit": return `Editando arquivo: ${base(input?.file_path)}`;
-    case "Grep": return `Procurando por: ${s(input?.pattern, 60)}`;
-    case "Glob": return `Buscando arquivos: ${s(input?.pattern, 60)}`;
-    case "Skill": return `Rodando skill: ${s(input?.command ?? input?.skill)}`;
-    case "Task": return `Subagente: ${s(input?.description, 60)}`;
-    case "TodoWrite": return "Atualizando o plano de tarefas";
-    case "WebFetch": return `Consultando: ${s(input?.url, 60)}`;
-    default: return `Ferramenta: ${name}`;
-  }
-}
-
 export interface RunSkillOptions {
   model?: string; // override do modelo
   cwd?: string; // override do diretorio de trabalho
-  env?: Record<string, string>; // variaveis extras
-  provider?: "ollama" | "claude" | "codex";
+  provider?: "codex" | "ollama";
   addDirs?: string[]; // diretorios adicionais liberados para escrita no Codex
   allowOllamaFallback?: boolean;
+  sandbox?: string;
 }
 
 export interface RunSkillResult {
@@ -72,17 +52,13 @@ const CODEX_BLOCKED_ENV = [
   "SUPABASE_SERVICE_ROLE_KEY",
   "MSSQL_USER",
   "MSSQL_PASSWORD",
-  "DTC_FALLBACK_API_KEY",
-  "ANTHROPIC_API_KEY",
   "OPENAI_API_KEY",
+  "CODEX_ACCESS_TOKEN",
 ];
 
 /** Evita expor segredos operacionais do worker aos comandos executados pela skill. */
-export function buildCodexChildEnv(
-  base: NodeJS.ProcessEnv,
-  extra?: Record<string, string>
-): NodeJS.ProcessEnv {
-  const env: NodeJS.ProcessEnv = { ...base, ...(extra || {}) };
+export function buildCodexChildEnv(base: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+  const env: NodeJS.ProcessEnv = { ...base };
   for (const name of CODEX_BLOCKED_ENV) delete env[name];
   return env;
 }
@@ -159,10 +135,7 @@ async function runOllama(
     onProgress?.({ at: new Date().toISOString(), text, kind });
   };
 
-  const rawModel = options.model;
-  const modelName = rawModel && !["sonnet", "haiku", "opus"].includes(rawModel.toLowerCase())
-    ? rawModel
-    : config.ollamaModel;
+  const modelName = config.ollamaModel;
 
   emit(`Sessão iniciada (Ollama - ${modelName}) - processando...`, "system");
 
@@ -270,10 +243,10 @@ async function runOllama(
       cacheReadTokens: 0,
       cacheCreationTokens: 0,
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     if (cancelTimer) clearInterval(cancelTimer);
 
-    if (cancelled || err?.name === "AbortError") {
+    if (cancelled || (err instanceof Error && err.name === "AbortError")) {
       return {
         transcript,
         resultText,
@@ -287,7 +260,7 @@ async function runOllama(
       };
     }
 
-    const stderrMsg = err?.message || String(err);
+    const stderrMsg = err instanceof Error ? err.message : String(err);
     return {
       transcript,
       resultText: "",
@@ -317,7 +290,7 @@ function runCodex(
       "--ephemeral",
       "--skip-git-repo-check",
       "--sandbox",
-      config.codexSandbox,
+      options.sandbox || config.codexSandbox,
       "-C",
       cwd,
     ];
@@ -330,9 +303,9 @@ function runCodex(
     const child = spawn(getCodexBin(), args, {
       cwd,
       stdio: ["ignore", "pipe", "pipe"],
-      // CODEX_API_KEY pode permanecer quando explicitamente usada pelo CLI.
-      // Segredos do Supabase/SQL/Anthropic nunca chegam aos comandos da skill.
-      env: buildCodexChildEnv(process.env, options.env),
+      // A autenticacao vem de `codex login`; segredos do worker nao chegam aos
+      // comandos executados pela skill.
+      env: buildCodexChildEnv(process.env),
     });
 
     let stderr = "";
@@ -433,142 +406,8 @@ function runCodex(
 }
 
 /**
- * Executa via Claude Code CLI.
- */
-function runClaude(
-  prompt: string,
-  onProgress?: (step: ProgressStep) => void,
-  shouldCancel?: () => Promise<boolean>,
-  options: RunSkillOptions = {}
-): Promise<RunSkillResult> {
-  return new Promise((resolve, reject) => {
-    const args = ["--dangerously-skip-permissions", "-p", prompt, "--output-format", "stream-json", "--verbose"];
-    if (options.model) args.push("--model", options.model);
-    const child = spawn(getClaudeBin(), args, {
-      cwd: options.cwd || config.orionProjectDir,
-      stdio: ["ignore", "pipe", "pipe"],
-      env: options.env ? { ...process.env, ...options.env } : process.env,
-    });
-
-    let stderr = "";
-    let transcript = "";
-    let resultText = "";
-    let buf = "";
-    let cancelled = false;
-    let inputTokens = 0;
-    let outputTokens = 0;
-    let cacheReadTokens = 0;
-    let cacheCreationTokens = 0;
-
-    let cancelChecking = false;
-    const cancelTimer = shouldCancel
-      ? setInterval(async () => {
-          if (cancelChecking || cancelled) return;
-          cancelChecking = true;
-          try {
-            if (await shouldCancel()) {
-              cancelled = true;
-              child.kill("SIGKILL");
-            }
-          } catch {
-            /* ignora erro de checagem */
-          } finally {
-            cancelChecking = false;
-          }
-        }, 5000)
-      : undefined;
-
-    const emit = (text: string, kind: ProgressStep["kind"]) => {
-      if (!text) return;
-      onProgress?.({ at: new Date().toISOString(), text, kind });
-    };
-
-    const handleEvent = (evt: AnyObj) => {
-      const t = evt?.type;
-      if (t === "system") {
-        if (evt.subtype === "init") emit("Sessao iniciada - analisando o documento...", "system");
-        return;
-      }
-      if (t === "assistant") {
-        const content = evt.message?.content;
-        if (Array.isArray(content)) {
-          for (const block of content) {
-            if (block?.type === "text" && typeof block.text === "string" && block.text.trim()) {
-              transcript += block.text + "\n";
-              const line = block.text.replace(/\s+/g, " ").trim().slice(0, 140);
-              if (line) emit(line, "text");
-            } else if (block?.type === "tool_use") {
-              emit(describeTool(block.name, block.input), "tool");
-            }
-          }
-        }
-        return;
-      }
-      if (t === "result") {
-        if (typeof evt.result === "string") {
-          resultText = evt.result;
-          transcript += evt.result + "\n";
-        }
-        const u = evt.usage;
-        if (u && typeof u === "object") {
-          inputTokens = Number(u.input_tokens) || 0;
-          outputTokens = Number(u.output_tokens) || 0;
-          cacheReadTokens = Number(u.cache_read_input_tokens) || 0;
-          cacheCreationTokens = Number(u.cache_creation_input_tokens) || 0;
-        }
-        return;
-      }
-    };
-
-    const onData = (chunk: Buffer) => {
-      buf += chunk.toString();
-      let idx: number;
-      while ((idx = buf.indexOf("\n")) >= 0) {
-        const line = buf.slice(0, idx).trim();
-        buf = buf.slice(idx + 1);
-        if (!line) continue;
-        try { handleEvent(JSON.parse(line)); } catch { /* ignora */ }
-      }
-    };
-
-    child.stdout.on("data", onData);
-    child.stderr.on("data", (d) => { stderr += d.toString(); });
-
-    const cleanup = () => {
-      clearTimeout(timer);
-      if (cancelTimer) clearInterval(cancelTimer);
-    };
-
-    const timer = setTimeout(() => {
-      cleanup();
-      child.kill("SIGKILL");
-      reject(new Error(`Timeout: a geracao excedeu ${config.jobTimeoutMs} ms`));
-    }, config.jobTimeoutMs);
-
-    child.on("error", (err) => { cleanup(); reject(err); });
-
-    child.on("close", (code) => {
-      cleanup();
-      const rest = buf.trim();
-      if (rest) { try { handleEvent(JSON.parse(rest)); } catch { /* ignore */ } }
-      resolve({
-        transcript,
-        resultText,
-        code: code ?? -1,
-        stderr,
-        cancelled,
-        inputTokens,
-        outputTokens,
-        cacheReadTokens,
-        cacheCreationTokens,
-      });
-    });
-  });
-}
-
-/**
  * Ponto de entrada unificado para execução de LLM/agente no worker.
- * Codex e Claude executam ferramentas; Ollama atende tarefas de texto puro.
+ * Codex e o motor padrao; Ollama e uma alternativa local explicita.
  */
 export async function runSkill(
   prompt: string,
@@ -576,30 +415,44 @@ export async function runSkill(
   shouldCancel?: () => Promise<boolean>,
   options: RunSkillOptions = {}
 ): Promise<RunSkillResult> {
-  const provider = options.provider || config.llmProvider;
+  const provider = options.provider || "codex";
+  let codexFailure = "";
+  const reportFallback = (reason: string) => {
+    codexFailure = reason;
+    const category = /session|usage|rate|quota|limit/i.test(reason)
+      ? "limite ou cota"
+      : /auth|login|credential|unauthorized|forbidden|401|403/i.test(reason)
+      ? "autenticacao"
+      : /enoent|spawn|not found/i.test(reason)
+      ? "CLI indisponivel"
+      : "falha temporaria";
+    onProgress?.({
+      at: new Date().toISOString(),
+      text: `Codex indisponivel (${category}). Continuando com Ollama local...`,
+      kind: "system",
+    });
+  };
 
   if (provider === "codex") {
     try {
       const res = await runCodex(prompt, onProgress, shouldCancel, options);
       if (res.code === 0 || res.cancelled || !options.allowOllamaFallback) return res;
+      reportFallback(res.stderr || `codigo ${res.code}`);
       console.warn("[runSkill] Codex CLI falhou. Redirecionando para Ollama local...", res.stderr);
     } catch (err) {
       if (!options.allowOllamaFallback) throw err;
+      reportFallback(err instanceof Error ? err.message : String(err));
       console.warn("[runSkill] Erro ao executar Codex CLI. Redirecionando para Ollama local...", err);
     }
   }
 
-  if (provider === "claude") {
-    try {
-      const res = await runClaude(prompt, onProgress, shouldCancel, options);
-      if (res.code === 0 || res.cancelled || options.allowOllamaFallback === false) return res;
-      console.warn("[runSkill] Claude CLI falhou. Redirecionando para Ollama local...", res.stderr);
-    } catch (err) {
-      if (options.allowOllamaFallback === false) throw err;
-      console.warn("[runSkill] Erro ao executar Claude CLI. Redirecionando para Ollama local...", err);
-    }
-  }
-
   // Padrão das tarefas de texto puro.
-  return runOllama(prompt, onProgress, shouldCancel, options);
+  const ollamaResult = await runOllama(prompt, onProgress, shouldCancel, {
+    ...options,
+    model: undefined,
+  });
+  if (codexFailure && ollamaResult.code !== 0 && !ollamaResult.cancelled) {
+    ollamaResult.stderr = `Falha Codex: ${codexFailure}\nFalha Ollama: ${ollamaResult.stderr}`;
+  }
+  return ollamaResult;
 }

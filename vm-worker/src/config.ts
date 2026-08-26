@@ -1,7 +1,7 @@
 import "dotenv/config";
 import path from "node:path";
 import os from "node:os";
-import { existsSync, readdirSync, mkdirSync } from "node:fs";
+import { existsSync, mkdirSync } from "node:fs";
 
 function required(name: string): string {
   const value = process.env[name];
@@ -21,43 +21,6 @@ function secretKey(): string {
     );
   }
   return value;
-}
-
-// Resolve o binario do Claude Code. Se CLAUDE_BIN estiver setado e existir, usa.
-// Senao (ou se o caminho ficou obsoleto apos um update da extensao), procura o
-// binario nativo MAIS NOVO da extensao do VS Code automaticamente -> zero manutencao
-// quando a extensao atualiza e o numero de versao no caminho muda.
-function resolveClaudeBin(): string {
-  const explicit = process.env.CLAUDE_BIN;
-  if (explicit && existsSync(explicit)) return explicit;
-
-  const extDir =
-    process.env.VSCODE_EXT_DIR ||
-    path.join(os.homedir(), ".vscode-server", "extensions");
-  try {
-    const found = readdirSync(extDir)
-      .filter((d) => d.startsWith("anthropic.claude-code-"))
-      .map((d) => path.join(extDir, d, "resources", "native-binary", "claude"))
-      .filter((bin) => existsSync(bin))
-      // ordena pela versao no nome da pasta (desc) -> mais novo primeiro
-      .sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
-    if (found.length > 0) return found[0];
-  } catch {
-    /* pasta de extensoes inexistente */
-  }
-
-  return explicit || "claude";
-}
-
-// Cache com revalidacao. Reusa o binario ja resolvido, mas se ele sumir (a
-// extensao do VS Code atualizou e apagou a pasta da versao antiga), re-descobre
-// o mais novo. Evita `spawn ... ENOENT` em workers de longa duracao apos um
-// update da extensao, sem precisar reiniciar o worker.
-let cachedClaudeBin: string | null = null;
-export function getClaudeBin(): string {
-  if (cachedClaudeBin && existsSync(cachedClaudeBin)) return cachedClaudeBin;
-  cachedClaudeBin = resolveClaudeBin();
-  return cachedClaudeBin;
 }
 
 // Resolve o Codex CLI instalado como dependencia local do worker. CODEX_BIN
@@ -96,8 +59,8 @@ function parseWorkerRoles(raw?: string): { models: boolean; ai: boolean } {
 
 const orionProjectDir = process.env.ORION_PROJECT_DIR || "/opt/Orion.Modelos";
 
-// Diretorio NEUTRO (vazio) onde o copiloto roda a CLI. Evita que o Claude Code
-// carregue no contexto o CLAUDE.md e as skills de /opt/Orion.Modelos (irrelevantes
+// Diretorio NEUTRO (vazio) onde o copiloto roda a CLI. Evita que o Codex
+// carregue no contexto as instrucoes e skills de /opt/Orion.Modelos (irrelevantes
 // para o Q&A e caros em tokens). Criado no boot.
 function ensureCopilotCwd(): string {
   const dir = process.env.COPILOT_CWD || path.join(os.tmpdir(), "siplan-copilot");
@@ -121,7 +84,7 @@ export const config = {
   pollIntervalMs: Number(process.env.POLL_INTERVAL_MS || 60000),
   jobTimeoutMs: Number(process.env.JOB_TIMEOUT_MS || 1800000),
   maxAttempts: Number(process.env.MAX_ATTEMPTS || 3),
-  // Quando o Claude bate o limite de sessao (tokens), o job NAO vira erro: volta
+  // Quando o Codex bate o limite de sessao/uso, o job NAO vira erro: volta
   // para a fila e e retentado automaticamente apos este intervalo (default 15 min),
   // sem consumir tentativa. O worker fica sondando ate os tokens voltarem.
   quotaRetryMs: Number(process.env.QUOTA_RETRY_MS || 900000),
@@ -145,29 +108,19 @@ export const config = {
   // Cliente sai do escopo do sync quando todo pos-implantacao dele terminou ha
   // mais dias que isto (o historico ja espelhado permanece).
   chamadosSyncGraceDays: Number(process.env.CHAMADOS_SYNC_GRACE_DAYS || 60),
-  // Modelo da classificacao de temas dos chamados (tarefa leve em lote -> haiku).
-  chamadosTemaModel: process.env.CHAMADOS_TEMA_MODEL || "haiku",
-
-  // Modelo usado no resumo com IA das "Consideracoes finais" (tarefa leve -> modelo
-  // mais rapido que o padrao). Override via DTC_MODEL. Vazio = usa o padrao da CLI.
-  dtcModel: process.env.DTC_MODEL || "sonnet",
-
-  // Modelo do Copiloto Operacional (chat sobre o portfolio). Roda pela CLI do
-  // Claude Code (mesma assinatura do gerador de modelos, sem chave de API).
-  // Tarefa leve de Q&A -> Haiku por padrao. Override via COPILOT_MODEL.
-  copilotModel: process.env.COPILOT_MODEL || "haiku",
-  // Diretorio neutro para rodar o copiloto/digest (sem CLAUDE.md/skills do Orion).
+  // Modelos Codex por carga. Vazios usam o modelo configurado/autenticado na CLI.
+  // CODEX_MODEL funciona como default comum; os overrides permitem otimizar custo
+  // e latencia sem alterar o codigo do worker.
+  chamadosTemaCodexModel:
+    process.env.CHAMADOS_TEMA_CODEX_MODEL || process.env.CODEX_MODEL || "",
+  dtcCodexModel: process.env.DTC_CODEX_MODEL || process.env.CODEX_MODEL || "",
+  copilotCodexModel: process.env.COPILOT_CODEX_MODEL || process.env.CODEX_MODEL || "",
+  // Diretorio neutro para rodar o copiloto/digest (sem instrucoes/skills do Orion).
   copilotCwd: ensureCopilotCwd(),
 
-  // Provedor de LLM para tarefas de texto/voz/copiloto. Mantido separado do
-  // gerador de modelos, que precisa de um agente com ferramentas/skills.
-  llmProvider: (process.env.LLM_PROVIDER || "ollama").toLowerCase(),
+  // Ollama e a contingencia local automatica das tarefas de texto.
   ollamaHost: process.env.OLLAMA_HOST || "http://127.0.0.1:11434",
   ollamaModel: process.env.OLLAMA_MODEL || "llama3.1",
-
-  // Chave de API opcional para fallback quando a assinatura bate o limite de sessao.
-  // Se definida (DTC_FALLBACK_API_KEY), o resumo tenta de novo cobrando via API.
-  fallbackApiKey: process.env.DTC_FALLBACK_API_KEY || "",
 
   // Transcricao de voz (jobs 'voice_note'). whisper.cpp roda LOCALMENTE na VM:
   // sem chave, custo zero por uso, audio nao sai da VM. whisper-cli exige WAV
@@ -182,14 +135,13 @@ export const config = {
   whisperLanguage: process.env.WHISPER_LANGUAGE || "pt",
   ffmpegBin: process.env.FFMPEG_BIN || "ffmpeg",
 
-  // Geracao headless de modelos. Codex e o padrao; Claude fica disponivel
-  // como rollback temporario por MODEL_LLM_PROVIDER=claude.
-  modelLlmProvider: (process.env.MODEL_LLM_PROVIDER || "codex").toLowerCase(),
-  modelCodexModel: process.env.MODEL_CODEX_MODEL || "",
-  codexSandbox: process.env.CODEX_SANDBOX || "danger-full-access",
+  // Geracao headless de modelos: sempre Codex, com skill e ferramentas.
+  modelCodexModel: process.env.MODEL_CODEX_MODEL || process.env.CODEX_MODEL || "",
+  // Texto/copiloto nao precisam escrever arquivos. A geracao de modelos recebe
+  // um sandbox separado porque a skill cria artefatos no projeto Orion.
+  codexSandbox: process.env.CODEX_SANDBOX || "read-only",
+  modelCodexSandbox: process.env.MODEL_CODEX_SANDBOX || "danger-full-access",
   codexBin: getCodexBin(),
-  // Compatibilidade/rollback Claude. O spawn revalida o binario a cada uso.
-  claudeBin: getClaudeBin(),
   orionProjectDir,
   modelosCriadosDir: process.env.MODELOS_CRIADOS_DIR || path.join(orionProjectDir, "modelos_criados"),
   entradaDir: process.env.ENTRADA_DIR || "/home/administrator/siplan_entrada",
@@ -224,7 +176,7 @@ export interface DtcJob {
 }
 
 // Job do Copiloto Operacional: uma pergunta em linguagem natural sobre o portfolio.
-// O worker monta um contexto compacto com as etapas dos projetos e roda o Claude.
+// O worker monta um contexto compacto com as etapas dos projetos e roda o Codex.
 export interface CopilotJob {
   id: string;
   user_id: string;

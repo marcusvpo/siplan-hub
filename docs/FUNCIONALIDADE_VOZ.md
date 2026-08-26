@@ -2,11 +2,12 @@
 
 Permite preencher campos de texto rico **falando** em vez de digitar. O analista grava um
 áudio no navegador (PC ou celular), o áudio é transcrito **localmente na VM** com
-**whisper.cpp** e a transcrição é elevada a um texto profissional pelo **Claude** (o mesmo
+**whisper.cpp** e a transcrição é elevada a um texto profissional pelo **Codex**, com fallback
+automático para **Ollama** (o mesmo
 que já roda na VM). Uma **legenda ao vivo** mostra o que está sendo falado durante a gravação.
 
-> **Fato central:** o Claude Code headless **não ingere áudio** — quem "ouve" (transcreve) é o
-> whisper.cpp; o Claude apenas reescreve/eleva o texto transcrito. São duas etapas distintas.
+> **Fato central:** o agente **não ingere áudio** neste fluxo — quem "ouve" (transcreve) é o
+> whisper.cpp; Codex/Ollama apenas reescrevem o texto transcrito. São duas etapas distintas.
 
 Estreou em 2026-07-14. Reusa a fila `dtc_ai_jobs` (mesmo worker das demais IAs de texto) com um
 novo `job_type = 'voice_note'`.
@@ -45,7 +46,7 @@ Para habilitar em outros campos, ver a seção **8. Como estender para outros ca
                                                         3. baixa o áudio do Storage  |
                                                         4. ffmpeg -> WAV 16kHz mono  |
                                                         5. whisper.cpp -> transcrição|
-                                                        6. Claude headless -> eleva  |
+                                                        6. Codex/Ollama -> eleva     |
                                                         7. grava result_text, done   |
         |                                                                            |
         | 8. Realtime (status='done')  <----------------------------------------------
@@ -56,7 +57,7 @@ Para habilitar em outros campos, ver a seção **8. Como estender para outros ca
 
 - **Legenda ao vivo** (Web Speech API do navegador) é só preview visual — roda em paralelo, não
   interfere no áudio gravado nem no resultado final.
-- **Resultado final** vem sempre do whisper.cpp + Claude (qualidade), não da legenda.
+- **Resultado final** vem sempre do whisper.cpp + motor de IA, não da legenda.
 
 ---
 
@@ -70,7 +71,7 @@ voz adicionou — [`supabase/migrations/20260714120000_dtc_ai_jobs_voice_note.sq
 | `job_type` | `'voice_note'` (adicionado ao `CHECK` da coluna) |
 | `audio_path` | **coluna nova** — caminho do áudio no Storage (ex.: `voice-notes/<projectId>/<uuid>.webm`) |
 | `input_text` | não usado (a entrada é o áudio, não texto) |
-| `result_text` | texto profissional final gerado pelo Claude |
+| `result_text` | texto profissional final gerado por Codex/Ollama |
 | `progress` / `progress_log` | feed de andamento ao vivo (baixando, transcrevendo, gerando…) |
 | `cancel_requested` | cancelamento pela tela |
 | `status` | `pending` → `processing` → `done` / `error` / `cancelled` |
@@ -108,16 +109,15 @@ Passos do job (já marcado `processing` pelo claim):
 1. **Baixa** o áudio do Storage (`config.bucket`, `job.audio_path`) para um diretório temporário isolado.
 2. **Converte** com `ffmpeg` para **WAV 16 kHz mono** (formato exigido pelo whisper.cpp).
 3. **Transcreve** com `whisper.cpp` (`whisper-cli -m <modelo> -f <wav> -l pt -otxt -of <base> -nt`).
-4. **Eleva** a transcrição rodando o Claude headless via `runSkill()` com o prompt `buildVoicePrompt`
+4. **Eleva** a transcrição rodando Codex via `runSkill()` com o prompt `buildVoicePrompt`
    (reescreve como texto profissional, com formatação leve em Markdown; **não inventa fatos**).
 5. **Grava** `result_text`, status `done`.
 6. **Remove** o áudio do Storage (best-effort — já foi transcrito, não precisa guardar).
 7. Limpa o diretório temporário.
 
 Detalhes:
-- **Modelo do Claude:** `config.dtcModel` (padrão `sonnet`, override `DTC_MODEL`).
-- **Fallback de limite de sessão:** se a assinatura do Claude bater o limite e houver `DTC_FALLBACK_API_KEY`,
-  tenta de novo via API (mesma lógica dos outros jobs de texto).
+- **Modelo Codex:** `config.dtcCodexModel` (vazio usa o default da CLI; override `DTC_CODEX_MODEL`).
+- **Fallback:** falha, indisponibilidade ou limite do Codex acionam o `OLLAMA_MODEL` local automaticamente.
 - **Cancelamento:** checa `cancel_requested` durante a geração.
 - **Progresso ao vivo:** grava frases curtas em `progress`/`progress_log` (o front pode exibir).
 
@@ -270,7 +270,7 @@ O `progress_log` do job e o log do worker dizem em qual etapa falhou:
 | `ffmpeg falhou (...)` | ffmpeg ausente ou áudio corrompido | `which ffmpeg`; conferir `FFMPEG_BIN` |
 | `whisper.cpp falhou (...)` | `WHISPER_BIN`/`WHISPER_MODEL` errado, modelo não baixado | testar `whisper-cli` na mão com `samples/jfk.wav` |
 | `Nao consegui entender o audio` | áudio silencioso/ruído | gravar de novo em ambiente mais silencioso |
-| `Limite de sessao do Claude atingido` | assinatura no limite | aguardar reset ou configurar `DTC_FALLBACK_API_KEY` |
+| `Continuando com Ollama local` | Codex indisponível ou no limite | o job continua; revisar `codex login status` se recorrente |
 | Job fica em `pending` e não anda | worker parado | `systemctl status siplan-model-worker`; ver reaper `requeue_stuck_dtc_ai_jobs` |
 | Botão não aparece na tela | build da Vercel pendente ou campo sem `enableVoice`/`projectId` | recarregar (Ctrl+Shift+R); conferir props |
 | Sem legenda ao vivo | navegador sem Web Speech (iOS/Firefox) | esperado — só afeta o preview, não o resultado |

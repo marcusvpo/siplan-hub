@@ -29,7 +29,7 @@ const TEXT_JOB_TYPES = ["improve_text", "summary_blocks"];
 /**
  * Fila de IA de texto da etapa 7 (Pos-Implantacao): "Melhorar texto com IA" por
  * bloco (job_type='improve_text') e "Gerar resumo com IA" (job_type='summary_blocks').
- * O frontend enfileira o texto em input_text; o worker da VM roda o Claude e devolve
+ * O frontend enfileira o texto em input_text; o worker da VM roda o Codex e devolve
  * em result_text. Quando o job vira 'done', onResult recebe o job (o componente
  * mostra manter/substituir antes de aplicar).
  */

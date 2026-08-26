@@ -6,6 +6,7 @@ import test from "node:test";
 
 process.env.SUPABASE_URL ||= "https://example.supabase.co";
 process.env.SUPABASE_SECRET_KEY ||= "test-secret";
+process.env.OLLAMA_HOST = "http://127.0.0.1:1";
 
 const { buildCodexChildEnv, parseCodexEvent, runSkill } = await import("./runSkill.js");
 const { ensureCodexModelSkill } = await import("./codexModelSkill.js");
@@ -46,14 +47,42 @@ test("remove segredos operacionais do ambiente do Codex", () => {
     PATH: "/usr/bin",
     SUPABASE_SECRET_KEY: "supabase-secret",
     MSSQL_PASSWORD: "sql-secret",
-    ANTHROPIC_API_KEY: "anthropic-secret",
-    CODEX_API_KEY: "codex-auth",
+    OPENAI_API_KEY: "openai-secret",
+    CODEX_ACCESS_TOKEN: "codex-secret",
   });
   assert.equal(env.PATH, "/usr/bin");
-  assert.equal(env.CODEX_API_KEY, "codex-auth");
   assert.equal(env.SUPABASE_SECRET_KEY, undefined);
   assert.equal(env.MSSQL_PASSWORD, undefined);
-  assert.equal(env.ANTHROPIC_API_KEY, undefined);
+  assert.equal(env.OPENAI_API_KEY, undefined);
+  assert.equal(env.CODEX_ACCESS_TOKEN, undefined);
+});
+
+test("usa Ollama como fallback e preserva a falha original do Codex", async () => {
+  const previousBin = process.env.CODEX_BIN;
+  const previousWarn = console.warn;
+  const progress: string[] = [];
+  process.env.CODEX_BIN = path.join(os.tmpdir(), "codex-bin-inexistente");
+  console.warn = () => {};
+  try {
+    const result = await runSkill(
+      "Responda apenas OK.",
+      (step) => progress.push(step.text),
+      undefined,
+      {
+        provider: "codex",
+        cwd: os.tmpdir(),
+        allowOllamaFallback: true,
+      }
+    );
+    assert.equal(result.code, 1);
+    assert.ok(progress.some((text) => /Continuando com Ollama local/i.test(text)));
+    assert.match(result.stderr, /Falha Codex:/);
+    assert.match(result.stderr, /Falha Ollama:/);
+  } finally {
+    if (previousBin === undefined) delete process.env.CODEX_BIN;
+    else process.env.CODEX_BIN = previousBin;
+    console.warn = previousWarn;
+  }
 });
 
 test("instala wrapper Codex apontando para a skill nativa em .codex", async () => {

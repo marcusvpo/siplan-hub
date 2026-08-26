@@ -159,7 +159,7 @@ Responda SOMENTE com a resposta final, sem preambulo.`;
 /**
  * Pipeline de um job do Copiloto (ja marcado 'processing' pelo claim):
  * valida a cota do usuario -> monta o contexto do portfolio (com escopo) e o
- * historico -> roda o Claude via CLI -> grava a resposta + tokens cobrados -> done.
+ * historico -> roda o Codex (com fallback Ollama) -> grava resposta e uso -> done.
  * Lanca em falha; o loop principal marca o job como 'error'.
  */
 export async function processCopilotJob(job: CopilotJob): Promise<void> {
@@ -362,7 +362,7 @@ export async function processCopilotJob(job: CopilotJob): Promise<void> {
     history.push({ question: q, result_text: a });
   }
 
-  // 4. Rodar o Claude via CLI (assinatura, sem chave de API)
+  // 4. Rodar o Codex; se estiver indisponivel, o executor usa Ollama local.
   pushStep("Analisando com IA...");
   await flushProgress(true);
 
@@ -379,8 +379,9 @@ export async function processCopilotJob(job: CopilotJob): Promise<void> {
   const prompt = buildPrompt(portfolio, issuesText, chamadosPosText, history, job.question, hoje);
   const { resultText, transcript, code, stderr, cancelled, inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens } =
     await runSkill(prompt, (step) => record(step), shouldCancel, {
-      model: config.copilotModel || undefined,
+      model: config.copilotCodexModel || undefined,
       cwd: config.copilotCwd,
+      allowOllamaFallback: true,
     });
   await flushProgress(true);
 
@@ -406,12 +407,12 @@ export async function processCopilotJob(job: CopilotJob): Promise<void> {
 
   if (code !== 0) {
     const tail = (stderr || transcript || "").slice(-1200);
-    throw new Error(`Claude encerrou com codigo ${code}. Fim da saida: ${tail}`);
+    throw new Error(`Motor de IA encerrou com codigo ${code}. Fim da saida: ${tail}`);
   }
 
   let answer = (resultText || "").trim();
   if (!answer) {
-    throw new Error(`O Claude nao retornou texto. Fim da saida: ${(transcript || "").slice(-800)}`);
+    throw new Error(`O motor de IA nao retornou texto. Fim da saida: ${(transcript || "").slice(-800)}`);
   }
 
   // Extrai as sugestoes de follow-up da ultima linha ([[FOLLOWUPS]] a | b | c) e

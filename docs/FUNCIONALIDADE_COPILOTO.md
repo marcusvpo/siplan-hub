@@ -6,7 +6,7 @@ Documento técnico para quem vai dar manutenção. Descreve o chat de IA sobre o
 
 ## 1. Visão geral
 
-O **Copiloto Operacional** é um chat de IA sobre o **portfólio inteiro de projetos**. O usuário digita uma pergunta em linguagem natural (ex.: *"Quais cartórios estão com a conversão pendente?"*), o worker da VM monta um contexto compacto com o status de cada etapa de cada projeto e roda o Claude para responder. A resposta volta em tempo real para a tela.
+O **Copiloto Operacional** é um chat de IA sobre o **portfólio inteiro de projetos**. O usuário digita uma pergunta em linguagem natural (ex.: *"Quais cartórios estão com a conversão pendente?"*), o worker da VM monta um contexto compacto com o status de cada etapa de cada projeto e roda o Codex para responder. Se o Codex estiver indisponível ou sem cota, o Ollama local assume automaticamente. A resposta volta em tempo real para a tela.
 
 Não é um assistente genérico: ele responde **apenas** com base nos dados do portfólio (projetos + pendências de conversão em aberto), com regras de negócio embutidas no prompt (o que conta como "atrasado", "travado", "concluído").
 
@@ -56,7 +56,7 @@ O front **nunca chama o worker diretamente**. Toda comunicação passa por tabel
 │      (+ escopo 'ativos'/'todos') + conversion_issues abertas │
 │   3. monta histórico das últimas trocas (chat multi-turno)   │
 │   4. runSkill(prompt, model=haiku, cwd=copilotCwd NEUTRO)    │
-│      → Claude Code headless (stream-json, --verbose)         │
+│      → Codex CLI (JSONL) → fallback Ollama local             │
 │   5. grava result_text + followups + tokens cobrados → 'done'│
 └────────────┬────────────────────────────────────────────────┘
              │  Realtime (UPDATE) empurra progresso e resposta
@@ -68,10 +68,10 @@ O front **nunca chama o worker diretamente**. Toda comunicação passa por tabel
 
 Pontos-chave:
 
-- **Atômico e serial:** o `claim` usa `FOR UPDATE SKIP LOCKED` → um worker por job. O worker processa **um Claude por vez** (flag `busy` em `index.ts`), intercalando as três filas (modelo → DTC → copiloto) até esvaziarem.
+- **Atômico e serial:** o `claim` usa `FOR UPDATE SKIP LOCKED` → um worker por job. O worker processa **um agente por vez** (flag `busy` em `index.ts`), intercalando as filas até esvaziarem.
 - **Modelo leve:** o copiloto roda em **Haiku** por padrão (`config.copilotModel`) — é uma tarefa de Q&A, não precisa do modelo pesado.
-- **Diretório neutro:** o Claude roda em `config.copilotCwd` (pasta vazia), **não** em `/opt/Orion.Modelos`, para não carregar o `CLAUDE.md` e as skills do Orion no contexto (irrelevantes e caros).
-- **Sem chave de API:** usa a **assinatura** da CLI do Claude Code (mesma credencial do gerador de modelos), não `ANTHROPIC_API_KEY`.
+- **Diretório neutro:** o Codex roda em `config.copilotCwd` (pasta vazia), **não** em `/opt/Orion.Modelos`, para não carregar instruções e skills do Orion no contexto (irrelevantes e caros).
+- **Autenticação centralizada:** usa a credencial salva por `codex login`; chaves do worker são removidas do ambiente entregue aos comandos do agente.
 
 ---
 
@@ -152,7 +152,7 @@ Criada em `20260710200000_copilot_digests.sql`. Uma linha por dia:
 
 ## 4. Worker
 
-Runtime separado em `vm-worker/`. O roteamento está em `vm-worker/src/index.ts`; a lógica do copiloto em `vm-worker/src/processCopilotJob.ts` (chat) e `vm-worker/src/processCopilotDigest.ts` (resumo diário). A execução do Claude é comum a tudo: `vm-worker/src/runSkill.ts`.
+Runtime separado em `vm-worker/`. O roteamento está em `vm-worker/src/index.ts`; a lógica do copiloto em `vm-worker/src/processCopilotJob.ts` (chat) e `vm-worker/src/processCopilotDigest.ts` (resumo diário). A execução Codex/Ollama é comum a tudo: `vm-worker/src/runSkill.ts`.
 
 ### `processCopilotJob.ts` — pipeline de uma pergunta
 
@@ -165,9 +165,10 @@ Runtime separado em `vm-worker/`. O roteamento está em `vm-worker/src/index.ts`
    - Corta em `MAX_CONTEXT_CHARS = 130000` (avisa "lista truncada").
 3. **Pendências de conversão:** lê `conversion_issues` com `status IN ('open','in_progress')` (até 100, por prioridade). `issueLine()` gera uma linha compacta por pendência, casando `project_id` com o nome do cartório.
 4. **Histórico multi-turno:** últimas `HISTORY_TURNS = 5` trocas `done` do próprio usuário (teto `MAX_HISTORY_CHARS = 8000`), para entender perguntas de acompanhamento ("e desses, quais atrasados?").
-5. **Roda o Claude:** `buildPrompt()` monta um único prompt (instruções + portfólio + pendências + histórico + pergunta). Chama `runSkill(prompt, onProgress, shouldCancel, { model: config.copilotModel, cwd: config.copilotCwd })`. O prompt embute as regras de negócio: definição de "atrasado" (data-fim no passado + status não concluído usando a data de hoje), "travado/pendente", citar o nome do cartório **exatamente** (para virar link), e emitir na última linha `[[FOLLOWUPS]] a | b | c`.
-6. **Progresso ao vivo:** cada passo do Claude é gravado em `progress`/`progress_log` (flush a cada `PROGRESS_FLUSH_MS = 2500`, mantendo os últimos `MAX_LOG_STEPS = 80`), empurrado por Realtime.
-7. **Cancelamento:** a cada ~5s checa `cancel_requested`; se marcado, mata o Claude e grava `cancelled`.
+5. **Roda o Codex:** `buildPrompt()` monta um único prompt (instruções + portfólio + pendências + histórico + pergunta). Chama `runSkill(..., { model: config.copilotCodexModel, cwd: config.copilotCwd, allowOllamaFallback: true })`. O prompt embute as regras de negócio: definição de "atrasado" (data-fim no passado + status não concluído usando a data de hoje), "travado/pendente", citar o nome do cartório **exatamente** (para virar link), e emitir na última linha `[[FOLLOWUPS]] a | b | c`.
+6. **Fallback local:** qualquer falha não cancelada do Codex aciona o Ollama; a troca aparece no `progress_log`.
+7. **Progresso ao vivo:** cada passo do motor é gravado em `progress`/`progress_log` (flush a cada `PROGRESS_FLUSH_MS = 2500`, mantendo os últimos `MAX_LOG_STEPS = 80`), empurrado por Realtime.
+8. **Cancelamento:** a cada ~2,5s checa `cancel_requested`; se marcado, encerra o processo e grava `cancelled`.
 8. **Tokens cobrados:** converte o uso real em cota ponderada — `input + cache_write*1.25 + cache_read*0.1 + output`. Chama `add_copilot_tokens`. O `cache_read` (barato) pesa só 10%, para não drenar a cota indevidamente.
 9. **Conclusão:** extrai os follow-ups do marcador `[[FOLLOWUPS]]`, remove-o do texto exibido, e grava `status='done'`, `result_text`, `followups`, `tokens_in/out/charged`.
 
@@ -176,16 +177,16 @@ Runtime separado em `vm-worker/`. O roteamento está em `vm-worker/src/index.ts`
 Em `vm-worker/src/config.ts`:
 
 ```
-copilotModel: process.env.COPILOT_MODEL || "haiku"
+copilotCodexModel: process.env.COPILOT_CODEX_MODEL || process.env.CODEX_MODEL || ""
 copilotCwd:   ensureCopilotCwd()  // COPILOT_CWD || <os.tmpdir()>/siplan-copilot
 ```
 
-- **`copilotModel`** — Haiku por padrão (Q&A leve → mais rápido/barato). Override por `COPILOT_MODEL`.
-- **`copilotCwd`** — diretório **neutro/vazio**, criado no boot (`ensureCopilotCwd`). Motivo explícito no código: rodar a CLI aqui evita que o Claude Code carregue no contexto o `CLAUDE.md` e as skills de `/opt/Orion.Modelos`, que são irrelevantes para o Q&A e caros em tokens. Contraste com `runSkill`, cujo default de `cwd` é `config.orionProjectDir` — o copiloto **sobrescreve** isso de propósito.
+- **`copilotCodexModel`** — vazio usa o modelo atual da CLI; override por `COPILOT_CODEX_MODEL` ou `CODEX_MODEL`.
+- **`copilotCwd`** — diretório **neutro/vazio**, criado no boot (`ensureCopilotCwd`). Isso evita carregar instruções e skills de `/opt/Orion.Modelos`, que são irrelevantes para o Q&A e caros em tokens.
 
-### `runSkill.ts` — Claude headless
+### `runSkill.ts` — Codex principal, Ollama fallback
 
-Comum a todas as filas. Faz `spawn` de `claude --dangerously-skip-permissions -p <prompt> --output-format stream-json --verbose` (adiciona `--model` se passado). Lê NDJSON linha a linha, emite cada passo (texto/tool_use) via `onProgress`, acumula o `result` e o uso de tokens (`input`, `output`, `cache_read`, `cache_creation`). Respeita timeout (`config.jobTimeoutMs`) e cancelamento (poll de `shouldCancel` a cada 5s → `SIGKILL`).
+Comum a todas as filas. Faz `spawn` de `codex exec --json --ephemeral` (adiciona `--model` se configurado), lê JSONL, emite progresso e acumula resposta/uso. Em tarefas de texto, uma saída não zero ou falha da CLI aciona `runOllama()` automaticamente. O Codex roda com sandbox `read-only`; somente a skill de geração de modelos usa `danger-full-access` e não aceita fallback.
 
 ### `processCopilotDigest.ts` — resumo diário
 
@@ -206,7 +207,7 @@ Centraliza todo o acesso a dados do copiloto:
 - **`access`** — query em `copilot_access` do usuário (cota/permissão). `hasAccess = !!access?.enabled`.
 - **`jobs`** — query em `copilot_jobs` do usuário (ordem crescente). `refetchInterval` de 4s enquanto houver job `pending`/`processing`; caso contrário, desliga.
 - **`enqueue`** — mutation que faz `INSERT { user_id, question, scope }`. Trata o erro de RLS (traduz para "Sem acesso ao copiloto ou cota diária atingida").
-- **`cancelJob`** — `pending` → grava `cancelled` direto; `processing` → seta `cancel_requested=true` (o worker mata o Claude).
+- **`cancelJob`** — `pending` → grava `cancelled` direto; `processing` → seta `cancel_requested=true` (o worker encerra o motor de IA).
 - **`clearConversation`** — `DELETE` de todos os jobs do usuário (depende da policy de DELETE).
 - **`setFeedback`** — grava `feedback` (1/-1, com toggle otimista).
 - **`digest`** — resumo do dia mais recente.
@@ -228,7 +229,7 @@ Centraliza todo o acesso a dados do copiloto:
 
 ## 6. Instalação / configuração
 
-**Nenhuma infra nova** além do worker já existente — o Copiloto reaproveita o mesmo processo systemd, a mesma credencial do Claude e o mesmo Supabase das outras filas.
+**Nenhuma infra nova** além do worker já existente — o Copiloto reaproveita o mesmo processo systemd, a credencial do Codex, o Ollama local e o mesmo Supabase das outras filas.
 
 Passos:
 
@@ -238,12 +239,12 @@ Passos:
 
 ### Variáveis de ambiente (`.env` do worker)
 
-Além das já existentes (`SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `CLAUDE_BIN`/auto-descoberta, etc. — ver `vm-worker/README.md`), o Copiloto adiciona **duas opcionais**:
+Além das já existentes (`SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `CODEX_BIN`, `OLLAMA_HOST`, etc. — ver `vm-worker/README.md`), o Copiloto adiciona **duas opcionais**:
 
 | Variável | Padrão | Descrição |
 |---|---|---|
-| `COPILOT_MODEL` | `haiku` | Modelo usado no chat e no digest. |
-| `COPILOT_CWD` | `<os.tmpdir()>/siplan-copilot` | Diretório neutro onde a CLI roda (sem `CLAUDE.md`/skills do Orion). Criado no boot. |
+| `COPILOT_CODEX_MODEL` | vazio | Modelo usado no chat e no digest; vazio herda `CODEX_MODEL`/configuração da CLI. |
+| `COPILOT_CWD` | `<os.tmpdir()>/siplan-copilot` | Diretório neutro onde a CLI roda (sem instruções/skills do Orion). Criado no boot. |
 
 Ambas têm default seguro — **não é obrigatório setar nada** para o Copiloto funcionar.
 
@@ -251,7 +252,7 @@ Ambas têm default seguro — **não é obrigatório setar nada** para o Copilot
 
 ## 7. Onde está rodando atualmente
 
-- **Worker:** VM Linux, como serviço systemd **`siplan-model-worker`** (unit em `/etc/systemd/system/siplan-model-worker.service`), rodando como o usuário **`administrator`** (não-root — o Claude recusa `--dangerously-skip-permissions` como root e a credencial da assinatura fica em `~/.claude` do `administrator`). Node **22** isolado via **nvm**, executando `src/index.ts` via **tsx**. `Restart=always` + watchdog cron (`scripts/worker-watchdog.sh`, a cada 2 min).
+- **Worker:** VM Linux, como serviço systemd **`siplan-model-worker`**, rodando como o usuário **`administrator`**, que mantém a credencial do Codex em `~/.codex`. Node **22** isolado via **nvm**, executando `src/index.ts` via **tsx**. `Restart=always` + watchdog cron (`scripts/worker-watchdog.sh`, a cada 2 min).
 - **Autodeploy:** `scripts/auto-deploy.sh` roda no **cron do root a cada 5 min**, baixa os `.ts` mais novos de `vm-worker/src` do branch **`main`** (API pública do GitHub) e **só reinicia o serviço se algum arquivo mudou**. Logo, todo `push` em `main` vira deploy do worker sozinho. **Novas migrations do Supabase continuam manuais.**
 - **Frontend:** Vercel, branch **`main`**.
 - **Digest diário:** **não usa cron externo.** É agendado **dentro do próprio worker** — `maybeDailyDigest()` roda no loop de polling (`index.ts`), gera uma vez por dia a partir das 6h quando o worker está ocioso, com idempotência garantida pela coluna `for_date` de `copilot_digests`.
@@ -296,15 +297,15 @@ UPDATE public.copilot_access SET tokens_used_today = 0 WHERE user_id = '<uuid>';
 |---|---|---|
 | "Sem acesso ao copiloto ou cota diária atingida" ao enviar | RLS de `INSERT` barrou (`enabled=FALSE` ou cota estourada) | Habilitar/ajustar cota em `/admin/copilot`. |
 | Job vira `error` com "Copiloto nao habilitado" | 2ª checagem no worker (acesso desligado entre o INSERT e o processing) | Verificar `copilot_access`. |
-| Job fica "na fila" e retoma sozinho depois | Limite de sessão do Claude (tokens da assinatura acabaram) → reenfileirado com `retry_after` (~15 min), **sem** consumir tentativa | Aguardar; é comportamento esperado (`isQuotaExhausted` em `index.ts`). |
-| "Claude encerrou com codigo N" | Falha do CLI / binário | Conferir `CLAUDE_BIN`/auto-descoberta e a autenticação da assinatura do `administrator`. |
-| Sem resposta / "spawn ENOENT" após update da extensão | Caminho do binário do Claude mudou | `config.ts` já revalida e re-descobre o mais novo (`getClaudeBin`); se persistir, checar `~/.vscode-server/extensions`. |
+| Progresso mostra "Continuando com Ollama local" | Codex falhou, ficou sem cota ou inacessível | O job continua localmente; verificar `codex login status` e logs se o fallback ficar frequente. |
+| Job vira `error` depois do fallback | Codex e Ollama falharam | Conferir autenticação Codex, `ollama serve` e `ollama list`. |
+| Sem resposta / `spawn ... ENOENT` | `CODEX_BIN` inválido ou dependências ausentes | Rodar `npm install` no `vm-worker` e conferir `CODEX_BIN`. |
 | Resumo do dia não aparece | Digest ainda não gerado (antes das 6h ou worker ocupado) ou já existe para hoje | Verificar `copilot_digests`; é best-effort. |
 | Job travado em `processing` | Worker morreu no meio | Reaper (`requeue_stuck_copilot_jobs`) e recuperação no boot devolvem à fila respeitando `MAX_ATTEMPTS`. |
 
 ### Cancelar / limpar
 
-- Botão "Parar" no chat → `cancel_requested` (worker mata o Claude em ~5s).
+- Botão "Parar" no chat → `cancel_requested` (worker encerra o motor em ~2,5s).
 - "Limpar conversa" → `DELETE` dos próprios jobs (depende da policy de DELETE).
 
 ---
@@ -313,8 +314,8 @@ UPDATE public.copilot_access SET tokens_used_today = 0 WHERE user_id = '<uuid>';
 
 Não requer nada específico do Copiloto. Basta o **setup padrão do worker** descrito em `vm-worker/README.md`:
 
-1. Node 22 (via nvm), Claude Code instalado e **autenticado** para o `administrator` (assinatura em `~/.claude`; aceitar a confiança do workspace uma vez).
-2. Copiar `vm-worker/` para `/home/administrator/vm-worker/`, `npm install`, preencher `.env` (`SUPABASE_SECRET_KEY` etc.). `COPILOT_MODEL`/`COPILOT_CWD` são opcionais (têm default).
+1. Node 22 (via nvm), Codex instalado pelo `npm install` e autenticado com `codex login` para o `administrator`; Ollama ativo com o modelo configurado.
+2. Copiar `vm-worker/` para `/home/administrator/vm-worker/`, `npm install`, preencher `.env` (`SUPABASE_SECRET_KEY` etc.). `COPILOT_CODEX_MODEL`/`COPILOT_CWD` são opcionais.
 3. Instalar a unit systemd `siplan-model-worker`, o autodeploy (cron root, 5 min) e o watchdog.
 4. Garantir que as migrations do copiloto já foram aplicadas no Supabase (isso é do banco, não da VM).
 
@@ -324,9 +325,9 @@ Como o `copilotCwd` default fica em `os.tmpdir()`, ele é recriado sozinho no bo
 
 ## 10. Segurança
 
-- **Gate + cota por usuário:** duas camadas de contenção de custo/abuso — RLS de `INSERT` (gate + cota no banco) e revalidação no worker antes de rodar o Claude. A cota é ponderada por custo real (`cache_read` pesa 0.1, `cache_write` 1.25) para refletir o gasto verdadeiro.
+- **Gate + cota por usuário:** duas camadas de contenção de custo/abuso — RLS de `INSERT` (gate + cota no banco) e revalidação no worker antes de rodar IA. A cota é ponderada pelos tokens reportados pelo motor.
 - **Chave secreta só no `.env` da VM:** o worker usa `SUPABASE_SECRET_KEY` (`sb_secret_...`, revogável), que ignora RLS — arquivo `600`, dono `administrator`, nunca commitado. Se vazar, revogar e gerar outra no painel. O **front usa apenas a chave `anon`/publishable**, sujeita à RLS.
-- **Diretório neutro evita vazamento de contexto:** rodar em `copilotCwd` (pasta vazia) garante que o `CLAUDE.md` e as skills internas de `/opt/Orion.Modelos` **não** entram no contexto do modelo — além de economizar tokens, evita expor instruções/estrutura do gerador de modelos numa resposta de Q&A.
+- **Diretório neutro evita vazamento de contexto:** rodar em `copilotCwd` (pasta vazia) evita que as instruções e skills internas de `/opt/Orion.Modelos` entrem no contexto do modelo.
 - **Isolamento de dados por usuário:** RLS restringe leitura/escrita de `copilot_jobs` ao dono (ou admin); o histórico multi-turno só puxa trocas `done` do próprio `user_id`.
 - **Sem porta aberta na VM:** o worker faz só conexões de **saída** (Realtime/WebSocket outbound) — sem túnel, sem porta de entrada.
-- **Agente autônomo:** o Claude roda com `--dangerously-skip-permissions`, mas num diretório vazio e sem tarefas de escrita — ainda assim, mantenha VM e `.env` restritos (mesma recomendação das outras filas).
+- **Sandbox:** o Copiloto roda Codex em `read-only`; a geração de modelos é a única carga com `danger-full-access`, numa VM dedicada. Segredos operacionais são removidos do ambiente filho.

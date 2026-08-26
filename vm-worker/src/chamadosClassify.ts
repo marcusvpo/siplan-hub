@@ -9,7 +9,7 @@ import { runSkill } from "./runSkill.js";
  * do mesmo problema entre cartorios.
  *
  * Roda como a fila de MENOR prioridade do worker 'ai' (so quando nao ha jobs de
- * modelo/texto/copiloto pendentes), em lotes pequenos via Claude haiku. Gate:
+ * modelo/texto/copiloto pendentes), em lotes pequenos via Codex/Ollama. Gate:
  * mesmo dono do sync (MSSQL_HOST configurado) para nao classificar em dobro
  * quando 2 workers compartilham o .env.
  */
@@ -25,7 +25,7 @@ const NATUREZAS_SEM_TEMA = [
 
 const BATCH_SIZE = 12;
 
-// Backoff apos falha (ex.: limite de sessao do Claude): evita martelar a cada tick.
+// Backoff apos falha dos motores de IA: evita martelar a cada tick.
 let nextTryAt = 0;
 
 interface PendingRow {
@@ -136,10 +136,14 @@ export async function classifyPendingChamados(): Promise<boolean> {
       buildPrompt(paraIa, temasExistentes),
       () => {},
       async () => false,
-      { model: config.chamadosTemaModel || undefined, cwd: config.copilotCwd }
+      {
+        model: config.chamadosTemaCodexModel || undefined,
+        cwd: config.copilotCwd,
+        allowOllamaFallback: true,
+      }
     );
     if (code !== 0) {
-      throw new Error(`Claude saiu com codigo ${code}: ${(stderr || transcript || "").slice(-400)}`);
+      throw new Error(`Motor de IA saiu com codigo ${code}: ${(stderr || transcript || "").slice(-400)}`);
     }
     const temas = parseResult(resultText || "");
 

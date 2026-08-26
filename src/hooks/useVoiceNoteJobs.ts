@@ -40,7 +40,7 @@ function extFromMime(mime: string): string {
 /**
  * Fila de preenchimento por voz (job_type='voice_note'). O componente sobe o audio
  * gravado no navegador para o Storage e enfileira um job; o worker da VM transcreve
- * localmente com whisper.cpp e eleva o texto com o Claude, devolvendo em result_text.
+ * localmente com whisper.cpp e eleva o texto com Codex/Ollama, devolvendo em result_text.
  * Quando o job vira 'done', onResult recebe o job (o componente mostra o texto antes
  * de aplicar). Compartilha a tabela dtc_ai_jobs com os demais jobs de IA de texto.
  */
