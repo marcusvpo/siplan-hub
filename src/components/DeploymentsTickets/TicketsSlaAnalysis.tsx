@@ -13,6 +13,7 @@ import {
   FileSearch,
   Loader2,
   MessageSquareText,
+  ShieldCheck,
   Timer,
   UserRound,
 } from "lucide-react";
@@ -21,7 +22,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -41,7 +41,7 @@ import {
   chronologicalTramites,
   elapsedHours,
   formatSlaDuration,
-  getResolutionSlaState,
+  getOfficialSlaState,
   parseSlaDate,
 } from "@/lib/tickets-sla";
 import type { ChamadosReportFilters } from "@/lib/chamados-report-pdf";
@@ -60,14 +60,14 @@ interface TicketsSlaAnalysisProps {
   reportFilters: ChamadosReportFilters;
 }
 
-type SlaCardFilter = "all" | "within" | "outside" | "inProgress";
+type SlaCardFilter = "all" | "within" | "outside" | "inProgress" | "unavailable";
 
 const MAX_ANALYTICAL_REPORT_TICKETS = 250;
 
-function formatDateTime(value?: string): string {
-  const date = parseSlaDate(value);
+function formatDateTime(value?: string | Date | null): string {
+  const date = value instanceof Date ? value : parseSlaDate(value || undefined);
   if (!date) return "—";
-  const hasTime = Boolean(value && !/^\d{4}-\d{2}-\d{2}$/.test(value));
+  const hasTime = value instanceof Date || Boolean(value && !/^\d{4}-\d{2}-\d{2}$/.test(value));
   return new Intl.DateTimeFormat("pt-BR", {
     dateStyle: "short",
     ...(hasTime ? { timeStyle: "short" } : {}),
@@ -76,12 +76,8 @@ function formatDateTime(value?: string): string {
 
 function TicketSlaRow({
   chamado,
-  resolutionDays,
-  firstResponseHours,
 }: {
   chamado: Chamado0800;
-  resolutionDays: number;
-  firstResponseHours: number;
 }) {
   const [open, setOpen] = useState(false);
   const [generatingDetailPdf, setGeneratingDetailPdf] = useState(false);
@@ -91,15 +87,16 @@ function TicketSlaRow({
     () => buildTicketFlowAnalysis(chamado, timeline),
     [chamado, timeline],
   );
-  const resolution = getResolutionSlaState(chamado, resolutionDays);
+  const sla = getOfficialSlaState(chamado);
   const openedAt = parseSlaDate(chamado.abertoEm || chamado.dataAbertura);
-  const firstResponse = timeline.find((item) => (
-    parseSlaDate(item.dataTramite)
-    && Boolean(item.responsavel || item.equipeResponsavel || item.atividade)
-  ));
-  const firstResponseElapsed = elapsedHours(openedAt, parseSlaDate(firstResponse?.dataTramite));
-  const firstResponseWithin = firstResponseElapsed !== null
-    && firstResponseElapsed <= firstResponseHours;
+  const firstResponseElapsed = elapsedHours(openedAt, sla.firstResponse.completedAt);
+  const firstResponseLabel = {
+    met: "Dentro do SLA",
+    breached: "Fora do SLA",
+    pending: "Aguardando retorno",
+    paused: "Pausado",
+    unavailable: "Sem prazo na origem",
+  }[sla.firstResponse.status];
 
   const gaps = timeline.map((item, index) => {
     const current = parseSlaDate(item.dataTramite);
@@ -118,10 +115,7 @@ function TicketSlaRow({
     const toastId = `ticket-sla-detail-${chamado.numeroChamado}`;
     try {
       toast.loading(`Montando análise detalhada do chamado #${chamado.numeroChamado}...`, { id: toastId });
-      await generateTicketSlaDetailPdf(chamado, timeline, {
-        firstResponseHours,
-        resolutionDays,
-      });
+      await generateTicketSlaDetailPdf(chamado, timeline);
       toast.success("Relatório detalhado gerado.", { id: toastId });
     } catch (pdfError) {
       console.error("Erro ao gerar relatório detalhado do chamado:", pdfError);
@@ -147,8 +141,13 @@ function TicketSlaRow({
             </span>
             <span>{formatDateTime(chamado.abertoEm || chamado.dataAbertura)}</span>
             <span>{formatDateTime(chamado.encerradoEm || chamado.dataEncerramento)}</span>
-            <span className="font-medium">{formatSlaDuration(resolution.hours)}</span>
-            <Badge className={cn("w-fit border-0 text-[9px]", resolution.className)}>{resolution.label}</Badge>
+            <span className="font-medium">{formatSlaDuration(sla.hours)}</span>
+            <span className="min-w-0">
+              <Badge className={cn("w-fit border-0 text-[9px]", sla.className)}>{sla.label}</Badge>
+              <span className="mt-0.5 block truncate text-[9px] text-muted-foreground" title={sla.activeDeadline ? formatDateTime(sla.activeDeadline) : undefined}>
+                {sla.activeDeadline ? `até ${formatDateTime(sla.activeDeadline)}` : sla.phaseLabel}
+              </span>
+            </span>
           </button>
         </CollapsibleTrigger>
 
@@ -181,22 +180,35 @@ function TicketSlaRow({
                   </Button>
                 </div>
 
-                <div className="mb-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
+                <div className="mb-2 flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-muted-foreground">
+                  <span><strong className="text-foreground">Criticidade:</strong> {chamado.criticidade || "Não informada"}</span>
+                  <span><strong className="text-foreground">Equipe atual:</strong> {chamado.equipeResponsavel || "Não informada"}</span>
+                  {chamado.slaVencimentoManual && <Badge className="border-0 bg-amber-100 text-[9px] text-amber-800">Vencimento ajustado manualmente no Ellevo</Badge>}
+                </div>
+
+                <div className="mb-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-6">
                   <div className="rounded-md border bg-background p-2.5">
                     <p className="text-[9px] font-semibold uppercase text-muted-foreground">Primeiro atendimento</p>
                     <p className="mt-1 text-sm font-bold">{formatSlaDuration(firstResponseElapsed)}</p>
                     <Badge className={cn(
                       "mt-1 border-0 text-[9px]",
-                      firstResponseElapsed === null
+                      sla.firstResponse.status === "unavailable"
                         ? "bg-muted text-muted-foreground"
-                        : firstResponseWithin
+                        : sla.firstResponse.status === "met"
                           ? "bg-emerald-100 text-emerald-700"
-                          : "bg-rose-100 text-rose-700",
+                          : sla.firstResponse.status === "pending"
+                            ? "bg-blue-100 text-blue-700"
+                            : "bg-rose-100 text-rose-700",
                     )}>
-                      {firstResponseElapsed === null
-                        ? "Sem trâmite de atendimento"
-                        : firstResponseWithin ? "Dentro do SLA" : "Fora do SLA"}
+                      {firstResponseLabel}
                     </Badge>
+                    <p className="mt-1 text-[9px] text-muted-foreground">Prazo: {formatDateTime(sla.firstResponse.deadline)}</p>
+                  </div>
+                  <div className="rounded-md border bg-background p-2.5">
+                    <p className="text-[9px] font-semibold uppercase text-muted-foreground">SLA vigente</p>
+                    <p className="mt-1 truncate text-sm font-bold" title={sla.phaseLabel}>{sla.phaseLabel}</p>
+                    <Badge className={cn("mt-1 border-0 text-[9px]", sla.className)}>{sla.label}</Badge>
+                    <p className="mt-1 text-[9px] text-muted-foreground">Vencimento: {formatDateTime(sla.activeDeadline)}</p>
                   </div>
                   <div className="rounded-md border bg-background p-2.5">
                     <p className="text-[9px] font-semibold uppercase text-muted-foreground">Maior intervalo</p>
@@ -318,8 +330,6 @@ export function TicketsSlaAnalysis({
   filters,
   reportFilters,
 }: TicketsSlaAnalysisProps) {
-  const [firstResponseHours, setFirstResponseHours] = useState(8);
-  const [resolutionDays, setResolutionDays] = useState(5);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [slaCardFilter, setSlaCardFilter] = useState<SlaCardFilter>("all");
@@ -333,29 +343,22 @@ export function TicketsSlaAnalysis({
   });
 
   const metrics = useMemo(() => rows.reduce((summary, chamado) => {
-    const state = getResolutionSlaState(chamado, resolutionDays);
-    if (state.label === "Dentro do SLA") summary.within += 1;
-    if (state.label === "Fora do SLA" || state.label === "SLA estourado") summary.outside += 1;
-    if (state.label === "SLA em curso") summary.inProgress += 1;
+    const state = getOfficialSlaState(chamado);
+    summary[state.classification] += 1;
     return summary;
-  }, { within: 0, outside: 0, inProgress: 0 }), [resolutionDays, rows]);
+  }, { within: 0, outside: 0, inProgress: 0, unavailable: 0 }), [rows]);
 
   const filteredRows = useMemo(() => rows.filter((chamado) => {
     if (slaCardFilter === "all") return true;
-    const state = getResolutionSlaState(chamado, resolutionDays);
-    if (slaCardFilter === "within") return state.label === "Dentro do SLA";
-    if (slaCardFilter === "outside") {
-      return state.label === "Fora do SLA" || state.label === "SLA estourado";
-    }
-    return state.label === "SLA em curso";
-  }), [resolutionDays, rows, slaCardFilter]);
+    return getOfficialSlaState(chamado).classification === slaCardFilter;
+  }), [rows, slaCardFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
   const visibleRows = filteredRows.slice((page - 1) * pageSize, page * pageSize);
 
   useEffect(() => {
     setPage(1);
-  }, [filterKey, resolutionDays, slaCardFilter]);
+  }, [filterKey, slaCardFilter]);
 
   useEffect(() => {
     setPage((current) => Math.min(current, totalPages));
@@ -373,13 +376,12 @@ export function TicketsSlaAnalysis({
       toast.loading("Montando o relatório de tempos e SLA...", { id: toastId });
       await generateTicketsSlaReportPdf(filteredRows, {
         ...reportFilters,
-        firstResponseHours,
-        resolutionDays,
         slaClassification: {
           all: "Todos",
           within: "Dentro do SLA",
           outside: "Fora / estourado",
           inProgress: "SLA em curso",
+          unavailable: "Sem SLA na origem",
         }[slaCardFilter],
       });
       toast.success(`Relatório de SLA gerado com ${filteredRows.length} chamado(s).`, { id: toastId });
@@ -421,13 +423,12 @@ export function TicketsSlaAnalysis({
         })),
         {
           ...reportFilters,
-          firstResponseHours,
-          resolutionDays,
           slaClassification: {
             all: "Todos",
             within: "Dentro do SLA",
             outside: "Fora / estourado",
             inProgress: "SLA em curso",
+            unavailable: "Sem SLA na origem",
           }[slaCardFilter],
         },
       );
@@ -454,7 +455,7 @@ export function TicketsSlaAnalysis({
         <CardContent className="flex flex-wrap items-end gap-3 p-3">
           <div className="mr-auto min-w-[260px]">
             <h2 className="flex items-center gap-1.5 text-sm font-bold"><Timer className="h-4 w-4 text-primary" />Tempos de atendimento e SLA</h2>
-            <p className="mt-0.5 text-[10px] text-muted-foreground">Cálculo em horas e dias corridos. Ajuste os limites conforme o contrato analisado.</p>
+            <p className="mt-0.5 text-[10px] text-muted-foreground">Prazos e pausas sincronizados da origem; não podem ser alterados nesta tela.</p>
           </div>
           <Button
             variant="outline"
@@ -481,23 +482,20 @@ export function TicketsSlaAnalysis({
               : <FileDown className="h-3 w-3" />}
             {generatingPdf ? "Gerando PDF..." : "Relatório SLA"}
           </Button>
-          <label className="space-y-1 text-[10px] font-medium text-muted-foreground">
-            SLA primeiro atendimento (horas)
-            <Input type="number" min={1} max={720} value={firstResponseHours} onChange={(event) => setFirstResponseHours(Math.max(1, Number(event.target.value) || 1))} className="h-7 w-28 text-xs" />
-          </label>
-          <label className="space-y-1 text-[10px] font-medium text-muted-foreground">
-            SLA resolução (dias)
-            <Input type="number" min={1} max={365} value={resolutionDays} onChange={(event) => setResolutionDays(Math.max(1, Number(event.target.value) || 1))} className="h-7 w-24 text-xs" />
-          </label>
+          <div className="flex h-9 items-center gap-2 rounded-md border bg-emerald-50 px-3 text-[10px] text-emerald-800">
+            <ShieldCheck className="h-4 w-4 shrink-0" />
+            <span><strong>SLA automático do Ellevo</strong><br />Criticidade, equipe, calendário e pausas oficiais</span>
+          </div>
         </CardContent>
       </Card>
 
-      <div className="grid gap-2 sm:grid-cols-4">
+      <div className="grid gap-2 sm:grid-cols-5">
         {[
           { filter: "all" as const, label: "Chamados analisados", value: rows.length, icon: MessageSquareText, color: "text-primary" },
           { filter: "within" as const, label: "Dentro do SLA", value: metrics.within, icon: CheckCircle2, color: "text-emerald-600" },
           { filter: "outside" as const, label: "Fora/estourado", value: metrics.outside, icon: CircleAlert, color: "text-rose-600" },
           { filter: "inProgress" as const, label: "SLA em curso", value: metrics.inProgress, icon: Clock3, color: "text-blue-600" },
+          { filter: "unavailable" as const, label: "Sem SLA na origem", value: metrics.unavailable, icon: ShieldCheck, color: "text-slate-500" },
         ].map((item) => (
           <button
             key={item.filter}
@@ -523,7 +521,7 @@ export function TicketsSlaAnalysis({
       <Card className="border-muted/80 shadow-sm">
         <CardContent className="overflow-x-auto p-3">
           <div className="mb-1 grid min-w-[900px] grid-cols-[28px_90px_minmax(220px,1fr)_120px_120px_110px_120px] gap-2 px-3 text-[9px] font-semibold uppercase text-muted-foreground">
-            <span /><span>Chamado</span><span>Cliente / título</span><span>Abertura</span><span>Encerramento</span><span>Duração</span><span>SLA resolução</span>
+            <span /><span>Chamado</span><span>Cliente / título</span><span>Abertura</span><span>Encerramento</span><span>Duração</span><span>SLA oficial</span>
           </div>
 
           {syncing || isLoading ? (
@@ -537,7 +535,7 @@ export function TicketsSlaAnalysis({
           ) : (
             <div className="space-y-1.5">
               {visibleRows.map((chamado) => (
-                <TicketSlaRow key={chamado.numeroChamado} chamado={chamado} resolutionDays={resolutionDays} firstResponseHours={firstResponseHours} />
+                <TicketSlaRow key={chamado.numeroChamado} chamado={chamado} />
               ))}
             </div>
           )}

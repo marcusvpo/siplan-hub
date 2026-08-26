@@ -25,6 +25,16 @@ export interface Chamado0800 {
   dataEncerramento?: string;
   abertoEm?: string;
   encerradoEm?: string;
+  slaPrimeiraRespostaPrevistaEm?: string;
+  slaPrimeiraRespostaRealEm?: string;
+  slaVencimentoEm?: string;
+  slaVencimentoPausado?: boolean;
+  slaVencimentoManual?: boolean;
+  slaTempoPrimeiraRespostaMinutos?: number;
+  slaTempoVencimentoMinutos?: number;
+  slaTempoRestanteMinutos?: number;
+  slaRetornoPrevistoEm?: string;
+  slaRetornoRealEm?: string;
   syncedAt?: string;
   /** Tema curto gerado por IA no worker ("selo digital", "livro caixa"...).
    * undefined = ainda nao classificado; "interno" nunca chega aqui (filtrado). */
@@ -115,6 +125,16 @@ export const mapChamado0800 = (c: any): Chamado0800 => ({
   dataEncerramento: c.data_encerramento ?? undefined,
   abertoEm: c.aberto_em ?? undefined,
   encerradoEm: c.encerrado_em ?? undefined,
+  slaPrimeiraRespostaPrevistaEm: c.sla_primeira_resposta_prevista_em ?? undefined,
+  slaPrimeiraRespostaRealEm: c.sla_primeira_resposta_real_em ?? undefined,
+  slaVencimentoEm: c.sla_vencimento_em ?? undefined,
+  slaVencimentoPausado: c.sla_vencimento_pausado === true,
+  slaVencimentoManual: c.sla_vencimento_manual === true,
+  slaTempoPrimeiraRespostaMinutos: c.sla_tempo_primeira_resposta_minutos ?? undefined,
+  slaTempoVencimentoMinutos: c.sla_tempo_vencimento_minutos ?? undefined,
+  slaTempoRestanteMinutos: c.sla_tempo_restante_minutos ?? undefined,
+  slaRetornoPrevistoEm: c.sla_retorno_previsto_em ?? undefined,
+  slaRetornoRealEm: c.sla_retorno_real_em ?? undefined,
   syncedAt: c.synced_at ?? undefined,
   tema: c.tema_ia && c.tema_ia !== "interno" ? c.tema_ia : undefined,
 });

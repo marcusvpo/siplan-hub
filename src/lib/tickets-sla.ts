@@ -3,10 +3,25 @@ import { isTicketCompleted, normalizeTicketText } from "@/lib/tickets-ai-analyti
 
 const HOUR_MS = 60 * 60 * 1000;
 
+export type TicketSlaClassification = "within" | "outside" | "inProgress" | "unavailable";
+export type SlaCheckpointStatus = "met" | "breached" | "pending" | "paused" | "unavailable";
+
+export interface SlaCheckpointState {
+  deadline: Date | null;
+  completedAt: Date | null;
+  status: SlaCheckpointStatus;
+}
+
 export interface ResolutionSlaState {
   hours: number | null;
-  label: "Dentro do SLA" | "Fora do SLA" | "SLA em curso" | "SLA estourado" | "Sem datas";
+  label: "Dentro do SLA" | "Fora do SLA" | "Retorno fora do SLA" | "Aguardando retorno" | "SLA em curso" | "SLA vencido" | "SLA pausado" | "Sem SLA na origem" | "Sem datas";
   className: string;
+  classification: TicketSlaClassification;
+  phase: "firstResponse" | "resolution" | "paused" | "completed" | "unavailable";
+  phaseLabel: string;
+  activeDeadline: Date | null;
+  firstResponse: SlaCheckpointState;
+  resolution: SlaCheckpointState;
 }
 
 export interface TicketAreaTime {
@@ -56,9 +71,40 @@ export function formatSlaDuration(hours: number | null): string {
   return remainingHours > 0 ? `${days} d ${remainingHours} h` : `${days} d`;
 }
 
-export function getResolutionSlaState(
+function getCheckpointState(
+  deadlineValue?: string,
+  completedValue?: string,
+  now = new Date(),
+  paused = false,
+): SlaCheckpointState {
+  const deadline = parseSlaDate(deadlineValue);
+  const completedAt = parseSlaDate(completedValue);
+  if (!deadline) return { deadline, completedAt, status: "unavailable" };
+  if (completedAt) {
+    return {
+      deadline,
+      completedAt,
+      status: completedAt.getTime() <= deadline.getTime() ? "met" : "breached",
+    };
+  }
+  if (paused) return { deadline, completedAt, status: "paused" };
+  return {
+    deadline,
+    completedAt,
+    status: now.getTime() <= deadline.getTime() ? "pending" : "breached",
+  };
+}
+
+/**
+ * Classifica o SLA exclusivamente pelos relógios oficiais do Ellevo.
+ *
+ * 1. Antes da primeira resposta, vale DataPrevistaPriResp.
+ * 2. Depois da primeira resposta, vale SolVencimento.
+ * 3. Transferir de equipe não pausa por inferência; somente o indicador
+ *    VencimentoPausado congela o relógio na origem.
+ */
+export function getOfficialSlaState(
   chamado: Chamado0800,
-  targetDays: number,
   now = new Date(),
 ): ResolutionSlaState {
   const openedAt = parseSlaDate(chamado.abertoEm || chamado.dataAbertura);
@@ -68,19 +114,143 @@ export function getResolutionSlaState(
     !chamado.encerradoEm,
   );
   const hours = elapsedHours(openedAt, closed ? closedAt : now);
-  const within = hours !== null && hours <= targetDays * 24;
+  const firstResponse = getCheckpointState(
+    chamado.slaPrimeiraRespostaPrevistaEm,
+    chamado.slaPrimeiraRespostaRealEm,
+    now,
+  );
+  const resolution = getCheckpointState(
+    chamado.slaVencimentoEm,
+    closed ? chamado.encerradoEm || chamado.dataEncerramento : undefined,
+    now,
+    !closed && chamado.slaVencimentoPausado === true,
+  );
 
   if (hours === null) {
-    return { hours, label: "Sem datas", className: "bg-muted text-muted-foreground" };
+    return {
+      hours,
+      label: "Sem datas",
+      className: "bg-muted text-muted-foreground",
+      classification: "unavailable",
+      phase: "unavailable",
+      phaseLabel: "Datas indisponíveis",
+      activeDeadline: null,
+      firstResponse,
+      resolution,
+    };
   }
-  if (closed) {
-    return within
-      ? { hours, label: "Dentro do SLA", className: "bg-emerald-100 text-emerald-700" }
-      : { hours, label: "Fora do SLA", className: "bg-rose-100 text-rose-700" };
+
+  const waitingFirstResponse = !firstResponse.completedAt && !closed;
+  if (waitingFirstResponse) {
+    if (firstResponse.status === "breached") {
+      return {
+        hours,
+        label: "Retorno fora do SLA",
+        className: "bg-rose-100 text-rose-700",
+        classification: "outside",
+        phase: "firstResponse",
+        phaseLabel: "Aguardando primeiro retorno",
+        activeDeadline: firstResponse.deadline,
+        firstResponse,
+        resolution,
+      };
+    }
+    if (firstResponse.status === "pending") {
+      return {
+        hours,
+        label: "Aguardando retorno",
+        className: "bg-blue-100 text-blue-700",
+        classification: "inProgress",
+        phase: "firstResponse",
+        phaseLabel: "Aguardando primeiro retorno",
+        activeDeadline: firstResponse.deadline,
+        firstResponse,
+        resolution,
+      };
+    }
   }
-  return within
-    ? { hours, label: "SLA em curso", className: "bg-blue-100 text-blue-700" }
-    : { hours, label: "SLA estourado", className: "bg-amber-100 text-amber-800" };
+
+  if (firstResponse.status === "breached") {
+    return {
+      hours,
+      label: "Retorno fora do SLA",
+      className: "bg-rose-100 text-rose-700",
+      classification: "outside",
+      phase: closed ? "completed" : "resolution",
+      phaseLabel: closed ? "Concluído" : "Em atendimento",
+      activeDeadline: resolution.deadline,
+      firstResponse,
+      resolution,
+    };
+  }
+
+  if (resolution.status === "paused") {
+    return {
+      hours,
+      label: "SLA pausado",
+      className: "bg-violet-100 text-violet-700",
+      classification: "inProgress",
+      phase: "paused",
+      phaseLabel: "Vencimento pausado no Ellevo",
+      activeDeadline: resolution.deadline,
+      firstResponse,
+      resolution,
+    };
+  }
+
+  if (resolution.status === "breached") {
+    return {
+      hours,
+      label: closed ? "Fora do SLA" : "SLA vencido",
+      className: "bg-rose-100 text-rose-700",
+      classification: "outside",
+      phase: closed ? "completed" : "resolution",
+      phaseLabel: closed ? "Concluído" : "Em atendimento",
+      activeDeadline: resolution.deadline,
+      firstResponse,
+      resolution,
+    };
+  }
+
+  if (closed && resolution.status === "met") {
+    return {
+      hours,
+      label: "Dentro do SLA",
+      className: "bg-emerald-100 text-emerald-700",
+      classification: "within",
+      phase: "completed",
+      phaseLabel: "Concluído",
+      activeDeadline: resolution.deadline,
+      firstResponse,
+      resolution,
+    };
+  }
+
+  if (!closed && resolution.status === "pending") {
+    return {
+      hours,
+      label: "SLA em curso",
+      className: "bg-blue-100 text-blue-700",
+      classification: "inProgress",
+      phase: "resolution",
+      phaseLabel: "Em atendimento",
+      activeDeadline: resolution.deadline,
+      firstResponse,
+      resolution,
+    };
+  }
+
+  return {
+    hours,
+    label: "Sem SLA na origem",
+    className: "bg-muted text-muted-foreground",
+    classification: "unavailable",
+    phase: "unavailable",
+    phaseLabel: "SLA não configurado no Ellevo",
+    activeDeadline: null,
+    firstResponse,
+    resolution,
+  };
 }
 
 export function chronologicalTramites(tramites: ChamadoTramite[]): ChamadoTramite[] {
