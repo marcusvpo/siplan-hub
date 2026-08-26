@@ -86,7 +86,23 @@ const PROCESSO_VENDA_CATALOGS: Record<ProcessoVendaScope, {
   legacy: boolean;
 }> = {
   processo_venda: {
-    sourceView: "dbo.vw_2026_HUB_CONSULTA_CHAMADOS_ORION",
+    sourceView: `(
+      SELECT DISTINCT
+             c.NumeroChamado,
+             c.CodPN AS codigoCliente,
+             c.NomeCliente,
+             c.NomeCliente AS RazaoSocialCliente,
+             c.SolTitulo AS TituloChamado,
+             CAST(c.DescricaoChamado AS nvarchar(max)) AS descricaotramite,
+             c.Natureza,
+             c.StatusChamado,
+             c.Software,
+             c.Produto,
+             c.DataAberturaChamadoComHoras AS DataAberturaChamado,
+             c.SolDataFechamentoComHoras AS SolDataFechamento
+      FROM plataformaellevo.dbo.vw_ChamadosTodosStatus AS c WITH (NOLOCK)
+      WHERE LTRIM(RTRIM(c.Software)) COLLATE Latin1_General_CI_AI LIKE 'Orion%'
+    ) AS chamados_orion`,
     label: "orion",
     legacy: false,
   },
@@ -94,27 +110,18 @@ const PROCESSO_VENDA_CATALOGS: Record<ProcessoVendaScope, {
     sourceView: `(
       SELECT DISTINCT
              c.NumeroChamado,
-             c.CardCode0800 AS codigoCliente,
-             cliente.NomeCliente,
-             cliente.NomeCliente AS RazaoSocialCliente,
-             c.TituloChamado,
+             c.CodPN AS codigoCliente,
+             c.NomeCliente,
+             c.NomeCliente AS RazaoSocialCliente,
+             c.SolTitulo AS TituloChamado,
              CAST(c.DescricaoChamado AS nvarchar(max)) AS descricaotramite,
-             c.natureza AS Natureza,
+             c.Natureza,
              c.StatusChamado,
              c.Software,
              c.Produto,
-             c.DataAberturaChamado,
-             c.DataEncerramentoChamado AS SolDataFechamento
-      FROM dbo.vw_2026_ChamadosTodosStatus AS c
-      CROSS APPLY (
-        VALUES (
-          CASE
-            WHEN CHARINDEX(' - Chamado:', c.ClienteChamado) > 0
-              THEN LEFT(c.ClienteChamado, CHARINDEX(' - Chamado:', c.ClienteChamado) - 1)
-            ELSE c.ClienteChamado
-          END
-        )
-      ) AS cliente (NomeCliente)
+             c.DataAberturaChamadoComHoras AS DataAberturaChamado,
+             c.SolDataFechamentoComHoras AS SolDataFechamento
+      FROM plataformaellevo.dbo.vw_ChamadosTodosStatus AS c WITH (NOLOCK)
       WHERE LTRIM(RTRIM(c.Produto)) IN ('Siplan', 'Control-M', 'Global')
     ) AS chamados_legado`,
     label: "legado",
@@ -612,9 +619,9 @@ async function runProcessoVendaOnce(
       whereClauses.push(`(${searchParts.join(" OR ")})`);
     }
 
-    // A view do catalogo ja entrega uma linha por chamado e sem o join 1:N de
-    // itens de venda/faturamento.
-    // O periodo continua no SQL para o otimizador consultar apenas a janela.
+    // A view historica do Ellevo cobre chamados desde 2020. O periodo e os
+    // filtros continuam no SQL para o otimizador consultar apenas a janela,
+    // sem depender de uma view anual que precisa ser recriada a cada janeiro.
     const res = await executeControlledQuery<ProcessoVendaViewRow>(chamadoRequest, `
       SELECT NumeroChamado, codigoCliente, NomeCliente, RazaoSocialCliente,
              TituloChamado, descricaotramite, Natureza, StatusChamado,
@@ -666,13 +673,13 @@ async function runProcessoVendaOnce(
       const slaResult = await executeControlledQuery<ProcessoVendaOfficialSlaRow>(slaRequest, `
         WITH chamado_meta AS (
           SELECT CONVERT(varchar(50), c.NumeroChamado) AS NumeroChamado,
-                 c.Criticidade,
+                 c.Severidade AS Criticidade,
                  c.EquipeResponsavelChamado,
                  ROW_NUMBER() OVER (
                    PARTITION BY c.NumeroChamado
-                   ORDER BY c.DataTramite DESC
+                   ORDER BY c.DataUltimaEdicaoTramite DESC
                  ) AS rn
-          FROM dbo.vw_2026_ChamadosTodosStatus AS c
+          FROM plataformaellevo.dbo.vw_ChamadosTodosStatus AS c WITH (NOLOCK)
           WHERE CONVERT(varchar(50), c.NumeroChamado) IN (${ticketParameters.join(", ")})
         )
         SELECT meta.NumeroChamado,

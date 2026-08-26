@@ -181,7 +181,7 @@ export function useChamadoTramites(numeroChamado?: string, enabled = true) {
 /**
  * Chamados 0800 (Ellevo) do cliente do projeto, abertos dentro do periodo do
  * pos-implantacao. Le o espelho public.chamados_0800, alimentado pelo vm-worker
- * a cada ~5 min a partir do SQL Server interno (vw_2026_ChamadosTodosStatus).
+ * a cada ~5 min a partir das views historicas do SQL Server interno.
  *
  * O vinculo projeto -> cliente Ellevo e resolvido pelo proprio espelho:
  * projects.ticket_number e o numero do chamado que originou o projeto, e essa

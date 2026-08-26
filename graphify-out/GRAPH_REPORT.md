@@ -1,7 +1,7 @@
 # Graph Report - siplan-hub  (2026-08-26)
 
 ## Corpus Check
-- 835 files · ~980,865 words
+- 835 files · ~980,928 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `b7087b2f`
+- Built from commit: `40dc85fa`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -450,7 +450,7 @@ Nodes (20): PosAiChatLinksManagerProps, PosAiAssistantSection(), DEFAULT_HEALTH_
 
 ### Community 8 - "Charts, KPI & Reports"
 Cohesion: 0.07
-Nodes (55): data, OverviewChart(), ProjectStatusChart(), ProjectStatusChartProps, STATUS_LABELS, formatAction(), RecentActivity(), AdminSettings() (+47 more)
+Nodes (56): data, OverviewChart(), ProjectStatusChart(), ProjectStatusChartProps, STATUS_LABELS, formatAction(), RecentActivity(), AdminSettings() (+48 more)
 
 ### Community 9 - "Notification Bell & Dropdown"
 Cohesion: 0.11
@@ -505,8 +505,8 @@ Cohesion: 0.09
 Nodes (21): dependencies, dotenv, mssql, @openai/codex, @supabase/supabase-js, description, devDependencies, tsx (+13 more)
 
 ### Community 22 - "Distribution/Workload Charts"
-Cohesion: 0.05
-Nodes (72): DeploymentCard(), DeploymentCardProps, DeploymentDetailsDialog(), EnvironmentScreenshotsProps, StageCardProps, AdherenceStageFormProps, ConversionStageFormProps, EnvironmentStageFormProps (+64 more)
+Cohesion: 0.06
+Nodes (61): EnvironmentScreenshotsProps, StageCardProps, AdherenceStageFormProps, ConversionStageFormProps, EnvironmentStageFormProps, ImplementationStageFormProps, PhaseFormProps, InfraStageFormProps (+53 more)
 
 ### Community 23 - "Modelos Editor & Model Jobs"
 Cohesion: 0.14
@@ -530,7 +530,7 @@ Nodes (22): NewProjectDialog(), AdvancedFilters(), ProjectGrid(), ProjectModal()
 
 ### Community 29 - "Commercial/Public Checklists"
 Cohesion: 0.07
-Nodes (39): ConversionIssuesTab(), ConversionIssuesTabProps, PRIORITIES, STATUSES, NOTIFICATION_TYPE_ICONS, NotificationBell(), DropdownMenuCheckboxItem, DropdownMenuContent (+31 more)
+Nodes (41): ConversionIssuesTab(), ConversionIssuesTabProps, PRIORITIES, STATUSES, MarkdownTiptapEditorProps, NOTIFICATION_TYPE_ICONS, NotificationBell(), DropdownMenuCheckboxItem (+33 more)
 
 ### Community 30 - "Commercial Page & Hooks"
 Cohesion: 0.19
@@ -637,8 +637,8 @@ Cohesion: 0.07
 Nodes (22): aggregate_interviews(), format_single_interview(), InterviewAnalyzer, main(), Extract feature requests and suggestions, Extract Jobs to Be Done patterns, Analyze customer interviews for insights and patterns, Calculate overall sentiment of the interview (+14 more)
 
 ### Community 65 - "1. Gestão de Atividades — Fila de Conversão"
-Cohesion: 0.11
-Nodes (17): 2. Motores de Conversão, 5. Modelos Editor (Workspace), Componentes principais, Componentes principais, Dados e Hooks, Dados e Hooks, Fluxos e Interações, Fluxos e Interações (+9 more)
+Cohesion: 0.08
+Nodes (23): 2. Motores de Conversão, 3. Dashboard — Modelos Editor, 4. Projetos OrionTN, Componentes principais, Componentes principais, Componentes principais, Dados e Hooks, Dados e Hooks (+15 more)
 
 ### Community 66 - "devDependencies"
 Cohesion: 0.07
@@ -909,8 +909,8 @@ Cohesion: 0.22
 Nodes (9): Administração / Auth / RBAC, Comercial, Contexto, Conversão e Implantação, KPIs e Utilitários, Projetos (padrão Split Query), 🪝 Referência de Hooks, Stores Zustand (+1 more)
 
 ### Community 134 - "FormRenderer.tsx"
-Cohesion: 0.05
-Nodes (45): react, ConversionPostDrawer(), AdherenceImpactSummary(), AdherenceQuestionField(), AdherenceQuestionValue, ArrayFieldTemplateItem, checkHasAdherenceQuestions(), CustomArrayFieldTemplate() (+37 more)
+Cohesion: 0.04
+Nodes (52): react, DeploymentFormFields(), formatPhone(), Props, ConversionPostDrawer(), AdherenceImpactSummary(), AdherenceQuestionField(), AdherenceQuestionValue (+44 more)
 
 ### Community 135 - "Siplan HUB"
 Cohesion: 0.22
@@ -1281,8 +1281,8 @@ Cohesion: 0.17
 Nodes (4): ActivityLogger, LogAction, LogActionPayload, LogDetails
 
 ### Community 232 - "Módulo: Núcleo — Dashboard e Projetos"
-Cohesion: 0.04
-Nodes (65): ChartEmptyState(), ChartEmptyStateProps, DashboardKPI(), DashboardKPIProps, DashboardReport(), DashboardReportProps, DashboardTable(), DashboardTableProps (+57 more)
+Cohesion: 0.07
+Nodes (32): ChartEmptyState(), ChartEmptyStateProps, DashboardKPI(), DashboardKPIProps, DashboardReport(), DashboardReportProps, KPICard(), KPICardProps (+24 more)
 
 ### Community 233 - "calendar.tsx"
 Cohesion: 0.08
@@ -1449,12 +1449,12 @@ Cohesion: 0.10
 Nodes (32): BenchmarkPos, Chamado0800, Chamados0800Result, checkPosCriticosAbertos(), createChamadosSearchQuery(), fetchChamadosTramites(), fetchUltimosTramites(), isNaturezaIgnorada() (+24 more)
 
 ### Community 336 - "3. Dashboard — Modelos Editor"
-Cohesion: 0.29
-Nodes (7): 3. Dashboard — Modelos Editor, Componentes principais, Dados e Hooks, Fluxos e Interações, Objetivo, Pontos de Manutenção, Regras de Negócio e Estados
+Cohesion: 0.06
+Nodes (41): DashboardTable(), DashboardTableProps, HealthBadge(), PipelineStatus(), PipelineStatusProps, DeploymentCard(), DeploymentCardProps, DeploymentDetailsDialog() (+33 more)
 
 ### Community 337 - "CsCxNps"
-Cohesion: 0.29
-Nodes (7): 4. Projetos OrionTN, Componentes principais, Dados e Hooks, Fluxos e Interações, Objetivo, Pontos de Manutenção, Regras de Negócio e Estados
+Cohesion: 0.25
+Nodes (8): 5. Modelos Editor (Workspace), Componentes principais, Dados e Hooks, Fluxos e Interações, Geração automática de modelos (worker na VM), Objetivo, Pontos de Manutenção, Regras de Negócio e Estados
 
 ### Community 338 - "usePosAiVisitorAnalytics.ts"
 Cohesion: 0.10
@@ -1477,8 +1477,8 @@ Cohesion: 0.36
 Nodes (5): corsHeaders, jsonHeaders, parsePublicNpsSubmission(), parsePublicNpsToken(), PublicNpsSubmission
 
 ### Community 343 - "CsCxReports"
-Cohesion: 0.10
-Nodes (31): MarkdownTiptapEditor(), ImplementerAllCartoriosTable(), ImplementerAllCartoriosTableProps, GLOBAL_STATUS_LABELS, GLOBAL_STATUS_VARIANTS, ImplementerPhase1ConsolidatedTable(), ImplementerPhase1ConsolidatedTableProps, Table (+23 more)
+Cohesion: 0.09
+Nodes (33): ProjectDetailsModal(), ProjectDetailsModalProps, MarkdownTiptapEditor(), ImplementerAllCartoriosTable(), ImplementerAllCartoriosTableProps, GLOBAL_STATUS_LABELS, GLOBAL_STATUS_VARIANTS, ImplementerPhase1ConsolidatedTable() (+25 more)
 
 ### Community 344 - "Checklist Público (Comercial)"
 Cohesion: 0.29
@@ -1513,8 +1513,8 @@ Cohesion: 0.29
 Nodes (7): 5. Contatos & Clientes, Componentes principais, Dados e Hooks, Fluxos e Interações, Objetivo, Pontos de Manutenção, Regras de Negócio e Estados
 
 ### Community 356 - "pos-chat-history-sidebar.test.tsx"
-Cohesion: 0.04
-Nodes (81): PosAiChatLinksManager(), RequirePermission(), RequirePermissionProps, DeploymentFormFields(), formatPhone(), Props, ACTION_ORDER, CsCxAccessPanel() (+73 more)
+Cohesion: 0.05
+Nodes (72): PosAiChatLinksManager(), RequirePermission(), RequirePermissionProps, ACTION_ORDER, CsCxAccessPanel(), AppSidebar(), UserProfileDrawer(), StageCard() (+64 more)
 
 ### Community 360 - "Migração SistemaRegistro → CS/CX"
 Cohesion: 0.25
@@ -1556,9 +1556,9 @@ Nodes (3): compilerOptions, allowJs, lib
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `cn()` connect `FormRenderer.tsx` to `Checklist & Visual Question Builder`, `Charts, KPI & Reports`, `Calendar Grid & Drag-Drop`, `GEMINI.md`, `Sidebar Components`, `Dashboard Table & Pagination`, `App Sidebar & Protected Route`, `Distribution/Workload Charts`, `Deployment Form Fields`, `Project Transformers & Stages`, `use-toast Reducer`, `Project Modal & Kanban`, `6. Análise de Aderência`, `Commercial/Public Checklists`, `Predictability & Bottlenecks`, `ProtectedRoute.tsx`, `Deployment Template & Stage Forms`, `Roadmap Page`, `LogsTab.tsx`, `PipelineStatus.tsx`, `useTeams.ts`, `Página 404 (Not Found)`, `Login`, `ProjectAdherenceForm.tsx`, `Módulo Comercial — Documentação por Tela`, `usePosAiVisitorAnalytics.ts`, `VersionHistoryDrawer.tsx`, `usePosPanorama.ts`, `CsCxReports`, `pos-chat-history-sidebar.test.tsx`, `Módulo: Núcleo — Dashboard e Projetos`, `chamados-date-range.ts`, `CsCxAdmin`?**
+- **Why does `cn()` connect `FormRenderer.tsx` to `Checklist & Visual Question Builder`, `Charts, KPI & Reports`, `Calendar Grid & Drag-Drop`, `GEMINI.md`, `Sidebar Components`, `Dashboard Table & Pagination`, `App Sidebar & Protected Route`, `Deployment Form Fields`, `Project Transformers & Stages`, `use-toast Reducer`, `Project Modal & Kanban`, `6. Análise de Aderência`, `Commercial/Public Checklists`, `Predictability & Bottlenecks`, `ProtectedRoute.tsx`, `Deployment Template & Stage Forms`, `Roadmap Page`, `LogsTab.tsx`, `PipelineStatus.tsx`, `useTeams.ts`, `Página 404 (Not Found)`, `Login`, `ProjectAdherenceForm.tsx`, `Módulo Comercial — Documentação por Tela`, `3. Dashboard — Modelos Editor`, `usePosAiVisitorAnalytics.ts`, `VersionHistoryDrawer.tsx`, `usePosPanorama.ts`, `CsCxReports`, `pos-chat-history-sidebar.test.tsx`, `Módulo: Núcleo — Dashboard e Projetos`, `chamados-date-range.ts`, `CsCxAdmin`?**
   _High betweenness centrality (0.042) - this node is a cross-community bridge._
-- **Why does `err()` connect `VM Worker Job Queue` to `FormRenderer.tsx`, `Notification Bell & Dropdown`, `Commercial & Conversion Hooks`, `Distribution/Workload Charts`, `use-toast Reducer`, `Project Modal & Kanban`, `Commercial/Public Checklists`, `Commercial Page & Hooks`, `5. Contatos & Clientes`, `ProtectedRoute.tsx`, `Deployment Template & Stage Forms`, `PipelineStatus.tsx`, `chamadosSync.ts`, `CsCxRegistryOffices.tsx`, `Improve-Text AI Jobs`, `Login`, `ProjectAdherenceForm.tsx`, `index.ts`, `normalizeSearchText`, `usePosAiVisitorAnalytics.ts`, `VersionHistoryDrawer.tsx`, `useHomologationEvents.ts`, `pos-chat-history-sidebar.test.tsx`, `calendar.tsx`, `pos-chat-visitor-dialog.test.tsx`?**
+- **Why does `err()` connect `VM Worker Job Queue` to `FormRenderer.tsx`, `Notification Bell & Dropdown`, `Commercial & Conversion Hooks`, `use-toast Reducer`, `Project Modal & Kanban`, `Commercial/Public Checklists`, `Commercial Page & Hooks`, `5. Contatos & Clientes`, `ProtectedRoute.tsx`, `Deployment Template & Stage Forms`, `PipelineStatus.tsx`, `chamadosSync.ts`, `CsCxRegistryOffices.tsx`, `Improve-Text AI Jobs`, `Login`, `ProjectAdherenceForm.tsx`, `index.ts`, `normalizeSearchText`, `3. Dashboard — Modelos Editor`, `usePosAiVisitorAnalytics.ts`, `VersionHistoryDrawer.tsx`, `useHomologationEvents.ts`, `pos-chat-history-sidebar.test.tsx`, `calendar.tsx`, `pos-chat-visitor-dialog.test.tsx`?**
   _High betweenness centrality (0.037) - this node is a cross-community bridge._
 - **Why does `dependencies` connect `Auth Context` to `xlsx-export.ts`, `FormRenderer.tsx`, `ProjectDistributionChart.tsx`, `sonner.tsx`, `package.json`, `use-toast Reducer`, `ProjectAdherenceForm.tsx`?**
   _High betweenness centrality (0.019) - this node is a cross-community bridge._
