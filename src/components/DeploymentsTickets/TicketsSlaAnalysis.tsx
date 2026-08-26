@@ -10,6 +10,7 @@ import {
   CircleAlert,
   Clock3,
   FileDown,
+  FileSearch,
   Loader2,
   MessageSquareText,
   Timer,
@@ -30,6 +31,7 @@ import {
 } from "@/components/ui/select";
 import {
   fetchAllChamados,
+  fetchChamadosTramites,
   type Chamado0800,
   type ChamadosSearchFilters,
   useChamadoTramites,
@@ -44,6 +46,7 @@ import {
 } from "@/lib/tickets-sla";
 import type { ChamadosReportFilters } from "@/lib/chamados-report-pdf";
 import { generateTicketSlaDetailPdf } from "@/lib/tickets-sla-detail-pdf";
+import { generateTicketsSlaAnalyticalReportPdf } from "@/lib/tickets-sla-analytical-report-pdf";
 import { generateTicketsSlaReportPdf } from "@/lib/tickets-sla-report-pdf";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -58,6 +61,8 @@ interface TicketsSlaAnalysisProps {
 }
 
 type SlaCardFilter = "all" | "within" | "outside" | "inProgress";
+
+const MAX_ANALYTICAL_REPORT_TICKETS = 250;
 
 function formatDateTime(value?: string): string {
   const date = parseSlaDate(value);
@@ -319,6 +324,7 @@ export function TicketsSlaAnalysis({
   const [pageSize, setPageSize] = useState(5);
   const [slaCardFilter, setSlaCardFilter] = useState<SlaCardFilter>("all");
   const [generatingPdf, setGeneratingPdf] = useState(false);
+  const [generatingAnalyticalPdf, setGeneratingAnalyticalPdf] = useState(false);
   const { data: rows = [], isLoading, error } = useQuery({
     queryKey: ["ticketsSlaAnalysis", filterKey, syncedAt],
     enabled: active && !syncing,
@@ -388,6 +394,60 @@ export function TicketsSlaAnalysis({
     }
   };
 
+  const handleGenerateAnalyticalPdf = async () => {
+    if (filteredRows.length === 0) {
+      toast.info("Nenhum chamado encontrado para gerar o relatório SLA analítico.");
+      return;
+    }
+    if (filteredRows.length > MAX_ANALYTICAL_REPORT_TICKETS) {
+      toast.warning(
+        `O relatório analítico aceita até ${MAX_ANALYTICAL_REPORT_TICKETS} chamados por vez. Refine os filtros ou selecione um card de SLA.`,
+      );
+      return;
+    }
+
+    setGeneratingAnalyticalPdf(true);
+    const toastId = "tickets-sla-analytical-report-pdf";
+    try {
+      toast.loading(`Carregando os trâmites de ${filteredRows.length} chamado(s)...`, { id: toastId });
+      const tramitesPorChamado = await fetchChamadosTramites(
+        filteredRows.map((chamado) => chamado.numeroChamado),
+      );
+      toast.loading("Montando o relatório SLA analítico...", { id: toastId });
+      await generateTicketsSlaAnalyticalReportPdf(
+        filteredRows.map((chamado) => ({
+          chamado,
+          tramites: tramitesPorChamado.get(chamado.numeroChamado) ?? [],
+        })),
+        {
+          ...reportFilters,
+          firstResponseHours,
+          resolutionDays,
+          slaClassification: {
+            all: "Todos",
+            within: "Dentro do SLA",
+            outside: "Fora / estourado",
+            inProgress: "SLA em curso",
+          }[slaCardFilter],
+        },
+      );
+      toast.success(
+        `Relatório SLA analítico gerado com ${filteredRows.length} chamado(s).`,
+        { id: toastId },
+      );
+    } catch (pdfError) {
+      console.error("Erro ao gerar relatório SLA analítico:", pdfError);
+      toast.error(
+        pdfError instanceof Error
+          ? pdfError.message
+          : "Não foi possível gerar o relatório SLA analítico.",
+        { id: toastId },
+      );
+    } finally {
+      setGeneratingAnalyticalPdf(false);
+    }
+  };
+
   return (
     <div className="space-y-3">
       <Card className="border-muted/80 shadow-sm">
@@ -400,8 +460,21 @@ export function TicketsSlaAnalysis({
             variant="outline"
             size="sm"
             className="h-7 gap-1.5 px-2 text-[10px]"
+            onClick={handleGenerateAnalyticalPdf}
+            disabled={generatingAnalyticalPdf || generatingPdf || syncing || isLoading || filteredRows.length === 0}
+            title={`Detalha até ${MAX_ANALYTICAL_REPORT_TICKETS} chamados por relatório`}
+          >
+            {generatingAnalyticalPdf
+              ? <Loader2 className="h-3 w-3 animate-spin" />
+              : <FileSearch className="h-3 w-3" />}
+            {generatingAnalyticalPdf ? "Gerando analítico..." : "Relatório SLA (Analítico)"}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 gap-1.5 px-2 text-[10px]"
             onClick={handleGeneratePdf}
-            disabled={generatingPdf || syncing || isLoading || filteredRows.length === 0}
+            disabled={generatingPdf || generatingAnalyticalPdf || syncing || isLoading || filteredRows.length === 0}
           >
             {generatingPdf
               ? <Loader2 className="h-3 w-3 animate-spin" />

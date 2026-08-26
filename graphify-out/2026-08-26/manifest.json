@@ -4175,18 +4175,18 @@
     "semantic_hash": ""
   },
   "src/components/DeploymentsTickets/TicketsSlaAnalysis.tsx": {
-    "mtime": 1787754752.9564042,
-    "ast_hash": "83f814fea25f63a188d14a14c9acb114",
+    "mtime": 1787760352.0634172,
+    "ast_hash": "6c181e552f82be9ed4786965493e628c",
     "semantic_hash": ""
   },
   "src/lib/tickets-sla.test.ts": {
-    "mtime": 1787697124.6528668,
-    "ast_hash": "58454ac3871cc8ecfe44f10da527aa8d",
+    "mtime": 1787760202.26199,
+    "ast_hash": "5fc0393f604d324e3aaf2f708f6b7511",
     "semantic_hash": ""
   },
   "src/lib/tickets-sla.ts": {
-    "mtime": 1787697124.6503696,
-    "ast_hash": "37c43b881344ea10795ff855229615b5",
+    "mtime": 1787760202.261003,
+    "ast_hash": "3be666414e22508a287d5aa1bbb1a2f1",
     "semantic_hash": ""
   },
   "supabase/migrations/20260825223000_chamados_sla_timestamps.sql": {
@@ -4222,6 +4222,11 @@
   "vm-worker/src/copilotLanguage.ts": {
     "mtime": 1787759245.0678098,
     "ast_hash": "1094cf5a6b08123339f6a78ed8763227",
+    "semantic_hash": ""
+  },
+  "src/lib/tickets-sla-detail-pdf.ts": {
+    "mtime": 1787760270.404209,
+    "ast_hash": "6683b3590e947cebad14c5dc4c96cdfc",
     "semantic_hash": ""
   }
 }
