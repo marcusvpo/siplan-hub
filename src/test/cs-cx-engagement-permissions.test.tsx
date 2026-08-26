@@ -106,7 +106,24 @@ describe("CS/CX contatos e agendamentos — permissões", () => {
   it("mantém contatos em leitura e esconde criação", () => {
     renderPage(<CsCxContacts />, []);
     expect(screen.getByText("Maria")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /visualizar contato de maria/i }),
+    ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /novo contato/i })).not.toBeInTheDocument();
+  });
+
+  it("abre os detalhes do contato em modo somente leitura", () => {
+    renderPage(<CsCxContacts />, []);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /visualizar contato de maria/i }),
+    );
+
+    expect(screen.getByRole("dialog")).toHaveTextContent("Visualizar contato");
+    expect(screen.getByRole("dialog")).toHaveTextContent("Cartório Central");
+    expect(screen.getByRole("dialog")).toHaveTextContent("maria@exemplo.com");
+    expect(screen.getByRole("dialog")).toHaveTextContent("Contato produtivo");
+    expect(screen.queryByRole("button", { name: /salvar contato/i })).not.toBeInTheDocument();
   });
 
   it("libera criação de contatos com a permissão correta", () => {

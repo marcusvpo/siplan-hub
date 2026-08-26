@@ -5,6 +5,7 @@ import {
   ChevronRight,
   Contact,
   Database,
+  Eye,
   FileDown,
   MoreHorizontal,
   Pencil,
@@ -70,6 +71,7 @@ import { useCsCxRecordPermissions } from "@/hooks/useCsCxRecordPermissions";
 import { useToast } from "@/hooks/use-toast";
 import { CsCxMultiSelect } from "@/components/cs-cx/CsCxMultiSelect";
 import { generateCsCxContactsPdf } from "@/lib/cs-cx-engagement-pdf";
+import { cn } from "@/lib/utils";
 
 const emptyForm: CsCxContactInput = {
   contact_date: new Date().toISOString().slice(0, 10),
@@ -101,6 +103,7 @@ export default function CsCxContacts() {
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [form, setForm] = useState<CsCxContactInput>(emptyForm);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [viewing, setViewing] = useState<CsCxContact | null>(null);
   const [deleting, setDeleting] = useState<CsCxContact | null>(null);
   const [isExporting, setIsExporting] = useState(false);
 
@@ -446,7 +449,9 @@ export default function CsCxContacts() {
                       <TableHead className="h-9 px-3 text-xs">
                         Pendências
                       </TableHead>
-                      <TableHead className="h-9 w-12 px-2" />
+                      <TableHead className="h-9 w-20 px-2">
+                        <span className="sr-only">Ações</span>
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -520,39 +525,52 @@ export default function CsCxContacts() {
                             </p>
                           </TableCell>
                           <TableCell className="px-2 py-1">
-                            {(canEdit || canDelete) && (
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8"
-                                  >
-                                    <MoreHorizontal className="h-4 w-4" />
-                                    <span className="sr-only">Ações</span>
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  {canEdit && (
-                                    <DropdownMenuItem
-                                      onClick={() => openEdit(contact)}
+                            <div className="flex items-center justify-end gap-0.5">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                aria-label={`Visualizar contato de ${contact.contact_person}`}
+                                title="Visualizar contato"
+                                onClick={() => setViewing(contact)}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              {(canEdit || canDelete) && (
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8"
                                     >
-                                      <Pencil className="mr-2 h-4 w-4" />
-                                      Editar
-                                    </DropdownMenuItem>
-                                  )}
-                                  {canDelete && (
-                                    <DropdownMenuItem
-                                      className="text-destructive"
-                                      onClick={() => setDeleting(contact)}
-                                    >
-                                      <Trash2 className="mr-2 h-4 w-4" />
-                                      Excluir
-                                    </DropdownMenuItem>
-                                  )}
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            )}
+                                      <MoreHorizontal className="h-4 w-4" />
+                                      <span className="sr-only">Ações</span>
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    {canEdit && (
+                                      <DropdownMenuItem
+                                        onClick={() => openEdit(contact)}
+                                      >
+                                        <Pencil className="mr-2 h-4 w-4" />
+                                        Editar
+                                      </DropdownMenuItem>
+                                    )}
+                                    {canDelete && (
+                                      <DropdownMenuItem
+                                        className="text-destructive"
+                                        onClick={() => setDeleting(contact)}
+                                      >
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        Excluir
+                                      </DropdownMenuItem>
+                                    )}
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              )}
+                            </div>
                           </TableCell>
                         </TableRow>
                         );
@@ -698,6 +716,29 @@ export default function CsCxContacts() {
         </DialogContent>
       </Dialog>
 
+      <Dialog
+        open={!!viewing}
+        onOpenChange={(open) => !open && setViewing(null)}
+      >
+        <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="h-5 w-5 text-rose-500" />
+              Visualizar contato
+            </DialogTitle>
+            <DialogDescription>
+              Consulta somente leitura do histórico de relacionamento.
+            </DialogDescription>
+          </DialogHeader>
+          {viewing && <ContactReadOnlyDetails contact={viewing} />}
+          <DialogFooter>
+            <Button type="button" onClick={() => setViewing(null)}>
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <AlertDialog
         open={!!deleting}
         onOpenChange={(open) => !open && setDeleting(null)}
@@ -773,6 +814,80 @@ function ContactProductBadges({ contact }: { contact: CsCxContact }) {
       {!contactProducts.length && (
         <span className="text-xs text-muted-foreground">—</span>
       )}
+    </div>
+  );
+}
+function ContactReadOnlyDetails({ contact }: { contact: CsCxContact }) {
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <ReadOnlyField
+          label="Cartório"
+          value={contact.registry_office?.name ?? "—"}
+        />
+        <ReadOnlyField label="Data" value={formatDate(contact.contact_date)} />
+        <ReadOnlyField label="Pessoa" value={contact.contact_person} />
+        <ReadOnlyField
+          label="Telefone/e-mail"
+          value={contact.contact_details || "Não informado"}
+        />
+        <ReadOnlyField
+          label="Responsável"
+          value={
+            contact.author?.full_name ||
+            contact.author?.email ||
+            "Não vinculado"
+          }
+        />
+        <ReadOnlyField
+          label="Chamado"
+          value={contact.ticket_number || "Não informado"}
+        />
+      </div>
+      <div className="space-y-2">
+        <p className="text-xs font-medium text-muted-foreground">Produtos</p>
+        <div className="rounded-md border bg-muted/20 p-3">
+          <ContactProductBadges contact={contact} />
+        </div>
+      </div>
+      <ReadOnlyField
+        label="Anotações"
+        value={contact.notes || "Nenhuma anotação registrada."}
+        multiline
+      />
+      <ReadOnlyField
+        label="Pendências"
+        value={contact.pending_items || "Nenhuma pendência registrada."}
+        multiline
+        warning={Boolean(contact.pending_items?.trim())}
+      />
+    </div>
+  );
+}
+function ReadOnlyField({
+  label,
+  value,
+  multiline = false,
+  warning = false,
+}: {
+  label: string;
+  value: string;
+  multiline?: boolean;
+  warning?: boolean;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <p className="text-xs font-medium text-muted-foreground">{label}</p>
+      <div
+        className={cn(
+          "rounded-md border bg-muted/20 px-3 py-2 text-sm",
+          multiline && "min-h-20 whitespace-pre-wrap break-words",
+          warning &&
+            "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200",
+        )}
+      >
+        {value}
+      </div>
     </div>
   );
 }
