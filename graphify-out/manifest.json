@@ -3030,8 +3030,8 @@
     "semantic_hash": ""
   },
   "scripts/check-cs-cx-readiness.mjs": {
-    "mtime": 1787147936.502032,
-    "ast_hash": "2c9ff13b809db682836bc25d18d8e291",
+    "mtime": 1787774924.4006135,
+    "ast_hash": "4ebe0d18565c4138cb9e86939944461d",
     "semantic_hash": ""
   },
   "scripts/lib/cs-cx-user-matching.mjs": {
@@ -3050,8 +3050,8 @@
     "semantic_hash": ""
   },
   "scripts/prepare-cs-cx-schema.mjs": {
-    "mtime": 1787147936.5039973,
-    "ast_hash": "4c4133f0c67b868a4bb98f64d9a85b98",
+    "mtime": 1787774363.4728584,
+    "ast_hash": "ea80e8e466a70fec8f7c0b13cb88de4f",
     "semantic_hash": ""
   },
   "src/components/Admin/PosAiChatLinksManager.tsx": {
@@ -3220,8 +3220,8 @@
     "semantic_hash": ""
   },
   "src/hooks/useCsCxCore.ts": {
-    "mtime": 1787589830.098383,
-    "ast_hash": "121e74c42887e8c023fd97946ae11749",
+    "mtime": 1787774919.232375,
+    "ast_hash": "644586523f285f763a8f28c947d9f4da",
     "semantic_hash": ""
   },
   "src/hooks/useCsCxEngagement.ts": {
@@ -3440,8 +3440,8 @@
     "semantic_hash": ""
   },
   "src/pages/cs-cx/CsCxContacts.tsx": {
-    "mtime": 1787686767.6018374,
-    "ast_hash": "3b8ac14ddf225b5f04949c51937a4d63",
+    "mtime": 1787773600.7605045,
+    "ast_hash": "a9e31bab45851b2aea87a26d13499fd1",
     "semantic_hash": ""
   },
   "src/pages/cs-cx/CsCxMigrationPlaceholder.tsx": {
@@ -3470,8 +3470,8 @@
     "semantic_hash": ""
   },
   "src/pages/cs-cx/CsCxRequests.tsx": {
-    "mtime": 1787686767.605856,
-    "ast_hash": "b3631de7e3416fc9744cc7c44012adf6",
+    "mtime": 1787774422.9006631,
+    "ast_hash": "eb039614a6ec85e66c23ebae4a2992e2",
     "semantic_hash": ""
   },
   "src/pages/cs-cx/CsCxRoutines.tsx": {
@@ -3585,13 +3585,13 @@
     "semantic_hash": ""
   },
   "src/test/cs-cx-core-permissions.test.tsx": {
-    "mtime": 1787686767.6088545,
-    "ast_hash": "999c96a30784be4d4b13973facd9eb81",
+    "mtime": 1787774451.2332513,
+    "ast_hash": "d23a72a0457d55f5a0422018ebef26d3",
     "semantic_hash": ""
   },
   "src/test/cs-cx-engagement-permissions.test.tsx": {
-    "mtime": 1787686767.6088545,
-    "ast_hash": "4a4d352d0f5841446dcba5bec19a46d3",
+    "mtime": 1787773578.086357,
+    "ast_hash": "14cbf314f82773077613f5ceebb32a3f",
     "semantic_hash": ""
   },
   "src/test/cs-cx-experience-pdf-layout.test.ts": {
@@ -3690,8 +3690,8 @@
     "semantic_hash": ""
   },
   "src/test/cs-cx-schema-preflight.test.ts": {
-    "mtime": 1787147936.641367,
-    "ast_hash": "79361bdd88b3c0687847f8c4551acd44",
+    "mtime": 1787774924.4017034,
+    "ast_hash": "f128b350c10162b7f830c4ddf687a8e4",
     "semantic_hash": ""
   },
   "src/test/cs-cx-user-matching.test.ts": {
@@ -4242,6 +4242,11 @@
   "supabase/migrations/20260826140000_chamados_official_sla.sql": {
     "mtime": 1787763507.9029467,
     "ast_hash": "2c26c348c00bb9d93b2806ac02a87a34",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260826170000_cs_cx_request_status_history.sql": {
+    "mtime": 1787775049.017865,
+    "ast_hash": "d7f20c7b6fec812b5c5ee8ff70cc5291",
     "semantic_hash": ""
   }
 }

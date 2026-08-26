@@ -7,6 +7,7 @@ import {
   Columns3,
   Database,
   GripVertical,
+  History,
   List,
   Maximize2,
   MoreHorizontal,
@@ -274,6 +275,7 @@ export default function CsCxRequests() {
           request.responsible,
           request.registry_office?.name,
           ...(request.updates ?? []).map((update) => update.observation),
+          ...(request.status_history ?? []).map((entry) => entry.status),
         ].some((value) => value?.toLocaleLowerCase("pt-BR").includes(term));
       const matchesStatus =
         statusFilter === "all" ||
@@ -872,12 +874,18 @@ export default function CsCxRequests() {
                 />
               </Field>
             </div>
-            <Field label="Status">
+            <Field label={currentRequest ? "Adicionar novo status" : "Status"}>
               <Select
                 value={form.status}
                 onValueChange={(value) => setForm({ ...form, status: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger
+                  aria-label={
+                    currentRequest
+                      ? "Adicionar novo status"
+                      : "Status da solicitação"
+                  }
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -888,7 +896,57 @@ export default function CsCxRequests() {
                   ))}
                 </SelectContent>
               </Select>
+              {currentRequest && (
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Ao selecionar outro status e salvar, o status atual será
+                  preservado no histórico abaixo.
+                </p>
+              )}
             </Field>
+            {currentRequest && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <History className="h-4 w-4 text-rose-500" />
+                  <Label>Histórico de status</Label>
+                  <Badge variant="secondary" className="h-5 text-[10px]">
+                    {currentRequest.status_history?.length ?? 0}
+                  </Badge>
+                </div>
+                <div className="max-h-48 space-y-2 overflow-y-auto rounded-lg border bg-muted/20 p-2">
+                  {currentRequest.status_history?.length ? (
+                    currentRequest.status_history.map((entry, index) => (
+                      <div
+                        key={entry.id}
+                        className="flex flex-col gap-2 rounded-md border bg-background px-3 py-2 sm:flex-row sm:items-center sm:justify-between"
+                      >
+                        <div className="flex min-w-0 items-center gap-2">
+                          <Badge
+                            variant="secondary"
+                            className="shrink-0 text-[10px]"
+                          >
+                            Status {index + 1}
+                          </Badge>
+                          <StatusBadge status={entry.status} />
+                        </div>
+                        <p className="text-[11px] text-muted-foreground">
+                          {entry.author?.full_name ||
+                            entry.author?.email ||
+                            (entry.origin === "legacy"
+                              ? "Sistema legado"
+                              : "Usuário removido")}
+                          {" · "}
+                          {formatDateTime(entry.occurred_at)}
+                        </p>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="py-3 text-center text-xs text-muted-foreground">
+                      O status atual será o primeiro item deste histórico.
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
             {currentRequest && (
               <div className="space-y-2">
                 <div className="flex items-center gap-2">

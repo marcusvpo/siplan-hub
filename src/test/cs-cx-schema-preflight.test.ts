@@ -27,7 +27,7 @@ const migrations = [
   ...new Set(
     [
       ...runner.matchAll(
-        /["']((?:20260811|20260812|20260817|20260818)\d+_cs_cx_[^"']+\.sql)["']/g,
+        /["'](202608\d+_cs_cx_[^"']+\.sql)["']/g,
       ),
     ].map((match) => match[1]),
   ),
@@ -35,7 +35,7 @@ const migrations = [
 
 describe("preflight do schema CS/CX", () => {
   it("mantém uma lista explícita e existente de migrations", () => {
-    expect(migrations).toHaveLength(21);
+    expect(migrations).toHaveLength(22);
     expect(new Set(migrations).size).toBe(migrations.length);
     for (const migration of migrations) {
       expect(
@@ -97,6 +97,7 @@ describe("preflight do schema CS/CX", () => {
   });
 
   it("mantém um gate conectado para a homologação", () => {
+    expect(readiness).toContain("const EXPECTED_TABLES = 36");
     expect(readiness).toContain("NOT_READY");
     expect(readiness).toContain(
       "READY - CS/CX pronto para homologação humana.",
@@ -109,6 +110,7 @@ describe("preflight do schema CS/CX", () => {
     expect(readiness).toContain("probePublicNps(apiUrl)");
     expect(readiness).toContain("nps_responses_immutable");
     expect(readiness).toContain("nps_questionnaire_themes");
+    expect(readiness).toContain("request_status_history");
     expect(readiness).toContain("[401, 403].includes(response.status)");
   });
 
@@ -185,6 +187,35 @@ describe("preflight do schema CS/CX", () => {
     expect(migration).toContain("ON public.cs_cx_request_updates FOR UPDATE TO authenticated");
     expect(migration).toContain("public.has_permission(auth.uid(), 'cs_cx_registros', 'edit')");
     expect(migration).toContain("GRANT UPDATE ON public.cs_cx_request_updates TO authenticated");
+  });
+
+  it("preserva o histórico de status das solicitações", () => {
+    const migration = readFileSync(
+      resolve(
+        root,
+        "supabase/migrations/20260826170000_cs_cx_request_status_history.sql",
+      ),
+      "utf8",
+    );
+
+    expect(migration).toContain(
+      "CREATE TABLE IF NOT EXISTS public.cs_cx_request_status_history",
+    );
+    expect(migration).toContain(
+      "INSERT INTO public.cs_cx_request_status_history",
+    );
+    expect(migration).toContain(
+      "CREATE OR REPLACE FUNCTION public.cs_cx_update_request_status",
+    );
+    expect(migration).toContain(
+      "previous_status IS DISTINCT FROM p_status",
+    );
+    expect(migration).toMatch(
+      /ALTER TABLE public\.cs_cx_request_status_history ENABLE ROW LEVEL SECURITY/,
+    );
+    expect(migration).not.toMatch(
+      /cs_cx_request_status_history FOR (?:UPDATE|DELETE)/,
+    );
   });
 
   it("versiona a análise em massa das rotinas do cartório", () => {

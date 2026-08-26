@@ -2,7 +2,7 @@ import fs from "node:fs";
 import pg from "pg";
 
 const { Client } = pg;
-const EXPECTED_TABLES = 34;
+const EXPECTED_TABLES = 36;
 
 loadDotEnv();
 const targetUrl = process.env.SUPABASE_DB_URL;
@@ -67,6 +67,9 @@ try {
              AS operational_review
            ,to_regprocedure('public.cs_cx_set_routine_items_bulk(uuid,boolean,text,timestamp with time zone)') IS NOT NULL
              AS bulk_routine_analysis
+           ,to_regclass('public.cs_cx_request_status_history') IS NOT NULL
+             AND to_regprocedure('public.cs_cx_update_request_status(uuid,text)') IS NOT NULL
+             AS request_status_history
            ,to_regclass('public.cs_cx_access_profiles') IS NOT NULL
              AND to_regclass('public.cs_cx_access_profile_permissions') IS NOT NULL
              AND to_regclass('public.cs_cx_user_access') IS NOT NULL
@@ -125,9 +128,10 @@ try {
         schemaRow.mapping_exceptions &&
         schemaRow.customer_relationships &&
         schemaRow.operational_review &&
+        schemaRow.request_status_history &&
         schemaRow.bulk_routine_analysis &&
         schemaRow.scoped_access,
-      `${schemaRow.total}/${EXPECTED_TABLES} tabelas; RLS ${schemaRow.with_rls}/${EXPECTED_TABLES}; exceções de usuário ${schemaRow.mapping_exceptions ? "OK" : "ausentes"}`,
+      `${schemaRow.total}/${EXPECTED_TABLES} tabelas; RLS ${schemaRow.with_rls}/${EXPECTED_TABLES}; histórico de status ${schemaRow.request_status_history ? "OK" : "ausente"}; exceções de usuário ${schemaRow.mapping_exceptions ? "OK" : "ausentes"}`,
     ],
     [
       "Integridade NPS",

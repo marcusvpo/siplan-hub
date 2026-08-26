@@ -99,6 +99,15 @@ export interface CsCxRequestUpdate {
   author: CsCxResponsibleProfile | null;
 }
 
+export interface CsCxRequestStatusHistoryEntry {
+  id: string;
+  status: string;
+  author_profile_id: string | null;
+  occurred_at: string;
+  origin: "legacy" | "hub";
+  author: CsCxResponsibleProfile | null;
+}
+
 export interface CsCxRequest {
   id: string;
   legacy_id: number | null;
@@ -119,6 +128,7 @@ export interface CsCxRequest {
   origin: "legacy" | "hub";
   registry_office: { id: string; name: string } | null;
   updates: CsCxRequestUpdate[];
+  status_history: CsCxRequestStatusHistoryEntry[];
 }
 
 export interface CsCxRequestInput {
@@ -157,11 +167,70 @@ interface RawOffice extends Omit<CsCxRegistryOffice, "products" | "analyst" | "r
   }>;
 }
 
-interface RawRequest extends Omit<CsCxRequest, "registry_office" | "updates"> {
+interface RawRequest extends Omit<
+  CsCxRequest,
+  "registry_office" | "updates" | "status_history"
+> {
   cs_cx_registry_offices: { id: string; name: string } | null;
   cs_cx_request_updates?: Array<Omit<CsCxRequestUpdate, "author"> & {
     profiles: CsCxResponsibleProfile | null;
   }>;
+}
+
+interface RawRequestStatusHistoryEntry
+  extends Omit<CsCxRequestStatusHistoryEntry, "author"> {
+  request_id: string;
+  profiles?: CsCxResponsibleProfile | null;
+}
+
+function isMissingRequestStatusHistory(error: unknown) {
+  if (!error || typeof error !== "object") return false;
+  const candidate = error as { code?: string; message?: string; details?: string };
+  const message = `${candidate.message ?? ""} ${candidate.details ?? ""}`.toLowerCase();
+  return (
+    candidate.code === "42P01" ||
+    candidate.code === "PGRST205" ||
+    (message.includes("cs_cx_request_status_history") &&
+      (message.includes("does not exist") ||
+        message.includes("could not find the table") ||
+        message.includes("schema cache")))
+  );
+}
+
+async function fetchRequestStatusHistory(requestIds: string[]) {
+  if (requestIds.length === 0) return [];
+
+  const historyWithAuthors = await db
+    .from("cs_cx_request_status_history")
+    .select(`
+      id, request_id, status, author_profile_id, occurred_at, origin,
+      profiles!cs_cx_request_status_history_author_profile_id_fkey (id, full_name, email)
+    `)
+    .in("request_id", requestIds)
+    .order("occurred_at")
+    .order("id");
+
+  if (!historyWithAuthors.error) {
+    return (historyWithAuthors.data ?? []) as unknown as RawRequestStatusHistoryEntry[];
+  }
+  if (isMissingRequestStatusHistory(historyWithAuthors.error)) return [];
+
+  // A tabela pode estar disponivel antes de o cache do PostgREST reconhecer a FK.
+  if (historyWithAuthors.error.code === "PGRST200") {
+    const historyWithoutAuthors = await db
+      .from("cs_cx_request_status_history")
+      .select("id, request_id, status, author_profile_id, occurred_at, origin")
+      .in("request_id", requestIds)
+      .order("occurred_at")
+      .order("id");
+    if (!historyWithoutAuthors.error) {
+      return (historyWithoutAuthors.data ?? []) as RawRequestStatusHistoryEntry[];
+    }
+    if (isMissingRequestStatusHistory(historyWithoutAuthors.error)) return [];
+    throw historyWithoutAuthors.error;
+  }
+
+  throw historyWithAuthors.error;
 }
 
 export function useCsCxRegistryOffices() {
@@ -316,12 +385,24 @@ export function useCsCxRequests() {
         .order("updated_at", { ascending: false });
       if (error) throw error;
 
-      return ((data ?? []) as unknown as RawRequest[]).map((request) => ({
+      const rawRequests = (data ?? []) as unknown as RawRequest[];
+      const history = await fetchRequestStatusHistory(
+        rawRequests.map((request) => request.id),
+      );
+      const historyByRequest = new Map<string, CsCxRequestStatusHistoryEntry[]>();
+      for (const entry of history) {
+        const requestHistory = historyByRequest.get(entry.request_id) ?? [];
+        requestHistory.push({ ...entry, author: entry.profiles ?? null });
+        historyByRequest.set(entry.request_id, requestHistory);
+      }
+
+      return rawRequests.map((request) => ({
         ...request,
         registry_office: request.cs_cx_registry_offices,
         updates: (request.cs_cx_request_updates ?? [])
           .map((update) => ({ ...update, author: update.profiles }))
           .sort((a, b) => b.occurred_at.localeCompare(a.occurred_at)),
+        status_history: historyByRequest.get(request.id) ?? [],
       })) satisfies CsCxRequest[];
     },
   });
@@ -363,10 +444,10 @@ export function useCsCxRequests() {
 
   const updateStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await db
-        .from("cs_cx_requests")
-        .update({ status, updated_at: new Date().toISOString() })
-        .eq("id", id);
+      const { error } = await db.rpc("cs_cx_update_request_status", {
+        p_id: id,
+        p_status: status,
+      });
       if (error) throw error;
     },
     onMutate: async ({ id, status }) => {

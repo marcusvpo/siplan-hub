@@ -1,5 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
 const hasPermission = vi.fn();
@@ -100,7 +106,7 @@ vi.mock("@/hooks/useCsCxCore", async (importOriginal) => {
         requested_on: index === 0 ? "2026-08-01" : "2026-07-01",
         expected_delivery_on: null,
         delivered_on: null,
-        status: index === 1 ? "Projeto" : index === 2 ? "Desenvolvimento" : index === 3 ? "Em andamento" : index === 4 ? "Finalizado" : "Aguardando",
+        status: index === 0 ? "Finalizado" : index === 1 ? "Projeto" : index === 2 ? "Desenvolvimento" : index === 3 ? "Em andamento" : index === 4 ? "Finalizado" : "Aguardando",
         notes: null,
         registry_office_id: "office-1",
         author_profile_id: "profile-1",
@@ -109,6 +115,12 @@ vi.mock("@/hooks/useCsCxCore", async (importOriginal) => {
         origin: "legacy",
         registry_office: { id: "office-1", name: "Cartório Central" },
         updates: index === 0 ? [{ id: "update-1", observation: "Primeiro retorno", author_profile_id: "profile-1", occurred_at: "2026-08-10T15:00:00Z", origin: "hub", author: { id: "profile-1", full_name: "Bruno", email: null } }] : [],
+        status_history: index === 0
+          ? [
+              { id: "status-history-1", status: "FastTrack", author_profile_id: "profile-1", occurred_at: "2026-08-09T15:00:00Z", origin: "hub", author: { id: "profile-1", full_name: "Bruno", email: null } },
+              { id: "status-history-2", status: "Finalizado", author_profile_id: "profile-1", occurred_at: "2026-08-10T15:00:00Z", origin: "hub", author: { id: "profile-1", full_name: "Bruno", email: null } },
+            ]
+          : [],
       })),
       statuses: [
         { id: "status-1", name: "Aguardando", color: "amber", sort_order: 10, active: true, is_system: true },
@@ -435,6 +447,12 @@ describe("CS/CX — ações por permissão", () => {
     expect(screen.getByText("Histórico de observações")).toBeInTheDocument();
     expect(screen.getByText("Primeiro retorno")).toBeInTheDocument();
     expect(screen.getByText("Nova observação")).toBeInTheDocument();
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByText("Histórico de status")).toBeInTheDocument();
+    expect(within(dialog).getByText("Status 1")).toBeInTheDocument();
+    expect(within(dialog).getAllByText("FastTrack").length).toBeGreaterThan(0);
+    expect(within(dialog).getByText("Status 2")).toBeInTheDocument();
+    expect(within(dialog).getAllByText("Finalizado").length).toBeGreaterThan(0);
   });
 
   it("edita e exclui observações anteriores com as permissões corretas", async () => {
