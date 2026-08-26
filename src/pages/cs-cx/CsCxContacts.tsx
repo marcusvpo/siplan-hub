@@ -102,10 +102,12 @@ export default function CsCxContacts() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [form, setForm] = useState<CsCxContactInput>(emptyForm);
+  const [registryOfficeIds, setRegistryOfficeIds] = useState<string[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [viewing, setViewing] = useState<CsCxContact | null>(null);
   const [deleting, setDeleting] = useState<CsCxContact | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const responsibleOptions = useMemo(
     () =>
@@ -204,6 +206,7 @@ export default function CsCxContacts() {
       ...emptyForm,
       contact_date: new Date().toISOString().slice(0, 10),
     });
+    setRegistryOfficeIds([]);
     setDialogOpen(true);
   };
 
@@ -222,23 +225,36 @@ export default function CsCxContacts() {
       registry_office_id: contact.registry_office_id,
       ticket_number: contact.ticket_number ?? "",
     });
+    setRegistryOfficeIds([contact.registry_office_id]);
     setDialogOpen(true);
   };
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
+    const selectedOfficeIds = form.id
+      ? [form.registry_office_id]
+      : registryOfficeIds;
     if (
       !form.contact_person.trim() ||
-      !form.registry_office_id ||
+      !selectedOfficeIds.length ||
       !form.product_ids.length
     )
       return;
+    setIsSubmitting(true);
     try {
-      await saveContact.mutateAsync(form);
+      await Promise.all(
+        selectedOfficeIds.map((registry_office_id) =>
+          saveContact.mutateAsync({ ...form, registry_office_id }),
+        ),
+      );
       setDialogOpen(false);
       toast({
-        title: "Contato salvo",
-        description: "A interação foi registrada com sucesso.",
+        title:
+          selectedOfficeIds.length > 1 ? "Contatos salvos" : "Contato salvo",
+        description:
+          selectedOfficeIds.length > 1
+            ? `A interação foi registrada para ${selectedOfficeIds.length} cartórios.`
+            : "A interação foi registrada com sucesso.",
       });
     } catch (mutationError) {
       toast({
@@ -246,6 +262,8 @@ export default function CsCxContacts() {
         description: errorMessage(mutationError),
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -604,30 +622,46 @@ export default function CsCxContacts() {
           </DialogHeader>
           <form onSubmit={submit} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Cartório *">
-                <Select
-                  value={form.registry_office_id}
-                  onValueChange={(value) =>
-                    setForm({ ...form, registry_office_id: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {offices
-                      .filter(
-                        (office) =>
-                          office.active ||
-                          office.id === form.registry_office_id,
-                      )
-                      .map((office) => (
-                        <SelectItem key={office.id} value={office.id}>
-                          {office.name}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
+              <Field label={form.id ? "Cartório *" : "Cartórios *"}>
+                {form.id ? (
+                  <Select
+                    value={form.registry_office_id}
+                    onValueChange={(value) =>
+                      setForm({ ...form, registry_office_id: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {offices
+                        .filter(
+                          (office) =>
+                            office.active ||
+                            office.id === form.registry_office_id,
+                        )
+                        .map((office) => (
+                          <SelectItem key={office.id} value={office.id}>
+                            {office.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <CsCxMultiSelect
+                    ariaLabel="Cartórios do contato"
+                    options={offices
+                      .filter((office) => office.active)
+                      .map((office) => ({
+                        value: office.id,
+                        label: office.name,
+                      }))}
+                    values={registryOfficeIds}
+                    onChange={setRegistryOfficeIds}
+                    placeholder="Selecione um ou mais cartórios"
+                    searchPlaceholder="Buscar cartório..."
+                  />
+                )}
               </Field>
               <Field label="Produtos *">
                 <CsCxMultiSelect
@@ -708,8 +742,12 @@ export default function CsCxContacts() {
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={saveContact.isPending}>
-                {saveContact.isPending ? "Salvando..." : "Salvar contato"}
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting
+                  ? "Salvando..."
+                  : registryOfficeIds.length > 1 && !form.id
+                    ? `Salvar ${registryOfficeIds.length} contatos`
+                    : "Salvar contato"}
               </Button>
             </DialogFooter>
           </form>

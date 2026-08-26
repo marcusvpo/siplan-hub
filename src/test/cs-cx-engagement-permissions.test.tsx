@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
 const hasPermission = vi.fn();
@@ -18,7 +18,10 @@ vi.mock("@/hooks/use-toast", () => ({
 
 vi.mock("@/hooks/useCsCxCore", () => ({
   useCsCxRegistryOffices: () => ({
-    offices: [{ id: "office-1", name: "Cartório Central", active: true }],
+    offices: [
+      { id: "office-1", name: "Cartório Central", active: true },
+      { id: "office-2", name: "Cartório Norte", active: true },
+    ],
     products: [{ id: "product-1", name: "Orion", product_code: "ORI" }],
     error: null,
   }),
@@ -101,7 +104,11 @@ function renderPage(page: React.ReactNode, permissions: string[]) {
 }
 
 describe("CS/CX contatos e agendamentos — permissões", () => {
-  beforeEach(() => hasPermission.mockReset());
+  beforeEach(() => {
+    hasPermission.mockReset();
+    mutation.mutateAsync.mockReset();
+    mutation.mutateAsync.mockResolvedValue(undefined);
+  });
 
   it("mantém contatos em leitura e esconde criação", () => {
     renderPage(<CsCxContacts />, []);
@@ -149,6 +156,41 @@ describe("CS/CX contatos e agendamentos — permissões", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /novo contato/i }));
     expect(screen.getByRole("combobox", { name: /produtos do contato/i })).toBeInTheDocument();
+  });
+
+  it("cria o mesmo contato para vários cartórios em uma única confirmação", async () => {
+    renderPage(<CsCxContacts />, ["cs_cx_contatos:create"]);
+    fireEvent.click(screen.getByRole("button", { name: /novo contato/i }));
+
+    fireEvent.click(
+      screen.getByRole("combobox", { name: /cartórios do contato/i }),
+    );
+    fireEvent.click(screen.getByRole("option", { name: "Cartório Central" }));
+    fireEvent.click(screen.getByRole("option", { name: "Cartório Norte" }));
+
+    fireEvent.click(
+      screen.getByRole("combobox", { name: /produtos do contato/i }),
+    );
+    fireEvent.click(screen.getByRole("option", { name: "Orion" }));
+
+    const contactPerson = screen.getByText("Pessoa de contato *")
+      .parentElement?.querySelector("input");
+    expect(contactPerson).not.toBeNull();
+    fireEvent.change(contactPerson!, { target: { value: "Maria" } });
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /salvar 2 contatos/i }),
+    );
+
+    await waitFor(() => expect(mutation.mutateAsync).toHaveBeenCalledTimes(2));
+    expect(mutation.mutateAsync).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ registry_office_id: "office-1" }),
+    );
+    expect(mutation.mutateAsync).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ registry_office_id: "office-2" }),
+    );
   });
 
   it("mantém o período em duas linhas antes de telas 2xl", () => {
