@@ -660,9 +660,9 @@
     "semantic_hash": "28427cefb0a4ea48e0e451579fc6681a"
   },
   "src/components/ui/popover.tsx": {
-    "mtime": 1781122833.1952283,
-    "ast_hash": "2799ec9c1b16aea629b8c1f0978a076a",
-    "semantic_hash": "2799ec9c1b16aea629b8c1f0978a076a"
+    "mtime": 1787775994.0350268,
+    "ast_hash": "4fc134d09edc8bd97d3ab527d5ab47c1",
+    "semantic_hash": ""
   },
   "src/components/ui/progress.tsx": {
     "mtime": 1781122833.1952283,
@@ -3030,8 +3030,8 @@
     "semantic_hash": ""
   },
   "scripts/check-cs-cx-readiness.mjs": {
-    "mtime": 1787774368.2642598,
-    "ast_hash": "1715373643b53a558580b4ca75bb919f",
+    "mtime": 1787774924.4006135,
+    "ast_hash": "4ebe0d18565c4138cb9e86939944461d",
     "semantic_hash": ""
   },
   "scripts/lib/cs-cx-user-matching.mjs": {
@@ -3085,8 +3085,8 @@
     "semantic_hash": ""
   },
   "src/components/cs-cx/CsCxMultiSelect.tsx": {
-    "mtime": 1787589830.0973804,
-    "ast_hash": "5387816ceb5e71cdb0c19afea33f117d",
+    "mtime": 1787775994.0360346,
+    "ast_hash": "915c039a96cad56839f4bd0d71c1bbe1",
     "semantic_hash": ""
   },
   "src/components/cs-cx/NpsAnalytics.tsx": {
@@ -3220,8 +3220,8 @@
     "semantic_hash": ""
   },
   "src/hooks/useCsCxCore.ts": {
-    "mtime": 1787774302.4695063,
-    "ast_hash": "a2a0693a80fddd6d3c31a62965ff285a",
+    "mtime": 1787774919.232375,
+    "ast_hash": "644586523f285f763a8f28c947d9f4da",
     "semantic_hash": ""
   },
   "src/hooks/useCsCxEngagement.ts": {
@@ -3690,8 +3690,8 @@
     "semantic_hash": ""
   },
   "src/test/cs-cx-schema-preflight.test.ts": {
-    "mtime": 1787774377.320426,
-    "ast_hash": "217304fe267b298b616531a67291bfda",
+    "mtime": 1787774924.4017034,
+    "ast_hash": "f128b350c10162b7f830c4ddf687a8e4",
     "semantic_hash": ""
   },
   "src/test/cs-cx-user-matching.test.ts": {
@@ -4245,8 +4245,13 @@
     "semantic_hash": ""
   },
   "supabase/migrations/20260826170000_cs_cx_request_status_history.sql": {
-    "mtime": 1787774422.9031737,
-    "ast_hash": "56bc9cc2db45b76583a94ceffff0baa7",
+    "mtime": 1787775049.017865,
+    "ast_hash": "d7f20c7b6fec812b5c5ee8ff70cc5291",
+    "semantic_hash": ""
+  },
+  "src/test/cs-cx-multi-select.test.tsx": {
+    "mtime": 1787775994.039031,
+    "ast_hash": "b762f63d67e7b40e89e7b2c04da76ca5",
     "semantic_hash": ""
   }
 }
