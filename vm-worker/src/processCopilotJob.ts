@@ -1,6 +1,7 @@
 import { supabase } from "./supabase.js";
 import { config, CopilotJob } from "./config.js";
 import { runSkill, ProgressStep } from "./runSkill.js";
+import { selectCopilotHistory } from "./copilotHistory.js";
 
 // Mantem apenas os ultimos N passos no banco (evita payloads gigantes no Realtime).
 const MAX_LOG_STEPS = 80;
@@ -11,10 +12,9 @@ const PROGRESS_FLUSH_MS = 2500;
 const MAX_PROJECTS = 800;
 const MAX_CONTEXT_CHARS = 130000;
 
-// Chat multi-turno: quantas trocas anteriores (pergunta+resposta) incluir no
-// prompt como contexto, e teto de caracteres do historico (controle de custo).
-const HISTORY_TURNS = 5;
-const MAX_HISTORY_CHARS = 8000;
+// Busca mais linhas do que o prompt comporta para a selecao conseguir priorizar
+// as trocas mais novas da sessao atual e descartar conversas antigas.
+const HISTORY_FETCH_LIMIT = 20;
 
 // Status que contam como etapa CONCLUIDA (para o filtro de escopo 'ativos').
 const CONCLUIDO_RE = /conclu|finaliz|adequ|entregue|ok\b/i;
@@ -342,25 +342,20 @@ export async function processCopilotJob(job: CopilotJob): Promise<void> {
   }
 
   // 3. Historico recente (chat multi-turno): ultimas trocas concluidas do usuario.
+  const currentCreatedAt = job.created_at || new Date().toISOString();
   const { data: historyRows } = await supabase
     .from("copilot_jobs")
-    .select("question, result_text")
+    .select("question, result_text, created_at")
     .eq("user_id", job.user_id)
     .eq("status", "done")
     .neq("id", job.id)
+    .lt("created_at", currentCreatedAt)
     .order("created_at", { ascending: false })
-    .limit(HISTORY_TURNS);
+    .limit(HISTORY_FETCH_LIMIT);
 
-  const history: HistoryItem[] = [];
-  let histChars = 0;
-  for (const h of (historyRows || []).slice().reverse()) {
-    const q = String(h.question || "").trim();
-    const a = String(h.result_text || "").trim();
-    if (!q || !a) continue;
-    histChars += q.length + a.length;
-    if (histChars > MAX_HISTORY_CHARS) continue;
-    history.push({ question: q, result_text: a });
-  }
+  const history: HistoryItem[] = selectCopilotHistory(historyRows || [], {
+    currentCreatedAt,
+  });
 
   // 4. Rodar o Codex; se estiver indisponivel, o executor usa Ollama local.
   pushStep("Analisando com IA...");
@@ -379,6 +374,7 @@ export async function processCopilotJob(job: CopilotJob): Promise<void> {
   const prompt = buildPrompt(portfolio, issuesText, chamadosPosText, history, job.question, hoje);
   const { resultText, transcript, code, stderr, cancelled, inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens } =
     await runSkill(prompt, (step) => record(step), shouldCancel, {
+      provider: "codex",
       model: config.copilotCodexModel || undefined,
       cwd: config.copilotCwd,
       allowOllamaFallback: true,

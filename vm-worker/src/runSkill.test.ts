@@ -10,6 +10,31 @@ process.env.OLLAMA_HOST = "http://127.0.0.1:1";
 
 const { buildCodexChildEnv, parseCodexEvent, runSkill } = await import("./runSkill.js");
 const { ensureCodexModelSkill } = await import("./codexModelSkill.js");
+const { selectCopilotHistory } = await import("./copilotHistory.js");
+
+test("isola o historico do copiloto por sessao e prioriza as mensagens recentes", () => {
+  const rows = [
+    { question: "mais recente", result_text: "resposta recente", created_at: "2026-08-26T15:00:00Z" },
+    { question: "anterior", result_text: "resposta anterior", created_at: "2026-08-26T14:55:00Z" },
+    { question: "ModelosTN antigo", result_text: "resposta antiga", created_at: "2026-07-10T15:00:00Z" },
+  ];
+
+  assert.deepEqual(
+    selectCopilotHistory(rows, { currentCreatedAt: "2026-08-26T15:05:00Z" }),
+    [
+      { question: "anterior", result_text: "resposta anterior" },
+      { question: "mais recente", result_text: "resposta recente" },
+    ]
+  );
+
+  assert.deepEqual(
+    selectCopilotHistory(rows, {
+      currentCreatedAt: "2026-08-26T15:05:00Z",
+      maxChars: "mais recente".length + "resposta recente".length,
+    }),
+    [{ question: "mais recente", result_text: "resposta recente" }]
+  );
+});
 
 test("parseia progresso, mensagem final e uso do Codex JSONL", () => {
   assert.equal(
