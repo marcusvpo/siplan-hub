@@ -35,6 +35,7 @@ import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { SimpleMarkdown } from "./SimpleMarkdown";
 import { useProjectsV2 } from "@/hooks/useProjectsV2";
+import { humanizeCopilotText } from "@/lib/copilot-language";
 
 // Transforma os nomes de cartorio citados na resposta em links markdown para o
 // projeto, casando com a lista carregada. Substitui o {id:...} que antes vinha no
@@ -159,7 +160,11 @@ export function CopilotChat({ showQuota = true, className }: CopilotChatProps) {
     const body = jobs
       .map((j) => {
         const ans =
-          j.status === "done" ? j.resultText || "" : j.status === "error" ? `Falha: ${j.errorMessage || ""}` : "(sem resposta)";
+          j.status === "done"
+            ? humanizeCopilotText(j.resultText || "")
+            : j.status === "error"
+              ? `Falha: ${j.errorMessage || ""}`
+              : "(sem resposta)";
         return `[${fmtDateTime(j.createdAt)}] Voce:\n${j.question}\n\n[${fmtDateTime(j.finishedAt || j.createdAt)}] Copiloto:\n${ans}`;
       })
       .join("\n\n———\n\n");
@@ -297,7 +302,7 @@ export function CopilotChat({ showQuota = true, className }: CopilotChatProps) {
                   <Sparkles className="h-3.5 w-3.5" /> Resumo do dia
                 </p>
                 <div className="text-sm">
-                  <SimpleMarkdown text={linkifyProjects(digest.content, projects)} />
+                  <SimpleMarkdown text={linkifyProjects(humanizeCopilotText(digest.content), projects)} />
                 </div>
               </div>
             )}
@@ -374,7 +379,7 @@ export function CopilotChat({ showQuota = true, className }: CopilotChatProps) {
                   </div>
                   <div className="rounded-2xl rounded-tl-sm bg-muted px-4 py-2 text-sm">
                     {job.status === "done" && (
-                      <SimpleMarkdown text={linkifyProjects(job.resultText || "", projects)} />
+                      <SimpleMarkdown text={linkifyProjects(humanizeCopilotText(job.resultText || ""), projects)} />
                     )}
                     {job.status === "error" && (
                       <span className="text-destructive">
@@ -398,7 +403,7 @@ export function CopilotChat({ showQuota = true, className }: CopilotChatProps) {
                     <span>{fmtDateTime(job.finishedAt || job.createdAt)}</span>
                     {cost > 0 && <span>· {cost.toLocaleString("pt-BR")} tokens</span>}
                     <button
-                      onClick={() => copyAnswer(job.id, job.resultText || "")}
+                      onClick={() => copyAnswer(job.id, humanizeCopilotText(job.resultText || ""))}
                       className="flex items-center gap-1 hover:text-foreground transition-colors"
                       title="Copiar resposta"
                     >

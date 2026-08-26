@@ -2,6 +2,7 @@ import { supabase } from "./supabase.js";
 import { config } from "./config.js";
 import { runSkill } from "./runSkill.js";
 import { projectLine, issueLine } from "./processCopilotJob.js";
+import { humanizeCopilotText } from "./copilotLanguage.js";
 
 const MAX_PROJECTS = 800;
 const MAX_CONTEXT_CHARS = 130000;
@@ -17,11 +18,19 @@ function buildDigestPrompt(portfolio: string, issues: string, hoje: string): str
   const issuesBlock = issues
     ? `\n=== PENDENCIAS DE CONVERSAO EM ABERTO ===\n${issues}\n=== FIM DAS PENDENCIAS ===\n`
     : "";
-  return `Voce e o Copiloto Operacional do SiplanHUB (gestao de implantacoes para cartorios). Gere um RESUMO EXECUTIVO do portfolio de hoje (${hoje}), curto e acionavel.
+  return `Voce e o Copiloto Operacional do SiplanHUB (gestao de implantacoes para cartorios). Gere um RESUMO EXECUTIVO do portfolio de hoje (${hoje}), curto, acionavel e compreensivel por qualquer pessoa.
 
 Formato: 5 a 8 bullets em markdown ("- "). Cubra, quando houver dados: projetos em risco/atrasados (etapa com data-fim no passado e status nao concluido), gargalos recorrentes por etapa, pendencias de conversao criticas, e destaques (o que avancou). Cite nomes de cartorios. Nao invente dados. Responda so o resumo, sem preambulo.
 
-Cada linha do portfolio: cliente com etapas etapa=status(responsavel)[inicio-fim] (datas em dd/mm).
+Os dados do portfolio usam uma notacao interna compacta: etapa=status(responsavel)[inicio-fim], com datas em dd/mm. Essa notacao serve APENAS como entrada e nunca deve aparecer na resposta.
+
+REGRAS DE LINGUAGEM:
+- Escreva para uma pessoa sem conhecimento tecnico do sistema, usando frases completas e naturais.
+- Nunca copie codigos ou nomes internos como todo, in-progress, done, blocked, waiting_adjustment, status_geral, pos= ou implantacao=.
+- Traduza os status: todo = nao iniciado; in-progress = em andamento; done = concluido; blocked = bloqueado; waiting_adjustment = aguardando ajustes.
+- Traduza as etapas: infra = infraestrutura; aderencia = aderencia; conversao = conversao de dados; ambiente = preparacao do ambiente; modelos = modelos do sistema; implantacao = implantacao e treinamento; pos = pos-implantacao.
+- Em vez de "ambiente=in-progress(Luciane Lima)[03/07]", escreva "A preparacao do ambiente esta em andamento, sob responsabilidade de Luciane Lima, com data registrada em 03/07".
+- Explique por que algo merece atencao e qual e a proxima acao quando os dados permitirem.
 
 === PORTFOLIO ===
 ${portfolio}
@@ -92,10 +101,11 @@ export async function generateDailyDigest(): Promise<void> {
 
   const { resultText, code } = await runSkill(prompt, undefined, undefined, {
     model: config.copilotCodexModel || undefined,
+    reasoningEffort: config.copilotCodexReasoningEffort,
     cwd: config.copilotCwd,
     allowOllamaFallback: true,
   });
-  const content = (resultText || "").trim();
+  const content = humanizeCopilotText((resultText || "").trim());
   if (code !== 0 || !content) return;
 
   await supabase
