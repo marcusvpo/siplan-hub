@@ -11,6 +11,18 @@ vi.mock("@/hooks/usePermissions", () => ({
 vi.mock("@/hooks/useAuth", () => ({
   useAuth: () => ({ user: { id: "profile-1" } }),
 }));
+vi.mock("@/hooks/useAiTextImprovement", () => ({
+  useAiTextImprovement: () => ({
+    improve: vi.fn(),
+    reset: vi.fn(),
+    job: undefined,
+    active: false,
+    error: null,
+  }),
+}));
+vi.mock("@/hooks/useModelGenerationJobs", () => ({
+  useModelWorkerStatus: () => ({ online: true, busy: false, status: null }),
+}));
 
 vi.mock("@/hooks/use-toast", () => ({
   useToast: () => ({ toast: vi.fn() }),
@@ -165,6 +177,31 @@ describe("CS/CX contatos e agendamentos — permissões", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /novo contato/i }));
     expect(screen.getByRole("combobox", { name: /produtos do contato/i })).toBeInTheDocument();
+  });
+
+  it("permite expandir o formulário de contato para tela cheia", () => {
+    renderPage(<CsCxContacts />, ["cs_cx_contatos:create"]);
+    fireEvent.click(screen.getByRole("button", { name: /novo contato/i }));
+
+    const expand = screen.getByRole("button", {
+      name: /ver formulário em tela cheia/i,
+    });
+    expect(screen.getAllByRole("button", { name: "Negrito" })).toHaveLength(2);
+    expect(
+      screen.getAllByRole("button", { name: "Lista com marcadores" }),
+    ).toHaveLength(2);
+    expect(
+      screen.getAllByRole("button", { name: "Lista numerada" }),
+    ).toHaveLength(2);
+    expect(
+      screen.getAllByRole("button", { name: "Melhorar com IA" }),
+    ).toHaveLength(2);
+    fireEvent.click(expand);
+
+    expect(screen.getByRole("dialog")).toHaveClass("h-[100dvh]");
+    expect(
+      screen.getByRole("button", { name: /sair da tela cheia/i }),
+    ).toBeInTheDocument();
   });
 
   it("exibe o painel de cartórios que precisam de atenção", () => {

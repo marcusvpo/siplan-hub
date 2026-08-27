@@ -22,6 +22,8 @@ import {
   Undo,
   Redo,
   CheckSquare,
+  List,
+  ListOrdered,
   Palette,
   Heading1,
   Heading2,
@@ -31,7 +33,11 @@ import { useCallback, useEffect, useState } from "react"
 import { Toggle } from "@/components/ui/toggle"
 import { Button } from "@/components/ui/button"
 import { $patchStyleText, $setBlocksType } from "@lexical/selection"
-import { INSERT_CHECK_LIST_COMMAND } from "@lexical/list"
+import {
+  INSERT_CHECK_LIST_COMMAND,
+  INSERT_ORDERED_LIST_COMMAND,
+  INSERT_UNORDERED_LIST_COMMAND,
+} from "@lexical/list"
 import { $createHeadingNode } from "@lexical/rich-text"
 import {
   Select,
@@ -147,6 +153,7 @@ export function ToolbarPlugin() {
   return (
     <div className="flex items-center gap-1 p-2 border-b bg-muted/40 flex-wrap">
       <Button
+        type="button"
         variant="ghost"
         size="sm"
         onClick={(e) => {
@@ -154,10 +161,13 @@ export function ToolbarPlugin() {
           formatHeading("h1")
         }}
         className="h-8 w-8 p-0"
+        title="Título 1"
+        aria-label="Título 1"
       >
         <Heading1 className="h-4 w-4" />
       </Button>
       <Button
+        type="button"
         variant="ghost"
         size="sm"
         onClick={(e) => {
@@ -165,10 +175,13 @@ export function ToolbarPlugin() {
           formatHeading("h2")
         }}
         className="h-8 w-8 p-0"
+        title="Título 2"
+        aria-label="Título 2"
       >
         <Heading2 className="h-4 w-4" />
       </Button>
       <Button
+        type="button"
         variant="ghost"
         size="sm"
         onClick={(e) => {
@@ -176,6 +189,8 @@ export function ToolbarPlugin() {
           formatHeading("h3")
         }}
         className="h-8 w-8 p-0"
+        title="Título 3"
+        aria-label="Título 3"
       >
         <Heading3 className="h-4 w-4" />
       </Button>
@@ -183,7 +198,7 @@ export function ToolbarPlugin() {
       <div className="w-px h-6 bg-border mx-1" />
 
       <Select value={fontSize} onValueChange={handleFontSizeChange}>
-        <SelectTrigger className="w-[80px] h-8 text-xs">
+        <SelectTrigger className="w-[80px] h-8 text-xs" aria-label="Tamanho da fonte">
           <SelectValue placeholder="Size" />
         </SelectTrigger>
         <SelectContent>
@@ -204,6 +219,8 @@ export function ToolbarPlugin() {
           editor.dispatchCommand(FORMAT_TEXT_COMMAND, "bold")
         }}
         className="h-8 w-8"
+        title="Negrito"
+        aria-label="Negrito"
       >
         <Bold className="h-4 w-4" />
       </Toggle>
@@ -214,6 +231,8 @@ export function ToolbarPlugin() {
           editor.dispatchCommand(FORMAT_TEXT_COMMAND, "italic")
         }}
         className="h-8 w-8"
+        title="Itálico"
+        aria-label="Itálico"
       >
         <Italic className="h-4 w-4" />
       </Toggle>
@@ -224,6 +243,8 @@ export function ToolbarPlugin() {
           editor.dispatchCommand(FORMAT_TEXT_COMMAND, "underline")
         }}
         className="h-8 w-8"
+        title="Sublinhado"
+        aria-label="Sublinhado"
       >
         <Underline className="h-4 w-4" />
       </Toggle>
@@ -234,6 +255,8 @@ export function ToolbarPlugin() {
           editor.dispatchCommand(FORMAT_TEXT_COMMAND, "strikethrough")
         }}
         className="h-8 w-8"
+        title="Tachado"
+        aria-label="Tachado"
       >
         <Strikethrough className="h-4 w-4" />
       </Toggle>
@@ -242,7 +265,7 @@ export function ToolbarPlugin() {
 
       <Popover>
         <PopoverTrigger asChild>
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+          <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" title="Cor do texto" aria-label="Cor do texto">
             <Palette className="h-4 w-4" style={{ color: fontColor }} />
           </Button>
         </PopoverTrigger>
@@ -250,6 +273,7 @@ export function ToolbarPlugin() {
           <div className="grid grid-cols-5 gap-1">
             {COLORS.map((color) => (
               <button
+                type="button"
                 key={color.value}
                 className="w-6 h-6 rounded-full border border-muted hover:scale-110 transition-transform"
                 style={{ backgroundColor: color.value }}
@@ -258,6 +282,7 @@ export function ToolbarPlugin() {
               />
             ))}
              <button
+                type="button"
                 className="w-6 h-6 rounded-full border border-muted hover:scale-110 transition-transform bg-black"
                 onClick={() => handleColorChange("#000000")}
                 title="Padrão"
@@ -276,6 +301,8 @@ export function ToolbarPlugin() {
           setTextAlign("left")
         }}
         className="h-8 w-8"
+        title="Alinhar à esquerda"
+        aria-label="Alinhar à esquerda"
       >
         <AlignLeft className="h-4 w-4" />
       </Toggle>
@@ -287,6 +314,8 @@ export function ToolbarPlugin() {
           setTextAlign("center")
         }}
         className="h-8 w-8"
+        title="Centralizar"
+        aria-label="Centralizar"
       >
         <AlignCenter className="h-4 w-4" />
       </Toggle>
@@ -298,6 +327,8 @@ export function ToolbarPlugin() {
           setTextAlign("right")
         }}
         className="h-8 w-8"
+        title="Alinhar à direita"
+        aria-label="Alinhar à direita"
       >
         <AlignRight className="h-4 w-4" />
       </Toggle>
@@ -305,6 +336,7 @@ export function ToolbarPlugin() {
       <div className="w-px h-6 bg-border mx-1" />
 
       <Button
+        type="button"
         variant="ghost"
         size="sm"
         onClick={(e) => {
@@ -313,8 +345,36 @@ export function ToolbarPlugin() {
         }}
         className="h-8 w-8 p-0"
         title="Checklist"
+        aria-label="Checklist"
       >
         <CheckSquare className="h-4 w-4" />
+      </Button>
+
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={() =>
+          editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined)
+        }
+        className="h-8 w-8 p-0"
+        title="Lista com marcadores"
+        aria-label="Lista com marcadores"
+      >
+        <List className="h-4 w-4" />
+      </Button>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={() =>
+          editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined)
+        }
+        className="h-8 w-8 p-0"
+        title="Lista numerada"
+        aria-label="Lista numerada"
+      >
+        <ListOrdered className="h-4 w-4" />
       </Button>
 
     </div>

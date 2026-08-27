@@ -87,7 +87,10 @@ vi.mock("@/hooks/useCsCxRoutines", () => ({
                 name: "Operacional",
                 display_color: "#ad0505",
               },
-              routine_type: { id: "type-1", name: "Firmas" },
+              routine_type: {
+                id: "type-1",
+                name: index === 0 ? "Digitalização em lote" : "Firmas",
+              },
             },
           },
         ],
@@ -337,6 +340,10 @@ describe("CS/CX rotinas — permissões", () => {
       screen.getByLabelText("Mostrando 1 a 1 de 1 itens da análise"),
     ).toBeInTheDocument();
     expect(screen.getByText("Rotina e observações")).toBeInTheDocument();
+    expect(screen.getAllByText("Tipo").length).toBeGreaterThan(0);
+    expect(screen.getByTitle("Digitalização em lote")).toHaveTextContent(
+      "Digitalização em lote",
+    );
     expect(screen.getAllByText("Ideal").length).toBeGreaterThan(0);
     const fullscreenButton = screen.getByRole("button", {
       name: "Abrir análise em tela cheia",

@@ -7,7 +7,9 @@ import {
   Database,
   Eye,
   FileDown,
+  Maximize2,
   MoreHorizontal,
+  Minimize2,
   Pencil,
   Plus,
   RefreshCw,
@@ -60,7 +62,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { AiRichTextField } from "@/components/ui/ai-rich-text-field";
 import { useCsCxRegistryOffices } from "@/hooks/useCsCxCore";
 import {
   type CsCxContact,
@@ -68,10 +71,12 @@ import {
   useCsCxContacts,
 } from "@/hooks/useCsCxEngagement";
 import { useCsCxRecordPermissions } from "@/hooks/useCsCxRecordPermissions";
+import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { CsCxMultiSelect } from "@/components/cs-cx/CsCxMultiSelect";
 import { ContactAttentionDashboard } from "@/components/cs-cx/ContactAttentionDashboard";
 import { generateCsCxContactsPdf } from "@/lib/cs-cx-engagement-pdf";
+import { hasRichTextContent, richTextToPlainText } from "@/lib/lexical";
 import { cn } from "@/lib/utils";
 
 const emptyForm: CsCxContactInput = {
@@ -93,6 +98,7 @@ export default function CsCxContacts() {
   const { offices, products, error: referenceError } = useCsCxRegistryOffices();
   const { canCreate, canEditRecord, canDeleteRecord } =
     useCsCxRecordPermissions("cs_cx_contatos");
+  const { user } = useAuth();
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [officeFilter, setOfficeFilter] = useState("all");
@@ -105,6 +111,7 @@ export default function CsCxContacts() {
   const [form, setForm] = useState<CsCxContactInput>(emptyForm);
   const [registryOfficeIds, setRegistryOfficeIds] = useState<string[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [isFormFullscreen, setIsFormFullscreen] = useState(false);
   const [viewing, setViewing] = useState<CsCxContact | null>(null);
   const [deleting, setDeleting] = useState<CsCxContact | null>(null);
   const [isExporting, setIsExporting] = useState(false);
@@ -138,8 +145,8 @@ export default function CsCxContacts() {
         [
           contact.contact_person,
           contact.contact_details,
-          contact.notes,
-          contact.pending_items,
+          richTextToPlainText(contact.notes),
+          richTextToPlainText(contact.pending_items),
           contact.ticket_number,
           contact.registry_office?.name,
           contact.author?.full_name,
@@ -208,6 +215,7 @@ export default function CsCxContacts() {
       contact_date: new Date().toISOString().slice(0, 10),
     });
     setRegistryOfficeIds([]);
+    setIsFormFullscreen(false);
     setDialogOpen(true);
   };
 
@@ -217,6 +225,7 @@ export default function CsCxContacts() {
       contact_date: new Date().toISOString().slice(0, 10),
     });
     setRegistryOfficeIds([officeId]);
+    setIsFormFullscreen(false);
     setDialogOpen(true);
   };
 
@@ -236,6 +245,7 @@ export default function CsCxContacts() {
       ticket_number: contact.ticket_number ?? "",
     });
     setRegistryOfficeIds([contact.registry_office_id]);
+    setIsFormFullscreen(false);
     setDialogOpen(true);
   };
 
@@ -254,7 +264,14 @@ export default function CsCxContacts() {
     try {
       await Promise.all(
         selectedOfficeIds.map((registry_office_id) =>
-          saveContact.mutateAsync({ ...form, registry_office_id }),
+          saveContact.mutateAsync({
+            ...form,
+            notes: hasRichTextContent(form.notes) ? form.notes : "",
+            pending_items: hasRichTextContent(form.pending_items)
+              ? form.pending_items
+              : "",
+            registry_office_id,
+          }),
         ),
       );
       setDialogOpen(false);
@@ -379,7 +396,7 @@ export default function CsCxContacts() {
         />
         <Metric
           label="Com pendências"
-          value={contacts.filter((item) => !!item.pending_items?.trim()).length}
+          value={contacts.filter((item) => hasRichTextContent(item.pending_items)).length}
           icon={TriangleAlert}
         />
       </div>
@@ -546,17 +563,17 @@ export default function CsCxContacts() {
                           <TableCell className="px-3 py-2">
                             <p
                               className="line-clamp-2 max-w-xs text-xs leading-4"
-                              title={contact.notes ?? ""}
+                              title={richTextToPlainText(contact.notes)}
                             >
-                              {contact.notes || "—"}
+                              {richTextToPlainText(contact.notes) || "—"}
                             </p>
                           </TableCell>
                           <TableCell className="px-3 py-2">
                             <p
                               className="line-clamp-2 max-w-xs text-xs leading-4 text-amber-700 dark:text-amber-300"
-                              title={contact.pending_items ?? ""}
+                              title={richTextToPlainText(contact.pending_items)}
                             >
-                              {contact.pending_items || "—"}
+                              {richTextToPlainText(contact.pending_items) || "—"}
                             </p>
                           </TableCell>
                           <TableCell className="px-2 py-1">
@@ -627,8 +644,39 @@ export default function CsCxContacts() {
         </CardContent>
       </Card>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-2xl">
+      <Dialog
+        open={dialogOpen}
+        onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) setIsFormFullscreen(false);
+        }}
+      >
+        <DialogContent
+          className={cn(
+            "max-h-[92vh] overflow-y-auto sm:max-w-2xl",
+            isFormFullscreen &&
+              "h-[100dvh] max-h-none w-screen max-w-none rounded-none sm:max-w-none",
+          )}
+        >
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="absolute right-12 top-4 h-8 w-8"
+            onClick={() => setIsFormFullscreen((current) => !current)}
+            aria-label={
+              isFormFullscreen
+                ? "Sair da tela cheia"
+                : "Ver formulário em tela cheia"
+            }
+            title={isFormFullscreen ? "Sair da tela cheia" : "Ver em tela cheia"}
+          >
+            {isFormFullscreen ? (
+              <Minimize2 className="h-4 w-4" />
+            ) : (
+              <Maximize2 className="h-4 w-4" />
+            )}
+          </Button>
           <DialogHeader>
             <DialogTitle>
               {form.id ? "Editar contato" : "Novo contato"}
@@ -637,7 +685,13 @@ export default function CsCxContacts() {
               Registre a interação e qualquer pendência identificada.
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={submit} className="space-y-4">
+          <form
+            onSubmit={submit}
+            className={cn(
+              "space-y-4",
+              isFormFullscreen && "mx-auto w-full max-w-5xl",
+            )}
+          >
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label={form.id ? "Cartório *" : "Cartórios *"}>
                 {form.id ? (
@@ -733,24 +787,24 @@ export default function CsCxContacts() {
                 />
               </Field>
             </div>
-            <Field label="Anotações">
-              <Textarea
-                className="min-h-24"
-                value={form.notes}
-                onChange={(event) =>
-                  setForm({ ...form, notes: event.target.value })
-                }
-              />
-            </Field>
-            <Field label="Pendências">
-              <Textarea
-                className="min-h-20"
-                value={form.pending_items}
-                onChange={(event) =>
-                  setForm({ ...form, pending_items: event.target.value })
-                }
-              />
-            </Field>
+            <AiRichTextField
+              label="Anotações"
+              content={form.notes ?? ""}
+              onChange={(notes) => setForm({ ...form, notes })}
+              placeholder="Registre informações, decisões e contexto do contato..."
+              requestedBy={user?.id}
+              targetField={`cs_cx_contact:${form.id ?? "draft"}:notes`}
+            />
+            <AiRichTextField
+              label="Pendências"
+              content={form.pending_items ?? ""}
+              onChange={(pending_items) =>
+                setForm({ ...form, pending_items })
+              }
+              placeholder="Liste pendências, próximos passos e responsáveis..."
+              requestedBy={user?.id}
+              targetField={`cs_cx_contact:${form.id ?? "draft"}:pending_items`}
+            />
             <DialogFooter>
               <Button
                 type="button"
@@ -905,16 +959,47 @@ function ContactReadOnlyDetails({ contact }: { contact: CsCxContact }) {
           <ContactProductBadges contact={contact} />
         </div>
       </div>
-      <ReadOnlyField
+      <ReadOnlyRichTextField
         label="Anotações"
-        value={contact.notes || "Nenhuma anotação registrada."}
-        multiline
+        value={contact.notes}
+        emptyMessage="Nenhuma anotação registrada."
       />
-      <ReadOnlyField
+      <ReadOnlyRichTextField
         label="Pendências"
-        value={contact.pending_items || "Nenhuma pendência registrada."}
-        multiline
-        warning={Boolean(contact.pending_items?.trim())}
+        value={contact.pending_items}
+        emptyMessage="Nenhuma pendência registrada."
+        warning={hasRichTextContent(contact.pending_items)}
+      />
+    </div>
+  );
+}
+function ReadOnlyRichTextField({
+  label,
+  value,
+  emptyMessage,
+  warning = false,
+}: {
+  label: string;
+  value: string | null;
+  emptyMessage: string;
+  warning?: boolean;
+}) {
+  if (!hasRichTextContent(value)) {
+    return <ReadOnlyField label={label} value={emptyMessage} multiline />;
+  }
+
+  return (
+    <div className="space-y-1.5">
+      <p className="text-xs font-medium text-muted-foreground">{label}</p>
+      <RichTextEditor
+        content={value ?? ""}
+        onChange={() => undefined}
+        editable={false}
+        className={cn(
+          "min-h-20",
+          warning &&
+            "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200",
+        )}
       />
     </div>
   );
