@@ -6,6 +6,7 @@ import {
   elapsedHours,
   formatSlaDuration,
   getOfficialSlaState,
+  getSlaCheckpointDisplay,
   parseSlaDate,
 } from "@/lib/tickets-sla";
 import type { TicketsSlaReportFilters } from "@/lib/tickets-sla-report-pdf";
@@ -177,15 +178,16 @@ export async function generateTicketsSlaAnalyticalReportPdf(
     const timeline = chronologicalTramites(tramites);
     const flow = buildTicketFlowAnalysis(chamado, timeline);
     const resolution = getOfficialSlaState(chamado);
+    const resolutionDisplay = getSlaCheckpointDisplay(
+      resolution.resolution,
+      "resolution",
+    );
+    const firstResponseDisplay = getSlaCheckpointDisplay(
+      resolution.firstResponse,
+      "firstResponse",
+    );
     const openedAt = parseSlaDate(chamado.abertoEm || chamado.dataAbertura);
     const firstResponseElapsed = elapsedHours(openedAt, resolution.firstResponse.completedAt);
-    const firstResponseState = {
-      met: "Dentro do SLA",
-      breached: "Fora do SLA",
-      pending: "Aguardando retorno",
-      paused: "Pausado",
-      unavailable: "Sem prazo na origem",
-    }[resolution.firstResponse.status];
 
     pdf.setFont("helvetica", "bold");
     pdf.setFontSize(14);
@@ -225,8 +227,8 @@ export async function generateTicketsSlaAnalyticalReportPdf(
 
     const summary = [
       `Tempo total: ${formatSlaDuration(resolution.hours)}`,
-      `SLA oficial: ${resolution.label}`,
-      `Primeiro atendimento: ${formatSlaDuration(firstResponseElapsed)} (${firstResponseState})`,
+      `SLA de resolução: ${resolutionDisplay.label}`,
+      `Primeiro atendimento: ${formatSlaDuration(firstResponseElapsed)} (${firstResponseDisplay.label})`,
       `Prazo primeiro retorno: ${formatDateTime(chamado.slaPrimeiraRespostaPrevistaEm)}`,
       `Vencimento vigente: ${formatDateTime(chamado.slaVencimentoEm)}`,
       `Fase: ${resolution.phaseLabel}${chamado.slaVencimentoManual ? " · vencimento manual" : ""}`,

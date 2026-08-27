@@ -5,6 +5,7 @@ import {
   elapsedHours,
   formatSlaDuration,
   getOfficialSlaState,
+  getSlaCheckpointDisplay,
   parseSlaDate,
 } from "@/lib/tickets-sla";
 
@@ -46,15 +47,16 @@ export async function generateTicketSlaDetailPdf(
   const timeline = chronologicalTramites(tramites);
   const flow = buildTicketFlowAnalysis(chamado, timeline);
   const resolution = getOfficialSlaState(chamado);
+  const resolutionDisplay = getSlaCheckpointDisplay(
+    resolution.resolution,
+    "resolution",
+  );
+  const firstResponseDisplay = getSlaCheckpointDisplay(
+    resolution.firstResponse,
+    "firstResponse",
+  );
   const openedAt = parseSlaDate(chamado.abertoEm || chamado.dataAbertura);
   const firstResponseElapsed = elapsedHours(openedAt, resolution.firstResponse.completedAt);
-  const firstResponseLabel = {
-    met: "Dentro do SLA",
-    breached: "Fora do SLA",
-    pending: "Aguardando retorno",
-    paused: "Pausado",
-    unavailable: "Sem prazo na origem",
-  }[resolution.firstResponse.status];
   let y = 0;
 
   const drawTopBar = () => {
@@ -135,9 +137,9 @@ export async function generateTicketSlaDetailPdf(
   const drawSummaryCards = () => {
     const cards = [
       { label: "Tempo total", value: formatSlaDuration(resolution.hours), accent: [190, 0, 48] as const },
-      { label: "SLA oficial", value: resolution.label, accent: [5, 150, 105] as const },
+      { label: "SLA resolução", value: resolutionDisplay.label, accent: [5, 150, 105] as const },
       { label: "Primeiro atendimento", value: formatSlaDuration(firstResponseElapsed), accent: [37, 99, 235] as const },
-      { label: "SLA primeiro atendimento", value: `${firstResponseLabel} · prazo ${formatDateTime(chamado.slaPrimeiraRespostaPrevistaEm)}`, accent: [225, 29, 72] as const },
+      { label: "SLA primeiro atendimento", value: `${firstResponseDisplay.label} · prazo ${formatDateTime(chamado.slaPrimeiraRespostaPrevistaEm)}`, accent: [225, 29, 72] as const },
       { label: "Vencimento vigente", value: formatDateTime(chamado.slaVencimentoEm), accent: [124, 58, 237] as const },
       { label: "Fase atual", value: resolution.phaseLabel, accent: [217, 119, 6] as const },
     ];

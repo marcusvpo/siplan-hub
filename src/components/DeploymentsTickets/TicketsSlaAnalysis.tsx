@@ -42,7 +42,10 @@ import {
   elapsedHours,
   formatSlaDuration,
   getOfficialSlaState,
+  getSlaCheckpointDisplay,
   parseSlaDate,
+  type TicketAreaStage,
+  type SlaCheckpointDisplay,
 } from "@/lib/tickets-sla";
 import type { ChamadosReportFilters } from "@/lib/chamados-report-pdf";
 import { generateTicketSlaDetailPdf } from "@/lib/tickets-sla-detail-pdf";
@@ -50,6 +53,7 @@ import { generateTicketsSlaAnalyticalReportPdf } from "@/lib/tickets-sla-analyti
 import { generateTicketsSlaReportPdf } from "@/lib/tickets-sla-report-pdf";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { TicketsSlaInfoDialog } from "./TicketsSlaInfoDialog";
 
 interface TicketsSlaAnalysisProps {
   active: boolean;
@@ -60,7 +64,24 @@ interface TicketsSlaAnalysisProps {
   reportFilters: ChamadosReportFilters;
 }
 
-type SlaCardFilter = "all" | "within" | "outside" | "inProgress" | "unavailable";
+type SlaCardFilter =
+  | "all"
+  | "firstWithin"
+  | "firstOutside"
+  | "resolutionWithin"
+  | "resolutionOutside"
+  | "inProgress"
+  | "unavailable";
+
+const SLA_FILTER_LABELS: Record<SlaCardFilter, string> = {
+  all: "Todos",
+  firstWithin: "1º retorno no prazo",
+  firstOutside: "1º retorno fora do SLA",
+  resolutionWithin: "Resolução no prazo",
+  resolutionOutside: "Resolução fora do SLA",
+  inProgress: "SLA em curso ou pausado",
+  unavailable: "Sem SLA na origem",
+};
 
 const MAX_ANALYTICAL_REPORT_TICKETS = 250;
 
@@ -72,6 +93,114 @@ function formatDateTime(value?: string | Date | null): string {
     dateStyle: "short",
     ...(hasTime ? { timeStyle: "short" } : {}),
   }).format(date);
+}
+
+function matchesSlaCardFilter(chamado: Chamado0800, filter: SlaCardFilter) {
+  if (filter === "all") return true;
+  const sla = getOfficialSlaState(chamado);
+  if (filter === "firstWithin") return sla.firstResponse.status === "met";
+  if (filter === "firstOutside") return sla.firstResponse.status === "breached";
+  if (filter === "resolutionWithin") return sla.resolution.status === "met";
+  if (filter === "resolutionOutside") return sla.resolution.status === "breached";
+  if (filter === "inProgress") {
+    return (
+      sla.firstResponse.status === "pending" ||
+      sla.resolution.status === "pending" ||
+      sla.resolution.status === "paused"
+    );
+  }
+  return sla.classification === "unavailable";
+}
+
+function SlaCheckpointCell({
+  display,
+  deadline,
+}: {
+  display: SlaCheckpointDisplay;
+  deadline: Date | null;
+}) {
+  return (
+    <span className="min-w-0">
+      <Badge className={cn("w-fit border-0 text-[9px]", display.className)}>
+        {display.label}
+      </Badge>
+      <span
+        className="mt-0.5 block truncate text-[9px] text-muted-foreground"
+        title={deadline ? formatDateTime(deadline) : undefined}
+      >
+        {deadline ? `até ${formatDateTime(deadline)}` : "Prazo não informado"}
+      </span>
+    </span>
+  );
+}
+
+const AREA_STAGE_OUTCOME: Record<TicketAreaStage["outcome"], {
+  label: string;
+  className: string;
+}> = {
+  handedOffBeforeDeadline: {
+    label: "Repasse antes do vencimento",
+    className: "bg-emerald-100 text-emerald-700",
+  },
+  handedOffAfterDeadline: {
+    label: "Repasse após o vencimento",
+    className: "bg-rose-100 text-rose-700",
+  },
+  resolvedWithin: {
+    label: "Resolvido no prazo",
+    className: "bg-emerald-100 text-emerald-700",
+  },
+  resolvedOutside: {
+    label: "Resolvido fora do SLA",
+    className: "bg-rose-100 text-rose-700",
+  },
+  activeWithin: {
+    label: "Etapa atual dentro do prazo",
+    className: "bg-blue-100 text-blue-700",
+  },
+  activeOutside: {
+    label: "SLA vencido na etapa atual",
+    className: "bg-rose-100 text-rose-700",
+  },
+  activePaused: {
+    label: "Etapa atual pausada",
+    className: "bg-violet-100 text-violet-700",
+  },
+  unavailable: {
+    label: "Sem comparação disponível",
+    className: "bg-muted text-muted-foreground",
+  },
+};
+
+function AreaJourneyRow({ stage, visit }: { stage: TicketAreaStage; visit: number }) {
+  const outcome = AREA_STAGE_OUTCOME[stage.outcome];
+  return (
+    <div className="grid gap-2 border-b px-3 py-2 last:border-0 md:grid-cols-[minmax(150px,1fr)_190px_90px_minmax(220px,1.2fr)] md:items-center">
+      <div className="min-w-0">
+        <p className="truncate text-[10px] font-semibold" title={stage.area}>{stage.area}</p>
+        <p className="text-[8px] text-muted-foreground">Passagem {visit}</p>
+      </div>
+      <p className="text-[9px] text-muted-foreground">
+        {formatDateTime(stage.startedAt)} → {stage.endKind === "current" ? "agora" : formatDateTime(stage.endedAt)}
+      </p>
+      <p className="text-[10px] font-semibold">{formatSlaDuration(stage.hours)}</p>
+      <div className="flex flex-wrap items-center gap-1">
+        <Badge className={cn("h-4 border-0 px-1.5 text-[8px]", outcome.className)}>
+          {outcome.label}
+        </Badge>
+        {stage.firstResponseStatus && (
+          <Badge className={cn(
+            "h-4 border-0 px-1.5 text-[8px]",
+            stage.firstResponseStatus === "met"
+              ? "bg-emerald-100 text-emerald-700"
+              : "bg-rose-100 text-rose-700",
+          )}>
+            1º retorno {stage.firstResponseStatus === "met" ? "no prazo" : "fora do SLA"}
+          </Badge>
+        )}
+      </div>
+    </div>
+  );
 }
 
 function TicketSlaRow({
@@ -87,16 +216,25 @@ function TicketSlaRow({
     () => buildTicketFlowAnalysis(chamado, timeline),
     [chamado, timeline],
   );
+  const areaStagesWithVisits = useMemo(() => {
+    const visits = new Map<string, number>();
+    return flowAnalysis.areaStages.map((stage) => {
+      const visit = (visits.get(stage.area) || 0) + 1;
+      visits.set(stage.area, visit);
+      return { stage, visit };
+    });
+  }, [flowAnalysis.areaStages]);
   const sla = getOfficialSlaState(chamado);
+  const firstResponseDisplay = getSlaCheckpointDisplay(
+    sla.firstResponse,
+    "firstResponse",
+  );
+  const resolutionDisplay = getSlaCheckpointDisplay(
+    sla.resolution,
+    "resolution",
+  );
   const openedAt = parseSlaDate(chamado.abertoEm || chamado.dataAbertura);
   const firstResponseElapsed = elapsedHours(openedAt, sla.firstResponse.completedAt);
-  const firstResponseLabel = {
-    met: "Dentro do SLA",
-    breached: "Fora do SLA",
-    pending: "Aguardando retorno",
-    paused: "Pausado",
-    unavailable: "Sem prazo na origem",
-  }[sla.firstResponse.status];
 
   const gaps = timeline.map((item, index) => {
     const current = parseSlaDate(item.dataTramite);
@@ -132,7 +270,7 @@ function TicketSlaRow({
     <Collapsible open={open} onOpenChange={setOpen}>
       <div className="rounded-lg border bg-card transition-colors hover:bg-muted/20">
         <CollapsibleTrigger asChild>
-          <button type="button" className="grid w-full min-w-[900px] grid-cols-[28px_90px_minmax(220px,1fr)_120px_120px_110px_120px] items-center gap-2 px-3 py-2 text-left text-xs">
+          <button type="button" className="grid w-full min-w-[1040px] grid-cols-[28px_85px_minmax(210px,1fr)_112px_112px_90px_125px_125px] items-center gap-2 px-3 py-2 text-left text-xs">
             <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", open && "rotate-180")} />
             <span className="font-mono font-semibold text-primary">#{chamado.numeroChamado}</span>
             <span className="min-w-0">
@@ -142,12 +280,14 @@ function TicketSlaRow({
             <span>{formatDateTime(chamado.abertoEm || chamado.dataAbertura)}</span>
             <span>{formatDateTime(chamado.encerradoEm || chamado.dataEncerramento)}</span>
             <span className="font-medium">{formatSlaDuration(sla.hours)}</span>
-            <span className="min-w-0">
-              <Badge className={cn("w-fit border-0 text-[9px]", sla.className)}>{sla.label}</Badge>
-              <span className="mt-0.5 block truncate text-[9px] text-muted-foreground" title={sla.activeDeadline ? formatDateTime(sla.activeDeadline) : undefined}>
-                {sla.activeDeadline ? `até ${formatDateTime(sla.activeDeadline)}` : sla.phaseLabel}
-              </span>
-            </span>
+            <SlaCheckpointCell
+              display={firstResponseDisplay}
+              deadline={sla.firstResponse.deadline}
+            />
+            <SlaCheckpointCell
+              display={resolutionDisplay}
+              deadline={sla.resolution.deadline}
+            />
           </button>
         </CollapsibleTrigger>
 
@@ -190,25 +330,16 @@ function TicketSlaRow({
                   <div className="rounded-md border bg-background p-2.5">
                     <p className="text-[9px] font-semibold uppercase text-muted-foreground">Primeiro atendimento</p>
                     <p className="mt-1 text-sm font-bold">{formatSlaDuration(firstResponseElapsed)}</p>
-                    <Badge className={cn(
-                      "mt-1 border-0 text-[9px]",
-                      sla.firstResponse.status === "unavailable"
-                        ? "bg-muted text-muted-foreground"
-                        : sla.firstResponse.status === "met"
-                          ? "bg-emerald-100 text-emerald-700"
-                          : sla.firstResponse.status === "pending"
-                            ? "bg-blue-100 text-blue-700"
-                            : "bg-rose-100 text-rose-700",
-                    )}>
-                      {firstResponseLabel}
+                    <Badge className={cn("mt-1 border-0 text-[9px]", firstResponseDisplay.className)}>
+                      {firstResponseDisplay.label}
                     </Badge>
                     <p className="mt-1 text-[9px] text-muted-foreground">Prazo: {formatDateTime(sla.firstResponse.deadline)}</p>
                   </div>
                   <div className="rounded-md border bg-background p-2.5">
-                    <p className="text-[9px] font-semibold uppercase text-muted-foreground">SLA vigente</p>
+                    <p className="text-[9px] font-semibold uppercase text-muted-foreground">SLA de resolução</p>
                     <p className="mt-1 truncate text-sm font-bold" title={sla.phaseLabel}>{sla.phaseLabel}</p>
-                    <Badge className={cn("mt-1 border-0 text-[9px]", sla.className)}>{sla.label}</Badge>
-                    <p className="mt-1 text-[9px] text-muted-foreground">Vencimento: {formatDateTime(sla.activeDeadline)}</p>
+                    <Badge className={cn("mt-1 border-0 text-[9px]", resolutionDisplay.className)}>{resolutionDisplay.label}</Badge>
+                    <p className="mt-1 text-[9px] text-muted-foreground">Vencimento: {formatDateTime(sla.resolution.deadline)}</p>
                   </div>
                   <div className="rounded-md border bg-background p-2.5">
                     <p className="text-[9px] font-semibold uppercase text-muted-foreground">Maior intervalo</p>
@@ -234,6 +365,38 @@ function TicketSlaRow({
                     <p className="mt-1 text-sm font-bold">{timeline.length}</p>
                     <p className="mt-1 text-[10px] text-muted-foreground">Trâmites sincronizados</p>
                   </div>
+                </div>
+
+                <div className="mb-4 overflow-hidden rounded-lg border bg-background">
+                  <div className="flex flex-col gap-1 border-b bg-muted/30 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <h3 className="flex items-center gap-1.5 text-xs font-semibold">
+                        <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+                        Jornada setorial do SLA
+                      </h3>
+                      <p className="mt-0.5 text-[9px] text-muted-foreground">
+                        Indica onde ocorreram o primeiro retorno, os repasses e o encerramento em relação ao vencimento oficial atualmente conhecido.
+                      </p>
+                    </div>
+                    <Badge variant="outline" className="w-fit border-amber-300 bg-amber-50 text-[8px] text-amber-800">
+                      Indicativo — não é SLA oficial por setor
+                    </Badge>
+                  </div>
+                  <div className="hidden grid-cols-[minmax(150px,1fr)_190px_90px_minmax(220px,1.2fr)] gap-2 border-b px-3 py-1.5 text-[8px] font-semibold uppercase text-muted-foreground md:grid">
+                    <span>Área/setor</span><span>Período estimado</span><span>Permanência</span><span>Situação na saída/etapa atual</span>
+                  </div>
+                  <div className="max-h-64 overflow-y-auto">
+                    {areaStagesWithVisits.map(({ stage, visit }, index) => (
+                      <AreaJourneyRow
+                        key={`${stage.area}-${stage.startedAt?.toISOString() || index}`}
+                        stage={stage}
+                        visit={visit}
+                      />
+                    ))}
+                  </div>
+                  <p className="border-t bg-muted/20 px-3 py-1.5 text-[8px] leading-relaxed text-muted-foreground">
+                    O prazo histórico no instante de cada transferência não é fornecido pelo espelho atual. Por isso, os repasses são comparados ao vencimento vigente hoje; se o Ellevo recalculou ou ajustou o prazo depois, a atribuição setorial pode mudar.
+                  </p>
                 </div>
 
                 <div className="mb-4 grid gap-3 lg:grid-cols-2">
@@ -344,13 +507,30 @@ export function TicketsSlaAnalysis({
 
   const metrics = useMemo(() => rows.reduce((summary, chamado) => {
     const state = getOfficialSlaState(chamado);
-    summary[state.classification] += 1;
+    if (state.firstResponse.status === "met") summary.firstWithin += 1;
+    if (state.firstResponse.status === "breached") summary.firstOutside += 1;
+    if (state.resolution.status === "met") summary.resolutionWithin += 1;
+    if (state.resolution.status === "breached") summary.resolutionOutside += 1;
+    if (
+      state.firstResponse.status === "pending" ||
+      state.resolution.status === "pending" ||
+      state.resolution.status === "paused"
+    ) {
+      summary.inProgress += 1;
+    }
+    if (state.classification === "unavailable") summary.unavailable += 1;
     return summary;
-  }, { within: 0, outside: 0, inProgress: 0, unavailable: 0 }), [rows]);
+  }, {
+    firstWithin: 0,
+    firstOutside: 0,
+    resolutionWithin: 0,
+    resolutionOutside: 0,
+    inProgress: 0,
+    unavailable: 0,
+  }), [rows]);
 
   const filteredRows = useMemo(() => rows.filter((chamado) => {
-    if (slaCardFilter === "all") return true;
-    return getOfficialSlaState(chamado).classification === slaCardFilter;
+    return matchesSlaCardFilter(chamado, slaCardFilter);
   }), [rows, slaCardFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
@@ -376,13 +556,7 @@ export function TicketsSlaAnalysis({
       toast.loading("Montando o relatório de tempos e SLA...", { id: toastId });
       await generateTicketsSlaReportPdf(filteredRows, {
         ...reportFilters,
-        slaClassification: {
-          all: "Todos",
-          within: "Dentro do SLA",
-          outside: "Fora / estourado",
-          inProgress: "SLA em curso",
-          unavailable: "Sem SLA na origem",
-        }[slaCardFilter],
+        slaClassification: SLA_FILTER_LABELS[slaCardFilter],
       });
       toast.success(`Relatório de SLA gerado com ${filteredRows.length} chamado(s).`, { id: toastId });
     } catch (pdfError) {
@@ -423,13 +597,7 @@ export function TicketsSlaAnalysis({
         })),
         {
           ...reportFilters,
-          slaClassification: {
-            all: "Todos",
-            within: "Dentro do SLA",
-            outside: "Fora / estourado",
-            inProgress: "SLA em curso",
-            unavailable: "Sem SLA na origem",
-          }[slaCardFilter],
+          slaClassification: SLA_FILTER_LABELS[slaCardFilter],
         },
       );
       toast.success(
@@ -454,7 +622,10 @@ export function TicketsSlaAnalysis({
       <Card className="border-muted/80 shadow-sm">
         <CardContent className="flex flex-wrap items-end gap-3 p-3">
           <div className="mr-auto min-w-[260px]">
-            <h2 className="flex items-center gap-1.5 text-sm font-bold"><Timer className="h-4 w-4 text-primary" />Tempos de atendimento e SLA</h2>
+            <div className="flex items-center gap-1">
+              <h2 className="flex items-center gap-1.5 text-sm font-bold"><Timer className="h-4 w-4 text-primary" />Tempos de atendimento e SLA</h2>
+              <TicketsSlaInfoDialog chamados={rows} />
+            </div>
             <p className="mt-0.5 text-[10px] text-muted-foreground">Prazos e pausas sincronizados da origem; não podem ser alterados nesta tela.</p>
           </div>
           <Button
@@ -489,12 +660,14 @@ export function TicketsSlaAnalysis({
         </CardContent>
       </Card>
 
-      <div className="grid gap-2 sm:grid-cols-5">
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
         {[
           { filter: "all" as const, label: "Chamados analisados", value: rows.length, icon: MessageSquareText, color: "text-primary" },
-          { filter: "within" as const, label: "Dentro do SLA", value: metrics.within, icon: CheckCircle2, color: "text-emerald-600" },
-          { filter: "outside" as const, label: "Fora/estourado", value: metrics.outside, icon: CircleAlert, color: "text-rose-600" },
-          { filter: "inProgress" as const, label: "SLA em curso", value: metrics.inProgress, icon: Clock3, color: "text-blue-600" },
+          { filter: "firstWithin" as const, label: "1º retorno no prazo", value: metrics.firstWithin, icon: CheckCircle2, color: "text-emerald-600" },
+          { filter: "firstOutside" as const, label: "1º retorno fora", value: metrics.firstOutside, icon: CircleAlert, color: "text-rose-600" },
+          { filter: "resolutionWithin" as const, label: "Resolução no prazo", value: metrics.resolutionWithin, icon: CheckCircle2, color: "text-emerald-600" },
+          { filter: "resolutionOutside" as const, label: "Resolução fora", value: metrics.resolutionOutside, icon: CircleAlert, color: "text-rose-600" },
+          { filter: "inProgress" as const, label: "Em curso/pausado", value: metrics.inProgress, icon: Clock3, color: "text-blue-600" },
           { filter: "unavailable" as const, label: "Sem SLA na origem", value: metrics.unavailable, icon: ShieldCheck, color: "text-slate-500" },
         ].map((item) => (
           <button
@@ -520,8 +693,8 @@ export function TicketsSlaAnalysis({
 
       <Card className="border-muted/80 shadow-sm">
         <CardContent className="overflow-x-auto p-3">
-          <div className="mb-1 grid min-w-[900px] grid-cols-[28px_90px_minmax(220px,1fr)_120px_120px_110px_120px] gap-2 px-3 text-[9px] font-semibold uppercase text-muted-foreground">
-            <span /><span>Chamado</span><span>Cliente / título</span><span>Abertura</span><span>Encerramento</span><span>Duração</span><span>SLA oficial</span>
+          <div className="mb-1 grid min-w-[1040px] grid-cols-[28px_85px_minmax(210px,1fr)_112px_112px_90px_125px_125px] gap-2 px-3 text-[9px] font-semibold uppercase text-muted-foreground">
+            <span /><span>Chamado</span><span>Cliente / título</span><span>Abertura</span><span>Encerramento</span><span>Duração</span><span>1º retorno</span><span>Resolução</span>
           </div>
 
           {syncing || isLoading ? (
