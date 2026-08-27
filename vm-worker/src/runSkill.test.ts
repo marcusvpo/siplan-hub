@@ -13,6 +13,44 @@ const { ensureCodexModelSkill } = await import("./codexModelSkill.js");
 const { selectCopilotHistory } = await import("./copilotHistory.js");
 const { detectCopilotQuestionContext } = await import("./copilotContext.js");
 const { humanizeCopilotText } = await import("./copilotLanguage.js");
+const {
+  buildImprovePrompt,
+  hasUsefulFormatting,
+  selectBestImprovement,
+  shouldRetryImprovement,
+} = await import("./improveTextPrompt.js");
+
+test("exige reescrita estruturada para anotacoes de contato", () => {
+  const prompt = buildImprovePrompt(
+    "Realizei contato e o cliente pediu retorno amanha.",
+    "cs_cx_contact:draft:notes",
+  );
+
+  assert.match(prompt, /NOVA REDACAO/);
+  assert.match(prompt, /Contato e objetivo/);
+  assert.match(prompt, /Retorno do cliente/);
+  assert.match(prompt, /formatacao Markdown leve/);
+});
+
+test("refaz sugestao de contato quase igual ou sem formatacao", () => {
+  const original =
+    "Realizei o contato de rotina com o cliente. Ele informou que esta tudo em ordem e pediu novo retorno na proxima semana.";
+  const weak =
+    "Realizei contato de rotina com o cliente. Ele informou que esta tudo em ordem e solicitou novo retorno na proxima semana.";
+  const strong =
+    "**Contato realizado**\nO acompanhamento de rotina foi concluido com o cliente.\n\n**Proximo passo**\n- Retomar o contato na proxima semana, conforme solicitado.";
+
+  assert.equal(hasUsefulFormatting(weak), false);
+  assert.equal(
+    shouldRetryImprovement(original, weak, "cs_cx_contact:123:notes"),
+    true,
+  );
+  assert.equal(
+    shouldRetryImprovement(original, strong, "cs_cx_contact:123:notes"),
+    false,
+  );
+  assert.equal(selectBestImprovement(original, [weak, strong]), strong);
+});
 
 test("traduz a notacao interna do copiloto para linguagem de negocio", () => {
   assert.equal(

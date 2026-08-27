@@ -37,14 +37,17 @@ vi.mock("@/components/ui/rich-text-editor", () => ({
   RichTextEditor: ({
     content,
     onChange,
+    editable = true,
   }: {
     content: string;
     onChange: (content: string) => void;
+    editable?: boolean;
   }) => (
     <textarea
-      aria-label="Editor rico"
+      aria-label={editable ? "Editor rico" : "Previa rica"}
       value={content}
       onChange={(event) => onChange(event.target.value)}
+      readOnly={!editable}
     />
   ),
 }));
@@ -101,6 +104,8 @@ describe("AiRichTextField", () => {
     expect(screen.getByRole("alertdialog")).toHaveTextContent(
       "Texto revisado",
     );
+    const preview = screen.getByLabelText("Previa rica") as HTMLTextAreaElement;
+    expect(JSON.parse(preview.value).root.children[0].children[0].format).toBe(1);
 
     fireEvent.click(
       screen.getByRole("button", { name: "Substituir pela sugestão" }),

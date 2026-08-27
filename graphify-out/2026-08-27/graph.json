@@ -7500,7 +7500,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_deploymentstickets_ticketsslainfodialog_test",
-      "community": 300,
+      "community": 22,
       "norm_label": "ticketsslainfodialog.test.tsx"
     },
     {
@@ -7510,7 +7510,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_components_deploymentstickets_ticketsslainfodialog_test_chamados",
-      "community": 300,
+      "community": 22,
       "norm_label": "chamados"
     },
     {
@@ -7530,7 +7530,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "src_components_deploymentstickets_ticketsslainfodialog_ticketsslainfodialogprops",
-      "community": 300,
+      "community": 22,
       "norm_label": "ticketsslainfodialogprops"
     },
     {
@@ -8060,7 +8060,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_layout_mainlayout",
-      "community": 304,
+      "community": 13,
       "norm_label": "mainlayout.tsx"
     },
     {
@@ -8070,7 +8070,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_components_layout_mainlayout_mainlayoutprops",
-      "community": 304,
+      "community": 13,
       "norm_label": "mainlayoutprops"
     },
     {
@@ -8080,7 +8080,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_components_layout_mainlayout_mainlayout",
-      "community": 304,
+      "community": 13,
       "norm_label": "mainlayout()"
     },
     {
@@ -8230,7 +8230,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "src_components_notificationbell_notificationbell",
-      "community": 304,
+      "community": 13,
       "norm_label": "notificationbell()"
     },
     {
@@ -8750,7 +8750,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_projectmanagement_forms_projectheaderform",
-      "community": 308,
+      "community": 8,
       "norm_label": "projectheaderform.tsx"
     },
     {
@@ -8760,7 +8760,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_components_projectmanagement_forms_projectheaderform_projectheaderformprops",
-      "community": 308,
+      "community": 8,
       "norm_label": "projectheaderformprops"
     },
     {
@@ -8770,7 +8770,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_components_projectmanagement_forms_projectheaderform_projectheaderform",
-      "community": 308,
+      "community": 8,
       "norm_label": "projectheaderform()"
     },
     {
@@ -9230,7 +9230,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "src_components_projectmanagement_projectmodal_projectmodal",
-      "community": 8,
+      "community": 29,
       "norm_label": "projectmodal()"
     },
     {
@@ -9420,7 +9420,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_projectmanagement_tabs_generalinfotab",
-      "community": 308,
+      "community": 8,
       "norm_label": "generalinfotab.tsx"
     },
     {
@@ -9430,7 +9430,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "src_components_projectmanagement_tabs_generalinfotab_tabprops",
-      "community": 308,
+      "community": 8,
       "norm_label": "tabprops"
     },
     {
@@ -9450,7 +9450,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_projectmanagement_tabs_logstab",
-      "community": 8,
+      "community": 308,
       "norm_label": "logstab.tsx"
     },
     {
@@ -9460,7 +9460,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_components_projectmanagement_tabs_logstab_logstabprops",
-      "community": 8,
+      "community": 308,
       "norm_label": "logstabprops"
     },
     {
@@ -9470,7 +9470,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "src_components_projectmanagement_tabs_logstab_logstab",
-      "community": 8,
+      "community": 308,
       "norm_label": "logstab()"
     },
     {
@@ -9900,7 +9900,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_reports_implementers_implementerotherstages",
-      "community": 403,
+      "community": 34,
       "norm_label": "implementerotherstages.tsx"
     },
     {
@@ -9910,7 +9910,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "src_components_reports_implementers_implementerotherstages_implementerotherstagesprops",
-      "community": 403,
+      "community": 34,
       "norm_label": "implementerotherstagesprops"
     },
     {
@@ -9920,7 +9920,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "src_components_reports_implementers_implementerotherstages_global_status_labels",
-      "community": 403,
+      "community": 34,
       "norm_label": "global_status_labels"
     },
     {
@@ -9930,7 +9930,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "src_components_reports_implementers_implementerotherstages_global_status_variants",
-      "community": 403,
+      "community": 34,
       "norm_label": "global_status_variants"
     },
     {
@@ -9940,7 +9940,7 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "src_components_reports_implementers_implementerotherstages_implementerotherstages",
-      "community": 403,
+      "community": 34,
       "norm_label": "implementerotherstages()"
     },
     {
@@ -10360,7 +10360,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_components_reports_implementers_implementerprojectslist_implementerprojectslistprops",
-      "community": 403,
+      "community": 34,
       "norm_label": "implementerprojectslistprops"
     },
     {
@@ -12480,7 +12480,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_mode_toggle",
-      "community": 304,
+      "community": 40,
       "norm_label": "mode-toggle.tsx"
     },
     {
@@ -12490,7 +12490,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_components_mode_toggle_modetoggle",
-      "community": 304,
+      "community": 40,
       "norm_label": "modetoggle()"
     },
     {
@@ -14320,7 +14320,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_ui_progress",
-      "community": 403,
+      "community": 34,
       "norm_label": "progress.tsx"
     },
     {
@@ -14330,7 +14330,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_components_ui_progress_progress",
-      "community": 403,
+      "community": 34,
       "norm_label": "progress"
     },
     {
@@ -14680,7 +14680,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "src_components_ui_sidebar_sidebarprovider",
-      "community": 304,
+      "community": 13,
       "norm_label": "sidebarprovider"
     },
     {
@@ -14700,7 +14700,7 @@
       "source_location": "L260",
       "_origin": "ast",
       "id": "src_components_ui_sidebar_sidebartrigger",
-      "community": 304,
+      "community": 13,
       "norm_label": "sidebartrigger"
     },
     {
@@ -16000,7 +16000,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_hooks_useautosave",
-      "community": 308,
+      "community": 8,
       "norm_label": "useautosave.ts"
     },
     {
@@ -16010,7 +16010,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_hooks_useautosave_autosaveconfig",
-      "community": 308,
+      "community": 8,
       "norm_label": "autosaveconfig"
     },
     {
@@ -16020,7 +16020,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_hooks_useautosave_savestate",
-      "community": 308,
+      "community": 8,
       "norm_label": "savestate"
     },
     {
@@ -16050,7 +16050,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_hooks_usechamados0800_chamado0800",
-      "community": 300,
+      "community": 22,
       "norm_label": "chamado0800"
     },
     {
@@ -16710,7 +16710,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_hooks_usecscxaccess",
-      "community": 330,
+      "community": 0,
       "norm_label": "usecscxaccess.ts"
     },
     {
@@ -16720,7 +16720,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_hooks_usecscxaccess_db",
-      "community": 330,
+      "community": 0,
       "norm_label": "db"
     },
     {
@@ -16730,7 +16730,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_hooks_usecscxaccess_query_key",
-      "community": 330,
+      "community": 0,
       "norm_label": "query_key"
     },
     {
@@ -16740,7 +16740,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_hooks_usecscxaccess_cscxaccessuser",
-      "community": 330,
+      "community": 0,
       "norm_label": "cscxaccessuser"
     },
     {
@@ -16750,7 +16750,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "src_hooks_usecscxaccess_cscxaccesscandidate",
-      "community": 330,
+      "community": 0,
       "norm_label": "cscxaccesscandidate"
     },
     {
@@ -16760,7 +16760,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "src_hooks_usecscxaccess_cscxaccessprofile",
-      "community": 330,
+      "community": 0,
       "norm_label": "cscxaccessprofile"
     },
     {
@@ -16770,7 +16770,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "src_hooks_usecscxaccess_cscxmodulepermission",
-      "community": 330,
+      "community": 0,
       "norm_label": "cscxmodulepermission"
     },
     {
@@ -16780,7 +16780,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "src_hooks_usecscxaccess_accessdata",
-      "community": 330,
+      "community": 0,
       "norm_label": "accessdata"
     },
     {
@@ -18080,7 +18080,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "src_hooks_useimplementerreport_implementerinvolvement",
-      "community": 403,
+      "community": 34,
       "norm_label": "implementerinvolvement"
     },
     {
@@ -18390,7 +18390,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_hooks_usenotifications_usenotifications",
-      "community": 304,
+      "community": 13,
       "norm_label": "usenotifications()"
     },
     {
@@ -19010,7 +19010,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_hooks_useprojectform",
-      "community": 308,
+      "community": 8,
       "norm_label": "useprojectform.ts"
     },
     {
@@ -19020,7 +19020,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_hooks_useprojectform_useprojectformreturn",
-      "community": 308,
+      "community": 8,
       "norm_label": "useprojectformreturn"
     },
     {
@@ -19300,7 +19300,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_hooks_usetimelineevents",
-      "community": 8,
+      "community": 308,
       "norm_label": "usetimelineevents.ts"
     },
     {
@@ -19310,7 +19310,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_hooks_usetimelineevents_usetimelineevents",
-      "community": 8,
+      "community": 308,
       "norm_label": "usetimelineevents()"
     },
     {
@@ -19320,7 +19320,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_hooks_usevacations",
-      "community": 7,
+      "community": 10,
       "norm_label": "usevacations.ts"
     },
     {
@@ -19330,7 +19330,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_hooks_usevacations_vacation",
-      "community": 7,
+      "community": 10,
       "norm_label": "vacation"
     },
     {
@@ -19340,7 +19340,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "src_hooks_usevacations_vacationinput",
-      "community": 7,
+      "community": 10,
       "norm_label": "vacationinput"
     },
     {
@@ -21610,7 +21610,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "src_lib_tickets_ai_analytics_normalizetickettext",
-      "community": 22,
+      "community": 297,
       "norm_label": "normalizetickettext()"
     },
     {
@@ -22130,7 +22130,7 @@
       "source_location": "L79",
       "_origin": "ast",
       "id": "src_lib_tickets_sla_ticketsectorentry",
-      "community": 300,
+      "community": 22,
       "norm_label": "ticketsectorentry"
     },
     {
@@ -23070,7 +23070,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_pages_projectskanban",
-      "community": 403,
+      "community": 29,
       "norm_label": "projectskanban.tsx"
     },
     {
@@ -23080,7 +23080,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "src_pages_projectskanban_kanbanstatus",
-      "community": 403,
+      "community": 29,
       "norm_label": "kanbanstatus"
     },
     {
@@ -23090,7 +23090,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "src_pages_projectskanban_column",
-      "community": 403,
+      "community": 29,
       "norm_label": "column"
     },
     {
@@ -23100,7 +23100,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "src_pages_projectskanban_columns",
-      "community": 403,
+      "community": 29,
       "norm_label": "columns"
     },
     {
@@ -23110,7 +23110,7 @@
       "source_location": "L65",
       "_origin": "ast",
       "id": "src_pages_projectskanban_projectskanban",
-      "community": 403,
+      "community": 29,
       "norm_label": "projectskanban()"
     },
     {
@@ -24070,7 +24070,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_pages_conversion_oriontndashboard",
-      "community": 8,
+      "community": 29,
       "norm_label": "oriontndashboard.tsx"
     },
     {
@@ -24080,7 +24080,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "src_pages_conversion_oriontndashboard_status_config",
-      "community": 8,
+      "community": 29,
       "norm_label": "status_config"
     },
     {
@@ -24090,7 +24090,7 @@
       "source_location": "L65",
       "_origin": "ast",
       "id": "src_pages_conversion_oriontndashboard_oriontndashboard",
-      "community": 8,
+      "community": 29,
       "norm_label": "oriontndashboard()"
     },
     {
@@ -24100,7 +24100,7 @@
       "source_location": "L473",
       "_origin": "ast",
       "id": "src_pages_conversion_oriontndashboard_kpicard",
-      "community": 8,
+      "community": 29,
       "norm_label": "kpicard()"
     },
     {
@@ -25467,7 +25467,7 @@
       "label": "RoutineOfficeCombobox()",
       "file_type": "code",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L1706",
+      "source_location": "L1707",
       "_origin": "ast",
       "id": "src_pages_cs_cx_cscxroutines_routineofficecombobox",
       "community": 163,
@@ -25477,7 +25477,7 @@
       "label": "Metric()",
       "file_type": "code",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L1781",
+      "source_location": "L1782",
       "_origin": "ast",
       "id": "src_pages_cs_cx_cscxroutines_metric",
       "community": 27,
@@ -25487,7 +25487,7 @@
       "label": "AnalysisMetric()",
       "file_type": "code",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L1807",
+      "source_location": "L1808",
       "_origin": "ast",
       "id": "src_pages_cs_cx_cscxroutines_analysismetric",
       "community": 27,
@@ -25497,7 +25497,7 @@
       "label": "ObservationListEditor()",
       "file_type": "code",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L1818",
+      "source_location": "L1819",
       "_origin": "ast",
       "id": "src_pages_cs_cx_cscxroutines_observationlisteditor",
       "community": 27,
@@ -25507,7 +25507,7 @@
       "label": "RoutineItemRow()",
       "file_type": "code",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L1895",
+      "source_location": "L1896",
       "_origin": "ast",
       "id": "src_pages_cs_cx_cscxroutines_routineitemrow",
       "community": 27,
@@ -25517,7 +25517,7 @@
       "label": "RoutineObservationsPreview()",
       "file_type": "code",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L1972",
+      "source_location": "L1989",
       "_origin": "ast",
       "id": "src_pages_cs_cx_cscxroutines_routineobservationspreview",
       "community": 114,
@@ -25527,7 +25527,7 @@
       "label": "StatusBadge()",
       "file_type": "code",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L2011",
+      "source_location": "L2028",
       "_origin": "ast",
       "id": "src_pages_cs_cx_cscxroutines_statusbadge",
       "community": 27,
@@ -25537,7 +25537,7 @@
       "label": "ActionBadge()",
       "file_type": "code",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L2034",
+      "source_location": "L2051",
       "_origin": "ast",
       "id": "src_pages_cs_cx_cscxroutines_actionbadge",
       "community": 27,
@@ -25547,7 +25547,7 @@
       "label": "RoutinePaginationBar()",
       "file_type": "code",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L2061",
+      "source_location": "L2078",
       "_origin": "ast",
       "id": "src_pages_cs_cx_cscxroutines_routinepaginationbar",
       "community": 12,
@@ -25557,7 +25557,7 @@
       "label": "actionLabel()",
       "file_type": "code",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L2144",
+      "source_location": "L2161",
       "_origin": "ast",
       "id": "src_pages_cs_cx_cscxroutines_actionlabel",
       "community": 27,
@@ -25567,7 +25567,7 @@
       "label": "hasStatusTransition()",
       "file_type": "code",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L2166",
+      "source_location": "L2183",
       "_origin": "ast",
       "id": "src_pages_cs_cx_cscxroutines_hasstatustransition",
       "community": 27,
@@ -25577,7 +25577,7 @@
       "label": "formatDate()",
       "file_type": "code",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L2178",
+      "source_location": "L2195",
       "_origin": "ast",
       "id": "src_pages_cs_cx_cscxroutines_formatdate",
       "community": 27,
@@ -25587,7 +25587,7 @@
       "label": "formatDateTime()",
       "file_type": "code",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L2184",
+      "source_location": "L2201",
       "_origin": "ast",
       "id": "src_pages_cs_cx_cscxroutines_formatdatetime",
       "community": 27,
@@ -25597,7 +25597,7 @@
       "label": "localDateKey()",
       "file_type": "code",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L2191",
+      "source_location": "L2208",
       "_origin": "ast",
       "id": "src_pages_cs_cx_cscxroutines_localdatekey",
       "community": 27,
@@ -25607,7 +25607,7 @@
       "label": "todayKey()",
       "file_type": "code",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L2202",
+      "source_location": "L2219",
       "_origin": "ast",
       "id": "src_pages_cs_cx_cscxroutines_todaykey",
       "community": 27,
@@ -25617,7 +25617,7 @@
       "label": "withEmptyObservation()",
       "file_type": "code",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L2206",
+      "source_location": "L2223",
       "_origin": "ast",
       "id": "src_pages_cs_cx_cscxroutines_withemptyobservation",
       "community": 27,
@@ -25627,7 +25627,7 @@
       "label": "formatObservationHistory()",
       "file_type": "code",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L2210",
+      "source_location": "L2227",
       "_origin": "ast",
       "id": "src_pages_cs_cx_cscxroutines_formatobservationhistory",
       "community": 185,
@@ -25637,7 +25637,7 @@
       "label": "messageOf()",
       "file_type": "code",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L2227",
+      "source_location": "L2244",
       "_origin": "ast",
       "id": "src_pages_cs_cx_cscxroutines_messageof",
       "community": 27,
@@ -27200,7 +27200,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_stores_projectstore",
-      "community": 12,
+      "community": 308,
       "norm_label": "projectstore.ts"
     },
     {
@@ -27210,7 +27210,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_stores_projectstore_projectstore",
-      "community": 12,
+      "community": 308,
       "norm_label": "projectstore"
     },
     {
@@ -28107,7 +28107,7 @@
       "label": "renderPage()",
       "file_type": "code",
       "source_file": "src/test/cs-cx-routines-permissions.test.tsx",
-      "source_location": "L172",
+      "source_location": "L175",
       "_origin": "ast",
       "id": "src_test_cs_cx_routines_permissions_test_renderpage",
       "community": 365,
@@ -28860,7 +28860,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_types_projectv2_globalstatus",
-      "community": 403,
+      "community": 34,
       "norm_label": "globalstatus"
     },
     {
@@ -28920,7 +28920,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "src_types_projectv2_contentblock",
-      "community": 308,
+      "community": 8,
       "norm_label": "contentblock"
     },
     {
@@ -141896,7 +141896,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L1980",
+      "source_location": "L1997",
       "weight": 1.0,
       "source": "src_pages_cs_cx_cscxroutines_routineobservationspreview",
       "target": "src_lib_chamados_report_pdf_text"
@@ -145252,7 +145252,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L2211",
+      "source_location": "L2228",
       "weight": 1.0,
       "source": "src_pages_cs_cx_cscxroutines_formatobservationhistory",
       "target": "src_lib_cs_cx_routine_observations_normalizeroutineobservations",
@@ -145319,7 +145319,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L1906",
+      "source_location": "L1907",
       "weight": 1.0,
       "source": "src_pages_cs_cx_cscxroutines_routineitemrow",
       "target": "src_lib_cs_cx_routine_observations_decoderoutineobservations"
@@ -149871,7 +149871,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L1765",
+      "source_location": "L1766",
       "weight": 1.0,
       "source": "src_pages_cs_cx_cscxroutines_routineofficecombobox",
       "target": "src_lib_utils_cn"
@@ -149882,7 +149882,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L2086",
+      "source_location": "L2103",
       "weight": 1.0,
       "source": "src_pages_cs_cx_cscxroutines_routinepaginationbar",
       "target": "src_lib_utils_cn"
@@ -154517,7 +154517,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L2034",
+      "source_location": "L2051",
       "weight": 1.0,
       "source": "src_pages_cs_cx_cscxroutines",
       "target": "src_pages_cs_cx_cscxroutines_actionbadge",
@@ -154527,7 +154527,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L2144",
+      "source_location": "L2161",
       "weight": 1.0,
       "source": "src_pages_cs_cx_cscxroutines",
       "target": "src_pages_cs_cx_cscxroutines_actionlabel",
@@ -154537,7 +154537,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L1807",
+      "source_location": "L1808",
       "weight": 1.0,
       "source": "src_pages_cs_cx_cscxroutines",
       "target": "src_pages_cs_cx_cscxroutines_analysismetric",
@@ -154567,7 +154567,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L2178",
+      "source_location": "L2195",
       "weight": 1.0,
       "source": "src_pages_cs_cx_cscxroutines",
       "target": "src_pages_cs_cx_cscxroutines_formatdate",
@@ -154577,7 +154577,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L2184",
+      "source_location": "L2201",
       "weight": 1.0,
       "source": "src_pages_cs_cx_cscxroutines",
       "target": "src_pages_cs_cx_cscxroutines_formatdatetime",
@@ -154587,7 +154587,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L2210",
+      "source_location": "L2227",
       "weight": 1.0,
       "source": "src_pages_cs_cx_cscxroutines",
       "target": "src_pages_cs_cx_cscxroutines_formatobservationhistory",
@@ -154607,7 +154607,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L2166",
+      "source_location": "L2183",
       "weight": 1.0,
       "source": "src_pages_cs_cx_cscxroutines",
       "target": "src_pages_cs_cx_cscxroutines_hasstatustransition",
@@ -154627,7 +154627,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L2191",
+      "source_location": "L2208",
       "weight": 1.0,
       "source": "src_pages_cs_cx_cscxroutines",
       "target": "src_pages_cs_cx_cscxroutines_localdatekey",
@@ -154637,7 +154637,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L2227",
+      "source_location": "L2244",
       "weight": 1.0,
       "source": "src_pages_cs_cx_cscxroutines",
       "target": "src_pages_cs_cx_cscxroutines_messageof",
@@ -154647,7 +154647,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L1781",
+      "source_location": "L1782",
       "weight": 1.0,
       "source": "src_pages_cs_cx_cscxroutines",
       "target": "src_pages_cs_cx_cscxroutines_metric",
@@ -154657,7 +154657,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L1818",
+      "source_location": "L1819",
       "weight": 1.0,
       "source": "src_pages_cs_cx_cscxroutines",
       "target": "src_pages_cs_cx_cscxroutines_observationlisteditor",
@@ -154667,7 +154667,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L1895",
+      "source_location": "L1896",
       "weight": 1.0,
       "source": "src_pages_cs_cx_cscxroutines",
       "target": "src_pages_cs_cx_cscxroutines_routineitemrow",
@@ -154677,7 +154677,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L1972",
+      "source_location": "L1989",
       "weight": 1.0,
       "source": "src_pages_cs_cx_cscxroutines",
       "target": "src_pages_cs_cx_cscxroutines_routineobservationspreview",
@@ -154687,7 +154687,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L1706",
+      "source_location": "L1707",
       "weight": 1.0,
       "source": "src_pages_cs_cx_cscxroutines",
       "target": "src_pages_cs_cx_cscxroutines_routineofficecombobox",
@@ -154697,7 +154697,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L2061",
+      "source_location": "L2078",
       "weight": 1.0,
       "source": "src_pages_cs_cx_cscxroutines",
       "target": "src_pages_cs_cx_cscxroutines_routinepaginationbar",
@@ -154727,7 +154727,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L2011",
+      "source_location": "L2028",
       "weight": 1.0,
       "source": "src_pages_cs_cx_cscxroutines",
       "target": "src_pages_cs_cx_cscxroutines_statusbadge",
@@ -154747,7 +154747,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L2202",
+      "source_location": "L2219",
       "weight": 1.0,
       "source": "src_pages_cs_cx_cscxroutines",
       "target": "src_pages_cs_cx_cscxroutines_todaykey",
@@ -154757,7 +154757,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L2206",
+      "source_location": "L2223",
       "weight": 1.0,
       "source": "src_pages_cs_cx_cscxroutines",
       "target": "src_pages_cs_cx_cscxroutines_withemptyobservation",
@@ -154790,7 +154790,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/test/cs-cx-routines-permissions.test.tsx",
-      "source_location": "L170",
+      "source_location": "L173",
       "weight": 1.0,
       "source": "src_test_cs_cx_routines_permissions_test",
       "target": "src_pages_cs_cx_cscxroutines",
@@ -154923,7 +154923,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L1741",
+      "source_location": "L1742",
       "weight": 1.0,
       "source": "src_pages_cs_cx_cscxroutines_routineofficecombobox",
       "target": "src_utils_normalize_search_normalizesearchtext"
@@ -154933,7 +154933,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L1953",
+      "source_location": "L1970",
       "weight": 1.0,
       "source": "src_pages_cs_cx_cscxroutines_routineitemrow",
       "target": "src_pages_cs_cx_cscxroutines_formatdate",
@@ -154944,7 +154944,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L2039",
+      "source_location": "L2056",
       "weight": 1.0,
       "source": "src_pages_cs_cx_cscxroutines_actionbadge",
       "target": "src_pages_cs_cx_cscxroutines_actionlabel",
@@ -154955,7 +154955,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/pages/cs-cx/CsCxRoutines.tsx",
-      "source_location": "L2203",
+      "source_location": "L2220",
       "weight": 1.0,
       "source": "src_pages_cs_cx_cscxroutines_todaykey",
       "target": "src_pages_cs_cx_cscxroutines_localdatekey",
@@ -158011,7 +158011,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/test/cs-cx-routines-permissions.test.tsx",
-      "source_location": "L172",
+      "source_location": "L175",
       "weight": 1.0,
       "source": "src_test_cs_cx_routines_permissions_test",
       "target": "src_test_cs_cx_routines_permissions_test_renderpage",

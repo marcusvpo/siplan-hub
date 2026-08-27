@@ -2,36 +2,15 @@ import { supabase } from "./supabase.js";
 import { config, DtcJob } from "./config.js";
 import { runSkill, ProgressStep } from "./runSkill.js";
 import { lexToText } from "./processDtcJob.js";
+import {
+  buildImprovePrompt,
+  selectBestImprovement,
+  shouldRetryImprovement,
+} from "./improveTextPrompt.js";
 
 // Mantem apenas os ultimos N passos no banco (evita payloads gigantes no Realtime).
 const MAX_LOG_STEPS = 80;
 const PROGRESS_FLUSH_MS = 2500;
-
-// Prompt de melhoria: reescreve o texto do analista mantendo sentido e fatos.
-// Regras de formatacao espelham o conversor plainTextToLexicalJson do frontend
-// (**negrito**, __sublinhado__, *italico*, listas com "- "/"1.").
-function buildImprovePrompt(text: string): string {
-  return `Voce e um revisor de texto profissional. Reescreva o TEXTO ORIGINAL abaixo deixando-o mais claro, coeso, bem estruturado e com portugues correto (gramatica, pontuacao, concordancia), mantendo um tom formal e profissional.
-
-REGRAS:
-- Preserve INTEGRALMENTE o sentido, os fatos, nomes, datas e numeros do original. NAO invente nem remova informacoes.
-- Mantenha o mesmo idioma do original (portugues do Brasil).
-- Nao adicione preambulo, titulo, comentarios nem explicacoes sobre o que voce mudou.
-- Pode organizar em paragrafos e, quando fizer sentido, em listas.
-
-FORMATACAO (Markdown leve, use com moderacao e apenas quando agregar clareza):
-- **negrito** para termos-chave.
-- __sublinhado__ para enfase pontual em algo critico.
-- *italico* para observacoes secundarias.
-- Listas com "- " no inicio da linha; listas numeradas com "1." quando houver ordem.
-Nao use titulos com "#", nem tabelas, nem blocos de codigo.
-
-Responda SOMENTE com o texto reescrito, sem aspas e sem qualquer texto adicional.
-
-=== TEXTO ORIGINAL ===
-${text}
-=== FIM DO TEXTO ORIGINAL ===`;
-}
 
 // Prompt de resumo: sintetiza TODOS os blocos de Observacoes & Detalhes da etapa 7
 // (Pos-Implantacao) em um texto unico, rico e bem estruturado.
@@ -420,8 +399,8 @@ export async function processImproveJob(job: DtcJob): Promise<void> {
     ? buildParecerPrompt(text, contextoProjetos)
     : isSummary
     ? buildSummaryPrompt(text)
-    : buildImprovePrompt(text);
-  const { resultText, transcript, code, stderr, cancelled } = await runSkill(
+    : buildImprovePrompt(text, job.target_field);
+  const generation = await runSkill(
     prompt,
     (step) => record(step),
     shouldCancel,
@@ -433,7 +412,7 @@ export async function processImproveJob(job: DtcJob): Promise<void> {
   );
   await flushProgress(true);
 
-  if (cancelled) {
+  if (generation.cancelled) {
     pushStep("Geracao cancelada pelo usuario.", "system");
     await flushProgress(true);
     await supabase
@@ -444,14 +423,52 @@ export async function processImproveJob(job: DtcJob): Promise<void> {
     return;
   }
 
-  if (code !== 0) {
-    const tail = (stderr || transcript || "").slice(-1200);
-    throw new Error(`Motor de IA encerrou com codigo ${code}. Fim da saida: ${tail}`);
+  if (generation.code !== 0) {
+    const tail = (generation.stderr || generation.transcript || "").slice(-1200);
+    throw new Error(`Motor de IA encerrou com codigo ${generation.code}. Fim da saida: ${tail}`);
   }
 
-  const improved = (resultText || "").trim();
+  let improved = (generation.resultText || "").trim();
   if (!improved) {
-    throw new Error(`O motor de IA nao retornou texto. Fim da saida: ${(transcript || "").slice(-800)}`);
+    throw new Error(`O motor de IA nao retornou texto. Fim da saida: ${(generation.transcript || "").slice(-800)}`);
+  }
+
+  // Os campos de contato exigem uma melhoria perceptivel e formatada. Se o
+  // primeiro retorno vier quase igual ou sem Markdown, faz uma segunda tentativa
+  // mais explicita e conserva a melhor das duas respostas.
+  if (
+    !isParecer &&
+    !isSummary &&
+    shouldRetryImprovement(text, improved, job.target_field)
+  ) {
+    pushStep("Refinando a redacao e a formatacao da sugestao...");
+    await flushProgress(true);
+    const retry = await runSkill(
+      buildImprovePrompt(text, job.target_field, true),
+      (step) => record(step),
+      shouldCancel,
+      {
+        model: config.dtcCodexModel || undefined,
+        cwd: config.copilotCwd,
+        allowOllamaFallback: true,
+      }
+    );
+    await flushProgress(true);
+
+    if (retry.cancelled) {
+      pushStep("Geracao cancelada pelo usuario.", "system");
+      await flushProgress(true);
+      await supabase
+        .from("dtc_ai_jobs")
+        .update({ status: "cancelled", finished_at: new Date().toISOString(), cancel_requested: false })
+        .eq("id", job.id);
+      console.log(`[improve ${job.id}] cancelado pelo usuario`);
+      return;
+    }
+
+    if (retry.code === 0 && retry.resultText?.trim()) {
+      improved = selectBestImprovement(text, [improved, retry.resultText]);
+    }
   }
 
   // 3. Concluir job com o texto gerado
