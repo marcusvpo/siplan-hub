@@ -13,6 +13,10 @@ const slaScreen = readSource(
 const slaInfoDialog = readSource(
   "src/components/DeploymentsTickets/TicketsSlaInfoDialog.tsx",
 );
+const slaSectorScreen = readSource(
+  "src/components/DeploymentsTickets/TicketsSlaSectorAnalysis.tsx",
+);
+const ticketsPage = readSource("src/pages/DeploymentsTickets.tsx");
 
 describe("SLA oficial da Consulta de Chamados", () => {
   it("espelha primeira resposta, vencimento, pausa e auditoria manual", () => {
@@ -35,7 +39,7 @@ describe("SLA oficial da Consulta de Chamados", () => {
 
   it("não oferece parâmetros manuais de SLA na tela", () => {
     expect(slaScreen).toContain("SLA automático do Ellevo");
-    expect(slaScreen).toContain("1º retorno fora");
+    expect(slaScreen).toContain("1ª resposta fora");
     expect(slaScreen).toContain("Resolução no prazo");
     expect(slaScreen).toContain("Resolução fora");
     expect(slaScreen).not.toContain("SLA primeiro atendimento (horas)");
@@ -47,7 +51,7 @@ describe("SLA oficial da Consulta de Chamados", () => {
     expect(slaInfoDialog).toContain("Entender o cálculo do SLA");
     expect(slaInfoDialog).toContain("Padrão predominante por área e criticidade");
     expect(slaInfoDialog).toContain("Equipe/área");
-    expect(slaInfoDialog).toContain("Meta do 1º atendimento");
+    expect(slaInfoDialog).toContain("Meta da 1ª resposta");
     expect(slaInfoDialog).toContain("Meta de resolução");
     expect(slaInfoDialog).toContain("slaTempoPrimeiraRespostaMinutos");
     expect(slaInfoDialog).toContain("slaTempoVencimentoMinutos");
@@ -63,5 +67,17 @@ describe("SLA oficial da Consulta de Chamados", () => {
     expect(slaScreen).toContain("Indicativo — não é SLA oficial por setor");
     expect(slaScreen).toContain("Repasse antes do vencimento");
     expect(slaScreen).toContain("SLA vencido na etapa atual");
+  });
+
+  it("oferece uma análise indicativa dos chamados por setor", () => {
+    expect(ticketsPage).toContain('value="sla-sector"');
+    expect(ticketsPage).toContain("SLA por setor");
+    expect(slaSectorScreen).toContain("Análise indicativa de SLA por setor");
+    expect(slaSectorScreen).toContain("Setor para analisar");
+    expect(slaSectorScreen).toContain("Comparativo dos setores");
+    expect(slaSectorScreen).toContain("Somente com falha");
+    expect(slaSectorScreen).toContain("primeira resposta atrasada");
+    expect(slaSectorScreen).toContain("repasse após o vencimento");
+    expect(slaSectorScreen).toContain("não substitui o SLA oficial");
   });
 });

@@ -20,7 +20,7 @@ export interface SlaCheckpointDisplay {
 
 export interface ResolutionSlaState {
   hours: number | null;
-  label: "Dentro do SLA" | "Fora do SLA" | "Retorno fora do SLA" | "Aguardando retorno" | "SLA em curso" | "SLA vencido" | "SLA pausado" | "Sem SLA na origem" | "Sem datas";
+  label: "Dentro do SLA" | "Fora do SLA" | "Primeira resposta fora do SLA" | "Aguardando primeira resposta" | "SLA em curso" | "SLA vencido" | "SLA pausado" | "Sem SLA na origem" | "Sem datas";
   className: string;
   classification: TicketSlaClassification;
   phase: "firstResponse" | "resolution" | "paused" | "completed" | "unavailable";
@@ -72,6 +72,51 @@ export interface TicketFlowAnalysis {
   bottleneck: TicketAreaTime | null;
   longestTransfer: TicketAreaTransfer | null;
   totalTrackedHours: number;
+}
+
+export type TicketSectorVerdict = "within" | "outside" | "paused" | "unavailable";
+
+export interface TicketSectorEntry {
+  chamado: Chamado0800;
+  sector: string;
+  sourceAreas: string[];
+  stages: TicketAreaStage[];
+  hours: number;
+  withinEvents: number;
+  outsideEvents: number;
+  pausedEvents: number;
+  unavailableEvents: number;
+  firstResponseWithin: number;
+  firstResponseOutside: number;
+  lateHandoffs: number;
+  lateResolutions: number;
+  activeOutside: number;
+  verdict: TicketSectorVerdict;
+}
+
+export interface TicketSectorSummary {
+  sector: string;
+  sourceAreas: string[];
+  tickets: number;
+  compliantTickets: number;
+  failedTickets: number;
+  pausedTickets: number;
+  unavailableTickets: number;
+  withinEvents: number;
+  outsideEvents: number;
+  firstResponseOutside: number;
+  lateHandoffs: number;
+  lateResolutions: number;
+  activeOutside: number;
+  hours: number;
+  complianceRate: number | null;
+}
+
+export interface TicketSectorAnalysis {
+  totalTickets: number;
+  totalStages: number;
+  sectors: TicketSectorSummary[];
+  entries: TicketSectorEntry[];
 }
 
 export function parseSlaDate(value?: string, endOfDay = false): Date | null {
@@ -211,11 +256,11 @@ export function getOfficialSlaState(
     if (firstResponse.status === "breached") {
       return {
         hours,
-        label: "Retorno fora do SLA",
+        label: "Primeira resposta fora do SLA",
         className: "bg-rose-100 text-rose-700",
         classification: "outside",
         phase: "firstResponse",
-        phaseLabel: "Aguardando primeiro retorno",
+        phaseLabel: "Aguardando primeira resposta",
         activeDeadline: firstResponse.deadline,
         firstResponse,
         resolution,
@@ -224,11 +269,11 @@ export function getOfficialSlaState(
     if (firstResponse.status === "pending") {
       return {
         hours,
-        label: "Aguardando retorno",
+        label: "Aguardando primeira resposta",
         className: "bg-blue-100 text-blue-700",
         classification: "inProgress",
         phase: "firstResponse",
-        phaseLabel: "Aguardando primeiro retorno",
+        phaseLabel: "Aguardando primeira resposta",
         activeDeadline: firstResponse.deadline,
         firstResponse,
         resolution,
@@ -239,7 +284,7 @@ export function getOfficialSlaState(
   if (firstResponse.status === "breached") {
     return {
       hours,
-      label: "Retorno fora do SLA",
+      label: "Primeira resposta fora do SLA",
       className: "bg-rose-100 text-rose-700",
       classification: "outside",
       phase: closed ? "completed" : "resolution",
@@ -365,10 +410,10 @@ export function buildTicketFlowAnalysis(
   };
 
   if (timeline.length === 0) {
-    addAreaInterval("Aguardando primeiro atendimento", openedAt, endpoint);
+    addAreaInterval("Aguardando primeira resposta", openedAt, endpoint);
   } else {
     const firstAt = parseSlaDate(timeline[0].dataTramite);
-    addAreaInterval("Aguardando primeiro atendimento", openedAt, firstAt);
+    addAreaInterval("Aguardando primeira resposta", openedAt, firstAt);
 
     for (let index = 0; index < timeline.length - 1; index += 1) {
       const current = timeline[index];
@@ -488,5 +533,177 @@ export function buildTicketFlowAnalysis(
     bottleneck: areaTimes[0] || null,
     longestTransfer,
     totalTrackedHours: areaTimes.reduce((total, area) => total + area.hours, 0),
+  };
+}
+
+/** Agrupa nomes operacionais em setores de leitura gerencial. */
+export function getTicketSectorLabel(area?: string): string {
+  const original = area?.trim() || "Área não informada";
+  const normalized = normalizeTicketText(original);
+  if (/^(sd\b|service desk\b|suporte\b|atendimento\b)/.test(normalized)) return "SD";
+  if (/infra/.test(normalized)) return "Infraestrutura";
+  if (/implanta/.test(normalized)) return "Implantação";
+  if (/sustenta/.test(normalized)) return "Sustentação";
+  if (/produto/.test(normalized)) return "Produtos";
+  if (/desenvol/.test(normalized)) return "Desenvolvimento";
+  if (/projeto/.test(normalized)) return "Projetos";
+  if (/convers/.test(normalized)) return "Conversão";
+  if (/comercial/.test(normalized)) return "Comercial";
+  return original;
+}
+
+function stageOutcomeGroup(outcome: TicketAreaStageOutcome): TicketSectorVerdict {
+  if (["handedOffAfterDeadline", "resolvedOutside", "activeOutside"].includes(outcome)) {
+    return "outside";
+  }
+  if (["handedOffBeforeDeadline", "resolvedWithin", "activeWithin"].includes(outcome)) {
+    return "within";
+  }
+  if (outcome === "activePaused") return "paused";
+  return "unavailable";
+}
+
+/**
+ * Consolida a jornada dos chamados por setor. A atribuição é indicativa porque
+ * os trâmites não preservam a fotografia do vencimento vigente em cada repasse.
+ */
+export function buildTicketSectorAnalysis(
+  tickets: Array<{ chamado: Chamado0800; tramites: ChamadoTramite[] }>,
+  now = new Date(),
+): TicketSectorAnalysis {
+  const entries: TicketSectorEntry[] = [];
+
+  tickets.forEach(({ chamado, tramites }) => {
+    const stagesBySector = new Map<string, TicketAreaStage[]>();
+    buildTicketFlowAnalysis(chamado, tramites, now).areaStages.forEach((stage) => {
+      const sector = getTicketSectorLabel(stage.area);
+      const current = stagesBySector.get(sector) ?? [];
+      current.push(stage);
+      stagesBySector.set(sector, current);
+    });
+
+    stagesBySector.forEach((stages, sector) => {
+      let withinEvents = 0;
+      let outsideEvents = 0;
+      let pausedEvents = 0;
+      let unavailableEvents = 0;
+      let firstResponseWithin = 0;
+      let firstResponseOutside = 0;
+      let lateHandoffs = 0;
+      let lateResolutions = 0;
+      let activeOutside = 0;
+
+      stages.forEach((stage) => {
+        const group = stageOutcomeGroup(stage.outcome);
+        if (group === "within") withinEvents += 1;
+        if (group === "outside") outsideEvents += 1;
+        if (group === "paused") pausedEvents += 1;
+        if (group === "unavailable") unavailableEvents += 1;
+        if (stage.firstResponseStatus === "met") {
+          firstResponseWithin += 1;
+          withinEvents += 1;
+        }
+        if (stage.firstResponseStatus === "breached") {
+          firstResponseOutside += 1;
+          outsideEvents += 1;
+        }
+        if (stage.outcome === "handedOffAfterDeadline") lateHandoffs += 1;
+        if (stage.outcome === "resolvedOutside") lateResolutions += 1;
+        if (stage.outcome === "activeOutside") activeOutside += 1;
+      });
+
+      const verdict: TicketSectorVerdict = outsideEvents > 0
+        ? "outside"
+        : withinEvents > 0
+          ? "within"
+          : pausedEvents > 0
+            ? "paused"
+            : "unavailable";
+
+      entries.push({
+        chamado,
+        sector,
+        sourceAreas: [...new Set(stages.map((stage) => stage.area))].sort((left, right) => (
+          left.localeCompare(right, "pt-BR")
+        )),
+        stages,
+        hours: stages.reduce((total, stage) => total + (stage.hours ?? 0), 0),
+        withinEvents,
+        outsideEvents,
+        pausedEvents,
+        unavailableEvents,
+        firstResponseWithin,
+        firstResponseOutside,
+        lateHandoffs,
+        lateResolutions,
+        activeOutside,
+        verdict,
+      });
+    });
+  });
+
+  const summaries = new Map<string, Omit<TicketSectorSummary, "complianceRate"> & {
+    sourceAreaSet: Set<string>;
+  }>();
+  entries.forEach((entry) => {
+    const summary = summaries.get(entry.sector) ?? {
+      sector: entry.sector,
+      sourceAreas: [],
+      sourceAreaSet: new Set<string>(),
+      tickets: 0,
+      compliantTickets: 0,
+      failedTickets: 0,
+      pausedTickets: 0,
+      unavailableTickets: 0,
+      withinEvents: 0,
+      outsideEvents: 0,
+      firstResponseOutside: 0,
+      lateHandoffs: 0,
+      lateResolutions: 0,
+      activeOutside: 0,
+      hours: 0,
+    };
+    entry.sourceAreas.forEach((area) => summary.sourceAreaSet.add(area));
+    summary.tickets += 1;
+    if (entry.verdict === "within") summary.compliantTickets += 1;
+    if (entry.verdict === "outside") summary.failedTickets += 1;
+    if (entry.verdict === "paused") summary.pausedTickets += 1;
+    if (entry.verdict === "unavailable") summary.unavailableTickets += 1;
+    summary.withinEvents += entry.withinEvents;
+    summary.outsideEvents += entry.outsideEvents;
+    summary.firstResponseOutside += entry.firstResponseOutside;
+    summary.lateHandoffs += entry.lateHandoffs;
+    summary.lateResolutions += entry.lateResolutions;
+    summary.activeOutside += entry.activeOutside;
+    summary.hours += entry.hours;
+    summaries.set(entry.sector, summary);
+  });
+
+  const sectors = [...summaries.values()].map((summary): TicketSectorSummary => {
+    const comparableTickets = summary.compliantTickets + summary.failedTickets;
+    const { sourceAreaSet, ...rest } = summary;
+    return {
+      ...rest,
+      sourceAreas: [...sourceAreaSet].sort((left, right) => left.localeCompare(right, "pt-BR")),
+      complianceRate: comparableTickets > 0
+        ? Math.round((summary.compliantTickets / comparableTickets) * 100)
+        : null,
+    };
+  }).sort((left, right) => (
+    right.failedTickets - left.failedTickets ||
+    right.outsideEvents - left.outsideEvents ||
+    right.tickets - left.tickets ||
+    left.sector.localeCompare(right.sector, "pt-BR")
+  ));
+
+  return {
+    totalTickets: tickets.length,
+    totalStages: entries.reduce((total, entry) => total + entry.stages.length, 0),
+    sectors,
+    entries: entries.sort((left, right) => (
+      Number(right.verdict === "outside") - Number(left.verdict === "outside") ||
+      left.sector.localeCompare(right.sector, "pt-BR") ||
+      left.chamado.numeroChamado.localeCompare(right.chamado.numeroChamado, "pt-BR")
+    )),
   };
 }

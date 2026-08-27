@@ -118,7 +118,7 @@ export async function generateTicketsSlaReportPdf(
     { label: "Encerramento", width: 27, value: (item: Chamado0800) => formatDateTime(item.encerradoEm || item.dataEncerramento) },
     { label: "Duração", width: 20, value: (item: Chamado0800) => formatSlaDuration(getOfficialSlaState(item).hours) },
     {
-      label: "1º retorno",
+      label: "1ª resposta",
       width: 31,
       value: (item: Chamado0800) => {
         const state = getOfficialSlaState(item);
@@ -186,8 +186,8 @@ export async function generateTicketsSlaReportPdf(
     y += filterLines.length * 3.5 + 3;
 
     drawSummaryCard(marginX, "Chamados analisados", chamados.length, [190, 0, 48]);
-    drawSummaryCard(marginX + 54, "1º retorno no prazo", firstWithin, [5, 150, 105]);
-    drawSummaryCard(marginX + 108, "1º retorno fora", firstOutside, [225, 29, 72]);
+    drawSummaryCard(marginX + 54, "1ª resposta no prazo", firstWithin, [5, 150, 105]);
+    drawSummaryCard(marginX + 108, "1ª resposta fora", firstOutside, [225, 29, 72]);
     drawSummaryCard(marginX + 162, "Resolução no prazo", resolutionWithin, [5, 150, 105]);
     drawSummaryCard(marginX + 216, "Resolução fora", resolutionOutside, [225, 29, 72]);
     y += 16;

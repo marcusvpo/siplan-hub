@@ -75,8 +75,8 @@ type SlaCardFilter =
 
 const SLA_FILTER_LABELS: Record<SlaCardFilter, string> = {
   all: "Todos",
-  firstWithin: "1º retorno no prazo",
-  firstOutside: "1º retorno fora do SLA",
+  firstWithin: "1ª resposta no prazo",
+  firstOutside: "1ª resposta fora do SLA",
   resolutionWithin: "Resolução no prazo",
   resolutionOutside: "Resolução fora do SLA",
   inProgress: "SLA em curso ou pausado",
@@ -195,7 +195,7 @@ function AreaJourneyRow({ stage, visit }: { stage: TicketAreaStage; visit: numbe
               ? "bg-emerald-100 text-emerald-700"
               : "bg-rose-100 text-rose-700",
           )}>
-            1º retorno {stage.firstResponseStatus === "met" ? "no prazo" : "fora do SLA"}
+            1ª resposta {stage.firstResponseStatus === "met" ? "no prazo" : "fora do SLA"}
           </Badge>
         )}
       </div>
@@ -328,7 +328,7 @@ function TicketSlaRow({
 
                 <div className="mb-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-6">
                   <div className="rounded-md border bg-background p-2.5">
-                    <p className="text-[9px] font-semibold uppercase text-muted-foreground">Primeiro atendimento</p>
+                    <p className="text-[9px] font-semibold uppercase text-muted-foreground">Primeira resposta</p>
                     <p className="mt-1 text-sm font-bold">{formatSlaDuration(firstResponseElapsed)}</p>
                     <Badge className={cn("mt-1 border-0 text-[9px]", firstResponseDisplay.className)}>
                       {firstResponseDisplay.label}
@@ -375,7 +375,7 @@ function TicketSlaRow({
                         Jornada setorial do SLA
                       </h3>
                       <p className="mt-0.5 text-[9px] text-muted-foreground">
-                        Indica onde ocorreram o primeiro retorno, os repasses e o encerramento em relação ao vencimento oficial atualmente conhecido.
+                        Indica onde ocorreram a primeira resposta, os repasses e o encerramento em relação ao vencimento oficial atualmente conhecido.
                       </p>
                     </div>
                     <Badge variant="outline" className="w-fit border-amber-300 bg-amber-50 text-[8px] text-amber-800">
@@ -663,8 +663,8 @@ export function TicketsSlaAnalysis({
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
         {[
           { filter: "all" as const, label: "Chamados analisados", value: rows.length, icon: MessageSquareText, color: "text-primary" },
-          { filter: "firstWithin" as const, label: "1º retorno no prazo", value: metrics.firstWithin, icon: CheckCircle2, color: "text-emerald-600" },
-          { filter: "firstOutside" as const, label: "1º retorno fora", value: metrics.firstOutside, icon: CircleAlert, color: "text-rose-600" },
+          { filter: "firstWithin" as const, label: "1ª resposta no prazo", value: metrics.firstWithin, icon: CheckCircle2, color: "text-emerald-600" },
+          { filter: "firstOutside" as const, label: "1ª resposta fora", value: metrics.firstOutside, icon: CircleAlert, color: "text-rose-600" },
           { filter: "resolutionWithin" as const, label: "Resolução no prazo", value: metrics.resolutionWithin, icon: CheckCircle2, color: "text-emerald-600" },
           { filter: "resolutionOutside" as const, label: "Resolução fora", value: metrics.resolutionOutside, icon: CircleAlert, color: "text-rose-600" },
           { filter: "inProgress" as const, label: "Em curso/pausado", value: metrics.inProgress, icon: Clock3, color: "text-blue-600" },
@@ -694,7 +694,7 @@ export function TicketsSlaAnalysis({
       <Card className="border-muted/80 shadow-sm">
         <CardContent className="overflow-x-auto p-3">
           <div className="mb-1 grid min-w-[1040px] grid-cols-[28px_85px_minmax(210px,1fr)_112px_112px_90px_125px_125px] gap-2 px-3 text-[9px] font-semibold uppercase text-muted-foreground">
-            <span /><span>Chamado</span><span>Cliente / título</span><span>Abertura</span><span>Encerramento</span><span>Duração</span><span>1º retorno</span><span>Resolução</span>
+            <span /><span>Chamado</span><span>Cliente / título</span><span>Abertura</span><span>Encerramento</span><span>Duração</span><span>1ª resposta</span><span>Resolução</span>
           </div>
 
           {syncing || isLoading ? (

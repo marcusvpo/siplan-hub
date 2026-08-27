@@ -138,8 +138,8 @@ export async function generateTicketSlaDetailPdf(
     const cards = [
       { label: "Tempo total", value: formatSlaDuration(resolution.hours), accent: [190, 0, 48] as const },
       { label: "SLA resolução", value: resolutionDisplay.label, accent: [5, 150, 105] as const },
-      { label: "Primeiro atendimento", value: formatSlaDuration(firstResponseElapsed), accent: [37, 99, 235] as const },
-      { label: "SLA primeiro atendimento", value: `${firstResponseDisplay.label} · prazo ${formatDateTime(chamado.slaPrimeiraRespostaPrevistaEm)}`, accent: [225, 29, 72] as const },
+      { label: "Primeira resposta", value: formatSlaDuration(firstResponseElapsed), accent: [37, 99, 235] as const },
+      { label: "SLA da primeira resposta", value: `${firstResponseDisplay.label} · prazo ${formatDateTime(chamado.slaPrimeiraRespostaPrevistaEm)}`, accent: [225, 29, 72] as const },
       { label: "Vencimento vigente", value: formatDateTime(chamado.slaVencimentoEm), accent: [124, 58, 237] as const },
       { label: "Fase atual", value: resolution.phaseLabel, accent: [217, 119, 6] as const },
     ];
