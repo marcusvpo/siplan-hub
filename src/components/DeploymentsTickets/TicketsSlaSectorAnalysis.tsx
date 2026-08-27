@@ -134,6 +134,7 @@ export function TicketsSlaSectorAnalysis({
   const selectedSummary = selectedSector === ALL_SECTORS
     ? null
     : analysis.sectors.find((sector) => sector.sector === selectedSector) ?? null;
+  const visibleSectorSummaries = selectedSummary ? [selectedSummary] : analysis.sectors;
 
   const entries = useMemo(() => analysis.entries.filter((entry) => {
     if (selectedSector !== ALL_SECTORS && entry.sector !== selectedSector) return false;
@@ -303,7 +304,7 @@ export function TicketsSlaSectorAnalysis({
                     </tr>
                   </thead>
                   <tbody>
-                    {analysis.sectors.map((sector) => (
+                    {visibleSectorSummaries.map((sector) => (
                       <tr key={sector.sector} className={cn("border-t", selectedSector === sector.sector && "bg-primary/[0.04]") }>
                         <td className="px-3 py-2">
                           <button type="button" className="text-left font-semibold hover:text-primary" onClick={() => setSelectedSector(sector.sector)}>
