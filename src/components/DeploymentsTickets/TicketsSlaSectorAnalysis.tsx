@@ -56,10 +56,11 @@ const ALL_SECTORS = "__all_sectors__";
 
 const RESULT_FILTER_LABELS: Record<SectorResultFilter, string> = {
   all: "Todos os resultados",
-  outside: "Somente com falha",
-  within: "Somente dentro do prazo",
-  paused: "Somente pausados",
-  unavailable: "Sem comparação",
+  outside: "SLA final fora do prazo",
+  within: "SLA final cumprido",
+  inProgress: "SLA final em curso",
+  paused: "SLA final pausado",
+  unavailable: "Sem etapa final no setor",
 };
 
 const OUTCOME_DISPLAY: Record<TicketAreaStage["outcome"], { label: string; className: string }> = {
@@ -79,7 +80,7 @@ function entryEvidence(entry: TicketSectorEntry) {
     if (stage.firstResponseStatus) {
       const met = stage.firstResponseStatus === "met";
       evidence.set(`first-${stage.firstResponseStatus}`, {
-        label: `1ª resposta ${met ? "no prazo" : "fora do SLA"}`,
+        label: `1º contato ${met ? "no prazo" : "fora do SLA"}`,
         className: met ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700",
       });
     }
@@ -155,8 +156,11 @@ export function TicketsSlaSectorAnalysis({
       .filter((entry) => entry.verdict === "outside")
       .map((entry) => entry.chamado.numeroChamado),
   ).size, [analysis.entries]);
-  const outsideEvents = selectedSummary?.outsideEvents
-    ?? analysis.sectors.reduce((total, sector) => total + sector.outsideEvents, 0);
+  const journeyAlerts = selectedSummary
+    ? selectedSummary.firstResponseOutside + selectedSummary.lateHandoffs
+    : analysis.sectors.reduce((total, sector) => (
+      total + sector.firstResponseOutside + sector.lateHandoffs
+    ), 0);
 
   useEffect(() => {
     setSelectedSector(ALL_SECTORS);
@@ -185,7 +189,7 @@ export function TicketsSlaSectorAnalysis({
               <Building2 className="h-4 w-4 text-primary" /> Análise indicativa de SLA por setor
             </h2>
             <p className="mt-0.5 max-w-3xl text-[10px] leading-relaxed text-muted-foreground">
-              Mostra em qual setor ocorreu a primeira resposta atrasada, o repasse após o vencimento, a resolução fora do prazo ou a etapa atual vencida nos chamados do filtro superior.
+              A falha e a aderência consideram somente o SLA final de resolução. Primeiro contato e repasses atrasados permanecem como alertas da jornada, sem reprovar o setor no resultado final.
             </p>
           </div>
           <div className="flex min-w-[230px] flex-col gap-1">
@@ -237,7 +241,7 @@ export function TicketsSlaSectorAnalysis({
                 color: "text-primary",
               },
               {
-                label: selectedSummary ? "Aderência indicativa" : "Setores envolvidos",
+                label: selectedSummary ? "Aderência final indicativa" : "Setores envolvidos",
                 value: selectedSummary?.complianceRate === null
                   ? "—"
                   : selectedSummary
@@ -248,16 +252,16 @@ export function TicketsSlaSectorAnalysis({
                 color: "text-blue-600",
               },
               {
-                label: "Chamados com falha atribuída",
+                label: "Chamados com SLA final fora",
                 value: selectedSummary?.failedTickets ?? failedTickets,
-                detail: selectedSummary ? `no setor ${selectedSummary.sector}` : "Em pelo menos um setor",
+                detail: selectedSummary ? `resolução atribuída a ${selectedSummary.sector}` : "Resolução encerrada ou atual vencida",
                 icon: ShieldAlert,
                 color: "text-rose-600",
               },
               {
-                label: "Eventos fora do prazo",
-                value: outsideEvents,
-                detail: "1ª resposta, repasse, resolução ou etapa atual",
+                label: "Alertas da jornada",
+                value: journeyAlerts,
+                detail: "1º contato e repasses; não alteram a aderência final",
                 icon: CircleAlert,
                 color: "text-amber-600",
               },
@@ -280,7 +284,7 @@ export function TicketsSlaSectorAnalysis({
               <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <h3 className="text-xs font-semibold">Comparativo dos setores</h3>
-                  <p className="text-[9px] text-muted-foreground">Ordenado pelos setores com mais chamados que apresentam indício de descumprimento.</p>
+                  <p className="text-[9px] text-muted-foreground">Ordenado pelos setores com mais chamados fora do SLA final de resolução.</p>
                 </div>
                 <span className="text-[9px] text-muted-foreground">Clique em um setor para abrir seus chamados.</span>
               </div>
@@ -290,10 +294,11 @@ export function TicketsSlaSectorAnalysis({
                     <tr>
                       <th className="px-3 py-2 font-semibold">Setor</th>
                       <th className="px-3 py-2 font-semibold">Chamados</th>
-                      <th className="px-3 py-2 font-semibold">Dentro</th>
-                      <th className="px-3 py-2 font-semibold">Com falha</th>
-                      <th className="px-3 py-2 font-semibold">Onde ocorreu a falha</th>
-                      <th className="px-3 py-2 font-semibold">Aderência</th>
+                      <th className="px-3 py-2 font-semibold">SLA final no prazo</th>
+                      <th className="px-3 py-2 font-semibold">Com falha final</th>
+                      <th className="px-3 py-2 font-semibold">Em curso / sem base</th>
+                      <th className="px-3 py-2 font-semibold">Diagnóstico da jornada</th>
+                      <th className="px-3 py-2 font-semibold">Aderência final</th>
                       <th className="px-3 py-2 font-semibold" />
                     </tr>
                   </thead>
@@ -311,8 +316,11 @@ export function TicketsSlaSectorAnalysis({
                         <td className="px-3 py-2 font-semibold">{sector.tickets}</td>
                         <td className="px-3 py-2 text-emerald-700">{sector.compliantTickets}</td>
                         <td className="px-3 py-2 font-semibold text-rose-700">{sector.failedTickets}</td>
+                        <td className="px-3 py-2 text-muted-foreground">
+                          {sector.inProgressTickets + sector.pausedTickets + sector.unavailableTickets}
+                        </td>
                         <td className="px-3 py-2 text-[9px] text-muted-foreground">
-                          1ª resposta: {sector.firstResponseOutside} · Repasse: {sector.lateHandoffs} · Resolução: {sector.lateResolutions} · Atual: {sector.activeOutside}
+                          1º contato: {sector.firstResponseOutside} · Repasse: {sector.lateHandoffs} · Finalizada fora: {sector.lateResolutions} · Atual vencida: {sector.activeOutside}
                         </td>
                         <td className="px-3 py-2">
                           <Badge className={cn(
@@ -405,7 +413,7 @@ export function TicketsSlaSectorAnalysis({
                           </td>
                           <td className="px-3 py-2">
                             <div className="flex flex-wrap gap-1">
-                              <Badge className={cn("h-4 border-0 px-1.5 text-[8px]", firstDisplay.className)}>1ª resposta: {firstDisplay.label}</Badge>
+                              <Badge className={cn("h-4 border-0 px-1.5 text-[8px]", firstDisplay.className)}>1º contato: {firstDisplay.label}</Badge>
                               <Badge className={cn("h-4 border-0 px-1.5 text-[8px]", resolutionDisplay.className)}>Resolução: {resolutionDisplay.label}</Badge>
                             </div>
                           </td>
@@ -448,7 +456,7 @@ export function TicketsSlaSectorAnalysis({
           </Card>
 
           <div className="rounded-lg border border-amber-200 bg-amber-50/60 px-3 py-2 text-[9px] leading-relaxed text-amber-900 dark:border-amber-900 dark:bg-amber-950/20 dark:text-amber-200">
-            <strong>Como interpretar:</strong> a falha é atribuída ao setor que estava com o chamado na primeira resposta atrasada, que o repassou depois do vencimento, que encerrou fora do prazo ou que mantém a etapa atual vencida. O Ellevo não fornece a fotografia histórica da regra em cada transferência; por isso, repasses antigos são comparados ao vencimento atualmente conhecido e esta visão é indicativa.
+            <strong>Como interpretar:</strong> “Com falha final” conta apenas o setor que encerrou o chamado após o vencimento ou que mantém a etapa atual com o prazo final vencido. Primeiro contato e repasses atrasados aparecem no diagnóstico da jornada, mas não reduzem a aderência final. Setores anteriores, que somente repassaram o chamado, ficam sem base de SLA final. O Ellevo não fornece a fotografia histórica da regra em cada transferência; por isso, esta visão continua indicativa.
           </div>
         </>
       )}

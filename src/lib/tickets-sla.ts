@@ -74,7 +74,7 @@ export interface TicketFlowAnalysis {
   totalTrackedHours: number;
 }
 
-export type TicketSectorVerdict = "within" | "outside" | "paused" | "unavailable";
+export type TicketSectorVerdict = "within" | "outside" | "inProgress" | "paused" | "unavailable";
 
 export interface TicketSectorEntry {
   chamado: Chamado0800;
@@ -100,6 +100,7 @@ export interface TicketSectorSummary {
   tickets: number;
   compliantTickets: number;
   failedTickets: number;
+  inProgressTickets: number;
   pausedTickets: number;
   unavailableTickets: number;
   withinEvents: number;
@@ -556,10 +557,26 @@ function stageOutcomeGroup(outcome: TicketAreaStageOutcome): TicketSectorVerdict
   if (["handedOffAfterDeadline", "resolvedOutside", "activeOutside"].includes(outcome)) {
     return "outside";
   }
-  if (["handedOffBeforeDeadline", "resolvedWithin", "activeWithin"].includes(outcome)) {
+  if (["handedOffBeforeDeadline", "resolvedWithin"].includes(outcome)) {
     return "within";
   }
+  if (outcome === "activeWithin") return "inProgress";
   if (outcome === "activePaused") return "paused";
+  return "unavailable";
+}
+
+/**
+ * O veredito gerencial considera somente o SLA final de resolução no setor.
+ * Primeiro contato e repasses continuam como evidências da jornada, mas não
+ * transformam o setor em cumpridor ou infrator do prazo final.
+ */
+function getFinalSectorVerdict(stages: TicketAreaStage[]): TicketSectorVerdict {
+  if (stages.some((stage) => ["resolvedOutside", "activeOutside"].includes(stage.outcome))) {
+    return "outside";
+  }
+  if (stages.some((stage) => stage.outcome === "resolvedWithin")) return "within";
+  if (stages.some((stage) => stage.outcome === "activePaused")) return "paused";
+  if (stages.some((stage) => stage.outcome === "activeWithin")) return "inProgress";
   return "unavailable";
 }
 
@@ -612,13 +629,7 @@ export function buildTicketSectorAnalysis(
         if (stage.outcome === "activeOutside") activeOutside += 1;
       });
 
-      const verdict: TicketSectorVerdict = outsideEvents > 0
-        ? "outside"
-        : withinEvents > 0
-          ? "within"
-          : pausedEvents > 0
-            ? "paused"
-            : "unavailable";
+      const verdict = getFinalSectorVerdict(stages);
 
       entries.push({
         chamado,
@@ -653,6 +664,7 @@ export function buildTicketSectorAnalysis(
       tickets: 0,
       compliantTickets: 0,
       failedTickets: 0,
+      inProgressTickets: 0,
       pausedTickets: 0,
       unavailableTickets: 0,
       withinEvents: 0,
@@ -667,6 +679,7 @@ export function buildTicketSectorAnalysis(
     summary.tickets += 1;
     if (entry.verdict === "within") summary.compliantTickets += 1;
     if (entry.verdict === "outside") summary.failedTickets += 1;
+    if (entry.verdict === "inProgress") summary.inProgressTickets += 1;
     if (entry.verdict === "paused") summary.pausedTickets += 1;
     if (entry.verdict === "unavailable") summary.unavailableTickets += 1;
     summary.withinEvents += entry.withinEvents;

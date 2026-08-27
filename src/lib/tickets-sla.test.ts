@@ -151,7 +151,7 @@ describe("tickets SLA", () => {
     });
   });
 
-  it("agrupa equipes e aponta em qual setor cada chamado descumpriu o prazo", () => {
+  it("separa o SLA final dos alertas de primeiro contato e repasse", () => {
     const firstTicket = chamado({
       numeroChamado: "100",
       abertoEm: "2026-08-01T08:00:00",
@@ -196,13 +196,49 @@ describe("tickets SLA", () => {
     });
     expect(result.sectors.find((sector) => sector.sector === "SD")).toMatchObject({
       tickets: 2,
-      compliantTickets: 1,
-      failedTickets: 1,
+      compliantTickets: 0,
+      failedTickets: 0,
       firstResponseOutside: 1,
-      complianceRate: 50,
+      complianceRate: null,
+    });
+    expect(result.sectors.find((sector) => sector.sector === "Infraestrutura")).toMatchObject({
+      tickets: 1,
+      compliantTickets: 1,
+      failedTickets: 0,
+      complianceRate: 100,
     });
     expect(result.entries.find((entry) => (
       entry.chamado.numeroChamado === "100" && entry.sector === "SD"
-    ))?.verdict).toBe("within");
+    ))?.verdict).toBe("unavailable");
+    expect(result.entries.find((entry) => (
+      entry.chamado.numeroChamado === "200" && entry.sector === "SD"
+    ))).toMatchObject({
+      firstResponseOutside: 1,
+      verdict: "unavailable",
+    });
+  });
+
+  it("mantém o SLA final em curso fora da aderência até haver um resultado", () => {
+    const result = buildTicketSectorAnalysis([{
+      chamado: chamado({
+        numeroChamado: "300",
+        status: "Em andamento",
+        encerradoEm: undefined,
+        equipeResponsavel: "Infraestrutura",
+        slaPrimeiraRespostaPrevistaEm: "2026-08-01T09:00:00",
+        slaPrimeiraRespostaRealEm: "2026-08-01T08:30:00",
+        slaVencimentoEm: "2026-08-02T12:00:00",
+      }),
+      tramites: [],
+    }], new Date("2026-08-01T12:00:00"));
+
+    expect(result.sectors[0]).toMatchObject({
+      sector: "Infraestrutura",
+      compliantTickets: 0,
+      failedTickets: 0,
+      inProgressTickets: 1,
+      complianceRate: null,
+    });
+    expect(result.entries[0].verdict).toBe("inProgress");
   });
 });

@@ -75,9 +75,10 @@ describe("SLA oficial da Consulta de Chamados", () => {
     expect(slaSectorScreen).toContain("Análise indicativa de SLA por setor");
     expect(slaSectorScreen).toContain("Setor para analisar");
     expect(slaSectorScreen).toContain("Comparativo dos setores");
-    expect(slaSectorScreen).toContain("Somente com falha");
-    expect(slaSectorScreen).toContain("primeira resposta atrasada");
-    expect(slaSectorScreen).toContain("repasse após o vencimento");
+    expect(slaSectorScreen).toContain("Com falha final");
+    expect(slaSectorScreen).toContain("SLA final fora do prazo");
+    expect(slaSectorScreen).toContain("Alertas da jornada");
+    expect(slaSectorScreen).toContain("não alteram a aderência final");
     expect(slaSectorScreen).toContain("não substitui o SLA oficial");
   });
 });
