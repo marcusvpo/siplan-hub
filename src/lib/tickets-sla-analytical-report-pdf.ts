@@ -228,8 +228,8 @@ export async function generateTicketsSlaAnalyticalReportPdf(
     const summary = [
       `Tempo total: ${formatSlaDuration(resolution.hours)}`,
       `SLA de resolução: ${resolutionDisplay.label}`,
-      `Primeiro atendimento: ${formatSlaDuration(firstResponseElapsed)} (${firstResponseDisplay.label})`,
-      `Prazo primeiro retorno: ${formatDateTime(chamado.slaPrimeiraRespostaPrevistaEm)}`,
+      `Primeira resposta: ${formatSlaDuration(firstResponseElapsed)} (${firstResponseDisplay.label})`,
+      `Prazo da primeira resposta: ${formatDateTime(chamado.slaPrimeiraRespostaPrevistaEm)}`,
       `Vencimento vigente: ${formatDateTime(chamado.slaVencimentoEm)}`,
       `Fase: ${resolution.phaseLabel}${chamado.slaVencimentoManual ? " · vencimento manual" : ""}`,
     ];

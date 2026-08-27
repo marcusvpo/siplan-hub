@@ -230,7 +230,7 @@ export function TicketsSlaInfoDialog({ chamados }: TicketsSlaInfoDialogProps) {
               { label: "Criticidade", detail: "impacto do chamado" },
               { label: "Equipe/área", detail: "SD, Infra, Implantação..." },
               { label: "Contrato e calendário", detail: "jornada, dias úteis e feriados" },
-              { label: "Datas oficiais", detail: "1º atendimento e resolução" },
+              { label: "Datas oficiais", detail: "1ª resposta e resolução" },
             ].map((step, index) => (
               <div key={step.label} className="contents">
                 <div className="rounded-md border bg-background px-2.5 py-2">
@@ -246,10 +246,10 @@ export function TicketsSlaInfoDialog({ chamados }: TicketsSlaInfoDialogProps) {
         <div className="grid gap-2 md:grid-cols-2">
           <div className="rounded-lg border border-blue-200 bg-blue-50/60 p-3 dark:border-blue-900 dark:bg-blue-950/20">
             <div className="flex items-center gap-2 text-xs font-semibold text-blue-800 dark:text-blue-300">
-              <MessageSquareText className="h-4 w-4" /> Primeiro atendimento
+              <MessageSquareText className="h-4 w-4" /> Primeira resposta
             </div>
             <p className="mt-1.5 text-[10px] leading-relaxed text-muted-foreground">
-              <strong>Data-limite:</strong> “1º retorno” recebido do Ellevo. Fica <strong>no prazo</strong> quando a primeira resposta real ocorre antes ou no mesmo instante dessa data. Se ainda não respondeu, a tela compara a data-limite com o momento atual.
+              <strong>Data-limite:</strong> “primeira resposta” recebida do Ellevo. Representa a primeira interação de atendimento registrada no chamado. Fica <strong>no prazo</strong> quando ela ocorre antes ou no mesmo instante dessa data; enquanto não ocorre, a tela compara o prazo com o momento atual.
             </p>
           </div>
           <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 p-3 dark:border-emerald-900 dark:bg-emerald-950/20">
@@ -304,7 +304,7 @@ export function TicketsSlaInfoDialog({ chamados }: TicketsSlaInfoDialogProps) {
                   <tr>
                     <th className="px-3 py-2 font-semibold">Área/equipe atual</th>
                     <th className="px-3 py-2 font-semibold">Criticidade</th>
-                    <th className="px-3 py-2 font-semibold">Meta do 1º atendimento</th>
+                    <th className="px-3 py-2 font-semibold">Meta da 1ª resposta</th>
                     <th className="px-3 py-2 font-semibold">Meta de resolução</th>
                     <th className="px-3 py-2 font-semibold">Confirmação no recorte</th>
                   </tr>
@@ -372,7 +372,7 @@ export function TicketsSlaInfoDialog({ chamados }: TicketsSlaInfoDialogProps) {
                 <div className="rounded-md border bg-background p-2">
                   <p className="text-[10px] font-semibold">SD · Passagem 1</p>
                   <div className="mt-1 flex flex-wrap gap-1">
-                    <Badge className="h-4 border-0 bg-emerald-100 px-1.5 text-[8px] text-emerald-700">1º retorno no prazo</Badge>
+                    <Badge className="h-4 border-0 bg-emerald-100 px-1.5 text-[8px] text-emerald-700">1ª resposta no prazo</Badge>
                     <Badge className="h-4 border-0 bg-emerald-100 px-1.5 text-[8px] text-emerald-700">Repasse antes do vencimento</Badge>
                   </div>
                 </div>
@@ -383,14 +383,14 @@ export function TicketsSlaInfoDialog({ chamados }: TicketsSlaInfoDialogProps) {
                 </div>
               </div>
               <p className="mt-2 text-[9px] leading-relaxed text-muted-foreground">
-                Neste exemplo, o SD realizou o primeiro retorno e repassou antes do vencimento conhecido. O chamado terminou em Produtos depois do prazo geral. Se voltar a uma equipe, ela aparece novamente como <strong>Passagem 2</strong>.
+                Neste exemplo, o SD realizou a primeira resposta e repassou antes do vencimento conhecido. O chamado terminou em Produtos depois do prazo geral. Se voltar a uma equipe, ela aparece novamente como <strong>Passagem 2</strong>.
               </p>
             </div>
 
             <div className="grid gap-1.5 sm:grid-cols-2">
               <div className="rounded-md border p-2">
-                <p className="text-[9px] font-semibold">1º retorno no prazo/fora</p>
-                <p className="mt-0.5 text-[8px] leading-relaxed text-muted-foreground">O resultado oficial do primeiro atendimento é colocado na equipe que estava com o chamado na data da primeira resposta.</p>
+                <p className="text-[9px] font-semibold">1ª resposta no prazo/fora</p>
+                <p className="mt-0.5 text-[8px] leading-relaxed text-muted-foreground">O resultado oficial da primeira resposta é colocado na equipe que estava com o chamado na data em que ela foi registrada.</p>
               </div>
               <div className="rounded-md border p-2">
                 <p className="text-[9px] font-semibold">Repasse antes/após o vencimento</p>
@@ -413,7 +413,7 @@ export function TicketsSlaInfoDialog({ chamados }: TicketsSlaInfoDialogProps) {
                 <ShieldCheck className="h-3.5 w-3.5" /> Oficial no HUB
               </p>
               <p className="mt-0.5 text-[8px] leading-relaxed text-muted-foreground">
-                Datas-limite e resultados do 1º retorno e da resolução, além de pausa e ajuste manual, vêm do Ellevo e valem para o chamado inteiro.
+                Datas-limite e resultados da 1ª resposta e da resolução, além de pausa e ajuste manual, vêm do Ellevo e valem para o chamado inteiro.
               </p>
             </div>
             <div className="bg-amber-50/50 px-3 py-2 dark:bg-amber-950/15">

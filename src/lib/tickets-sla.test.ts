@@ -3,11 +3,13 @@ import { describe, expect, it } from "vitest";
 import type { Chamado0800, ChamadoTramite } from "@/hooks/useChamados0800";
 import {
   buildTicketFlowAnalysis,
+  buildTicketSectorAnalysis,
   chronologicalTramites,
   elapsedHours,
   formatSlaDuration,
   getOfficialSlaState,
   getSlaCheckpointDisplay,
+  getTicketSectorLabel,
   parseSlaDate,
 } from "@/lib/tickets-sla";
 
@@ -28,9 +30,9 @@ describe("tickets SLA", () => {
       slaPrimeiraRespostaPrevistaEm: "2026-08-01T11:00:00",
       slaVencimentoEm: "2026-08-02T18:00:00",
     });
-    expect(getOfficialSlaState(pending, now).label).toBe("Aguardando retorno");
+    expect(getOfficialSlaState(pending, now).label).toBe("Aguardando primeira resposta");
     expect(getOfficialSlaState(pending, new Date("2026-08-01T12:00:00")).label)
-      .toBe("Retorno fora do SLA");
+      .toBe("Primeira resposta fora do SLA");
   });
 
   it("troca para o vencimento oficial depois da primeira resposta", () => {
@@ -64,7 +66,7 @@ describe("tickets SLA", () => {
     }), new Date("2026-08-10T08:00:00")).label).toBe("SLA pausado");
   });
 
-  it("separa o SLA do primeiro retorno do SLA de resolução", () => {
+  it("separa o SLA da primeira resposta do SLA de resolução", () => {
     const state = getOfficialSlaState(chamado({
       slaPrimeiraRespostaPrevistaEm: "2026-08-01T10:00:00",
       slaPrimeiraRespostaRealEm: "2026-08-01T11:00:00",
@@ -113,7 +115,7 @@ describe("tickets SLA", () => {
     expect(result.areaTimes).toEqual([
       { area: "Sustentação", hours: 28, intervals: 2 },
       { area: "SD", hours: 18, intervals: 2 },
-      { area: "Aguardando primeiro atendimento", hours: 2, intervals: 1 },
+      { area: "Aguardando primeira resposta", hours: 2, intervals: 1 },
     ]);
     expect(result.bottleneck?.area).toBe("Sustentação");
     expect(result.totalTrackedHours).toBe(48);
@@ -147,5 +149,60 @@ describe("tickets SLA", () => {
       outcome: "resolvedOutside",
       firstResponseStatus: null,
     });
+  });
+
+  it("agrupa equipes e aponta em qual setor cada chamado descumpriu o prazo", () => {
+    const firstTicket = chamado({
+      numeroChamado: "100",
+      abertoEm: "2026-08-01T08:00:00",
+      encerradoEm: "2026-08-03T08:00:00",
+      slaPrimeiraRespostaPrevistaEm: "2026-08-01T10:00:00",
+      slaPrimeiraRespostaRealEm: "2026-08-01T09:00:00",
+      slaVencimentoEm: "2026-08-02T12:00:00",
+    });
+    const secondTicket = chamado({
+      numeroChamado: "200",
+      abertoEm: "2026-08-01T08:00:00",
+      encerradoEm: "2026-08-01T18:00:00",
+      slaPrimeiraRespostaPrevistaEm: "2026-08-01T09:00:00",
+      slaPrimeiraRespostaRealEm: "2026-08-01T10:00:00",
+      slaVencimentoEm: "2026-08-02T12:00:00",
+    });
+    const result = buildTicketSectorAnalysis([
+      {
+        chamado: firstTicket,
+        tramites: [
+          { sequenciaTramite: 1, dataTramite: "2026-08-01T08:30:00", equipeResponsavel: "SD - TN/RC" },
+          { sequenciaTramite: 2, dataTramite: "2026-08-02T10:00:00", equipeResponsavel: "Sustentação Orion" },
+        ],
+      },
+      {
+        chamado: secondTicket,
+        tramites: [
+          { sequenciaTramite: 1, dataTramite: "2026-08-01T08:30:00", equipeResponsavel: "Service Desk" },
+          { sequenciaTramite: 2, dataTramite: "2026-08-01T12:00:00", equipeResponsavel: "Infra - Operações" },
+        ],
+      },
+    ]);
+
+    expect(getTicketSectorLabel("SD - TN/RC")).toBe("SD");
+    expect(getTicketSectorLabel("Sustentação Orion")).toBe("Sustentação");
+    expect(result.totalTickets).toBe(2);
+    expect(result.sectors.find((sector) => sector.sector === "Sustentação")).toMatchObject({
+      tickets: 1,
+      failedTickets: 1,
+      lateResolutions: 1,
+      complianceRate: 0,
+    });
+    expect(result.sectors.find((sector) => sector.sector === "SD")).toMatchObject({
+      tickets: 2,
+      compliantTickets: 1,
+      failedTickets: 1,
+      firstResponseOutside: 1,
+      complianceRate: 50,
+    });
+    expect(result.entries.find((entry) => (
+      entry.chamado.numeroChamado === "100" && entry.sector === "SD"
+    ))?.verdict).toBe("within");
   });
 });

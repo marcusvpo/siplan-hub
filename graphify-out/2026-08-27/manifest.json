@@ -4175,18 +4175,18 @@
     "semantic_hash": ""
   },
   "src/components/DeploymentsTickets/TicketsSlaAnalysis.tsx": {
-    "mtime": 1787834937.5398796,
-    "ast_hash": "8c338e5caeb21c6ac11a6e9e433808b2",
+    "mtime": 1787837075.052971,
+    "ast_hash": "8e2a02bf646fa3ca73818ae33c96ae8c",
     "semantic_hash": ""
   },
   "src/lib/tickets-sla.test.ts": {
-    "mtime": 1787834172.8212976,
-    "ast_hash": "362312c6f72a4a578f7cfe54dfb1574a",
+    "mtime": 1787837088.9618688,
+    "ast_hash": "0b5376eed269b3bcb713bdb31f22c190",
     "semantic_hash": ""
   },
   "src/lib/tickets-sla.ts": {
-    "mtime": 1787834075.3442628,
-    "ast_hash": "05f6a0ce9d126fb5865c74958d689dbc",
+    "mtime": 1787837041.2951567,
+    "ast_hash": "12a8f5bc904832f80ac6872ccfc8980f",
     "semantic_hash": ""
   },
   "supabase/migrations/20260825223000_chamados_sla_timestamps.sql": {
@@ -4235,8 +4235,8 @@
     "semantic_hash": ""
   },
   "src/test/chamados-official-sla-sync.test.ts": {
-    "mtime": 1787836621.562872,
-    "ast_hash": "c31469c781ae7f2300b3c8c8199c3fb7",
+    "mtime": 1787837588.912927,
+    "ast_hash": "5d248a37847f23652cab0a5f7df44840",
     "semantic_hash": ""
   },
   "supabase/migrations/20260826140000_chamados_official_sla.sql": {
@@ -4260,13 +4260,13 @@
     "semantic_hash": ""
   },
   "src/components/DeploymentsTickets/TicketsSlaInfoDialog.tsx": {
-    "mtime": 1787836597.967027,
-    "ast_hash": "feb178484afb86a2e38308cf125e8f93",
+    "mtime": 1787837588.9094067,
+    "ast_hash": "a9e5639e570d70b520a9f3e0b7d25ea3",
     "semantic_hash": ""
   },
   "src/components/DeploymentsTickets/TicketsSlaInfoDialog.test.tsx": {
-    "mtime": 1787836621.560869,
-    "ast_hash": "a701209f6a8ef553263e04d0c3888560",
+    "mtime": 1787837588.9104075,
+    "ast_hash": "5c5def9ddfeb522f914017786286d773",
     "semantic_hash": ""
   }
 }
