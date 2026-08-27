@@ -51,6 +51,9 @@ export function AiRichTextField({
   const plainText = richTextToPlainText(content);
   const suggestion =
     job?.status === "done" ? job.resultText?.trim() || "" : "";
+  const formattedSuggestion = suggestion
+    ? plainTextToLexicalJson(suggestion)
+    : "";
   const isRunning = isStarting || active;
   const canImprove =
     Boolean(requestedBy) && online && !isRunning && plainText.trim().length >= 10;
@@ -154,8 +157,16 @@ export function AiRichTextField({
               você confirmar.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="max-h-[45vh] overflow-y-auto whitespace-pre-wrap rounded-md border bg-muted/30 p-3 text-sm">
-            {suggestion}
+          <div
+            className="max-h-[45vh] overflow-y-auto rounded-md border bg-muted/30 p-2"
+            aria-label="Previa formatada da sugestao"
+          >
+            <RichTextEditor
+              content={formattedSuggestion}
+              onChange={() => undefined}
+              editable={false}
+              className="min-h-0 border-0 bg-transparent [&_[contenteditable]]:min-h-0"
+            />
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel>Manter meu texto</AlertDialogCancel>

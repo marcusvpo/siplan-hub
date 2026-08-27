@@ -303,7 +303,6 @@
   "301": "CsCxRegistryOffices.tsx",
   "302": "cs-cx-routines-report.ts",
   "303": "Página 404 (Not Found)",
-  "304": "SimpleMarkdown.tsx",
   "305": "AuthContext.tsx",
   "306": "cs-cx-experience-pdf.ts",
   "307": "ProtectedRoute.tsx",
@@ -329,7 +328,6 @@
   "327": "CsCxRegistryOffices",
   "328": "processCopilotJob.ts",
   "329": "processDtcJob.ts",
-  "330": "PublicNpsResponse.tsx",
   "331": "cs-cx-experience-permissions.test.tsx",
   "332": "copilot-language.ts",
   "333": "Módulo: Núcleo — Dashboard e Projetos",
@@ -385,6 +383,5 @@
   "398": "runSkill.test.ts",
   "399": "TicketsSlaInfoDialog",
   "400": "ProjectGrid.tsx",
-  "402": "StageStatus",
-  "403": "ImplementerInvolvement"
+  "402": "StageStatus"
 }
