@@ -75,6 +75,7 @@ describe("SLA oficial da Consulta de Chamados", () => {
     expect(slaSectorScreen).toContain("Análise indicativa de SLA por setor");
     expect(slaSectorScreen).toContain("Setor para analisar");
     expect(slaSectorScreen).toContain("Comparativo dos setores");
+    expect(slaSectorScreen).toContain("visibleSectorSummaries.map");
     expect(slaSectorScreen).toContain("Com falha final");
     expect(slaSectorScreen).toContain("SLA final fora do prazo");
     expect(slaSectorScreen).toContain("Alertas da jornada");
