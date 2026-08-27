@@ -51,7 +51,7 @@ export function Editor({
         }}
       >
         <TooltipProvider>
-          <Plugins placeholder={placeholder} />
+          <Plugins placeholder={placeholder} editable={editable} />
 
           <OnChangePlugin
             ignoreSelectionChange={true}

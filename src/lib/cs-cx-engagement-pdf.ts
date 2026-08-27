@@ -1,6 +1,7 @@
 import type { CsCxAppointment, CsCxContact } from "@/hooks/useCsCxEngagement";
 import { formatAppointmentObservations } from "@/lib/cs-cx-appointment-observations";
 import { generateCsCxPdfReport, type CsCxReportBlock, type CsCxReportRow } from "@/lib/cs-cx-experience-pdf";
+import { hasRichTextContent, richTextToPlainText } from "@/lib/lexical";
 
 const APPOINTMENT_TYPE_LABELS: Record<string, string> = {
   REUNIAO: "Reunião",
@@ -28,8 +29,8 @@ export async function generateCsCxContactsPdf(contacts: CsCxContact[], filterDes
         `${contact.contact_person} · ${(contact.products ?? (contact.product ? [{ ...contact.product, is_primary: true }] : [])).map((product) => product.name).join(", ") || "Sem produto"}`,
       ] as CsCxReportRow,
       ["Responsável", contact.author?.full_name || contact.author?.email || "Não vinculado"],
-      ["Anotações", contact.notes || "Não informadas"],
-      ["Pendências", contact.pending_items || "Nenhuma"],
+      ["Anotações", richTextToPlainText(contact.notes) || "Não informadas"],
+      ["Pendências", richTextToPlainText(contact.pending_items) || "Nenhuma"],
       ...(contact.ticket_number ? [["Chamado", contact.ticket_number] as CsCxReportRow] : []),
     ]),
   }));
@@ -41,7 +42,7 @@ export async function generateCsCxContactsPdf(contacts: CsCxContact[], filterDes
       { label: "Contatos", value: contacts.length },
       { label: "Cartórios", value: offices },
       { label: "Responsáveis", value: responsibles },
-      { label: "Com pendências", value: contacts.filter((contact) => contact.pending_items?.trim()).length },
+      { label: "Com pendências", value: contacts.filter((contact) => hasRichTextContent(contact.pending_items)).length },
     ],
     blocks,
     `relatorio-contatos-${localIsoDate()}.pdf`,

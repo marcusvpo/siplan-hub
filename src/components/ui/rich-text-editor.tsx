@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog"
 import { VoiceDictationButton } from "@/components/ui/voice-dictation-button"
 import { appendPlainTextToLexicalJson, plainTextToLexicalJson } from "@/lib/lexical"
+import { cn } from "@/lib/utils"
 
 interface RichTextEditorProps {
   content: string | object; // HTML string or JSON object
@@ -22,9 +23,10 @@ interface RichTextEditorProps {
   enableVoice?: boolean;
   projectId?: string;
   requestedBy?: string;
+  className?: string;
 }
 
-export function RichTextEditor({ content, onChange, editable = true, placeholder, enableVoice, projectId, requestedBy }: RichTextEditorProps) {
+export function RichTextEditor({ content, onChange, editable = true, placeholder, enableVoice, projectId, requestedBy, className }: RichTextEditorProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   // O componente Editor (Lexical) só lê o conteúdo no mount; ao aplicar texto por
   // voz forçamos um remount bumpando esta key para o novo conteúdo aparecer.
@@ -57,13 +59,14 @@ export function RichTextEditor({ content, onChange, editable = true, placeholder
         return parsed as SerializedEditorState;
       }
     } catch {
-      // Not JSON
+      // Conteúdo legado em texto simples é convertido apenas para apresentação;
+      // ele só passa a ser salvo como Lexical quando o usuário editar o campo.
     }
-    return undefined;
+    return JSON.parse(plainTextToLexicalJson(content)) as SerializedEditorState;
   }, [content]);
 
   return (
-    <div className="relative group min-h-[200px] w-full border rounded-md bg-background">
+    <div className={cn("relative group min-h-[200px] w-full border rounded-md bg-background", className)}>
       {/* Toolbar do canto: voz (sempre visível) + modo foco (no hover) */}
       {(showVoice || editable) && (
           <div className="absolute top-2 right-2 z-10 flex items-center gap-1">
@@ -76,10 +79,12 @@ export function RichTextEditor({ content, onChange, editable = true, placeholder
             )}
             {editable && (
               <Button
+                  type="button"
                   variant="ghost"
                   size="icon"
                   onClick={() => setIsExpanded(true)}
                   title="Modo Foco (Tela Cheia)"
+                  aria-label="Abrir editor em tela cheia"
                   className="opacity-0 group-hover:opacity-100 transition-opacity"
               >
                   <Maximize2 className="h-4 w-4 text-muted-foreground" />
@@ -104,9 +109,11 @@ export function RichTextEditor({ content, onChange, editable = true, placeholder
             <DialogHeader className="px-6 py-4 border-b shrink-0 flex flex-row items-center justify-between">
                 <DialogTitle>Editor (Modo Foco)</DialogTitle>
                 <Button
+                    type="button"
                     variant="ghost"
                     size="icon"
                     onClick={() => setIsExpanded(false)}
+                    aria-label="Sair do modo tela cheia"
                     className="mr-8" // spacing for close button
                 >
                     <Minimize2 className="h-4 w-4" />

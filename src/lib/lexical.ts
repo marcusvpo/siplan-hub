@@ -164,3 +164,60 @@ export function appendPlainTextToLexicalJson(
     return appended;
   }
 }
+
+/**
+ * Extrai texto legível de um estado serializado do Lexical. Conteúdo legado em
+ * texto simples é devolvido sem alterações, mantendo busca, resumos e PDFs
+ * compatíveis durante a migração gradual dos campos para rich text.
+ */
+export function richTextToPlainText(
+  value: string | object | null | undefined,
+): string {
+  if (!value) return "";
+
+  let parsed: LexicalNode;
+  if (typeof value === "string") {
+    try {
+      parsed = JSON.parse(value) as LexicalNode;
+    } catch {
+      return value;
+    }
+  } else {
+    parsed = value as LexicalNode;
+  }
+
+  if (!parsed?.root || !Array.isArray(parsed.root.children)) {
+    return typeof value === "string" ? value : "";
+  }
+
+  return lexicalNodeToPlainText(parsed.root).trim();
+}
+
+export function hasRichTextContent(
+  value: string | object | null | undefined,
+): boolean {
+  return richTextToPlainText(value).trim().length > 0;
+}
+
+function lexicalNodeToPlainText(node: LexicalNode): string {
+  if (typeof node?.text === "string") return node.text;
+  if (node?.type === "linebreak") return "\n";
+
+  const children: LexicalNode[] = Array.isArray(node?.children)
+    ? node.children
+    : [];
+
+  if (node?.type === "list") {
+    const ordered = node.listType === "number" || node.tag === "ol";
+    return children
+      .map((child, index) => {
+        const content = lexicalNodeToPlainText(child).trim();
+        return content ? `${ordered ? `${index + 1}.` : "•"} ${content}` : "";
+      })
+      .filter(Boolean)
+      .join("\n");
+  }
+
+  const separator = node?.type === "root" ? "\n" : "";
+  return children.map(lexicalNodeToPlainText).join(separator);
+}

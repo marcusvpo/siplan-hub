@@ -510,9 +510,9 @@
     "semantic_hash": "aa66165ef0718016ce690be8f6643ecf"
   },
   "src/components/editor/editor.tsx": {
-    "mtime": 1781122833.1846993,
-    "ast_hash": "06f8ecb3990eef777d0ebf986883c285",
-    "semantic_hash": "06f8ecb3990eef777d0ebf986883c285"
+    "mtime": 1787854690.6693535,
+    "ast_hash": "6c76b3245b4d344790a13d28c6f0ef8b",
+    "semantic_hash": ""
   },
   "src/components/editor/nodes.ts": {
     "mtime": 1781122833.1846993,
@@ -520,14 +520,14 @@
     "semantic_hash": "f7ca6678206e911cc54fd7047edbb70f"
   },
   "src/components/editor/plugins.tsx": {
-    "mtime": 1781122833.1846993,
-    "ast_hash": "6405e2c3872b3fc02682c463c3b56b55",
-    "semantic_hash": "6405e2c3872b3fc02682c463c3b56b55"
+    "mtime": 1787854690.668199,
+    "ast_hash": "651bf73a858f656eb499c95b5c5e1f24",
+    "semantic_hash": ""
   },
   "src/components/editor/plugins/toolbar-plugin.tsx": {
-    "mtime": 1781122833.1856995,
-    "ast_hash": "7ebc8acf41d5cc5b5630714f90945923",
-    "semantic_hash": "7ebc8acf41d5cc5b5630714f90945923"
+    "mtime": 1787854863.0135064,
+    "ast_hash": "76b2af5eeed0b1471b22b58600637807",
+    "semantic_hash": ""
   },
   "src/components/editor/themes/editor-theme.ts": {
     "mtime": 1781122833.1856995,
@@ -675,8 +675,8 @@
     "semantic_hash": "6c2a4c39fb3f889fe94b854b7198b5ed"
   },
   "src/components/ui/rich-text-editor.tsx": {
-    "mtime": 1784046618.9069798,
-    "ast_hash": "5ce688521389888046a38b35f0e9914d",
+    "mtime": 1787854719.0367906,
+    "ast_hash": "22928151ea5ae3d4a7c966be606c683d",
     "semantic_hash": ""
   },
   "src/components/ui/scroll-area.tsx": {
@@ -990,8 +990,8 @@
     "semantic_hash": "2cf6ee4100e431430c7b6c1313e422f5"
   },
   "src/lib/lexical.ts": {
-    "mtime": 1784046618.908981,
-    "ast_hash": "46b43e7e6dda711e24f24ef2fce24b2e",
+    "mtime": 1787854686.5115223,
+    "ast_hash": "267568e0477d62287f53770f4f17ce1d",
     "semantic_hash": ""
   },
   "src/lib/marquee.ts": {
@@ -3335,8 +3335,8 @@
     "semantic_hash": ""
   },
   "src/lib/cs-cx-engagement-pdf.ts": {
-    "mtime": 1787589830.1044095,
-    "ast_hash": "1354884930998c0acd8eec8dd4d367ce",
+    "mtime": 1787854772.7365665,
+    "ast_hash": "aeff4c1f9fc9883ddf844ec670f44f92",
     "semantic_hash": ""
   },
   "src/lib/cs-cx-experience-pdf.ts": {
@@ -3440,8 +3440,8 @@
     "semantic_hash": ""
   },
   "src/pages/cs-cx/CsCxContacts.tsx": {
-    "mtime": 1787777122.3223052,
-    "ast_hash": "272cc4cbbfb689469bce363020cbcf95",
+    "mtime": 1787857155.533146,
+    "ast_hash": "0181ad40795ed2e127bbcfdde34330ea",
     "semantic_hash": ""
   },
   "src/pages/cs-cx/CsCxMigrationPlaceholder.tsx": {
@@ -3475,8 +3475,8 @@
     "semantic_hash": ""
   },
   "src/pages/cs-cx/CsCxRoutines.tsx": {
-    "mtime": 1787589830.1084495,
-    "ast_hash": "bbeaf7ea6f144bd4569fa431d7e834db",
+    "mtime": 1787857606.2960443,
+    "ast_hash": "bf480a005ad40331bd26577a7ca09a99",
     "semantic_hash": ""
   },
   "src/pages/cs-cx/CsCxVisitDetails.tsx": {
@@ -3590,8 +3590,8 @@
     "semantic_hash": ""
   },
   "src/test/cs-cx-engagement-permissions.test.tsx": {
-    "mtime": 1787777122.3253126,
-    "ast_hash": "6eb0dd3a8eb7587c699957e79c83976b",
+    "mtime": 1787857164.7430103,
+    "ast_hash": "2507e971d3dc5dd1877744c5b1c32d46",
     "semantic_hash": ""
   },
   "src/test/cs-cx-experience-pdf-layout.test.ts": {
@@ -3680,8 +3680,8 @@
     "semantic_hash": ""
   },
   "src/test/cs-cx-routines-permissions.test.tsx": {
-    "mtime": 1787589830.1259992,
-    "ast_hash": "1788a656693605fd122d0b48e45a6e21",
+    "mtime": 1787857614.7129047,
+    "ast_hash": "b53a90961a0478f34010aff2d3d3791a",
     "semantic_hash": ""
   },
   "src/test/cs-cx-routines-report.test.ts": {
@@ -4272,6 +4272,26 @@
   "src/components/DeploymentsTickets/TicketsSlaSectorAnalysis.tsx": {
     "mtime": 1787848297.9757397,
     "ast_hash": "5d216e9cb324024a6c23a338b86dedcb",
+    "semantic_hash": ""
+  },
+  "src/test/lexical-rich-text.test.ts": {
+    "mtime": 1787854785.4181452,
+    "ast_hash": "41b956e0fc285414f88a455836a4a439",
+    "semantic_hash": ""
+  },
+  "src/components/ui/ai-rich-text-field.tsx": {
+    "mtime": 1787857231.2228396,
+    "ast_hash": "6a546f3ca685ba25784fb441c57953c2",
+    "semantic_hash": ""
+  },
+  "src/hooks/useAiTextImprovement.ts": {
+    "mtime": 1787857145.0890932,
+    "ast_hash": "4ee06712f920cdf831aaf55b79a9cd3f",
+    "semantic_hash": ""
+  },
+  "src/test/ai-rich-text-field.test.tsx": {
+    "mtime": 1787857208.7965834,
+    "ast_hash": "7ed9ae3b28b6f6407e379592c0634438",
     "semantic_hash": ""
   }
 }

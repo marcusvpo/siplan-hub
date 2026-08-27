@@ -1480,8 +1480,9 @@ export default function CsCxRoutines() {
 
           <div className="min-h-0 flex-1 overflow-y-auto pr-1">
             {pagedOfficeItems.length > 0 && (
-              <div className="mb-1.5 hidden grid-cols-[minmax(0,1fr)_minmax(7rem,0.28fr)_minmax(7rem,0.28fr)_auto] items-center gap-3 px-3 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground md:grid">
+              <div className="mb-1.5 hidden grid-cols-[minmax(0,1fr)_minmax(8rem,0.32fr)_minmax(7rem,0.28fr)_minmax(7rem,0.28fr)_auto] items-center gap-3 px-3 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground md:grid">
                 <span>Rotina e observações</span>
+                <span>Tipo</span>
                 <span>Ideal</span>
                 <span>Status</span>
                 <span className="sr-only">Ações</span>
@@ -1906,7 +1907,7 @@ function RoutineItemRow({
   const beforeObservations = decodeRoutineObservations(item.notes);
   const afterObservations = decodeRoutineObservations(item.analysis_notes);
   return (
-    <div className="grid gap-2 rounded-md border px-3 py-2 md:grid-cols-[minmax(0,1fr)_minmax(7rem,0.28fr)_minmax(7rem,0.28fr)_auto] md:items-center md:gap-3">
+    <div className="grid gap-2 rounded-md border px-3 py-2 md:grid-cols-[minmax(0,1fr)_minmax(8rem,0.32fr)_minmax(7rem,0.28fr)_minmax(7rem,0.28fr)_auto] md:items-center md:gap-3">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-1.5">
           <span className="text-sm font-medium">
@@ -1922,6 +1923,22 @@ function RoutineItemRow({
           before={beforeObservations}
           after={afterObservations}
         />
+      </div>
+      <div className="flex min-w-0 items-center gap-2">
+        <span className="w-12 shrink-0 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground md:hidden">
+          Tipo
+        </span>
+        {item.model_item?.routine_type ? (
+          <Badge
+            variant="secondary"
+            className="h-5 max-w-full truncate px-1.5 text-[10px] font-normal"
+            title={item.model_item.routine_type.name}
+          >
+            {item.model_item.routine_type.name}
+          </Badge>
+        ) : (
+          <span className="text-xs text-muted-foreground">—</span>
+        )}
       </div>
       <div className="flex min-w-0 items-center gap-2">
         <span className="w-12 shrink-0 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground md:hidden">
