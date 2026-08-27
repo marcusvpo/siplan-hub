@@ -12,6 +12,12 @@ export interface SlaCheckpointState {
   status: SlaCheckpointStatus;
 }
 
+export interface SlaCheckpointDisplay {
+  label: "No prazo" | "Fora do SLA" | "Aguardando" | "Em curso" | "Pausado" | "Sem SLA";
+  className: string;
+  classification: TicketSlaClassification;
+}
+
 export interface ResolutionSlaState {
   hours: number | null;
   label: "Dentro do SLA" | "Fora do SLA" | "Retorno fora do SLA" | "Aguardando retorno" | "SLA em curso" | "SLA vencido" | "SLA pausado" | "Sem SLA na origem" | "Sem datas";
@@ -39,8 +45,29 @@ export interface TicketAreaTransfer {
   responsible?: string;
 }
 
+export type TicketAreaStageOutcome =
+  | "handedOffBeforeDeadline"
+  | "handedOffAfterDeadline"
+  | "resolvedWithin"
+  | "resolvedOutside"
+  | "activeWithin"
+  | "activeOutside"
+  | "activePaused"
+  | "unavailable";
+
+export interface TicketAreaStage {
+  area: string;
+  startedAt: Date | null;
+  endedAt: Date | null;
+  hours: number | null;
+  endKind: "transfer" | "completion" | "current";
+  outcome: TicketAreaStageOutcome;
+  firstResponseStatus: "met" | "breached" | null;
+}
+
 export interface TicketFlowAnalysis {
   areaTimes: TicketAreaTime[];
+  areaStages: TicketAreaStage[];
   transfers: TicketAreaTransfer[];
   bottleneck: TicketAreaTime | null;
   longestTransfer: TicketAreaTransfer | null;
@@ -69,6 +96,45 @@ export function formatSlaDuration(hours: number | null): string {
   const days = Math.floor(roundedHours / 24);
   const remainingHours = roundedHours % 24;
   return remainingHours > 0 ? `${days} d ${remainingHours} h` : `${days} d`;
+}
+
+export function getSlaCheckpointDisplay(
+  checkpoint: SlaCheckpointState,
+  kind: "firstResponse" | "resolution",
+): SlaCheckpointDisplay {
+  if (checkpoint.status === "met") {
+    return {
+      label: "No prazo",
+      className: "bg-emerald-100 text-emerald-700",
+      classification: "within",
+    };
+  }
+  if (checkpoint.status === "breached") {
+    return {
+      label: "Fora do SLA",
+      className: "bg-rose-100 text-rose-700",
+      classification: "outside",
+    };
+  }
+  if (checkpoint.status === "paused") {
+    return {
+      label: "Pausado",
+      className: "bg-violet-100 text-violet-700",
+      classification: "inProgress",
+    };
+  }
+  if (checkpoint.status === "pending") {
+    return {
+      label: kind === "firstResponse" ? "Aguardando" : "Em curso",
+      className: "bg-blue-100 text-blue-700",
+      classification: "inProgress",
+    };
+  }
+  return {
+    label: "Sem SLA",
+    className: "bg-muted text-muted-foreground",
+    classification: "unavailable",
+  };
 }
 
 function getCheckpointState(
@@ -280,11 +346,12 @@ export function buildTicketFlowAnalysis(
     parseSlaDate(tramite.dataTramite) !== null
   ));
   const openedAt = parseSlaDate(chamado.abertoEm || chamado.dataAbertura);
+  const closed = isTicketCompleted(chamado);
   const closedAt = parseSlaDate(
     chamado.encerradoEm || chamado.dataEncerramento,
     !chamado.encerradoEm,
   );
-  const endpoint = isTicketCompleted(chamado) && closedAt ? closedAt : now;
+  const endpoint = closed && closedAt ? closedAt : now;
   const areaTotals = new Map<string, { hours: number; intervals: number }>();
   const transfers: TicketAreaTransfer[] = [];
 
@@ -338,9 +405,85 @@ export function buildTicketFlowAnalysis(
       ? transfer
       : longest;
   }, null);
+  const sla = getOfficialSlaState(chamado, now);
+  const rawStages: Array<Omit<TicketAreaStage, "outcome" | "firstResponseStatus">> = [];
+
+  if (timeline.length === 0) {
+    rawStages.push({
+      area: chamado.equipeResponsavel?.trim() || "Área não informada",
+      startedAt: openedAt,
+      endedAt: endpoint,
+      hours: elapsedHours(openedAt, endpoint),
+      endKind: closed ? "completion" : "current",
+    });
+  } else {
+    let currentArea = tramiteArea(timeline[0]);
+    let stageStartedAt = openedAt || parseSlaDate(timeline[0].dataTramite);
+
+    for (let index = 1; index < timeline.length; index += 1) {
+      const next = timeline[index];
+      const nextArea = tramiteArea(next);
+      if (normalizeTicketText(currentArea) === normalizeTicketText(nextArea)) continue;
+      const transferredAt = parseSlaDate(next.dataTramite);
+      rawStages.push({
+        area: currentArea,
+        startedAt: stageStartedAt,
+        endedAt: transferredAt,
+        hours: elapsedHours(stageStartedAt, transferredAt),
+        endKind: "transfer",
+      });
+      currentArea = nextArea;
+      stageStartedAt = transferredAt;
+    }
+
+    rawStages.push({
+      area: currentArea,
+      startedAt: stageStartedAt,
+      endedAt: endpoint,
+      hours: elapsedHours(stageStartedAt, endpoint),
+      endKind: closed ? "completion" : "current",
+    });
+  }
+
+  const areaStages = rawStages.map((stage, index): TicketAreaStage => {
+    let outcome: TicketAreaStageOutcome = "unavailable";
+    if (stage.endKind === "transfer" && stage.endedAt && sla.resolution.deadline) {
+      outcome = stage.endedAt.getTime() <= sla.resolution.deadline.getTime()
+        ? "handedOffBeforeDeadline"
+        : "handedOffAfterDeadline";
+    } else if (stage.endKind === "completion") {
+      if (sla.resolution.status === "met") outcome = "resolvedWithin";
+      if (sla.resolution.status === "breached") outcome = "resolvedOutside";
+    } else if (stage.endKind === "current") {
+      if (sla.resolution.status === "pending") outcome = "activeWithin";
+      if (sla.resolution.status === "breached") outcome = "activeOutside";
+      if (sla.resolution.status === "paused") outcome = "activePaused";
+    }
+
+    const firstResponseAt = sla.firstResponse.completedAt;
+    const isLastStage = index === rawStages.length - 1;
+    const containsFirstResponse = Boolean(
+      firstResponseAt &&
+      stage.startedAt &&
+      stage.endedAt &&
+      firstResponseAt.getTime() >= stage.startedAt.getTime() &&
+      (firstResponseAt.getTime() < stage.endedAt.getTime() || (
+        isLastStage && firstResponseAt.getTime() <= stage.endedAt.getTime()
+      )),
+    );
+
+    return {
+      ...stage,
+      outcome,
+      firstResponseStatus: containsFirstResponse && (
+        sla.firstResponse.status === "met" || sla.firstResponse.status === "breached"
+      ) ? sla.firstResponse.status : null,
+    };
+  });
 
   return {
     areaTimes,
+    areaStages,
     transfers,
     bottleneck: areaTimes[0] || null,
     longestTransfer,

@@ -6,6 +6,7 @@ import type { ChamadosReportFilters } from "@/lib/chamados-report-pdf";
 import {
   formatSlaDuration,
   getOfficialSlaState,
+  getSlaCheckpointDisplay,
   parseSlaDate,
 } from "@/lib/tickets-sla";
 
@@ -65,10 +66,10 @@ export async function generateTicketsSlaReportPdf(
   let y = 0;
 
   const states = chamados.map((chamado) => getOfficialSlaState(chamado));
-  const within = states.filter((state) => state.classification === "within").length;
-  const outside = states.filter((state) => state.classification === "outside").length;
-  const inProgress = states.filter((state) => state.classification === "inProgress").length;
-  const unavailable = states.filter((state) => state.classification === "unavailable").length;
+  const firstWithin = states.filter((state) => state.firstResponse.status === "met").length;
+  const firstOutside = states.filter((state) => state.firstResponse.status === "breached").length;
+  const resolutionWithin = states.filter((state) => state.resolution.status === "met").length;
+  const resolutionOutside = states.filter((state) => state.resolution.status === "breached").length;
 
   const productLabel = filters.catalog === "legacy"
     ? summarize(filters.products || [], "Todos os produtos")
@@ -110,14 +111,30 @@ export async function generateTicketsSlaReportPdf(
 
   const columns = [
     { label: "Chamado", width: 18, value: (item: Chamado0800) => `#${item.numeroChamado}` },
-    { label: "Cliente / serventia", width: 42, value: (item: Chamado0800) => safeText(item.nomeCliente) },
-    { label: "Título", width: 48, value: (item: Chamado0800) => safeText(item.titulo) },
+    { label: "Cliente / serventia", width: 40, value: (item: Chamado0800) => safeText(item.nomeCliente) },
+    { label: "Título", width: 46, value: (item: Chamado0800) => safeText(item.titulo) },
     { label: "Criticidade", width: 27, value: (item: Chamado0800) => safeText(item.criticidade) },
     { label: "Abertura", width: 27, value: (item: Chamado0800) => formatDateTime(item.abertoEm || item.dataAbertura) },
     { label: "Encerramento", width: 27, value: (item: Chamado0800) => formatDateTime(item.encerradoEm || item.dataEncerramento) },
-    { label: "Vencimento", width: 27, value: (item: Chamado0800) => formatDateTime(item.slaVencimentoEm) },
     { label: "Duração", width: 20, value: (item: Chamado0800) => formatSlaDuration(getOfficialSlaState(item).hours) },
-    { label: "SLA oficial", width: 31, value: (item: Chamado0800) => getOfficialSlaState(item).label },
+    {
+      label: "1º retorno",
+      width: 31,
+      value: (item: Chamado0800) => {
+        const state = getOfficialSlaState(item);
+        const display = getSlaCheckpointDisplay(state.firstResponse, "firstResponse");
+        return `${display.label} · ${formatDateTime(item.slaPrimeiraRespostaPrevistaEm)}`;
+      },
+    },
+    {
+      label: "Resolução",
+      width: 31,
+      value: (item: Chamado0800) => {
+        const state = getOfficialSlaState(item);
+        const display = getSlaCheckpointDisplay(state.resolution, "resolution");
+        return `${display.label} · ${formatDateTime(item.slaVencimentoEm)}`;
+      },
+    },
   ];
 
   const drawTableHeader = () => {
@@ -169,10 +186,10 @@ export async function generateTicketsSlaReportPdf(
     y += filterLines.length * 3.5 + 3;
 
     drawSummaryCard(marginX, "Chamados analisados", chamados.length, [190, 0, 48]);
-    drawSummaryCard(marginX + 54, "Dentro do SLA", within, [5, 150, 105]);
-    drawSummaryCard(marginX + 108, "Fora / vencido", outside, [225, 29, 72]);
-    drawSummaryCard(marginX + 162, "SLA em curso / pausado", inProgress, [37, 99, 235]);
-    drawSummaryCard(marginX + 216, "Sem SLA na origem", unavailable, [100, 116, 139]);
+    drawSummaryCard(marginX + 54, "1º retorno no prazo", firstWithin, [5, 150, 105]);
+    drawSummaryCard(marginX + 108, "1º retorno fora", firstOutside, [225, 29, 72]);
+    drawSummaryCard(marginX + 162, "Resolução no prazo", resolutionWithin, [5, 150, 105]);
+    drawSummaryCard(marginX + 216, "Resolução fora", resolutionOutside, [225, 29, 72]);
     y += 16;
     drawTableHeader();
   };
@@ -207,11 +224,14 @@ export async function generateTicketsSlaReportPdf(
 
       if (columnIndex === 0) {
         pdf.setTextColor(190, 0, 48);
-      } else if (columnIndex === columns.length - 1) {
+      } else if (columnIndex >= columns.length - 2) {
         const state = getOfficialSlaState(item);
-        if (state.classification === "within") pdf.setTextColor(5, 130, 90);
-        else if (state.classification === "inProgress") pdf.setTextColor(37, 99, 235);
-        else if (state.classification === "unavailable") pdf.setTextColor(100, 110, 125);
+        const checkpoint = columnIndex === columns.length - 2
+          ? getSlaCheckpointDisplay(state.firstResponse, "firstResponse")
+          : getSlaCheckpointDisplay(state.resolution, "resolution");
+        if (checkpoint.classification === "within") pdf.setTextColor(5, 130, 90);
+        else if (checkpoint.classification === "inProgress") pdf.setTextColor(37, 99, 235);
+        else if (checkpoint.classification === "unavailable") pdf.setTextColor(100, 110, 125);
         else pdf.setTextColor(190, 18, 60);
       } else {
         pdf.setTextColor(30, 38, 50);

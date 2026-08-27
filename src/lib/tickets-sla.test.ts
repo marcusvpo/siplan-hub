@@ -7,6 +7,7 @@ import {
   elapsedHours,
   formatSlaDuration,
   getOfficialSlaState,
+  getSlaCheckpointDisplay,
   parseSlaDate,
 } from "@/lib/tickets-sla";
 
@@ -63,6 +64,21 @@ describe("tickets SLA", () => {
     }), new Date("2026-08-10T08:00:00")).label).toBe("SLA pausado");
   });
 
+  it("separa o SLA do primeiro retorno do SLA de resolução", () => {
+    const state = getOfficialSlaState(chamado({
+      slaPrimeiraRespostaPrevistaEm: "2026-08-01T10:00:00",
+      slaPrimeiraRespostaRealEm: "2026-08-01T11:00:00",
+      slaVencimentoEm: "2026-08-05T18:00:00",
+    }));
+
+    expect(state.firstResponse.status).toBe("breached");
+    expect(state.resolution.status).toBe("met");
+    expect(getSlaCheckpointDisplay(state.firstResponse, "firstResponse").label)
+      .toBe("Fora do SLA");
+    expect(getSlaCheckpointDisplay(state.resolution, "resolution").label)
+      .toBe("No prazo");
+  });
+
   it("calcula e formata durações", () => {
     const start = parseSlaDate("2026-08-01T08:00:00");
     const end = parseSlaDate("2026-08-02T10:00:00");
@@ -101,5 +117,35 @@ describe("tickets SLA", () => {
     ]);
     expect(result.bottleneck?.area).toBe("Sustentação");
     expect(result.totalTrackedHours).toBe(48);
+  });
+
+  it("identifica o setor que repassou no prazo e o setor em que a resolução estourou", () => {
+    const tramites: ChamadoTramite[] = [
+      { sequenciaTramite: 1, dataTramite: "2026-08-01T08:30:00", equipeResponsavel: "SD" },
+      { sequenciaTramite: 2, dataTramite: "2026-08-02T10:00:00", equipeResponsavel: "Sustentação" },
+      { sequenciaTramite: 3, dataTramite: "2026-08-02T14:00:00", equipeResponsavel: "Sustentação" },
+    ];
+    const result = buildTicketFlowAnalysis(chamado({
+      abertoEm: "2026-08-01T08:00:00",
+      encerradoEm: "2026-08-03T08:00:00",
+      slaPrimeiraRespostaPrevistaEm: "2026-08-01T10:00:00",
+      slaPrimeiraRespostaRealEm: "2026-08-01T09:00:00",
+      slaVencimentoEm: "2026-08-02T12:00:00",
+      equipeResponsavel: "Sustentação",
+    }), tramites);
+
+    expect(result.areaStages).toHaveLength(2);
+    expect(result.areaStages[0]).toMatchObject({
+      area: "SD",
+      endKind: "transfer",
+      outcome: "handedOffBeforeDeadline",
+      firstResponseStatus: "met",
+    });
+    expect(result.areaStages[1]).toMatchObject({
+      area: "Sustentação",
+      endKind: "completion",
+      outcome: "resolvedOutside",
+      firstResponseStatus: null,
+    });
   });
 });
