@@ -71,8 +71,18 @@ export function AppSidebar() {
     location.pathname.startsWith("/dashboard") ||
       location.pathname.startsWith("/deployments/tickets"),
   );
-  const [isImplantacaoOpen, setIsImplantacaoOpen] = useState(false);
-  const [isCalendarioOpen, setIsCalendarioOpen] = useState(false);
+  const [isImplantacaoOpen, setIsImplantacaoOpen] = useState(
+    location.pathname === "/implantacao" ||
+      location.pathname === "/projects" ||
+      location.pathname === "/reports" ||
+      location.pathname === "/deployments" ||
+      location.pathname === "/deployments/latest",
+  );
+  const [isCalendarioOpen, setIsCalendarioOpen] = useState(
+    location.pathname === "/calendario" ||
+      location.pathname === "/calendar" ||
+      location.pathname === "/agenda-analistas",
+  );
   const [isOrionTNModelsOpen, setIsOrionTNModelsOpen] = useState(
     location.pathname.startsWith("/orion-tn-models"),
   );
@@ -109,6 +119,7 @@ export function AppSidebar() {
   const canViewOrion = hasPermission("menu_orion", "view");
   const canViewSd = hasPermission("menu_sd", "view");
   const canViewAssistentes = hasPermission("menu_assistentes", "view");
+  const canViewDashboard = hasPermission("dashboard", "view");
   const canViewDashboardView = hasPermission("dashboard_view", "view");
   const canViewKanban = hasPermission("kanban", "view");
   const canViewPosPanorama = hasPermission("pos_panorama", "view");
@@ -124,7 +135,7 @@ export function AppSidebar() {
     opcoes.find(([resource]) => can(resource))?.[1];
 
   const rotaDashboard = primeiraRota(
-    ["dashboard_view", "/dashboard"],
+    ["dashboard_view", "/dashboard/indicadores"],
     ["kanban", "/dashboard/kanban"],
     ["pos_panorama", "/dashboard/pos-implantacao"],
     ["pos_panorama_geral", "/dashboard/pos-panorama-geral"],
@@ -148,17 +159,16 @@ export function AppSidebar() {
     ["commercial_checklists", "/commercial/checklists"],
   );
   const rotaConversao = primeiraRota(
-    ["conversion_home", "/conversion"],
+    ["conversion_home", "/conversion/atividades"],
     ["conversion_engines", "/conversion/engines"],
   );
   const rotaSd = primeiraRota(["sd_solutions", "/sd/solucoes"]);
   const rotaOrion = primeiraRota(
     ["orion_dashboard", "/orion-tn-models/dashboard"],
     ["orion_projects", "/orion-tn-models/projects"],
-    ["orion_editor", "/orion-tn-models"],
+    ["orion_editor", "/orion-tn-models/editor"],
   );
   const rotaImplantadores = primeiraRota(
-    ["implantadores_home", "/implantadores"],
     ["implantadores_aderencia", "/implantadores/aderencia"],
     ["implantadores_aderencia_finalizadas", "/implantadores/aderencia/finalizadas"],
     ["conversion_homologation", "/implantadores/homologation"],
@@ -183,7 +193,7 @@ export function AppSidebar() {
     ["pos_ai_logs", "/assistentes/links-chats"],
   );
 
-  const mostrarDashboard = !!rotaDashboard;
+  const mostrarDashboard = canViewDashboard && !!rotaDashboard;
   const mostrarImplantacao = canViewImplantacao && !!rotaImplantacao;
   const mostrarCalendario = canViewCalendario && !!rotaCalendario;
   const mostrarComercial = canViewComercial && !!rotaComercial;
@@ -304,15 +314,25 @@ export function AppSidebar() {
               </CollapsibleTrigger>
               <CollapsibleContent className="space-y-1 pl-4 animate-in slide-in-from-top-2">
                 <div className="pt-1 pb-2">
+                  <Link to="/dashboard">
+                    <Button
+                      variant={isActive("/dashboard") ? "secondary" : "ghost"}
+                      size="sm"
+                      className="w-full justify-start gap-3 h-9"
+                    >
+                      <LayoutGrid className="h-4 w-4" />
+                      <span>Visão Geral</span>
+                    </Button>
+                  </Link>
                   {canViewDashboardView && (
-                    <Link to="/dashboard">
+                    <Link to="/dashboard/indicadores">
                       <Button
-                        variant={isActive("/dashboard") ? "secondary" : "ghost"}
+                        variant={isActive("/dashboard/indicadores") ? "secondary" : "ghost"}
                         size="sm"
                         className="w-full justify-start gap-3 h-9"
                       >
                         <BarChart3 className="h-4 w-4" />
-                        <span>Visão Geral</span>
+                        <span>Dashboard</span>
                       </Button>
                     </Link>
                   )}
@@ -380,7 +400,7 @@ export function AppSidebar() {
               </CollapsibleContent>
             </Collapsible>
           ) : (
-            <Link to={rotaDashboard!}>
+            <Link to="/dashboard">
               <Button
                 variant={
                   location.pathname.startsWith("/dashboard") ||
@@ -427,6 +447,16 @@ export function AppSidebar() {
               </CollapsibleTrigger>
               <CollapsibleContent className="space-y-1 pl-4 animate-in slide-in-from-top-2">
                 <div className="pt-1 pb-2">
+                  <Link to="/implantacao">
+                    <Button
+                      variant={isActive("/implantacao") ? "secondary" : "ghost"}
+                      size="sm"
+                      className="w-full justify-start gap-3 h-9"
+                    >
+                      <LayoutDashboard className="h-4 w-4" />
+                      <span>Visão Geral</span>
+                    </Button>
+                  </Link>
                   <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider pl-4 mb-2 block">
                     Projetos
                   </span>
@@ -482,10 +512,11 @@ export function AppSidebar() {
               </CollapsibleContent>
             </Collapsible>
           ) : (
-              <Link to={rotaImplantacao!}>
+              <Link to="/implantacao">
                 <Button
                   variant={
-                    isActive("/projects") ||
+                    isActive("/implantacao") ||
+                      isActive("/projects") ||
                       isActive("/reports") ||
                       isActive("/deployments") ||
                       isActive("/deployments/latest")
@@ -532,6 +563,16 @@ export function AppSidebar() {
               </CollapsibleTrigger>
               <CollapsibleContent className="space-y-1 pl-4 animate-in slide-in-from-top-2">
                 <div className="pt-1 pb-2">
+                  <Link to="/calendario">
+                    <Button
+                      variant={isActive("/calendario") ? "secondary" : "ghost"}
+                      size="sm"
+                      className="w-full justify-start gap-3 h-9"
+                    >
+                      <LayoutDashboard className="h-4 w-4" />
+                      <span>Visão Geral</span>
+                    </Button>
+                  </Link>
                   <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider pl-4 mb-2 block">
                     Cronogramas
                   </span>
@@ -563,10 +604,10 @@ export function AppSidebar() {
               </CollapsibleContent>
             </Collapsible>
           ) : (
-            <Link to={rotaCalendario!}>
+            <Link to="/calendario">
               <Button
                 variant={
-                  isActive("/calendar") || isActive("/agenda-analistas") ? "secondary" : "ghost"
+                  isActive("/calendario") || isActive("/calendar") || isActive("/agenda-analistas") ? "secondary" : "ghost"
                 }
                 className="w-full justify-center px-0"
                 title="Calendário (Projetos e Agenda)"
@@ -599,6 +640,16 @@ export function AppSidebar() {
               </CollapsibleTrigger>
               <CollapsibleContent className="space-y-1 pl-4 animate-in slide-in-from-top-2">
                 <div className="pt-1 pb-2">
+                  <Link to="/commercial">
+                    <Button
+                      variant={isActive("/commercial") ? "secondary" : "ghost"}
+                      size="sm"
+                      className="w-full justify-start gap-3 h-9"
+                    >
+                      <LayoutDashboard className="h-4 w-4" />
+                      <span>Visão Geral</span>
+                    </Button>
+                  </Link>
                   {can("commercial_customers") && (
                   <Link to="/commercial/customers">
                     <Button
@@ -662,10 +713,11 @@ export function AppSidebar() {
               </CollapsibleContent>
             </Collapsible>
           ) : (
-              <Link to={rotaComercial!}>
+              <Link to="/commercial">
                 <Button
                   variant={
-                    isActive("/commercial/customers") ||
+                    isActive("/commercial") ||
+                      isActive("/commercial/customers") ||
                       isActive("/commercial/blockers") ||
                       isActive("/commercial/contacts") ||
                       isActive("/commercial/checklists")
@@ -706,10 +758,20 @@ export function AppSidebar() {
               </CollapsibleTrigger>
               <CollapsibleContent className="space-y-1 pl-4 animate-in slide-in-from-top-2">
                 <div className="pt-1 pb-2">
-                  {can("conversion_home") && (
                   <Link to="/conversion">
                     <Button
                       variant={isActive("/conversion") ? "secondary" : "ghost"}
+                      size="sm"
+                      className="w-full justify-start gap-3 h-9"
+                    >
+                      <LayoutDashboard className="h-4 w-4" />
+                      <span>Visão Geral</span>
+                    </Button>
+                  </Link>
+                  {can("conversion_home") && (
+                  <Link to="/conversion/atividades">
+                    <Button
+                      variant={isActive("/conversion/atividades") ? "secondary" : "ghost"}
                       size="sm"
                       className="w-full justify-start gap-3 h-9"
                     >
@@ -736,7 +798,7 @@ export function AppSidebar() {
               </CollapsibleContent>
             </Collapsible>
           ) : (
-            <Link to={rotaConversao!}>
+            <Link to="/conversion">
               <Button
                 variant={
                   location.pathname.startsWith("/conversion")
@@ -848,6 +910,18 @@ export function AppSidebar() {
               </CollapsibleTrigger>
               <CollapsibleContent className="space-y-1 pl-4 animate-in slide-in-from-top-2">
                 <div className="pt-1 pb-1">
+                  <div className="px-4 pt-2">
+                    <Link to="/orion-tn-models">
+                      <Button
+                        variant={isActive("/orion-tn-models") ? "secondary" : "ghost"}
+                        size="sm"
+                        className="w-full justify-start gap-3 h-9"
+                      >
+                        <LayoutDashboard className="h-4 w-4" />
+                        <span className="text-xs font-medium">Visão Geral</span>
+                      </Button>
+                    </Link>
+                  </div>
                   <div className="px-4 py-2">
                     <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-2">
                       Gestão
@@ -877,10 +951,10 @@ export function AppSidebar() {
                     </Link>
                     )}
                     {can("orion_editor") && (
-                    <Link to="/orion-tn-models">
+                    <Link to="/orion-tn-models/editor">
                       <Button
                         variant={
-                          location.pathname === "/orion-tn-models" ||
+                          location.pathname.startsWith("/orion-tn-models/editor") ||
                           (location.pathname.startsWith("/orion-tn-models/") &&
                             location.pathname !== "/orion-tn-models/dashboard" &&
                             location.pathname !== "/orion-tn-models/projects")
@@ -900,7 +974,7 @@ export function AppSidebar() {
               </CollapsibleContent>
             </Collapsible>
           ) : (
-            <Link to={rotaOrion!}>
+            <Link to="/orion-tn-models">
               <Button
                 variant={
                   location.pathname.startsWith("/orion-tn-models")
@@ -954,7 +1028,6 @@ export function AppSidebar() {
                     <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-2">
                       Operacional
                     </span>
-                    {can("implantadores_home") && (
                     <Link to="/implantadores">
                       <Button
                         variant={isActive("/implantadores") ? "secondary" : "ghost"}
@@ -965,7 +1038,6 @@ export function AppSidebar() {
                         <span className="text-xs font-medium">Visão Geral</span>
                       </Button>
                     </Link>
-                    )}
                     {can("implantadores_aderencia") && (
                     <Link to="/implantadores/aderencia">
                       <Button
@@ -1031,7 +1103,7 @@ export function AppSidebar() {
               </CollapsibleContent>
             </Collapsible>
           ) : (
-            <Link to={rotaImplantadores!}>
+            <Link to="/implantadores">
               <Button
                 variant={
                   location.pathname.startsWith("/implantadores")
@@ -1228,6 +1300,18 @@ export function AppSidebar() {
               </CollapsibleTrigger>
               <CollapsibleContent className="space-y-1 pl-4 animate-in slide-in-from-top-2">
                 <div className="pt-1 pb-1">
+                  <div className="px-4 pt-2">
+                    <Link to="/assistentes">
+                      <Button
+                        variant={isActive("/assistentes") ? "secondary" : "ghost"}
+                        size="sm"
+                        className="w-full justify-start gap-3 h-9"
+                      >
+                        <LayoutDashboard className="h-4 w-4" />
+                        <span className="text-xs font-medium">Visão Geral</span>
+                      </Button>
+                    </Link>
+                  </div>
                   {can("assistants_knowledge") && (
                   <div className="px-4 py-2">
                     <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-2">
@@ -1289,7 +1373,7 @@ export function AppSidebar() {
               </CollapsibleContent>
             </Collapsible>
           ) : (
-            <Link to={rotaAssistentes!}>
+            <Link to="/assistentes">
               <Button
                 variant={
                   location.pathname.startsWith("/assistentes")

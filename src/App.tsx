@@ -62,7 +62,6 @@ const OrionTNDashboard = lazy(
 );
 
 // Implantadores Pages (lazy)
-const Implantadores = lazy(() => import("./pages/implantadores/Implantadores"));
 const ImplantadoresAderencia = lazy(
   () => import("./pages/implantadores/EditarFormAderencia"),
 );
@@ -96,7 +95,6 @@ const TransicaoPlaceholder = lazy(
 );
 
 // CS/CX Pages (lazy)
-const CsCxOverview = lazy(() => import("./pages/cs-cx/CsCxOverview"));
 const CsCxRequests = lazy(() => import("./pages/cs-cx/CsCxRequests"));
 const CsCxRegistryOffices = lazy(
   () => import("./pages/cs-cx/CsCxRegistryOffices"),
@@ -141,6 +139,7 @@ const PosAiLinksChats = lazy(() => import("./pages/assistants/PosAiLinksChats"))
 const KnowledgeEditorPage = lazy(
   () => import("./pages/assistants/KnowledgeEditorPage"),
 );
+const ModuleOverview = lazy(() => import("./pages/ModuleOverview"));
 
 const queryClient = new QueryClient();
 
@@ -380,7 +379,63 @@ const App = () => (
                         <Routes>
                           <Route path="/" element={<Home />} />
                           <Route
+                            path="/implantacao"
+                            element={
+                              <RequirePermission resource="menu_implantacao">
+                                <ModuleOverview moduleName="Implantação" />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/calendario"
+                            element={
+                              <RequirePermission resource="menu_calendario">
+                                <ModuleOverview moduleName="Calendário" />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/commercial"
+                            element={
+                              <RequirePermission resource="menu_comercial">
+                                <ModuleOverview moduleName="Comercial" />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/conversion"
+                            element={
+                              <RequirePermission resource="menu_conversao">
+                                <ModuleOverview moduleName="Conversão" />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/orion-tn-models"
+                            element={
+                              <RequirePermission resource="menu_orion">
+                                <ModuleOverview moduleName="Modelos Editor OrionTN" />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/assistentes"
+                            element={
+                              <RequirePermission resource="menu_assistentes">
+                                <ModuleOverview moduleName="Assistentes" />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
                             path="/dashboard"
+                            element={
+                              <RequirePermission resource="dashboard">
+                                <ModuleOverview moduleName="Dashboard" />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/dashboard/indicadores"
                             element={
                               <RequirePermission resource="dashboard_view">
                                 <DashboardV2 />
@@ -567,7 +622,7 @@ const App = () => (
                             }
                           />
                           <Route
-                            path="/conversion"
+                            path="/conversion/atividades"
                             element={
                               <RequirePermission resource="conversion_home">
                                 <Conversion />
@@ -645,7 +700,15 @@ const App = () => (
                             }
                           />
                           <Route
-                            path="/orion-tn-models/:projectId?"
+                            path="/orion-tn-models/editor/:projectId?"
+                            element={
+                              <RequirePermission resource="orion_editor">
+                                <OrionTNModels />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/orion-tn-models/:projectId"
                             element={
                               <RequirePermission resource="orion_editor">
                                 <OrionTNModels />
@@ -655,8 +718,8 @@ const App = () => (
                           <Route
                             path="/implantadores"
                             element={
-                              <RequirePermission resource="implantadores_home">
-                                <Implantadores />
+                              <RequirePermission resource="menu_implantadores">
+                                <ModuleOverview moduleName="Implantadores" />
                               </RequirePermission>
                             }
                           />
@@ -704,7 +767,7 @@ const App = () => (
                             path="/cs-cx"
                             element={
                               <RequirePermission resource="cs_cx_home">
-                                <CsCxOverview />
+                                <ModuleOverview moduleName="CS/CX" />
                               </RequirePermission>
                             }
                           />

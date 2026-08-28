@@ -98,7 +98,15 @@ export default function Home() {
     }, [search, allowedMenuItems]);
 
     const handleCardClick = (item: MenuItem) => {
-        if (item.path) {
+        const protectedOverview = item.subItems?.find(
+            (subItem) => subItem.path === item.path && subItem.permissionKey,
+        );
+        const canOpenOverview =
+            !protectedOverview ||
+            isAdmin ||
+            hasPermission(protectedOverview.permissionKey!, "view");
+
+        if (item.path && canOpenOverview) {
             navigate(item.path);
         } else if (item.subItems) {
             setSelectedCategory(item);

@@ -220,7 +220,7 @@ export function useConversionQueue(options: UseConversionQueueOptions = {}) {
           type: "new_demand",
           title: "Nova conversão na fila",
           message: `${clientName}${ticketNumber ? ` (#${ticketNumber})` : ""} foi enviado para a fila de conversão por ${sentByName}.`,
-          action_url: "/conversion",
+          action_url: "/conversion/atividades",
         });
 
         await fetchQueue();
