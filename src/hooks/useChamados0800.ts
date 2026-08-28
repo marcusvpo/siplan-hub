@@ -64,6 +64,94 @@ export interface Chamados0800Result {
   lastSyncedAt?: string;
 }
 
+export interface ChamadosClientOption {
+  codigoCliente: string | null;
+  nomeCliente: string;
+  aliases: string[];
+}
+
+/** Catálogo compartilhado exibido no filtro de clientes da Consulta de Chamados. */
+export function useChamadosClientOptions(catalog: ChamadosCatalog = "orion") {
+  const isLegacy = catalog === "legacy";
+
+  return useQuery<ChamadosClientOption[]>({
+    queryKey: ["chamadosClientOptions", catalog, "catalog-v1"],
+    queryFn: async () => {
+      try {
+        const { data, error } = await supabase.rpc(
+          isLegacy ? "get_chamados_legacy_client_options" : "get_chamados_client_options",
+        );
+        if (error) throw error;
+        if (data && Array.isArray(data) && data.length > 0) {
+          return data
+            .filter((row) => Boolean(row.nome_cliente))
+            .map((row) => ({
+              codigoCliente: row.codigo_cliente ?? null,
+              nomeCliente: row.nome_cliente,
+              aliases: Array.isArray(row.aliases)
+                ? row.aliases.filter(Boolean)
+                : [row.nome_cliente],
+            }))
+            .sort((a, b) => a.nomeCliente.localeCompare(b.nomeCliente, "pt-BR"));
+        }
+      } catch (error) {
+        console.warn("RPC get_chamados_client_options falhou:", error);
+      }
+
+      try {
+        let query = supabase.from("chamados_processo_venda").select("nome_cliente");
+        query = isLegacy
+          ? query.in("produto", [...LEGACY_PRODUCT_FAMILIES])
+          : query.ilike("software", getOrionProductPattern("todos"));
+        const { data, error } = await query;
+        if (!error && data) {
+          const names = data
+            .map((row: { nome_cliente?: string | null }) => row.nome_cliente)
+            .filter(Boolean);
+          if (names.length > 0) {
+            return [...new Set(names)]
+              .map((name) => ({
+                codigoCliente: null,
+                nomeCliente: name as string,
+                aliases: [name as string],
+              }))
+              .sort((a, b) => a.nomeCliente.localeCompare(b.nomeCliente, "pt-BR"));
+          }
+        }
+      } catch (error) {
+        console.warn("Consulta direta à tabela chamados_processo_venda falhou:", error);
+      }
+
+      if (isLegacy) return [];
+
+      try {
+        const { data: projects, error } = await supabase
+          .from("projects")
+          .select("client_name")
+          .eq("is_deleted", false)
+          .ilike("system_type", "%orion%");
+        if (!error && projects) {
+          const names = projects
+            .map((project: { client_name?: string | null }) => project.client_name)
+            .filter(Boolean);
+          return [...new Set(names)]
+            .map((name) => ({
+              codigoCliente: null,
+              nomeCliente: name as string,
+              aliases: [name as string],
+            }))
+            .sort((a, b) => a.nomeCliente.localeCompare(b.nomeCliente, "pt-BR"));
+        }
+      } catch (error) {
+        console.error("Todos os fallbacks para obter lista de clientes falharam:", error);
+      }
+
+      return [];
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
 /**
  * Naturezas que nao representam dor do cliente no pos e so poluem a lista e a
  * analise: "Nova implantação" e o chamado interno do proprio projeto.

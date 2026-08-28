@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle,
+  Building2,
   Check,
   Copy,
   ExternalLink,
@@ -11,6 +12,7 @@ import {
   PowerOff,
   RefreshCw,
   Search,
+  UserRound,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -35,12 +37,15 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import type { PosAiChatLink } from "@/hooks/usePosAiChatLinks";
 import { usePermissions } from "@/hooks/usePermissions";
+import { getErrorMessage } from "@/lib/error-message";
+import { activityLogger } from "@/services/activityLogger";
 
 interface PosAiChatLinksManagerProps {
   links: PosAiChatLink[];
   isLoading: boolean;
-  selectedProject: string;
-  onViewLogs: (projectId: string) => void;
+  focusId?: string | null;
+  quickFilter?: "active" | "standalone" | null;
+  onViewChats: (linkId: string) => void;
 }
 
 type StatusFilter = "active" | "inactive" | "all";
@@ -48,14 +53,15 @@ type StatusFilter = "active" | "inactive" | "all";
 export function PosAiChatLinksManager({
   links,
   isLoading,
-  selectedProject,
-  onViewLogs,
+  focusId,
+  quickFilter,
+  onViewChats,
 }: PosAiChatLinksManagerProps) {
   const queryClient = useQueryClient();
   const { hasPermission } = usePermissions();
   const canManageLinks = hasPermission("pos_ai_logs", "manage");
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("active");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [linkToDeactivate, setLinkToDeactivate] = useState<PosAiChatLink | null>(null);
@@ -66,21 +72,23 @@ export function PosAiChatLinksManager({
   const filteredLinks = useMemo(() => {
     const normalizedSearch = search.trim().toLocaleLowerCase("pt-BR");
 
-    return links.filter((link) => {
-      if (selectedProject !== "all" && link.id !== selectedProject) return false;
-      if (statusFilter === "active" && !link.enabled) return false;
-      if (statusFilter === "inactive" && link.enabled) return false;
-      if (!normalizedSearch) return true;
+    return links
+      .filter((link) => {
+        const effectiveStatus = quickFilter === "active" ? "active" : statusFilter;
+        if (effectiveStatus === "active" && !link.enabled) return false;
+        if (effectiveStatus === "inactive" && link.enabled) return false;
+        if (quickFilter === "standalone" && link.project_id) return false;
+        if (!normalizedSearch) return true;
 
-      return (
-        link.client_name.toLocaleLowerCase("pt-BR").includes(normalizedSearch) ||
-        link.system_type.toLocaleLowerCase("pt-BR").includes(normalizedSearch)
-      );
-    });
-  }, [links, search, selectedProject, statusFilter]);
+        return (
+          link.client_name.toLocaleLowerCase("pt-BR").includes(normalizedSearch) ||
+          link.system_type.toLocaleLowerCase("pt-BR").includes(normalizedSearch)
+        );
+      })
+      .sort((a, b) => Number(b.id === focusId) - Number(a.id === focusId));
+  }, [focusId, links, quickFilter, search, statusFilter]);
 
-  const getPublicUrl = (projectId: string) =>
-    `${window.location.origin}/public/pos-chat/${projectId}`;
+  const getPublicUrl = (linkId: string) => `${window.location.origin}/public/pos-chat/${linkId}`;
 
   const handleCopy = async (link: PosAiChatLink) => {
     try {
@@ -93,38 +101,61 @@ export function PosAiChatLinksManager({
     }
   };
 
+  const invalidateLinks = async (link: PosAiChatLink) => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["posAiChatLinks"] }),
+      queryClient.invalidateQueries({ queryKey: ["activePosAiProjectsList"] }),
+      queryClient.invalidateQueries({ queryKey: ["projectsList"] }),
+      ...(link.project_id
+        ? [queryClient.invalidateQueries({ queryKey: ["projectDetails", link.project_id] })]
+        : []),
+    ]);
+  };
+
   const updateLinkStatus = async (link: PosAiChatLink, enabled: boolean) => {
     setUpdatingId(link.id);
     try {
       const now = new Date().toISOString();
-      const updatedCustomFields = {
-        ...link.custom_fields,
-        pos_assistant_enabled: enabled,
-        pos_assistant_activated_at:
-          enabled && !link.activated_at ? now : link.activated_at,
-        pos_assistant_disabled_at: enabled ? null : now,
-      };
 
-      const { error } = await supabase
-        .from("projects")
-        .update({ custom_fields: updatedCustomFields })
-        .eq("id", link.id);
+      if (link.managed_by === "link") {
+        const { data, error } = await supabase.rpc("set_pos_ai_chat_link_enabled", {
+          p_link_id: link.id,
+          p_enabled: enabled,
+        });
+        if (error) throw error;
+        if (!(data as { success?: boolean } | null)?.success) throw new Error("O banco não confirmou a alteração do link.");
+      } else {
+        const { error } = await supabase
+          .from("projects")
+          .update({
+            custom_fields: {
+              ...link.custom_fields,
+              pos_assistant_enabled: enabled,
+              pos_assistant_activated_at: enabled ? link.activated_at || now : link.activated_at,
+              pos_assistant_disabled_at: enabled ? null : now,
+            },
+          })
+          .eq("id", link.id);
+        if (error) throw error;
+        await activityLogger.log({
+          action: "custom_action",
+          details: {
+            projectId: link.project_id || link.id,
+            projectName: link.client_name,
+            entityType: "pos_ai_chat",
+            entityId: link.id,
+            additionalInfo: { action: enabled ? "link_reactivated" : "link_disabled" },
+          },
+        });
+      }
 
-      if (error) throw error;
-
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["posAiChatLinks"] }),
-        queryClient.invalidateQueries({ queryKey: ["activePosAiProjectsList"] }),
-        queryClient.invalidateQueries({ queryKey: ["projectsList"] }),
-        queryClient.invalidateQueries({ queryKey: ["projectDetails", link.id] }),
-      ]);
-
-      toast.success(enabled ? "Assistente reativado com sucesso." : "Acesso ao assistente encerrado.");
+      await invalidateLinks(link);
+      toast.success(enabled ? "Link reativado com sucesso." : "Acesso ao chat encerrado.");
       setLinkToDeactivate(null);
     } catch (error) {
       toast.error(
         `Erro ao ${enabled ? "reativar" : "encerrar"} o acesso: ${
-          error instanceof Error ? error.message : "erro desconhecido"
+          getErrorMessage(error, "erro desconhecido")
         }`,
       );
     } finally {
@@ -133,34 +164,34 @@ export function PosAiChatLinksManager({
   };
 
   return (
-    <Card>
-      <CardHeader className="border-b px-4 py-3">
-        <div className="flex flex-col gap-2.5 xl:flex-row xl:items-center xl:justify-between">
+    <Card className="overflow-hidden border-border/70 shadow-sm">
+      <CardHeader className="border-b bg-muted/20 px-3 py-2.5">
+        <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <CardTitle className="text-sm">Links dos Chats de Pós-Implantação</CardTitle>
-              <Badge className="bg-emerald-50 text-[10px] text-emerald-700 hover:bg-emerald-50 dark:bg-emerald-950/40 dark:text-emerald-300">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <CardTitle className="text-xs">Links de acesso dos clientes</CardTitle>
+              <Badge className="h-5 bg-emerald-50 px-1.5 text-[9px] text-emerald-700 hover:bg-emerald-50 dark:bg-emerald-950/40 dark:text-emerald-300">
                 {activeCount} ativo{activeCount === 1 ? "" : "s"}
               </Badge>
               {inactiveCount > 0 && (
-                <Badge variant="secondary" className="text-[10px]">
+                <Badge variant="secondary" className="h-5 px-1.5 text-[9px]">
                   {inactiveCount} encerrado{inactiveCount === 1 ? "" : "s"}
                 </Badge>
               )}
-              {!canManageLinks && <Badge variant="outline" className="text-[10px]">Somente leitura</Badge>}
+              {!canManageLinks && <Badge variant="outline" className="h-5 px-1.5 text-[9px]">Somente leitura</Badge>}
             </div>
-            <p className="mt-0.5 text-[11px] text-muted-foreground">
-              Copie, abra ou controle o acesso dos links exclusivos de cada cartório.
+            <p className="mt-0.5 text-[10px] text-muted-foreground">
+              Controle o acesso, acompanhe o uso e abra as conversas de cada cliente.
             </p>
           </div>
 
-          <div className="grid gap-2 sm:grid-cols-[minmax(220px,1fr)_150px]">
+          <div className="grid gap-1.5 sm:grid-cols-[minmax(220px,1fr)_150px]">
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Buscar cartório..."
+                placeholder="Buscar cliente ou sistema..."
                 className="h-8 pl-8 text-xs"
               />
             </div>
@@ -169,41 +200,41 @@ export function PosAiChatLinksManager({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="all">Todos os links</SelectItem>
                 <SelectItem value="active">Links ativos</SelectItem>
                 <SelectItem value="inactive">Encerrados</SelectItem>
-                <SelectItem value="all">Todos os links</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="p-3">
+      <CardContent className="p-2.5 sm:p-3">
         {isLoading ? (
-          <div className="flex items-center justify-center gap-2 py-12 text-xs text-muted-foreground">
+          <div className="flex items-center justify-center gap-2 py-10 text-xs text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
             Carregando links...
           </div>
         ) : filteredLinks.length === 0 ? (
-          <div className="rounded-lg border border-dashed py-12 text-center">
-            <Link2 className="mx-auto mb-2 h-6 w-6 text-muted-foreground/60" />
+          <div className="rounded-lg border border-dashed py-10 text-center">
+            <Link2 className="mx-auto mb-1.5 h-6 w-6 text-muted-foreground/50" />
             <p className="text-xs font-medium">Nenhum link encontrado</p>
-            <p className="mt-1 text-[11px] text-muted-foreground">
-              Ajuste a busca ou o filtro de status.
-            </p>
+            <p className="mt-0.5 text-[10px] text-muted-foreground">Ajuste a busca ou gere um novo link.</p>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="grid gap-2 xl:grid-cols-2">
             {filteredLinks.map((link) => {
               const publicUrl = getPublicUrl(link.id);
               const isUpdating = updatingId === link.id;
 
               return (
-                <div
+                <article
                   key={link.id}
-                  className="rounded-lg border bg-card px-3 py-2.5 transition-colors hover:border-rose-200 dark:hover:border-rose-900"
+                  className={`rounded-lg border bg-card px-3 py-2.5 transition-all hover:border-rose-200 hover:shadow-sm dark:hover:border-rose-900 ${
+                    link.id === focusId ? "border-rose-400 ring-2 ring-rose-500/10" : ""
+                  }`}
                 >
-                  <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
                       <div className="flex min-w-0 flex-wrap items-center gap-1.5">
                         <p className="truncate text-xs font-semibold">{link.client_name}</p>
@@ -217,81 +248,84 @@ export function PosAiChatLinksManager({
                         >
                           {link.enabled ? "Ativo" : "Encerrado"}
                         </Badge>
-                        <span className="text-[10px] text-muted-foreground">
-                          {link.message_count} mensagem{link.message_count === 1 ? "" : "s"}
-                        </span>
                       </div>
-                      <p className="mt-1 truncate font-mono text-[10px] text-muted-foreground">
-                        {publicUrl}
-                      </p>
+                      <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[9px] text-muted-foreground">
+                        {link.project_id ? <Building2 className="h-3 w-3" /> : <UserRound className="h-3 w-3" />}
+                        <span>{link.project_id ? "Vinculado a projeto" : "Cliente avulso"}</span>
+                        <span>·</span>
+                        <span>{link.system_type}</span>
+                        <span className="text-border">|</span>
+                        <span><strong className="font-semibold text-foreground">{link.conversation_count}</strong> conversas</span>
+                        <span>·</span>
+                        <span><strong className="font-semibold text-foreground">{link.message_count}</strong> mensagens</span>
+                        <span>·</span>
+                        <span><strong className="font-semibold text-foreground">{link.visitor_count}</strong> usuários</span>
+                      </div>
                     </div>
-
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="h-7 gap-1 px-2 text-[10px]"
-                        onClick={() => void handleCopy(link)}
-                      >
-                        {copiedId === link.id ? (
-                          <Check className="h-3 w-3 text-emerald-600" />
-                        ) : (
-                          <Copy className="h-3 w-3" />
-                        )}
-                        {copiedId === link.id ? "Copiado" : "Copiar"}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="h-7 gap-1 px-2 text-[10px]"
-                        onClick={() => window.open(publicUrl, "_blank", "noopener,noreferrer")}
-                      >
-                        <ExternalLink className="h-3 w-3" />
-                        Abrir
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="h-7 gap-1 px-2 text-[10px]"
-                        onClick={() => onViewLogs(link.id)}
-                      >
-                        <MessageSquareText className="h-3 w-3 text-blue-600" />
-                        Conversas
-                      </Button>
-                      {canManageLinks && (link.enabled ? (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="h-7 gap-1 border-amber-300 px-2 text-[10px] text-amber-700 hover:bg-amber-50 dark:border-amber-900 dark:text-amber-300 dark:hover:bg-amber-950/40"
-                          onClick={() => setLinkToDeactivate(link)}
-                          disabled={isUpdating}
-                        >
-                          <PowerOff className="h-3 w-3" />
-                          Encerrar
-                        </Button>
-                      ) : (
-                        <Button
-                          type="button"
-                          size="sm"
-                          className="h-7 gap-1 bg-emerald-600 px-2 text-[10px] text-white hover:bg-emerald-700"
-                          onClick={() => void updateLinkStatus(link, true)}
-                          disabled={isUpdating}
-                        >
-                          {isUpdating ? (
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                          ) : (
-                            <RefreshCw className="h-3 w-3" />
-                          )}
-                          Reativar
-                        </Button>
-                      ))}
-                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 shrink-0"
+                      onClick={() => window.open(publicUrl, "_blank", "noopener,noreferrer")}
+                      aria-label={`Abrir chat de ${link.client_name}`}
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </Button>
                   </div>
-                </div>
+
+                  <div className="mt-2 flex min-w-0 flex-wrap items-center gap-1.5 sm:flex-nowrap">
+                    <button
+                      type="button"
+                      onClick={() => void handleCopy(link)}
+                      className="flex h-7 min-w-0 flex-1 items-center gap-1.5 rounded-md border bg-background px-2 text-left transition-colors hover:bg-muted/40"
+                    >
+                      {copiedId === link.id ? (
+                        <Check className="h-3 w-3 shrink-0 text-emerald-600" />
+                      ) : (
+                        <Copy className="h-3 w-3 shrink-0 text-muted-foreground" />
+                      )}
+                      <span className="min-w-0 flex-1 truncate font-mono text-[9px] text-muted-foreground">
+                        {publicUrl}
+                      </span>
+                      <span className="text-[9px] font-medium">{copiedId === link.id ? "Copiado" : "Copiar"}</span>
+                    </button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-7 shrink-0 gap-1 px-2 text-[10px]"
+                      onClick={() => onViewChats(link.id)}
+                    >
+                      <MessageSquareText className="h-3 w-3 text-blue-600" />
+                      Conversas
+                    </Button>
+                    {canManageLinks && (link.enabled ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-7 shrink-0 gap-1 border-amber-300 px-2 text-[10px] text-amber-700 hover:bg-amber-50 dark:border-amber-900 dark:text-amber-300"
+                        onClick={() => setLinkToDeactivate(link)}
+                        disabled={isUpdating}
+                      >
+                        <PowerOff className="h-3 w-3" />
+                        Encerrar
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="h-7 shrink-0 gap-1 bg-emerald-600 px-2 text-[10px] text-white hover:bg-emerald-700"
+                        onClick={() => void updateLinkStatus(link, true)}
+                        disabled={isUpdating}
+                      >
+                        {isUpdating ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+                        Reativar
+                      </Button>
+                    ))}
+                  </div>
+                </article>
               );
             })}
           </div>
@@ -303,21 +337,15 @@ export function PosAiChatLinksManager({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base">
               <AlertTriangle className="h-4 w-4 text-amber-600" />
-              Encerrar acesso ao assistente?
+              Encerrar acesso ao chat?
             </DialogTitle>
             <DialogDescription className="pt-1 text-xs leading-relaxed">
-              O link de <strong>{linkToDeactivate?.client_name}</strong> deixará de aceitar novas
-              perguntas. As conversas e métricas continuarão disponíveis neste painel.
+              O link de <strong>{linkToDeactivate?.client_name}</strong> deixará de aceitar novas perguntas.
+              As conversas continuarão disponíveis nesta central.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setLinkToDeactivate(null)}
-              disabled={Boolean(updatingId)}
-            >
+            <Button type="button" variant="outline" size="sm" onClick={() => setLinkToDeactivate(null)} disabled={Boolean(updatingId)}>
               Cancelar
             </Button>
             <Button
@@ -327,11 +355,7 @@ export function PosAiChatLinksManager({
               onClick={() => linkToDeactivate && void updateLinkStatus(linkToDeactivate, false)}
               disabled={Boolean(updatingId)}
             >
-              {updatingId ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <PowerOff className="h-3.5 w-3.5" />
-              )}
+              {updatingId ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <PowerOff className="h-3.5 w-3.5" />}
               Encerrar acesso
             </Button>
           </DialogFooter>

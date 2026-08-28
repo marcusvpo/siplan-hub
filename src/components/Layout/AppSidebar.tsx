@@ -42,6 +42,7 @@ import {
   Star,
   Settings2,
   Bot,
+  Link2,
 } from "lucide-react";
 import {
   Collapsible,
@@ -179,6 +180,7 @@ export function AppSidebar() {
   const rotaAssistentes = primeiraRota(
     ["assistants_knowledge", "/assistentes/conhecimento"],
     ["pos_ai_logs", "/assistentes/logs"],
+    ["pos_ai_logs", "/assistentes/links-chats"],
   );
 
   const mostrarDashboard = !!rotaDashboard;
@@ -1265,6 +1267,20 @@ export function AppSidebar() {
                         >
                           <BarChart3 className="h-4 w-4" />
                           <span className="text-xs font-medium">Logs & Analytics</span>
+                        </Button>
+                      </Link>
+                      <Link to="/assistentes/links-chats">
+                        <Button
+                          variant={
+                            location.pathname === "/assistentes/links-chats"
+                              ? "secondary"
+                              : "ghost"
+                          }
+                          size="sm"
+                          className="w-full justify-start gap-3 h-9"
+                        >
+                          <Link2 className="h-4 w-4" />
+                          <span className="text-xs font-medium">Links e Chats</span>
                         </Button>
                       </Link>
                     </div>
