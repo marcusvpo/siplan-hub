@@ -9,6 +9,8 @@ SELECT
   usuario.UsuID AS id_analista_0800,
   usuario.UsuNome AS nome_analista,
   LOWER(LTRIM(RTRIM(usuario.UsuUsuario))) AS login_analista,
+  grupo.UsuID AS id_grupo_analista_0800,
+  LTRIM(RTRIM(grupo.UsuNome)) AS grupo_analista,
   CONVERT(date, tempo.TGIntervaloDe) AS data_lancamento,
   tempo.TGIntervaloDe AS inicio,
   tempo.TGIntervaloAte AS fim,
@@ -26,6 +28,8 @@ INNER JOIN PlataformaEllevo.dbo.Solicitacao AS solicitacao
   ON solicitacao.SolID = tempo.SolID
 INNER JOIN PlataformaEllevo.dbo.Usuario AS usuario
   ON usuario.UsuID = tempo.UsuID
+LEFT JOIN PlataformaEllevo.dbo.Usuario AS grupo
+  ON grupo.UsuID = usuario.UsuIDGrupo
 LEFT JOIN PlataformaEllevo.dbo.TipoTempoGasto AS tipo
   ON tipo.TTGasID = tempo.TTGasID
 WHERE tempo.TGValido = 1
