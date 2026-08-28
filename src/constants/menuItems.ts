@@ -248,6 +248,13 @@ export const menuItems: MenuItem[] = [
                 description: "Indicadores e lançamentos consolidados da equipe",
                 permissionKey: "sd_time_management",
             },
+            {
+                title: "BI de Atendimento",
+                path: "/sd/bi-atendimento",
+                icon: BarChart3,
+                description: "Análise de performance, chamados, equipes e tipos de atendimento",
+                permissionKey: "sd_attendance_bi",
+            },
         ],
     },
     {

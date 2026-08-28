@@ -12,6 +12,7 @@ const MIGRATIONS = [
   "20260828235900_sd_time_report_sources.sql",
   "20260828235930_sd_time_import_detail_refresh.sql",
   "20260828235945_sd_time_group_filters.sql",
+  "20260828235955_sd_attendance_bi.sql",
 ];
 const EXPECTED_TABLES = [
   "sd_time_entries",
@@ -34,6 +35,7 @@ const EXPECTED_FUNCTIONS = [
   "public.refresh_sd_time_import_details(jsonb)",
   "public.get_sd_time_management_report(date,date,uuid,text,text[])",
   "public.get_sd_time_management_page(date,date,uuid,text,text[],integer,integer)",
+  "public.get_sd_attendance_bi(date,date,uuid[],text[],text[],text[])",
 ];
 const EXPECTED_PERMISSIONS = [
   ["sd_time_entries", "view"],
@@ -41,6 +43,7 @@ const EXPECTED_PERMISSIONS = [
   ["sd_time_entries", "edit"],
   ["sd_time_entries", "delete"],
   ["sd_time_management", "view"],
+  ["sd_attendance_bi", "view"],
 ];
 
 loadDotEnv();
@@ -148,7 +151,8 @@ async function inspectReadiness() {
        ('sd_time_entries', 'create'),
        ('sd_time_entries', 'edit'),
        ('sd_time_entries', 'delete'),
-       ('sd_time_management', 'view')
+       ('sd_time_management', 'view'),
+       ('sd_attendance_bi', 'view')
      )`,
   );
   const adminGrantResult = await target.query(
@@ -157,7 +161,7 @@ async function inspectReadiness() {
      JOIN public.app_permissions permission ON permission.id = role_permission.permission_id
      JOIN public.app_roles role ON role.id = role_permission.role_id
      WHERE role.name = 'admin'
-       AND permission.resource IN ('sd_time_entries', 'sd_time_management')`,
+       AND permission.resource IN ('sd_time_entries', 'sd_time_management', 'sd_attendance_bi')`,
   );
 
   const presentTables = new Set(tableResult.rows.map((row) => row.tablename));
