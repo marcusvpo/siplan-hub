@@ -66,18 +66,23 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // Verify project exists
-    const { data: project, error: projError } = await supabaseAdmin
-      .from("projects")
-      .select("id, client_name, system_type, products")
-      .eq("id", project_id)
-      .eq("is_deleted", false)
-      .maybeSingle();
+    // Resolve either a project-backed link or a standalone client link.
+    const { data: project, error: projError } = await supabaseAdmin.rpc(
+      "get_pos_assistant_project_info",
+      { p_id: project_id },
+    );
 
     if (projError || !project) {
       return new Response(
-        JSON.stringify({ error: "Projeto não encontrado ou inativo" }),
+        JSON.stringify({ error: "Link não encontrado ou inativo" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (project.pos_assistant_enabled === false) {
+      return new Response(
+        JSON.stringify({ error: "O acesso a este chat foi encerrado" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 

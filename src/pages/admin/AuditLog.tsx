@@ -13,6 +13,7 @@ import { ptBR } from "date-fns/locale";
 import { useState, useMemo, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import type { AuditLog } from "@/types/admin";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -63,9 +64,17 @@ const actionLabels: Record<string, string> = {
   checklist_item_uncompleted: "Item de Checklist Desmarcado",
   ROLE_UPDATED: "Perfil de Acesso Atualizado",
   USER_UPDATED: "Usuário Atualizado",
+  pos_chat_link_created: "Link do Chat Criado",
+  pos_chat_link_reactivated: "Link do Chat Reativado",
+  pos_chat_link_disabled: "Link do Chat Encerrado",
+  pos_chat_user_updated: "Usuário do Chat Atualizado",
+  pos_chat_user_deactivated: "Usuário do Chat Desativado",
+  pos_chat_user_reactivated: "Usuário do Chat Reativado",
+  pos_chat_conversations_cleared: "Conversas do Chat Limpas",
+  pos_chat_conversations_cleared_all: "Histórico do Chat Limpo",
 };
 
-const translateValue = (value: any): string => {
+const translateValue = (value: unknown): string => {
   if (value === null || value === undefined) return "vazio";
   if (typeof value === "boolean") return value ? "Sim" : "Não";
   
@@ -86,10 +95,10 @@ const isUUID = (str: string) => {
   return typeof str === 'string' && uuidRegex.test(str);
 };
 
-const formatValue = (value: any): string => {
+const formatValue = (value: unknown): string => {
   if (value === null || value === undefined) return "vazio";
   if (typeof value === "object") {
-    return Object.entries(value)
+    return Object.entries(value as Record<string, unknown>)
       .filter(([key]) => !isUUID(key) && key !== 'id')
       .map(([key, val]) => `${key}: ${translateValue(val)}`)
       .join(", ");
@@ -98,15 +107,15 @@ const formatValue = (value: any): string => {
   return translateValue(value);
 };
 
-const formatLogDetails = (log: any) => {
+const formatLogDetails = (log: AuditLog) => {
   const details = log.details;
   if (!details) return "Ação registrada com sucesso";
 
   const parts: string[] = [];
 
   if (details.projectName) parts.push(`Projeto: ${details.projectName}`);
-  if (details.roleName) parts.push(`Perfil: ${translateValue(details.roleName)}`);
   if (details.targetUserName) parts.push(`Usuário alvo: ${details.targetUserName}`);
+  if (details.roleName) parts.push(`Perfil: ${translateValue(details.roleName)}`);
   
   if (details.field) {
     const fieldMap: Record<string, string> = {

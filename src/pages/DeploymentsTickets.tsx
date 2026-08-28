@@ -8,6 +8,7 @@ import {
   fetchAllChamados,
   fetchAllChamadosForReport,
   Chamado0800,
+  useChamadosClientOptions,
   type ProcessoVendaSyncFilters,
 } from "@/hooks/useChamados0800";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -53,12 +54,6 @@ import { TicketsSlaSectorAnalysis } from "@/components/DeploymentsTickets/Ticket
 const FILTER_SYNC_DEBOUNCE_MS = 700;
 const FILTER_SYNC_FRESHNESS_MS = 5 * 60_000;
 const MAX_SYNC_SNAPSHOT_TICKETS = 250;
-
-interface ChamadosClientOption {
-  codigoCliente: string | null;
-  nomeCliente: string;
-  aliases: string[];
-}
 
 interface DeploymentsTicketsProps {
   catalog?: ChamadosCatalog;
@@ -208,83 +203,8 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
       .map((software) => ({ value: software, label: software }));
   }, [selectedLegacyProducts]);
 
-  const { data: clientOptions = [], isLoading: loadingClients } = useQuery<ChamadosClientOption[]>({
-    // Versao do cache alterada quando a RPC passou a usar o catalogo rapido de
-    // aliases. Evita preservar por cinco minutos o fallback incompleto.
-    queryKey: ["chamadosClientOptions", catalog, "catalog-v1"],
-    queryFn: async () => {
-      // 1. Tenta a RPC para performance
-      try {
-        const { data, error } = await supabase.rpc(
-          isLegacy ? "get_chamados_legacy_client_options" : "get_chamados_client_options"
-        );
-        if (error) throw error;
-        if (data && Array.isArray(data) && data.length > 0) {
-          return data
-            .filter((row) => Boolean(row.nome_cliente))
-            .map((row) => ({
-              codigoCliente: row.codigo_cliente ?? null,
-              nomeCliente: row.nome_cliente,
-              aliases: Array.isArray(row.aliases) ? row.aliases.filter(Boolean) : [row.nome_cliente],
-            }))
-            .sort((a, b) => a.nomeCliente.localeCompare(b.nomeCliente, "pt-BR"));
-        }
-      } catch (e) {
-        console.warn("RPC get_chamados_client_options falhou:", e);
-      }
-
-      // 2. Tenta obter diretamente da tabela chamados_processo_venda
-      try {
-        let query = supabase
-          .from("chamados_processo_venda")
-          .select("nome_cliente");
-        query = isLegacy
-          ? query.in("produto", [...LEGACY_PRODUCT_FAMILIES])
-          : query.ilike("software", getOrionProductPattern("todos"));
-        const { data, error } = await query;
-        if (!error && data) {
-          const names = data.map((row: { nome_cliente?: string | null }) => row.nome_cliente).filter(Boolean);
-          if (names.length > 0) {
-            return [...new Set(names)]
-              .map((name) => ({
-                codigoCliente: null,
-                nomeCliente: name as string,
-                aliases: [name as string],
-              }))
-              .sort((a, b) => a.nomeCliente.localeCompare(b.nomeCliente, "pt-BR"));
-          }
-        }
-      } catch (e) {
-        console.warn("Consulta direta à tabela chamados_processo_venda falhou:", e);
-      }
-
-      if (isLegacy) return [];
-
-      // 3. Fallback final na tabela projects (somente catÃ¡logo Orion)
-      try {
-        const { data: projs, error: projsErr } = await supabase
-          .from("projects")
-          .select("client_name")
-          .eq("is_deleted", false)
-          .ilike("system_type", "%orion%");
-        if (!projsErr && projs) {
-          const names = projs.map((p: { client_name?: string | null }) => p.client_name).filter(Boolean);
-          return [...new Set(names)]
-            .map((name) => ({
-              codigoCliente: null,
-              nomeCliente: name as string,
-              aliases: [name as string],
-            }))
-            .sort((a, b) => a.nomeCliente.localeCompare(b.nomeCliente, "pt-BR"));
-        }
-      } catch (e) {
-        console.error("Todos os fallbacks para obter lista de clientes falharam:", e);
-      }
-
-      return [];
-    },
-    staleTime: 5 * 60_000,
-  });
+  const { data: clientOptions = [], isLoading: loadingClients } =
+    useChamadosClientOptions(catalog);
 
   const clients = useMemo(
     () => clientOptions.map((option) => option.nomeCliente),
