@@ -20,8 +20,9 @@ export function MainLayout({ children }: MainLayoutProps) {
   const isProjectsPage = location.pathname === "/projects";
   const isModelsPage = location.pathname.startsWith("/orion-tn-models");
   const isPosAiLogsPage = location.pathname === "/assistentes/logs";
+  const isPosAiLinksChatsPage = location.pathname === "/assistentes/links-chats";
   const isNoScrollPage = isProjectsPage || isModelsPage;
-  const isFullBleedPage = isModelsPage || isPosAiLogsPage;
+  const isFullBleedPage = isModelsPage || isPosAiLogsPage || isPosAiLinksChatsPage;
   const isPrintMode = new URLSearchParams(location.search).get("print") === "true";
 
   if (isPrintMode) {

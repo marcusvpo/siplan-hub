@@ -28,6 +28,7 @@ import {
     Star,
     Settings2,
     Bot,
+    Link2,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -402,7 +403,14 @@ export const menuItems: MenuItem[] = [
                 title: "Logs & Analytics Pós-Implantação",
                 path: "/assistentes/logs",
                 icon: BarChart3,
-                description: "Conversas, custos, usuários e gestão dos links dos chats",
+                description: "Custos, desempenho, avaliações e indicadores do assistente",
+                permissionKey: "pos_ai_logs",
+            },
+            {
+                title: "Links e Chats",
+                path: "/assistentes/links-chats",
+                icon: Link2,
+                description: "Geração de links, acessos e conversas dos clientes",
                 permissionKey: "pos_ai_logs",
             },
         ],
