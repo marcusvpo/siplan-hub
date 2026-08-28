@@ -112,6 +112,7 @@ export const PERMISSION_RESOURCES: PermissionResourceDef[] = [
   { resource: "sd_solutions", label: "SD - Soluções", category: "SD", actions: ["view", "create", "edit", "delete", "manage"] },
   { resource: "sd_time_entries", label: "SD - Gerenciamento de Horas", category: "SD", actions: ["view", "create", "edit", "delete"] },
   { resource: "sd_time_management", label: "SD - Consulta Gerencial de Horas", category: "SD", actions: ["view"] },
+  { resource: "sd_attendance_bi", label: "SD - BI de Atendimento", category: "SD", actions: ["view"] },
 
   // Implantadores
   { resource: "menu_implantadores", label: "Menu Implantadores", category: "Implantadores", actions: ["view"] },

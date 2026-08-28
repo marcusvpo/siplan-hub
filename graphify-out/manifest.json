@@ -155,8 +155,8 @@
     "semantic_hash": ""
   },
   "src/App.tsx": {
-    "mtime": 1787935561.442106,
-    "ast_hash": "b4e71c56d3bcd4e008b4b9f9a7360bb4",
+    "mtime": 1787949488.7087173,
+    "ast_hash": "5c3a16662be202a97345a7eca89f74c0",
     "semantic_hash": ""
   },
   "src/components/Admin/OverviewChart.tsx": {
@@ -765,8 +765,8 @@
     "semantic_hash": "5bff9ea3904b15a9e1908b128c88e75f"
   },
   "src/constants/menuItems.ts": {
-    "mtime": 1787935561.4511447,
-    "ast_hash": "a7301fb6ef34f603a41790d7b60f3095",
+    "mtime": 1787949488.7122214,
+    "ast_hash": "f34df583f199afea729e29bc758068fb",
     "semantic_hash": ""
   },
   "src/contexts/AuthContext.tsx": {
@@ -2675,8 +2675,8 @@
     "semantic_hash": ""
   },
   "src/constants/permissions.ts": {
-    "mtime": 1787935561.4531412,
-    "ast_hash": "e837a78ef9c89311c7b41b9b8a47daad",
+    "mtime": 1787949488.7152321,
+    "ast_hash": "b11fb2b1810689544ee11a07615fd39c",
     "semantic_hash": ""
   },
   "src/test/permissions-catalog.test.ts": {
@@ -4400,8 +4400,8 @@
     "semantic_hash": ""
   },
   "src/test/module-overview.test.tsx": {
-    "mtime": 1787935561.4913354,
-    "ast_hash": "85ed56fcddf1a3c089c8b81b7c8c2ecd",
+    "mtime": 1787949506.0439553,
+    "ast_hash": "2267e8e33bfdd0cd2048106ea30b1bc4",
     "semantic_hash": ""
   },
   "src/components/sd/time/TimeEntryDialog.tsx": {
@@ -4410,8 +4410,8 @@
     "semantic_hash": ""
   },
   "src/hooks/useSdTimeTracking.ts": {
-    "mtime": 1787948471.8430076,
-    "ast_hash": "533c6870c0540cb1103561f22622916b",
+    "mtime": 1787949100.201678,
+    "ast_hash": "222d8cb13d6d8a1de79d1cb3d8175fac",
     "semantic_hash": ""
   },
   "src/lib/sd-time.ts": {
@@ -4425,8 +4425,8 @@
     "semantic_hash": ""
   },
   "src/pages/sd/TimeManagementReport.tsx": {
-    "mtime": 1787948538.0634067,
-    "ast_hash": "30a8f0755d1a6a4238e702b1362bdca3",
+    "mtime": 1787949100.203195,
+    "ast_hash": "2d9d3859047923ee2980328b47add4cc",
     "semantic_hash": ""
   },
   "src/test/sd-time-tracking-migration.test.ts": {
@@ -4450,13 +4450,13 @@
     "semantic_hash": ""
   },
   "scripts/prepare-sd-time-schema.mjs": {
-    "mtime": 1787948457.0256133,
-    "ast_hash": "50a7bb94ec120fb77d8c440d5c6cd07a",
+    "mtime": 1787949350.2985103,
+    "ast_hash": "e7a35c1f0bb656779a588cfae1a1f48e",
     "semantic_hash": ""
   },
   "src/test/sd-time-import.test.ts": {
-    "mtime": 1787948014.0107036,
-    "ast_hash": "1cfde4661f515362f6ff7f0020dcd518",
+    "mtime": 1787949100.204194,
+    "ast_hash": "205292bb27417400e9e4edc813afc5fa",
     "semantic_hash": ""
   },
   "supabase/migrations/20260828233000_sd_time_ellevo_import.sql": {
@@ -4465,33 +4465,33 @@
     "semantic_hash": ""
   },
   "vm-worker/scripts/prepare-ellevo-hours-view.mjs": {
-    "mtime": 1787948091.6132698,
-    "ast_hash": "98c944c96d2f810df15e3d7fe5188f10",
+    "mtime": 1787949100.2117207,
+    "ast_hash": "31e533898069e0e120feeabf35df55e3",
     "semantic_hash": ""
   },
   "vm-worker/sql/horas_analistas_0800.sql": {
-    "mtime": 1787948185.6264338,
-    "ast_hash": "cf2caaacf9491a80c1251f615976b23f",
+    "mtime": 1787949100.2117207,
+    "ast_hash": "43dbcb9e532d03b24162c758ea18c8be",
     "semantic_hash": ""
   },
   "vm-worker/src/sdTimeImport.test.ts": {
-    "mtime": 1787948185.6616662,
-    "ast_hash": "b81cd6f72adb98f9d751d075bbb9a32b",
+    "mtime": 1787949100.2132351,
+    "ast_hash": "4d69e12d046b402d0b90aca75a55a483",
     "semantic_hash": ""
   },
   "vm-worker/src/sdTimeImport.ts": {
-    "mtime": 1787948013.9961145,
-    "ast_hash": "e9fa16b9691937180bad15d72bb9a391",
+    "mtime": 1787949100.2142475,
+    "ast_hash": "44a7c4bededaf9b30d87760e67993b56",
     "semantic_hash": ""
   },
   "vm-worker/src/sdTimeImportMapper.ts": {
-    "mtime": 1787948185.6440027,
-    "ast_hash": "2f14d57572e62654b84d9cf3ae5b90ad",
+    "mtime": 1787949100.2162457,
+    "ast_hash": "777f57e10789ea4cae9b572399b47d43",
     "semantic_hash": ""
   },
   "src/test/sd-time-report.test.ts": {
-    "mtime": 1787948548.6032758,
-    "ast_hash": "30f0665b4ae68ece6be56576f93cb0be",
+    "mtime": 1787949100.2051957,
+    "ast_hash": "80b7fb892d0cf66b9a7e408d5b85c514",
     "semantic_hash": ""
   },
   "supabase/migrations/20260828234500_sd_time_bulk_import.sql": {
@@ -4505,18 +4505,38 @@
     "semantic_hash": ""
   },
   "supabase/migrations/20260828235900_sd_time_report_sources.sql": {
-    "mtime": 1787947493.1325762,
-    "ast_hash": "e1f14f1087fe5fc93845aae6bf440877",
+    "mtime": 1787949100.206194,
+    "ast_hash": "770bb4b2ea3cb204477e36c951aa2573",
     "semantic_hash": ""
   },
   "supabase/migrations/20260828235930_sd_time_import_detail_refresh.sql": {
-    "mtime": 1787948014.0297706,
-    "ast_hash": "b635cda4700795b287594c9a408c85da",
+    "mtime": 1787949100.2077005,
+    "ast_hash": "4966816a3f1cd96b3154199648404759",
     "semantic_hash": ""
   },
   "supabase/migrations/20260828235945_sd_time_group_filters.sql": {
-    "mtime": 1787948457.0134985,
-    "ast_hash": "8ad1572fa6db48af4efb751cc9e62dc5",
+    "mtime": 1787949100.2087069,
+    "ast_hash": "3c0c28b7cc38a745c03fe3adea0f0628",
+    "semantic_hash": ""
+  },
+  "src/hooks/useSdAttendanceBi.ts": {
+    "mtime": 1787949377.5009742,
+    "ast_hash": "1823b307b72ebbd01df53356fcbe6d2c",
+    "semantic_hash": ""
+  },
+  "src/pages/sd/SdAttendanceBi.tsx": {
+    "mtime": 1787949606.8175735,
+    "ast_hash": "3223a2b870871badcaf4e3755e385dad",
+    "semantic_hash": ""
+  },
+  "src/test/sd-attendance-bi.test.ts": {
+    "mtime": 1787949610.7626493,
+    "ast_hash": "beb3b6d2a0aef18e33bbefa7d8412319",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260828235955_sd_attendance_bi.sql": {
+    "mtime": 1787949593.3537767,
+    "ast_hash": "c5b49c21f86aa225b06df9ff1430888e",
     "semantic_hash": ""
   }
 }

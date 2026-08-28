@@ -130,4 +130,23 @@ describe("ModuleOverview", () => {
     );
     expect(screen.queryByText("Consulta de horas")).not.toBeInTheDocument();
   });
+
+  it("apresenta o BI quando o perfil possui a permissão gerencial", () => {
+    hasPermission.mockImplementation(
+      (resource: string, action: string) =>
+        action === "view" && resource === "sd_attendance_bi",
+    );
+
+    render(
+      <MemoryRouter>
+        <ModuleOverview moduleName="SD" />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole("link", { name: /BI de Atendimento/i })).toHaveAttribute(
+      "href",
+      "/sd/bi-atendimento",
+    );
+    expect(screen.queryByText("Consulta de horas")).not.toBeInTheDocument();
+  });
 });
