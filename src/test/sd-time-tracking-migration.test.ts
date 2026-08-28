@@ -7,6 +7,14 @@ const migration = readFileSync(
   "utf8",
 );
 
+const richDescriptionMigration = readFileSync(
+  resolve(
+    process.cwd(),
+    "supabase/migrations/20260828223000_sd_time_rich_description.sql",
+  ),
+  "utf8",
+);
+
 describe("migration de gerenciamento de horas do SD", () => {
   it("cria lançamentos, intervalos e operações atômicas", () => {
     expect(migration).toContain("CREATE TABLE IF NOT EXISTS public.sd_time_entries");
@@ -27,5 +35,12 @@ describe("migration de gerenciamento de horas do SD", () => {
     expect(migration).toContain("'sd_time_management', 'view'");
     expect(migration).toContain("REVOKE ALL ON FUNCTION public.get_sd_time_management");
     expect(migration).toContain("GRANT EXECUTE ON FUNCTION public.get_sd_time_management");
+  });
+
+  it("acomoda a serialização do editor rico na descrição", () => {
+    expect(richDescriptionMigration).toContain(
+      "DROP CONSTRAINT IF EXISTS sd_time_entries_description_length",
+    );
+    expect(richDescriptionMigration).toContain("char_length(description) <= 20000");
   });
 });

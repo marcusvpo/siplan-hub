@@ -155,8 +155,8 @@
     "semantic_hash": ""
   },
   "src/App.tsx": {
-    "mtime": 1787930891.8260593,
-    "ast_hash": "882d5e3a72b6d38148437487be1584d1",
+    "mtime": 1787935561.442106,
+    "ast_hash": "b4e71c56d3bcd4e008b4b9f9a7360bb4",
     "semantic_hash": ""
   },
   "src/components/Admin/OverviewChart.tsx": {
@@ -245,13 +245,13 @@
     "semantic_hash": "fbeef457886221679d8422238870cfb9"
   },
   "src/components/Layout/AppSidebar.tsx": {
-    "mtime": 1787930891.8562202,
-    "ast_hash": "5d869834b12edb1359f98428423843ec",
+    "mtime": 1787935561.4491436,
+    "ast_hash": "72e9d97251c73ad9c61cc40460df0bfd",
     "semantic_hash": ""
   },
   "src/components/Layout/Breadcrumbs.tsx": {
-    "mtime": 1787930891.857766,
-    "ast_hash": "7e9cce8edb5b9c62843dc3497996889e",
+    "mtime": 1787935561.4501452,
+    "ast_hash": "7f98a73eb0b4b0de735f7ebdf4fee8d3",
     "semantic_hash": ""
   },
   "src/components/Layout/MainLayout.tsx": {
@@ -765,8 +765,8 @@
     "semantic_hash": "5bff9ea3904b15a9e1908b128c88e75f"
   },
   "src/constants/menuItems.ts": {
-    "mtime": 1787930891.81751,
-    "ast_hash": "5b1e7967d4022cffede15e278cfbce67",
+    "mtime": 1787935561.4511447,
+    "ast_hash": "a7301fb6ef34f603a41790d7b60f3095",
     "semantic_hash": ""
   },
   "src/contexts/AuthContext.tsx": {
@@ -2675,8 +2675,8 @@
     "semantic_hash": ""
   },
   "src/constants/permissions.ts": {
-    "mtime": 1787930891.8205354,
-    "ast_hash": "07509c886034324fc3dc996ab49dde15",
+    "mtime": 1787935561.4531412,
+    "ast_hash": "e837a78ef9c89311c7b41b9b8a47daad",
     "semantic_hash": ""
   },
   "src/test/permissions-catalog.test.ts": {
@@ -4390,8 +4390,8 @@
     "semantic_hash": ""
   },
   "src/pages/ModuleOverview.tsx": {
-    "mtime": 1787930891.8215387,
-    "ast_hash": "ff3e3bb6452923e3fc39c615e6d3a89c",
+    "mtime": 1787935561.481278,
+    "ast_hash": "57db5477cba7b27b00d66566bf7a6280",
     "semantic_hash": ""
   },
   "src/test/breadcrumbs-module-overview.test.tsx": {
@@ -4400,48 +4400,53 @@
     "semantic_hash": ""
   },
   "src/test/module-overview.test.tsx": {
-    "mtime": 1787930976.1203372,
-    "ast_hash": "9462edd117eb987768a316ece7ddc74b",
+    "mtime": 1787935561.4913354,
+    "ast_hash": "85ed56fcddf1a3c089c8b81b7c8c2ecd",
     "semantic_hash": ""
   },
   "src/components/sd/time/TimeEntryDialog.tsx": {
-    "mtime": 1787930748.5233097,
-    "ast_hash": "72100848b0e6025c5acc1b878aae115b",
+    "mtime": 1787935800.637537,
+    "ast_hash": "85c08b0be9e0d176d8a8beddd4164d09",
     "semantic_hash": ""
   },
   "src/hooks/useSdTimeTracking.ts": {
-    "mtime": 1787930715.0056083,
-    "ast_hash": "a8459a14f92da2358610e86519a6648f",
+    "mtime": 1787935561.4566574,
+    "ast_hash": "6008f321eb20ce62c515f54c52e8caf2",
     "semantic_hash": ""
   },
   "src/lib/sd-time.ts": {
-    "mtime": 1787930715.0046046,
-    "ast_hash": "0c14ed8c12e2892be8b03e087d7d68cc",
+    "mtime": 1787935561.4661908,
+    "ast_hash": "79a8e8bba2d03359a4c2bf531ebd5fc4",
     "semantic_hash": ""
   },
   "src/pages/sd/TimeManagement.tsx": {
-    "mtime": 1787930811.496302,
-    "ast_hash": "1a0d5535509d9905fbadc843d30b5e44",
+    "mtime": 1787935774.4185297,
+    "ast_hash": "7eb04d26412c8cdfdf6d075859b79fa3",
     "semantic_hash": ""
   },
   "src/pages/sd/TimeManagementReport.tsx": {
-    "mtime": 1787930976.1193383,
-    "ast_hash": "9edc68a9268c9abdc0391881bc04a1aa",
+    "mtime": 1787935774.4205344,
+    "ast_hash": "38522e676d46d169b6a450981a4fea95",
     "semantic_hash": ""
   },
   "src/test/sd-time-tracking-migration.test.ts": {
-    "mtime": 1787930976.123862,
-    "ast_hash": "a31d064c06a40bb4d4c92074827fb9fa",
+    "mtime": 1787935800.640056,
+    "ast_hash": "b60ce1461a929a5f74087c9fa7618fa3",
     "semantic_hash": ""
   },
   "src/test/sd-time.test.ts": {
-    "mtime": 1787930976.1213486,
-    "ast_hash": "f1af8e490ddb4c7ba5a36a1f15443c1d",
+    "mtime": 1787935561.4923372,
+    "ast_hash": "aea38ab0a07647eaed54774d4323b745",
     "semantic_hash": ""
   },
   "supabase/migrations/20260828213000_sd_time_tracking.sql": {
-    "mtime": 1787930681.826695,
-    "ast_hash": "edcddb7116e0ea6f8b604f9f8c34058a",
+    "mtime": 1787935561.4958403,
+    "ast_hash": "726c9fe312d05d172124ce8e2e2967fe",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260828223000_sd_time_rich_description.sql": {
+    "mtime": 1787935774.4235337,
+    "ast_hash": "47d84112130626512bdf8decb7a2ae63",
     "semantic_hash": ""
   }
 }
