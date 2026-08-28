@@ -53,6 +53,10 @@ const ConversionEngines = lazy(
   () => import("./pages/conversion/ConversionEngines"),
 );
 const SdSolutions = lazy(() => import("./pages/sd/Solutions"));
+const SdTimeManagement = lazy(() => import("./pages/sd/TimeManagement"));
+const SdTimeManagementReport = lazy(
+  () => import("./pages/sd/TimeManagementReport"),
+);
 const OrionTNModels = lazy(() => import("./pages/conversion/OrionTNModels"));
 const OrionTNProjects = lazy(
   () => import("./pages/conversion/OrionTNProjects"),
@@ -654,10 +658,34 @@ const App = () => (
                             }
                           />
                           <Route
+                            path="/sd"
+                            element={
+                              <RequirePermission resource="menu_sd">
+                                <ModuleOverview moduleName="SD" />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
                             path="/sd/solucoes"
                             element={
                               <RequirePermission resource="sd_solutions">
                                 <SdSolutions />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/sd/horas"
+                            element={
+                              <RequirePermission resource="sd_time_entries">
+                                <SdTimeManagement />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/sd/consulta-horas"
+                            element={
+                              <RequirePermission resource="sd_time_management">
+                                <SdTimeManagementReport />
                               </RequirePermission>
                             }
                           />

@@ -43,6 +43,7 @@ import {
   Settings2,
   Bot,
   Link2,
+  Clock3,
 } from "lucide-react";
 import {
   Collapsible,
@@ -162,7 +163,11 @@ export function AppSidebar() {
     ["conversion_home", "/conversion/atividades"],
     ["conversion_engines", "/conversion/engines"],
   );
-  const rotaSd = primeiraRota(["sd_solutions", "/sd/solucoes"]);
+  const rotaSd = primeiraRota(
+    ["sd_solutions", "/sd/solucoes"],
+    ["sd_time_entries", "/sd/horas"],
+    ["sd_time_management", "/sd/consulta-horas"],
+  );
   const rotaOrion = primeiraRota(
     ["orion_dashboard", "/orion-tn-models/dashboard"],
     ["orion_projects", "/orion-tn-models/projects"],
@@ -848,6 +853,16 @@ export function AppSidebar() {
                 </CollapsibleTrigger>
                 <CollapsibleContent className="space-y-1 pl-4 animate-in slide-in-from-top-2">
                   <div className="pb-2 pt-1">
+                    <Link to="/sd">
+                      <Button
+                        variant={isActive("/sd") ? "secondary" : "ghost"}
+                        size="sm"
+                        className="h-9 w-full justify-start gap-3"
+                      >
+                        <LayoutGrid className="h-4 w-4" />
+                        <span>Visão Geral</span>
+                      </Button>
+                    </Link>
                     {can("sd_solutions") && (
                       <Link to="/sd/solucoes">
                         <Button
@@ -860,15 +875,39 @@ export function AppSidebar() {
                         </Button>
                       </Link>
                     )}
+                    {can("sd_time_entries") && (
+                      <Link to="/sd/horas">
+                        <Button
+                          variant={isActive("/sd/horas") ? "secondary" : "ghost"}
+                          size="sm"
+                          className="h-9 w-full justify-start gap-3"
+                        >
+                          <Clock3 className="h-4 w-4" />
+                          <span>Gerenciamento de horas</span>
+                        </Button>
+                      </Link>
+                    )}
+                    {can("sd_time_management") && (
+                      <Link to="/sd/consulta-horas">
+                        <Button
+                          variant={isActive("/sd/consulta-horas") ? "secondary" : "ghost"}
+                          size="sm"
+                          className="h-9 w-full justify-start gap-3"
+                        >
+                          <BarChart3 className="h-4 w-4" />
+                          <span>Consulta de horas</span>
+                        </Button>
+                      </Link>
+                    )}
                   </div>
                 </CollapsibleContent>
               </Collapsible>
             ) : (
-              <Link to={rotaSd!}>
+              <Link to="/sd">
                 <Button
                   variant={location.pathname.startsWith("/sd") ? "secondary" : "ghost"}
                   className="w-full justify-center px-0"
-                  title="SD (Soluções)"
+                  title="SD"
                 >
                   <LifeBuoy className="h-5 w-5" />
                 </Button>

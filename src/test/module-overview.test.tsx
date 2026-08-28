@@ -110,4 +110,24 @@ describe("ModuleOverview", () => {
     );
     expect(screen.queryByText("Solicitações")).not.toBeInTheDocument();
   });
+
+  it("apresenta as telas de horas liberadas na visão geral do SD", () => {
+    hasPermission.mockImplementation(
+      (resource: string, action: string) =>
+        action === "view" && resource === "sd_time_entries",
+    );
+
+    render(
+      <MemoryRouter>
+        <ModuleOverview moduleName="SD" />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole("heading", { name: "SD", level: 1 })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Gerenciamento de horas/i })).toHaveAttribute(
+      "href",
+      "/sd/horas",
+    );
+    expect(screen.queryByText("Consulta de horas")).not.toBeInTheDocument();
+  });
 });
