@@ -29,6 +29,7 @@ import {
     Settings2,
     Bot,
     Link2,
+    Clock3,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -222,7 +223,8 @@ export const menuItems: MenuItem[] = [
     {
         title: "SD",
         icon: LifeBuoy,
-        description: "Base de conhecimento da equipe de suporte",
+        path: "/sd",
+        description: "Soluções técnicas e gestão das horas da equipe de suporte",
         permissionKey: "menu_sd",
         subItems: [
             {
@@ -231,6 +233,20 @@ export const menuItems: MenuItem[] = [
                 icon: BookOpen,
                 description: "Busca e cadastro de soluções técnicas",
                 permissionKey: "sd_solutions",
+            },
+            {
+                title: "Gerenciamento de horas",
+                path: "/sd/horas",
+                icon: Clock3,
+                description: "Lançamentos diários e resumo semanal pessoal",
+                permissionKey: "sd_time_entries",
+            },
+            {
+                title: "Consulta de horas",
+                path: "/sd/consulta-horas",
+                icon: BarChart3,
+                description: "Indicadores e lançamentos consolidados da equipe",
+                permissionKey: "sd_time_management",
             },
         ],
     },

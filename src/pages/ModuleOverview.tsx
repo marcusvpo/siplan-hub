@@ -12,6 +12,7 @@ export type ModuleOverviewName =
   | "Calendário"
   | "Comercial"
   | "Conversão"
+  | "SD"
   | "Modelos Editor OrionTN"
   | "Implantadores"
   | "CS/CX"
