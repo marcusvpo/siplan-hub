@@ -10,6 +10,10 @@ const timeHook = readFileSync(
   resolve(process.cwd(), "src/hooks/useSdTimeTracking.ts"),
   "utf8",
 );
+const groupFilterMigration = readFileSync(
+  resolve(process.cwd(), "supabase/migrations/20260828235945_sd_time_group_filters.sql"),
+  "utf8",
+);
 
 describe("consulta gerencial de horas do SD", () => {
   it("pagina os lançamentos da equipe com cinco itens por padrão", () => {
@@ -27,6 +31,38 @@ describe("consulta gerencial de horas do SD", () => {
     expect(reportPage).toContain("interval={0}");
     expect(reportPage).toContain("chartData.length * 88");
     expect(reportPage).toContain("parts[parts.length - 1]");
+  });
+
+  it("separa no gráfico as horas do HUB e as importadas do 0800", () => {
+    expect(reportPage).toContain('dataKey="hubHours"');
+    expect(reportPage).toContain('dataKey="importedHours"');
+    expect(reportPage).toContain('name="Lançado no HUB"');
+    expect(reportPage).toContain('name="Importado do 0800"');
+    expect(reportPage).toContain('stackId="source"');
+    expect(timeHook).toContain("manual_minutes");
+    expect(timeHook).toContain("imported_minutes");
+  });
+
+  it("filtra a lista ao selecionar um analista no gráfico diário", () => {
+    expect(reportPage).toContain("filterByChartAnalyst");
+    expect(reportPage).toContain("setSelectedUser(userId)");
+    expect(reportPage).toContain("bar?.payload?.userId");
+    expect(reportPage).toContain("onSelect={(index) => filterByChartAnalyst");
+    expect(reportPage).toContain("Filtrar lançamentos de");
+  });
+
+  it("filtra indicadores, gráficos e lançamentos por um ou mais grupos de atendimento", () => {
+    expect(reportPage).toContain("Todos os grupos");
+    expect(reportPage).toContain("Grupos de atendimento");
+    expect(reportPage).toContain("selectedGroups.includes(group)");
+    expect(reportPage).toContain("SD - TN/RC");
+    expect(reportPage).toContain("SD - GLOBAL");
+    expect(reportPage).toContain("SD - Protesto");
+    expect(reportPage).toContain("SD - RI/TD");
+    expect(timeHook).toContain("p_groups: groups.length ? groups : null");
+    expect(groupFilterMigration).toContain("entry.attendance_group = ANY(p_groups)");
+    expect(groupFilterMigration).toContain("'available_groups'");
+    expect(groupFilterMigration).toContain("analyst_group.attendance_group");
   });
 
   it("permite alternar a consulta entre dia e semana", () => {

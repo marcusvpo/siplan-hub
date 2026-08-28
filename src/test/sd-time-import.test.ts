@@ -32,6 +32,9 @@ describe("importação de horas do 0800", () => {
     expect(worker).toContain('.input("login"');
     expect(worker).toContain('.input("workDate"');
     expect(sqlView).toContain("CREATE OR ALTER VIEW dbo.horas_analistas_0800");
+    expect(sqlView).toContain("OUTER APPLY");
+    expect(sqlView).toContain("descricao_ultimo_tramite");
+    expect(worker).toContain("refresh_sd_time_import_details");
     expect(sqlView).not.toContain("vw_2026_PROCESSO_VENDA_FATURAMENTO_ITEM_ATIVIDADES");
   });
 });

@@ -29,6 +29,7 @@ export interface SdTimeEntry {
   user_name?: string;
   user_email?: string | null;
   user_team?: string | null;
+  attendance_group?: string | null;
 }
 
 export interface SdTimeManagementAnalyst {
@@ -36,20 +37,31 @@ export interface SdTimeManagementAnalyst {
   user_name: string;
   user_email: string | null;
   user_team: string | null;
+  attendance_group?: string | null;
 }
 
 export interface SdTimeManagementAnalystTotal extends SdTimeManagementAnalyst {
   total_minutes: number;
+  manual_minutes: number;
+  imported_minutes: number;
   worked_days: number;
 }
 
 export interface SdTimeManagementReport {
   total_minutes: number;
+  manual_minutes: number;
+  imported_minutes: number;
   analyst_count: number;
   worked_user_days: number;
-  daily: Array<{ work_date: string; total_minutes: number }>;
+  daily: Array<{
+    work_date: string;
+    total_minutes: number;
+    manual_minutes: number;
+    imported_minutes: number;
+  }>;
   analyst_totals: SdTimeManagementAnalystTotal[];
   available_analysts: SdTimeManagementAnalyst[];
+  available_groups: string[];
 }
 
 export interface SdTimeManagementPage {
@@ -99,6 +111,7 @@ function normalizeEntry(row: Record<string, unknown>): SdTimeEntry {
     user_name: row.user_name ? String(row.user_name) : undefined,
     user_email: row.user_email ? String(row.user_email) : null,
     user_team: row.user_team ? String(row.user_team) : null,
+    attendance_group: row.attendance_group ? String(row.attendance_group) : null,
   };
 }
 
@@ -129,11 +142,12 @@ export function useManagedSdTimeEntries(
   endDate: string,
   userId?: string,
   search?: string,
+  groups: string[] = [],
   page = 1,
   pageSize = 10,
 ) {
   return useQuery({
-    queryKey: ["sd-time", "management", "page", startDate, endDate, userId ?? "all", search ?? "", page, pageSize],
+    queryKey: ["sd-time", "management", "page", startDate, endDate, userId ?? "all", search ?? "", groups, page, pageSize],
     enabled: Boolean(startDate && endDate),
     queryFn: async () => {
       const { data, error } = await db.rpc("get_sd_time_management_page", {
@@ -141,6 +155,7 @@ export function useManagedSdTimeEntries(
         p_end_date: endDate,
         p_user_id: userId || null,
         p_search: search?.trim() || null,
+        p_groups: groups.length ? groups : null,
         p_limit: pageSize,
         p_offset: (page - 1) * pageSize,
       });
@@ -162,9 +177,10 @@ export function useManagedSdTimeReport(
   endDate: string,
   userId?: string,
   search?: string,
+  groups: string[] = [],
 ) {
   return useQuery({
-    queryKey: ["sd-time", "management", "report", startDate, endDate, userId ?? "all", search ?? ""],
+    queryKey: ["sd-time", "management", "report", startDate, endDate, userId ?? "all", search ?? "", groups],
     enabled: Boolean(startDate && endDate),
     queryFn: async () => {
       const { data, error } = await db.rpc("get_sd_time_management_report", {
@@ -172,16 +188,20 @@ export function useManagedSdTimeReport(
         p_end_date: endDate,
         p_user_id: userId || null,
         p_search: search?.trim() || null,
+        p_groups: groups.length ? groups : null,
       });
       if (error) throw error;
       const report = (data ?? {}) as Partial<SdTimeManagementReport>;
       return {
         total_minutes: Number(report.total_minutes ?? 0),
+        manual_minutes: Number(report.manual_minutes ?? 0),
+        imported_minutes: Number(report.imported_minutes ?? 0),
         analyst_count: Number(report.analyst_count ?? 0),
         worked_user_days: Number(report.worked_user_days ?? 0),
         daily: Array.isArray(report.daily) ? report.daily : [],
         analyst_totals: Array.isArray(report.analyst_totals) ? report.analyst_totals : [],
         available_analysts: Array.isArray(report.available_analysts) ? report.available_analysts : [],
+        available_groups: Array.isArray(report.available_groups) ? report.available_groups : [],
       } satisfies SdTimeManagementReport;
     },
   });

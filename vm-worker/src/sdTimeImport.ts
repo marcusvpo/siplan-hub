@@ -100,6 +100,9 @@ async function fetchEllevoHours(login: string, workDate: string) {
           CONVERT(char(5), fim, 108) AS horario_fim,
           minutos,
           descricao_tramite,
+          ultima_sequencia_tramite,
+          data_ultimo_tramite_iso,
+          descricao_ultimo_tramite,
           hora_extra,
           retrabalho,
           tipo_tempo,
@@ -155,6 +158,9 @@ async function fetchEllevoWeek(startDate: string, endDate: string) {
         CONVERT(char(5), fim, 108) AS horario_fim,
         minutos,
         descricao_tramite,
+        ultima_sequencia_tramite,
+        data_ultimo_tramite_iso,
+        descricao_ultimo_tramite,
         hora_extra,
         retrabalho,
         tipo_tempo,
@@ -177,6 +183,13 @@ async function completeRequest(requestId: string, items: SdTimeImportItem[]) {
   });
   if (error) throw new Error(`gravação dos lançamentos importados: ${error.message}`);
   return data as { available_count: number; imported_count: number; skipped_count: number };
+}
+
+async function refreshImportDetails(items: SdTimeImportItem[]) {
+  const { error } = await supabase.rpc("refresh_sd_time_import_details", {
+    p_items: items,
+  });
+  if (error) throw new Error(`atualização das descrições importadas: ${error.message}`);
 }
 
 async function completeBulkRequest(
@@ -241,6 +254,7 @@ async function processBulkRequest(request: SdTimeBulkImportRequest) {
     items.push({ ...mapEllevoHour(row), user_id: userId, work_date: row.data_lancamento_iso });
   }
 
+  await refreshImportDetails(items);
   return completeBulkRequest(
     request.id,
     items,
@@ -262,6 +276,7 @@ async function processPendingRequests() {
         try {
           const login = await profileLogin(request.user_id);
           const items = await fetchEllevoHours(login, request.work_date);
+          await refreshImportDetails(items);
           const result = await completeRequest(request.id, items);
           console.log(`[sd-time-import ${request.id}] ${request.work_date}: ${result.imported_count} importados, ${result.skipped_count} já existentes`);
         } catch (error) {

@@ -13,6 +13,9 @@ export interface EllevoHourRow {
   horario_fim: string;
   minutos: number;
   descricao_tramite: string | null;
+  ultima_sequencia_tramite: number | null;
+  data_ultimo_tramite_iso: string | null;
+  descricao_ultimo_tramite: string | null;
   hora_extra: boolean;
   retrabalho: string | null;
   tipo_tempo: string | null;
@@ -32,14 +35,46 @@ function compactText(value: string | null | undefined) {
   return value?.replace(/\r\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim() || null;
 }
 
+function decodeEllevoDescription(value: string | null | undefined) {
+  if (!value) return null;
+  let text = value;
+  if (text.startsWith("ÿþ")) {
+    text = Buffer.from(text, "latin1").toString("utf16le").slice(1);
+  }
+  const fromCode = (code: number) => {
+    try {
+      return code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : "";
+    } catch {
+      return "";
+    }
+  };
+  return compactText(
+    text
+      .replace(/<[^>]*>/g, " ")
+      .replace(/&gt;/gi, ">")
+      .replace(/&lt;/gi, "<")
+      .replace(/&quot;/gi, '"')
+      .replace(/&nbsp;/gi, " ")
+      .replace(/&#x([0-9a-f]+);/gi, (_, hex: string) => fromCode(parseInt(hex, 16)))
+      .replace(/&#(\d+);/g, (_, decimal: string) => fromCode(Number(decimal)))
+      .replace(/&amp;/gi, "&")
+      .replace(/\s+/g, " "),
+  );
+}
+
 export function mapEllevoHour(row: EllevoHourRow): SdTimeImportItem {
   const ticketLabel = `#${row.numero_chamado}`;
   const title = compactText(row.titulo_chamado) || "Chamado sem título";
   const activity = compactText(row.atividade);
-  const description = compactText(row.descricao_tramite);
+  const description = decodeEllevoDescription(row.descricao_ultimo_tramite)
+    || decodeEllevoDescription(row.descricao_tramite);
+  const latestTramiteSequence = row.ultima_sequencia_tramite
+    ?? row.sequencia_tramite;
   const details = [
     activity ? `Atividade no 0800: ${activity}` : null,
-    row.sequencia_tramite ? `Trâmite: ${row.sequencia_tramite}` : null,
+    latestTramiteSequence
+      ? `Último trâmite do chamado: ${latestTramiteSequence}`
+      : null,
     description,
   ].filter(Boolean);
 
@@ -52,6 +87,9 @@ export function mapEllevoHour(row: EllevoHourRow): SdTimeImportItem {
     metadata: {
       ticket_number: row.numero_chamado,
       tramite_sequence: row.sequencia_tramite,
+      time_entry_tramite_sequence: row.sequencia_tramite,
+      latest_tramite_sequence: latestTramiteSequence,
+      latest_tramite_at: row.data_ultimo_tramite_iso,
       activity,
       ellevo_user_id: row.id_analista_0800,
       ellevo_login: row.login_analista,
