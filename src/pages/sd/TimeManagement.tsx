@@ -48,6 +48,7 @@ import {
   totalMinutes,
   totalsByDate,
 } from "@/lib/sd-time";
+import { richTextToPlainText } from "@/lib/lexical";
 
 function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Não foi possível concluir a operação.";
@@ -202,7 +203,7 @@ export default function TimeManagement() {
                             <h3 className="font-bold">{entry.title}</h3>
                             <Badge variant="secondary" className="tabular-nums">{formatMinutes(entryMinutes(entry))}</Badge>
                           </div>
-                          {entry.description && <p className="mt-1.5 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">{entry.description}</p>}
+                          {entry.description && <p className="mt-1.5 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">{richTextToPlainText(entry.description)}</p>}
                           <div className="mt-3 flex flex-wrap gap-2">
                             {entry.intervals.map((interval) => (
                               <span key={interval.id} className="inline-flex items-center gap-1 rounded-md border bg-muted/40 px-2 py-1 text-xs tabular-nums">

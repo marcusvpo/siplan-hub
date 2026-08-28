@@ -32,6 +32,7 @@ import {
   SD_DAILY_TARGET_MINUTES,
   totalMinutes,
 } from "@/lib/sd-time";
+import { richTextToPlainText } from "@/lib/lexical";
 
 const PAGE_SIZE = 10;
 
@@ -63,7 +64,12 @@ export default function TimeManagementReport() {
     return entries.filter((entry) => {
       if (selectedUser !== "all" && entry.user_id !== selectedUser) return false;
       if (!term) return true;
-      return [entry.user_name, entry.user_email, entry.title, entry.description]
+      return [
+        entry.user_name,
+        entry.user_email,
+        entry.title,
+        entry.description ? richTextToPlainText(entry.description) : null,
+      ]
         .filter(Boolean)
         .some((value) => String(value).toLocaleLowerCase("pt-BR").includes(term));
     });
@@ -171,7 +177,7 @@ export default function TimeManagementReport() {
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2"><h3 className="font-bold">{entry.title}</h3><Badge variant="secondary">{formatMinutes(entryMinutes(entry))}</Badge></div>
                       <p className="mt-1 text-xs text-muted-foreground"><span className="font-semibold text-foreground">{entry.user_name}</span>{entry.user_team ? ` · ${entry.user_team}` : ""} · {format(parseISO(entry.work_date), "EEEE, dd/MM", { locale: ptBR })}</p>
-                      {entry.description && <p className="mt-2 line-clamp-2 text-sm leading-5 text-muted-foreground">{entry.description}</p>}
+                      {entry.description && <p className="mt-2 line-clamp-2 whitespace-pre-wrap text-sm leading-5 text-muted-foreground">{richTextToPlainText(entry.description)}</p>}
                     </div>
                     <div className="flex shrink-0 flex-wrap gap-1.5">
                       {entry.intervals.map((interval) => <span key={interval.id} className="rounded-md border bg-muted/40 px-2 py-1 text-xs tabular-nums">{interval.started_at} — {interval.ended_at ?? "em andamento"}</span>)}

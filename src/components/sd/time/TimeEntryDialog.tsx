@@ -12,7 +12,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { AiRichTextField } from "@/components/ui/ai-rich-text-field";
+import { useAuth } from "@/hooks/useAuth";
 import type { SdTimeEntry, SaveSdTimeEntryInput } from "@/hooks/useSdTimeTracking";
 import { intervalsOverlap, timeToMinutes } from "@/lib/sd-time";
 
@@ -45,6 +46,7 @@ export function TimeEntryDialog({
   onOpenChange,
   onSave,
 }: TimeEntryDialogProps) {
+  const { user } = useAuth();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [intervals, setIntervals] = useState<IntervalDraft[]>([emptyInterval()]);
@@ -111,7 +113,7 @@ export function TimeEntryDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-h-[94vh] max-w-3xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -136,17 +138,14 @@ export function TimeEntryDialog({
             />
           </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="sd-time-description">Descrição</Label>
-            <Textarea
-              id="sd-time-description"
-              value={description}
-              maxLength={4000}
-              rows={4}
-              placeholder="Detalhes, chamados atendidos, decisões ou resultados..."
-              onChange={(event) => setDescription(event.target.value)}
-            />
-          </div>
+          <AiRichTextField
+            label="Descrição"
+            content={description}
+            onChange={setDescription}
+            placeholder="Detalhes, chamados atendidos, decisões ou resultados..."
+            requestedBy={user?.id}
+            targetField={`sd_time_entry:${entry?.id ?? workDate}:description`}
+          />
 
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-3">
