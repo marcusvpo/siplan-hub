@@ -36,14 +36,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useImportSdTeamWeek, useManagedSdTimeEntries } from "@/hooks/useSdTimeTracking";
+import { useDebounce } from "@/hooks/use-debounce";
+import {
+  useImportSdTeamWeek,
+  useManagedSdTimeEntries,
+  useManagedSdTimeReport,
+} from "@/hooks/useSdTimeTracking";
 import { toast } from "sonner";
 import {
   entryMinutes,
   formatMinutes,
   getWeekRange,
   SD_DAILY_TARGET_MINUTES,
-  totalMinutes,
 } from "@/lib/sd-time";
 import { richTextToPlainText } from "@/lib/lexical";
 
@@ -62,58 +66,43 @@ export default function TimeManagementReport() {
   const importTeamWeek = useImportSdTeamWeek();
   const week = useMemo(() => getWeekRange(selectedDate), [selectedDate]);
   const selectedDateKey = format(selectedDate, "yyyy-MM-dd");
-  const query = useManagedSdTimeEntries(week.start, week.end);
-  const entries = useMemo(() => query.data ?? [], [query.data]);
-  const periodEntries = useMemo(
-    () => periodView === "day" ? entries.filter((entry) => entry.work_date === selectedDateKey) : entries,
-    [entries, periodView, selectedDateKey],
+  const debouncedSearch = useDebounce(search, 300);
+  const periodStart = periodView === "day" ? selectedDateKey : week.start;
+  const periodEnd = periodView === "day" ? selectedDateKey : week.end;
+  const reportQuery = useManagedSdTimeReport(
+    periodStart,
+    periodEnd,
+    selectedUser === "all" ? undefined : selectedUser,
+    debouncedSearch,
   );
-
-  const analysts = useMemo(() => {
-    const byId = new Map<string, { id: string; name: string; email: string | null; team: string | null }>();
-    entries.forEach((entry) => {
-      byId.set(entry.user_id, {
-        id: entry.user_id,
-        name: entry.user_name ?? entry.user_email ?? "Usuário",
-        email: entry.user_email ?? null,
-        team: entry.user_team ?? null,
-      });
-    });
-    return Array.from(byId.values()).sort((first, second) => first.name.localeCompare(second.name, "pt-BR"));
-  }, [entries]);
-
-  const filteredEntries = useMemo(() => {
-    const term = search.trim().toLocaleLowerCase("pt-BR");
-    return periodEntries.filter((entry) => {
-      if (selectedUser !== "all" && entry.user_id !== selectedUser) return false;
-      if (!term) return true;
-      return [
-        entry.user_name,
-        entry.user_email,
-        entry.title,
-        entry.description ? richTextToPlainText(entry.description) : null,
-      ]
-        .filter(Boolean)
-        .some((value) => String(value).toLocaleLowerCase("pt-BR").includes(term));
-    });
-  }, [periodEntries, search, selectedUser]);
+  const entriesQuery = useManagedSdTimeEntries(
+    periodStart,
+    periodEnd,
+    selectedUser === "all" ? undefined : selectedUser,
+    debouncedSearch,
+    page,
+    pageSize,
+  );
+  const report = reportQuery.data;
+  const pagedEntries = entriesQuery.data?.entries ?? [];
+  const totalItems = entriesQuery.data?.totalCount ?? 0;
+  const analysts = report?.available_analysts ?? [];
 
   useEffect(() => setPage(1), [periodView, search, selectedDateKey, selectedUser, week.start]);
 
-  const total = totalMinutes(filteredEntries);
-  const visibleAnalystIds = new Set(filteredEntries.map((entry) => entry.user_id));
-  const analystCount = visibleAnalystIds.size;
-  const workedUserDays = new Set(filteredEntries.map((entry) => `${entry.user_id}:${entry.work_date}`)).size;
+  const total = report?.total_minutes ?? 0;
+  const analystCount = report?.analyst_count ?? 0;
+  const workedUserDays = report?.worked_user_days ?? 0;
   const target = analystCount * (periodView === "week" ? 5 : 1) * SD_DAILY_TARGET_MINUTES;
-  const totalPages = Math.max(1, Math.ceil(filteredEntries.length / pageSize));
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const activePage = Math.min(page, totalPages);
-  const pagedEntries = filteredEntries.slice((activePage - 1) * pageSize, activePage * pageSize);
 
   const chartData = useMemo(() => {
     if (periodView === "week") {
+      const totals = new Map((report?.daily ?? []).map((item) => [item.work_date, item.total_minutes]));
       return week.days.map((date) => {
         const key = format(date, "yyyy-MM-dd");
-        const minutes = totalMinutes(filteredEntries.filter((entry) => entry.work_date === key));
+        const minutes = totals.get(key) ?? 0;
         return {
           day: format(date, "EEE", { locale: ptBR }).replace(".", ""),
           date: format(date, "dd/MM"),
@@ -122,21 +111,17 @@ export default function TimeManagementReport() {
       });
     }
 
-    const byAnalyst = new Map<string, { day: string; date: string; minutes: number }>();
-    filteredEntries.forEach((entry) => {
-      const current = byAnalyst.get(entry.user_id);
-      byAnalyst.set(entry.user_id, {
-        day: shortAnalystName(entry.user_name ?? entry.user_email ?? "Usuário"),
-        date: format(selectedDate, "dd/MM"),
-        minutes: (current?.minutes ?? 0) + entryMinutes(entry),
-      });
-    });
-    return Array.from(byAnalyst.values()).map(({ day, date, minutes }) => ({
-      day,
-      date,
-      hours: Number((minutes / 60).toFixed(2)),
+    return (report?.analyst_totals ?? []).map((analyst) => ({
+      day: shortAnalystName(analyst.user_name || analyst.user_email || "Usuário"),
+      fullName: analyst.user_name || analyst.user_email || "Usuário",
+      date: format(selectedDate, "dd/MM"),
+      hours: Number((analyst.total_minutes / 60).toFixed(2)),
     }));
-  }, [filteredEntries, periodView, selectedDate, week.days]);
+  }, [periodView, report?.analyst_totals, report?.daily, selectedDate, week.days]);
+
+  const chartMinWidth = periodView === "day" ? Math.max(720, chartData.length * 88) : 0;
+  const queryIsLoading = reportQuery.isLoading || entriesQuery.isLoading;
+  const queryIsError = reportQuery.isError || entriesQuery.isError;
 
   const periodDetail = periodView === "week"
     ? `${format(parseISO(week.start), "dd/MM")} a ${format(parseISO(week.end), "dd/MM")}`
@@ -211,7 +196,7 @@ export default function TimeManagementReport() {
             <SelectTrigger className="h-9 w-full text-xs lg:w-64"><SelectValue placeholder="Todos os analistas" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos os analistas</SelectItem>
-              {analysts.map((analyst) => <SelectItem key={analyst.id} value={analyst.id}>{analyst.name}</SelectItem>)}
+              {analysts.map((analyst) => <SelectItem key={analyst.user_id} value={analyst.user_id}>{analyst.user_name}</SelectItem>)}
             </SelectContent>
           </Select>
           <div className="flex h-9 items-center gap-1 rounded-lg border px-1">
@@ -222,10 +207,10 @@ export default function TimeManagementReport() {
         </CardContent>
       </Card>
 
-      {query.isLoading ? (
+      {queryIsLoading ? (
         <Card><CardContent className="flex items-center justify-center gap-2 py-16 text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin" /> Consolidando horas da equipe...</CardContent></Card>
-      ) : query.isError ? (
-        <Card className="border-destructive/40"><CardContent className="flex flex-col items-center gap-2 py-14 text-center"><FileSearch className="h-8 w-8 text-destructive" /><p className="font-semibold">Não foi possível consultar os lançamentos</p><p className="text-sm text-muted-foreground">Verifique sua permissão gerencial ou tente novamente.</p><Button size="sm" variant="outline" onClick={() => query.refetch()}>Tentar novamente</Button></CardContent></Card>
+      ) : queryIsError ? (
+        <Card className="border-destructive/40"><CardContent className="flex flex-col items-center gap-2 py-14 text-center"><FileSearch className="h-8 w-8 text-destructive" /><p className="font-semibold">Não foi possível consultar os lançamentos</p><p className="text-sm text-muted-foreground">Verifique sua permissão gerencial ou tente novamente.</p><Button size="sm" variant="outline" onClick={() => { void reportQuery.refetch(); void entriesQuery.refetch(); }}>Tentar novamente</Button></CardContent></Card>
       ) : (
         <>
           <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
@@ -237,22 +222,32 @@ export default function TimeManagementReport() {
 
           <Card>
             <CardHeader className="p-3 pb-1"><CardTitle className="text-sm">{periodView === "week" ? "Distribuição semanal" : "Horas por analista"}</CardTitle></CardHeader>
-            <CardContent className="h-44 p-2 pt-0">
-              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                <BarChart data={chartData} margin={{ top: 8, right: 6, left: -24, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="day" fontSize={10} tickLine={false} axisLine={false} />
-                  <YAxis fontSize={10} tickLine={false} axisLine={false} unit="h" />
-                  <Tooltip formatter={(value: number) => formatMinutes(value * 60)} labelFormatter={(_, payload) => payload?.[0]?.payload?.date ?? ""} />
-                  <Bar dataKey="hours" name="Horas da equipe" fill="hsl(var(--primary))" radius={[5, 5, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+            <CardContent className="h-48 overflow-x-auto p-2 pt-0">
+              <div className="h-full" style={{ minWidth: chartMinWidth || undefined }}>
+                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                  <BarChart data={chartData} margin={{ top: 8, right: 8, left: -24, bottom: periodView === "day" ? 8 : 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis
+                      dataKey="day"
+                      fontSize={10}
+                      tickLine={false}
+                      axisLine={false}
+                      interval={0}
+                      height={periodView === "day" ? 42 : 24}
+                      tick={periodView === "day" ? <AnalystAxisTick /> : undefined}
+                    />
+                    <YAxis fontSize={10} tickLine={false} axisLine={false} unit="h" />
+                    <Tooltip formatter={(value: number) => formatMinutes(value * 60)} labelFormatter={(_, payload) => payload?.[0]?.payload?.fullName ?? payload?.[0]?.payload?.date ?? ""} />
+                    <Bar dataKey="hours" name={periodView === "week" ? "Horas da equipe" : "Horas do analista"} fill="hsl(var(--primary))" maxBarSize={48} radius={[5, 5, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex-row items-center justify-between space-y-0 p-3 pb-1.5">
-              <div><CardTitle className="text-sm">{periodView === "week" ? "Lançamentos da equipe" : "Lançamentos do dia"}</CardTitle><p className="text-[11px] text-muted-foreground">{filteredEntries.length} item(ns) encontrados · {periodDetail}</p></div>
+              <div><CardTitle className="text-sm">{periodView === "week" ? "Lançamentos da equipe" : "Lançamentos do dia"}</CardTitle><p className="text-[11px] text-muted-foreground">{totalItems} item(ns) encontrados · {periodDetail}</p></div>
             </CardHeader>
             <CardContent className="space-y-1 p-2 pt-0">
               {pagedEntries.length === 0 ? (
@@ -275,7 +270,7 @@ export default function TimeManagementReport() {
                 <ReportPagination
                   currentPage={activePage}
                   pageSize={pageSize}
-                  totalItems={filteredEntries.length}
+                  totalItems={totalItems}
                   totalPages={totalPages}
                   onPageChange={setPage}
                   onPageSizeChange={(value) => {
@@ -337,6 +332,26 @@ function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Não foi possível concluir a importação geral.";
 }
 
+function AnalystAxisTick({
+  x = 0,
+  y = 0,
+  payload,
+}: {
+  x?: number;
+  y?: number;
+  payload?: { value?: string };
+}) {
+  const [firstName = "", lastName = ""] = String(payload?.value ?? "").split(" ");
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <text textAnchor="middle" className="fill-muted-foreground text-[10px]">
+        <tspan x="0" dy="13">{firstName}</tspan>
+        {lastName && <tspan x="0" dy="12">{lastName}</tspan>}
+      </text>
+    </g>
+  );
+}
+
 function MetricCard({ label, value, detail, icon }: { label: string; value: string; detail: string; icon: React.ReactNode }) {
   return <Card><CardContent className="flex items-start justify-between gap-2 p-2.5"><div><p className="text-[11px] font-medium text-muted-foreground">{label}</p><p className="text-lg font-black leading-6 tabular-nums">{value}</p><p className="text-[10px] leading-4 text-muted-foreground">{detail}</p></div><span className="rounded-md bg-primary/10 p-1.5 text-primary">{icon}</span></CardContent></Card>;
 }
@@ -392,5 +407,6 @@ function formatEntryDescription(description: string) {
 }
 
 function shortAnalystName(name: string) {
-  return name.trim().split(/\s+/).slice(0, 2).join(" ");
+  const parts = name.trim().split(/\s+/);
+  return parts.length <= 2 ? parts.join(" ") : `${parts[0]} ${parts[parts.length - 1]}`;
 }

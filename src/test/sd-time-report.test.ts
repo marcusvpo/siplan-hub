@@ -6,6 +6,10 @@ const reportPage = readFileSync(
   resolve(process.cwd(), "src/pages/sd/TimeManagementReport.tsx"),
   "utf8",
 );
+const timeHook = readFileSync(
+  resolve(process.cwd(), "src/hooks/useSdTimeTracking.ts"),
+  "utf8",
+);
 
 describe("consulta gerencial de horas do SD", () => {
   it("pagina os lançamentos da equipe com cinco itens por padrão", () => {
@@ -13,6 +17,16 @@ describe("consulta gerencial de horas do SD", () => {
     expect(reportPage).toContain("pagedEntries");
     expect(reportPage).toContain("Lançamentos da equipe por página");
     expect(reportPage).toContain("Mostrando");
+    expect(timeHook).toContain('db.rpc("get_sd_time_management_page"');
+    expect(timeHook).toContain("p_offset: (page - 1) * pageSize");
+    expect(timeHook).toContain('db.rpc("get_sd_time_management_report"');
+  });
+
+  it("mantém cada nome alinhado com sua barra na visão diária", () => {
+    expect(reportPage).toContain("AnalystAxisTick");
+    expect(reportPage).toContain("interval={0}");
+    expect(reportPage).toContain("chartData.length * 88");
+    expect(reportPage).toContain("parts[parts.length - 1]");
   });
 
   it("permite alternar a consulta entre dia e semana", () => {

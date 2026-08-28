@@ -31,6 +31,32 @@ export interface SdTimeEntry {
   user_team?: string | null;
 }
 
+export interface SdTimeManagementAnalyst {
+  user_id: string;
+  user_name: string;
+  user_email: string | null;
+  user_team: string | null;
+}
+
+export interface SdTimeManagementAnalystTotal extends SdTimeManagementAnalyst {
+  total_minutes: number;
+  worked_days: number;
+}
+
+export interface SdTimeManagementReport {
+  total_minutes: number;
+  analyst_count: number;
+  worked_user_days: number;
+  daily: Array<{ work_date: string; total_minutes: number }>;
+  analyst_totals: SdTimeManagementAnalystTotal[];
+  available_analysts: SdTimeManagementAnalyst[];
+}
+
+export interface SdTimeManagementPage {
+  entries: SdTimeEntry[];
+  totalCount: number;
+}
+
 export interface SaveSdTimeEntryInput {
   id?: string;
   workDate: string;
@@ -102,18 +128,61 @@ export function useManagedSdTimeEntries(
   startDate: string,
   endDate: string,
   userId?: string,
+  search?: string,
+  page = 1,
+  pageSize = 10,
 ) {
   return useQuery({
-    queryKey: ["sd-time", "management", startDate, endDate, userId ?? "all"],
+    queryKey: ["sd-time", "management", "page", startDate, endDate, userId ?? "all", search ?? "", page, pageSize],
     enabled: Boolean(startDate && endDate),
     queryFn: async () => {
-      const { data, error } = await db.rpc("get_sd_time_management", {
+      const { data, error } = await db.rpc("get_sd_time_management_page", {
         p_start_date: startDate,
         p_end_date: endDate,
         p_user_id: userId || null,
+        p_search: search?.trim() || null,
+        p_limit: pageSize,
+        p_offset: (page - 1) * pageSize,
       });
       if (error) throw error;
-      return ((data ?? []) as Record<string, unknown>[]).map(normalizeEntry);
+      const payload = (data ?? {}) as {
+        items?: Record<string, unknown>[];
+        total_count?: number;
+      };
+      return {
+        entries: (payload.items ?? []).map(normalizeEntry),
+        totalCount: Number(payload.total_count ?? 0),
+      } satisfies SdTimeManagementPage;
+    },
+  });
+}
+
+export function useManagedSdTimeReport(
+  startDate: string,
+  endDate: string,
+  userId?: string,
+  search?: string,
+) {
+  return useQuery({
+    queryKey: ["sd-time", "management", "report", startDate, endDate, userId ?? "all", search ?? ""],
+    enabled: Boolean(startDate && endDate),
+    queryFn: async () => {
+      const { data, error } = await db.rpc("get_sd_time_management_report", {
+        p_start_date: startDate,
+        p_end_date: endDate,
+        p_user_id: userId || null,
+        p_search: search?.trim() || null,
+      });
+      if (error) throw error;
+      const report = (data ?? {}) as Partial<SdTimeManagementReport>;
+      return {
+        total_minutes: Number(report.total_minutes ?? 0),
+        analyst_count: Number(report.analyst_count ?? 0),
+        worked_user_days: Number(report.worked_user_days ?? 0),
+        daily: Array.isArray(report.daily) ? report.daily : [],
+        analyst_totals: Array.isArray(report.analyst_totals) ? report.analyst_totals : [],
+        available_analysts: Array.isArray(report.available_analysts) ? report.available_analysts : [],
+      } satisfies SdTimeManagementReport;
     },
   });
 }
