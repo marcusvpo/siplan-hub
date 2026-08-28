@@ -106,9 +106,13 @@ describe("catálogo de permissões", () => {
   it("mantém os logs de IA dentro de Assistentes e fora do painel administrativo", () => {
     const assistants = menuItems.find((item) => item.title === "Assistentes");
     const logs = assistants?.subItems?.find((sub) => sub.permissionKey === "pos_ai_logs");
+    const linksAndChats = assistants?.subItems?.find(
+      (sub) => sub.path === "/assistentes/links-chats"
+    );
     const permission = PERMISSION_RESOURCES.find((item) => item.resource === "pos_ai_logs");
 
     expect(logs?.path).toBe("/assistentes/logs");
+    expect(linksAndChats?.permissionKey).toBe("pos_ai_logs");
     expect(permission?.category).toBe("Assistentes");
     expect(permission?.actions).toEqual(["view", "manage"]);
   });

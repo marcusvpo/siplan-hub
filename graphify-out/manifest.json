@@ -155,8 +155,8 @@
     "semantic_hash": ""
   },
   "src/App.tsx": {
-    "mtime": 1787693868.5629487,
-    "ast_hash": "3a2eaf172db874fdc57aa1e15a1336f6",
+    "mtime": 1787921032.7399714,
+    "ast_hash": "dc1bb08dcfbc4279ddb47c8f8dc9debc",
     "semantic_hash": ""
   },
   "src/components/Admin/OverviewChart.tsx": {
@@ -245,18 +245,18 @@
     "semantic_hash": "fbeef457886221679d8422238870cfb9"
   },
   "src/components/Layout/AppSidebar.tsx": {
-    "mtime": 1787694083.609475,
-    "ast_hash": "88aa2342c438b737c8cdfffe8c491736",
+    "mtime": 1787921038.8554006,
+    "ast_hash": "8f056849cdb9ac8469078878c19010be",
     "semantic_hash": ""
   },
   "src/components/Layout/Breadcrumbs.tsx": {
-    "mtime": 1787342995.3581226,
-    "ast_hash": "6ec074a58fa65957d2e96fc58a8e6ae4",
+    "mtime": 1787921032.771207,
+    "ast_hash": "bfdbb6cd8324b006f9c8af0c585dea9c",
     "semantic_hash": ""
   },
   "src/components/Layout/MainLayout.tsx": {
-    "mtime": 1787342995.3591201,
-    "ast_hash": "2d1792f66ff0105e10ba33b08097d2d5",
+    "mtime": 1787921032.7702072,
+    "ast_hash": "b41f7d0ae61e2d7a8b1d826f82d36107",
     "semantic_hash": ""
   },
   "src/components/Layout/UserProfileDrawer.tsx": {
@@ -765,8 +765,8 @@
     "semantic_hash": "5bff9ea3904b15a9e1908b128c88e75f"
   },
   "src/constants/menuItems.ts": {
-    "mtime": 1787693868.5689769,
-    "ast_hash": "0a5a52d6c4200cf2792dc2bb5ccdb8e6",
+    "mtime": 1787921032.7616386,
+    "ast_hash": "2b70c54ee5dab636737615eb1cde340f",
     "semantic_hash": ""
   },
   "src/contexts/AuthContext.tsx": {
@@ -1100,9 +1100,9 @@
     "semantic_hash": "0871152547117ad2e4b36c8825ca3b60"
   },
   "src/pages/admin/AuditLog.tsx": {
-    "mtime": 1781122833.2232792,
-    "ast_hash": "bb688c0dbd484cc2fd7378abec788abe",
-    "semantic_hash": "bb688c0dbd484cc2fd7378abec788abe"
+    "mtime": 1787926374.1998813,
+    "ast_hash": "da4ca47a6759e945503a4d5d200065f2",
+    "semantic_hash": ""
   },
   "src/pages/admin/InactiveUsers.tsx": {
     "mtime": 1781122833.2232792,
@@ -2680,8 +2680,8 @@
     "semantic_hash": ""
   },
   "src/test/permissions-catalog.test.ts": {
-    "mtime": 1787342995.368153,
-    "ast_hash": "39e55c45b3b002a123ba7ceded697283",
+    "mtime": 1787921258.1678822,
+    "ast_hash": "0ba8b9b11d261103cddfc933bcc789ee",
     "semantic_hash": ""
   },
   "supabase/migrations/20260715093000_rbac_screens_expansion.sql": {
@@ -2770,8 +2770,8 @@
     "semantic_hash": ""
   },
   "src/hooks/useChamados0800.ts": {
-    "mtime": 1787772226.7486372,
-    "ast_hash": "b7c9f5686a4f36c6832786aa113c0ec1",
+    "mtime": 1787923505.3714235,
+    "ast_hash": "47c383acf987265f77c9113314fe313e",
     "semantic_hash": ""
   },
   "supabase/migrations/20260716120000_chamados_0800_mirror.sql": {
@@ -2960,8 +2960,8 @@
     "semantic_hash": ""
   },
   "src/pages/DeploymentsTickets.tsx": {
-    "mtime": 1787838223.9234843,
-    "ast_hash": "8b984245f7b3bb07eff294824ec1117a",
+    "mtime": 1787923536.3268876,
+    "ast_hash": "c6981b2ea890234dc2aeff6563b9cd83",
     "semantic_hash": ""
   },
   "src/utils/adherence-helpers.ts": {
@@ -3055,8 +3055,8 @@
     "semantic_hash": ""
   },
   "src/components/Admin/PosAiChatLinksManager.tsx": {
-    "mtime": 1787342995.3556046,
-    "ast_hash": "d483f6643f39a27617a3683e379ebc68",
+    "mtime": 1787926314.3259933,
+    "ast_hash": "2fe74dfa809fbeccf91187fe675b0fd7",
     "semantic_hash": ""
   },
   "src/components/Admin/PosAiVisitorAnalytics.tsx": {
@@ -3070,8 +3070,8 @@
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/PosAiAssistantSection.tsx": {
-    "mtime": 1787342995.3611212,
-    "ast_hash": "170826473735bd0e61d963ea4da18b47",
+    "mtime": 1787921011.969445,
+    "ast_hash": "d6c1abcc28228a4d1fe104b89e2f9b88",
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/ProjectTagsLegendDialog.tsx": {
@@ -3270,8 +3270,8 @@
     "semantic_hash": ""
   },
   "src/hooks/usePosAiChatLinks.ts": {
-    "mtime": 1787340909.0957012,
-    "ast_hash": "db5faa07efdad8cf2eb8d85a5c905b30",
+    "mtime": 1787926768.7809415,
+    "ast_hash": "dcb6dde2a84b1f89cce097b8a7d1d6ef",
     "semantic_hash": ""
   },
   "src/hooks/usePosAiProjectSummary.ts": {
@@ -3420,8 +3420,8 @@
     "semantic_hash": ""
   },
   "src/pages/admin/PosAiLogs.tsx": {
-    "mtime": 1787340909.0976954,
-    "ast_hash": "311008a153473d245efb7466df4cafeb",
+    "mtime": 1787921019.8013058,
+    "ast_hash": "51b1f9941ccececf36c969f131e1ee1c",
     "semantic_hash": ""
   },
   "src/pages/assistants/KnowledgeEditorPage.tsx": {
@@ -3825,8 +3825,8 @@
     "semantic_hash": ""
   },
   "supabase/functions/pos-assistant-chat/index.ts": {
-    "mtime": 1787337479.1073909,
-    "ast_hash": "f4972774c4a317465171cc9900fb585d",
+    "mtime": 1787921089.166319,
+    "ast_hash": "605c22cff9f93e1177ffff92a52fb25d",
     "semantic_hash": ""
   },
   "supabase/functions/scan-sd-attachment/index.ts": {
@@ -4297,6 +4297,96 @@
   "vm-worker/src/improveTextPrompt.ts": {
     "mtime": 1787858330.3764803,
     "ast_hash": "7fd3e276305992b85784047c41f75b45",
+    "semantic_hash": ""
+  },
+  "src/hooks/usePosAiChatConversations.ts": {
+    "mtime": 1787926723.388054,
+    "ast_hash": "77ef0d5fa672798e9ae91df3a030836b",
+    "semantic_hash": ""
+  },
+  "src/pages/assistants/PosAiLinksChats.tsx": {
+    "mtime": 1787926684.723825,
+    "ast_hash": "5c4e21a965f5d473f591fef0dc956517",
+    "semantic_hash": ""
+  },
+  "src/test/pos-ai-chat-links-migration.test.ts": {
+    "mtime": 1787921258.1688905,
+    "ast_hash": "20686feaa344a86aaa9222af342f755b",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260828120000_create_pos_ai_chat_links.sql": {
+    "mtime": 1787921380.205803,
+    "ast_hash": "24ec7bad7a4e1df5b5a25ee9abb68d21",
+    "semantic_hash": ""
+  },
+  "src/test/pos-ai-chat-clear-conversations-migration.test.ts": {
+    "mtime": 1787922242.5205517,
+    "ast_hash": "716762788e2c0a2b0bbd5588e51737e0",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260828163000_clear_pos_ai_chat_conversations.sql": {
+    "mtime": 1787922242.5190408,
+    "ast_hash": "96eba041c04621b069cda1127476a513",
+    "semantic_hash": ""
+  },
+  "src/test/pos-ai-searchable-client-select.test.tsx": {
+    "mtime": 1787924936.6407592,
+    "ast_hash": "d9d62ea9777c39d4d692076850ee2ba8",
+    "semantic_hash": ""
+  },
+  "src/lib/pagination.ts": {
+    "mtime": 1787924645.5493193,
+    "ast_hash": "8ff5c922ad645470a5dba0f3c4e4968f",
+    "semantic_hash": ""
+  },
+  "src/components/Admin/PosAiChatUsersManager.tsx": {
+    "mtime": 1787926160.0763767,
+    "ast_hash": "d5fdb427cb5d0f958f6ef59f16b9c0f4",
+    "semantic_hash": ""
+  },
+  "src/components/Admin/SearchableClientSelect.tsx": {
+    "mtime": 1787924936.6357255,
+    "ast_hash": "33263d9402a8c68efb4fa69aed352d9e",
+    "semantic_hash": ""
+  },
+  "src/hooks/usePosAiChatVisitors.ts": {
+    "mtime": 1787926742.925341,
+    "ast_hash": "222d8667904db730854569d96c4ceea2",
+    "semantic_hash": ""
+  },
+  "src/test/pos-ai-chat-visitor-management-migration.test.ts": {
+    "mtime": 1787925063.1439595,
+    "ast_hash": "35932ae5eeed2972375230fd5b98f26f",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260828180000_manage_pos_ai_chat_visitors.sql": {
+    "mtime": 1787925032.8189158,
+    "ast_hash": "3c3ca479df38e443e484d2e1bd2681b5",
+    "semantic_hash": ""
+  },
+  "src/lib/csv-export.ts": {
+    "mtime": 1787926082.9550152,
+    "ast_hash": "ec37de277ceecab42dc2e990e1f28a03",
+    "semantic_hash": ""
+  },
+  "src/lib/error-message.ts": {
+    "mtime": 1787925952.6916888,
+    "ast_hash": "0d82577fa09a26c7741ed3443db631b2",
+    "semantic_hash": ""
+  },
+  "src/test/error-message.test.ts": {
+    "mtime": 1787926354.9929812,
+    "ast_hash": "187d189563041ab4fc69f2e83ac57d4a",
+    "semantic_hash": ""
+  },
+  "src/test/pos-ai-chat-admin-hardening-migration.test.ts": {
+    "mtime": 1787926354.991472,
+    "ast_hash": "52e0c73c0a9ccc27a4ead46cfcb7b3e7",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260828200000_harden_pos_ai_chat_admin.sql": {
+    "mtime": 1787926332.0660841,
+    "ast_hash": "762761bca076317b766eea4d00e6f56e",
     "semantic_hash": ""
   }
 }

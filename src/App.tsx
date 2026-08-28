@@ -137,6 +137,7 @@ const Copilot = lazy(() => import("./pages/Copilot"));
 const CopilotAccess = lazy(() => import("./pages/admin/CopilotAccess"));
 const CopilotUsage = lazy(() => import("./pages/admin/CopilotUsage"));
 const PosAiLogs = lazy(() => import("./pages/admin/PosAiLogs"));
+const PosAiLinksChats = lazy(() => import("./pages/assistants/PosAiLinksChats"));
 const KnowledgeEditorPage = lazy(
   () => import("./pages/assistants/KnowledgeEditorPage"),
 );
@@ -618,6 +619,14 @@ const App = () => (
                             element={
                               <RequirePermission resource="pos_ai_logs">
                                 <PosAiLogs />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/assistentes/links-chats"
+                            element={
+                              <RequirePermission resource="pos_ai_logs">
+                                <PosAiLinksChats />
                               </RequirePermission>
                             }
                           />

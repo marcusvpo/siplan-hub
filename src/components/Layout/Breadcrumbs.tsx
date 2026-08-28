@@ -16,6 +16,7 @@ export function Breadcrumbs() {
     "orion-tn-models": "Modelos Orion TN",
     assistentes: "Assistentes",
     logs: "Logs & Analytics",
+    "links-chats": "Links e Chats",
   };
 
   const getBreadcrumbName = (value: string) => {
