@@ -33,6 +33,13 @@ export function entryMinutes(entry: Pick<SdTimeEntryLike, "intervals">) {
   return entry.intervals.reduce((total, interval) => total + intervalMinutes(interval), 0);
 }
 
+export function entryStartMinutes(entry: Pick<SdTimeEntryLike, "intervals">) {
+  const starts = entry.intervals
+    .map((interval) => timeToMinutes(interval.started_at))
+    .filter((minutes): minutes is number => minutes !== null);
+  return starts.length ? Math.min(...starts) : -1;
+}
+
 export function totalMinutes(entries: Array<Pick<SdTimeEntryLike, "intervals">>) {
   return entries.reduce((total, entry) => total + entryMinutes(entry), 0);
 }

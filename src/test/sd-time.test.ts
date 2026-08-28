@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   entryMinutes,
+  entryStartMinutes,
   formatMinutes,
   getWeekRange,
   intervalsOverlap,
@@ -30,6 +31,18 @@ describe("cálculos do gerenciamento de horas do SD", () => {
         { work_date: "2026-08-28", intervals: [{ started_at: "10:00", ended_at: "10:30" }] },
       ]),
     ).toEqual({ "2026-08-28": 90 });
+  });
+
+  it("usa a primeira hora cronológica para ordenar lançamentos", () => {
+    expect(
+      entryStartMinutes({
+        work_date: "2026-08-28",
+        intervals: [
+          { started_at: "17:00", ended_at: "17:30" },
+          { started_at: "15:35", ended_at: "16:00" },
+        ],
+      }),
+    ).toBe(15 * 60 + 35);
   });
 
   it("calcula a semana de segunda a domingo", () => {
