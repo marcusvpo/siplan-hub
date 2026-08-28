@@ -20,6 +20,11 @@ describe("importação de horas do 0800", () => {
     expect(page).toContain("Importar do 0800");
     expect(page).toContain("Importado do 0800");
     expect(page).toContain('entry.source === "ellevo_0800"');
+    expect(page).toContain("entryStartMinutes(second) - entryStartMinutes(first)");
+    expect(page).toContain("maior horário primeiro");
+    expect(page).toContain("paginatedDayEntries");
+    expect(page).toContain("Lançamentos por página");
+    expect(page).toContain("DAY_PAGE_SIZE_OPTIONS = [5, 10, 20]");
   });
 
   it("usa a view exclusiva e parâmetros para usuário e data", () => {

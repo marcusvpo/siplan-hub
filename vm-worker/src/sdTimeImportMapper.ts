@@ -44,7 +44,7 @@ export function mapEllevoHour(row: EllevoHourRow): SdTimeImportItem {
   return {
     external_id: String(row.id_lancamento_0800),
     title: `${ticketLabel} — ${title}`.slice(0, 120),
-    description: details.length ? details.join("\n\n") : null,
+    description: details.length ? details.join("\n") : null,
     start: row.horario_inicio.slice(0, 5),
     end: row.horario_fim.slice(0, 5),
     metadata: {
