@@ -30,6 +30,29 @@ adicionalmente de `whisper.cpp` + `ffmpeg` na VM
 </details>
 
 <details>
+<summary><b>Importação de horas do 0800 (Ellevo -> Gerenciamento de horas)</b></summary>
+
+A tela `/sd/horas` cria um pedido em `public.sd_time_import_requests`. O worker que possui as
+credenciais `MSSQL_*` consulta a view exclusiva `Siplan_AcessoIA.dbo.horas_analistas_0800`,
+relaciona o usuário pelo login do Ellevo com a parte anterior ao `@` do e-mail do HUB e grava os
+itens de forma idempotente em `sd_time_entries`/`sd_time_intervals`.
+
+Para publicar ou atualizar apenas a view dedicada:
+
+```bash
+cd /home/administrator/vm-worker
+npm run prepare:ellevo-hours-view -- --apply --confirm-database=Siplan_AcessoIA
+```
+
+A view usa diretamente `TempoGasto`, `Tramite`, `Solicitacao`, `Usuario` e `TipoTempoGasto` no
+banco `PlataformaEllevo`; ela não depende das views de vendas nem das views amplas de chamados.
+Cada tempo usa `TGID` como origem estável, portanto repetir a importação não duplica lançamentos.
+O fallback da fila roda a cada `SD_TIME_IMPORT_INTERVAL_MS` (15 segundos por padrão), além do
+acionamento imediato por Realtime.
+
+</details>
+
+<details>
 <summary><b>Fluxo</b></summary>
 
 ```
