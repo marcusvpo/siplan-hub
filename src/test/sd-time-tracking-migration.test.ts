@@ -15,6 +15,14 @@ const richDescriptionMigration = readFileSync(
   "utf8",
 );
 
+const ellevoImportMigration = readFileSync(
+  resolve(
+    process.cwd(),
+    "supabase/migrations/20260828233000_sd_time_ellevo_import.sql",
+  ),
+  "utf8",
+);
+
 describe("migration de gerenciamento de horas do SD", () => {
   it("cria lançamentos, intervalos e operações atômicas", () => {
     expect(migration).toContain("CREATE TABLE IF NOT EXISTS public.sd_time_entries");
@@ -42,5 +50,17 @@ describe("migration de gerenciamento de horas do SD", () => {
       "DROP CONSTRAINT IF EXISTS sd_time_entries_description_length",
     );
     expect(richDescriptionMigration).toContain("char_length(description) <= 20000");
+  });
+
+  it("cria uma fila segura e uma importação idempotente do 0800", () => {
+    expect(ellevoImportMigration).toContain(
+      "CREATE TABLE IF NOT EXISTS public.sd_time_import_requests",
+    );
+    expect(ellevoImportMigration).toContain("CREATE OR REPLACE FUNCTION public.request_sd_time_import");
+    expect(ellevoImportMigration).toContain("CREATE OR REPLACE FUNCTION public.claim_sd_time_import_request");
+    expect(ellevoImportMigration).toContain("CREATE OR REPLACE FUNCTION public.complete_sd_time_import");
+    expect(ellevoImportMigration).toContain("ON CONFLICT (source, source_external_id)");
+    expect(ellevoImportMigration).toContain("'ellevo_0800'");
+    expect(ellevoImportMigration).toContain("user_id = auth.uid()");
   });
 });

@@ -8,6 +8,7 @@ import { processCopilotJob } from "./processCopilotJob.js";
 import { generateDailyDigest } from "./processCopilotDigest.js";
 import { startChamadosSync, startProcessoVendaSync } from "./chamadosSync.js";
 import { classifyPendingChamados } from "./chamadosClassify.js";
+import { startSdTimeImport } from "./sdTimeImport.js";
 
 let busy = false;
 
@@ -387,6 +388,7 @@ async function main() {
   //     disputa o flag `busy` (nao envolve IA). No-op sem MSSQL_* no .env.
   startChamadosSync();
   startProcessoVendaSync();
+  startSdTimeImport();
 
   // 1. Realtime: acorda o worker assim que um job e inserido (conexao de SAIDA, sem
   //    tunel). So assina as tabelas das filas que ESTE worker processa (por papel).

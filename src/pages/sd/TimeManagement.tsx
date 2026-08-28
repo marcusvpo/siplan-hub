@@ -8,6 +8,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock3,
+  Database,
+  Download,
   Loader2,
   Pencil,
   Plus,
@@ -36,6 +38,7 @@ import { TimeEntryDialog } from "@/components/sd/time/TimeEntryDialog";
 import {
   type SdTimeEntry,
   useDeleteSdTimeEntry,
+  useImportSdTimeEntries,
   useMySdTimeEntries,
   useSaveSdTimeEntry,
 } from "@/hooks/useSdTimeTracking";
@@ -62,12 +65,14 @@ export default function TimeManagement() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<SdTimeEntry | null>(null);
   const [deletingEntry, setDeletingEntry] = useState<SdTimeEntry | null>(null);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
 
   const workDate = format(selectedDate, "yyyy-MM-dd");
   const week = useMemo(() => getWeekRange(selectedDate), [selectedDate]);
   const entriesQuery = useMySdTimeEntries(week.start, week.end);
   const saveEntry = useSaveSdTimeEntry();
   const deleteEntry = useDeleteSdTimeEntry();
+  const importEntries = useImportSdTimeEntries();
   const entries = entriesQuery.data ?? [];
   const dayEntries = entries.filter((entry) => entry.work_date === workDate);
   const dayTotal = totalMinutes(dayEntries);
@@ -117,9 +122,24 @@ export default function TimeManagement() {
             </p>
           </div>
           {canCreate && (
-            <Button className="relative gap-2 self-start" onClick={openNewEntry}>
-              <Plus className="h-4 w-4" /> Adicionar item
-            </Button>
+            <div className="relative flex flex-wrap gap-2 self-start">
+              <Button
+                variant="outline"
+                className="gap-2 bg-background/80"
+                disabled={importEntries.isPending}
+                onClick={() => setImportDialogOpen(true)}
+              >
+                {importEntries.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4" />
+                )}
+                Importar do 0800
+              </Button>
+              <Button className="gap-2" onClick={openNewEntry}>
+                <Plus className="h-4 w-4" /> Adicionar item
+              </Button>
+            </div>
           )}
         </div>
       </motion.section>
@@ -201,6 +221,11 @@ export default function TimeManagement() {
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-2">
                             <h3 className="font-bold">{entry.title}</h3>
+                            {entry.source === "ellevo_0800" && (
+                              <Badge variant="outline" className="gap-1 border-sky-300 bg-sky-50 text-sky-700 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-300">
+                                <Database className="h-3 w-3" /> Importado do 0800
+                              </Badge>
+                            )}
                             <Badge variant="secondary" className="tabular-nums">{formatMinutes(entryMinutes(entry))}</Badge>
                           </div>
                           {entry.description && <p className="mt-1.5 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">{richTextToPlainText(entry.description)}</p>}
@@ -283,6 +308,45 @@ export default function TimeManagement() {
           }
         }}
       />
+
+      <AlertDialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Importar lançamentos do 0800?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Serão buscadas as horas de {format(selectedDate, "dd/MM/yyyy")} vinculadas ao seu usuário do HUB. Itens já importados serão ignorados automaticamente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={importEntries.isPending}
+              onClick={async (event) => {
+                event.preventDefault();
+                try {
+                  const result = await importEntries.mutateAsync(workDate);
+                  setImportDialogOpen(false);
+                  if (result.available_count === 0) {
+                    toast.info("Nenhum lançamento do 0800 foi encontrado para este dia.");
+                  } else if (result.imported_count === 0) {
+                    toast.info("Todos os lançamentos desse dia já estavam importados.");
+                  } else {
+                    toast.success(
+                      `${result.imported_count} lançamento(s) importado(s) do 0800.` +
+                        (result.skipped_count ? ` ${result.skipped_count} já existente(s).` : ""),
+                    );
+                  }
+                } catch (error) {
+                  toast.error(errorMessage(error));
+                }
+              }}
+            >
+              {importEntries.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Importar agora
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={Boolean(deletingEntry)} onOpenChange={(open) => !open && setDeletingEntry(null)}>
         <AlertDialogContent>

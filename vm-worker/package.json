@@ -7,9 +7,10 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "test": "node --import tsx --test src/runSkill.test.ts",
+    "test": "node --import tsx --test src/runSkill.test.ts src/sdTimeImport.test.ts",
     "start": "node dist/index.js",
-    "dev": "tsx src/index.ts"
+    "dev": "tsx src/index.ts",
+    "prepare:ellevo-hours-view": "node scripts/prepare-ellevo-hours-view.mjs"
   },
   "dependencies": {
     "@openai/codex": "0.147.0",
