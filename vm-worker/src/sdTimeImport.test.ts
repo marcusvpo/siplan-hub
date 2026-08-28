@@ -12,6 +12,8 @@ test("mapeia um tempo do 0800 com origem estável e contexto do chamado", () => 
     id_analista_0800: 11890,
     nome_analista: "Marcos Fernandes - Siplan",
     login_analista: "marcos.fernandes",
+    id_grupo_analista_0800: 11186,
+    grupo_analista: "SD - Protesto",
     horario_inicio: "08:25",
     horario_fim: "09:10",
     minutos: 45,
@@ -28,4 +30,5 @@ test("mapeia um tempo do 0800 com origem estável e contexto do chamado", () => 
   assert.equal(item.end, "09:10");
   assert.match(item.description ?? "", /Atividade no 0800: Análise/);
   assert.equal(item.metadata.ellevo_login, "marcos.fernandes");
+  assert.equal(item.metadata.ellevo_group, "SD - Protesto");
 });

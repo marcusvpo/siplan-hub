@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 
 const apply = process.argv.includes("--apply");
 const inspect = process.argv.includes("--inspect");
+const inspectSdMembers = process.argv.includes("--inspect-sd-members");
 const confirmation = process.argv
   .find((argument) => argument.startsWith("--confirm-database="))
   ?.split("=")[1];
@@ -13,6 +14,9 @@ const sampleLogin = process.argv
   ?.split("=")[1];
 const sampleDate = process.argv
   .find((argument) => argument.startsWith("--sample-date="))
+  ?.split("=")[1];
+const sampleWeekStart = process.argv
+  .find((argument) => argument.startsWith("--sample-week-start="))
   ?.split("=")[1];
 
 const server = process.env.MSSQL_HOST ?? "";
@@ -67,6 +71,25 @@ try {
     console.table(metadata.recordset);
   }
 
+  if (inspectSdMembers) {
+    const members = await pool.request().query(`
+      SELECT
+        grupo.UsuID AS group_id,
+        grupo.UsuNome AS group_name,
+        COUNT_BIG(*) AS member_count,
+        SUM(CASE WHEN analyst.DataExclusao IS NULL THEN 1 ELSE 0 END) AS active_member_count
+      FROM PlataformaEllevo.dbo.Usuario AS analyst
+      INNER JOIN PlataformaEllevo.dbo.Usuario AS grupo
+        ON grupo.UsuID = analyst.UsuIDGrupo
+      WHERE UPPER(LTRIM(RTRIM(grupo.UsuNome))) IN (
+        N'SD - TN/RC', N'SD - GLOBAL', N'SD - PROTESTO', N'SD - RI/TD'
+      )
+      GROUP BY grupo.UsuID, grupo.UsuNome
+      ORDER BY grupo.UsuNome;
+    `);
+    console.table(members.recordset);
+  }
+
   if (apply) {
     await pool.request().batch(viewSql);
     const validation = await pool.request().query(`
@@ -95,6 +118,25 @@ try {
       `);
     console.log(
       `Amostra ${sampleLogin}/${sampleDate}: ${sample.recordset[0].lancamentos} lançamentos, ${sample.recordset[0].minutos ?? 0} minutos.`,
+    );
+  }
+
+  if (sampleWeekStart) {
+    const week = await pool
+      .request()
+      .input("startDate", sql.Date, sampleWeekStart)
+      .query(`
+        SELECT
+          COUNT_BIG(*) AS lancamentos,
+          COUNT(DISTINCT login_analista) AS analistas,
+          SUM(minutos) AS minutos
+        FROM dbo.horas_analistas_0800
+        WHERE data_lancamento BETWEEN @startDate AND DATEADD(day, 6, @startDate)
+          AND grupo_analista IN (N'SD - TN/RC', N'SD - GLOBAL', N'SD - Protesto', N'SD - RI/TD');
+      `);
+    console.log(
+      `Semana ${sampleWeekStart}: ${week.recordset[0].lancamentos} lançamentos, ` +
+        `${week.recordset[0].analistas} analistas, ${week.recordset[0].minutos ?? 0} minutos.`,
     );
   }
 } finally {

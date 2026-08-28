@@ -7,6 +7,8 @@ export interface EllevoHourRow {
   id_analista_0800: number;
   nome_analista: string;
   login_analista: string;
+  id_grupo_analista_0800: number | null;
+  grupo_analista: string | null;
   horario_inicio: string;
   horario_fim: string;
   minutos: number;
@@ -54,6 +56,8 @@ export function mapEllevoHour(row: EllevoHourRow): SdTimeImportItem {
       ellevo_user_id: row.id_analista_0800,
       ellevo_login: row.login_analista,
       ellevo_user_name: row.nome_analista,
+      ellevo_group_id: row.id_grupo_analista_0800,
+      ellevo_group: compactText(row.grupo_analista),
       minutes: row.minutos,
       overtime: Boolean(row.hora_extra),
       rework: compactText(row.retrabalho),

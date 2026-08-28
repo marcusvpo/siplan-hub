@@ -157,7 +157,18 @@ export interface SdTimeImportResult {
   skipped_count: number;
 }
 
+export interface SdTimeBulkImportResult extends SdTimeImportResult {
+  analyst_count: number;
+  matched_user_count: number;
+  unmatched_analyst_count: number;
+}
+
 interface SdTimeImportRequestRow extends SdTimeImportResult {
+  status: "pending" | "processing" | "completed" | "failed";
+  error_message: string | null;
+}
+
+interface SdTimeBulkImportRequestRow extends SdTimeBulkImportResult {
   status: "pending" | "processing" | "completed" | "failed";
   error_message: string | null;
 }
@@ -199,6 +210,48 @@ export function useImportSdTimeEntries() {
       }
 
       throw new Error("A importação continua em processamento. Atualize a tela em alguns instantes.");
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["sd-time"] }),
+  });
+}
+
+export function useImportSdTeamWeek() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ startDate, endDate }: { startDate: string; endDate: string }) => {
+      const { data: requestId, error: requestError } = await db.rpc(
+        "request_sd_time_bulk_import",
+        { p_start_date: startDate, p_end_date: endDate },
+      );
+      if (requestError) throw requestError;
+
+      for (let attempt = 0; attempt < 180; attempt += 1) {
+        const { data, error } = await db
+          .from("sd_time_bulk_import_requests")
+          .select("status, analyst_count, matched_user_count, unmatched_analyst_count, available_count, imported_count, skipped_count, error_message")
+          .eq("id", String(requestId))
+          .single();
+        if (error) throw error;
+
+        const request = data as SdTimeBulkImportRequestRow;
+        if (request.status === "completed") {
+          return {
+            analyst_count: request.analyst_count,
+            matched_user_count: request.matched_user_count,
+            unmatched_analyst_count: request.unmatched_analyst_count,
+            available_count: request.available_count,
+            imported_count: request.imported_count,
+            skipped_count: request.skipped_count,
+          } satisfies SdTimeBulkImportResult;
+        }
+        if (request.status === "failed") {
+          throw new Error(request.error_message || "Não foi possível importar as horas gerais do SD.");
+        }
+        await wait(1_000);
+      }
+
+      throw new Error("A importação geral continua em processamento. Atualize a tela em alguns instantes.");
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["sd-time"] }),
   });
