@@ -5,16 +5,18 @@ import { motion, useReducedMotion } from "framer-motion";
 import {
   BarChart3,
   CalendarDays,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Clock3,
   Download,
   FileSearch,
+  Layers3,
   Loader2,
   Search,
   UsersRound,
 } from "lucide-react";
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
@@ -28,6 +30,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -52,12 +62,14 @@ import {
 import { richTextToPlainText } from "@/lib/lexical";
 
 const PAGE_SIZE_OPTIONS = [5, 10, 20];
+const SD_ATTENDANCE_GROUPS = ["SD - TN/RC", "SD - GLOBAL", "SD - Protesto", "SD - RI/TD"];
 type PeriodView = "day" | "week";
 
 export default function TimeManagementReport() {
   const shouldReduceMotion = useReducedMotion();
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [selectedUser, setSelectedUser] = useState("all");
+  const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[0]);
@@ -74,12 +86,14 @@ export default function TimeManagementReport() {
     periodEnd,
     selectedUser === "all" ? undefined : selectedUser,
     debouncedSearch,
+    selectedGroups,
   );
   const entriesQuery = useManagedSdTimeEntries(
     periodStart,
     periodEnd,
     selectedUser === "all" ? undefined : selectedUser,
     debouncedSearch,
+    selectedGroups,
     page,
     pageSize,
   );
@@ -87,8 +101,12 @@ export default function TimeManagementReport() {
   const pagedEntries = entriesQuery.data?.entries ?? [];
   const totalItems = entriesQuery.data?.totalCount ?? 0;
   const analysts = report?.available_analysts ?? [];
+  const groupOptions = useMemo(
+    () => Array.from(new Set([...SD_ATTENDANCE_GROUPS, ...(report?.available_groups ?? [])])),
+    [report?.available_groups],
+  );
 
-  useEffect(() => setPage(1), [periodView, search, selectedDateKey, selectedUser, week.start]);
+  useEffect(() => setPage(1), [periodView, search, selectedDateKey, selectedGroups, selectedUser, week.start]);
 
   const total = report?.total_minutes ?? 0;
   const analystCount = report?.analyst_count ?? 0;
@@ -100,6 +118,8 @@ export default function TimeManagementReport() {
   const chartData = useMemo(() => {
     if (periodView === "week") {
       const totals = new Map((report?.daily ?? []).map((item) => [item.work_date, item.total_minutes]));
+      const manualTotals = new Map((report?.daily ?? []).map((item) => [item.work_date, item.manual_minutes]));
+      const importedTotals = new Map((report?.daily ?? []).map((item) => [item.work_date, item.imported_minutes]));
       return week.days.map((date) => {
         const key = format(date, "yyyy-MM-dd");
         const minutes = totals.get(key) ?? 0;
@@ -107,15 +127,20 @@ export default function TimeManagementReport() {
           day: format(date, "EEE", { locale: ptBR }).replace(".", ""),
           date: format(date, "dd/MM"),
           hours: Number((minutes / 60).toFixed(2)),
+          hubHours: Number(((manualTotals.get(key) ?? 0) / 60).toFixed(2)),
+          importedHours: Number(((importedTotals.get(key) ?? 0) / 60).toFixed(2)),
         };
       });
     }
 
     return (report?.analyst_totals ?? []).map((analyst) => ({
+      userId: analyst.user_id,
       day: shortAnalystName(analyst.user_name || analyst.user_email || "Usuário"),
       fullName: analyst.user_name || analyst.user_email || "Usuário",
       date: format(selectedDate, "dd/MM"),
       hours: Number((analyst.total_minutes / 60).toFixed(2)),
+      hubHours: Number((analyst.manual_minutes / 60).toFixed(2)),
+      importedHours: Number((analyst.imported_minutes / 60).toFixed(2)),
     }));
   }, [periodView, report?.analyst_totals, report?.daily, selectedDate, week.days]);
 
@@ -129,6 +154,23 @@ export default function TimeManagementReport() {
   const navigatePeriod = (amount: number) => {
     setSelectedDate((current) => addDays(current, amount * (periodView === "week" ? 7 : 1)));
   };
+  const filterByChartAnalyst = (userId?: string) => {
+    if (periodView !== "day" || !userId) return;
+    setSelectedUser(userId);
+    setPage(1);
+  };
+  const toggleGroup = (group: string) => {
+    setSelectedGroups((current) => current.includes(group)
+      ? current.filter((item) => item !== group)
+      : [...current, group]);
+    setSelectedUser("all");
+    setPage(1);
+  };
+  const groupFilterLabel = selectedGroups.length === 0
+    ? "Todos os grupos"
+    : selectedGroups.length === 1
+      ? selectedGroups[0]
+      : `${selectedGroups.length} grupos`;
 
   return (
     <div className="mx-auto h-full w-full max-w-7xl space-y-2 overflow-y-auto px-1 pb-4 pt-1 md:px-3">
@@ -187,18 +229,60 @@ export default function TimeManagementReport() {
       </motion.section>
 
       <Card>
-        <CardContent className="flex flex-col gap-1.5 p-2 lg:flex-row lg:items-center">
+        <CardContent className="grid grid-cols-1 gap-1.5 p-2 lg:grid-cols-[minmax(240px,1fr)_220px_200px_auto] lg:items-center">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar analista, atividade ou descrição..." className="h-9 pl-9 text-xs" />
           </div>
           <Select value={selectedUser} onValueChange={setSelectedUser}>
-            <SelectTrigger className="h-9 w-full text-xs lg:w-64"><SelectValue placeholder="Todos os analistas" /></SelectTrigger>
+            <SelectTrigger className="h-9 w-full text-xs"><SelectValue placeholder="Todos os analistas" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos os analistas</SelectItem>
               {analysts.map((analyst) => <SelectItem key={analyst.user_id} value={analyst.user_id}>{analyst.user_name}</SelectItem>)}
             </SelectContent>
           </Select>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-9 w-full justify-between gap-2 px-3 text-xs font-normal"
+                aria-label="Filtrar por grupos de atendimento"
+              >
+                <span className="flex min-w-0 items-center gap-2">
+                  <Layers3 className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <span className="truncate">{groupFilterLabel}</span>
+                </span>
+                <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-64">
+              <DropdownMenuLabel className="text-xs">Grupos de atendimento</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuCheckboxItem
+                checked={selectedGroups.length === 0}
+                onCheckedChange={() => {
+                  setSelectedGroups([]);
+                  setSelectedUser("all");
+                  setPage(1);
+                }}
+                onSelect={(event) => event.preventDefault()}
+              >
+                Todos os grupos
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuSeparator />
+              {groupOptions.map((group) => (
+                <DropdownMenuCheckboxItem
+                  key={group}
+                  checked={selectedGroups.includes(group)}
+                  onCheckedChange={() => toggleGroup(group)}
+                  onSelect={(event) => event.preventDefault()}
+                >
+                  {group}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
           <div className="flex h-9 items-center gap-1 rounded-lg border px-1">
             <Button variant="ghost" size="icon" className="h-7 w-7" aria-label={`${periodView === "week" ? "Semana" : "Dia"} anterior`} onClick={() => navigatePeriod(-1)}><ChevronLeft className="h-4 w-4" /></Button>
             <Input type="date" value={format(selectedDate, "yyyy-MM-dd")} className="h-7 w-[140px] border-0 bg-transparent text-xs shadow-none" onChange={(event) => event.target.value && setSelectedDate(parseISO(event.target.value))} />
@@ -234,11 +318,35 @@ export default function TimeManagementReport() {
                       axisLine={false}
                       interval={0}
                       height={periodView === "day" ? 42 : 24}
-                      tick={periodView === "day" ? <AnalystAxisTick /> : undefined}
+                      tick={periodView === "day" ? (
+                        <AnalystAxisTick
+                          onSelect={(index) => filterByChartAnalyst(chartData[index]?.userId)}
+                        />
+                      ) : undefined}
                     />
                     <YAxis fontSize={10} tickLine={false} axisLine={false} unit="h" />
                     <Tooltip formatter={(value: number) => formatMinutes(value * 60)} labelFormatter={(_, payload) => payload?.[0]?.payload?.fullName ?? payload?.[0]?.payload?.date ?? ""} />
-                    <Bar dataKey="hours" name={periodView === "week" ? "Horas da equipe" : "Horas do analista"} fill="hsl(var(--primary))" maxBarSize={48} radius={[5, 5, 0, 0]} />
+                    <Legend verticalAlign="top" height={24} iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11 }} />
+                    <Bar
+                      dataKey="hubHours"
+                      name="Lançado no HUB"
+                      stackId="source"
+                      fill="#2563eb"
+                      maxBarSize={48}
+                      radius={[0, 0, 4, 4]}
+                      className={periodView === "day" ? "cursor-pointer" : undefined}
+                      onClick={(bar) => filterByChartAnalyst(bar?.payload?.userId)}
+                    />
+                    <Bar
+                      dataKey="importedHours"
+                      name="Importado do 0800"
+                      stackId="source"
+                      fill="#e11d48"
+                      maxBarSize={48}
+                      radius={[4, 4, 0, 0]}
+                      className={periodView === "day" ? "cursor-pointer" : undefined}
+                      onClick={(bar) => filterByChartAnalyst(bar?.payload?.userId)}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -257,7 +365,7 @@ export default function TimeManagementReport() {
                   <div className="flex flex-col justify-between gap-1 sm:flex-row sm:items-start">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-1.5"><h3 className="text-sm font-bold leading-5">{entry.title}</h3><Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{formatMinutes(entryMinutes(entry))}</Badge></div>
-                      <p className="text-[11px] leading-4 text-muted-foreground"><span className="font-semibold text-foreground">{entry.user_name}</span>{entry.user_team ? ` · ${entry.user_team}` : ""} · {format(parseISO(entry.work_date), "EEEE, dd/MM", { locale: ptBR })}</p>
+                      <p className="text-[11px] leading-4 text-muted-foreground"><span className="font-semibold text-foreground">{entry.user_name}</span>{entry.attendance_group ? ` · ${entry.attendance_group}` : entry.user_team ? ` · ${entry.user_team}` : ""} · {format(parseISO(entry.work_date), "EEEE, dd/MM", { locale: ptBR })}</p>
                       {entry.description && <p className="mt-0.5 line-clamp-2 text-[11px] leading-4 text-muted-foreground">{formatEntryDescription(entry.description)}</p>}
                     </div>
                     <div className="flex shrink-0 flex-wrap gap-1">
@@ -336,14 +444,28 @@ function AnalystAxisTick({
   x = 0,
   y = 0,
   payload,
+  index = 0,
+  onSelect,
 }: {
   x?: number;
   y?: number;
   payload?: { value?: string };
+  index?: number;
+  onSelect?: (index: number) => void;
 }) {
   const [firstName = "", lastName = ""] = String(payload?.value ?? "").split(" ");
   return (
-    <g transform={`translate(${x},${y})`}>
+    <g
+      transform={`translate(${x},${y})`}
+      className="cursor-pointer"
+      role="button"
+      tabIndex={0}
+      aria-label={`Filtrar lançamentos de ${payload?.value ?? "analista"}`}
+      onClick={() => onSelect?.(index)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") onSelect?.(index);
+      }}
+    >
       <text textAnchor="middle" className="fill-muted-foreground text-[10px]">
         <tspan x="0" dy="13">{firstName}</tspan>
         {lastName && <tspan x="0" dy="12">{lastName}</tspan>}

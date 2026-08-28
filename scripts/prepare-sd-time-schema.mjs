@@ -9,6 +9,9 @@ const MIGRATIONS = [
   "20260828233000_sd_time_ellevo_import.sql",
   "20260828234500_sd_time_bulk_import.sql",
   "20260828235500_sd_time_management_report.sql",
+  "20260828235900_sd_time_report_sources.sql",
+  "20260828235930_sd_time_import_detail_refresh.sql",
+  "20260828235945_sd_time_group_filters.sql",
 ];
 const EXPECTED_TABLES = [
   "sd_time_entries",
@@ -28,6 +31,9 @@ const EXPECTED_FUNCTIONS = [
   "public.complete_sd_time_bulk_import(uuid,jsonb,integer,integer,integer)",
   "public.get_sd_time_management_report(date,date,uuid,text)",
   "public.get_sd_time_management_page(date,date,uuid,text,integer,integer)",
+  "public.refresh_sd_time_import_details(jsonb)",
+  "public.get_sd_time_management_report(date,date,uuid,text,text[])",
+  "public.get_sd_time_management_page(date,date,uuid,text,text[],integer,integer)",
 ];
 const EXPECTED_PERMISSIONS = [
   ["sd_time_entries", "view"],

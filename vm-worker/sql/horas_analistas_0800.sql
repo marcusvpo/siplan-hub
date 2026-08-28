@@ -15,7 +15,10 @@ SELECT
   tempo.TGIntervaloDe AS inicio,
   tempo.TGIntervaloAte AS fim,
   DATEDIFF(minute, tempo.TGIntervaloDe, tempo.TGIntervaloAte) AS minutos,
-  NULLIF(LTRIM(RTRIM(tramite.DescricaoTextoPlano)), N'') AS descricao_tramite,
+  CONVERT(varchar(max), tramite.Descricao) AS descricao_tramite,
+  ultimo_tramite.TraIDSeq AS ultima_sequencia_tramite,
+  CONVERT(char(19), ultimo_tramite.TraData, 126) AS data_ultimo_tramite_iso,
+  ultimo_tramite.DescricaoTextoPlano AS descricao_ultimo_tramite,
   tempo.TGExtra AS hora_extra,
   tempo.TraRetrabalho AS retrabalho,
   tempo.TGTipoTempo AS tipo_tempo,
@@ -32,6 +35,17 @@ LEFT JOIN PlataformaEllevo.dbo.Usuario AS grupo
   ON grupo.UsuID = usuario.UsuIDGrupo
 LEFT JOIN PlataformaEllevo.dbo.TipoTempoGasto AS tipo
   ON tipo.TTGasID = tempo.TTGasID
+OUTER APPLY (
+  SELECT TOP (1)
+    candidato.TraIDSeq,
+    candidato.TraData,
+    CONVERT(varchar(max), candidato.Descricao) AS DescricaoTextoPlano
+  FROM PlataformaEllevo.dbo.Tramite AS candidato
+  WHERE candidato.SolID = tempo.SolID
+    AND candidato.Descricao IS NOT NULL
+    AND DATALENGTH(candidato.Descricao) > 0
+  ORDER BY candidato.TraIDSeq DESC, candidato.TraData DESC, candidato.TraID DESC
+) AS ultimo_tramite
 WHERE tempo.TGValido = 1
   AND tempo.TGIntervaloDe IS NOT NULL
   AND tempo.TGIntervaloAte IS NOT NULL

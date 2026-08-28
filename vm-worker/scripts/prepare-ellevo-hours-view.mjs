@@ -112,12 +112,17 @@ try {
       .input("login", sql.NVarChar(200), sampleLogin.toLowerCase())
       .input("workDate", sql.Date, sampleDate)
       .query(`
-        SELECT COUNT(*) AS lancamentos, SUM(minutos) AS minutos
+        SELECT
+          COUNT(*) AS lancamentos,
+          SUM(minutos) AS minutos,
+          COUNT(descricao_ultimo_tramite) AS com_ultimo_tramite
         FROM dbo.horas_analistas_0800
         WHERE login_analista = @login AND data_lancamento = @workDate;
       `);
     console.log(
-      `Amostra ${sampleLogin}/${sampleDate}: ${sample.recordset[0].lancamentos} lançamentos, ${sample.recordset[0].minutos ?? 0} minutos.`,
+      `Amostra ${sampleLogin}/${sampleDate}: ${sample.recordset[0].lancamentos} lançamentos, ` +
+        `${sample.recordset[0].minutos ?? 0} minutos, ` +
+        `${sample.recordset[0].com_ultimo_tramite} com último trâmite.`,
     );
   }
 
