@@ -16,13 +16,15 @@ interface MainLayoutProps {
 export function MainLayout({ children }: MainLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const normalizedPathname = location.pathname.replace(/\/+$/, "");
 
   const isProjectsPage = location.pathname === "/projects";
-  const isModelsPage = location.pathname.startsWith("/orion-tn-models");
+  const isModelsWorkspacePage = normalizedPathname.startsWith("/orion-tn-models/");
   const isPosAiLogsPage = location.pathname === "/assistentes/logs";
   const isPosAiLinksChatsPage = location.pathname === "/assistentes/links-chats";
-  const isNoScrollPage = isProjectsPage || isModelsPage;
-  const isFullBleedPage = isModelsPage || isPosAiLogsPage || isPosAiLinksChatsPage;
+  const isNoScrollPage = isProjectsPage || isModelsWorkspacePage;
+  const isFullBleedPage =
+    isModelsWorkspacePage || isPosAiLogsPage || isPosAiLinksChatsPage;
   const isPrintMode = new URLSearchParams(location.search).get("print") === "true";
 
   if (isPrintMode) {

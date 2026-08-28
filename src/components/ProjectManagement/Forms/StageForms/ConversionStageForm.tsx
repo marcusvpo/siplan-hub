@@ -75,7 +75,7 @@ export function ConversionStageForm({
                     <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
                     Na Fila de Conversão
                     <a
-                      href="/conversion"
+                      href="/conversion/atividades"
                       className="ml-2 inline-flex items-center text-xs underline"
                       onClick={(e) => e.stopPropagation()}
                     >
