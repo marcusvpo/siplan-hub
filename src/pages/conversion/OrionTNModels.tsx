@@ -46,7 +46,7 @@ export default function OrionTNModels() {
   );
 
   const handleSelectProject = (id: string) => {
-    navigate(`/orion-tn-models/${id}`);
+    navigate(`/orion-tn-models/editor/${id}`);
   };
 
   const updateStage = async (proj: typeof selectedProject, stageKey: string, updates: any) => {

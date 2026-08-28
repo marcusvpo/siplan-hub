@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { MemoryRouter, useLocation } from "react-router-dom";
 
 /**
  * O incidente de 15/07/2026: o perfil 'user' tinha menu_implantadores.view mas
@@ -19,6 +19,10 @@ vi.mock("@/hooks/usePermissions", () => ({
 
 import Home from "@/pages/Home";
 
+function CurrentPath() {
+  return <span data-testid="current-path">{useLocation().pathname}</span>;
+}
+
 function renderHome(permitidas: string[]) {
   hasPermission.mockImplementation((resource: string, action: string) =>
     permitidas.includes(`${resource}:${action}`),
@@ -26,6 +30,7 @@ function renderHome(permitidas: string[]) {
   return render(
     <MemoryRouter>
       <Home />
+      <CurrentPath />
     </MemoryRouter>,
   );
 }
@@ -42,8 +47,16 @@ describe("Home — grupo sem subitem acessível", () => {
   });
 
   it("mostra Implantadores quando ao menos uma tela está liberada", () => {
-    renderHome(["menu_implantadores:view", "implantadores_home:view"]);
+    renderHome(["menu_implantadores:view", "implantadores_aderencia:view"]);
     expect(screen.getByText("Implantadores")).toBeInTheDocument();
+  });
+
+  it("abre a visão geral padronizada de Implantadores", () => {
+    renderHome(["menu_implantadores:view", "implantadores_aderencia:view"]);
+
+    fireEvent.click(screen.getByText("Implantadores"));
+
+    expect(screen.getByTestId("current-path")).toHaveTextContent("/implantadores");
   });
 
   it("esconde Comercial com o menu mas sem nenhuma tela", () => {

@@ -656,7 +656,7 @@ export default function ImplantadoresHomologation() {
           type: "homologation_issues",
           title: "Homologação Recusada (Inconsistências)",
           message: `${selectedItem.clientName} retornou da homologação com inconsistências apontadas por ${currentUserName}.`,
-          action_url: "/conversion",
+          action_url: "/conversion/atividades",
         });
 
         toast.success("Parecer enviado! Projeto retornado para a fila de Conversão.", { id: "verdict-submit" });
@@ -710,7 +710,7 @@ export default function ImplantadoresHomologation() {
           type: "homologation_approved",
           title: "Homologação Aprovada! 🎉",
           message: `A conversão de ${selectedItem.clientName} foi totalmente aprovada por ${currentUserName}. A etapa de conversão foi concluída.`,
-          action_url: "/conversion",
+          action_url: "/conversion/atividades",
         });
 
         toast.success("Homologação aprovada! Etapa de Conversão de Dados concluída com sucesso.", { id: "verdict-submit" });

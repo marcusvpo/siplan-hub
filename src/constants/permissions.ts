@@ -65,7 +65,7 @@ export interface PermissionResourceDef {
 export const PERMISSION_RESOURCES: PermissionResourceDef[] = [
   // Dashboard
   { resource: "dashboard", label: "Menu Dashboard", category: "Dashboard", actions: ["view"] },
-  { resource: "dashboard_view", label: "Dashboard - Visão Geral", category: "Dashboard", actions: ["view"] },
+  { resource: "dashboard_view", label: "Dashboard - Painel de Indicadores", category: "Dashboard", actions: ["view"] },
   { resource: "kanban", label: "Dashboard - Quadro Kanban", category: "Dashboard", actions: ["view", "edit"] },
   { resource: "pos_panorama", label: "Dashboard - Panorama Pós-Implantação", category: "Dashboard", actions: ["view"] },
   { resource: "pos_panorama_geral", label: "Dashboard - Panorama Geral (pós histórico)", category: "Dashboard", actions: ["view"] },

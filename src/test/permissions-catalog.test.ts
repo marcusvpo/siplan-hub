@@ -74,6 +74,23 @@ describe("catálogo de permissões", () => {
     }
   });
 
+  it("define uma rota de visão geral para todo módulo com mais de uma tela", () => {
+    const multiScreenModules = menuItems.filter(
+      (item) => (item.subItems?.length ?? 0) > 1,
+    );
+    const modulesWithoutOverview = multiScreenModules
+      .filter((item) => !item.path)
+      .map((item) => item.title);
+    const appSource = readFileSync(resolve(SRC, "App.tsx"), "utf8");
+
+    expect(modulesWithoutOverview).toEqual([]);
+    multiScreenModules.forEach((item) => {
+      expect(appSource, `rota geral ausente para ${item.title}`).toContain(
+        `path="${item.path}"`,
+      );
+    });
+  });
+
   it("mantém a consulta de chamados no menu Dashboard", () => {
     const dashboard = menuItems.find((item) => item.title === "Dashboard");
     const implantacao = menuItems.find((item) => item.title === "Implantação");

@@ -51,12 +51,13 @@ export const menuItems: MenuItem[] = [
     {
         title: "Dashboard",
         icon: LayoutGrid,
+        path: "/dashboard",
         description: "Visão geral e indicadores principais",
         permissionKey: "dashboard",
         subItems: [
             {
-                title: "Visão Geral",
-                path: "/dashboard",
+                title: "Dashboard",
+                path: "/dashboard/indicadores",
                 icon: BarChart3,
                 description: "Métricas e status dos projetos",
                 permissionKey: "dashboard_view",
@@ -101,6 +102,7 @@ export const menuItems: MenuItem[] = [
     {
         title: "Implantação",
         icon: Layers,
+        path: "/implantacao",
         description: "Gestão de projetos, cronogramas e entregas",
         permissionKey: "menu_implantacao",
         subItems: [
@@ -137,6 +139,7 @@ export const menuItems: MenuItem[] = [
     {
         title: "Calendário",
         icon: Calendar,
+        path: "/calendario",
         description: "Visão cronológica de atividades e prazos",
         permissionKey: "menu_calendario",
         subItems: [
@@ -159,6 +162,7 @@ export const menuItems: MenuItem[] = [
     {
         title: "Comercial",
         icon: Briefcase,
+        path: "/commercial",
         description: "CRM, vendas e gerenciamento de clientes",
         permissionKey: "menu_comercial",
         subItems: [
@@ -195,12 +199,13 @@ export const menuItems: MenuItem[] = [
     {
         title: "Conversão",
         icon: Database,
+        path: "/conversion",
         description: "Migração de dados e motores de conversão",
         permissionKey: "menu_conversao",
         subItems: [
             {
                 title: "Gestão de Atividades",
-                path: "/conversion",
+                path: "/conversion/atividades",
                 icon: Home,
                 description: "Controle de tarefas de conversão",
                 permissionKey: "conversion_home",
@@ -232,6 +237,7 @@ export const menuItems: MenuItem[] = [
     {
         title: "Modelos Editor OrionTN",
         icon: FileText,
+        path: "/orion-tn-models",
         description: "Editor de modelos e templates OrionTN",
         permissionKey: "menu_orion",
         subItems: [
@@ -251,7 +257,7 @@ export const menuItems: MenuItem[] = [
             },
             {
                 title: "Editor de Modelos",
-                path: "/orion-tn-models",
+                path: "/orion-tn-models/editor",
                 icon: FileText,
                 description: "Criador e editor avançado de JSON",
                 permissionKey: "orion_editor",
@@ -261,16 +267,10 @@ export const menuItems: MenuItem[] = [
     {
         title: "Implantadores",
         icon: Users,
+        path: "/implantadores",
         description: "Ferramentas, formulários de aderência e transição",
         permissionKey: "menu_implantadores",
         subItems: [
-            {
-                title: "Visão Geral",
-                path: "/implantadores",
-                icon: LayoutDashboard,
-                description: "Painel geral do módulo de implantadores",
-                permissionKey: "implantadores_home",
-            },
             {
                 title: "Editor de Aderência",
                 path: "/implantadores/aderencia",
@@ -311,6 +311,7 @@ export const menuItems: MenuItem[] = [
     {
         title: "CS/CX",
         icon: Headset,
+        path: "/cs-cx",
         description: "Relacionamento, rotinas e experiência do cliente",
         permissionKey: "menu_cs_cx",
         subItems: [
@@ -389,6 +390,7 @@ export const menuItems: MenuItem[] = [
     {
         title: "Assistentes",
         icon: Bot,
+        path: "/assistentes",
         description: "Base de conhecimento e configurações de assistentes IA",
         permissionKey: "menu_assistentes",
         subItems: [
