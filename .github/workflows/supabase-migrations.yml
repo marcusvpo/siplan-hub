@@ -10,11 +10,13 @@ on:
     paths:
       - "supabase/migrations/**"
       - "scripts/prepare-cs-cx-schema.mjs"
+      - "scripts/prepare-sd-time-schema.mjs"
   push:
     branches: [main]
     paths:
       - "supabase/migrations/**"
       - "scripts/prepare-cs-cx-schema.mjs"
+      - "scripts/prepare-sd-time-schema.mjs"
   workflow_dispatch:
 
 jobs:
@@ -31,3 +33,5 @@ jobs:
       - run: npm ci
       - name: Validar pacote transacional CS/CX
         run: npm run prepare:cs-cx -- --static
+      - name: Validar pacote transacional de horas do SD
+        run: npm run prepare:sd-time -- --static

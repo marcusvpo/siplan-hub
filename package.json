@@ -12,6 +12,7 @@
     "migrate:cs-cx": "node scripts/migrate-cs-cx.mjs",
     "migrate:cs-cx-files": "node scripts/migrate-cs-cx-files.mjs",
     "prepare:cs-cx": "node scripts/prepare-cs-cx-schema.mjs",
+    "prepare:sd-time": "node scripts/prepare-sd-time-schema.mjs",
     "preview": "vite preview",
     "test": "vitest run"
   },

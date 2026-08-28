@@ -140,8 +140,8 @@
     "semantic_hash": "4bf12498562950a1602f3902102b7cc8"
   },
   "package.json": {
-    "mtime": 1787330817.8913367,
-    "ast_hash": "ffa322663cbf8248ddc94a3043cd0475",
+    "mtime": 1787937690.2467341,
+    "ast_hash": "342fa20335930af352a5f3e03a5d3acd",
     "semantic_hash": ""
   },
   "postcss.config.js": {
@@ -2315,8 +2315,8 @@
     "semantic_hash": "07d175472c5c88baf797f2b11263bee0"
   },
   ".github/workflows/supabase-migrations.yml": {
-    "mtime": 1787147936.4971805,
-    "ast_hash": "69d777788f161264a9d679a56c3fcc54",
+    "mtime": 1787937690.2482555,
+    "ast_hash": "e0afa69b219f7c556059ffe0736247ab",
     "semantic_hash": ""
   },
   ".github/workflows/worker-heartbeat-alert.yml": {
@@ -4405,8 +4405,8 @@
     "semantic_hash": ""
   },
   "src/components/sd/time/TimeEntryDialog.tsx": {
-    "mtime": 1787935800.637537,
-    "ast_hash": "85c08b0be9e0d176d8a8beddd4164d09",
+    "mtime": 1787936290.552902,
+    "ast_hash": "ba4a577d617a635a23e89925efd23f6f",
     "semantic_hash": ""
   },
   "src/hooks/useSdTimeTracking.ts": {
@@ -4420,18 +4420,18 @@
     "semantic_hash": ""
   },
   "src/pages/sd/TimeManagement.tsx": {
-    "mtime": 1787935774.4185297,
-    "ast_hash": "7eb04d26412c8cdfdf6d075859b79fa3",
+    "mtime": 1787936290.556926,
+    "ast_hash": "44eee3037adc51416a1350dfdad30f6c",
     "semantic_hash": ""
   },
   "src/pages/sd/TimeManagementReport.tsx": {
-    "mtime": 1787935774.4205344,
-    "ast_hash": "38522e676d46d169b6a450981a4fea95",
+    "mtime": 1787936290.5579228,
+    "ast_hash": "65c8197b52416c0694c13c689891641f",
     "semantic_hash": ""
   },
   "src/test/sd-time-tracking-migration.test.ts": {
-    "mtime": 1787935800.640056,
-    "ast_hash": "b60ce1461a929a5f74087c9fa7618fa3",
+    "mtime": 1787936290.5599205,
+    "ast_hash": "a07d19316c725dd7cfd0cde52c5b04e9",
     "semantic_hash": ""
   },
   "src/test/sd-time.test.ts": {
@@ -4445,8 +4445,13 @@
     "semantic_hash": ""
   },
   "supabase/migrations/20260828223000_sd_time_rich_description.sql": {
-    "mtime": 1787935774.4235337,
-    "ast_hash": "47d84112130626512bdf8decb7a2ae63",
+    "mtime": 1787936290.560921,
+    "ast_hash": "88858918f161ca7c52e79a230f7a30b4",
+    "semantic_hash": ""
+  },
+  "scripts/prepare-sd-time-schema.mjs": {
+    "mtime": 1787937822.3519406,
+    "ast_hash": "b3d984d6bb52f728f4db0f9529b670bc",
     "semantic_hash": ""
   }
 }
