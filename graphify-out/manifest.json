@@ -4410,8 +4410,8 @@
     "semantic_hash": ""
   },
   "src/hooks/useSdTimeTracking.ts": {
-    "mtime": 1787944577.0595038,
-    "ast_hash": "8d0b46efaf10f3c4110784cf4b935231",
+    "mtime": 1787946856.789373,
+    "ast_hash": "122e03d6b4998f098c80708eca57229c",
     "semantic_hash": ""
   },
   "src/lib/sd-time.ts": {
@@ -4425,8 +4425,8 @@
     "semantic_hash": ""
   },
   "src/pages/sd/TimeManagementReport.tsx": {
-    "mtime": 1787944906.0804527,
-    "ast_hash": "00b890f8f6b720956f4c1657886174fc",
+    "mtime": 1787946988.8872516,
+    "ast_hash": "a45d786098a1dd13d983b1abe9a3d396",
     "semantic_hash": ""
   },
   "src/test/sd-time-tracking-migration.test.ts": {
@@ -4450,8 +4450,8 @@
     "semantic_hash": ""
   },
   "scripts/prepare-sd-time-schema.mjs": {
-    "mtime": 1787944770.2140858,
-    "ast_hash": "764b055ce5b3818653e443c03ff7444d",
+    "mtime": 1787946841.1534824,
+    "ast_hash": "7376eaa4b2f8857a84e249ceef35a654",
     "semantic_hash": ""
   },
   "src/test/sd-time-import.test.ts": {
@@ -4465,38 +4465,43 @@
     "semantic_hash": ""
   },
   "vm-worker/scripts/prepare-ellevo-hours-view.mjs": {
-    "mtime": 1787944886.9606097,
-    "ast_hash": "b3a30ab318643740e4d2a8759bd81b15",
+    "mtime": 1787945033.169391,
+    "ast_hash": "43f36a2f3b52e9eb18f929d3cacc3349",
     "semantic_hash": ""
   },
   "vm-worker/sql/horas_analistas_0800.sql": {
-    "mtime": 1787944393.7088006,
-    "ast_hash": "234eb44bf8af8f42cb9e6396e5d8e805",
+    "mtime": 1787945033.169391,
+    "ast_hash": "d5ac767d50277096144be62b712bf74a",
     "semantic_hash": ""
   },
   "vm-worker/src/sdTimeImport.test.ts": {
-    "mtime": 1787944393.7133453,
-    "ast_hash": "0b8a32e7550d824495baf173f74e16ca",
+    "mtime": 1787945033.1703897,
+    "ast_hash": "96dcd86c00e6b812dcfa1013dc8e32ec",
     "semantic_hash": ""
   },
   "vm-worker/src/sdTimeImport.ts": {
-    "mtime": 1787944526.9373252,
-    "ast_hash": "e405a481cfdfa675fdfc2ff84cd13e39",
+    "mtime": 1787945033.1733916,
+    "ast_hash": "e2b7cb69dc190e56b66e05a98c0a1477",
     "semantic_hash": ""
   },
   "vm-worker/src/sdTimeImportMapper.ts": {
-    "mtime": 1787944393.7113478,
-    "ast_hash": "ebb20078727ccdec8fb38bd5eb0c0f1c",
+    "mtime": 1787945033.1743877,
+    "ast_hash": "0f969114c024d0ef5a823792aaabe579",
     "semantic_hash": ""
   },
   "src/test/sd-time-report.test.ts": {
-    "mtime": 1787944604.080126,
-    "ast_hash": "816840f68e8bb35c486031bbf20e575a",
+    "mtime": 1787947000.1186957,
+    "ast_hash": "270dba842f48b49ffac328dd8ef344ce",
     "semantic_hash": ""
   },
   "supabase/migrations/20260828234500_sd_time_bulk_import.sql": {
-    "mtime": 1787944566.625645,
-    "ast_hash": "9f9344108a4908c3251a4beb6c83b0f8",
+    "mtime": 1787945033.167382,
+    "ast_hash": "a9f645abec7b36c72ae67e1b95e32a59",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260828235500_sd_time_management_report.sql": {
+    "mtime": 1787946841.1529758,
+    "ast_hash": "862909b004bedfb1a9001bb9c0a5bb1a",
     "semantic_hash": ""
   }
 }

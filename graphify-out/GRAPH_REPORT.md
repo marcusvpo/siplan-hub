@@ -1,16 +1,16 @@
 # Graph Report - siplan-hub  (2026-08-28)
 
 ## Corpus Check
-- 886 files · ~1,017,423 words
+- 887 files · ~1,018,399 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 5739 nodes · 12919 edges · 407 communities (312 shown, 95 thin omitted)
-- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 176 edges (avg confidence: 0.71)
+- 5746 nodes · 12930 edges · 400 communities (303 shown, 97 thin omitted)
+- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 177 edges (avg confidence: 0.71)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `cba3db97`
+- Built from commit: `9cafe471`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -340,17 +340,12 @@
 - processJob.ts
 - PostObservations
 - usePosAiVisitorAnalytics.ts
-- sidebar-empty-groups.test.tsx
 - formatLogDetails
 - ImplementerPhase1Fichas.tsx
-- predictability-utils.ts
 - useCsCxAccess.ts
 - 🚀 Guia Técnico: Sincronização Contínua e Rotação da Vector Store OpenAI com Zero Downtime — Siplan HUB
-- cs-cx-nps-public.test.ts
 - usePosPanorama.ts
-- cs-cx-nps-public.test.ts
 - AdminSettings.tsx
-- useConversionQueue.ts
 - 3. Aderências Finalizadas
 - Próximas Implantações
 - chamados-official-sla-sync.test.ts
@@ -378,7 +373,6 @@
 - deno.d.ts
 - CsCxReports
 - prepare-ellevo-hours-view.mjs
-- CsCxAdmin
 - pos-chat-visitor-dialog.test.tsx
 - Módulo Comercial — Documentação por Tela
 - chamados-date-range.ts
@@ -406,7 +400,6 @@
 - ImplementerPhaseMetrics.tsx
 - commercial-contacts-permissions.test.tsx
 - CsCxContacts
-- usePosAiVisitorAnalytics.ts
 - sd-time-import.test.ts
 - sidebar-empty-groups.test.tsx
 - cs-cx-admin-permissions.test.tsx
@@ -439,15 +432,15 @@
 ## Import Cycles
 - None detected.
 
-## Communities (407 total, 95 thin omitted)
+## Communities (400 total, 97 thin omitted)
 
 ### Community 0 - "Conversion Issues & Post Forms"
 Cohesion: 0.10
 Nodes (22): CsCxProduct, CsCxRoutineCategory, CsCxRoutineHistory, CsCxRoutineItemConfig, CsCxRoutineLink, CsCxRoutineLinkModel, CsCxRoutineModelItem, CsCxRoutineType (+14 more)
 
 ### Community 1 - "Conversion Post Feed & Drawer"
-Cohesion: 0.21
-Nodes (10): fmt(), getSpeechRecognition(), pickMimeType(), VoiceDictationButton(), mapJob(), useDtcAiJobs(), extFromMime(), mapJob() (+2 more)
+Cohesion: 0.32
+Nodes (7): fmt(), getSpeechRecognition(), pickMimeType(), VoiceDictationButton(), extFromMime(), mapJob(), useVoiceNoteJobs()
 
 ### Community 2 - "App Routes & Pages"
 Cohesion: 0.03
@@ -458,40 +451,40 @@ Cohesion: 0.17
 Nodes (21): jszip, CsCxNpsImportRow, detectDelimiter(), findColumn(), HEADERS, normalizeHeader(), NpsCsvResult, parseDate() (+13 more)
 
 ### Community 4 - "VM Worker Job Queue"
-Cohesion: 0.10
-Nodes (29): err(), AderenciasFinalizadas(), buildPrompt(), classifyPendingChamados(), NATUREZAS_SEM_TEMA, parseResult(), PendingRow, config (+21 more)
+Cohesion: 0.11
+Nodes (28): err(), buildPrompt(), classifyPendingChamados(), NATUREZAS_SEM_TEMA, parseResult(), PendingRow, config, CopilotJob (+20 more)
 
 ### Community 5 - "Alerts & DTC AI/Team Hooks"
 Cohesion: 0.10
 Nodes (21): 10. Segurança, 1. Visão geral, 2. Arquitetura / fluxo, 3. Banco de dados, 4. Worker, 5. Frontend, 6. Instalação / configuração, 7. Onde está rodando atualmente (+13 more)
 
 ### Community 6 - "Checklist & Visual Question Builder"
-Cohesion: 0.21
-Nodes (17): emptyInterval(), TimeEntryDialog(), useDeleteSdTimeEntry(), useSaveSdTimeEntry(), entryMinutes(), entryStartMinutes(), getWeekDays(), getWeekRange() (+9 more)
+Cohesion: 0.08
+Nodes (44): emptyInterval(), TimeEntryDialog(), TimeEntryDialogProps, db, normalizeEntry(), SaveSdTimeEntryInput, SdTimeBulkImportRequestRow, SdTimeBulkImportResult (+36 more)
 
 ### Community 7 - "Project Stage Forms & Models"
-Cohesion: 0.23
-Nodes (13): lexical, AiRichTextField(), messageOf(), appendPlainTextToLexicalJson(), LexicalNode, listItemNode(), listNode(), paragraphNode() (+5 more)
+Cohesion: 0.17
+Nodes (19): AiRichTextField(), AiRichTextFieldProps, messageOf(), RichTextEditor(), RichTextEditorProps, AiTextImprovementJob, mapJob(), useAiTextImprovement() (+11 more)
 
 ### Community 8 - "Charts, KPI & Reports"
-Cohesion: 0.28
-Nodes (5): Breadcrumbs(), MainLayout(), MainLayoutProps, SidebarProvider, SidebarTrigger
+Cohesion: 0.22
+Nodes (7): Breadcrumbs(), MainLayout(), MainLayoutProps, NotificationBell(), SidebarProvider, SidebarTrigger, useNotifications()
 
 ### Community 9 - "Notification Bell & Dropdown"
-Cohesion: 0.11
-Nodes (21): NotificationBell(), useNotifications(), UseNotificationsOptions, ConversionActivityLog, ConversionIssue, ConversionKPIs, ConversionMapping, ConversionQueueItem (+13 more)
+Cohesion: 0.12
+Nodes (19): UseNotificationsOptions, ConversionActivityLog, ConversionIssue, ConversionKPIs, ConversionMapping, ConversionQueueItem, DataVolume, HomologationStatus (+11 more)
 
 ### Community 10 - "Calendar Grid & Drag-Drop"
-Cohesion: 0.14
-Nodes (24): CalendarControls(), CalendarGrid(), CalendarGridProps, DayDroppableZone(), CalendarLegend(), DraggableTeamMember(), DraggableTeamMemberProps, CalendarEventPill() (+16 more)
+Cohesion: 0.23
+Nodes (12): CalendarGridProps, DayDroppableZone(), DraggableTeamMemberProps, CalendarEventPill(), CalendarEventPillProps, EventSegment, getEventTypeStyles(), HoverCardContent (+4 more)
 
 ### Community 11 - "Modal/Tab Prop Types"
 Cohesion: 0.08
 Nodes (24): 10. Segurança, 1. Visão geral, 2. Arquitetura / fluxo, 4. Worker, 5. Frontend, 6. Instalação / configuração, 7. Onde está rodando atualmente, 8. Manutenção / troubleshooting (+16 more)
 
 ### Community 12 - "Adherence Form Renderer"
-Cohesion: 0.16
-Nodes (22): MarkdownTiptapEditor(), ImplementerAllCartoriosTableProps, GLOBAL_STATUS_LABELS, GLOBAL_STATUS_VARIANTS, ImplementerOtherStagesProps, ImplementerProjectsListProps, Table, TableBody (+14 more)
+Cohesion: 0.06
+Nodes (50): dateFormatter, formatLastActivity(), integerFormatter, PosAiVisitorAnalytics(), PosAiVisitorAnalyticsProps, usdFormatter, QUESTION_TYPES, questionTypeLabel() (+42 more)
 
 ### Community 13 - "Sidebar Components"
 Cohesion: 0.08
@@ -510,20 +503,20 @@ Cohesion: 0.23
 Nodes (17): buildImprovePrompt(), contextFromTarget(), contextInstructions(), hasUsefulFormatting(), ImproveTextContext, normalizeWords(), selectBestImprovement(), shouldRetryImprovement() (+9 more)
 
 ### Community 17 - "Dashboard Table & Pagination"
-Cohesion: 0.15
-Nodes (15): AdherenceGapCard(), AdherenceGapCardProps, HealthDistribution(), IndividualProjectReport(), IndividualProjectReportProps, ProjectHeaderStats(), ProjectSelector(), StageAnalysisTimeline() (+7 more)
+Cohesion: 0.10
+Nodes (23): AutocompleteInput(), mapJob(), useDtcAiJobs(), useTeamMembers(), TeamManagement(), ALL_SYSTEMS, DTCData, dtcStatusToStageStatus() (+15 more)
 
 ### Community 18 - "App Sidebar & Protected Route"
-Cohesion: 0.22
-Nodes (13): useAuditLogs(), useTeams(), actionLabels, AuditLogPage(), formatLogDetails(), formatValue(), isUUID(), translateValue() (+5 more)
+Cohesion: 0.14
+Nodes (22): TicketsAiAnalysisProps, TicketsSlaSectorAnalysisProps, Chamado0800DetailDialog(), Chamado0800DetailDialogProps, fmtDateBr(), fmtDateTimeBr(), formatTicketDuration(), statusBadgeClass() (+14 more)
 
 ### Community 19 - "Overview/Activity & Avatar"
 Cohesion: 0.11
 Nodes (18): 📋 1. Descrição Geral do Fluxo, 1. Nó Microsoft SQL (Deduplicação via Query), 🛠️ 2. Configuração do Webhook no Supabase (Trigger), 2. Nó Code (JavaScript - Agrupamento Idempotente por `p_ticket_number`), 3. Chamada da RPC `upsert_project_from_0800` no Supabase (Nó HTTP Request), ⚙️ 3. Configuração Passo a Passo do Nó IF no n8n, ✉️ 4. Modelo do E-mail (HTML Premium), 🧪 5. Scripts de Simulação e Testes (Supabase) (+10 more)
 
 ### Community 20 - "useAuth"
-Cohesion: 0.20
-Nodes (16): NpsThemePreview(), darkenNpsThemeColor(), isHexColor(), normalizeNpsTheme(), npsThemeForegroundColor(), npsThemeTint(), isEmptyAnswer(), loadInvitation() (+8 more)
+Cohesion: 0.13
+Nodes (28): NpsQuestionnairesPanel(), NpsThemePreview(), darkenNpsThemeColor(), DEFAULT_NPS_QUESTIONS, DEFAULT_NPS_THEME, isHexColor(), newNpsQuestion(), normalizeNpsTheme() (+20 more)
 
 ### Community 21 - "Worker package.json"
 Cohesion: 0.09
@@ -538,24 +531,24 @@ Cohesion: 0.14
 Nodes (14): 10. Migração de VM (recriar em outra máquina), 11. Segurança, 1. Onde aparece na UI, 2. Arquitetura / fluxo, 3. Banco de dados, 4. Worker (VM), 5. Frontend, 6. Instalação / configuração na VM (whisper.cpp + ffmpeg) (+6 more)
 
 ### Community 25 - "Deployment Form Fields"
-Cohesion: 0.07
-Nodes (35): ChartEmptyState(), ChartEmptyStateProps, DashboardKPI(), DashboardKPIProps, KPICard(), KPICardProps, ProjectDistributionChart(), ProjectDistributionChartProps (+27 more)
+Cohesion: 0.05
+Nodes (49): ChartEmptyState(), ChartEmptyStateProps, DashboardKPI(), DashboardKPIProps, DashboardReport(), DashboardReportProps, KPICard(), KPICardProps (+41 more)
 
 ### Community 26 - "Project Transformers & Stages"
-Cohesion: 0.16
-Nodes (15): ActionBadge(), actionLabel(), CsCxRoutines(), formatDate(), formatDateTime(), getRoutineProductOptions(), hasStatusTransition(), includeOfficesWithoutRoutines() (+7 more)
+Cohesion: 0.15
+Nodes (16): ActionBadge(), actionLabel(), CsCxRoutines(), formatDate(), formatDateTime(), getRoutineProductOptions(), hasStatusTransition(), includeOfficesWithoutRoutines() (+8 more)
 
 ### Community 27 - "use-toast Reducer"
-Cohesion: 0.07
-Nodes (37): DashboardReport(), DashboardReportProps, ProjectDetailsModalProps, DeploymentCard(), DeploymentCardProps, DeploymentDetailsDialogProps, ProjectHeaderFormProps, PosAiAssistantSectionProps (+29 more)
+Cohesion: 0.06
+Nodes (49): CompactQueueCard(), STATUS_COLORS, STATUS_LABELS, ProjectDetailsModalProps, WorkloadChartProps, DeploymentCard(), DeploymentCardProps, DeploymentDetailsDialogProps (+41 more)
 
 ### Community 28 - "Project Modal & Kanban"
 Cohesion: 0.06
-Nodes (44): CS_CX_REQUEST_STATUSES, CsCxOfficeProduct, CsCxOfficeResponsible, CsCxProductResponsible, CsCxRequest, CsCxRequestInput, CsCxRequestStatus, CsCxRequestStatusConfig (+36 more)
+Nodes (43): CS_CX_REQUEST_STATUSES, CsCxOfficeProduct, CsCxOfficeResponsible, CsCxProductResponsible, CsCxRequest, CsCxRequestInput, CsCxRequestStatus, CsCxRequestStatusConfig (+35 more)
 
 ### Community 29 - "Commercial/Public Checklists"
-Cohesion: 0.09
-Nodes (33): DashboardTable(), DashboardTableProps, HealthBadge(), HealthBadgeProps, PipelineStatus(), PipelineStatusProps, ProjectDetailsModal(), SortableThumb() (+25 more)
+Cohesion: 0.10
+Nodes (24): DashboardTable(), DashboardTableProps, HealthBadge(), HealthBadgeProps, PipelineStatus(), PipelineStatusProps, ProjectDetailsModal(), MarkdownTiptapEditorProps (+16 more)
 
 ### Community 30 - "Commercial Page & Hooks"
 Cohesion: 0.29
@@ -566,48 +559,48 @@ Cohesion: 0.14
 Nodes (13): 📋 1. Descrição Geral do Fluxo, 1. Selecionar um Projeto de Teste em Status Pendente (`todo`), 🛠️ 2. Configuração do Webhook no Supabase (Trigger), 2. Simular Transição para Em Andamento (`in-progress`) - Transação Segura com Rollback, ⚙️ 3. Configuração Passo a Passo dos Nós no n8n, ✉️ 4. Modelo do E-mail (HTML Premium), 🧪 5. Scripts de Simulação e Testes (Supabase), Configurações no Painel do Supabase (Caso queira validar visualmente): (+5 more)
 
 ### Community 32 - "Predictability & Bottlenecks"
-Cohesion: 0.07
-Nodes (50): AttentionChartItem, AttentionClientsChart(), classificationClass(), classificationLabel(), ClassificationSummary(), DatedNpsAxisTickProps, DISTRIBUTION_COLORS, ExpandedNpsChart (+42 more)
+Cohesion: 0.13
+Nodes (24): CsCxNpsResponse, buildNpsAiSource(), buildNpsAnalytics(), compact(), EMPTY_NPS_FILTERS, filterNpsResponses(), formatDate(), metrics() (+16 more)
 
 ### Community 33 - "Worker tsconfig"
 Cohesion: 0.15
 Nodes (12): compilerOptions, esModuleInterop, module, moduleResolution, outDir, resolveJsonModule, rootDir, skipLibCheck (+4 more)
 
 ### Community 34 - "Main Layout & Theme Toggle"
-Cohesion: 0.14
-Nodes (14): CatalogKind, CsCxAdmin(), DeleteTarget, EMPTY_CATALOG, EMPTY_ITEM, EMPTY_MODEL, EMPTY_PRODUCT, EMPTY_STATUS (+6 more)
+Cohesion: 0.07
+Nodes (44): PAGE_SIZE_OPTIONS, VisitorActionResult, EMPTY_PROFILE, COLORS, FONT_SIZES, UnsavedChangesDialogProps, AlertDialogAction, AlertDialogCancel (+36 more)
 
 ### Community 35 - "Post Observations Editor"
-Cohesion: 0.18
-Nodes (18): UserProfileDrawer(), ProtectedRoute(), FallbackChecklistForm(), FallbackChecklistFormProps, useToast(), useAuth(), CommercialChecklistRecord, useCommercialChecklists() (+10 more)
+Cohesion: 0.08
+Nodes (42): AppSidebar(), UserProfileDrawer(), ModeToggle(), DeploymentDetailsDialog(), ProtectedRoute(), FallbackChecklistForm(), FallbackChecklistFormProps, useTheme() (+34 more)
 
 ### Community 36 - "Toast Component"
 Cohesion: 0.02
 Nodes (92): Communities (123 total, 21 thin omitted), Community 0 - "Playwright Runner & Benchmarks", Community 10 - "Siplan Hub Domain Docs", Community 11 - "Error Handling & KPI Patterns", Community 12 - "Interview Analyzer (Python)", Community 13 - "Strict tsconfig", Community 14 - "Project Modal & Roadmap Tabs", Community 15 - "Editor Toolbar & UI Inputs" (+84 more)
 
 ### Community 37 - "sd-solutions.ts"
-Cohesion: 0.06
-Nodes (59): StageCardProps, AdherenceStageFormProps, EnvironmentStageFormProps, InfraStageFormProps, ModelosEditorWorkspaceProps, ProjectModal(), useProjectDetails(), ProjectRow (+51 more)
+Cohesion: 0.07
+Nodes (55): StageCardProps, AdherenceStageFormProps, EnvironmentStageFormProps, EditableCell(), EditableCellProps, InfraStageForm(), InfraStageFormProps, ModelosEditorWorkspaceProps (+47 more)
 
 ### Community 38 - "Files Tab & Accordion"
 Cohesion: 0.06
 Nodes (58): checkPlaywrightInstalled(), cleanupOldTempFiles(), { execSync }, fs, getCodeToExecute(), installPlaywright(), main(), path (+50 more)
 
 ### Community 39 - "Roadmap Page"
-Cohesion: 0.27
-Nodes (16): EditableCell(), EditableCellProps, InfraStageForm(), EditableCell(), EditableCellProps, PublicInfraCollection(), ServerInfo, WorkstationInfo (+8 more)
+Cohesion: 0.11
+Nodes (22): entryEvidence(), OUTCOME_DISPLAY, RESULT_FILTER_LABELS, SectorResultFilter, buildTicketSectorAnalysis(), getFinalSectorVerdict(), getTicketSectorLabel(), ResolutionSlaState (+14 more)
 
 ### Community 40 - "Deployment Template & Stage Forms"
 Cohesion: 0.27
 Nodes (7): PosChatThemeMenu(), initialState, Theme, ThemeProviderContext, ThemeProviderState, ThemeProvider(), ThemeProviderProps
 
 ### Community 41 - "Theme Provider"
-Cohesion: 0.06
-Nodes (52): CompactQueueCard(), CompactQueueCardProps, STATUS_COLORS, STATUS_LABELS, ConversionIssuesTab(), ConversionPostDrawer(), ConversionPostDrawerProps, STATUS_LABELS (+44 more)
+Cohesion: 0.10
+Nodes (26): CompactQueueCardProps, ConversionPostFeed(), ConversionPostFeedProps, formatPostDate(), getInitials(), groupPostsByDate(), POST_TYPE_CONFIG, NewPostForm() (+18 more)
 
 ### Community 42 - "Health Badge & Pipeline Status"
-Cohesion: 0.22
-Nodes (14): formatStepTime(), ModelosEditorWorkspace(), ModelosMetrics(), normalizeModelName(), pairKeyFor(), ProgressBody(), mapHeartbeat(), mapJob() (+6 more)
+Cohesion: 0.11
+Nodes (20): SolutionDetailsProps, SolutionFormProps, SolutionCardProps, SolutionsSearchProps, SdFamilyGroup, serviceMocks, solution, families (+12 more)
 
 ### Community 43 - "chamadosSync.ts"
 Cohesion: 0.09
@@ -615,15 +608,15 @@ Nodes (38): normalizeChamadoStatus(), STATUS_BY_KEY, assertProcessoVendaRunActiv
 
 ### Community 44 - "Auth Context"
 Cohesion: 0.03
-Nodes (68): dependencies, canvas-confetti, class-variance-authority, clsx, cmdk, date-fns, @dnd-kit/core, @dnd-kit/sortable (+60 more)
+Nodes (69): dependencies, canvas-confetti, class-variance-authority, clsx, cmdk, date-fns, @dnd-kit/core, @dnd-kit/sortable (+61 more)
 
 ### Community 45 - "usePublicChecklist.ts"
-Cohesion: 0.09
-Nodes (22): react, AdherenceImpactSummary(), AdherenceQuestionField(), AdherenceQuestionValue, ArrayFieldTemplateItem, checkHasAdherenceQuestions(), CustomArrayFieldTemplate(), CustomCheckboxWidget() (+14 more)
+Cohesion: 0.05
+Nodes (35): react, DeploymentFormFields(), formatPhone(), Props, AdherenceImpactSummary(), AdherenceQuestionField(), AdherenceQuestionValue, ArrayFieldTemplateItem (+27 more)
 
 ### Community 46 - "SolutionsSearch.tsx"
-Cohesion: 0.12
-Nodes (32): SolutionDetailsProps, SolutionFormProps, formatDate(), HighlightedText(), SolutionCard(), SolutionCardProps, SolutionsSearch(), SolutionsSearchProps (+24 more)
+Cohesion: 0.18
+Nodes (22): formatDate(), HighlightedText(), SolutionCard(), SolutionsSearch(), filterSdSolutions(), groupSdSolutionsByFamily(), normalizedTextMap(), normalizeSdSearch() (+14 more)
 
 ### Community 47 - "Improve-Text AI Jobs"
 Cohesion: 0.04
@@ -631,7 +624,7 @@ Nodes (45): Arguments, AssertEqual, AsyncFunction, AtLeast, Brand, DeepMutable, 
 
 ### Community 48 - "Toggle Component"
 Cohesion: 0.19
-Nodes (15): TimeEntryDialogProps, db, normalizeEntry(), SaveSdTimeEntryInput, SdTimeBulkImportRequestRow, SdTimeBulkImportResult, SdTimeEntry, SdTimeImportRequestRow (+7 more)
+Nodes (13): data, OverviewChart(), ProjectStatusChart(), formatAction(), RecentActivity(), Avatar, AvatarFallback, AvatarImage (+5 more)
 
 ### Community 58 - "DesignSystemGenerator"
 Cohesion: 0.06
@@ -690,8 +683,8 @@ Cohesion: 0.06
 Nodes (33): Additional Resources, Analysis Tools, Best Practices, Caching, Common Pitfalls, Core Web Vitals, CSS, ✅ Do This (+25 more)
 
 ### Community 72 - "🛠️ Manual do Desenvolvedor: Siplan Hub"
-Cohesion: 0.08
-Nodes (25): 1. Prevenção de "Event Clipping" no Calendário, 2. Padrão de Estilização Shadcn + Tailwind, 3. Evitar Bloqueios de UI em Listagens (Virtualização), 4. Sincronização Obrigatória de Novas Telas com o Dashboard Inicial, 🏛️ Arquitetura da Aplicação, 🎨 Boas Práticas e Padrões de Código, Checklist Visual (QA), Como adicionar um novo campo customizado ao formulário do projeto (+17 more)
+Cohesion: 0.06
+Nodes (31): 1. Prevenção de "Event Clipping" no Calendário, 1. Sistema de Notificações em Tempo Real (`useNotifications`), 2. Autosave com Retry e Unmount Save (`useAutoSave`), 2. Padrão de Estilização Shadcn + Tailwind, 3. Evitar Bloqueios de UI em Listagens (Virtualização), 4. Sincronização Obrigatória de Novas Telas com o Dashboard Inicial, 🏛️ Arquitetura da Aplicação, 🎨 Boas Práticas e Padrões de Código (+23 more)
 
 ### Community 73 - "🔧 Build Warnings - Correções Aplicadas"
 Cohesion: 0.06
@@ -858,8 +851,8 @@ Cohesion: 0.15
 Nodes (13): 10.1 Team Structure, 10.2 Budget, 10. Team & Resources, 11. Appendix, 1. Executive Summary, 2.1 Customer Problem, 2.2 Market Opportunity, 2.3 Business Case (+5 more)
 
 ### Community 114 - "SimpleMarkdown.tsx"
-Cohesion: 0.22
-Nodes (7): deleteObservationMutation, deleteRoutineMutation, hasPermission, mutation, { printOfficesReport, printRequestsReport }, routineMutation, updateObservationMutation
+Cohesion: 0.12
+Nodes (14): CsCxRegistryOffices(), DataError(), errorMessage(), formatDate(), matchesRegistryOfficeFilters(), ResponsibleBadges(), responsibleNames(), deleteObservationMutation (+6 more)
 
 ### Community 115 - "compilerOptions"
 Cohesion: 0.15
@@ -878,8 +871,8 @@ Cohesion: 0.17
 Nodes (10): caveman, Example output, How to invoke, See also, What it does, Auto-Clarity, Boundaries, Intensity (+2 more)
 
 ### Community 119 - "Página 404 (Not Found)"
-Cohesion: 0.19
-Nodes (13): Action, ActionType, actionTypes, addToRemoveQueue(), dispatch(), genId(), listeners, memoryState (+5 more)
+Cohesion: 0.11
+Nodes (24): CalendarControls(), CalendarGrid(), CalendarLegend(), DraggableTeamMember(), Action, ActionType, actionTypes, addToRemoveQueue() (+16 more)
 
 ### Community 121 - "Anti-Patterns"
 Cohesion: 0.18
@@ -934,16 +927,16 @@ Cohesion: 0.22
 Nodes (9): Administração / Auth / RBAC, Comercial, Contexto, Conversão e Implantação, KPIs e Utilitários, Projetos (padrão Split Query), 🪝 Referência de Hooks, Stores Zustand (+1 more)
 
 ### Community 134 - "FormRenderer.tsx"
-Cohesion: 0.11
-Nodes (26): ProjectHeaderForm(), PosSaudeBadge(), RoadmapManager(), Chamado0800Tab(), EditProjectTab(), FilesTab(), GeneralInfoTab(), LogsTab() (+18 more)
+Cohesion: 0.21
+Nodes (12): classificationClass(), classificationLabel(), formatRankingDate(), formatResponseDate(), matchesDrilldown(), NpsAnalyticsPanel(), NpsDrilldownDialog(), npsTone() (+4 more)
 
 ### Community 135 - "Siplan HUB"
 Cohesion: 0.22
 Nodes (9): Administração (`/admin` — requer papel admin), Calendário, Analytics e Relatórios, Comercial, Conversão e Modelos OrionTN, Implantadores, Núcleo — Dashboard e Projetos, Rotas Públicas (sem login — anon key + RLS/RPC), Siplan HUB (+1 more)
 
 ### Community 136 - "filterStore.ts"
-Cohesion: 0.31
-Nodes (9): NpsQuestionnairesPanel(), QUESTION_TYPES, questionTypeLabel(), DEFAULT_NPS_QUESTIONS, DEFAULT_NPS_THEME, newNpsQuestion(), publicNpsAssetUrl(), validateNpsQuestionnaire() (+1 more)
+Cohesion: 0.27
+Nodes (10): SolutionForm(), Solutions(), SolutionsTab, attachmentStorageName(), createSdSolution(), deleteSdSolutionAttachment(), listSdProfiles(), listSdRoutines() (+2 more)
 
 ### Community 137 - "Accessibility Audit and Testing"
 Cohesion: 0.25
@@ -954,8 +947,8 @@ Cohesion: 0.25
 Nodes (8): Acceptance Criteria, Dependencies, Epic: [Epic Name], Goals & Objectives, Overview, Problem Statement, Success Metrics, User Stories
 
 ### Community 139 - "GEMINI.md"
-Cohesion: 0.07
-Nodes (52): jspdf, Bloco, escapeHtml(), MarkdownLite(), markdownLiteToHtml(), parseBlocos(), renderInline(), Chamado0800DetailDialog() (+44 more)
+Cohesion: 0.08
+Nodes (32): Bloco, escapeHtml(), MarkdownLite(), markdownLiteToHtml(), parseBlocos(), renderInline(), ModelosEditorWorkspace(), normalizeModelName() (+24 more)
 
 ### Community 140 - "chart.tsx"
 Cohesion: 0.25
@@ -1050,8 +1043,8 @@ Cohesion: 0.29
 Nodes (7): 4. Central de Bloqueios, Componentes principais, Dados e Hooks, Fluxos e Interações, Objetivo, Pontos de Manutenção, Regras de Negócio e Estados
 
 ### Community 163 - "5. Contatos & Clientes"
-Cohesion: 0.16
-Nodes (16): errorCode(), FamiliesManager(), FamiliesManagerProps, nameCollator, Alert, AlertDescription, AlertTitle, alertVariants (+8 more)
+Cohesion: 0.20
+Nodes (14): errorCode(), FamiliesManager(), FamiliesManagerProps, nameCollator, Alert, AlertDescription, AlertTitle, alertVariants (+6 more)
 
 ### Community 164 - "6. Formulários de Implantação"
 Cohesion: 0.29
@@ -1106,12 +1099,12 @@ Cohesion: 0.29
 Nodes (7): Componentes principais, Dados e Hooks, Fluxos e Interações, Objetivo, Pontos de Manutenção, Regras de Negócio e Estados, TeamAreasManagement (componente auxiliar)
 
 ### Community 177 - "Agenda dos Analistas"
-Cohesion: 0.20
-Nodes (13): ChecklistEditor(), ChecklistEditorProps, SYSTEM_TYPES, convertVisualToJSONSchema(), convertVisualToUISchema(), parseJSONSchemaToVisual(), VisualQuestion, VisualQuestionBuilder() (+5 more)
+Cohesion: 0.17
+Nodes (16): ChecklistEditor(), ChecklistEditorProps, SYSTEM_TYPES, convertVisualToJSONSchema(), convertVisualToUISchema(), parseJSONSchemaToVisual(), VisualQuestion, VisualQuestionBuilder() (+8 more)
 
 ### Community 178 - "Calendário (Planejamento Visual)"
-Cohesion: 0.16
-Nodes (15): emptyPage(), fetchPosAiChatConversationsPage(), PosAiConversationGroup, PosAiConversationMessage, PosAiConversationPage, PosAiConversationPageParams, PosAiVisitorOption, usePosAiChatConversations() (+7 more)
+Cohesion: 0.27
+Nodes (7): CHAMADOS_CATALOG_CONFIG, CHAMADOS_LEGACY_PRODUCT_GROUPS, isLegacyFamily(), LEGACY_PRODUCT_FAMILIES, CHAMADOS_ORION_PRODUCTS, formatOrionProductLabel(), ORION_PRODUCT_CODES
 
 ### Community 179 - "Dashboard Executivo (Analytics)"
 Cohesion: 0.29
@@ -1126,24 +1119,24 @@ Cohesion: 0.29
 Nodes (7): Componentes principais, Dados e Hooks, Fluxos e Interações, Objetivo, Pontos de Manutenção, Regras de Negócio e Estados, Roadmap do Cliente (Portal Público)
 
 ### Community 182 - "Próximas Implantações"
-Cohesion: 0.27
-Nodes (9): OfficeFilterCombobox(), CsCxContact, contactIdentity(), contactTimestamp(), deduplicateAppointmentContacts(), RoutineOfficeCombobox(), TicketFilterMultiSelect(), contact() (+1 more)
+Cohesion: 0.22
+Nodes (9): 6. Documento de Transição de Conhecimento — DTC, Componentes principais, Dados e Hooks, Fluxos e Interações, Leitor de voz (Text-to-Speech), Modelo de dados (`DTCData`), Objetivo, Pontos de Manutenção (+1 more)
 
 ### Community 183 - "Últimas Implantações"
 Cohesion: 0.29
 Nodes (7): Componentes principais, Dados e Hooks, Fluxos e Interações, Objetivo, Pontos de Manutenção, Regras de Negócio e Estados, Últimas Implantações
 
 ### Community 184 - "Login"
-Cohesion: 0.08
-Nodes (46): SearchableClientSelectProps, CsCxMultiSelectOption, CsCxMultiSelectProps, COLORS, FONT_SIZES, NOTIFICATION_TYPE_ICONS, ReportsFiltersProps, AutocompleteInput() (+38 more)
+Cohesion: 0.07
+Nodes (51): SearchableClientOption, SearchableClientSelect(), SearchableClientSelectProps, CsCxMultiSelect(), CsCxMultiSelectOption, CsCxMultiSelectProps, AttentionChartItem, AttentionClientsChart() (+43 more)
 
 ### Community 185 - "CsCxReports.tsx"
-Cohesion: 0.19
-Nodes (19): CsCxOfficeRoutine, CsCxRoutineModel, buildCsCxRoutinesWorkbook(), buildRoutineReportAnalytics(), formatDateTime(), generateCsCxRoutinePdf(), generateCsCxRoutinesPdf(), generateCsCxRoutinesXlsx() (+11 more)
+Cohesion: 0.32
+Nodes (14): buildCsCxRoutinesWorkbook(), buildRoutineReportAnalytics(), formatDateTime(), generateCsCxRoutinePdf(), generateCsCxRoutinesPdf(), generateCsCxRoutinesXlsx(), localIsoDate(), reportObservationValue() (+6 more)
 
 ### Community 186 - "package.json"
-Cohesion: 0.24
-Nodes (16): useKnowledgeBase(), KnowledgeEditorPage(), computeTextDiff(), formatBackupFilePath(), deleteArticleFromDocument(), insertNewArticleIntoDocument(), normalizeMarkdown(), parseArticleFrontmatter() (+8 more)
+Cohesion: 0.10
+Nodes (39): ArticleMetadataCard(), ArticleMetadataCardProps, ArticleNavigator(), ArticleNavigatorProps, BunnyVideoModal(), BunnyVideoModalProps, CreateRoutineModal(), CreateRoutineModalProps (+31 more)
 
 ### Community 187 - "API Design Principles"
 Cohesion: 0.33
@@ -1198,8 +1191,8 @@ Cohesion: 0.33
 Nodes (6): Componentes principais, Dados e Hooks, Objetivo, Pontos de Manutenção, Regras de Negócio e Estados, TeamManagement (legado/descontinuado)
 
 ### Community 200 - "RolesManagement.tsx"
-Cohesion: 0.18
-Nodes (10): Client, Contact, Project, useCommercial(), ClientOverview(), CommercialBlockers(), getBlockers(), CommercialCustomers() (+2 more)
+Cohesion: 0.06
+Nodes (47): ConversionIssuesTab(), ConversionIssuesTabProps, PRIORITIES, STATUSES, ConversionPostDrawer(), ConversionPostDrawerProps, STATUS_LABELS, NOTIFICATION_TYPE_ICONS (+39 more)
 
 ### Community 201 - "Database Selection (2025)"
 Cohesion: 0.40
@@ -1230,8 +1223,8 @@ Cohesion: 0.40
 Nodes (5): 6.1 Architecture Overview, 6.2 API Design, 6.3 Database Design, 6.4 Security Considerations, 6. Technical Specifications
 
 ### Community 208 - "Módulo Comercial — Documentação por Tela"
-Cohesion: 0.08
-Nodes (36): CS_CX_APPOINTMENT_STATUSES, CS_CX_APPOINTMENT_TYPES, CsCxAppointment, CsCxAppointmentInput, CsCxContactInput, CsCxProfileOption, currentUser(), db (+28 more)
+Cohesion: 0.11
+Nodes (26): CS_CX_APPOINTMENT_STATUSES, CS_CX_APPOINTMENT_TYPES, CsCxAppointmentInput, CsCxContactInput, CsCxProfileOption, currentUser(), db, emptyToNull() (+18 more)
 
 ### Community 209 - "Módulo Administração"
 Cohesion: 0.40
@@ -1306,32 +1299,32 @@ Cohesion: 0.67
 Nodes (3): Debug Mode, Debugging, In-Code Debugging
 
 ### Community 231 - "🗄️ Configuração Local do Supabase (Ambiente de Desenvolvimento)"
-Cohesion: 0.10
-Nodes (31): BenchmarkPos, Chamados0800Result, ChamadosClientOption, createChamadosSearchQuery(), fetchAllChamados(), fetchAllChamadosForReport(), fetchUltimosTramites(), isProcessoVendaSyncSupersededError() (+23 more)
+Cohesion: 0.11
+Nodes (31): BenchmarkPos, Chamados0800Result, ChamadosClientOption, checkPosCriticosAbertos(), createChamadosSearchQuery(), fetchAllChamados(), fetchUltimosTramites(), isNaturezaIgnorada() (+23 more)
 
 ### Community 232 - "Módulo: Núcleo — Dashboard e Projetos"
-Cohesion: 0.13
-Nodes (21): ArticleMetadataCard(), ArticleMetadataCardProps, ArticleNavigator(), ArticleNavigatorProps, CreateRoutineModalProps, MarkdownTiptapEditorProps, RestoreVersionModal(), RestoreVersionModalProps (+13 more)
+Cohesion: 0.29
+Nodes (7): 1. Painel de Implantadores (hub), Componentes principais, Dados e Hooks, Fluxos e Interações, Objetivo, Pontos de Manutenção, Regras de Negócio e Estados
 
 ### Community 233 - "calendar.tsx"
-Cohesion: 0.09
-Nodes (36): csvCell(), groupBy(), matchLegacyUsers(), normalizeEmail(), normalizeName(), apply, applyUserMap(), args (+28 more)
+Cohesion: 0.06
+Nodes (42): csvCell(), groupBy(), matchLegacyUsers(), normalizeEmail(), normalizeName(), apply, applyUserMap(), args (+34 more)
 
 ### Community 272 - "Módulo: Calendário, Agenda, Analytics, Relatórios, Roadmap e Implantações"
 Cohesion: 0.25
 Nodes (13): AreaSlaPolicy, buildAreaSlaPolicies(), canonicalCriticality(), criticalityRank(), formatMinutes(), normalizeText(), SlaPolicyObservation, chamados (+5 more)
 
 ### Community 295 - "ProtectedRoute.tsx"
-Cohesion: 0.23
-Nodes (10): lexicalNodeToPlainText(), richTextToPlainText(), formatMinutes(), formatEntryDescription(), errorMessage(), formatEntryDescription(), PAGE_SIZE_OPTIONS, PeriodView (+2 more)
+Cohesion: 0.29
+Nodes (7): 3. Aderências Finalizadas, Componentes principais, Dados e Hooks, Fluxos e Interações, Objetivo, Pontos de Manutenção, Regras de Negócio e Estados
 
 ### Community 296 - "commercial-contacts-permissions.test.tsx"
-Cohesion: 0.04
-Nodes (48): 1. Painel de Implantadores (hub), 2. Editor de Formulário de Aderência, 3. Aderências Finalizadas, 4. Homologação de Conversões, 5. Roteiro de Treinamento (Placeholder), 6. Documento de Transição de Conhecimento — DTC, 7. Relação com telas externas ao módulo, Componentes principais (+40 more)
+Cohesion: 0.11
+Nodes (18): 2. Editor de Formulário de Aderência, 5. Roteiro de Treinamento (Placeholder), 7. Relação com telas externas ao módulo, Componentes principais, Componentes principais, Dados e Hooks, Dados e Hooks, Fluxos e Interações (+10 more)
 
 ### Community 297 - "TicketsAiAnalysis.tsx"
 Cohesion: 0.13
-Nodes (28): STATUS_COLORS, TicketsAiAnalysis(), tooltipStyle, truncate(), ChamadoReportRow, hashFilterKey(), TicketsAiAnalysisJob, useTicketsAiAnalysis() (+20 more)
+Nodes (29): STATUS_COLORS, TicketsAiAnalysis(), tooltipStyle, truncate(), ChamadoReportRow, fetchAllChamadosForReport(), hashFilterKey(), TicketsAiAnalysisJob (+21 more)
 
 ### Community 298 - "LogsTab.tsx"
 Cohesion: 0.17
@@ -1339,39 +1332,35 @@ Nodes (20): AiTarget, Block, blockTextLen(), blockToPlain(), escapeHtml(), fmtDa
 
 ### Community 299 - "PipelineStatus.tsx"
 Cohesion: 0.09
-Nodes (26): RequirePermission(), RequirePermissionProps, ACTION_ORDER, CsCxAccessPanel(), MenuItem, menuItems, ACTION_LABELS, getActionLabel() (+18 more)
+Nodes (30): RequirePermission(), RequirePermissionProps, ACTION_ORDER, CsCxAccessPanel(), AccordionContent, AccordionItem, AccordionTrigger, Checkbox (+22 more)
 
 ### Community 300 - "useTeams.ts"
 Cohesion: 0.05
-Nodes (48): ImplementerAllCartoriosTable(), healthColors, healthLabels, ImplementerChartsProps, statusColors, statusLabels, ImplementerHeaderBanner(), ImplementerHeaderBannerProps (+40 more)
+Nodes (48): ImplementerAllCartoriosTable(), healthColors, healthLabels, ImplementerCharts(), ImplementerChartsProps, statusColors, statusLabels, ImplementerHeaderBanner() (+40 more)
 
 ### Community 301 - "CsCxRegistryOffices.tsx"
 Cohesion: 0.38
 Nodes (7): AttachmentPreview, SolutionRichTextEditor(), SolutionRichTextEditorProps, BLOCKED_EXTENSIONS, formatSdAttachmentSize(), validateSdAttachment(), SdAnexo
 
 ### Community 302 - "project-transformers.ts"
-Cohesion: 0.13
-Nodes (16): NewProjectDialog(), AdvancedFilters(), ProjectGrid(), ProjectTagsLegendDialog(), useProjectsList(), userProjectsListTransform(), Analytics(), defaultFilters (+8 more)
+Cohesion: 0.16
+Nodes (12): NewProjectDialog(), AdvancedFilters(), ProjectGrid(), ProjectTagsLegendDialog(), ConversionKPIs, useConversionQueue(), UseConversionQueueOptions, normalizeText() (+4 more)
 
 ### Community 303 - "Página 404 (Not Found)"
 Cohesion: 0.21
 Nodes (8): Editor(), editorConfig, nodes, Plugins(), ToolbarPlugin(), editorTheme, EditorContentEditable(), Props
 
 ### Community 304 - "usePosAiAdminAnalytics.ts"
-Cohesion: 0.17
-Nodes (4): ActivityLogger, LogAction, LogActionPayload, LogDetails
+Cohesion: 0.29
+Nodes (7): 4. Homologação de Conversões, Componentes principais, Dados e Hooks, Fluxos e Interações, Objetivo, Pontos de Manutenção, Regras de Negócio e Estados
 
 ### Community 305 - "AuthContext.tsx"
-Cohesion: 0.43
-Nodes (5): authDb, AuthContext, AuthContextType, Permission, UserRole
+Cohesion: 0.29
+Nodes (5): CsCxOfficeRoutine, CsCxRoutineModel, CsCxOfficeRoutineSummary, models, routines
 
 ### Community 306 - "cs-cx-experience-pdf.ts"
-Cohesion: 0.14
-Nodes (25): APPOINTMENT_STATUS_LABELS, APPOINTMENT_TYPE_LABELS, formatDate(), formatDateTime(), generateCsCxAppointmentsPdf(), generateCsCxContactsPdf(), groupByOffice(), localIsoDate() (+17 more)
-
-### Community 307 - "lexical.ts"
-Cohesion: 0.31
-Nodes (8): CreateRoutineModal(), GeneratedRoutineMetadata, generateHeuristicMetadata(), generateRoutineMetadataWithAi(), BunnyVideoInfo, extractBunnyVideoIdentifiers(), fetchBunnyVideoInfo(), suggestNextArticleId()
+Cohesion: 0.16
+Nodes (20): calculateCsCxReportRowLayout(), clean(), CsCxPdfOutputOptions, CsCxReportBlock, CsCxReportRow, CsCxReportRowLayout, CsCxSummaryItem, formatDate() (+12 more)
 
 ### Community 308 - "CompactQueueCard.tsx"
 Cohesion: 0.29
@@ -1394,8 +1383,8 @@ Cohesion: 0.17
 Nodes (12): scripts, build, build:dev, check:cs-cx, dev, lint, migrate:cs-cx, migrate:cs-cx-files (+4 more)
 
 ### Community 313 - "ProjectCardV3.tsx"
-Cohesion: 0.22
-Nodes (8): CsCxNpsInvitation, NpsAnswers, NpsAnswerValue, NpsInvitationStatus, NpsQuestion, NpsQuestionnaireTheme, NpsQuestionType, PublicNpsInvitation
+Cohesion: 0.83
+Nodes (3): renderInline(), renderLink(), SimpleMarkdown()
 
 ### Community 315 - "PipelineStatus.tsx"
 Cohesion: 0.50
@@ -1406,32 +1395,28 @@ Cohesion: 0.11
 Nodes (16): apply, args, assertReadiness(), BASE_TABLES, EXPECTED_RESOURCES, EXPECTED_TABLES, fail(), FEATURE_MIGRATIONS (+8 more)
 
 ### Community 317 - "CopilotChat.tsx"
-Cohesion: 0.24
-Nodes (9): CopilotChat(), CopilotChatProps, fmtDateTime(), linkifyProjects(), loadSaved(), SUGESTOES, renderInline(), renderLink() (+1 more)
+Cohesion: 0.21
+Nodes (11): CopilotChat(), CopilotChatProps, fmtDateTime(), linkifyProjects(), loadSaved(), SUGESTOES, CopilotAccess, CopilotJob (+3 more)
 
 ### Community 318 - "package.json"
 Cohesion: 0.29
 Nodes (7): Componentes principais, Dados e Hooks, Dashboard Executivo (Analytics), Fluxos e Interações, Objetivo, Pontos de Manutenção, Regras de Negócio e Estados
 
 ### Community 319 - "ImplementerReportTab.tsx"
-Cohesion: 0.23
-Nodes (12): CreateNpsInvitationInput, currentUser(), db, effectiveInvitationStatus(), invalidateNpsSurveys(), RawInvitation, SaveQuestionnaireInput, useCsCxNpsSurveys() (+4 more)
+Cohesion: 0.19
+Nodes (14): CreateNpsInvitationInput, currentUser(), db, effectiveInvitationStatus(), invalidateNpsSurveys(), RawInvitation, SaveQuestionnaireInput, useCsCxNpsSurveys() (+6 more)
 
 ### Community 320 - "SolutionDetails.tsx"
-Cohesion: 0.17
-Nodes (20): attachmentSecurity(), clampPanelWidth(), longDate(), maxPanelWidth(), shortDate(), SolutionDetails(), canPreviewSdAttachment(), isSdSolutionReviewOverdue() (+12 more)
+Cohesion: 0.23
+Nodes (19): attachmentSecurity(), clampPanelWidth(), longDate(), maxPanelWidth(), shortDate(), SolutionDetails(), canPreviewSdAttachment(), isSdSolutionReviewOverdue() (+11 more)
 
 ### Community 321 - "useCsCxExperience.ts"
 Cohesion: 0.13
 Nodes (18): storagePath(), CS_CX_VISIT_STATUSES, CsCxChecklistInput, CsCxNpsHistory, CsCxVisitAttachment, CsCxVisitChecklistItem, CsCxVisitInput, CsCxVisitPendingInput (+10 more)
 
 ### Community 322 - "PosPanorama.tsx"
-Cohesion: 0.13
-Nodes (31): SolutionForm(), DeleteTarget, errorCode(), systemNameCollator, SystemsManager(), attachmentStorageName(), createSdRoutine(), createSdSolution() (+23 more)
-
-### Community 323 - "DeploymentFormFields.tsx"
-Cohesion: 0.15
-Nodes (10): DeploymentFormFields(), formatPhone(), Props, RadioGroup, RadioGroupItem, DeploymentFormRecord, check(), DeploymentFormData (+2 more)
+Cohesion: 0.20
+Nodes (14): DeleteTarget, errorCode(), systemNameCollator, SystemsManager(), createSdRoutine(), createSdSystem(), deleteSdRoutine(), deleteSdSystem() (+6 more)
 
 ### Community 324 - "migrate-cs-cx-files.mjs"
 Cohesion: 0.12
@@ -1446,8 +1431,8 @@ Cohesion: 0.43
 Nodes (6): humanizeCopilotText(), normalizedKey(), readablePeriod(), readableStatus(), STAGE_LABELS, STATUS_LABELS
 
 ### Community 327 - "CsCxRegistryOffices"
-Cohesion: 0.08
-Nodes (20): AiTextImprovementJob, mapJob(), useAiTextImprovement(), ConversionEngineItem, EngineKPIs, EngineStatus, AccessData, CsCxAccessCandidate (+12 more)
+Cohesion: 0.09
+Nodes (23): AdminSettings(), STAGE_LABELS, DEFAULT_HEALTH_SETTINGS, ProjectHealthSettings, useAdminSettings(), ConversionIssue, AccessData, CsCxAccessCandidate (+15 more)
 
 ### Community 328 - "processCopilotJob.ts"
 Cohesion: 0.11
@@ -1469,14 +1454,6 @@ Nodes (10): buildManagedSkill(), CODEX_MODEL_SKILL_CONTENT, ensureCodexModelSkil
 Cohesion: 0.29
 Nodes (7): 3. Banco de dados, `copilot_access` — gate + cota por usuário, `copilot_digests` — resumo diário, `copilot_jobs` — fila de perguntas, Realtime, RLS, RPCs
 
-### Community 333 - "usePosAiVisitorAnalytics.ts"
-Cohesion: 0.29
-Nodes (7): Componentes principais, Dados e Hooks, Fluxos e Interações, Login, Objetivo, Regras de Negócio e Estados, Segurança / Pontos de Manutenção
-
-### Community 334 - "sidebar-empty-groups.test.tsx"
-Cohesion: 0.33
-Nodes (5): Progress, Column, COLUMNS, KanbanStatus, ProjectsKanban()
-
 ### Community 335 - "formatLogDetails"
 Cohesion: 0.22
 Nodes (6): RoadmapData, RoadmapPage(), StageConfig, StageData, STAGES_CONFIG, TimelineItem()
@@ -1485,25 +1462,13 @@ Nodes (6): RoadmapData, RoadmapPage(), StageConfig, StageData, STAGES_CONFIG, Ti
 Cohesion: 0.57
 Nodes (5): decodeRoutineObservations(), encodeRoutineObservations(), formatRoutineObservations(), normalizeRoutineObservations(), formatObservationHistory()
 
-### Community 337 - "predictability-utils.ts"
-Cohesion: 0.33
-Nodes (6): 1. Sistema de Notificações em Tempo Real (`useNotifications`), 2. Autosave com Retry e Unmount Save (`useAutoSave`), 🧠 Gerenciamento de Estado, ⚓ Hooks Especiais de Lógica e Comunicação, TanStack React Query (Estado do Servidor), Zustand (Estado Local da UI)
-
 ### Community 339 - "🚀 Guia Técnico: Sincronização Contínua e Rotação da Vector Store OpenAI com Zero Downtime — Siplan HUB"
 Cohesion: 0.17
 Nodes (11): 📋 1. Descrição Geral do Fluxo, 2.1. Trigger de Banco de Dados (`Database Webhook`), 2.2. SQL de Referência Aplicado no Supabase:, 🛠️ 2. Configuração do Webhook no Supabase (Trigger & Banco), ⚙️ 3. Passo a Passo Manual no n8n, 📦 4. JSON Completo do Workflow para Importação, 🧪 5. Feedback em Tempo Real na Tela do Usuário, 🚀 Guia Técnico: Sincronização Contínua e Rotação da Vector Store OpenAI com Zero Downtime — Siplan HUB (+3 more)
 
-### Community 340 - "cs-cx-nps-public.test.ts"
-Cohesion: 0.47
-Nodes (5): CopilotAccess, CopilotJob, mapAccess(), mapJob(), useCopilot()
-
 ### Community 341 - "usePosPanorama.ts"
-Cohesion: 0.10
-Nodes (54): AREA_STAGE_OUTCOME, AreaJourneyRow(), formatDateTime(), matchesSlaCardFilter(), SLA_FILTER_LABELS, SlaCardFilter, SlaCheckpointCell(), TicketSlaRow() (+46 more)
-
-### Community 342 - "cs-cx-nps-public.test.ts"
-Cohesion: 0.29
-Nodes (7): Coleta Pública de Infraestrutura, Componentes principais, Dados e Hooks, Fluxos e Interações, Objetivo, Regras de Negócio e Estados, Segurança / Pontos de Manutenção
+Cohesion: 0.14
+Nodes (42): jspdf, AREA_STAGE_OUTCOME, AreaJourneyRow(), formatDateTime(), matchesSlaCardFilter(), SLA_FILTER_LABELS, SlaCardFilter, SlaCheckpointCell() (+34 more)
 
 ### Community 343 - "AdminSettings.tsx"
 Cohesion: 0.40
@@ -1526,12 +1491,12 @@ Cohesion: 0.33
 Nodes (7): jsonHeaders, isValidWebhookToken(), NpsWebhookInput, nullableString(), parseNpsWebhookPayload(), parseWebhookDate(), stringValue()
 
 ### Community 350 - "AdminSettings.tsx"
-Cohesion: 0.08
-Nodes (43): EMPTY_PROFILE, BunnyVideoModal(), UnsavedChangesDialogProps, VersionHistoryDrawer(), DeploymentDetailsDialog(), CollapsibleFieldSection(), CollapsibleFieldSectionProps, getEditorContent() (+35 more)
+Cohesion: 0.09
+Nodes (28): CollapsibleFieldSection(), CollapsibleFieldSectionProps, EnvironmentScreenshots(), sanitize(), getEditorContent(), ObservationsWithAI(), ObservationsWithAIProps, obsTextLen() (+20 more)
 
 ### Community 351 - "ImplementerCharts.tsx"
-Cohesion: 0.14
-Nodes (24): TicketsAiAnalysisProps, TicketsSlaAnalysisProps, TicketsSlaSectorAnalysisProps, Chamado0800DetailDialogProps, ChamadosSearchFilters, ChamadosCatalog, getChamadosProductLabel(), ChamadosReportFilters (+16 more)
+Cohesion: 0.38
+Nodes (9): getChamadosProductLabel(), formatDate(), formatDateTime(), generateChamadosReportPdf(), latestTramiteText(), localIsoDate(), summarizeClients(), text() (+1 more)
 
 ### Community 352 - "Migração de dados CS/CX"
 Cohesion: 0.22
@@ -1542,20 +1507,20 @@ Cohesion: 0.22
 Nodes (8): Ajustes recebidos na validação em 17/08/2026, Antes da validação humana, Atualização pré-homologação em 12/08/2026, Atualização pré-homologação em 17/08/2026, Estado em 17/08/2026, Gate de homologação CS/CX, Roteiro da validação humana, Virada final
 
 ### Community 354 - "CsCxReports"
-Cohesion: 0.10
-Nodes (50): StatusFilter, ConversionIssuesTabProps, PRIORITIES, STATUSES, BunnyVideoModalProps, UserProfileDrawerProps, AdvancedFiltersProps, EnvironmentScreenshots() (+42 more)
+Cohesion: 0.12
+Nodes (38): StatusFilter, RestoreVersionModal(), RestoreVersionModalProps, VersionDetailModal(), VersionDetailModalProps, VersionHistoryDrawer(), VersionHistoryDrawerProps, UserProfileDrawerProps (+30 more)
 
 ### Community 355 - "CsCxAdmin"
 Cohesion: 0.29
 Nodes (7): Calendário (Planejamento Visual), Componentes principais, Dados e Hooks, Fluxos e Interações, Objetivo, Pontos de Manutenção, Regras de Negócio e Estados
 
 ### Community 356 - "4. Homologação de Conversões"
-Cohesion: 0.06
-Nodes (29): CsCxMultiSelect(), copyText(), formatDate(), NpsInvitationsPanel(), Checkbox, useCsCxNps(), canAccessCsCxRecord(), CsCxOwnedResource (+21 more)
+Cohesion: 0.09
+Nodes (21): copyText(), formatDate(), NpsInvitationsPanel(), useCsCxNps(), canAccessCsCxRecord(), CsCxOwnedResource, useCsCxRecordPermissions(), answerLabel() (+13 more)
 
 ### Community 359 - "cs-cx-routines-report.test.ts"
-Cohesion: 0.29
-Nodes (7): hasRichTextContent(), ContactReadOnlyDetails(), CsCxContacts(), DataError(), errorMessage(), formatDate(), ReadOnlyRichTextField()
+Cohesion: 0.13
+Nodes (20): CsCxAppointment, APPOINTMENT_STATUS_LABELS, APPOINTMENT_TYPE_LABELS, formatDate(), formatDateTime(), generateCsCxAppointmentsPdf(), generateCsCxContactsPdf(), groupByOffice() (+12 more)
 
 ### Community 360 - "Migração SistemaRegistro → CS/CX"
 Cohesion: 0.25
@@ -1570,8 +1535,8 @@ Cohesion: 0.25
 Nodes (7): fileMigrator, migrations, migrator, readiness, root, runner, workflow
 
 ### Community 363 - "cs-cx-routine-observations.ts"
-Cohesion: 0.11
-Nodes (18): Autenticação e Rotas Protegidas, AuthProvider / AuthContext / useAuth, Checklist Público (Comercial), Componentes principais, Componentes principais, Dados e Hooks, Dados e Hooks, Fluxos e Interações (+10 more)
+Cohesion: 0.06
+Nodes (32): Autenticação e Rotas Protegidas, AuthProvider / AuthContext / useAuth, Checklist Público (Comercial), Coleta Pública de Infraestrutura, Componentes principais, Componentes principais, Componentes principais, Componentes principais (+24 more)
 
 ### Community 365 - "cs-cx-routines-permissions.test.tsx"
 Cohesion: 0.40
@@ -1588,10 +1553,6 @@ Nodes (8): fetchAllRoutineConfigs(), useCsCxRoutines(), CsCxReports(), formatDat
 ### Community 372 - "prepare-ellevo-hours-view.mjs"
 Cohesion: 0.25
 Nodes (5): apply, inspect, inspectSdMembers, scriptDirectory, viewSql
-
-### Community 373 - "CsCxAdmin"
-Cohesion: 0.16
-Nodes (17): ActivePosAiProjectOption, PosAiAdminAnalyticsData, PosAiAdminKpis, PosAiAdminLogItem, PosAiAdminProjectItem, PosAiAdminTimelineItem, PosAiFeedbackItem, PosAiHourlyDistributionItem (+9 more)
 
 ### Community 375 - "pos-chat-visitor-dialog.test.tsx"
 Cohesion: 0.07
@@ -1610,20 +1571,20 @@ Cohesion: 0.50
 Nodes (3): compilerOptions, allowJs, lib
 
 ### Community 381 - "useAutoSave.ts"
-Cohesion: 0.50
-Nodes (3): useDebounce(), AutoSaveConfig, SaveState
+Cohesion: 0.33
+Nodes (6): useDebounce(), AutoSaveConfig, SaveState, useAutoSave(), useProjectForm(), UseProjectFormReturn
 
 ### Community 402 - "StageStatus"
-Cohesion: 0.08
-Nodes (39): data, OverviewChart(), ProjectStatusChart(), ProjectStatusChartProps, STATUS_LABELS, formatAction(), RecentActivity(), AdminSettings() (+31 more)
+Cohesion: 0.07
+Nodes (48): ProjectStatusChartProps, STATUS_LABELS, AdherenceGapCard(), AdherenceGapCardProps, GlobalMetrics(), HealthDistribution(), ImplementerKPIsProps, GLOBAL_STATUS_LABELS (+40 more)
 
 ### Community 403 - "Coleta Pública de Infraestrutura"
-Cohesion: 0.18
-Nodes (18): AdherenceStageForm(), FormTemplate, NewTemplateInput, useActiveTemplate(), ProjectFormResponse, UpsertResponseInput, useProjectFormResponse(), useUpsertFormResponse() (+10 more)
+Cohesion: 0.11
+Nodes (29): AdherenceStageForm(), ProjectModal(), RoadmapManager(), Chamado0800Tab(), FilesTab(), GeneralInfoTab(), LogsTab(), StepsTab() (+21 more)
 
 ### Community 405 - "ImplementerPhaseMetrics.tsx"
-Cohesion: 0.09
-Nodes (28): PosAiChatLinksManager(), PosAiChatLinksManagerProps, initials(), PAGE_SIZE_OPTIONS, PosAiChatUsersManager(), PosAiChatUsersManagerProps, VisitorActionResult, SearchableClientOption (+20 more)
+Cohesion: 0.07
+Nodes (37): PosAiChatLinksManager(), PosAiChatLinksManagerProps, initials(), PosAiChatUsersManager(), PosAiChatUsersManagerProps, emptyPage(), fetchPosAiChatConversationsPage(), PosAiConversationGroup (+29 more)
 
 ### Community 406 - "commercial-contacts-permissions.test.tsx"
 Cohesion: 0.40
@@ -1631,11 +1592,7 @@ Nodes (3): contatoFake, hasPermission, TODAS
 
 ### Community 410 - "CsCxContacts"
 Cohesion: 0.15
-Nodes (20): AttentionFilter, AttentionRow, AttentionStatus, buildContactAttentionRows(), ContactAttentionDashboard(), ContactAttentionDashboardProps, contactStatus(), filterForStatus() (+12 more)
-
-### Community 411 - "usePosAiVisitorAnalytics.ts"
-Cohesion: 0.17
-Nodes (12): dateFormatter, formatLastActivity(), integerFormatter, PosAiVisitorAnalytics(), PosAiVisitorAnalyticsProps, usdFormatter, EMPTY_DATA, PosAiVisitorAnalyticsData (+4 more)
+Nodes (22): AttentionFilter, AttentionRow, AttentionStatus, buildContactAttentionRows(), ContactAttentionDashboard(), ContactAttentionDashboardProps, contactStatus(), filterForStatus() (+14 more)
 
 ### Community 412 - "sd-time-import.test.ts"
 Cohesion: 0.50
@@ -1646,24 +1603,24 @@ Cohesion: 0.36
 Nodes (5): corsHeaders, jsonHeaders, parsePublicNpsSubmission(), parsePublicNpsToken(), PublicNpsSubmission
 
 ## Knowledge Gaps
-- **2664 isolated node(s):** `{ chromium, firefox, webkit }`, `name`, `version`, `description`, `author` (+2659 more)
+- **2667 isolated node(s):** `{ chromium, firefox, webkit }`, `name`, `version`, `description`, `author` (+2662 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **95 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **97 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `err()` connect `VM Worker Job Queue` to `Conversion Post Feed & Drawer`, `Notification Bell & Dropdown`, `GEMINI.md`, `Post Observations Editor`, `Roadmap Page`, `Theme Provider`, `LogsTab.tsx`, `Health Badge & Pipeline Status`, `useTeams.ts`, `usePublicChecklist.ts`, `chamadosSync.ts`, `Improve-Text AI Jobs`, `lexical.ts`, `Login`, `package.json`, `index.ts`, `cs-cx-nps-public.test.ts`, `AdminSettings.tsx`, `pos-chat-visitor-dialog.test.tsx`?**
-  _High betweenness centrality (0.027) - this node is a cross-community bridge._
-- **Why does `cn()` connect `Commercial/Public Checklists` to `FormRenderer.tsx`, `filterStore.ts`, `Notification Bell & Dropdown`, `Calendar Grid & Drag-Drop`, `GEMINI.md`, `Adherence Form Renderer`, `Sidebar Components`, `Dashboard Table & Pagination`, `StageStatus`, `useAuth`, `ImplementerPhaseMetrics.tsx`, `Deployment Form Fields`, `CsCxContacts`, `use-toast Reducer`, `Project Modal & Kanban`, `Project Transformers & Stages`, `Predictability & Bottlenecks`, `5. Contatos & Clientes`, `Post Observations Editor`, `sd-solutions.ts`, `Roadmap Page`, `Theme Provider`, `LogsTab.tsx`, `Health Badge & Pipeline Status`, `usePublicChecklist.ts`, `project-transformers.ts`, `Página 404 (Not Found)`, `Agenda dos Analistas`, `Próximas Implantações`, `Login`, `CopilotChat.tsx`, `DeploymentFormFields.tsx`, `sheet.tsx`, `sidebar-empty-groups.test.tsx`, `formatLogDetails`, `Módulo Comercial — Documentação por Tela`, `usePosPanorama.ts`, `AdminSettings.tsx`, `CsCxReports`, `4. Homologação de Conversões`, `cs-cx-routines-report.test.ts`, `Módulo: Núcleo — Dashboard e Projetos`, `useCsCxAccess.ts`, `🗄️ Configuração Local do Supabase (Ambiente de Desenvolvimento)`?**
-  _High betweenness centrality (0.027) - this node is a cross-community bridge._
-- **Why does `supabase` connect `CsCxRegistryOffices` to `Conversion Issues & Post Forms`, `Conversion Post Feed & Drawer`, `FormRenderer.tsx`, `Notification Bell & Dropdown`, `Calendar Grid & Drag-Drop`, `GEMINI.md`, `Adherence Form Renderer`, `StageStatus`, `App Sidebar & Protected Route`, `Coleta Pública de Infraestrutura`, `ImplementerPhaseMetrics.tsx`, `usePosAiVisitorAnalytics.ts`, `Project Modal & Kanban`, `Predictability & Bottlenecks`, `Post Observations Editor`, `sd-solutions.ts`, `Roadmap Page`, `Theme Provider`, `Health Badge & Pipeline Status`, `LogsTab.tsx`, `useTeams.ts`, `usePublicChecklist.ts`, `TicketsAiAnalysis.tsx`, `PipelineStatus.tsx`, `Toggle Component`, `AuthContext.tsx`, `Calendário (Planejamento Visual)`, `usePosAiAdminAnalytics.ts`, `lexical.ts`, `Login`, `package.json`, `ImplementerReportTab.tsx`, `useCsCxExperience.ts`, `PosPanorama.tsx`, `DeploymentFormFields.tsx`, `RolesManagement.tsx`, `formatLogDetails`, `Módulo Comercial — Documentação por Tela`, `cs-cx-nps-public.test.ts`, `CsCxReports`, `🗄️ Configuração Local do Supabase (Ambiente de Desenvolvimento)`, `CsCxAdmin`, `pos-chat-visitor-dialog.test.tsx`?**
-  _High betweenness centrality (0.022) - this node is a cross-community bridge._
+- **Why does `err()` connect `VM Worker Job Queue` to `Conversion Post Feed & Drawer`, `Charts, KPI & Reports`, `GEMINI.md`, `Dashboard Table & Pagination`, `App Sidebar & Protected Route`, `Coleta Pública de Infraestrutura`, `Post Observations Editor`, `sd-solutions.ts`, `Theme Provider`, `LogsTab.tsx`, `chamadosSync.ts`, `useTeams.ts`, `usePublicChecklist.ts`, `project-transformers.ts`, `Improve-Text AI Jobs`, `package.json`, `CopilotChat.tsx`, `index.ts`, `CsCxRegistryOffices`, `RolesManagement.tsx`, `pos-chat-visitor-dialog.test.tsx`?**
+  _High betweenness centrality (0.026) - this node is a cross-community bridge._
+- **Why does `cn()` connect `Login` to `Project Stage Forms & Models`, `Charts, KPI & Reports`, `Calendar Grid & Drag-Drop`, `GEMINI.md`, `Adherence Form Renderer`, `Sidebar Components`, `Dashboard Table & Pagination`, `App Sidebar & Protected Route`, `Coleta Pública de Infraestrutura`, `useAuth`, `StageStatus`, `Deployment Form Fields`, `CsCxContacts`, `use-toast Reducer`, `Project Modal & Kanban`, `Commercial/Public Checklists`, `Project Transformers & Stages`, `Main Layout & Theme Toggle`, `Post Observations Editor`, `5. Contatos & Clientes`, `sd-solutions.ts`, `Roadmap Page`, `Theme Provider`, `LogsTab.tsx`, `PipelineStatus.tsx`, `useTeams.ts`, `usePublicChecklist.ts`, `project-transformers.ts`, `Página 404 (Not Found)`, `Toggle Component`, `Agenda dos Analistas`, `package.json`, `CopilotChat.tsx`, `CsCxRegistryOffices`, `RolesManagement.tsx`, `sheet.tsx`, `formatLogDetails`, `Módulo Comercial — Documentação por Tela`, `usePosPanorama.ts`, `AdminSettings.tsx`, `CsCxReports`, `4. Homologação de Conversões`, `cs-cx-routines-report.test.ts`, `🗄️ Configuração Local do Supabase (Ambiente de Desenvolvimento)`, `useCsCxAccess.ts`, `Página 404 (Not Found)`?**
+  _High betweenness centrality (0.025) - this node is a cross-community bridge._
+- **Why does `supabase` connect `CsCxRegistryOffices` to `Conversion Issues & Post Forms`, `Conversion Post Feed & Drawer`, `FormRenderer.tsx`, `Project Stage Forms & Models`, `Checklist & Visual Question Builder`, `Notification Bell & Dropdown`, `GEMINI.md`, `Adherence Form Renderer`, `Dashboard Table & Pagination`, `Coleta Pública de Infraestrutura`, `ImplementerPhaseMetrics.tsx`, `Project Modal & Kanban`, `Main Layout & Theme Toggle`, `Post Observations Editor`, `sd-solutions.ts`, `Theme Provider`, `LogsTab.tsx`, `PipelineStatus.tsx`, `useTeams.ts`, `usePublicChecklist.ts`, `project-transformers.ts`, `TicketsAiAnalysis.tsx`, `Toggle Component`, `Agenda dos Analistas`, `Login`, `package.json`, `CopilotChat.tsx`, `ImplementerReportTab.tsx`, `SolutionDetails.tsx`, `useCsCxExperience.ts`, `DeploymentFormFields.tsx`, `RolesManagement.tsx`, `formatLogDetails`, `Módulo Comercial — Documentação por Tela`, `Página 404 (Not Found)`, `AdminSettings.tsx`, `CsCxReports`, `🗄️ Configuração Local do Supabase (Ambiente de Desenvolvimento)`, `calendar.tsx`, `pos-chat-visitor-dialog.test.tsx`?**
+  _High betweenness centrality (0.023) - this node is a cross-community bridge._
 - **What connects `Production-ready REST API template using FastAPI. Includes pagination, filterin`, `List users with pagination and filtering.`, `Partially update user.` to the rest of the system?**
-  _2739 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _2742 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Conversion Issues & Post Forms` be split into smaller, more focused modules?**
   _Cohesion score 0.09881422924901186 - nodes in this community are weakly interconnected._
 - **Should `App Routes & Pages` be split into smaller, more focused modules?**
   _Cohesion score 0.02564102564102564 - nodes in this community are weakly interconnected._
 - **Should `VM Worker Job Queue` be split into smaller, more focused modules?**
-  _Cohesion score 0.1021021021021021 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.10634920634920635 - nodes in this community are weakly interconnected._
