@@ -396,7 +396,7 @@ function ProjectTable({
                                         <ExternalLink className="h-3 w-3" />
                                         <span className={hideActionsOnMobile ? "hidden sm:inline" : ""}>Abrir</span>
                                     </Button>
-                                    <Link to={`/orion-tn-models/${project.id}`}>
+                                    <Link to={`/orion-tn-models/editor/${project.id}`}>
                                         <Button variant="ghost" size="sm" className="h-7 w-7 p-0" title="Abrir Editor">
                                             <LayoutPanelTop className="h-3.5 w-3.5" />
                                         </Button>

@@ -217,7 +217,7 @@ export default function DashboardV2() {
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h2 className="text-xl font-black tracking-tight">Visão Geral</h2>
+            <h2 className="text-xl font-black tracking-tight">Dashboard</h2>
             <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-widest font-bold opacity-70">
               Métricas e status dos projetos de implantação
             </p>
