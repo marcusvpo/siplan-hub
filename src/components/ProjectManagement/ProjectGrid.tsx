@@ -267,7 +267,7 @@ export function ProjectGrid() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="min-w-0 space-y-4 overflow-x-hidden" data-testid="projects-grid">
       {/* Advanced Filters */}
       <AdvancedFilters
         leaders={uniqueLeaders}
@@ -284,7 +284,7 @@ export function ProjectGrid() {
       ) : (
         <>
           {/* Results Count */}
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <div className="flex min-w-0 flex-wrap items-center justify-between gap-1.5 text-xs text-muted-foreground sm:text-sm">
             <span>
               {filteredAndSortedProjects.length} projeto
               {filteredAndSortedProjects.length !== 1 ? "s" : ""} encontrado
@@ -300,8 +300,8 @@ export function ProjectGrid() {
 
           {/* List of Projects with Pagination */}
           {paginatedProjects.length > 0 ? (
-            <div className="flex-1 flex flex-col justify-between min-h-0">
-              <div className="space-y-3 pr-2">
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col justify-between">
+              <div className="min-w-0 space-y-4 px-0.5 pt-1 sm:space-y-3 sm:pr-2">
                 {paginatedProjects.map((project) => (
                   <ProjectCardV3
                     key={project.id}
@@ -348,8 +348,8 @@ export function ProjectGrid() {
 
               {/* Pagination Controls */}
               {totalItems > 0 && (
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t pt-4 mt-6">
-                  <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
+                <div className="mt-6 flex min-w-0 flex-col items-stretch justify-between gap-4 border-t pt-4 sm:flex-row sm:items-center">
+                  <div className="flex min-w-0 flex-col items-center gap-2 text-xs text-muted-foreground min-[380px]:flex-row min-[380px]:flex-wrap min-[380px]:justify-center sm:gap-x-6">
                     <span>
                       Mostrando <span className="font-medium">{totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1}</span> a{" "}
                       <span className="font-medium">
@@ -382,7 +382,7 @@ export function ProjectGrid() {
                   </div>
 
                   {totalPages > 1 && (
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex flex-wrap items-center justify-center gap-1.5" aria-label="Paginação de projetos">
                       <Button
                         variant="outline"
                         size="sm"

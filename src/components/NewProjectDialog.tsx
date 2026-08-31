@@ -43,9 +43,6 @@ export const NewProjectDialog = () => {
   const [open, setOpen] = useState(false);
   const { canCreateProjects } = usePermissions();
 
-  // Hide button entirely if user can't create projects
-  if (!canCreateProjects) return null;
-
   // Dados do Projeto
   const [clientName, setClientName] = useState("");
   const [ticketNumber, setTicketNumber] = useState("");
@@ -75,6 +72,9 @@ export const NewProjectDialog = () => {
   ];
 
   const { createProject } = useProjectsV2();
+
+  // Todos os hooks precisam executar antes do retorno condicionado à permissão.
+  if (!canCreateProjects) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,9 +136,10 @@ export const NewProjectDialog = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-1.5 h-9 text-xs">
-          <Plus className="h-4 w-4" />
-          Cadastrar Novo Projeto
+        <Button className="h-10 w-full min-w-0 gap-1.5 px-3 text-xs sm:h-9 sm:w-auto">
+          <Plus className="h-4 w-4 shrink-0" />
+          <span className="sm:hidden">Novo projeto</span>
+          <span className="hidden sm:inline">Cadastrar Novo Projeto</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="w-[94vw] sm:w-full sm:max-w-[700px] max-h-[88vh] overflow-y-auto p-4 sm:p-6">
