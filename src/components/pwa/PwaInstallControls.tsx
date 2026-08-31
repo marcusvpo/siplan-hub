@@ -16,12 +16,16 @@ interface PwaInstallDialogProps {
   autoOpen?: boolean;
 }
 
+interface PwaInstallButtonProps {
+  visible?: boolean;
+}
+
 const AUTO_OPEN_DELAY_MS = 1600;
 
-export function PwaInstallButton() {
-  const { canInstall, isInstalled, openInstallDialog } = usePwaInstall();
+export function PwaInstallButton({ visible = true }: PwaInstallButtonProps) {
+  const { canInstall, isInstalled, isMobile, openInstallDialog } = usePwaInstall();
 
-  if (isInstalled) return null;
+  if (!visible || !isMobile || isInstalled) return null;
 
   return (
     <Button
@@ -50,6 +54,7 @@ export function PwaInstallDialog({ autoOpen = true }: PwaInstallDialogProps) {
     installApp,
     isInstalled,
     isIos,
+    isMobile,
     neverShowInstall,
     openInstallDialog,
     postponeInstall,
@@ -64,7 +69,7 @@ export function PwaInstallDialog({ autoOpen = true }: PwaInstallDialogProps) {
     return () => window.clearTimeout(timeout);
   }, [autoOpen, dialogOpen, openInstallDialog, shouldAutoOffer]);
 
-  if (isInstalled) return null;
+  if (!isMobile || isInstalled) return null;
 
   const handleInstall = async () => {
     setInstalling(true);

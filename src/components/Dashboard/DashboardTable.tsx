@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { HealthBadge } from "./HealthBadge";
 import { PipelineStatus } from "./PipelineStatus";
 import { ChartEmptyState } from "./ChartEmptyState";
-import { Eye, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Eye, Loader2 } from "lucide-react";
 import { format, isPast } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { getRelativeTime, getDaysSinceUpdate } from "@/utils/calculations";
@@ -67,39 +67,39 @@ export const DashboardTable = ({ onProjectClick }: DashboardTableProps) => {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="space-y-2">
+    <div className="min-w-0 space-y-4">
+      <div className="min-w-0 space-y-2">
         {paginatedProjects.map((project) => (
           <Card
             key={project.id}
-            className="p-3 hover:bg-muted/30 transition-all cursor-pointer border-muted/20 shadow-none hover:shadow-sm"
+            className="min-w-0 overflow-hidden border-muted/20 p-3 shadow-none transition-all hover:bg-muted/30 hover:shadow-sm cursor-pointer"
             onClick={() => {
               setSelectedProject(project);
               onProjectClick?.(project);
             }}
           >
-            <div className="flex flex-col space-y-2 sm:space-y-0 sm:grid sm:grid-cols-[1.5fr_1.2fr_0.8fr_1fr] gap-2 sm:gap-4 items-stretch sm:items-center">
+            <div className="flex min-w-0 flex-col items-stretch gap-2 sm:grid sm:grid-cols-[1.5fr_1.2fr_0.8fr_1fr] sm:items-center sm:gap-4 sm:space-y-0">
               <div className="min-w-0">
-                <h3 className="font-bold text-sm tracking-tight truncate leading-tight">
+                <h3 className="whitespace-normal break-words text-sm font-bold leading-5 tracking-tight">
                   {project.clientName}
                 </h3>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="text-[10px] uppercase font-black text-muted-foreground/60 tracking-wider">
+                <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                  <span className="break-words text-[10px] font-black uppercase tracking-wider text-muted-foreground/60">
                     {project.systemType}
                   </span>
                   <span className="text-muted-foreground/30">•</span>
-                  <span className="text-[10px] font-mono text-muted-foreground/80">
+                  <span className="shrink-0 text-[10px] font-mono text-muted-foreground/80">
                     #{project.ticketNumber}
                   </span>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between sm:justify-center border-t border-border/40 pt-2 sm:border-0 sm:pt-0">
+              <div className="flex min-w-0 items-center justify-between border-t border-border/40 pt-2 sm:justify-center sm:border-0 sm:pt-0">
                 <span className="text-[10px] font-bold text-muted-foreground uppercase sm:hidden">Progresso</span>
                 <PipelineStatus project={project} />
               </div>
 
-              <div className="flex items-center justify-between sm:justify-center border-t border-border/40 pt-2 sm:border-0 sm:pt-0">
+              <div className="flex min-w-0 items-center justify-between border-t border-border/40 pt-2 sm:justify-center sm:border-0 sm:pt-0">
                 <span className="text-[10px] font-bold text-muted-foreground uppercase sm:hidden">Saúde</span>
                 <HealthBadge
                   healthScore={project.healthScore!}
@@ -109,7 +109,7 @@ export const DashboardTable = ({ onProjectClick }: DashboardTableProps) => {
 
 
 
-              <div className="flex items-center justify-between sm:justify-end gap-3 border-t border-border/40 pt-2 sm:border-0 sm:pt-0">
+              <div className="flex min-w-0 items-center justify-between gap-3 border-t border-border/40 pt-2 sm:justify-end sm:border-0 sm:pt-0">
                 <div className="text-left sm:text-right">
                   <div className="text-[10px] font-bold text-muted-foreground/70 leading-tight">
                     {getRelativeTime(new Date(project.lastUpdatedAt))}
@@ -119,6 +119,7 @@ export const DashboardTable = ({ onProjectClick }: DashboardTableProps) => {
                   </div>
                 </div>
                 <Button 
+                  aria-label={`Ver detalhes de ${project.clientName}`}
                   size="sm" 
                   variant="ghost" 
                   className="h-8 w-8 p-0 rounded-full hover:bg-primary/10 hover:text-primary shrink-0"
@@ -137,13 +138,14 @@ export const DashboardTable = ({ onProjectClick }: DashboardTableProps) => {
       </div>
 
       {totalPages > 1 && (
-        <Pagination className="justify-center mt-4">
-          <PaginationContent>
+        <Pagination className="mt-4 min-w-0 justify-center overflow-hidden">
+          <PaginationContent className="max-w-full justify-center">
             <PaginationItem>
               <PaginationPrevious 
+                aria-label="Página anterior"
                 onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                 className={cn(
-                  "cursor-pointer hover:bg-muted select-none",
+                  "h-9 w-9 cursor-pointer select-none px-0 hover:bg-muted sm:w-auto sm:px-2.5 [&>span]:hidden sm:[&>span]:inline",
                   currentPage === 1 && "pointer-events-none opacity-50"
                 )}
               >
@@ -163,11 +165,18 @@ export const DashboardTable = ({ onProjectClick }: DashboardTableProps) => {
               </PaginationItem>
             ))}
 
+            <PaginationItem className="sm:hidden">
+              <span className="flex h-9 min-w-16 items-center justify-center px-2 text-xs font-semibold text-muted-foreground">
+                {currentPage} de {totalPages}
+              </span>
+            </PaginationItem>
+
             <PaginationItem>
               <PaginationNext 
+                aria-label="Próxima página"
                 onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
                 className={cn(
-                  "cursor-pointer hover:bg-muted select-none",
+                  "h-9 w-9 cursor-pointer select-none px-0 hover:bg-muted sm:w-auto sm:px-2.5 [&>span]:hidden sm:[&>span]:inline",
                   currentPage === totalPages && "pointer-events-none opacity-50"
                 )}
               >

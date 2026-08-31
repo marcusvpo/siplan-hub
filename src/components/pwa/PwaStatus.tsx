@@ -17,6 +17,7 @@ interface PwaProviderProps {
 const INSTALL_LATER_KEY = "siplan-pwa-install-later";
 const INSTALL_NEVER_KEY = "siplan-pwa-install-never";
 const UPDATE_INTERVAL_MS = 60 * 60 * 1000;
+const MOBILE_VIEWPORT_QUERY = "(max-width: 767px)";
 const PUBLIC_EXPERIENCE_PATHS = [
   /^\/public\//,
   /^\/nps\/responder\//,
@@ -38,11 +39,8 @@ function isIosDevice() {
   );
 }
 
-function isMobileDevice() {
-  return (
-    window.matchMedia("(max-width: 767px)").matches ||
-    /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent)
-  );
+function isMobileViewport() {
+  return window.matchMedia(MOBILE_VIEWPORT_QUERY).matches;
 }
 
 function isPublicExperience() {
@@ -82,7 +80,7 @@ export function PwaProvider({ children }: PwaProviderProps) {
     readStorage(localStorage, INSTALL_NEVER_KEY),
   );
   const [isIos] = useState(isIosDevice);
-  const [isMobile] = useState(isMobileDevice);
+  const [isMobile, setIsMobile] = useState(isMobileViewport);
 
   const {
     offlineReady: [offlineReady, setOfflineReady],
@@ -106,6 +104,17 @@ export function PwaProvider({ children }: PwaProviderProps) {
 
     return () => window.clearInterval(interval);
   }, [registration]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(MOBILE_VIEWPORT_QUERY);
+    const handleViewportChange = (event: MediaQueryListEvent) => {
+      setIsMobile(event.matches);
+      if (!event.matches) setDialogOpen(false);
+    };
+
+    mediaQuery.addEventListener("change", handleViewportChange);
+    return () => mediaQuery.removeEventListener("change", handleViewportChange);
+  }, []);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);

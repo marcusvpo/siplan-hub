@@ -49,10 +49,17 @@ describe("breadcrumbs das visões gerais", () => {
   it("leva o painel de indicadores de volta à visão geral do Dashboard", () => {
     renderBreadcrumbs("/dashboard/indicadores");
 
-    expect(screen.getByRole("link", { name: "Dashboard" })).toHaveAttribute(
+    const dashboardLink = screen.getByRole("link", { name: "Dashboard" });
+
+    expect(dashboardLink).toHaveAttribute(
       "href",
       "/dashboard",
     );
-    expect(screen.getByText("Painel de Indicadores")).toBeInTheDocument();
+    expect(dashboardLink.parentElement).toHaveClass("hidden", "sm:flex");
+    expect(screen.getByText("Painel de Indicadores")).toHaveClass(
+      "min-w-0",
+      "flex-1",
+      "truncate",
+    );
   });
 });
