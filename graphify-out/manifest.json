@@ -140,8 +140,8 @@
     "semantic_hash": "4bf12498562950a1602f3902102b7cc8"
   },
   "package.json": {
-    "mtime": 1787937952.7909393,
-    "ast_hash": "5fdb251d431aa8b063733667de982140",
+    "mtime": 1788183258.9321387,
+    "ast_hash": "1592548a97a984864266ac62cd0be5aa",
     "semantic_hash": ""
   },
   "postcss.config.js": {
@@ -155,8 +155,8 @@
     "semantic_hash": ""
   },
   "src/App.tsx": {
-    "mtime": 1787950180.4471116,
-    "ast_hash": "2fb1fdb648ad7faf7ba1b2dcf0df1c51",
+    "mtime": 1788183409.7178395,
+    "ast_hash": "30f78d49d2fbf60e89f52918319266c9",
     "semantic_hash": ""
   },
   "src/components/Admin/OverviewChart.tsx": {
@@ -1340,9 +1340,9 @@
     "semantic_hash": ""
   },
   "src/vite-env.d.ts": {
-    "mtime": 1781122833.2414663,
-    "ast_hash": "8f68c27c3fc38817b2726b20e2d4f1ee",
-    "semantic_hash": "8f68c27c3fc38817b2726b20e2d4f1ee"
+    "mtime": 1788183409.714307,
+    "ast_hash": "5f1a7d20083a790c58c47a017326b745",
+    "semantic_hash": ""
   },
   "supabase/functions/create-user/deno.json": {
     "mtime": 1781122833.2424662,
@@ -1640,8 +1640,8 @@
     "semantic_hash": "0db7ccb3aff36e97aa469126e9e17f99"
   },
   "vite.config.ts": {
-    "mtime": 1787147936.7076395,
-    "ast_hash": "dba012e1d7d630a5b56496a97e9329ca",
+    "mtime": 1788183941.1537414,
+    "ast_hash": "871d7b0573030f2ccf2b44e29a7cf10a",
     "semantic_hash": ""
   },
   "vm-worker/package.json": {
@@ -2445,9 +2445,9 @@
     "semantic_hash": "d020accd9c976ccb5f19a7480e709035"
   },
   "index.html": {
-    "mtime": 1781122833.1412082,
-    "ast_hash": "c12a2ffd8412cc53527f0988ad69457e",
-    "semantic_hash": "c12a2ffd8412cc53527f0988ad69457e"
+    "mtime": 1788183716.9624436,
+    "ast_hash": "d63e7f48558d00f89db0ea567f96e32e",
+    "semantic_hash": ""
   },
   "public/robots.txt": {
     "mtime": 1781122833.1532178,
@@ -4520,18 +4520,18 @@
     "semantic_hash": ""
   },
   "src/hooks/useSdAttendanceBi.ts": {
-    "mtime": 1788182299.1386847,
-    "ast_hash": "77ad546a735d8a4b3057619e3fdd2854",
+    "mtime": 1788182688.4039688,
+    "ast_hash": "a153b34f20854daa35ab82ff199dd511",
     "semantic_hash": ""
   },
   "src/pages/sd/SdAttendanceBi.tsx": {
-    "mtime": 1788182299.1406856,
-    "ast_hash": "5d22cc29e761fc15dd428a8265fbf150",
+    "mtime": 1788182688.404971,
+    "ast_hash": "2064a06d06412f3fb9e711c88944bf87",
     "semantic_hash": ""
   },
   "src/test/sd-attendance-bi.test.ts": {
-    "mtime": 1788182311.3847618,
-    "ast_hash": "26b3d733c851d88c9edde72f9e805860",
+    "mtime": 1788182688.4069777,
+    "ast_hash": "bcedcd76b0359397a5f60496129f8dd1",
     "semantic_hash": ""
   },
   "supabase/migrations/20260828235955_sd_attendance_bi.sql": {
@@ -4550,8 +4550,38 @@
     "semantic_hash": ""
   },
   "src/test/sd-attendance-bi-interactions.test.tsx": {
-    "mtime": 1788182401.3911967,
-    "ast_hash": "9b9708b0e885102cc773ce29f29bddd0",
+    "mtime": 1788182688.4059782,
+    "ast_hash": "25eb814b74c70cbd62305e52baecac7e",
+    "semantic_hash": ""
+  },
+  "src/components/pwa/PwaStatus.tsx": {
+    "mtime": 1788183716.9659789,
+    "ast_hash": "e63acf32b10c5dcb39f7deaf0e75313f",
+    "semantic_hash": ""
+  },
+  "src/test/pwa-status.test.tsx": {
+    "mtime": 1788183725.8333347,
+    "ast_hash": "9c324a9211b1647394ad2f57af3988cf",
+    "semantic_hash": ""
+  },
+  "public/apple-touch-icon.png": {
+    "mtime": 1788183433.9587314,
+    "ast_hash": "58fae70d64bf07f9c98e7127f542d73f",
+    "semantic_hash": ""
+  },
+  "public/maskable-icon-512x512.png": {
+    "mtime": 1788183433.647624,
+    "ast_hash": "5cbe0bd0fe4962faad401e10343dde44",
+    "semantic_hash": ""
+  },
+  "public/pwa-192x192.png": {
+    "mtime": 1788183432.2998135,
+    "ast_hash": "db7479b9095b8c5fe977e79c16fefb58",
+    "semantic_hash": ""
+  },
+  "public/pwa-512x512.png": {
+    "mtime": 1788183433.061192,
+    "ast_hash": "c27f1a5ba83fedea60a34f3392a67ce4",
     "semantic_hash": ""
   }
 }

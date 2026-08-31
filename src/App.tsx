@@ -9,6 +9,7 @@ import { lazy, Suspense } from "react";
 import DashboardV2 from "./pages/DashboardV2";
 import { MainLayout } from "@/components/Layout/MainLayout";
 import { ThemeProvider } from "@/components/theme-provider";
+import { PwaStatus } from "@/components/pwa/PwaStatus";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { RequirePermission } from "@/components/auth/RequirePermission";
@@ -191,6 +192,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <SonnerToaster />
+        <PwaStatus />
         <AuthProvider>
           <BrowserRouter
             future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
