@@ -72,7 +72,7 @@ export function Chamado0800DetailDialog({
 
   return (
     <Dialog open={!!chamado} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-5xl w-[calc(100vw-2rem)] max-h-[92vh] overflow-y-auto overflow-x-hidden">
+      <DialogContent className="max-h-[94vh] w-[calc(100vw-1rem)] max-w-5xl overflow-x-hidden overflow-y-auto p-4 sm:w-[calc(100vw-2rem)] sm:p-6">
         {chamado && (
           <>
             <DialogHeader>
@@ -82,30 +82,32 @@ export function Chamado0800DetailDialog({
                 </span>
                 <span className="break-words">{chamado.titulo || "(sem título)"}</span>
               </DialogTitle>
-              <DialogDescription className="flex items-center gap-2 flex-wrap">
-                <Badge className={cn("pointer-events-none", statusBadgeClass(chamado.status))}>
-                  {chamado.status || "—"}
-                </Badge>
-                {chamado.natureza && <span>{chamado.natureza}</span>}
-                {chamado.criticidade && <span>· {chamado.criticidade}</span>}
-                {chamado.tema && (
-                  <Badge variant="outline" className="pointer-events-none font-normal">
-                    tema: {chamado.tema}
+              <DialogDescription asChild>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge className={cn("pointer-events-none", statusBadgeClass(chamado.status))}>
+                    {chamado.status || "—"}
                   </Badge>
-                )}
+                  {chamado.natureza && <span>{chamado.natureza}</span>}
+                  {chamado.criticidade && <span>· {chamado.criticidade}</span>}
+                  {chamado.tema && (
+                    <Badge variant="outline" className="pointer-events-none font-normal">
+                      tema: {chamado.tema}
+                    </Badge>
+                  )}
+                </div>
               </DialogDescription>
             </DialogHeader>
 
-            <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-              <div>
+            <div className="grid grid-cols-1 gap-x-4 gap-y-3 text-sm sm:grid-cols-2 sm:gap-y-2">
+              <div className="min-w-0">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Serventia</p>
-                <p>{chamado.nomeCliente || "—"}</p>
+                <p className="break-words">{chamado.nomeCliente || "—"}</p>
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Solicitante</p>
-                <p className="flex items-center gap-1">
-                  <User className="h-3.5 w-3.5 text-muted-foreground" />
-                  {chamado.solicitante || "—"}
+                <p className="flex min-w-0 items-start gap-1">
+                  <User className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <span className="break-words">{chamado.solicitante || "—"}</span>
                 </p>
               </div>
               <div>
@@ -147,11 +149,11 @@ export function Chamado0800DetailDialog({
 
             {showTramites ? (
               <Tabs defaultValue="descricao" className="min-w-0">
-                <TabsList className="h-8 p-0.5">
-                  <TabsTrigger value="descricao" className="h-7 px-3 py-1 text-xs">
+                <TabsList className="grid h-9 w-full grid-cols-2 p-0.5 sm:flex sm:w-auto">
+                  <TabsTrigger value="descricao" className="h-8 min-w-0 px-2 py-1 text-xs sm:h-7 sm:px-3">
                     Descrição
                   </TabsTrigger>
-                  <TabsTrigger value="tramites" className="h-7 px-3 py-1 text-xs">
+                  <TabsTrigger value="tramites" className="h-8 min-w-0 px-2 py-1 text-xs sm:h-7 sm:px-3">
                     Trâmites{tramites.length > 0 ? ` (${tramites.length})` : ""}
                   </TabsTrigger>
                 </TabsList>

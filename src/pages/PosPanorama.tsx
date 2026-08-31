@@ -82,6 +82,8 @@ interface PanoramaBaseProps {
   descricao: string;
 }
 
+type MobileSection = "resumo" | "chamados" | "parecer";
+
 /**
  * Base compartilhada dos panoramas de pós: visão de carteira dos chamados 0800
  * que caíram DENTRO da janela de pós de algum projeto (cliente + produto +
@@ -104,6 +106,8 @@ export function PanoramaBase({ escopo, titulo, descricao }: PanoramaBaseProps) {
   const [busca, setBusca] = useState<string>("");
   const [tema, setTema] = useState<string | null>(null);
   const [cartorio, setCartorio] = useState<string | null>(null);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [mobileSection, setMobileSection] = useState<MobileSection>("resumo");
 
   const [inicioQuery, fimQuery] = useMemo((): [string | null, string | null] => {
     if (periodo === "custom") return [dataInicio || null, dataFim || null];
@@ -353,6 +357,16 @@ export function PanoramaBase({ escopo, titulo, descricao }: PanoramaBaseProps) {
     produto !== "todos" || natureza !== "todas" || status !== "todos" ||
     criticidade !== "todas" || !!tema || !!cartorio || !!busca.trim();
 
+  const filtrosAtivos = [
+    produto !== "todos",
+    natureza !== "todas",
+    status !== "todos",
+    criticidade !== "todas",
+    periodo !== "90",
+    !!tema,
+    !!cartorio,
+  ].filter(Boolean).length;
+
   const limparFiltros = () => {
     setProduto("todos");
     setNatureza("todas");
@@ -364,19 +378,19 @@ export function PanoramaBase({ escopo, titulo, descricao }: PanoramaBaseProps) {
   };
 
   return (
-    <div className="p-4 space-y-3 max-w-[1400px] mx-auto [--viz-bar:#2a78d6] dark:[--viz-bar:#3987e5]">
+    <div className="mx-auto w-full min-w-0 max-w-[1400px] space-y-4 px-0 pb-4 pt-2 [--viz-bar:#2a78d6] dark:[--viz-bar:#3987e5] sm:p-4">
       {/* Cabecalho */}
-      <div className="flex items-end justify-between gap-3 flex-wrap">
-        <div>
-          <h1 className="text-xl font-bold flex items-center gap-2">
-            <Headset className="h-5 w-5 text-primary" />
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="flex items-start gap-2 text-xl font-bold leading-tight">
+            <Headset className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
             {titulo}
           </h1>
-          <p className="text-xs text-muted-foreground mt-0.5">{descricao}</p>
+          <p className="mt-1 break-words text-xs leading-relaxed text-muted-foreground">{descricao}</p>
         </div>
-        <span className="flex items-center gap-2">
+        <div className="flex w-full min-w-0 items-center justify-between gap-2 sm:w-auto sm:justify-end">
           {data?.lastSyncedAt && (
-            <span className="text-[11px] text-muted-foreground">
+            <span className="min-w-0 text-[10px] leading-tight text-muted-foreground sm:text-right sm:text-[11px]">
               espelho sincronizado{" "}
               {new Date(data.lastSyncedAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
             </span>
@@ -393,16 +407,53 @@ export function PanoramaBase({ escopo, titulo, descricao }: PanoramaBaseProps) {
             {exporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileDown className="h-3.5 w-3.5" />}
             PDF
           </Button>
-        </span>
+        </div>
       </div>
 
       {/* Barra de filtros */}
-      <Card>
-        <CardContent className="p-2.5 space-y-1.5">
-          <div className="flex items-center gap-2 flex-wrap">
-            <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
+      <Card className="min-w-0">
+        <CardContent className="space-y-2.5 p-3">
+          <div className="space-y-2 md:hidden">
+            <div className="relative min-w-0">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                placeholder="Buscar chamado, cartório ou tema…"
+                className="h-10 min-w-0 pl-9"
+              />
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-10 w-full justify-between px-3"
+              aria-expanded={mobileFiltersOpen}
+              onClick={() => setMobileFiltersOpen((open) => !open)}
+            >
+              <span className="flex items-center gap-2">
+                <Filter className="h-4 w-4" />
+                Filtros avançados
+                {filtrosAtivos > 0 && (
+                  <Badge variant="secondary" className="h-5 min-w-5 justify-center px-1.5 text-[10px]">
+                    {filtrosAtivos}
+                  </Badge>
+                )}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {mobileFiltersOpen ? "Ocultar" : "Mostrar"}
+              </span>
+            </Button>
+          </div>
+
+          <div
+            className={cn(
+              "grid min-w-0 grid-cols-1 gap-2 md:flex md:flex-wrap md:items-center",
+              !mobileFiltersOpen && "hidden md:flex"
+            )}
+          >
+            <Filter className="hidden h-4 w-4 shrink-0 text-muted-foreground md:block" />
             <Select value={produto} onValueChange={setProduto}>
-              <SelectTrigger className="w-[150px] h-8"><SelectValue placeholder="Produto" /></SelectTrigger>
+              <SelectTrigger aria-label="Filtrar por produto" className="h-10 w-full md:h-8 md:w-[150px]"><SelectValue placeholder="Produto" /></SelectTrigger>
               <SelectContent>
                 {PRODUTOS.map((p) => (
                   <SelectItem key={p} value={p}>{p === "todos" ? "Todos os produtos" : p}</SelectItem>
@@ -410,7 +461,7 @@ export function PanoramaBase({ escopo, titulo, descricao }: PanoramaBaseProps) {
               </SelectContent>
             </Select>
             <Select value={natureza} onValueChange={setNatureza}>
-              <SelectTrigger className="w-[190px] h-8"><SelectValue placeholder="Natureza" /></SelectTrigger>
+              <SelectTrigger aria-label="Filtrar por natureza" className="h-10 w-full md:h-8 md:w-[190px]"><SelectValue placeholder="Natureza" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="todas">Todas as naturezas</SelectItem>
                 {opcoes.naturezas.map((n) => (
@@ -419,7 +470,7 @@ export function PanoramaBase({ escopo, titulo, descricao }: PanoramaBaseProps) {
               </SelectContent>
             </Select>
             <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="w-[130px] h-8"><SelectValue placeholder="Status" /></SelectTrigger>
+              <SelectTrigger aria-label="Filtrar por status" className="h-10 w-full md:h-8 md:w-[130px]"><SelectValue placeholder="Status" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="todos">Todos os status</SelectItem>
                 <SelectItem value="abertos">Em aberto</SelectItem>
@@ -427,7 +478,7 @@ export function PanoramaBase({ escopo, titulo, descricao }: PanoramaBaseProps) {
               </SelectContent>
             </Select>
             <Select value={criticidade} onValueChange={setCriticidade}>
-              <SelectTrigger className="w-[160px] h-8"><SelectValue placeholder="Criticidade" /></SelectTrigger>
+              <SelectTrigger aria-label="Filtrar por criticidade" className="h-10 w-full md:h-8 md:w-[160px]"><SelectValue placeholder="Criticidade" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="todas">Toda criticidade</SelectItem>
                 {opcoes.criticidades.map((c) => (
@@ -436,7 +487,7 @@ export function PanoramaBase({ escopo, titulo, descricao }: PanoramaBaseProps) {
               </SelectContent>
             </Select>
             <Select value={periodo} onValueChange={setPeriodo}>
-              <SelectTrigger className="w-[180px] h-8"><SelectValue placeholder="Período" /></SelectTrigger>
+              <SelectTrigger aria-label="Filtrar por período" className="h-10 w-full md:h-8 md:w-[180px]"><SelectValue placeholder="Período" /></SelectTrigger>
               <SelectContent>
                 {PERIODOS.map((p) => (
                   <SelectItem key={p.valor} value={p.valor}>{p.rotulo}</SelectItem>
@@ -444,26 +495,32 @@ export function PanoramaBase({ escopo, titulo, descricao }: PanoramaBaseProps) {
               </SelectContent>
             </Select>
             {periodo === "custom" && (
-              <span className="flex items-center gap-1.5">
-                <Input
-                  type="date"
-                  value={dataInicio}
-                  onChange={(e) => setDataInicio(e.target.value)}
-                  className="h-8 w-[150px]"
-                  title="Abertura a partir de"
-                />
-                <span className="text-xs text-muted-foreground">até</span>
-                <Input
-                  type="date"
-                  value={dataFim}
-                  onChange={(e) => setDataFim(e.target.value)}
-                  className="h-8 w-[150px]"
-                  title="Abertura até"
-                />
-              </span>
+              <div className="grid min-w-0 grid-cols-2 gap-2 md:flex md:items-center md:gap-1.5">
+                <label className="min-w-0 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground md:contents">
+                  <span className="mb-1 block md:sr-only">De</span>
+                  <Input
+                    type="date"
+                    value={dataInicio}
+                    onChange={(e) => setDataInicio(e.target.value)}
+                    className="h-10 w-full min-w-0 px-2 md:h-8 md:w-[150px]"
+                    title="Abertura a partir de"
+                  />
+                </label>
+                <span className="hidden text-xs text-muted-foreground md:inline">até</span>
+                <label className="min-w-0 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground md:contents">
+                  <span className="mb-1 block md:sr-only">Até</span>
+                  <Input
+                    type="date"
+                    value={dataFim}
+                    onChange={(e) => setDataFim(e.target.value)}
+                    className="h-10 w-full min-w-0 px-2 md:h-8 md:w-[150px]"
+                    title="Abertura até"
+                  />
+                </label>
+              </div>
             )}
-            <div className="relative flex-1 min-w-[200px]">
-              <Search className="h-3.5 w-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <div className="relative hidden min-w-[200px] flex-1 md:block">
+              <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={busca}
                 onChange={(e) => setBusca(e.target.value)}
@@ -473,17 +530,17 @@ export function PanoramaBase({ escopo, titulo, descricao }: PanoramaBaseProps) {
             </div>
           </div>
           {(tema || cartorio || temFiltroFino) && (
-            <div className="flex items-center gap-1.5 flex-wrap text-xs">
+            <div className="flex min-w-0 flex-wrap items-center gap-1.5 text-xs">
               {tema && (
-                <Badge variant="secondary" className="gap-1">
-                  tema: {tema}
-                  <button type="button" onClick={() => setTema(null)}><X className="h-3 w-3" /></button>
+                <Badge variant="secondary" className="max-w-full gap-1">
+                  <span className="truncate">tema: {tema}</span>
+                  <button type="button" className="shrink-0" aria-label="Remover filtro de tema" onClick={() => setTema(null)}><X className="h-3 w-3" /></button>
                 </Badge>
               )}
               {cartorio && (
-                <Badge variant="secondary" className="gap-1">
-                  cartório: {cartorio}
-                  <button type="button" onClick={() => setCartorio(null)}><X className="h-3 w-3" /></button>
+                <Badge variant="secondary" className="max-w-full gap-1">
+                  <span className="truncate">cartório: {cartorio}</span>
+                  <button type="button" className="shrink-0" aria-label="Remover filtro de cartório" onClick={() => setCartorio(null)}><X className="h-3 w-3" /></button>
                 </Badge>
               )}
               <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={limparFiltros}>
@@ -517,8 +574,40 @@ export function PanoramaBase({ escopo, titulo, descricao }: PanoramaBaseProps) {
         </Card>
       ) : (
         <>
+          <nav
+            className="grid grid-cols-3 gap-1 rounded-xl border bg-muted/30 p-1 md:hidden"
+            aria-label="Seções do panorama"
+          >
+            {([
+              ["resumo", "Resumo"],
+              ["chamados", `Chamados (${filtrados.length})`],
+              ["parecer", "Parecer IA"],
+            ] as const).map(([section, label]) => (
+              <button
+                key={section}
+                type="button"
+                aria-pressed={mobileSection === section}
+                onClick={() => setMobileSection(section)}
+                className={cn(
+                  "min-w-0 rounded-lg px-2 py-2 text-[11px] font-bold leading-tight transition-colors",
+                  mobileSection === section
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground"
+                )}
+              >
+                <span className="break-words">{label}</span>
+              </button>
+            ))}
+          </nav>
+
           {/* KPIs */}
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
+          <div
+            data-testid="panorama-mobile-summary"
+            className={cn(
+              "grid grid-cols-2 gap-2 lg:grid-cols-5",
+              mobileSection !== "resumo" && "hidden md:grid"
+            )}
+          >
             {[
               { label: "Chamados no recorte", value: String(filtrados.length), icon: Headset },
               { label: "Cartórios envolvidos", value: String(agg.cartorios.length), icon: Building2 },
@@ -533,13 +622,13 @@ export function PanoramaBase({ escopo, titulo, descricao }: PanoramaBaseProps) {
                 icon: CheckCircle2,
               },
               { label: "Temas distintos (IA)", value: String(agg.temas.length), icon: Tags },
-            ].map((t) => (
-              <Card key={t.label}>
-                <CardContent className="p-3 flex items-center gap-2.5">
+            ].map((t, index) => (
+              <Card key={t.label} className={cn("min-w-0", index === 4 && "col-span-2 lg:col-span-1")}>
+                <CardContent className="flex min-w-0 items-center gap-2 p-2.5 sm:gap-2.5 sm:p-3">
                   <t.icon className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <div>
-                    <p className="text-lg font-bold leading-none">{t.value}</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">{t.label}</p>
+                  <div className="min-w-0">
+                    <p className="break-words text-base font-bold leading-none sm:text-lg">{t.value}</p>
+                    <p className="mt-1 break-words text-[9px] leading-tight text-muted-foreground sm:text-[10px]">{t.label}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -547,17 +636,24 @@ export function PanoramaBase({ escopo, titulo, descricao }: PanoramaBaseProps) {
           </div>
 
           {/* Grade 2x2 alinhada: todos os cards com a MESMA altura de conteudo */}
-          <div className="grid lg:grid-cols-2 gap-3">
+          <div
+            className={cn(
+              "grid min-w-0 gap-3 lg:grid-cols-2",
+              mobileSection !== "resumo" && "hidden md:grid"
+            )}
+          >
             {/* Temas recorrentes */}
-            <Card className="flex flex-col">
+            <Card className="flex min-w-0 flex-col">
               <CardHeader className="px-4 py-2.5">
-                <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
-                  <Tags className="h-4 w-4 text-indigo-500" />
-                  Temas recorrentes entre cartórios
-                  <span className="ml-1 text-[10px] font-normal text-muted-foreground">clique para filtrar</span>
+                <CardTitle className="min-w-0 text-sm font-semibold">
+                  <span className="flex items-start gap-1.5">
+                    <Tags className="mt-0.5 h-4 w-4 shrink-0 text-indigo-500" />
+                    <span className="break-words">Temas recorrentes entre cartórios</span>
+                  </span>
+                  <span className="mt-0.5 block text-[10px] font-normal text-muted-foreground">toque para filtrar</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="px-4 pb-3 pt-0 h-[280px] overflow-y-auto">
+              <CardContent className="max-h-[320px] overflow-y-auto px-3 pb-3 pt-0 sm:px-4 md:h-[280px]">
                 {agg.temas.length === 0 ? (
                   <p className="text-xs text-muted-foreground">
                     {agg.semTema > 0
@@ -572,12 +668,12 @@ export function PanoramaBase({ escopo, titulo, descricao }: PanoramaBaseProps) {
                         type="button"
                         onClick={() => setTema(tema === t.tema ? null : t.tema)}
                         className={cn(
-                          "w-full flex items-center justify-between gap-2 py-1.5 text-left hover:bg-neutral-50 dark:hover:bg-neutral-900/40 px-2 rounded transition-colors",
+                          "flex w-full min-w-0 flex-col items-stretch gap-1.5 rounded px-2 py-2 text-left transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-900/40 sm:flex-row sm:items-center sm:justify-between",
                           tema === t.tema && "bg-indigo-50 dark:bg-indigo-950/30"
                         )}
                       >
-                        <span className="text-sm font-medium truncate">{t.tema}</span>
-                        <span className="flex items-center gap-2 shrink-0 text-xs">
+                        <span className="min-w-0 break-words text-sm font-medium sm:truncate">{t.tema}</span>
+                        <span className="flex flex-wrap items-center gap-2 text-xs sm:shrink-0 sm:flex-nowrap">
                           <Badge
                             variant="outline"
                             className={cn(
@@ -606,15 +702,45 @@ export function PanoramaBase({ escopo, titulo, descricao }: PanoramaBaseProps) {
             </Card>
 
             {/* Naturezas */}
-            <Card className="flex flex-col">
+            <Card className="flex min-w-0 flex-col">
               <CardHeader className="px-4 py-2.5">
                 <CardTitle className="text-sm font-semibold">
-                  Chamados por natureza
-                  <span className="ml-2 text-[10px] font-normal text-muted-foreground">clique para filtrar</span>
+                  <span className="block">Chamados por natureza</span>
+                  <span className="mt-0.5 block text-[10px] font-normal text-muted-foreground">toque para filtrar</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="px-4 pb-3 pt-0 h-[280px]">
-                <ResponsiveContainer width="100%" height="100%">
+              <CardContent className="px-3 pb-3 pt-0 sm:px-4">
+                <div className="space-y-1 md:hidden">
+                  {agg.porNatureza.slice(0, 8).map((item) => {
+                    const max = agg.porNatureza[0]?.total || 1;
+                    return (
+                      <button
+                        key={item.natureza}
+                        type="button"
+                        onClick={() => setNatureza(natureza === item.natureza ? "todas" : item.natureza)}
+                        className={cn(
+                          "w-full min-w-0 rounded-lg px-2 py-2 text-left transition-colors",
+                          natureza === item.natureza
+                            ? "bg-indigo-50 dark:bg-indigo-950/30"
+                            : "hover:bg-muted/50"
+                        )}
+                      >
+                        <span className="flex min-w-0 items-start justify-between gap-2 text-xs">
+                          <span className="break-words font-medium">{item.natureza}</span>
+                          <span className="shrink-0 font-bold tabular-nums">{item.total}</span>
+                        </span>
+                        <span className="mt-1.5 block h-1.5 overflow-hidden rounded-full bg-muted">
+                          <span
+                            className="block h-full rounded-full"
+                            style={{ width: `${(item.total / max) * 100}%`, background: "var(--viz-bar)" }}
+                          />
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="hidden h-[280px] md:block">
+                  <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                       data={agg.porNatureza.slice(0, 8)}
                       layout="vertical"
@@ -659,19 +785,22 @@ export function PanoramaBase({ escopo, titulo, descricao }: PanoramaBaseProps) {
                       </Bar>
                     </BarChart>
                   </ResponsiveContainer>
-                </CardContent>
-              </Card>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Ranking de cartorios */}
-            <Card className="flex flex-col">
+            <Card className="flex min-w-0 flex-col">
                 <CardHeader className="px-4 py-2.5">
-                  <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
-                    <Trophy className="h-4 w-4 text-amber-500" />
-                    Cartórios com mais chamados no pós
-                    <span className="ml-1 text-[10px] font-normal text-muted-foreground">clique para filtrar</span>
+                  <CardTitle className="min-w-0 text-sm font-semibold">
+                    <span className="flex items-start gap-1.5">
+                      <Trophy className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+                      <span className="break-words">Cartórios com mais chamados no pós</span>
+                    </span>
+                    <span className="mt-0.5 block text-[10px] font-normal text-muted-foreground">toque para filtrar</span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-0.5 px-4 pb-3 pt-0 h-[280px] overflow-y-auto">
+                <CardContent className="max-h-[320px] space-y-0.5 overflow-y-auto px-3 pb-3 pt-0 sm:px-4 md:h-[280px]">
                   {agg.cartorios.slice(0, 8).map(([nome, n]) => {
                     const max = agg.cartorios[0]?.[1] || 1;
                     return (
@@ -684,8 +813,8 @@ export function PanoramaBase({ escopo, titulo, descricao }: PanoramaBaseProps) {
                           cartorio === nome && "bg-indigo-50 dark:bg-indigo-950/30"
                         )}
                       >
-                        <div className="flex items-center justify-between gap-2 text-xs mb-1">
-                          <span className="truncate font-medium">{nome}</span>
+                        <div className="mb-1 flex min-w-0 items-start justify-between gap-2 text-xs">
+                          <span className="break-words font-medium sm:truncate">{nome}</span>
                           <span className="tabular-nums font-semibold shrink-0">{n}</span>
                         </div>
                         <div className="h-1.5 rounded-full bg-muted overflow-hidden">
@@ -701,49 +830,61 @@ export function PanoramaBase({ escopo, titulo, descricao }: PanoramaBaseProps) {
             </Card>
 
             {/* Tendencia mensal */}
-            <Card className="flex flex-col">
+            <Card className="flex min-w-0 flex-col">
               <CardHeader className="px-4 py-2.5">
                 <CardTitle className="text-sm font-semibold">
-                  Tendência mensal
-                  <span className="ml-2 text-[10px] font-normal text-muted-foreground">
+                  <span className="block">Tendência mensal</span>
+                  <span className="mt-0.5 block text-[10px] font-normal leading-relaxed text-muted-foreground">
                     as implantações estão gerando menos chamados de pós ao longo do tempo?
                   </span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="px-4 pb-3 pt-0 h-[280px]">
+              <CardContent className="px-3 pb-3 pt-0 sm:px-4">
                 {agg.porMes.length > 1 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={agg.porMes} margin={{ top: 16, right: 8, bottom: 0, left: 8 }}>
-                    <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="0" />
-                    <XAxis
-                      dataKey="mes"
-                      tickLine={false}
-                      axisLine={{ stroke: "hsl(var(--border))" }}
-                      tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
-                    />
-                    <YAxis hide allowDecimals={false} />
-                    <Tooltip
-                      cursor={{ fill: "hsl(var(--muted))", opacity: 0.4 }}
-                      formatter={(v: number) => [`${v} chamado${v === 1 ? "" : "s"}`, ""]}
-                      separator=""
-                      contentStyle={{
-                        background: "hsl(var(--background))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: 8,
-                        fontSize: 12,
-                      }}
-                    />
-                    <Bar dataKey="total" fill="var(--viz-bar)" barSize={28} radius={[4, 4, 0, 0]}>
-                      <LabelList
-                        dataKey="total"
-                        position="top"
-                        style={{ fill: "hsl(var(--foreground))", fontSize: 12, fontWeight: 600 }}
-                      />
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
+                  <>
+                    <div className="grid grid-cols-3 gap-2 md:hidden">
+                      {agg.porMes.slice(-6).map((item) => (
+                        <div key={item.mes} className="rounded-lg border bg-muted/20 p-2 text-center">
+                          <p className="text-base font-bold tabular-nums">{item.total}</p>
+                          <p className="mt-0.5 text-[10px] uppercase text-muted-foreground">{item.mes}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="hidden h-[280px] md:block">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={agg.porMes} margin={{ top: 16, right: 8, bottom: 0, left: 8 }}>
+                          <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="0" />
+                          <XAxis
+                            dataKey="mes"
+                            tickLine={false}
+                            axisLine={{ stroke: "hsl(var(--border))" }}
+                            tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                          />
+                          <YAxis hide allowDecimals={false} />
+                          <Tooltip
+                            cursor={{ fill: "hsl(var(--muted))", opacity: 0.4 }}
+                            formatter={(v: number) => [`${v} chamado${v === 1 ? "" : "s"}`, ""]}
+                            separator=""
+                            contentStyle={{
+                              background: "hsl(var(--background))",
+                              border: "1px solid hsl(var(--border))",
+                              borderRadius: 8,
+                              fontSize: 12,
+                            }}
+                          />
+                          <Bar dataKey="total" fill="var(--viz-bar)" barSize={28} radius={[4, 4, 0, 0]}>
+                            <LabelList
+                              dataKey="total"
+                              position="top"
+                              style={{ fill: "hsl(var(--foreground))", fontSize: 12, fontWeight: 600 }}
+                            />
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </>
                 ) : (
-                  <p className="text-xs text-muted-foreground">
+                  <p className="pb-3 text-xs text-muted-foreground">
                     Sem meses suficientes no recorte para mostrar tendência.
                   </p>
                 )}
@@ -753,13 +894,13 @@ export function PanoramaBase({ escopo, titulo, descricao }: PanoramaBaseProps) {
 
           {/* Projetos do cartorio selecionado — atalho direto pro projeto */}
           {cartorio && (
-            <Card>
-              <CardHeader className="px-4 py-2.5 flex flex-row items-center justify-between space-y-0">
-                <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
-                  <FolderKanban className="h-4 w-4 text-indigo-500" />
-                  Projetos de {cartorio}
+            <Card className={cn("min-w-0", mobileSection !== "resumo" && "hidden md:block")}>
+              <CardHeader className="flex flex-col items-stretch gap-2 space-y-0 px-4 py-2.5 sm:flex-row sm:items-center sm:justify-between">
+                <CardTitle className="flex min-w-0 items-start gap-1.5 text-sm font-semibold">
+                  <FolderKanban className="mt-0.5 h-4 w-4 shrink-0 text-indigo-500" />
+                  <span className="break-words">Projetos de {cartorio}</span>
                 </CardTitle>
-                <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={() => setCartorio(null)}>
+                <Button variant="ghost" size="sm" className="h-8 justify-center gap-1 text-xs sm:h-7 sm:shrink-0" onClick={() => setCartorio(null)}>
                   <X className="h-3.5 w-3.5" /> Fechar
                 </Button>
               </CardHeader>
@@ -769,9 +910,9 @@ export function PanoramaBase({ escopo, titulo, descricao }: PanoramaBaseProps) {
                 ) : (
                   <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 divide-y divide-neutral-100 dark:divide-neutral-800/60 overflow-hidden">
                     {projetosDoCartorio.map((p) => (
-                      <div key={p.id} className="flex items-center justify-between gap-2 px-3 py-1.5">
+                      <div key={p.id} className="flex min-w-0 flex-col items-stretch gap-2 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:py-1.5">
                         <div className="min-w-0">
-                          <p className="text-xs font-semibold flex items-center gap-1.5">
+                          <p className="flex min-w-0 flex-wrap items-center gap-1.5 text-xs font-semibold">
                             <Badge variant="outline" className="text-[10px] font-normal pointer-events-none">
                               {p.produto}
                             </Badge>
@@ -786,7 +927,7 @@ export function PanoramaBase({ escopo, titulo, descricao }: PanoramaBaseProps) {
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="h-7 gap-1 text-xs shrink-0"
+                          className="h-9 w-full gap-1 text-xs sm:h-7 sm:w-auto sm:shrink-0"
                           onClick={() => navigate(`/projects/${p.id}`)}
                           title="Abrir a tela do projeto"
                         >
@@ -801,14 +942,17 @@ export function PanoramaBase({ escopo, titulo, descricao }: PanoramaBaseProps) {
           )}
 
           {/* Lista de chamados do recorte */}
-          <Card>
+          <Card
+            data-testid="panorama-mobile-tickets"
+            className={cn("min-w-0", mobileSection !== "chamados" && "hidden md:block")}
+          >
             <CardHeader className="px-4 py-2.5">
               <CardTitle className="text-sm font-semibold">
                 Chamados do recorte{" "}
                 <span className="text-muted-foreground font-normal">({filtrados.length})</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="px-4 pb-3 pt-0">
+            <CardContent className="px-3 pb-3 pt-0 sm:px-4">
               <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 divide-y divide-neutral-100 dark:divide-neutral-800/60 overflow-hidden">
                 {paginados.map((c) => {
                   const critico = isCriticoAberto(c);
@@ -818,19 +962,19 @@ export function PanoramaBase({ escopo, titulo, descricao }: PanoramaBaseProps) {
                     type="button"
                     onClick={() => setChamadoSelecionado(c)}
                     className={cn(
-                      "w-full text-left px-3 py-1.5 transition-colors",
+                      "w-full min-w-0 px-3 py-3 text-left transition-colors sm:py-1.5",
                       critico
                         ? "bg-red-50/70 dark:bg-red-950/20 border-l-2 border-l-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
                         : "hover:bg-neutral-50 dark:hover:bg-neutral-900/40"
                     )}
                     title="Ver detalhes do chamado"
                   >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-semibold truncate">
+                    <div className="flex min-w-0 flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <span className="min-w-0 break-words text-xs font-semibold sm:truncate">
                         <span className="text-indigo-600 dark:text-indigo-400 font-mono">#{c.numeroChamado}</span>{" "}
                         {c.titulo || "(sem título)"}
                       </span>
-                      <span className="flex items-center gap-1.5 shrink-0">
+                      <span className="flex flex-wrap items-center gap-1.5 sm:shrink-0 sm:flex-nowrap">
                         {critico && (
                           <Badge className="text-[10px] pointer-events-none bg-red-600 hover:bg-red-600 text-white gap-0.5">
                             <TriangleAlert className="h-2.5 w-2.5" />
@@ -845,11 +989,11 @@ export function PanoramaBase({ escopo, titulo, descricao }: PanoramaBaseProps) {
                         </Badge>
                       </span>
                     </div>
-                    <div className="flex items-center gap-3 mt-0.5 text-[11px] text-muted-foreground">
-                      <span className="truncate">{c.projetoCliente}</span>
-                      <span>{c.natureza || "—"}</span>
-                      {c.tema && <span className="italic shrink-0">“{c.tema}”</span>}
-                      <span className="flex items-center gap-1 shrink-0">
+                    <div className="mt-2 grid min-w-0 gap-1 text-[11px] text-muted-foreground sm:mt-0.5 sm:flex sm:flex-wrap sm:items-center sm:gap-x-3 sm:gap-y-1">
+                      <span className="break-words font-medium text-foreground/80 sm:min-w-0 sm:truncate">{c.projetoCliente}</span>
+                      <span className="break-words">{c.natureza || "—"}</span>
+                      {c.tema && <span className="break-words italic">“{c.tema}”</span>}
+                      <span className="flex items-center gap-1 sm:shrink-0">
                         <CalendarDays className="h-3 w-3" />
                         {fmtDateBr(c.dataAbertura)}
                         {" → "}
@@ -871,8 +1015,8 @@ export function PanoramaBase({ escopo, titulo, descricao }: PanoramaBaseProps) {
 
               {/* Paginacao */}
               {filtrados.length > 0 && (
-                <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground flex-wrap gap-2">
-                  <span className="flex items-center gap-2">
+                <div className="mt-3 flex min-w-0 flex-col gap-3 text-xs text-muted-foreground sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-2">
+                  <div className="flex min-w-0 items-center justify-between gap-2 sm:justify-start">
                     <Select
                       value={String(porPagina)}
                       onValueChange={(v) => {
@@ -880,7 +1024,7 @@ export function PanoramaBase({ escopo, titulo, descricao }: PanoramaBaseProps) {
                         setPagina(1);
                       }}
                     >
-                      <SelectTrigger className="h-7 w-[64px] text-xs">
+                      <SelectTrigger aria-label="Itens por página" className="h-7 w-[64px] text-xs">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -891,51 +1035,58 @@ export function PanoramaBase({ escopo, titulo, descricao }: PanoramaBaseProps) {
                         ))}
                       </SelectContent>
                     </Select>
-                    por página · {(paginaAtual - 1) * porPagina + 1}–
-                    {Math.min(paginaAtual * porPagina, filtrados.length)} de {filtrados.length}
-                  </span>
-                  <span className="flex items-center gap-1">
+                    <span className="min-w-0 text-right sm:text-left">
+                      por página · {(paginaAtual - 1) * porPagina + 1}–
+                      {Math.min(paginaAtual * porPagina, filtrados.length)} de {filtrados.length}
+                    </span>
+                  </div>
+                  <div className="grid w-full grid-cols-[2.25rem_1fr_2.25rem] items-center gap-2 sm:flex sm:w-auto sm:gap-1">
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
-                      className="h-7 gap-1 text-xs"
+                      className="h-9 w-9 gap-1 p-0 text-xs sm:h-7 sm:w-auto sm:px-3"
+                      aria-label="Página anterior"
                       disabled={paginaAtual <= 1}
                       onClick={() => setPagina(paginaAtual - 1)}
                     >
-                      <ChevronLeft className="h-3.5 w-3.5" /> Anterior
+                      <ChevronLeft className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Anterior</span>
                     </Button>
-                    <span className="px-2 tabular-nums">
+                    <span className="text-center tabular-nums sm:px-2">
                       página {paginaAtual} de {totalPaginas}
                     </span>
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
-                      className="h-7 gap-1 text-xs"
+                      className="h-9 w-9 gap-1 p-0 text-xs sm:h-7 sm:w-auto sm:px-3"
+                      aria-label="Próxima página"
                       disabled={paginaAtual >= totalPaginas}
                       onClick={() => setPagina(paginaAtual + 1)}
                     >
-                      Próxima <ChevronRight className="h-3.5 w-3.5" />
+                      <span className="hidden sm:inline">Próxima</span> <ChevronRight className="h-3.5 w-3.5" />
                     </Button>
-                  </span>
+                  </div>
                 </div>
               )}
             </CardContent>
           </Card>
 
           {/* Parecer IA da carteira */}
-          <Card>
-            <CardHeader className="px-4 py-2.5 flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
-                <Sparkles className="h-4 w-4 text-indigo-500" />
-                Parecer da IA — carteira
+          <Card
+            data-testid="panorama-mobile-ai"
+            className={cn("min-w-0", mobileSection !== "parecer" && "hidden md:block")}
+          >
+            <CardHeader className="flex flex-col items-stretch gap-2 space-y-0 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:py-2.5">
+              <CardTitle className="flex items-center gap-1.5 text-sm font-semibold">
+                <Sparkles className="h-4 w-4 shrink-0 text-indigo-500" />
+                <span className="break-words">Parecer da IA — carteira</span>
               </CardTitle>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-7 gap-1 text-xs"
+                className="h-9 w-full gap-1 text-xs sm:h-7 sm:w-auto sm:shrink-0"
                 onClick={handleGerarParecer}
                 disabled={!!parecerAtivo || !workerOnline || filtrados.length === 0}
                 title={
