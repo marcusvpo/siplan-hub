@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { format, parseISO, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion, useReducedMotion } from "framer-motion";
@@ -6,6 +6,8 @@ import {
   Activity,
   BarChart3,
   Bug,
+  ChevronLeft,
+  ChevronRight,
   Clock3,
   FileQuestion,
   FilterX,
@@ -55,6 +57,7 @@ const SOURCE_OPTIONS = [
   { value: "manual", label: "Lançado no HUB" },
 ];
 const PIE_COLORS = ["#7c3aed", "#2563eb", "#e11d48", "#0d9488", "#d97706", "#64748b"];
+const TICKETS_PER_PAGE = 5;
 
 export default function SdAttendanceBi() {
   const shouldReduceMotion = useReducedMotion();
@@ -65,6 +68,7 @@ export default function SdAttendanceBi() {
   const [groups, setGroups] = useState<string[]>([]);
   const [sources, setSources] = useState<string[]>([]);
   const [natures, setNatures] = useState<string[]>([]);
+  const [ticketsPage, setTicketsPage] = useState(1);
 
   const query = useSdAttendanceBi({ startDate, endDate, userIds, groups, sources, natures });
   const data = query.data;
@@ -144,6 +148,17 @@ export default function SdAttendanceBi() {
       hours: minutesToHours(byHour.get(hour)?.total_minutes ?? 0),
     }));
   }, [data?.by_hour]);
+  const topTickets = data?.top_tickets ?? [];
+  const ticketsPageCount = Math.max(1, Math.ceil(topTickets.length / TICKETS_PER_PAGE));
+  const activeTicketsPage = Math.min(ticketsPage, ticketsPageCount);
+  const paginatedTickets = topTickets.slice(
+    (activeTicketsPage - 1) * TICKETS_PER_PAGE,
+    activeTicketsPage * TICKETS_PER_PAGE,
+  );
+
+  useEffect(() => {
+    setTicketsPage(1);
+  }, [data?.top_tickets]);
 
   const setPreset = (days: number) => {
     setEndDate(format(today, "yyyy-MM-dd"));
@@ -181,10 +196,10 @@ export default function SdAttendanceBi() {
       </motion.section>
 
       <Card>
-        <CardContent className="space-y-2 p-2.5">
-          <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-[140px_140px_minmax(180px,1fr)_minmax(200px,1.2fr)]">
-            <FilterField label="Início"><Input aria-label="Data inicial do BI" type="date" value={startDate} max={endDate} onChange={(event) => setStartDate(event.target.value)} className="h-9 text-xs" /></FilterField>
-            <FilterField label="Fim"><Input aria-label="Data final do BI" type="date" value={endDate} min={startDate} onChange={(event) => setEndDate(event.target.value)} className="h-9 text-xs" /></FilterField>
+        <CardContent className="space-y-1.5 p-2">
+          <div className="grid gap-1.5 md:grid-cols-2 xl:grid-cols-[132px_132px_minmax(180px,1fr)_minmax(200px,1.2fr)]">
+            <FilterField label="Início"><Input aria-label="Data inicial do BI" type="date" value={startDate} max={endDate} onChange={(event) => setStartDate(event.target.value)} className="h-8 px-2 text-[11px]" /></FilterField>
+            <FilterField label="Fim"><Input aria-label="Data final do BI" type="date" value={endDate} min={startDate} onChange={(event) => setEndDate(event.target.value)} className="h-8 px-2 text-[11px]" /></FilterField>
             <FilterField label="Grupos de atendimento">
               <CsCxMultiSelect ariaLabel="Filtrar grupos de atendimento" options={groupOptions} values={groups} onChange={setGroups} placeholder="Todos os grupos" searchPlaceholder="Buscar grupo..." />
             </FilterField>
@@ -192,17 +207,17 @@ export default function SdAttendanceBi() {
               <CsCxMultiSelect ariaLabel="Filtrar analistas" options={analystOptions} values={userIds} onChange={setUserIds} placeholder="Todos os analistas" searchPlaceholder="Buscar analista..." />
             </FilterField>
           </div>
-          <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_220px_auto_auto] xl:items-end">
+          <div className="grid gap-1.5 md:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_210px_auto_auto] xl:items-end">
             <FilterField label="Natureza do chamado">
               <CsCxMultiSelect ariaLabel="Filtrar naturezas dos chamados" options={natureOptions} values={natures} onChange={setNatures} placeholder="Todas as naturezas" searchPlaceholder="Buscar natureza..." />
             </FilterField>
             <FilterField label="Origem das horas">
               <CsCxMultiSelect ariaLabel="Filtrar origem das horas" options={SOURCE_OPTIONS} values={sources} onChange={setSources} placeholder="Todas as origens" />
             </FilterField>
-            <div className="flex h-10 items-center rounded-lg border bg-muted/30 p-1">
-              {[7, 30, 90].map((days) => <Button key={days} type="button" variant="ghost" size="sm" className="h-8 px-2.5 text-xs" onClick={() => setPreset(days)}>{days} dias</Button>)}
+            <div className="flex h-8 items-center rounded-md border bg-muted/30 p-0.5">
+              {[7, 30, 90].map((days) => <Button key={days} type="button" variant="ghost" size="sm" className="h-7 px-2 text-[11px]" onClick={() => setPreset(days)}>{days} dias</Button>)}
             </div>
-            <Button type="button" variant="ghost" size="sm" className="h-10 gap-1.5 text-xs" disabled={!hasActiveFilters} onClick={clearDimensions}><FilterX className="h-3.5 w-3.5" /> Limpar filtros</Button>
+            <Button type="button" variant="ghost" size="sm" className="h-8 gap-1.5 px-2 text-[11px]" disabled={!hasActiveFilters} onClick={clearDimensions}><FilterX className="h-3.5 w-3.5" /> Limpar filtros</Button>
           </div>
         </CardContent>
       </Card>
@@ -225,13 +240,13 @@ export default function SdAttendanceBi() {
           </div>
 
           <Card>
-            <CardHeader className="flex-row items-center justify-between space-y-0 p-3 pb-1">
-              <div><CardTitle className="text-sm">Evolução do atendimento</CardTitle><p className="text-[11px] text-muted-foreground">Horas por dia, separadas entre HUB e 0800</p></div>
+            <CardHeader className="flex-row items-center justify-between space-y-0 p-2.5 pb-0.5">
+              <div><CardTitle className="text-sm">Evolução do atendimento</CardTitle><p className="text-[10px] text-muted-foreground">Horas por dia, separadas entre HUB e 0800</p></div>
               <SourceLegend />
             </CardHeader>
-            <CardContent className="h-56 p-2 pt-0">
+            <CardContent className="h-48 p-1.5 pt-0">
               <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                <BarChart data={dailyData} margin={{ top: 8, right: 8, left: -22, bottom: 0 }}>
+                <BarChart data={dailyData} margin={{ top: 4, right: 6, left: -24, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="label" fontSize={10} tickLine={false} axisLine={false} />
                   <YAxis fontSize={10} tickLine={false} axisLine={false} unit="h" />
@@ -321,11 +336,11 @@ export default function SdAttendanceBi() {
           </div>
 
           <div className="grid gap-2 xl:grid-cols-[1.1fr_0.9fr]">
-            <Card>
-              <CardHeader className="p-3 pb-1"><CardTitle className="text-sm">Performance dos analistas</CardTitle><p className="text-[11px] text-muted-foreground">Horas, volume e produtividade dentro do período filtrado</p></CardHeader>
-              <CardContent className="overflow-x-auto p-2 pt-0">
-                <Table>
-                  <TableHeader><TableRow><TableHead>Analista</TableHead><TableHead>Grupo</TableHead><TableHead className="text-right">Horas</TableHead><TableHead className="text-right">Chamados</TableHead><TableHead className="text-right">Média/lanç.</TableHead><TableHead className="text-right">Dias</TableHead></TableRow></TableHeader>
+            <Card className="flex h-[30rem] min-h-0 flex-col">
+              <CardHeader className="shrink-0 p-2.5 pb-0.5"><CardTitle className="text-xs">Performance dos analistas</CardTitle><p className="text-[10px] text-muted-foreground">Horas, volume e produtividade dentro do período filtrado</p></CardHeader>
+              <CardContent className="min-h-0 flex-1 overflow-auto p-1.5 pt-0">
+                <Table className="text-[11px] [&_td]:px-2 [&_td]:py-1.5 [&_th]:h-8 [&_th]:px-2 [&_th]:text-[10px]">
+                  <TableHeader className="sticky top-0 z-10 bg-background"><TableRow><TableHead>Analista</TableHead><TableHead>Grupo</TableHead><TableHead className="text-right">Horas</TableHead><TableHead className="text-right">Chamados</TableHead><TableHead className="text-right">Média/lanç.</TableHead><TableHead className="text-right">Dias</TableHead></TableRow></TableHeader>
                   <TableBody>
                     {(data?.by_analyst ?? []).map((analyst) => (
                       <TableRow key={analyst.user_id} className="cursor-pointer" onClick={() => setUserIds([analyst.user_id])}>
@@ -337,9 +352,9 @@ export default function SdAttendanceBi() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="p-3 pb-1"><CardTitle className="text-sm">Atividades executadas</CardTitle><p className="text-[11px] text-muted-foreground">Distribuição do esforço por tipo de atividade</p></CardHeader>
-              <CardContent className="space-y-2 p-3 pt-1">
+            <Card className="flex h-[30rem] min-h-0 flex-col">
+              <CardHeader className="shrink-0 p-3 pb-1"><CardTitle className="text-sm">Atividades executadas</CardTitle><p className="text-[11px] text-muted-foreground">Distribuição do esforço por tipo de atividade</p></CardHeader>
+              <CardContent className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3 pt-1">
                 {(data?.by_activity ?? []).slice(0, 12).map((activity) => (
                   <div key={activity.activity} className="space-y-1">
                     <div className="flex items-center justify-between gap-3 text-xs"><span className="truncate font-medium" title={activity.activity}>{activity.activity}</span><span className="shrink-0 tabular-nums text-muted-foreground">{formatMinutes(activity.total_minutes)} · {activity.entry_count}</span></div>
@@ -351,12 +366,12 @@ export default function SdAttendanceBi() {
           </div>
 
           <Card>
-            <CardHeader className="p-3 pb-1"><CardTitle className="text-sm">Chamados com maior esforço</CardTitle><p className="text-[11px] text-muted-foreground">Top 15 pelo total de horas lançadas no período</p></CardHeader>
-            <CardContent className="overflow-x-auto p-2 pt-0">
-              <Table>
+            <CardHeader className="p-2.5 pb-0.5"><CardTitle className="text-xs">Chamados com maior esforço</CardTitle><p className="text-[10px] text-muted-foreground">Top 15 pelo total de horas lançadas no período · 5 por página</p></CardHeader>
+            <CardContent className="overflow-x-auto p-1.5 pt-0">
+              <Table className="text-[11px] [&_td]:px-2 [&_td]:py-1.5 [&_th]:h-8 [&_th]:px-2 [&_th]:text-[10px]">
                 <TableHeader><TableRow><TableHead>Chamado</TableHead><TableHead>Cliente / título</TableHead><TableHead>Natureza</TableHead><TableHead>Produto</TableHead><TableHead className="text-right">Horas</TableHead><TableHead className="text-right">Interações</TableHead></TableRow></TableHeader>
                 <TableBody>
-                  {(data?.top_tickets ?? []).map((ticket) => (
+                  {paginatedTickets.map((ticket) => (
                     <TableRow key={ticket.ticket_number}>
                       <TableCell className="font-bold">#{ticket.ticket_number}</TableCell>
                       <TableCell className="max-w-[360px]"><p className="truncate text-xs font-medium" title={ticket.ticket_title}>{ticket.ticket_title}</p><p className="truncate text-[10px] text-muted-foreground">{ticket.client_name}</p></TableCell>
@@ -365,6 +380,15 @@ export default function SdAttendanceBi() {
                   ))}
                 </TableBody>
               </Table>
+              <div className="flex items-center justify-end gap-2 border-t px-2 py-1.5 text-[10px] text-muted-foreground">
+                <span>Página {activeTicketsPage} de {ticketsPageCount}</span>
+                <Button type="button" variant="outline" size="icon" className="h-7 w-7" aria-label="Página anterior dos chamados" disabled={activeTicketsPage === 1} onClick={() => setTicketsPage(activeTicketsPage - 1)}>
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                </Button>
+                <Button type="button" variant="outline" size="icon" className="h-7 w-7" aria-label="Próxima página dos chamados" disabled={activeTicketsPage === ticketsPageCount} onClick={() => setTicketsPage(activeTicketsPage + 1)}>
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </>
@@ -374,7 +398,7 @@ export default function SdAttendanceBi() {
 }
 
 function FilterField({ label, children }: { label: string; children: React.ReactNode }) {
-  return <label className="space-y-1"><span className="block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</span>{children}</label>;
+  return <label className="space-y-0.5 [&_[role=combobox]]:h-8 [&_[role=combobox]]:px-2 [&_[role=combobox]]:text-[11px]"><span className="block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</span>{children}</label>;
 }
 
 function MetricCard({ label, value, detail, icon }: { label: string; value: string; detail: string; icon: React.ReactElement }) {
