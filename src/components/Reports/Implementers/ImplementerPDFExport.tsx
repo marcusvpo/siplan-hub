@@ -293,7 +293,7 @@ export function ImplementerPDFExport({ data }: ImplementerPDFExportProps) {
       onClick={generatePDF}
       disabled={exporting}
       variant="default"
-      className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-md hover:shadow-lg transition-all"
+      className="w-full gap-2 bg-primary font-bold text-primary-foreground shadow-md transition-all hover:bg-primary/90 hover:shadow-lg sm:w-auto"
     >
       {exporting ? (
         <Loader2 className="h-4 w-4 animate-spin" />

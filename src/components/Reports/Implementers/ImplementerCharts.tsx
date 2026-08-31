@@ -29,6 +29,12 @@ interface ImplementerChartsProps {
   stageRadarData?: StageRadarEntry[];
 }
 
+interface ChartTooltipProps {
+  active?: boolean;
+  payload?: Array<{ name?: string; value?: number }>;
+  label?: string;
+}
+
 const statusColors: Record<string, string> = {
   "in-progress": "#3b82f6",
   done: "#22c55e",
@@ -100,7 +106,7 @@ export function ImplementerCharts({
     };
   });
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-popover border border-border p-3 rounded-lg shadow-xl text-popover-foreground text-xs font-semibold">
@@ -115,9 +121,9 @@ export function ImplementerCharts({
   };
 
   return (
-    <div className="grid gap-4 md:grid-cols-2">
+    <div className="grid min-w-0 gap-4 md:grid-cols-2" data-testid="implementer-charts">
       {/* Chart 1: Status Distribution */}
-      <Card className="border border-border/80 shadow-sm overflow-hidden">
+      <Card className="min-w-0 overflow-hidden border border-border/80 shadow-sm">
         <CardHeader className="py-3.5 bg-muted/20 border-b border-border/60">
           <CardTitle className="text-sm font-bold text-foreground">
             Distribuição de Status dos Projetos
@@ -126,10 +132,10 @@ export function ImplementerCharts({
             Projetos sob liderança direta por estado global
           </CardDescription>
         </CardHeader>
-        <CardContent className="pt-4">
-          <div className="w-full h-[260px] min-h-[260px]">
+        <CardContent className="px-1 pt-4 sm:px-6">
+          <div className="h-[230px] min-h-[230px] w-full min-w-0 sm:h-[260px] sm:min-h-[260px]">
             {statusData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <PieChart>
                   <Pie
                     data={statusData}
@@ -157,7 +163,7 @@ export function ImplementerCharts({
       </Card>
 
       {/* Chart 2: Health Score Distribution */}
-      <Card className="border border-border/80 shadow-sm overflow-hidden">
+      <Card className="min-w-0 overflow-hidden border border-border/80 shadow-sm">
         <CardHeader className="py-3.5 bg-muted/20 border-b border-border/60">
           <CardTitle className="text-sm font-bold text-foreground">
             Saúde Operacional dos Projetos
@@ -166,10 +172,10 @@ export function ImplementerCharts({
             Classificação por nível de atenção e risco
           </CardDescription>
         </CardHeader>
-        <CardContent className="pt-4">
-          <div className="w-full h-[260px] min-h-[260px]">
+        <CardContent className="px-1 pt-4 sm:px-6">
+          <div className="h-[230px] min-h-[230px] w-full min-w-0 sm:h-[260px] sm:min-h-[260px]">
             {healthData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <PieChart>
                   <Pie
                     data={healthData}
@@ -197,7 +203,7 @@ export function ImplementerCharts({
       </Card>
 
       {/* Chart 3: Volume por Sistema */}
-      <Card className="border border-border/80 shadow-sm overflow-hidden">
+      <Card className="min-w-0 overflow-hidden border border-border/80 shadow-sm">
         <CardHeader className="py-3.5 bg-muted/20 border-b border-border/60">
           <CardTitle className="text-sm font-bold text-foreground">
             Volume de Implantações por Sistema
@@ -206,10 +212,10 @@ export function ImplementerCharts({
             Distribuição entre Orion TN, Orion PRO, WebRI e outros
           </CardDescription>
         </CardHeader>
-        <CardContent className="pt-4">
-          <div className="w-full h-[260px] min-h-[260px]">
+        <CardContent className="px-1 pt-4 sm:px-6">
+          <div className="h-[230px] min-h-[230px] w-full min-w-0 sm:h-[260px] sm:min-h-[260px]">
             {systemData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <BarChart data={systemData} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
                   <defs>
                     <linearGradient id="colorSystem" x1="0" y1="0" x2="0" y2="1">
@@ -243,7 +249,7 @@ export function ImplementerCharts({
       </Card>
 
       {/* Chart 4: Radar / Spider Chart de Atuação por Etapa */}
-      <Card className="border border-border/80 shadow-sm overflow-hidden">
+      <Card className="min-w-0 overflow-hidden border border-border/80 shadow-sm">
         <CardHeader className="py-3.5 bg-muted/20 border-b border-border/60">
           <CardTitle className="text-sm font-bold text-foreground">
             Matriz de Atuação Versátil por Etapa
@@ -252,10 +258,10 @@ export function ImplementerCharts({
             Volume de participações em cada uma das etapas do ciclo
           </CardDescription>
         </CardHeader>
-        <CardContent className="pt-4">
-          <div className="w-full h-[260px] min-h-[260px]">
+        <CardContent className="px-1 pt-4 sm:px-6">
+          <div className="h-[230px] min-h-[230px] w-full min-w-0 sm:h-[260px] sm:min-h-[260px]">
             {stageRadarData && stageRadarData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <RadarChart cx="50%" cy="50%" outerRadius={80} data={stageRadarData}>
                   <PolarGrid stroke="#e2e8f0" />
                   <PolarAngleAxis dataKey="subject" tick={{ fill: "currentColor", fontSize: 10, fontWeight: 600 }} />
@@ -280,7 +286,7 @@ export function ImplementerCharts({
       </Card>
 
       {/* Chart 5: Evolução Mensal (Full width) */}
-      <Card className="md:col-span-2 border border-border/80 shadow-sm overflow-hidden">
+      <Card className="min-w-0 overflow-hidden border border-border/80 shadow-sm md:col-span-2">
         <CardHeader className="py-3.5 bg-muted/20 border-b border-border/60">
           <CardTitle className="text-sm font-bold text-foreground">
             Evolução Temporal de Projetos Iniciados
@@ -289,10 +295,10 @@ export function ImplementerCharts({
             Volume mensal de novos cartórios sob liderança
           </CardDescription>
         </CardHeader>
-        <CardContent className="pt-4">
-          <div className="w-full h-[260px] min-h-[260px]">
+        <CardContent className="px-1 pt-4 sm:px-6">
+          <div className="h-[230px] min-h-[230px] w-full min-w-0 sm:h-[260px] sm:min-h-[260px]">
             {monthData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <AreaChart data={monthData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorMonth" x1="0" y1="0" x2="0" y2="1">

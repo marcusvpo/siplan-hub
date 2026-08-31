@@ -47,14 +47,17 @@ export default function Reports() {
   });
 
   return (
-    <div className="min-h-[calc(100vh-80px)] space-y-3.5 animate-in fade-in zoom-in-95 duration-700 pb-6">
+    <div
+      className="min-h-[calc(100vh-80px)] min-w-0 space-y-3.5 overflow-x-hidden pb-6 animate-in fade-in zoom-in-95 duration-700"
+      data-testid="reports-page"
+    >
       <Tabs
         defaultValue="overview"
-        className="space-y-4"
+        className="min-w-0 space-y-4"
         onValueChange={setActiveTab}
       >
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 pb-3 border-b border-border">
-          <div className="space-y-0.5">
+        <div className="flex min-w-0 flex-col justify-between gap-3 border-b border-border pb-3 md:flex-row md:items-end">
+          <div className="min-w-0 space-y-0.5">
             <div className="flex items-center gap-1.5 mb-0.5">
               <div className="h-3.5 w-0.75 bg-primary rounded-full" />
               <span className="text-[8px] font-black uppercase tracking-[0.2em] text-primary/70">Intelligence Engine</span>
@@ -67,32 +70,35 @@ export default function Reports() {
             </p>
           </div>
 
-          <TabsList className="bg-muted/50 backdrop-blur-md p-0.5 border border-border rounded-lg shadow-sm self-start md:self-center">
+          <TabsList className="grid h-auto w-full grid-cols-3 gap-1 self-start overflow-x-hidden rounded-lg border border-border bg-muted/50 p-1 shadow-sm backdrop-blur-md sm:flex sm:h-9 sm:w-auto sm:gap-0 sm:overflow-x-auto sm:p-0.5 md:self-center">
             <TabsTrigger 
               value="overview" 
-              className="gap-1.5 px-3 py-1 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all rounded-md text-[10px] font-bold uppercase tracking-wider"
+              className="h-10 min-w-0 gap-1 px-1 py-1 text-[10px] font-bold uppercase tracking-wide transition-all data-[state=active]:bg-background data-[state=active]:shadow-sm sm:h-8 sm:gap-1.5 sm:px-3 sm:tracking-wider"
             >
               <LayoutDashboard className="h-3 w-3" />
-              Visão Geral
+              <span className="sm:hidden">Geral</span>
+              <span className="hidden sm:inline">Visão Geral</span>
             </TabsTrigger>
             <TabsTrigger 
               value="individual" 
-              className="gap-1.5 px-3 py-1 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all rounded-md text-[10px] font-bold uppercase tracking-wider"
+              className="h-10 min-w-0 gap-1 px-1 py-1 text-[10px] font-bold uppercase tracking-wide transition-all data-[state=active]:bg-background data-[state=active]:shadow-sm sm:h-8 sm:gap-1.5 sm:px-3 sm:tracking-wider"
             >
               <Search className="h-3 w-3" />
-              Análise Individual
+              <span className="sm:hidden">Individual</span>
+              <span className="hidden sm:inline">Análise Individual</span>
             </TabsTrigger>
             <TabsTrigger 
               value="implementers" 
-              className="gap-1.5 px-3 py-1 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all rounded-md text-[10px] font-bold uppercase tracking-wider"
+              className="h-10 min-w-0 gap-1 px-1 py-1 text-[10px] font-bold uppercase tracking-wide transition-all data-[state=active]:bg-background data-[state=active]:shadow-sm sm:h-8 sm:gap-1.5 sm:px-3 sm:tracking-wider"
             >
               <Users className="h-3 w-3" />
-              Implantadores
+              <span className="sm:hidden">Equipe</span>
+              <span className="hidden sm:inline">Implantadores</span>
             </TabsTrigger>
           </TabsList>
         </div>
 
-        <TabsContent value="overview" className="space-y-4 m-0 animate-in fade-in slide-in-from-left-4 duration-500">
+        <TabsContent value="overview" className="m-0 min-w-0 space-y-4 animate-in fade-in slide-in-from-left-4 duration-500">
           <div className="bg-card/40 backdrop-blur-sm p-1.5 rounded-lg border border-border shadow-sm transition-all hover:bg-card/50">
             <ReportsFilters
               onSystemChange={setSystemFilter}
@@ -104,24 +110,24 @@ export default function Reports() {
           <GlobalMetrics projects={filteredProjects} />
 
           {/* Status and Health Distribution Cards */}
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid min-w-0 gap-4 md:grid-cols-3">
             <StatusDistribution projects={filteredProjects} />
             <HealthDistribution projects={filteredProjects} />
             <AdherenceGapCard projects={filteredProjects} />
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="transition-all hover:scale-[1.01]">
+          <div className="grid min-w-0 gap-4 md:grid-cols-2">
+            <div className="min-w-0 transition-all hover:scale-[1.01]">
               <TimePerStageChart projects={filteredProjects} />
             </div>
           </div>
         </TabsContent>
 
-        <TabsContent value="individual" className="m-0 animate-in fade-in slide-in-from-right-4 duration-500">
+        <TabsContent value="individual" className="m-0 min-w-0 animate-in fade-in slide-in-from-right-4 duration-500">
           <IndividualProjectReport projects={projectsWithoutModelosTN} />
         </TabsContent>
 
-        <TabsContent value="implementers" className="m-0 animate-in fade-in slide-in-from-right-4 duration-500">
+        <TabsContent value="implementers" className="m-0 min-w-0 animate-in fade-in slide-in-from-right-4 duration-500">
           <ImplementerReportTab />
         </TabsContent>
       </Tabs>

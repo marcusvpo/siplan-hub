@@ -30,8 +30,8 @@ export function ProjectHeaderStats({ project }: ProjectHeaderStatsProps) {
   const isDone = project.globalStatus === "done";
 
   return (
-    <div className="grid gap-4 md:grid-cols-4">
-      <Card className="relative overflow-hidden group hover:shadow-sm transition-all border border-border bg-card/40 backdrop-blur-sm">
+    <div className="grid min-w-0 grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
+      <Card className="group relative min-w-0 overflow-hidden border border-border bg-card/40 backdrop-blur-sm transition-all hover:shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3.5 pb-2">
           <CardTitle className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/80">
             Saúde do Projeto
@@ -50,7 +50,7 @@ export function ProjectHeaderStats({ project }: ProjectHeaderStatsProps) {
         </CardContent>
       </Card>
 
-      <Card className="relative overflow-hidden group hover:shadow-sm transition-all border border-border bg-card/40 backdrop-blur-sm">
+      <Card className="group relative min-w-0 overflow-hidden border border-border bg-card/40 backdrop-blur-sm transition-all hover:shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3.5 pb-2">
           <CardTitle className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/85">Etapa Atual</CardTitle>
           <div className="h-3.5 w-3.5 flex items-center justify-center">
@@ -59,7 +59,7 @@ export function ProjectHeaderStats({ project }: ProjectHeaderStatsProps) {
           </div>
         </CardHeader>
         <CardContent className="p-3.5 pt-0">
-          <div className="text-xl font-black capitalize truncate tracking-tight">
+          <div className="break-words text-lg font-black capitalize tracking-tight sm:text-xl md:truncate">
             {isDone ? "Finalizado" : currentStage || "Em Espera"}
           </div>
           <div className="flex gap-2 mt-0.5">
@@ -70,7 +70,7 @@ export function ProjectHeaderStats({ project }: ProjectHeaderStatsProps) {
         </CardContent>
       </Card>
 
-      <Card className="relative overflow-hidden group hover:shadow-sm transition-all border border-border bg-card/40 backdrop-blur-sm">
+      <Card className="group relative min-w-0 overflow-hidden border border-border bg-card/40 backdrop-blur-sm transition-all hover:shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3.5 pb-2">
           <CardTitle className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/85">
             Última Atualização
@@ -93,7 +93,7 @@ export function ProjectHeaderStats({ project }: ProjectHeaderStatsProps) {
         </CardContent>
       </Card>
 
-      <Card className="relative overflow-hidden group hover:shadow-sm transition-all border border-border bg-card/40 backdrop-blur-sm">
+      <Card className="group relative min-w-0 overflow-hidden border border-border bg-card/40 backdrop-blur-sm transition-all hover:shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3.5 pb-2">
           <CardTitle className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/85">
             Entrega Estimada
