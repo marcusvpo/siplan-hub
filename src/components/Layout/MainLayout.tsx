@@ -4,10 +4,12 @@ import { Breadcrumbs } from "./Breadcrumbs";
 import { ModeToggle } from "@/components/mode-toggle";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
-import { ArrowRight, LayoutGrid } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { FloatingCopilot } from "@/components/Copilot/FloatingCopilot";
+import { usePermissions } from "@/hooks/usePermissions";
+import { getContextualHeaderAction } from "./contextualHeaderAction";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -16,6 +18,7 @@ interface MainLayoutProps {
 export function MainLayout({ children }: MainLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { hasPermission } = usePermissions();
   const normalizedPathname = location.pathname.replace(/\/+$/, "");
 
   const isProjectsPage = location.pathname === "/projects";
@@ -26,6 +29,11 @@ export function MainLayout({ children }: MainLayoutProps) {
   const isFullBleedPage =
     isModelsWorkspacePage || isPosAiLogsPage || isPosAiLinksChatsPage;
   const isPrintMode = new URLSearchParams(location.search).get("print") === "true";
+  const headerAction = getContextualHeaderAction(
+    location.pathname,
+    (permissionKey) => !permissionKey || hasPermission(permissionKey, "view"),
+  );
+  const HeaderActionIcon = headerAction?.icon;
 
   if (isPrintMode) {
     return (
@@ -56,24 +64,16 @@ export function MainLayout({ children }: MainLayoutProps) {
             </div>
 
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-              {isProjectsPage ? (
+              {headerAction && HeaderActionIcon && (
                 <Button
                   variant="outline"
                   size="sm"
                   className="gap-2 hidden md:flex"
-                  onClick={() => navigate("/")}
+                  title={`Ir para ${headerAction.label}`}
+                  onClick={() => navigate(headerAction.path)}
                 >
-                  <LayoutGrid className="h-4 w-4" />
-                  Início
-                </Button>
-              ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2 hidden md:flex"
-                  onClick={() => navigate("/projects")}
-                >
-                  Ver Todos os Projetos
+                  <HeaderActionIcon className="h-4 w-4" />
+                  {headerAction.label}
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               )}
