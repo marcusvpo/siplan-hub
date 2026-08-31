@@ -29,7 +29,8 @@ import {
   CalendarClock,
   ChevronLeft,
   ChevronRight,
-  ChevronsUpDown,
+  SlidersHorizontal,
+  X,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -39,18 +40,6 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Command,
-  CommandGroup,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import { cn } from "@/lib/utils";
 
 export default function CommercialCustomers() {
   const { clients, projectsWithClients, isLoadingClients, allCommercialNotes } =
@@ -64,7 +53,19 @@ export default function CommercialCustomers() {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
-  const [itemsPerPageOpen, setItemsPerPageOpen] = useState(false);
+
+  const hasActiveFilters =
+    searchTerm.trim() !== "" ||
+    statusFilter !== "all" ||
+    projectsFilter !== "all" ||
+    lastActionFilter !== "any";
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("all");
+    setProjectsFilter("all");
+    setLastActionFilter("any");
+  };
 
   // Reset to page 1 when any filter changes
   useEffect(() => {
@@ -214,81 +215,120 @@ export default function CommercialCustomers() {
     startIndex,
     startIndex + itemsPerPage
   );
+  const firstVisibleItem = sortedClients.length === 0 ? 0 : startIndex + 1;
+  const lastVisibleItem = Math.min(startIndex + itemsPerPage, sortedClients.length);
 
   if (isLoadingClients) {
     return (
-      <div className="p-8 flex items-center justify-center">
+      <div className="flex min-h-48 items-center justify-center px-4 py-8 text-center text-sm text-muted-foreground">
         Carregando painel de clientes...
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 animate-in fade-in duration-500">
-      <div className="flex flex-col gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">
+    <div
+      className="min-w-0 space-y-4 overflow-x-hidden animate-in fade-in duration-500"
+      data-testid="commercial-customers-page"
+    >
+      <div className="flex min-w-0 flex-col gap-3">
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold leading-tight tracking-tight sm:text-2xl">
             Painel de Clientes
           </h1>
-          <p className="text-muted-foreground text-sm">
+          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
             Visão geral e saúde da carteira de clientes.
           </p>
         </div>
 
         {/* Filters */}
-        <div className="flex flex-col md:flex-row gap-3 p-3 bg-muted/20 rounded-lg border">
-          <div className="relative flex-1">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar cliente por nome..."
-              className="pl-8 bg-background h-9"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+        <div
+          className="min-w-0 rounded-xl border bg-muted/20 p-3 sm:p-4"
+          data-testid="commercial-customer-filters"
+        >
+          <div className="mb-3 flex min-w-0 items-center justify-between gap-2">
+            <div className="flex min-w-0 items-center gap-2 text-sm font-semibold">
+              <SlidersHorizontal className="h-4 w-4 shrink-0 text-primary" />
+              <span>Filtros da carteira</span>
+            </div>
+            {hasActiveFilters && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 shrink-0 gap-1.5 px-2 text-xs"
+                onClick={clearFilters}
+              >
+                <X className="h-3.5 w-3.5" />
+                Limpar
+              </Button>
+            )}
           </div>
 
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[180px] bg-background">
-              <SelectValue placeholder="Status Geral" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os Status</SelectItem>
-              <SelectItem value="critical">🔴 Críticos</SelectItem>
-              <SelectItem value="attention">🟡 Em Atenção</SelectItem>
-              <SelectItem value="healthy">🟢 Saudáveis</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-[minmax(240px,1fr)_180px_180px_180px]">
+            <div className="relative min-w-0 sm:col-span-2 xl:col-span-1">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Buscar cliente por nome..."
+                aria-label="Buscar cliente por nome"
+                className="h-10 min-w-0 bg-background pl-9"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
 
-          <Select value={projectsFilter} onValueChange={setProjectsFilter}>
-            <SelectTrigger className="w-[180px] bg-background">
-              <SelectValue placeholder="Filtro de Projetos" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os Projetos</SelectItem>
-              <SelectItem value="critical">Com Projetos Críticos</SelectItem>
-              <SelectItem value="has-blockers">Com Bloqueios</SelectItem>
-            </SelectContent>
-          </Select>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger
+                className="h-10 w-full min-w-0 bg-background"
+                aria-label="Filtrar por status geral"
+              >
+                <SelectValue placeholder="Status Geral" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os Status</SelectItem>
+                <SelectItem value="critical">🔴 Críticos</SelectItem>
+                <SelectItem value="attention">🟡 Em Atenção</SelectItem>
+                <SelectItem value="healthy">🟢 Saudáveis</SelectItem>
+              </SelectContent>
+            </Select>
 
-          <Select value={lastActionFilter} onValueChange={setLastActionFilter}>
-            <SelectTrigger className="w-[180px] bg-background">
-              <SelectValue placeholder="Última Interação" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="any">Qualquer Data</SelectItem>
-              <SelectItem value="7days">Últimos 7 dias</SelectItem>
-              <SelectItem value="15days">Últimos 15 dias</SelectItem>
-              <SelectItem value="30days">Últimos 30 dias</SelectItem>
-              <SelectItem value="never">Sem interação</SelectItem>
-            </SelectContent>
-          </Select>
+            <Select value={projectsFilter} onValueChange={setProjectsFilter}>
+              <SelectTrigger
+                className="h-10 w-full min-w-0 bg-background"
+                aria-label="Filtrar por projetos"
+              >
+                <SelectValue placeholder="Filtro de Projetos" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os Projetos</SelectItem>
+                <SelectItem value="critical">Com Projetos Críticos</SelectItem>
+                <SelectItem value="has-blockers">Com Bloqueios</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={lastActionFilter} onValueChange={setLastActionFilter}>
+              <SelectTrigger
+                className="h-10 w-full min-w-0 bg-background"
+                aria-label="Filtrar por última interação"
+              >
+                <SelectValue placeholder="Última Interação" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="any">Qualquer Data</SelectItem>
+                <SelectItem value="7days">Últimos 7 dias</SelectItem>
+                <SelectItem value="15days">Últimos 15 dias</SelectItem>
+                <SelectItem value="30days">Últimos 30 dias</SelectItem>
+                <SelectItem value="never">Sem interação</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
       {/* Desktop Table */}
-      <div className="hidden md:block rounded-md border text-left">
+      <div className="hidden min-w-0 rounded-md border text-left lg:block">
         <div className="w-full overflow-x-auto scrollbar-thin">
-          <Table>
+          <Table className="min-w-[840px]">
           <TableHeader>
             <TableRow className="h-10">
               <TableHead className="h-10 py-2">Cliente</TableHead>
@@ -408,7 +448,7 @@ export default function CommercialCustomers() {
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
+                            <span className="sr-only">Abrir ações de {client.name}</span>
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
@@ -447,119 +487,200 @@ export default function CommercialCustomers() {
     </div>
 
       {/* Mobile Cards */}
-      <div className="grid grid-cols-1 gap-3 md:hidden">
-        {paginatedClients.map((client) => {
-          const stats = getClientStats(client.id);
-          return (
-            <Card
-              key={client.id}
-              onClick={() => navigate(`/commercial/client/${client.id}`)}
-              className="cursor-pointer active:scale-[0.98] transition-transform"
-            >
-              <CardContent className="p-3 space-y-2">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-semibold text-base">{client.name}</h3>
-                    <div className="text-[10px] text-muted-foreground mt-0.5 flex gap-1.5">
-                      <span>{stats.activeProjects} Projetos</span>
-                      <span>•</span>
-                      {stats.lastUpdateUAT ? (
-                        <span>
-                          Há{" "}
-                          {Math.floor(
-                            (new Date().getTime() -
-                              stats.lastUpdateUAT.getTime()) /
-                              (1000 * 3600 * 24)
-                          )}{" "}
-                          dias
-                        </span>
-                      ) : (
-                        <span>Sem atualização</span>
-                      )}
+      <div className="grid min-w-0 grid-cols-1 gap-3 lg:hidden" data-testid="commercial-customer-mobile-list">
+        {paginatedClients.length === 0 ? (
+          <Card className="min-w-0" data-testid="commercial-customer-empty-state">
+            <CardContent className="flex min-h-36 flex-col items-center justify-center gap-2 px-4 py-6 text-center">
+              <Search className="h-6 w-6 text-muted-foreground/70" />
+              <p className="text-sm font-medium">Nenhum cliente encontrado</p>
+              <p className="max-w-xs text-xs leading-relaxed text-muted-foreground">
+                Ajuste a busca ou limpe os filtros para visualizar outros clientes.
+              </p>
+              {hasActiveFilters && (
+                <Button type="button" variant="outline" size="sm" onClick={clearFilters}>
+                  Limpar filtros
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        ) : (
+          paginatedClients.map((client) => {
+            const stats = getClientStats(client.id);
+            return (
+              <Card
+                key={client.id}
+                className="min-w-0 overflow-hidden transition-colors hover:border-primary/30"
+                data-testid="commercial-customer-card"
+              >
+                <Link
+                  to={`/commercial/client/${client.id}`}
+                  className="group block min-w-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  aria-label={`Ver detalhes de ${client.name}`}
+                >
+                  <CardContent className="min-w-0 space-y-3 p-3.5">
+                    <div className="flex min-w-0 items-start gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+                          <h3
+                            className="min-w-0 break-words text-sm font-semibold leading-snug sm:text-base"
+                            data-testid="commercial-customer-name"
+                          >
+                            {client.name}
+                          </h3>
+                          {client.tags?.includes("Key Account") && (
+                            <Badge
+                              variant="outline"
+                              className="h-5 shrink-0 border-yellow-200 bg-yellow-100 px-1.5 text-[9px] text-yellow-800"
+                            >
+                              Key Account
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <Badge
+                        variant="outline"
+                        className={`h-6 shrink-0 gap-1 px-2 text-[10px]
+                          ${
+                            stats.status === "critical"
+                              ? "border-red-200 bg-red-100 text-red-700 hover:bg-red-100 dark:border-red-900/50 dark:bg-red-950/20 dark:text-red-400"
+                              : ""
+                          }
+                          ${
+                            stats.status === "attention"
+                              ? "border-yellow-200 bg-yellow-100 text-yellow-700 hover:bg-yellow-100 dark:border-yellow-900/50 dark:bg-yellow-950/20 dark:text-yellow-400"
+                              : ""
+                          }
+                          ${
+                            stats.status === "healthy"
+                              ? "border-green-200 bg-green-100 text-green-700 hover:bg-green-100 dark:border-emerald-900/50 dark:bg-emerald-950/20 dark:text-emerald-400"
+                              : ""
+                          }
+                        `}
+                      >
+                        {stats.status === "critical" && (
+                          <AlertCircle className="h-3 w-3" />
+                        )}
+                        {stats.status === "attention" && (
+                          <AlertTriangle className="h-3 w-3" />
+                        )}
+                        {stats.status === "healthy" && (
+                          <CheckCircle2 className="h-3 w-3" />
+                        )}
+                        {stats.status === "critical"
+                          ? "Crítico"
+                          : stats.status === "attention"
+                          ? "Atenção"
+                          : "Saudável"}
+                      </Badge>
                     </div>
-                  </div>
-                  <Badge
-                    variant="outline"
-                    className={`h-5 text-[10px] px-1.5
-                      ${
-                        stats.status === "critical"
-                          ? "bg-red-100 text-red-700 hover:bg-red-100 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/50 dark:hover:bg-red-950/30"
-                          : ""
-                      }
-                      ${
-                        stats.status === "attention"
-                          ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-100 dark:bg-yellow-950/20 dark:text-yellow-400 dark:border-yellow-900/50 dark:hover:bg-yellow-950/30"
-                          : ""
-                      }
-                      ${
-                        stats.status === "healthy"
-                          ? "bg-green-100 text-green-700 hover:bg-green-100 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50 dark:hover:bg-emerald-950/30"
-                          : ""
-                      }
-                    `}
-                  >
-                    {stats.status === "critical"
-                      ? "Crítico"
-                      : stats.status === "attention"
-                      ? "Atenção"
-                      : "OL"}
-                  </Badge>
-                </div>
-                {stats.blockers > 0 && (
-                  <div className="bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400 border border-red-200/50 dark:border-red-900/40 text-[10px] px-1.5 py-0.5 rounded inline-block">
-                    🚨 {stats.blockers} Bloqueios Abertos
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
+
+                    <div className="grid min-w-0 grid-cols-2 gap-2 text-xs">
+                      <div className="min-w-0 rounded-lg bg-muted/45 px-2.5 py-2">
+                        <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                          Projetos ativos
+                        </p>
+                        <p className="mt-0.5 text-sm font-semibold">
+                          {stats.activeProjects}
+                        </p>
+                      </div>
+                      <div className="min-w-0 rounded-lg bg-muted/45 px-2.5 py-2">
+                        <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                          Última atualização
+                        </p>
+                        <p className="mt-0.5 flex min-w-0 items-center gap-1 text-xs font-medium">
+                          <CalendarClock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                          <span className="min-w-0 break-words">
+                            {stats.lastUpdateUAT
+                              ? stats.lastUpdateUAT.toLocaleDateString("pt-BR")
+                              : "Sem registro"}
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+
+                    {stats.blockers > 0 && (
+                      <div className="flex min-w-0 items-center gap-1.5 rounded-lg border border-red-200/60 bg-red-50 px-2.5 py-2 text-xs font-medium text-red-700 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-400">
+                        <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                        <span className="break-words">
+                          {stats.blockers} bloqueio
+                          {stats.blockers > 1 ? "s" : ""} aberto
+                          {stats.blockers > 1 ? "s" : ""}
+                        </span>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between gap-2 border-t pt-2 text-xs font-medium text-primary">
+                      <span>Ver detalhes do cliente</span>
+                      <ChevronRight className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5" />
+                    </div>
+                  </CardContent>
+                </Link>
+              </Card>
+            );
+          })
+        )}
       </div>
 
       {/* Pagination Controls */}
       {sortedClients.length > 0 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 px-2">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground w-full sm:w-auto justify-center sm:justify-start">
-            <p>Itens por página:</p>
-            <Select
-              value={itemsPerPage.toString()}
-              onValueChange={(value) => {
-                setItemsPerPage(Number(value));
-                setCurrentPage(1); // Reset to first page when changing page size
-              }}
-            >
-              <SelectTrigger className="h-8 w-[70px]">
-                <SelectValue placeholder={itemsPerPage.toString()} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="5">5</SelectItem>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="25">25</SelectItem>
-                <SelectItem value="50">50</SelectItem>
-                <SelectItem value="100">100</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        <div
+          className="flex min-w-0 flex-col gap-3 border-t px-1 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-2"
+          data-testid="commercial-customer-pagination"
+        >
+          <p className="text-center text-xs text-muted-foreground sm:text-left sm:text-sm">
+            Mostrando{" "}
+            <strong className="font-semibold text-foreground">
+              {firstVisibleItem}–{lastVisibleItem}
+            </strong>{" "}
+            de{" "}
+            <strong className="font-semibold text-foreground">
+              {sortedClients.length}
+            </strong>
+          </p>
 
-          <div className="flex items-center gap-4 w-full sm:w-auto justify-center sm:justify-end">
-            <span className="text-sm font-medium">
+          <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 sm:justify-end">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground sm:text-sm">
+              <span>Por página</span>
+              <Select
+                value={itemsPerPage.toString()}
+                onValueChange={(value) => {
+                  setItemsPerPage(Number(value));
+                  setCurrentPage(1);
+                }}
+              >
+                <SelectTrigger
+                  className="h-8 w-[68px]"
+                  aria-label="Clientes por página"
+                >
+                  <SelectValue placeholder={itemsPerPage.toString()} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">5</SelectItem>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="25">25</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                  <SelectItem value="100">100</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <span className="whitespace-nowrap text-xs font-medium sm:text-sm">
               Página {currentPage} de {totalPages}
-              <span className="text-muted-foreground ml-2 font-normal hidden sm:inline">
-                ({sortedClients.length} no total)
-              </span>
             </span>
             <div className="flex items-center gap-1">
               <Button
+                type="button"
                 variant="outline"
                 size="icon"
                 className="h-8 w-8"
                 onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
+                aria-label="Página anterior"
               >
                 <ChevronLeft className="h-4 w-4" />
-                <span className="sr-only">Página anterior</span>
               </Button>
               <Button
+                type="button"
                 variant="outline"
                 size="icon"
                 className="h-8 w-8"
@@ -567,9 +688,9 @@ export default function CommercialCustomers() {
                   setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                 }
                 disabled={currentPage === totalPages}
+                aria-label="Próxima página"
               >
                 <ChevronRight className="h-4 w-4" />
-                <span className="sr-only">Próxima página</span>
               </Button>
             </div>
           </div>

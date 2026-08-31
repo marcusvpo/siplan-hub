@@ -1,6 +1,6 @@
 import { useCommercial, type Project } from "@/hooks/useCommercial";
 import { useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,20 +11,31 @@ import {
   CheckCircle2,
   FileText,
   Hourglass,
+  X,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Helper to determine active blockers
 const getBlockers = (projectObj: Project) => {
@@ -66,11 +77,15 @@ const getBlockers = (projectObj: Project) => {
 
 export default function CommercialBlockers() {
   const { projectsWithClients, isLoadingProjects } = useCommercial();
+  const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [editorContent, setEditorContent] = useState("");
   const [selectedSystemFilter, setSelectedSystemFilter] =
     useState<string>("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedPageSize, setSelectedPageSize] = useState<number | null>(null);
+  const itemsPerPage = selectedPageSize ?? (isMobile ? 3 : 9);
   const [viewedProjects, setViewedProjects] = useState<string[]>(() => {
     const saved = localStorage.getItem("commercial_viewed_projects");
     return saved ? JSON.parse(saved) : [];
@@ -80,6 +95,13 @@ export default function CommercialBlockers() {
   const queryClient = useQueryClient();
   const { hasPermission } = usePermissions();
   const canEditBlockers = hasPermission("commercial_blockers", "edit");
+  const hasActiveFilters =
+    searchTerm.trim() !== "" || selectedSystemFilter !== "all";
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setSelectedSystemFilter("all");
+  };
 
   // Helper to mark project as viewed
   const markAsViewed = (projectId: string) => {
@@ -96,7 +118,9 @@ export default function CommercialBlockers() {
   // Helper to check if project is finalized/concluded
   const isFinalizedProject = (project: Project) => {
     const gStatus = (project.global_status || "").toLowerCase();
-    const status = ((project as any).status || "").toLowerCase();
+    const status = (
+      (project as Project & { status?: string | null }).status || ""
+    ).toLowerCase();
     return (
       gStatus === "done" ||
       gStatus === "archived" ||
@@ -144,6 +168,29 @@ export default function CommercialBlockers() {
           new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime()
         );
       }) || [];
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(blockedProjects.length / itemsPerPage)
+  );
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedProjects = blockedProjects.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
+  const firstVisibleItem = blockedProjects.length === 0 ? 0 : startIndex + 1;
+  const lastVisibleItem = Math.min(
+    startIndex + itemsPerPage,
+    blockedProjects.length
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedSystemFilter, itemsPerPage]);
+
+  useEffect(() => {
+    setCurrentPage((page) => Math.min(page, totalPages));
+  }, [totalPages]);
 
   const handleOpenDetails = (project: Project) => {
     markAsViewed(project.id);
@@ -244,170 +291,231 @@ export default function CommercialBlockers() {
 
   // Extract unique values for filters
   const availableSystems = Array.from(
-    new Set(projectsWithClients?.map((p) => p.system_type).filter(Boolean))
+    new Set(
+      (projectsWithClients || [])
+        .map((project) => project.system_type)
+        .filter((system): system is string => Boolean(system))
+    )
   );
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500 h-[calc(100vh-6rem)] flex flex-col">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+    <div
+      className="flex min-w-0 flex-col gap-4 overflow-x-hidden animate-in fade-in duration-500 md:h-[calc(100vh-6rem)] md:gap-6"
+      data-testid="commercial-blockers-page"
+    >
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-xl font-bold leading-tight tracking-tight text-transparent sm:text-2xl md:text-3xl">
             Central de Bloqueios
           </h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="mt-1 text-sm leading-relaxed text-muted-foreground sm:mt-2 sm:text-base">
             Priorize e resolva as pendências de Infraestrutura que impedem o
             avanço dos projetos.
           </p>
         </div>
 
-        {/* Top Actions */}
-        <div className="flex items-center gap-2">
-          <div className="bg-muted px-3 py-1 rounded-full text-xs font-medium text-muted-foreground border">
-            Total: {blockedProjects.length}
+        <Badge
+          variant="outline"
+          className="h-7 w-fit shrink-0 bg-muted px-3 text-xs font-medium text-muted-foreground"
+        >
+          {blockedProjects.length} bloqueio
+          {blockedProjects.length === 1 ? "" : "s"}
+        </Badge>
+      </div>
+
+      <div
+        className="min-w-0 rounded-xl border bg-muted/20 p-3 sm:p-4"
+        data-testid="commercial-blockers-filters"
+      >
+        <div className="mb-3 flex min-w-0 items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2 text-sm font-semibold">
+            <Filter className="h-4 w-4 shrink-0 text-primary" />
+            <span>Filtros dos bloqueios</span>
+          </div>
+          {hasActiveFilters && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 shrink-0 gap-1.5 px-2 text-xs"
+              onClick={clearFilters}
+            >
+              <X className="h-3.5 w-3.5" />
+              Limpar
+            </Button>
+          )}
+        </div>
+
+        <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_220px]">
+          <div className="relative min-w-0">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por cliente, sistema ou observações..."
+              aria-label="Buscar bloqueio"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="h-10 min-w-0 bg-background pl-9"
+            />
           </div>
 
-          <select
-            className="h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          <Select
             value={selectedSystemFilter}
-            onChange={(e) => setSelectedSystemFilter(e.target.value)}
+            onValueChange={setSelectedSystemFilter}
           >
-            <option value="all">Sistemas: Todos</option>
-            {availableSystems.map((sys) => (
-              <option key={sys} value={sys}>
-                {sys}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger
+              className="h-10 w-full min-w-0 bg-background"
+              aria-label="Filtrar bloqueios por sistema"
+            >
+              <SelectValue placeholder="Sistema" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os sistemas</SelectItem>
+              {availableSystems.map((system) => (
+                <SelectItem key={system} value={system}>
+                  {system}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
-      <div className="relative shrink-0">
-        <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Buscar por cliente, sistema ou observações..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-9 bg-card/50"
-        />
-      </div>
-
-      <div className="flex-1 overflow-y-auto pr-2 -mr-2">
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3 pb-8">
+      <div className="min-w-0 md:-mr-2 md:flex-1 md:overflow-y-auto md:pr-2">
+        <div className="grid min-w-0 gap-3 pb-8 sm:gap-4 md:grid-cols-2 xl:grid-cols-3 xl:gap-6">
           {blockedProjects.length === 0 ? (
-            <div className="col-span-full flex flex-col items-center justify-center p-12 text-center border-2 border-dashed rounded-xl bg-muted/10">
-              <CheckCircle2 className="h-16 w-16 text-green-500 mb-4 opacity-80" />
-              <h3 className="text-xl font-semibold text-foreground">
+            <div
+              className="col-span-full flex min-w-0 flex-col items-center justify-center rounded-xl border-2 border-dashed bg-muted/10 px-4 py-8 text-center sm:p-12"
+              data-testid="commercial-blockers-empty-state"
+            >
+              <CheckCircle2 className="mb-3 h-12 w-12 text-green-500 opacity-80 sm:mb-4 sm:h-16 sm:w-16" />
+              <h3 className="text-lg font-semibold text-foreground sm:text-xl">
                 Tudo limpo!
               </h3>
-              <p className="text-muted-foreground max-w-md mt-2">
+              <p className="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
                 Nenhum bloqueio de infraestrutura encontrado com os filtros
                 atuais.
               </p>
-              {(searchTerm || selectedSystemFilter !== "all") && (
+              {hasActiveFilters && (
                 <Button
                   variant="link"
-                  onClick={() => {
-                    setSearchTerm("");
-                    setSelectedSystemFilter("all");
-                  }}
+                  onClick={clearFilters}
                   className="mt-4"
                 >
-                  Limpar Filtros
+                  Limpar filtros
                 </Button>
               )}
             </div>
           ) : (
-            blockedProjects.map((project) => {
+            paginatedProjects.map((project) => {
               const isNew = !viewedProjects.includes(project.id);
 
               return (
                 <Card
                   key={project.id}
-                  className="overflow-hidden border-t-4 hover:shadow-lg transition-all cursor-pointer group flex flex-col h-full bg-card/95 hover:bg-card border-t-red-500"
+                  className="group flex h-full min-w-0 cursor-pointer flex-col overflow-hidden border-t-4 border-t-red-500 bg-card/95 transition-all hover:bg-card hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   onClick={() => handleOpenDetails(project)}
+                  onKeyDown={(event) => {
+                    if (event.target !== event.currentTarget) return;
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      handleOpenDetails(project);
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Abrir detalhes do bloqueio de ${project.client_name || "cliente sem nome"}`}
+                  data-testid="commercial-blocker-card"
                 >
-                  <CardContent className="p-4 flex flex-col flex-1 gap-3">
+                  <CardContent className="flex min-w-0 flex-1 flex-col gap-3 p-3.5 sm:p-4">
                     {/* Header */}
-                    <div className="flex justify-between items-start">
-                      <div className="flex flex-col gap-1.5">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-bold text-lg leading-tight group-hover:text-primary transition-colors">
-                            {project.client_name}
+                    <div className="flex min-w-0 items-start justify-between">
+                      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                        <div className="flex min-w-0 flex-wrap items-start gap-2">
+                          <h3
+                            className="min-w-0 break-words text-base font-bold leading-snug transition-colors group-hover:text-primary sm:text-lg"
+                            data-testid="commercial-blocker-client-name"
+                          >
+                            {project.client_name || "Cliente não informado"}
                           </h3>
                           {isNew && (
-                            <Badge className="bg-blue-600 hover:bg-blue-700 h-5 px-1.5 text-[10px] animate-pulse">
+                            <Badge className="h-5 shrink-0 animate-pulse bg-blue-600 px-1.5 text-[10px] hover:bg-blue-700">
                               NOVO
                             </Badge>
                           )}
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex min-w-0 flex-wrap gap-2">
                           <Badge
                             variant="outline"
-                            className="text-xs font-normal text-muted-foreground bg-muted/50 border-input"
+                            className="h-auto max-w-full whitespace-normal break-words border-input bg-muted/50 px-2 py-1 text-left text-xs font-normal leading-snug text-muted-foreground"
                           >
-                            {project.system_type}
+                            {project.system_type || "Sistema não informado"}
                           </Badge>
                         </div>
                       </div>
                     </div>
 
                     {/* UAT & Chamado Info */}
-                    <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground py-2 border-b border-dashed">
-                      <div className="flex flex-col justify-center">
+                    <div className="grid min-w-0 grid-cols-2 gap-2 border-b border-dashed py-2 text-xs text-muted-foreground">
+                      <div className="flex min-w-0 flex-col justify-center">
                         <span className="uppercase text-[10px] font-bold tracking-wider opacity-70">
                           UAT (Update)
                         </span>
-                        <div className="flex items-center gap-1.5 text-foreground/80 mt-0.5">
-                          <Clock className="h-3 w-3" />
-                          {new Date(project.updated_at).toLocaleDateString()}
+                        <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-foreground/80">
+                          <Clock className="h-3 w-3 shrink-0" />
+                          <span className="break-words">
+                            {new Date(project.updated_at).toLocaleDateString("pt-BR")}
+                          </span>
                         </div>
                       </div>
-                      <div className="flex flex-col justify-center items-end text-right">
+                      <div className="flex min-w-0 flex-col items-end justify-center text-right">
                         <span className="uppercase text-[10px] font-bold tracking-wider opacity-70">
                           Chamado
                         </span>
-                        <span className="font-mono text-foreground/80 mt-0.5">
+                        <span className="mt-0.5 max-w-full break-all font-mono text-foreground/80">
                           {project.ticket_number || "N/A"}
                         </span>
                       </div>
                     </div>
 
                     {/* Blockers List */}
-                    <div className="flex-1 space-y-2.5 mt-1">
+                    <div className="mt-1 min-w-0 flex-1 space-y-2.5">
                       {project.blockers.map((blocker, idx) => (
                         <div
                           key={idx}
-                          className="rounded-md p-2.5 text-sm border shadow-sm bg-red-50/80 dark:bg-red-950/20 border-red-200 dark:border-red-900/30"
+                          className="min-w-0 rounded-md border border-red-200 bg-red-50/80 p-2.5 text-sm shadow-sm dark:border-red-900/30 dark:bg-red-950/20"
                         >
-                          <div className="flex items-center gap-2 mb-1">
+                          <div className="mb-1 flex min-w-0 items-center gap-2">
                             <AlertCircle className="h-4 w-4 shrink-0 text-red-600" />
-                            <span className="font-semibold text-red-700 dark:text-red-300">
+                            <span className="min-w-0 break-words font-semibold text-red-700 dark:text-red-300">
                               {blocker.stage}
                             </span>
                           </div>
 
                           {blocker.reason && (
-                            <p className="text-foreground/90 pl-6 leading-relaxed text-xs md:text-sm">
+                            <p
+                              className="break-words text-xs leading-relaxed text-foreground/90 sm:pl-6 md:text-sm"
+                              data-testid="commercial-blocker-reason"
+                            >
                               {blocker.reason}
                             </p>
                           )}
 
                           {/* Extra Infra Fields */}
                           {blocker.details && (
-                            <div className="mt-2 ml-6 grid grid-cols-2 gap-2 text-xs bg-white/50 dark:bg-black/20 p-2 rounded border border-red-100/50">
-                              <div>
+                            <div className="mt-2 grid min-w-0 grid-cols-1 gap-2 rounded border border-red-100/50 bg-white/50 p-2 text-xs dark:bg-black/20 sm:ml-6 sm:grid-cols-2">
+                              <div className="min-w-0">
                                 <span className="font-semibold text-red-800 dark:text-red-200 block">
                                   Status Estações
                                 </span>
-                                <span className="text-foreground/80">
+                                <span className="break-words text-foreground/80">
                                   {blocker.details.stations || "-"}
                                 </span>
                               </div>
-                              <div>
+                              <div className="min-w-0">
                                 <span className="font-semibold text-red-800 dark:text-red-200 block">
                                   Status Servidor
                                 </span>
-                                <span className="text-foreground/80">
+                                <span className="break-words text-foreground/80">
                                   {blocker.details.server || "-"}
                                 </span>
                               </div>
@@ -417,26 +525,27 @@ export default function CommercialBlockers() {
                       ))}
                     </div>
 
-                    <div className="mt-auto pt-3 flex justify-between items-center">
-                      <div className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Hourglass className="h-3 w-3" />
+                    <div className="mt-auto flex min-w-0 flex-col gap-2 border-t pt-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Hourglass className="h-3 w-3 shrink-0" />
                         <span>
                           {project.sold_hours ? `${project.sold_hours}h` : "0h"}
                         </span>
                       </div>
                       {canEditBlockers && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 text-xs hover:bg-green-50 hover:text-green-700 dark:hover:bg-green-950/30"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleMarkResolved(project);
-                        }}
-                      >
-                        <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
-                        Resolver
-                      </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-9 w-full text-xs hover:bg-green-50 hover:text-green-700 dark:hover:bg-green-950/30 sm:h-7 sm:w-auto"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            handleMarkResolved(project);
+                          }}
+                        >
+                          <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
+                          Resolver
+                        </Button>
                       )}
                     </div>
                   </CardContent>
@@ -445,33 +554,122 @@ export default function CommercialBlockers() {
             })
           )}
         </div>
+
+        {blockedProjects.length > 0 && (
+          <div
+            className="flex min-w-0 flex-col gap-3 border-t px-1 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-2"
+            data-testid="commercial-blockers-pagination"
+          >
+            <p className="text-center text-xs text-muted-foreground sm:text-left sm:text-sm">
+              Mostrando{" "}
+              <strong className="font-semibold text-foreground">
+                {firstVisibleItem}–{lastVisibleItem}
+              </strong>{" "}
+              de{" "}
+              <strong className="font-semibold text-foreground">
+                {blockedProjects.length}
+              </strong>
+            </p>
+
+            <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 sm:justify-end">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground sm:text-sm">
+                <span>Por página</span>
+                <Select
+                  value={itemsPerPage.toString()}
+                  onValueChange={(value) => {
+                    setSelectedPageSize(Number(value));
+                    setCurrentPage(1);
+                  }}
+                >
+                  <SelectTrigger
+                    className="h-8 w-[68px]"
+                    aria-label="Bloqueios por página"
+                  >
+                    <SelectValue placeholder={itemsPerPage.toString()} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="3">3</SelectItem>
+                    <SelectItem value="6">6</SelectItem>
+                    <SelectItem value="9">9</SelectItem>
+                    <SelectItem value="12">12</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <span className="whitespace-nowrap text-xs font-medium sm:text-sm">
+                Página {currentPage} de {totalPages}
+              </span>
+              <div className="flex items-center gap-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() =>
+                    setCurrentPage((page) => Math.max(page - 1, 1))
+                  }
+                  disabled={currentPage === 1}
+                  aria-label="Página anterior"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() =>
+                    setCurrentPage((page) => Math.min(page + 1, totalPages))
+                  }
+                  disabled={currentPage === totalPages}
+                  aria-label="Próxima página"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <Dialog
         open={!!selectedProject}
         onOpenChange={(open) => !open && setSelectedProject(null)}
       >
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto flex flex-col">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-xl">
-              {selectedProject?.client_name}
-              <Badge variant="secondary">{selectedProject?.system_type}</Badge>
+        <DialogContent
+          className="flex max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] min-w-0 max-w-4xl flex-col overflow-x-hidden overflow-y-auto p-4 sm:p-6"
+          data-testid="commercial-blocker-dialog"
+        >
+          <DialogHeader className="min-w-0 pr-10">
+            <DialogTitle className="flex min-w-0 flex-col items-start gap-2 text-lg sm:flex-row sm:items-center sm:text-xl">
+              <span className="min-w-0 break-words">
+                {selectedProject?.client_name || "Cliente não informado"}
+              </span>
+              <Badge
+                variant="secondary"
+                className="h-auto max-w-full shrink-0 whitespace-normal break-words py-1 text-left leading-snug"
+              >
+                {selectedProject?.system_type || "Sistema não informado"}
+              </Badge>
             </DialogTitle>
+            <DialogDescription className="sr-only">
+              Detalhes do bloqueio de infraestrutura e observações comerciais do projeto.
+            </DialogDescription>
           </DialogHeader>
 
           {selectedProject && (
-            <div className="space-y-6 flex-1 overflow-y-auto pr-1">
+            <div className="min-w-0 flex-1 space-y-4 sm:space-y-6">
               {/* Info Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-muted/30 rounded-lg border">
-                <div className="space-y-1">
+              <div className="grid min-w-0 grid-cols-1 gap-3 rounded-lg border bg-muted/30 p-3 sm:grid-cols-2 sm:p-4 lg:grid-cols-4 lg:gap-4">
+                <div className="min-w-0 space-y-1">
                   <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                     Chamado
                   </h4>
-                  <p className="font-mono text-sm">
+                  <p className="break-all font-mono text-sm">
                     {selectedProject.ticket_number || "-"}
                   </p>
                 </div>
-                <div className="space-y-1">
+                <div className="min-w-0 space-y-1">
                   <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                     Horas Vendidas
                   </h4>
@@ -479,30 +677,33 @@ export default function CommercialBlockers() {
                     {selectedProject.sold_hours || "-"}h
                   </p>
                 </div>
-                <div className="space-y-1">
+                <div className="min-w-0 space-y-1">
                   <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                     Status Geral
                   </h4>
-                  <Badge variant="outline" className="capitalize">
+                  <Badge
+                    variant="outline"
+                    className="h-auto max-w-full whitespace-normal break-words py-1 capitalize"
+                  >
                     {selectedProject.global_status || "N/A"}
                   </Badge>
                 </div>
-                <div className="space-y-1">
+                <div className="min-w-0 space-y-1">
                   <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                     Ultima atualização
                   </h4>
                   <p className="font-medium text-sm">
-                    {new Date(selectedProject.updated_at).toLocaleDateString()}
+                    {new Date(selectedProject.updated_at).toLocaleDateString("pt-BR")}
                   </p>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <h3 className="font-semibold flex items-center gap-2 text-indigo-600">
-                  <FileText className="h-4 w-4" />
+              <div className="min-w-0 space-y-2">
+                <h3 className="flex min-w-0 items-center gap-2 font-semibold text-indigo-600">
+                  <FileText className="h-4 w-4 shrink-0" />
                   Observações Comerciais
                 </h3>
-                <div className="border rounded-md shadow-sm">
+                <div className="min-w-0 overflow-hidden rounded-md border shadow-sm">
                   <RichTextEditor
                     content={editorContent}
                     onChange={setEditorContent}
@@ -512,29 +713,33 @@ export default function CommercialBlockers() {
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t">
+              <div className="flex min-w-0 flex-col gap-2 border-t pt-4 sm:flex-row sm:flex-wrap sm:justify-end">
                 <Button
+                  type="button"
                   variant="outline"
                   onClick={() => setSelectedProject(null)}
+                  className="w-full sm:w-auto"
                 >
                   Fechar
                 </Button>
                 <Button
+                  type="button"
                   onClick={handleSaveNotes}
                   disabled={!canEditBlockers}
-                  className="bg-indigo-600 hover:bg-indigo-700"
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 sm:w-auto"
                 >
                   Salvar Observações
                 </Button>
                 {canEditBlockers && (
-                <Button
-                  variant="secondary"
-                  className="ml-auto text-green-700 bg-green-100 hover:bg-green-200"
-                  onClick={() => handleMarkResolved(selectedProject)}
-                >
-                  <CheckCircle2 className="h-4 w-4 mr-2" />
-                  Marcar como Resolvido
-                </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="w-full bg-green-100 text-green-700 hover:bg-green-200 sm:w-auto"
+                    onClick={() => handleMarkResolved(selectedProject)}
+                  >
+                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                    Marcar como Resolvido
+                  </Button>
                 )}
               </div>
             </div>

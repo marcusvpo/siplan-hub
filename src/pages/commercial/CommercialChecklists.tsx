@@ -18,7 +18,8 @@ import {
   Plus, Search, FileText, Trash2, Copy, CheckCircle2,
   Building2, User, Clock, Eye, ClipboardCheck, ExternalLink, ShieldCheck,
   ChevronsUpDown, Check, Settings, ArrowLeft, AlertTriangle, HelpCircle,
-  Calendar, Phone, Wrench, Info, Zap, Download
+  Calendar, Phone, Wrench, Info, Zap, Download,
+  Filter, X, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { useCommercialChecklists, type CommercialChecklistRecord } from "@/hooks/useCommercialChecklists";
 import { useProjectsV2 } from "@/hooks/useProjectsV2";
@@ -32,6 +33,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useDeploymentForms, type DeploymentFormRecord } from "@/hooks/useDeploymentForms";
 import { DeploymentFormFields } from "@/components/commercial/DeploymentFormFields";
 import { generateDeploymentTemplate, type DeploymentFormData } from "@/utils/deployment-template";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const EMPTY_FORM: DeploymentFormData = {
   client_name: "",
@@ -108,6 +110,11 @@ export default function CommercialChecklists() {
   const navigate = useNavigate();
 
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedPageSize, setSelectedPageSize] = useState<number | null>(null);
+  const isMobile = useIsMobile();
+  const itemsPerPage = selectedPageSize ?? (isMobile ? 3 : 9);
   const [mode, setMode] = useState<"list" | "create">("list");
   
   // Create workflow states
@@ -386,6 +393,7 @@ export default function CommercialChecklists() {
       // Find and delete matching deployment form if exists
       const matchedForm = forms.find(f => f.ticket_number === ticketNumber);
       if (matchedForm) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         supabase.from("deployment_forms" as any).delete().eq("id", matchedForm.id).then(() => {
           deleteChecklist.mutate(id);
         });
@@ -401,7 +409,8 @@ export default function CommercialChecklists() {
     const systemType = item.projects?.systemType?.toLowerCase() || "";
     const ticketNumber = item.projects?.ticketNumber?.toLowerCase() || "";
     const createdBy = item.created_by_name?.toLowerCase() || "";
-    return (
+    const matchesStatus = statusFilter === "all" || item.status === statusFilter;
+    return matchesStatus && (
       clientName.includes(query) ||
       systemType.includes(query) ||
       ticketNumber.includes(query) ||
@@ -411,29 +420,51 @@ export default function CommercialChecklists() {
 
   const canCreateChecklists = hasPermission("commercial_checklists", "create");
   const canDeleteChecklists = hasPermission("commercial_checklists", "delete");
+  const hasActiveFilters = search.trim() !== "" || statusFilter !== "all";
+  const totalPages = Math.max(1, Math.ceil(filteredChecklists.length / itemsPerPage));
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedChecklists = filteredChecklists.slice(startIndex, startIndex + itemsPerPage);
+  const firstVisibleItem = filteredChecklists.length === 0 ? 0 : startIndex + 1;
+  const lastVisibleItem = Math.min(startIndex + itemsPerPage, filteredChecklists.length);
+
+  const clearFilters = () => {
+    setSearch("");
+    setStatusFilter("all");
+  };
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter, itemsPerPage]);
+
+  useEffect(() => {
+    setCurrentPage((page) => Math.min(page, totalPages));
+  }, [totalPages]);
 
   /* ── CREATE VIEW (FORMULÁRIO DE NEGOCIAÇÃO) ── */
   if (mode === "create") {
     return (
-      <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+      <div
+        className="min-w-0 space-y-4 overflow-x-hidden animate-in fade-in slide-in-from-bottom-2 duration-300"
+        data-testid="commercial-checklist-create-page"
+      >
         {/* Header bar */}
-        <div className="flex items-center gap-3 sticky top-0 z-10 bg-background/95 backdrop-blur border-b pb-3 -mx-1 px-1">
-          <Button variant="ghost" size="icon" onClick={() => setMode("list")} className="h-8 w-8 shrink-0">
+        <div className="sticky top-0 z-10 -mx-1 grid min-w-0 grid-cols-[auto_minmax(0,1fr)] gap-3 border-b bg-background/95 px-1 pb-3 backdrop-blur sm:flex sm:items-center">
+          <Button variant="ghost" size="icon" onClick={() => setMode("list")} className="h-9 w-9 shrink-0" aria-label="Voltar para checklists">
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="flex-1 min-w-0">
-            <h1 className="text-lg font-bold tracking-tight truncate text-foreground">
+            <h1 className="break-words text-base font-bold leading-snug tracking-tight text-foreground sm:text-lg">
               Passo 1: Formulário Comercial de Nova Implantação
             </h1>
-            <p className="text-xs text-muted-foreground">Preencha os dados da negociação para liberar o checklist ao cliente.</p>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">Preencha os dados da negociação para liberar o checklist ao cliente.</p>
           </div>
-          <div className="flex gap-2 shrink-0">
-            <Button variant="outline" size="sm" onClick={() => setMode("list")}>Cancelar</Button>
+          <div className="col-span-2 grid w-full shrink-0 grid-cols-2 gap-2 sm:ml-auto sm:flex sm:w-auto">
+            <Button variant="outline" size="sm" onClick={() => setMode("list")} className="w-full sm:w-auto">Cancelar</Button>
             <Button
               size="sm"
               onClick={handleSaveAndGenerate}
               disabled={createForm.isPending || createChecklist.isPending}
-              className="bg-indigo-600 hover:bg-indigo-700 gap-1.5 shadow-md"
+              className="h-auto min-h-9 w-full gap-1.5 whitespace-normal bg-indigo-600 text-xs leading-snug shadow-md hover:bg-indigo-700 sm:w-auto"
             >
               <CheckCircle2 className="h-3.5 w-3.5" />
               {createForm.isPending || createChecklist.isPending ? "Processando..." : "Salvar e Liberar Link"}
@@ -442,7 +473,7 @@ export default function CommercialChecklists() {
         </div>
 
         {/* Info */}
-        <div className="flex items-start gap-2.5 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200">
+        <div className="flex min-w-0 items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
           <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
           <p className="text-xs leading-relaxed">
             <strong>Instrução Comercial:</strong> O preenchimento das informações abaixo é <strong>obrigatório</strong> antes de disponibilizar o checklist técnico ao cliente. Essas respostas serão gravadas e integradas diretamente na timeline do projeto.
@@ -450,8 +481,8 @@ export default function CommercialChecklists() {
         </div>
 
         {/* Project Selector */}
-        <Card className={`border-2 transition-colors ${fieldErrors.has("client_name") || fieldErrors.has("contracted_system") ? "border-red-400" : "border-transparent"} bg-gradient-to-br from-indigo-50/40 to-purple-50/40 dark:from-indigo-950/20 dark:to-purple-950/20`}>
-          <CardContent className="pt-4 pb-4 space-y-4">
+        <Card className={`min-w-0 border-2 transition-colors ${fieldErrors.has("client_name") || fieldErrors.has("contracted_system") ? "border-red-400" : "border-transparent"} bg-gradient-to-br from-indigo-50/40 to-purple-50/40 dark:from-indigo-950/20 dark:to-purple-950/20`}>
+          <CardContent className="min-w-0 space-y-4 p-3 sm:p-4">
             <p className="text-[11px] font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">Identificação do Projeto</p>
 
             <div className="space-y-1.5 flex flex-col max-w-3xl">
@@ -462,7 +493,7 @@ export default function CommercialChecklists() {
                     variant="outline"
                     role="combobox"
                     aria-expanded={comboboxOpen}
-                    className="w-full justify-between font-normal text-left h-auto min-h-10 py-2 border-muted-foreground/30 bg-background whitespace-normal pr-4"
+                    className="h-auto min-h-10 w-full min-w-0 justify-between whitespace-normal border-muted-foreground/30 bg-background py-2 pr-3 text-left font-normal"
                   >
                     {selectedProjectId ? (
                       (() => {
@@ -475,7 +506,7 @@ export default function CommercialChecklists() {
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[var(--radix-popover-trigger-width)] min-w-[350px] max-w-[90vw] p-0" align="start">
+                <PopoverContent className="w-[var(--radix-popover-trigger-width)] min-w-0 max-w-[calc(100vw-1.5rem)] p-0" align="start">
                   <Command>
                     <CommandInput placeholder="Pesquisar projeto..." />
                     <CommandList className="max-h-60 overflow-y-auto">
@@ -522,15 +553,15 @@ export default function CommercialChecklists() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-indigo-100 dark:border-indigo-950/40">
                 <div className="space-y-1">
                   <span className="text-[11px] font-bold text-muted-foreground block uppercase">Cliente</span>
-                  <span className="text-sm font-semibold">{formData.client_name}</span>
+                  <span className="break-words text-sm font-semibold">{formData.client_name}</span>
                 </div>
                 <div className="space-y-1">
                   <span className="text-[11px] font-bold text-muted-foreground block uppercase">N.º do Chamado</span>
-                  <span className="text-sm font-semibold font-mono">#{formData.ticket_number || "—"}</span>
+                  <span className="break-all text-sm font-semibold font-mono">#{formData.ticket_number || "—"}</span>
                 </div>
                 <div className="space-y-1">
                   <span className="text-[11px] font-bold text-muted-foreground block uppercase">Sistema Principal</span>
-                  <span className="text-sm font-semibold">{formData.contracted_system}</span>
+                  <span className="break-words text-sm font-semibold">{formData.contracted_system}</span>
                 </div>
               </div>
             )}
@@ -540,12 +571,12 @@ export default function CommercialChecklists() {
         {selectedProjectId ? (
           <div className="space-y-4">
             <DeploymentFormFields data={formData} onChange={setFormData} errors={fieldErrors} />
-            <div className="flex justify-end gap-2 pb-10 pt-2 border-t">
-              <Button variant="outline" onClick={() => setMode("list")}>Cancelar</Button>
+            <div className="grid grid-cols-1 gap-2 border-t pb-10 pt-3 sm:flex sm:justify-end">
+              <Button variant="outline" onClick={() => setMode("list")} className="w-full sm:w-auto">Cancelar</Button>
               <Button
                 onClick={handleSaveAndGenerate}
                 disabled={createForm.isPending || createChecklist.isPending}
-                className="bg-indigo-600 hover:bg-indigo-700 gap-2"
+                className="h-auto min-h-10 w-full gap-2 whitespace-normal bg-indigo-600 leading-snug hover:bg-indigo-700 sm:w-auto"
               >
                 <ClipboardCheck className="h-4 w-4" />
                 {createForm.isPending || createChecklist.isPending ? "Processando..." : "Salvar e Liberar Checklist"}
@@ -553,7 +584,7 @@ export default function CommercialChecklists() {
             </div>
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center p-12 text-center border border-dashed rounded-2xl bg-muted/10 h-[200px]">
+          <div className="flex h-[200px] min-w-0 flex-col items-center justify-center rounded-2xl border border-dashed bg-muted/10 p-4 text-center sm:p-8">
             <Building2 className="h-8 w-8 text-muted-foreground/60 mb-2" />
             <p className="text-sm text-muted-foreground">Por favor, selecione um projeto ativo no campo acima para carregar o formulário.</p>
           </div>
@@ -564,26 +595,29 @@ export default function CommercialChecklists() {
 
   /* ── LIST VIEW ── */
   return (
-    <div className="space-y-5 animate-in fade-in duration-500 h-[calc(100vh-6rem)] flex flex-col">
+    <div
+      className="flex min-w-0 flex-col gap-4 overflow-x-hidden animate-in fade-in duration-500 md:h-[calc(100vh-6rem)] md:gap-5"
+      data-testid="commercial-checklists-page"
+    >
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
-        <div>
-          <h1 className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+      <div className="flex min-w-0 shrink-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-xl font-extrabold leading-tight tracking-tight text-transparent sm:text-2xl">
             Checklists de Implantação
           </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Gerencie os formulários de passagem do Comercial e os checklists estruturais dos clientes</p>
+          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">Gerencie os formulários de passagem do Comercial e os checklists estruturais dos clientes</p>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="grid w-full shrink-0 grid-cols-2 gap-2 sm:flex sm:w-auto">
           <Button
             variant="outline"
             onClick={() => navigate("/commercial/checklists/questions")}
-            className="border-muted-foreground/30 bg-card gap-2"
+            className="h-auto min-h-10 w-full gap-2 whitespace-normal border-muted-foreground/30 bg-card text-xs leading-snug sm:w-auto sm:text-sm"
           >
             <Settings className="h-4 w-4" />
             Editar Perguntas
           </Button>
           {canCreateChecklists && (
-            <Button onClick={handleStartCreate} className="bg-indigo-600 hover:bg-indigo-700 gap-2 shadow-lg shadow-indigo-500/20">
+            <Button onClick={handleStartCreate} className="h-auto min-h-10 w-full gap-2 whitespace-normal bg-indigo-600 text-xs leading-snug shadow-lg shadow-indigo-500/20 hover:bg-indigo-700 sm:w-auto sm:text-sm">
               <Plus className="h-4 w-4" />
               Novo Checklist
             </Button>
@@ -593,34 +627,60 @@ export default function CommercialChecklists() {
 
       {/* Stats row */}
       {checklists.length > 0 && (
-        <div className="flex flex-wrap gap-3 shrink-0">
+        <div className="grid min-w-0 shrink-0 grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3" data-testid="commercial-checklists-stats">
           {[
             { label: "Total", value: checklists.length, icon: FileText, color: "text-indigo-500" },
             { label: "Aguardando Resposta", value: checklists.filter(c => c.status === "pending").length, icon: Clock, color: "text-amber-500" },
             { label: "Respondidos", value: checklists.filter(c => c.status === "submitted").length, icon: CheckCircle2, color: "text-emerald-500" },
           ].map(stat => (
-            <div key={stat.label} className="flex items-center gap-2 bg-card rounded-lg px-3 py-2 border text-sm shadow-sm">
-              <stat.icon className={`h-4 w-4 ${stat.color}`} />
+            <div key={stat.label} className="flex min-w-0 items-center gap-2 rounded-lg border bg-card px-2.5 py-2 text-sm shadow-sm sm:px-3">
+              <stat.icon className={`h-4 w-4 shrink-0 ${stat.color}`} />
               <span className="font-bold">{stat.value}</span>
-              <span className="text-muted-foreground text-xs">{stat.label}</span>
+              <span className="min-w-0 break-words text-[11px] leading-tight text-muted-foreground sm:text-xs">{stat.label}</span>
             </div>
           ))}
         </div>
       )}
 
-      {/* Search Input */}
-      <div className="relative shrink-0">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Buscar por cliente, sistema, chamado ou quem criou..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-9 h-9 bg-card/60"
-        />
+      {/* Filters */}
+      <div className="min-w-0 shrink-0 rounded-xl border bg-muted/20 p-3 sm:p-4" data-testid="commercial-checklists-filters">
+        <div className="mb-3 flex min-w-0 items-center justify-between gap-2">
+          <div className="flex items-center gap-2 text-sm font-semibold">
+            <Filter className="h-4 w-4 shrink-0 text-indigo-500" />
+            <span>Filtros dos checklists</span>
+          </div>
+          {hasActiveFilters && (
+            <Button type="button" variant="ghost" size="sm" className="h-8 shrink-0 gap-1.5 px-2 text-xs" onClick={clearFilters}>
+              <X className="h-3.5 w-3.5" /> Limpar
+            </Button>
+          )}
+        </div>
+        <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_220px]">
+          <div className="relative min-w-0">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por cliente, sistema, chamado ou quem criou..."
+              aria-label="Buscar checklist"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="h-10 min-w-0 bg-card/60 pl-9"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="h-10 w-full min-w-0 bg-background" aria-label="Filtrar checklists por status">
+              <SelectValue placeholder="Todos os status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os status</SelectItem>
+              <SelectItem value="pending">Aguardando resposta</SelectItem>
+              <SelectItem value="submitted">Respondidos</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* List content */}
-      <div className="flex-1 overflow-y-auto pr-1 -mr-1">
+      <div className="min-w-0 md:-mr-1 md:flex-1 md:overflow-y-auto md:pr-1">
         {isLoadingChecklists || isLoadingProjects || isLoadingForms ? (
           <div className="flex items-center justify-center py-20">
             <div className="flex flex-col items-center gap-3">
@@ -629,7 +689,7 @@ export default function CommercialChecklists() {
             </div>
           </div>
         ) : filteredChecklists.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-12 text-center border-2 border-dashed rounded-2xl bg-muted/10 h-[280px]">
+          <div className="flex h-[280px] min-w-0 flex-col items-center justify-center rounded-2xl border-2 border-dashed bg-muted/10 p-4 text-center sm:p-8" data-testid="commercial-checklists-empty-state">
             <div className="p-4 rounded-full bg-indigo-50 dark:bg-indigo-950/30 mb-4">
               <ClipboardCheck className="h-10 w-10 text-indigo-400" />
             </div>
@@ -644,48 +704,60 @@ export default function CommercialChecklists() {
             )}
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 pb-8">
-            {filteredChecklists.map((item) => {
+          <>
+          <div className="grid min-w-0 gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3" data-testid="commercial-checklists-list">
+            {paginatedChecklists.map((item) => {
               const isSubmitted = item.status === "submitted";
               const matchedForm = forms.find(f => f.ticket_number === item.projects?.ticketNumber);
               return (
                 <Card
                   key={item.id}
-                  className="overflow-hidden hover:shadow-xl transition-all duration-200 cursor-pointer group bg-card border hover:border-indigo-300 dark:hover:border-indigo-700 hover:-translate-y-0.5"
+                  className="group min-w-0 cursor-pointer overflow-hidden border bg-card transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-300 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:hover:border-indigo-700"
                   onClick={() => handleOpenView(item, "client")}
+                  onKeyDown={(event) => {
+                    if (event.target !== event.currentTarget) return;
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      handleOpenView(item, "client");
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Abrir checklist de ${item.projects?.clientName || "projeto removido"}`}
+                  data-testid="commercial-checklist-card"
                 >
                   <div className={`h-1.5 w-full ${isSubmitted ? "bg-emerald-500" : "bg-blue-500"}`} />
-                  <CardContent className="p-4 space-y-3">
-                    <div className="flex justify-between items-start gap-2">
+                  <CardContent className="min-w-0 space-y-3 p-3.5 sm:p-4">
+                    <div className="flex min-w-0 items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
-                        <h3 className="font-bold text-base leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">
+                        <h3 className="min-w-0 break-words text-base font-bold leading-snug transition-colors group-hover:text-indigo-600 dark:group-hover:text-indigo-400" data-testid="commercial-checklist-client-name">
                           {item.projects?.clientName || "Projeto Removido"}
                         </h3>
                         <div className="flex flex-wrap gap-1.5 mt-1.5">
                           {item.projects?.systemType && (
-                            <Badge variant="outline" className="text-[11px] px-2 py-0">{item.projects.systemType}</Badge>
+                            <Badge variant="outline" className="h-auto max-w-full whitespace-normal break-words px-2 py-0.5 text-left text-[11px] leading-snug">{item.projects.systemType}</Badge>
                           )}
                           {item.projects?.ticketNumber && (
-                            <Badge variant="secondary" className="text-[11px] font-mono px-2 py-0">#{item.projects.ticketNumber}</Badge>
+                            <Badge variant="secondary" className="h-auto max-w-full whitespace-normal break-all px-2 py-0.5 text-left font-mono text-[11px] leading-snug">#{item.projects.ticketNumber}</Badge>
                           )}
                         </div>
                         <div className="flex flex-wrap gap-1.5 mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                           {matchedForm ? (
-                            <Badge className="bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[11px] px-2 py-0">
+                            <Badge className="h-auto max-w-full whitespace-normal break-words border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-left text-[11px] leading-snug text-emerald-500">
                               Form Comercial: Preenchido
                             </Badge>
                           ) : (
-                            <Badge className="bg-orange-500/10 text-orange-500 border border-orange-500/20 text-[11px] px-2 py-0 animate-pulse">
+                            <Badge className="h-auto max-w-full animate-pulse whitespace-normal break-words border border-orange-500/20 bg-orange-500/10 px-2 py-0.5 text-left text-[11px] leading-snug text-orange-500">
                               Form Comercial: Pendente
                             </Badge>
                           )}
 
                           {isSubmitted ? (
-                            <Badge className="bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[11px] px-2 py-0">
+                            <Badge className="h-auto max-w-full whitespace-normal break-words border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-left text-[11px] leading-snug text-emerald-500">
                               Checklist Cliente: Respondido
                             </Badge>
                           ) : (
-                            <Badge className="bg-blue-500/10 text-blue-500 border border-blue-500/20 text-[11px] px-2 py-0">
+                            <Badge className="h-auto max-w-full whitespace-normal break-words border border-blue-500/20 bg-blue-500/10 px-2 py-0.5 text-left text-[11px] leading-snug text-blue-500">
                               Checklist Cliente: Enviado
                             </Badge>
                           )}
@@ -695,30 +767,31 @@ export default function CommercialChecklists() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 shrink-0"
+                          className="h-9 w-9 shrink-0 text-red-500 opacity-100 transition-opacity hover:bg-red-50 hover:text-red-600 md:h-7 md:w-7 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 dark:hover:bg-red-950/30"
                           onClick={(e) => handleDelete(item.id, item.projects?.ticketNumber, e)}
+                          aria-label={`Excluir checklist de ${item.projects?.clientName || "projeto removido"}`}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       )}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground border-t pt-2.5">
-                      <div className="flex items-center gap-1.5">
+                    <div className="grid min-w-0 grid-cols-1 gap-2 border-t pt-2.5 text-xs text-muted-foreground sm:grid-cols-2">
+                      <div className="flex min-w-0 items-start gap-1.5">
                         <User className="h-3.5 w-3.5 shrink-0" />
-                        <span className="truncate" title={item.created_by_name}>Criado por {item.created_by_name}</span>
+                        <span className="min-w-0 break-words" title={item.created_by_name}>Criado por {item.created_by_name || "Não informado"}</span>
                       </div>
-                      <div className="flex items-center gap-1.5 justify-end">
+                      <div className="flex items-center gap-1.5 sm:justify-end">
                         <Clock className="h-3.5 w-3.5 shrink-0" />
                         <span>{new Date(item.created_at).toLocaleDateString("pt-BR")}</span>
                       </div>
                     </div>
 
-                    <div className="flex gap-2 pt-2 border-t mt-1">
+                    <div className="mt-1 flex min-w-0 flex-wrap gap-2 border-t pt-2">
                       <Button
                         variant="outline"
                         size="sm"
-                        className="flex-1 gap-1.5 h-8 text-xs hover:bg-slate-50 dark:hover:bg-slate-900"
+                        className="h-auto min-h-9 min-w-[120px] flex-1 gap-1.5 whitespace-normal text-xs leading-snug hover:bg-slate-50 dark:hover:bg-slate-900"
                         onClick={(e) => { e.stopPropagation(); handleOpenView(item, "commercial"); }}
                       >
                         <FileText className="h-3.5 w-3.5" /> Dados Comercial
@@ -728,7 +801,7 @@ export default function CommercialChecklists() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="flex-1 gap-1.5 h-8 text-xs hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-400"
+                          className="h-auto min-h-9 min-w-[120px] flex-1 gap-1.5 whitespace-normal text-xs leading-snug hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-400"
                           onClick={(e) => { e.stopPropagation(); handleOpenView(item, "client"); }}
                         >
                           <Eye className="h-3.5 w-3.5" /> Ver Respostas
@@ -739,7 +812,7 @@ export default function CommercialChecklists() {
                             variant="outline"
                             size="sm"
                             disabled={!matchedForm}
-                            className="flex-1 gap-1.5 h-8 text-xs disabled:opacity-50 disabled:cursor-not-allowed hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-300 dark:hover:bg-indigo-950/30 dark:hover:text-indigo-400"
+                            className="h-auto min-h-9 min-w-[110px] flex-1 gap-1.5 whitespace-normal text-xs leading-snug hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-indigo-950/30 dark:hover:text-indigo-400"
                             onClick={(e) => handleCopyLink(item.id, e)}
                             title={!matchedForm ? "O formulário comercial deve estar preenchido para liberar o checklist." : "Copiar link de preenchimento do cliente"}
                           >
@@ -777,6 +850,71 @@ export default function CommercialChecklists() {
               );
             })}
           </div>
+          <div
+            className="mt-4 flex min-w-0 flex-col gap-3 border-t px-1 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-2"
+            data-testid="commercial-checklists-pagination"
+          >
+            <p className="text-center text-xs text-muted-foreground sm:text-left sm:text-sm">
+              Mostrando{" "}
+              <strong className="font-semibold text-foreground">
+                {firstVisibleItem}–{lastVisibleItem}
+              </strong>{" "}
+              de{" "}
+              <strong className="font-semibold text-foreground">
+                {filteredChecklists.length}
+              </strong>
+            </p>
+            <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 sm:justify-end">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground sm:text-sm">
+                <span>Por página</span>
+                <Select
+                  value={itemsPerPage.toString()}
+                  onValueChange={(value) => {
+                    setSelectedPageSize(Number(value));
+                    setCurrentPage(1);
+                  }}
+                >
+                  <SelectTrigger className="h-8 w-[68px]" aria-label="Checklists por página">
+                    <SelectValue placeholder={itemsPerPage.toString()} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="3">3</SelectItem>
+                    <SelectItem value="6">6</SelectItem>
+                    <SelectItem value="9">9</SelectItem>
+                    <SelectItem value="12">12</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <span className="whitespace-nowrap text-xs font-medium sm:text-sm">
+                Página {currentPage} de {totalPages}
+              </span>
+              <div className="flex items-center gap-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setCurrentPage((page) => Math.max(page - 1, 1))}
+                  disabled={currentPage === 1}
+                  aria-label="Página anterior"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setCurrentPage((page) => Math.min(page + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  aria-label="Próxima página"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+          </>
         )}
       </div>
 
@@ -786,16 +924,16 @@ export default function CommercialChecklists() {
           const matchedForm = forms.find(f => f.ticket_number === viewChecklist.projects?.ticketNumber);
           return (
             <Dialog open={!!viewChecklist} onOpenChange={(open) => { if (!open) handleCloseView(); }}>
-              <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col p-0 overflow-hidden gap-0">
-                <DialogHeader className="px-6 pt-5 pb-3 border-b shrink-0 bg-gradient-to-r from-slate-50 to-slate-100/50 dark:from-slate-900 dark:to-slate-900/50">
-                  <div className="flex justify-between items-start pr-6">
-                    <div>
-                      <DialogTitle className="text-lg font-bold flex items-center gap-2">
-                        <Building2 className="h-5 w-5 text-indigo-500" />
-                        {viewChecklist.projects?.clientName || "Dados da Serventia"}
+              <DialogContent className="flex max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] min-w-0 max-w-4xl flex-col gap-0 overflow-hidden p-0" data-testid="commercial-checklist-dialog">
+                <DialogHeader className="min-w-0 shrink-0 border-b bg-gradient-to-r from-slate-50 to-slate-100/50 px-4 pb-3 pt-4 dark:from-slate-900 dark:to-slate-900/50 sm:px-6 sm:pt-5">
+                  <div className="flex min-w-0 items-start justify-between pr-7">
+                    <div className="min-w-0">
+                      <DialogTitle className="flex min-w-0 items-start gap-2 text-base font-bold sm:text-lg">
+                        <Building2 className="h-5 w-5 shrink-0 text-indigo-500" />
+                        <span className="min-w-0 break-words">{viewChecklist.projects?.clientName || "Dados da Serventia"}</span>
                       </DialogTitle>
-                      <DialogDescription className="text-xs text-muted-foreground mt-0.5">
-                        ID: <span className="font-mono text-[10px] select-all bg-muted px-1 rounded">{viewChecklist.id}</span>
+                      <DialogDescription className="mt-1 min-w-0 break-words text-left text-xs leading-relaxed text-muted-foreground">
+                        ID: <span className="break-all rounded bg-muted px-1 font-mono text-[10px] select-all">{viewChecklist.id}</span>
                         {viewChecklist.projects?.ticketNumber && ` • Chamado: #${viewChecklist.projects.ticketNumber}`}
                         {viewChecklist.projects?.systemType && ` • Sistema: ${viewChecklist.projects.systemType}`}
                       </DialogDescription>
@@ -803,28 +941,28 @@ export default function CommercialChecklists() {
                   </div>
                 </DialogHeader>
 
-                <Tabs value={activeTab} onValueChange={handleTabChange} className="flex-1 flex flex-col overflow-hidden">
-                  <div className="px-6 border-b bg-background shrink-0">
-                    <TabsList className="flex w-64 my-2">
-                      <TabsTrigger value="client" className="flex-1 text-xs">Checklist Cliente</TabsTrigger>
-                      <TabsTrigger value="commercial" className="flex-1 text-xs">Dados Comercial</TabsTrigger>
+                <Tabs value={activeTab} onValueChange={handleTabChange} className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+                  <div className="shrink-0 border-b bg-background px-3 sm:px-6">
+                    <TabsList className="my-2 grid h-auto w-full min-w-0 grid-cols-2 sm:w-72">
+                      <TabsTrigger value="client" className="h-auto min-h-9 min-w-0 whitespace-normal px-2 text-xs leading-snug">Checklist Cliente</TabsTrigger>
+                      <TabsTrigger value="commercial" className="h-auto min-h-9 min-w-0 whitespace-normal px-2 text-xs leading-snug">Dados Comercial</TabsTrigger>
                     </TabsList>
                   </div>
 
-                  <div className="flex-1 overflow-y-auto p-6 min-h-0">
+                  <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto p-3 break-words sm:p-6">
                     {/* CLIENT CHECKLIST TAB */}
                     <TabsContent value="client" className="space-y-6 mt-0 focus-visible:outline-none focus-visible:ring-0">
                       {viewChecklist.status === "pending" ? (
-                        <div className="flex flex-col items-center justify-center p-8 text-center bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 rounded-xl text-amber-800 dark:text-amber-200">
+                        <div className="flex min-w-0 flex-col items-center justify-center rounded-xl border border-amber-200 bg-amber-50 p-4 text-center text-amber-800 dark:border-amber-900 dark:bg-amber-950/20 dark:text-amber-200 sm:p-8">
                           <Clock className="h-10 w-10 text-amber-500 animate-pulse mb-3" />
                           <h4 className="font-bold">Aguardando Resposta do Cliente</h4>
                           <p className="text-xs text-muted-foreground max-w-sm mt-1">
                             Este checklist foi gerado comercialmente, mas o cliente ainda não o respondeu. Envie o link abaixo:
                           </p>
                           {matchedForm ? (
-                            <div className="flex items-center gap-2 mt-4 max-w-full w-full bg-background border p-2 rounded-lg">
-                              <span className="text-xs truncate text-left flex-1 font-mono">{`${window.location.origin}/public/checklist/${viewChecklist.id}`}</span>
-                              <Button size="sm" variant="secondary" className="gap-1 h-8 shrink-0" onClick={(e) => handleCopyLink(viewChecklist.id, e)}>
+                            <div className="mt-4 flex w-full min-w-0 max-w-full flex-col gap-2 rounded-lg border bg-background p-2 sm:flex-row sm:items-center">
+                              <span className="min-w-0 flex-1 break-all text-left font-mono text-xs">{`${window.location.origin}/public/checklist/${viewChecklist.id}`}</span>
+                              <Button size="sm" variant="secondary" className="h-9 w-full shrink-0 gap-1 sm:h-8 sm:w-auto" onClick={(e) => handleCopyLink(viewChecklist.id, e)}>
                                 <Copy className="h-3 w-3" /> Copiar Link
                               </Button>
                             </div>
@@ -858,7 +996,7 @@ export default function CommercialChecklists() {
                             </div>
                           </div>
 
-                          <div className="border rounded-xl p-6 bg-card">
+                          <div className="min-w-0 rounded-xl border bg-card p-3 sm:p-6">
                             {isLoadingViewTemplate || !viewTemplate ? (
                               <div className="flex flex-col items-center justify-center p-8 gap-2">
                                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
@@ -929,7 +1067,7 @@ export default function CommercialChecklists() {
                                     )}
                                   </div>
                                 </div>
-                                <div className="col-span-2">
+                                <div className="sm:col-span-2">
                                   <span className="text-xs text-muted-foreground block font-medium">Data do Preenchimento</span>
                                   <span className="font-semibold text-foreground">
                                     {viewChecklist.responses.fill_date ? new Date(viewChecklist.responses.fill_date).toLocaleDateString("pt-BR") : "—"}
@@ -993,7 +1131,7 @@ export default function CommercialChecklists() {
                               </div>
 
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm pt-2 border-t">
-                                <div className="col-span-2">
+                                <div className="sm:col-span-2">
                                   <span className="text-xs text-muted-foreground block font-medium">Quantidade de colaboradores por setor</span>
                                   <p className="mt-1 text-foreground/80 bg-muted/20 p-2.5 rounded-lg border text-xs whitespace-pre-wrap">{viewChecklist.responses.employees_by_sector || "—"}</p>
                                 </div>
@@ -1005,11 +1143,11 @@ export default function CommercialChecklists() {
                                   <span className="text-xs text-muted-foreground block font-medium">Equipe ciente da mudança de sistema?</span>
                                   <Badge variant="secondary" className="font-bold text-xs">{viewChecklist.responses.aware_of_change || "—"}</Badge>
                                 </div>
-                                <div className="col-span-2">
+                                <div className="sm:col-span-2">
                                   <span className="text-xs text-muted-foreground block font-medium">Como a equipe lida com mudanças ou sistemas novos?</span>
                                   <p className="mt-1 text-foreground/80 bg-muted/20 p-2.5 rounded-lg border text-xs whitespace-pre-wrap">{viewChecklist.responses.team_adaptability || "—"}</p>
                                 </div>
-                                <div className="col-span-2">
+                                <div className="sm:col-span-2">
                                   <span className="text-xs text-muted-foreground block font-medium">Observação</span>
                                   <p className="mt-1 text-foreground/80 bg-muted/20 p-2.5 rounded-lg border text-xs whitespace-pre-wrap">{viewChecklist.responses.employees_obs || "Sem observações."}</p>
                                 </div>
@@ -1025,13 +1163,13 @@ export default function CommercialChecklists() {
                       {isEditingCommercialForm && editFormData ? (
                         /* Edit mode */
                         <div className="space-y-4">
-                          <div className="flex items-center justify-between border-b pb-2 mb-3">
+                          <div className="mb-3 flex min-w-0 flex-col gap-2 border-b pb-3 sm:flex-row sm:items-center sm:justify-between">
                             <span className="text-xs font-bold text-muted-foreground uppercase">Editando Formulário Comercial</span>
-                            <div className="flex gap-2">
-                              <Button variant="ghost" size="sm" onClick={() => setIsEditingCommercialForm(false)}>Cancelar</Button>
+                            <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
+                              <Button variant="ghost" size="sm" onClick={() => setIsEditingCommercialForm(false)} className="w-full sm:w-auto">Cancelar</Button>
                               <Button
                                 size="sm"
-                                className="bg-indigo-600 hover:bg-indigo-700"
+                                className="h-auto min-h-9 w-full whitespace-normal bg-indigo-600 leading-snug hover:bg-indigo-700 sm:w-auto"
                                 disabled={updateForm.isPending || createForm.isPending}
                                 onClick={() => handleUpdateCommercialForm(matchedForm?.id || null)}
                               >
@@ -1042,11 +1180,11 @@ export default function CommercialChecklists() {
 
                           <DeploymentFormFields data={editFormData} onChange={setEditFormData} errors={editFieldErrors} />
 
-                          <div className="flex justify-end gap-2 border-t pt-3 mt-4">
-                            <Button variant="outline" size="sm" onClick={() => setIsEditingCommercialForm(false)}>Cancelar</Button>
+                          <div className="mt-4 grid grid-cols-1 gap-2 border-t pt-3 sm:flex sm:justify-end">
+                            <Button variant="outline" size="sm" onClick={() => setIsEditingCommercialForm(false)} className="w-full sm:w-auto">Cancelar</Button>
                             <Button
                               size="sm"
-                              className="bg-indigo-600 hover:bg-indigo-700"
+                              className="h-auto min-h-9 w-full whitespace-normal bg-indigo-600 leading-snug hover:bg-indigo-700 sm:w-auto"
                               disabled={updateForm.isPending || createForm.isPending}
                               onClick={() => handleUpdateCommercialForm(matchedForm?.id || null)}
                             >
@@ -1057,15 +1195,15 @@ export default function CommercialChecklists() {
                       ) : matchedForm ? (
                         /* Read-only details view */
                         <div className="space-y-6">
-                          <div className="flex justify-between items-center bg-muted/20 border p-3 rounded-lg">
-                            <div className="text-xs text-muted-foreground">
+                          <div className="flex min-w-0 flex-col gap-3 rounded-lg border bg-muted/20 p-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="min-w-0 break-words text-xs text-muted-foreground">
                               Preenchido por <strong>{matchedForm.filled_by}</strong> em {new Date(matchedForm.created_at || new Date()).toLocaleDateString("pt-BR")}
                             </div>
-                            <div className="flex gap-2">
+                            <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto">
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="gap-1.5 h-8 text-xs"
+                                className="h-auto min-h-9 w-full gap-1.5 whitespace-normal text-xs leading-snug sm:w-auto"
                                 onClick={() => handleCopyTramite(matchedForm)}
                               >
                                 <Download className="h-3.5 w-3.5" /> Copiar Trâmite (0800)
@@ -1074,7 +1212,7 @@ export default function CommercialChecklists() {
                                 <Button
                                   size="sm"
                                   variant="secondary"
-                                  className="h-8 text-xs"
+                                  className="h-9 w-full text-xs sm:h-8 sm:w-auto"
                                   onClick={() => {
                                     setEditFormData({ ...matchedForm });
                                     setEditFieldErrors(new Set());
@@ -1095,7 +1233,7 @@ export default function CommercialChecklists() {
                                 <FileText className="h-3.5 w-3.5 text-indigo-500" />
                                 Dados Administrativos
                               </h4>
-                              <div className="grid grid-cols-2 gap-2 text-xs">
+                              <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
                                 <div><span className="text-muted-foreground block">N.º OP</span><strong className="text-sm">{matchedForm.op_number}</strong></div>
                                 <div><span className="text-muted-foreground block">N.º Pedido</span><strong className="text-sm">{matchedForm.sales_order_number}</strong></div>
                                 <div><span className="text-muted-foreground block">Data do Pedido</span><strong className="text-sm">{matchedForm.order_date ? new Date(matchedForm.order_date).toLocaleDateString("pt-BR") : "—"}</strong></div>
@@ -1109,7 +1247,7 @@ export default function CommercialChecklists() {
                                 <Wrench className="h-3.5 w-3.5 text-emerald-500" />
                                 Escopo Contratado
                               </h4>
-                              <div className="grid grid-cols-2 gap-2 text-xs">
+                              <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
                                 <div><span className="text-muted-foreground block">Sistema Principal</span><strong className="text-sm">{matchedForm.contracted_system}</strong></div>
                                 <div><span className="text-muted-foreground block">Modalidade</span><strong className="text-sm">{matchedForm.modality}</strong></div>
                                 <div><span className="text-muted-foreground block">Horas Presencial</span><strong className="text-sm">{matchedForm.hours_presencial} h</strong></div>
@@ -1136,12 +1274,12 @@ export default function CommercialChecklists() {
                                 <Calendar className="h-3.5 w-3.5 text-amber-500" />
                                 Perfil, Datas e Agenda
                               </h4>
-                              <div className="grid grid-cols-2 gap-2 text-xs">
+                              <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
                                 <div><span className="text-muted-foreground block">Tipo de Implantação</span><strong className="text-sm">{matchedForm.deployment_type === "migration_siplan" ? "Migração Siplan Legado" : matchedForm.deployment_type === "migration_competitor" ? "Migração Concorrente" : "Outro"}</strong></div>
                                 <div><span className="text-muted-foreground block">Sistema Legado</span><strong className="text-sm">{matchedForm.legacy_system}</strong></div>
                                 <div><span className="text-muted-foreground block">Data Desejada</span><strong className="text-sm">{matchedForm.desired_date ? new Date(matchedForm.desired_date).toLocaleDateString("pt-BR") : "—"}</strong></div>
                                 <div><span className="text-muted-foreground block">Data Limite (Máxima)</span><strong className="text-sm">{matchedForm.max_date ? new Date(matchedForm.max_date).toLocaleDateString("pt-BR") : "—"}</strong></div>
-                                <div className="col-span-2 border-t pt-2">
+                                <div className="border-t pt-2 sm:col-span-2">
                                   <span className="text-muted-foreground block">Restrições de Período</span>
                                   <p className="text-sm leading-relaxed whitespace-pre-wrap">{matchedForm.schedule_restrictions || "Sem restrições informadas."}</p>
                                 </div>
@@ -1269,8 +1407,8 @@ export default function CommercialChecklists() {
                     </TabsContent>
                   </div>
 
-                  <div className="flex justify-end gap-2 px-6 py-4 border-t shrink-0 bg-slate-50 dark:bg-slate-900">
-                    <Button variant="outline" size="sm" onClick={handleCloseView}>Fechar</Button>
+                  <div className="shrink-0 border-t bg-slate-50 px-3 py-3 dark:bg-slate-900 sm:flex sm:justify-end sm:px-6 sm:py-4">
+                    <Button variant="outline" size="sm" onClick={handleCloseView} className="w-full sm:w-auto">Fechar</Button>
                   </div>
                 </Tabs>
               </DialogContent>
