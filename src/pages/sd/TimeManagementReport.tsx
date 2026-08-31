@@ -126,6 +126,7 @@ export default function TimeManagementReport() {
         return {
           day: format(date, "EEE", { locale: ptBR }).replace(".", ""),
           date: format(date, "dd/MM"),
+          dateKey: key,
           hours: Number((minutes / 60).toFixed(2)),
           hubHours: Number(((manualTotals.get(key) ?? 0) / 60).toFixed(2)),
           importedHours: Number(((importedTotals.get(key) ?? 0) / 60).toFixed(2)),
@@ -158,6 +159,19 @@ export default function TimeManagementReport() {
     if (periodView !== "day" || !userId) return;
     setSelectedUser(userId);
     setPage(1);
+  };
+  const filterByChartDate = (dateKey?: string) => {
+    if (periodView !== "week" || !dateKey) return;
+    setSelectedDate(parseISO(dateKey));
+    setPeriodView("day");
+    setPage(1);
+  };
+  const filterByChartPoint = (point?: { dateKey?: string; userId?: string }) => {
+    if (periodView === "week") {
+      filterByChartDate(point?.dateKey);
+      return;
+    }
+    filterByChartAnalyst(point?.userId);
   };
   const toggleGroup = (group: string) => {
     setSelectedGroups((current) => current.includes(group)
@@ -297,7 +311,7 @@ export default function TimeManagementReport() {
         <Card className="border-destructive/40"><CardContent className="flex flex-col items-center gap-2 py-14 text-center"><FileSearch className="h-8 w-8 text-destructive" /><p className="font-semibold">Não foi possível consultar os lançamentos</p><p className="text-sm text-muted-foreground">Verifique sua permissão gerencial ou tente novamente.</p><Button size="sm" variant="outline" onClick={() => { void reportQuery.refetch(); void entriesQuery.refetch(); }}>Tentar novamente</Button></CardContent></Card>
       ) : (
         <>
-          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-1.5 sm:grid-cols-2 xl:grid-cols-4">
             <MetricCard label="Horas lançadas" value={formatMinutes(total)} detail={periodDetail} icon={<Clock3 className="h-4 w-4" />} />
             <MetricCard label="Analistas" value={String(analystCount)} detail={`${analystCount} com registros ${periodView === "week" ? "na semana" : "no dia"}`} icon={<UsersRound className="h-4 w-4" />} />
             <MetricCard label={periodView === "week" ? "Média por analista/dia" : "Média por analista"} value={formatMinutes(workedUserDays ? total / workedUserDays : 0)} detail={`${workedUserDays} jornada(s) registrada(s)`} icon={<BarChart3 className="h-4 w-4" />} />
@@ -305,11 +319,11 @@ export default function TimeManagementReport() {
           </div>
 
           <Card>
-            <CardHeader className="p-3 pb-1"><CardTitle className="text-sm">{periodView === "week" ? "Distribuição semanal" : "Horas por analista"}</CardTitle></CardHeader>
-            <CardContent className="h-48 overflow-x-auto p-2 pt-0">
+            <CardHeader className="px-2.5 pb-0 pt-2"><CardTitle className="text-xs">{periodView === "week" ? "Distribuição semanal" : "Horas por analista"}</CardTitle></CardHeader>
+            <CardContent className="h-40 overflow-x-auto p-1.5 pt-0">
               <div className="h-full" style={{ minWidth: chartMinWidth || undefined }}>
                 <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                  <BarChart data={chartData} margin={{ top: 8, right: 8, left: -24, bottom: periodView === "day" ? 8 : 0 }}>
+                  <BarChart data={chartData} margin={{ top: 4, right: 6, left: -26, bottom: periodView === "day" ? 8 : 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
                     <XAxis
                       dataKey="day"
@@ -322,7 +336,11 @@ export default function TimeManagementReport() {
                         <AnalystAxisTick
                           onSelect={(index) => filterByChartAnalyst(chartData[index]?.userId)}
                         />
-                      ) : undefined}
+                      ) : (
+                        <WeekdayAxisTick
+                          onSelect={(index) => filterByChartDate(chartData[index]?.dateKey)}
+                        />
+                      )}
                     />
                     <YAxis fontSize={10} tickLine={false} axisLine={false} unit="h" />
                     <Tooltip formatter={(value: number) => formatMinutes(value * 60)} labelFormatter={(_, payload) => payload?.[0]?.payload?.fullName ?? payload?.[0]?.payload?.date ?? ""} />
@@ -334,8 +352,8 @@ export default function TimeManagementReport() {
                       fill="#2563eb"
                       maxBarSize={48}
                       radius={[0, 0, 4, 4]}
-                      className={periodView === "day" ? "cursor-pointer" : undefined}
-                      onClick={(bar) => filterByChartAnalyst(bar?.payload?.userId)}
+                      className="cursor-pointer"
+                      onClick={(bar) => filterByChartPoint(bar?.payload)}
                     />
                     <Bar
                       dataKey="importedHours"
@@ -344,8 +362,8 @@ export default function TimeManagementReport() {
                       fill="#e11d48"
                       maxBarSize={48}
                       radius={[4, 4, 0, 0]}
-                      className={periodView === "day" ? "cursor-pointer" : undefined}
-                      onClick={(bar) => filterByChartAnalyst(bar?.payload?.userId)}
+                      className="cursor-pointer"
+                      onClick={(bar) => filterByChartPoint(bar?.payload)}
                     />
                   </BarChart>
                 </ResponsiveContainer>
@@ -474,8 +492,40 @@ function AnalystAxisTick({
   );
 }
 
+function WeekdayAxisTick({
+  x = 0,
+  y = 0,
+  payload,
+  index = 0,
+  onSelect,
+}: {
+  x?: number;
+  y?: number;
+  payload?: { value?: string };
+  index?: number;
+  onSelect?: (index: number) => void;
+}) {
+  return (
+    <g
+      transform={`translate(${x},${y})`}
+      className="cursor-pointer"
+      role="button"
+      tabIndex={0}
+      aria-label={`Filtrar lançamentos de ${payload?.value ?? "dia"}`}
+      onClick={() => onSelect?.(index)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") onSelect?.(index);
+      }}
+    >
+      <text y={13} textAnchor="middle" className="fill-muted-foreground text-[10px]">
+        {payload?.value}
+      </text>
+    </g>
+  );
+}
+
 function MetricCard({ label, value, detail, icon }: { label: string; value: string; detail: string; icon: React.ReactNode }) {
-  return <Card><CardContent className="flex items-start justify-between gap-2 p-2.5"><div><p className="text-[11px] font-medium text-muted-foreground">{label}</p><p className="text-lg font-black leading-6 tabular-nums">{value}</p><p className="text-[10px] leading-4 text-muted-foreground">{detail}</p></div><span className="rounded-md bg-primary/10 p-1.5 text-primary">{icon}</span></CardContent></Card>;
+  return <Card><CardContent className="flex items-start justify-between gap-1.5 p-2"><div><p className="text-[10px] font-medium leading-3.5 text-muted-foreground">{label}</p><p className="text-base font-black leading-5 tabular-nums">{value}</p><p className="text-[9px] leading-3.5 text-muted-foreground">{detail}</p></div><span className="rounded-md bg-primary/10 p-1 text-primary">{icon}</span></CardContent></Card>;
 }
 
 function ReportPagination({
