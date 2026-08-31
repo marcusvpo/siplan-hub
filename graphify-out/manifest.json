@@ -1080,8 +1080,8 @@
     "semantic_hash": ""
   },
   "src/pages/ProjectsKanban.tsx": {
-    "mtime": 1788189421.8366103,
-    "ast_hash": "d39a3b209309b7fdde3e3950b88f46a8",
+    "mtime": 1788189546.2975128,
+    "ast_hash": "eaa0d1c77939949760ced18397a4e67f",
     "semantic_hash": ""
   },
   "src/pages/Reports.tsx": {
@@ -2800,8 +2800,8 @@
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/Chamado0800DetailDialog.tsx": {
-    "mtime": 1787930496.2273495,
-    "ast_hash": "7910499c95a3b89fc1db374a73732f70",
+    "mtime": 1788190066.6926606,
+    "ast_hash": "35bb7b68ac739c321ccfc83d99209dbd",
     "semantic_hash": ""
   },
   "src/hooks/usePosPanorama.ts": {
@@ -2810,8 +2810,8 @@
     "semantic_hash": ""
   },
   "src/pages/PosPanorama.tsx": {
-    "mtime": 1784232017.4936583,
-    "ast_hash": "f29c12495b2c3708d89ff579349d1779",
+    "mtime": 1788189948.5080853,
+    "ast_hash": "849edbd1daa4f030b1b164bd905e9c1d",
     "semantic_hash": ""
   },
   "supabase/migrations/20260716190000_pos_panorama_tema_ia.sql": {
@@ -4605,8 +4605,18 @@
     "semantic_hash": ""
   },
   "src/test/projects-kanban-mobile.test.tsx": {
-    "mtime": 1788189267.6648464,
-    "ast_hash": "018e3ce4c672059f5e90df03f6dbd082",
+    "mtime": 1788189546.2975128,
+    "ast_hash": "a1fabebfcee5201d65774b710892e525",
+    "semantic_hash": ""
+  },
+  "src/test/chamado-detail-mobile.test.tsx": {
+    "mtime": 1788190044.987445,
+    "ast_hash": "3c92e22aae180cf88c1b6b4b69bdbf94",
+    "semantic_hash": ""
+  },
+  "src/test/pos-panorama-mobile.test.tsx": {
+    "mtime": 1788190008.3116953,
+    "ast_hash": "14c32d065caaff84280caaa397e4ba15",
     "semantic_hash": ""
   }
 }
