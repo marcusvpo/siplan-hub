@@ -26,6 +26,7 @@ interface CalendarEventPillProps {
   onUpdate?: (event: CalendarEvent) => void;
   isResizing?: boolean;
   isResizingAny?: boolean;
+  allowResize?: boolean;
   onEventClick?: (event: CalendarEvent) => void;
 }
 
@@ -74,6 +75,7 @@ export function CalendarEventPill({
   onResizeStart,
   onUpdate,
   isResizing,
+  allowResize = true,
   onEventClick,
 }: CalendarEventPillProps) {
   const member = CALENDAR_MEMBERS.find((m) => m.id === event.resourceId);
@@ -124,7 +126,7 @@ export function CalendarEventPill({
         touchAction: "none",
       }}
       className={cn(
-        "relative w-full h-full rounded-md text-[9px] font-medium shadow-sm select-none transition-all flex items-center overflow-hidden",
+        "relative flex h-full w-full select-none items-center overflow-hidden rounded-md text-[11px] font-medium shadow-sm transition-all md:text-[9px]",
         isSpecialType
           ? typeStyles.className
           : cn(typeStyles.className, "shadow-sm"),
@@ -138,7 +140,7 @@ export function CalendarEventPill({
       <div
         {...listeners}
         className={cn(
-          "flex-1 h-full flex items-center px-1.5 min-w-0 gap-1",
+          "flex h-full min-w-0 flex-1 items-center gap-1 px-2 md:px-1.5",
           isInteractiveMode &&
             !isEditing &&
             !typeStyles.disableDrag &&
@@ -200,6 +202,7 @@ export function CalendarEventPill({
 
       {/* Resize Handle */}
       {isInteractiveMode &&
+        allowResize &&
         segment.isEnd &&
         !isEditing &&
         !typeStyles.disableDrag && (

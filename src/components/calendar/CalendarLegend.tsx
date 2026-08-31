@@ -7,7 +7,10 @@ import { Palmtree, BarChart3, CheckCircle2 } from "lucide-react";
  */
 export function CalendarLegend() {
   return (
-    <div className="hidden md:flex items-center gap-3 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
+    <div
+      className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1.5 text-[8px] font-semibold uppercase tracking-wider text-muted-foreground md:flex-none md:text-[9px]"
+      data-testid="calendar-legend"
+    >
       {/* Implantação (evento padrão, preenchido) */}
       <div className="flex items-center gap-1.5">
         <span className="h-3 w-5 rounded-md bg-sky-500 shrink-0" />

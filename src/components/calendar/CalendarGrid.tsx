@@ -1,5 +1,5 @@
 import { useCalendarStore } from "@/stores/calendarStore";
-import { CALENDAR_MEMBERS, CalendarEvent } from "@/types/calendar";
+import { CalendarEvent } from "@/types/calendar";
 import {
   eachDayOfInterval,
   endOfMonth,
@@ -10,7 +10,6 @@ import {
   isToday,
   startOfMonth,
   startOfWeek,
-  isWithinInterval,
   startOfDay,
   endOfDay,
   differenceInCalendarDays,
@@ -21,21 +20,18 @@ import {
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useDroppable } from "@dnd-kit/core";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
-import { useDraggable } from "@dnd-kit/core";
 import { useState, useEffect, useRef } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
-import { CalendarEventPill, EventSegment } from "./EventCard";
+import { CalendarEventPill } from "./EventCard";
+import { MobileCalendarAgenda } from "./MobileCalendarAgenda";
 
 interface CalendarGridProps {
   onEventClick?: (event: CalendarEvent) => void;
 }
 
 export function CalendarGrid({ onEventClick }: CalendarGridProps) {
+  const isMobile = useIsMobile();
   const {
     currentDate,
     viewMode,
@@ -214,8 +210,19 @@ export function CalendarGrid({ onEventClick }: CalendarGridProps) {
     ? [format(currentDate, "EEEE", { locale: ptBR })]
     : ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
+  if (isMobile) {
+    return (
+      <MobileCalendarAgenda
+        days={daysArr}
+        events={displayEvents}
+        isInteractiveMode={isInteractiveMode}
+        onEventClick={onEventClick}
+      />
+    );
+  }
+
   return (
-    <div className="flex flex-col h-full border rounded-lg bg-background shadow-sm select-none overflow-visible">
+    <div className="flex h-full min-w-0 flex-col overflow-visible rounded-lg border bg-background shadow-sm select-none" data-testid="calendar-desktop-grid">
       {/* Header */}
       <div className={cn(
         "grid border-b bg-muted/40",

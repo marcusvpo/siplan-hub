@@ -55,79 +55,89 @@ export function CalendarControls() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row items-center justify-between gap-2 px-4 py-1 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 select-none shadow-sm">
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-0.5 border rounded-md bg-background shadow-sm p-0.5">
+    <div
+      className="sticky top-0 z-40 grid min-w-0 grid-cols-1 gap-2 border-b bg-background/95 px-2 py-2 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/60 md:flex md:items-center md:justify-between md:px-4 md:py-1"
+      data-testid="calendar-controls"
+    >
+      <div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-2 md:flex md:gap-3">
+        <div className="flex shrink-0 items-center gap-0.5 rounded-md border bg-background p-0.5 shadow-sm">
           <button
             type="button"
             onClick={handlePrevious}
-            className="h-6 w-6 inline-flex items-center justify-center rounded-md hover:bg-muted transition-colors focus:outline-none active:scale-95"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-md transition-colors hover:bg-muted focus:outline-none active:scale-95 md:h-6 md:w-6"
+            aria-label="Período anterior"
           >
             <ChevronLeft className="h-3.5 w-3.5 pointer-events-none" />
           </button>
           <button
             type="button"
             onClick={handleToday}
-            className="h-6 px-2 text-[10px] font-medium inline-flex items-center justify-center rounded-md hover:bg-muted transition-colors focus:outline-none active:scale-95"
+            className="inline-flex h-9 items-center justify-center rounded-md px-2.5 text-[11px] font-medium transition-colors hover:bg-muted focus:outline-none active:scale-95 md:h-6 md:px-2 md:text-[10px]"
           >
             Hoje
           </button>
           <button
             type="button"
             onClick={handleNext}
-            className="h-6 w-6 inline-flex items-center justify-center rounded-md hover:bg-muted transition-colors focus:outline-none active:scale-95"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-md transition-colors hover:bg-muted focus:outline-none active:scale-95 md:h-6 md:w-6"
+            aria-label="Próximo período"
           >
             <ChevronRight className="h-3.5 w-3.5 pointer-events-none" />
           </button>
         </div>
-        <h2 className="text-sm font-semibold capitalize min-w-[120px]">
+        <h2 className="min-w-0 break-words text-right text-sm font-semibold capitalize md:min-w-[120px] md:text-left">
           {viewMode === "day"
             ? format(currentDate, "dd 'de' MMM, yyyy", { locale: ptBR })
             : format(currentDate, "MMMM yyyy", { locale: ptBR })}
         </h2>
       </div>
 
-      <div className="flex items-center gap-3">
-        {isInteractiveMode && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-7 gap-1 text-amber-600 border-amber-200 hover:bg-amber-50 dark:hover:bg-amber-950/30 text-[10px] px-2"
-            onClick={() => importRealDataToSandbox()}
-          >
-            <Copy className="h-3 w-3" />
-            Copiar
-          </Button>
-        )}
-
+      <div className="flex min-w-0 flex-col gap-2 md:flex-row md:items-center md:gap-3">
         <Tabs
           value={isInteractiveMode ? "interactive" : "real"}
           onValueChange={(v) => setInteractiveMode(v === "interactive")}
-          className="absolute left-1/2 -translate-x-1/2"
+          className="w-full md:absolute md:left-1/2 md:w-auto md:-translate-x-1/2"
         >
-          <TabsList className="grid w-[240px] grid-cols-2 h-8">
-            <TabsTrigger value="real" className="font-semibold text-[10px]">
+          <TabsList className="grid h-10 w-full grid-cols-2 md:h-8 md:w-[240px]">
+            <TabsTrigger value="real" className="text-[11px] font-semibold md:text-[10px]">
               Real
             </TabsTrigger>
-            <TabsTrigger value="interactive" className="font-semibold text-[10px]">
+            <TabsTrigger value="interactive" className="text-[11px] font-semibold md:text-[10px]">
               Playground
             </TabsTrigger>
           </TabsList>
         </Tabs>
 
-        <Select
-          value={viewMode}
-          onValueChange={(v) => setViewMode(v as CalendarViewMode)}
-        >
-          <SelectTrigger className="w-[100px] h-7 text-[10px]">
-            <SelectValue placeholder="Visualização" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="day" className="text-xs">Dia</SelectItem>
-            <SelectItem value="week" className="text-xs">Semana</SelectItem>
-            <SelectItem value="month" className="text-xs">Mês</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex min-w-0 gap-2 md:contents">
+          {isInteractiveMode && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-10 min-w-0 flex-1 gap-1 border-amber-200 px-2 text-[10px] text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30 md:h-7 md:flex-none"
+              onClick={() => importRealDataToSandbox()}
+            >
+              <Copy className="h-3 w-3 shrink-0" />
+              <span className="truncate">Copiar dados reais</span>
+            </Button>
+          )}
+
+          <Select
+            value={viewMode}
+            onValueChange={(v) => setViewMode(v as CalendarViewMode)}
+          >
+            <SelectTrigger
+              className="h-10 min-w-0 flex-1 text-[11px] md:h-7 md:w-[100px] md:flex-none md:text-[10px]"
+              aria-label="Visualização do calendário"
+            >
+              <SelectValue placeholder="Visualização" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="day" className="text-xs">Dia</SelectItem>
+              <SelectItem value="week" className="text-xs">Semana</SelectItem>
+              <SelectItem value="month" className="text-xs">Mês</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
     </div>
   );

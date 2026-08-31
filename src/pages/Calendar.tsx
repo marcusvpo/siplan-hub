@@ -39,7 +39,7 @@ function TrashDroppable() {
     <div
       ref={setNodeRef}
       className={cn(
-        "flex items-center justify-center w-10 h-10 rounded-lg border transition-all duration-200 ml-auto",
+        "ml-auto flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border transition-all duration-200",
         isOver
           ? "bg-red-500 border-red-600 text-white scale-110 shadow-lg z-50"
           : "bg-muted/50 border-dashed border-muted-foreground/30 text-muted-foreground hover:bg-red-50 hover:text-red-500 hover:border-red-200",
@@ -405,7 +405,10 @@ export default function Calendar() {
     : null;
 
   return (
-    <div className="h-full flex flex-col bg-background overflow-hidden">
+    <div
+      className="flex min-h-0 min-w-0 flex-col overflow-visible bg-background md:h-full md:overflow-hidden"
+      data-testid="calendar-page"
+    >
       <CalendarControls />
 
       <DndContext
@@ -413,41 +416,50 @@ export default function Calendar() {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex min-w-0 flex-1 flex-col overflow-visible md:overflow-hidden">
           {/* Team Dock (Drag Source / Legend) */}
-          <div className="flex items-center justify-between gap-4 p-1 px-4 bg-muted/20 border-b shrink-0">
-            <div className="flex items-center gap-4">
-              <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider mr-2">
+          <div
+            className="flex min-w-0 shrink-0 flex-col gap-2 border-b bg-muted/20 p-2 md:flex-row md:items-center md:justify-between md:gap-4 md:px-4 md:py-1"
+            data-testid="calendar-team-dock"
+          >
+            <div className="flex min-w-0 flex-wrap items-center gap-2 md:gap-4">
+              <span className="w-full text-[9px] font-semibold uppercase tracking-wider text-muted-foreground md:mr-2 md:w-auto">
                 Equipe Disponível:
               </span>
-              {activeMembersInLegend.map((member) => (
-                <DraggableTeamMember key={member.id} member={member} />
-              ))}
+              {activeMembersInLegend.length > 0 ? (
+                activeMembersInLegend.map((member) => (
+                  <DraggableTeamMember key={member.id} member={member} />
+                ))
+              ) : (
+                <span className="text-[10px] text-muted-foreground">
+                  Nenhum integrante com eventos neste período.
+                </span>
+              )}
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex min-w-0 flex-wrap items-center justify-between gap-3 md:justify-end md:gap-4">
               <CalendarLegend />
               {isInteractiveMode && canDeleteEvents && <TrashDroppable />}
             </div>
           </div>
 
           {/* Main Grid */}
-          <div className="flex-1 p-2 overflow-y-auto">
+          <div className="min-w-0 flex-1 overflow-y-auto p-2">
             <CalendarGrid onEventClick={(evt) => setSelectedEvent(evt)} />
           </div>
         </div>
 
         <DragOverlay>
           {activeDragItem ? (
-            <div className="opacity-80 rotate-2 cursor-grabbing">
+            <div className="max-w-[80vw] cursor-grabbing rotate-2 opacity-80">
               {activeDragItem.isNew ? (
                 <div
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full border shadow-xl bg-background ring-2 ring-primary`}
+                  className="flex min-w-0 items-center gap-2 rounded-full border bg-background px-3 py-1.5 shadow-xl ring-2 ring-primary"
                 >
-                  <span className="text-sm font-medium">Nova Alocação</span>
+                  <span className="truncate text-sm font-medium">Nova Alocação</span>
                 </div>
               ) : (
-                <div className="px-2 py-1 rounded-md bg-primary text-white text-xs font-medium shadow-xl">
+                <div className="break-words rounded-md bg-primary px-2 py-1 text-xs font-medium text-white shadow-xl">
                   {activeDragItem.event?.title}
                 </div>
               )}
@@ -456,7 +468,6 @@ export default function Calendar() {
         </DragOverlay>
       </DndContext>
 
-      {/* Details Dialog */}
       {/* Details Dialog */}
       {activeProject ? (
         <DeploymentDetailsDialog
@@ -482,13 +493,13 @@ export default function Calendar() {
           open={!!selectedEvent}
           onOpenChange={(v) => !v && setSelectedEvent(null)}
         >
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
+          <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-md overflow-x-hidden overflow-y-auto p-4 sm:p-6" data-testid="calendar-manual-event-dialog">
+            <DialogHeader className="min-w-0 text-left">
+              <DialogTitle className="flex min-w-0 items-start gap-2 break-words pr-8">
                 {selectedEvent && (
                   <div
                     className={cn(
-                      "w-3 h-3 rounded-full",
+                      "mt-1 h-3 w-3 shrink-0 rounded-full",
                       selectedEvent.color || "bg-primary",
                     )}
                   />
@@ -498,13 +509,13 @@ export default function Calendar() {
               <DialogDescription>Detalhes do Agendamento</DialogDescription>
             </DialogHeader>
 
-            <div className="py-4 text-center text-muted-foreground">
-              <p>Este é um evento manual sem vínculo direto com projeto.</p>
-              <div className="mt-4 p-4 bg-muted/30 rounded-lg text-left">
+            <div className="min-w-0 py-4 text-center text-muted-foreground">
+              <p className="break-words">Este é um evento manual sem vínculo direto com projeto.</p>
+              <div className="mt-4 min-w-0 rounded-lg bg-muted/30 p-3 text-left sm:p-4">
                 <p className="text-sm font-medium text-foreground mb-1">
                   Notas:
                 </p>
-                <p className="text-sm whitespace-pre-wrap">
+                <p className="whitespace-pre-wrap break-words text-sm">
                   {selectedEvent?.notes || "Sem notas."}
                 </p>
               </div>
