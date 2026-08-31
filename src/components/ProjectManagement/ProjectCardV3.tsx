@@ -204,8 +204,9 @@ export function ProjectCardV3({
 
   return (
     <Card
-      className="w-full hover:shadow-lg hover:border-primary/20 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer flex flex-col md:flex-row items-stretch md:items-center p-3 md:p-3 gap-3 md:gap-4 min-h-[5.5rem] h-auto relative overflow-visible group bg-card/50 backdrop-blur-sm"
+      className="group relative grid h-auto min-h-[5.5rem] w-full min-w-0 cursor-pointer grid-cols-[auto_minmax(0,1fr)] items-stretch gap-3 overflow-hidden bg-card/50 p-3 pt-4 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-lg md:flex md:flex-row md:items-center md:gap-4 md:overflow-visible md:p-3"
       onClick={() => onClick(project)}
+      data-testid="project-card"
     >
       <div
         className={cn(
@@ -216,7 +217,7 @@ export function ProjectCardV3({
 
       {/* Top Left Tag - Floating over Top Border */}
       {hasTopLeftTag && (
-        <div className="absolute -top-2.5 left-2 z-10">
+        <div className="col-span-2 flex min-w-0 flex-wrap items-center pl-1 md:absolute md:-top-2.5 md:left-2 md:z-10 md:block md:pl-0">
           {isImplementationInProgress ? (
             <Badge className="text-[9px] px-2 py-0.5 font-bold shadow-lg border-2 border-background bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20 flex items-center gap-1">
               <PlayCircle className="w-2.5 h-2.5" />
@@ -237,7 +238,7 @@ export function ProjectCardV3({
       )}
 
       {/* Project Status Badges - Floating over Top Right Corner */}
-      <div className="absolute -top-1.5 -right-1.5 z-10 flex items-center gap-1.5">
+      <div className="col-span-2 flex min-w-0 flex-wrap items-center gap-1.5 pl-1 md:absolute md:-right-1.5 md:-top-1.5 md:z-10 md:pl-0">
         <PosSaudeBadge projectId={project.id} />
         {isFromAutomacao && (
           <Badge className="text-[9px] px-2 py-0.5 font-bold shadow-lg border-2 border-background bg-purple-600 hover:bg-purple-700 text-white shadow-purple-500/20">
@@ -256,17 +257,22 @@ export function ProjectCardV3({
 
       {/* Selection Checkbox */}
       {onSelect && (
-        <div className="mr-1 shrink-0 self-center" onClick={(e) => e.stopPropagation()}>
+        <div className="ml-1 shrink-0 self-start pt-1 md:ml-0 md:mr-1 md:self-center md:pt-0" onClick={(e) => e.stopPropagation()}>
           <Checkbox
             checked={selected}
             onCheckedChange={(checked) => onSelect(checked as boolean)}
-            className="h-3.5 w-3.5 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+            aria-label={`Selecionar projeto ${project.clientName}`}
+            className="h-5 w-5 data-[state=checked]:border-primary data-[state=checked]:bg-primary md:h-3.5 md:w-3.5"
           />
         </div>
       )}
 
       {/* 1. Info Principal */}
-      <div className={cn("flex flex-col justify-center flex-[1.5] w-full md:w-auto min-w-0 space-y-1", hasTopLeftTag && "pt-1 sm:pt-2 md:pt-2.5")}>
+      <div className={cn(
+        "flex w-full min-w-0 flex-[1.5] flex-col justify-center space-y-1 md:w-auto",
+        onSelect ? "col-start-2" : "col-span-2",
+        hasTopLeftTag && "md:pt-2.5",
+      )}>
         <div className="flex items-center gap-2 w-full min-w-0">
           <div
             className={cn(
@@ -288,7 +294,7 @@ export function ProjectCardV3({
             }`}
           />
           <h3
-            className="font-bold text-sm sm:text-base leading-tight truncate tracking-tight text-foreground/90 w-full min-w-0"
+            className="w-full min-w-0 break-words text-sm font-bold leading-tight tracking-tight text-foreground/90 sm:text-base md:truncate"
             title={project.clientName}
           >
             {project.clientName}
@@ -308,24 +314,24 @@ export function ProjectCardV3({
         </div>
 
         {project.TituloChamado && (
-          <div className="text-[11px] font-medium text-muted-foreground/90 truncate leading-snug w-full min-w-0" title={project.TituloChamado}>
+          <div className="w-full min-w-0 break-words text-[11px] font-medium leading-snug text-muted-foreground/90 md:truncate" title={project.TituloChamado}>
             {project.TituloChamado}
           </div>
         )}
         
         {project.EtapasProjeto && (
-          <div className="text-[10px] text-muted-foreground/80 truncate flex items-center gap-1.5 w-full min-w-0 bg-muted/40 rounded-md px-1.5 py-0.5 border border-border/30" title={project.EtapasProjeto}>
+          <div className="flex w-full min-w-0 items-start gap-1.5 rounded-md border border-border/30 bg-muted/40 px-1.5 py-1 text-[10px] text-muted-foreground/80 md:items-center md:truncate md:py-0.5" title={project.EtapasProjeto}>
             <div className="w-1.5 h-1.5 rounded-full bg-blue-500/80 animate-pulse shrink-0"></div>
-            <span className="truncate">0800: <span className="font-medium text-foreground/80">{project.EtapasProjeto}</span></span>
+            <span className="min-w-0 break-words md:truncate">0800: <span className="font-medium text-foreground/80">{project.EtapasProjeto}</span></span>
           </div>
         )}
       </div>
 
       {/* 2. Pipeline Visual */}
-      <div className="flex-[2.5] w-full md:w-auto flex flex-col justify-center px-2 sm:px-4 md:border-l md:border-r border-border/40 min-h-[2.5rem] bg-gradient-to-r from-transparent via-muted/5 to-transparent overflow-x-auto scrollbar-none py-1">
-        <div className="flex items-center justify-between gap-1 relative w-full min-w-[280px] sm:min-w-0 max-w-2xl mx-auto">
+      <div className="col-span-2 flex min-h-[2.5rem] w-full min-w-0 flex-[2.5] flex-col justify-center border-border/40 bg-gradient-to-r from-transparent via-muted/5 to-transparent px-1 py-2 sm:px-4 md:w-auto md:border-l md:border-r md:py-1">
+        <div className="relative mx-auto grid w-full min-w-0 max-w-2xl grid-cols-3 items-start gap-x-2 gap-y-3 min-[380px]:grid-cols-4 md:flex md:items-center md:justify-between md:gap-1">
           {/* Linha de conexão (fundo) */}
-          <div className="absolute top-1/2 left-0 right-0 h-[1px] bg-muted-foreground/10 -z-10 transform -translate-y-1/2 rounded-full" />
+          <div className="absolute left-0 right-0 top-1/2 -z-10 hidden h-px -translate-y-1/2 rounded-full bg-muted-foreground/10 md:block" />
 
           {stages.map((stage) => {
             const readiness = stageReadiness.find(
@@ -336,7 +342,7 @@ export function ProjectCardV3({
             return (
               <div
                 key={stage.id}
-                className="flex flex-col items-center gap-1 z-0 group/stage relative cursor-help"
+                className="group/stage relative z-0 flex min-w-0 flex-col items-center gap-1 text-center md:cursor-help"
               >
                 <div
                   className={cn(
@@ -347,7 +353,7 @@ export function ProjectCardV3({
                 />
                 <span
                   className={cn(
-                    "text-[8px] md:text-[9px] font-bold uppercase tracking-wider whitespace-nowrap",
+                    "max-w-full break-words text-center text-[8px] font-bold uppercase leading-tight tracking-wide md:whitespace-nowrap md:text-[9px] md:tracking-wider",
                     stage.status === "done"
                       ? "text-emerald-600/70 dark:text-emerald-400/70"
                       : stage.status === "in-progress"
@@ -374,7 +380,7 @@ export function ProjectCardV3({
       </div>
 
       {/* 3. Gargalo Atual */}
-      <div className="flex-[1.2] w-full md:w-auto flex flex-col justify-center px-2 sm:px-4 md:border-r border-border/40 min-w-0 bg-gradient-to-r from-transparent via-muted/3 to-transparent">
+      <div className="col-span-2 flex w-full min-w-0 flex-[1.2] flex-col justify-center rounded-lg border border-border/40 bg-muted/20 px-3 py-2 md:w-auto md:rounded-none md:border-y-0 md:border-l-0 md:border-r md:bg-gradient-to-r md:from-transparent md:via-muted/3 md:to-transparent md:px-4 md:py-0">
         <span className="text-[9px] text-muted-foreground uppercase tracking-wider font-bold opacity-60 mb-1 whitespace-nowrap overflow-hidden">
           Gargalo{bottlenecks.length > 1 ? "s" : ""}
         </span>
@@ -412,8 +418,8 @@ export function ProjectCardV3({
       </div>
 
       {/* 4. Metricas & Ações */}
-      <div className="flex-[1.2] w-full md:w-auto flex items-center gap-3 justify-between md:justify-end pl-1 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-border/30">
-        <div className="flex flex-col items-end shrink-0">
+      <div className="col-span-2 flex w-full shrink-0 flex-[1.2] items-center justify-between gap-3 border-t border-border/30 pl-1 pt-2 md:w-auto md:justify-end md:border-t-0 md:pt-0">
+        <div className="flex shrink-0 flex-col items-start md:items-end">
           <span className="text-[8px] text-muted-foreground uppercase tracking-wider font-bold opacity-60 mb-0.5">
             UAT
           </span>
@@ -432,7 +438,8 @@ export function ProjectCardV3({
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 rounded-full hover:bg-primary/10 hover:text-primary transition-colors"
+              className="h-10 w-10 rounded-full transition-colors hover:bg-primary/10 hover:text-primary md:h-7 md:w-7"
+              aria-label={`Ações do projeto ${project.clientName}`}
             >
               <MoreHorizontal className="h-3.5 w-3.5" />
             </Button>

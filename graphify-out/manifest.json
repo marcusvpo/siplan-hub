@@ -265,8 +265,8 @@
     "semantic_hash": ""
   },
   "src/components/NewProjectDialog.tsx": {
-    "mtime": 1786361796.8040824,
-    "ast_hash": "02226d832acc73777abe4c57a13c8216",
+    "mtime": 1788192617.0116918,
+    "ast_hash": "54e48b2a918e7f5915393e590f56cbbe",
     "semantic_hash": ""
   },
   "src/components/NotificationBell.tsx": {
@@ -275,9 +275,9 @@
     "semantic_hash": "7429b091eceee6345a4945bb56742ed0"
   },
   "src/components/ProjectManagement/AdvancedFilters.tsx": {
-    "mtime": 1781535967.1755028,
-    "ast_hash": "3e9beaacee79920c67ef96cea6929750",
-    "semantic_hash": "3e9beaacee79920c67ef96cea6929750"
+    "mtime": 1788192439.895337,
+    "ast_hash": "21ec1f71010fd9ba20d5763597e1df4b",
+    "semantic_hash": ""
   },
   "src/components/ProjectManagement/DeploymentCard.tsx": {
     "mtime": 1785877154.0779586,
@@ -345,13 +345,13 @@
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/ProjectCardV3.tsx": {
-    "mtime": 1786480740.8252285,
-    "ast_hash": "7332cdae504b7e4c0b1db0288632e48d",
+    "mtime": 1788192367.0044193,
+    "ast_hash": "61a778e0959f6558abd0ef8bea2fb44e",
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/ProjectGrid.tsx": {
-    "mtime": 1786480740.8262286,
-    "ast_hash": "bf57a7296b7a1537f475d010c829b246",
+    "mtime": 1788192139.447364,
+    "ast_hash": "7e68f195105e1154ea3a61dc7b783ba3",
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/ProjectModal.tsx": {
@@ -1045,8 +1045,8 @@
     "semantic_hash": ""
   },
   "src/pages/Index.tsx": {
-    "mtime": 1786480740.8282368,
-    "ast_hash": "17261e62d574c510c48f4c5206ce3008",
+    "mtime": 1788192096.3741312,
+    "ast_hash": "b2d3da338f3eb57e7c030ad0aa522085",
     "semantic_hash": ""
   },
   "src/pages/LatestDeployments.tsx": {
@@ -2960,8 +2960,8 @@
     "semantic_hash": ""
   },
   "src/pages/DeploymentsTickets.tsx": {
-    "mtime": 1788191063.2423203,
-    "ast_hash": "37f7cda19072e454ef1727069b02e37e",
+    "mtime": 1788191892.0195944,
+    "ast_hash": "fa4c0c79e0e8dd30ff57c870f49d149e",
     "semantic_hash": ""
   },
   "src/utils/adherence-helpers.ts": {
@@ -3065,8 +3065,8 @@
     "semantic_hash": ""
   },
   "src/components/DeploymentsTickets/TicketsAiAnalysis.tsx": {
-    "mtime": 1788191570.7304692,
-    "ast_hash": "4876abcbd2cde758be15eab1d7dbf9f0",
+    "mtime": 1788191891.9989955,
+    "ast_hash": "63dcc79f37961c2781d110f613175ea6",
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/PosAiAssistantSection.tsx": {
@@ -3075,8 +3075,8 @@
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/ProjectTagsLegendDialog.tsx": {
-    "mtime": 1786480740.8272357,
-    "ast_hash": "9ce79459baa4b85f8a9b08de7f838786",
+    "mtime": 1788192293.9040341,
+    "ast_hash": "180ee79c26382be20b113d87d84db6cc",
     "semantic_hash": ""
   },
   "src/components/cs-cx/CsCxAccessPanel.tsx": {
@@ -4175,8 +4175,8 @@
     "semantic_hash": ""
   },
   "src/components/DeploymentsTickets/TicketsSlaAnalysis.tsx": {
-    "mtime": 1788191063.2272322,
-    "ast_hash": "ac2fd1c72cc5f42a6d6d69770f93089b",
+    "mtime": 1788191892.0075572,
+    "ast_hash": "07c509a142ff4cf733d577839ec4d27d",
     "semantic_hash": ""
   },
   "src/lib/tickets-sla.test.ts": {
@@ -4260,8 +4260,8 @@
     "semantic_hash": ""
   },
   "src/components/DeploymentsTickets/TicketsSlaInfoDialog.tsx": {
-    "mtime": 1788191063.2287452,
-    "ast_hash": "c0fbb30515fe1cd58e96e7ed20ecc333",
+    "mtime": 1788191892.0100634,
+    "ast_hash": "26630255f4ed853807e7375da82073ac",
     "semantic_hash": ""
   },
   "src/components/DeploymentsTickets/TicketsSlaInfoDialog.test.tsx": {
@@ -4270,8 +4270,8 @@
     "semantic_hash": ""
   },
   "src/components/DeploymentsTickets/TicketsSlaSectorAnalysis.tsx": {
-    "mtime": 1788191063.2317574,
-    "ast_hash": "fb2c2945a9e2c9ca1077379895374baa",
+    "mtime": 1788191892.01107,
+    "ast_hash": "ae9295fcbbc88253ef0b58d85083876c",
     "semantic_hash": ""
   },
   "src/test/lexical-rich-text.test.ts": {
@@ -4620,13 +4620,23 @@
     "semantic_hash": ""
   },
   "src/pages/DeploymentsTickets.mobile.test.tsx": {
-    "mtime": 1788190996.2571886,
-    "ast_hash": "f6ffa93c48bf2013a7bcb695e049ad64",
+    "mtime": 1788191892.0175948,
+    "ast_hash": "0b817d0a301f20b6a82fa8d4f113ffaa",
     "semantic_hash": ""
   },
   "src/components/DeploymentsTickets/TicketsAiAnalysis.mobile.test.tsx": {
-    "mtime": 1788191638.3936799,
-    "ast_hash": "24f519b8da47600752829d7e80f2bb4a",
+    "mtime": 1788191891.994982,
+    "ast_hash": "9b4928d032a5888b8b34110bf7842eac",
+    "semantic_hash": ""
+  },
+  "src/components/ProjectManagement/ProjectCardV3.mobile.test.tsx": {
+    "mtime": 1788192419.2423012,
+    "ast_hash": "87323b3cf668827dab0a4a1745eaed42",
+    "semantic_hash": ""
+  },
+  "src/pages/Index.mobile.test.tsx": {
+    "mtime": 1788192396.2241445,
+    "ast_hash": "a719fb6c6e3a7f4e9419eb7477514a5c",
     "semantic_hash": ""
   }
 }

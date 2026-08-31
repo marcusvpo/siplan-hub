@@ -2,28 +2,28 @@ import { ProjectGrid } from "@/components/ProjectManagement/ProjectGrid";
 import { NewProjectDialog } from "@/components/NewProjectDialog";
 import { ProjectTagsLegendDialog } from "@/components/ProjectManagement/ProjectTagsLegendDialog";
 import { FolderKanban } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
 const Index = () => {
-  const navigate = useNavigate();
-
   return (
-    <div className="bg-background">
-      <div className="container mx-auto pt-2 pb-6">
-        <div className="mb-4 pb-3 border-b flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="space-y-1">
+    <div
+      className="h-full min-w-0 overflow-y-auto overflow-x-hidden bg-background"
+      data-testid="projects-page"
+    >
+      <div className="mx-auto w-full min-w-0 max-w-[1600px] pb-6 pt-1 sm:pt-2">
+        <div className="mb-4 flex min-w-0 flex-col gap-3 border-b pb-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0 space-y-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <FolderKanban className="h-5 w-5 text-red-500" />
-              <h1 className="text-xl font-bold tracking-tight">Projetos Ativos</h1>
-              <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+              <FolderKanban className="h-5 w-5 shrink-0 text-red-500" />
+              <h1 className="text-lg font-bold tracking-tight sm:text-xl">Projetos Ativos</h1>
+              <span className="hidden rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 sm:inline-flex">
                 Layout Centralizado
               </span>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs leading-relaxed text-muted-foreground">
               Visão geral de todos os projetos de implantação
             </p>
           </div>
-          <div className="flex items-center gap-2 self-start sm:self-center">
+          <div className="grid w-full grid-cols-[auto_minmax(0,1fr)] items-center gap-2 sm:flex sm:w-auto sm:self-center">
             <ProjectTagsLegendDialog />
             <NewProjectDialog />
           </div>

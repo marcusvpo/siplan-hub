@@ -31,15 +31,16 @@ export function ProjectTagsLegendDialog() {
         <Button
           variant="outline"
           size="sm"
-          className="h-7 px-2.5 text-xs gap-1.5 font-semibold text-slate-600 dark:text-slate-300 hover:text-primary hover:border-primary/40 rounded-full border-slate-200 dark:border-slate-700 bg-background/80 shadow-sm transition-all"
+          className="h-10 min-w-0 gap-1.5 rounded-lg border-slate-200 bg-background/80 px-3 text-xs font-semibold text-slate-600 shadow-sm transition-all hover:border-primary/40 hover:text-primary dark:border-slate-700 dark:text-slate-300 sm:h-7 sm:rounded-full sm:px-2.5"
           title="Legenda de Tags e Cores"
         >
           <HelpCircle className="w-3.5 h-3.5 text-blue-500" />
-          <span>Guia de Tags & Cores</span>
+          <span className="sm:hidden">Guia</span>
+          <span className="hidden sm:inline">Guia de Tags & Cores</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[85vh] p-0 flex flex-col gap-0 overflow-hidden">
-        <DialogHeader className="p-4 pb-3 border-b bg-slate-50/50 dark:bg-slate-900/50 space-y-1">
+      <DialogContent className="flex max-h-[92dvh] w-[calc(100vw-1rem)] max-w-2xl flex-col gap-0 overflow-hidden p-0">
+        <DialogHeader className="space-y-1 border-b bg-slate-50/50 p-4 pb-3 pr-10 dark:bg-slate-900/50">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-400">
               <HelpCircle className="w-4 h-4" />
@@ -55,7 +56,7 @@ export function ProjectTagsLegendDialog() {
           </div>
         </DialogHeader>
 
-        <ScrollArea className="p-4 max-h-[calc(85vh-80px)] overflow-y-auto">
+        <ScrollArea className="max-h-[calc(92dvh-80px)] overflow-y-auto p-4">
           <div className="space-y-5 text-xs">
             {/* Seção 1: Status de Implantação e Agenda */}
             <div className="space-y-2.5">

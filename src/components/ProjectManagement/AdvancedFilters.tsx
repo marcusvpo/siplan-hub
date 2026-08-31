@@ -190,13 +190,13 @@ export function AdvancedFilters({
   ];
 
   return (
-    <div className="space-y-3">
+    <div className="min-w-0 space-y-3" data-testid="projects-filters">
       {/* Main Controls Row */}
       <div className="flex flex-col lg:flex-row gap-3 items-start lg:items-center justify-between">
         {/* Left: Search + Quick Views */}
-        <div className="flex flex-col sm:flex-row gap-2 flex-1 w-full lg:w-auto">
+        <div className="flex w-full min-w-0 flex-1 flex-col gap-2 sm:flex-row lg:w-auto">
           {/* Search */}
-          <div className="relative flex-1 sm:max-w-sm">
+          <div className="relative min-w-0 flex-1 sm:max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Buscar projetos..."
@@ -222,31 +222,31 @@ export function AdvancedFilters({
             onValueChange={(v) => setViewPreset(v as ViewPreset)}
             className="w-full sm:w-auto"
           >
-            <TabsList className="h-9 bg-muted/50 p-0.5">
+            <TabsList className="grid h-auto w-full grid-cols-2 gap-1 bg-muted/50 p-1 sm:flex sm:h-9 sm:gap-0 sm:p-0.5">
               <TabsTrigger
                 value="active"
-                className="h-8 gap-1.5 text-xs data-[state=active]:bg-blue-500 data-[state=active]:text-white"
+                className="h-9 min-w-0 gap-1.5 px-2 text-[11px] data-[state=active]:bg-blue-500 data-[state=active]:text-white sm:h-8 sm:text-xs"
               >
                 <Play className="h-3 w-3" />
                 Em Andamento
               </TabsTrigger>
               <TabsTrigger
                 value="post"
-                className="h-8 gap-1.5 text-xs data-[state=active]:bg-purple-500 data-[state=active]:text-white"
+                className="h-9 min-w-0 gap-1.5 px-2 text-[11px] data-[state=active]:bg-purple-500 data-[state=active]:text-white sm:h-8 sm:text-xs"
               >
                 <Rocket className="h-3 w-3" />
                 Pós
               </TabsTrigger>
               <TabsTrigger
                 value="paused"
-                className="h-8 gap-1.5 text-xs data-[state=active]:bg-amber-500 data-[state=active]:text-white"
+                className="h-9 min-w-0 gap-1.5 px-2 text-[11px] data-[state=active]:bg-amber-500 data-[state=active]:text-white sm:h-8 sm:text-xs"
               >
                 <Pause className="h-3 w-3" />
                 Pausados
               </TabsTrigger>
               <TabsTrigger
                 value="done"
-                className="h-8 gap-1.5 text-xs data-[state=active]:bg-emerald-500 data-[state=active]:text-white"
+                className="h-9 min-w-0 gap-1.5 px-2 text-[11px] data-[state=active]:bg-emerald-500 data-[state=active]:text-white sm:h-8 sm:text-xs"
               >
                 <CheckCircle2 className="h-3 w-3" />
                 Finalizados
@@ -256,14 +256,14 @@ export function AdvancedFilters({
         </div>
 
         {/* Right: Controls */}
-        <div className="flex gap-1.5 items-center flex-wrap">
+        <div className="flex w-full flex-wrap items-center gap-1.5 sm:w-auto">
           {/* Sort Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="h-9 text-xs gap-1.5">
+              <Button variant="outline" className="h-10 min-w-0 flex-1 gap-1 px-1.5 text-[10px] sm:h-9 sm:flex-none sm:gap-1.5 sm:px-3 sm:text-xs">
                 <ArrowUpDown className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Ordenar</span>
-                <ChevronDown className="h-3 w-3 opacity-50" />
+                <span>Ordenar</span>
+                <ChevronDown className="hidden h-3 w-3 opacity-50 sm:block" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
@@ -286,9 +286,9 @@ export function AdvancedFilters({
           {/* Saved Filters Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="h-9 text-xs gap-1.5">
+              <Button variant="outline" className="h-10 min-w-0 flex-1 gap-1 px-1.5 text-[10px] sm:h-9 sm:flex-none sm:gap-1.5 sm:px-3 sm:text-xs">
                 <Bookmark className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Salvos</span>
+                <span>Salvos</span>
                 {savedFilters.length > 0 && (
                   <Badge variant="secondary" className="h-4 px-1 text-[10px]">
                     {savedFilters.length}
@@ -367,9 +367,9 @@ export function AdvancedFilters({
           {/* Advanced Filters Button */}
           <Sheet open={isFilterPanelOpen} onOpenChange={setFilterPanelOpen}>
             <SheetTrigger asChild>
-              <Button variant="outline" className="h-9 text-xs gap-1.5 relative">
+              <Button variant="outline" className="relative h-10 min-w-0 flex-1 gap-1 px-1.5 text-[10px] sm:h-9 sm:flex-none sm:gap-1.5 sm:px-3 sm:text-xs">
                 <SlidersHorizontal className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Filtros</span>
+                <span>Filtros</span>
                 {activeFiltersCount > 0 && (
                   <Badge className="absolute -top-1.5 -right-1.5 h-4.5 w-4.5 p-0 flex items-center justify-center text-[10px] bg-primary">
                     {activeFiltersCount}
@@ -377,7 +377,7 @@ export function AdvancedFilters({
                 )}
               </Button>
             </SheetTrigger>
-            <SheetContent className="w-full sm:max-w-md">
+            <SheetContent className="w-[calc(100vw-0.5rem)] max-w-full overflow-hidden px-4 sm:max-w-md sm:px-6">
               <SheetHeader>
                 <SheetTitle className="flex items-center gap-2">
                   <Filter className="h-5 w-5" />
@@ -388,7 +388,7 @@ export function AdvancedFilters({
                 </SheetDescription>
               </SheetHeader>
 
-              <ScrollArea className="h-[calc(100vh-200px)] pr-4 mt-6">
+              <ScrollArea className="mt-4 h-[calc(100dvh-190px)] pr-3 sm:mt-6 sm:h-[calc(100dvh-200px)] sm:pr-4">
                 <div className="space-y-6">
                   {/* Health Score */}
                   <div className="space-y-3">
@@ -529,7 +529,7 @@ export function AdvancedFilters({
                       <Calendar className="h-4 w-4 text-violet-500" />
                       Período de Criação
                     </Label>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2">
                       <div className="space-y-1.5">
                         <Label className="text-xs text-muted-foreground">
                           De
@@ -557,7 +557,7 @@ export function AdvancedFilters({
                 </div>
               </ScrollArea>
 
-              <SheetFooter className="mt-6 gap-2">
+              <SheetFooter className="mt-4 grid grid-cols-2 gap-2 sm:mt-6 sm:flex">
                 <Button
                   variant="outline"
                   onClick={resetFilters}
@@ -582,7 +582,7 @@ export function AdvancedFilters({
             <Button
               onClick={onCompare}
               disabled={selectedCount < 2}
-              className="h-9 text-xs gap-1.5"
+              className="h-10 basis-full gap-1.5 text-xs sm:h-9 sm:basis-auto"
             >
               Comparar ({selectedCount})
             </Button>
@@ -592,10 +592,10 @@ export function AdvancedFilters({
 
       {/* Active Filters Tags */}
       {activeFiltersCount > 0 && (
-        <div className="flex flex-wrap gap-2 items-center">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
           <span className="text-sm text-muted-foreground">Filtros ativos:</span>
           {healthScore !== "all" && (
-            <Badge variant="secondary" className="gap-1.5 pr-1">
+            <Badge variant="secondary" className="max-w-full gap-1.5 pr-1">
               Saúde:{" "}
               {healthScore === "ok"
                 ? "Saudável"
@@ -613,7 +613,7 @@ export function AdvancedFilters({
             </Badge>
           )}
           {currentStage !== "all" && (
-            <Badge variant="secondary" className="gap-1.5 pr-1">
+            <Badge variant="secondary" className="max-w-full gap-1.5 pr-1">
               Etapa: {stageOptions.find((s) => s.value === currentStage)?.label}
               <Button
                 variant="ghost"
@@ -626,7 +626,7 @@ export function AdvancedFilters({
             </Badge>
           )}
           {projectLeader && (
-            <Badge variant="secondary" className="gap-1.5 pr-1">
+            <Badge variant="secondary" className="max-w-full gap-1.5 pr-1">
               Resp: {projectLeader}
               <Button
                 variant="ghost"
@@ -639,7 +639,7 @@ export function AdvancedFilters({
             </Badge>
           )}
           {systemType && (
-            <Badge variant="secondary" className="gap-1.5 pr-1">
+            <Badge variant="secondary" className="max-w-full gap-1.5 pr-1">
               Sistema: {systemType}
               <Button
                 variant="ghost"
@@ -664,7 +664,7 @@ export function AdvancedFilters({
 
       {/* Save Filter Dialog */}
       <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
-        <DialogContent>
+        <DialogContent className="w-[calc(100vw-1rem)] max-w-lg overflow-x-hidden">
           <DialogHeader>
             <DialogTitle>Salvar Filtro</DialogTitle>
             <DialogDescription>
