@@ -190,8 +190,8 @@
     "semantic_hash": ""
   },
   "src/components/Dashboard/DashboardTable.tsx": {
-    "mtime": 1788188430.164529,
-    "ast_hash": "c469764a703002b673ac24f05a0cfa01",
+    "mtime": 1788189009.3863654,
+    "ast_hash": "cf421413c6857b3b0aedc74b72b42bb6",
     "semantic_hash": ""
   },
   "src/components/Dashboard/HealthBadge.tsx": {
@@ -250,13 +250,13 @@
     "semantic_hash": ""
   },
   "src/components/Layout/Breadcrumbs.tsx": {
-    "mtime": 1788188349.3954096,
-    "ast_hash": "ce67a9f308ebf2d45d6702939eda49a0",
+    "mtime": 1788189009.3863654,
+    "ast_hash": "60bea862846373097b944bece2510907",
     "semantic_hash": ""
   },
   "src/components/Layout/MainLayout.tsx": {
-    "mtime": 1788188343.5000834,
-    "ast_hash": "bb0085bbe5ae4daaae86625b4b3f0b9a",
+    "mtime": 1788189009.3873699,
+    "ast_hash": "61f7f78adc56509084e14158bc04d6e3",
     "semantic_hash": ""
   },
   "src/components/Layout/UserProfileDrawer.tsx": {
@@ -655,8 +655,8 @@
     "semantic_hash": "a8c075269b5971c2ab072603b5166cc2"
   },
   "src/components/ui/pagination.tsx": {
-    "mtime": 1788188430.1655283,
-    "ast_hash": "797d74c029dfd5d23fbda2e312fe8205",
+    "mtime": 1788189009.3893666,
+    "ast_hash": "045bfee06cd38db57f471e88114207ad",
     "semantic_hash": ""
   },
   "src/components/ui/popover.tsx": {
@@ -1035,8 +1035,8 @@
     "semantic_hash": "469ca814ed4eae7715b64294626adcd7"
   },
   "src/pages/DashboardV2.tsx": {
-    "mtime": 1788188393.3577316,
-    "ast_hash": "427d95be572227006146b60ac4e45edd",
+    "mtime": 1788189009.3893666,
+    "ast_hash": "421cb17a9e3f3b737f3bddc5e37d2102",
     "semantic_hash": ""
   },
   "src/pages/Home.tsx": {
@@ -1080,8 +1080,8 @@
     "semantic_hash": ""
   },
   "src/pages/ProjectsKanban.tsx": {
-    "mtime": 1784123070.6412244,
-    "ast_hash": "b7fcd0d4f6d19df4f6f99b406a399e4c",
+    "mtime": 1788189421.8366103,
+    "ast_hash": "d39a3b209309b7fdde3e3950b88f46a8",
     "semantic_hash": ""
   },
   "src/pages/Reports.tsx": {
@@ -4390,18 +4390,18 @@
     "semantic_hash": ""
   },
   "src/pages/ModuleOverview.tsx": {
-    "mtime": 1788187538.8548987,
-    "ast_hash": "ec8db4a78ff363b53d1f7cabbf80daeb",
+    "mtime": 1788189009.3903673,
+    "ast_hash": "bf6efe070c5678981cc676021dd84baf",
     "semantic_hash": ""
   },
   "src/test/breadcrumbs-module-overview.test.tsx": {
-    "mtime": 1788188468.1544514,
-    "ast_hash": "025cec4db863a24f7d9f164ba7b92ea1",
+    "mtime": 1788189009.3913672,
+    "ast_hash": "60fb0af1c79012aa3a66fa9664eaf07b",
     "semantic_hash": ""
   },
   "src/test/module-overview.test.tsx": {
-    "mtime": 1788187570.785234,
-    "ast_hash": "1c279b7fa6bd8b4b624fb065c4e8c841",
+    "mtime": 1788189009.3913672,
+    "ast_hash": "8295d0bbfda6d549846153c4c921f7e5",
     "semantic_hash": ""
   },
   "src/components/sd/time/TimeEntryDialog.tsx": {
@@ -4555,13 +4555,13 @@
     "semantic_hash": ""
   },
   "src/components/pwa/PwaStatus.tsx": {
-    "mtime": 1788188779.8597343,
-    "ast_hash": "17c0f27525d216a132c5c2bac24de97a",
+    "mtime": 1788189009.388369,
+    "ast_hash": "dd009b26f1176127e37f94a169372894",
     "semantic_hash": ""
   },
   "src/test/pwa-status.test.tsx": {
-    "mtime": 1788188803.3387375,
-    "ast_hash": "cecbb0b6ff7519b54a6391217c9144d6",
+    "mtime": 1788189009.3928828,
+    "ast_hash": "d2e42b574ef0eb4ab460f8d99e14d9e8",
     "semantic_hash": ""
   },
   "public/apple-touch-icon.png": {
@@ -4590,18 +4590,23 @@
     "semantic_hash": ""
   },
   "src/components/pwa/PwaInstallControls.tsx": {
-    "mtime": 1788188779.8617358,
-    "ast_hash": "b79941aa325c7bd002c814e75f8e1ff4",
+    "mtime": 1788189009.3873699,
+    "ast_hash": "04b06a71bc85d16ad6db8d185f84daa7",
     "semantic_hash": ""
   },
   "src/components/Dashboard/CriticalAlerts.tsx": {
-    "mtime": 1788188393.3551807,
-    "ast_hash": "c758ccec2c2f606f78712206c86e2939",
+    "mtime": 1788189009.3849187,
+    "ast_hash": "af174313e4639c97fa2b0865d25db4e9",
     "semantic_hash": ""
   },
   "src/test/dashboard-mobile.test.tsx": {
-    "mtime": 1788188485.1716578,
-    "ast_hash": "8c4dfd0861ac92303779abd96fb17427",
+    "mtime": 1788189009.3913672,
+    "ast_hash": "e9032343ec87738418c8d828e15f8c37",
+    "semantic_hash": ""
+  },
+  "src/test/projects-kanban-mobile.test.tsx": {
+    "mtime": 1788189267.6648464,
+    "ast_hash": "018e3ce4c672059f5e90df03f6dbd082",
     "semantic_hash": ""
   }
 }
