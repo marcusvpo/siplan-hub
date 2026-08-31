@@ -68,13 +68,22 @@ describe("BI de atendimento do SD", () => {
 
   it("organiza as análises em abas por contexto", () => {
     expect(page).toContain('from "@/components/ui/tabs"');
-    expect(page).toContain('<Tabs defaultValue="overview"');
+    expect(page).toContain('const [activeTab, setActiveTab] = useState<AttendanceBiTab>("overview")');
+    expect(page).toContain('<Tabs value={activeTab} onValueChange={handleTabChange}');
     expect(page).toContain('<TabsContent value="overview"');
     expect(page).toContain('<TabsContent value="team"');
     expect(page).toContain('<TabsContent value="tickets"');
     expect(page.match(/<MetricCard label=/g)).toHaveLength(4);
     expect(page).toContain('<ContextMetric label="Média por lançamento"');
     expect(page).toContain('<ContextMetric label="Cobertura de categoria"');
+  });
+
+  it("preserva dados e aba durante recargas e adapta os rótulos no celular", () => {
+    expect(hook).toContain("placeholderData: (previous) => previous");
+    expect(page).toContain('role="status" aria-live="polite"');
+    expect(page).toContain('<span className="sm:hidden">Geral</span>');
+    expect(page).toContain('<span className="sm:hidden">Equipe</span>');
+    expect(page).toContain('aria-label="Equipes e analistas"');
   });
 
   it("apresenta os principais indicadores e análises operacionais", () => {

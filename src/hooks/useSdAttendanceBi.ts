@@ -131,6 +131,7 @@ export function useSdAttendanceBi(filters: SdAttendanceBiFilters) {
       filters.natures,
     ],
     enabled: Boolean(filters.startDate && filters.endDate),
+    placeholderData: (previous) => previous,
     queryFn: async () => {
       const { data, error } = await db.rpc("get_sd_attendance_bi", {
         p_start_date: filters.startDate,
