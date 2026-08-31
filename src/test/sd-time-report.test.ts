@@ -46,9 +46,18 @@ describe("consulta gerencial de horas do SD", () => {
   it("filtra a lista ao selecionar um analista no gráfico diário", () => {
     expect(reportPage).toContain("filterByChartAnalyst");
     expect(reportPage).toContain("setSelectedUser(userId)");
-    expect(reportPage).toContain("bar?.payload?.userId");
+    expect(reportPage).toContain("filterByChartPoint(bar?.payload)");
     expect(reportPage).toContain("onSelect={(index) => filterByChartAnalyst");
     expect(reportPage).toContain("Filtrar lançamentos de");
+  });
+
+  it("transforma o clique em uma barra semanal em filtro para o dia", () => {
+    expect(reportPage).toContain("dateKey: key");
+    expect(reportPage).toContain("filterByChartDate");
+    expect(reportPage).toContain("setSelectedDate(parseISO(dateKey))");
+    expect(reportPage).toContain('setPeriodView("day")');
+    expect(reportPage).toContain("filterByChartPoint(bar?.payload)");
+    expect(reportPage).toContain("WeekdayAxisTick");
   });
 
   it("filtra indicadores, gráficos e lançamentos por um ou mais grupos de atendimento", () => {
