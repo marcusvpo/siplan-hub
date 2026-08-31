@@ -121,11 +121,11 @@ function SlaCheckpointCell({
 }) {
   return (
     <span className="min-w-0">
-      <Badge className={cn("w-fit border-0 text-[9px]", display.className)}>
+      <span className={cn("inline-flex w-fit rounded-md border-0 px-2 py-0.5 text-[9px] font-semibold", display.className)}>
         {display.label}
-      </Badge>
+      </span>
       <span
-        className="mt-0.5 block truncate text-[9px] text-muted-foreground"
+        className="mt-0.5 block break-words text-[9px] text-muted-foreground md:truncate"
         title={deadline ? formatDateTime(deadline) : undefined}
       >
         {deadline ? `até ${formatDateTime(deadline)}` : "Prazo não informado"}
@@ -270,24 +270,44 @@ function TicketSlaRow({
     <Collapsible open={open} onOpenChange={setOpen}>
       <div className="rounded-lg border bg-card transition-colors hover:bg-muted/20">
         <CollapsibleTrigger asChild>
-          <button type="button" className="grid w-full min-w-[1040px] grid-cols-[28px_85px_minmax(210px,1fr)_112px_112px_90px_125px_125px] items-center gap-2 px-3 py-2 text-left text-xs">
-            <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", open && "rotate-180")} />
-            <span className="font-mono font-semibold text-primary">#{chamado.numeroChamado}</span>
-            <span className="min-w-0">
-              <span className="block truncate font-semibold" title={chamado.nomeCliente}>{chamado.nomeCliente || "—"}</span>
-              <span className="block truncate text-[10px] text-muted-foreground" title={chamado.titulo}>{chamado.titulo || "—"}</span>
+          <button type="button" className="w-full min-w-0 px-3 py-3 text-left text-xs md:py-2">
+            <span className="block min-w-0 md:hidden">
+              <span className="flex min-w-0 items-center gap-2">
+                <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} />
+                <span className="font-mono font-semibold text-primary">#{chamado.numeroChamado}</span>
+                <span className="ml-auto font-medium">{formatSlaDuration(sla.hours)}</span>
+              </span>
+              <span className="mt-2 block break-words font-semibold leading-snug">{chamado.nomeCliente || "—"}</span>
+              <span className="mt-0.5 block break-words text-[10px] leading-relaxed text-muted-foreground">{chamado.titulo || "—"}</span>
+              <span className="mt-3 grid grid-cols-1 gap-2 min-[360px]:grid-cols-2">
+                <span className="min-w-0 rounded-md bg-muted/30 p-2">
+                  <span className="mb-1 block text-[8px] font-semibold uppercase text-muted-foreground">1ª resposta</span>
+                  <SlaCheckpointCell display={firstResponseDisplay} deadline={sla.firstResponse.deadline} />
+                </span>
+                <span className="min-w-0 rounded-md bg-muted/30 p-2">
+                  <span className="mb-1 block text-[8px] font-semibold uppercase text-muted-foreground">Resolução</span>
+                  <SlaCheckpointCell display={resolutionDisplay} deadline={sla.resolution.deadline} />
+                </span>
+              </span>
+              <span className="mt-2 grid grid-cols-2 gap-2 text-[9px] text-muted-foreground">
+                <span><strong className="block text-foreground">Abertura</strong>{formatDateTime(chamado.abertoEm || chamado.dataAbertura)}</span>
+                <span><strong className="block text-foreground">Encerramento</strong>{formatDateTime(chamado.encerradoEm || chamado.dataEncerramento)}</span>
+              </span>
             </span>
-            <span>{formatDateTime(chamado.abertoEm || chamado.dataAbertura)}</span>
-            <span>{formatDateTime(chamado.encerradoEm || chamado.dataEncerramento)}</span>
-            <span className="font-medium">{formatSlaDuration(sla.hours)}</span>
-            <SlaCheckpointCell
-              display={firstResponseDisplay}
-              deadline={sla.firstResponse.deadline}
-            />
-            <SlaCheckpointCell
-              display={resolutionDisplay}
-              deadline={sla.resolution.deadline}
-            />
+
+            <span className="hidden min-w-[1040px] grid-cols-[28px_85px_minmax(210px,1fr)_112px_112px_90px_125px_125px] items-center gap-2 md:grid">
+              <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", open && "rotate-180")} />
+              <span className="font-mono font-semibold text-primary">#{chamado.numeroChamado}</span>
+              <span className="min-w-0">
+                <span className="block truncate font-semibold" title={chamado.nomeCliente}>{chamado.nomeCliente || "—"}</span>
+                <span className="block truncate text-[10px] text-muted-foreground" title={chamado.titulo}>{chamado.titulo || "—"}</span>
+              </span>
+              <span>{formatDateTime(chamado.abertoEm || chamado.dataAbertura)}</span>
+              <span>{formatDateTime(chamado.encerradoEm || chamado.dataEncerramento)}</span>
+              <span className="font-medium">{formatSlaDuration(sla.hours)}</span>
+              <SlaCheckpointCell display={firstResponseDisplay} deadline={sla.firstResponse.deadline} />
+              <SlaCheckpointCell display={resolutionDisplay} deadline={sla.resolution.deadline} />
+            </span>
           </button>
         </CollapsibleTrigger>
 
@@ -621,7 +641,7 @@ export function TicketsSlaAnalysis({
     <div className="space-y-3">
       <Card className="border-muted/80 shadow-sm">
         <CardContent className="flex flex-wrap items-end gap-3 p-3">
-          <div className="mr-auto min-w-[260px]">
+          <div className="mr-auto min-w-0 sm:min-w-[260px]">
             <div className="flex items-center gap-1">
               <h2 className="flex items-center gap-1.5 text-sm font-bold"><Timer className="h-4 w-4 text-primary" />Tempos de atendimento e SLA</h2>
               <TicketsSlaInfoDialog chamados={rows} />
@@ -631,7 +651,7 @@ export function TicketsSlaAnalysis({
           <Button
             variant="outline"
             size="sm"
-            className="h-7 gap-1.5 px-2 text-[10px]"
+            className="h-10 gap-1.5 px-2 text-[10px] sm:h-7"
             onClick={handleGenerateAnalyticalPdf}
             disabled={generatingAnalyticalPdf || generatingPdf || syncing || isLoading || filteredRows.length === 0}
             title={`Detalha até ${MAX_ANALYTICAL_REPORT_TICKETS} chamados por relatório`}
@@ -644,7 +664,7 @@ export function TicketsSlaAnalysis({
           <Button
             variant="outline"
             size="sm"
-            className="h-7 gap-1.5 px-2 text-[10px]"
+            className="h-10 gap-1.5 px-2 text-[10px] sm:h-7"
             onClick={handleGeneratePdf}
             disabled={generatingPdf || generatingAnalyticalPdf || syncing || isLoading || filteredRows.length === 0}
           >
@@ -692,8 +712,8 @@ export function TicketsSlaAnalysis({
       </div>
 
       <Card className="border-muted/80 shadow-sm">
-        <CardContent className="overflow-x-auto p-3">
-          <div className="mb-1 grid min-w-[1040px] grid-cols-[28px_85px_minmax(210px,1fr)_112px_112px_90px_125px_125px] gap-2 px-3 text-[9px] font-semibold uppercase text-muted-foreground">
+        <CardContent className="p-2 sm:overflow-x-auto sm:p-3">
+          <div className="mb-1 hidden min-w-[1040px] grid-cols-[28px_85px_minmax(210px,1fr)_112px_112px_90px_125px_125px] gap-2 px-3 text-[9px] font-semibold uppercase text-muted-foreground md:grid">
             <span /><span>Chamado</span><span>Cliente / título</span><span>Abertura</span><span>Encerramento</span><span>Duração</span><span>1ª resposta</span><span>Resolução</span>
           </div>
 
@@ -714,9 +734,9 @@ export function TicketsSlaAnalysis({
           )}
 
           {filteredRows.length > 0 && (
-            <div className="mt-3 flex flex-col items-center justify-between gap-3 border-t pt-3 text-[10px] text-muted-foreground sm:flex-row">
+            <div className="mt-3 flex flex-col items-stretch justify-between gap-3 border-t pt-3 text-[10px] text-muted-foreground sm:flex-row sm:items-center">
               <span>Exibindo {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, filteredRows.length)} de {filteredRows.length}</span>
-              <div className="flex flex-wrap items-center justify-center gap-3">
+              <div className="flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                 <div className="flex items-center gap-1.5">
                   <span>Exibir</span>
                   <Select
@@ -738,10 +758,10 @@ export function TicketsSlaAnalysis({
                   <span>por página</span>
                 </div>
                 {totalPages > 1 && (
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="icon" className="h-7 w-7" disabled={page === 1} onClick={() => setPage((current) => Math.max(1, current - 1))}><ChevronLeft className="h-3.5 w-3.5" /></Button>
-                    <span>Página <strong className="text-foreground">{page}</strong> de {totalPages}</span>
-                    <Button variant="outline" size="icon" className="h-7 w-7" disabled={page === totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))}><ChevronRight className="h-3.5 w-3.5" /></Button>
+                  <div className="grid grid-cols-[2.25rem_1fr_2.25rem] items-center gap-2 sm:flex">
+                    <Button variant="outline" size="icon" aria-label="Página anterior" className="h-9 w-9 sm:h-7 sm:w-7" disabled={page === 1} onClick={() => setPage((current) => Math.max(1, current - 1))}><ChevronLeft className="h-3.5 w-3.5" /></Button>
+                    <span className="text-center">Página <strong className="text-foreground">{page}</strong> de {totalPages}</span>
+                    <Button variant="outline" size="icon" aria-label="Próxima página" className="h-9 w-9 sm:h-7 sm:w-7" disabled={page === totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))}><ChevronRight className="h-3.5 w-3.5" /></Button>
                   </div>
                 )}
               </div>

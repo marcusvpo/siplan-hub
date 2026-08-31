@@ -9,6 +9,7 @@ import {
   fetchAllChamadosForReport,
   Chamado0800,
   useChamadosClientOptions,
+  type ChamadosClientOption,
   type ProcessoVendaSyncFilters,
 } from "@/hooks/useChamados0800";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -98,7 +99,7 @@ function TicketFilterMultiSelect({
           role="combobox"
           aria-expanded={open}
           disabled={disabled}
-          className="h-7 w-full justify-between px-2 font-normal text-[11px]"
+          className="h-10 w-full justify-between px-2 text-[11px] font-normal md:h-7"
         >
           <span className={cn("truncate", values.length === 0 && "text-muted-foreground")}>{label}</span>
           <ChevronsUpDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
@@ -161,6 +162,7 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
   const [natureza, setNatureza] = useState<string>("todas");
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [busca, setBusca] = useState<string>("");
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   
   // Paginação
   const [page, setPage] = useState(1);
@@ -415,6 +417,26 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
 
   const totalPages = Math.ceil(totalCount / pageSize);
 
+  const hasActiveFilters =
+    dataInicio !== defaultDateRange.startDate ||
+    dataFim !== defaultDateRange.endDate ||
+    selectedClients.length > 0 ||
+    produto !== "todos" ||
+    selectedLegacyProducts.length > 0 ||
+    selectedLegacySoftware.length > 0 ||
+    natureza !== "todas" ||
+    selectedStatuses.length > 0 ||
+    !!busca;
+
+  const activeFilterCount = [
+    dataInicio !== defaultDateRange.startDate || dataFim !== defaultDateRange.endDate,
+    selectedClients.length > 0,
+    produto !== "todos" || selectedLegacyProducts.length > 0,
+    selectedLegacySoftware.length > 0,
+    natureza !== "todas",
+    selectedStatuses.length > 0,
+  ].filter(Boolean).length;
+
   const toggleClient = (clientName: string) => {
     setSelectedClients(prev => {
       const next = prev.includes(clientName)
@@ -554,25 +576,25 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
   };
 
   return (
-    <div className="container mx-auto p-3 md:p-4 space-y-2.5">
+    <div className="container mx-auto w-full min-w-0 space-y-3 px-0 pb-4 pt-2 sm:p-3 md:p-4">
       {/* Cabeçalho */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 border-b border-muted pb-2">
-        <div className="flex flex-col lg:flex-row lg:items-baseline gap-x-3">
-          <h1 className="text-lg font-bold flex items-center gap-1.5 text-foreground whitespace-nowrap">
-            <ClipboardList className="h-4 w-4 text-primary" style={{ color: "hsl(346, 84%, 45%)" }} />
-            {catalogConfig.title}
+      <div className="flex min-w-0 flex-col gap-3 border-b border-muted pb-3 md:flex-row md:items-center md:justify-between">
+        <div className="flex min-w-0 flex-col gap-x-3 lg:flex-row lg:items-baseline">
+          <h1 className="flex min-w-0 items-start gap-1.5 break-words text-lg font-bold leading-tight text-foreground">
+            <ClipboardList className="mt-0.5 h-4 w-4 shrink-0 text-primary" style={{ color: "hsl(346, 84%, 45%)" }} />
+            <span className="break-words">{catalogConfig.title}</span>
           </h1>
-          <p className="text-[10px] text-muted-foreground leading-tight">
+          <p className="mt-1 break-words text-[10px] leading-relaxed text-muted-foreground lg:mt-0">
             {catalogConfig.description}
           </p>
         </div>
         
-        <div className="flex items-center gap-1.5">
+        <div className="flex w-full min-w-0 items-center justify-between gap-1.5 md:w-auto md:justify-end">
           {activeView !== "sla" && activeView !== "sla-sector" && (
             <Button
               variant="outline"
               size="sm"
-              className="h-7 gap-1.5 px-2 text-[10px]"
+              className="h-10 gap-1.5 px-2 text-[10px] sm:h-7"
               onClick={handleGeneratePdf}
               disabled={generatingPdf || syncingPeriodo || !dataInicio || !dataFim || dataInicio > dataFim}
               title={activeView === "analysis"
@@ -593,11 +615,14 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
           )}
 
           {/* Indicador de Status/Sync rápido */}
-          <Badge variant="outline" className="px-2 py-0 font-normal text-[10px] text-muted-foreground flex items-center gap-1.5 h-5">
+          <Badge variant="outline" className="flex h-6 min-w-0 items-center gap-1.5 px-2 py-0 text-[9px] font-normal text-muted-foreground sm:text-[10px]">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            {syncingPeriodo
-              ? "Consultando filtro na origem..."
-              : "Ellevo ativo (1h + filtros sob demanda)"}
+            <span className="sm:hidden">{syncingPeriodo ? "Sincronizando..." : "Ellevo ativo"}</span>
+            <span className="hidden sm:inline">
+              {syncingPeriodo
+                ? "Consultando filtro na origem..."
+                : "Ellevo ativo (1h + filtros sob demanda)"}
+            </span>
           </Badge>
         </div>
       </div>
@@ -607,7 +632,7 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
         <CardContent className="p-2.5 space-y-1.5">
           
           {/* Header do Filtro Inline com Limpeza de Filtros */}
-          <div className="flex items-center justify-between border-b border-muted/40 pb-1">
+          <div className="flex min-w-0 items-center justify-between gap-2 border-b border-muted/40 pb-2 md:pb-1">
             <div className="flex min-w-0 items-center gap-2">
               <div className="flex shrink-0 items-center gap-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
                 <Filter className="h-2.5 w-2.5 text-primary" style={{ color: "hsl(346, 84%, 45%)" }} />
@@ -617,21 +642,59 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
                 Período padrão: últimos 30 dias; datas anteriores consultam somente a faixa escolhida na origem.
               </span>
             </div>
-            {(dataInicio !== defaultDateRange.startDate || dataFim !== defaultDateRange.endDate || selectedClients.length > 0 || produto !== "todos" || selectedLegacyProducts.length > 0 || selectedLegacySoftware.length > 0 || natureza !== "todas" || selectedStatuses.length > 0 || busca) && (
+            <div className="flex shrink-0 items-center gap-1">
+              {hasActiveFilters && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearAllFilters}
+                  className="flex h-7 items-center gap-1 px-1.5 text-[10px] text-muted-foreground hover:text-primary sm:text-[11px] md:h-5"
+                >
+                  <X className="h-3 w-3" />
+                  Limpar
+                </Button>
+              )}
               <Button
-                variant="ghost"
+                type="button"
+                variant="outline"
                 size="sm"
-                onClick={clearAllFilters}
-                className="text-[11px] text-muted-foreground hover:text-primary h-5 px-1.5 flex items-center gap-1"
+                className="h-8 gap-1.5 px-2 text-[10px] md:hidden"
+                aria-expanded={mobileFiltersOpen}
+                onClick={() => setMobileFiltersOpen((open) => !open)}
               >
-                <X className="h-3 w-3" />
-                Limpar filtros
+                {mobileFiltersOpen ? "Ocultar" : "Mais filtros"}
+                {activeFilterCount > 0 && (
+                  <Badge variant="secondary" className="h-4 min-w-4 justify-center px-1 text-[9px]">
+                    {activeFilterCount}
+                  </Badge>
+                )}
               </Button>
+            </div>
+          </div>
+
+          <div className="relative md:hidden">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Buscar chamado, título ou termo..."
+              value={busca}
+              onChange={(e) => handleFilterChange(setBusca, e.target.value)}
+              className="h-10 min-w-0 pl-9 pr-8 text-sm"
+            />
+            {busca && (
+              <button
+                type="button"
+                aria-label="Limpar busca"
+                onClick={() => handleFilterChange(setBusca, "")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
             )}
           </div>
 
           {/* Grid de Filtros: Linha 1 compacta, Linha 2 com Clientes (Full Width) */}
-          <div className="space-y-1.5">
+          <div className={cn("space-y-2 md:space-y-1.5", !mobileFiltersOpen && "hidden md:block")}>
             {/* Linha 1: Datas, Produto, Natureza, Status, Busca */}
             <div className={cn(
               "grid grid-cols-1 gap-1.5 sm:grid-cols-2 md:grid-cols-3",
@@ -647,7 +710,7 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
                   value={dataInicio}
                   max={dataFim || undefined}
                   onChange={(e) => handleFilterChange(setDataInicio, e.target.value)}
-                  className="w-full text-[11px] h-7"
+                  className="h-10 w-full text-[11px] md:h-7"
                 />
               </div>
 
@@ -661,7 +724,7 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
                   value={dataFim}
                   min={dataInicio || undefined}
                   onChange={(e) => handleFilterChange(setDataFim, e.target.value)}
-                  className="w-full text-[11px] h-7"
+                  className="h-10 w-full text-[11px] md:h-7"
                 />
               </div>
 
@@ -713,7 +776,7 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
                       setPage(1);
                     }}
                   >
-                    <SelectTrigger className="h-7 w-full text-[11px]">
+                    <SelectTrigger aria-label="Filtrar por produto" className="h-10 w-full text-[11px] md:h-7">
                       <SelectValue placeholder="Selecione o produto" />
                     </SelectTrigger>
                     <SelectContent>
@@ -735,7 +798,7 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
                   onValueChange={(val) => handleFilterChange(setNatureza, val)}
                   disabled={loadingNaturezas}
                 >
-                  <SelectTrigger className="w-full text-[11px] h-7">
+                  <SelectTrigger aria-label="Filtrar por natureza" className="h-10 w-full text-[11px] md:h-7">
                     <SelectValue placeholder={loadingNaturezas ? "Carregando..." : "Todas as naturezas"} />
                   </SelectTrigger>
                   <SelectContent>
@@ -757,7 +820,7 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
                     <Button
                       variant="outline"
                       role="combobox"
-                      className="w-full justify-between font-normal text-[11px] h-7"
+                      className="h-10 w-full justify-between text-[11px] font-normal md:h-7"
                     >
                       <span className="truncate">
                         {selectedStatuses.length === 1
@@ -821,7 +884,7 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
               </div>
 
               {/* Busca Rápida */}
-              <div className="space-y-0">
+              <div className="hidden space-y-0 md:block">
                 <label className="text-[10px] leading-none font-medium text-muted-foreground">
                   Busca Rápida
                 </label>
@@ -831,7 +894,7 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
                     placeholder="Chamado, título, termo..."
                     value={busca}
                     onChange={(e) => handleFilterChange(setBusca, e.target.value)}
-                    className="w-full text-[11px] pr-7 h-7"
+                    className="h-7 w-full pr-7 text-[11px]"
                   />
                   {busca && (
                     <button
@@ -922,7 +985,7 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
                   <Button
                     variant="outline"
                     role="combobox"
-                    className="w-full justify-between font-normal text-[11px] h-7"
+                    className="h-10 w-full justify-between text-[11px] font-normal md:h-7"
                     disabled={loadingClients}
                   >
                     <span className="truncate">
@@ -987,18 +1050,18 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
       </Card>
 
       <Tabs value={activeView} onValueChange={(value) => setActiveView(value as "list" | "analysis" | "sla" | "sla-sector")}>
-        <TabsList className="h-8 border border-muted/80 bg-muted/40 p-0.5">
-          <TabsTrigger value="list" className="h-7 gap-1.5 px-3 text-[11px]">
-            <ClipboardList className="h-3.5 w-3.5" /> Consulta de chamados
+        <TabsList className="grid h-auto w-full grid-cols-2 gap-1 border border-muted/80 bg-muted/40 p-1 md:flex md:h-8 md:w-auto md:gap-0 md:p-0.5">
+          <TabsTrigger value="list" className="h-10 min-w-0 gap-1.5 px-2 text-[10px] leading-tight md:h-7 md:px-3 md:text-[11px]">
+            <ClipboardList className="h-3.5 w-3.5 shrink-0" /> <span className="break-words">Consulta</span>
           </TabsTrigger>
-          <TabsTrigger value="analysis" className="h-7 gap-1.5 px-3 text-[11px]">
-            <BarChart3 className="h-3.5 w-3.5" /> Análise de chamados IA
+          <TabsTrigger value="analysis" className="h-10 min-w-0 gap-1.5 px-2 text-[10px] leading-tight md:h-7 md:px-3 md:text-[11px]">
+            <BarChart3 className="h-3.5 w-3.5 shrink-0" /> <span className="break-words">Análise IA</span>
           </TabsTrigger>
-          <TabsTrigger value="sla" className="h-7 gap-1.5 px-3 text-[11px]">
-            <Timer className="h-3.5 w-3.5" /> Tempos e SLA
+          <TabsTrigger value="sla" className="h-10 min-w-0 gap-1.5 px-2 text-[10px] leading-tight md:h-7 md:px-3 md:text-[11px]">
+            <Timer className="h-3.5 w-3.5 shrink-0" /> <span className="break-words">Tempos e SLA</span>
           </TabsTrigger>
-          <TabsTrigger value="sla-sector" className="h-7 gap-1.5 px-3 text-[11px]">
-            <Building2 className="h-3.5 w-3.5" /> SLA por setor
+          <TabsTrigger value="sla-sector" className="h-10 min-w-0 gap-1.5 px-2 text-[10px] leading-tight md:h-7 md:px-3 md:text-[11px]">
+            <Building2 className="h-3.5 w-3.5 shrink-0" /> <span className="break-words">SLA por setor</span>
           </TabsTrigger>
         </TabsList>
       </Tabs>
@@ -1025,7 +1088,60 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
               <p className="text-xs">Tente ajustar seus filtros ou termos de pesquisa.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+              <div className="divide-y divide-border md:hidden" data-testid="tickets-mobile-list">
+                {chamados.map((chamado) => (
+                  <button
+                    key={chamado.numeroChamado}
+                    type="button"
+                    onClick={() => setSelectedChamado(chamado)}
+                    className="block w-full min-w-0 px-3 py-3.5 text-left transition-colors active:bg-muted/50"
+                    aria-label={`Abrir chamado ${chamado.numeroChamado}: ${chamado.titulo || chamado.nomeCliente || "sem título"}`}
+                  >
+                    <span className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+                      <span className="font-mono text-xs font-bold" style={{ color: "hsl(346, 84%, 45%)" }}>
+                        #{chamado.numeroChamado}
+                      </span>
+                      <span className={cn("inline-flex max-w-full rounded-md px-1.5 py-0 text-[9px] font-semibold", statusBadgeClass(chamado.status))}>
+                        <span className="truncate">{chamado.status || "—"}</span>
+                      </span>
+                    </span>
+
+                    <span className="mt-2 block break-words text-sm font-bold leading-snug text-foreground">
+                      {chamado.nomeCliente || "—"}
+                    </span>
+                    <span className="mt-1 block break-words text-xs leading-relaxed text-muted-foreground">
+                      {chamado.titulo || "—"}
+                    </span>
+
+                    <span className="mt-3 grid min-w-0 grid-cols-1 gap-1.5 text-[11px] text-muted-foreground">
+                      <span className="flex min-w-0 items-start gap-1.5">
+                        <Filter className="mt-0.5 h-3 w-3 shrink-0" />
+                        <span className="break-words">{chamado.natureza || "Sem natureza"}</span>
+                      </span>
+                      <span className="flex min-w-0 items-start gap-1.5">
+                        <ClipboardList className="mt-0.5 h-3 w-3 shrink-0" />
+                        <span className="break-words">
+                          {isLegacy
+                            ? chamado.produto || "Sem produto"
+                            : formatChamadosProductLabel(chamado.software, catalog)}
+                          {isLegacy && chamado.software ? ` · ${chamado.software}` : ""}
+                        </span>
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <CalendarDays className="h-3 w-3 shrink-0" />
+                        Abertura: {fmtDateBr(chamado.dataAbertura)}
+                      </span>
+                    </span>
+
+                    <span className="mt-3 flex items-center justify-end gap-1 text-[10px] font-semibold text-primary">
+                      Ver detalhes <Eye className="h-3.5 w-3.5" />
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              <div className="hidden overflow-x-auto md:block">
               <Table className="text-xs">
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
@@ -1093,15 +1209,16 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
                   ))}
                 </TableBody>
               </Table>
+              </div>
 
               {/* Seção de Paginação */}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-3 py-2.5 border-t border-muted bg-muted/20">
-                <span className="text-xs text-muted-foreground">
+              <div className="flex min-w-0 flex-col items-stretch justify-between gap-3 border-t border-muted bg-muted/20 px-3 py-3 sm:flex-row sm:items-center sm:py-2.5">
+                <span className="break-words text-center text-xs text-muted-foreground sm:text-left">
                   Mostrando <strong className="font-medium text-foreground">{chamados.length}</strong> de <strong className="font-medium text-foreground">{totalCount}</strong> chamados encontrados.
                 </span>
 
-                <div className="flex flex-wrap items-center justify-center gap-3">
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <div className="flex min-w-0 flex-col items-stretch justify-center gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+                  <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
                     <span>Exibir</span>
                     <Select
                       value={String(pageSize)}
@@ -1110,7 +1227,7 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
                         setPage(1);
                       }}
                     >
-                      <SelectTrigger className="h-7 w-[68px] text-xs">
+                      <SelectTrigger aria-label="Itens por página" className="h-8 w-[68px] text-xs sm:h-7">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -1125,18 +1242,19 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
                   </div>
 
                   {totalPages > 1 && (
-                    <div className="flex items-center gap-1.5">
+                    <div className="grid grid-cols-[2.25rem_1fr_2.25rem] items-center gap-2 sm:flex sm:gap-1.5">
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-7 w-7"
+                        className="h-9 w-9 sm:h-7 sm:w-7"
+                        aria-label="Página anterior"
                         onClick={() => setPage((p) => Math.max(1, p - 1))}
                         disabled={page === 1}
                       >
                         <ChevronLeft className="h-3.5 w-3.5" />
                       </Button>
 
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground px-2">
+                      <div className="flex items-center justify-center gap-1 px-2 text-xs text-muted-foreground">
                         <span>Página</span>
                         <strong className="font-medium text-foreground">{page}</strong>
                         <span>de</span>
@@ -1146,7 +1264,8 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-7 w-7"
+                        className="h-9 w-9 sm:h-7 sm:w-7"
+                        aria-label="Próxima página"
                         onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                         disabled={page === totalPages}
                       >
@@ -1156,7 +1275,7 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
                   )}
                 </div>
               </div>
-            </div>
+            </>
           )}
         </CardContent>
         </Card>

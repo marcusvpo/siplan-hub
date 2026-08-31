@@ -215,8 +215,8 @@ export function TicketsAiAnalysis({
   }
 
   return (
-    <div className="space-y-2.5">
-      <div className="grid grid-cols-2 gap-2 lg:grid-cols-6">
+    <div className="w-full max-w-full min-w-0 space-y-2.5 overflow-x-hidden">
+      <div className="grid min-w-0 grid-cols-2 gap-2 lg:grid-cols-6">
         {[
           { label: "Chamados", value: analytics.total, icon: Headset, color: "text-rose-600" },
           { label: "Clientes", value: analytics.clients, icon: Building2, color: "text-violet-500" },
@@ -225,22 +225,22 @@ export function TicketsAiAnalysis({
           { label: "Bugs resolvidos", value: `${analytics.bugCompleted}/${analytics.bugLike}`, icon: AlertTriangle, color: "text-amber-500" },
           { label: "Média de resolução", value: analytics.averageResolutionDays === null ? "-" : `${analytics.averageResolutionDays} d`, icon: BarChart3, color: "text-cyan-500" },
         ].map((item) => (
-          <Card key={item.label} className="border-muted/80">
+          <Card key={item.label} className="min-w-0 overflow-hidden border-muted/80">
             <CardContent className="flex items-center gap-2 p-2.5">
               <item.icon className={`h-4 w-4 shrink-0 ${item.color}`} />
               <div className="min-w-0">
-                <p className="truncate text-base font-bold leading-none">{item.value}</p>
-                <p className="mt-1 truncate text-[9px] text-muted-foreground">{item.label}</p>
+                <p className="break-words text-sm font-bold leading-none sm:text-base">{item.value}</p>
+                <p className="mt-1 break-words text-[9px] leading-tight text-muted-foreground">{item.label}</p>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <div className="grid gap-2.5 xl:grid-cols-2">
-        <Card>
+      <div className="grid min-w-0 gap-2.5 xl:grid-cols-2">
+        <Card className="min-w-0 overflow-hidden">
           <CardHeader className="px-3 py-2"><CardTitle className="text-xs">Distribuição por status</CardTitle></CardHeader>
-          <CardContent className="h-[240px] px-2 pb-2 pt-0">
+          <CardContent className="hidden h-[240px] px-2 pb-2 pt-0 sm:block">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie data={analytics.byStatus} dataKey="total" nameKey="name" innerRadius={48} outerRadius={78} paddingAngle={2}>
@@ -258,11 +258,20 @@ export function TicketsAiAnalysis({
               ))}
             </div>
           </CardContent>
+          <CardContent className="space-y-1 px-3 pb-3 pt-0 sm:hidden">
+            {analytics.byStatus.map((item, index) => (
+              <div key={item.name} className="flex min-w-0 items-center gap-2 rounded-md bg-muted/25 px-2 py-1.5 text-[10px]">
+                <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: STATUS_COLORS[index % STATUS_COLORS.length] }} />
+                <span className="min-w-0 flex-1 break-words">{item.name}</span>
+                <strong className="shrink-0">{item.total}</strong>
+              </div>
+            ))}
+          </CardContent>
         </Card>
 
-        <Card>
+        <Card className="min-w-0 overflow-hidden">
           <CardHeader className="px-3 py-2"><CardTitle className="text-xs">Principais naturezas</CardTitle></CardHeader>
-          <CardContent className="h-[240px] px-2 pb-2 pt-0">
+          <CardContent className="hidden h-[240px] px-2 pb-2 pt-0 sm:block">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={analytics.byNature.slice(0, 8)} layout="vertical" margin={{ top: 4, right: 30, bottom: 0, left: 4 }}>
                 <CartesianGrid horizontal={false} stroke="hsl(var(--border))" />
@@ -273,11 +282,20 @@ export function TicketsAiAnalysis({
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
+          <CardContent className="space-y-1 px-3 pb-3 pt-0 sm:hidden">
+            {analytics.byNature.slice(0, 8).map((item, index) => (
+              <div key={item.name} className="flex min-w-0 items-center gap-2 rounded-md bg-muted/25 px-2 py-1.5 text-[10px]">
+                <span className="w-4 shrink-0 text-center font-mono text-muted-foreground">{index + 1}</span>
+                <span className="min-w-0 flex-1 break-words">{item.name}</span>
+                <strong className="shrink-0">{item.total}</strong>
+              </div>
+            ))}
+          </CardContent>
         </Card>
 
-        <Card>
+        <Card className="min-w-0 overflow-hidden">
           <CardHeader className="px-3 py-2"><CardTitle className="text-xs">Clientes com maior volume</CardTitle></CardHeader>
-          <CardContent className="h-[240px] px-2 pb-2 pt-0">
+          <CardContent className="hidden h-[240px] px-2 pb-2 pt-0 sm:block">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={analytics.byClient.slice(0, 8)} layout="vertical" margin={{ top: 4, right: 30, bottom: 0, left: 4 }}>
                 <CartesianGrid horizontal={false} stroke="hsl(var(--border))" />
@@ -288,9 +306,18 @@ export function TicketsAiAnalysis({
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
+          <CardContent className="space-y-1 px-3 pb-3 pt-0 sm:hidden">
+            {analytics.byClient.slice(0, 8).map((item, index) => (
+              <div key={item.name} className="flex min-w-0 items-center gap-2 rounded-md bg-muted/25 px-2 py-1.5 text-[10px]">
+                <span className="w-4 shrink-0 text-center font-mono text-muted-foreground">{index + 1}</span>
+                <span className="min-w-0 flex-1 break-words">{item.name}</span>
+                <strong className="shrink-0">{item.total}</strong>
+              </div>
+            ))}
+          </CardContent>
         </Card>
 
-        <Card>
+        <Card className="min-w-0 overflow-hidden">
           <CardHeader className="px-3 py-2"><CardTitle className="text-xs">Evolução mensal: abertos x concluídos</CardTitle></CardHeader>
           <CardContent className="h-[240px] px-2 pb-2 pt-0">
             {analytics.monthlyFlow.length > 0 ? (
@@ -309,19 +336,35 @@ export function TicketsAiAnalysis({
         </Card>
       </div>
 
-      <div className="grid gap-2.5 xl:grid-cols-[1fr_1.4fr]">
-        <Card>
+      <div className="grid min-w-0 gap-2.5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+        <Card className="min-w-0 overflow-hidden">
           <CardHeader className="px-3 py-2"><CardTitle className="text-xs">Chamados em aberto há mais tempo</CardTitle></CardHeader>
-          <CardContent className="space-y-1 px-3 pb-3 pt-0">
+          <CardContent className="min-w-0 space-y-1 px-3 pb-3 pt-0">
             {analytics.oldestOpen.length === 0 ? (
               <p className="py-6 text-center text-xs text-muted-foreground">Nenhum chamado em aberto no filtro.</p>
             ) : analytics.oldestOpen.map((row) => (
-              <div key={row.numeroChamado} className="flex items-center justify-between gap-2 rounded-md border border-muted/70 px-2 py-1.5">
-                <div className="min-w-0">
-                  <p className="truncate text-[11px] font-medium"><span className="font-mono text-rose-600">#{row.numeroChamado}</span> {row.titulo || "Sem titulo"}</p>
-                  <p className="truncate text-[9px] text-muted-foreground">{row.nomeCliente || "Cliente não informado"}</p>
+              <article key={row.numeroChamado} className="min-w-0 rounded-md border border-muted/70 px-2 py-2 sm:flex sm:items-center sm:justify-between sm:gap-2 sm:py-1.5">
+                <div className="min-w-0 sm:flex-1">
+                  <div className="flex min-w-0 items-center justify-between gap-2 sm:block">
+                    <span className="font-mono text-[10px] font-semibold text-rose-600">#{row.numeroChamado}</span>
+                    <div className="flex shrink-0 items-center gap-1 sm:hidden">
+                      <Badge variant="outline" className="h-6 px-1.5 text-[8px]">{ticketDaysOpen(row.dataAbertura)} dias</Badge>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                        aria-label={`Ver detalhes e trâmites do chamado ${row.numeroChamado}`}
+                        onClick={() => setSelectedChamado(row)}
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                  <p className="mt-1 break-words text-[11px] font-medium leading-relaxed sm:mt-0 sm:truncate">{row.titulo || "Sem título"}</p>
+                  <p className="mt-0.5 break-words text-[9px] leading-relaxed text-muted-foreground sm:truncate">{row.nomeCliente || "Cliente não informado"}</p>
                 </div>
-                <div className="flex shrink-0 items-center gap-1">
+                <div className="hidden shrink-0 items-center gap-1 sm:flex">
                   <Badge variant="outline" className="text-[9px]">{ticketDaysOpen(row.dataAbertura)} dias</Badge>
                   <Button
                     type="button"
@@ -335,31 +378,31 @@ export function TicketsAiAnalysis({
                     <Eye className="h-3.5 w-3.5" />
                   </Button>
                 </div>
-              </div>
+              </article>
             ))}
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 px-3 py-2">
-            <CardTitle className="flex items-center gap-1.5 text-xs"><Sparkles className="h-3.5 w-3.5 text-violet-500" />Considerações da IA</CardTitle>
-            <Button size="sm" variant="outline" className="h-7 gap-1 text-[10px]" onClick={handleGenerate} disabled={Boolean(activeJob) || preparingAi || syncing || !workerOnline || !rows.length}>
+        <Card className="min-w-0 overflow-hidden">
+          <CardHeader className="flex min-w-0 flex-col items-stretch gap-2 space-y-0 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
+            <CardTitle className="flex min-w-0 items-center gap-1.5 break-words text-xs"><Sparkles className="h-3.5 w-3.5 shrink-0 text-violet-500" />Considerações da IA</CardTitle>
+            <Button size="sm" variant="outline" className="h-10 w-full min-w-0 gap-1 whitespace-normal px-2 text-[10px] sm:h-7 sm:w-auto sm:whitespace-nowrap" onClick={handleGenerate} disabled={Boolean(activeJob) || preparingAi || syncing || !workerOnline || !rows.length}>
               {activeJob || preparingAi ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
               {preparingAi ? "Preparando dados..." : latest ? "Atualizar análise" : "Gerar considerações"}
             </Button>
           </CardHeader>
-          <CardContent className="px-3 pb-3 pt-0">
+          <CardContent className="min-w-0 overflow-hidden px-3 pb-3 pt-0">
             {preparingAi ? (
-              <div className="flex min-h-[120px] items-center justify-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" />Carregando os últimos trâmites do recorte...</div>
+              <div className="flex min-h-[120px] min-w-0 items-center justify-center gap-2 break-words text-xs text-muted-foreground"><Loader2 className="h-4 w-4 shrink-0 animate-spin" />Carregando os últimos trâmites do recorte...</div>
             ) : activeJob ? (
-              <div className="flex min-h-[120px] items-center justify-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" />{activeJob.progress || "Gerando parecer do recorte..."}</div>
+              <div className="flex min-h-[120px] min-w-0 items-center justify-center gap-2 break-words text-xs text-muted-foreground"><Loader2 className="h-4 w-4 shrink-0 animate-spin" /><span className="min-w-0 break-words">{activeJob.progress || "Gerando parecer do recorte..."}</span></div>
             ) : latest?.resultText ? (
-              <div className="text-xs"><MarkdownLite text={latest.resultText} /><p className="mt-2 text-[9px] text-muted-foreground">Gerado em {new Date(latest.createdAt).toLocaleString("pt-BR")} para esta combinacao de filtros.</p></div>
+              <div className="min-w-0 max-w-full text-xs"><MarkdownLite text={latest.resultText} className="min-w-0 max-w-full break-words [overflow-wrap:anywhere] [&_*]:max-w-full" /><p className="mt-2 break-words text-[9px] text-muted-foreground">Gerado em {new Date(latest.createdAt).toLocaleString("pt-BR")} para esta combinação de filtros.</p></div>
             ) : latestError ? (
-              <p className="py-8 text-center text-xs text-red-500">Falha na ultima analise: {latestError.errorMessage}</p>
+              <p className="break-words py-8 text-center text-xs text-red-500 [overflow-wrap:anywhere]">Falha na última análise: {latestError.errorMessage}</p>
             ) : (
-              <div className="min-h-[120px] space-y-2 py-5 text-xs text-muted-foreground">
-                <p>A IA cruza os indicadores do recorte com títulos, descrições e últimos trâmites para apontar recorrências, riscos, soluções e ações recomendadas.</p>
+              <div className="min-h-[120px] min-w-0 space-y-2 py-5 text-xs text-muted-foreground">
+                <p className="break-words leading-relaxed">A IA cruza os indicadores do recorte com títulos, descrições e últimos trâmites para apontar recorrências, riscos, soluções e ações recomendadas.</p>
                 {!workerOnline && <p className="text-amber-600">O worker de IA está offline no momento.</p>}
               </div>
             )}
