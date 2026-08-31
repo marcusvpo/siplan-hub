@@ -259,11 +259,14 @@ export function MyQueueDetailedCard({
 
       {/* Detailed Modal */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent
+          className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] min-w-0 max-w-4xl overflow-y-auto p-4 sm:p-6"
+          data-testid="conversion-activity-dialog"
+        >
           <DialogHeader className="border-b pb-4">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <DialogTitle className="text-2xl font-bold text-primary flex items-center gap-3">
+            <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+              <div className="min-w-0">
+                <DialogTitle className="flex min-w-0 flex-wrap items-center gap-2 break-words pr-6 text-xl font-bold text-primary sm:gap-3 sm:text-2xl">
                   {item.clientName}
                   <Badge
                     variant="outline"
@@ -303,7 +306,7 @@ export function MyQueueDetailedCard({
                     </Badge>
                   )}
                 </DialogTitle>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
+                <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground sm:text-sm">
                   <span className="font-mono bg-muted px-2 py-0.5 rounded">
                     #{item.ticketNumber}
                   </span>
@@ -323,7 +326,7 @@ export function MyQueueDetailedCard({
                   </a>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
                 <Badge
                   className={cn(
                     "text-sm font-bold",
@@ -352,7 +355,7 @@ export function MyQueueDetailedCard({
               <ProjectInfoSection projectInfo={projectInfo} item={item} />
 
               {/* Conversion Stage Section */}
-              <div className="bg-primary/5 rounded-lg p-4 border border-primary/10 dark:bg-primary/5 dark:border-primary/10">
+              <div className="min-w-0 rounded-lg border border-primary/10 bg-primary/5 p-3 dark:border-primary/10 dark:bg-primary/5 sm:p-4">
                 <h3 className="font-bold text-primary flex items-center gap-2 mb-4">
                   <Database className="h-4 w-4" />
                   3. Conversão de Dados
@@ -612,11 +615,11 @@ export function MyQueueDetailedCard({
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-end gap-2 pt-4 border-t">
+                <div className="grid grid-cols-1 gap-2 border-t pt-4 sm:flex sm:items-center sm:justify-end">
                 <Button
                   variant="outline"
                   onClick={() => onTransfer(item)}
-                  className="text-primary border-primary/20 hover:bg-primary/5"
+                  className="w-full border-primary/20 text-primary hover:bg-primary/5 sm:w-auto"
                 >
                   <ArrowRight className="h-4 w-4 mr-1" />
                   Transferir
@@ -627,7 +630,7 @@ export function MyQueueDetailedCard({
                       setIsOpen(false);
                       onSendToHomologation(item);
                     }}
-                    className="bg-primary hover:bg-primary/90"
+                    className="w-full bg-primary hover:bg-primary/90 sm:w-auto"
                   >
                     <Send className="h-4 w-4 mr-1" />
                     Enviar p/ Homologação

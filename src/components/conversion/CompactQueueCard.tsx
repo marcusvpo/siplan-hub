@@ -40,28 +40,38 @@ export function CompactQueueCard({ item, onClick }: CompactQueueCardProps) {
 
   return (
     <Card
-      className="border border-primary/20 bg-gradient-to-br from-primary/[0.02] to-background hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer"
+      className="min-w-0 cursor-pointer overflow-hidden border border-primary/20 bg-gradient-to-br from-primary/[0.02] to-background transition-all hover:-translate-y-0.5 hover:shadow-lg"
       onClick={onClick}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onClick();
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      aria-label={`Abrir detalhes de ${item.clientName}`}
+      data-testid="conversion-my-queue-card"
     >
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between gap-4">
+      <CardContent className="min-w-0 p-3 sm:p-4">
+        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
           {/* Left Side - Client Info */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 mb-1">
-              <span className="font-bold text-lg text-slate-900 dark:text-slate-100 truncate">
+            <div className="mb-1 flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
+              <span className="min-w-0 basis-full break-words text-base font-bold text-slate-900 dark:text-slate-100 sm:basis-auto sm:text-lg">
                 {item.clientName}
               </span>
               <Badge
                 variant="outline"
                 className={cn(
-                  "text-xs shrink-0",
+                  "h-auto max-w-full shrink-0 whitespace-normal break-words text-xs",
                   STATUS_COLORS[item.queueStatus],
                 )}
               >
                 {STATUS_LABELS[item.queueStatus] || item.queueStatus}
               </Badge>
             </div>
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground sm:text-sm">
               <span className="font-mono bg-muted px-2 py-0.5 rounded">
                 #{item.ticketNumber}
               </span>
@@ -83,7 +93,7 @@ export function CompactQueueCard({ item, onClick }: CompactQueueCardProps) {
               <div className="mt-2">
                 <Badge
                   className={cn(
-                    "text-xs font-semibold gap-1.5 px-3 py-1",
+                    "h-auto max-w-full whitespace-normal break-words px-3 py-1 text-left text-xs font-semibold gap-1.5",
                     item.engineStatus === "pending_engine" &&
                       "bg-orange-500 text-white border-orange-600 shadow-sm shadow-orange-200",
                     item.engineStatus === "engine_in_development" &&
@@ -115,7 +125,7 @@ export function CompactQueueCard({ item, onClick }: CompactQueueCardProps) {
           </div>
 
           {/* Right Side - Priority & Actions */}
-          <div className="flex items-center gap-3">
+          <div className="grid w-full grid-cols-[auto_auto_1fr] items-center gap-2 sm:flex sm:w-auto sm:gap-3">
             <Badge
               className={cn(
                 "text-sm font-bold",
@@ -143,7 +153,7 @@ export function CompactQueueCard({ item, onClick }: CompactQueueCardProps) {
             <Button
               size="sm"
               variant="outline"
-              className="border-primary/20 text-primary hover:bg-primary/5 gap-1"
+              className="min-w-0 gap-1 border-primary/20 text-primary hover:bg-primary/5"
               onClick={(e) => {
                 e.stopPropagation();
                 onClick();
