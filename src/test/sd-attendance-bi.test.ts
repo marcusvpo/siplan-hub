@@ -66,6 +66,17 @@ describe("BI de atendimento do SD", () => {
     expect(page).toContain("setTicketsPage(1)");
   });
 
+  it("organiza as análises em abas por contexto", () => {
+    expect(page).toContain('from "@/components/ui/tabs"');
+    expect(page).toContain('<Tabs defaultValue="overview"');
+    expect(page).toContain('<TabsContent value="overview"');
+    expect(page).toContain('<TabsContent value="team"');
+    expect(page).toContain('<TabsContent value="tickets"');
+    expect(page.match(/<MetricCard label=/g)).toHaveLength(4);
+    expect(page).toContain('<ContextMetric label="Média por lançamento"');
+    expect(page).toContain('<ContextMetric label="Cobertura de categoria"');
+  });
+
   it("apresenta os principais indicadores e análises operacionais", () => {
     expect(page).toContain("Tempo médio/chamado");
     expect(page).toContain("Cobertura de categoria");
