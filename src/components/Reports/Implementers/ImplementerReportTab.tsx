@@ -88,10 +88,10 @@ export function ImplementerReportTab() {
   ).sort();
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="min-w-0 space-y-4 overflow-x-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 sm:space-y-6" data-testid="implementer-report">
       {/* Header bar with Selector and PDF export button */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-card/50 backdrop-blur-sm p-3 rounded-xl border border-border shadow-sm">
-        <div className="flex items-center gap-3 flex-1 w-full sm:w-auto">
+        <div className="flex w-full min-w-0 flex-1 items-center gap-3 sm:w-auto">
           <ImplementerSelector
             implementers={implementers || []}
             selectedId={selectedId}
@@ -122,7 +122,7 @@ export function ImplementerReportTab() {
 
       {/* Main Unified Report Content */}
       {selectedId && reportData.implementer && (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+        <div className="min-w-0 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500 sm:space-y-8">
           
           {/* Top Header Banner matching Reference PDF */}
           <ImplementerHeaderBanner
@@ -131,9 +131,9 @@ export function ImplementerReportTab() {
           />
 
           {/* Interactive Filters Bar */}
-          <div className="bg-card/40 backdrop-blur-sm p-3 rounded-xl border border-border flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-2.5 flex-1">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground pr-2 border-r border-border">
+          <div className="flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card/40 p-3 backdrop-blur-sm">
+            <div className="grid w-full min-w-0 flex-1 grid-cols-1 items-center gap-2.5 min-[420px]:grid-cols-2 sm:flex sm:flex-wrap">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground min-[420px]:col-span-2 sm:col-span-1 sm:border-r sm:border-border sm:pr-2">
                 <Filter className="h-3.5 w-3.5 text-primary" />
                 Filtros Dinâmicos:
               </div>
@@ -194,7 +194,7 @@ export function ImplementerReportTab() {
           <div className="space-y-4 pt-2 border-t border-border">
             <div className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4 text-primary" />
-              <h3 className="text-sm font-bold tracking-tight text-foreground/90">
+              <h3 className="min-w-0 text-sm font-bold tracking-tight text-foreground/90">
                 3. Painel de Gráficos, Tendências e Performance
               </h3>
             </div>

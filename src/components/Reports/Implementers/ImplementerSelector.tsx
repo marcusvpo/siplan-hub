@@ -47,7 +47,7 @@ export function ImplementerSelector({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-[320px] sm:w-[350px] justify-between shadow-sm bg-card/60 backdrop-blur-md border-border hover:border-primary/40 hover:bg-accent/40 transition-all rounded-xl h-11 px-3.5 group"
+          className="group h-11 w-full min-w-0 justify-between rounded-xl border-border bg-card/60 px-3.5 shadow-sm backdrop-blur-md transition-all hover:border-primary/40 hover:bg-accent/40 sm:w-[350px]"
         >
           <div className="flex items-center gap-2.5 truncate">
             <User className="h-4 w-4 shrink-0 text-primary" />
@@ -65,7 +65,7 @@ export function ImplementerSelector({
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-[320px] sm:w-[350px] p-0 border-border/80 bg-card/95 backdrop-blur-xl shadow-xl rounded-xl overflow-hidden"
+        className="w-[calc(100vw-1rem)] max-w-[350px] overflow-hidden rounded-xl border-border/80 bg-card/95 p-0 shadow-xl backdrop-blur-xl"
         align="start"
       >
         <Command className="bg-transparent">

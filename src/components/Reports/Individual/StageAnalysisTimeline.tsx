@@ -91,6 +91,7 @@ export function StageAnalysisTimeline({
   interface TooltipPayload {
     name: string;
     value: number;
+    dataKey?: string;
     payload: {
       name: string;
       Project: number;
@@ -101,7 +102,7 @@ export function StageAnalysisTimeline({
 
   interface CustomTooltipProps {
     active?: boolean;
-    payload?: any[];
+    payload?: TooltipPayload[];
     label?: string;
   }
 
@@ -152,7 +153,7 @@ export function StageAnalysisTimeline({
   };
 
   return (
-    <Card className="col-span-2 border border-border bg-card/40 backdrop-blur-sm hover:shadow-md transition-all overflow-hidden group">
+    <Card className="group col-span-1 min-w-0 overflow-hidden border border-border bg-card/40 backdrop-blur-sm transition-all hover:shadow-md md:col-span-2">
       <CardHeader className="p-3.5 pb-2 flex flex-row items-center justify-between">
         <div className="space-y-1">
           <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/70">Fluxo de Retenção</CardTitle>
@@ -162,13 +163,13 @@ export function StageAnalysisTimeline({
             <Activity className="h-3.5 w-3.5 text-blue-600" />
         </div>
       </CardHeader>
-      <CardContent className="p-3.5 pt-0 pr-6">
-        <div className="h-[250px]">
+      <CardContent className="px-1 pb-3.5 pt-0 sm:px-3.5 sm:pr-6">
+        <div className="h-[260px] min-w-0">
           <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <BarChart 
               data={data} 
               layout="vertical" 
-              margin={{ left: 20, right: 20, top: 10, bottom: 10 }}
+              margin={{ left: 0, right: 8, top: 10, bottom: 10 }}
               barGap={8}
             >
               <defs>
@@ -184,7 +185,7 @@ export function StageAnalysisTimeline({
               <YAxis
                 dataKey="name"
                 type="category"
-                width={90}
+                width={72}
                 tick={{ fontSize: 10, fontWeight: 700, fill: "currentColor" }}
                 axisLine={false}
                 tickLine={false}
@@ -210,7 +211,7 @@ export function StageAnalysisTimeline({
             </BarChart>
           </ResponsiveContainer>
         </div>
-        <div className="flex items-center justify-center gap-6 mt-4 p-2 bg-muted/20 rounded-lg border border-border">
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 rounded-lg border border-border bg-muted/20 p-2 sm:gap-6">
           <div className="flex items-center gap-2">
             <div className="h-2.5 w-6 rounded-full bg-blue-500" />
             <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/80">Este Projeto</span>

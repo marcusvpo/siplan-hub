@@ -14,6 +14,12 @@ interface ImplementerStageAnalysisProps {
   stageTimeAnalysis: StageTimeEntry[];
 }
 
+interface StageTooltipProps {
+  active?: boolean;
+  payload?: Array<{ value: number }>;
+  label?: string;
+}
+
 export function ImplementerStageAnalysis({
   stageTimeAnalysis,
 }: ImplementerStageAnalysisProps) {
@@ -24,7 +30,7 @@ export function ImplementerStageAnalysis({
     diferenca: s.avgDays - s.benchmarkDays,
   }));
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: StageTooltipProps) => {
     if (active && payload && payload.length >= 2) {
       const imp = payload[0].value;
       const bench = payload[1].value;
@@ -52,19 +58,19 @@ export function ImplementerStageAnalysis({
   };
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="min-w-0 overflow-hidden">
+      <CardHeader className="p-4 sm:p-6">
         <CardTitle>Performance por Etapa</CardTitle>
         <CardDescription>Comparação com média geral</CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="w-full h-[380px]">
+      <CardContent className="px-1 pb-4 sm:px-6 sm:pb-6">
+        <div className="h-[330px] w-full min-w-0 sm:h-[380px]">
         {data.length > 0 ? (
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <BarChart
               layout="vertical"
               data={data}
-              margin={{ top: 20, right: 30, left: 100, bottom: 20 }}
+              margin={{ top: 20, right: 8, left: 0, bottom: 20 }}
             >
               <CartesianGrid
                 strokeDasharray="3 3"
@@ -83,7 +89,7 @@ export function ImplementerStageAnalysis({
                 axisLine={false}
                 tickLine={false}
                 tick={{ fill: "currentColor", opacity: 0.7, fontSize: 12 }}
-                width={90}
+                width={72}
               />
               <Tooltip cursor={{ fill: "rgba(0,0,0,0.1)" }} content={<CustomTooltip />} />
               <Bar

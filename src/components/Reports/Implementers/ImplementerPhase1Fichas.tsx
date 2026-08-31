@@ -1,11 +1,17 @@
 import React, { useState } from "react";
 import type { Phase1ProjectDetail } from "@/hooks/useImplementerReport";
+import type { ProjectV2 } from "@/types/ProjectV2";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronUp, Layers, CheckCircle2, Clock } from "lucide-react";
+import { ReportListPagination } from "./ReportListPagination";
+import { useReportPagination } from "./useReportPagination";
+
+const PAGE_SIZE = 3;
+const LIST_ID = "implementer-phase1-detail-list";
 
 interface ImplementerPhase1FichasProps {
   details: Phase1ProjectDetail[];
@@ -61,19 +67,33 @@ const satisfactionLabels: Record<string, string> = {
   dissatisfied: "Insatisfeito",
 };
 
+type ReportStage =
+  | ProjectV2["stages"]["adherence"]
+  | ProjectV2["stages"]["conversion"]
+  | ProjectV2["stages"]["implementation"]
+  | ProjectV2["stages"]["post"];
+
+const getReportStages = (project: ProjectV2): Array<[string, ReportStage]> => [
+  ["Aderência", project.stages.adherence],
+  ["Homologação Conversão", project.stages.conversion],
+  ["Implementação", project.stages.implementation],
+  ["Pós-Implantação", project.stages.post],
+];
+
 export const ImplementerPhase1Fichas: React.FC<ImplementerPhase1FichasProps> = ({
   details,
 }) => {
   const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({});
+  const pagination = useReportPagination(details, PAGE_SIZE);
 
   const toggleExpand = (id: string) => {
     setExpandedIds((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-bold tracking-tight text-foreground/90 flex items-center gap-2">
+    <div id={LIST_ID} className="min-w-0 scroll-mt-20 space-y-4">
+      <div className="flex min-w-0 items-center justify-between">
+        <h3 className="flex min-w-0 items-start gap-2 break-words text-sm font-bold tracking-tight text-foreground/90">
           <Layers className="h-4 w-4 text-primary" />
           3. Fichas Detalhadas e Projetos Envolvidos ({details.length} implantações)
         </h3>
@@ -85,7 +105,7 @@ export const ImplementerPhase1Fichas: React.FC<ImplementerPhase1FichasProps> = (
         </div>
       ) : (
         <div className="space-y-4">
-          {details.map((ficha, index) => {
+          {pagination.pageItems.map((ficha, index) => {
             const project = ficha.project;
             const isDone = ficha.statusF1Text === "Concluído";
             const isExpanded = !!expandedIds[project.id];
@@ -98,14 +118,14 @@ export const ImplementerPhase1Fichas: React.FC<ImplementerPhase1FichasProps> = (
                 <CardContent className="p-4 md:p-5 space-y-3">
                   {/* Title & Badge */}
                   <div className="flex flex-wrap items-start justify-between gap-2 border-b border-border/50 pb-2.5">
-                    <div>
-                      <h4 className="text-sm md:text-base font-black text-foreground">
-                        {index + 1}. {project.clientName}{" "}
+                    <div className="min-w-0">
+                      <h4 className="break-words text-sm font-black text-foreground md:text-base">
+                        {(pagination.currentPage - 1) * pagination.pageSize + index + 1}. {project.clientName}{" "}
                         <span className="text-xs font-bold text-muted-foreground font-mono">
                           (Ticket: #{project.ticketNumber})
                         </span>
                       </h4>
-                      <p className="text-xs text-muted-foreground mt-0.5 font-medium">
+                      <p className="mt-0.5 break-words text-xs font-medium leading-relaxed text-muted-foreground">
                         Sistema: <strong className="text-foreground">{ficha.systemType}</strong> |{" "}
                         Tipo Implantação: <strong className="text-foreground">{ficha.implantationType}</strong> |{" "}
                         Líder: <strong className="text-foreground">{ficha.leaderName}</strong>
@@ -125,9 +145,9 @@ export const ImplementerPhase1Fichas: React.FC<ImplementerPhase1FichasProps> = (
 
                   {/* Period highlight */}
                   <div className="text-xs font-bold text-primary bg-primary/5 p-2 rounded-lg border border-primary/15 flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex min-w-0 items-start gap-1.5">
                       <Clock className="h-3.5 w-3.5 text-primary shrink-0" />
-                      <span>Período da Fase 1 (Treinamento & Virada Presencial): {ficha.periodText}</span>
+                      <span className="min-w-0 break-words">Período da Fase 1 (Treinamento & Virada Presencial): {ficha.periodText}</span>
                       {ficha.presentialDaysText && (
                         <span className="text-muted-foreground font-normal">
                           ({ficha.presentialDaysText})
@@ -158,7 +178,7 @@ export const ImplementerPhase1Fichas: React.FC<ImplementerPhase1FichasProps> = (
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-7 text-xs gap-1.5 text-primary font-bold hover:bg-primary/10"
+                          className="h-auto min-h-10 max-w-full gap-1.5 whitespace-normal px-2 py-2 text-right text-xs font-bold text-primary hover:bg-primary/10 sm:h-7 sm:min-h-0 sm:whitespace-nowrap sm:py-0"
                         >
                           {isExpanded ? (
                             <>
@@ -208,7 +228,43 @@ export const ImplementerPhase1Fichas: React.FC<ImplementerPhase1FichasProps> = (
                         <h5 className="text-xs font-bold text-foreground uppercase tracking-wider">
                           Status e Retenção por Etapa
                         </h5>
-                        <div className="overflow-x-auto border border-border/60 rounded-lg">
+                        <div className="space-y-2 md:hidden" data-testid="phase-stages-mobile-list">
+                          {getReportStages(project).map(([label, stageData], sIdx) => {
+                            return (
+                              <div key={sIdx} className="min-w-0 space-y-2 rounded-lg border border-border/60 bg-muted/20 p-3">
+                                <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+                                  <span className="break-words text-xs font-bold text-foreground">{label}</span>
+                                  <Badge
+                                    variant="outline"
+                                    className={`text-[10px] ${stageStatusColors[stageData.status] || ""}`}
+                                  >
+                                    {stageStatusLabels[stageData.status] || stageData.status || "—"}
+                                  </Badge>
+                                </div>
+                                <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-[11px]">
+                                  <div className="col-span-2 min-w-0">
+                                    <dt className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Responsável</dt>
+                                    <dd className="break-words font-medium text-foreground">{stageData.responsible || "—"}</dd>
+                                  </div>
+                                  <div>
+                                    <dt className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Início</dt>
+                                    <dd className="font-medium text-foreground">{formatDate(stageData.startDate)}</dd>
+                                  </div>
+                                  <div>
+                                    <dt className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Fim</dt>
+                                    <dd className="font-medium text-foreground">{formatDate(stageData.endDate)}</dd>
+                                  </div>
+                                  <div className="col-span-2">
+                                    <dt className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Duração</dt>
+                                    <dd className="font-medium text-foreground">{daysBetweenStr(stageData.startDate, stageData.endDate)}</dd>
+                                  </div>
+                                </dl>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        <div className="hidden overflow-x-auto rounded-lg border border-border/60 md:block">
                           <table className="w-full text-left text-xs">
                             <thead className="bg-muted/50 border-b border-border">
                               <tr>
@@ -221,13 +277,7 @@ export const ImplementerPhase1Fichas: React.FC<ImplementerPhase1FichasProps> = (
                               </tr>
                             </thead>
                             <tbody>
-                              {[
-                                ["Aderência", project.stages?.adherence],
-                                ["Homologação Conversão", project.stages?.conversion],
-                                ["Implementação", project.stages?.implementation],
-                                ["Pós-Implantação", project.stages?.post],
-                              ].map(([label, stageData]: [string, any], sIdx) => {
-                                if (!stageData) return null;
+                              {getReportStages(project).map(([label, stageData], sIdx) => {
                                 return (
                                   <tr key={sIdx} className="border-b border-border/40 last:border-0 hover:bg-muted/30">
                                     <td className="py-2 px-3 font-bold text-foreground">{label}</td>
@@ -330,6 +380,15 @@ export const ImplementerPhase1Fichas: React.FC<ImplementerPhase1FichasProps> = (
           })}
         </div>
       )}
+      <ReportListPagination
+        anchorId={LIST_ID}
+        currentPage={pagination.currentPage}
+        itemLabel="fichas detalhadas"
+        onPageChange={pagination.setCurrentPage}
+        pageSize={pagination.pageSize}
+        totalItems={details.length}
+        totalPages={pagination.totalPages}
+      />
     </div>
   );
 };

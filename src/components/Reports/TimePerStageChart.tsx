@@ -153,7 +153,7 @@ export function TimePerStageChart({ projects }: TimePerStageChartProps) {
   };
 
   return (
-    <Card className="col-span-1 border border-border bg-card/50 backdrop-blur-sm hover:shadow-md transition-all overflow-hidden group">
+    <Card className="group col-span-1 min-w-0 overflow-hidden border border-border bg-card/50 backdrop-blur-sm transition-all hover:shadow-md">
       <CardHeader className="p-3.5 pb-2 flex flex-row items-center justify-between">
         <div className="space-y-1">
            <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/70">Performance por Etapa</CardTitle>
@@ -163,7 +163,7 @@ export function TimePerStageChart({ projects }: TimePerStageChartProps) {
             <TrendingUp className="h-3.5 w-3.5 text-primary" />
         </div>
       </CardHeader>
-      <CardContent className="p-3.5 pt-0 pr-6 pl-2">
+      <CardContent className="px-1.5 pb-3.5 pt-0 sm:pl-2 sm:pr-6">
         <div className="h-[200px] w-full min-w-0">
           <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <BarChart data={data} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
@@ -217,7 +217,7 @@ export function TimePerStageChart({ projects }: TimePerStageChartProps) {
             </BarChart>
           </ResponsiveContainer>
         </div>
-        <div className="flex items-center justify-center gap-6 mt-4 p-2 bg-muted/20 rounded-lg border border-border">
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 rounded-lg border border-border bg-muted/20 p-2 sm:gap-6">
           <div className="flex items-center gap-2">
             <div className="h-3 w-3 rounded-full bg-blue-500/80" />
             <span className="text-[10px] font-bold uppercase tracking-wider opacity-60">Ideal</span>

@@ -23,9 +23,9 @@ function PhaseCard({ title, icon: Icon, metrics }: PhaseCardProps) {
   const avgDaysFormatted = metrics?.avgDays ? Number(metrics.avgDays.toFixed(1)) : 0;
 
   return (
-    <Card className="h-full border-border bg-card text-card-foreground shadow-sm transition-all hover:shadow-md">
+    <Card className="h-full min-w-0 border-border bg-card text-card-foreground shadow-sm transition-all hover:shadow-md">
       <CardHeader className="flex flex-row items-center justify-between pb-3 space-y-0 border-b border-border/50">
-        <CardTitle className="text-base font-semibold flex items-center gap-2 text-foreground">
+        <CardTitle className="flex min-w-0 items-center gap-2 break-words text-sm font-semibold text-foreground sm:text-base">
           <div className="p-2 rounded-md bg-primary/10 text-primary">
             <Icon className="h-5 w-5" />
           </div>
@@ -120,7 +120,7 @@ export function ImplementerPhaseMetrics({
   phase2Metrics,
 }: ImplementerPhaseMetricsProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="grid min-w-0 grid-cols-1 gap-4 md:grid-cols-2">
       <PhaseCard
         title="Fase 1: Treinamento & Acompanhamento"
         icon={GraduationCap}

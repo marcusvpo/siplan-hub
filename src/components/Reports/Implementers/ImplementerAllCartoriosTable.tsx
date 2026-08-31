@@ -3,6 +3,11 @@ import type { DetailedInvolvement } from "@/hooks/useImplementerReport";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { ReportListPagination } from "./ReportListPagination";
+import { useReportPagination } from "./useReportPagination";
+
+const PAGE_SIZE = 3;
+const LIST_ID = "implementer-all-cartorios-list";
 
 interface ImplementerAllCartoriosTableProps {
   involvements: DetailedInvolvement[];
@@ -13,8 +18,10 @@ export const ImplementerAllCartoriosTable: React.FC<ImplementerAllCartoriosTable
   involvements,
   implementerName,
 }) => {
+  const pagination = useReportPagination(involvements, PAGE_SIZE);
+
   return (
-    <Card className="border border-border/80 shadow-sm overflow-hidden">
+    <Card id={LIST_ID} className="min-w-0 scroll-mt-20 overflow-hidden border border-border/80 shadow-sm">
       <CardHeader className="py-4 bg-muted/30 border-b border-border">
         <CardTitle className="text-sm font-bold tracking-tight text-foreground">
           4. Visão Geral dos {involvements.length} Cartórios com Atuação de {implementerName} no Siplan HUB
@@ -23,8 +30,49 @@ export const ImplementerAllCartoriosTable: React.FC<ImplementerAllCartoriosTable
           Mapeamento completo de todos os {involvements.length} projetos da base que possuem registro de atuação de {implementerName} (incluindo Aderência, Homologações, Implantação Fase 1 e Pós-Implantação):
         </CardDescription>
       </CardHeader>
-      <CardContent className="p-0 overflow-x-auto">
-        <Table>
+      <CardContent className="p-0">
+        <div className="divide-y divide-border md:hidden" data-testid="cartorios-mobile-list">
+          {involvements.length === 0 ? (
+            <div className="px-4 py-8 text-center text-xs text-muted-foreground">
+              Nenhum cartório registrado com atuação para este profissional.
+            </div>
+          ) : (
+            pagination.pageItems.map((inv) => (
+              <article key={inv.project.id} className="min-w-0 space-y-3 p-4">
+                <div className="flex min-w-0 items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h4 className="break-words text-sm font-bold text-foreground">
+                      {inv.project.clientName}
+                    </h4>
+                    <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-semibold text-muted-foreground">
+                      <span>#{inv.project.ticketNumber}</span>
+                      <span>{inv.project.systemType}</span>
+                    </div>
+                  </div>
+                  {inv.isPhase1Lead && (
+                    <Badge
+                      variant="outline"
+                      className="shrink-0 border-green-500/30 bg-green-500/15 text-[9px] font-extrabold text-green-600"
+                    >
+                      Lead F1
+                    </Badge>
+                  )}
+                </div>
+                <div className="rounded-lg bg-muted/30 p-3">
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Etapas de atuação
+                  </span>
+                  <p className="mt-1 break-words text-xs font-medium leading-relaxed text-foreground/90">
+                    {inv.involvedStagesText}
+                  </p>
+                </div>
+              </article>
+            ))
+          )}
+        </div>
+
+        <div className="hidden md:block">
+          <Table>
           <TableHeader className="bg-slate-900 text-slate-100">
             <TableRow className="hover:bg-slate-900 border-slate-800">
               <TableHead className="text-slate-100 font-bold text-xs">Cartório / Cliente</TableHead>
@@ -42,7 +90,7 @@ export const ImplementerAllCartoriosTable: React.FC<ImplementerAllCartoriosTable
                 </TableCell>
               </TableRow>
             ) : (
-              involvements.map((inv) => (
+              pagination.pageItems.map((inv) => (
                 <TableRow key={inv.project.id} className="hover:bg-muted/40 transition-colors border-b border-border/60">
                   <TableCell className="font-bold text-xs text-foreground">
                     {inv.project.clientName}
@@ -74,7 +122,17 @@ export const ImplementerAllCartoriosTable: React.FC<ImplementerAllCartoriosTable
               ))
             )}
           </TableBody>
-        </Table>
+          </Table>
+        </div>
+        <ReportListPagination
+          anchorId={LIST_ID}
+          currentPage={pagination.currentPage}
+          itemLabel="cartórios com atuação"
+          onPageChange={pagination.setCurrentPage}
+          pageSize={pagination.pageSize}
+          totalItems={involvements.length}
+          totalPages={pagination.totalPages}
+        />
       </CardContent>
     </Card>
   );

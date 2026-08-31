@@ -49,7 +49,7 @@ export function ProjectSelector({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-[350px] justify-between shadow-xl bg-card/50 backdrop-blur-md border-primary/10 hover:border-primary/30 hover:bg-accent/50 transition-all rounded-xl h-10 px-4 group"
+          className="group h-11 w-full min-w-0 justify-between rounded-xl border-primary/10 bg-card/50 px-3 shadow-xl backdrop-blur-md transition-all hover:border-primary/30 hover:bg-accent/50 sm:h-10 sm:w-[350px] sm:px-4"
         >
           {selectedProject ? (
             <span className="truncate font-black text-xs uppercase tracking-tight">
@@ -63,7 +63,7 @@ export function ProjectSelector({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-30 group-hover:opacity-100 transition-opacity" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[350px] p-0 border-primary/10 bg-card/95 backdrop-blur-xl shadow-2xl rounded-xl overflow-hidden" align="end">
+      <PopoverContent className="w-[calc(100vw-1rem)] max-w-[350px] overflow-hidden rounded-xl border-primary/10 bg-card/95 p-0 shadow-2xl backdrop-blur-xl" align="end">
         <Command className="bg-transparent">
           <CommandInput placeholder="Buscar por cliente ou sistema..." className="border-none focus:ring-0 text-xs font-bold uppercase placeholder:text-muted-foreground/40 h-11" />
           <CommandList className="max-h-[300px] scrollbar-thin">

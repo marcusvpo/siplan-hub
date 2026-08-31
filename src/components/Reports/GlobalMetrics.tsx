@@ -89,7 +89,7 @@ export function GlobalMetrics({ projects }: GlobalMetricsProps) {
   const bottleneck = stageStats[0];
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid min-w-0 grid-cols-2 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-4">
       {/* 1. TEMPO MÉDIO TOTAL */}
       <Dialog>
         <DialogTrigger asChild>
@@ -116,7 +116,7 @@ export function GlobalMetrics({ projects }: GlobalMetricsProps) {
             </CardContent>
           </Card>
         </DialogTrigger>
-        <DialogContent className="max-w-2xl bg-card/95 backdrop-blur-xl border-primary/10 shadow-2xl rounded-2xl">
+        <DialogContent className="max-h-[92dvh] w-[calc(100vw-1rem)] max-w-2xl overflow-x-hidden overflow-y-auto rounded-2xl border-primary/10 bg-card/95 p-4 shadow-2xl backdrop-blur-xl sm:p-6">
           <DialogHeader>
             <DialogTitle className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2">
               <Clock className="h-4 w-4" /> Detalhamento de Performance
@@ -125,15 +125,15 @@ export function GlobalMetrics({ projects }: GlobalMetricsProps) {
               Projetos concluídos e suas respectivas durações em dias.
             </DialogDescription>
           </DialogHeader>
-          <ScrollArea className="h-[400px] mt-4 pr-4">
+          <ScrollArea className="mt-4 h-[min(400px,65dvh)] pr-2 sm:pr-4">
             <div className="space-y-3">
               {completedProjectsList.map((p) => (
-                <div key={p.id} className="flex items-center justify-between p-4 rounded-xl bg-muted/20 border border-primary/5 hover:border-primary/20 transition-all group">
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-xs font-black uppercase truncate max-w-[300px]">{p.clientName}</span>
+                <div key={p.id} className="group flex min-w-0 flex-col gap-2 rounded-xl border border-primary/5 bg-muted/20 p-3 transition-all hover:border-primary/20 sm:flex-row sm:items-center sm:justify-between sm:p-4">
+                  <div className="flex min-w-0 flex-col gap-0.5">
+                    <span className="break-words text-xs font-black uppercase sm:max-w-[300px] sm:truncate">{p.clientName}</span>
                     <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-60 italic">{p.systemType}</span>
                   </div>
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center justify-between gap-4 sm:justify-end">
                     <div className="flex flex-col items-end">
                       <span className="text-sm font-black text-blue-600">{p.durationDays} dias</span>
                       <span className="text-[8px] font-black uppercase text-muted-foreground/40">Tempo Total</span>
@@ -180,14 +180,14 @@ export function GlobalMetrics({ projects }: GlobalMetricsProps) {
             </CardContent>
           </Card>
         </DialogTrigger>
-        <DialogContent className="max-w-md bg-card/95 backdrop-blur-xl border-emerald-500/10 shadow-2xl rounded-2xl">
+        <DialogContent className="max-h-[92dvh] w-[calc(100vw-1rem)] max-w-md overflow-x-hidden overflow-y-auto rounded-2xl border-emerald-500/10 bg-card/95 p-4 shadow-2xl backdrop-blur-xl sm:p-6">
           <DialogHeader>
             <DialogTitle className="text-sm font-black uppercase tracking-widest text-emerald-600 flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4" /> Visão de Entregas
             </DialogTitle>
           </DialogHeader>
           <div className="mt-6 space-y-6">
-             <div className="flex items-center justify-between p-6 rounded-2xl bg-emerald-500/5 dark:bg-transparent border border-emerald-500/10 dark:border-emerald-500/30 relative overflow-hidden">
+             <div className="relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-emerald-500/10 bg-emerald-500/5 p-4 dark:border-emerald-500/30 dark:bg-transparent min-[380px]:flex-row min-[380px]:items-center min-[380px]:justify-between sm:p-6">
                 <div className="absolute top-0 right-0 p-4 opacity-5">
                    <CheckCircle2 className="h-20 w-20" />
                 </div>
@@ -195,7 +195,7 @@ export function GlobalMetrics({ projects }: GlobalMetricsProps) {
                    <div className="text-4xl font-black text-emerald-600">{completionRate}%</div>
                    <div className="text-[10px] font-black uppercase tracking-widest text-emerald-600/60">Taxa de Sucesso</div>
                 </div>
-                <div className="text-right space-y-1">
+                <div className="space-y-1 min-[380px]:text-right">
                    <div className="text-sm font-black">{completedProjects} Projetos</div>
                    <div className="text-[9px] font-bold text-muted-foreground uppercase">Concluídos na Main</div>
                 </div>
@@ -210,7 +210,7 @@ export function GlobalMetrics({ projects }: GlobalMetricsProps) {
                    <div className="h-full bg-emerald-500" style={{ width: `${completionRate}%` }} />
                    <div className="h-full bg-blue-500/40" style={{ width: `${100 - completionRate}%` }} />
                 </div>
-                <div className="flex gap-4 mt-2">
+                <div className="mt-2 flex flex-wrap gap-3 sm:gap-4">
                    <div className="flex items-center gap-1.5">
                       <div className="h-2 w-2 rounded-full bg-emerald-500" />
                       <span className="text-[9px] font-bold uppercase text-muted-foreground">Entregues ({completedProjects})</span>
@@ -261,13 +261,13 @@ export function GlobalMetrics({ projects }: GlobalMetricsProps) {
             </CardContent>
           </Card>
         </DialogTrigger>
-        <DialogContent className="max-w-2xl bg-card/95 backdrop-blur-xl border-blue-500/10 shadow-2xl rounded-2xl">
+        <DialogContent className="max-h-[92dvh] w-[calc(100vw-1rem)] max-w-2xl overflow-x-hidden overflow-y-auto rounded-2xl border-blue-500/10 bg-card/95 p-4 shadow-2xl backdrop-blur-xl sm:p-6">
           <DialogHeader>
             <DialogTitle className="text-sm font-black uppercase tracking-widest text-blue-600 flex items-center gap-2">
               <TrendingUp className="h-4 w-4" /> Controle de Fluxo
             </DialogTitle>
           </DialogHeader>
-          <ScrollArea className="h-[450px] mt-4 pr-4">
+          <ScrollArea className="mt-4 h-[min(450px,65dvh)] pr-2 sm:pr-4">
             <div className="space-y-6">
               {blockedProjects.length > 0 && (
                 <div className="space-y-3">
@@ -275,8 +275,8 @@ export function GlobalMetrics({ projects }: GlobalMetricsProps) {
                     <AlertTriangle className="h-3 w-3" /> Projetos Bloqueados ({blockedProjects.length})
                   </h4>
                   {blockedProjects.map(p => (
-                    <div key={p.id} className="flex items-center justify-between p-3 rounded-lg bg-red-500/5 dark:bg-transparent border border-red-500/10 dark:border-red-500/30">
-                      <span className="text-[11px] font-black uppercase max-w-[300px] truncate">{p.clientName}</span>
+                    <div key={p.id} className="flex min-w-0 flex-col items-start gap-2 rounded-lg border border-red-500/10 bg-red-500/5 p-3 dark:border-red-500/30 dark:bg-transparent min-[380px]:flex-row min-[380px]:items-center min-[380px]:justify-between">
+                      <span className="break-words text-[11px] font-black uppercase min-[380px]:max-w-[300px] min-[380px]:truncate">{p.clientName}</span>
                       <Badge variant="destructive" className="text-[8px] h-4 font-black uppercase tracking-tighter">Impedido</Badge>
                     </div>
                   ))}
@@ -288,8 +288,8 @@ export function GlobalMetrics({ projects }: GlobalMetricsProps) {
                   <TrendingUp className="h-3 w-3" /> Em Andamento ({inProgressProjects.length})
                 </h4>
                 {inProgressProjects.map(p => (
-                  <div key={p.id} className="flex items-center justify-between p-3 rounded-lg bg-blue-500/5 dark:bg-transparent border border-blue-500/10 dark:border-blue-500/30">
-                    <span className="text-[11px] font-black uppercase max-w-[300px] truncate">{p.clientName}</span>
+                  <div key={p.id} className="flex min-w-0 flex-col items-start gap-2 rounded-lg border border-blue-500/10 bg-blue-500/5 p-3 dark:border-blue-500/30 dark:bg-transparent min-[380px]:flex-row min-[380px]:items-center min-[380px]:justify-between">
+                    <span className="break-words text-[11px] font-black uppercase min-[380px]:max-w-[300px] min-[380px]:truncate">{p.clientName}</span>
                     <Badge variant="outline" className="text-[8px] h-4 font-black uppercase tracking-tighter border-blue-500/30 text-blue-600">Ativo</Badge>
                   </div>
                 ))}
@@ -330,7 +330,7 @@ export function GlobalMetrics({ projects }: GlobalMetricsProps) {
             </CardContent>
           </Card>
         </DialogTrigger>
-        <DialogContent className="max-w-md bg-card/95 backdrop-blur-xl border-destructive/10 shadow-2xl rounded-2xl">
+        <DialogContent className="max-h-[92dvh] w-[calc(100vw-1rem)] max-w-md overflow-x-hidden overflow-y-auto rounded-2xl border-destructive/10 bg-card/95 p-4 shadow-2xl backdrop-blur-xl sm:p-6">
           <DialogHeader>
             <DialogTitle className="text-sm font-black uppercase tracking-widest text-destructive flex items-center gap-2">
               <AlertTriangle className="h-4 w-4" /> Análise de Retenção

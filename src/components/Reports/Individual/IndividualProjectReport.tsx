@@ -91,11 +91,11 @@ export function IndividualProjectReport({
 
   if (!selectedProject) {
     return (
-      <div className="flex flex-col items-center justify-center p-12 text-center border-2 border-dashed rounded-lg">
+      <div className="flex min-w-0 flex-col items-center justify-center rounded-lg border-2 border-dashed p-5 text-center sm:p-12">
         <h3 className="text-lg font-semibold text-muted-foreground">
           Selecione um projeto para começar
         </h3>
-        <div className="mt-4">
+        <div className="mt-4 w-full sm:w-auto">
           <ProjectSelector
             projects={projects}
             selectedProjectId={selectedProjectId}
@@ -110,9 +110,9 @@ export function IndividualProjectReport({
   const p1End = selectedProject.stages.implementation.phase1.endDate;
 
   return (
-    <div className="space-y-4 animate-in slide-in-from-bottom duration-500">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-bold tracking-tight text-primary">
+    <div className="min-w-0 space-y-4 animate-in slide-in-from-bottom duration-500">
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h3 className="min-w-0 break-words text-base font-bold tracking-tight text-primary sm:text-lg">
           Análise Detalhada: {selectedProject.clientName}
         </h3>
         <ProjectSelector
@@ -124,13 +124,13 @@ export function IndividualProjectReport({
 
       <ProjectHeaderStats project={selectedProject} />
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid min-w-0 gap-4 md:grid-cols-3">
         <StageAnalysisTimeline
           project={selectedProject}
           allProjects={projects}
         />
 
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           <Card className="bg-card/50 backdrop-blur-sm border border-border shadow-md rounded-xl overflow-hidden group">
             <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
             <CardHeader className="p-3.5 pb-2">
@@ -187,24 +187,24 @@ export function IndividualProjectReport({
               </CardTitle>
             </CardHeader>
             <CardContent className="p-3.5 pt-3 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1 group/spec">
+              <div className="grid min-w-0 grid-cols-2 gap-3 sm:gap-4">
+                <div className="group/spec min-w-0 space-y-1">
                   <div className="flex items-center gap-1.5 text-[9px] font-bold text-muted-foreground/60 uppercase tracking-wider">
                     <Monitor className="h-3 w-3" /> Estações
                   </div>
                   <p
-                    className="text-xs font-black text-foreground truncate pl-1 border-l-2 border-emerald-500/30 group-hover/spec:border-emerald-500 transition-colors"
+                    className="break-words border-l-2 border-emerald-500/30 pl-1 text-xs font-black text-foreground transition-colors group-hover/spec:border-emerald-500 sm:truncate"
                     title={selectedProject.stages.infra.workstationsStatus || "N/A"}
                   >
                     {selectedProject.stages.infra.workstationsStatus || "-"}
                   </p>
                 </div>
-                <div className="space-y-1 group/spec">
+                <div className="group/spec min-w-0 space-y-1">
                   <div className="flex items-center gap-1.5 text-[9px] font-bold text-muted-foreground/60 uppercase tracking-wider">
                     <Server className="h-3 w-3" /> Servidor
                   </div>
                   <p
-                    className="text-xs font-black text-foreground truncate pl-1 border-l-2 border-blue-500/30 group-hover/spec:border-blue-500 transition-colors"
+                    className="break-words border-l-2 border-blue-500/30 pl-1 text-xs font-black text-foreground transition-colors group-hover/spec:border-blue-500 sm:truncate"
                     title={selectedProject.stages.infra.serverStatus || "N/A"}
                   >
                     {selectedProject.stages.infra.serverStatus || "-"}

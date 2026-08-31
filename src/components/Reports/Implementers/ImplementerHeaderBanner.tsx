@@ -11,11 +11,11 @@ export const ImplementerHeaderBanner: React.FC<ImplementerHeaderBannerProps> = (
   totalBaseProjects,
 }) => {
   return (
-    <div className="bg-card/60 backdrop-blur-md border border-border/80 rounded-xl p-5 md:p-6 shadow-sm relative overflow-hidden transition-all hover:border-primary/30">
+    <div className="relative min-w-0 overflow-hidden rounded-xl border border-border/80 bg-card/60 p-4 shadow-sm backdrop-blur-md transition-all hover:border-primary/30 sm:p-5 md:p-6">
       <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary" />
       <div className="pl-3 space-y-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-xl md:text-2xl font-black tracking-tight text-foreground">
+          <h2 className="min-w-0 break-words text-lg font-black tracking-tight text-foreground sm:text-xl md:text-2xl">
             Relatório Completo de Implantações —{" "}
             <span className="text-primary">{implementer.name}</span>
           </h2>
