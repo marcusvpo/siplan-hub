@@ -59,6 +59,7 @@ const SOURCE_OPTIONS = [
 ];
 const PIE_COLORS = ["#7c3aed", "#2563eb", "#e11d48", "#0d9488", "#d97706", "#64748b"];
 const TICKETS_PER_PAGE = 5;
+type AttendanceBiTab = "overview" | "team" | "tickets";
 
 export default function SdAttendanceBi() {
   const shouldReduceMotion = useReducedMotion();
@@ -70,6 +71,7 @@ export default function SdAttendanceBi() {
   const [sources, setSources] = useState<string[]>([]);
   const [natures, setNatures] = useState<string[]>([]);
   const [ticketsPage, setTicketsPage] = useState(1);
+  const [activeTab, setActiveTab] = useState<AttendanceBiTab>("overview");
 
   const query = useSdAttendanceBi({ startDate, endDate, userIds, groups, sources, natures });
   const data = query.data;
@@ -171,6 +173,9 @@ export default function SdAttendanceBi() {
     setSources([]);
     setNatures([]);
   };
+  const handleTabChange = (value: string) => {
+    if (value === "overview" || value === "team" || value === "tickets") setActiveTab(value);
+  };
 
   return (
     <div className="mx-auto h-full w-full max-w-7xl space-y-2 overflow-y-auto px-1 pb-5 pt-1 md:px-3">
@@ -238,12 +243,15 @@ export default function SdAttendanceBi() {
             <MetricCard label="Tempo médio/chamado" value={formatMinutes(metrics.average_ticket_minutes)} detail="soma das interações por chamado" icon={<Headphones />} />
           </div>
 
-          <Tabs defaultValue="overview" className="space-y-2">
-            <TabsList className="grid h-9 w-full grid-cols-3 p-0.5 sm:w-[520px]">
-              <TabsTrigger value="overview" className="h-8 gap-1.5 text-[11px]"><BarChart3 className="h-3.5 w-3.5" /> Visão geral</TabsTrigger>
-              <TabsTrigger value="team" className="h-8 gap-1.5 text-[11px]"><UsersRound className="h-3.5 w-3.5" /> Equipes e analistas</TabsTrigger>
-              <TabsTrigger value="tickets" className="h-8 gap-1.5 text-[11px]"><TicketCheck className="h-3.5 w-3.5" /> Chamados</TabsTrigger>
-            </TabsList>
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-2">
+            <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
+              <TabsList className="grid h-9 w-full grid-cols-3 p-0.5 sm:w-[520px]">
+                <TabsTrigger value="overview" aria-label="Visão geral" className="h-8 gap-1.5 px-1 text-[11px] sm:px-2.5"><BarChart3 className="h-3.5 w-3.5" /><span className="sm:hidden">Geral</span><span className="hidden sm:inline">Visão geral</span></TabsTrigger>
+                <TabsTrigger value="team" aria-label="Equipes e analistas" className="h-8 gap-1.5 px-1 text-[11px] sm:px-2.5"><UsersRound className="h-3.5 w-3.5" /><span className="sm:hidden">Equipe</span><span className="hidden sm:inline">Equipes e analistas</span></TabsTrigger>
+                <TabsTrigger value="tickets" aria-label="Chamados" className="h-8 gap-1.5 px-1 text-[11px] sm:px-2.5"><TicketCheck className="h-3.5 w-3.5" /> Chamados</TabsTrigger>
+              </TabsList>
+              {query.isFetching && !query.isLoading && <span role="status" aria-live="polite" className="flex items-center gap-1 text-[10px] text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" /> Atualizando dados</span>}
+            </div>
 
             <TabsContent value="overview" className="mt-0 space-y-2">
               <Card>

@@ -4520,18 +4520,18 @@
     "semantic_hash": ""
   },
   "src/hooks/useSdAttendanceBi.ts": {
-    "mtime": 1787950180.4496336,
-    "ast_hash": "a931dd08f066cff156c6b7f214f8cde9",
+    "mtime": 1788182299.1386847,
+    "ast_hash": "77ad546a735d8a4b3057619e3fdd2854",
     "semantic_hash": ""
   },
   "src/pages/sd/SdAttendanceBi.tsx": {
-    "mtime": 1788181560.4383695,
-    "ast_hash": "de35a97c52b5bf57661d588e02d660a7",
+    "mtime": 1788182299.1406856,
+    "ast_hash": "5d22cc29e761fc15dd428a8265fbf150",
     "semantic_hash": ""
   },
   "src/test/sd-attendance-bi.test.ts": {
-    "mtime": 1788181569.8550453,
-    "ast_hash": "7c5a57bb0c90b57d72aa5a27232740bd",
+    "mtime": 1788182311.3847618,
+    "ast_hash": "26b3d733c851d88c9edde72f9e805860",
     "semantic_hash": ""
   },
   "supabase/migrations/20260828235955_sd_attendance_bi.sql": {
@@ -4547,6 +4547,11 @@
   "src/test/contextual-header-action.test.ts": {
     "mtime": 1788180066.7955337,
     "ast_hash": "6a468e03e8940bae639ba68754a58f17",
+    "semantic_hash": ""
+  },
+  "src/test/sd-attendance-bi-interactions.test.tsx": {
+    "mtime": 1788182401.3911967,
+    "ast_hash": "9b9708b0e885102cc773ce29f29bddd0",
     "semantic_hash": ""
   }
 }
