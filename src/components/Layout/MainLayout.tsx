@@ -6,6 +6,10 @@ import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
+import {
+  PwaInstallButton,
+  PwaInstallDialog,
+} from "@/components/pwa/PwaInstallControls";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { FloatingCopilot } from "@/components/Copilot/FloatingCopilot";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -77,6 +81,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               )}
+              <PwaInstallButton />
               <NotificationBell />
               <ModeToggle />
             </div>
@@ -89,6 +94,7 @@ export function MainLayout({ children }: MainLayoutProps) {
 
         {/* Botao flutuante do Copiloto (so aparece para usuarios habilitados) */}
         <FloatingCopilot />
+        <PwaInstallDialog />
       </div>
     </SidebarProvider>
   );
