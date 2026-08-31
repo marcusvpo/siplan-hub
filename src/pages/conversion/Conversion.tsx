@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import type { ElementType } from "react";
 import { normalizeText } from "@/lib/utils";
 import {
   Database,
@@ -64,6 +65,7 @@ import { ConversionPostDrawer } from "@/components/conversion/ConversionPostDraw
 import { useConversionEngines } from "@/hooks/useConversionEngines";
 import { useConversionIssues } from "@/hooks/useConversionIssues";
 import { ConversionIssuesTab } from "@/components/conversion/ConversionIssuesTab";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Status labels and colors
 const STATUS_LABELS: Record<string, string> = {
@@ -86,6 +88,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function Conversion() {
   const { user, team } = useAuth();
+  const isMobile = useIsMobile();
   const isConversionTeam = team === "conversion";
 
   // Permissões do perfil (ortogonais ao gate de time acima)
@@ -240,6 +243,7 @@ export default function Conversion() {
     return (
       <Card
         key={item.id}
+        data-testid="conversion-queue-card"
         className={cn(
           "transition-all duration-300 border-l-[5px] hover:shadow-md bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 relative group",
           statusVisual.borderColor
@@ -559,7 +563,10 @@ export default function Conversion() {
 
   // KPI Cards
   const renderKPIs = () => (
-    <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+    <div
+      className="mb-4 grid min-w-0 grid-cols-2 gap-2 sm:mb-6 sm:grid-cols-3 sm:gap-3 lg:grid-cols-5"
+      data-testid="conversion-activities-kpis"
+    >
       <Card
         className="bg-gradient-to-br from-primary/5 to-primary/10 dark:from-primary/10 dark:to-primary/5 border-primary/20 dark:border-primary/30 cursor-pointer hover:shadow-md transition-shadow"
         onClick={() => openKpiModal("Minha Fila", "primary", myQueue)}
@@ -628,7 +635,7 @@ export default function Conversion() {
   );
 
   // Configuração visual de status da fila
-  const queueStatusConfig: Record<string, { icon: any; bgColor: string; borderColor: string }> = {
+  const queueStatusConfig: Record<string, { icon: ElementType; bgColor: string; borderColor: string }> = {
     pending: {
       icon: Clock,
       bgColor: "bg-slate-50 text-slate-500 border-slate-200 dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-800",
@@ -677,19 +684,20 @@ export default function Conversion() {
     return (
       <Card
         key={item.id}
+        data-testid="conversion-queue-card"
         className={cn(
-          "transition-all duration-300 border-l-[6px] hover:shadow-md bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800/80 relative overflow-hidden",
+          "relative min-w-0 overflow-hidden border-l-[6px] border-slate-200 bg-white transition-all duration-300 hover:shadow-md dark:border-slate-800/80 dark:bg-slate-950",
           statusVisual.borderColor
         )}
       >
-        <CardContent className={cn("p-5", isKanban ? "py-4 px-3.5 space-y-3" : "")}>
+        <CardContent className={cn("min-w-0 p-4 sm:p-5", isKanban ? "space-y-3 px-3.5 py-4" : "")}>
           {isKanban ? (
             // DESIGN KANBAN COMPACTO
             <div className="flex flex-col gap-3">
               {/* Linha 1: Cliente e Status */}
               <div className="flex items-start justify-between gap-2">
                 <div className="space-y-0.5 min-w-0 flex-1">
-                  <h4 className="font-bold text-sm text-slate-850 dark:text-slate-200 leading-tight tracking-tight truncate hover:text-primary transition-colors duration-200" title={item.clientName}>
+                  <h4 className="break-words text-sm font-bold leading-tight tracking-tight text-slate-850 transition-colors duration-200 hover:text-primary dark:text-slate-200 md:truncate" title={item.clientName}>
                     {item.clientName}
                   </h4>
                   <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground flex-wrap font-medium">
@@ -1263,7 +1271,7 @@ export default function Conversion() {
           "transition-all duration-300 border-l-4 hover:-translate-y-0.5 hover:shadow-md border-l-indigo-500 bg-gradient-to-br from-indigo-50/20 via-transparent to-transparent dark:from-indigo-950/10 dark:via-transparent dark:to-transparent"
         )}
       >
-        <CardContent className="p-5">
+        <CardContent className="min-w-0 p-4 sm:p-5">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             {/* Left Column: Info & Indicators */}
             <div className="flex items-start gap-4 min-w-0 flex-1">
@@ -1278,7 +1286,7 @@ export default function Conversion() {
                   <span className="text-[10px] font-bold tracking-wider uppercase bg-indigo-100 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded">
                     Esteira de Homologação
                   </span>
-                  <h3 className="font-bold text-lg text-slate-900 dark:text-slate-100 truncate">
+                  <h3 className="min-w-0 break-words text-base font-bold text-slate-900 dark:text-slate-100 sm:text-lg">
                     {item.clientName}
                   </h3>
                   <Badge
@@ -1429,30 +1437,34 @@ export default function Conversion() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-br from-background to-muted/30 overflow-hidden">
+    <div
+      className="min-h-0 min-w-0 overflow-x-hidden bg-gradient-to-br from-background to-muted/30 md:flex md:h-screen md:flex-col md:overflow-hidden"
+      data-testid="conversion-activities-page"
+      data-viewport={isMobile ? "mobile" : "desktop"}
+    >
       {/* Fixed Header Area */}
-      <div className="flex-shrink-0 p-6 pb-0 space-y-4">
+      <div className="min-w-0 space-y-4 p-4 pb-0 sm:p-6 sm:pb-0 md:flex-shrink-0">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <Database className="h-6 w-6 text-primary" />
+        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex min-w-0 items-start gap-3">
+            <div className="shrink-0 rounded-lg bg-primary/10 p-2">
+              <Database className="h-5 w-5 text-primary sm:h-6 sm:w-6" />
             </div>
-            <div>
-              <h1 className="text-2xl font-bold">Gestão de Atividades</h1>
-              <p className="text-muted-foreground">
+            <div className="min-w-0">
+              <h1 className="break-words text-xl font-bold sm:text-2xl">Gestão de Atividades</h1>
+              <p className="text-xs text-muted-foreground sm:text-base">
                 Fila de conversão e homologação
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="grid w-full min-w-0 grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:justify-end">
             {/* Minha Fila Button - Only for conversion team */}
             {isConversionTeam && (
               <Button
                 onClick={() => setActiveTab("my-queue")}
                 variant={activeTab === "my-queue" ? "default" : "outline"}
                 className={cn(
-                  "gap-2 relative",
+                  "relative col-span-2 w-full justify-center gap-2 sm:col-span-1 sm:w-auto",
                   activeTab === "my-queue"
                     ? "bg-primary hover:bg-primary/90 text-primary-foreground"
                     : "border-primary/30 text-primary hover:bg-primary/5",
@@ -1487,11 +1499,11 @@ export default function Conversion() {
                 )}
               </Button>
             )}
-            <Button onClick={() => setHelpOpen(true)} variant="outline" size="sm" className="border-primary/20 text-primary hover:bg-primary/5 gap-1.5">
+            <Button onClick={() => setHelpOpen(true)} variant="outline" size="sm" className="w-full gap-1.5 border-primary/20 text-primary hover:bg-primary/5 sm:w-auto">
               <HelpCircle className="h-4 w-4" />
               Ajuda / Tutorial
             </Button>
-            <Button onClick={refetch} variant="outline" size="sm">
+            <Button onClick={refetch} variant="outline" size="sm" className="w-full sm:w-auto">
               <RefreshCw className="h-4 w-4 mr-2" />
               Atualizar
             </Button>
@@ -1502,10 +1514,14 @@ export default function Conversion() {
         {renderKPIs()}
 
         {/* Search and Filters */}
-        <div className="flex items-center gap-4">
-          <div className="relative flex-1 max-w-sm">
+        <div
+          className="flex min-w-0 flex-col gap-2 rounded-xl border bg-muted/20 p-3 sm:flex-row sm:items-center sm:gap-3"
+          data-testid="conversion-activities-filters"
+        >
+          <div className="relative min-w-0 flex-1 sm:max-w-sm">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
+              aria-label="Buscar atividades"
               placeholder="Buscar cliente ou ticket..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -1514,7 +1530,7 @@ export default function Conversion() {
           </div>
           {activeTab !== "general" && (
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger aria-label="Filtrar atividades por status" className="w-full min-w-0 sm:w-[180px]">
                 <Filter className="h-4 w-4 mr-2" />
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
@@ -1531,7 +1547,7 @@ export default function Conversion() {
           )}
 
           <Select value={systemFilter} onValueChange={setSystemFilter}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger aria-label="Filtrar atividades por sistema" className="w-full min-w-0 sm:w-[180px]">
               <Filter className="h-4 w-4 mr-2" />
               <SelectValue placeholder="Sistema" />
             </SelectTrigger>
@@ -1551,10 +1567,10 @@ export default function Conversion() {
       <Tabs
         value={activeTab}
         onValueChange={setActiveTab}
-        className="flex-1 flex flex-col overflow-hidden px-6 pt-4"
+        className="min-w-0 px-4 pt-3 md:flex md:flex-1 md:flex-col md:overflow-hidden md:px-6 md:pt-4"
       >
-        <TabsList className="mb-4 flex-shrink-0">
-          <TabsTrigger value="general" className="gap-2 relative">
+        <TabsList className="mb-3 grid h-auto w-full min-w-0 grid-cols-3 gap-1 p-1 md:mb-4 md:inline-flex md:w-auto md:flex-shrink-0">
+          <TabsTrigger value="general" className="relative min-w-0 gap-1 px-1.5 text-[10px] sm:gap-2 sm:px-3 sm:text-sm">
             <Users className="h-4 w-4" />
             Fila Geral
             {generalQueue.length > 0 && (
@@ -1571,7 +1587,7 @@ export default function Conversion() {
               </span>
             )}
           </TabsTrigger>
-          <TabsTrigger value="homologations" className="gap-2 relative">
+          <TabsTrigger value="homologations" className="relative min-w-0 gap-1 px-1.5 text-[10px] sm:gap-2 sm:px-3 sm:text-sm">
             <CheckCircle2 className="h-4 w-4" />
             Homologações
             {homologationQueue.length > 0 && (
@@ -1588,7 +1604,7 @@ export default function Conversion() {
               </span>
             )}
           </TabsTrigger>
-          <TabsTrigger value="issues" className="gap-2 relative">
+          <TabsTrigger value="issues" className="relative min-w-0 gap-1 px-1.5 text-[10px] sm:gap-2 sm:px-3 sm:text-sm">
             <AlertCircle className="h-4 w-4" />
             Pendências
             {activeIssuesCount > 0 && (
@@ -1602,7 +1618,7 @@ export default function Conversion() {
         </TabsList>
 
         {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto pb-6 space-y-4">
+        <div className="min-w-0 space-y-4 pb-6 md:flex-1 md:overflow-y-auto">
           {/* My Queue Tab - Detailed View */}
           <TabsContent value="my-queue" className="mt-0">
             {loading ? (
@@ -1610,7 +1626,7 @@ export default function Conversion() {
                 Carregando...
               </div>
             ) : filterItems(myQueue).length === 0 ? (
-              <Card className="p-12 text-center border-2 border-dashed border-primary/20 bg-primary/5">
+              <Card className="border-2 border-dashed border-primary/20 bg-primary/5 p-6 text-center sm:p-12">
                 <Database className="h-12 w-12 mx-auto text-primary/40 mb-4" />
                 <h3 className="text-lg font-medium mb-2 text-primary">
                   Sua fila está vazia
@@ -1645,7 +1661,7 @@ export default function Conversion() {
 
           {/* General Queue Tab */}
           {/* General Queue Tab - Kanban Layout */}
-          <TabsContent value="general" className="mt-0 overflow-hidden flex-1 flex flex-col">
+          <TabsContent value="general" className="mt-0 min-w-0 md:flex md:flex-1 md:flex-col md:overflow-hidden">
             {loading ? (
               <div className="text-center py-12 text-muted-foreground flex-grow flex items-center justify-center min-h-[300px]">
                 <div className="space-y-2">
@@ -1654,7 +1670,7 @@ export default function Conversion() {
                 </div>
               </div>
             ) : (
-              <div className="space-y-6 pb-6 overflow-y-auto flex-1 pr-1 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
+              <div className="min-w-0 space-y-5 pb-6 md:flex-1 md:space-y-6 md:overflow-y-auto md:pr-1 md:scrollbar-thin md:scrollbar-thumb-slate-200 dark:md:scrollbar-thumb-slate-800" data-testid="conversion-mobile-kanban">
                 {/* 1. Pendentes Section */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-slate-800">
@@ -1668,14 +1684,14 @@ export default function Conversion() {
                       </Badge>
                     </div>
                   </div>
-                  <div className="flex gap-4 overflow-x-auto pb-3 pt-1 w-full scrollbar-thin scrollbar-thumb-slate-250 dark:scrollbar-thumb-slate-800">
+                  <div className="grid min-w-0 grid-cols-1 gap-3 pb-3 pt-1 md:flex md:w-full md:gap-4 md:overflow-x-auto md:scrollbar-thin md:scrollbar-thumb-slate-250 dark:md:scrollbar-thumb-slate-800" data-testid="conversion-kanban-lane">
                     {filterKanbanItems(queue.filter((i) => i.queueStatus === "pending")).length === 0 ? (
                       <div className="text-center py-6 text-muted-foreground text-xs bg-slate-50/30 dark:bg-slate-900/10 border border-dashed border-slate-200 dark:border-slate-800/50 rounded-lg w-full p-4 flex items-center justify-center min-h-[80px]">
                         Nenhuma demanda pendente
                       </div>
                     ) : (
                       filterKanbanItems(queue.filter((i) => i.queueStatus === "pending")).map((item) => (
-                        <div key={item.id} className="w-[380px] shrink-0">
+                        <div key={item.id} className="min-w-0 w-full md:w-[380px] md:shrink-0">
                           {renderQueueItem(item, !item.assignedTo, true)}
                         </div>
                       ))
@@ -1696,14 +1712,14 @@ export default function Conversion() {
                       </Badge>
                     </div>
                   </div>
-                  <div className="flex gap-4 overflow-x-auto pb-3 pt-1 w-full scrollbar-thin scrollbar-thumb-slate-250 dark:scrollbar-thumb-slate-800">
+                  <div className="grid min-w-0 grid-cols-1 gap-3 pb-3 pt-1 md:flex md:w-full md:gap-4 md:overflow-x-auto md:scrollbar-thin md:scrollbar-thumb-slate-250 dark:md:scrollbar-thumb-slate-800" data-testid="conversion-kanban-lane">
                     {filterKanbanItems(queue.filter((i) => i.queueStatus === "in_progress")).length === 0 ? (
                       <div className="text-center py-6 text-muted-foreground text-xs bg-slate-50/30 dark:bg-slate-900/10 border border-dashed border-slate-200 dark:border-slate-800/50 rounded-lg w-full p-4 flex items-center justify-center min-h-[80px]">
                         Nenhuma conversão em andamento
                       </div>
                     ) : (
                       filterKanbanItems(queue.filter((i) => i.queueStatus === "in_progress")).map((item) => (
-                        <div key={item.id} className="w-[380px] shrink-0">
+                        <div key={item.id} className="min-w-0 w-full md:w-[380px] md:shrink-0">
                           {renderQueueItem(item, !item.assignedTo, true)}
                         </div>
                       ))
@@ -1724,14 +1740,14 @@ export default function Conversion() {
                       </Badge>
                     </div>
                   </div>
-                  <div className="flex gap-4 overflow-x-auto pb-3 pt-1 w-full scrollbar-thin scrollbar-thumb-slate-250 dark:scrollbar-thumb-slate-800">
+                  <div className="grid min-w-0 grid-cols-1 gap-3 pb-3 pt-1 md:flex md:w-full md:gap-4 md:overflow-x-auto md:scrollbar-thin md:scrollbar-thumb-slate-250 dark:md:scrollbar-thumb-slate-800" data-testid="conversion-kanban-lane">
                     {filterKanbanItems(queue.filter((i) => i.queueStatus === "awaiting_homologation" || i.queueStatus === "homologation")).length === 0 ? (
                       <div className="text-center py-6 text-muted-foreground text-xs bg-slate-50/30 dark:bg-slate-900/10 border border-dashed border-slate-200 dark:border-slate-800/50 rounded-lg w-full p-4 flex items-center justify-center min-h-[80px]">
                         Nenhum projeto em homologação
                       </div>
                     ) : (
                       filterKanbanItems(queue.filter((i) => i.queueStatus === "awaiting_homologation" || i.queueStatus === "homologation")).map((item) => (
-                        <div key={item.id} className="w-[380px] shrink-0">
+                        <div key={item.id} className="min-w-0 w-full md:w-[380px] md:shrink-0">
                           {renderQueueItem(item, !item.assignedTo, true)}
                         </div>
                       ))
@@ -1752,14 +1768,14 @@ export default function Conversion() {
                       </Badge>
                     </div>
                   </div>
-                  <div className="flex gap-4 overflow-x-auto pb-3 pt-1 w-full scrollbar-thin scrollbar-thumb-slate-250 dark:scrollbar-thumb-slate-800">
+                  <div className="grid min-w-0 grid-cols-1 gap-3 pb-3 pt-1 md:flex md:w-full md:gap-4 md:overflow-x-auto md:scrollbar-thin md:scrollbar-thumb-slate-250 dark:md:scrollbar-thumb-slate-800" data-testid="conversion-kanban-lane">
                     {filterKanbanItems(queue.filter((i) => i.queueStatus === "homologation_issues")).length === 0 ? (
                       <div className="text-center py-6 text-muted-foreground text-xs bg-slate-50/30 dark:bg-slate-900/10 border border-dashed border-slate-200 dark:border-slate-800/50 rounded-lg w-full p-4 flex items-center justify-center min-h-[80px]">
                         Nenhum projeto com inconsistências
                       </div>
                     ) : (
                       filterKanbanItems(queue.filter((i) => i.queueStatus === "homologation_issues")).map((item) => (
-                        <div key={item.id} className="w-[380px] shrink-0">
+                        <div key={item.id} className="min-w-0 w-full md:w-[380px] md:shrink-0">
                           {renderQueueItem(item, !item.assignedTo, true)}
                         </div>
                       ))
@@ -1780,14 +1796,14 @@ export default function Conversion() {
                       </Badge>
                     </div>
                   </div>
-                  <div className="flex gap-4 overflow-x-auto pb-3 pt-1 w-full scrollbar-thin scrollbar-thumb-slate-250 dark:scrollbar-thumb-slate-800">
+                  <div className="grid min-w-0 grid-cols-1 gap-3 pb-3 pt-1 md:flex md:w-full md:gap-4 md:overflow-x-auto md:scrollbar-thin md:scrollbar-thumb-slate-250 dark:md:scrollbar-thumb-slate-800" data-testid="conversion-kanban-lane">
                     {filterKanbanItems(queue.filter((i) => i.queueStatus === "done")).length === 0 ? (
                       <div className="text-center py-6 text-muted-foreground text-xs bg-slate-50/30 dark:bg-slate-900/10 border border-dashed border-slate-200 dark:border-slate-800/50 rounded-lg w-full p-4 flex items-center justify-center min-h-[80px]">
                         Nenhuma conversão finalizada
                       </div>
                     ) : (
                       filterKanbanItems(queue.filter((i) => i.queueStatus === "done")).map((item) => (
-                        <div key={item.id} className="w-[380px] shrink-0">
+                        <div key={item.id} className="min-w-0 w-full md:w-[380px] md:shrink-0">
                           {renderQueueItem(item, !item.assignedTo, true)}
                         </div>
                       ))
@@ -1805,7 +1821,7 @@ export default function Conversion() {
                 Carregando...
               </div>
             ) : filterItems(homologationQueue).length === 0 ? (
-              <Card className="p-12 text-center border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/20 dark:bg-slate-900/10">
+              <Card className="border border-dashed border-slate-200 bg-slate-50/20 p-6 text-center dark:border-slate-800 dark:bg-slate-900/10 sm:p-12">
                 <CheckCircle2 className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
                 <h3 className="text-lg font-medium mb-2">
                   Nenhuma homologação na fila
@@ -1851,7 +1867,7 @@ export default function Conversion() {
         open={transferDialog.open}
         onOpenChange={(open) => setTransferDialog({ open })}
       >
-        <DialogContent>
+        <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] min-w-0 max-w-lg overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Transferir Projeto</DialogTitle>
             <DialogDescription>
@@ -1889,11 +1905,11 @@ export default function Conversion() {
               />
             </div>
           </div>
-          <DialogFooter className="sm:justify-between">
+          <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-between">
             {transferDialog.item && canDeleteConversion && (
               <Button
                 variant="ghost"
-                className="text-red-550 hover:text-red-650 hover:bg-red-50 dark:hover:bg-red-900/20 font-semibold"
+                className="w-full whitespace-normal text-red-550 hover:bg-red-50 hover:text-red-650 dark:hover:bg-red-900/20 sm:w-auto font-semibold"
                 onClick={() => {
                   if (!canDeleteConversion) return;
                   const isAssigned = !!transferDialog.item?.assignedTo;
@@ -1912,7 +1928,7 @@ export default function Conversion() {
                 {transferDialog.item?.assignedTo ? "Devolver para Pendentes" : "Remover da Fila"}
               </Button>
             )}
-            <div className="flex gap-2">
+            <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
               <Button
                 variant="outline"
                 onClick={() => setTransferDialog({ open: false })}
@@ -1938,7 +1954,7 @@ export default function Conversion() {
           if (!open) setSelectedImplantador("");
         }}
       >
-        <DialogContent>
+        <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] min-w-0 max-w-lg overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Enviar para Homologação</DialogTitle>
             <DialogDescription>
@@ -1972,9 +1988,10 @@ export default function Conversion() {
               </Select>
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex-col gap-2 sm:flex-row">
             <Button
               variant="outline"
+              className="w-full sm:w-auto"
               onClick={() => {
                 setHomologationDialog({ open: false });
                 setSelectedImplantador("");
@@ -1985,7 +2002,7 @@ export default function Conversion() {
             <Button
               onClick={handleSendToHomologation}
               disabled={!canExecuteConversion}
-              className="bg-primary hover:bg-primary/90"
+              className="w-full bg-primary hover:bg-primary/90 sm:w-auto"
             >
               Enviar para Homologação
             </Button>
@@ -2000,7 +2017,7 @@ export default function Conversion() {
           if (!open) setEngineDialog({ open: false });
         }}
       >
-        <DialogContent>
+        <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] min-w-0 max-w-lg overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Enviar para Criação do Conversor</DialogTitle>
             <DialogDescription>
@@ -2025,9 +2042,10 @@ export default function Conversion() {
               />
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex-col gap-2 sm:flex-row">
             <Button
               variant="outline"
+              className="w-full sm:w-auto"
               onClick={() => setEngineDialog({ open: false })}
             >
               Cancelar
@@ -2047,7 +2065,7 @@ export default function Conversion() {
                 }
               }}
               disabled={!canExecuteConversion}
-              className="bg-orange-600 hover:bg-orange-700"
+              className="w-full bg-orange-600 hover:bg-orange-700 sm:w-auto"
             >
               <Cog className="h-4 w-4 mr-2" />
               Enviar para Criação
@@ -2058,7 +2076,7 @@ export default function Conversion() {
 
       {/* KPI Detail Dialog */}
       <Dialog open={kpiModal.open} onOpenChange={(open) => !open && setKpiModal((p) => ({ ...p, open: false }))}>
-        <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
+        <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] min-w-0 max-w-2xl overflow-hidden p-4 sm:p-6 flex flex-col" data-testid="conversion-kpi-dialog">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <span>{kpiModal.title}</span>
@@ -2069,7 +2087,7 @@ export default function Conversion() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex-1 overflow-y-auto space-y-2 pr-1 mt-2">
+          <div className="mt-2 min-w-0 flex-1 space-y-2 overflow-y-auto pr-1">
             {kpiModal.items.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <CheckCircle2 className="h-10 w-10 text-muted-foreground/30 mb-3" />
@@ -2083,11 +2101,11 @@ export default function Conversion() {
                 return (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-muted/20 hover:bg-muted/40 transition-colors"
+                    className="flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/20 p-3 transition-colors hover:bg-muted/40 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-sm truncate">{item.clientName}</p>
-                      <div className="flex items-center gap-2 mt-0.5">
+                      <p className="break-words text-sm font-semibold sm:truncate">{item.clientName}</p>
+                      <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-2">
                         <span className="text-[10px] font-mono text-muted-foreground">#{item.ticketNumber}</span>
                         <span className="text-[10px] text-muted-foreground">{item.systemType}</span>
                       </div>
@@ -2098,7 +2116,7 @@ export default function Conversion() {
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2 sm:shrink-0">
                       <Badge
                         variant="outline"
                         className={cn("text-[10px] px-1.5 py-0", STATUS_COLORS[item.queueStatus] || "")}
@@ -2137,7 +2155,7 @@ export default function Conversion() {
 
       {/* Dialog: Tutorial / Ajuda da Esteira */}
       <Dialog open={helpOpen} onOpenChange={setHelpOpen}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] min-w-0 max-w-2xl overflow-y-auto p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle className="text-base font-bold flex items-center gap-2 text-primary border-b border-slate-100 dark:border-slate-800 pb-2">
               <Database className="h-5 w-5 text-primary animate-pulse" />

@@ -227,9 +227,9 @@ export function ConversionIssuesTab({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="min-w-0 space-y-4" data-testid="conversion-issues-tab">
       {/* Header controls */}
-      <div className="flex flex-col sm:flex-row gap-3 justify-between items-stretch sm:items-center bg-muted/40 p-4 rounded-xl border border-muted-foreground/10">
+      <div className="flex min-w-0 flex-col items-stretch justify-between gap-3 rounded-xl border border-muted-foreground/10 bg-muted/40 p-3 sm:flex-row sm:items-center sm:p-4">
         <div className="flex flex-wrap gap-2 items-center flex-1">
           {/* Search Input */}
           <div className="relative w-full sm:w-64">
@@ -273,7 +273,7 @@ export function ConversionIssuesTab({
 
         <Button
           size="sm"
-          className="text-xs font-bold gap-1.5 shadow-sm h-9 bg-primary text-primary-foreground hover:bg-primary/95 shrink-0"
+          className="h-9 w-full shrink-0 gap-1.5 bg-primary text-xs font-bold text-primary-foreground shadow-sm hover:bg-primary/95 sm:w-auto"
           onClick={() => setCreateDialogOpen(true)}
         >
           <Plus className="h-4 w-4" />
@@ -287,7 +287,7 @@ export function ConversionIssuesTab({
           Carregando pendências...
         </div>
       ) : filteredIssues.length === 0 ? (
-        <Card className="p-12 text-center border-2 border-dashed border-muted/50 bg-muted/5">
+        <Card className="border-2 border-dashed border-muted/50 bg-muted/5 p-6 text-center sm:p-12">
           <AlertCircle className="h-12 w-12 mx-auto text-muted-foreground/45 mb-3" />
           <h3 className="text-sm font-semibold text-foreground mb-1">
             Nenhuma pendência encontrada
@@ -310,11 +310,11 @@ export function ConversionIssuesTab({
               >
                 <Card
                   className={cn(
-                    "border-l-4 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden h-full flex flex-col justify-between",
+                    "relative flex h-full min-w-0 flex-col justify-between overflow-hidden border-l-4 shadow-sm transition-shadow hover:shadow-md",
                     PRIORITIES[issue.priority].bar
                   )}
                 >
-                  <CardContent className="p-4 space-y-3 flex-1 flex flex-col justify-between">
+                  <CardContent className="flex min-w-0 flex-1 flex-col justify-between space-y-3 p-3 sm:p-4">
                     <div>
                       {/* Top Header Card */}
                       <div className="flex justify-between items-start gap-2">
@@ -439,7 +439,7 @@ export function ConversionIssuesTab({
 
       {/* Modal: Relatar nova pendência */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] min-w-0 max-w-md overflow-y-auto p-4 sm:p-6" data-testid="conversion-issue-create-dialog">
           <DialogHeader>
             <DialogTitle className="text-base font-bold flex items-center gap-1.5">
               <AlertCircle className="h-5 w-5 text-primary" />
@@ -549,11 +549,11 @@ export function ConversionIssuesTab({
               />
             </div>
 
-            <DialogFooter className="pt-2">
-              <Button type="button" variant="outline" size="sm" onClick={() => setCreateDialogOpen(false)} className="text-xs">
+            <DialogFooter className="flex-col gap-2 pt-2 sm:flex-row">
+              <Button type="button" variant="outline" size="sm" onClick={() => setCreateDialogOpen(false)} className="w-full text-xs sm:w-auto">
                 Cancelar
               </Button>
-              <Button type="submit" size="sm" className="text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/95" disabled={!newIssue.projectId || !newIssue.title || !newIssue.description}>
+              <Button type="submit" size="sm" className="w-full bg-primary text-xs font-bold text-primary-foreground hover:bg-primary/95 sm:w-auto" disabled={!newIssue.projectId || !newIssue.title || !newIssue.description}>
                 Salvar Pendência
               </Button>
             </DialogFooter>
@@ -563,7 +563,7 @@ export function ConversionIssuesTab({
 
       {/* Modal: Resolver pendência */}
       <Dialog open={resolveDialogOpen} onOpenChange={setResolveDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] min-w-0 max-w-md overflow-y-auto p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle className="text-base font-bold flex items-center gap-1.5">
               <CheckCircle className="h-5 w-5 text-emerald-500" />
@@ -591,14 +591,14 @@ export function ConversionIssuesTab({
               />
             </div>
 
-            <DialogFooter>
-              <Button type="button" variant="outline" size="sm" onClick={() => setResolveDialogOpen(false)} className="text-xs">
+            <DialogFooter className="flex-col gap-2 sm:flex-row">
+              <Button type="button" variant="outline" size="sm" onClick={() => setResolveDialogOpen(false)} className="w-full text-xs sm:w-auto">
                 Cancelar
               </Button>
               <Button
                 type="button"
                 size="sm"
-                className="text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white"
+                className="w-full bg-emerald-600 text-xs font-bold text-white hover:bg-emerald-700 sm:w-auto"
                 disabled={!resolutionNotes}
                 onClick={handleResolveIssue}
               >
