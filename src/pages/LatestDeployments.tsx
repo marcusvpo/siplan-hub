@@ -10,17 +10,13 @@ import {
   Filter,
   X,
   Calendar as CalendarIcon,
-  User,
   Server,
   CheckCircle2,
   Clock,
   Search,
   ArrowRight,
   Tag,
-  Smile,
   Activity,
-  Award,
-  AlertCircle,
   TrendingUp,
 } from "lucide-react";
 import {
@@ -266,7 +262,7 @@ export default function LatestDeployments() {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center p-8 bg-slate-50 dark:bg-slate-950">
+      <div className="flex min-h-[60vh] items-center justify-center bg-slate-50 p-4 dark:bg-slate-950 sm:p-8">
         <div className="flex flex-col items-center gap-4">
           <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
           <p className="text-slate-500 dark:text-slate-400 font-medium animate-pulse">
@@ -293,19 +289,22 @@ export default function LatestDeployments() {
   ];
 
   return (
-    <div className="space-y-3.5 pb-8">
+    <div
+      className="min-w-0 space-y-3.5 overflow-x-hidden pb-8"
+      data-testid="latest-deployments-page"
+    >
       {/* Page Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-2 border-b border-slate-200 dark:border-slate-800"
+        className="flex min-w-0 flex-col items-start justify-between gap-2 border-b border-slate-200 pb-2 dark:border-slate-800 sm:flex-row sm:items-center"
       >
-        <div className="space-y-0.5">
-          <h1 className="text-lg md:text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-1.5">
-            <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+        <div className="min-w-0 space-y-0.5">
+          <h1 className="flex min-w-0 items-start gap-1.5 text-lg font-bold tracking-tight text-slate-900 dark:text-white md:text-xl">
+            <span className="min-w-0 break-words bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
               Últimas Implantações
             </span>
-            <History className="w-4.5 h-4.5 text-indigo-500 animate-pulse" />
+            <History className="h-4.5 w-4.5 shrink-0 animate-pulse text-indigo-500" />
           </h1>
           <p className="text-[11px] text-slate-500 dark:text-slate-400 max-w-2xl">
             Histórico cronológico de todos os projetos finalizados ou em pós-implantação.
@@ -318,12 +317,13 @@ export default function LatestDeployments() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5"
+        className="grid min-w-0 grid-cols-2 gap-2 sm:gap-2.5 lg:grid-cols-4"
+        data-testid="latest-deployments-kpis"
       >
-        <Card className="bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-2.5 pb-0.5">
-            <CardTitle className="text-[10px] font-bold text-slate-500 dark:text-slate-400">Total no Período</CardTitle>
-            <Activity className="h-3 w-3 text-blue-500" />
+        <Card className="min-w-0 border-slate-100 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
+          <CardHeader className="flex min-w-0 flex-row items-start justify-between gap-1 space-y-0 p-2.5 pb-0.5">
+            <CardTitle className="min-w-0 break-words text-[10px] font-bold leading-tight text-slate-500 dark:text-slate-400">Total no Período</CardTitle>
+            <Activity className="h-3 w-3 shrink-0 text-blue-500" />
           </CardHeader>
           <CardContent className="p-2.5 pt-0">
             <div className="text-lg font-bold text-slate-900 dark:text-white">{kpis.total}</div>
@@ -331,10 +331,10 @@ export default function LatestDeployments() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-2.5 pb-0.5">
-            <CardTitle className="text-[10px] font-bold text-slate-500 dark:text-slate-400">Finalizadas</CardTitle>
-            <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+        <Card className="min-w-0 border-slate-100 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
+          <CardHeader className="flex min-w-0 flex-row items-start justify-between gap-1 space-y-0 p-2.5 pb-0.5">
+            <CardTitle className="min-w-0 break-words text-[10px] font-bold leading-tight text-slate-500 dark:text-slate-400">Finalizadas</CardTitle>
+            <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-500" />
           </CardHeader>
           <CardContent className="p-2.5 pt-0">
             <div className="text-lg font-bold text-slate-900 dark:text-white">{kpis.finalizadas}</div>
@@ -344,10 +344,10 @@ export default function LatestDeployments() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-2.5 pb-0.5">
-            <CardTitle className="text-[10px] font-bold text-slate-500 dark:text-slate-400">Em Pós-Implantação</CardTitle>
-            <Clock className="h-3 w-3 text-amber-500" />
+        <Card className="min-w-0 border-slate-100 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
+          <CardHeader className="flex min-w-0 flex-row items-start justify-between gap-1 space-y-0 p-2.5 pb-0.5">
+            <CardTitle className="min-w-0 break-words text-[10px] font-bold leading-tight text-slate-500 dark:text-slate-400">Em Pós-Implantação</CardTitle>
+            <Clock className="h-3 w-3 shrink-0 text-amber-500" />
           </CardHeader>
           <CardContent className="p-2.5 pt-0">
             <div className="text-lg font-bold text-slate-900 dark:text-white">{kpis.posImplantacao}</div>
@@ -355,10 +355,10 @@ export default function LatestDeployments() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-2.5 pb-0.5">
-            <CardTitle className="text-[10px] font-bold text-slate-500 dark:text-slate-400">Satisfação</CardTitle>
-            <TrendingUp className="h-3 w-3 text-indigo-500" />
+        <Card className="min-w-0 border-slate-100 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
+          <CardHeader className="flex min-w-0 flex-row items-start justify-between gap-1 space-y-0 p-2.5 pb-0.5">
+            <CardTitle className="min-w-0 break-words text-[10px] font-bold leading-tight text-slate-500 dark:text-slate-400">Satisfação</CardTitle>
+            <TrendingUp className="h-3 w-3 shrink-0 text-indigo-500" />
           </CardHeader>
           <CardContent className="p-2.5 pt-0">
             <div className="text-lg font-bold text-slate-900 dark:text-white">
@@ -374,29 +374,34 @@ export default function LatestDeployments() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15 }}
-        className="flex flex-wrap items-center gap-2 p-2 bg-white dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm"
+        className="grid min-w-0 grid-cols-1 items-center gap-2 rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900/50 min-[420px]:grid-cols-2 sm:flex sm:flex-wrap sm:p-2"
+        data-testid="latest-deployments-filters"
       >
-        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300">
-          <Filter className="w-3.5 h-3.5 text-indigo-500" />
+        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 min-[420px]:col-span-2 sm:col-span-1 sm:border-r sm:border-slate-200 sm:pr-2 dark:sm:border-slate-700">
+          <Filter className="h-3.5 w-3.5 shrink-0 text-indigo-500" />
           <span>Filtros:</span>
         </div>
 
         {/* Text Search */}
-        <div className="relative min-w-[200px] flex-1 max-w-xs">
-          <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
+        <div className="relative min-w-0 min-[420px]:col-span-2 sm:col-span-1 sm:min-w-[200px] sm:max-w-xs sm:flex-1">
+          <Search className="absolute left-2.5 top-3 h-3.5 w-3.5 text-slate-400 sm:top-2.5" />
           <Input
             placeholder="Buscar por cliente ou chamado..."
-            className="pl-8 h-8 text-xs rounded-lg"
+            className="h-10 min-w-0 rounded-lg pl-8 text-xs sm:h-8"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            aria-label="Buscar implantações"
           />
         </div>
 
         {/* System Filter */}
-        <div className="flex items-center gap-1.5">
-          <Server className="w-3.5 h-3.5 text-slate-400" />
+        <div className="flex min-w-0 items-center gap-1.5">
+          <Server className="h-3.5 w-3.5 shrink-0 text-slate-400" />
           <Select value={filterSystem} onValueChange={setFilterSystem}>
-            <SelectTrigger className="w-[160px] h-8 text-xs rounded-lg">
+            <SelectTrigger
+              className="h-10 min-w-0 flex-1 rounded-lg text-xs sm:h-8 sm:w-[160px] sm:flex-none"
+              aria-label="Filtrar por sistema"
+            >
               <SelectValue placeholder="Todos os Sistemas" />
             </SelectTrigger>
             <SelectContent>
@@ -411,8 +416,8 @@ export default function LatestDeployments() {
         </div>
 
         {/* Preset Period Filter */}
-        <div className="flex items-center gap-1.5">
-          <CalendarIcon className="w-3.5 h-3.5 text-slate-400" />
+        <div className="flex min-w-0 items-center gap-1.5">
+          <CalendarIcon className="h-3.5 w-3.5 shrink-0 text-slate-400" />
           <Select
             value={filterPeriod}
             onValueChange={(val) => {
@@ -422,7 +427,10 @@ export default function LatestDeployments() {
               }
             }}
           >
-            <SelectTrigger className="w-[160px] h-8 text-xs rounded-lg">
+            <SelectTrigger
+              className="h-10 min-w-0 flex-1 rounded-lg text-xs sm:h-8 sm:w-[160px] sm:flex-none"
+              aria-label="Filtrar por período"
+            >
               <SelectValue placeholder="Qualquer Período" />
             </SelectTrigger>
             <SelectContent>
@@ -438,32 +446,32 @@ export default function LatestDeployments() {
 
         {/* Custom Range Picker */}
         {filterPeriod === "custom" && (
-          <div className="flex items-center gap-1.5">
+          <div className="min-w-0 min-[420px]:col-span-2 sm:col-span-1">
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
                   size="sm"
                   className={cn(
-                    "h-8 text-xs px-2.5 justify-start font-normal rounded-lg border-slate-200 dark:border-slate-800",
+                    "h-10 w-full min-w-0 justify-start overflow-hidden rounded-lg border-slate-200 px-2.5 text-xs font-normal dark:border-slate-800 sm:h-8 sm:w-auto",
                     !dateRange.from && "text-slate-400"
                   )}
                 >
-                  <CalendarIcon className="mr-1.5 h-3.5 w-3.5 text-slate-400" />
-                  {dateRange.from ? (
-                    dateRange.to ? (
-                      <>
-                        {format(dateRange.from, "dd/MM/yyyy")} - {format(dateRange.to, "dd/MM/yyyy")}
-                      </>
+                  <CalendarIcon className="mr-1.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
+                  <span className="min-w-0 truncate">
+                    {dateRange.from ? (
+                      dateRange.to ? (
+                        `${format(dateRange.from, "dd/MM/yyyy")} - ${format(dateRange.to, "dd/MM/yyyy")}`
+                      ) : (
+                        format(dateRange.from, "dd/MM/yyyy")
+                      )
                     ) : (
-                      format(dateRange.from, "dd/MM/yyyy")
-                    )
-                  ) : (
-                    <span>Selecionar Período</span>
-                  )}
+                      "Selecionar Período"
+                    )}
+                  </span>
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
+              <PopoverContent className="max-w-[calc(100vw-1rem)] overflow-x-auto p-0" align="start">
                 <Calendar
                   initialFocus
                   mode="range"
@@ -485,9 +493,12 @@ export default function LatestDeployments() {
         )}
 
         {/* Year Filter */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex min-w-0 items-center gap-1.5">
           <Select value={filterYear} onValueChange={setFilterYear}>
-            <SelectTrigger className="w-[110px] h-8 text-xs rounded-lg">
+            <SelectTrigger
+              className="h-10 min-w-0 flex-1 rounded-lg text-xs sm:h-8 sm:w-[110px] sm:flex-none"
+              aria-label="Filtrar por ano"
+            >
               <SelectValue placeholder="Ano" />
             </SelectTrigger>
             <SelectContent>
@@ -502,9 +513,12 @@ export default function LatestDeployments() {
         </div>
 
         {/* Month Filter */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex min-w-0 items-center gap-1.5">
           <Select value={filterMonth} onValueChange={setFilterMonth}>
-            <SelectTrigger className="w-[130px] h-8 text-xs rounded-lg">
+            <SelectTrigger
+              className="h-10 min-w-0 flex-1 rounded-lg text-xs sm:h-8 sm:w-[130px] sm:flex-none"
+              aria-label="Filtrar por mês"
+            >
               <SelectValue placeholder="Mês" />
             </SelectTrigger>
             <SelectContent>
@@ -524,7 +538,7 @@ export default function LatestDeployments() {
             variant="ghost"
             size="sm"
             onClick={clearFilters}
-            className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 h-8 rounded-lg px-2 text-xs"
+            className="h-10 w-full rounded-lg px-2 text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 min-[420px]:col-span-2 sm:h-8 sm:w-auto"
           >
             <X className="w-3.5 h-3.5 mr-1" />
             Limpar
@@ -534,23 +548,23 @@ export default function LatestDeployments() {
 
       {/* Timeline Section */}
       {groupedDeployments.length > 0 ? (
-        <div className="space-y-4 max-w-6xl mx-auto pb-6">
+        <div className="mx-auto min-w-0 max-w-6xl space-y-4 pb-6" data-testid="latest-deployments-timeline">
           {groupedDeployments.map((group, groupIdx) => (
-            <div key={`${group.year}-${group.monthName}`} className="space-y-2">
+            <div key={`${group.year}-${group.monthName}`} className="min-w-0 space-y-2">
               {/* Month Group Header */}
-              <div className="flex items-center gap-2 sticky top-16 bg-slate-50/95 dark:bg-slate-950/95 py-1 z-10 backdrop-blur-sm">
-                <h2 className="text-sm md:text-base font-bold text-slate-800 dark:text-white flex items-baseline gap-1">
-                  <span>{group.monthName}</span>
-                  <span className="text-slate-400 font-medium text-xs">{group.year}</span>
+              <div className="sticky top-16 z-10 flex min-w-0 items-center gap-2 bg-slate-50/95 py-1 backdrop-blur-sm dark:bg-slate-950/95">
+                <h2 className="flex min-w-0 flex-wrap items-baseline gap-1 text-sm font-bold text-slate-800 dark:text-white md:text-base">
+                  <span className="break-words">{group.monthName}</span>
+                  <span className="shrink-0 text-xs font-medium text-slate-400">{group.year}</span>
                 </h2>
-                <div className="flex-1 h-px bg-slate-200 dark:bg-slate-800" />
-                <Badge variant="secondary" className="px-1.5 py-0.5 rounded-full font-bold text-[9px]">
+                <div className="h-px min-w-2 flex-1 bg-slate-200 dark:bg-slate-800" />
+                <Badge variant="secondary" className="shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold">
                   {group.projects.length} {group.projects.length === 1 ? "implantação" : "implantações"}
                 </Badge>
               </div>
 
               {/* Timeline Container */}
-              <div className="relative pl-5 sm:pl-6 border-l-2 border-slate-200 dark:border-slate-800 space-y-2.5 ml-3">
+              <div className="relative ml-2 min-w-0 space-y-2.5 border-l-2 border-slate-200 pl-4 dark:border-slate-800 sm:ml-3 sm:pl-6">
                 {group.projects.map((project, index) => {
                   const deploymentDate = getDeploymentDate(project)!;
                   const isPostActive = project.stages.post?.status === "in-progress";
@@ -562,11 +576,11 @@ export default function LatestDeployments() {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.05 + groupIdx * 0.1 }}
-                      className="relative group"
+                      className="group relative min-w-0"
                     >
                       {/* Timeline Node Dot */}
                       <span className={cn(
-                        "absolute -left-[27px] sm:-left-[31px] top-3.5 flex h-3 w-3 items-center justify-center rounded-full border-2 bg-white dark:bg-slate-950 transition-all duration-300 ring-4 ring-slate-50 dark:ring-slate-950",
+                        "absolute -left-[23px] top-3.5 flex h-3 w-3 items-center justify-center rounded-full border-2 bg-white ring-4 ring-slate-50 transition-all duration-300 dark:bg-slate-950 dark:ring-slate-950 sm:-left-[31px]",
                         isPostDone || project.globalStatus === "done"
                           ? "border-emerald-500 group-hover:bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.4)]"
                           : isPostActive
@@ -577,8 +591,9 @@ export default function LatestDeployments() {
                       {/* Deployment Card */}
                       <div
                         onClick={() => handleCardClick(project)}
+                        data-testid="latest-deployment-card"
                         className={cn(
-                          "cursor-pointer group relative flex flex-col md:flex-row md:items-start justify-between gap-3 p-3 rounded-lg border bg-white dark:bg-slate-900 hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-300",
+                          "group relative flex min-w-0 cursor-pointer flex-col justify-between gap-3 overflow-hidden rounded-lg border bg-white p-3 transition-all duration-300 hover:border-slate-300 hover:shadow-md dark:bg-slate-900 dark:hover:border-slate-700 md:flex-row md:items-start",
                           isPostActive && "border-blue-200 dark:border-blue-900/60 bg-gradient-to-r from-white to-blue-50/10 dark:from-slate-900 dark:to-blue-950/5"
                         )}
                       >
@@ -588,13 +603,13 @@ export default function LatestDeployments() {
                         {/* Left Column: Core Data */}
                         <div className="flex-1 space-y-1.5 min-w-0">
                           {/* Top Badges */}
-                          <div className="flex flex-wrap items-center gap-1">
-                            <Badge className={cn("px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider rounded-md", getSystemBadgeColor(project.systemType))}>
-                              {project.systemType}
+                          <div className="flex min-w-0 flex-wrap items-center gap-1">
+                            <Badge className={cn("max-w-full rounded-md px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider", getSystemBadgeColor(project.systemType))}>
+                              <span className="truncate">{project.systemType}</span>
                             </Badge>
                             
                             {project.implantationType && (
-                              <Badge variant="outline" className="px-1 py-0.5 text-[8px] uppercase font-semibold text-slate-500 dark:text-slate-400">
+                              <Badge variant="outline" className="max-w-full whitespace-normal break-words px-1 py-0.5 text-[8px] font-semibold uppercase text-slate-500 dark:text-slate-400">
                                 {project.implantationType === "new"
                                   ? "Nova Implantação"
                                   : project.implantationType === "migration_siplan"
@@ -607,73 +622,73 @@ export default function LatestDeployments() {
                               </Badge>
                             )}
 
-                            <Badge variant="secondary" className="px-1 py-0.5 text-[8px] font-mono font-medium rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
-                              <Tag className="w-2 h-2 mr-1 inline-block" />
-                              {project.ticketNumber}
+                            <Badge variant="secondary" className="max-w-full rounded-full bg-slate-100 px-1 py-0.5 font-mono text-[8px] font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                              <Tag className="mr-1 h-2 w-2 shrink-0" />
+                              <span className="truncate">{project.ticketNumber}</span>
                             </Badge>
 
                             {/* Status Indicators */}
                             {isPostActive && (
-                              <Badge className="bg-blue-500 hover:bg-blue-600 text-white text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 border-none shadow-sm rounded-full">
+                              <Badge className="max-w-full whitespace-normal break-words rounded-full border-none bg-blue-500 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-white shadow-sm hover:bg-blue-600">
                                 Em Pós-Implantação
                               </Badge>
                             )}
                             {(isPostDone || project.globalStatus === "done") && (
-                              <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 border-none shadow-sm rounded-full">
+                              <Badge className="max-w-full whitespace-normal break-words rounded-full border-none bg-emerald-500 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-white shadow-sm hover:bg-emerald-600">
                                 Concluído & Finalizado
                               </Badge>
                             )}
                           </div>
 
                           {/* Client Title */}
-                          <div className="space-y-0.5">
-                            <h3 className="text-xs md:text-sm font-bold text-slate-800 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">
+                          <div className="min-w-0 space-y-0.5">
+                            <h3 className="break-words text-xs font-bold text-slate-800 transition-colors group-hover:text-indigo-600 dark:text-white dark:group-hover:text-indigo-400 md:text-sm md:truncate">
                               {project.clientName}
                             </h3>
-                            <div className="flex items-center gap-1 text-[10px] text-slate-400">
-                              <Clock className="w-2.5 text-slate-400" />
-                              <span>Implantação finalizada em: </span>
-                              <span className="font-semibold text-slate-600 dark:text-slate-300">
+                            <div className="flex min-w-0 flex-wrap items-center gap-x-1 gap-y-0.5 text-[10px] text-slate-400">
+                              <Clock className="h-2.5 w-2.5 shrink-0 text-slate-400" />
+                              <span className="break-words">Implantação finalizada em:</span>
+                              <span className="break-words font-semibold text-slate-600 dark:text-slate-300">
                                 {format(deploymentDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
                               </span>
                             </div>
                           </div>
 
                           {/* Detail Grid */}
-                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 pt-0.5">
+                          <div className="grid min-w-0 grid-cols-1 gap-2 pt-0.5 min-[420px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4">
                             {project.projectLeader && (
-                              <div>
+                              <div className="min-w-0">
                                 <span className="text-[8px] uppercase font-bold tracking-wider text-slate-400">Líder do Projeto</span>
-                                <p className="text-[10px] font-semibold text-slate-600 dark:text-slate-300 truncate">{project.projectLeader}</p>
+                                <p className="break-words text-[10px] font-semibold text-slate-600 dark:text-slate-300 md:truncate">{project.projectLeader}</p>
                               </div>
                             )}
 
                             {project.stages.implementation?.responsible && (
-                              <div>
+                              <div className="min-w-0">
                                 <span className="text-[8px] uppercase font-bold tracking-wider text-slate-400">Analista Implantação</span>
-                                <p className="text-[10px] font-semibold text-slate-600 dark:text-slate-300 truncate">{project.stages.implementation.responsible}</p>
+                                <p className="break-words text-[10px] font-semibold text-slate-600 dark:text-slate-300 md:truncate">{project.stages.implementation.responsible}</p>
                               </div>
                             )}
 
                             {project.stages.post?.responsible && (
-                              <div>
+                              <div className="min-w-0">
                                 <span className="text-[8px] uppercase font-bold tracking-wider text-slate-400">Analista Pós-Implantação</span>
-                                <p className="text-[10px] font-semibold text-slate-600 dark:text-slate-300 truncate">{project.stages.post.responsible}</p>
+                                <p className="break-words text-[10px] font-semibold text-slate-600 dark:text-slate-300 md:truncate">{project.stages.post.responsible}</p>
                               </div>
                             )}
 
                             {project.systemType === "Modelos TN" ? (
                               project.workHours && (
-                                <div>
+                                <div className="min-w-0">
                                   <span className="text-[8px] uppercase font-bold tracking-wider text-slate-400">Horas de Trabalho</span>
-                                  <p className="text-[10px] font-semibold text-slate-600 dark:text-slate-300 truncate">{project.workHours} horas</p>
+                                  <p className="break-words text-[10px] font-semibold text-slate-600 dark:text-slate-300 md:truncate">{project.workHours} horas</p>
                                 </div>
                               )
                             ) : (
                               project.soldHours && (
-                                <div>
+                                <div className="min-w-0">
                                   <span className="text-[8px] uppercase font-bold tracking-wider text-slate-400">Horas Contratadas</span>
-                                  <p className="text-[10px] font-semibold text-slate-600 dark:text-slate-300 truncate">{project.soldHours} horas</p>
+                                  <p className="break-words text-[10px] font-semibold text-slate-600 dark:text-slate-300 md:truncate">{project.soldHours} horas</p>
                                 </div>
                               )
                             )}
@@ -681,24 +696,24 @@ export default function LatestDeployments() {
 
                           {/* Extra info block: switch details / feedback */}
                           {(project.stages.implementation?.phase1?.switchType || project.stages.post?.clientSatisfaction) && (
-                            <div className="flex flex-wrap gap-2.5 pt-1 border-t border-slate-100 dark:border-slate-800/60 mt-0.5">
+                            <div className="mt-0.5 flex min-w-0 flex-wrap gap-2.5 border-t border-slate-100 pt-1 dark:border-slate-800/60">
                               {project.stages.implementation.phase1.switchType && (
-                                <div className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400">
-                                  <span className="font-bold text-slate-400 uppercase text-[8px] tracking-wider">Tipo Virada:</span>
-                                  <span className="font-semibold">{project.stages.implementation.phase1.switchType}</span>
+                                <div className="flex min-w-0 flex-wrap items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400">
+                                  <span className="shrink-0 text-[8px] font-bold uppercase tracking-wider text-slate-400">Tipo Virada:</span>
+                                  <span className="min-w-0 break-words font-semibold">{project.stages.implementation.phase1.switchType}</span>
                                 </div>
                               )}
 
                               {project.stages.post?.clientSatisfaction && (
-                                <div className="flex items-center gap-1">
-                                  <span className="font-bold text-slate-400 uppercase text-[8px] tracking-wider">Satisfação:</span>
+                                <div className="flex min-w-0 flex-wrap items-center gap-1">
+                                  <span className="shrink-0 text-[8px] font-bold uppercase tracking-wider text-slate-400">Satisfação:</span>
                                   {(() => {
                                     const rating = getSatisfactionEmoji(project.stages.post.clientSatisfaction);
                                     if (!rating) return null;
                                     return (
-                                      <span className={cn("inline-flex items-center gap-0.5 px-1 py-0.5 rounded-full text-[9px] font-bold", rating.color)}>
+                                      <span className={cn("inline-flex max-w-full items-center gap-0.5 rounded-full px-1 py-0.5 text-[9px] font-bold", rating.color)}>
                                         <span>{rating.emoji}</span>
-                                        <span>{rating.text}</span>
+                                        <span className="break-words">{rating.text}</span>
                                       </span>
                                     );
                                   })()}
@@ -709,10 +724,10 @@ export default function LatestDeployments() {
                         </div>
 
                         {/* Right Column: Actions & Quick Meta */}
-                        <div className="flex flex-row md:flex-col md:items-end justify-between md:justify-center md:h-full gap-2 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100 dark:border-slate-800/80">
-                          <div className="text-left md:text-right">
+                        <div className="flex min-w-0 flex-wrap justify-between gap-2 border-t border-slate-100 pt-2 dark:border-slate-800/80 md:h-full md:flex-col md:flex-nowrap md:items-end md:justify-center md:border-t-0 md:pt-0">
+                          <div className="min-w-0 text-left md:text-right">
                             <span className="text-[8px] uppercase tracking-widest text-slate-400 font-bold">Data Virada</span>
-                            <div className="text-xs font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
+                            <div className="flex items-center gap-1 text-xs font-bold text-indigo-600 dark:text-indigo-400">
                               <CalendarIcon className="w-3 h-3 shrink-0" />
                               <span>{format(deploymentDate, "dd/MM/yyyy")}</span>
                             </div>
@@ -721,7 +736,7 @@ export default function LatestDeployments() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-7 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 dark:bg-indigo-950/20 dark:hover:bg-indigo-950/40 dark:text-indigo-400 rounded-md font-bold flex gap-1 items-center text-[10px] hover:translate-x-1 transition-transform"
+                            className="flex h-9 min-w-0 items-center gap-1 rounded-md bg-indigo-50 px-3 text-[10px] font-bold text-indigo-600 transition-transform hover:translate-x-1 hover:bg-indigo-100 dark:bg-indigo-950/20 dark:text-indigo-400 dark:hover:bg-indigo-950/40 md:h-7 md:px-2.5"
                           >
                             <span>Detalhes</span>
                             <ArrowRight className="w-2.5 h-2.5" />
@@ -739,22 +754,22 @@ export default function LatestDeployments() {
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="flex flex-col items-center justify-center py-24 text-center space-y-6 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 max-w-xl mx-auto shadow-sm"
+          className="mx-auto flex min-w-0 max-w-xl flex-col items-center justify-center space-y-5 rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-14 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:space-y-6 sm:rounded-3xl sm:py-24"
         >
           <div className="w-20 h-20 rounded-full bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center text-slate-400">
             <History className="w-10 h-10" />
           </div>
           <div className="space-y-2">
-            <h3 className="text-2xl font-black text-slate-900 dark:text-white">
+            <h3 className="break-words text-xl font-black text-slate-900 dark:text-white sm:text-2xl">
               {hasActiveFilters ? "Nenhum histórico encontrado" : "Nenhum histórico de implantação"}
             </h3>
-            <p className="text-slate-500 dark:text-slate-400 max-w-sm mx-auto text-sm leading-relaxed">
+            <p className="mx-auto max-w-sm break-words text-sm leading-relaxed text-slate-500 dark:text-slate-400">
               {hasActiveFilters
                 ? "Tente ajustar ou limpar seus filtros para encontrar resultados no histórico de implantações."
                 : "Não há projetos concluídos ou em pós-implantação cadastrados no sistema com datas válidas."}
             </p>
             {hasActiveFilters && (
-              <Button variant="outline" onClick={clearFilters} className="mt-4 rounded-xl font-bold border-slate-200 dark:border-slate-800">
+              <Button variant="outline" onClick={clearFilters} className="mt-4 h-auto min-h-10 max-w-full whitespace-normal rounded-xl border-slate-200 font-bold dark:border-slate-800">
                 <X className="w-4 h-4 mr-2" />
                 Limpar Todos os Filtros
               </Button>
