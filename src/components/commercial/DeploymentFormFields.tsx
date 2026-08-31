@@ -30,14 +30,14 @@ const SectionCard = ({
   };
   const s = styles[color];
   return (
-    <Card className={`border-l-4 ${s.border} shadow-sm hover:shadow-md transition-shadow`}>
-      <CardHeader className="pb-2 pt-4 px-4">
-        <CardTitle className={`text-sm font-bold flex items-center gap-2 ${s.text}`}>
-          <span className={`p-1 rounded-md ${s.bg}`}><Icon className="h-3.5 w-3.5" /></span>
-          {title}
+    <Card className={`min-w-0 border-l-4 ${s.border} shadow-sm transition-shadow hover:shadow-md`}>
+      <CardHeader className="px-3 pb-2 pt-3 sm:px-4 sm:pt-4">
+        <CardTitle className={`flex min-w-0 items-start gap-2 text-sm font-bold ${s.text}`}>
+          <span className={`shrink-0 rounded-md p-1 ${s.bg}`}><Icon className="h-3.5 w-3.5" /></span>
+          <span className="min-w-0 break-words">{title}</span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="px-4 pb-4">{children}</CardContent>
+      <CardContent className="min-w-0 px-3 pb-3 sm:px-4 sm:pb-4">{children}</CardContent>
     </Card>
   );
 };
@@ -59,26 +59,26 @@ const ERR = "border-red-400 focus-visible:ring-red-400";
 const CheckRow = ({
   checked, onCheckedChange, label,
 }: { checked?: boolean; onCheckedChange: (v: boolean | "indeterminate") => void; label: string }) => (
-  <label className="flex items-center gap-2 cursor-pointer group">
+  <label className="group flex min-w-0 cursor-pointer items-start gap-2">
     <Checkbox checked={checked} onCheckedChange={onCheckedChange}
       className="data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600" />
-    <span className="text-sm group-hover:text-foreground transition-colors">{label}</span>
+    <span className="min-w-0 break-words text-sm transition-colors group-hover:text-foreground">{label}</span>
   </label>
 );
 
 const RadioRow = ({ value, label }: { value: string; label: string }) => (
-  <label className="flex items-center gap-2 cursor-pointer group">
+  <label className="group flex min-w-0 cursor-pointer items-start gap-2">
     <RadioGroupItem value={value} />
-    <span className="text-sm group-hover:text-foreground transition-colors">{label}</span>
+    <span className="min-w-0 break-words text-sm transition-colors group-hover:text-foreground">{label}</span>
   </label>
 );
 
 const YesNo = ({
   label, value, onChange, hasError,
 }: { label: string; value?: boolean; onChange: (v: boolean) => void; hasError?: boolean }) => (
-  <div className={`flex items-center justify-between rounded-lg px-3 py-2 gap-3 ${hasError ? "bg-red-50 dark:bg-red-950/20 ring-1 ring-red-400" : "bg-muted/40"}`}>
-    <span className="text-sm font-medium">{label}<span className="text-red-500 ml-0.5">*</span></span>
-    <div className="flex gap-1">
+  <div className={`flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-lg px-3 py-2 ${hasError ? "bg-red-50 dark:bg-red-950/20 ring-1 ring-red-400" : "bg-muted/40"}`}>
+    <span className="min-w-0 flex-1 break-words text-sm font-medium">{label}<span className="text-red-500 ml-0.5">*</span></span>
+    <div className="flex shrink-0 gap-1">
       <button type="button" onClick={() => onChange(true)}
         className={`px-3 py-1 rounded-md text-xs font-semibold border transition-all ${value === true ? "bg-emerald-600 text-white border-emerald-600 shadow-sm" : "border-muted-foreground/30 hover:border-emerald-400 hover:text-emerald-600"}`}>Sim</button>
       <button type="button" onClick={() => onChange(false)}
@@ -106,7 +106,7 @@ export function DeploymentFormFields({ data, onChange, errors = new Set() }: Pro
   const attr = (field: string) => errors.has(field) ? { "data-field-error": "true" } : {};
 
   return (
-    <div className="space-y-4">
+    <div className="min-w-0 space-y-4" data-testid="deployment-form-fields">
 
       {/* ── DADOS ADMINISTRATIVOS ── */}
       <SectionCard title="Dados Administrativos" icon={FileText} color="indigo">
@@ -164,7 +164,7 @@ export function DeploymentFormFields({ data, onChange, errors = new Set() }: Pro
               <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
                 Modalidade<span className="text-red-500 ml-0.5">*</span>
               </p>
-              <RadioGroup value={data.modality || ""} onValueChange={v => set("modality", v)} className="flex gap-4">
+              <RadioGroup value={data.modality || ""} onValueChange={v => set("modality", v)} className="flex flex-wrap gap-3 sm:gap-4">
                 {["Presencial", "Remoto", "Misto"].map(m => (
                   <label key={m} className="flex items-center gap-1.5 cursor-pointer">
                     <RadioGroupItem value={m} /><span className="text-sm">{m}</span>
@@ -174,7 +174,7 @@ export function DeploymentFormFields({ data, onChange, errors = new Set() }: Pro
             </div>
 
             {/* Horas */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2" data-testid="deployment-form-hours-grid">
               <div className="space-y-1" {...attr("hours_presencial")}>
                 <RL label="Horas — Implantação presencial" />
                 <div className="relative">
@@ -235,7 +235,7 @@ export function DeploymentFormFields({ data, onChange, errors = new Set() }: Pro
 
       {/* ── DATAS E AGENDA ── */}
       <SectionCard title="Datas e Agenda" icon={Calendar} color="sky">
-        <div className="grid grid-cols-2 gap-3 mb-3">
+        <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="space-y-1">
             <OL label="Data desejada pelo cliente" />
             <Input type="date" value={data.desired_date || ""} onChange={ev => set("desired_date", ev.target.value)}
@@ -262,7 +262,7 @@ export function DeploymentFormFields({ data, onChange, errors = new Set() }: Pro
             <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
               Tabelião / Oficial responsável
             </p>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-3" data-testid="deployment-form-official-contact-grid">
               <Input value={data.official_name || ""} onChange={ev => set("official_name", ev.target.value)}
                 placeholder="Nome" className="h-8 text-sm" />
               <Input type="tel" value={data.official_phone || ""} onChange={ev => set("official_phone", formatPhone(ev.target.value))}
@@ -277,7 +277,7 @@ export function DeploymentFormFields({ data, onChange, errors = new Set() }: Pro
             <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
               Responsável pelo TI / Servidor
             </p>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-3">
               <Input value={data.it_name || ""} onChange={ev => set("it_name", ev.target.value)}
                 placeholder="Nome" className="h-8 text-sm" />
               <Input type="tel" value={data.it_phone || ""} onChange={ev => set("it_phone", formatPhone(ev.target.value))}
@@ -292,7 +292,7 @@ export function DeploymentFormFields({ data, onChange, errors = new Set() }: Pro
             <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
               Responsável operacional
             </p>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
               <Input value={data.operational_name || ""} onChange={ev => set("operational_name", ev.target.value)}
                 placeholder="Nome" className="h-8 text-sm" />
               <Input value={data.operational_role || ""} onChange={ev => set("operational_role", ev.target.value)}

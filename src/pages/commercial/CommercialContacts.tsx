@@ -15,8 +15,13 @@ import {
   MoreHorizontal,
   Pencil,
   Trash2,
+  Filter,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -43,14 +48,9 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 import { cn } from "@/lib/utils";
-
-import { getMarqueeStyle } from "@/lib/marquee";
-
-// Dimensions for Marquee logic tailored for the w-96 Contacts sidebar
-const TEXT_AREA_PX = 310;
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function CommercialContacts() {
-// ... preserving rest of state and handlers from line 46 to 223 ...
   const {
     clients,
     contacts,
@@ -61,16 +61,24 @@ export default function CommercialContacts() {
   } = useCommercial();
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [clientSearchTerm, setClientSearchTerm] = useState("");
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
-  const [hoveredClientId, setHoveredClientId] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
-  const [roleFilter, setRoleFilter] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedPageSize, setSelectedPageSize] = useState<number | null>(null);
+  const isMobile = useIsMobile();
+  const itemsPerPage = selectedPageSize ?? (isMobile ? 3 : 12);
   const { toast } = useToast();
   const { hasPermission } = usePermissions();
   const canCreateContacts = hasPermission("commercial_contacts", "create");
   const canEditContacts = hasPermission("commercial_contacts", "edit");
   const canDeleteContacts = hasPermission("commercial_contacts", "delete");
+  const hasActiveFilters =
+    searchTerm.trim() !== "" ||
+    roleFilter !== "all" ||
+    selectedClientId !== null;
 
   const [formData, setFormData] = useState({
     name: "",
@@ -174,9 +182,10 @@ export default function CommercialContacts() {
         contact.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         contact.clients?.name?.toLowerCase().includes(searchTerm.toLowerCase());
 
-      const matchesRole = roleFilter
-        ? contact.role?.toLowerCase().includes(roleFilter.toLowerCase())
-        : true;
+      const matchesRole =
+        roleFilter !== "all"
+          ? contact.role?.toLowerCase().includes(roleFilter.toLowerCase())
+          : true;
 
       if (selectedClientId) {
         return (
@@ -188,42 +197,77 @@ export default function CommercialContacts() {
 
   const filteredClients =
     clients?.filter((client) =>
-      client.name.toLowerCase().includes(searchTerm.toLowerCase())
+      client.name.toLowerCase().includes(clientSearchTerm.toLowerCase()),
     ) || [];
 
   const uniqueRoles = Array.from(
-    new Set(contacts?.map((c) => c.role).filter(Boolean))
+    new Set(
+      (contacts || [])
+        .map((contact) => contact.role)
+        .filter((role): role is string => Boolean(role)),
+    ),
   );
 
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredContacts.length / itemsPerPage),
+  );
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedContacts = filteredContacts.slice(
+    startIndex,
+    startIndex + itemsPerPage,
+  );
+  const firstVisibleItem = filteredContacts.length === 0 ? 0 : startIndex + 1;
+  const lastVisibleItem = Math.min(
+    startIndex + itemsPerPage,
+    filteredContacts.length,
+  );
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setRoleFilter("all");
+    setSelectedClientId(null);
+  };
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, roleFilter, selectedClientId, itemsPerPage]);
+
+  useEffect(() => {
+    setCurrentPage((page) => Math.min(page, totalPages));
+  }, [totalPages]);
+
+  const selectedClientName = clients?.find(
+    (client) => client.id === selectedClientId,
+  )?.name;
+  const isSaving = editingContact
+    ? updateContact.isPending
+    : createContact.isPending;
+
   return (
-    <div className="h-[calc(100vh-6rem)] flex flex-col space-y-6 animate-in fade-in duration-500">
-      <div className="flex items-center justify-between shrink-0">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+    <div
+      className="flex min-w-0 flex-col gap-4 overflow-x-hidden animate-in fade-in duration-500 md:h-[calc(100vh-6rem)] md:gap-6"
+      data-testid="commercial-contacts-page"
+    >
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-xl font-bold leading-tight tracking-tight text-transparent sm:text-2xl md:text-3xl">
             Contatos & Clientes
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="mt-1 text-sm leading-relaxed text-muted-foreground sm:text-base">
             Gerencie a agenda de contatos unificada dos seus clientes.
           </p>
         </div>
-        <div className="flex gap-2">
-          <select
-            className="h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
-          >
-            <option value="">Cargos: Todos</option>
-            {uniqueRoles.map((role) => (
-              <option key={role} value={role}>
-                {role}
-              </option>
-            ))}
-          </select>
-
+        <div className="flex w-full shrink-0 items-center gap-2 sm:w-auto">
+          <div className="hidden rounded-full border bg-muted px-3 py-1 text-xs font-medium text-muted-foreground sm:block">
+            {filteredContacts.length} contato
+            {filteredContacts.length === 1 ? "" : "s"}
+          </div>
           {canCreateContacts && (
             <Button
+              type="button"
               onClick={handleOpenCreate}
-              className="gap-2 bg-purple-600 hover:bg-purple-700 shadow-sm"
+              className="w-full gap-2 bg-purple-600 shadow-sm hover:bg-purple-700 sm:w-auto"
             >
               <Plus className="h-4 w-4" />
               Novo Contato
@@ -232,21 +276,113 @@ export default function CommercialContacts() {
         </div>
       </div>
 
-      <div className="flex gap-6 flex-1 overflow-hidden">
+      <div
+        className="min-w-0 rounded-xl border bg-muted/20 p-3 sm:p-4"
+        data-testid="commercial-contacts-filters"
+      >
+        <div className="mb-3 flex min-w-0 items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2 text-sm font-semibold">
+            <Filter className="h-4 w-4 shrink-0 text-purple-600" />
+            <span>Filtros dos contatos</span>
+          </div>
+          {hasActiveFilters && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 shrink-0 gap-1.5 px-2 text-xs"
+              onClick={clearFilters}
+            >
+              <X className="h-3.5 w-3.5" />
+              Limpar
+            </Button>
+          )}
+        </div>
+
+        <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_220px]">
+          <div className="relative min-w-0">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por nome, e-mail ou cliente..."
+              aria-label="Buscar contato"
+              className="h-10 min-w-0 bg-background pl-9"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+            />
+          </div>
+
+          <Select value={roleFilter} onValueChange={setRoleFilter}>
+            <SelectTrigger
+              className="h-10 w-full min-w-0 bg-background"
+              aria-label="Filtrar contatos por cargo"
+            >
+              <SelectValue placeholder="Todos os cargos" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os cargos</SelectItem>
+              {uniqueRoles.map((role) => (
+                <SelectItem key={role} value={role}>
+                  {role}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <div className="min-w-0 sm:col-span-2 lg:hidden">
+            <Select
+              value={selectedClientId || "all"}
+              onValueChange={(value) =>
+                setSelectedClientId(value === "all" ? null : value)
+              }
+            >
+              <SelectTrigger
+                className="h-10 w-full min-w-0 bg-background"
+                aria-label="Filtrar contatos por cliente"
+              >
+                <SelectValue placeholder="Todos os clientes" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os clientes</SelectItem>
+                {(clients || []).map((client) => (
+                  <SelectItem key={client.id} value={client.id}>
+                    {client.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="mt-3 flex min-w-0 items-center justify-between gap-2 text-xs text-muted-foreground sm:hidden">
+          <span className="min-w-0 break-words">
+            {selectedClientName || "Todos os clientes"}
+          </span>
+          <span className="shrink-0 font-medium text-foreground">
+            {filteredContacts.length} resultado
+            {filteredContacts.length === 1 ? "" : "s"}
+          </span>
+        </div>
+      </div>
+
+      <div className="flex min-w-0 flex-1 gap-4 lg:gap-6 lg:overflow-hidden">
         {/* Sidebar de Clientes */}
-        <Card className="w-96 flex flex-col h-full border-r shrink-0 shadow-sm transition-all">
-          <div className="p-3 border-b space-y-2 bg-muted/10">
-            <h3 className="font-semibold text-[11px] text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+        <Card
+          className="hidden h-full w-80 shrink-0 flex-col border-r shadow-sm transition-all lg:flex xl:w-96"
+          data-testid="commercial-contacts-client-sidebar"
+        >
+          <div className="space-y-2 border-b bg-muted/10 p-3">
+            <h3 className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               <Building2 className="h-3.5 w-3.5" />
               Filtrar por Cliente
             </h3>
             <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Buscar cliente..."
-                className="pl-8 h-8 text-xs bg-background/50"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                aria-label="Buscar cliente"
+                className="h-8 bg-background/50 pl-8 text-xs"
+                value={clientSearchTerm}
+                onChange={(event) => setClientSearchTerm(event.target.value)}
               />
             </div>
           </div>
@@ -254,7 +390,7 @@ export default function CommercialContacts() {
             <div className="p-1.5 space-y-0.5">
               <Button
                 variant={selectedClientId === null ? "secondary" : "ghost"}
-                className={`w-full justify-start font-normal text-xs py-1.5 h-auto ${
+                className={`h-auto w-full justify-start py-2 text-xs font-normal ${
                   selectedClientId === null
                     ? "bg-purple-100 text-purple-900 dark:bg-purple-900/20 dark:text-purple-100"
                     : ""
@@ -266,28 +402,22 @@ export default function CommercialContacts() {
               </Button>
               {filteredClients.map((client) => {
                 const isSelected = selectedClientId === client.id;
-                const isHovered = hoveredClientId === client.id;
-                const animate = isSelected || isHovered;
 
                 return (
                   <Button
                     key={client.id}
                     variant={isSelected ? "secondary" : "ghost"}
                     className={cn(
-                      "w-full justify-start font-normal text-xs py-1 h-auto relative overflow-hidden",
+                      "relative h-auto w-full min-w-0 justify-start overflow-hidden py-2 text-xs font-normal",
                       isSelected
                         ? "bg-purple-100 text-purple-900 dark:bg-purple-900/20 dark:text-purple-100 border-l-2 border-purple-500 rounded-l-none"
-                        : ""
+                        : "",
                     )}
                     onClick={() => setSelectedClientId(client.id)}
-                    onMouseEnter={() => setHoveredClientId(client.id)}
-                    onMouseLeave={() => setHoveredClientId(null)}
+                    title={client.name}
                   >
-                    <div className="flex-1 min-w-0 overflow-hidden text-left pl-5">
-                      <span
-                        className="inline-block whitespace-nowrap leading-tight"
-                        style={getMarqueeStyle(client.name, animate, TEXT_AREA_PX)}
-                      >
+                    <div className="min-w-0 flex-1 pl-5 text-left">
+                      <span className="block truncate leading-tight">
                         {client.name}
                       </span>
                     </div>
@@ -299,303 +429,435 @@ export default function CommercialContacts() {
         </Card>
 
         {/* Grid de Contatos */}
-        <div className="flex-1 h-full overflow-y-auto pr-2">
-          {filteredContacts.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed rounded-xl bg-muted/10 mx-4 mb-4">
-              <User className="h-16 w-16 mb-4 opacity-20" />
-              <h3 className="text-lg font-medium text-foreground opacity-80">
+        <div className="min-w-0 flex-1 lg:-mr-2 lg:h-full lg:overflow-y-auto lg:pr-2">
+          {isLoadingContacts ? (
+            <div className="flex min-h-52 items-center justify-center rounded-xl border bg-muted/10">
+              <div className="flex flex-col items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-7 w-7 animate-spin text-purple-600" />
+                Carregando contatos...
+              </div>
+            </div>
+          ) : filteredContacts.length === 0 ? (
+            <div
+              className="flex min-h-52 min-w-0 flex-col items-center justify-center rounded-xl border-2 border-dashed bg-muted/10 px-4 py-8 text-center text-muted-foreground lg:min-h-full"
+              data-testid="commercial-contacts-empty-state"
+            >
+              <User className="mb-3 h-12 w-12 opacity-20 sm:h-16 sm:w-16" />
+              <h3 className="text-base font-medium text-foreground opacity-80 sm:text-lg">
                 Nenhum contato encontrado
               </h3>
-              <p className="text-sm">
+              <p className="mt-1 max-w-sm text-sm leading-relaxed">
                 Tente ajustar seus filtros ou selecione outro cliente.
               </p>
-              {selectedClientId && canCreateContacts && (
-                <Button
-                  variant="outline"
-                  onClick={handleOpenCreate}
-                  className="mt-4"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Criar contato para este cliente
-                </Button>
-              )}
+              <div className="mt-4 flex w-full max-w-xs flex-col gap-2 sm:w-auto sm:max-w-none sm:flex-row">
+                {hasActiveFilters && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={clearFilters}
+                  >
+                    Limpar filtros
+                  </Button>
+                )}
+                {selectedClientId && canCreateContacts && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleOpenCreate}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Criar contato para este cliente
+                  </Button>
+                )}
+              </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-5 pb-10 content-start">
-              {filteredContacts.map((contact) => (
-                <Card
-                  key={contact.id}
-                  className="group hover:border-purple-300 dark:hover:border-purple-700 hover:shadow-md transition-all duration-300 relative overflow-hidden"
-                >
-                  <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-purple-400 to-pink-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <>
+              <div
+                className="grid min-w-0 content-start grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3 2xl:grid-cols-4"
+                data-testid="commercial-contacts-list"
+              >
+                {paginatedContacts.map((contact) => (
+                  <Card
+                    key={contact.id}
+                    className="group relative min-w-0 overflow-hidden transition-all duration-300 hover:border-purple-300 hover:shadow-md dark:hover:border-purple-700"
+                    data-testid="commercial-contact-card"
+                  >
+                    <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-purple-400 to-pink-400 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100" />
 
-                  <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2 pl-5">
-                    <div className="flex items-center gap-3 w-full overflow-hidden">
-                      <Avatar className="h-12 w-12 border-2 border-white dark:border-zinc-800 shadow-sm shrink-0">
-                        <AvatarFallback className="bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900 dark:to-pink-900 text-purple-700 dark:text-purple-200 font-bold text-lg">
-                          {contact.name.substring(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="space-y-0.5 overflow-hidden flex-1">
-                        <CardTitle
-                          className="text-base font-bold leading-tight truncate"
-                          title={contact.name}
-                        >
-                          {contact.name}
-                        </CardTitle>
-                        {contact.role ? (
-                          <p className="text-xs font-medium text-purple-600 dark:text-purple-300 truncate">
-                            {contact.role}
-                          </p>
-                        ) : (
-                          <p className="text-xs text-muted-foreground italic">
-                            Sem cargo
-                          </p>
-                        )}
+                    <CardHeader className="flex min-w-0 flex-row items-start justify-between space-y-0 pb-2 pl-5 pr-3 pt-4">
+                      <div className="flex min-w-0 flex-1 items-center gap-3 pr-9">
+                        <Avatar className="h-11 w-11 shrink-0 border-2 border-white shadow-sm dark:border-zinc-800 sm:h-12 sm:w-12">
+                          <AvatarFallback className="bg-gradient-to-br from-purple-100 to-pink-100 text-base font-bold text-purple-700 dark:from-purple-900 dark:to-pink-900 dark:text-purple-200 sm:text-lg">
+                            {contact.name.substring(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 flex-1 space-y-0.5">
+                          <CardTitle
+                            className="min-w-0 break-words text-sm font-bold leading-snug sm:text-base"
+                            title={contact.name}
+                            data-testid="commercial-contact-name"
+                          >
+                            {contact.name}
+                          </CardTitle>
+                          {contact.role ? (
+                            <p className="min-w-0 break-words text-xs font-medium leading-snug text-purple-600 dark:text-purple-300">
+                              {contact.role}
+                            </p>
+                          ) : (
+                            <p className="text-xs text-muted-foreground italic">
+                              Sem cargo
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                    {/* Actions Menu */}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity absolute right-2 top-2"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {canEditContacts && (
-                          <DropdownMenuItem
-                            onClick={() => handleOpenEdit(contact)}
-                          >
-                            <Pencil className="h-4 w-4 mr-2" /> Editar
-                          </DropdownMenuItem>
-                        )}
-                        {canDeleteContacts && (
-                          <DropdownMenuItem
-                            className="text-red-600 focus:text-red-700 focus:bg-red-50"
-                            onClick={() => handleDelete(contact.id)}
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" /> Excluir
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </CardHeader>
-
-                  <CardContent className="pl-5 pt-2">
-                    <div className="space-y-3">
-                      {/* Client Chip */}
-                      <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-muted/60 text-[10px] font-medium text-muted-foreground w-fit max-w-full">
-                        <Building2 className="h-3 w-3 shrink-0" />
-                        <span className="truncate">
-                          {contact.clients?.name}
-                        </span>
-                      </div>
-
-                      <div className="space-y-2 pt-1">
-                        <div className="flex items-center text-sm gap-2.5 group/link">
-                          <div className="h-7 w-7 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0">
-                            <Mail className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                          </div>
-                          <span
-                            className="truncate text-foreground/80 text-xs selection:bg-blue-100 selection:text-blue-900"
-                            title={contact.email || ""}
-                          >
-                            {contact.email || (
-                              <span className="text-muted-foreground italic">
-                                Não informado
-                              </span>
+                      {/* Actions Menu */}
+                      {(canEditContacts || canDeleteContacts) && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="absolute right-2 top-2 h-9 w-9 opacity-100 transition-opacity lg:h-8 lg:w-8 lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100"
+                              aria-label={`Ações para ${contact.name}`}
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {canEditContacts && (
+                              <DropdownMenuItem
+                                onClick={() => handleOpenEdit(contact)}
+                              >
+                                <Pencil className="h-4 w-4 mr-2" /> Editar
+                              </DropdownMenuItem>
                             )}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center text-sm gap-2.5">
-                          <div className="h-7 w-7 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center shrink-0">
-                            <Phone className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
-                          </div>
-                          <span className="text-foreground/80 text-xs">
-                            {contact.phone || (
-                              <span className="text-muted-foreground italic">
-                                Não informado
-                              </span>
+                            {canDeleteContacts && (
+                              <DropdownMenuItem
+                                className="text-red-600 focus:text-red-700 focus:bg-red-50"
+                                onClick={() => handleDelete(contact.id)}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" /> Excluir
+                              </DropdownMenuItem>
                             )}
-                          </span>
-                        </div>
-                      </div>
-
-                      {contact.notes && (
-                        <div className="mt-3 pt-3 border-t text-xs text-muted-foreground italic line-clamp-2 bg-muted/10 p-2 rounded relative">
-                          <span className="absolute top-1 left-1 text-2xl text-muted-foreground/20 leading-none">
-                            "
-                          </span>
-                          <span className="relative z-10 pl-2">
-                            {contact.notes}
-                          </span>
-                        </div>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                    </CardHeader>
+
+                    <CardContent className="min-w-0 pb-4 pl-5 pr-4 pt-2">
+                      <div className="min-w-0 space-y-3">
+                        {/* Client Chip */}
+                        <div className="inline-flex h-auto max-w-full items-start gap-1.5 rounded bg-muted/60 px-2 py-1 text-[10px] font-medium leading-snug text-muted-foreground">
+                          <Building2 className="h-3 w-3 shrink-0" />
+                          <span className="min-w-0 break-words">
+                            {contact.clients?.name || "Cliente não informado"}
+                          </span>
+                        </div>
+
+                        <div className="min-w-0 space-y-2 pt-1">
+                          <div className="flex min-w-0 items-start gap-2.5 text-sm group/link">
+                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/20">
+                              <Mail className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                            </div>
+                            <span
+                              className="min-w-0 break-all pt-1 text-xs leading-relaxed text-foreground/80 selection:bg-blue-100 selection:text-blue-900"
+                              title={contact.email || ""}
+                            >
+                              {contact.email || (
+                                <span className="text-muted-foreground italic">
+                                  Não informado
+                                </span>
+                              )}
+                            </span>
+                          </div>
+
+                          <div className="flex min-w-0 items-start gap-2.5 text-sm">
+                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-50 dark:bg-green-900/20">
+                              <Phone className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
+                            </div>
+                            <span className="min-w-0 break-words pt-1 text-xs leading-relaxed text-foreground/80">
+                              {contact.phone || (
+                                <span className="text-muted-foreground italic">
+                                  Não informado
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                        </div>
+
+                        {contact.notes && (
+                          <div className="relative mt-3 min-w-0 rounded border-t bg-muted/10 p-2 pt-3 text-xs italic text-muted-foreground">
+                            <span className="absolute left-1 top-1 text-2xl leading-none text-muted-foreground/20">
+                              "
+                            </span>
+                            <span className="relative z-10 block min-w-0 break-words pl-2 leading-relaxed line-clamp-3">
+                              {contact.notes}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              <div
+                className="mt-4 flex min-w-0 flex-col gap-3 border-t px-1 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-2"
+                data-testid="commercial-contacts-pagination"
+              >
+                <p className="text-center text-xs text-muted-foreground sm:text-left sm:text-sm">
+                  Mostrando{" "}
+                  <strong className="font-semibold text-foreground">
+                    {firstVisibleItem}–{lastVisibleItem}
+                  </strong>{" "}
+                  de{" "}
+                  <strong className="font-semibold text-foreground">
+                    {filteredContacts.length}
+                  </strong>
+                </p>
+
+                <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 sm:justify-end">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground sm:text-sm">
+                    <span>Por página</span>
+                    <Select
+                      value={itemsPerPage.toString()}
+                      onValueChange={(value) => {
+                        setSelectedPageSize(Number(value));
+                        setCurrentPage(1);
+                      }}
+                    >
+                      <SelectTrigger
+                        className="h-8 w-[68px]"
+                        aria-label="Contatos por página"
+                      >
+                        <SelectValue placeholder={itemsPerPage.toString()} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="3">3</SelectItem>
+                        <SelectItem value="6">6</SelectItem>
+                        <SelectItem value="12">12</SelectItem>
+                        <SelectItem value="24">24</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <span className="whitespace-nowrap text-xs font-medium sm:text-sm">
+                    Página {currentPage} de {totalPages}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() =>
+                        setCurrentPage((page) => Math.max(page - 1, 1))
+                      }
+                      disabled={currentPage === 1}
+                      aria-label="Página anterior"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() =>
+                        setCurrentPage((page) => Math.min(page + 1, totalPages))
+                      }
+                      disabled={currentPage === totalPages}
+                      aria-label="Próxima página"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </>
           )}
         </div>
       </div>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold flex items-center gap-2">
+      <Dialog
+        open={isDialogOpen}
+        onOpenChange={(open) => {
+          setIsDialogOpen(open);
+          if (!open) resetForm();
+        }}
+      >
+        <DialogContent
+          className="flex max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] min-w-0 max-w-[500px] flex-col overflow-hidden p-4 sm:p-6"
+          data-testid="commercial-contact-dialog"
+        >
+          <DialogHeader className="min-w-0 shrink-0 pr-8">
+            <DialogTitle className="flex min-w-0 items-center gap-2 text-lg font-bold sm:text-xl">
               {editingContact ? (
-                <Pencil className="h-5 w-5 text-purple-600" />
+                <Pencil className="h-5 w-5 shrink-0 text-purple-600" />
               ) : (
-                <Plus className="h-5 w-5 text-purple-600" />
+                <Plus className="h-5 w-5 shrink-0 text-purple-600" />
               )}
-              {editingContact ? "Editar Contato" : "Novo Contato"}
+              <span className="min-w-0 break-words">
+                {editingContact ? "Editar Contato" : "Novo Contato"}
+              </span>
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-left text-xs leading-relaxed sm:text-sm">
               Preencha as informações do contato abaixo. Todos os campos com *
               são obrigatórios.
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label
-                htmlFor="client"
-                className="text-xs font-bold uppercase text-muted-foreground"
+          <form
+            onSubmit={handleSubmit}
+            className="flex min-h-0 min-w-0 flex-1 flex-col"
+          >
+            <div className="min-h-0 min-w-0 flex-1 space-y-4 overflow-y-auto px-1 py-3">
+              <div className="space-y-2">
+                <Label
+                  htmlFor="client"
+                  className="text-xs font-bold uppercase text-muted-foreground"
+                >
+                  Cliente *
+                </Label>
+                <Select
+                  value={formData.client_id}
+                  onValueChange={(val) =>
+                    setFormData({ ...formData, client_id: val })
+                  }
+                  disabled={!!selectedClientId && !editingContact}
+                >
+                  <SelectTrigger
+                    className="h-10 w-full min-w-0"
+                    aria-label="Cliente do contato"
+                  >
+                    <SelectValue placeholder="Selecione o cliente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {clients?.map((client) => (
+                      <SelectItem key={client.id} value={client.id}>
+                        {client.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div
+                className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2"
+                data-testid="commercial-contact-primary-fields"
               >
-                Cliente *
-              </Label>
-              <Select
-                value={formData.client_id}
-                onValueChange={(val) =>
-                  setFormData({ ...formData, client_id: val })
-                }
-                disabled={!!selectedClientId && !editingContact}
-              >
-                <SelectTrigger className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
-                  <SelectValue placeholder="Selecione o cliente" />
-                </SelectTrigger>
-                <SelectContent>
-                  {clients?.map((client) => (
-                    <SelectItem key={client.id} value={client.id}>
-                      {client.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="name"
+                    className="text-xs font-bold uppercase text-muted-foreground"
+                  >
+                    Nome Completo *
+                  </Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                    required
+                    className="h-10"
+                    placeholder="Ex: João Silva"
+                  />
+                </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label
-                  htmlFor="name"
-                  className="text-xs font-bold uppercase text-muted-foreground"
-                >
-                  Nome Completo *
-                </Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  required
-                  className="h-10"
-                  placeholder="Ex: João Silva"
-                />
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="role"
+                    className="text-xs font-bold uppercase text-muted-foreground"
+                  >
+                    Cargo / Papel
+                  </Label>
+                  <Input
+                    id="role"
+                    placeholder="Ex: Gerente"
+                    value={formData.role}
+                    onChange={(e) =>
+                      setFormData({ ...formData, role: e.target.value })
+                    }
+                    className="h-10"
+                  />
+                </div>
+              </div>
+
+              <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="phone"
+                    className="text-xs font-bold uppercase text-muted-foreground"
+                  >
+                    Telefone
+                  </Label>
+                  <Input
+                    id="phone"
+                    placeholder="(XX) 99999-9999"
+                    value={formData.phone}
+                    onChange={(e) =>
+                      setFormData({ ...formData, phone: e.target.value })
+                    }
+                    className="h-10"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="email"
+                    className="text-xs font-bold uppercase text-muted-foreground"
+                  >
+                    Email
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="joao@empresa.com"
+                    value={formData.email}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
+                    className="h-10"
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">
                 <Label
-                  htmlFor="role"
+                  htmlFor="notes"
                   className="text-xs font-bold uppercase text-muted-foreground"
                 >
-                  Cargo / Papel
+                  Observações
                 </Label>
-                <Input
-                  id="role"
-                  placeholder="Ex: Gerente"
-                  value={formData.role}
+                <Textarea
+                  id="notes"
+                  placeholder="Informações adicionais sobre o contato..."
+                  value={formData.notes}
                   onChange={(e) =>
-                    setFormData({ ...formData, role: e.target.value })
+                    setFormData({ ...formData, notes: e.target.value })
                   }
-                  className="h-10"
+                  className="min-h-[80px]"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label
-                  htmlFor="phone"
-                  className="text-xs font-bold uppercase text-muted-foreground"
-                >
-                  Telefone
-                </Label>
-                <Input
-                  id="phone"
-                  placeholder="(XX) 99999-9999"
-                  value={formData.phone}
-                  onChange={(e) =>
-                    setFormData({ ...formData, phone: e.target.value })
-                  }
-                  className="h-10"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label
-                  htmlFor="email"
-                  className="text-xs font-bold uppercase text-muted-foreground"
-                >
-                  Email
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="joao@empresa.com"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                  className="h-10"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label
-                htmlFor="notes"
-                className="text-xs font-bold uppercase text-muted-foreground"
-              >
-                Observações
-              </Label>
-              <Textarea
-                id="notes"
-                placeholder="Informações adicionais sobre o contato..."
-                value={formData.notes}
-                onChange={(e) =>
-                  setFormData({ ...formData, notes: e.target.value })
-                }
-                className="min-h-[80px]"
-              />
-            </div>
-
-            <DialogFooter className="pt-4">
+            <DialogFooter className="shrink-0 gap-2 border-t pt-4 sm:gap-2">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setIsDialogOpen(false)}
+                className="w-full sm:w-auto"
               >
                 Cancelar
               </Button>
               <Button
                 type="submit"
-                className="bg-purple-600 hover:bg-purple-700"
+                className="w-full bg-purple-600 hover:bg-purple-700 sm:w-auto"
+                disabled={isSaving}
               >
+                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Salvar Contato
               </Button>
             </DialogFooter>

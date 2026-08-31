@@ -450,23 +450,23 @@
     "semantic_hash": ""
   },
   "src/components/calendar/CalendarControls.tsx": {
-    "mtime": 1788200643.1427438,
-    "ast_hash": "ca1a19245b7dc176e32c0e65e0f1c55a",
+    "mtime": 1788201431.598339,
+    "ast_hash": "85dc6a16a1372d65552b4a788f0bb0e0",
     "semantic_hash": ""
   },
   "src/components/calendar/CalendarGrid.tsx": {
-    "mtime": 1788200721.88227,
-    "ast_hash": "c197187bc452c6e354877fa3a5611f88",
+    "mtime": 1788201431.598339,
+    "ast_hash": "3f6f181622373d0717adecbf13910f5b",
     "semantic_hash": ""
   },
   "src/components/calendar/DraggableTeamMember.tsx": {
-    "mtime": 1788200772.779806,
-    "ast_hash": "228ff7e35bef0b57fd905baffee181a4",
+    "mtime": 1788201431.5993388,
+    "ast_hash": "fa41d7803db884ac5144865bbea0d12c",
     "semantic_hash": ""
   },
   "src/components/calendar/EventCard.tsx": {
-    "mtime": 1788200652.652515,
-    "ast_hash": "585182d376d5d0a0f999cb5a08ab5e39",
+    "mtime": 1788201431.6003368,
+    "ast_hash": "bcf9509abf2b89b56761641b3a763406",
     "semantic_hash": ""
   },
   "src/components/checklist/ChecklistEditor.tsx": {
@@ -475,8 +475,8 @@
     "semantic_hash": ""
   },
   "src/components/commercial/DeploymentFormFields.tsx": {
-    "mtime": 1786361796.8651943,
-    "ast_hash": "cbb18f328d6785ffaa83d2e085909e2f",
+    "mtime": 1788207769.671445,
+    "ast_hash": "dc51abd214521a66ae53610acddd228c",
     "semantic_hash": ""
   },
   "src/components/conversion/CompactQueueCard.tsx": {
@@ -1015,8 +1015,8 @@
     "semantic_hash": "1ef20455261f2c0932906b119928ffbb"
   },
   "src/pages/AgendaAnalistas.tsx": {
-    "mtime": 1788201214.344982,
-    "ast_hash": "ac4b0d45a9e7f0cdd843dcb31f7951ad",
+    "mtime": 1788201431.6013515,
+    "ast_hash": "bfa4c1d3f3b3ba3a2e2ac429fed9711c",
     "semantic_hash": ""
   },
   "src/pages/Analytics.tsx": {
@@ -1025,8 +1025,8 @@
     "semantic_hash": "14dac6cf025b564f7827df1c74ed297a"
   },
   "src/pages/Calendar.tsx": {
-    "mtime": 1788200756.0848608,
-    "ast_hash": "1890084d5de8f6db97c6d5fc069aef12",
+    "mtime": 1788201431.6023598,
+    "ast_hash": "dd8deb9f3396a657a9bef8e872ba4794",
     "semantic_hash": ""
   },
   "src/pages/CompareProjects.tsx": {
@@ -1150,23 +1150,23 @@
     "semantic_hash": ""
   },
   "src/pages/commercial/CommercialBlockers.tsx": {
-    "mtime": 1785877154.1213725,
-    "ast_hash": "d4d6f47bb214229decf10bac4692dc6f",
+    "mtime": 1788206162.2451906,
+    "ast_hash": "a52bc0814034a701d73cc44417c98294",
     "semantic_hash": ""
   },
   "src/pages/commercial/CommercialChecklists.tsx": {
-    "mtime": 1785877154.1223707,
-    "ast_hash": "2db73fb06a7b7c2cfa5d463a23e03944",
+    "mtime": 1788207695.1011014,
+    "ast_hash": "9369ae2cfb1d288812dfb07c1496fb5c",
     "semantic_hash": ""
   },
   "src/pages/commercial/CommercialContacts.tsx": {
-    "mtime": 1784123070.6497693,
-    "ast_hash": "763c36a242b8caeef1de5cce33cedf19",
+    "mtime": 1788206966.296875,
+    "ast_hash": "ace2925341ac215924bd58019ae30616",
     "semantic_hash": ""
   },
   "src/pages/commercial/CommercialCustomers.tsx": {
-    "mtime": 1785877154.1228778,
-    "ast_hash": "3fdc5eb6b70fafe5be86c9d0154765a1",
+    "mtime": 1788205089.5576425,
+    "ast_hash": "b70a55aee1ece3dc9961b765bf0d411e",
     "semantic_hash": ""
   },
   "src/pages/commercial/CustomerTimeline.tsx": {
@@ -2640,8 +2640,8 @@
     "semantic_hash": ""
   },
   "src/components/calendar/CalendarLegend.tsx": {
-    "mtime": 1788200764.063413,
-    "ast_hash": "53ba77263214c2b11b0ede7914c999ed",
+    "mtime": 1788201431.5993388,
+    "ast_hash": "86e87c28a73b74f0796370d60b01b423",
     "semantic_hash": ""
   },
   "src/components/ui/voice-dictation-button.tsx": {
@@ -4670,18 +4670,38 @@
     "semantic_hash": ""
   },
   "src/components/calendar/Calendar.mobile.test.tsx": {
-    "mtime": 1788200846.8121932,
-    "ast_hash": "0d212f947ac1e94a095f0e52b6a9c3d1",
+    "mtime": 1788201431.5973406,
+    "ast_hash": "cebe6f5024694f7d1e58ade17553cca6",
     "semantic_hash": ""
   },
   "src/components/calendar/MobileCalendarAgenda.tsx": {
-    "mtime": 1788200816.3073483,
-    "ast_hash": "072ccd5471d9f1b411eeef547060aae4",
+    "mtime": 1788201431.6008444,
+    "ast_hash": "0c2643759f373ee6b4299c352c22a457",
     "semantic_hash": ""
   },
   "src/pages/AgendaAnalistas.mobile.test.tsx": {
-    "mtime": 1788201214.344982,
-    "ast_hash": "06662bc850323f5b7371a48bd9e8f7c6",
+    "mtime": 1788201431.6013515,
+    "ast_hash": "72028d0528dbb139f674598b3b4a34f9",
+    "semantic_hash": ""
+  },
+  "src/pages/commercial/CommercialCustomers.mobile.test.tsx": {
+    "mtime": 1788205089.5586429,
+    "ast_hash": "e62537c6153335c398003e8c1e90864d",
+    "semantic_hash": ""
+  },
+  "src/pages/commercial/CommercialBlockers.mobile.test.tsx": {
+    "mtime": 1788206162.2471652,
+    "ast_hash": "075a4edb0d3ff093797bcd29e48b82af",
+    "semantic_hash": ""
+  },
+  "src/pages/commercial/CommercialContacts.mobile.test.tsx": {
+    "mtime": 1788207033.813643,
+    "ast_hash": "04fb050fa084877a16cde29aa059a6c1",
+    "semantic_hash": ""
+  },
+  "src/pages/commercial/CommercialChecklists.mobile.test.tsx": {
+    "mtime": 1788207781.5896027,
+    "ast_hash": "50fa4c639d28f0711f11dddc26b76373",
     "semantic_hash": ""
   }
 }
