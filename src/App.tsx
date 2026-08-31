@@ -9,7 +9,7 @@ import { lazy, Suspense } from "react";
 import DashboardV2 from "./pages/DashboardV2";
 import { MainLayout } from "@/components/Layout/MainLayout";
 import { ThemeProvider } from "@/components/theme-provider";
-import { PwaStatus } from "@/components/pwa/PwaStatus";
+import { PwaProvider } from "@/components/pwa/PwaStatus";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { RequirePermission } from "@/components/auth/RequirePermission";
@@ -189,14 +189,14 @@ const ProjectAdherenceRouteWrapper = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <TooltipProvider>
-        <Toaster />
-        <SonnerToaster />
-        <PwaStatus />
-        <AuthProvider>
-          <BrowserRouter
-            future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-          >
+      <PwaProvider>
+        <TooltipProvider>
+          <Toaster />
+          <SonnerToaster />
+          <AuthProvider>
+            <BrowserRouter
+              future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+            >
             <Routes>
               {/* Public Routes */}
               <Route path="/login" element={<Login />} />
@@ -890,9 +890,10 @@ const App = () => (
                 }
               />
             </Routes>
-          </BrowserRouter>
-        </AuthProvider>
-      </TooltipProvider>
+            </BrowserRouter>
+          </AuthProvider>
+        </TooltipProvider>
+      </PwaProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );

@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
-import { Download, RefreshCw, Share, WifiOff, X } from "lucide-react";
+import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import { Download, RefreshCw, WifiOff } from "lucide-react";
 import { useRegisterSW } from "virtual:pwa-register/react";
 
+import { PwaInstallContext } from "@/components/pwa/PwaContext";
 import { Button } from "@/components/ui/button";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -9,7 +10,12 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
-const INSTALL_DISMISSED_KEY = "siplan-pwa-install-dismissed";
+interface PwaProviderProps {
+  children: ReactNode;
+}
+
+const INSTALL_LATER_KEY = "siplan-pwa-install-later";
+const INSTALL_NEVER_KEY = "siplan-pwa-install-never";
 const UPDATE_INTERVAL_MS = 60 * 60 * 1000;
 const PUBLIC_EXPERIENCE_PATHS = [
   /^\/public\//,
@@ -32,50 +38,74 @@ function isIosDevice() {
   );
 }
 
-function isPublicExperience() {
-  return PUBLIC_EXPERIENCE_PATHS.some((pattern) => pattern.test(window.location.pathname));
+function isMobileDevice() {
+  return (
+    window.matchMedia("(max-width: 767px)").matches ||
+    /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent)
+  );
 }
 
-function wasInstallDismissed() {
+function isPublicExperience() {
+  return PUBLIC_EXPERIENCE_PATHS.some((pattern) =>
+    pattern.test(window.location.pathname),
+  );
+}
+
+function readStorage(storage: Storage, key: string) {
   try {
-    return sessionStorage.getItem(INSTALL_DISMISSED_KEY) === "true";
+    return storage.getItem(key) === "true";
   } catch {
     return false;
   }
 }
 
-function rememberInstallDismissal() {
+function writeStorage(storage: Storage, key: string) {
   try {
-    sessionStorage.setItem(INSTALL_DISMISSED_KEY, "true");
+    storage.setItem(key, "true");
   } catch {
-    // A instalação continua funcional mesmo quando o armazenamento está bloqueado.
+    // O fluxo manual continua disponível quando o armazenamento está bloqueado.
   }
 }
 
-export function PwaStatus() {
+export function PwaProvider({ children }: PwaProviderProps) {
   const [isOnline, setIsOnline] = useState(() => navigator.onLine);
+  const [registration, setRegistration] =
+    useState<ServiceWorkerRegistration | null>(null);
   const [installPrompt, setInstallPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
-  const [installDismissed, setInstallDismissed] = useState(wasInstallDismissed);
-  const [installed, setInstalled] = useState(isRunningStandalone);
-  const suppressMessages = isPublicExperience();
+  const [isInstalled, setIsInstalled] = useState(isRunningStandalone);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [postponed, setPostponed] = useState(() =>
+    readStorage(sessionStorage, INSTALL_LATER_KEY),
+  );
+  const [neverShow, setNeverShow] = useState(() =>
+    readStorage(localStorage, INSTALL_NEVER_KEY),
+  );
+  const [isIos] = useState(isIosDevice);
+  const [isMobile] = useState(isMobileDevice);
 
   const {
     offlineReady: [offlineReady, setOfflineReady],
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
   } = useRegisterSW({
-    onRegisteredSW: (_swUrl, registration) => {
-      if (!registration) return;
-
-      window.setInterval(() => {
-        void registration.update();
-      }, UPDATE_INTERVAL_MS);
+    onRegisteredSW: (_swUrl, serviceWorkerRegistration) => {
+      setRegistration(serviceWorkerRegistration ?? null);
     },
     onRegisterError: (error) => {
       console.error("Não foi possível registrar o aplicativo Siplan HUB.", error);
     },
   });
+
+  useEffect(() => {
+    if (!registration) return;
+
+    const interval = window.setInterval(() => {
+      void registration.update();
+    }, UPDATE_INTERVAL_MS);
+
+    return () => window.clearInterval(interval);
+  }, [registration]);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -85,7 +115,8 @@ export function PwaStatus() {
       setInstallPrompt(event as BeforeInstallPromptEvent);
     };
     const handleInstalled = () => {
-      setInstalled(true);
+      setIsInstalled(true);
+      setDialogOpen(false);
       setInstallPrompt(null);
     };
 
@@ -102,133 +133,132 @@ export function PwaStatus() {
     };
   }, []);
 
-  const dismissInstall = useCallback(() => {
-    rememberInstallDismissal();
-    setInstallDismissed(true);
+  const openInstallDialog = useCallback(() => setDialogOpen(true), []);
+
+  const postponeInstall = useCallback(() => {
+    writeStorage(sessionStorage, INSTALL_LATER_KEY);
+    setPostponed(true);
+    setDialogOpen(false);
+  }, []);
+
+  const neverShowInstall = useCallback(() => {
+    writeStorage(localStorage, INSTALL_NEVER_KEY);
+    setNeverShow(true);
+    setDialogOpen(false);
   }, []);
 
   const installApp = useCallback(async () => {
-    if (!installPrompt) return;
+    if (!installPrompt) return false;
 
-    await installPrompt.prompt();
-    const { outcome } = await installPrompt.userChoice;
-    setInstallPrompt(null);
+    try {
+      await installPrompt.prompt();
+      const { outcome } = await installPrompt.userChoice;
+      setInstallPrompt(null);
 
-    if (outcome === "accepted") {
-      setInstalled(true);
-    } else {
-      dismissInstall();
+      if (outcome === "accepted") {
+        setIsInstalled(true);
+        setDialogOpen(false);
+        return true;
+      }
+
+      postponeInstall();
+      return false;
+    } catch (error) {
+      console.error("Não foi possível abrir a instalação do Siplan HUB.", error);
+      return false;
     }
-  }, [dismissInstall, installPrompt]);
+  }, [installPrompt, postponeInstall]);
 
+  const contextValue = useMemo(
+    () => ({
+      canInstall: installPrompt !== null,
+      dialogOpen,
+      isInstalled,
+      isIos,
+      isMobile,
+      shouldAutoOffer:
+        isMobile && !isInstalled && !postponed && !neverShow,
+      installApp,
+      neverShowInstall,
+      openInstallDialog,
+      postponeInstall,
+    }),
+    [
+      dialogOpen,
+      installApp,
+      installPrompt,
+      isInstalled,
+      isIos,
+      isMobile,
+      neverShow,
+      neverShowInstall,
+      openInstallDialog,
+      postponed,
+      postponeInstall,
+    ],
+  );
+
+  const suppressStatus = isPublicExperience();
   const cardClass =
     "fixed left-3 right-3 z-[100] mx-auto flex max-w-md items-start gap-3 rounded-xl border border-border bg-background/95 p-4 text-foreground shadow-2xl backdrop-blur sm:left-auto sm:right-4";
   const cardStyle = { bottom: "max(1rem, env(safe-area-inset-bottom))" };
 
-  if (suppressMessages) return null;
+  return (
+    <PwaInstallContext.Provider value={contextValue}>
+      {children}
 
-  if (!isOnline) {
-    return (
-      <div className={cardClass} style={cardStyle} role="status" aria-live="polite">
-        <WifiOff className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
-        <div>
-          <p className="font-semibold">Você está sem conexão</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            A estrutura do aplicativo continua disponível, mas dados e operações do
-            sistema precisam de internet para sincronizar.
-          </p>
+      {!suppressStatus && !isOnline && (
+        <div className={cardClass} style={cardStyle} role="status" aria-live="polite">
+          <WifiOff className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
+          <div>
+            <p className="font-semibold">Você está sem conexão</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              A estrutura do aplicativo continua disponível, mas dados e operações
+              do sistema precisam de internet para sincronizar.
+            </p>
+          </div>
         </div>
-      </div>
-    );
-  }
+      )}
 
-  if (needRefresh) {
-    return (
-      <div className={cardClass} style={cardStyle} role="status" aria-live="polite">
-        <RefreshCw className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-        <div className="min-w-0 flex-1">
-          <p className="font-semibold">Nova versão disponível</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Atualize quando puder. Salve formulários em andamento antes de continuar.
-          </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            <Button size="sm" onClick={() => void updateServiceWorker(true)}>
-              Atualizar agora
-            </Button>
-            <Button size="sm" variant="ghost" onClick={() => setNeedRefresh(false)}>
-              Agora não
+      {!suppressStatus && isOnline && needRefresh && (
+        <div className={cardClass} style={cardStyle} role="status" aria-live="polite">
+          <RefreshCw className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold">Nova versão disponível</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Atualize quando puder. Salve formulários em andamento antes de continuar.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button size="sm" onClick={() => void updateServiceWorker(true)}>
+                Atualizar agora
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setNeedRefresh(false)}>
+                Agora não
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!suppressStatus && isOnline && !needRefresh && offlineReady && (
+        <div className={cardClass} style={cardStyle} role="status" aria-live="polite">
+          <Download className="mt-0.5 h-5 w-5 shrink-0 text-success" />
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold">Aplicativo preparado</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              A estrutura do Siplan HUB foi salva neste dispositivo.
+            </p>
+            <Button
+              className="mt-3"
+              size="sm"
+              variant="outline"
+              onClick={() => setOfflineReady(false)}
+            >
+              Entendi
             </Button>
           </div>
         </div>
-      </div>
-    );
-  }
-
-  if (offlineReady) {
-    return (
-      <div className={cardClass} style={cardStyle} role="status" aria-live="polite">
-        <Download className="mt-0.5 h-5 w-5 shrink-0 text-success" />
-        <div className="min-w-0 flex-1">
-          <p className="font-semibold">Aplicativo preparado</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            A estrutura do Siplan HUB foi salva neste dispositivo.
-          </p>
-          <Button className="mt-3" size="sm" variant="outline" onClick={() => setOfflineReady(false)}>
-            Entendi
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!installed && !installDismissed && installPrompt) {
-    return (
-      <div className={cardClass} style={cardStyle} role="dialog" aria-label="Instalar Siplan HUB">
-        <Download className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-        <div className="min-w-0 flex-1">
-          <p className="font-semibold">Instale o Siplan HUB</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Abra em uma janela própria e acesse pelo ícone na tela inicial.
-          </p>
-          <Button className="mt-3" size="sm" onClick={() => void installApp()}>
-            Instalar aplicativo
-          </Button>
-        </div>
-        <Button
-          aria-label="Fechar convite de instalação"
-          className="-mr-2 -mt-2 shrink-0"
-          size="icon"
-          variant="ghost"
-          onClick={dismissInstall}
-        >
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
-    );
-  }
-
-  if (!installed && !installDismissed && isIosDevice()) {
-    return (
-      <div className={cardClass} style={cardStyle} role="dialog" aria-label="Instalar Siplan HUB no iPhone">
-        <Share className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-        <div className="min-w-0 flex-1">
-          <p className="font-semibold">Instale o Siplan HUB</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            No Safari, toque em Compartilhar e depois em “Adicionar à Tela de Início”.
-          </p>
-        </div>
-        <Button
-          aria-label="Fechar instruções de instalação"
-          className="-mr-2 -mt-2 shrink-0"
-          size="icon"
-          variant="ghost"
-          onClick={dismissInstall}
-        >
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
-    );
-  }
-
-  return null;
+      )}
+    </PwaInstallContext.Provider>
+  );
 }

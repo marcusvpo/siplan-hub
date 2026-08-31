@@ -140,7 +140,7 @@
     "semantic_hash": "4bf12498562950a1602f3902102b7cc8"
   },
   "package.json": {
-    "mtime": 1788183258.9321387,
+    "mtime": 1788184540.4160995,
     "ast_hash": "1592548a97a984864266ac62cd0be5aa",
     "semantic_hash": ""
   },
@@ -155,8 +155,8 @@
     "semantic_hash": ""
   },
   "src/App.tsx": {
-    "mtime": 1788183409.7178395,
-    "ast_hash": "30f78d49d2fbf60e89f52918319266c9",
+    "mtime": 1788185381.7623768,
+    "ast_hash": "daa3b4aad27e2fc2401cd7f2b62b8dd6",
     "semantic_hash": ""
   },
   "src/components/Admin/OverviewChart.tsx": {
@@ -255,8 +255,8 @@
     "semantic_hash": ""
   },
   "src/components/Layout/MainLayout.tsx": {
-    "mtime": 1788180066.788221,
-    "ast_hash": "1fe47ded914ce535e26927e683e407db",
+    "mtime": 1788185381.766907,
+    "ast_hash": "aa26eb701fff0e702839dff8e5fbc072",
     "semantic_hash": ""
   },
   "src/components/Layout/UserProfileDrawer.tsx": {
@@ -1340,8 +1340,8 @@
     "semantic_hash": ""
   },
   "src/vite-env.d.ts": {
-    "mtime": 1788183409.714307,
-    "ast_hash": "5f1a7d20083a790c58c47a017326b745",
+    "mtime": 1788184540.4221723,
+    "ast_hash": "947f5d79d500f3ecd6af3b6d90906737",
     "semantic_hash": ""
   },
   "supabase/functions/create-user/deno.json": {
@@ -1640,8 +1640,8 @@
     "semantic_hash": "0db7ccb3aff36e97aa469126e9e17f99"
   },
   "vite.config.ts": {
-    "mtime": 1788183941.1537414,
-    "ast_hash": "871d7b0573030f2ccf2b44e29a7cf10a",
+    "mtime": 1788184540.4227724,
+    "ast_hash": "ee0ff613aef466913a5a48ba78ea55e3",
     "semantic_hash": ""
   },
   "vm-worker/package.json": {
@@ -2445,8 +2445,8 @@
     "semantic_hash": "d020accd9c976ccb5f19a7480e709035"
   },
   "index.html": {
-    "mtime": 1788183716.9624436,
-    "ast_hash": "d63e7f48558d00f89db0ea567f96e32e",
+    "mtime": 1788184540.4096775,
+    "ast_hash": "462fc13306ae0d44f82bce796ec84771",
     "semantic_hash": ""
   },
   "public/robots.txt": {
@@ -4555,33 +4555,43 @@
     "semantic_hash": ""
   },
   "src/components/pwa/PwaStatus.tsx": {
-    "mtime": 1788183716.9659789,
-    "ast_hash": "e63acf32b10c5dcb39f7deaf0e75313f",
+    "mtime": 1788185518.6166408,
+    "ast_hash": "c13f8ef13f458228f2ddf31ee9c5d38a",
     "semantic_hash": ""
   },
   "src/test/pwa-status.test.tsx": {
-    "mtime": 1788183725.8333347,
-    "ast_hash": "9c324a9211b1647394ad2f57af3988cf",
+    "mtime": 1788185531.9255323,
+    "ast_hash": "348d5f8bfc46bc99b2a3ff67efa9c551",
     "semantic_hash": ""
   },
   "public/apple-touch-icon.png": {
-    "mtime": 1788183433.9587314,
+    "mtime": 1788184540.4166315,
     "ast_hash": "58fae70d64bf07f9c98e7127f542d73f",
     "semantic_hash": ""
   },
   "public/maskable-icon-512x512.png": {
-    "mtime": 1788183433.647624,
+    "mtime": 1788184540.4176426,
     "ast_hash": "5cbe0bd0fe4962faad401e10343dde44",
     "semantic_hash": ""
   },
   "public/pwa-192x192.png": {
-    "mtime": 1788183432.2998135,
+    "mtime": 1788184540.418156,
     "ast_hash": "db7479b9095b8c5fe977e79c16fefb58",
     "semantic_hash": ""
   },
   "public/pwa-512x512.png": {
-    "mtime": 1788183433.061192,
+    "mtime": 1788184540.418916,
     "ast_hash": "c27f1a5ba83fedea60a34f3392a67ce4",
+    "semantic_hash": ""
+  },
+  "src/components/pwa/PwaContext.ts": {
+    "mtime": 1788185381.740225,
+    "ast_hash": "b9dfef5a24ac5df300aeccc911dd5118",
+    "semantic_hash": ""
+  },
+  "src/components/pwa/PwaInstallControls.tsx": {
+    "mtime": 1788185504.446788,
+    "ast_hash": "cb32d4e3ffb62ef6fea96e8b0240baf3",
     "semantic_hash": ""
   }
 }
