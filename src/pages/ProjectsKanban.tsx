@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useProjectsV2 } from "@/hooks/useProjectsV2";
 import { ProjectModal } from "@/components/ProjectManagement/ProjectModal";
-import { ProjectV2, StageStatus } from "@/types/ProjectV2";
+import { ProjectV2 } from "@/types/ProjectV2";
 import { 
   Loader2, 
   Circle, 
@@ -9,12 +9,11 @@ import {
   CheckCircle2, 
   AlertCircle,
   MoreVertical,
-  Calendar,
   User,
   ArrowRight
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
 import { 
@@ -65,6 +64,7 @@ const COLUMNS: Column[] = [
 export default function ProjectsKanban() {
   const { projects, isLoading, updateProject } = useProjectsV2();
   const [selectedProject, setSelectedProject] = useState<ProjectV2 | null>(null);
+  const [activeMobileColumn, setActiveMobileColumn] = useState<KanbanStatus>("in-progress");
   const { toast } = useToast();
   const { hasPermission } = usePermissions();
   const canEditKanban = hasPermission("kanban", "edit");
@@ -89,6 +89,27 @@ export default function ProjectsKanban() {
     return groups;
   }, [projects]);
 
+  const moveProject = (project: ProjectV2, newStatus: KanbanStatus) => {
+    if (!canEditKanban) return;
+
+    const currentStatus = project.globalStatus === "archived" ? "done" : project.globalStatus;
+    if (currentStatus === newStatus) return;
+
+    updateProject.mutate({
+      projectId: project.id,
+      updates: {
+        ...project,
+        globalStatus: newStatus
+      }
+    });
+
+    const destination = COLUMNS.find(column => column.id === newStatus)?.title ?? newStatus;
+    toast({
+      title: "Status Atualizado",
+      description: `O projeto "${project.clientName}" foi movido para ${destination}.`,
+    });
+  };
+
   const onDragEnd = (result: DropResult) => {
     if (!canEditKanban) return;
 
@@ -106,21 +127,11 @@ export default function ProjectsKanban() {
     const newStatus = destination.droppableId as KanbanStatus;
     const project = projects.find(p => p.id === draggableId);
 
-    if (project && project.globalStatus !== newStatus) {
-      updateProject.mutate({
-        projectId: project.id,
-        updates: {
-          ...project,
-          globalStatus: newStatus
-        }
-      });
-
-      toast({
-        title: "Status Atualizado",
-        description: `O projeto "${project.clientName}" foi movido para ${newStatus === "todo" ? "Não Iniciado" : newStatus === "in-progress" ? "Em Andamento" : newStatus === "done" ? "Concluído" : "Bloqueado"}.`,
-      });
-    }
+    if (project) moveProject(project, newStatus);
   };
+
+  const mobileColumn = COLUMNS.find(column => column.id === activeMobileColumn) ?? COLUMNS[0];
+  const mobileProjects = groupedProjects[activeMobileColumn];
 
   if (isLoading) {
     return (
@@ -131,7 +142,7 @@ export default function ProjectsKanban() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-100px)] pt-2 pb-6 px-4 space-y-4">
+    <div className="flex min-w-0 flex-col space-y-4 px-0 pb-4 pt-2 sm:px-4 md:h-[calc(100vh-100px)] md:pb-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-black tracking-tight">Quadro Kanban</h2>
@@ -141,8 +152,139 @@ export default function ProjectsKanban() {
         </div>
       </div>
 
-      <DragDropContext onDragEnd={onDragEnd}>
-        <div className="flex-1 overflow-x-auto">
+      <section className="space-y-4 md:hidden" data-testid="mobile-kanban">
+        <div className="grid grid-cols-2 gap-2" aria-label="Etapas do Kanban">
+          {COLUMNS.map(column => {
+            const isActive = column.id === activeMobileColumn;
+
+            return (
+              <button
+                key={column.id}
+                type="button"
+                aria-pressed={isActive}
+                onClick={() => setActiveMobileColumn(column.id)}
+                className={cn(
+                  "min-w-0 rounded-xl border px-3 py-2.5 text-left shadow-sm transition-colors",
+                  isActive
+                    ? column.color
+                    : "border-border/60 bg-card text-muted-foreground"
+                )}
+              >
+                <span className="flex items-start justify-between gap-2">
+                  <span className="flex min-w-0 items-start gap-2">
+                    <span className="shrink-0">{column.icon}</span>
+                    <span className="break-words text-[10px] font-bold uppercase leading-tight tracking-wide">
+                      {column.title}
+                    </span>
+                  </span>
+                  <Badge
+                    variant="outline"
+                    className="h-5 min-w-5 shrink-0 justify-center border-current/20 bg-background/60 px-1.5 text-[10px]"
+                  >
+                    {groupedProjects[column.id].length}
+                  </Badge>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex items-center justify-between gap-3 px-1">
+          <div className={cn("flex min-w-0 items-center gap-2", mobileColumn.color.split(" ")[0])}>
+            {mobileColumn.icon}
+            <h3 className="truncate text-sm font-black uppercase tracking-wide">
+              {mobileColumn.title}
+            </h3>
+          </div>
+          <span className="shrink-0 text-xs font-semibold text-muted-foreground">
+            {mobileProjects.length} {mobileProjects.length === 1 ? "projeto" : "projetos"}
+          </span>
+        </div>
+
+        <div className="space-y-3">
+          {mobileProjects.map(project => {
+            const visualStatus = project.globalStatus === "archived"
+              ? "done"
+              : project.globalStatus as KanbanStatus;
+
+            return (
+              <Card
+                key={project.id}
+                className="min-w-0 overflow-hidden border-border/60 bg-card/90 shadow-sm"
+              >
+                <button
+                  type="button"
+                  className="block w-full p-4 text-left active:bg-muted/40"
+                  onClick={() => setSelectedProject(project)}
+                >
+                  <span className="mb-2 flex min-w-0 flex-wrap items-center gap-1.5">
+                    <Badge variant="outline" className="h-5 border-primary/20 bg-primary/5 px-1.5 text-[9px] text-primary">
+                      #{project.ticketNumber}
+                    </Badge>
+                    <Badge variant="secondary" className="h-5 max-w-full bg-slate-700 px-1.5 text-[9px] text-white">
+                      <span className="truncate">{project.systemType}</span>
+                    </Badge>
+                  </span>
+
+                  <span className="block break-words text-sm font-bold leading-snug text-foreground">
+                    {project.clientName}
+                  </span>
+
+                  <span className="mt-4 block space-y-1.5">
+                    <span className="flex items-center justify-between text-[10px] text-muted-foreground">
+                      <span className="font-medium uppercase tracking-wider">Progresso</span>
+                      <span className="font-bold text-primary">{project.overallProgress}%</span>
+                    </span>
+                    <Progress value={project.overallProgress} className="h-1.5" />
+                  </span>
+
+                  <span className="mt-3 flex min-w-0 items-center gap-1.5 text-[11px] text-muted-foreground">
+                    <User className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate">{project.projectLeader || "Sem Líder"}</span>
+                  </span>
+                </button>
+
+                {canEditKanban && (
+                  <div className="flex items-center gap-3 border-t border-border/60 bg-muted/20 px-4 py-2.5">
+                    <label
+                      htmlFor={`mobile-status-${project.id}`}
+                      className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-muted-foreground"
+                    >
+                      Mover para
+                    </label>
+                    <select
+                      id={`mobile-status-${project.id}`}
+                      aria-label={`Status de ${project.clientName}`}
+                      value={visualStatus}
+                      onChange={event => moveProject(project, event.target.value as KanbanStatus)}
+                      className="h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-2 text-xs font-semibold text-foreground outline-none focus:ring-2 focus:ring-ring"
+                    >
+                      {COLUMNS.map(column => (
+                        <option key={column.id} value={column.id}>
+                          {column.title}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </Card>
+            );
+          })}
+
+          {mobileProjects.length === 0 && (
+            <div className="rounded-xl border border-dashed border-border bg-muted/20 px-5 py-10 text-center text-muted-foreground">
+              <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+                {mobileColumn.icon}
+              </div>
+              <p className="text-sm font-bold text-foreground">Nenhum projeto nesta etapa</p>
+              <p className="mt-1 text-xs">Escolha outra etapa acima para continuar.</p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <div className="hidden min-h-0 flex-1 overflow-x-auto md:block">
+        <DragDropContext onDragEnd={onDragEnd}>
           <div className="flex gap-6 h-full min-w-max pb-4">
             {COLUMNS.map(column => (
               <div key={column.id} className="w-80 flex flex-col gap-4">
@@ -242,8 +384,8 @@ export default function ProjectsKanban() {
               </div>
             ))}
           </div>
-        </div>
-      </DragDropContext>
+        </DragDropContext>
+      </div>
 
       <ProjectModal
         project={selectedProject}
