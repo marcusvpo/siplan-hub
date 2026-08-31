@@ -415,5 +415,10 @@
   "413": "sidebar-empty-groups.test.tsx",
   "414": "ImplementerInvolvement",
   "415": "PhaseMetrics",
-  "417": "cs-cx-admin-permissions.test.tsx"
+  "416": "sonner.tsx",
+  "417": "cs-cx-admin-permissions.test.tsx",
+  "418": "🗄️ Configuração Local do Supabase (Ambiente de Desenvolvimento)",
+  "419": "Visual QA Checklist",
+  "420": "admin-layout-sidebar.test.tsx",
+  "421": "ProtectedRoute.tsx"
 }
