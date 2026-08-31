@@ -34,7 +34,7 @@ export function DraggableTeamMember({ member }: DraggableTeamMemberProps) {
         toggleResourceVisibility(member.id);
       }}
       className={cn(
-        "flex items-center gap-1.5 px-2 py-1 rounded-full border shadow-sm transition-all select-none",
+        "flex min-h-9 min-w-0 max-w-full select-none items-center gap-1.5 rounded-full border px-2.5 py-1 shadow-sm transition-all md:min-h-0 md:px-2",
         isHidden
           ? "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-700 opacity-60 grayscale cursor-pointer"
           : "bg-background border-input cursor-grab active:cursor-grabbing hover:shadow-md",
@@ -42,7 +42,7 @@ export function DraggableTeamMember({ member }: DraggableTeamMemberProps) {
       )}
     >
       <div className={cn("w-2 h-2 rounded-full shrink-0", isHidden ? "bg-slate-300 dark:bg-slate-600" : member.color)} />
-      <span className="text-[10px] font-medium truncate">{member.name}</span>
+      <span className="min-w-0 truncate text-[10px] font-medium">{member.name}</span>
     </div>
   );
 }
