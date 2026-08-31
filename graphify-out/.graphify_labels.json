@@ -420,5 +420,6 @@
   "418": "🗄️ Configuração Local do Supabase (Ambiente de Desenvolvimento)",
   "419": "Visual QA Checklist",
   "420": "admin-layout-sidebar.test.tsx",
-  "421": "ProtectedRoute.tsx"
+  "421": "ProtectedRoute.tsx",
+  "422": "CsCxRoutines.tsx"
 }
