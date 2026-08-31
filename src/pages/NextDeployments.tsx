@@ -222,7 +222,7 @@ export default function NextDeployments() {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center p-8 bg-slate-50 dark:bg-slate-950">
+      <div className="flex min-h-[60vh] items-center justify-center bg-slate-50 p-4 dark:bg-slate-950 sm:p-8">
         <div className="flex flex-col items-center gap-4">
           <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
           <p className="text-slate-500 dark:text-slate-400 font-medium animate-pulse">
@@ -234,50 +234,72 @@ export default function NextDeployments() {
   }
 
   return (
-    <div className="space-y-5 pb-10">
+    <div
+      className="min-w-0 space-y-4 overflow-x-hidden pb-10 sm:space-y-5"
+      data-testid="next-deployments-page"
+    >
       {/* Page Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 pb-3 border-b border-slate-200 dark:border-slate-800"
+        className="flex min-w-0 flex-col items-start justify-between gap-4 border-b border-slate-200 pb-3 dark:border-slate-800 lg:flex-row lg:items-center"
       >
-        <div className="space-y-0.5">
-          <h1 className="text-xl md:text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-            <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+        <div className="min-w-0 space-y-0.5">
+          <h1 className="flex min-w-0 items-start gap-2 text-xl font-black tracking-tight text-slate-900 dark:text-white md:text-2xl">
+            <span className="min-w-0 break-words bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
               Próximas Implantações
             </span>
-            <Rocket className="w-5.5 h-5.5 text-indigo-500 animate-pulse" />
+            <Rocket className="h-5.5 w-5.5 shrink-0 animate-pulse text-indigo-500" />
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 max-w-2xl">
             Acompanhe o cronograma semanal das implantações confirmadas e previstas.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
           {/* Summary Badges */}
-          <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-800 shadow-sm text-xs font-semibold">
-            <span className="text-slate-600 dark:text-slate-300">
-              {sortedDeployments.length} Agendadas
-            </span>
-            <span className="text-slate-300 dark:text-slate-700">•</span>
-            <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-              <CheckCircle2 className="w-3 h-3" />
-              {confirmedTotal} Confirmadas
-            </span>
-            <span className="text-slate-300 dark:text-slate-700">•</span>
-            <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1">
-              <CalendarIcon className="w-3 h-3 text-slate-400" />
-              {forecastTotal} Previsões
-            </span>
+          <div
+            className="grid w-full min-w-0 grid-cols-3 gap-1.5 sm:w-auto"
+            data-testid="deployments-summary"
+          >
+            <div className="min-w-0 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:min-w-[88px]">
+              <strong className="block text-sm font-black text-slate-900 dark:text-white">
+                {sortedDeployments.length}
+              </strong>
+              <span className="block truncate text-[9px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                Agendadas
+              </span>
+            </div>
+            <div className="min-w-0 rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-2 py-1.5 text-center shadow-sm sm:min-w-[88px]">
+              <strong className="flex items-center justify-center gap-1 text-sm font-black text-emerald-600 dark:text-emerald-400">
+                <CheckCircle2 className="h-3 w-3" />
+                {confirmedTotal}
+              </strong>
+              <span className="block truncate text-[9px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+                Confirmadas
+              </span>
+            </div>
+            <div className="min-w-0 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-center shadow-sm dark:border-slate-700 dark:bg-slate-800/70 sm:min-w-[88px]">
+              <strong className="flex items-center justify-center gap-1 text-sm font-black text-slate-600 dark:text-slate-300">
+                <CalendarIcon className="h-3 w-3" />
+                {forecastTotal}
+              </strong>
+              <span className="block truncate text-[9px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                Previsões
+              </span>
+            </div>
           </div>
 
           {/* View Toggle */}
-          <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
+          <div
+            className="grid w-full grid-cols-2 items-center rounded-lg border border-slate-200 bg-slate-100 p-0.5 dark:border-slate-700 dark:bg-slate-800 sm:flex sm:w-auto"
+            data-testid="deployments-view-toggle"
+          >
             <Button
               variant={viewMode === "weekly" ? "secondary" : "ghost"}
               size="sm"
               onClick={() => setViewMode("weekly")}
-              className={`h-7 px-2.5 text-xs font-bold gap-1.5 rounded-md ${
+              className={`h-10 min-w-0 gap-1.5 rounded-md px-2.5 text-xs font-bold sm:h-7 ${
                 viewMode === "weekly"
                   ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm"
                   : "text-slate-600 dark:text-slate-400"
@@ -291,7 +313,7 @@ export default function NextDeployments() {
               variant={viewMode === "grid" ? "secondary" : "ghost"}
               size="sm"
               onClick={() => setViewMode("grid")}
-              className={`h-7 px-2.5 text-xs font-bold gap-1.5 rounded-md ${
+              className={`h-10 min-w-0 gap-1.5 rounded-md px-2.5 text-xs font-bold sm:h-7 ${
                 viewMode === "grid"
                   ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm"
                   : "text-slate-600 dark:text-slate-400"
@@ -309,18 +331,22 @@ export default function NextDeployments() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="flex flex-wrap items-center gap-3 p-2.5 bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm"
+        className="grid min-w-0 grid-cols-1 items-center gap-2.5 rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900/50 min-[420px]:grid-cols-2 sm:flex sm:flex-wrap"
+        data-testid="deployments-filters"
       >
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300">
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 min-[420px]:col-span-2 sm:col-span-1 sm:border-r sm:border-slate-200 sm:pr-2 dark:sm:border-slate-700">
           <Filter className="w-3.5 h-3.5" />
           <span>Filtros Avançados:</span>
         </div>
 
         {/* Deployer Filter */}
-        <div className="flex items-center gap-1.5">
-          <User className="w-3.5 h-3.5 text-slate-400" />
+        <div className="flex min-w-0 items-center gap-1.5">
+          <User className="h-3.5 w-3.5 shrink-0 text-slate-400" />
           <Select value={filterDeployer} onValueChange={setFilterDeployer}>
-            <SelectTrigger className="w-[180px] h-8 text-xs">
+            <SelectTrigger
+              className="h-10 min-w-0 flex-1 text-xs sm:h-8 sm:w-[180px] sm:flex-none"
+              aria-label="Filtrar por implantador"
+            >
               <SelectValue placeholder="Todos os Implantadores" />
             </SelectTrigger>
             <SelectContent>
@@ -337,10 +363,13 @@ export default function NextDeployments() {
         </div>
 
         {/* System Filter */}
-        <div className="flex items-center gap-1.5">
-          <Server className="w-3.5 h-3.5 text-slate-400" />
+        <div className="flex min-w-0 items-center gap-1.5">
+          <Server className="h-3.5 w-3.5 shrink-0 text-slate-400" />
           <Select value={filterSystem} onValueChange={setFilterSystem}>
-            <SelectTrigger className="w-[160px] h-8 text-xs">
+            <SelectTrigger
+              className="h-10 min-w-0 flex-1 text-xs sm:h-8 sm:w-[160px] sm:flex-none"
+              aria-label="Filtrar por sistema"
+            >
               <SelectValue placeholder="Todos os Sistemas" />
             </SelectTrigger>
             <SelectContent>
@@ -362,7 +391,7 @@ export default function NextDeployments() {
             variant="ghost"
             size="sm"
             onClick={clearFilters}
-            className="h-8 text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-200"
+            className="h-10 w-full text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 min-[420px]:col-span-2 sm:h-8 sm:w-auto"
           >
             <X className="w-3.5 h-3.5 mr-1" />
             Limpar Filtros
@@ -371,11 +400,11 @@ export default function NextDeployments() {
 
         {/* Active Filter Badges */}
         {hasActiveFilters && (
-          <div className="flex items-center gap-1.5 ml-auto">
+          <div className="flex min-w-0 flex-wrap items-center gap-1.5 min-[420px]:col-span-2 sm:col-span-1 sm:ml-auto">
             {filterDeployer !== "all" && (
-              <Badge variant="secondary" className="gap-1 text-[10px]">
+              <Badge variant="secondary" className="min-w-0 max-w-full gap-1 text-[10px]">
                 <User className="w-2.5 h-2.5" />
-                {filterDeployer}
+                <span className="truncate">{filterDeployer}</span>
                 <X
                   className="w-2.5 h-2.5 ml-1 cursor-pointer hover:text-red-500"
                   onClick={() => setFilterDeployer("all")}
@@ -383,9 +412,9 @@ export default function NextDeployments() {
               </Badge>
             )}
             {filterSystem !== "all" && (
-              <Badge variant="secondary" className="gap-1 text-[10px]">
+              <Badge variant="secondary" className="min-w-0 max-w-full gap-1 text-[10px]">
                 <Server className="w-2.5 h-2.5" />
-                {filterSystem}
+                <span className="truncate">{filterSystem}</span>
                 <X
                   className="w-2.5 h-2.5 ml-1 cursor-pointer hover:text-red-500"
                   onClick={() => setFilterSystem("all")}
@@ -400,26 +429,27 @@ export default function NextDeployments() {
       {sortedDeployments.length > 0 ? (
         viewMode === "weekly" ? (
           /* Visualização da Timeline por Semana */
-          <div className="space-y-6">
+          <div className="min-w-0 space-y-4 sm:space-y-6">
             {weeklyGroups.map((group, groupIdx) => (
               <motion.div
                 key={group.weekKey}
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: groupIdx * 0.05 }}
-                className={`rounded-2xl border p-4 transition-all ${
+                className={`min-w-0 overflow-hidden rounded-2xl border p-3 transition-all sm:p-4 ${
                   group.isCurrentWeek
                     ? "bg-blue-500/5 border-blue-300 dark:border-blue-700/50 shadow-sm"
                     : group.isNextWeek
                     ? "bg-orange-500/5 border-orange-300 dark:border-orange-700/50 shadow-sm"
                     : "bg-white dark:bg-slate-900/60 border-slate-200 dark:border-slate-800"
                 }`}
+                data-testid="deployment-week"
               >
                 {/* Week Header */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4 pb-3 border-b border-slate-200/80 dark:border-slate-800/80">
-                  <div className="flex items-center gap-2.5">
+                <div className="mb-4 flex min-w-0 flex-col items-start justify-between gap-3 border-b border-slate-200/80 pb-3 dark:border-slate-800/80 sm:flex-row sm:items-center">
+                  <div className="flex min-w-0 items-start gap-2.5">
                     <div
-                      className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs shadow-sm ${
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-black shadow-sm ${
                         group.isCurrentWeek
                           ? "bg-blue-600 text-white"
                           : group.isNextWeek
@@ -430,10 +460,11 @@ export default function NextDeployments() {
                       S{group.weekNumber}
                     </div>
 
-                    <div>
-                      <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                        <span>
-                          Semana {group.weekNumber} •{" "}
+                    <div className="min-w-0">
+                      <h3 className="break-words text-sm font-bold leading-snug text-slate-900 dark:text-white">
+                        Semana {group.weekNumber}
+                      </h3>
+                      <p className="break-words text-[11px] font-semibold text-slate-600 dark:text-slate-300">
                           {format(group.startDate, "dd 'de' MMM", {
                             locale: ptBR,
                           })}{" "}
@@ -441,8 +472,8 @@ export default function NextDeployments() {
                           {format(group.endDate, "dd 'de' MMM", {
                             locale: ptBR,
                           })}
-                        </span>
-
+                      </p>
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5">
                         {group.isCurrentWeek && (
                           <Badge className="bg-blue-600 hover:bg-blue-700 text-white text-[9px] uppercase font-extrabold px-2 py-0.5">
                             Semana Atual
@@ -453,7 +484,7 @@ export default function NextDeployments() {
                             Próxima Semana
                           </Badge>
                         )}
-                      </h3>
+                      </div>
                       <p className="text-[11px] text-slate-500 dark:text-slate-400">
                         {group.deployments.length}{" "}
                         {group.deployments.length === 1
@@ -463,16 +494,16 @@ export default function NextDeployments() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 text-xs font-semibold self-end sm:self-center">
+                  <div className="flex w-full flex-wrap gap-1.5 text-xs font-semibold sm:w-auto sm:self-center">
                     {group.confirmedCount > 0 && (
-                      <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 text-[11px] flex items-center gap-1 font-bold">
+                      <span className="flex min-w-0 flex-1 items-center justify-center gap-1 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-center text-[10px] font-bold text-emerald-700 dark:text-emerald-400 sm:flex-none sm:rounded-full sm:px-2.5 sm:text-[11px]">
                         <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                         {group.confirmedCount} Confirmada
                         {group.confirmedCount > 1 ? "s" : ""}
                       </span>
                     )}
                     {group.forecastCount > 0 && (
-                      <span className="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 text-[11px] flex items-center gap-1 font-medium">
+                      <span className="flex min-w-0 flex-1 items-center justify-center gap-1 rounded-lg border border-slate-200 bg-slate-100 px-2 py-1 text-center text-[10px] font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 sm:flex-none sm:rounded-full sm:px-2.5 sm:text-[11px]">
                         <CalendarIcon className="w-3 h-3 text-slate-400" />
                         {group.forecastCount} Previsão
                         {group.forecastCount > 1 ? "ões" : ""}
@@ -482,7 +513,7 @@ export default function NextDeployments() {
                 </div>
 
                 {/* Cards for this Week */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+                <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
                   {group.deployments.map((deployment, index) => (
                     <motion.div
                       key={`${deployment.project.id}-${deployment.phase}`}
@@ -503,7 +534,7 @@ export default function NextDeployments() {
           </div>
         ) : (
           /* Visualização Tradicional em Grade */
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+          <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
             {sortedDeployments.map((deployment, index) => (
               <motion.div
                 key={`${deployment.project.id}-${deployment.phase}`}
@@ -525,18 +556,18 @@ export default function NextDeployments() {
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="flex flex-col items-center justify-center py-20 text-center space-y-6 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-300 dark:border-slate-800"
+          className="flex min-w-0 flex-col items-center justify-center space-y-5 rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-14 text-center dark:border-slate-800 dark:bg-slate-900 sm:space-y-6 sm:rounded-3xl sm:py-20"
         >
           <div className="w-20 h-20 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
             <Rocket className="w-10 h-10" />
           </div>
           <div className="space-y-2">
-            <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+            <h3 className="break-words text-lg font-bold text-slate-900 dark:text-white sm:text-xl">
               {hasActiveFilters
                 ? "Nenhum resultado para os filtros selecionados"
                 : "Nenhuma implantação agendada"}
             </h3>
-            <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+            <p className="mx-auto max-w-md break-words text-sm text-slate-500 dark:text-slate-400 sm:text-base">
               {hasActiveFilters
                 ? "Tente ajustar ou limpar os filtros para ver mais resultados."
                 : "Nenhum projeto possui datas definidas para Implantação (Fase 1) ou Treinamento (Fase 2) no momento."}
