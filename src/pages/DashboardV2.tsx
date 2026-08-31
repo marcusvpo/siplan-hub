@@ -4,7 +4,7 @@ import { DashboardKPI } from "@/components/Dashboard/DashboardKPI";
 import { ProjectDistributionChart } from "@/components/Dashboard/ProjectDistributionChart";
 import { StatusChart } from "@/components/Dashboard/StatusChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertTriangle, Package, ArrowRight, Printer } from "lucide-react";
+import { Package, ArrowRight, Printer } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -13,9 +13,9 @@ import { cn } from "@/lib/utils";
 
 import { useToast } from "@/components/ui/use-toast";
 import { useEffect, useState } from "react";
-import { ScrollingText } from "@/components/ui/scrolling-text";
 import { ProjectDetailsModal } from "@/components/Dashboard/ProjectDetailsModal";
 import { DashboardTable } from "@/components/Dashboard/DashboardTable";
+import { CriticalAlerts } from "@/components/Dashboard/CriticalAlerts";
 import { TimelineChart } from "@/components/Dashboard/TimelineChart";
 import { WorkloadChart } from "@/components/Dashboard/WorkloadChart";
 import { ProjectV2 } from "@/types/ProjectV2";
@@ -213,7 +213,7 @@ export default function DashboardV2() {
         <div className="absolute bottom-[-10%] left-[-5%] w-[40%] h-[40%] bg-primary/5 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
       </div>
 
-      <main className="container mx-auto px-4 py-6 space-y-4 relative z-10">
+      <main className="container relative z-10 mx-auto w-full min-w-0 space-y-4 px-0 py-3 sm:px-4 sm:py-6">
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -321,57 +321,27 @@ export default function DashboardV2() {
         </div>
 
         {/* Lista de Projetos e Alertas */}
-        <div className="grid gap-6 lg:grid-cols-3 pt-4 min-h-[600px]">
-          <div className="lg:col-span-2 flex flex-col space-y-4">
-            <div className="flex items-center justify-between px-2 shrink-0">
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground/70">Projetos Ativos</h3>
-                <Badge variant="secondary" className="bg-primary/10 text-primary border-none font-bold">{projects.length}</Badge>
+        <div className="grid min-w-0 gap-4 pt-2 sm:gap-6 sm:pt-4 lg:min-h-[600px] lg:grid-cols-3">
+          <div className="flex min-w-0 flex-col space-y-3 sm:space-y-4 lg:col-span-2">
+            <div className="flex min-w-0 shrink-0 items-center justify-between gap-2 px-1 sm:px-2">
+              <div className="flex min-w-0 items-center gap-2">
+                <h3 className="min-w-0 text-xs font-black uppercase tracking-wider text-muted-foreground/70 sm:text-sm sm:tracking-widest">Projetos Ativos</h3>
+                <Badge variant="secondary" className="shrink-0 border-none bg-primary/10 font-bold text-primary">{projects.length}</Badge>
               </div>
-              <Button variant="ghost" size="sm" onClick={() => navigate("/projects")} className="h-7 text-[10px] gap-1 font-bold uppercase tracking-wider">
+              <Button variant="ghost" size="sm" onClick={() => navigate("/projects")} className="h-7 shrink-0 gap-1 px-2 text-[10px] font-bold uppercase tracking-wider sm:px-3">
                 Ver Todos <ArrowRight className="h-3 w-3" />
               </Button>
             </div>
-            <div className="pr-2">
+            <div className="min-w-0 sm:pr-2">
               <DashboardTable onProjectClick={handleProjectClick} />
             </div>
           </div>
 
-          <div className="flex flex-col space-y-6">
-            {criticalAlerts.length > 0 && (
-              <Card className="rounded-2xl border-destructive/20 bg-destructive/5 overflow-hidden flex flex-col h-full border-b-destructive/40">
-                <CardHeader className="py-4 px-5 border-b border-destructive/10 bg-destructive/5 shrink-0">
-                  <CardTitle className="flex items-center gap-2 text-destructive text-xs font-black uppercase tracking-widest">
-                    <AlertTriangle className="h-4 w-4" />
-                    Alertas Críticos
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4">
-                  <div className="space-y-3">
-                    {criticalAlerts.map((project) => (
-                      <div
-                        key={project.id}
-                        onClick={() => handleProjectClick(project)}
-                        className="p-3 border border-destructive/10 rounded-xl bg-background/50 hover:bg-destructive/10 transition-all cursor-pointer group shadow-sm"
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <Badge variant="destructive" className="h-4 text-[8px] font-black uppercase px-1.5 rounded-sm">Crítico</Badge>
-                          <span className="text-[9px] font-mono text-muted-foreground opacity-60">#{project.ticketNumber}</span>
-                        </div>
-                        <ScrollingText 
-                          text={project.clientName} 
-                          className="text-xs font-bold mb-1 opacity-90"
-                          speed={40}
-                        />
-                        <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider opacity-60">
-                          {project.systemType}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+          <div className="flex min-w-0 flex-col space-y-4 sm:space-y-6">
+            <CriticalAlerts
+              projects={criticalAlerts}
+              onProjectClick={handleProjectClick}
+            />
           </div>
         </div>
       </main>

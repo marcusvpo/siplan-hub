@@ -8,6 +8,9 @@ import {
 import { PwaProvider } from "@/components/pwa/PwaStatus";
 
 const updateServiceWorker = vi.fn();
+const mobileViewportListeners = new Set<
+  (event: MediaQueryListEvent) => void
+>();
 
 vi.mock("virtual:pwa-register/react", () => ({
   useRegisterSW: () => ({
@@ -27,10 +30,30 @@ function mockMobileViewport(mobile: boolean) {
       onchange: null,
       addListener: vi.fn(),
       removeListener: vi.fn(),
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
+      addEventListener: vi.fn(
+        (event: string, listener: (event: MediaQueryListEvent) => void) => {
+          if (query === "(max-width: 767px)" && event === "change") {
+            mobileViewportListeners.add(listener);
+          }
+        },
+      ),
+      removeEventListener: vi.fn(
+        (event: string, listener: (event: MediaQueryListEvent) => void) => {
+          if (query === "(max-width: 767px)" && event === "change") {
+            mobileViewportListeners.delete(listener);
+          }
+        },
+      ),
       dispatchEvent: vi.fn(),
     })),
+  });
+}
+
+function changeMobileViewport(matches: boolean) {
+  act(() => {
+    mobileViewportListeners.forEach((listener) =>
+      listener({ matches } as MediaQueryListEvent),
+    );
   });
 }
 
@@ -45,6 +68,7 @@ function renderInstallControls(autoOpen = false) {
 
 describe("PWA do Siplan HUB", () => {
   beforeEach(() => {
+    mobileViewportListeners.clear();
     localStorage.clear();
     sessionStorage.clear();
     window.history.replaceState({}, "", "/");
@@ -89,6 +113,48 @@ describe("PWA do Siplan HUB", () => {
     expect(sessionStorage.getItem("siplan-pwa-install-later")).toBe("true");
     expect(screen.getByRole("button", { name: "Instalar aplicativo" })).toBeInTheDocument();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("permite ocultar o atalho fora da tela inicial", () => {
+    render(
+      <PwaProvider>
+        <PwaInstallButton visible={false} />
+      </PwaProvider>,
+    );
+
+    expect(
+      screen.queryByRole("button", { name: "Instalar aplicativo" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("não renderiza o atalho nem o convite na visualização desktop", () => {
+    vi.useFakeTimers();
+    mockMobileViewport(false);
+    renderInstallControls(true);
+
+    act(() => {
+      vi.advanceTimersByTime(1600);
+    });
+
+    expect(
+      screen.queryByRole("button", { name: "Instalar aplicativo" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    vi.useRealTimers();
+  });
+
+  it("fecha o convite ao sair da visualização mobile", () => {
+    renderInstallControls();
+
+    fireEvent.click(screen.getByRole("button", { name: "Instalar aplicativo" }));
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+
+    changeMobileViewport(false);
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Instalar aplicativo" }),
+    ).not.toBeInTheDocument();
   });
 
   it("oferece automaticamente no mobile e respeita não mostrar novamente", () => {

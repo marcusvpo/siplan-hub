@@ -155,8 +155,8 @@
     "semantic_hash": ""
   },
   "src/App.tsx": {
-    "mtime": 1788185381.7623768,
-    "ast_hash": "daa3b4aad27e2fc2401cd7f2b62b8dd6",
+    "mtime": 1788186372.8777883,
+    "ast_hash": "7e5e69b64b73ca6140b2f82d997a9d19",
     "semantic_hash": ""
   },
   "src/components/Admin/OverviewChart.tsx": {
@@ -190,8 +190,8 @@
     "semantic_hash": ""
   },
   "src/components/Dashboard/DashboardTable.tsx": {
-    "mtime": 1785877154.0691304,
-    "ast_hash": "69d9374d4bfb6d91ca93b62a4267fa77",
+    "mtime": 1788188430.164529,
+    "ast_hash": "c469764a703002b673ac24f05a0cfa01",
     "semantic_hash": ""
   },
   "src/components/Dashboard/HealthBadge.tsx": {
@@ -250,13 +250,13 @@
     "semantic_hash": ""
   },
   "src/components/Layout/Breadcrumbs.tsx": {
-    "mtime": 1787935561.4501452,
-    "ast_hash": "7f98a73eb0b4b0de735f7ebdf4fee8d3",
+    "mtime": 1788188349.3954096,
+    "ast_hash": "ce67a9f308ebf2d45d6702939eda49a0",
     "semantic_hash": ""
   },
   "src/components/Layout/MainLayout.tsx": {
-    "mtime": 1788185381.766907,
-    "ast_hash": "aa26eb701fff0e702839dff8e5fbc072",
+    "mtime": 1788188343.5000834,
+    "ast_hash": "bb0085bbe5ae4daaae86625b4b3f0b9a",
     "semantic_hash": ""
   },
   "src/components/Layout/UserProfileDrawer.tsx": {
@@ -655,9 +655,9 @@
     "semantic_hash": "a8c075269b5971c2ab072603b5166cc2"
   },
   "src/components/ui/pagination.tsx": {
-    "mtime": 1781122833.194722,
-    "ast_hash": "28427cefb0a4ea48e0e451579fc6681a",
-    "semantic_hash": "28427cefb0a4ea48e0e451579fc6681a"
+    "mtime": 1788188430.1655283,
+    "ast_hash": "797d74c029dfd5d23fbda2e312fe8205",
+    "semantic_hash": ""
   },
   "src/components/ui/popover.tsx": {
     "mtime": 1787776122.908325,
@@ -1035,8 +1035,8 @@
     "semantic_hash": "469ca814ed4eae7715b64294626adcd7"
   },
   "src/pages/DashboardV2.tsx": {
-    "mtime": 1787930496.2657268,
-    "ast_hash": "64a76fc11da55ba824dbcb402a30a842",
+    "mtime": 1788188393.3577316,
+    "ast_hash": "427d95be572227006146b60ac4e45edd",
     "semantic_hash": ""
   },
   "src/pages/Home.tsx": {
@@ -4390,18 +4390,18 @@
     "semantic_hash": ""
   },
   "src/pages/ModuleOverview.tsx": {
-    "mtime": 1787935561.481278,
-    "ast_hash": "57db5477cba7b27b00d66566bf7a6280",
+    "mtime": 1788187538.8548987,
+    "ast_hash": "ec8db4a78ff363b53d1f7cabbf80daeb",
     "semantic_hash": ""
   },
   "src/test/breadcrumbs-module-overview.test.tsx": {
-    "mtime": 1787930496.2843153,
-    "ast_hash": "da9dd6e9a268f90739d1b20e013b85fb",
+    "mtime": 1788188468.1544514,
+    "ast_hash": "025cec4db863a24f7d9f164ba7b92ea1",
     "semantic_hash": ""
   },
   "src/test/module-overview.test.tsx": {
-    "mtime": 1787950180.451633,
-    "ast_hash": "139b56cd80b8b3b7255bffde9cfb3ae9",
+    "mtime": 1788187570.785234,
+    "ast_hash": "1c279b7fa6bd8b4b624fb065c4e8c841",
     "semantic_hash": ""
   },
   "src/components/sd/time/TimeEntryDialog.tsx": {
@@ -4555,13 +4555,13 @@
     "semantic_hash": ""
   },
   "src/components/pwa/PwaStatus.tsx": {
-    "mtime": 1788185518.6166408,
-    "ast_hash": "c13f8ef13f458228f2ddf31ee9c5d38a",
+    "mtime": 1788188779.8597343,
+    "ast_hash": "17c0f27525d216a132c5c2bac24de97a",
     "semantic_hash": ""
   },
   "src/test/pwa-status.test.tsx": {
-    "mtime": 1788185531.9255323,
-    "ast_hash": "348d5f8bfc46bc99b2a3ff67efa9c551",
+    "mtime": 1788188803.3387375,
+    "ast_hash": "cecbb0b6ff7519b54a6391217c9144d6",
     "semantic_hash": ""
   },
   "public/apple-touch-icon.png": {
@@ -4585,13 +4585,23 @@
     "semantic_hash": ""
   },
   "src/components/pwa/PwaContext.ts": {
-    "mtime": 1788185381.740225,
-    "ast_hash": "b9dfef5a24ac5df300aeccc911dd5118",
+    "mtime": 1788186372.8787901,
+    "ast_hash": "50f7ca9a16b6372e9afa23c51f7318ec",
     "semantic_hash": ""
   },
   "src/components/pwa/PwaInstallControls.tsx": {
-    "mtime": 1788185504.446788,
-    "ast_hash": "cb32d4e3ffb62ef6fea96e8b0240baf3",
+    "mtime": 1788188779.8617358,
+    "ast_hash": "b79941aa325c7bd002c814e75f8e1ff4",
+    "semantic_hash": ""
+  },
+  "src/components/Dashboard/CriticalAlerts.tsx": {
+    "mtime": 1788188393.3551807,
+    "ast_hash": "c758ccec2c2f606f78712206c86e2939",
+    "semantic_hash": ""
+  },
+  "src/test/dashboard-mobile.test.tsx": {
+    "mtime": 1788188485.1716578,
+    "ast_hash": "8c4dfd0861ac92303779abd96fb17427",
     "semantic_hash": ""
   }
 }

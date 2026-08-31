@@ -62,7 +62,7 @@ export function MainLayout({ children }: MainLayoutProps) {
 
         <div className="flex flex-col flex-1 min-h-[100dvh] overflow-hidden transition-all duration-300 min-w-0">
           <header className="flex h-14 sm:h-16 items-center justify-between gap-2 sm:gap-4 border-b border-border/40 bg-background/80 backdrop-blur-md px-3 sm:px-6 shrink-0 z-10 sticky top-0 overflow-hidden">
-            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+            <div className="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-2">
               <SidebarTrigger className="md:hidden shrink-0" />
               <Breadcrumbs />
             </div>
@@ -81,7 +81,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               )}
-              <PwaInstallButton />
+              <PwaInstallButton visible={location.pathname === "/"} />
               <NotificationBell />
               <ModeToggle />
             </div>

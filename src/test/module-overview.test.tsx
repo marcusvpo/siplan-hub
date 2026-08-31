@@ -91,6 +91,42 @@ describe("ModuleOverview", () => {
     expect(screen.queryByText("Quadro Kanban")).not.toBeInTheDocument();
   });
 
+  it("mantém todas as áreas do Dashboard dentro da largura mobile", () => {
+    hasPermission.mockImplementation(
+      (_resource: string, action: string) => action === "view",
+    );
+
+    render(
+      <MemoryRouter>
+        <ModuleOverview moduleName="Dashboard" />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByTestId("module-overview")).toHaveClass(
+      "w-full",
+      "min-w-0",
+      "overflow-x-hidden",
+    );
+
+    const expectedAreas: Array<[RegExp, string]> = [
+      [/^Dashboard\b/i, "/dashboard/indicadores"],
+      [/Quadro Kanban/i, "/dashboard/kanban"],
+      [/Panorama Pós-Implantação/i, "/dashboard/pos-implantacao"],
+      [/Panorama Geral/i, "/dashboard/pos-panorama-geral"],
+      [/Consultar Chamados/i, "/deployments/tickets"],
+      [/Chamados \(Legado\)/i, "/deployments/tickets-legacy"],
+    ];
+
+    expect(screen.getAllByRole("link")).toHaveLength(expectedAreas.length);
+
+    expectedAreas.forEach(([name, href]) => {
+      expect(screen.getByRole("link", { name })).toHaveAttribute(
+        "href",
+        href,
+      );
+    });
+  });
+
   it("usa o padrão compartilhado também na visão geral de CS/CX", () => {
     hasPermission.mockImplementation(
       (resource: string, action: string) =>

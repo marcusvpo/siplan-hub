@@ -1,6 +1,7 @@
 import { useLocation, Link } from "react-router-dom";
 import { ChevronRight, Home } from "lucide-react";
 import { useProjectsV2 } from "@/hooks/useProjectsV2";
+import { cn } from "@/lib/utils";
 
 export function Breadcrumbs() {
   const location = useLocation();
@@ -100,23 +101,31 @@ export function Breadcrumbs() {
   return (
     <nav
       aria-label="Breadcrumb"
-      className="flex items-center text-sm text-muted-foreground"
+      className="flex min-w-0 flex-1 items-center overflow-hidden text-sm text-muted-foreground"
     >
       <Link
         to="/"
-        className="flex items-center hover:text-foreground transition-colors"
+        className="flex shrink-0 items-center transition-colors hover:text-foreground"
       >
         <Home className="h-4 w-4" />
       </Link>
-      {breadcrumbs.length > 0 && <ChevronRight className="h-4 w-4 mx-2" />}
+      {breadcrumbs.length > 0 && (
+        <ChevronRight className="mx-1.5 h-4 w-4 shrink-0 sm:mx-2" />
+      )}
 
       {breadcrumbs.map(({ value, to, name }, index) => {
         const isLast = index === breadcrumbs.length - 1;
 
         return (
-          <div key={to} className="flex items-center">
+          <div
+            key={to}
+            className={cn(
+              "min-w-0 items-center",
+              isLast ? "flex flex-1" : "hidden sm:flex",
+            )}
+          >
             {isLast ? (
-              <span className="font-medium text-foreground max-w-[110px] sm:max-w-[240px] md:max-w-[360px] truncate text-xs sm:text-sm" title={name}>
+              <span className="min-w-0 flex-1 truncate text-xs font-medium text-foreground sm:max-w-[240px] sm:text-sm md:max-w-[360px]" title={name}>
                 {name}
               </span>
             ) : (
@@ -128,7 +137,7 @@ export function Breadcrumbs() {
                 {name}
               </Link>
             )}
-            {!isLast && <ChevronRight className="h-4 w-4 mx-2" />}
+            {!isLast && <ChevronRight className="mx-2 h-4 w-4 shrink-0" />}
           </div>
         );
       })}
