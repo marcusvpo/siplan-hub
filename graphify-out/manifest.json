@@ -2800,8 +2800,8 @@
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/Chamado0800DetailDialog.tsx": {
-    "mtime": 1788190066.6926606,
-    "ast_hash": "35bb7b68ac739c321ccfc83d99209dbd",
+    "mtime": 1788190279.47501,
+    "ast_hash": "64fbb0777f84f09d1c78fc09857c0135",
     "semantic_hash": ""
   },
   "src/hooks/usePosPanorama.ts": {
@@ -2810,8 +2810,8 @@
     "semantic_hash": ""
   },
   "src/pages/PosPanorama.tsx": {
-    "mtime": 1788189948.5080853,
-    "ast_hash": "849edbd1daa4f030b1b164bd905e9c1d",
+    "mtime": 1788190279.478016,
+    "ast_hash": "24f30d8c1099da8968c8888693e9527c",
     "semantic_hash": ""
   },
   "supabase/migrations/20260716190000_pos_panorama_tema_ia.sql": {
@@ -2960,8 +2960,8 @@
     "semantic_hash": ""
   },
   "src/pages/DeploymentsTickets.tsx": {
-    "mtime": 1787930496.267734,
-    "ast_hash": "a5f421763b0f736b59f6888b3df9f7eb",
+    "mtime": 1788191063.2423203,
+    "ast_hash": "37f7cda19072e454ef1727069b02e37e",
     "semantic_hash": ""
   },
   "src/utils/adherence-helpers.ts": {
@@ -3065,8 +3065,8 @@
     "semantic_hash": ""
   },
   "src/components/DeploymentsTickets/TicketsAiAnalysis.tsx": {
-    "mtime": 1787930496.2067564,
-    "ast_hash": "00f26379462dccf931e27d2d3b64a842",
+    "mtime": 1788191570.7304692,
+    "ast_hash": "4876abcbd2cde758be15eab1d7dbf9f0",
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/PosAiAssistantSection.tsx": {
@@ -4175,8 +4175,8 @@
     "semantic_hash": ""
   },
   "src/components/DeploymentsTickets/TicketsSlaAnalysis.tsx": {
-    "mtime": 1787930496.2122753,
-    "ast_hash": "14c116b27a1bfe8b008e3f505cb4f5f8",
+    "mtime": 1788191063.2272322,
+    "ast_hash": "ac2fd1c72cc5f42a6d6d69770f93089b",
     "semantic_hash": ""
   },
   "src/lib/tickets-sla.test.ts": {
@@ -4260,8 +4260,8 @@
     "semantic_hash": ""
   },
   "src/components/DeploymentsTickets/TicketsSlaInfoDialog.tsx": {
-    "mtime": 1787930496.2183228,
-    "ast_hash": "112adc137c41261c7a5b9dfd0a5aa6ef",
+    "mtime": 1788191063.2287452,
+    "ast_hash": "c0fbb30515fe1cd58e96e7ed20ecc333",
     "semantic_hash": ""
   },
   "src/components/DeploymentsTickets/TicketsSlaInfoDialog.test.tsx": {
@@ -4270,8 +4270,8 @@
     "semantic_hash": ""
   },
   "src/components/DeploymentsTickets/TicketsSlaSectorAnalysis.tsx": {
-    "mtime": 1787930496.2193196,
-    "ast_hash": "c7e06e0775ae2f48438f2cbb79f53a21",
+    "mtime": 1788191063.2317574,
+    "ast_hash": "fb2c2945a9e2c9ca1077379895374baa",
     "semantic_hash": ""
   },
   "src/test/lexical-rich-text.test.ts": {
@@ -4610,13 +4610,23 @@
     "semantic_hash": ""
   },
   "src/test/chamado-detail-mobile.test.tsx": {
-    "mtime": 1788190044.987445,
-    "ast_hash": "3c92e22aae180cf88c1b6b4b69bdbf94",
+    "mtime": 1788190279.4795208,
+    "ast_hash": "7ab56c45db64df6ca7f7a06ba82956ca",
     "semantic_hash": ""
   },
   "src/test/pos-panorama-mobile.test.tsx": {
-    "mtime": 1788190008.3116953,
-    "ast_hash": "14c32d065caaff84280caaa397e4ba15",
+    "mtime": 1788190279.4795208,
+    "ast_hash": "a1db21cb9bafc6dfbf764453b08508ed",
+    "semantic_hash": ""
+  },
+  "src/pages/DeploymentsTickets.mobile.test.tsx": {
+    "mtime": 1788190996.2571886,
+    "ast_hash": "f6ffa93c48bf2013a7bcb695e049ad64",
+    "semantic_hash": ""
+  },
+  "src/components/DeploymentsTickets/TicketsAiAnalysis.mobile.test.tsx": {
+    "mtime": 1788191638.3936799,
+    "ast_hash": "24f519b8da47600752829d7e80f2bb4a",
     "semantic_hash": ""
   }
 }

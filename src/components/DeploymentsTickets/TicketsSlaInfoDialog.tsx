@@ -204,7 +204,7 @@ export function TicketsSlaInfoDialog({ chamados }: TicketsSlaInfoDialogProps) {
           type="button"
           variant="ghost"
           size="icon"
-          className="h-6 w-6 rounded-full text-muted-foreground hover:bg-primary/10 hover:text-primary"
+          className="h-9 w-9 rounded-full text-muted-foreground hover:bg-primary/10 hover:text-primary md:h-6 md:w-6"
           aria-label="Entender o cálculo do SLA"
           title="Entender o cálculo do SLA"
         >
@@ -212,11 +212,11 @@ export function TicketsSlaInfoDialog({ chamados }: TicketsSlaInfoDialogProps) {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="max-w-5xl gap-3 p-4 sm:p-5">
+      <DialogContent className="max-h-[94vh] w-[calc(100vw-1rem)] max-w-5xl gap-3 overflow-y-auto overflow-x-hidden p-3 sm:p-5">
         <DialogHeader className="pr-10">
-          <DialogTitle className="flex items-center gap-2">
-            <ShieldCheck className="h-5 w-5 text-emerald-600" />
-            Entenda o cálculo do SLA
+          <DialogTitle className="flex min-w-0 items-start gap-2 leading-tight">
+            <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+            <span className="break-words">Entenda o cálculo do SLA</span>
           </DialogTitle>
           <DialogDescription>
             A criticidade não define o prazo sozinha. O Ellevo combina criticidade, equipe responsável, contrato e calendário para gerar as datas-limite oficiais.
@@ -273,9 +273,9 @@ export function TicketsSlaInfoDialog({ chamados }: TicketsSlaInfoDialogProps) {
                 Mostra a combinação automática mais frequente no filtro atual; não faz média e descarta `0`/vazio como prazo válido.
               </p>
             </div>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="grid w-full grid-cols-1 gap-1.5 sm:flex sm:w-auto sm:flex-wrap">
               <Select value={selectedArea} onValueChange={setSelectedArea}>
-                <SelectTrigger className="h-7 w-[210px] bg-background text-[10px]">
+                <SelectTrigger className="h-10 w-full bg-background text-[10px] sm:h-7 sm:w-[210px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -284,7 +284,7 @@ export function TicketsSlaInfoDialog({ chamados }: TicketsSlaInfoDialogProps) {
                 </SelectContent>
               </Select>
               <Select value={selectedCriticality} onValueChange={setSelectedCriticality}>
-                <SelectTrigger className="h-7 w-[180px] bg-background text-[10px]">
+                <SelectTrigger className="h-10 w-full bg-background text-[10px] sm:h-7 sm:w-[180px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -298,8 +298,47 @@ export function TicketsSlaInfoDialog({ chamados }: TicketsSlaInfoDialogProps) {
           </div>
 
           {visiblePolicies.length > 0 ? (
-            <div className="max-h-56 overflow-auto">
-              <table className="w-full min-w-[780px] text-left text-[10px]">
+            <div className="max-h-64 overflow-y-auto md:max-h-56 md:overflow-auto">
+              <div className="divide-y md:hidden" data-testid="sla-policies-mobile-list">
+                {visiblePolicies.map((policy) => (
+                  <article key={`${policy.area}:${policy.criticality}`} className="min-w-0 space-y-2 p-3 text-[10px]">
+                    <div className="flex min-w-0 items-start justify-between gap-2">
+                      <p className="min-w-0 break-words font-semibold">{policy.area}</p>
+                      <Badge variant="outline" className="h-auto shrink-0 px-1.5 py-0.5 text-[8px]">{policy.criticality}</Badge>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="rounded-md bg-blue-50 p-2 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300">
+                        <span className="block text-[8px]">Meta da 1ª resposta</span>
+                        <strong>{formatMinutes(policy.firstResponseMinutes)}</strong>
+                      </div>
+                      <div className="rounded-md bg-emerald-50 p-2 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300">
+                        <span className="block text-[8px]">Meta de resolução</span>
+                        <strong>{formatMinutes(policy.resolutionMinutes)}</strong>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1 text-[9px] text-muted-foreground">
+                      {policy.comparableCount > 0 ? (
+                        <>
+                          <span>{policy.dominantCount} de {policy.comparableCount} iguais</span>
+                          {policy.variants > 1 && <Badge variant="outline" className="h-4 px-1.5 text-[8px]">{policy.variants} configurações</Badge>}
+                          {policy.manualOnly && <Badge variant="outline" className="h-4 border-amber-300 px-1.5 text-[8px] text-amber-700">somente ajustados</Badge>}
+                        </>
+                      ) : (
+                        <span>Sem prazo numérico neste recorte</span>
+                      )}
+                    </div>
+                    {(policy.manualDeadlines > 0 || policy.withoutNumericPolicy > 0) && (
+                      <p className="break-words text-[8px] text-muted-foreground">
+                        {policy.tickets} chamado(s) no total
+                        {policy.manualDeadlines > 0 ? ` · ${policy.manualDeadlines} com vencimento manual` : ""}
+                        {policy.withoutNumericPolicy > 0 ? ` · ${policy.withoutNumericPolicy} sem par numérico` : ""}
+                      </p>
+                    )}
+                  </article>
+                ))}
+              </div>
+
+              <table className="hidden w-full min-w-[780px] text-left text-[10px] md:table">
                 <thead className="sticky top-0 z-10 bg-background text-muted-foreground shadow-[0_1px_0_hsl(var(--border))]">
                   <tr>
                     <th className="px-3 py-2 font-semibold">Área/equipe atual</th>

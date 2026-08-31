@@ -193,7 +193,7 @@ export function TicketsSlaSectorAnalysis({
               A falha e a aderência consideram somente o SLA final de resolução. Primeiro contato e repasses atrasados permanecem como alertas da jornada, sem reprovar o setor no resultado final.
             </p>
           </div>
-          <div className="flex min-w-[230px] flex-col gap-1">
+          <div className="flex w-full min-w-0 flex-col gap-1 lg:w-auto lg:min-w-[230px]">
             <span className="text-[9px] font-semibold text-muted-foreground">Setor para analisar</span>
             <Select value={selectedSector} onValueChange={setSelectedSector}>
               <SelectTrigger className="h-8 text-[11px]"><SelectValue /></SelectTrigger>
@@ -289,7 +289,48 @@ export function TicketsSlaSectorAnalysis({
                 </div>
                 <span className="text-[9px] text-muted-foreground">Clique em um setor para abrir seus chamados.</span>
               </div>
-              <div className="overflow-x-auto rounded-lg border">
+              <div className="space-y-2 md:hidden" data-testid="sla-sector-mobile-list">
+                {visibleSectorSummaries.map((sector) => (
+                  <button
+                    key={sector.sector}
+                    type="button"
+                    onClick={() => setSelectedSector(sector.sector)}
+                    className={cn(
+                      "block w-full min-w-0 rounded-lg border p-3 text-left",
+                      selectedSector === sector.sector && "border-primary/50 bg-primary/[0.04]",
+                    )}
+                  >
+                    <span className="flex min-w-0 items-start justify-between gap-2">
+                      <span className="min-w-0">
+                        <span className="block break-words text-xs font-semibold">{sector.sector}</span>
+                        <span className="mt-0.5 block break-words text-[9px] text-muted-foreground">{sector.sourceAreas.join(" · ")}</span>
+                      </span>
+                      <span className={cn(
+                        "shrink-0 rounded-md px-1.5 py-0.5 text-[9px] font-semibold",
+                        sector.complianceRate === null
+                          ? "bg-muted text-muted-foreground"
+                          : sector.complianceRate >= 90
+                            ? "bg-emerald-100 text-emerald-700"
+                            : sector.complianceRate >= 70
+                              ? "bg-amber-100 text-amber-800"
+                              : "bg-rose-100 text-rose-700",
+                      )}>
+                        {sector.complianceRate === null ? "Sem base" : `${sector.complianceRate}%`}
+                      </span>
+                    </span>
+                    <span className="mt-3 grid grid-cols-3 gap-2 text-center">
+                      <span className="rounded-md bg-muted/35 p-2"><strong className="block text-sm">{sector.tickets}</strong><span className="text-[8px] text-muted-foreground">Chamados</span></span>
+                      <span className="rounded-md bg-emerald-50 p-2 text-emerald-700"><strong className="block text-sm">{sector.compliantTickets}</strong><span className="text-[8px]">No prazo</span></span>
+                      <span className="rounded-md bg-rose-50 p-2 text-rose-700"><strong className="block text-sm">{sector.failedTickets}</strong><span className="text-[8px]">Com falha</span></span>
+                    </span>
+                    <span className="mt-2 block break-words text-[9px] leading-relaxed text-muted-foreground">
+                      1º contato: {sector.firstResponseOutside} · Repasse: {sector.lateHandoffs} · Finalizada fora: {sector.lateResolutions} · Atual vencida: {sector.activeOutside}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              <div className="hidden overflow-x-auto rounded-lg border md:block">
                 <table className="w-full min-w-[900px] text-left text-[10px]">
                   <thead className="bg-muted/35 text-[8px] uppercase text-muted-foreground">
                     <tr>
@@ -359,12 +400,12 @@ export function TicketsSlaSectorAnalysis({
                   </h3>
                   <p className="text-[9px] text-muted-foreground">Um chamado aparece uma vez para cada setor pelo qual passou.</p>
                 </div>
-                <div className="relative min-w-[260px]">
+                <div className="relative w-full min-w-0 lg:w-auto lg:min-w-[260px]">
                   <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-muted-foreground" />
-                  <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar chamado, cliente ou equipe..." className="h-8 pl-8 text-[10px]" />
+                  <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar chamado, cliente ou equipe..." className="h-10 pl-8 text-[10px] lg:h-8" />
                 </div>
                 <Select value={resultFilter} onValueChange={(value) => setResultFilter(value as SectorResultFilter)}>
-                  <SelectTrigger className="h-8 w-[210px] text-[10px]"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-10 w-full text-[10px] lg:h-8 lg:w-[210px]"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {Object.entries(RESULT_FILTER_LABELS).map(([value, label]) => (
                       <SelectItem key={value} value={value}>{label}</SelectItem>
@@ -373,7 +414,49 @@ export function TicketsSlaSectorAnalysis({
                 </Select>
               </div>
 
-              <div className="overflow-x-auto rounded-lg border">
+              {entries.length === 0 ? (
+                <div className="flex flex-col items-center gap-1 rounded-lg border py-12 text-xs text-muted-foreground md:hidden">
+                  <Clock3 className="h-5 w-5" /> Nenhum chamado encontrado nesta combinação.
+                </div>
+              ) : (
+                <div className="space-y-2 md:hidden" data-testid="sla-sector-tickets-mobile-list">
+                  {visibleEntries.map((entry) => {
+                    const official = getOfficialSlaState(entry.chamado);
+                    const firstDisplay = getSlaCheckpointDisplay(official.firstResponse, "firstResponse");
+                    const resolutionDisplay = getSlaCheckpointDisplay(official.resolution, "resolution");
+                    return (
+                      <article key={`${entry.chamado.numeroChamado}:${entry.sector}`} className="min-w-0 rounded-lg border p-3">
+                        <div className="flex min-w-0 items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="font-mono text-xs font-semibold text-primary">#{entry.chamado.numeroChamado}</p>
+                            <p className="mt-1 break-words text-xs font-semibold">{entry.chamado.nomeCliente || "—"}</p>
+                            <p className="mt-0.5 break-words text-[9px] leading-relaxed text-muted-foreground">{entry.chamado.titulo || "—"}</p>
+                          </div>
+                          <span className="shrink-0 text-right text-[9px] text-muted-foreground">
+                            <strong className="block text-xs text-foreground">{formatSlaDuration(entry.hours)}</strong>
+                            {entry.stages.length} passagem(ns)
+                          </span>
+                        </div>
+                        <div className="mt-3 rounded-md bg-muted/30 p-2">
+                          <p className="break-words text-[10px] font-semibold">{entry.sector}</p>
+                          <p className="break-words text-[8px] text-muted-foreground">{entry.sourceAreas.join(" · ")}</p>
+                        </div>
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {entryEvidence(entry).map((evidence) => (
+                            <Badge key={evidence.label} className={cn("h-auto min-h-4 whitespace-normal border-0 px-1.5 py-0.5 text-[8px]", evidence.className)}>{evidence.label}</Badge>
+                          ))}
+                        </div>
+                        <div className="mt-2 grid grid-cols-1 gap-1.5 min-[360px]:grid-cols-2">
+                          <Badge className={cn("h-auto min-h-5 whitespace-normal border-0 px-2 py-1 text-[8px]", firstDisplay.className)}>1º contato: {firstDisplay.label}</Badge>
+                          <Badge className={cn("h-auto min-h-5 whitespace-normal border-0 px-2 py-1 text-[8px]", resolutionDisplay.className)}>Resolução: {resolutionDisplay.label}</Badge>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
+
+              <div className="hidden overflow-x-auto rounded-lg border md:block">
                 <table className="w-full min-w-[1020px] text-left text-[10px]">
                   <thead className="bg-muted/35 text-[8px] uppercase text-muted-foreground">
                     <tr>
@@ -431,10 +514,10 @@ export function TicketsSlaSectorAnalysis({
               </div>
 
               {entries.length > 0 && (
-                <div className="mt-3 flex flex-col items-center justify-between gap-3 border-t pt-3 text-[10px] text-muted-foreground sm:flex-row">
+                <div className="mt-3 flex flex-col items-stretch justify-between gap-3 border-t pt-3 text-[10px] text-muted-foreground sm:flex-row sm:items-center">
                   <span>Exibindo {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, entries.length)} de {entries.length}</span>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <div className="flex items-center gap-1.5">
+                  <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+                    <div className="flex items-center justify-center gap-1.5">
                       <span>Exibir</span>
                       <Select value={String(pageSize)} onValueChange={(value) => { setPageSize(Number(value)); setPage(1); }}>
                         <SelectTrigger className="h-7 w-[68px] text-xs"><SelectValue /></SelectTrigger>
@@ -444,10 +527,10 @@ export function TicketsSlaSectorAnalysis({
                       </Select>
                     </div>
                     {totalPages > 1 && (
-                      <div className="flex items-center gap-2">
-                        <Button variant="outline" size="icon" className="h-7 w-7" disabled={page === 1} onClick={() => setPage((current) => Math.max(1, current - 1))}><ChevronLeft className="h-3.5 w-3.5" /></Button>
-                        <span>Página <strong className="text-foreground">{page}</strong> de {totalPages}</span>
-                        <Button variant="outline" size="icon" className="h-7 w-7" disabled={page === totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))}><ChevronRight className="h-3.5 w-3.5" /></Button>
+                      <div className="grid grid-cols-[2.25rem_1fr_2.25rem] items-center gap-2 sm:flex">
+                        <Button variant="outline" size="icon" aria-label="Página anterior" className="h-9 w-9 sm:h-7 sm:w-7" disabled={page === 1} onClick={() => setPage((current) => Math.max(1, current - 1))}><ChevronLeft className="h-3.5 w-3.5" /></Button>
+                        <span className="text-center">Página <strong className="text-foreground">{page}</strong> de {totalPages}</span>
+                        <Button variant="outline" size="icon" aria-label="Próxima página" className="h-9 w-9 sm:h-7 sm:w-7" disabled={page === totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))}><ChevronRight className="h-3.5 w-3.5" /></Button>
                       </div>
                     )}
                   </div>
