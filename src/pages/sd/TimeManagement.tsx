@@ -123,7 +123,7 @@ export default function TimeManagement() {
   };
 
   return (
-    <div className="mx-auto h-full w-full max-w-7xl space-y-2 overflow-y-auto px-1 pb-4 pt-1 md:px-3">
+    <div data-testid="sd-hours-page" className="mx-auto h-full w-full min-w-0 max-w-7xl space-y-2 overflow-x-hidden overflow-y-auto px-1 pb-4 pt-1 md:px-3">
       <motion.section
         initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -141,10 +141,10 @@ export default function TimeManagement() {
             </p>
           </div>
           {canCreate && (
-            <div className="relative flex flex-wrap gap-2 self-start">
+            <div className="relative grid w-full grid-cols-1 gap-2 self-start min-[390px]:grid-cols-2 sm:flex sm:w-auto sm:flex-wrap">
               <Button
                 variant="outline"
-                className="h-9 gap-2 bg-background/80"
+                className="h-9 w-full gap-2 bg-background/80 sm:w-auto"
                 disabled={importEntries.isPending}
                 onClick={() => setImportDialogOpen(true)}
               >
@@ -155,7 +155,7 @@ export default function TimeManagement() {
                 )}
                 Importar do 0800
               </Button>
-              <Button className="h-9 gap-2" onClick={openNewEntry}>
+              <Button className="h-9 w-full gap-2 sm:w-auto" onClick={openNewEntry}>
                 <Plus className="h-4 w-4" /> Adicionar item
               </Button>
             </div>
@@ -169,7 +169,7 @@ export default function TimeManagement() {
             <TabsTrigger value="day" className="gap-2"><CalendarDays className="h-4 w-4" /> Dia</TabsTrigger>
             <TabsTrigger value="week" className="gap-2"><BarChart3 className="h-4 w-4" /> Semana</TabsTrigger>
           </TabsList>
-          <div className="flex h-9 items-center gap-1 rounded-lg border bg-card px-1 shadow-sm">
+          <div className="flex h-9 w-full items-center justify-between gap-1 rounded-lg border bg-card px-1 shadow-sm sm:w-auto sm:justify-start">
             <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Período anterior" onClick={() => navigateDate(-1)}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
@@ -222,12 +222,12 @@ export default function TimeManagement() {
             </CardContent>
           </Card>
 
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex flex-col gap-2 min-[390px]:flex-row min-[390px]:items-center min-[390px]:justify-between">
+            <div className="min-w-0">
               <h2 className="font-bold">Itens de trabalho</h2>
               <p className="text-xs text-muted-foreground">{dayEntries.length} lançamento(s) · maior horário primeiro</p>
             </div>
-            {canCreate && <Button size="sm" variant="outline" className="h-8 gap-2" onClick={openNewEntry}><Plus className="h-4 w-4" /> Adicionar</Button>}
+            {canCreate && <Button size="sm" variant="outline" className="h-8 w-full gap-2 min-[390px]:w-auto" onClick={openNewEntry}><Plus className="h-4 w-4" /> Adicionar</Button>}
           </div>
 
           {entriesQuery.isLoading ? (
@@ -240,7 +240,7 @@ export default function TimeManagement() {
                 <motion.div key={entry.id} initial={shouldReduceMotion ? false : { opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.04 }}>
                   <Card className="border-l-4 border-l-blue-500">
                     <CardContent className="px-3 py-2">
-                      <div className="flex items-start justify-between gap-1.5">
+                      <div className="flex min-w-0 items-start justify-between gap-1.5">
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-1.5">
                             <h3 className="text-sm font-bold leading-5">{entry.title}</h3>
@@ -308,7 +308,7 @@ export default function TimeManagement() {
             </Card>
             <Card>
               <CardHeader className="p-3 pb-1"><CardTitle className="text-sm">Detalhamento</CardTitle></CardHeader>
-              <CardContent className="grid grid-cols-2 gap-1 p-2 pt-0">
+              <CardContent className="grid grid-cols-1 gap-1 p-2 pt-0 sm:grid-cols-2">
                 {week.days.map((date) => {
                   const key = format(date, "yyyy-MM-dd");
                   const minutes = dailyTotals[key] ?? 0;
@@ -344,7 +344,7 @@ export default function TimeManagement() {
       />
 
       <AlertDialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] overflow-y-auto sm:w-full">
           <AlertDialogHeader>
             <AlertDialogTitle>Importar lançamentos do 0800?</AlertDialogTitle>
             <AlertDialogDescription>
@@ -383,7 +383,7 @@ export default function TimeManagement() {
       </AlertDialog>
 
       <AlertDialog open={Boolean(deletingEntry)} onOpenChange={(open) => !open && setDeletingEntry(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] overflow-y-auto sm:w-full">
           <AlertDialogHeader><AlertDialogTitle>Excluir lançamento?</AlertDialogTitle><AlertDialogDescription>O item “{deletingEntry?.title}” e todos os seus intervalos serão removidos. Essa ação não pode ser desfeita.</AlertDialogDescription></AlertDialogHeader>
           <AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" disabled={deleteEntry.isPending} onClick={async () => { if (!deletingEntry) return; try { await deleteEntry.mutateAsync(deletingEntry.id); toast.success("Lançamento excluído."); setDeletingEntry(null); } catch (error) { toast.error(errorMessage(error)); } }}>Excluir</AlertDialogAction></AlertDialogFooter>
         </AlertDialogContent>

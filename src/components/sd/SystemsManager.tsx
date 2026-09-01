@@ -189,7 +189,7 @@ export function SystemsManager() {
 
   return (
     <Card className="mx-auto max-w-4xl">
-      <CardHeader className="flex-row items-start justify-between gap-4 space-y-0">
+      <CardHeader className="flex-col items-stretch gap-4 space-y-0 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <CardTitle>Sistemas e rotinas</CardTitle>
           <CardDescription className="mt-1">
@@ -203,7 +203,7 @@ export function SystemsManager() {
           </Button>
         )}
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 px-4 sm:px-6">
         {error && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
@@ -458,7 +458,7 @@ export function SystemsManager() {
       </CardContent>
 
       <AlertDialog open={Boolean(deleteTarget)} onOpenChange={(open) => !open && setDeleteTarget(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] overflow-y-auto sm:w-full">
           <AlertDialogHeader>
             <AlertDialogTitle>
               Remover {deleteTarget?.type === "system" ? "sistema" : "rotina"}?

@@ -237,7 +237,7 @@ export function SolutionForm({ solution, onSaved, onCancelEdit }: SolutionFormPr
   }
 
   return (
-    <Card className="mx-auto max-w-5xl">
+    <Card className="mx-auto min-w-0 max-w-5xl overflow-hidden">
       <CardHeader>
         <CardTitle>{editing ? "Editar solução" : "Cadastrar solução"}</CardTitle>
         <CardDescription>
@@ -246,7 +246,7 @@ export function SolutionForm({ solution, onSaved, onCancelEdit }: SolutionFormPr
             : "Registre um procedimento para consulta da equipe de suporte."}
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 px-4 sm:px-6">
         {error && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
@@ -349,7 +349,7 @@ export function SolutionForm({ solution, onSaved, onCancelEdit }: SolutionFormPr
             />
           </div>
 
-          <div className="flex items-center justify-between gap-3 md:col-span-3">
+          <div className="flex flex-col items-start gap-3 md:col-span-3 md:flex-row md:items-center md:justify-between">
             <p className="text-xs text-muted-foreground">
               Última revisão: {reviewedAt
                 ? new Intl.DateTimeFormat("pt-BR").format(new Date(reviewedAt))
@@ -359,7 +359,7 @@ export function SolutionForm({ solution, onSaved, onCancelEdit }: SolutionFormPr
               type="button"
               variant="outline"
               size="sm"
-              className="gap-2"
+              className="w-full gap-2 md:w-auto"
               onClick={() => {
                 setReviewedAt(new Date().toISOString());
                 setNextReviewDate(new Date(Date.now() + 180 * 86400000).toISOString().slice(0, 10));
@@ -408,14 +408,15 @@ export function SolutionForm({ solution, onSaved, onCancelEdit }: SolutionFormPr
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 border-t pt-5">
-          <Button onClick={save} disabled={saving} className="gap-2">
+        <div className="grid gap-3 border-t pt-5 sm:flex sm:flex-wrap sm:items-center">
+          <Button onClick={save} disabled={saving} className="w-full gap-2 sm:w-auto">
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             {saving ? "Salvando..." : actionLabel}
           </Button>
           <Button
             type="button"
             variant="outline"
+            className="w-full sm:w-auto"
             onClick={() => {
               clearForm();
               if (editing) onCancelEdit();

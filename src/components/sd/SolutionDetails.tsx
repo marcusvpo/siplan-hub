@@ -231,7 +231,7 @@ export function SolutionDetails({ solutionId, onClose, onEdit, onDeleted, onUpda
   return (
     <>
       <Sheet open={Boolean(solutionId)} onOpenChange={(open) => !open && onClose()}>
-        <SheetContent style={{ width: panelWidth, maxWidth: `${PANEL_VIEWPORT_MARGIN * 100}vw` }} className={`w-full overflow-y-auto sm:max-w-none ${resizing ? "transition-none" : ""}`}>
+        <SheetContent style={{ width: panelWidth, maxWidth: `${PANEL_VIEWPORT_MARGIN * 100}vw` }} className={`w-[calc(100vw-0.5rem)] overflow-y-auto p-4 sm:max-w-none sm:p-6 ${resizing ? "transition-none" : ""}`}>
           <div role="separator" aria-label="Redimensionar painel de detalhes" aria-orientation="vertical" aria-valuemin={MIN_PANEL_WIDTH} aria-valuemax={maxPanelWidth()} aria-valuenow={panelWidth} tabIndex={0} className="group absolute -left-1 top-0 z-50 hidden h-full w-2 cursor-col-resize touch-none outline-none sm:block" title="Arraste para redimensionar; duplo clique restaura o tamanho padrão" onPointerDown={(event) => { event.preventDefault(); setResizing(true); }} onDoubleClick={() => setPanelWidth(clampPanelWidth(DEFAULT_PANEL_WIDTH))} onKeyDown={(event) => {
             if (event.key === "ArrowLeft") setPanelWidth((current) => clampPanelWidth(current + 32));
             if (event.key === "ArrowRight") setPanelWidth((current) => clampPanelWidth(current - 32));
@@ -243,7 +243,7 @@ export function SolutionDetails({ solutionId, onClose, onEdit, onDeleted, onUpda
             <div className="space-y-5 pb-8">
               <SheetHeader className="pr-8">
                 <div className="mb-1 flex flex-wrap items-center gap-2"><Badge variant="outline" className={status?.className}>{status?.label}</Badge><Badge variant="secondary">Versão {solution.versao}</Badge>{overdue && <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700">Revisão vencida</Badge>}</div>
-                <SheetTitle className="text-2xl leading-tight">{solution.titulo}</SheetTitle><SheetDescription>Base técnica do SD</SheetDescription>
+                <SheetTitle className="break-words text-xl leading-tight sm:text-2xl">{solution.titulo}</SheetTitle><SheetDescription>Base técnica do SD</SheetDescription>
               </SheetHeader>
 
               <div className="flex flex-wrap gap-2 border-y py-3">
@@ -252,7 +252,7 @@ export function SolutionDetails({ solutionId, onClose, onEdit, onDeleted, onUpda
                 {hasPermission("sd_solutions", "delete") && <Button variant="outline" size="sm" className="gap-2 text-destructive hover:text-destructive" onClick={() => setConfirmDelete(true)}><Trash2 className="h-4 w-4" />Excluir</Button>}
               </div>
 
-              <div className="grid gap-4 rounded-xl border bg-muted/20 p-4 sm:grid-cols-2">
+              <div className="grid min-w-0 gap-4 rounded-xl border bg-muted/20 p-3 sm:grid-cols-2 sm:p-4 [&>div>div]:min-w-0 [&>div_p]:break-words">
                 <div className="flex items-center gap-3"><Server className="h-4 w-4 text-primary" /><div><p className="text-xs text-muted-foreground">Sistema</p><p className="text-sm font-medium">{solution.sistema?.nome || "—"}</p></div></div>
                 <div className="flex items-center gap-3"><FolderTree className="h-4 w-4 text-primary" /><div><p className="text-xs text-muted-foreground">Rotina</p><p className="text-sm font-medium">{solution.rotina?.nome || "Sem rotina"}</p></div></div>
                 <div className="flex items-center gap-3"><UserRound className="h-4 w-4 text-primary" /><div><p className="text-xs text-muted-foreground">Responsável</p><p className="text-sm font-medium">{solution.responsavel?.full_name || solution.responsavel?.email || "Não definido"}</p></div></div>
@@ -263,7 +263,7 @@ export function SolutionDetails({ solutionId, onClose, onEdit, onDeleted, onUpda
 
               {solution.palavras_chave.length > 0 && <div className="space-y-2"><div className="flex items-center gap-2 text-sm font-semibold"><Tag className="h-4 w-4 text-primary" />Palavras-chave</div><div className="flex flex-wrap gap-2">{solution.palavras_chave.map((keyword) => <Badge key={keyword} variant="secondary">{keyword}</Badge>)}</div></div>}
 
-              <div className="space-y-3"><h3 className="text-sm font-semibold">Descrição da solução</h3>{solution.descricao ? <SdSolutionContent value={solution.descricao} className="rounded-xl border bg-card p-5 text-sm leading-relaxed" /> : <p className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">Nenhuma descrição informada.</p>}</div>
+              <div className="min-w-0 space-y-3"><h3 className="text-sm font-semibold">Descrição da solução</h3>{solution.descricao ? <SdSolutionContent value={solution.descricao} className="max-w-full overflow-hidden rounded-xl border bg-card p-3 text-sm leading-relaxed sm:p-5" /> : <p className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">Nenhuma descrição informada.</p>}</div>
 
               {solution.anexos && solution.anexos.length > 0 && <div className="space-y-3">
                 <div className="flex items-center gap-2 text-sm font-semibold"><Paperclip className="h-4 w-4 text-primary" />Anexos <Badge variant="secondary">{solution.anexos.length}</Badge></div>
@@ -271,7 +271,7 @@ export function SolutionDetails({ solutionId, onClose, onEdit, onDeleted, onUpda
                   const security = attachmentSecurity(attachment); const SecurityIcon = security.icon; const blocked = attachment.verificacao_status === "suspeito";
                   return <div key={attachment.id} className="flex min-w-0 flex-wrap items-center gap-3 rounded-lg border bg-card px-4 py-3">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary"><FileText className="h-4 w-4" /></div>
-                    <div className="min-w-48 flex-1"><p className="truncate text-sm font-medium" title={attachment.nome_arquivo}>{attachment.nome_arquivo}</p><div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground"><span>{formatSdAttachmentSize(attachment.tamanho_bytes)}{attachment.tipo_mime ? ` · ${attachment.tipo_mime}` : ""}</span><Badge variant="outline" className={`gap-1 ${security.className}`}><SecurityIcon className={`h-3 w-3 ${attachment.verificacao_status === "pendente" ? "animate-spin" : ""}`} />{security.label}</Badge></div></div>
+                    <div className="min-w-0 basis-[calc(100%-3rem)] flex-1 sm:basis-auto"><p className="break-all text-sm font-medium" title={attachment.nome_arquivo}>{attachment.nome_arquivo}</p><div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground"><span>{formatSdAttachmentSize(attachment.tamanho_bytes)}{attachment.tipo_mime ? ` · ${attachment.tipo_mime}` : ""}</span><Badge variant="outline" className={`gap-1 ${security.className}`}><SecurityIcon className={`h-3 w-3 ${attachment.verificacao_status === "pendente" ? "animate-spin" : ""}`} />{security.label}</Badge></div></div>
                     {(attachment.verificacao_status === "erro" || attachment.verificacao_status === "pendente") && <Button type="button" variant="ghost" size="sm" className="gap-1" disabled={scanningAttachmentId === attachment.id} onClick={() => void scanAttachment(attachment)}><RefreshCw className={`h-4 w-4 ${scanningAttachmentId === attachment.id ? "animate-spin" : ""}`} />Verificar</Button>}
                     {canPreviewSdAttachment(attachment) && !blocked && <Button type="button" variant="outline" size="sm" className="gap-1" disabled={previewLoading} onClick={() => void openAttachmentPreview(attachment)}><FileSearch className="h-4 w-4" />Prévia</Button>}
                     <Button type="button" variant="outline" size="sm" className="gap-1" disabled={blocked || downloadingAttachmentId === attachment.id} onClick={() => void downloadAttachment(attachment)}>{downloadingAttachmentId === attachment.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}Baixar</Button>
@@ -287,7 +287,7 @@ export function SolutionDetails({ solutionId, onClose, onEdit, onDeleted, onUpda
         </SheetContent>
       </Sheet>
 
-      <Dialog open={Boolean(preview)} onOpenChange={(open) => !open && setPreview(null)}><DialogContent className="max-w-5xl"><DialogHeader><DialogTitle>{preview?.attachment.nome_arquivo}</DialogTitle><DialogDescription>Pré-visualização segura do anexo</DialogDescription></DialogHeader>{preview?.text !== null && preview ? <pre className="max-h-[70vh] overflow-auto rounded-lg bg-slate-950 p-4 text-xs text-slate-100"><code>{preview.text}</code></pre> : preview?.attachment.tipo_mime?.startsWith("image/") ? <img src={preview.url} alt={preview.attachment.nome_arquivo} className="mx-auto max-h-[72vh] max-w-full rounded-lg object-contain" /> : preview ? <iframe src={preview.url} title={preview.attachment.nome_arquivo} className="h-[72vh] w-full rounded-lg border" /> : null}</DialogContent></Dialog>
+      <Dialog open={Boolean(preview)} onOpenChange={(open) => !open && setPreview(null)}><DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-5xl overflow-hidden p-4 sm:p-6"><DialogHeader className="min-w-0"><DialogTitle className="break-all pr-6">{preview?.attachment.nome_arquivo}</DialogTitle><DialogDescription>Pré-visualização segura do anexo</DialogDescription></DialogHeader>{preview?.text !== null && preview ? <pre className="max-h-[70dvh] max-w-full overflow-auto rounded-lg bg-slate-950 p-3 text-xs text-slate-100 sm:p-4"><code>{preview.text}</code></pre> : preview?.attachment.tipo_mime?.startsWith("image/") ? <img src={preview.url} alt={preview.attachment.nome_arquivo} className="mx-auto max-h-[72dvh] max-w-full rounded-lg object-contain" /> : preview ? <iframe src={preview.url} title={preview.attachment.nome_arquivo} className="h-[72dvh] w-full rounded-lg border" /> : null}</DialogContent></Dialog>
 
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Excluir solução?</AlertDialogTitle><AlertDialogDescription>“{solution?.titulo}” será removida permanentemente. Essa ação não pode ser desfeita.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel><AlertDialogAction onClick={(event) => { event.preventDefault(); void remove(); }} disabled={deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{deleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Excluir</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
 

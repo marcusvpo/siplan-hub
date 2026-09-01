@@ -47,6 +47,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useDebounce } from "@/hooks/use-debounce";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   useImportSdTeamWeek,
   useManagedSdTimeEntries,
@@ -67,6 +68,7 @@ type PeriodView = "day" | "week";
 
 export default function TimeManagementReport() {
   const shouldReduceMotion = useReducedMotion();
+  const isMobile = useIsMobile();
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [selectedUser, setSelectedUser] = useState("all");
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
@@ -146,6 +148,7 @@ export default function TimeManagementReport() {
   }, [periodView, report?.analyst_totals, report?.daily, selectedDate, week.days]);
 
   const chartMinWidth = periodView === "day" ? Math.max(720, chartData.length * 88) : 0;
+  const visibleChartData = isMobile && periodView === "day" ? chartData.slice(0, 5) : chartData;
   const queryIsLoading = reportQuery.isLoading || entriesQuery.isLoading;
   const queryIsError = reportQuery.isError || entriesQuery.isError;
 
@@ -187,7 +190,7 @@ export default function TimeManagementReport() {
       : `${selectedGroups.length} grupos`;
 
   return (
-    <div className="mx-auto h-full w-full max-w-7xl space-y-2 overflow-y-auto px-1 pb-4 pt-1 md:px-3">
+    <div data-testid="sd-hours-report-page" className="mx-auto h-full w-full min-w-0 max-w-7xl space-y-2 overflow-x-hidden overflow-y-auto px-1 pb-4 pt-1 md:px-3">
       <motion.section
         initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -204,19 +207,19 @@ export default function TimeManagementReport() {
               Acompanhe os lançamentos, a cobertura da jornada e a distribuição de horas da equipe.
             </p>
           </div>
-          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+          <div className="grid w-full shrink-0 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:justify-end">
             <Button
               type="button"
               variant="outline"
               size="sm"
-              className="h-9 gap-1.5 border-violet-300 bg-background/90 px-3 text-xs text-violet-700 shadow-sm hover:bg-violet-50 hover:text-violet-800 dark:border-violet-800 dark:text-violet-300 dark:hover:bg-violet-950/50"
+              className="h-9 w-full gap-1.5 border-violet-300 bg-background/90 px-3 text-xs text-violet-700 shadow-sm hover:bg-violet-50 hover:text-violet-800 sm:w-auto dark:border-violet-800 dark:text-violet-300 dark:hover:bg-violet-950/50"
               disabled={importTeamWeek.isPending}
               onClick={() => setImportDialogOpen(true)}
             >
               {importTeamWeek.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
               Importar dados gerais
             </Button>
-            <div className="flex items-center rounded-lg border border-violet-200/80 bg-background/85 p-1 shadow-sm backdrop-blur-sm dark:border-violet-900">
+            <div className="grid grid-cols-2 items-center rounded-lg border border-violet-200/80 bg-background/85 p-1 shadow-sm backdrop-blur-sm sm:flex dark:border-violet-900">
               <Button
                 type="button"
                 variant="ghost"
@@ -297,7 +300,7 @@ export default function TimeManagementReport() {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-          <div className="flex h-9 items-center gap-1 rounded-lg border px-1">
+          <div className="flex h-9 w-full items-center justify-between gap-1 rounded-lg border px-1 lg:justify-start">
             <Button variant="ghost" size="icon" className="h-7 w-7" aria-label={`${periodView === "week" ? "Semana" : "Dia"} anterior`} onClick={() => navigatePeriod(-1)}><ChevronLeft className="h-4 w-4" /></Button>
             <Input type="date" value={format(selectedDate, "yyyy-MM-dd")} className="h-7 w-[140px] border-0 bg-transparent text-xs shadow-none" onChange={(event) => event.target.value && setSelectedDate(parseISO(event.target.value))} />
             <Button variant="ghost" size="icon" className="h-7 w-7" aria-label={`Próxim${periodView === "week" ? "a semana" : "o dia"}`} onClick={() => navigatePeriod(1)}><ChevronRight className="h-4 w-4" /></Button>
@@ -311,7 +314,7 @@ export default function TimeManagementReport() {
         <Card className="border-destructive/40"><CardContent className="flex flex-col items-center gap-2 py-14 text-center"><FileSearch className="h-8 w-8 text-destructive" /><p className="font-semibold">Não foi possível consultar os lançamentos</p><p className="text-sm text-muted-foreground">Verifique sua permissão gerencial ou tente novamente.</p><Button size="sm" variant="outline" onClick={() => { void reportQuery.refetch(); void entriesQuery.refetch(); }}>Tentar novamente</Button></CardContent></Card>
       ) : (
         <>
-          <div className="grid gap-1.5 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-1.5 xl:grid-cols-4">
             <MetricCard label="Horas lançadas" value={formatMinutes(total)} detail={periodDetail} icon={<Clock3 className="h-4 w-4" />} />
             <MetricCard label="Analistas" value={String(analystCount)} detail={`${analystCount} com registros ${periodView === "week" ? "na semana" : "no dia"}`} icon={<UsersRound className="h-4 w-4" />} />
             <MetricCard label={periodView === "week" ? "Média por analista/dia" : "Média por analista"} value={formatMinutes(workedUserDays ? total / workedUserDays : 0)} detail={`${workedUserDays} jornada(s) registrada(s)`} icon={<BarChart3 className="h-4 w-4" />} />
@@ -319,11 +322,11 @@ export default function TimeManagementReport() {
           </div>
 
           <Card>
-            <CardHeader className="px-2.5 pb-0 pt-2"><CardTitle className="text-xs">{periodView === "week" ? "Distribuição semanal" : "Horas por analista"}</CardTitle></CardHeader>
-            <CardContent className="h-40 overflow-x-auto p-1.5 pt-0">
-              <div className="h-full" style={{ minWidth: chartMinWidth || undefined }}>
+            <CardHeader className="px-2.5 pb-0 pt-2"><CardTitle className="text-xs">{periodView === "week" ? "Distribuição semanal" : "Horas por analista"}</CardTitle>{isMobile && periodView === "day" && chartData.length > 5 && <p className="text-[10px] text-muted-foreground">Top 5 analistas no celular</p>}</CardHeader>
+            <CardContent className="h-44 overflow-hidden p-1.5 pt-0 md:h-40 md:overflow-x-auto">
+              <div className="h-full" style={{ minWidth: isMobile ? undefined : chartMinWidth || undefined }}>
                 <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                  <BarChart data={chartData} margin={{ top: 4, right: 6, left: -26, bottom: periodView === "day" ? 8 : 0 }}>
+                  <BarChart data={visibleChartData} margin={{ top: 4, right: 6, left: -26, bottom: periodView === "day" ? 8 : 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
                     <XAxis
                       dataKey="day"
@@ -334,11 +337,11 @@ export default function TimeManagementReport() {
                       height={periodView === "day" ? 42 : 24}
                       tick={periodView === "day" ? (
                         <AnalystAxisTick
-                          onSelect={(index) => filterByChartAnalyst(chartData[index]?.userId)}
+                          onSelect={(index) => filterByChartAnalyst(visibleChartData[index]?.userId)}
                         />
                       ) : (
                         <WeekdayAxisTick
-                          onSelect={(index) => filterByChartDate(chartData[index]?.dateKey)}
+                          onSelect={(index) => filterByChartDate(visibleChartData[index]?.dateKey)}
                         />
                       )}
                     />
@@ -411,7 +414,7 @@ export default function TimeManagementReport() {
       )}
 
       <AlertDialog open={importDialogOpen} onOpenChange={(open) => !importTeamWeek.isPending && setImportDialogOpen(open)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] overflow-y-auto sm:w-full">
           <AlertDialogHeader>
             <AlertDialogTitle>Importar dados gerais do SD?</AlertDialogTitle>
             <AlertDialogDescription className="space-y-2">
