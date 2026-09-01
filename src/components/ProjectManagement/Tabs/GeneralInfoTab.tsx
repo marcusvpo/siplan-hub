@@ -116,7 +116,7 @@ export function GeneralInfoTab({ project, onUpdate, onStageClick }: TabProps) {
   };
 
   return (
-    <div className="space-y-3 w-full pb-2">
+    <div className="w-full min-w-0 space-y-3 pb-2">
       {/* Feedback Visual do Autosave */}
       <div className="fixed bottom-4 right-4 z-50">
         {saveState.status === "saving" && (
@@ -138,14 +138,14 @@ export function GeneralInfoTab({ project, onUpdate, onStageClick }: TabProps) {
       </div>
 
       {/* 1. Pipeline Visual Moderno */}
-      <div className="w-full py-2 px-3 sm:px-4 bg-card/50 backdrop-blur-sm rounded-2xl border shadow-sm relative overflow-x-auto scrollbar-none">
-        <div className="flex items-center justify-between relative z-10 min-w-[500px] sm:min-w-full max-w-5xl mx-auto py-1">
+      <div data-testid="project-stage-overview" className="relative w-full overflow-hidden rounded-xl border bg-card/50 px-2 py-2 shadow-sm backdrop-blur-sm sm:overflow-x-auto sm:rounded-2xl sm:px-4 scrollbar-none">
+        <div className="relative z-10 mx-auto grid max-w-5xl grid-cols-2 gap-2 py-1 sm:flex sm:min-w-[500px] sm:items-center sm:justify-between sm:gap-0">
           {/* Connecting Line */}
-          <div className="absolute top-[1.3rem] left-0 right-0 h-0.5 bg-muted -z-10 rounded-full" />
+          <div className="absolute top-[1.3rem] left-0 right-0 -z-10 hidden h-0.5 rounded-full bg-muted sm:block" />
 
           {/* Active Progress Line */}
           <div
-            className="absolute top-[1.3rem] left-0 h-0.5 bg-gradient-to-r from-emerald-500 to-emerald-400 -z-10 transition-all duration-1000 ease-in-out rounded-full shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+            className="absolute top-[1.3rem] left-0 -z-10 hidden h-0.5 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.5)] transition-all duration-1000 ease-in-out sm:block"
             style={{
               width: `${Math.min(
                 100,
@@ -178,7 +178,7 @@ export function GeneralInfoTab({ project, onUpdate, onStageClick }: TabProps) {
             return (
               <div
                 key={stage.id}
-                className="flex flex-col items-center gap-1.5 group cursor-pointer relative"
+                className="group relative flex min-w-0 cursor-pointer flex-col items-center gap-1.5 rounded-lg bg-background/50 p-2 sm:bg-transparent sm:p-0"
                 onClick={() => onStageClick?.(stage.id)}
               >
                 <div
@@ -201,10 +201,10 @@ export function GeneralInfoTab({ project, onUpdate, onStageClick }: TabProps) {
                     <Icon className="h-4 w-4" />
                   )}
                 </div>
-                <div className="text-center bg-background/80 backdrop-blur-md px-1.5 py-0.5 rounded-md border border-transparent group-hover:border-border/50 transition-colors">
+                <div className="max-w-full rounded-md border border-transparent bg-background/80 px-1.5 py-0.5 text-center backdrop-blur-md transition-colors group-hover:border-border/50">
                   <p
                     className={cn(
-                      "text-[10px] font-bold uppercase tracking-widest",
+                      "break-words text-[9px] font-bold uppercase tracking-wide sm:text-[10px] sm:tracking-widest",
                       isDone
                         ? "text-emerald-600 dark:text-emerald-400"
                         : isWaitingAdjustment

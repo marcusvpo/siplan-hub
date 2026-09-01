@@ -511,7 +511,7 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
         const someChecked = list.some(f => f.isDone);
 
         return (
-            <div className="flex items-center justify-between p-1.5 rounded border border-border bg-muted/40 text-xs shrink-0 mb-1.5 transition-all duration-300">
+            <div className="mb-1.5 flex shrink-0 flex-col items-stretch gap-2 rounded border border-border bg-muted/40 p-2 text-xs transition-all duration-300 sm:flex-row sm:items-center sm:justify-between sm:gap-1.5 sm:p-1.5">
                 <div className="flex items-center gap-2">
                     <Checkbox
                         checked={allChecked}
@@ -524,11 +524,11 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                     </span>
                 </div>
                 {someChecked && (
-                    <div className="flex items-center gap-1.5">
+                    <div className="grid grid-cols-2 gap-1.5 sm:flex sm:items-center">
                         <Button
                             variant="ghost"
                             size="sm"
-                            className="h-6 px-2 text-[10px] flex items-center gap-1 text-muted-foreground hover:text-foreground hover:bg-accent"
+                            className="h-7 min-w-0 px-1.5 text-[9px] flex items-center justify-center gap-1 text-muted-foreground hover:text-foreground hover:bg-accent sm:h-6 sm:px-2 sm:text-[10px]"
                             onClick={() => handleBatchDownload(type, list)}
                         >
                             <Download className="h-3 w-3" />
@@ -538,7 +538,7 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-6 px-2 text-[10px] text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-100/50 dark:hover:bg-red-900/20 flex items-center gap-1"
+                                className="h-7 min-w-0 px-1.5 text-[9px] text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-100/50 dark:hover:bg-red-900/20 flex items-center justify-center gap-1 sm:h-6 sm:px-2 sm:text-[10px]"
                                 onClick={() => handleBatchDelete(type, list)}
                             >
                                 <Trash2 className="h-3 w-3" />
@@ -662,11 +662,11 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
             onMouseEnter={() => hasPair && setHoveredPairKey(pairKey)}
             onMouseLeave={() => setHoveredPairKey(null)}
             className={cn(
-                "flex items-center justify-between p-1.5 rounded bg-white dark:bg-neutral-900 border border-border/50 dark:border-neutral-800 text-xs transition-all duration-300 shadow-sm hover:shadow-md hover:border-border",
+                "flex flex-col items-stretch gap-1.5 rounded bg-white p-2 text-xs transition-all duration-300 shadow-sm border border-border/50 hover:shadow-md hover:border-border sm:flex-row sm:items-center sm:justify-between sm:gap-2 sm:p-1.5 dark:bg-neutral-900 dark:border-neutral-800",
                 file.isDone && "bg-muted border-border",
                 isHighlighted && "ring-2 ring-primary bg-primary/10 border-primary shadow-md scale-[1.01]"
             )}>
-            <div className="flex items-center gap-2 overflow-hidden">
+            <div className="flex min-w-0 items-center gap-2 overflow-hidden">
                 {hasPair ? (
                     <Tooltip>
                         <TooltipTrigger asChild>
@@ -710,7 +710,7 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                     </TooltipContent>
                 </Tooltip>
             </div>
-            <div className="flex items-center gap-0.5 shrink-0">
+            <div className="flex shrink-0 items-center justify-end gap-0.5 border-t border-border/40 pt-1 sm:border-0 sm:pt-0">
                 {type === 'sent' && renderJobBadge(file)}
                 {type === 'sent' && renderGenerateButton(file)}
                 <Button variant="ghost" size="icon" className="h-6.5 w-6.5 text-muted-foreground hover:text-foreground hover:bg-accent group" title="Visualizar arquivo" onClick={(e) => { e.preventDefault(); handleFileView(file); }}>
@@ -741,7 +741,7 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
         const isCollapsed = !expandedCats.has(collapseKey);
         return (
             <div key={label} className="rounded-md border border-border/60 bg-card/50 dark:bg-neutral-900/40 p-2 space-y-1.5">
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex flex-col items-stretch gap-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
                     <button
                         type="button"
                         onClick={(e) => { e.preventDefault(); toggleCategory(collapseKey); }}
@@ -755,7 +755,7 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                         <span className="opacity-60 font-semibold">({catFiles.length})</span>
                     </button>
                     {modelType && canUploadFiles && (
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center justify-end gap-1">
                             {isSent && catFiles.length > 0 && (
                                 <Button
                                     variant="ghost"
@@ -825,7 +825,7 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
         const actualDone = stage.sentFiles.filter(f => f.isDone).length;
 
         return (
-            <div className="w-full space-y-1.5 bg-card/50 dark:bg-neutral-900/50 p-3 rounded-lg border border-border">
+            <div className="w-full space-y-1.5 rounded-lg border border-border bg-card/50 p-2.5 sm:p-3 dark:bg-neutral-900/50">
                 <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                     <span className="flex items-center gap-1.5">
                         <CheckCircle2 className="h-3.5 w-3.5" />
@@ -844,11 +844,11 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
     };
 
     return (
-        <div className="col-span-full w-full flex-1 flex flex-col min-h-0 space-y-3">
+        <div data-testid="orion-models-workspace" className="col-span-full flex min-h-0 min-w-0 w-full flex-1 flex-col space-y-2 sm:space-y-3">
             {renderProgress()}
 
             {/* Painel unico com abas (Enviados / Disponiveis) */}
-            <div className="flex-1 min-h-0 flex flex-col p-3 rounded-lg border border-border/60 bg-muted/20 dark:bg-muted/10 space-y-2">
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col space-y-2 rounded-lg border border-border/60 bg-muted/20 p-2 sm:p-3 dark:bg-muted/10">
                 {/* inputs de upload (sempre montados p/ o botao Anexar por categoria) */}
                 <input
                     type="file"
@@ -867,13 +867,13 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                 />
 
                 {/* Barra de abas */}
-                <div className="flex items-center justify-between gap-2 shrink-0">
-                    <div className="flex items-center gap-1 p-1 rounded-lg bg-muted/60 dark:bg-neutral-900/60 border border-border/60">
+                <div className="flex shrink-0 flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="grid w-full grid-cols-2 items-center gap-1 rounded-lg border border-border/60 bg-muted/60 p-1 sm:flex sm:w-auto dark:bg-neutral-900/60">
                         <button
                             type="button"
                             onClick={(e) => { e.preventDefault(); setActiveTab('sent'); }}
                             className={cn(
-                                "flex items-center gap-1.5 h-8 px-3 rounded-md text-[11px] font-bold uppercase tracking-wider transition-colors",
+                                "flex h-8 min-w-0 items-center justify-center gap-1 rounded-md px-1.5 text-[9px] font-bold uppercase tracking-wide transition-colors sm:px-3 sm:text-[11px] sm:tracking-wider",
                                 activeTab === 'sent'
                                     ? "bg-background text-foreground shadow-sm"
                                     : "text-muted-foreground hover:text-foreground"
@@ -887,7 +887,7 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                             type="button"
                             onClick={(e) => { e.preventDefault(); setActiveTab('available'); }}
                             className={cn(
-                                "flex items-center gap-1.5 h-8 px-3 rounded-md text-[11px] font-bold uppercase tracking-wider transition-colors",
+                                "flex h-8 min-w-0 items-center justify-center gap-1 rounded-md px-1.5 text-[9px] font-bold uppercase tracking-wide transition-colors sm:px-3 sm:text-[11px] sm:tracking-wider",
                                 activeTab === 'available'
                                     ? "bg-background text-foreground shadow-sm"
                                     : "text-muted-foreground hover:text-foreground"
@@ -898,7 +898,7 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
                             <span className="opacity-70">{stage.availableFiles?.length ?? 0}</span>
                         </button>
                     </div>
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex w-full items-center justify-between gap-1.5 sm:w-auto sm:justify-end">
                         {renderWorkerStatus()}
                         <Button
                             variant="ghost"
@@ -952,23 +952,23 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
 
             {/* Fullscreen Viewer Dialog */}
             <Dialog open={!!viewingFullscreen} onOpenChange={(open) => !open && setViewingFullscreen(null)}>
-                <DialogContent className="max-w-[90vw] w-full max-h-[90vh] h-full flex flex-col p-6">
-                    <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b">
-                        <div>
-                            <DialogTitle className="flex items-center gap-2 text-xl">
+                <DialogContent className="flex h-[calc(100dvh-1rem)] max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-[90vw] flex-col p-3 sm:h-full sm:max-h-[90vh] sm:p-6">
+                    <DialogHeader className="flex min-w-0 flex-row items-center justify-between space-y-0 border-b pb-3 sm:pb-4">
+                        <div className="min-w-0">
+                            <DialogTitle className="flex items-center gap-2 pr-5 text-base sm:text-xl">
                                 {viewingFullscreen === 'sent' ? (
                                     <><UploadCloud className="h-5 w-5 text-muted-foreground" /> Modelos Enviados (Cliente)</>
                                 ) : viewingFullscreen === 'available' ? (
                                     <><FileText className="h-5 w-5 text-muted-foreground" /> Modelos Disponíveis (JSON)</>
                                 ) : null}
                             </DialogTitle>
-                            <DialogDescription className="mt-1">
+                            <DialogDescription className="mt-1 text-xs sm:text-sm">
                                 Gerenciamento avançado de arquivos do projeto.
                             </DialogDescription>
                         </div>
                     </DialogHeader>
 
-                    <div className="flex-1 overflow-y-auto mt-4 pr-2">
+                    <div className="mt-3 flex-1 overflow-y-auto pr-1 sm:mt-4 sm:pr-2">
                         {viewingFullscreen === 'sent' && (
                             <div className="space-y-3">
                                 <div className="relative mb-2">
@@ -1006,7 +1006,7 @@ export function ModelosEditorWorkspace({ project, onUpdate }: ModelosEditorWorks
 
             {/* Andamento ao vivo da geração (o que o agente de IA está fazendo na VM) */}
             <Dialog open={!!progressJob} onOpenChange={(open) => !open && setProgressJobId(null)}>
-                <DialogContent className="max-w-5xl w-[94vw] max-h-[90vh] flex flex-col overflow-hidden">
+                <DialogContent className="flex max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-5xl flex-col overflow-hidden p-4 sm:max-h-[90vh] sm:w-[94vw] sm:p-6">
                     <DialogHeader className="shrink-0">
                         <DialogTitle className="flex items-center gap-2 text-base">
                             {progressJob?.status === 'processing' && <Loader2 className="h-4 w-4 animate-spin text-indigo-500" />}
