@@ -247,7 +247,7 @@ export function SolutionRichTextEditor({
   const hasAttachments = attachments.length > 0 || pendingAttachments.length > 0;
 
   return (
-    <div className="space-y-3">
+    <div className="min-w-0 space-y-3">
       <div
         className={`relative overflow-hidden rounded-lg border bg-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 ${draggingFiles ? "border-primary ring-2 ring-primary/20" : ""}`}
         onDragEnter={(event) => {
@@ -271,7 +271,7 @@ export function SolutionRichTextEditor({
             Solte os arquivos para anexar
           </div>
         )}
-        <div className="flex flex-wrap items-center gap-2 border-b bg-muted/40 px-3 py-2">
+        <div className="flex max-w-full flex-wrap items-center gap-1 border-b bg-muted/40 px-2 py-2 sm:gap-2 sm:px-3">
           <Button type="button" variant="ghost" size="icon" className="h-8 w-8" title="Título" disabled={disabled} onMouseDown={(event) => event.preventDefault()} onClick={() => runEditorCommand("formatBlock", "h2")}>
             <Heading2 className="h-4 w-4" />
           </Button>
@@ -301,7 +301,7 @@ export function SolutionRichTextEditor({
             type="button"
             variant="ghost"
             size="sm"
-            className="h-8 gap-2"
+            className="h-8 gap-2 px-2 sm:px-3"
             disabled={disabled}
             onClick={() => imageInputRef.current?.click()}
           >
@@ -313,7 +313,7 @@ export function SolutionRichTextEditor({
             type="button"
             variant="ghost"
             size="sm"
-            className="h-8 gap-2"
+            className="h-8 gap-2 px-2 sm:px-3"
             disabled={disabled}
             onClick={() => attachmentInputRef.current?.click()}
           >
@@ -325,7 +325,7 @@ export function SolutionRichTextEditor({
             type="button"
             variant="ghost"
             size="sm"
-            className="h-8 gap-2 text-muted-foreground"
+            className="h-auto min-h-8 whitespace-normal px-2 text-left text-xs text-muted-foreground sm:gap-2 sm:px-3 sm:text-sm"
             disabled={disabled}
             onMouseDown={(event) => event.preventDefault()}
             onClick={markSelection}
@@ -343,7 +343,7 @@ export function SolutionRichTextEditor({
           aria-multiline="true"
           aria-label="Descrição da solução"
           data-placeholder="Descreva o problema e o passo a passo da solução..."
-          className="sd-rich-editor min-h-56 px-4 py-3 text-sm outline-none"
+          className="sd-rich-editor min-h-56 max-w-full overflow-x-auto px-3 py-3 text-sm outline-none sm:px-4"
           onInput={emitChange}
           onClick={handleEditorClick}
         />

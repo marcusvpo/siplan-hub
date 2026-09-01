@@ -42,14 +42,14 @@ export default function Solutions() {
   };
 
   return (
-    <div className="min-h-full bg-background">
-      <div className="mx-auto w-full max-w-7xl space-y-3 px-4 pb-4 pt-2 sm:px-6 sm:pt-3 lg:px-8 lg:pb-5">
+    <div data-testid="sd-solutions-page" className="min-h-full min-w-0 overflow-x-hidden bg-background">
+      <div className="mx-auto w-full min-w-0 max-w-7xl space-y-3 px-3 pb-4 pt-2 sm:px-6 sm:pt-3 lg:px-8 lg:pb-5">
         <div className="overflow-hidden rounded-2xl border bg-gradient-to-br from-primary/10 via-background to-background p-4 shadow-sm sm:px-5 sm:py-4">
           <div className="flex items-start gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
               <BookOpenText className="h-5 w-5" />
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">SD</p>
               <h1 className="mt-0.5 text-2xl font-bold tracking-tight">Soluções</h1>
               <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
@@ -60,25 +60,25 @@ export default function Solutions() {
         </div>
 
         <Tabs value={tab} onValueChange={handleTabChange} className="space-y-3">
-          <TabsList className="h-auto w-full justify-start overflow-x-auto rounded-xl bg-muted/60 p-1 sm:w-auto">
-            <TabsTrigger value="search" className="gap-2 px-3 py-1.5">
+          <TabsList className="flex h-auto w-full flex-wrap gap-1 rounded-xl bg-muted/60 p-1 lg:w-auto lg:flex-nowrap">
+            <TabsTrigger value="search" className="min-w-0 flex-1 basis-[calc(50%-0.25rem)] gap-2 whitespace-normal px-2 py-1.5 sm:px-3 lg:flex-none lg:basis-auto">
               <Search className="h-4 w-4" />
               Buscar
             </TabsTrigger>
             {(canCreate || editingSolution) && (
-              <TabsTrigger value="create" className="gap-2 px-3 py-1.5">
+              <TabsTrigger value="create" className="min-w-0 flex-1 basis-[calc(50%-0.25rem)] gap-2 whitespace-normal px-2 py-1.5 sm:px-3 lg:flex-none lg:basis-auto">
                 <Plus className="h-4 w-4" />
                 {editingSolution ? "Editar" : "Cadastrar"}
               </TabsTrigger>
             )}
             {canManage && (
-              <TabsTrigger value="manage" className="gap-2 px-3 py-1.5">
+              <TabsTrigger value="manage" className="min-w-0 flex-1 basis-[calc(50%-0.25rem)] gap-2 whitespace-normal px-2 py-1.5 sm:px-3 lg:flex-none lg:basis-auto">
                 <Settings2 className="h-4 w-4" />
                 Sistemas e rotinas
               </TabsTrigger>
             )}
             {canManage && (
-              <TabsTrigger value="families" className="gap-2 px-3 py-1.5">
+              <TabsTrigger value="families" className="min-w-0 flex-1 basis-[calc(50%-0.25rem)] gap-2 whitespace-normal px-2 py-1.5 sm:px-3 lg:flex-none lg:basis-auto">
                 <FolderTree className="h-4 w-4" />
                 Famílias
               </TabsTrigger>

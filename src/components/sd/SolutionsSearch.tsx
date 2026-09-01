@@ -92,7 +92,7 @@ function SolutionCard({ solution, search, onOpen }: SolutionCardProps) {
         if (event.key === "Enter" || event.key === " ") onOpen(solution);
       }}
     >
-      <CardContent className="flex h-full gap-4 p-5">
+      <CardContent className="flex h-full min-w-0 gap-3 p-3 sm:gap-4 sm:p-5">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
           <BookOpenText className="h-5 w-5" />
         </div>
@@ -117,7 +117,7 @@ function SolutionCard({ solution, search, onOpen }: SolutionCardProps) {
               <HighlightedText value={descriptionExcerpt} search={search} />
             </p>
           )}
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+          <div className="mt-4 flex flex-col items-start gap-2 text-xs text-muted-foreground sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
             <div className="flex flex-wrap gap-1.5">
               {solution.palavras_chave.slice(0, 3).map((keyword) => (
                 <span key={keyword} className="rounded bg-muted px-2 py-0.5">
@@ -249,7 +249,7 @@ export function SolutionsSearch({ refreshKey, onOpen }: SolutionsSearchProps) {
   };
 
   return (
-    <div className="space-y-3">
+    <div className="min-w-0 space-y-3">
       <div className="relative">
         <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
@@ -260,7 +260,7 @@ export function SolutionsSearch({ refreshKey, onOpen }: SolutionsSearchProps) {
         />
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
         <Button
           type="button"
           variant={showFilters ? "secondary" : "outline"}
@@ -289,7 +289,7 @@ export function SolutionsSearch({ refreshKey, onOpen }: SolutionsSearchProps) {
             Limpar
           </Button>
         )}
-        <div className="ml-auto min-w-44">
+        <div className="w-full sm:ml-auto sm:w-auto sm:min-w-44">
           <Select value={sort} onValueChange={(value) => setSort(value as SdSolutionSort)}>
             <SelectTrigger className="h-9" aria-label="Ordenar soluções">
               <SelectValue />
@@ -398,13 +398,13 @@ export function SolutionsSearch({ refreshKey, onOpen }: SolutionsSearchProps) {
                 }}
               >
                 <CardContent className="flex h-full flex-col p-4">
-                  <div className="flex items-start gap-3">
+                  <div className="flex min-w-0 items-start gap-3">
                     <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                       <FolderTree className="h-5 w-5" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
-                        <h3 className="font-semibold group-hover:text-primary">{family.nome}</h3>
+                        <h3 className="break-words font-semibold group-hover:text-primary">{family.nome}</h3>
                         <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
                       </div>
                       <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
@@ -431,8 +431,8 @@ export function SolutionsSearch({ refreshKey, onOpen }: SolutionsSearchProps) {
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-center gap-3">
               <Button
                 type="button"
                 variant="outline"
@@ -443,9 +443,9 @@ export function SolutionsSearch({ refreshKey, onOpen }: SolutionsSearchProps) {
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
-              <div>
+              <div className="min-w-0">
                 <p className="text-xs text-muted-foreground">Família</p>
-                <h2 className="font-semibold">{selectedFamily?.nome}</h2>
+                <h2 className="break-words font-semibold">{selectedFamily?.nome}</h2>
               </div>
             </div>
             <p className="text-sm text-muted-foreground">

@@ -113,7 +113,7 @@ export function TimeEntryDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[94vh] max-w-3xl">
+      <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-3xl overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -156,9 +156,9 @@ export function TimeEntryDialog({
               {intervals.map((interval, index) => (
                 <div
                   key={interval.key}
-                  className="grid grid-cols-[1fr_1fr_auto] items-end gap-2 rounded-xl border bg-muted/25 p-3"
+                  className="grid grid-cols-1 items-end gap-2 rounded-xl border bg-muted/25 p-3 sm:grid-cols-[1fr_1fr_auto]"
                 >
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5 sm:col-auto">
                     <Label htmlFor={`sd-time-start-${interval.key}`} className="text-xs">
                       Entrada {index + 1}
                     </Label>
@@ -169,7 +169,7 @@ export function TimeEntryDialog({
                       onChange={(event) => updateInterval(interval.key, "start", event.target.value)}
                     />
                   </div>
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5 sm:col-auto">
                     <Label htmlFor={`sd-time-end-${interval.key}`} className="text-xs">
                       Saída (opcional)
                     </Label>
@@ -184,6 +184,7 @@ export function TimeEntryDialog({
                     type="button"
                     variant="ghost"
                     size="icon"
+                    className="w-full sm:w-10"
                     disabled={intervals.length === 1}
                     aria-label={`Remover entrada ${index + 1}`}
                     onClick={() =>

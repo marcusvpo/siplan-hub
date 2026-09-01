@@ -50,6 +50,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useSdAttendanceBi } from "@/hooks/useSdAttendanceBi";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { formatMinutes } from "@/lib/sd-time";
 
 const SD_GROUPS = ["SD - TN/RC", "SD - GLOBAL", "SD - Protesto", "SD - RI/TD"];
@@ -63,6 +64,7 @@ type AttendanceBiTab = "overview" | "team" | "tickets";
 
 export default function SdAttendanceBi() {
   const shouldReduceMotion = useReducedMotion();
+  const isMobile = useIsMobile();
   const today = useMemo(() => new Date(), []);
   const [startDate, setStartDate] = useState(() => format(subDays(today, 29), "yyyy-MM-dd"));
   const [endDate, setEndDate] = useState(() => format(today, "yyyy-MM-dd"));
@@ -178,7 +180,7 @@ export default function SdAttendanceBi() {
   };
 
   return (
-    <div className="mx-auto h-full w-full max-w-7xl space-y-2 overflow-y-auto px-1 pb-5 pt-1 md:px-3">
+    <div data-testid="sd-attendance-bi-page" className="mx-auto h-full w-full min-w-0 max-w-7xl space-y-2 overflow-x-hidden overflow-y-auto px-1 pb-5 pt-1 md:px-3">
       <motion.section
         initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -195,7 +197,7 @@ export default function SdAttendanceBi() {
               Performance por equipe e analista, perfil dos chamados e distribuição das horas atendidas.
             </p>
           </div>
-          <Button type="button" variant="outline" size="sm" className="h-9 gap-1.5 bg-background/90 text-xs" onClick={() => void query.refetch()} disabled={query.isFetching}>
+          <Button type="button" variant="outline" size="sm" className="h-9 w-full gap-1.5 bg-background/90 text-xs sm:w-auto" onClick={() => void query.refetch()} disabled={query.isFetching}>
             <RefreshCw className={`h-3.5 w-3.5 ${query.isFetching ? "animate-spin" : ""}`} /> Atualizar BI
           </Button>
         </div>
@@ -221,9 +223,9 @@ export default function SdAttendanceBi() {
               <CsCxMultiSelect ariaLabel="Filtrar origem das horas" options={SOURCE_OPTIONS} values={sources} onChange={setSources} placeholder="Todas as origens" />
             </FilterField>
             <div className="flex h-8 items-center rounded-md border bg-muted/30 p-0.5">
-              {[7, 30, 90].map((days) => <Button key={days} type="button" variant="ghost" size="sm" className="h-7 px-2 text-[11px]" onClick={() => setPreset(days)}>{days} dias</Button>)}
+              {[7, 30, 90].map((days) => <Button key={days} type="button" variant="ghost" size="sm" className="h-7 flex-1 px-2 text-[11px]" onClick={() => setPreset(days)}>{days} dias</Button>)}
             </div>
-            <Button type="button" variant="ghost" size="sm" className="h-8 gap-1.5 px-2 text-[11px]" disabled={!hasActiveFilters} onClick={clearDimensions}><FilterX className="h-3.5 w-3.5" /> Limpar filtros</Button>
+            <Button type="button" variant="ghost" size="sm" className="h-8 w-full gap-1.5 px-2 text-[11px] xl:w-auto" disabled={!hasActiveFilters} onClick={clearDimensions}><FilterX className="h-3.5 w-3.5" /> Limpar filtros</Button>
           </div>
         </CardContent>
       </Card>
@@ -236,7 +238,7 @@ export default function SdAttendanceBi() {
         <Card><CardContent className="flex flex-col items-center gap-2 py-16 text-center"><BarChart3 className="h-8 w-8 text-muted-foreground" /><p className="font-semibold">Nenhum atendimento encontrado</p><p className="text-sm text-muted-foreground">Altere o período ou remova parte dos filtros selecionados.</p></CardContent></Card>
       ) : (
         <>
-          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 xl:grid-cols-4">
             <MetricCard label="Horas atendidas" value={formatMinutes(metrics.total_minutes)} detail={`${metrics.entry_count} lançamentos`} icon={<Clock3 />} />
             <MetricCard label="Chamados atendidos" value={String(metrics.ticket_count)} detail={`${metrics.classified_ticket_count} classificados`} icon={<TicketCheck />} />
             <MetricCard label="Analistas ativos" value={String(metrics.analyst_count)} detail={`${data?.by_group.length ?? 0} grupos no resultado`} icon={<UsersRound />} />
@@ -334,7 +336,21 @@ export default function SdAttendanceBi() {
                 <Card className="flex h-[30rem] min-h-0 flex-col">
                   <CardHeader className="shrink-0 p-2.5 pb-0.5"><CardTitle className="text-xs">Performance dos analistas</CardTitle><p className="text-[10px] text-muted-foreground">Horas, volume e produtividade dentro do período filtrado</p></CardHeader>
                   <CardContent className="min-h-0 flex-1 overflow-auto p-1.5 pt-0">
-                    <Table className="text-[11px] [&_td]:px-2 [&_td]:py-1.5 [&_th]:h-8 [&_th]:px-2 [&_th]:text-[10px]">
+                    {isMobile ? <div data-testid="sd-analyst-mobile-list" className="space-y-1.5">
+                      {(data?.by_analyst ?? []).map((analyst) => (
+                        <button key={analyst.user_id} type="button" className="w-full rounded-lg border p-2.5 text-left" onClick={() => setUserIds([analyst.user_id])}>
+                          <div className="flex min-w-0 items-start justify-between gap-2">
+                            <div className="min-w-0"><p className="break-words text-xs font-semibold">{analyst.user_name}</p><p className="break-words text-[10px] text-muted-foreground">{analyst.attendance_group || "Sem grupo"}</p></div>
+                            <Badge variant="secondary" className="shrink-0 text-[10px]">{formatMinutes(analyst.total_minutes)}</Badge>
+                          </div>
+                          <div className="mt-2 grid grid-cols-3 gap-1 border-t pt-2 text-center text-[10px] text-muted-foreground">
+                            <span><strong className="block text-xs text-foreground">{analyst.ticket_count}</strong>Chamados</span>
+                            <span><strong className="block text-xs text-foreground">{formatMinutes(analyst.average_entry_minutes)}</strong>Média</span>
+                            <span><strong className="block text-xs text-foreground">{analyst.worked_days}</strong>Dias</span>
+                          </div>
+                        </button>
+                      ))}
+                    </div> : <Table className="text-[11px] [&_td]:px-2 [&_td]:py-1.5 [&_th]:h-8 [&_th]:px-2 [&_th]:text-[10px]">
                       <TableHeader className="sticky top-0 z-10 bg-background"><TableRow><TableHead>Analista</TableHead><TableHead>Grupo</TableHead><TableHead className="text-right">Horas</TableHead><TableHead className="text-right">Chamados</TableHead><TableHead className="text-right">Média/lanç.</TableHead><TableHead className="text-right">Dias</TableHead></TableRow></TableHeader>
                       <TableBody>
                         {(data?.by_analyst ?? []).map((analyst) => (
@@ -343,7 +359,7 @@ export default function SdAttendanceBi() {
                           </TableRow>
                         ))}
                       </TableBody>
-                    </Table>
+                    </Table>}
                   </CardContent>
                 </Card>
 
@@ -367,10 +383,10 @@ export default function SdAttendanceBi() {
               <div className="grid gap-2 xl:grid-cols-[1.25fr_0.75fr]">
                 <ChartCard title="Tipos de chamados mais atendidos" subtitle="Naturezas ordenadas pelo esforço; clique para filtrar">
                   <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                    <BarChart data={natureChart} layout="vertical" margin={{ top: 4, right: 12, left: 72, bottom: 0 }}>
+                    <BarChart data={natureChart} layout="vertical" margin={{ top: 4, right: 12, left: isMobile ? 0 : 72, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" horizontal={false} />
                       <XAxis type="number" fontSize={10} tickLine={false} axisLine={false} unit="h" />
-                      <YAxis type="category" dataKey="shortName" width={150} fontSize={10} tickLine={false} axisLine={false} />
+                      <YAxis type="category" dataKey="shortName" width={isMobile ? 86 : 150} fontSize={isMobile ? 8 : 10} tickLine={false} axisLine={false} />
                       <Tooltip formatter={(value: number) => formatMinutes(value * 60)} labelFormatter={(_, payload) => payload?.[0]?.payload?.nature ?? ""} />
                       <Bar dataKey="hours" name="Horas" fill="#7c3aed" radius={[0, 4, 4, 0]} onClick={(bar) => setNatures([bar.payload.nature])} className="cursor-pointer" />
                     </BarChart>
@@ -392,8 +408,15 @@ export default function SdAttendanceBi() {
 
               <Card>
                 <CardHeader className="p-2.5 pb-0.5"><CardTitle className="text-xs">Chamados com maior esforço</CardTitle><p className="text-[10px] text-muted-foreground">Top 15 pelo total de horas lançadas no período · 5 por página</p></CardHeader>
-                <CardContent className="overflow-x-auto p-1.5 pt-0">
-                  <Table className="text-[11px] [&_td]:px-2 [&_td]:py-1.5 [&_th]:h-8 [&_th]:px-2 [&_th]:text-[10px]">
+                <CardContent className="min-w-0 p-1.5 pt-0">
+                  {isMobile ? <div data-testid="sd-ticket-mobile-list" className="space-y-1.5">
+                    {paginatedTickets.map((ticket) => (
+                      <article key={ticket.ticket_number} className="min-w-0 rounded-lg border p-2.5">
+                        <div className="flex min-w-0 items-start justify-between gap-2"><div className="min-w-0"><p className="text-[10px] font-bold text-violet-600">#{ticket.ticket_number}</p><p className="break-words text-xs font-semibold">{ticket.ticket_title}</p><p className="break-words text-[10px] text-muted-foreground">{ticket.client_name}</p></div><Badge variant="secondary" className="shrink-0 text-[10px]">{formatMinutes(ticket.total_minutes)}</Badge></div>
+                        <div className="mt-2 flex flex-wrap gap-1.5 text-[10px]"><Badge variant="outline" className="max-w-full whitespace-normal text-left">{ticket.nature || "Sem natureza"}</Badge><Badge variant="outline" className="max-w-full whitespace-normal text-left">{ticket.product || "Sem produto"}</Badge><span className="self-center text-muted-foreground">{ticket.entry_count} interações</span></div>
+                      </article>
+                    ))}
+                  </div> : <Table className="text-[11px] [&_td]:px-2 [&_td]:py-1.5 [&_th]:h-8 [&_th]:px-2 [&_th]:text-[10px]">
                     <TableHeader><TableRow><TableHead>Chamado</TableHead><TableHead>Cliente / título</TableHead><TableHead>Natureza</TableHead><TableHead>Produto</TableHead><TableHead className="text-right">Horas</TableHead><TableHead className="text-right">Interações</TableHead></TableRow></TableHeader>
                     <TableBody>
                       {paginatedTickets.map((ticket) => (
@@ -404,8 +427,8 @@ export default function SdAttendanceBi() {
                         </TableRow>
                       ))}
                     </TableBody>
-                  </Table>
-                  <div className="flex items-center justify-end gap-2 border-t px-2 py-1.5 text-[10px] text-muted-foreground">
+                  </Table>}
+                  <div className="mt-1.5 flex items-center justify-between gap-2 border-t px-2 py-1.5 text-[10px] text-muted-foreground sm:justify-end">
                     <span>Página {activeTicketsPage} de {ticketsPageCount}</span>
                     <Button type="button" variant="outline" size="icon" className="h-7 w-7" aria-label="Página anterior dos chamados" disabled={activeTicketsPage === 1} onClick={() => setTicketsPage(activeTicketsPage - 1)}>
                       <ChevronLeft className="h-3.5 w-3.5" />
@@ -437,7 +460,7 @@ function ContextMetric({ label, value, detail, icon }: { label: string; value: s
 }
 
 function ChartCard({ title, subtitle, children, compact = false, legend = false }: { title: string; subtitle: string; children: React.ReactNode; compact?: boolean; legend?: boolean }) {
-  return <Card><CardHeader className="flex-row items-start justify-between space-y-0 p-3 pb-1"><div><CardTitle className="text-sm">{title}</CardTitle><p className="text-[11px] text-muted-foreground">{subtitle}</p></div>{legend && <SourceLegend />}</CardHeader><CardContent className={`${compact ? "h-56" : "h-72"} p-2 pt-0`}>{children}</CardContent></Card>;
+  return <Card className="min-w-0 overflow-hidden"><CardHeader className="flex-col items-start gap-1 space-y-0 p-3 pb-1 sm:flex-row sm:justify-between"><div className="min-w-0"><CardTitle className="text-sm">{title}</CardTitle><p className="text-[11px] text-muted-foreground">{subtitle}</p></div>{legend && <SourceLegend />}</CardHeader><CardContent className={`${compact ? "h-52 sm:h-56" : "h-64 sm:h-72"} min-w-0 p-2 pt-0`}>{children}</CardContent></Card>;
 }
 
 function SourceLegend() {
