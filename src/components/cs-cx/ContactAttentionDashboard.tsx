@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/table";
 import type { CsCxRegistryOffice } from "@/hooks/useCsCxCore";
 import type { CsCxContact } from "@/hooks/useCsCxEngagement";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 type AttentionStatus = "never" | "critical" | "attention" | "monitor" | "current";
@@ -104,6 +105,7 @@ export function ContactAttentionDashboard({
   onFilterOffice,
   onRegisterContact,
 }: ContactAttentionDashboardProps) {
+  const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<AttentionFilter>("needs-attention");
@@ -170,7 +172,7 @@ export function ContactAttentionDashboard({
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="flex max-h-[92vh] flex-col gap-3 overflow-hidden sm:max-w-5xl">
+        <DialogContent className="flex h-[calc(100dvh-1rem)] max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none flex-col gap-3 overflow-hidden p-4 sm:h-auto sm:max-h-[92vh] sm:max-w-5xl sm:p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <ChartNoAxesCombined className="h-5 w-5 text-rose-500" />
@@ -274,7 +276,7 @@ export function ContactAttentionDashboard({
 
             <div className="flex flex-col gap-2 sm:flex-row">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
@@ -300,7 +302,12 @@ export function ContactAttentionDashboard({
               </Select>
             </div>
 
-            <div className="max-h-[46vh] overflow-auto rounded-lg border">
+            {isMobile && <div data-testid="cs-cx-attention-mobile-list" className="max-h-[50dvh] space-y-2 overflow-y-auto md:hidden">
+              {!visibleRows.length ? <p className="rounded-lg border py-8 text-center text-sm text-muted-foreground">Nenhum cartório encontrado neste recorte.</p> : visibleRows.map((row) => (
+                <article key={row.office.id} className="min-w-0 rounded-lg border bg-card p-3"><div className="flex min-w-0 items-start justify-between gap-2"><div className="min-w-0"><p className="break-words text-sm font-bold">{row.office.name}</p><p className="mt-0.5 truncate text-xs text-muted-foreground">{officeResponsible(row.office)}</p></div><Badge variant="outline" className={cn("shrink-0 whitespace-nowrap text-[10px]", STATUS_META[row.status].className)}>{STATUS_META[row.status].shortLabel}</Badge></div><div className="mt-2 grid grid-cols-2 gap-2 text-xs"><div><span className="block text-[10px] uppercase text-muted-foreground">Último contato</span>{row.lastContact ? formatDate(row.lastContact.contact_date) : "Nunca registrado"}</div><div><span className="block text-[10px] uppercase text-muted-foreground">Sem contato</span>{formatElapsedDays(row.daysWithoutContact)}</div></div><div className="mt-3 grid grid-cols-1 gap-1.5 border-t pt-2 min-[420px]:grid-cols-2"><Button type="button" variant="outline" size="sm" className="h-8" onClick={() => filterOffice(row.office.id)}>Ver histórico</Button>{canCreate && <Button type="button" size="sm" className="h-8" onClick={() => registerContact(row.office.id)}>Registrar contato</Button>}</div></article>
+              ))}
+            </div>}
+            {!isMobile && <div className="hidden max-h-[46vh] overflow-auto rounded-lg border md:block">
               <Table>
                 <TableHeader className="sticky top-0 z-10 bg-background">
                   <TableRow>
@@ -365,7 +372,7 @@ export function ContactAttentionDashboard({
                   )}
                 </TableBody>
               </Table>
-            </div>
+            </div>}
           </div>
         </DialogContent>
       </Dialog>

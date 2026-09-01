@@ -93,6 +93,7 @@ import {
 } from "@/hooks/useCsCxRoutines";
 import { useCsCxRecordPermissions } from "@/hooks/useCsCxRecordPermissions";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { generateCsCxRoutinePdf } from "@/lib/cs-cx-routines-report";
 import {
   decodeRoutineObservations,
@@ -210,6 +211,7 @@ function includeOfficesWithoutRoutines(
 }
 
 export default function CsCxRoutines() {
+  const isMobile = useIsMobile();
   const {
     models,
     routines,
@@ -699,7 +701,7 @@ export default function CsCxRoutines() {
     );
 
   return (
-    <div className="container mx-auto max-w-[1600px] space-y-4 px-4 py-4 lg:px-6">
+    <div data-testid="cs-cx-routines-page" className="container mx-auto w-full min-w-0 max-w-[1600px] space-y-4 overflow-x-hidden px-3 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:px-4 lg:px-6">
       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
         <div className="flex items-center gap-2">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-300">
@@ -719,7 +721,7 @@ export default function CsCxRoutines() {
           <Button
             size="sm"
             onClick={() => openApplyRoutine()}
-            className="gap-2"
+            className="w-full gap-2 md:w-auto"
           >
             <Plus className="h-4 w-4" />
             Aplicar rotina
@@ -761,7 +763,7 @@ export default function CsCxRoutines() {
       </div>
 
       <Tabs defaultValue="applications" className="space-y-3">
-        <TabsList className="h-9">
+        <TabsList className="h-auto w-full justify-start overflow-x-auto py-1 sm:h-9 sm:w-auto">
           <TabsTrigger className="h-7" value="applications">
             Aplicações
           </TabsTrigger>
@@ -776,7 +778,7 @@ export default function CsCxRoutines() {
           <Card>
             <CardContent className="grid gap-2 p-3 md:grid-cols-[minmax(260px,1fr)_260px]">
               <div className="relative">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   value={search}
                   onChange={(event) => updateSearch(event.target.value)}
@@ -811,7 +813,16 @@ export default function CsCxRoutines() {
               </CardDescription>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="overflow-x-auto">
+              {isMobile && <div data-testid="cs-cx-routines-mobile-list" className="space-y-2 p-3 md:hidden">
+                {pagedOfficeSummaries.length === 0 ? <p className="py-8 text-center text-sm text-muted-foreground">Nenhum cartório ou rotina encontrado.</p> : pagedOfficeSummaries.map((summary) => (
+                  <article key={summary.registryOfficeId} className="min-w-0 rounded-lg border bg-card p-3">
+                    <div className="flex min-w-0 items-start justify-between gap-2"><div className="min-w-0"><p className="break-words text-sm font-bold">{summary.registryOfficeName}</p><p className="mt-0.5 line-clamp-2 break-words text-xs text-muted-foreground">{summary.routines.length ? summary.routines.map((routine) => routine.routine_model?.name ?? "Modelo removido").join(", ") : "Nenhuma rotina vinculada"}</p></div><Badge variant="outline" className={!summary.routines.length ? "shrink-0 border-slate-200 bg-slate-50 text-slate-600" : summary.analyzed ? "shrink-0 border-emerald-200 bg-emerald-50 text-emerald-700" : "shrink-0 border-amber-200 bg-amber-50 text-amber-700"}>{!summary.routines.length ? "Sem rotina" : summary.analyzed ? "Analisado" : "Pendente"}</Badge></div>
+                    <div className="mt-3 grid grid-cols-3 gap-2 border-t pt-2 text-center text-xs"><div><strong className="block text-base">{summary.routines.length}</strong><span className="text-[10px] text-muted-foreground">Rotinas</span></div><div><strong className="block text-base text-emerald-700">{summary.activeItems}</strong><span className="text-[10px] text-muted-foreground">Ativos</span></div><div><strong className="block text-base text-rose-700">{summary.inactiveItems}</strong><span className="text-[10px] text-muted-foreground">Inativos</span></div></div>
+                    <div className="mt-3 flex flex-wrap gap-1.5">{summary.routines.length ? <Button variant="outline" size="sm" className="h-8 flex-1" onClick={() => openOfficeAnalysis(summary.registryOfficeId)}><Eye className="mr-1.5 h-4 w-4" />Analisar</Button> : canCreate && <Button variant="outline" size="sm" className="h-8 flex-1" onClick={() => openApplyRoutine(summary.registryOfficeId)}><Plus className="mr-1.5 h-4 w-4" />Aplicar rotina</Button>}{summary.routines.map((routine) => <div key={routine.id} className="flex"><Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Exportar PDF da rotina ${routine.routine_model?.name ?? "sem nome"}`} disabled={exportingRoutineId === routine.id} onClick={() => handleRoutinePdf(routine)}><FileDown className="h-4 w-4" /></Button>{canDeleteRecord(routine.applied_by) && <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Desvincular rotina ${routine.routine_model?.name ?? "sem nome"}`} onClick={() => setDeleting(routine)}><Trash2 className="h-4 w-4 text-destructive" /></Button>}</div>)}</div>
+                  </article>
+                ))}
+              </div>}
+              {!isMobile && <div className="hidden overflow-x-auto md:block">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -1008,7 +1019,7 @@ export default function CsCxRoutines() {
                     )}
                   </TableBody>
                 </Table>
-              </div>
+              </div>}
               <div className="px-3 pb-3">
                 <RoutinePaginationBar
                   currentPage={currentApplicationPage}
@@ -1150,7 +1161,18 @@ export default function CsCxRoutines() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="overflow-x-auto">
+              {isMobile && <div data-testid="cs-cx-routines-history-mobile-list" className="space-y-2 p-3 md:hidden">
+                {pagedHistory.length === 0 ? <p className="py-8 text-center text-sm text-muted-foreground">Nenhum registro encontrado para os filtros selecionados.</p> : pagedHistory.map((entry) => (
+                  <article key={entry.id} className="min-w-0 rounded-lg border bg-card p-3">
+                    <div className="flex items-start justify-between gap-2"><div className="min-w-0"><p className="break-words text-sm font-bold">{entry.registry_office_name ?? "Cartório não vinculado"}</p><p className="mt-0.5 break-words text-xs text-muted-foreground">{entry.routine_model_name ?? "Modelo não informado"}</p></div><ActionBadge action={entry.action} /></div>
+                    <p className="mt-2 break-words text-xs font-medium">{entry.model_item_name ?? "Modelo completo"}</p>
+                    {hasStatusTransition(entry.action, entry.previous_status, entry.new_status) && <div className="mt-2 flex items-center gap-1"><StatusBadge active={entry.previous_status} /><ArrowRight className="h-3 w-3 text-muted-foreground" /><StatusBadge active={entry.new_status} /></div>}
+                    {entry.notes && <p className="mt-2 line-clamp-3 break-words text-xs text-muted-foreground">{entry.notes}</p>}
+                    <div className="mt-3 grid grid-cols-2 gap-2 border-t pt-2 text-xs"><div className="min-w-0"><span className="block text-[10px] uppercase text-muted-foreground">Responsável</span><span className="block truncate">{entry.actor_name ?? (entry.legacy_user_id ? `Usuário legado #${entry.legacy_user_id}` : "Sistema")}</span></div><div><span className="block text-[10px] uppercase text-muted-foreground">Data</span>{formatDateTime(entry.occurred_at)}</div></div>
+                  </article>
+                ))}
+              </div>}
+              {!isMobile && <div className="hidden overflow-x-auto md:block">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -1251,7 +1273,7 @@ export default function CsCxRoutines() {
                     )}
                   </TableBody>
                 </Table>
-              </div>
+              </div>}
               <div className="px-3 pb-3">
                 <RoutinePaginationBar
                   currentPage={currentHistoryPage}
@@ -1270,7 +1292,7 @@ export default function CsCxRoutines() {
       </Tabs>
 
       <Dialog open={applyOpen} onOpenChange={setApplyOpen}>
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none overflow-y-auto p-4 sm:max-h-[92vh] sm:max-w-2xl sm:p-6">
           <DialogHeader>
             <DialogTitle>Aplicar rotina</DialogTitle>
             <DialogDescription>
@@ -1532,7 +1554,7 @@ export default function CsCxRoutines() {
       </Dialog>
 
       <Dialog open={bulkAnalysisOpen} onOpenChange={setBulkAnalysisOpen}>
-        <DialogContent className="sm:max-w-xl">
+        <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none overflow-y-auto p-4 sm:max-h-[92vh] sm:max-w-xl sm:p-6">
           <DialogHeader>
             <DialogTitle>
               {analysisProductName
@@ -1615,7 +1637,7 @@ export default function CsCxRoutines() {
         open={Boolean(editingItem)}
         onOpenChange={(open) => !open && setEditingItem(null)}
       >
-        <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-3xl">
+        <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none overflow-y-auto p-4 sm:max-h-[92vh] sm:max-w-3xl sm:p-6">
           <DialogHeader>
             <DialogTitle>Analisar item</DialogTitle>
             <DialogDescription>

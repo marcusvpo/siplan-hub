@@ -254,7 +254,7 @@ export default function CsCxVisits() {
       </div>
     );
   return (
-    <div className="container mx-auto max-w-[1600px] space-y-4 px-4 py-4 lg:px-6">
+    <div data-testid="cs-cx-visits-page" className="container mx-auto w-full min-w-0 max-w-[1600px] space-y-4 overflow-x-hidden px-3 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:px-4 lg:px-6">
       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
         <div className="flex items-center gap-2">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-300">
@@ -270,7 +270,7 @@ export default function CsCxVisits() {
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 md:flex">
           <Button
             size="sm"
             variant="outline"
@@ -281,7 +281,7 @@ export default function CsCxVisits() {
             Exportar PDF
           </Button>
           {canCreate && (
-            <Button size="sm" onClick={openCreate}>
+            <Button size="sm" onClick={openCreate} className="w-full md:w-auto">
               <Plus className="mr-2 h-4 w-4" />
               Nova visita
             </Button>
@@ -323,7 +323,7 @@ export default function CsCxVisits() {
       <Card>
         <CardContent className="grid gap-2 p-3 lg:grid-cols-[minmax(260px,1fr)_200px_155px_155px]">
           <div className="relative">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               className="h-9 pl-9"
               value={search}
@@ -497,7 +497,7 @@ export default function CsCxVisits() {
         onPageSizeChange={updatePageSize}
       />
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none overflow-y-auto p-4 sm:max-h-[92vh] sm:max-w-2xl sm:p-6">
           <DialogHeader>
             <DialogTitle>
               {form.id ? "Editar visita" : "Nova visita"}

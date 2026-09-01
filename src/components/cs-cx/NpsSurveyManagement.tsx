@@ -62,6 +62,7 @@ import {
 } from "@/hooks/useCsCxNpsSurveys";
 import { useCsCxRecordPermissions } from "@/hooks/useCsCxRecordPermissions";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   DEFAULT_NPS_QUESTIONS,
   DEFAULT_NPS_THEME,
@@ -100,6 +101,7 @@ export function NpsInvitationsPanel({
   requestOpen: boolean;
   onRequestOpenChange: (open: boolean) => void;
 }) {
+  const isMobile = useIsMobile();
   const { invitations, questionnaires, createInvitation, cancelInvitation } =
     useCsCxNpsSurveys();
   const { offices } = useCsCxRegistryOffices();
@@ -236,7 +238,16 @@ export function NpsInvitationsPanel({
     <>
       <Card>
         <CardContent className="p-0">
-          <Table className="[&_td]:px-3 [&_td]:py-2 [&_th]:h-9 [&_th]:px-3">
+          {isMobile && <div data-testid="cs-cx-nps-invitations-mobile-list" className="space-y-2 p-3 md:hidden">
+            {paged.length === 0 ? <p className="py-8 text-center text-sm text-muted-foreground">Nenhuma solicitação criada.</p> : paged.map((invitation) => { const status = effectiveInvitationStatus(invitation); return (
+              <article key={invitation.id} className="min-w-0 rounded-lg border bg-card p-3">
+                <div className="flex min-w-0 items-start justify-between gap-2"><div className="min-w-0"><p className="break-words text-sm font-bold">{invitation.registry_office?.name}</p><p className="mt-0.5 truncate text-xs text-muted-foreground">{invitation.recipient_name}{invitation.recipient_email ? ` · ${invitation.recipient_email}` : ""}</p></div><InvitationBadge status={status} /></div>
+                <div className="mt-2 flex flex-wrap gap-1.5"><Badge variant="outline">{invitation.product?.name ?? "Sem produto"}</Badge><span className="break-words text-xs">{invitation.questionnaire?.title ?? invitation.questionnaire_snapshot.title}</span></div>
+                <div className="mt-3 flex items-center justify-between border-t pt-2"><p className="text-[10px] text-muted-foreground">Validade: {formatDate(invitation.expires_at)}</p><div className="flex"><Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Copiar link NPS" onClick={() => copyInvitation(invitation.public_token)}><Copy className="h-4 w-4" /></Button>{canEditRecord(invitation.created_by) && status === "PENDENTE" && <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" aria-label="Cancelar solicitação NPS" onClick={() => cancel(invitation.id)}><Ban className="h-4 w-4" /></Button>}</div></div>
+              </article>
+            ); })}
+          </div>}
+          {!isMobile && <Table className="hidden md:table [&_td]:px-3 [&_td]:py-2 [&_th]:h-9 [&_th]:px-3">
             <TableHeader>
               <TableRow>
                 <TableHead>Cliente</TableHead>
@@ -325,7 +336,7 @@ export function NpsInvitationsPanel({
                 </TableRow>
               )}
             </TableBody>
-          </Table>
+          </Table>}
           <Pagination
             page={currentPage}
             totalPages={totalPages}
@@ -336,7 +347,7 @@ export function NpsInvitationsPanel({
       </Card>
 
       <Dialog open={requestOpen} onOpenChange={onRequestOpenChange}>
-        <DialogContent className="max-w-xl">
+        <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none overflow-y-auto p-4 sm:max-h-[92vh] sm:max-w-xl sm:p-6">
           <DialogHeader>
             <DialogTitle>Solicitar NPS</DialogTitle>
             <DialogDescription>
@@ -757,7 +768,7 @@ export function NpsQuestionnairesPanel() {
         open={Boolean(editing)}
         onOpenChange={(open) => !open && setEditing(null)}
       >
-        <DialogContent className="max-h-[92vh] max-w-4xl overflow-y-auto">
+        <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none overflow-y-auto p-4 sm:max-h-[92vh] sm:max-w-4xl sm:p-6">
           <DialogHeader>
             <DialogTitle>
               {editing === "new"

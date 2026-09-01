@@ -74,6 +74,7 @@ import {
   useCsCxContacts,
 } from "@/hooks/useCsCxEngagement";
 import { useCsCxRecordPermissions } from "@/hooks/useCsCxRecordPermissions";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { generateCsCxAppointmentsPdf } from "@/lib/cs-cx-engagement-pdf";
@@ -370,7 +371,7 @@ export default function CsCxAppointments() {
   );
 
   return (
-    <div className="container mx-auto max-w-[1600px] space-y-4 px-4 py-4 lg:px-6">
+    <div data-testid="cs-cx-appointments-page" className="container mx-auto w-full min-w-0 max-w-[1600px] space-y-4 overflow-x-hidden px-3 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:px-4 lg:px-6">
       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
         <div className="flex items-center gap-2">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-300">
@@ -420,7 +421,7 @@ export default function CsCxAppointments() {
         <CardContent className="space-y-3 p-3">
           <div className="grid gap-2 xl:grid-cols-[minmax(230px,1fr)_185px_165px_150px_145px_145px]">
             <div className="relative">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 value={search}
                 onChange={(event) => updateSearch(event.target.value)}
@@ -532,7 +533,7 @@ export default function CsCxAppointments() {
       </Card>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-3xl">
+        <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none overflow-y-auto p-4 sm:max-h-[92vh] sm:max-w-3xl sm:p-6">
           <DialogHeader className="sm:pr-44">
             <DialogTitle>
               {form.id ? "Editar agendamento" : "Novo agendamento"}
@@ -859,8 +860,43 @@ function AppointmentTable({
   onAction: (item: CsCxAppointment, status: string) => void;
   onDelete: (item: CsCxAppointment) => void;
 }) {
+  const isMobile = useIsMobile();
   return (
-    <div className="overflow-x-auto rounded-lg border">
+    <>
+      {isMobile && <div data-testid="cs-cx-appointments-mobile-list" className="space-y-2 md:hidden">
+        {appointments.length === 0 ? (
+          <div className="rounded-lg border px-3 py-10 text-center text-sm text-muted-foreground">Nenhum agendamento encontrado.</div>
+        ) : appointments.map((item) => {
+          const editable = canEdit(item.created_by);
+          const deletable = canDelete(item.created_by);
+          return (
+            <article key={item.id} className="min-w-0 rounded-lg border bg-card p-3 shadow-sm">
+              <div className="flex min-w-0 items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="break-words text-sm font-bold">{item.title}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">{formatDateTime(item.starts_at)} · {item.duration_minutes} min</p>
+                </div>
+                {(editable || deletable) && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label="Ações do agendamento"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {editable && <><DropdownMenuItem onClick={() => onEdit(item)}><Pencil className="mr-2 h-4 w-4" />Editar</DropdownMenuItem><DropdownMenuSeparator /><DropdownMenuItem onClick={() => onAction(item, "REALIZADO")}>Marcar realizado</DropdownMenuItem><DropdownMenuItem onClick={() => onAction(item, "CONCLUIDO")}>Concluir</DropdownMenuItem><DropdownMenuItem onClick={() => onAction(item, "REMARCADO")}>Remarcar</DropdownMenuItem><DropdownMenuItem className="text-amber-700" onClick={() => onAction(item, "CANCELADO")}>Cancelar</DropdownMenuItem></>}
+                      {deletable && <><DropdownMenuSeparator /><DropdownMenuItem className="text-destructive" onClick={() => onDelete(item)}><Trash2 className="mr-2 h-4 w-4" />Excluir</DropdownMenuItem></>}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+              </div>
+              <div className="mt-2 flex flex-wrap gap-1.5"><StatusBadge appointment={item} /><Badge variant="secondary" className="h-5 px-1.5 text-[10px] font-normal">{TYPE_LABELS[item.appointment_type] ?? item.appointment_type}</Badge>{item.is_lead && <Badge variant="outline" className="h-5 px-1.5 text-[10px] font-normal text-amber-700">Lead</Badge>}</div>
+              <div className="mt-3 grid grid-cols-2 gap-2 border-t pt-2 text-xs">
+                <div className="min-w-0"><span className="block text-[10px] uppercase text-muted-foreground">Cartório</span><span className="block truncate">{appointmentOfficeName(item) || "—"}</span></div>
+                <div className="min-w-0"><span className="block text-[10px] uppercase text-muted-foreground">Contato</span><span className="block truncate">{appointmentContactName(item) || "Não vinculado"}</span></div>
+                <div className="col-span-2 min-w-0"><span className="block text-[10px] uppercase text-muted-foreground">Responsável</span><span className="block truncate">{item.responsible?.full_name || item.responsible?.email || "Não vinculado"}</span></div>
+              </div>
+            </article>
+          );
+        })}
+      </div>}
+      {!isMobile && <div className="hidden overflow-x-auto rounded-lg border md:block">
       <Table>
         <TableHeader>
           <TableRow>
@@ -1019,7 +1055,8 @@ function AppointmentTable({
           )}
         </TableBody>
       </Table>
-    </div>
+      </div>}
+    </>
   );
 }
 
@@ -1111,6 +1148,7 @@ function MonthCalendar({
   canEdit: (ownerId: string | null) => boolean;
   onEdit: (item: CsCxAppointment) => void;
 }) {
+  const isMobile = useIsMobile();
   const [year, monthNumber] = month.split("-").map(Number);
   const firstDay = new Date(year, monthNumber - 1, 1);
   const days = new Date(year, monthNumber, 0).getDate();
@@ -1129,7 +1167,12 @@ function MonthCalendar({
           className="h-9 w-44"
         />
       </div>
-      <div className="grid grid-cols-7 overflow-hidden rounded-lg border">
+      {isMobile && <div data-testid="cs-cx-calendar-mobile-agenda" className="space-y-2 md:hidden">
+        {appointments.filter((item) => localDateKey(item.starts_at).startsWith(month)).length === 0 ? <p className="rounded-lg border py-8 text-center text-sm text-muted-foreground">Nenhum compromisso neste mês.</p> : appointments.filter((item) => localDateKey(item.starts_at).startsWith(month)).sort((a, b) => a.starts_at.localeCompare(b.starts_at)).map((item) => (
+          <button key={item.id} type="button" disabled={!canEdit(item.created_by)} onClick={() => onEdit(item)} className="w-full min-w-0 rounded-lg border bg-card p-3 text-left disabled:cursor-default"><div className="flex min-w-0 items-start justify-between gap-2"><div className="min-w-0"><p className="break-words text-sm font-bold">{item.title}</p><p className="mt-0.5 text-xs text-muted-foreground">{formatDateTime(item.starts_at)} · {item.duration_minutes} min</p></div><StatusBadge appointment={item} /></div><p className="mt-2 truncate text-xs">{appointmentOfficeName(item) || "Sem cartório vinculado"}</p></button>
+        ))}
+      </div>}
+      {!isMobile && <div className="hidden grid-cols-7 overflow-hidden rounded-lg border md:grid">
         {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((day) => (
           <div
             key={day}
@@ -1179,7 +1222,7 @@ function MonthCalendar({
             </div>
           );
         })}
-      </div>
+      </div>}
     </div>
   );
 }

@@ -89,6 +89,7 @@ import { useCsCxNpsAiReport } from "@/hooks/useCsCxNpsAiReport";
 import { useModelWorkerStatus } from "@/hooks/useModelGenerationJobs";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   buildNpsAiSource,
   buildNpsAnalytics,
@@ -299,7 +300,7 @@ export function NpsAnalyticsPanel({
   }
 
   return (
-    <div className="space-y-2.5">
+    <div data-testid="cs-cx-nps-analytics" className="min-w-0 space-y-2.5 overflow-x-hidden">
       <Card>
         <CardContent className="grid gap-2 p-3 md:grid-cols-2 xl:grid-cols-[145px_145px_minmax(190px,1fr)_180px_auto] xl:items-end">
           <div className="space-y-1">
@@ -379,12 +380,12 @@ export function NpsAnalyticsPanel({
               </SelectContent>
             </Select>
           </div>
-          <div className="flex gap-2">
+          <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 sm:flex">
             <Button
               type="button"
               size="sm"
               variant="outline"
-              className="h-8"
+              className="h-8 w-full sm:w-auto"
               disabled={
                 !filters.startDate &&
                 !filters.endDate &&
@@ -400,7 +401,7 @@ export function NpsAnalyticsPanel({
               type="button"
               size="sm"
               variant="outline"
-              className="h-8"
+              className="h-8 w-full sm:w-auto"
               disabled={!analytics.total || isExporting}
               onClick={handleExport}
             >
@@ -1158,7 +1159,7 @@ function NpsExpandedChartDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="flex h-[92vh] max-h-[92vh] max-w-[96vw] flex-col overflow-hidden p-4 sm:max-w-[96vw] sm:p-5">
+      <DialogContent className="flex h-[calc(100dvh-1rem)] max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none flex-col overflow-hidden p-4 sm:h-[92vh] sm:max-h-[92vh] sm:max-w-[96vw] sm:p-5">
         <DialogHeader className="shrink-0 pr-10">
           <DialogTitle>
             {isAttention ? "Clientes que precisam de atenção" : "Ranking de NPS por cartório"}
@@ -1200,6 +1201,7 @@ function NpsDrilldownDialog({
   onClose: () => void;
   onSelectClassification: (classification: CsCxNpsResponse["classification"]) => void;
 }) {
+  const isMobile = useIsMobile();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const selectedResponses = useMemo(
@@ -1239,7 +1241,7 @@ function NpsDrilldownDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="flex max-h-[92vh] flex-col overflow-hidden sm:max-w-6xl">
+      <DialogContent className="flex h-[calc(100dvh-1rem)] max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none flex-col overflow-hidden p-4 sm:h-auto sm:max-h-[92vh] sm:max-w-6xl sm:p-6">
         <DialogHeader className="shrink-0 pr-8">
           <DialogTitle>{drilldown.title}</DialogTitle>
           <DialogDescription>{drilldown.description}</DialogDescription>
@@ -1259,7 +1261,7 @@ function NpsDrilldownDialog({
         </div>
 
         <div className="relative shrink-0">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             aria-label="Buscar clientes no detalhamento"
             value={search}
@@ -1269,7 +1271,12 @@ function NpsDrilldownDialog({
           />
         </div>
 
-        <div className="min-h-0 flex-1 overflow-auto rounded-lg border">
+        {isMobile && <div data-testid="cs-cx-nps-drilldown-mobile-list" className="min-h-0 flex-1 space-y-2 overflow-y-auto md:hidden">
+          {!pagedResponses.length ? <p className="rounded-lg border py-8 text-center text-sm text-muted-foreground">Nenhum cliente encontrado neste recorte.</p> : pagedResponses.map((response) => (
+            <article key={response.id} className="min-w-0 rounded-lg border bg-card p-3"><div className="flex min-w-0 items-start justify-between gap-2"><div className="min-w-0"><p className="break-words text-sm font-bold">{responseOfficeName(response)}</p><p className="mt-0.5 truncate text-xs text-muted-foreground">{response.respondent_name || "Não informado"} · {formatResponseDate(response.responded_at)}</p></div><div className="flex shrink-0 items-center gap-1.5"><span className="text-xl font-black">{response.score}</span><Badge variant="outline" className={classificationClass(response.classification)}>{classificationLabel(response.classification)}</Badge></div></div><div className="mt-2 space-y-1 text-xs leading-5"><p className="break-words"><span className="font-semibold">Motivo:</span> {response.score_reason?.trim() || "Não informado"}</p>{response.improvement_suggestion?.trim() && <p className="break-words text-muted-foreground"><span className="font-semibold text-foreground">Sugestão:</span> {response.improvement_suggestion}</p>}</div></article>
+          ))}
+        </div>}
+        {!isMobile && <div className="hidden min-h-0 flex-1 overflow-auto rounded-lg border md:block">
           <Table>
             <TableHeader className="sticky top-0 z-10 bg-background">
               <TableRow>
@@ -1302,7 +1309,7 @@ function NpsDrilldownDialog({
               ))}
             </TableBody>
           </Table>
-        </div>
+        </div>}
 
         <div className="flex shrink-0 flex-col gap-2 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <span>Mostrando <strong className="text-foreground">{firstItem}–{lastItem}</strong> de <strong className="text-foreground">{searchedResponses.length}</strong> cliente(s)</span>

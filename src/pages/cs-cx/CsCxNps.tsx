@@ -74,6 +74,7 @@ import {
 import { NpsAnalyticsPanel } from "@/components/cs-cx/NpsAnalytics";
 import { answerLabel } from "@/lib/cs-cx-nps-survey";
 import { useCsCxRegistryOffices } from "@/hooks/useCsCxCore";
+import { useIsMobile } from "@/hooks/use-mobile";
 const CLASS_LABELS: Record<string, string> = {
   PROMOTOR: "Promotor",
   NEUTRO: "Neutro",
@@ -82,6 +83,7 @@ const CLASS_LABELS: Record<string, string> = {
 const DEFAULT_PAGE_SIZE = 5;
 
 export default function CsCxNps() {
+  const isMobile = useIsMobile();
   const {
     responses,
     history,
@@ -306,7 +308,7 @@ export default function CsCxNps() {
       </div>
     );
   return (
-    <div className="container mx-auto max-w-[1600px] space-y-4 px-4 py-4 lg:px-6">
+    <div data-testid="cs-cx-nps-page" className="container mx-auto w-full min-w-0 max-w-[1600px] space-y-4 overflow-x-hidden px-3 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:px-4 lg:px-6">
       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
         <div className="flex items-center gap-2">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-300">
@@ -321,7 +323,7 @@ export default function CsCxNps() {
             </p>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 md:flex md:flex-wrap">
           <Button
             size="sm"
             variant="outline"
@@ -332,7 +334,7 @@ export default function CsCxNps() {
             Exportar PDF
           </Button>
           {canCreate && (
-            <Button size="sm" onClick={() => setRequestOpen(true)}>
+            <Button size="sm" className="w-full md:w-auto" onClick={() => setRequestOpen(true)}>
               <Link2 className="mr-2 h-4 w-4" />
               Solicitar NPS
             </Button>
@@ -392,7 +394,7 @@ export default function CsCxNps() {
         />
       </div>
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="h-9">
+        <TabsList className="h-auto w-full justify-start overflow-x-auto py-1 sm:h-9 sm:w-auto">
           <TabsTrigger className="h-7" value="analytics">
             Análises
           </TabsTrigger>
@@ -413,7 +415,7 @@ export default function CsCxNps() {
           <Card>
             <CardContent className="grid gap-2 p-3 md:grid-cols-2 xl:grid-cols-[minmax(260px,1fr)_200px_200px]">
               <div className="relative">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   className="h-9 pl-9"
                   value={search}
@@ -459,7 +461,17 @@ export default function CsCxNps() {
           </Card>
           <Card>
             <CardContent className="p-0">
-              <Table className="[&_td]:px-3 [&_td]:py-2 [&_th]:h-9 [&_th]:px-3">
+              {isMobile && <div data-testid="cs-cx-nps-responses-mobile-list" className="space-y-2 p-3 md:hidden">
+                {pagedResponses.length === 0 ? <p className="py-8 text-center text-sm text-muted-foreground">Nenhuma resposta encontrada.</p> : pagedResponses.map((response) => (
+                  <article key={response.id} className="min-w-0 rounded-lg border bg-card p-3">
+                    <div className="flex min-w-0 items-start justify-between gap-2"><div className="min-w-0"><p className="break-words text-sm font-bold">{response.registry_office?.name ?? response.respondent_office}</p><p className="mt-0.5 truncate text-xs text-muted-foreground">{response.respondent_name} · {formatDate(response.responded_at)}</p></div><span className="shrink-0 text-2xl font-black">{response.score}</span></div>
+                    <div className="mt-2 flex flex-wrap gap-1.5"><ClassificationBadge value={response.classification} /><Badge variant="outline">{response.product?.name ?? "Sem produto"}</Badge></div>
+                    <p className="mt-2 line-clamp-3 break-words text-xs leading-5 text-muted-foreground">{response.score_reason || "Motivo não informado"}</p>
+                    <div className="mt-2 flex justify-end border-t pt-2"><Button variant="ghost" size="sm" className="h-8" onClick={() => setViewing(response)}><Eye className="mr-1.5 h-4 w-4" />Visualizar</Button>{canEditRecord(response.owner_profile_id) && <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Corrigir produto da resposta" onClick={() => { setCorrectingProduct(response); setCorrectedProductId(response.product_id ?? ""); }}><Pencil className="h-4 w-4" /></Button>}{canDeleteRecord(response.owner_profile_id) && <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Excluir resposta" onClick={() => setDeleting(response)}><Trash2 className="h-4 w-4 text-destructive" /></Button>}</div>
+                  </article>
+                ))}
+              </div>}
+              {!isMobile && <Table className="hidden md:table [&_td]:px-3 [&_td]:py-2 [&_th]:h-9 [&_th]:px-3">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Data</TableHead>
@@ -564,7 +576,7 @@ export default function CsCxNps() {
                     </TableRow>
                   )}
                 </TableBody>
-              </Table>
+              </Table>}
               <div className="px-3 pb-3">
                 <NpsPaginationBar
                   currentPage={currentResponsePage}
@@ -640,7 +652,16 @@ export default function CsCxNps() {
               )}
             </CardHeader>
             <CardContent className="p-0">
-              <Table className="[&_td]:px-3 [&_td]:py-2 [&_th]:h-9 [&_th]:px-3">
+              {isMobile && <div data-testid="cs-cx-nps-history-mobile-list" className="space-y-2 p-3 md:hidden">
+                {pagedHistory.length === 0 ? <p className="py-8 text-center text-sm text-muted-foreground">Nenhum fechamento histórico foi importado.</p> : pagedHistory.map((item) => { const status = npsHistoryStatus(item.nps_score); return (
+                  <article key={item.id} className="min-w-0 rounded-lg border bg-card p-3">
+                    <div className="flex min-w-0 items-start justify-between gap-2"><div className="min-w-0"><p className="break-words text-sm font-bold">{item.registry_office?.name ?? "Cartório não informado"}</p><p className="mt-0.5 text-xs text-muted-foreground">{formatDateOnly(item.period_start)} – {formatDateOnly(item.period_end)}</p></div><Badge variant="outline" className={status.className}>NPS {item.nps_score.toFixed(1)}</Badge></div>
+                    <div className="mt-3 flex flex-wrap gap-1"><HistoryCount label="Promotores" shortLabel="P" value={item.total_promoters} tone="positive" /><HistoryCount label="Neutros" shortLabel="N" value={item.total_neutrals} tone="neutral" /><HistoryCount label="Detratores" shortLabel="D" value={item.total_detractors} tone="negative" /></div>
+                    <p className="mt-2 text-xs text-muted-foreground">{item.total_responses} respostas · {status.label}</p>
+                  </article>
+                ); })}
+              </div>}
+              {!isMobile && <Table className="hidden md:table [&_td]:px-3 [&_td]:py-2 [&_th]:h-9 [&_th]:px-3">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Cartório</TableHead>
@@ -726,7 +747,7 @@ export default function CsCxNps() {
                     </TableRow>
                   )}
                 </TableBody>
-              </Table>
+              </Table>}
               <div className="px-3 pb-3">
                 <NpsPaginationBar
                   currentPage={currentHistoryPage}
@@ -747,7 +768,7 @@ export default function CsCxNps() {
         open={Boolean(officeCoverage)}
         onOpenChange={(open) => !open && setOfficeCoverage(null)}
       >
-        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
+        <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none overflow-y-auto p-4 sm:max-h-[85vh] sm:max-w-2xl sm:p-6">
           <DialogHeader>
             <DialogTitle>
               {officeCoverage === "evaluated"
@@ -839,7 +860,7 @@ export default function CsCxNps() {
         open={Boolean(viewing)}
         onOpenChange={(open) => !open && setViewing(null)}
       >
-        <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
+        <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none overflow-y-auto p-4 sm:max-h-[85vh] sm:max-w-2xl sm:p-6">
           <DialogHeader>
             <DialogTitle>Visualizar resposta NPS</DialogTitle>
             <DialogDescription>
@@ -922,7 +943,7 @@ export default function CsCxNps() {
           }
         }}
       >
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none overflow-y-auto p-4 sm:max-h-[92vh] sm:max-w-md sm:p-6">
           <DialogHeader>
             <DialogTitle>Corrigir produto da avaliação</DialogTitle>
             <DialogDescription>

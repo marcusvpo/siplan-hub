@@ -106,6 +106,9 @@
   "104": "admin-layout-sidebar.test.tsx",
   "105": "Visual QA Checklist",
   "106": "README e relacionados",
+  "107": "package.json",
+  "108": "useVoiceNoteJobs.ts",
+  "109": "sidebar-empty-groups.test.tsx",
   "114": "cs cx core permissions.test",
   "115": "tsconfig e relacionados",
   "119": "activity Logger",
@@ -126,12 +129,10 @@
   "153": "01 nucleo dashboard projetos",
   "154": "01 nucleo dashboard projetos",
   "155": "01 nucleo dashboard projetos",
-  "156": "Pos Ai Visitor Analytics",
   "159": "03 comercial",
   "160": "03 comercial",
   "161": "03 comercial",
   "162": "03 comercial",
-  "164": "03 comercial",
   "165": "use Pos Ai Chat Conversations",
   "166": "03 comercial",
   "167": "05 administracao",
@@ -270,6 +271,5 @@
   "419": "use Cs Cx Access",
   "420": "03 comercial",
   "421": "Commercial Customers.mobile.test",
-  "422": "03 comercial",
-  "425": "03 comercial"
+  "422": "03 comercial"
 }
