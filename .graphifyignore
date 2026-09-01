@@ -1,0 +1,11 @@
+# Agent instructions, skills and IDE-specific tooling are not application code.
+.agent/
+.agents/
+.claude/
+.codex/
+.gemini/
+
+# Root instruction files belong to the agent runtime, not the product graph.
+AGENTS.md
+CLAUDE.md
+GEMINI.md

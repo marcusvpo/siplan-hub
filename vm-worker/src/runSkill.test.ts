@@ -195,7 +195,6 @@ test("instala wrapper Codex apontando para a skill nativa em .codex", async () =
     const content = await readFile(installed, "utf-8");
     assert.match(content, /name: criar-modelo-mesclado/);
     assert.match(content, /\.codex\/skills\/criar-modelo-mesclado\/SKILL\.md/);
-    assert.doesNotMatch(content, /\.claude\/skills\/criar-modelo-mesclado/);
     assert.match(content, /Nunca pedir entrada, confirmacao ou aprovacao/);
 
     assert.equal(await ensureCodexModelSkill(tempRoot), installed);
@@ -204,27 +203,7 @@ test("instala wrapper Codex apontando para a skill nativa em .codex", async () =
   }
 });
 
-test("mantem compatibilidade com a skill legada em .claude", async () => {
-  const tempRoot = await mkdtemp(path.join(os.tmpdir(), "siplan-claude-skill-"));
-  try {
-    const originalDir = path.join(
-      tempRoot,
-      ".claude",
-      "skills",
-      "criar-modelo-mesclado"
-    );
-    await mkdir(originalDir, { recursive: true });
-    await writeFile(path.join(originalDir, "SKILL.md"), "# Skill legada\n", "utf-8");
-
-    const installed = await ensureCodexModelSkill(tempRoot);
-    const content = await readFile(installed, "utf-8");
-    assert.match(content, /\.claude\/skills\/criar-modelo-mesclado\/SKILL\.md/);
-  } finally {
-    await rm(tempRoot, { recursive: true, force: true });
-  }
-});
-
-test("informa todos os caminhos quando a skill do modelo nao existe", async () => {
+test("informa o caminho quando a skill do modelo nao existe", async () => {
   const tempRoot = await mkdtemp(path.join(os.tmpdir(), "siplan-missing-skill-"));
   try {
     await assert.rejects(
@@ -232,7 +211,6 @@ test("informa todos os caminhos quando a skill do modelo nao existe", async () =
       (error: unknown) => {
         assert.ok(error instanceof Error);
         assert.match(error.message, /\.codex.*criar-modelo-mesclado.*SKILL\.md/);
-        assert.match(error.message, /\.claude.*criar-modelo-mesclado.*SKILL\.md/);
         return true;
       }
     );

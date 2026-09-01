@@ -11,6 +11,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import List
 
@@ -40,7 +41,7 @@ def split_frontmatter(text: str):
     return "", text
 
 # Filenames and paths that almost certainly hold secrets or PII. Compressing
-# them ships raw bytes to the Anthropic API — a third-party data boundary that
+# them sends raw bytes to the configured Codex provider — a third-party data boundary that
 # developers on sensitive codebases cannot cross. detect.py already skips .env
 # by extension, but credentials.md / secrets.txt / ~/.aws/credentials would
 # slip through the natural-language filter. This is a hard refuse before read.
@@ -70,7 +71,7 @@ def backup_dir_for(filepath: Path) -> Path:
     """Resolve the out-of-tree backup directory for a given source file.
 
     Backups must live OUTSIDE the source directory so skill auto-loaders
-    (Claude Code rules/, opencode instructions/, etc.) stop re-ingesting the
+    (Codex rules, opencode instructions, etc.) stop re-ingesting the
     `.original.md` copies as live files. Base dir is platform-aware:
       - Windows: %LOCALAPPDATA%\\caveman-compress\\backups
       - else:    $XDG_DATA_HOME/caveman-compress/backups if set,
@@ -116,46 +117,44 @@ from .validate import validate
 MAX_RETRIES = 2
 
 
-# ---------- Claude Calls ----------
+# ---------- Codex Calls ----------
 
 
-def call_claude(prompt: str) -> str:
-    """Send a prompt to Claude.
+def call_codex(prompt: str) -> str:
+    """Send a prompt through the authenticated Codex CLI.
 
-    Prefers the Anthropic SDK when ANTHROPIC_API_KEY is set; otherwise falls
-    back to the ``claude --print`` CLI (which handles desktop auth).
-
-    On Windows the CLI subprocess decoding defaults to the system codepage
-    (cp1251 / cp1252) and crashes on UTF-8 output — see issue #152. Pinning
-    ``encoding="utf-8"`` with ``errors="replace"`` matches the CLI's actual
-    native I/O and prevents the UnicodeDecodeError before validation can
-    report. Windows users with non-ASCII content can also set
-    ``ANTHROPIC_API_KEY`` to route through the SDK and skip the subprocess.
+    The invocation is ephemeral, ignores project rules and uses a read-only
+    sandbox. ``CAVEMAN_MODEL`` may override the model; otherwise Codex uses the
+    account default. UTF-8 is pinned for consistent Windows subprocess output.
     """
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    if api_key:
-        try:
-            import anthropic
-
-            client = anthropic.Anthropic(api_key=api_key)
-            msg = client.messages.create(
-                model=os.environ.get("CAVEMAN_MODEL", "claude-sonnet-4-5"),
-                max_tokens=8192,
-                messages=[{"role": "user", "content": prompt}],
-            )
-            return strip_llm_wrapper(msg.content[0].text.strip())
-        except ImportError:
-            pass  # anthropic not installed, fall back to CLI
-    # Fallback: use claude CLI (handles desktop auth).
-    # Resolve binary via shutil.which so Windows .cmd/.bat shims (e.g.
-    # %APPDATA%\npm\claude.CMD) work without shell=True. On POSIX,
-    # shutil.which returns the same absolute path as the implicit lookup,
-    # so this is a no-op there. Falls back to bare "claude" if not found
-    # on PATH so subprocess raises a clear FileNotFoundError.
-    claude_bin = shutil.which("claude") or "claude"
+    codex_bin = shutil.which("codex") or "codex"
+    output_path = ""
     try:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".txt") as output_file:
+            output_path = output_file.name
+
+        args = [
+            codex_bin,
+            "exec",
+            "--ephemeral",
+            "--ignore-rules",
+            "--skip-git-repo-check",
+            "--cd",
+            tempfile.gettempdir(),
+            "--sandbox",
+            "read-only",
+            "--color",
+            "never",
+            "--output-last-message",
+            output_path,
+        ]
+        model = os.environ.get("CAVEMAN_MODEL", "").strip()
+        if model:
+            args.extend(["--model", model])
+        args.append("-")
+
         result = subprocess.run(
-            [claude_bin, "--print"],
+            args,
             input=prompt,
             text=True,
             capture_output=True,
@@ -163,9 +162,17 @@ def call_claude(prompt: str) -> str:
             encoding="utf-8",
             errors="replace",
         )
-        return strip_llm_wrapper(result.stdout.strip())
+        response = Path(output_path).read_text(encoding="utf-8", errors="replace").strip()
+        return strip_llm_wrapper(response or result.stdout.strip())
+    except FileNotFoundError as error:
+        raise RuntimeError(
+            "Codex CLI not found. Install/authenticate Codex before using caveman-compress."
+        ) from error
     except subprocess.CalledProcessError as e:
-        raise RuntimeError(f"Claude call failed:\n{e.stderr}")
+        raise RuntimeError(f"Codex call failed:\n{e.stderr}") from e
+    finally:
+        if output_path:
+            Path(output_path).unlink(missing_ok=True)
 
 
 def build_compress_prompt(original: str) -> str:
@@ -229,14 +236,14 @@ def compress_file(filepath: Path) -> bool:
         raise ValueError(f"File too large to compress safely (max 500KB): {filepath}")
 
     # Refuse files that look like they contain secrets or PII. Compressing ships
-    # the raw bytes to the Anthropic API — a third-party boundary — so we fail
+    # the raw bytes to the configured Codex provider — a third-party boundary — so we fail
     # loudly rather than silently exfiltrate credentials or keys. Override is
     # intentional: the user must rename the file if the heuristic is wrong.
     if is_sensitive_path(filepath):
         raise ValueError(
             f"Refusing to compress {filepath}: filename looks sensitive "
             "(credentials, keys, secrets, or known private paths). "
-            "Compression sends file contents to the Anthropic API. "
+            "Compression sends file contents through the configured Codex provider. "
             "Rename the file if this is a false positive."
         )
 
@@ -265,7 +272,7 @@ def compress_file(filepath: Path) -> bool:
         print("Aborting to prevent data loss. Please remove or rename the backup file if you want to proceed.")
         return False
 
-    # Split YAML frontmatter off before compression. Claude tends to strip or
+    # Split YAML frontmatter off before compression. Language models may strip or
     # rewrite frontmatter despite preserve-structure rules; we keep it verbatim
     # by removing it from the input and re-prepending it to the output.
     frontmatter, body = split_frontmatter(original_text)
@@ -277,11 +284,11 @@ def compress_file(filepath: Path) -> bool:
         return False
 
     # Step 1: Compress (body only, frontmatter excluded)
-    print("Compressing with Claude...")
-    compressed_body = call_claude(build_compress_prompt(body))
+    print("Compressing with Codex...")
+    compressed_body = call_codex(build_compress_prompt(body))
 
     if compressed_body is None or not compressed_body.strip():
-        print("❌ Compression aborted: Claude returned an empty response.")
+        print("❌ Compression aborted: Codex returned an empty response.")
         print("   Original file is untouched (no backup created).")
         return False
 
@@ -289,7 +296,7 @@ def compress_file(filepath: Path) -> bool:
     # and would never change, so identity must be judged on the compressible part.
     if compressed_body.strip() == body.strip():
         print("❌ Compression aborted: output is identical to input.")
-        print("   Likely causes: Claude refused, returned the prompt verbatim, or the file is")
+        print("   Likely causes: Codex refused, returned the prompt verbatim, or the file is")
         print("   already in caveman form. Original file is untouched (no backup created).")
         return False
 
@@ -333,8 +340,8 @@ def compress_file(filepath: Path) -> bool:
             print("❌ Failed after retries — original restored")
             return False
 
-        print("Fixing with Claude...")
-        compressed = call_claude(
+        print("Fixing with Codex...")
+        compressed = call_codex(
             build_fix_prompt(original_text, compressed, result.errors)
         )
         filepath.write_text(compressed)

@@ -15,7 +15,7 @@ from design_system import generate_design_system
 
 
 def format_output(result):
-    """Format results for Claude consumption (token-optimized)"""
+    """Format results for agent consumption (token-optimized)"""
     if "error" in result:
         return f"Error: {result['error']}"
 
