@@ -340,8 +340,8 @@
     "semantic_hash": "35f70e43d77ab43f1343a9c3746bd2f9"
   },
   "src/components/ProjectManagement/ModelosEditor/ModelosEditorWorkspace.tsx": {
-    "mtime": 1786998592.0465844,
-    "ast_hash": "007e50013bd274cad54997f48fd83187",
+    "mtime": 1788266174.9127214,
+    "ast_hash": "109b61ef50bf2685ebd81433b7ceead2",
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/ProjectCardV3.tsx": {
@@ -355,8 +355,8 @@
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/ProjectModal.tsx": {
-    "mtime": 1786480740.8272357,
-    "ast_hash": "1045d264cd65cf2716670f769ea25a13",
+    "mtime": 1788267815.2864356,
+    "ast_hash": "0d4d9144895e29772848df42183a6a28",
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/RoadmapManager.tsx": {
@@ -380,8 +380,8 @@
     "semantic_hash": "983dd83c838e6616f13f0a71fa0b7951"
   },
   "src/components/ProjectManagement/Tabs/GeneralInfoTab.tsx": {
-    "mtime": 1786361796.8631964,
-    "ast_hash": "a000474f05f6725380c8b194c3191967",
+    "mtime": 1788267815.2884378,
+    "ast_hash": "47dacd516bab8e4c2f8b4853c0fc18eb",
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/Tabs/LogsTab.tsx": {
@@ -1195,18 +1195,18 @@
     "semantic_hash": ""
   },
   "src/pages/conversion/OrionTNDashboard.tsx": {
-    "mtime": 1781183998.3690543,
-    "ast_hash": "436de5b9dda1cfe1b98f004bf5174e57",
-    "semantic_hash": "436de5b9dda1cfe1b98f004bf5174e57"
+    "mtime": 1788268494.2617722,
+    "ast_hash": "707d42eed5fc4271d16ce13b685338b7",
+    "semantic_hash": ""
   },
   "src/pages/conversion/OrionTNModels.tsx": {
-    "mtime": 1787930496.2737799,
-    "ast_hash": "a95d89536c2a40e397a7a41b62087299",
+    "mtime": 1788268140.7534268,
+    "ast_hash": "a969cd5b1542179bdf4fb5e0baa568b3",
     "semantic_hash": ""
   },
   "src/pages/conversion/OrionTNProjects.tsx": {
-    "mtime": 1787930496.274781,
-    "ast_hash": "ba37852c32b6709b408b340b9b5ad253",
+    "mtime": 1788266127.1202977,
+    "ast_hash": "af1cafafd5ba32515241a7aab6a4ed2b",
     "semantic_hash": ""
   },
   "src/pages/implantadores/AderenciasFinalizadas.tsx": {
@@ -4525,8 +4525,8 @@
     "semantic_hash": ""
   },
   "src/pages/sd/SdAttendanceBi.tsx": {
-    "mtime": 1788265220.9171624,
-    "ast_hash": "3a0b08c74af4badd743e17234e61918d",
+    "mtime": 1788265867.4890883,
+    "ast_hash": "c00f502d89f4db30117f3f25220825e7",
     "semantic_hash": ""
   },
   "src/test/sd-attendance-bi.test.ts": {
@@ -4550,8 +4550,8 @@
     "semantic_hash": ""
   },
   "src/test/sd-attendance-bi-interactions.test.tsx": {
-    "mtime": 1788264982.002323,
-    "ast_hash": "1f3be74fdff565274c0cdc0960a72373",
+    "mtime": 1788265867.494137,
+    "ast_hash": "8f72dac129e1d2d4cc749ef28b3e2061",
     "semantic_hash": ""
   },
   "src/components/pwa/PwaStatus.tsx": {
@@ -4710,8 +4710,13 @@
     "semantic_hash": ""
   },
   "src/test/sd-mobile-layout.test.ts": {
-    "mtime": 1788264974.7055104,
-    "ast_hash": "c6a5981e4d29dfc71fe00b4fcc71690f",
+    "mtime": 1788265867.4956453,
+    "ast_hash": "d29a157b8412aaf30ffe06ae9fdecd88",
+    "semantic_hash": ""
+  },
+  "src/test/orion-models-mobile-layout.test.ts": {
+    "mtime": 1788268494.263773,
+    "ast_hash": "8023ea7380fb20d9fb927e51b5d91104",
     "semantic_hash": ""
   }
 }

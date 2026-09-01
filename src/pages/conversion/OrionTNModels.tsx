@@ -1,6 +1,6 @@
 import { FileText, Search, Loader2, ChevronRight, Layout, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useProjectsV2 } from "@/hooks/useProjectsV2";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import { getMarqueeStyle } from "@/lib/marquee";
 
@@ -21,9 +22,16 @@ export default function OrionTNModels() {
   const { projects, isLoading, updateProject } = useProjectsV2();
   const { hasPermission } = usePermissions();
   const canEditOrionModels = hasPermission("orion_editor", "edit");
+  const isMobile = useIsMobile();
   const [projectSearch, setProjectSearch] = useState("");
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() =>
+    typeof window === "undefined" || window.innerWidth >= 768 || !projectId
+  );
+
+  useEffect(() => {
+    if (isMobile && projectId) setIsSidebarOpen(false);
+  }, [isMobile, projectId]);
 
   const orionProjects = useMemo(() => {
     return projects.filter((p) =>
@@ -47,6 +55,7 @@ export default function OrionTNModels() {
 
   const handleSelectProject = (id: string) => {
     navigate(`/orion-tn-models/editor/${id}`);
+    if (isMobile) setIsSidebarOpen(false);
   };
 
   const updateStage = async (proj: typeof selectedProject, stageKey: string, updates: any) => {
@@ -68,18 +77,28 @@ export default function OrionTNModels() {
 
   if (isLoading && projects.length === 0) {
     return (
-      <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
+      <div className="flex h-[calc(100dvh-3rem)] items-center justify-center md:h-[calc(100vh-4rem)]">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] overflow-hidden bg-neutral-50 dark:bg-neutral-950/50">
+    <div data-testid="orion-models-editor" className="relative flex h-[calc(100dvh-3rem)] min-w-0 overflow-hidden bg-neutral-50 md:h-[calc(100vh-4rem)] dark:bg-neutral-950/50">
+      {isSidebarOpen && (
+        <button
+          type="button"
+          aria-label="Fechar lista de projetos"
+          className="absolute inset-0 z-30 bg-black/35 backdrop-blur-[1px] md:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
       {/* Sidebar de Projetos */}
       <div className={cn(
-        "w-80 border-r bg-white dark:bg-neutral-900 flex flex-col shrink-0 transition-all duration-300 ease-in-out overflow-hidden",
-        !isSidebarOpen && "w-0 border-r-0 opacity-0 pointer-events-none"
+        "absolute inset-y-0 left-0 z-40 flex w-[calc(100%_-_1rem)] max-w-xs shrink-0 flex-col overflow-hidden border-r bg-white shadow-xl transition-all duration-300 ease-in-out md:relative md:z-auto md:w-80 md:shadow-none dark:bg-neutral-900",
+        isSidebarOpen
+          ? "translate-x-0 opacity-100 md:w-80"
+          : "-translate-x-full pointer-events-none opacity-0 md:w-0 md:translate-x-0 md:border-r-0"
       )}>
         <div className="p-3 border-b space-y-2.5">
           <div className="flex items-center justify-between">
@@ -130,15 +149,18 @@ export default function OrionTNModels() {
                     onMouseEnter={() => setHoveredId(p.id)}
                     onMouseLeave={() => setHoveredId(null)}
                     className={cn(
-                      "w-full text-left px-2 py-1.5 rounded transition-all duration-200 flex items-center justify-between gap-1",
+                      "flex w-full items-start justify-between gap-1 rounded px-2 py-2.5 text-left transition-all duration-200 md:items-center md:py-1.5",
                       isSelected
                         ? "bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/50"
                         : "hover:bg-neutral-50 dark:hover:bg-neutral-800/50 text-neutral-600 dark:text-neutral-400 border border-transparent"
                     )}
                   >
-                    <div className="flex-1 min-w-0 overflow-hidden">
+                    <div className="min-w-0 flex-1 overflow-hidden">
+                      <span className="block whitespace-normal break-words text-[10.5px] font-semibold leading-snug md:hidden">
+                        {p.clientName}
+                      </span>
                       <span
-                        className="inline-block whitespace-nowrap font-semibold text-[10.5px] leading-tight"
+                        className="hidden whitespace-nowrap text-[10.5px] font-semibold leading-tight md:inline-block"
                         style={getMarqueeStyle(p.clientName, animate, TEXT_AREA_PX)}
                       >
                         {p.clientName}
@@ -148,7 +170,7 @@ export default function OrionTNModels() {
                       </p>
                     </div>
                     <ChevronRight className={cn(
-                      "h-3 w-3 shrink-0 transition-all duration-200",
+                      "hidden h-3 w-3 shrink-0 transition-all duration-200 md:block",
                       animate ? "translate-x-0 opacity-100" : "-translate-x-1 opacity-0"
                     )} />
                   </button>
@@ -160,8 +182,8 @@ export default function OrionTNModels() {
       </div>
 
       {/* Área Principal */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-12 border-b bg-white dark:bg-neutral-900 flex items-center px-4 shrink-0">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <header className="flex h-12 shrink-0 items-center border-b bg-white px-2.5 sm:px-4 dark:bg-neutral-900">
           <div className="flex items-center gap-2.5 min-w-0 flex-1">
             {!isSidebarOpen && (
               <Button
@@ -181,7 +203,7 @@ export default function OrionTNModels() {
               <h1 className="font-bold text-sm md:text-base leading-none text-foreground" title={selectedProject?.clientName || "Modelos Editor"}>
                 {selectedProject ? selectedProject.clientName : "Modelos Editor"}
               </h1>
-              <p className="text-[10px] text-muted-foreground mt-0.5">
+              <p className="mt-0.5 truncate text-[10px] text-muted-foreground">
                 {selectedProject
                   ? `Central de Modelos - ${selectedProject.systemType}`
                   : "Selecione um projeto para gerenciar modelos"}
@@ -190,7 +212,7 @@ export default function OrionTNModels() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-hidden p-3 flex flex-col">
+        <main className="flex min-w-0 flex-1 flex-col overflow-hidden p-2 sm:p-3">
           {selectedProject ? (
             <div className="w-full max-w-7xl mx-auto flex-1 flex flex-col min-h-0 space-y-3">
               <ModelosEditorWorkspace

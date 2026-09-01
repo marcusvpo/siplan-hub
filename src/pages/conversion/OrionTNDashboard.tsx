@@ -19,10 +19,16 @@ import {
     Download,
     ExternalLink,
     BarChart3,
+    Search,
+    ChevronLeft,
+    ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ProjectV2, StageStatus } from "@/types/ProjectV2";
 import { ProjectModal } from "@/components/ProjectManagement/ProjectModal";
+import { normalizeText } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const STATUS_CONFIG: Record<StageStatus, { label: string; color: string; bgColor: string; icon: React.ReactNode; badgeClass: string }> = {
     "todo": {
@@ -64,7 +70,11 @@ const STATUS_CONFIG: Record<StageStatus, { label: string; color: string; bgColor
 
 export default function OrionTNDashboard() {
     const { projects, isLoading, updateProject } = useProjectsV2();
+    const isMobile = useIsMobile();
     const [selectedProjectForModal, setSelectedProjectForModal] = useState<ProjectV2 | null>(null);
+    const [activeProjectSearch, setActiveProjectSearch] = useState("");
+    const [activeProjectsPage, setActiveProjectsPage] = useState(1);
+    const activeProjectsPageSize = isMobile ? 3 : 5;
 
     // Only OrionTN projects
     const orionProjects = useMemo(
@@ -109,11 +119,30 @@ export default function OrionTNDashboard() {
                 const status = p.stages.modelosEditor?.status;
                 return status === "todo" || status === "in-progress";
             })
-            .sort((a, b) => new Date(b.lastUpdatedAt).getTime() - new Date(a.lastUpdatedAt).getTime())
-            .slice(0, 10);
+            .sort((a, b) => new Date(b.lastUpdatedAt).getTime() - new Date(a.lastUpdatedAt).getTime());
 
         return { byStatus, totalSentFiles, totalAvailableFiles, progressRanges, avgProgress, recentProjects };
     }, [withEditor]);
+
+    const filteredRecentProjects = useMemo(() => {
+        const query = normalizeText(activeProjectSearch.trim());
+        if (!query) return stats.recentProjects;
+        return stats.recentProjects.filter((project) =>
+            normalizeText(project.clientName).includes(query)
+        );
+    }, [activeProjectSearch, stats.recentProjects]);
+
+    const activeProjectsTotalPages = Math.ceil(filteredRecentProjects.length / activeProjectsPageSize);
+    const safeActiveProjectsPage = Math.min(activeProjectsPage, Math.max(activeProjectsTotalPages, 1));
+    const paginatedRecentProjects = filteredRecentProjects.slice(
+        (safeActiveProjectsPage - 1) * activeProjectsPageSize,
+        safeActiveProjectsPage * activeProjectsPageSize
+    );
+
+    const handleActiveProjectSearch = (value: string) => {
+        setActiveProjectSearch(value);
+        setActiveProjectsPage(1);
+    };
 
     if (isLoading) {
         return (
@@ -127,7 +156,7 @@ export default function OrionTNDashboard() {
     const maxStatus = Math.max(...Object.values(stats.byStatus), 1);
 
     return (
-        <div className="p-4 space-y-5 animate-in fade-in duration-500">
+        <div data-testid="orion-models-dashboard" className="min-w-0 space-y-4 overflow-x-hidden px-3 py-4 sm:space-y-5 sm:p-4 animate-in fade-in duration-500">
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
@@ -143,7 +172,7 @@ export default function OrionTNDashboard() {
             </div>
 
             {/* KPI Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-5">
                 <KPICard
                     title="Total c/ Editor"
                     value={total}
@@ -342,19 +371,72 @@ export default function OrionTNDashboard() {
 
             {/* Recent Projects Table */}
             <Card className="bg-card/50 backdrop-blur-sm shadow-sm">
-                <CardHeader className="p-4 pb-2">
-                    <CardTitle className="text-sm font-bold flex items-center gap-2">
+                <CardHeader className="flex flex-col items-stretch gap-3 p-3 pb-2 sm:flex-row sm:items-center sm:justify-between sm:p-4 sm:pb-2">
+                    <CardTitle className="flex items-center gap-2 text-sm font-bold">
                         <FileText className="h-4 w-4 text-primary" />
                         Projetos em Andamento — Modelos Editor
                     </CardTitle>
+                    <div className="relative w-full sm:w-72">
+                        <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                            aria-label="Filtrar cartórios em andamento"
+                            placeholder="Filtrar por nome do cartório..."
+                            value={activeProjectSearch}
+                            onChange={(event) => handleActiveProjectSearch(event.target.value)}
+                            className="h-9 pl-8 text-xs"
+                        />
+                    </div>
                 </CardHeader>
-                <CardContent className="p-4 pt-2">
-                    {stats.recentProjects.length === 0 ? (
+                <CardContent className="p-3 pt-2 sm:p-4 sm:pt-2">
+                    {filteredRecentProjects.length === 0 ? (
                         <p className="text-xs text-muted-foreground text-center py-8">
-                            Nenhum projeto em andamento no Modelos Editor encontrado.
+                            {activeProjectSearch
+                                ? "Nenhum cartório corresponde ao filtro informado."
+                                : "Nenhum projeto em andamento no Modelos Editor encontrado."}
                         </p>
                     ) : (
-                        <div className="relative w-full overflow-auto">
+                        <>
+                        <div data-testid="orion-dashboard-mobile-projects" className="space-y-2 sm:hidden">
+                            {paginatedRecentProjects.map((project) => {
+                                const editorStage = project.stages.modelosEditor!;
+                                const statusCfg = STATUS_CONFIG[editorStage.status] || STATUS_CONFIG["todo"];
+                                const sentCount = (editorStage.sentFiles || []).length;
+                                const availCount = (editorStage.availableFiles || []).length;
+
+                                return (
+                                    <article key={project.id} className="min-w-0 rounded-lg border bg-background/70 p-3 shadow-sm">
+                                        <div className="flex min-w-0 items-start justify-between gap-2">
+                                            <div className="min-w-0">
+                                                <p className="break-words text-xs font-bold leading-snug">{project.clientName}</p>
+                                                <p className="mt-0.5 text-[9px] text-muted-foreground">#{project.ticketNumber}</p>
+                                            </div>
+                                            <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold ${statusCfg.badgeClass}`}>
+                                                {statusCfg.icon}
+                                                {statusCfg.label}
+                                            </span>
+                                        </div>
+                                        <div className="mt-3 grid grid-cols-2 gap-2 rounded-md bg-muted/40 p-2 text-[10px]">
+                                            <div className="min-w-0">
+                                                <span className="block text-muted-foreground">Responsável</span>
+                                                <span className="block truncate font-medium">{editorStage.responsible || "Não atribuído"}</span>
+                                            </div>
+                                            <div>
+                                                <span className="block text-muted-foreground">Arquivos</span>
+                                                <span className="flex items-center gap-2 font-medium">
+                                                    <span className="flex items-center gap-1 text-blue-600"><Send className="h-2.5 w-2.5" />{sentCount}</span>
+                                                    <span className="flex items-center gap-1 text-emerald-600"><Download className="h-2.5 w-2.5" />{availCount}</span>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <Button variant="outline" size="sm" className="mt-2 h-8 w-full gap-1 text-[10px]" onClick={() => setSelectedProjectForModal(project)}>
+                                            <ExternalLink className="h-3 w-3" />
+                                            Abrir projeto
+                                        </Button>
+                                    </article>
+                                );
+                            })}
+                        </div>
+                        <div className="relative hidden w-full overflow-auto sm:block">
                             <table className="w-full caption-bottom text-sm">
                                 <thead>
                                     <tr className="border-b">
@@ -379,7 +461,7 @@ export default function OrionTNDashboard() {
                                     </tr>
                                 </thead>
                                 <tbody className="[&_tr:last-child]:border-0">
-                                    {stats.recentProjects.map((project) => {
+                                    {paginatedRecentProjects.map((project) => {
                                         const editorStage = project.stages.modelosEditor!;
                                         const statusCfg = STATUS_CONFIG[editorStage.status] || STATUS_CONFIG["todo"];
                                         const sentCount = (editorStage.sentFiles || []).length;
@@ -450,6 +532,37 @@ export default function OrionTNDashboard() {
                                 </tbody>
                             </table>
                         </div>
+                        {activeProjectsTotalPages > 1 && (
+                            <div data-testid="orion-dashboard-project-pagination" className="mt-3 flex flex-col items-center justify-between gap-3 border-t pt-3 sm:flex-row">
+                                <p className="text-[10px] text-muted-foreground">
+                                    Mostrando {(safeActiveProjectsPage - 1) * activeProjectsPageSize + 1} a {Math.min(safeActiveProjectsPage * activeProjectsPageSize, filteredRecentProjects.length)} de {filteredRecentProjects.length}
+                                </p>
+                                <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:justify-end">
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-8 w-8"
+                                        aria-label="Página anterior dos projetos"
+                                        disabled={safeActiveProjectsPage === 1}
+                                        onClick={() => setActiveProjectsPage(Math.max(1, safeActiveProjectsPage - 1))}
+                                    >
+                                        <ChevronLeft className="h-4 w-4" />
+                                    </Button>
+                                    <span className="text-xs font-medium">Página {safeActiveProjectsPage} de {activeProjectsTotalPages}</span>
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-8 w-8"
+                                        aria-label="Próxima página dos projetos"
+                                        disabled={safeActiveProjectsPage === activeProjectsTotalPages}
+                                        onClick={() => setActiveProjectsPage(Math.min(activeProjectsTotalPages, safeActiveProjectsPage + 1))}
+                                    >
+                                        <ChevronRight className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+                        </>
                     )}
                 </CardContent>
             </Card>
@@ -493,9 +606,9 @@ function KPICard({
 
     return (
         <Card
-            className={`bg-card/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all group ${hoverBorderClass[accent] || ""}`}
+            className={`min-w-0 bg-card/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all group ${hoverBorderClass[accent] || ""}`}
         >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1">
+            <CardHeader className="flex flex-row items-start justify-between gap-1 space-y-0 p-2.5 pb-1 sm:p-3 sm:pb-1">
                 <CardTitle
                     className={`text-[10px] sm:text-xs font-semibold text-muted-foreground transition-colors ${hoverBorderClass[accent]}`}
                 >
@@ -503,7 +616,7 @@ function KPICard({
                 </CardTitle>
                 {icon}
             </CardHeader>
-            <CardContent className="p-3 pt-1">
+            <CardContent className="p-2.5 pt-1 sm:p-3 sm:pt-1">
                 <div className="text-xl font-bold">{value}</div>
                 <p className="text-[9px] text-muted-foreground">{subtitle}</p>
             </CardContent>

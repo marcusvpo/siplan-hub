@@ -49,7 +49,9 @@ export default function OrionTNProjects() {
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedProjectForModal, setSelectedProjectForModal] = useState<ProjectV2 | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
-    const [pageSize, setPageSize] = useState(5);
+    const [pageSize, setPageSize] = useState(() =>
+        typeof window !== "undefined" && window.innerWidth < 768 ? 3 : 5
+    );
 
     const orionTNProjects = projects.filter(
         (p) => p.systemType === "Orion TN" || p.systemType === "OrionTN" || p.systemType === "Modelos TN"
@@ -109,7 +111,7 @@ export default function OrionTNProjects() {
     };
 
     return (
-        <div className="p-4 space-y-5 animate-in fade-in duration-500">
+        <div data-testid="orion-models-projects" className="min-w-0 space-y-4 overflow-x-hidden px-3 py-4 sm:space-y-5 sm:p-4 animate-in fade-in duration-500">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight">Projetos OrionTN</h1>
@@ -123,7 +125,7 @@ export default function OrionTNProjects() {
             </div>
 
             {/* KPI Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-4">
                 <Card
                     className="bg-card/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-primary/50 group"
                     onClick={() => setSelectedMetric("total")}
@@ -184,14 +186,15 @@ export default function OrionTNProjects() {
             <Card>
                 <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 space-y-0 p-4 pb-2">
                     <CardTitle className="text-base font-bold">Listagem de Projetos</CardTitle>
-                    <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-                        <div className="flex items-center gap-2">
+                    <div className="flex w-full flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:items-center">
+                        <div className="flex items-center justify-between gap-2 sm:justify-start">
                             <span className="text-xs text-muted-foreground whitespace-nowrap">Mostrar:</span>
                             <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
                                 <SelectTrigger className="w-[70px] h-9">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
+                                    <SelectItem value="3">3</SelectItem>
                                     <SelectItem value="5">5</SelectItem>
                                     <SelectItem value="10">10</SelectItem>
                                     <SelectItem value="25">25</SelectItem>
@@ -224,13 +227,13 @@ export default function OrionTNProjects() {
 
                             {/* Pagination Controls */}
                             {totalPages > 1 && (
-                                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t">
+                                <div className="flex flex-col items-center justify-between gap-3 border-t pt-4 sm:flex-row sm:gap-4">
                                     <div className="text-xs text-muted-foreground">
                                         Mostrando <span className="font-medium">{(currentPage - 1) * pageSize + 1}</span> a{" "}
                                         <span className="font-medium">{Math.min(currentPage * pageSize, filteredProjects.length)}</span> de{" "}
                                         <span className="font-medium">{filteredProjects.length}</span> projetos
                                     </div>
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-start">
                                         <Button
                                             variant="outline"
                                             size="icon"
@@ -240,7 +243,8 @@ export default function OrionTNProjects() {
                                         >
                                             <ChevronLeft className="h-4 w-4" />
                                         </Button>
-                                        <div className="flex items-center gap-1">
+                                        <span className="text-xs font-medium sm:hidden">Página {currentPage} de {totalPages}</span>
+                                        <div className="hidden items-center gap-1 sm:flex">
                                             {[...Array(totalPages)].map((_, i) => {
                                                 const page = i + 1;
                                                 // Only show first, last, and pages around current
@@ -290,7 +294,7 @@ export default function OrionTNProjects() {
 
             {/* Detail Dialog */}
             <Dialog open={!!selectedMetric} onOpenChange={(open) => !open && setSelectedMetric(null)}>
-                <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+                <DialogContent className="flex max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-4xl flex-col overflow-hidden p-4 sm:max-h-[80vh] sm:p-6">
                     <DialogHeader>
                         <DialogTitle>
                             {selectedMetric && metricTitles[selectedMetric]}
@@ -349,7 +353,43 @@ function ProjectTable({
     onOpenProject: (project: ProjectV2) => void
 }) {
     return (
-        <div className="relative w-full overflow-auto">
+        <>
+        <div data-testid="orion-project-mobile-list" className="space-y-2 sm:hidden">
+            {projects.map((project) => (
+                <article key={project.id} className="min-w-0 rounded-lg border bg-background p-3 shadow-sm">
+                    <div className="flex min-w-0 items-start justify-between gap-2">
+                        <div className="min-w-0">
+                            <p className="break-words text-xs font-bold leading-snug">{project.clientName}</p>
+                            <p className="mt-0.5 text-[9px] text-muted-foreground">#{project.ticketNumber}</p>
+                        </div>
+                        <span className={`shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-[9px] font-bold ${project.globalStatus === 'done' ? 'bg-emerald-100/80 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
+                            project.globalStatus === 'blocked' ? 'bg-rose-100/80 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400' :
+                                'bg-blue-100/80 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                        }`}>
+                            {statusMap[project.globalStatus] || project.globalStatus}
+                        </span>
+                    </div>
+                    <div className="mt-3 flex items-center gap-2">
+                        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                            <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: `${project.overallProgress || 0}%` }} />
+                        </div>
+                        <span className="w-8 text-right text-[10px] font-bold text-muted-foreground">{project.overallProgress || 0}%</span>
+                    </div>
+                    <div className="mt-3 grid grid-cols-[1fr_auto] gap-2">
+                        <Button variant="outline" size="sm" className="h-8 gap-1.5 text-[10px]" onClick={() => onOpenProject(project)}>
+                            <ExternalLink className="h-3 w-3" />
+                            {hideActionsOnMobile ? "Abrir projeto" : "Ver detalhes"}
+                        </Button>
+                        <Button asChild variant="secondary" size="icon" className="h-8 w-8" title="Abrir Editor">
+                            <Link to={`/orion-tn-models/editor/${project.id}`} aria-label={`Abrir editor de ${project.clientName}`}>
+                                <LayoutPanelTop className="h-3.5 w-3.5" />
+                            </Link>
+                        </Button>
+                    </div>
+                </article>
+            ))}
+        </div>
+        <div className="relative hidden w-full overflow-auto sm:block">
             <table className="w-full caption-bottom text-sm">
                 <thead>
                     <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
@@ -408,5 +448,6 @@ function ProjectTable({
                 </tbody>
             </table>
         </div>
+        </>
     );
 }
