@@ -10,12 +10,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useCsCxRoutines } from "@/hooks/useCsCxRoutines";
+import type { CsCxOfficeRoutine } from "@/hooks/useCsCxRoutines";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { buildRoutineReportAnalytics, generateCsCxRoutinesPdf, generateCsCxRoutinesXlsx } from "@/lib/cs-cx-routines-report";
 
 const DEFAULT_PAGE_SIZE = 5;
 
 export default function CsCxReports() {
+  const isMobile = useIsMobile();
   const { models, routines, isLoading, error, refetch } = useCsCxRoutines();
   const { toast } = useToast();
   const [search, setSearch] = useState("");
@@ -93,7 +96,8 @@ export default function CsCxReports() {
   if (isLoading) return <div className="container mx-auto max-w-[1600px] space-y-4 px-4 py-4 lg:px-6"><Skeleton className="h-20 w-full" /><Skeleton className="h-72 w-full" /></div>;
 
   return (
-    <div className="container mx-auto max-w-[1600px] space-y-4 px-4 py-4 lg:px-6">
+    <div data-testid="cs-cx-reports-page" className="container mx-auto flex w-full min-w-0 max-w-[1600px] flex-col space-y-4 overflow-x-hidden px-3 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] max-md:[&>div:last-child]:hidden sm:px-4 lg:px-6">
+      {isMobile && <ReportMobileCards routines={pagedRoutines} currentPage={currentPage} pageSize={pageSize} totalItems={filtered.length} totalPages={totalPages} onPageChange={setPage} onPageSizeChange={updatePageSize} />}
       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
         <div className="flex items-center gap-2"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-300"><BarChart3 className="h-4 w-4" /></span><div><h1 className="text-2xl font-black leading-none tracking-tight">Relatórios de Rotinas</h1><p className="mt-1 text-xs text-muted-foreground">Indicadores, configurações e exportações consolidadas por cartório e modelo</p></div></div>
         <div className="flex flex-wrap gap-2"><Button size="sm" variant="outline" disabled={!filtered.length || Boolean(exporting)} onClick={() => handleExport("pdf")}><FileDown className="mr-2 h-4 w-4" />Exportar PDF</Button><Button size="sm" disabled={(!filtered.length && !exportModels.length) || Boolean(exporting)} onClick={() => handleExport("xlsx")}><FileSpreadsheet className="mr-2 h-4 w-4" />Exportar Excel</Button></div>
@@ -112,6 +116,24 @@ export default function CsCxReports() {
 
       <Card><CardHeader className="px-4 pb-2 pt-3"><div className="flex items-start justify-between gap-3"><div><CardTitle className="text-sm">Aplicações por cartório</CardTitle><CardDescription className="text-xs">{filtered.length} resultado(s) no recorte atual.</CardDescription></div><div className="flex max-w-xl flex-wrap justify-end gap-1">{analytics.popularModels.slice(0, 5).map((model) => <Badge key={model.name} variant="outline" className="h-5 px-1.5 text-[10px] font-normal">{model.name}: {model.total}</Badge>)}</div></div></CardHeader><CardContent className="p-0"><Table className="[&_td]:px-3 [&_td]:py-2 [&_th]:h-9 [&_th]:px-3"><TableHeader><TableRow><TableHead>Cartório</TableHead><TableHead>Modelo</TableHead><TableHead>Aplicação</TableHead><TableHead>Status</TableHead><TableHead>Ativos</TableHead><TableHead>Inativos</TableHead><TableHead>A analisar</TableHead></TableRow></TableHeader><TableBody>{pagedRoutines.map((routine) => <TableRow key={routine.id}><TableCell className="max-w-64 truncate font-medium" title={routine.registry_office?.name ?? "Cartório removido"}>{routine.registry_office?.name ?? "Cartório removido"}</TableCell><TableCell className="max-w-56 truncate" title={routine.routine_model?.name ?? "Modelo removido"}>{routine.routine_model?.name ?? "Modelo removido"}</TableCell><TableCell className="whitespace-nowrap text-xs">{formatDateTime(routine.applied_at)}</TableCell><TableCell><Badge variant={routine.active ? "default" : "secondary"} className="h-5 px-1.5 text-[10px] font-normal">{routine.active ? "Ativa" : "Inativa"}</Badge></TableCell><TableCell>{routine.items.filter((item) => item.active === true).length}</TableCell><TableCell>{routine.items.filter((item) => item.active === false).length}</TableCell><TableCell>{routine.items.filter((item) => item.active === null).length}</TableCell></TableRow>)}{!filtered.length && <TableRow><TableCell colSpan={7} className="h-24 text-center text-sm text-muted-foreground">Nenhuma aplicação encontrada.</TableCell></TableRow>}</TableBody></Table><div className="px-3 pb-3"><ReportPaginationBar currentPage={currentPage} pageSize={pageSize} totalItems={filtered.length} totalPages={totalPages} onPageChange={setPage} onPageSizeChange={updatePageSize} /></div></CardContent></Card>
     </div>
+  );
+}
+
+function ReportMobileCards({ routines, currentPage, pageSize, totalItems, totalPages, onPageChange, onPageSizeChange }: { routines: CsCxOfficeRoutine[]; currentPage: number; pageSize: number; totalItems: number; totalPages: number; onPageChange: (page: number) => void; onPageSizeChange: (size: string) => void }) {
+  return (
+    <Card data-testid="cs-cx-reports-mobile-list" className="order-last md:hidden">
+      <CardHeader className="px-3 pb-2 pt-3"><CardTitle className="text-sm">Aplicações por cartório</CardTitle><CardDescription className="text-xs">Resumo paginado sem rolagem lateral.</CardDescription></CardHeader>
+      <CardContent className="space-y-2 px-3 pb-3">
+        {routines.length === 0 ? <p className="py-8 text-center text-sm text-muted-foreground">Nenhuma aplicação encontrada.</p> : routines.map((routine) => (
+          <article key={routine.id} className="min-w-0 rounded-lg border bg-card p-3">
+            <div className="flex min-w-0 items-start justify-between gap-2"><div className="min-w-0"><p className="break-words text-sm font-bold">{routine.registry_office?.name ?? "Cartório removido"}</p><p className="mt-0.5 break-words text-xs text-muted-foreground">{routine.routine_model?.name ?? "Modelo removido"}</p></div><Badge variant={routine.active ? "default" : "secondary"} className="h-5 shrink-0 px-1.5 text-[10px] font-normal">{routine.active ? "Ativa" : "Inativa"}</Badge></div>
+            <p className="mt-2 text-xs text-muted-foreground">Aplicada em {formatDateTime(routine.applied_at)}</p>
+            <div className="mt-3 grid grid-cols-3 gap-2 border-t pt-2 text-center text-xs"><div><strong className="block text-base">{routine.items.filter((item) => item.active === true).length}</strong><span className="text-[10px] text-muted-foreground">Ativos</span></div><div><strong className="block text-base">{routine.items.filter((item) => item.active === false).length}</strong><span className="text-[10px] text-muted-foreground">Inativos</span></div><div><strong className="block text-base">{routine.items.filter((item) => item.active === null).length}</strong><span className="text-[10px] text-muted-foreground">A analisar</span></div></div>
+          </article>
+        ))}
+        <ReportPaginationBar currentPage={currentPage} pageSize={pageSize} totalItems={totalItems} totalPages={totalPages} onPageChange={onPageChange} onPageSizeChange={onPageSizeChange} />
+      </CardContent>
+    </Card>
   );
 }
 

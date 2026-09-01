@@ -70,6 +70,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useCsCxRecordPermissions } from "@/hooks/useCsCxRecordPermissions";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   type CsCxRequest,
   type CsCxRequestInput,
@@ -533,7 +534,7 @@ export default function CsCxRequests() {
   const dataError = error ?? officesError;
 
   return (
-    <div className="container mx-auto max-w-[1600px] space-y-4 px-4 py-4 lg:px-6">
+    <div data-testid="cs-cx-requests-page" className="container mx-auto w-full min-w-0 max-w-[1600px] space-y-4 overflow-x-hidden px-3 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:px-4 lg:px-6">
       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
         <div>
           <div className="flex items-center gap-2">
@@ -550,19 +551,19 @@ export default function CsCxRequests() {
             </div>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 md:flex md:flex-wrap">
           <Button
             size="sm"
             variant="outline"
             disabled={!filtered.length || isPrinting}
             onClick={() => void printReport()}
-            className="gap-2"
+            className="w-full gap-2 md:w-auto"
           >
             <Printer className="h-4 w-4" />
             {isPrinting ? "Gerando..." : "Imprimir relatório"}
           </Button>
           {canCreate && (
-            <Button size="sm" onClick={openCreate} className="gap-2">
+            <Button size="sm" onClick={openCreate} className="w-full gap-2 md:w-auto">
               <Plus className="h-4 w-4" /> Nova solicitação
             </Button>
           )}
@@ -604,7 +605,7 @@ export default function CsCxRequests() {
         <CardContent className="space-y-3 p-3">
           <div className="grid gap-2 lg:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_150px_190px_190px_350px]">
             <div className="relative">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 value={search}
                 onChange={(event) => updateSearch(event.target.value)}
@@ -666,7 +667,7 @@ export default function CsCxRequests() {
               </SelectContent>
             </Select>
             <div
-              className="flex h-9 min-w-0 items-center gap-1 rounded-md border bg-background px-2"
+              className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto_minmax(0,1fr)_auto] items-center gap-1 rounded-md border bg-background px-2 py-1 sm:h-9 sm:flex sm:py-0"
               title="Período da solicitação"
             >
               <CalendarClock
@@ -680,7 +681,7 @@ export default function CsCxRequests() {
                 value={periodStart}
                 max={periodEnd || undefined}
                 onChange={(event) => updatePeriodStart(event.target.value)}
-                className="h-7 w-[132px] min-w-[132px] border-0 px-1 text-xs shadow-none focus-visible:ring-0"
+                className="h-7 min-w-0 border-0 px-1 text-xs shadow-none focus-visible:ring-0 sm:w-[132px] sm:min-w-[132px]"
               />
               <span className="shrink-0 text-[11px] text-muted-foreground">
                 até
@@ -691,7 +692,7 @@ export default function CsCxRequests() {
                 value={periodEnd}
                 min={periodStart || undefined}
                 onChange={(event) => updatePeriodEnd(event.target.value)}
-                className="h-7 w-[132px] min-w-[132px] border-0 px-1 text-xs shadow-none focus-visible:ring-0"
+                className="h-7 min-w-0 border-0 px-1 text-xs shadow-none focus-visible:ring-0 sm:w-[132px] sm:min-w-[132px]"
               />
               {(periodStart || periodEnd) && (
                 <Button
@@ -760,7 +761,7 @@ export default function CsCxRequests() {
       </Card>
 
       <Dialog open={dialogOpen} onOpenChange={changeDialogOpen}>
-        <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-5xl">
+        <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none overflow-y-auto p-4 sm:max-h-[92vh] sm:max-w-5xl sm:p-6">
           <DialogHeader>
             <DialogTitle>
               {form.id ? "Editar solicitação" : "Nova solicitação"}
@@ -1161,10 +1162,56 @@ function RequestTable({
   onEdit: (request: CsCxRequest) => void;
   onDelete: (request: CsCxRequest) => void;
 }) {
+  const isMobile = useIsMobile();
   const headClass = "h-9 px-3 text-xs";
   const cellClass = "px-3 py-2";
   return (
-    <div className="overflow-x-auto rounded-lg border">
+    <>
+      {isMobile && <div data-testid="cs-cx-requests-mobile-list" className="space-y-2 md:hidden">
+        {requests.length === 0 ? (
+          <div className="rounded-lg border px-3 py-10 text-center text-sm text-muted-foreground">
+            Nenhuma solicitação encontrada.
+          </div>
+        ) : requests.map((request) => {
+          const editable = canEdit(request.author_profile_id);
+          const deletable = canDelete(request.author_profile_id);
+          return (
+            <article key={request.id} className="min-w-0 rounded-lg border bg-card p-3 shadow-sm">
+              <div className="flex min-w-0 items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Chamado</p>
+                  <p className="truncate text-sm font-bold">
+                    {request.ticket_number || `#${request.legacy_id ?? request.id.slice(0, 8)}`}
+                  </p>
+                </div>
+                <div className="flex shrink-0 items-center gap-1">
+                  <StatusBadge status={request.status} />
+                  {(editable || deletable) && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Ações da solicitação">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {editable && <DropdownMenuItem onClick={() => onEdit(request)}><Pencil className="mr-2 h-4 w-4" />Editar</DropdownMenuItem>}
+                        {deletable && <DropdownMenuItem className="text-destructive" onClick={() => onDelete(request)}><Trash2 className="mr-2 h-4 w-4" />Excluir</DropdownMenuItem>}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                </div>
+              </div>
+              <p className="mt-2 break-words text-sm font-medium">{request.registry_office?.name ?? "—"}</p>
+              <p className="mt-1 line-clamp-3 break-words text-xs leading-5 text-muted-foreground">{request.description || "Sem descrição"}</p>
+              <div className="mt-3 grid grid-cols-2 gap-2 border-t pt-2 text-xs">
+                <div className="min-w-0"><span className="block text-[10px] uppercase text-muted-foreground">Responsável</span><span className="block truncate">{request.responsible || "—"}</span></div>
+                <div><span className="block text-[10px] uppercase text-muted-foreground">Previsão</span>{formatDate(request.expected_delivery_on)}</div>
+              </div>
+            </article>
+          );
+        })}
+      </div>}
+      {!isMobile && <div className="hidden overflow-x-auto rounded-lg border md:block">
       <Table>
         <TableHeader>
           <TableRow>
@@ -1259,7 +1306,8 @@ function RequestTable({
           )}
         </TableBody>
       </Table>
-    </div>
+      </div>}
+    </>
   );
 }
 
@@ -1349,7 +1397,9 @@ function RequestBoard({
   onEdit: (request: CsCxRequest) => void;
   onStatusChange: (request: CsCxRequest, status: string) => void;
 }) {
+  const isMobile = useIsMobile();
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [mobileStatus, setMobileStatus] = useState(statuses[0]?.name ?? "");
   const [draggedRequestId, setDraggedRequestId] = useState<string | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<string | null>(null);
 
@@ -1430,13 +1480,18 @@ function RequestBoard({
         </Button>
       </div>
 
+      <Select value={mobileStatus || statuses[0]?.name} onValueChange={setMobileStatus}>
+        <SelectTrigger data-testid="cs-cx-requests-mobile-status" className="h-9 w-full md:hidden" aria-label="Etapa do quadro"><SelectValue placeholder="Selecione uma etapa" /></SelectTrigger>
+        <SelectContent>{statuses.map((status) => <SelectItem key={status.id} value={status.name}>{status.name} ({requests.filter((request) => request.status === status.name).length})</SelectItem>)}</SelectContent>
+      </Select>
+
       <div
         className={cn(
-          "flex h-[calc(100vh-340px)] min-h-[380px] max-h-[620px] gap-2 overflow-x-auto overscroll-contain rounded-lg border bg-muted/10 p-2",
+          "flex h-[calc(100dvh-340px)] min-h-[380px] max-h-[620px] gap-2 overflow-hidden overscroll-contain rounded-lg border bg-muted/10 p-2 md:overflow-x-auto",
           isFullscreen && "h-auto max-h-none flex-1",
         )}
       >
-        {statuses.map((statusConfig) => {
+        {statuses.filter((statusConfig) => !isMobile || statusConfig.name === (mobileStatus || statuses[0]?.name)).map((statusConfig) => {
           const status = statusConfig.name;
           const items = requests.filter((request) => request.status === status);
           const styles =
@@ -1452,7 +1507,8 @@ function RequestBoard({
               key={status}
               aria-label={`${status}: ${items.length} solicitações`}
               className={cn(
-                "flex h-full w-[260px] shrink-0 flex-col overflow-hidden rounded-lg border transition-all",
+                "h-full w-full min-w-0 shrink-0 flex-col overflow-hidden rounded-lg border transition-all md:flex md:w-[260px]",
+                status === (mobileStatus || statuses[0]?.name) ? "flex" : "hidden",
                 styles.column,
                 isDropTarget &&
                   "scale-[0.99] border-rose-400 bg-rose-50/80 ring-2 ring-rose-400 ring-offset-1 dark:border-rose-500 dark:bg-rose-950/30 dark:ring-rose-500",

@@ -73,6 +73,7 @@ import {
 import { useCsCxRecordPermissions } from "@/hooks/useCsCxRecordPermissions";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { CsCxMultiSelect } from "@/components/cs-cx/CsCxMultiSelect";
 import { ContactAttentionDashboard } from "@/components/cs-cx/ContactAttentionDashboard";
 import { generateCsCxContactsPdf } from "@/lib/cs-cx-engagement-pdf";
@@ -93,6 +94,7 @@ const emptyForm: CsCxContactInput = {
 const DEFAULT_PAGE_SIZE = 5;
 
 export default function CsCxContacts() {
+  const isMobile = useIsMobile();
   const { contacts, isLoading, error, refetch, saveContact, deleteContact } =
     useCsCxContacts();
   const { offices, products, error: referenceError } = useCsCxRegistryOffices();
@@ -346,7 +348,7 @@ export default function CsCxContacts() {
   ).length;
 
   return (
-    <div className="container mx-auto max-w-[1600px] space-y-4 px-4 py-4 lg:px-6">
+    <div data-testid="cs-cx-contacts-page" className="container mx-auto w-full min-w-0 max-w-[1600px] space-y-4 overflow-x-hidden px-3 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:px-4 lg:px-6">
       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
         <div className="flex items-center gap-2">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-300">
@@ -405,7 +407,7 @@ export default function CsCxContacts() {
         <CardContent className="space-y-3 p-3">
           <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-[minmax(240px,1fr)_190px_170px] 2xl:grid-cols-[minmax(240px,1fr)_190px_170px_180px_145px_145px]">
             <div className="relative">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 value={search}
                 onChange={(event) => updateSearch(event.target.value)}
@@ -480,7 +482,43 @@ export default function CsCxContacts() {
             />
           ) : (
             <div className="space-y-3">
-              <div className="overflow-x-auto rounded-lg border">
+              {isMobile && <div data-testid="cs-cx-contacts-mobile-list" className="space-y-2 md:hidden">
+                {pagedContacts.length === 0 ? (
+                  <div className="rounded-lg border px-3 py-10 text-center text-sm text-muted-foreground">Nenhum contato encontrado.</div>
+                ) : pagedContacts.map((contact) => {
+                  const canEdit = canEditRecord(contact.author_profile_id);
+                  const canDelete = canDeleteRecord(contact.author_profile_id);
+                  return (
+                    <article key={contact.id} className="min-w-0 rounded-lg border bg-card p-3 shadow-sm">
+                      <div className="flex min-w-0 items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="break-words text-sm font-bold">{contact.registry_office?.name ?? "—"}</p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">{formatDate(contact.contact_date)}{contact.ticket_number ? ` · Chamado ${contact.ticket_number}` : ""}</p>
+                        </div>
+                        <div className="flex shrink-0">
+                          <Button type="button" variant="ghost" size="icon" className="h-8 w-8" aria-label={`Visualizar contato de ${contact.contact_person}`} onClick={() => setViewing(contact)}><Eye className="h-4 w-4" /></Button>
+                          {(canEdit || canDelete) && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Ações do contato"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                {canEdit && <DropdownMenuItem onClick={() => openEdit(contact)}><Pencil className="mr-2 h-4 w-4" />Editar</DropdownMenuItem>}
+                                {canDelete && <DropdownMenuItem className="text-destructive" onClick={() => setDeleting(contact)}><Trash2 className="mr-2 h-4 w-4" />Excluir</DropdownMenuItem>}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
+                        </div>
+                      </div>
+                      <div className="mt-3 grid grid-cols-2 gap-2 border-t pt-2 text-xs">
+                        <div className="min-w-0"><span className="block text-[10px] uppercase text-muted-foreground">Pessoa</span><span className="block truncate">{contact.contact_person}</span></div>
+                        <div className="min-w-0"><span className="block text-[10px] uppercase text-muted-foreground">Responsável</span><span className="block truncate">{contact.author?.full_name || contact.author?.email || "—"}</span></div>
+                      </div>
+                      <div className="mt-2"><ContactProductBadges contact={contact} /></div>
+                      {(richTextToPlainText(contact.notes) || richTextToPlainText(contact.pending_items)) && <div className="mt-2 space-y-1 rounded-md bg-muted/40 p-2 text-xs"><p className="line-clamp-2 break-words"><span className="font-semibold">Notas: </span>{richTextToPlainText(contact.notes) || "—"}</p><p className="line-clamp-2 break-words text-amber-700 dark:text-amber-300"><span className="font-semibold">Pendências: </span>{richTextToPlainText(contact.pending_items) || "—"}</p></div>}
+                    </article>
+                  );
+                })}
+              </div>}
+              {!isMobile && <div className="hidden overflow-x-auto rounded-lg border md:block">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -630,7 +668,7 @@ export default function CsCxContacts() {
                     )}
                   </TableBody>
                 </Table>
-              </div>
+              </div>}
               <ContactPaginationBar
                 currentPage={currentPage}
                 pageSize={pageSize}
@@ -653,7 +691,7 @@ export default function CsCxContacts() {
       >
         <DialogContent
           className={cn(
-            "max-h-[92vh] overflow-y-auto sm:max-w-2xl",
+            "max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none overflow-y-auto p-4 sm:max-h-[92vh] sm:max-w-2xl sm:p-6",
             isFormFullscreen &&
               "h-[100dvh] max-h-none w-screen max-w-none rounded-none sm:max-w-none",
           )}
@@ -829,7 +867,7 @@ export default function CsCxContacts() {
         open={!!viewing}
         onOpenChange={(open) => !open && setViewing(null)}
       >
-        <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-2xl">
+        <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none overflow-y-auto p-4 sm:max-h-[92vh] sm:max-w-2xl sm:p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Eye className="h-5 w-5 text-rose-500" />

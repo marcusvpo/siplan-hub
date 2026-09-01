@@ -72,6 +72,7 @@ import {
   useCsCxRegistryOffices,
 } from "@/hooks/useCsCxCore";
 import { useCsCxRoutineLinks } from "@/hooks/useCsCxRoutines";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { CsCxMultiSelect } from "@/components/cs-cx/CsCxMultiSelect";
 import { printCsCxRegistryOfficesReport } from "@/lib/cs-cx-registry-offices-report";
 
@@ -159,6 +160,7 @@ export function matchesRegistryOfficeFilters(
 }
 
 export default function CsCxRegistryOffices() {
+  const isMobile = useIsMobile();
   const {
     offices,
     products,
@@ -454,7 +456,7 @@ export default function CsCxRegistryOffices() {
   };
 
   return (
-    <div className="container mx-auto max-w-[1600px] space-y-4 px-4 py-4 lg:px-6">
+    <div data-testid="cs-cx-offices-page" className="container mx-auto w-full min-w-0 max-w-[1600px] space-y-4 overflow-x-hidden px-3 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:px-4 lg:px-6">
       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
         <div className="flex items-center gap-2">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-300">
@@ -469,19 +471,19 @@ export default function CsCxRegistryOffices() {
             </p>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 md:flex md:flex-wrap">
           <Button
             size="sm"
             variant="outline"
             disabled={!filtered.length || isPrinting}
             onClick={() => void printOffices()}
-            className="gap-2"
+            className="w-full gap-2 md:w-auto"
           >
             <Printer className="h-4 w-4" />
             {isPrinting ? "Gerando..." : "Imprimir listagem"}
           </Button>
           {canCreate && (
-            <Button size="sm" onClick={openCreate} className="gap-2">
+            <Button size="sm" onClick={openCreate} className="w-full gap-2 md:w-auto">
               <Plus className="h-4 w-4" /> Novo cartório
             </Button>
           )}
@@ -506,7 +508,7 @@ export default function CsCxRegistryOffices() {
         <CardContent className="space-y-3 p-3">
           <div className="flex flex-col gap-2 sm:flex-row">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 value={search}
                 onChange={(event) => updateSearch(event.target.value)}
@@ -612,7 +614,30 @@ export default function CsCxRegistryOffices() {
             <DataError error={error} onRetry={() => void refetch()} />
           ) : (
             <div className="space-y-3">
-              <div className="overflow-x-auto rounded-lg border">
+              {isMobile && <div data-testid="cs-cx-offices-mobile-list" className="space-y-2 md:hidden">
+                {pagedOffices.length === 0 ? (
+                  <div className="rounded-lg border px-3 py-10 text-center text-sm text-muted-foreground">Nenhum cartório encontrado.</div>
+                ) : pagedOffices.map((office) => {
+                  const responsibleIds = office.responsibles.map((item) => item.profile_id);
+                  const canEdit = canEditRecord(office.created_by, responsibleIds);
+                  const canDelete = canDeleteRecord(office.created_by, responsibleIds);
+                  return (
+                    <article key={office.id} className="min-w-0 rounded-lg border bg-card p-3 shadow-sm">
+                      <div className="flex min-w-0 items-start justify-between gap-2">
+                        <div className="min-w-0"><p className="break-words text-sm font-bold">{office.name}</p><p className="mt-0.5 truncate text-xs text-muted-foreground">SAP: {office.sap_code || "—"}</p></div>
+                        <div className="flex shrink-0 items-center">
+                          <Badge variant={office.active ? "default" : "outline"} className="h-5 text-[10px]">{office.active ? "Ativo" : "Inativo"}</Badge>
+                          <Button size="icon" variant="ghost" className="h-8 w-8" aria-label={`Visualizar ${office.name}`} onClick={() => setViewing(office)}><Eye className="h-4 w-4" /></Button>
+                          {(canEdit || canDelete) && <DropdownMenu><DropdownMenuTrigger asChild><Button size="icon" variant="ghost" className="h-8 w-8" aria-label="Ações do cartório"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end">{canEdit && <DropdownMenuItem onClick={() => openEdit(office)}><Pencil className="mr-2 h-4 w-4" />Editar</DropdownMenuItem>}{canDelete && <DropdownMenuItem onClick={() => setDeleting(office)} className="text-destructive"><Trash2 className="mr-2 h-4 w-4" />Excluir</DropdownMenuItem>}</DropdownMenuContent></DropdownMenu>}
+                        </div>
+                      </div>
+                      <p className="mt-2 break-words text-xs text-muted-foreground">{office.contact_details || "Contato não informado"}</p>
+                      <div className="mt-3 space-y-2 border-t pt-2"><div><span className="mb-1 block text-[10px] uppercase text-muted-foreground">Responsáveis</span><ResponsibleBadges office={office} /></div><div><span className="mb-1 block text-[10px] uppercase text-muted-foreground">Produtos</span><ProductBadges office={office} /></div></div>
+                    </article>
+                  );
+                })}
+              </div>}
+              {!isMobile && <div className="hidden overflow-x-auto rounded-lg border md:block">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -733,7 +758,7 @@ export default function CsCxRegistryOffices() {
                     )}
                   </TableBody>
                 </Table>
-              </div>
+              </div>}
               <OfficePaginationBar
                 currentPage={currentPage}
                 pageSize={pageSize}
@@ -748,7 +773,7 @@ export default function CsCxRegistryOffices() {
       </Card>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+        <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none overflow-y-auto p-4 sm:max-h-[90vh] sm:max-w-2xl sm:p-6">
           <DialogHeader>
             <DialogTitle>
               {form.id ? "Editar cartório" : "Novo cartório"}
@@ -1001,7 +1026,7 @@ export default function CsCxRegistryOffices() {
         open={!!viewing}
         onOpenChange={(open) => !open && setViewing(null)}
       >
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+        <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none overflow-y-auto p-4 sm:max-h-[90vh] sm:max-w-2xl sm:p-6">
           <DialogHeader>
             <DialogTitle>Cadastro do cartório</DialogTitle>
             <DialogDescription>

@@ -129,7 +129,7 @@ export function CsCxAccessPanel({ canManage }: { canManage: boolean }) {
   }
 
   return (
-    <Card>
+    <Card data-testid="cs-cx-access-panel" className="min-w-0 max-md:[&_div.grid]:grid-cols-1 max-md:[&_div.grid]:items-stretch max-md:[&_[role=tablist]]:h-auto max-md:[&_[role=tablist]]:w-full max-md:[&_[role=tablist]]:overflow-x-auto max-md:[&_[role=tablist]]:py-1">
       <CardHeader className="px-4 pb-2 pt-3">
         <CardTitle className="text-sm">Controle de acesso exclusivo do CS/CX</CardTitle>
         <CardDescription className="text-xs">Os vínculos abaixo não alteram o perfil global nem liberam outras áreas do Siplan HUB.</CardDescription>

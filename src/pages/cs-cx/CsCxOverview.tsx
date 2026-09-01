@@ -104,7 +104,7 @@ export default function CsCxOverview() {
   const visibleAreas = areas.filter((area) => hasPermission(area.permission, "view"));
 
   return (
-    <div className="container mx-auto max-w-7xl space-y-5 px-4 pb-4 pt-2 md:px-6 md:pb-6 md:pt-3">
+    <div data-testid="cs-cx-overview-page" className="container mx-auto w-full min-w-0 max-w-7xl space-y-5 overflow-x-hidden px-3 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-2 sm:px-4 md:px-6 md:pb-6 md:pt-3">
       <section className="relative overflow-hidden rounded-xl border border-rose-200/70 bg-gradient-to-br from-rose-50 via-background to-slate-50 px-5 py-4 shadow-sm dark:border-rose-950/70 dark:from-rose-950/20 dark:via-background dark:to-slate-950 md:px-6 md:py-5">
         <Headset className="pointer-events-none absolute -bottom-10 -right-6 h-40 w-40 text-rose-500/10" />
         <div className="relative z-10 max-w-3xl space-y-2.5">

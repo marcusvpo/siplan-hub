@@ -279,7 +279,7 @@ export default function CsCxAdmin() {
   }
 
   return (
-    <div className="container mx-auto max-w-[1600px] space-y-4 px-4 py-4 lg:px-6">
+    <div data-testid="cs-cx-admin-page" className="container mx-auto w-full min-w-0 max-w-[1600px] space-y-4 overflow-x-hidden px-3 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:px-4 lg:px-6">
       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
         <div className="flex items-center gap-2">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-300"><Settings2 className="h-4 w-4" /></span>
@@ -299,7 +299,7 @@ export default function CsCxAdmin() {
         <Metric icon={Workflow} label="Status" value={statusAdmin.statuses.length} />
       </div>
 
-      <Tabs defaultValue="models">
+      <Tabs defaultValue="models" className="min-w-0 max-md:[&_[role=tablist]]:h-auto max-md:[&_[role=tablist]]:w-full max-md:[&_[role=tablist]]:py-1">
         <TabsList className="h-9 max-w-full justify-start overflow-x-auto"><TabsTrigger className="h-7" value="models">Modelos e itens</TabsTrigger><TabsTrigger className="h-7" value="products">Produtos</TabsTrigger><TabsTrigger className="h-7" value="categories">Categorias</TabsTrigger><TabsTrigger className="h-7" value="types">Tipos</TabsTrigger><TabsTrigger className="h-7" value="statuses">Status das solicitações</TabsTrigger><TabsTrigger className="h-7" value="access">Usuários e permissões</TabsTrigger></TabsList>
 
         <TabsContent value="models" className="mt-3 grid gap-3 lg:grid-cols-[280px_minmax(0,1fr)]">
