@@ -6,6 +6,7 @@ import {
   Activity,
   BarChart3,
   Bug,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Clock3,
@@ -16,6 +17,7 @@ import {
   Layers3,
   Loader2,
   RefreshCw,
+  SlidersHorizontal,
   TicketCheck,
   UsersRound,
 } from "lucide-react";
@@ -38,6 +40,7 @@ import { CsCxMultiSelect } from "@/components/cs-cx/CsCxMultiSelect";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -74,6 +77,9 @@ export default function SdAttendanceBi() {
   const [natures, setNatures] = useState<string[]>([]);
   const [ticketsPage, setTicketsPage] = useState(1);
   const [activeTab, setActiveTab] = useState<AttendanceBiTab>("overview");
+  const [filtersOpen, setFiltersOpen] = useState(
+    () => typeof window === "undefined" || window.innerWidth >= 768,
+  );
 
   const query = useSdAttendanceBi({ startDate, endDate, userIds, groups, sources, natures });
   const data = query.data;
@@ -85,6 +91,7 @@ export default function SdAttendanceBi() {
     ? Math.round((metrics.imported_minutes / metrics.total_minutes) * 100)
     : 0;
   const hasActiveFilters = Boolean(userIds.length || groups.length || sources.length || natures.length);
+  const activeFilterCount = userIds.length + groups.length + sources.length + natures.length;
 
   const groupOptions = useMemo(
     () => Array.from(new Set([...SD_GROUPS, ...(data?.filters.groups ?? [])])).map((group) => ({ value: group, label: group })),
@@ -203,32 +210,60 @@ export default function SdAttendanceBi() {
         </div>
       </motion.section>
 
-      <Card>
-        <CardContent className="space-y-1.5 p-2">
-          <div className="grid gap-1.5 md:grid-cols-2 xl:grid-cols-[132px_132px_minmax(180px,1fr)_minmax(200px,1.2fr)]">
-            <FilterField label="Início"><Input aria-label="Data inicial do BI" type="date" value={startDate} max={endDate} onChange={(event) => setStartDate(event.target.value)} className="h-8 px-2 text-[11px]" /></FilterField>
-            <FilterField label="Fim"><Input aria-label="Data final do BI" type="date" value={endDate} min={startDate} onChange={(event) => setEndDate(event.target.value)} className="h-8 px-2 text-[11px]" /></FilterField>
-            <FilterField label="Grupos de atendimento">
-              <CsCxMultiSelect ariaLabel="Filtrar grupos de atendimento" options={groupOptions} values={groups} onChange={setGroups} placeholder="Todos os grupos" searchPlaceholder="Buscar grupo..." />
-            </FilterField>
-            <FilterField label="Analistas">
-              <CsCxMultiSelect ariaLabel="Filtrar analistas" options={analystOptions} values={userIds} onChange={setUserIds} placeholder="Todos os analistas" searchPlaceholder="Buscar analista..." />
-            </FilterField>
-          </div>
-          <div className="grid gap-1.5 md:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_210px_auto_auto] xl:items-end">
-            <FilterField label="Natureza do chamado">
-              <CsCxMultiSelect ariaLabel="Filtrar naturezas dos chamados" options={natureOptions} values={natures} onChange={setNatures} placeholder="Todas as naturezas" searchPlaceholder="Buscar natureza..." />
-            </FilterField>
-            <FilterField label="Origem das horas">
-              <CsCxMultiSelect ariaLabel="Filtrar origem das horas" options={SOURCE_OPTIONS} values={sources} onChange={setSources} placeholder="Todas as origens" />
-            </FilterField>
-            <div className="flex h-8 items-center rounded-md border bg-muted/30 p-0.5">
-              {[7, 30, 90].map((days) => <Button key={days} type="button" variant="ghost" size="sm" className="h-7 flex-1 px-2 text-[11px]" onClick={() => setPreset(days)}>{days} dias</Button>)}
-            </div>
-            <Button type="button" variant="ghost" size="sm" className="h-8 w-full gap-1.5 px-2 text-[11px] xl:w-auto" disabled={!hasActiveFilters} onClick={clearDimensions}><FilterX className="h-3.5 w-3.5" /> Limpar filtros</Button>
-          </div>
-        </CardContent>
-      </Card>
+      <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
+        <Card className="overflow-hidden">
+          <CollapsibleTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              className="h-auto w-full justify-between rounded-none px-3 py-2 text-left hover:bg-muted/50"
+              aria-label={filtersOpen ? "Recolher filtros do BI" : "Abrir filtros do BI"}
+            >
+              <span className="flex min-w-0 items-center gap-2.5">
+                <span className="rounded-md bg-violet-500/10 p-1.5 text-violet-600 dark:text-violet-300">
+                  <SlidersHorizontal className="h-3.5 w-3.5" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-xs font-semibold">Filtros</span>
+                  <span className="block truncate text-[10px] font-normal text-muted-foreground">
+                    {format(parseISO(startDate), "dd/MM/yy")} a {format(parseISO(endDate), "dd/MM/yy")}
+                  </span>
+                </span>
+              </span>
+              <span className="flex shrink-0 items-center gap-2">
+                {activeFilterCount > 0 && <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{activeFilterCount} ativo(s)</Badge>}
+                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${filtersOpen ? "rotate-180" : ""}`} />
+              </span>
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="border-t">
+            <CardContent className="space-y-1.5 p-2">
+              <div className="grid gap-1.5 md:grid-cols-2 xl:grid-cols-[132px_132px_minmax(180px,1fr)_minmax(200px,1.2fr)]">
+                <FilterField label="Início"><Input aria-label="Data inicial do BI" type="date" value={startDate} max={endDate} onChange={(event) => setStartDate(event.target.value)} className="h-8 px-2 text-[11px]" /></FilterField>
+                <FilterField label="Fim"><Input aria-label="Data final do BI" type="date" value={endDate} min={startDate} onChange={(event) => setEndDate(event.target.value)} className="h-8 px-2 text-[11px]" /></FilterField>
+                <FilterField label="Grupos de atendimento">
+                  <CsCxMultiSelect ariaLabel="Filtrar grupos de atendimento" options={groupOptions} values={groups} onChange={setGroups} placeholder="Todos os grupos" searchPlaceholder="Buscar grupo..." />
+                </FilterField>
+                <FilterField label="Analistas">
+                  <CsCxMultiSelect ariaLabel="Filtrar analistas" options={analystOptions} values={userIds} onChange={setUserIds} placeholder="Todos os analistas" searchPlaceholder="Buscar analista..." />
+                </FilterField>
+              </div>
+              <div className="grid gap-1.5 md:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_210px_auto_auto] xl:items-end">
+                <FilterField label="Natureza do chamado">
+                  <CsCxMultiSelect ariaLabel="Filtrar naturezas dos chamados" options={natureOptions} values={natures} onChange={setNatures} placeholder="Todas as naturezas" searchPlaceholder="Buscar natureza..." />
+                </FilterField>
+                <FilterField label="Origem das horas">
+                  <CsCxMultiSelect ariaLabel="Filtrar origem das horas" options={SOURCE_OPTIONS} values={sources} onChange={setSources} placeholder="Todas as origens" />
+                </FilterField>
+                <div className="flex h-8 items-center rounded-md border bg-muted/30 p-0.5">
+                  {[7, 30, 90].map((days) => <Button key={days} type="button" variant="ghost" size="sm" className="h-7 flex-1 px-2 text-[11px]" onClick={() => setPreset(days)}>{days} dias</Button>)}
+                </div>
+                <Button type="button" variant="ghost" size="sm" className="h-8 w-full gap-1.5 px-2 text-[11px] xl:w-auto" disabled={!hasActiveFilters} onClick={clearDimensions}><FilterX className="h-3.5 w-3.5" /> Limpar filtros</Button>
+              </div>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
 
       {query.isLoading ? (
         <Card><CardContent className="flex items-center justify-center gap-2 py-20 text-sm text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin" /> Consolidando indicadores de atendimento...</CardContent></Card>
