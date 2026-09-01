@@ -16,32 +16,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import {
-  DndContext,
-  closestCenter,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  useSortable,
-  verticalListSortingStrategy,
-  arrayMove,
-} from "@dnd-kit/sortable";
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { activityLogger } from "@/services/activityLogger";
 import { useTimeline } from "@/hooks/useTimeline";
@@ -51,25 +32,9 @@ import { plainTextToLexicalJson } from "@/lib/lexical";
 import { DtcAiJob } from "@/types/ProjectV2";
 import { LogsTab } from "@/components/ProjectManagement/Tabs/LogsTab";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import {
   ArrowLeft,
   FileText,
@@ -110,7 +75,7 @@ import {
   Lightbulb,
   Users,
   BarChart3,
-  FileDown
+  FileDown,
 } from "lucide-react";
 
 interface KeyUserItem {
@@ -118,19 +83,7 @@ interface KeyUserItem {
   phone: string;
 }
 
-const ALL_SYSTEMS = [
-  "Orion TN",
-  "Orion PRO",
-  "Orion REG",
-  "Modelos TN",
-  "LCW",
-  "SGA",
-  "On Hand",
-  "Orion GED",
-  "e-Recepção",
-  "e-Qualificação",
-  "Cartflow"
-];
+const ALL_SYSTEMS = ["Orion TN", "Orion PRO", "Orion REG", "Modelos TN", "LCW", "SGA", "On Hand", "Orion GED", "e-Recepção", "e-Qualificação", "Cartflow"];
 
 // Ticket structure inside DTC
 interface DTCTicket {
@@ -257,11 +210,13 @@ const getLexicalTextLength = (jsonStr: string): number => {
     const parsed = JSON.parse(jsonStr);
     if (parsed.root && parsed.root.children) {
       const getTextFromNodes = (nodes: any[]): string => {
-        return nodes.map(node => {
-          if (node.text) return node.text;
-          if (node.children) return getTextFromNodes(node.children);
-          return "";
-        }).join("");
+        return nodes
+          .map((node) => {
+            if (node.text) return node.text;
+            if (node.children) return getTextFromNodes(node.children);
+            return "";
+          })
+          .join("");
       };
       return getTextFromNodes(parsed.root.children).length;
     }
@@ -284,17 +239,29 @@ const LexicalRenderer = ({ jsonStr, fallback }: { jsonStr: string; fallback: str
       if (node.type === "text") {
         // Bitmask real do Lexical: bold=1, italic=2, strikethrough=4, underline=8.
         let element: React.ReactNode = node.text;
-        if (node.format & 1) { // Bold
+        if (node.format & 1) {
+          // Bold
           element = <strong key={index}>{element}</strong>;
         }
-        if (node.format & 2) { // Italic
+        if (node.format & 2) {
+          // Italic
           element = <em key={index}>{element}</em>;
         }
-        if (node.format & 4) { // Strikethrough
-          element = <span key={index} style={{ textDecoration: "line-through" }}>{element}</span>;
+        if (node.format & 4) {
+          // Strikethrough
+          element = (
+            <span key={index} style={{ textDecoration: "line-through" }}>
+              {element}
+            </span>
+          );
         }
-        if (node.format & 8) { // Underline
-          element = <span key={index} style={{ textDecoration: "underline" }}>{element}</span>;
+        if (node.format & 8) {
+          // Underline
+          element = (
+            <span key={index} style={{ textDecoration: "underline" }}>
+              {element}
+            </span>
+          );
         }
         return <span key={index}>{element}</span>;
       }
@@ -317,29 +284,17 @@ const LexicalRenderer = ({ jsonStr, fallback }: { jsonStr: string; fallback: str
       }
 
       if (node.type === "listitem") {
-        return (
-          <li key={index}>
-            {node.children ? node.children.map((child: any, idx: number) => renderNode(child, idx)) : null}
-          </li>
-        );
+        return <li key={index}>{node.children ? node.children.map((child: any, idx: number) => renderNode(child, idx)) : null}</li>;
       }
 
       if (node.children) {
-        return (
-          <div key={index}>
-            {node.children.map((child: any, idx: number) => renderNode(child, idx))}
-          </div>
-        );
+        return <div key={index}>{node.children.map((child: any, idx: number) => renderNode(child, idx))}</div>;
       }
 
       return null;
     };
 
-    return (
-      <div className="space-y-0.5">
-        {parsed.root.children.map((child: any, idx: number) => renderNode(child, idx))}
-      </div>
-    );
+    return <div className="space-y-0.5">{parsed.root.children.map((child: any, idx: number) => renderNode(child, idx))}</div>;
   } catch {
     // If JSON parsing fails, it's legacy plain text
     return <span className="whitespace-pre-wrap">{jsonStr}</span>;
@@ -407,9 +362,9 @@ function TransicaoPlaceholder() {
   });
 
   const toggleSection = (sectionKey: string) => {
-    setCollapsedSections(prev => ({
+    setCollapsedSections((prev) => ({
       ...prev,
-      [sectionKey]: !prev[sectionKey]
+      [sectionKey]: !prev[sectionKey],
     }));
   };
 
@@ -425,39 +380,34 @@ function TransicaoPlaceholder() {
   const { data: projectsList = [], isLoading: isLoadingList } = useQuery({
     queryKey: ["projectsSelectDtc"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("projects")
-        .select("id, client_name, ticket_number, system_type, post_status")
-        .eq("is_deleted", false)
-        .order("client_name", { ascending: true });
+      const { data, error } = await supabase.from("projects").select("id, client_name, ticket_number, system_type, post_status").eq("is_deleted", false).order("client_name", { ascending: true });
       if (error) throw error;
       return data;
-    }
+    },
   });
 
   // 2. Fetch full details of the selected project (lazy loaded)
-  const { project, isLoading: isLoadingDetails } = useProjectDetails(
-    selectedProjectId || null
-  );
+  const { project, isLoading: isLoadingDetails } = useProjectDetails(selectedProjectId || null);
 
   // 3. Connect to auto-save logic (only runs when we have an active project)
   const getInitialDtc = (): DTCData | null => {
     if (!project) return null;
     const existingDtc = project.customFields?.dtc as DTCData | undefined;
-    if (existingDtc) return {
-      // defaults for new fields added after initial save (retrocompatibility)
-      implantationProcessLogs: [],
-      implantationGainsList: [],
-      implantationPendingList: [],
-      implantationSuggestionsList: [],
-      keyUsersList: [],
-      systemVersionsList: {},
-      remoteAccessList: [],
-      employeesList: [],
-      tickets: [],
-      // spread existing data last — overrides defaults with whatever was already saved
-      ...existingDtc,
-    };
+    if (existingDtc)
+      return {
+        // defaults for new fields added after initial save (retrocompatibility)
+        implantationProcessLogs: [],
+        implantationGainsList: [],
+        implantationPendingList: [],
+        implantationSuggestionsList: [],
+        keyUsersList: [],
+        systemVersionsList: {},
+        remoteAccessList: [],
+        employeesList: [],
+        tickets: [],
+        // spread existing data last — overrides defaults with whatever was already saved
+        ...existingDtc,
+      };
 
     return {
       responsible: project.responsiblePost || project.projectLeader || fullName || "",
@@ -497,21 +447,19 @@ function TransicaoPlaceholder() {
       employeesList: [],
       finalConsiderations: "",
       tickets: [],
-      status: "draft"
+      status: "draft",
     };
   };
 
   const initialDtcValue = useMemo(() => {
     if (!project) return null;
     const dtc = (project.customFields?.dtc as DTCData | null) || getInitialDtc();
-    
+
     // Sync environment accesses, OS credentials and postgres details from project's environment stage
     const envStage = project.stages?.environment;
     return {
       ...dtc,
-      remoteAccessList: envStage?.remoteAccessList && envStage.remoteAccessList.length > 0
-        ? envStage.remoteAccessList
-        : dtc.remoteAccessList || [],
+      remoteAccessList: envStage?.remoteAccessList && envStage.remoteAccessList.length > 0 ? envStage.remoteAccessList : dtc.remoteAccessList || [],
       soLogin: envStage?.soLogin || dtc.soLogin || "",
       soPassword: envStage?.soPassword || dtc.soPassword || "",
       postgresVersion: envStage?.postgresVersion || dtc.postgresVersion || "",
@@ -524,7 +472,11 @@ function TransicaoPlaceholder() {
     };
   }, [project]);
 
-  const { data: localDtc, updateData: setLocalDtc, saveState } = useAutoSave<DTCData | null>(
+  const {
+    data: localDtc,
+    updateData: setLocalDtc,
+    saveState,
+  } = useAutoSave<DTCData | null>(
     initialDtcValue,
     async (newData) => {
       if (!selectedProjectId || !newData || !project) return;
@@ -534,12 +486,12 @@ function TransicaoPlaceholder() {
         updates: {
           customFields: {
             ...project.customFields,
-            dtc: newData
+            dtc: newData,
           },
           stages: {
             post: {
               status: dtcStatusToStageStatus(newData.status),
-              responsible: newData.analystResponsible || project.responsiblePost || undefined
+              responsible: newData.analystResponsible || project.responsiblePost || undefined,
             },
             environment: {
               remoteAccessList: newData.remoteAccessList,
@@ -552,12 +504,12 @@ function TransicaoPlaceholder() {
               postgresPassword: newData.postgresPassword,
               osType: newData.osType,
               osVersion: newData.osVersion,
-            }
-          }
-        }
+            },
+          },
+        },
       });
     },
-    { debounceMs: 1000 }
+    { debounceMs: 1000 },
   );
 
   // Migrate older keyUsers string and remoteAccessData to lists on the fly
@@ -576,8 +528,11 @@ function TransicaoPlaceholder() {
     if (!localDtc.keyUsersList) {
       const migratedList: KeyUserItem[] = [];
       if (localDtc.keyUsers) {
-        const names = localDtc.keyUsers.split(",").map(n => n.trim()).filter(Boolean);
-        names.forEach(name => {
+        const names = localDtc.keyUsers
+          .split(",")
+          .map((n) => n.trim())
+          .filter(Boolean);
+        names.forEach((name) => {
           migratedList.push({ name, phone: "" });
         });
       }
@@ -599,7 +554,7 @@ function TransicaoPlaceholder() {
         migratedList.push({
           system: sys,
           id: localDtc.remoteAccessData,
-          password: ""
+          password: "",
         });
       }
       updatedDtc.remoteAccessList = migratedList;
@@ -607,14 +562,17 @@ function TransicaoPlaceholder() {
     }
 
     if (localDtc.systemsInstalled && !localDtc.systemVersionsList) {
-      const selectedSystems = localDtc.systemsInstalled.split(",").map(s => s.trim()).filter(Boolean);
+      const selectedSystems = localDtc.systemsInstalled
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
       const versionsObj: Record<string, string> = {};
-      
+
       if (selectedSystems.length === 1) {
         versionsObj[selectedSystems[0]] = localDtc.systemVersions || "";
       } else {
-        selectedSystems.forEach(sys => {
-          const regex = new RegExp(`${sys.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\s*\\(v?([^)]+)\\)`);
+        selectedSystems.forEach((sys) => {
+          const regex = new RegExp(`${sys.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&")}\\s*\\(v?([^)]+)\\)`);
           const match = localDtc.systemVersions?.match(regex);
           if (match) {
             versionsObj[sys] = match[1];
@@ -630,11 +588,18 @@ function TransicaoPlaceholder() {
     if (localDtc.employees !== undefined && !localDtc.employeesList) {
       const migratedList: EmployeeItem[] = [];
       if (localDtc.employees) {
-        const items = localDtc.employees.split(",").map(i => i.trim()).filter(Boolean);
-        items.forEach(item => {
-          const parts = item.split("-").map(p => p.trim());
+        const items = localDtc.employees
+          .split(",")
+          .map((i) => i.trim())
+          .filter(Boolean);
+        items.forEach((item) => {
+          const parts = item.split("-").map((p) => p.trim());
           if (parts.length >= 2) {
-            migratedList.push({ name: parts[0], department: parts[1], role: parts[2] || "" });
+            migratedList.push({
+              name: parts[0],
+              department: parts[1],
+              role: parts[2] || "",
+            });
           } else {
             migratedList.push({ name: item, department: "", role: "" });
           }
@@ -650,36 +615,19 @@ function TransicaoPlaceholder() {
   }, [localDtc, setLocalDtc]);
 
   // Helper to send system notifications to all project participants and the designated analyst
-  const sendNotificationsToParticipants = async (
-    title: string,
-    message: string,
-    actionUrl: string
-  ) => {
+  const sendNotificationsToParticipants = async (title: string, message: string, actionUrl: string) => {
     if (!project || !localDtc) return;
 
     try {
       // Gather unique participant names from the project and form
       const namesToNotify = Array.from(
-        new Set(
-          [
-            project.projectLeader,
-            project.responsibleInfra,
-            project.responsibleAdherence,
-            project.responsibleConversion,
-            project.responsibleImplementation,
-            project.responsiblePost,
-            localDtc.analystResponsible,
-          ].filter(Boolean)
-        )
+        new Set([project.projectLeader, project.responsibleInfra, project.responsibleAdherence, project.responsibleConversion, project.responsibleImplementation, project.responsiblePost, localDtc.analystResponsible].filter(Boolean)),
       );
 
       if (namesToNotify.length === 0) return;
 
       // Query profiles to resolve full names to user IDs
-      const { data: matchedProfiles, error: profilesError } = await supabase
-        .from("profiles")
-        .select("id, full_name")
-        .in("full_name", namesToNotify);
+      const { data: matchedProfiles, error: profilesError } = await supabase.from("profiles").select("id, full_name").in("full_name", namesToNotify);
 
       if (profilesError) throw profilesError;
 
@@ -694,9 +642,7 @@ function TransicaoPlaceholder() {
           read: false,
         }));
 
-        const { error: insertError } = await supabase
-          .from("notifications")
-          .insert(notificationsPayload);
+        const { error: insertError } = await supabase.from("notifications").insert(notificationsPayload);
 
         if (insertError) throw insertError;
       }
@@ -715,79 +661,79 @@ function TransicaoPlaceholder() {
       ...localDtc,
       status: newStatus,
       ...(newStatus === "submitted" ? { submittedAt: now, submittedBy: fullName || "Usuário" } : {}),
-      ...(newStatus === "approved" ? { approvedAt: now, approvedBy: fullName || "Gestor" } : {})
+      ...(newStatus === "approved" ? { approvedAt: now, approvedBy: fullName || "Gestor" } : {}),
     };
 
     setLocalDtc(updatedDtc);
 
     toast.promise(
-      updateProject.mutateAsync({
-        projectId: selectedProjectId,
-        updates: {
-          customFields: {
-            ...project.customFields,
-            dtc: updatedDtc
+      updateProject
+        .mutateAsync({
+          projectId: selectedProjectId,
+          updates: {
+            customFields: {
+              ...project.customFields,
+              dtc: updatedDtc,
+            },
+            stages: {
+              post: {
+                status: dtcStatusToStageStatus(newStatus),
+                responsible: updatedDtc.analystResponsible || project.responsiblePost || undefined,
+              },
+            },
           },
-          stages: {
-            post: {
-              status: dtcStatusToStageStatus(newStatus),
-              responsible: updatedDtc.analystResponsible || project.responsiblePost || undefined
-            }
+        })
+        .then(async () => {
+          // Reforce details query refresh
+          queryClient.invalidateQueries({
+            queryKey: ["projectDetails", selectedProjectId],
+          });
+
+          // Log timeline event
+          let logMsg = "";
+          if (newStatus === "submitted") {
+            logMsg = `DTC enviado para validação por ${fullName || "Implantador"}.`;
+          } else if (newStatus === "approved") {
+            logMsg = `DTC homologado e aprovado por ${fullName || "Suporte/Gestor"}.`;
+          } else if (newStatus === "draft") {
+            logMsg = `DTC reaberto e retornado para rascunho por ${fullName || "Usuário"}.`;
           }
-        }
-      }).then(async () => {
-        // Reforce details query refresh
-        queryClient.invalidateQueries({ queryKey: ["projectDetails", selectedProjectId] });
+          if (logMsg) {
+            await addAutoLog
+              .mutateAsync({
+                projectId: selectedProjectId,
+                message: logMsg,
+                metadata: {
+                  action: "dtc_status_change",
+                  status: newStatus,
+                },
+              })
+              .catch((err) => console.error("Error logging timeline event:", err));
+          }
 
-        // Log timeline event
-        let logMsg = "";
-        if (newStatus === "submitted") {
-          logMsg = `DTC enviado para validação por ${fullName || "Implantador"}.`;
-        } else if (newStatus === "approved") {
-          logMsg = `DTC homologado e aprovado por ${fullName || "Suporte/Gestor"}.`;
-        } else if (newStatus === "draft") {
-          logMsg = `DTC reaberto e retornado para rascunho por ${fullName || "Usuário"}.`;
-        }
-        if (logMsg) {
-          await addAutoLog.mutateAsync({
-            projectId: selectedProjectId,
-            message: logMsg,
-            metadata: {
-              action: "dtc_status_change",
-              status: newStatus
-            }
-          }).catch(err => console.error("Error logging timeline event:", err));
-        }
+          // Trigger notifications to participants
+          let title = "";
+          let message = "";
+          if (newStatus === "submitted") {
+            title = "Transição Operacional (DTC) Pendente";
+            message = `O DTC do cartório "${project.clientName}" foi enviado para validação por ${fullName || "Implantador"}.`;
+          } else if (newStatus === "approved") {
+            title = "Transição Operacional (DTC) Aprovada";
+            message = `O DTC do cartório "${project.clientName}" foi homologado e aprovado por ${fullName || "Suporte/Gestor"}.`;
+          } else if (newStatus === "draft") {
+            title = "Transição Operacional (DTC) Reaberta";
+            message = `O DTC do cartório "${project.clientName}" foi retornado para rascunho por ${fullName || "Usuário"}.`;
+          }
 
-        // Trigger notifications to participants
-        let title = "";
-        let message = "";
-        if (newStatus === "submitted") {
-          title = "Transição Operacional (DTC) Pendente";
-          message = `O DTC do cartório "${project.clientName}" foi enviado para validação por ${fullName || "Implantador"}.`;
-        } else if (newStatus === "approved") {
-          title = "Transição Operacional (DTC) Aprovada";
-          message = `O DTC do cartório "${project.clientName}" foi homologado e aprovado por ${fullName || "Suporte/Gestor"}.`;
-        } else if (newStatus === "draft") {
-          title = "Transição Operacional (DTC) Reaberta";
-          message = `O DTC do cartório "${project.clientName}" foi retornado para rascunho por ${fullName || "Usuário"}.`;
-        }
-
-        if (title && message) {
-          await sendNotificationsToParticipants(title, message, "/implantadores/transicao");
-        }
-      }),
+          if (title && message) {
+            await sendNotificationsToParticipants(title, message, "/implantadores/transicao");
+          }
+        }),
       {
         loading: "Atualizando status do DTC...",
-        success: `Status alterado para: ${
-          newStatus === "draft"
-            ? "Rascunho"
-            : newStatus === "submitted"
-            ? "Pendente de Validação"
-            : "Aprovado / Finalizado"
-        }`,
-        error: "Falha ao atualizar status do documento."
-      }
+        success: `Status alterado para: ${newStatus === "draft" ? "Rascunho" : newStatus === "submitted" ? "Pendente de Validação" : "Aprovado / Finalizado"}`,
+        error: "Falha ao atualizar status do documento.",
+      },
     );
   };
 
@@ -795,11 +741,11 @@ function TransicaoPlaceholder() {
   const handleFieldChange = (field: keyof DTCData, value: any) => {
     if (!canEditTransicao) return;
     if (!localDtc) return;
-    setLocalDtc(prev => {
+    setLocalDtc((prev) => {
       if (!prev) return null;
       return {
         ...prev,
-        [field]: value
+        [field]: value,
       };
     });
   };
@@ -808,17 +754,17 @@ function TransicaoPlaceholder() {
   // Ao concluir, o worker devolve o texto em result_text; aqui convertemos para
   // Lexical, injetamos no editor (via remount por key) e o analista revisa/salva.
   const [aiEditorKey, setAiEditorKey] = useState(0);
-  const applyAiResult = useCallback((job: DtcAiJob) => {
-    const text = (job.resultText || "").trim();
-    if (!text) return;
-    const lexical = plainTextToLexicalJson(text);
-    setLocalDtc(prev => (prev ? { ...prev, finalConsiderations: lexical } : prev));
-    setAiEditorKey(k => k + 1); // força remount do editor para refletir o texto
-  }, [setLocalDtc]);
-  const { enqueueJob: enqueueAiJob, activeJob: aiJob, cancelJob: cancelAiJob } = useDtcAiJobs(
-    selectedProjectId || undefined,
-    applyAiResult
+  const applyAiResult = useCallback(
+    (job: DtcAiJob) => {
+      const text = (job.resultText || "").trim();
+      if (!text) return;
+      const lexical = plainTextToLexicalJson(text);
+      setLocalDtc((prev) => (prev ? { ...prev, finalConsiderations: lexical } : prev));
+      setAiEditorKey((k) => k + 1); // força remount do editor para refletir o texto
+    },
+    [setLocalDtc],
   );
+  const { enqueueJob: enqueueAiJob, activeJob: aiJob, cancelJob: cancelAiJob } = useDtcAiJobs(selectedProjectId || undefined, applyAiResult);
   const { online: aiWorkerOnline } = useModelWorkerStatus();
   const aiRunning = aiJob?.status === "processing" || aiJob?.status === "pending";
 
@@ -827,16 +773,8 @@ function TransicaoPlaceholder() {
   const aiHasEnough = useMemo(() => {
     if (!localDtc) return false;
     const len = (s?: string) => getLexicalTextLength(s || "");
-    const textScore =
-      len(localDtc.implantationProcess) +
-      len(localDtc.postImplantationProcess) +
-      len(localDtc.systemsInstalled) +
-      len(localDtc.convertedData);
-    const listScore =
-      (localDtc.implantationProcessLogs?.length || 0) +
-      (localDtc.implantationGainsList?.length || 0) +
-      (localDtc.implantationPendingList?.length || 0) +
-      (localDtc.implantationSuggestionsList?.length || 0);
+    const textScore = len(localDtc.implantationProcess) + len(localDtc.postImplantationProcess) + len(localDtc.systemsInstalled) + len(localDtc.convertedData);
+    const listScore = (localDtc.implantationProcessLogs?.length || 0) + (localDtc.implantationGainsList?.length || 0) + (localDtc.implantationPendingList?.length || 0) + (localDtc.implantationSuggestionsList?.length || 0);
     return textScore >= 60 || listScore >= 2;
   }, [localDtc]);
   const aiHasExistingText = getLexicalTextLength(localDtc?.finalConsiderations || "") > 0;
@@ -854,17 +792,14 @@ function TransicaoPlaceholder() {
   const aiDisabledReason = !aiWorkerOnline
     ? "O gerador da IA está offline no momento"
     : !aiHasEnough
-    ? "Preencha os campos do relato (processo, ganhos, pendências…) antes de gerar"
-    : "Gera um resumo do processo com base nos dados preenchidos";
+      ? "Preencha os campos do relato (processo, ganhos, pendências…) antes de gerar"
+      : "Gera um resumo do processo com base nos dados preenchidos";
 
   // Tickets helper functions
   const addTicket = () => {
     if (!canEditTransicao) return;
     if (!localDtc) return;
-    handleFieldChange("tickets", [
-      ...localDtc.tickets,
-      { number: "", description: "", status: "open" }
-    ]);
+    handleFieldChange("tickets", [...localDtc.tickets, { number: "", description: "", status: "open" }]);
   };
 
   const removeTicket = (idx: number) => {
@@ -872,7 +807,7 @@ function TransicaoPlaceholder() {
     if (!localDtc) return;
     handleFieldChange(
       "tickets",
-      localDtc.tickets.filter((_, i) => i !== idx)
+      localDtc.tickets.filter((_, i) => i !== idx),
     );
   };
 
@@ -882,7 +817,7 @@ function TransicaoPlaceholder() {
     const updated = [...localDtc.tickets];
     updated[idx] = {
       ...updated[idx],
-      [key]: val
+      [key]: val,
     };
     handleFieldChange("tickets", updated);
   };
@@ -892,10 +827,7 @@ function TransicaoPlaceholder() {
     if (!canEditTransicao) return;
     if (!localDtc) return;
     const currentList = localDtc.keyUsersList || [];
-    handleFieldChange("keyUsersList", [
-      ...currentList,
-      { name: "", phone: "" }
-    ]);
+    handleFieldChange("keyUsersList", [...currentList, { name: "", phone: "" }]);
   };
 
   const removeKeyUser = (idx: number) => {
@@ -903,7 +835,7 @@ function TransicaoPlaceholder() {
     if (!localDtc || !localDtc.keyUsersList) return;
     handleFieldChange(
       "keyUsersList",
-      localDtc.keyUsersList.filter((_, i) => i !== idx)
+      localDtc.keyUsersList.filter((_, i) => i !== idx),
     );
   };
 
@@ -913,7 +845,7 @@ function TransicaoPlaceholder() {
     const updated = [...localDtc.keyUsersList];
     updated[idx] = {
       ...updated[idx],
-      [key]: val
+      [key]: val,
     };
     handleFieldChange("keyUsersList", updated);
   };
@@ -923,10 +855,7 @@ function TransicaoPlaceholder() {
     if (!canEditTransicao) return;
     if (!localDtc) return;
     const currentList = localDtc.remoteAccessList || [];
-    handleFieldChange("remoteAccessList", [
-      ...currentList,
-      { system: "AnyDesk", id: "", password: "" }
-    ]);
+    handleFieldChange("remoteAccessList", [...currentList, { system: "AnyDesk", id: "", password: "" }]);
   };
 
   const removeRemoteAccess = (idx: number) => {
@@ -934,7 +863,7 @@ function TransicaoPlaceholder() {
     if (!localDtc || !localDtc.remoteAccessList) return;
     handleFieldChange(
       "remoteAccessList",
-      localDtc.remoteAccessList.filter((_, i) => i !== idx)
+      localDtc.remoteAccessList.filter((_, i) => i !== idx),
     );
   };
 
@@ -944,7 +873,7 @@ function TransicaoPlaceholder() {
     const updated = [...localDtc.remoteAccessList];
     updated[idx] = {
       ...updated[idx],
-      [key]: val
+      [key]: val,
     };
     handleFieldChange("remoteAccessList", updated);
   };
@@ -953,10 +882,7 @@ function TransicaoPlaceholder() {
     if (!canEditTransicao) return;
     if (!localDtc) return;
     const currentList = localDtc.employeesList || [];
-    handleFieldChange("employeesList", [
-      ...currentList,
-      { name: "", department: "", role: "" }
-    ]);
+    handleFieldChange("employeesList", [...currentList, { name: "", department: "", role: "" }]);
   };
 
   const removeEmployee = (idx: number) => {
@@ -964,7 +890,7 @@ function TransicaoPlaceholder() {
     if (!localDtc || !localDtc.employeesList) return;
     handleFieldChange(
       "employeesList",
-      localDtc.employeesList.filter((_, i) => i !== idx)
+      localDtc.employeesList.filter((_, i) => i !== idx),
     );
   };
 
@@ -974,23 +900,23 @@ function TransicaoPlaceholder() {
     const updated = [...localDtc.employeesList];
     updated[idx] = {
       ...updated[idx],
-      [key]: val
+      [key]: val,
     };
-    
+
     // Automatically rebuild the employees text string for backwards compatibility
     const joinedStr = updated
-      .map(emp => {
+      .map((emp) => {
         const parts = [emp.name];
         if (emp.department) parts.push(emp.department);
         if (emp.role) parts.push(emp.role);
         return parts.join(" - ");
       })
       .join(", ");
-    
+
     setLocalDtc({
       ...localDtc,
       employeesList: updated,
-      employees: joinedStr
+      employees: joinedStr,
     });
   };
 
@@ -1000,10 +926,7 @@ function TransicaoPlaceholder() {
     const currentList = localDtc.implantationProcessLogs || [];
     // Default to current local date
     const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
-    handleFieldChange("implantationProcessLogs", [
-      ...currentList,
-      { date: today, description: "" }
-    ]);
+    handleFieldChange("implantationProcessLogs", [...currentList, { date: today, description: "" }]);
   };
 
   const removeImplantationLog = (idx: number) => {
@@ -1011,7 +934,7 @@ function TransicaoPlaceholder() {
     if (!localDtc || !localDtc.implantationProcessLogs) return;
     handleFieldChange(
       "implantationProcessLogs",
-      localDtc.implantationProcessLogs.filter((_, i) => i !== idx)
+      localDtc.implantationProcessLogs.filter((_, i) => i !== idx),
     );
   };
 
@@ -1021,7 +944,7 @@ function TransicaoPlaceholder() {
     const updated = [...localDtc.implantationProcessLogs];
     updated[idx] = {
       ...updated[idx],
-      [key]: val
+      [key]: val,
     };
     handleFieldChange("implantationProcessLogs", updated);
   };
@@ -1032,7 +955,14 @@ function TransicaoPlaceholder() {
     const currentList = localDtc.implantationPendingList || [];
     handleFieldChange("implantationPendingList", [
       ...currentList,
-      { title: "", status: "Pendente", department: "", assignedTo: "", product: "", description: "" }
+      {
+        title: "",
+        status: "Pendente",
+        department: "",
+        assignedTo: "",
+        product: "",
+        description: "",
+      },
     ]);
   };
 
@@ -1041,7 +971,7 @@ function TransicaoPlaceholder() {
     if (!localDtc || !localDtc.implantationPendingList) return;
     handleFieldChange(
       "implantationPendingList",
-      localDtc.implantationPendingList.filter((_, i) => i !== idx)
+      localDtc.implantationPendingList.filter((_, i) => i !== idx),
     );
   };
 
@@ -1051,7 +981,7 @@ function TransicaoPlaceholder() {
     const updated = [...localDtc.implantationPendingList];
     updated[idx] = {
       ...updated[idx],
-      [key]: val
+      [key]: val,
     };
     handleFieldChange("implantationPendingList", updated);
   };
@@ -1060,10 +990,7 @@ function TransicaoPlaceholder() {
     if (!canEditTransicao) return;
     if (!localDtc) return;
     const currentList = localDtc.implantationGainsList || [];
-    handleFieldChange("implantationGainsList", [
-      ...currentList,
-      { title: "", product: "", department: "", description: "" }
-    ]);
+    handleFieldChange("implantationGainsList", [...currentList, { title: "", product: "", department: "", description: "" }]);
   };
 
   const removeImplantationGain = (idx: number) => {
@@ -1071,7 +998,7 @@ function TransicaoPlaceholder() {
     if (!localDtc || !localDtc.implantationGainsList) return;
     handleFieldChange(
       "implantationGainsList",
-      localDtc.implantationGainsList.filter((_, i) => i !== idx)
+      localDtc.implantationGainsList.filter((_, i) => i !== idx),
     );
   };
 
@@ -1089,7 +1016,14 @@ function TransicaoPlaceholder() {
     const currentList = localDtc.implantationSuggestionsList || [];
     handleFieldChange("implantationSuggestionsList", [
       ...currentList,
-      { title: "", status: "Pendente", department: "", assignedTo: "", product: "", description: "" }
+      {
+        title: "",
+        status: "Pendente",
+        department: "",
+        assignedTo: "",
+        product: "",
+        description: "",
+      },
     ]);
   };
 
@@ -1098,7 +1032,7 @@ function TransicaoPlaceholder() {
     if (!localDtc || !localDtc.implantationSuggestionsList) return;
     handleFieldChange(
       "implantationSuggestionsList",
-      localDtc.implantationSuggestionsList.filter((_, i) => i !== idx)
+      localDtc.implantationSuggestionsList.filter((_, i) => i !== idx),
     );
   };
 
@@ -1108,26 +1042,26 @@ function TransicaoPlaceholder() {
     const updated = [...localDtc.implantationSuggestionsList];
     updated[idx] = {
       ...updated[idx],
-      [key]: val
+      [key]: val,
     };
     handleFieldChange("implantationSuggestionsList", updated);
   };
 
   const getIpValidationMessage = (val: string) => {
     if (!val) return null;
-    
+
     // Check if it contains an IP address (IPv4)
     const ipRegex = /\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/;
     const ipMatch = val.match(ipRegex);
-    
+
     // Check if it contains a port (e.g. :5432 or :1433)
     const portRegex = /:([0-9]{2,5})\b/;
     const portMatch = val.match(portRegex);
-    
+
     const defaultPort = "5432";
     let msg = "";
     let isWarning = false;
-    
+
     if (ipMatch) {
       msg = `IP ${ipMatch[0]} detectado. `;
       if (portMatch) {
@@ -1146,32 +1080,33 @@ function TransicaoPlaceholder() {
       msg = "Atenção: Nenhum endereço de IP válido detectado no formato.";
       isWarning = true;
     }
-    
+
     return { msg, isWarning };
   };
 
   const toggleSystemInstalled = (system: string) => {
     if (!canEditTransicao) return;
     if (!localDtc) return;
-    const current = localDtc.systemsInstalled 
-      ? localDtc.systemsInstalled.split(",").map(s => s.trim()).filter(Boolean)
+    const current = localDtc.systemsInstalled
+      ? localDtc.systemsInstalled
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
       : [];
-    
-    const next = current.includes(system)
-      ? current.filter(s => s !== system)
-      : [...current, system];
-    
+
+    const next = current.includes(system) ? current.filter((s) => s !== system) : [...current, system];
+
     const nextStr = next.join(", ");
-    
+
     // Clean up version of removed system
     const currentList = localDtc.systemVersionsList || {};
     const updatedList = { ...currentList };
     if (current.includes(system)) {
       delete updatedList[system];
     }
-    
+
     const joinedVersions = next
-      .map(s => {
+      .map((s) => {
         const v = updatedList[s];
         return v ? `${s} (v${v})` : s;
       })
@@ -1181,7 +1116,7 @@ function TransicaoPlaceholder() {
       ...localDtc,
       systemsInstalled: nextStr,
       systemVersionsList: updatedList,
-      systemVersions: joinedVersions
+      systemVersions: joinedVersions,
     });
   };
 
@@ -1191,15 +1126,18 @@ function TransicaoPlaceholder() {
     const currentList = localDtc.systemVersionsList || {};
     const updatedList = {
       ...currentList,
-      [sys]: version
+      [sys]: version,
     };
-    
+
     const selectedSystems = localDtc.systemsInstalled
-      ? localDtc.systemsInstalled.split(",").map(s => s.trim()).filter(Boolean)
+      ? localDtc.systemsInstalled
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
       : [];
-    
+
     const joinedVersions = selectedSystems
-      .map(s => {
+      .map((s) => {
         const v = updatedList[s];
         return v ? `${s} (v${v})` : s;
       })
@@ -1208,7 +1146,7 @@ function TransicaoPlaceholder() {
     setLocalDtc({
       ...localDtc,
       systemVersionsList: updatedList,
-      systemVersions: joinedVersions
+      systemVersions: joinedVersions,
     });
   };
 
@@ -1229,14 +1167,11 @@ function TransicaoPlaceholder() {
   const handleExportVcf = () => {
     if (!localDtc) return;
 
-    const groupName = prompt(
-      "Digite o nome do grupo do WhatsApp (para prefixar os contatos):",
-      `DTC - ${localDtc.serventia}`
-    );
+    const groupName = prompt("Digite o nome do grupo do WhatsApp (para prefixar os contatos):", `DTC - ${localDtc.serventia}`);
     if (groupName === null) return;
 
     let vcardText = "";
-    
+
     // Add primary contact if name is filled
     if (localDtc.clientResponsible) {
       vcardText += `BEGIN:VCARD\r\nVERSION:3.0\r\nFN:${groupName} - ${localDtc.clientResponsible}\r\nTEL;TYPE=CELL,VOICE:${localDtc.clientResponsiblePhone || ""}\r\nEND:VCARD\r\n`;
@@ -1244,7 +1179,7 @@ function TransicaoPlaceholder() {
 
     // Add other key users
     if (localDtc.keyUsersList && localDtc.keyUsersList.length > 0) {
-      localDtc.keyUsersList.forEach(u => {
+      localDtc.keyUsersList.forEach((u) => {
         if (u.name) {
           vcardText += `BEGIN:VCARD\r\nVERSION:3.0\r\nFN:${groupName} - ${u.name}\r\nTEL;TYPE=CELL,VOICE:${u.phone || ""}\r\nEND:VCARD\r\n`;
         }
@@ -1264,17 +1199,14 @@ function TransicaoPlaceholder() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
+
     toast.success("Arquivo de contatos (.vcf) baixado! Abra-o no celular ou computador para importar todos.");
   };
 
   const handleExportZip = async () => {
     if (!localDtc) return;
 
-    const groupName = prompt(
-      "Digite o nome do grupo do WhatsApp (para prefixar os contatos):",
-      `DTC - ${localDtc.serventia}`
-    );
+    const groupName = prompt("Digite o nome do grupo do WhatsApp (para prefixar os contatos):", `DTC - ${localDtc.serventia}`);
     if (groupName === null) return;
 
     const JSZip = (await import("jszip")).default;
@@ -1295,7 +1227,7 @@ function TransicaoPlaceholder() {
 
     // 2. Key users
     if (localDtc.keyUsersList && localDtc.keyUsersList.length > 0) {
-      localDtc.keyUsersList.forEach(u => {
+      localDtc.keyUsersList.forEach((u) => {
         if (u.name) {
           const filename = `${groupName} - ${u.name}.vcf`.replace(/[\\/:*?"<>|]/g, "_");
           zip.file(filename, makeVcard(u.name, u.phone || ""));
@@ -1336,7 +1268,7 @@ function TransicaoPlaceholder() {
       lines.push(`${localDtc.clientResponsible} - ${localDtc.clientResponsiblePhone}`);
     }
     if (localDtc.keyUsersList) {
-      localDtc.keyUsersList.forEach(u => {
+      localDtc.keyUsersList.forEach((u) => {
         if (u.name && u.phone) {
           lines.push(`${u.name} - ${u.phone}`);
         }
@@ -1356,10 +1288,7 @@ function TransicaoPlaceholder() {
   const handleOpenWhatsappShare = () => {
     if (!localDtc) return;
 
-    const groupName = prompt(
-      "Confirme o nome do grupo do WhatsApp:",
-      `DTC - ${localDtc.serventia}`
-    );
+    const groupName = prompt("Confirme o nome do grupo do WhatsApp:", `DTC - ${localDtc.serventia}`);
     if (groupName === null) return;
 
     let msg = `*Grupo do WhatsApp:* ${groupName}\n\n`;
@@ -1368,7 +1297,7 @@ function TransicaoPlaceholder() {
       msg += `• *${localDtc.clientResponsible}* (Responsável): ${localDtc.clientResponsiblePhone || "Sem telefone"}\n`;
     }
     if (localDtc.keyUsersList) {
-      localDtc.keyUsersList.forEach(u => {
+      localDtc.keyUsersList.forEach((u) => {
         if (u.name) {
           msg += `• *${u.name}*: ${u.phone || "Sem telefone"}\n`;
         }
@@ -1437,10 +1366,10 @@ function TransicaoPlaceholder() {
       if (typeof window === "undefined" || !window.speechSynthesis) return;
       const voices = window.speechSynthesis.getVoices();
       // Filter pt-BR / Portuguese voices
-      const ptVoices = voices.filter(v => v.lang.toLowerCase().includes("pt"));
+      const ptVoices = voices.filter((v) => v.lang.toLowerCase().includes("pt"));
       setAvailableVoices(ptVoices);
       if (ptVoices.length > 0 && !selectedVoiceURI) {
-        const defaultVoice = ptVoices.find(v => v.default) || ptVoices[0];
+        const defaultVoice = ptVoices.find((v) => v.default) || ptVoices[0];
         setSelectedVoiceURI(defaultVoice.voiceURI);
       }
     };
@@ -1505,7 +1434,7 @@ function TransicaoPlaceholder() {
 
       if (localDtc.remoteAccessList && localDtc.remoteAccessList.length > 0) {
         parts.push("Acessos remotos disponibilizados:");
-        localDtc.remoteAccessList.forEach(a => {
+        localDtc.remoteAccessList.forEach((a) => {
           parts.push(`${a.system}. Identificador ${a.id}.`);
         });
       }
@@ -1536,12 +1465,12 @@ function TransicaoPlaceholder() {
 
       if (localDtc.employeesList && localDtc.employeesList.length > 0) {
         parts.push("Funcionários capacitados:");
-        parts.push(localDtc.employeesList.map(e => e.name).join(", "));
+        parts.push(localDtc.employeesList.map((e) => e.name).join(", "));
       }
 
       if (localDtc.implantationGainsList && localDtc.implantationGainsList.length > 0) {
         parts.push("Ganhos operacionais obtidos:");
-        localDtc.implantationGainsList.forEach(g => {
+        localDtc.implantationGainsList.forEach((g) => {
           parts.push(`${g.title || ""}: ${getLexicalText(g.description)}`);
         });
       }
@@ -1551,7 +1480,7 @@ function TransicaoPlaceholder() {
       parts.push("Seção 5. Pendências e Chamados de Suporte 0800.");
       if (localDtc.implantationPendingList && localDtc.implantationPendingList.length > 0) {
         parts.push("Pendências da implantação:");
-        localDtc.implantationPendingList.forEach(p => {
+        localDtc.implantationPendingList.forEach((p) => {
           parts.push(`${p.title || ""}. Status: ${p.status}.`);
         });
       } else {
@@ -1598,14 +1527,14 @@ function TransicaoPlaceholder() {
     const utterance = new SpeechSynthesisUtterance(fullText);
     utterance.lang = "pt-BR";
     utterance.rate = speechRate;
-    
+
     if (selectedVoiceURI) {
-      const activeVoice = availableVoices.find(v => v.voiceURI === selectedVoiceURI);
+      const activeVoice = availableVoices.find((v) => v.voiceURI === selectedVoiceURI);
       if (activeVoice) {
         utterance.voice = activeVoice;
       }
     } else {
-      const ptVoice = availableVoices.find(v => v.lang.startsWith("pt"));
+      const ptVoice = availableVoices.find((v) => v.lang.startsWith("pt"));
       if (ptVoice) {
         utterance.voice = ptVoice;
       }
@@ -1666,7 +1595,7 @@ function TransicaoPlaceholder() {
   const execSummary = useMemo(() => {
     if (!localDtc) return { openPending: 0, gains: 0, suggestions: 0, employees: 0 };
     return {
-      openPending: (localDtc.implantationPendingList ?? []).filter(p => p.status !== "Resolvido" && p.status !== "Cancelado").length,
+      openPending: (localDtc.implantationPendingList ?? []).filter((p) => p.status !== "Resolvido" && p.status !== "Cancelado").length,
       gains: (localDtc.implantationGainsList ?? []).length,
       suggestions: (localDtc.implantationSuggestionsList ?? []).length,
       employees: (localDtc.employeesList ?? []).length,
@@ -1681,21 +1610,25 @@ function TransicaoPlaceholder() {
       toast.loading("Gerando PDF...", { id: "pdf-export" });
       const html2canvas = (await import("html2canvas")).default;
       const { jsPDF } = await import("jspdf");
-      
+
       const element = printRef.current;
       element.classList.remove("hidden");
-      
+
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
         backgroundColor: "#ffffff",
         logging: false,
       });
-      
+
       element.classList.add("hidden");
-      
+
       const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
       const imgWidth = pageWidth;
@@ -1715,12 +1648,12 @@ function TransicaoPlaceholder() {
       toast.success("PDF exportado com sucesso!", { id: "pdf-export" });
     } catch (err) {
       console.error(err);
-          toast.error("Erro ao gerar PDF.", { id: "pdf-export" });
+      toast.error("Erro ao gerar PDF.", { id: "pdf-export" });
     }
   }, [localDtc, canExecuteTransicao]);
 
   return (
-    <div className="container mx-auto pt-0 px-6 pb-6 space-y-6 max-w-7xl -mt-6">
+    <div className="container mx-auto w-full min-w-0 max-w-7xl space-y-4 overflow-x-hidden px-0 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-0 sm:space-y-6" data-testid="implantadores-transition-mobile-layout">
       {/* CSS overrides for print layout */}
       <style>{`
         .dtc-document-font, .dtc-document-font * {
@@ -1754,15 +1687,15 @@ function TransicaoPlaceholder() {
       <Card className="no-print border-muted/50 shadow-sm bg-card/60 backdrop-blur-sm">
         <CardContent className="p-3 space-y-2">
           {/* First Row: Title, Selector & Auto-save Status */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-muted-foreground/10 pb-2">
-            <div className="flex items-center gap-2">
+          <div className="flex min-w-0 flex-col justify-between gap-3 border-b border-muted-foreground/10 pb-2 sm:flex-row sm:items-center sm:gap-2">
+            <div className="flex min-w-0 items-start gap-2 sm:items-center">
               <Link to="/implantadores">
                 <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full shrink-0">
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
               </Link>
               <div className="min-w-0">
-                <h1 className="text-sm md:text-base font-black tracking-tight text-foreground flex items-center gap-2 truncate">
+                <h1 className="flex min-w-0 flex-wrap items-center gap-1.5 break-words text-sm font-black leading-5 tracking-tight text-foreground md:text-base">
                   DTC: Transição Operacional
                   {localDtc && getStatusBadge(localDtc.status)}
                 </h1>
@@ -1792,19 +1725,14 @@ function TransicaoPlaceholder() {
             </div>
 
             {/* Project Select Dropdown */}
-            <div className="flex items-center gap-1.5 w-full sm:w-auto shrink-0 justify-end">
+            <div className="flex w-full min-w-0 items-center justify-end gap-1.5 sm:w-auto sm:shrink-0">
               <Popover open={projectSelectOpen} onOpenChange={setProjectSelectOpen}>
                 <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={projectSelectOpen}
-                    className="w-full sm:w-[40rem] h-8 text-xs border-muted/80 justify-between font-normal"
-                  >
+                  <Button variant="outline" role="combobox" aria-expanded={projectSelectOpen} className="h-9 w-full min-w-0 justify-between border-muted/80 text-xs font-normal sm:h-8 sm:w-[40rem]">
                     {selectedProjectId ? (
                       <span className="truncate">
                         {(() => {
-                          const proj = projectsList.find(p => p.id === selectedProjectId);
+                          const proj = projectsList.find((p) => p.id === selectedProjectId);
                           if (!proj) return "Selecione um projeto...";
                           return `${proj.client_name}${proj.ticket_number ? ` (${proj.ticket_number})` : ""}`;
                         })()}
@@ -1815,12 +1743,8 @@ function TransicaoPlaceholder() {
                     <ChevronsUpDown className="ml-2 h-3.5 w-3.5 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[--radix-popover-trigger-width] min-w-[18rem] p-0" align="end">
-                  <Command
-                    filter={(value, search) =>
-                      value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0
-                    }
-                  >
+                <PopoverContent className="w-[--radix-popover-trigger-width] max-w-[calc(100vw-1.5rem)] p-0" align="end">
+                  <Command filter={(value, search) => (value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0)}>
                     <CommandInput placeholder="Buscar cartório ou nº do ticket..." className="h-9 text-xs" />
                     <CommandList className="max-h-[300px]">
                       {isLoadingList ? (
@@ -1830,11 +1754,9 @@ function TransicaoPlaceholder() {
                         </div>
                       ) : (
                         <>
-                          <CommandEmpty className="py-4 text-center text-xs text-muted-foreground">
-                            Nenhum projeto encontrado.
-                          </CommandEmpty>
+                          <CommandEmpty className="py-4 text-center text-xs text-muted-foreground">Nenhum projeto encontrado.</CommandEmpty>
                           <CommandGroup>
-                            {projectsList.map(proj => (
+                            {projectsList.map((proj) => (
                               <CommandItem
                                 key={proj.id}
                                 value={`${proj.client_name} ${proj.ticket_number || ""}`}
@@ -1844,18 +1766,9 @@ function TransicaoPlaceholder() {
                                 }}
                                 className="flex items-center gap-2 text-xs cursor-pointer"
                               >
-                                <Check
-                                  className={cn(
-                                    "h-3.5 w-3.5 shrink-0 text-primary",
-                                    selectedProjectId === proj.id ? "opacity-100" : "opacity-0"
-                                  )}
-                                />
+                                <Check className={cn("h-3.5 w-3.5 shrink-0 text-primary", selectedProjectId === proj.id ? "opacity-100" : "opacity-0")} />
                                 <span className="truncate flex-1">{proj.client_name}</span>
-                                {proj.ticket_number && (
-                                  <span className="text-[10px] text-muted-foreground shrink-0 tabular-nums">
-                                    {proj.ticket_number}
-                                  </span>
-                                )}
+                                {proj.ticket_number && <span className="text-[10px] text-muted-foreground shrink-0 tabular-nums">{proj.ticket_number}</span>}
                               </CommandItem>
                             ))}
                           </CommandGroup>
@@ -1877,10 +1790,10 @@ function TransicaoPlaceholder() {
 
           {/* Second Row: Status Details & Actions */}
           {selectedProjectId && localDtc && (
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1 text-[11px]">
-              <div className="text-muted-foreground flex items-center gap-1">
+            <div className="flex min-w-0 flex-col justify-between gap-2 pt-1 text-[11px] sm:flex-row sm:items-center">
+              <div className="flex min-w-0 items-start gap-1 text-muted-foreground sm:items-center">
                 <Clock className="h-3.5 w-3.5 text-primary shrink-0" />
-                <span className="truncate">
+                <span className="min-w-0 break-words">
                   {localDtc.status === "draft" && "Rascunho: As alterações são salvas automaticamente."}
                   {localDtc.status === "submitted" && `Enviado para validação em ${new Date(localDtc.submittedAt || "").toLocaleDateString("pt-BR")} por ${localDtc.submittedBy}.`}
                   {localDtc.status === "approved" && `Aprovado e finalizado em ${new Date(localDtc.approvedAt || "").toLocaleDateString("pt-BR")} por ${localDtc.approvedBy}.`}
@@ -1888,13 +1801,9 @@ function TransicaoPlaceholder() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center gap-1.5 justify-end">
+              <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:justify-end sm:gap-1.5">
                 {localDtc.status === "draft" && (
-                  <Button
-                    onClick={() => handleStatusChange("submitted")}
-                    className="bg-rose-600 hover:bg-rose-700 text-white font-bold gap-1 text-[11px] h-7 px-2.5"
-                    size="sm"
-                  >
+                  <Button onClick={() => handleStatusChange("submitted")} className="col-span-2 h-9 min-w-0 gap-1 bg-rose-600 px-2.5 text-[11px] font-bold text-white hover:bg-rose-700 sm:col-span-1 sm:h-7" size="sm">
                     <Send className="h-3 w-3" />
                     Enviar para Validação
                   </Button>
@@ -1902,20 +1811,11 @@ function TransicaoPlaceholder() {
 
                 {localDtc.status === "submitted" && (
                   <>
-                    <Button
-                      onClick={() => handleStatusChange("draft")}
-                      variant="outline"
-                      className="border-muted-foreground/30 hover:bg-muted text-[11px] h-7 px-2.5"
-                      size="sm"
-                    >
+                    <Button onClick={() => handleStatusChange("draft")} variant="outline" className="h-9 min-w-0 border-muted-foreground/30 px-2 text-[11px] hover:bg-muted sm:h-7 sm:px-2.5" size="sm">
                       Retornar a Rascunho
                     </Button>
                     {(isAdmin || fullName === localDtc.analystResponsible) && canExecuteTransicao && (
-                      <Button
-                        onClick={() => handleStatusChange("approved")}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-1 text-[11px] h-7 px-2.5"
-                        size="sm"
-                      >
+                      <Button onClick={() => handleStatusChange("approved")} className="h-9 min-w-0 gap-1 bg-emerald-600 px-2 text-[11px] font-bold text-white hover:bg-emerald-700 sm:h-7 sm:px-2.5" size="sm">
                         <CheckCircle2 className="h-3 w-3" />
                         Aprovar Transição
                       </Button>
@@ -1928,7 +1828,7 @@ function TransicaoPlaceholder() {
                     <Button
                       onClick={() => handleStatusChange("draft")}
                       variant="outline"
-                      className="border-rose-500/20 text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/20 text-[11px] h-7 px-2.5"
+                      className="h-9 min-w-0 border-rose-500/20 px-2 text-[11px] text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/20 sm:h-7 sm:px-2.5"
                       size="sm"
                     >
                       Reabrir (Editar)
@@ -1936,17 +1836,13 @@ function TransicaoPlaceholder() {
                     <Button
                       onClick={exportToPdf}
                       variant="outline"
-                      className="border-rose-500/20 text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/20 font-bold gap-1 text-[11px] h-7 px-2.5"
+                      className="h-9 min-w-0 gap-1 border-rose-500/20 px-2 text-[11px] font-bold text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/20 sm:h-7 sm:px-2.5"
                       size="sm"
                     >
                       <FileDown className="h-3 w-3" />
                       Exportar PDF
                     </Button>
-                    <Button
-                      onClick={() => window.print()}
-                      className="bg-primary hover:bg-primary/95 text-primary-foreground font-bold gap-1 text-[11px] h-7 px-2.5 shadow"
-                      size="sm"
-                    >
+                    <Button onClick={() => window.print()} className="col-span-2 h-9 min-w-0 gap-1 bg-primary px-2.5 text-[11px] font-bold text-primary-foreground shadow hover:bg-primary/95 sm:col-span-1 sm:h-7" size="sm">
                       <Printer className="h-3 w-3" />
                       Imprimir DTC
                     </Button>
@@ -1965,9 +1861,7 @@ function TransicaoPlaceholder() {
             <FileText className="h-10 w-10" />
           </div>
           <h2 className="text-xl font-bold">Nenhum projeto selecionado</h2>
-          <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-            Por favor, selecione um cartório ou projeto no menu de busca acima para começar a preencher ou consultar o DTC.
-          </p>
+          <p className="text-sm text-muted-foreground max-w-sm mx-auto">Por favor, selecione um cartório ou projeto no menu de busca acima para começar a preencher ou consultar o DTC.</p>
         </div>
       ) : isLoadingDetails || !localDtc ? (
         <div className="no-print flex flex-col items-center justify-center py-20 space-y-3">
@@ -1975,49 +1869,42 @@ function TransicaoPlaceholder() {
           <p className="text-sm text-muted-foreground">Carregando detalhes do projeto e do DTC...</p>
         </div>
       ) : (
-        <div className="space-y-6">
-
+        <div className="min-w-0 space-y-4 sm:space-y-6">
           {/* ② Progress Bar */}
           <div className="no-print space-y-1.5">
             <div className="flex items-center justify-between text-xs">
               <span className="font-bold text-muted-foreground uppercase tracking-wider">Completude do DTC</span>
-              <span className={cn(
-                "font-extrabold tabular-nums",
-                dtcProgress === 100 ? "text-emerald-500" : dtcProgress >= 50 ? "text-amber-500" : "text-rose-500"
-              )}>{dtcProgress}%</span>
+              <span className={cn("font-extrabold tabular-nums", dtcProgress === 100 ? "text-emerald-500" : dtcProgress >= 50 ? "text-amber-500" : "text-rose-500")}>{dtcProgress}%</span>
             </div>
-            <Progress
-              value={dtcProgress}
-              className="h-2 bg-muted/60"
-            />
+            <Progress value={dtcProgress} className="h-2 bg-muted/60" />
           </div>
 
           {/* ③ Executive Summary */}
-          <div className="no-print grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="flex items-center gap-3 bg-amber-500/10 dark:bg-transparent border border-amber-500/20 dark:border-amber-500/40 rounded-xl p-3">
+          <div className="no-print grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
+            <div className="flex min-w-0 items-start gap-2 rounded-xl border border-amber-500/20 bg-amber-500/10 p-2.5 dark:border-amber-500/40 dark:bg-transparent sm:items-center sm:gap-3 sm:p-3">
               <ListChecks className="h-5 w-5 text-amber-500 shrink-0" />
-              <div>
+              <div className="min-w-0">
                 <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">Pendências abertas</p>
                 <p className="text-xl font-black text-amber-600 dark:text-amber-400 leading-tight">{execSummary.openPending}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 bg-emerald-500/10 dark:bg-transparent border border-emerald-500/20 dark:border-emerald-500/40 rounded-xl p-3">
+            <div className="flex min-w-0 items-start gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-2.5 dark:border-emerald-500/40 dark:bg-transparent sm:items-center sm:gap-3 sm:p-3">
               <TrendingUp className="h-5 w-5 text-emerald-500 shrink-0" />
-              <div>
+              <div className="min-w-0">
                 <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">Ganhos registrados</p>
                 <p className="text-xl font-black text-emerald-600 dark:text-emerald-400 leading-tight">{execSummary.gains}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 bg-blue-500/10 dark:bg-transparent border border-blue-500/20 dark:border-blue-500/40 rounded-xl p-3">
+            <div className="flex min-w-0 items-start gap-2 rounded-xl border border-blue-500/20 bg-blue-500/10 p-2.5 dark:border-blue-500/40 dark:bg-transparent sm:items-center sm:gap-3 sm:p-3">
               <Lightbulb className="h-5 w-5 text-blue-500 shrink-0" />
-              <div>
+              <div className="min-w-0">
                 <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">Sugestões</p>
                 <p className="text-xl font-black text-blue-600 dark:text-blue-400 leading-tight">{execSummary.suggestions}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 bg-purple-500/10 dark:bg-transparent border border-purple-500/20 dark:border-purple-500/40 rounded-xl p-3">
+            <div className="flex min-w-0 items-start gap-2 rounded-xl border border-purple-500/20 bg-purple-500/10 p-2.5 dark:border-purple-500/40 dark:bg-transparent sm:items-center sm:gap-3 sm:p-3">
               <Users className="h-5 w-5 text-purple-500 shrink-0" />
-              <div>
+              <div className="min-w-0">
                 <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">Colaboradores</p>
                 <p className="text-xl font-black text-purple-600 dark:text-purple-400 leading-tight">{execSummary.employees}</p>
               </div>
@@ -2026,16 +1913,24 @@ function TransicaoPlaceholder() {
 
           {/* Form Tabs */}
           <Tabs defaultValue="geral" className="no-print w-full space-y-4">
-            <TabsList className="grid grid-cols-6 w-full h-11 bg-muted/60 p-1 border">
-              <TabsTrigger value="geral" className="text-xs font-bold">Identificação</TabsTrigger>
-              <TabsTrigger value="infra" className="text-xs font-bold">Infra & Acesso</TabsTrigger>
-              <TabsTrigger value="processo" className="text-xs font-bold">Relato Técnico</TabsTrigger>
-              <TabsTrigger value="chamados" className="text-xs font-bold">Chamados pendentes</TabsTrigger>
-              <TabsTrigger value="historico" className="text-xs font-bold flex items-center gap-1">
+            <TabsList className="grid h-auto w-full grid-cols-2 gap-1 overflow-hidden border bg-muted/60 p-1 md:grid-cols-6">
+              <TabsTrigger value="geral" className="min-h-10 min-w-0 whitespace-normal px-1 text-[11px] font-bold leading-4 sm:text-xs">
+                Identificação
+              </TabsTrigger>
+              <TabsTrigger value="infra" className="min-h-10 min-w-0 whitespace-normal px-1 text-[11px] font-bold leading-4 sm:text-xs">
+                Infra & Acesso
+              </TabsTrigger>
+              <TabsTrigger value="processo" className="min-h-10 min-w-0 whitespace-normal px-1 text-[11px] font-bold leading-4 sm:text-xs">
+                Relato Técnico
+              </TabsTrigger>
+              <TabsTrigger value="chamados" className="min-h-10 min-w-0 whitespace-normal px-1 text-[11px] font-bold leading-4 sm:text-xs">
+                Chamados pendentes
+              </TabsTrigger>
+              <TabsTrigger value="historico" className="min-h-10 min-w-0 gap-1 whitespace-normal px-1 text-[11px] font-bold leading-4 sm:text-xs">
                 <History className="h-3.5 w-3.5 text-primary" />
                 Histórico
               </TabsTrigger>
-              <TabsTrigger value="visualizar" className="text-xs font-bold flex items-center gap-1">
+              <TabsTrigger value="visualizar" className="min-h-10 min-w-0 gap-1 whitespace-normal px-1 text-[11px] font-bold leading-4 sm:text-xs">
                 <Printer className="h-3.5 w-3.5 text-primary" />
                 Visualizar DTC
               </TabsTrigger>
@@ -2044,21 +1939,16 @@ function TransicaoPlaceholder() {
             {/* TAB 1: IDENTIFICATION */}
             <TabsContent value="geral">
               <Card className="border-muted/60 shadow-sm">
-                <CardHeader>
+                <CardHeader className="p-4 sm:p-6">
                   <CardTitle className="text-base font-bold text-primary">Identificação do Cartório & Responsáveis</CardTitle>
                   <CardDescription className="text-xs">Dados de contato da serventia e equipe técnica envolvida na transição.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="min-w-0 space-y-5 p-4 pt-0 sm:space-y-6 sm:p-6 sm:pt-0">
                   {/* Sub-seção 1: Dados do Cartório */}
                   <div className="space-y-3">
-                    <div 
-                      className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors"
-                      onClick={() => toggleSection("ident-cartorio")}
-                    >
+                    <div className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors" onClick={() => toggleSection("ident-cartorio")}>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">
-                          1. Dados do Cartório
-                        </span>
+                        <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">1. Dados do Cartório</span>
                       </div>
                       <Button type="button" variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
                         {collapsedSections["ident-cartorio"] ? (
@@ -2071,17 +1961,15 @@ function TransicaoPlaceholder() {
                     {!collapsedSections["ident-cartorio"] && (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 animate-in fade-in slide-in-from-top-1 duration-200">
                         <div className="space-y-1">
-                          <Label htmlFor="serventia" className="text-[11px] font-bold">Serventia (Cartório)</Label>
-                          <Input
-                            id="serventia"
-                            value={localDtc.serventia}
-                            onChange={(e) => handleFieldChange("serventia", e.target.value)}
-                            disabled={isFormDisabled}
-                            className="border-muted/80 h-8 text-xs font-semibold"
-                          />
+                          <Label htmlFor="serventia" className="text-[11px] font-bold">
+                            Serventia (Cartório)
+                          </Label>
+                          <Input id="serventia" value={localDtc.serventia} onChange={(e) => handleFieldChange("serventia", e.target.value)} disabled={isFormDisabled} className="border-muted/80 h-8 text-xs font-semibold" />
                         </div>
                         <div className="space-y-1">
-                          <Label htmlFor="oficial" className="text-[11px] font-bold">Oficial do Cartório</Label>
+                          <Label htmlFor="oficial" className="text-[11px] font-bold">
+                            Oficial do Cartório
+                          </Label>
                           <Input
                             id="oficial"
                             value={localDtc.oficial}
@@ -2092,7 +1980,9 @@ function TransicaoPlaceholder() {
                           />
                         </div>
                         <div className="space-y-1">
-                          <Label htmlFor="clientPhone" className="text-[11px] font-bold">Telefone Serventia</Label>
+                          <Label htmlFor="clientPhone" className="text-[11px] font-bold">
+                            Telefone Serventia
+                          </Label>
                           <div className="relative flex items-center">
                             <Input
                               id="clientPhone"
@@ -2117,22 +2007,19 @@ function TransicaoPlaceholder() {
                           </div>
                         </div>
                         <div className="space-y-1">
-                          <Label htmlFor="clientEmail" className="text-[11px] font-bold">E-mail Serventia</Label>
+                          <Label htmlFor="clientEmail" className="text-[11px] font-bold">
+                            E-mail Serventia
+                          </Label>
                           <Input
                             id="clientEmail"
                             type="email"
                             value={localDtc.clientEmail}
                             onChange={(e) => handleFieldChange("clientEmail", e.target.value)}
                             disabled={isFormDisabled}
-                            className={cn(
-                              "border-muted/80 h-8 text-xs",
-                              localDtc.clientEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(localDtc.clientEmail) && "border-rose-500 focus-visible:ring-rose-500"
-                            )}
+                            className={cn("border-muted/80 h-8 text-xs", localDtc.clientEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(localDtc.clientEmail) && "border-rose-500 focus-visible:ring-rose-500")}
                             placeholder="contato@cartorio.com.br"
                           />
-                          {localDtc.clientEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(localDtc.clientEmail) && (
-                            <p className="text-[10px] text-rose-500 mt-0.5">Formato de e-mail inválido.</p>
-                          )}
+                          {localDtc.clientEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(localDtc.clientEmail) && <p className="text-[10px] text-rose-500 mt-0.5">Formato de e-mail inválido.</p>}
                         </div>
                       </div>
                     )}
@@ -2140,13 +2027,8 @@ function TransicaoPlaceholder() {
 
                   {/* Sub-seção 2: Equipe & Contatos */}
                   <div className="space-y-3">
-                    <div 
-                      className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors"
-                      onClick={() => toggleSection("ident-equipe")}
-                    >
-                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">
-                        2. Equipe de Transição & Contatos-Chave
-                      </span>
+                    <div className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors" onClick={() => toggleSection("ident-equipe")}>
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">2. Equipe de Transição & Contatos-Chave</span>
                       <Button type="button" variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
                         {collapsedSections["ident-equipe"] ? (
                           <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
@@ -2159,7 +2041,9 @@ function TransicaoPlaceholder() {
                       <div className="space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           <div className="space-y-1 flex flex-col justify-end">
-                            <Label htmlFor="responsible" className="text-[11px] font-bold mb-1">Implantador Responsável (DTC)</Label>
+                            <Label htmlFor="responsible" className="text-[11px] font-bold mb-1">
+                              Implantador Responsável (DTC)
+                            </Label>
                             <AutocompleteInput
                               value={localDtc.responsible}
                               onChange={(val) => handleFieldChange("responsible", val)}
@@ -2169,7 +2053,9 @@ function TransicaoPlaceholder() {
                             />
                           </div>
                           <div className="space-y-1 flex flex-col justify-end">
-                            <Label htmlFor="analystResponsible" className="text-[11px] font-bold mb-1">Responsável pelo pós implantação</Label>
+                            <Label htmlFor="analystResponsible" className="text-[11px] font-bold mb-1">
+                              Responsável pelo pós implantação
+                            </Label>
                             <AutocompleteInput
                               value={localDtc.analystResponsible}
                               onChange={(val) => handleFieldChange("analystResponsible", val)}
@@ -2181,7 +2067,9 @@ function TransicaoPlaceholder() {
                         </div>
 
                         <div className="space-y-1">
-                          <Label htmlFor="clientResponsible" className="text-[11px] font-bold">Responsável / Contato Principal (Cliente)</Label>
+                          <Label htmlFor="clientResponsible" className="text-[11px] font-bold">
+                            Responsável / Contato Principal (Cliente)
+                          </Label>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             <Input
                               id="clientResponsible"
@@ -2228,12 +2116,7 @@ function TransicaoPlaceholder() {
                               {localDtc && (
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      size="sm"
-                                      className="h-6.5 text-[10px] gap-1 border-emerald-500/20 text-emerald-600 hover:bg-emerald-500/10 font-bold"
-                                    >
+                                    <Button type="button" variant="outline" size="sm" className="h-6.5 text-[10px] gap-1 border-emerald-500/20 text-emerald-600 hover:bg-emerald-500/10 font-bold">
                                       <MessageSquare className="h-3 w-3" />
                                       Ações WhatsApp
                                     </Button>
@@ -2260,35 +2143,20 @@ function TransicaoPlaceholder() {
                                   </DropdownMenuContent>
                                 </DropdownMenu>
                               )}
-                              <Button
-                                type="button"
-                                onClick={addKeyUser}
-                                disabled={isFormDisabled}
-                                variant="outline"
-                                size="sm"
-                                className="h-6.5 text-[10px] gap-1 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 font-bold"
-                              >
+                              <Button type="button" onClick={addKeyUser} disabled={isFormDisabled} variant="outline" size="sm" className="h-6.5 text-[10px] gap-1 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 font-bold">
                                 <Plus className="h-3 w-3" />
                                 Adicionar Contato
                               </Button>
                             </div>
                           </div>
 
-                          {(!localDtc.keyUsersList || localDtc.keyUsersList.length === 0) ? (
-                            <p className="text-[11px] text-muted-foreground italic py-1.5 text-center bg-background/50 border border-dashed rounded-md">
-                              Nenhum contato-chave adicional. Clique em Adicionar Contato.
-                            </p>
+                          {!localDtc.keyUsersList || localDtc.keyUsersList.length === 0 ? (
+                            <p className="text-[11px] text-muted-foreground italic py-1.5 text-center bg-background/50 border border-dashed rounded-md">Nenhum contato-chave adicional. Clique em Adicionar Contato.</p>
                           ) : (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1.5">
                               {localDtc.keyUsersList.map((user, idx) => (
-                                <div key={idx} className="flex items-center gap-1.5 bg-background p-1.5 border rounded-md shadow-2xs">
-                                  <Input
-                                    value={user.name}
-                                    onChange={(e) => updateKeyUser(idx, "name", e.target.value)}
-                                    disabled={isFormDisabled}
-                                    placeholder="Nome"
-                                    className="border-muted/80 h-7 text-xs flex-1"
-                                  />
+                                <div key={idx} className="grid min-w-0 grid-cols-1 gap-2 rounded-md border bg-background p-2 shadow-2xs sm:flex sm:items-center sm:gap-1.5 sm:p-1.5">
+                                  <Input value={user.name} onChange={(e) => updateKeyUser(idx, "name", e.target.value)} disabled={isFormDisabled} placeholder="Nome" className="border-muted/80 h-7 text-xs flex-1" />
                                   <div className="relative flex items-center flex-1">
                                     <Input
                                       value={user.phone}
@@ -2335,21 +2203,15 @@ function TransicaoPlaceholder() {
             {/* TAB 2: INFRASTRUCTURE & ACCESS */}
             <TabsContent value="infra">
               <Card className="border-muted/60 shadow-sm">
-                <CardHeader>
+                <CardHeader className="p-4 sm:p-6">
                   <CardTitle className="text-base font-bold text-primary">Infraestrutura, Bancos & Acesso Remoto</CardTitle>
                   <CardDescription className="text-xs">Informações sobre servidores, bancos de dados, conexões de acesso e chamados.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  
+                <CardContent className="min-w-0 space-y-5 p-4 pt-0 sm:space-y-6 sm:p-6 sm:pt-0">
                   {/* Sub-seção 1: Controle de Chamados & Acessos Remotos */}
                   <div className="space-y-3">
-                    <div 
-                      className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors"
-                      onClick={() => toggleSection("infra-chamados")}
-                    >
-                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">
-                        1. Controle de Chamados & Acessos Remotos
-                      </span>
+                    <div className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors" onClick={() => toggleSection("infra-chamados")}>
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">1. Controle de Chamados & Acessos Remotos</span>
                       <Button type="button" variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
                         {collapsedSections["infra-chamados"] ? (
                           <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
@@ -2362,7 +2224,9 @@ function TransicaoPlaceholder() {
                       <div className="space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                           <div className="space-y-1.5">
-                            <Label htmlFor="supportCallNumber" className="text-[11px] font-bold">Número do Chamado Principal no 0800</Label>
+                            <Label htmlFor="supportCallNumber" className="text-[11px] font-bold">
+                              Número do Chamado Principal no 0800
+                            </Label>
                             <Input
                               id="supportCallNumber"
                               value={localDtc.supportCallNumber}
@@ -2372,40 +2236,51 @@ function TransicaoPlaceholder() {
                               placeholder="Ex: #58129"
                             />
                           </div>
-                          
+
                           {/* Status & Downloads Panel */}
                           <div className="space-y-1.5 border p-2.5 rounded-lg bg-muted/20 flex flex-col justify-between min-h-[76px] self-stretch">
                             <div>
-                              <Label className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground block">
-                                Status & Downloads de TI
-                              </Label>
+                              <Label className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground block">Status & Downloads de TI</Label>
                               <div className="flex items-center gap-1.5 mt-1">
-                                <div className={cn(
-                                  "h-2 w-2 rounded-full animate-pulse",
-                                  localDtc.postgresAccessData && (localDtc.remoteAccessList?.length || 0) > 0
-                                    ? "bg-emerald-500"
-                                    : "bg-amber-500"
-                                )} />
+                                <div className={cn("h-2 w-2 rounded-full animate-pulse", localDtc.postgresAccessData && (localDtc.remoteAccessList?.length || 0) > 0 ? "bg-emerald-500" : "bg-amber-500")} />
                                 <span className="text-[11px] font-bold text-foreground">
-                                  {localDtc.postgresAccessData && (localDtc.remoteAccessList?.length || 0) > 0
-                                    ? "Estrutura Pronta para Acesso"
-                                    : "Pendente: Preencha Acesso e Banco"}
+                                  {localDtc.postgresAccessData && (localDtc.remoteAccessList?.length || 0) > 0 ? "Estrutura Pronta para Acesso" : "Pendente: Preencha Acesso e Banco"}
                                 </span>
                               </div>
                             </div>
-                            
+
                             <div className="flex flex-wrap gap-1 items-center mt-2 border-t pt-2">
                               <span className="text-[9px] text-muted-foreground mr-1">Utilitários:</span>
-                              <a href="https://anydesk.com/download" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 text-[9px] font-bold text-primary hover:underline bg-background border px-1.5 py-0.5 rounded shadow-2xs">
+                              <a
+                                href="https://anydesk.com/download"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-0.5 text-[9px] font-bold text-primary hover:underline bg-background border px-1.5 py-0.5 rounded shadow-2xs"
+                              >
                                 AnyDesk <ExternalLink className="h-2 w-2" />
                               </a>
-                              <a href="https://rustdesk.com" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 text-[9px] font-bold text-primary hover:underline bg-background border px-1.5 py-0.5 rounded shadow-2xs">
+                              <a
+                                href="https://rustdesk.com"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-0.5 text-[9px] font-bold text-primary hover:underline bg-background border px-1.5 py-0.5 rounded shadow-2xs"
+                              >
                                 RustDesk <ExternalLink className="h-2 w-2" />
                               </a>
-                              <a href="https://www.teamviewer.com" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 text-[9px] font-bold text-primary hover:underline bg-background border px-1.5 py-0.5 rounded shadow-2xs">
+                              <a
+                                href="https://www.teamviewer.com"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-0.5 text-[9px] font-bold text-primary hover:underline bg-background border px-1.5 py-0.5 rounded shadow-2xs"
+                              >
                                 TeamViewer <ExternalLink className="h-2 w-2" />
                               </a>
-                              <a href="https://www.pgadmin.org/download/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 text-[9px] font-bold text-primary hover:underline bg-background border px-1.5 py-0.5 rounded shadow-2xs">
+                              <a
+                                href="https://www.pgadmin.org/download/"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-0.5 text-[9px] font-bold text-primary hover:underline bg-background border px-1.5 py-0.5 rounded shadow-2xs"
+                              >
                                 pgAdmin <ExternalLink className="h-2 w-2" />
                               </a>
                             </div>
@@ -2414,57 +2289,46 @@ function TransicaoPlaceholder() {
 
                         {/* Remote Access Connections Section */}
                         <div className="space-y-2 border p-3 rounded-lg bg-muted/10">
-                          <div className="flex items-center justify-between">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
                             <div className="space-y-0.5">
                               <Label className="text-[11px] font-bold">Acessos Remotos (AnyDesk / TeamViewer)</Label>
                               <p className="text-[9px] text-muted-foreground">Cadastre um ou mais acessos para a serventia.</p>
                             </div>
-                            <Button
-                              type="button"
-                              onClick={addRemoteAccess}
-                              disabled={isFormDisabled}
-                              variant="outline"
-                              size="sm"
-                              className="h-6.5 text-[10px] gap-1 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 font-bold"
-                            >
+                            <Button type="button" onClick={addRemoteAccess} disabled={isFormDisabled} variant="outline" size="sm" className="h-6.5 text-[10px] gap-1 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 font-bold">
                               <Plus className="h-3 w-3" />
                               Adicionar Acesso
                             </Button>
                           </div>
 
-                          {(!localDtc.remoteAccessList || localDtc.remoteAccessList.length === 0) ? (
-                            <p className="text-[11px] text-muted-foreground italic py-1.5 text-center bg-background/50 border border-dashed rounded-md">
-                              Nenhum acesso remoto cadastrado. Clique em Adicionar Acesso.
-                            </p>
+                          {!localDtc.remoteAccessList || localDtc.remoteAccessList.length === 0 ? (
+                            <p className="text-[11px] text-muted-foreground italic py-1.5 text-center bg-background/50 border border-dashed rounded-md">Nenhum acesso remoto cadastrado. Clique em Adicionar Acesso.</p>
                           ) : (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1.5">
                               {localDtc.remoteAccessList.map((access, idx) => (
-                                <div key={idx} className="flex items-center gap-1.5 bg-background p-1.5 border rounded-md shadow-2xs">
+                                <div key={idx} className="grid min-w-0 grid-cols-1 gap-2 rounded-md border bg-background p-2 shadow-2xs sm:flex sm:items-center sm:gap-1.5 sm:p-1.5">
                                   {/* System Select */}
-                                  <Select
-                                    value={access.system}
-                                    onValueChange={(val: any) => updateRemoteAccess(idx, "system", val)}
-                                    disabled={isFormDisabled}
-                                  >
-                                    <SelectTrigger className="w-28 h-7 text-xs border-muted/80 shrink-0">
+                                  <Select value={access.system} onValueChange={(val: any) => updateRemoteAccess(idx, "system", val)} disabled={isFormDisabled}>
+                                    <SelectTrigger className="h-9 w-full border-muted/80 text-xs sm:h-7 sm:w-28 sm:shrink-0">
                                       <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      <SelectItem value="AnyDesk" className="text-xs">AnyDesk</SelectItem>
-                                      <SelectItem value="TeamViewer" className="text-xs">TeamViewer</SelectItem>
-                                      <SelectItem value="RustDesk" className="text-xs">RustDesk</SelectItem>
-                                      <SelectItem value="Outro" className="text-xs">Outro</SelectItem>
+                                      <SelectItem value="AnyDesk" className="text-xs">
+                                        AnyDesk
+                                      </SelectItem>
+                                      <SelectItem value="TeamViewer" className="text-xs">
+                                        TeamViewer
+                                      </SelectItem>
+                                      <SelectItem value="RustDesk" className="text-xs">
+                                        RustDesk
+                                      </SelectItem>
+                                      <SelectItem value="Outro" className="text-xs">
+                                        Outro
+                                      </SelectItem>
                                     </SelectContent>
                                   </Select>
 
                                   {/* ID Input */}
-                                  <Input
-                                    value={access.id}
-                                    onChange={(e) => updateRemoteAccess(idx, "id", e.target.value)}
-                                    disabled={isFormDisabled}
-                                    placeholder="ID"
-                                    className="border-muted/80 h-7 text-xs flex-1"
-                                  />
+                                  <Input value={access.id} onChange={(e) => updateRemoteAccess(idx, "id", e.target.value)} disabled={isFormDisabled} placeholder="ID" className="border-muted/80 h-7 text-xs flex-1" />
 
                                   {/* Password Input with inline Copy */}
                                   <div className="relative flex items-center flex-1">
@@ -2509,7 +2373,9 @@ function TransicaoPlaceholder() {
                         {/* OS Credentials Section */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border p-3 rounded-lg bg-muted/10 mt-3 col-span-1 md:col-span-2">
                           <div className="space-y-1.5">
-                            <Label htmlFor="dtcSoLogin" className="text-[11px] font-bold">Usuário do Sistema Operacional (SO)</Label>
+                            <Label htmlFor="dtcSoLogin" className="text-[11px] font-bold">
+                              Usuário do Sistema Operacional (SO)
+                            </Label>
                             <Input
                               id="dtcSoLogin"
                               value={localDtc.soLogin || ""}
@@ -2519,9 +2385,11 @@ function TransicaoPlaceholder() {
                               placeholder="Ex: Administrator"
                             />
                           </div>
-                          
+
                           <div className="space-y-1.5">
-                            <Label htmlFor="dtcSoPassword" className="text-[11px] font-bold">Senha do Sistema Operacional (SO)</Label>
+                            <Label htmlFor="dtcSoPassword" className="text-[11px] font-bold">
+                              Senha do Sistema Operacional (SO)
+                            </Label>
                             <div className="relative flex items-center">
                               <Input
                                 id="dtcSoPassword"
@@ -2561,24 +2429,26 @@ function TransicaoPlaceholder() {
                           {/* Tipo de SO */}
                           <div className="space-y-1.5">
                             <Label className="text-[11px] font-bold">Sistema Operacional (SO)</Label>
-                            <Select
-                              value={localDtc.osType || ""}
-                              onValueChange={(val) => handleFieldChange("osType", val)}
-                              disabled={isFormDisabled}
-                            >
+                            <Select value={localDtc.osType || ""} onValueChange={(val) => handleFieldChange("osType", val)} disabled={isFormDisabled}>
                               <SelectTrigger className="w-full h-8 text-xs border-muted/80 bg-background">
                                 <SelectValue placeholder="Selecione o SO..." />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="Windows" className="text-xs">Windows</SelectItem>
-                                <SelectItem value="Linux" className="text-xs">Linux</SelectItem>
+                                <SelectItem value="Windows" className="text-xs">
+                                  Windows
+                                </SelectItem>
+                                <SelectItem value="Linux" className="text-xs">
+                                  Linux
+                                </SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
 
                           {/* Versão do SO */}
                           <div className="space-y-1.5">
-                            <Label htmlFor="dtcOsVersion" className="text-[11px] font-bold">Versão do Sistema Operacional</Label>
+                            <Label htmlFor="dtcOsVersion" className="text-[11px] font-bold">
+                              Versão do Sistema Operacional
+                            </Label>
                             <Input
                               id="dtcOsVersion"
                               value={localDtc.osVersion || ""}
@@ -2595,13 +2465,8 @@ function TransicaoPlaceholder() {
 
                   {/* Sub-seção 2: Banco de Dados PostgreSQL */}
                   <div className="space-y-3">
-                    <div 
-                      className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors"
-                      onClick={() => toggleSection("infra-banco")}
-                    >
-                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">
-                        2. Banco de Dados PostgreSQL
-                      </span>
+                    <div className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors" onClick={() => toggleSection("infra-banco")}>
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">2. Banco de Dados PostgreSQL</span>
                       <Button type="button" variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
                         {collapsedSections["infra-banco"] ? (
                           <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
@@ -2610,11 +2475,13 @@ function TransicaoPlaceholder() {
                         )}
                       </Button>
                     </div>
-                    
+
                     {!collapsedSections["infra-banco"] && (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start animate-in fade-in slide-in-from-top-1 duration-200">
                         <div className="space-y-1.5">
-                          <Label htmlFor="postgresVersion" className="text-[11px] font-bold">Versão do PostgreSQL</Label>
+                          <Label htmlFor="postgresVersion" className="text-[11px] font-bold">
+                            Versão do PostgreSQL
+                          </Label>
                           <Input
                             id="postgresVersion"
                             value={localDtc.postgresVersion}
@@ -2624,9 +2491,11 @@ function TransicaoPlaceholder() {
                             placeholder="Ex: PostgreSQL 17"
                           />
                         </div>
-                        
+
                         <div className="space-y-1.5">
-                          <Label htmlFor="postgresHost" className="text-[11px] font-bold">Local de Instalação (IP / Porta)</Label>
+                          <Label htmlFor="postgresHost" className="text-[11px] font-bold">
+                            Local de Instalação (IP / Porta)
+                          </Label>
                           <Input
                             id="postgresHost"
                             value={localDtc.postgresHost || ""}
@@ -2639,18 +2508,18 @@ function TransicaoPlaceholder() {
                             const validation = getIpValidationMessage(localDtc.postgresHost || "");
                             if (!validation) return null;
                             return (
-                              <span className={cn(
-                                "text-[10px] font-semibold mt-1 block",
-                                validation.isWarning ? "text-amber-500" : "text-emerald-600"
-                              )}>
-                                {validation.isWarning ? "⚠ " : "✓ "}{validation.msg}
+                              <span className={cn("text-[10px] font-semibold mt-1 block", validation.isWarning ? "text-amber-500" : "text-emerald-600")}>
+                                {validation.isWarning ? "⚠ " : "✓ "}
+                                {validation.msg}
                               </span>
                             );
                           })()}
                         </div>
 
                         <div className="space-y-1.5">
-                          <Label htmlFor="postgresUser" className="text-[11px] font-bold">Usuário do Banco</Label>
+                          <Label htmlFor="postgresUser" className="text-[11px] font-bold">
+                            Usuário do Banco
+                          </Label>
                           <Input
                             id="postgresUser"
                             value={localDtc.postgresUser || ""}
@@ -2662,7 +2531,9 @@ function TransicaoPlaceholder() {
                         </div>
 
                         <div className="space-y-1.5">
-                          <Label htmlFor="postgresPassword" className="text-[11px] font-bold">Senha do Banco</Label>
+                          <Label htmlFor="postgresPassword" className="text-[11px] font-bold">
+                            Senha do Banco
+                          </Label>
                           <div className="relative flex items-center">
                             <Input
                               id="postgresPassword"
@@ -2704,13 +2575,8 @@ function TransicaoPlaceholder() {
 
                   {/* Sub-seção 3: Sistemas Instalados & Versões */}
                   <div className="space-y-3">
-                    <div 
-                      className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors"
-                      onClick={() => toggleSection("infra-sistemas")}
-                    >
-                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">
-                        3. Sistemas Instalados & Versões
-                      </span>
+                    <div className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors" onClick={() => toggleSection("infra-sistemas")}>
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">3. Sistemas Instalados & Versões</span>
                       <Button type="button" variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
                         {collapsedSections["infra-sistemas"] ? (
                           <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
@@ -2719,12 +2585,14 @@ function TransicaoPlaceholder() {
                         )}
                       </Button>
                     </div>
-                    
+
                     {!collapsedSections["infra-sistemas"] && (
                       <div className="space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
                         {/* Systems Installed (Badge pills select) */}
                         <div className="space-y-1.5">
-                          <Label htmlFor="systemsInstalled" className="text-[11px] font-bold">Sistemas Instalados</Label>
+                          <Label htmlFor="systemsInstalled" className="text-[11px] font-bold">
+                            Sistemas Instalados
+                          </Label>
                           <Input
                             id="systemsInstalled"
                             value={localDtc.systemsInstalled}
@@ -2734,9 +2602,12 @@ function TransicaoPlaceholder() {
                             placeholder="Ex: Orion TN, LCW, SGA"
                           />
                           <div className="flex flex-wrap gap-1 mt-1">
-                            {ALL_SYSTEMS.map(sys => {
+                            {ALL_SYSTEMS.map((sys) => {
                               const isSelected = localDtc.systemsInstalled
-                                ? localDtc.systemsInstalled.split(",").map(s => s.trim()).includes(sys)
+                                ? localDtc.systemsInstalled
+                                    .split(",")
+                                    .map((s) => s.trim())
+                                    .includes(sys)
                                 : false;
                               return (
                                 <Badge
@@ -2744,9 +2615,7 @@ function TransicaoPlaceholder() {
                                   variant={isSelected ? "default" : "outline"}
                                   className={cn(
                                     "cursor-pointer text-[10px] px-2 py-0.5 select-none transition-all",
-                                    isSelected 
-                                      ? "bg-primary text-primary-foreground hover:bg-primary/95" 
-                                      : "border-muted-foreground/30 text-muted-foreground hover:bg-muted"
+                                    isSelected ? "bg-primary text-primary-foreground hover:bg-primary/95" : "border-muted-foreground/30 text-muted-foreground hover:bg-muted",
                                   )}
                                   onClick={() => !isFormDisabled && toggleSystemInstalled(sys)}
                                 >
@@ -2760,7 +2629,10 @@ function TransicaoPlaceholder() {
                         {/* Dynamic System Versions Grid */}
                         {(() => {
                           const selectedSystemsList = localDtc.systemsInstalled
-                            ? localDtc.systemsInstalled.split(",").map(s => s.trim()).filter(Boolean)
+                            ? localDtc.systemsInstalled
+                                .split(",")
+                                .map((s) => s.trim())
+                                .filter(Boolean)
                             : [];
                           if (selectedSystemsList.length === 0) return null;
                           return (
@@ -2797,13 +2669,8 @@ function TransicaoPlaceholder() {
 
                   {/* Sub-seção 4: Conversão de Dados */}
                   <div className="space-y-3">
-                    <div 
-                      className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors"
-                      onClick={() => toggleSection("infra-conversao")}
-                    >
-                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">
-                        4. Conversão de Dados
-                      </span>
+                    <div className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors" onClick={() => toggleSection("infra-conversao")}>
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">4. Conversão de Dados</span>
                       <Button type="button" variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
                         {collapsedSections["infra-conversao"] ? (
                           <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
@@ -2812,32 +2679,34 @@ function TransicaoPlaceholder() {
                         )}
                       </Button>
                     </div>
-                    
+
                     {!collapsedSections["infra-conversao"] && (
                       <div className="border p-3 rounded-lg bg-muted/20 space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
                           <div className="space-y-0.5">
                             <Label className="text-[11px] font-bold">Houve Conversão de Dados?</Label>
                             <p className="text-[10px] text-muted-foreground">Marque se os dados de sistemas anteriores foram convertidos.</p>
                           </div>
-                          <Select
-                            value={localDtc.hadConversion ? "yes" : "no"}
-                            onValueChange={(val) => handleFieldChange("hadConversion", val === "yes")}
-                            disabled={isFormDisabled}
-                          >
+                          <Select value={localDtc.hadConversion ? "yes" : "no"} onValueChange={(val) => handleFieldChange("hadConversion", val === "yes")} disabled={isFormDisabled}>
                             <SelectTrigger className="w-24 h-7 text-xs border-muted/80">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="yes" className="text-xs">Sim</SelectItem>
-                              <SelectItem value="no" className="text-xs">Não</SelectItem>
+                              <SelectItem value="yes" className="text-xs">
+                                Sim
+                              </SelectItem>
+                              <SelectItem value="no" className="text-xs">
+                                Não
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
 
                         {localDtc.hadConversion && (
                           <div className="space-y-1 animate-in fade-in slide-in-from-top-1 duration-200">
-                            <Label htmlFor="convertedData" className="text-[11px] font-bold">Dados Convertidos (Tabelas / Escopos)</Label>
+                            <Label htmlFor="convertedData" className="text-[11px] font-bold">
+                              Dados Convertidos (Tabelas / Escopos)
+                            </Label>
                             <Textarea
                               id="convertedData"
                               value={localDtc.convertedData}
@@ -2858,21 +2727,15 @@ function TransicaoPlaceholder() {
             {/* TAB 3: IMPlANTATION PROCESS & RECAP */}
             <TabsContent value="processo">
               <Card className="border-muted/60 shadow-sm">
-                <CardHeader>
+                <CardHeader className="p-4 sm:p-6">
                   <CardTitle className="text-base font-bold text-primary">Relato do Processo & Colaboradores</CardTitle>
                   <CardDescription className="text-xs">Observações sobre como ocorreu o treinamento, implantação e detalhes operacionais importantes.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  
+                <CardContent className="min-w-0 space-y-5 p-4 pt-0 sm:space-y-6 sm:p-6 sm:pt-0">
                   {/* Sub-seção 1: Processo de Implantação */}
                   <div className="space-y-3">
-                    <div 
-                      className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors"
-                      onClick={() => toggleSection("processo-implantacao")}
-                    >
-                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">
-                        1. Processo de Implantação
-                      </span>
+                    <div className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors" onClick={() => toggleSection("processo-implantacao")}>
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">1. Processo de Implantação</span>
                       <Button type="button" variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
                         {collapsedSections["processo-implantacao"] ? (
                           <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
@@ -2881,11 +2744,13 @@ function TransicaoPlaceholder() {
                         )}
                       </Button>
                     </div>
-                    
+
                     {!collapsedSections["processo-implantacao"] && (
                       <div className="space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
                         <div className="space-y-1.5">
-                          <Label htmlFor="implantationProcess" className="text-xs font-bold text-muted-foreground">Relato Geral do Processo de Implantação</Label>
+                          <Label htmlFor="implantationProcess" className="text-xs font-bold text-muted-foreground">
+                            Relato Geral do Processo de Implantação
+                          </Label>
                           <RichTextEditor
                             content={localDtc.implantationProcess}
                             onChange={(c) => handleFieldChange("implantationProcess", c)}
@@ -2900,9 +2765,7 @@ function TransicaoPlaceholder() {
                             const isValid = count >= 50;
                             return (
                               <div className="flex justify-between items-center text-[10px] mt-0.5 pb-2">
-                                <span className={cn("font-semibold", isValid ? "text-emerald-600" : "text-amber-500")}>
-                                  {isValid ? "✓ Relato completo" : "⚠ Relato muito curto (mínimo 50 caracteres)"}
-                                </span>
+                                <span className={cn("font-semibold", isValid ? "text-emerald-600" : "text-amber-500")}>{isValid ? "✓ Relato completo" : "⚠ Relato muito curto (mínimo 50 caracteres)"}</span>
                                 <span className="text-muted-foreground">{count} caracteres</span>
                               </div>
                             );
@@ -2911,42 +2774,27 @@ function TransicaoPlaceholder() {
 
                         {/* Daily Activity Logs */}
                         <div className="pt-3 border-t space-y-2">
-                          <div className="flex items-center justify-between">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
                             <div className="space-y-0.5">
                               <Label className="text-[11px] font-bold text-muted-foreground">Relatos Diários de Atividades</Label>
                               <p className="text-[9px] text-muted-foreground">Registre o que foi feito em datas específicas da implantação.</p>
                             </div>
-                            <Button
-                              type="button"
-                              onClick={addImplantationLog}
-                              disabled={isFormDisabled}
-                              variant="outline"
-                              size="sm"
-                              className="h-6.5 text-[10px] gap-1 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 font-bold"
-                            >
+                            <Button type="button" onClick={addImplantationLog} disabled={isFormDisabled} variant="outline" size="sm" className="h-6.5 text-[10px] gap-1 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 font-bold">
                               <Plus className="h-3 w-3" />
                               Adicionar Relato por Data
                             </Button>
                           </div>
 
-                          {(!localDtc.implantationProcessLogs || localDtc.implantationProcessLogs.length === 0) ? (
-                            <p className="text-[11px] text-muted-foreground italic py-1.5 text-center bg-background/50 border border-dashed rounded-md">
-                              Nenhum relato diário cadastrado. Clique em Adicionar Relato por Data.
-                            </p>
+                          {!localDtc.implantationProcessLogs || localDtc.implantationProcessLogs.length === 0 ? (
+                            <p className="text-[11px] text-muted-foreground italic py-1.5 text-center bg-background/50 border border-dashed rounded-md">Nenhum relato diário cadastrado. Clique em Adicionar Relato por Data.</p>
                           ) : (
                             <div className="space-y-3">
                               {localDtc.implantationProcessLogs.map((log, idx) => (
                                 <div key={idx} className="bg-background p-3 border rounded-md shadow-2xs space-y-2 relative">
-                                  <div className="flex items-center justify-between">
+                                  <div className="flex flex-wrap items-center justify-between gap-2">
                                     <div className="flex items-center gap-2">
                                       <Label className="text-[10px] font-bold text-muted-foreground uppercase">Data da Atividade:</Label>
-                                      <Input
-                                        type="date"
-                                        value={log.date}
-                                        onChange={(e) => updateImplantationLog(idx, "date", e.target.value)}
-                                        disabled={isFormDisabled}
-                                        className="border-muted/80 h-7 text-xs w-36"
-                                      />
+                                      <Input type="date" value={log.date} onChange={(e) => updateImplantationLog(idx, "date", e.target.value)} disabled={isFormDisabled} className="h-9 w-full border-muted/80 text-xs sm:h-7 sm:w-36" />
                                     </div>
                                     <Button
                                       type="button"
@@ -2962,21 +2810,13 @@ function TransicaoPlaceholder() {
                                   </div>
 
                                   <div className="space-y-1">
-                                    <div className="flex items-center justify-between">
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
                                       <Label className="text-[10px] font-bold text-muted-foreground uppercase">Atividades Realizadas:</Label>
                                       {!isFormDisabled && selectedProjectId && (
                                         <VoiceDictationButton
                                           projectId={selectedProjectId}
                                           requestedBy={fullName}
-                                          onApply={(text, mode) =>
-                                            updateImplantationLog(
-                                              idx,
-                                              "description",
-                                              mode === "append" && log.description
-                                                ? `${log.description}\n\n${text}`
-                                                : text
-                                            )
-                                          }
+                                          onApply={(text, mode) => updateImplantationLog(idx, "description", mode === "append" && log.description ? `${log.description}\n\n${text}` : text)}
                                         />
                                       )}
                                     </div>
@@ -3000,13 +2840,8 @@ function TransicaoPlaceholder() {
 
                   {/* Sub-seção 2: Colaboradores da Serventia */}
                   <div className="space-y-3">
-                    <div 
-                      className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors"
-                      onClick={() => toggleSection("processo-colaboradores")}
-                    >
-                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">
-                        2. Principais colaboradores da serventia
-                      </span>
+                    <div className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors" onClick={() => toggleSection("processo-colaboradores")}>
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">2. Principais colaboradores da serventia</span>
                       <Button type="button" variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
                         {collapsedSections["processo-colaboradores"] ? (
                           <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
@@ -3015,77 +2850,73 @@ function TransicaoPlaceholder() {
                         )}
                       </Button>
                     </div>
-                    
+
                     {!collapsedSections["processo-colaboradores"] && (
                       <div className="space-y-2 border p-3 rounded-lg bg-muted/10 animate-in fade-in slide-in-from-top-1 duration-200">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
                           <div className="space-y-0.5">
                             <Label className="text-[11px] font-bold">Principais colaboradores cadastrados</Label>
                             <p className="text-[9px] text-muted-foreground">Cadastre os principais contatos operacionais por setor.</p>
                           </div>
-                          <Button
-                            type="button"
-                            onClick={addEmployee}
-                            disabled={isFormDisabled}
-                            variant="outline"
-                            size="sm"
-                            className="h-6.5 text-[10px] gap-1 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 font-bold"
-                          >
+                          <Button type="button" onClick={addEmployee} disabled={isFormDisabled} variant="outline" size="sm" className="h-6.5 text-[10px] gap-1 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 font-bold">
                             <Plus className="h-3 w-3" />
                             Adicionar Funcionário
                           </Button>
                         </div>
 
-                        {(!localDtc.employeesList || localDtc.employeesList.length === 0) ? (
-                          <p className="text-[11px] text-muted-foreground italic py-1.5 text-center bg-background/50 border border-dashed rounded-md mt-1">
-                            Nenhum colaborador cadastrado. Clique em Adicionar Funcionário.
-                          </p>
+                        {!localDtc.employeesList || localDtc.employeesList.length === 0 ? (
+                          <p className="text-[11px] text-muted-foreground italic py-1.5 text-center bg-background/50 border border-dashed rounded-md mt-1">Nenhum colaborador cadastrado. Clique em Adicionar Funcionário.</p>
                         ) : (
                           <div className="grid grid-cols-1 gap-2 mt-1.5">
                             {localDtc.employeesList.map((emp, idx) => (
-                              <div key={idx} className="flex items-center gap-1.5 bg-background p-1.5 border rounded-md shadow-2xs">
+                              <div key={idx} className="grid min-w-0 grid-cols-1 gap-2 rounded-md border bg-background p-2 shadow-2xs sm:flex sm:items-center sm:gap-1.5 sm:p-1.5">
                                 {/* Name Input */}
-                                <Input
-                                  value={emp.name}
-                                  onChange={(e) => updateEmployee(idx, "name", e.target.value)}
-                                  disabled={isFormDisabled}
-                                  placeholder="Nome do Colaborador"
-                                  className="border-muted/80 h-7 text-xs flex-[4]"
-                                
-                                />
+                                <Input value={emp.name} onChange={(e) => updateEmployee(idx, "name", e.target.value)} disabled={isFormDisabled} placeholder="Nome do Colaborador" className="border-muted/80 h-7 text-xs flex-[4]" />
 
                                 {/* Department Select dropdown */}
-                                <Select
-                                  value={emp.department}
-                                  onValueChange={(val) => updateEmployee(idx, "department", val)}
-                                  disabled={isFormDisabled}
-                                >
-                                  <SelectTrigger className="w-24 h-7 text-[10px] border-muted/80 shrink-0">
+                                <Select value={emp.department} onValueChange={(val) => updateEmployee(idx, "department", val)} disabled={isFormDisabled}>
+                                  <SelectTrigger className="h-9 w-full border-muted/80 text-[10px] sm:h-7 sm:w-24 sm:shrink-0">
                                     <SelectValue placeholder="Setor" />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="Notas" className="text-xs">Notas</SelectItem>
-                                    <SelectItem value="Firmas" className="text-xs">Firmas</SelectItem>
-                                    <SelectItem value="Recepção / Triagem" className="text-xs">Recepção/Triagem</SelectItem>
-                                    <SelectItem value="Protesto" className="text-xs">Protesto</SelectItem>
-                                    <SelectItem value="Registro Civil" className="text-xs">R. Civil</SelectItem>
-                                    <SelectItem value="Registro de Imóveis" className="text-xs">R. Imóveis</SelectItem>
-                                    <SelectItem value="RTD / PJ" className="text-xs">RTD/PJ</SelectItem>
-                                    <SelectItem value="Administrativo" className="text-xs">Adm</SelectItem>
-                                    <SelectItem value="Financeiro" className="text-xs">Financeiro</SelectItem>
-                                    <SelectItem value="TI / Suporte" className="text-xs">TI</SelectItem>
-                                    <SelectItem value="Outro" className="text-xs">Outro</SelectItem>
+                                    <SelectItem value="Notas" className="text-xs">
+                                      Notas
+                                    </SelectItem>
+                                    <SelectItem value="Firmas" className="text-xs">
+                                      Firmas
+                                    </SelectItem>
+                                    <SelectItem value="Recepção / Triagem" className="text-xs">
+                                      Recepção/Triagem
+                                    </SelectItem>
+                                    <SelectItem value="Protesto" className="text-xs">
+                                      Protesto
+                                    </SelectItem>
+                                    <SelectItem value="Registro Civil" className="text-xs">
+                                      R. Civil
+                                    </SelectItem>
+                                    <SelectItem value="Registro de Imóveis" className="text-xs">
+                                      R. Imóveis
+                                    </SelectItem>
+                                    <SelectItem value="RTD / PJ" className="text-xs">
+                                      RTD/PJ
+                                    </SelectItem>
+                                    <SelectItem value="Administrativo" className="text-xs">
+                                      Adm
+                                    </SelectItem>
+                                    <SelectItem value="Financeiro" className="text-xs">
+                                      Financeiro
+                                    </SelectItem>
+                                    <SelectItem value="TI / Suporte" className="text-xs">
+                                      TI
+                                    </SelectItem>
+                                    <SelectItem value="Outro" className="text-xs">
+                                      Outro
+                                    </SelectItem>
                                   </SelectContent>
                                 </Select>
 
                                 {/* Role / Office Input */}
-                                <Input
-                                  value={emp.role}
-                                  onChange={(e) => updateEmployee(idx, "role", e.target.value)}
-                                  disabled={isFormDisabled}
-                                  placeholder="Função (Ex: Escrevente)"
-                                  className="border-muted/80 h-7 text-xs flex-1"
-                                />
+                                <Input value={emp.role} onChange={(e) => updateEmployee(idx, "role", e.target.value)} disabled={isFormDisabled} placeholder="Função (Ex: Escrevente)" className="border-muted/80 h-7 text-xs flex-1" />
 
                                 {/* Remove Button */}
                                 <Button
@@ -3108,13 +2939,8 @@ function TransicaoPlaceholder() {
 
                   {/* Sub-seção 3: Ganhos Operacionais */}
                   <div className="space-y-3">
-                    <div
-                      className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors"
-                      onClick={() => toggleSection("processo-ganhos")}
-                    >
-                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">
-                        3. Ganhos Operacionais
-                      </span>
+                    <div className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors" onClick={() => toggleSection("processo-ganhos")}>
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">3. Ganhos Operacionais</span>
                       <Button type="button" variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
                         {collapsedSections["processo-ganhos"] ? (
                           <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
@@ -3126,28 +2952,19 @@ function TransicaoPlaceholder() {
 
                     {!collapsedSections["processo-ganhos"] && (
                       <div className="space-y-2 border p-3 rounded-lg bg-muted/10 animate-in fade-in slide-in-from-top-1 duration-200">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
                           <div className="space-y-0.5">
                             <Label className="text-[11px] font-bold">Ganhos operacionais implementados</Label>
                             <p className="text-[9px] text-muted-foreground">Registre os ganhos e melhorias operacionais que foram implementados durante a implantação.</p>
                           </div>
-                          <Button
-                            type="button"
-                            onClick={addImplantationGain}
-                            disabled={isFormDisabled}
-                            variant="outline"
-                            size="sm"
-                            className="h-6.5 text-[10px] gap-1 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 font-bold"
-                          >
+                          <Button type="button" onClick={addImplantationGain} disabled={isFormDisabled} variant="outline" size="sm" className="h-6.5 text-[10px] gap-1 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 font-bold">
                             <Plus className="h-3 w-3" />
                             Adicionar Ganho
                           </Button>
                         </div>
 
-                        {(!localDtc.implantationGainsList || localDtc.implantationGainsList.length === 0) ? (
-                          <p className="text-[11px] text-muted-foreground italic py-1.5 text-center bg-background/50 border border-dashed rounded-md mt-1">
-                            Nenhum ganho cadastrado. Clique em Adicionar Ganho.
-                          </p>
+                        {!localDtc.implantationGainsList || localDtc.implantationGainsList.length === 0 ? (
+                          <p className="text-[11px] text-muted-foreground italic py-1.5 text-center bg-background/50 border border-dashed rounded-md mt-1">Nenhum ganho cadastrado. Clique em Adicionar Ganho.</p>
                         ) : (
                           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleGainDragEnd}>
                             <SortableContext items={(localDtc.implantationGainsList ?? []).map((_, i) => `gain-${i}`)} strategy={verticalListSortingStrategy}>
@@ -3169,75 +2986,110 @@ function TransicaoPlaceholder() {
                                             className="border-muted/80 h-8 text-xs w-full font-medium"
                                           />
                                         </div>
-                                {/* Linha 2: Produto + Setor + Delete */}
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <Select
-                                    value={gain.product || ""}
-                                    onValueChange={(val) => updateImplantationGain(idx, "product", val)}
-                                    disabled={isFormDisabled}
-                                  >
-                                    <SelectTrigger className="w-40 h-8 text-[11px] border-muted/80 shrink-0">
-                                      <SelectValue placeholder="Produto" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="Orion TN" className="text-xs">Orion TN</SelectItem>
-                                      <SelectItem value="Orion PRO" className="text-xs">Orion PRO</SelectItem>
-                                      <SelectItem value="Orion REG" className="text-xs">Orion REG</SelectItem>
-                                      <SelectItem value="Modelos TN" className="text-xs">Modelos TN</SelectItem>
-                                      <SelectItem value="LCW" className="text-xs">LCW</SelectItem>
-                                      <SelectItem value="SGA" className="text-xs">SGA</SelectItem>
-                                      <SelectItem value="On Hand" className="text-xs">On Hand</SelectItem>
-                                      <SelectItem value="Orion GED" className="text-xs">Orion GED</SelectItem>
-                                      <SelectItem value="Library" className="text-xs">Library</SelectItem>
-                                      <SelectItem value="e-Recepção" className="text-xs">e-Recepção</SelectItem>
-                                      <SelectItem value="e-Qualificação" className="text-xs">e-Qualificação</SelectItem>
-                                      <SelectItem value="Cartflow" className="text-xs">Cartflow</SelectItem>
-                                      <SelectItem value="Outro" className="text-xs">Outro</SelectItem>
-                                    </SelectContent>
-                                  </Select>
+                                        {/* Linha 2: Produto + Setor + Delete */}
+                                        <div className="flex flex-wrap items-center gap-2">
+                                          <Select value={gain.product || ""} onValueChange={(val) => updateImplantationGain(idx, "product", val)} disabled={isFormDisabled}>
+                                            <SelectTrigger className="h-9 w-full border-muted/80 text-[11px] sm:h-8 sm:w-40 sm:shrink-0">
+                                              <SelectValue placeholder="Produto" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="Orion TN" className="text-xs">
+                                                Orion TN
+                                              </SelectItem>
+                                              <SelectItem value="Orion PRO" className="text-xs">
+                                                Orion PRO
+                                              </SelectItem>
+                                              <SelectItem value="Orion REG" className="text-xs">
+                                                Orion REG
+                                              </SelectItem>
+                                              <SelectItem value="Modelos TN" className="text-xs">
+                                                Modelos TN
+                                              </SelectItem>
+                                              <SelectItem value="LCW" className="text-xs">
+                                                LCW
+                                              </SelectItem>
+                                              <SelectItem value="SGA" className="text-xs">
+                                                SGA
+                                              </SelectItem>
+                                              <SelectItem value="On Hand" className="text-xs">
+                                                On Hand
+                                              </SelectItem>
+                                              <SelectItem value="Orion GED" className="text-xs">
+                                                Orion GED
+                                              </SelectItem>
+                                              <SelectItem value="Library" className="text-xs">
+                                                Library
+                                              </SelectItem>
+                                              <SelectItem value="e-Recepção" className="text-xs">
+                                                e-Recepção
+                                              </SelectItem>
+                                              <SelectItem value="e-Qualificação" className="text-xs">
+                                                e-Qualificação
+                                              </SelectItem>
+                                              <SelectItem value="Cartflow" className="text-xs">
+                                                Cartflow
+                                              </SelectItem>
+                                              <SelectItem value="Outro" className="text-xs">
+                                                Outro
+                                              </SelectItem>
+                                            </SelectContent>
+                                          </Select>
 
-                                  <Select
-                                    value={gain.department}
-                                    onValueChange={(val) => updateImplantationGain(idx, "department", val)}
-                                    disabled={isFormDisabled}
-                                  >
-                                    <SelectTrigger className="w-36 h-8 text-[11px] border-muted/80 shrink-0">
-                                      <SelectValue placeholder="Setor" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="Notas" className="text-xs">Notas</SelectItem>
-                                      <SelectItem value="Firmas" className="text-xs">Firmas</SelectItem>
-                                      <SelectItem value="Recepção / Triagem" className="text-xs">Recepção/Triagem</SelectItem>
-                                      <SelectItem value="Protesto" className="text-xs">Protesto</SelectItem>
-                                      <SelectItem value="Registro Civil" className="text-xs">R. Civil</SelectItem>
-                                      <SelectItem value="Registro de Imóveis" className="text-xs">R. Imóveis</SelectItem>
-                                      <SelectItem value="RTD / PJ" className="text-xs">RTD/PJ</SelectItem>
-                                      <SelectItem value="Administrativo" className="text-xs">Adm</SelectItem>
-                                      <SelectItem value="Financeiro" className="text-xs">Financeiro</SelectItem>
-                                      <SelectItem value="TI / Suporte" className="text-xs">TI</SelectItem>
-                                      <SelectItem value="Outro" className="text-xs">Outro</SelectItem>
-                                    </SelectContent>
-                                  </Select>
+                                          <Select value={gain.department} onValueChange={(val) => updateImplantationGain(idx, "department", val)} disabled={isFormDisabled}>
+                                            <SelectTrigger className="h-9 w-full border-muted/80 text-[11px] sm:h-8 sm:w-36 sm:shrink-0">
+                                              <SelectValue placeholder="Setor" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="Notas" className="text-xs">
+                                                Notas
+                                              </SelectItem>
+                                              <SelectItem value="Firmas" className="text-xs">
+                                                Firmas
+                                              </SelectItem>
+                                              <SelectItem value="Recepção / Triagem" className="text-xs">
+                                                Recepção/Triagem
+                                              </SelectItem>
+                                              <SelectItem value="Protesto" className="text-xs">
+                                                Protesto
+                                              </SelectItem>
+                                              <SelectItem value="Registro Civil" className="text-xs">
+                                                R. Civil
+                                              </SelectItem>
+                                              <SelectItem value="Registro de Imóveis" className="text-xs">
+                                                R. Imóveis
+                                              </SelectItem>
+                                              <SelectItem value="RTD / PJ" className="text-xs">
+                                                RTD/PJ
+                                              </SelectItem>
+                                              <SelectItem value="Administrativo" className="text-xs">
+                                                Adm
+                                              </SelectItem>
+                                              <SelectItem value="Financeiro" className="text-xs">
+                                                Financeiro
+                                              </SelectItem>
+                                              <SelectItem value="TI / Suporte" className="text-xs">
+                                                TI
+                                              </SelectItem>
+                                              <SelectItem value="Outro" className="text-xs">
+                                                Outro
+                                              </SelectItem>
+                                            </SelectContent>
+                                          </Select>
 
-                                  <Button
-                                    type="button"
-                                    onClick={() => removeImplantationGain(idx)}
-                                    disabled={isFormDisabled}
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-full shrink-0 ml-auto"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </div>
+                                          <Button
+                                            type="button"
+                                            onClick={() => removeImplantationGain(idx)}
+                                            disabled={isFormDisabled}
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-full shrink-0 ml-auto"
+                                          >
+                                            <Trash2 className="h-4 w-4" />
+                                          </Button>
+                                        </div>
 
                                         {/* Linha 3: Descrição com RichTextEditor */}
-                                        <RichTextEditor
-                                          content={gain.description}
-                                          onChange={(c) => updateImplantationGain(idx, "description", c)}
-                                          placeholder="Descreva o ganho operacional implementado..."
-                                          editable={!isFormDisabled}
-                                        />
+                                        <RichTextEditor content={gain.description} onChange={(c) => updateImplantationGain(idx, "description", c)} placeholder="Descreva o ganho operacional implementado..." editable={!isFormDisabled} />
                                       </div>
                                     )}
                                   </SortableItem>
@@ -3252,13 +3104,8 @@ function TransicaoPlaceholder() {
 
                   {/* Sub-seção 4: Pendências da Implantação */}
                   <div className="space-y-3">
-                    <div 
-                      className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors"
-                      onClick={() => toggleSection("processo-pendencias")}
-                    >
-                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">
-                        4. Pendências da Implantação
-                      </span>
+                    <div className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors" onClick={() => toggleSection("processo-pendencias")}>
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">4. Pendências da Implantação</span>
                       <Button type="button" variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
                         {collapsedSections["processo-pendencias"] ? (
                           <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
@@ -3267,31 +3114,22 @@ function TransicaoPlaceholder() {
                         )}
                       </Button>
                     </div>
-                    
+
                     {!collapsedSections["processo-pendencias"] && (
                       <div className="space-y-2 border p-3 rounded-lg bg-muted/10 animate-in fade-in slide-in-from-top-1 duration-200">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
                           <div className="space-y-0.5">
                             <Label className="text-[11px] font-bold">Pendências registradas na implantação</Label>
                             <p className="text-[9px] text-muted-foreground">Cadastre pendências internas identificadas durante o processo.</p>
                           </div>
-                          <Button
-                            type="button"
-                            onClick={addImplantationPending}
-                            disabled={isFormDisabled}
-                            variant="outline"
-                            size="sm"
-                            className="h-6.5 text-[10px] gap-1 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 font-bold"
-                          >
+                          <Button type="button" onClick={addImplantationPending} disabled={isFormDisabled} variant="outline" size="sm" className="h-6.5 text-[10px] gap-1 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 font-bold">
                             <Plus className="h-3 w-3" />
                             Adicionar Pendência
                           </Button>
                         </div>
 
-                        {(!localDtc.implantationPendingList || localDtc.implantationPendingList.length === 0) ? (
-                          <p className="text-[11px] text-muted-foreground italic py-1.5 text-center bg-background/50 border border-dashed rounded-md mt-1">
-                            Nenhuma pendência cadastrada. Clique em Adicionar Pendência.
-                          </p>
+                        {!localDtc.implantationPendingList || localDtc.implantationPendingList.length === 0 ? (
+                          <p className="text-[11px] text-muted-foreground italic py-1.5 text-center bg-background/50 border border-dashed rounded-md mt-1">Nenhuma pendência cadastrada. Clique em Adicionar Pendência.</p>
                         ) : (
                           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handlePendingDragEnd}>
                             <SortableContext items={(localDtc.implantationPendingList ?? []).map((_, i) => `pend-${i}`)} strategy={verticalListSortingStrategy}>
@@ -3319,83 +3157,125 @@ function TransicaoPlaceholder() {
                                         {/* Controls Row (Product, Sector, Status, Responsibility, Delete) */}
                                         <div className="flex flex-wrap items-center gap-2">
                                           {/* Product Select dropdown */}
-                                          <Select
-                                            value={pending.product}
-                                            onValueChange={(val) => updateImplantationPending(idx, "product", val)}
-                                            disabled={isFormDisabled}
-                                          >
-                                            <SelectTrigger className="w-40 h-8 text-[11px] border-muted/80 shrink-0">
+                                          <Select value={pending.product} onValueChange={(val) => updateImplantationPending(idx, "product", val)} disabled={isFormDisabled}>
+                                            <SelectTrigger className="h-9 w-full border-muted/80 text-[11px] sm:h-8 sm:w-40 sm:shrink-0">
                                               <SelectValue placeholder="Produto" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                              <SelectItem value="Orion TN" className="text-xs">Orion TN</SelectItem>
-                                              <SelectItem value="Orion PRO" className="text-xs">Orion PRO</SelectItem>
-                                              <SelectItem value="Orion REG" className="text-xs">Orion REG</SelectItem>
-                                              <SelectItem value="Modelos TN" className="text-xs">Modelos TN</SelectItem>
-                                              <SelectItem value="LCW" className="text-xs">LCW</SelectItem>
-                                              <SelectItem value="SGA" className="text-xs">SGA</SelectItem>
-                                              <SelectItem value="On Hand" className="text-xs">On Hand</SelectItem>
-                                              <SelectItem value="Orion GED" className="text-xs">Orion GED</SelectItem>
-                                              <SelectItem value="Library" className="text-xs">Library</SelectItem>
-                                              <SelectItem value="e-Recepção" className="text-xs">e-Recepção</SelectItem>
-                                              <SelectItem value="e-Qualificação" className="text-xs">e-Qualificação</SelectItem>
-                                              <SelectItem value="Cartflow" className="text-xs">Cartflow</SelectItem>
-                                              <SelectItem value="Outro" className="text-xs">Outro</SelectItem>
+                                              <SelectItem value="Orion TN" className="text-xs">
+                                                Orion TN
+                                              </SelectItem>
+                                              <SelectItem value="Orion PRO" className="text-xs">
+                                                Orion PRO
+                                              </SelectItem>
+                                              <SelectItem value="Orion REG" className="text-xs">
+                                                Orion REG
+                                              </SelectItem>
+                                              <SelectItem value="Modelos TN" className="text-xs">
+                                                Modelos TN
+                                              </SelectItem>
+                                              <SelectItem value="LCW" className="text-xs">
+                                                LCW
+                                              </SelectItem>
+                                              <SelectItem value="SGA" className="text-xs">
+                                                SGA
+                                              </SelectItem>
+                                              <SelectItem value="On Hand" className="text-xs">
+                                                On Hand
+                                              </SelectItem>
+                                              <SelectItem value="Orion GED" className="text-xs">
+                                                Orion GED
+                                              </SelectItem>
+                                              <SelectItem value="Library" className="text-xs">
+                                                Library
+                                              </SelectItem>
+                                              <SelectItem value="e-Recepção" className="text-xs">
+                                                e-Recepção
+                                              </SelectItem>
+                                              <SelectItem value="e-Qualificação" className="text-xs">
+                                                e-Qualificação
+                                              </SelectItem>
+                                              <SelectItem value="Cartflow" className="text-xs">
+                                                Cartflow
+                                              </SelectItem>
+                                              <SelectItem value="Outro" className="text-xs">
+                                                Outro
+                                              </SelectItem>
                                             </SelectContent>
                                           </Select>
 
                                           {/* Department (Setor) Select dropdown */}
-                                          <Select
-                                            value={pending.department}
-                                            onValueChange={(val) => updateImplantationPending(idx, "department", val)}
-                                            disabled={isFormDisabled}
-                                          >
-                                            <SelectTrigger className="w-36 h-8 text-[11px] border-muted/80 shrink-0">
+                                          <Select value={pending.department} onValueChange={(val) => updateImplantationPending(idx, "department", val)} disabled={isFormDisabled}>
+                                            <SelectTrigger className="h-9 w-full border-muted/80 text-[11px] sm:h-8 sm:w-36 sm:shrink-0">
                                               <SelectValue placeholder="Setor" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                              <SelectItem value="Notas" className="text-xs">Notas</SelectItem>
-                                              <SelectItem value="Firmas" className="text-xs">Firmas</SelectItem>
-                                              <SelectItem value="Recepção / Triagem" className="text-xs">Recepção/Triagem</SelectItem>
-                                              <SelectItem value="Protesto" className="text-xs">Protesto</SelectItem>
-                                              <SelectItem value="Registro Civil" className="text-xs">R. Civil</SelectItem>
-                                              <SelectItem value="Registro de Imóveis" className="text-xs">R. Imóveis</SelectItem>
-                                              <SelectItem value="RTD / PJ" className="text-xs">RTD/PJ</SelectItem>
-                                              <SelectItem value="Administrativo" className="text-xs">Adm</SelectItem>
-                                              <SelectItem value="Financeiro" className="text-xs">Financeiro</SelectItem>
-                                              <SelectItem value="TI / Suporte" className="text-xs">TI</SelectItem>
-                                              <SelectItem value="Outro" className="text-xs">Outro</SelectItem>
+                                              <SelectItem value="Notas" className="text-xs">
+                                                Notas
+                                              </SelectItem>
+                                              <SelectItem value="Firmas" className="text-xs">
+                                                Firmas
+                                              </SelectItem>
+                                              <SelectItem value="Recepção / Triagem" className="text-xs">
+                                                Recepção/Triagem
+                                              </SelectItem>
+                                              <SelectItem value="Protesto" className="text-xs">
+                                                Protesto
+                                              </SelectItem>
+                                              <SelectItem value="Registro Civil" className="text-xs">
+                                                R. Civil
+                                              </SelectItem>
+                                              <SelectItem value="Registro de Imóveis" className="text-xs">
+                                                R. Imóveis
+                                              </SelectItem>
+                                              <SelectItem value="RTD / PJ" className="text-xs">
+                                                RTD/PJ
+                                              </SelectItem>
+                                              <SelectItem value="Administrativo" className="text-xs">
+                                                Adm
+                                              </SelectItem>
+                                              <SelectItem value="Financeiro" className="text-xs">
+                                                Financeiro
+                                              </SelectItem>
+                                              <SelectItem value="TI / Suporte" className="text-xs">
+                                                TI
+                                              </SelectItem>
+                                              <SelectItem value="Outro" className="text-xs">
+                                                Outro
+                                              </SelectItem>
                                             </SelectContent>
                                           </Select>
 
                                           {/* Status Select dropdown */}
-                                          <Select
-                                            value={pending.status}
-                                            onValueChange={(val) => updateImplantationPending(idx, "status", val)}
-                                            disabled={isFormDisabled}
-                                          >
-                                            <SelectTrigger className="w-32 h-8 text-[11px] border-muted/80 shrink-0">
+                                          <Select value={pending.status} onValueChange={(val) => updateImplantationPending(idx, "status", val)} disabled={isFormDisabled}>
+                                            <SelectTrigger className="h-9 w-full border-muted/80 text-[11px] sm:h-8 sm:w-32 sm:shrink-0">
                                               <SelectValue placeholder="Status" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                              <SelectItem value="Pendente" className="text-xs">Pendente</SelectItem>
-                                              <SelectItem value="Em andamento" className="text-xs">Em andamento</SelectItem>
-                                              <SelectItem value="Resolvido" className="text-xs">Resolvido</SelectItem>
-                                              <SelectItem value="Cancelado" className="text-xs">Cancelado</SelectItem>
+                                              <SelectItem value="Pendente" className="text-xs">
+                                                Pendente
+                                              </SelectItem>
+                                              <SelectItem value="Em andamento" className="text-xs">
+                                                Em andamento
+                                              </SelectItem>
+                                              <SelectItem value="Resolvido" className="text-xs">
+                                                Resolvido
+                                              </SelectItem>
+                                              <SelectItem value="Cancelado" className="text-xs">
+                                                Cancelado
+                                              </SelectItem>
                                             </SelectContent>
                                           </Select>
 
                                           {/* Assigned Analyst Select dropdown */}
-                                          <Select
-                                            value={pending.assignedTo || "none"}
-                                            onValueChange={(val) => updateImplantationPending(idx, "assignedTo", val === "none" ? "" : val)}
-                                            disabled={isFormDisabled}
-                                          >
-                                            <SelectTrigger className="w-48 h-8 text-[11px] border-muted/80 shrink-0">
+                                          <Select value={pending.assignedTo || "none"} onValueChange={(val) => updateImplantationPending(idx, "assignedTo", val === "none" ? "" : val)} disabled={isFormDisabled}>
+                                            <SelectTrigger className="h-9 w-full border-muted/80 text-[11px] sm:h-8 sm:w-48 sm:shrink-0">
                                               <SelectValue placeholder="Responsável" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                              <SelectItem value="none" className="text-xs">Não atribuído</SelectItem>
+                                              <SelectItem value="none" className="text-xs">
+                                                Não atribuído
+                                              </SelectItem>
                                               {members.map((m) => (
                                                 <SelectItem key={m.id} value={m.name} className="text-xs">
                                                   {m.name}
@@ -3418,12 +3298,7 @@ function TransicaoPlaceholder() {
                                         </div>
 
                                         <div className="space-y-1">
-                                          <RichTextEditor
-                                            content={pending.description}
-                                            onChange={(c) => updateImplantationPending(idx, "description", c)}
-                                            placeholder="Descrição detalhada da pendência..."
-                                            editable={!isFormDisabled}
-                                          />
+                                          <RichTextEditor content={pending.description} onChange={(c) => updateImplantationPending(idx, "description", c)} placeholder="Descrição detalhada da pendência..." editable={!isFormDisabled} />
                                         </div>
                                       </div>
                                     )}
@@ -3439,13 +3314,8 @@ function TransicaoPlaceholder() {
 
                   {/* Sub-seção 5: Sugestões de Melhorias */}
                   <div className="space-y-3">
-                    <div 
-                      className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors"
-                      onClick={() => toggleSection("processo-sugestoes")}
-                    >
-                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">
-                        5. Sugestões de Melhorias
-                      </span>
+                    <div className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors" onClick={() => toggleSection("processo-sugestoes")}>
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">5. Sugestões de Melhorias</span>
                       <Button type="button" variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
                         {collapsedSections["processo-sugestoes"] ? (
                           <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
@@ -3454,31 +3324,22 @@ function TransicaoPlaceholder() {
                         )}
                       </Button>
                     </div>
-                    
+
                     {!collapsedSections["processo-sugestoes"] && (
                       <div className="space-y-2 border p-3 rounded-lg bg-muted/10 animate-in fade-in slide-in-from-top-1 duration-200">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
                           <div className="space-y-0.5">
                             <Label className="text-[11px] font-bold">Sugestões de melhorias cadastradas</Label>
                             <p className="text-[9px] text-muted-foreground">Cadastre sugestões de melhorias identificadas para o cliente ou produto.</p>
                           </div>
-                          <Button
-                            type="button"
-                            onClick={addImplantationSuggestion}
-                            disabled={isFormDisabled}
-                            variant="outline"
-                            size="sm"
-                            className="h-6.5 text-[10px] gap-1 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 font-bold"
-                          >
+                          <Button type="button" onClick={addImplantationSuggestion} disabled={isFormDisabled} variant="outline" size="sm" className="h-6.5 text-[10px] gap-1 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 font-bold">
                             <Plus className="h-3 w-3" />
                             Adicionar Sugestão
                           </Button>
                         </div>
 
-                        {(!localDtc.implantationSuggestionsList || localDtc.implantationSuggestionsList.length === 0) ? (
-                          <p className="text-[11px] text-muted-foreground italic py-1.5 text-center bg-background/50 border border-dashed rounded-md mt-1">
-                            Nenhuma sugestão cadastrada. Clique em Adicionar Sugestão.
-                          </p>
+                        {!localDtc.implantationSuggestionsList || localDtc.implantationSuggestionsList.length === 0 ? (
+                          <p className="text-[11px] text-muted-foreground italic py-1.5 text-center bg-background/50 border border-dashed rounded-md mt-1">Nenhuma sugestão cadastrada. Clique em Adicionar Sugestão.</p>
                         ) : (
                           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleSuggestionDragEnd}>
                             <SortableContext items={(localDtc.implantationSuggestionsList ?? []).map((_, i) => `sugg-${i}`)} strategy={verticalListSortingStrategy}>
@@ -3506,54 +3367,94 @@ function TransicaoPlaceholder() {
                                         {/* Controls Row (Product, Sector, Status, Responsibility, Delete) */}
                                         <div className="flex flex-wrap items-center gap-2">
                                           {/* Product Select dropdown */}
-                                          <Select
-                                            value={suggestion.product}
-                                            onValueChange={(val) => updateImplantationSuggestion(idx, "product", val)}
-                                            disabled={isFormDisabled}
-                                          >
-                                            <SelectTrigger className="w-40 h-8 text-[11px] border-muted/80 shrink-0">
+                                          <Select value={suggestion.product} onValueChange={(val) => updateImplantationSuggestion(idx, "product", val)} disabled={isFormDisabled}>
+                                            <SelectTrigger className="h-9 w-full border-muted/80 text-[11px] sm:h-8 sm:w-40 sm:shrink-0">
                                               <SelectValue placeholder="Produto" />
                                             </SelectTrigger>
                                             <SelectContent>
                                               {/* Sistemas Principais */}
-                                              <SelectItem value="Orion TN" className="text-xs">Orion TN</SelectItem>
-                                              <SelectItem value="Orion PRO" className="text-xs">Orion PRO</SelectItem>
-                                              <SelectItem value="Orion REG" className="text-xs">Orion REG</SelectItem>
-                                              <SelectItem value="Modelos TN" className="text-xs">Modelos TN</SelectItem>
+                                              <SelectItem value="Orion TN" className="text-xs">
+                                                Orion TN
+                                              </SelectItem>
+                                              <SelectItem value="Orion PRO" className="text-xs">
+                                                Orion PRO
+                                              </SelectItem>
+                                              <SelectItem value="Orion REG" className="text-xs">
+                                                Orion REG
+                                              </SelectItem>
+                                              <SelectItem value="Modelos TN" className="text-xs">
+                                                Modelos TN
+                                              </SelectItem>
                                               {/* Produtos Adicionais */}
-                                              <SelectItem value="LCW" className="text-xs">LCW</SelectItem>
-                                              <SelectItem value="SGA" className="text-xs">SGA</SelectItem>
-                                              <SelectItem value="On Hand" className="text-xs">On Hand</SelectItem>
-                                              <SelectItem value="Orion GED" className="text-xs">Orion GED</SelectItem>
-                                              <SelectItem value="Library" className="text-xs">Library</SelectItem>
-                                              <SelectItem value="e-Recepção" className="text-xs">e-Recepção</SelectItem>
-                                              <SelectItem value="e-Qualificação" className="text-xs">e-Qualificação</SelectItem>
-                                              <SelectItem value="Cartflow" className="text-xs">Cartflow</SelectItem>
-                                              <SelectItem value="Outro" className="text-xs">Outro</SelectItem>
+                                              <SelectItem value="LCW" className="text-xs">
+                                                LCW
+                                              </SelectItem>
+                                              <SelectItem value="SGA" className="text-xs">
+                                                SGA
+                                              </SelectItem>
+                                              <SelectItem value="On Hand" className="text-xs">
+                                                On Hand
+                                              </SelectItem>
+                                              <SelectItem value="Orion GED" className="text-xs">
+                                                Orion GED
+                                              </SelectItem>
+                                              <SelectItem value="Library" className="text-xs">
+                                                Library
+                                              </SelectItem>
+                                              <SelectItem value="e-Recepção" className="text-xs">
+                                                e-Recepção
+                                              </SelectItem>
+                                              <SelectItem value="e-Qualificação" className="text-xs">
+                                                e-Qualificação
+                                              </SelectItem>
+                                              <SelectItem value="Cartflow" className="text-xs">
+                                                Cartflow
+                                              </SelectItem>
+                                              <SelectItem value="Outro" className="text-xs">
+                                                Outro
+                                              </SelectItem>
                                             </SelectContent>
                                           </Select>
 
                                           {/* Department (Setor) Select dropdown */}
-                                          <Select
-                                            value={suggestion.department}
-                                            onValueChange={(val) => updateImplantationSuggestion(idx, "department", val)}
-                                            disabled={isFormDisabled}
-                                          >
-                                            <SelectTrigger className="w-36 h-8 text-[11px] border-muted/80 shrink-0">
+                                          <Select value={suggestion.department} onValueChange={(val) => updateImplantationSuggestion(idx, "department", val)} disabled={isFormDisabled}>
+                                            <SelectTrigger className="h-9 w-full border-muted/80 text-[11px] sm:h-8 sm:w-36 sm:shrink-0">
                                               <SelectValue placeholder="Setor" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                              <SelectItem value="Notas" className="text-xs">Notas</SelectItem>
-                                              <SelectItem value="Firmas" className="text-xs">Firmas</SelectItem>
-                                              <SelectItem value="Recepção / Triagem" className="text-xs">Recepção/Triagem</SelectItem>
-                                              <SelectItem value="Protesto" className="text-xs">Protesto</SelectItem>
-                                              <SelectItem value="Registro Civil" className="text-xs">R. Civil</SelectItem>
-                                              <SelectItem value="Registro de Imóveis" className="text-xs">R. Imóveis</SelectItem>
-                                              <SelectItem value="RTD / PJ" className="text-xs">RTD/PJ</SelectItem>
-                                              <SelectItem value="Administrativo" className="text-xs">Adm</SelectItem>
-                                              <SelectItem value="Financeiro" className="text-xs">Financeiro</SelectItem>
-                                              <SelectItem value="TI / Suporte" className="text-xs">TI</SelectItem>
-                                              <SelectItem value="Outro" className="text-xs">Outro</SelectItem>
+                                              <SelectItem value="Notas" className="text-xs">
+                                                Notas
+                                              </SelectItem>
+                                              <SelectItem value="Firmas" className="text-xs">
+                                                Firmas
+                                              </SelectItem>
+                                              <SelectItem value="Recepção / Triagem" className="text-xs">
+                                                Recepção/Triagem
+                                              </SelectItem>
+                                              <SelectItem value="Protesto" className="text-xs">
+                                                Protesto
+                                              </SelectItem>
+                                              <SelectItem value="Registro Civil" className="text-xs">
+                                                R. Civil
+                                              </SelectItem>
+                                              <SelectItem value="Registro de Imóveis" className="text-xs">
+                                                R. Imóveis
+                                              </SelectItem>
+                                              <SelectItem value="RTD / PJ" className="text-xs">
+                                                RTD/PJ
+                                              </SelectItem>
+                                              <SelectItem value="Administrativo" className="text-xs">
+                                                Adm
+                                              </SelectItem>
+                                              <SelectItem value="Financeiro" className="text-xs">
+                                                Financeiro
+                                              </SelectItem>
+                                              <SelectItem value="TI / Suporte" className="text-xs">
+                                                TI
+                                              </SelectItem>
+                                              <SelectItem value="Outro" className="text-xs">
+                                                Outro
+                                              </SelectItem>
                                             </SelectContent>
                                           </Select>
 
@@ -3571,12 +3472,7 @@ function TransicaoPlaceholder() {
                                         </div>
 
                                         <div className="space-y-1">
-                                          <RichTextEditor
-                                            content={suggestion.description}
-                                            onChange={(c) => updateImplantationSuggestion(idx, "description", c)}
-                                            placeholder="Descrição detalhada da sugestão..."
-                                            editable={!isFormDisabled}
-                                          />
+                                          <RichTextEditor content={suggestion.description} onChange={(c) => updateImplantationSuggestion(idx, "description", c)} placeholder="Descrição detalhada da sugestão..." editable={!isFormDisabled} />
                                         </div>
                                       </div>
                                     )}
@@ -3592,13 +3488,8 @@ function TransicaoPlaceholder() {
 
                   {/* Sub-seção 5: Considerações Finais */}
                   <div className="space-y-3">
-                    <div 
-                      className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors"
-                      onClick={() => toggleSection("processo-consideracoes")}
-                    >
-                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">
-                        6. Considerações Finais
-                      </span>
+                    <div className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none group hover:text-primary transition-colors" onClick={() => toggleSection("processo-consideracoes")}>
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground/80 group-hover:text-primary transition-colors">6. Considerações Finais</span>
                       <Button type="button" variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
                         {collapsedSections["processo-consideracoes"] ? (
                           <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-all" />
@@ -3607,11 +3498,11 @@ function TransicaoPlaceholder() {
                         )}
                       </Button>
                     </div>
-                    
+
                     {!collapsedSections["processo-consideracoes"] && (
                       <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
                         {/* ⑤ NPS / Avaliação do Cliente */}
-                        <div className="flex items-center justify-between bg-muted/30 border rounded-lg p-3 mb-2">
+                        <div className="mb-2 flex flex-col items-start justify-between gap-3 rounded-lg border bg-muted/30 p-3 sm:flex-row sm:items-center">
                           <div>
                             <Label className="text-xs font-bold text-muted-foreground">Satisfação do Cliente</Label>
                             <p className="text-[9px] text-muted-foreground mt-0.5">Avalie a recepção do cliente durante a implantação</p>
@@ -3623,54 +3514,26 @@ function TransicaoPlaceholder() {
                                 type="button"
                                 disabled={isFormDisabled}
                                 onClick={() => handleFieldChange("clientSatisfactionScore", star === localDtc.clientSatisfactionScore ? 0 : star)}
-                                className={cn(
-                                  "transition-all duration-150 hover:scale-110 disabled:cursor-not-allowed disabled:opacity-60",
-                                  "focus:outline-none"
-                                )}
+                                className={cn("transition-all duration-150 hover:scale-110 disabled:cursor-not-allowed disabled:opacity-60", "focus:outline-none")}
                               >
-                                <Star
-                                  className={cn(
-                                    "h-6 w-6 transition-colors",
-                                    (localDtc.clientSatisfactionScore ?? 0) >= star
-                                      ? "fill-amber-400 text-amber-400"
-                                      : "fill-none text-muted-foreground/40 hover:text-amber-300"
-                                  )}
-                                />
+                                <Star className={cn("h-6 w-6 transition-colors", (localDtc.clientSatisfactionScore ?? 0) >= star ? "fill-amber-400 text-amber-400" : "fill-none text-muted-foreground/40 hover:text-amber-300")} />
                               </button>
                             ))}
-                            {(localDtc.clientSatisfactionScore ?? 0) > 0 && (
-                              <span className="ml-2 text-xs font-bold text-amber-500">
-                                {["", "Ruim", "Regular", "Bom", "Muito bom", "Excelente"][localDtc.clientSatisfactionScore ?? 0]}
-                              </span>
-                            )}
+                            {(localDtc.clientSatisfactionScore ?? 0) > 0 && <span className="ml-2 text-xs font-bold text-amber-500">{["", "Ruim", "Regular", "Bom", "Muito bom", "Excelente"][localDtc.clientSatisfactionScore ?? 0]}</span>}
                           </div>
                         </div>
-                        <div className="flex items-center justify-between gap-2">
-                          <Label htmlFor="finalConsiderations" className="text-xs font-bold text-muted-foreground">Notas de Encerramento do Projeto</Label>
+                        <div className="flex flex-col items-stretch justify-between gap-2 sm:flex-row sm:items-center">
+                          <Label htmlFor="finalConsiderations" className="text-xs font-bold text-muted-foreground">
+                            Notas de Encerramento do Projeto
+                          </Label>
                           <div className="flex items-center gap-2">
                             {aiRunning && (
-                              <button
-                                type="button"
-                                onClick={() => aiJob && cancelAiJob(aiJob)}
-                                className="text-[10px] text-muted-foreground hover:text-destructive underline underline-offset-2"
-                              >
+                              <button type="button" onClick={() => aiJob && cancelAiJob(aiJob)} className="text-[10px] text-muted-foreground hover:text-destructive underline underline-offset-2">
                                 Cancelar
                               </button>
                             )}
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              disabled={isFormDisabled || aiRunning || !aiWorkerOnline || !aiHasEnough}
-                              title={aiDisabledReason}
-                              onClick={handleGenerateAi}
-                              className="h-7 gap-1.5 text-xs"
-                            >
-                              {aiRunning ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                              ) : (
-                                <Sparkles className="h-3.5 w-3.5" />
-                              )}
+                            <Button type="button" size="sm" variant="outline" disabled={isFormDisabled || aiRunning || !aiWorkerOnline || !aiHasEnough} title={aiDisabledReason} onClick={handleGenerateAi} className="h-7 gap-1.5 text-xs">
+                              {aiRunning ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
                               {aiRunning ? "Gerando..." : "Gerar com IA"}
                             </Button>
                           </div>
@@ -3681,15 +3544,12 @@ function TransicaoPlaceholder() {
                             <span className="truncate">{aiJob.progress}</span>
                           </p>
                         )}
-                        {!aiWorkerOnline && !aiRunning && (
-                          <p className="text-[10px] text-amber-500">Gerador da IA offline — a geração automática ficará indisponível até religar o worker.</p>
-                        )}
+                        {!aiWorkerOnline && !aiRunning && <p className="text-[10px] text-amber-500">Gerador da IA offline — a geração automática ficará indisponível até religar o worker.</p>}
                         {aiEditorKey > 0 && !aiRunning && (
                           <div className="flex items-start gap-2 rounded-md border border-amber-400/40 bg-amber-400/10 dark:bg-transparent px-3 py-2 text-[11px] text-amber-700 dark:text-amber-300">
                             <Sparkles className="h-3.5 w-3.5 mt-0.5 shrink-0" />
                             <span>
-                              <strong>Texto gerado por IA.</strong> É um rascunho a partir dos campos preenchidos — revise
-                              todo o conteúdo, corrija o que for necessário e complete o que faltar antes de salvar.
+                              <strong>Texto gerado por IA.</strong> É um rascunho a partir dos campos preenchidos — revise todo o conteúdo, corrija o que for necessário e complete o que faltar antes de salvar.
                             </span>
                           </div>
                         )}
@@ -3701,12 +3561,11 @@ function TransicaoPlaceholder() {
                           editable={!isFormDisabled}
                         />
                         <AlertDialog open={aiConfirmOpen} onOpenChange={setAiConfirmOpen}>
-                          <AlertDialogContent>
+                          <AlertDialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] overflow-y-auto sm:max-w-lg">
                             <AlertDialogHeader>
                               <AlertDialogTitle>Substituir o texto atual?</AlertDialogTitle>
                               <AlertDialogDescription>
-                                Já existe conteúdo nas Considerações Finais. Gerar com IA vai <strong>substituir</strong> o
-                                texto atual pelo rascunho gerado quando ficar pronto. Deseja continuar?
+                                Já existe conteúdo nas Considerações Finais. Gerar com IA vai <strong>substituir</strong> o texto atual pelo rascunho gerado quando ficar pronto. Deseja continuar?
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
@@ -3725,97 +3584,135 @@ function TransicaoPlaceholder() {
             {/* TAB 4: SUPPORT CALLS TABLE */}
             <TabsContent value="chamados">
               <Card className="border-muted/60 shadow-sm">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardHeader className="flex flex-col items-stretch justify-between gap-3 p-4 pb-2 sm:flex-row sm:items-center sm:p-6 sm:pb-2">
                   <div>
                     <CardTitle className="text-base font-bold text-primary">Chamados em Aberto / Pendências</CardTitle>
                     <CardDescription className="text-xs">Registre chamados técnicos abertos ou pendências para acompanhamento da equipe de suporte.</CardDescription>
                   </div>
-                  <Button
-                    onClick={addTicket}
-                    disabled={isFormDisabled}
-                    variant="outline"
-                    size="sm"
-                    className="gap-1 border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 text-xs font-bold shadow-sm"
-                  >
+                  <Button onClick={addTicket} disabled={isFormDisabled} variant="outline" size="sm" className="gap-1 border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 text-xs font-bold shadow-sm">
                     <Plus className="h-4 w-4" />
                     Adicionar Pendência
                   </Button>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="min-w-0 p-4 pt-0 sm:p-6 sm:pt-0">
                   {localDtc.tickets.length === 0 ? (
                     <div className="text-center py-10 bg-muted/10 border border-dashed rounded-lg">
                       <p className="text-xs text-muted-foreground">Não há chamados ou pendências pendentes cadastrados.</p>
                       <p className="text-[10px] text-muted-foreground mt-1">Clique no botão "Adicionar Pendência" caso queira encaminhar chamados abertos ao suporte.</p>
                     </div>
                   ) : (
-                    <div className="border rounded-lg overflow-hidden">
-                      <table className="w-full text-left border-collapse text-xs">
-                        <thead>
-                          <tr className="bg-muted/40 border-b">
-                            <th className="p-3 font-bold text-muted-foreground w-1/4">Chamado / N°</th>
-                            <th className="p-3 font-bold text-muted-foreground w-1/2">Descrição da Pendência / Obice</th>
-                            <th className="p-3 font-bold text-muted-foreground w-1/5">Status</th>
-                            <th className="p-3 font-bold text-muted-foreground w-12 text-center"></th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {localDtc.tickets.map((t, idx) => (
-                            <tr key={idx} className="border-b last:border-0 hover:bg-muted/20">
-                              <td className="p-2.5">
-                                <Input
-                                  value={t.number}
-                                  onChange={(e) => updateTicket(idx, "number", e.target.value)}
+                    <>
+                      <div className="space-y-2 md:hidden" data-testid="transition-tickets-mobile-list">
+                        {localDtc.tickets.map((ticket, idx) => (
+                          <article key={idx} className="min-w-0 space-y-3 rounded-xl border bg-background p-3 shadow-sm">
+                            <div className="grid min-w-0 grid-cols-1 gap-3">
+                              <div className="space-y-1">
+                                <Label className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Chamado / Nº</Label>
+                                <Input value={ticket.number} onChange={(event) => updateTicket(idx, "number", event.target.value)} disabled={isFormDisabled} className="h-10 min-w-0 border-muted text-xs font-bold" placeholder="Ex: #59203" />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Descrição da pendência</Label>
+                                <Textarea
+                                  value={ticket.description}
+                                  onChange={(event) => updateTicket(idx, "description", event.target.value)}
                                   disabled={isFormDisabled}
-                                  className="border-muted h-8 text-xs font-bold"
-                                  placeholder="Ex: #59203"
+                                  className="min-h-20 min-w-0 border-muted text-xs"
+                                  placeholder="Descreva a pendência"
                                 />
-                              </td>
-                              <td className="p-2.5">
-                                <Input
-                                  value={t.description}
-                                  onChange={(e) => updateTicket(idx, "description", e.target.value)}
-                                  disabled={isFormDisabled}
-                                  className="border-muted h-8 text-xs"
-                                  placeholder="Ex: Aguardando correção do layout de selo digital"
-                                />
-                              </td>
-                              <td className="p-2.5">
-                                <Select
-                                  value={t.status}
-                                  onValueChange={(val: any) => updateTicket(idx, "status", val)}
-                                  disabled={isFormDisabled}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                            <Select value={ticket.status} onValueChange={(value) => updateTicket(idx, "status", value as DTCTicket["status"])} disabled={isFormDisabled}>
+                                <SelectTrigger
+                                  className={cn(
+                                    "h-10 min-w-0 flex-1 border-muted text-xs font-semibold",
+                                    ticket.status === "open" && "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/20 dark:text-amber-400",
+                                    ticket.status === "in_progress" && "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/20 dark:text-blue-400",
+                                    ticket.status === "closed" && "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/20 dark:text-emerald-400",
+                                  )}
                                 >
-                                  <SelectTrigger className={cn(
-                                    "border-muted h-8 text-xs font-semibold",
-                                    t.status === "open" && "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/50",
-                                    t.status === "in_progress" && "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/50",
-                                    t.status === "closed" && "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50"
-                                  )}>
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="open" className="text-xs">Aberto (Não iniciado)</SelectItem>
-                                    <SelectItem value="in_progress" className="text-xs">Em Tratativa</SelectItem>
-                                    <SelectItem value="closed" className="text-xs">Concluído / Resolvido</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </td>
-                              <td className="p-2.5 text-center">
-                                <Button
-                                  onClick={() => removeTicket(idx)}
-                                  disabled={isFormDisabled}
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-full"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </td>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="open" className="text-xs">
+                                    Aberto (Não iniciado)
+                                  </SelectItem>
+                                  <SelectItem value="in_progress" className="text-xs">
+                                    Em Tratativa
+                                  </SelectItem>
+                                  <SelectItem value="closed" className="text-xs">
+                                    Concluído / Resolvido
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <Button onClick={() => removeTicket(idx)} disabled={isFormDisabled} variant="outline" size="icon" className="h-10 w-10 shrink-0 text-rose-500" aria-label={`Remover pendência ${idx + 1}`}>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </article>
+                        ))}
+                      </div>
+                      <div className="hidden overflow-hidden rounded-lg border md:block">
+                        <table className="w-full text-left border-collapse text-xs">
+                          <thead>
+                            <tr className="bg-muted/40 border-b">
+                              <th className="p-3 font-bold text-muted-foreground w-1/4">Chamado / N°</th>
+                              <th className="p-3 font-bold text-muted-foreground w-1/2">Descrição da Pendência / Obice</th>
+                              <th className="p-3 font-bold text-muted-foreground w-1/5">Status</th>
+                              <th className="p-3 font-bold text-muted-foreground w-12 text-center"></th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                          </thead>
+                          <tbody>
+                            {localDtc.tickets.map((t, idx) => (
+                              <tr key={idx} className="border-b last:border-0 hover:bg-muted/20">
+                                <td className="p-2.5">
+                                  <Input value={t.number} onChange={(e) => updateTicket(idx, "number", e.target.value)} disabled={isFormDisabled} className="border-muted h-8 text-xs font-bold" placeholder="Ex: #59203" />
+                                </td>
+                                <td className="p-2.5">
+                                  <Input
+                                    value={t.description}
+                                    onChange={(e) => updateTicket(idx, "description", e.target.value)}
+                                    disabled={isFormDisabled}
+                                    className="border-muted h-8 text-xs"
+                                    placeholder="Ex: Aguardando correção do layout de selo digital"
+                                  />
+                                </td>
+                                <td className="p-2.5">
+                                  <Select value={t.status} onValueChange={(val: any) => updateTicket(idx, "status", val)} disabled={isFormDisabled}>
+                                    <SelectTrigger
+                                      className={cn(
+                                        "border-muted h-8 text-xs font-semibold",
+                                        t.status === "open" && "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/50",
+                                        t.status === "in_progress" && "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/50",
+                                        t.status === "closed" && "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50",
+                                      )}
+                                    >
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="open" className="text-xs">
+                                        Aberto (Não iniciado)
+                                      </SelectItem>
+                                      <SelectItem value="in_progress" className="text-xs">
+                                        Em Tratativa
+                                      </SelectItem>
+                                      <SelectItem value="closed" className="text-xs">
+                                        Concluído / Resolvido
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </td>
+                                <td className="p-2.5 text-center">
+                                  <Button onClick={() => removeTicket(idx)} disabled={isFormDisabled} variant="ghost" size="icon" className="h-7 w-7 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-full">
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
                   )}
                 </CardContent>
               </Card>
@@ -3824,7 +3721,7 @@ function TransicaoPlaceholder() {
             {/* TAB 4.5: HISTORICO */}
             <TabsContent value="historico">
               <Card className="border-muted/60 shadow-sm">
-                <CardContent className="p-4">
+                <CardContent className="min-w-0 p-3 sm:p-4">
                   <LogsTab project={project as any} />
                 </CardContent>
               </Card>
@@ -3833,27 +3730,39 @@ function TransicaoPlaceholder() {
             {/* TAB 5: REPORT PRINT PREVIEW */}
             <TabsContent value="visualizar">
               <Card className="border-muted/60 shadow-md">
-                <CardHeader className="border-b flex flex-row items-center justify-between py-4 bg-muted/20 gap-4">
+                <CardHeader className="flex flex-col items-stretch justify-between gap-3 border-b bg-muted/20 p-4 sm:flex-row sm:items-center sm:gap-4 sm:py-4">
                   <div>
                     <CardTitle className="text-base font-bold text-foreground">Visualização de Impressão (DTC Oficial)</CardTitle>
                     <CardDescription className="text-xs text-muted-foreground">Visualize e formate o documento A4 exatamente como será impresso ou exportado para PDF.</CardDescription>
                   </div>
-                  <div className="flex items-center gap-1.5 flex-shrink-0 flex-nowrap">
+                  <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-shrink-0 sm:flex-nowrap">
                     {/* Controls */}
-                    <div className="flex items-center gap-1.5 border rounded-md px-2 bg-background text-[10px] h-8">
+                    <div className="flex h-auto min-h-10 w-full flex-wrap items-center gap-2 rounded-md border bg-background px-2 py-1 text-[10px] sm:h-8 sm:min-h-0 sm:w-auto sm:flex-nowrap sm:gap-1.5 sm:py-0">
                       <div className="flex items-center gap-1">
                         <span className="text-muted-foreground font-semibold text-[9px] uppercase tracking-wider">Leitura:</span>
                         <select
                           value={speechSection}
                           onChange={(e) => setSpeechSection(e.target.value)}
-                          className="bg-transparent border-none outline-none font-bold text-foreground max-w-[120px] cursor-pointer text-[10px] pr-0.5"
+                          className="max-w-[105px] cursor-pointer border-none bg-transparent pr-0.5 text-[10px] font-bold text-foreground outline-none sm:max-w-[120px]"
                         >
-                          <option value="all" className="text-black bg-white">Tudo (Completo)</option>
-                          <option value="1" className="text-black bg-white">1. Identificação</option>
-                          <option value="2" className="text-black bg-white">2. Infra & Acessos</option>
-                          <option value="3" className="text-black bg-white">3. Conversão</option>
-                          <option value="4" className="text-black bg-white">4. Relato Técnico</option>
-                          <option value="5" className="text-black bg-white">5. Pendências</option>
+                          <option value="all" className="text-black bg-white">
+                            Tudo (Completo)
+                          </option>
+                          <option value="1" className="text-black bg-white">
+                            1. Identificação
+                          </option>
+                          <option value="2" className="text-black bg-white">
+                            2. Infra & Acessos
+                          </option>
+                          <option value="3" className="text-black bg-white">
+                            3. Conversão
+                          </option>
+                          <option value="4" className="text-black bg-white">
+                            4. Relato Técnico
+                          </option>
+                          <option value="5" className="text-black bg-white">
+                            5. Pendências
+                          </option>
                         </select>
                       </div>
 
@@ -3866,7 +3775,7 @@ function TransicaoPlaceholder() {
                             <select
                               value={selectedVoiceURI}
                               onChange={(e) => setSelectedVoiceURI(e.target.value)}
-                              className="bg-transparent border-none outline-none font-bold text-foreground max-w-[150px] cursor-pointer text-[10px] pr-0.5"
+                              className="max-w-[105px] cursor-pointer border-none bg-transparent pr-0.5 text-[10px] font-bold text-foreground outline-none sm:max-w-[150px]"
                             >
                               {availableVoices.map((v, i) => (
                                 <option key={i} value={v.voiceURI} className="text-black bg-white">
@@ -3878,60 +3787,53 @@ function TransicaoPlaceholder() {
                           <div className="w-[1px] h-3 bg-border" />
                         </>
                       )}
- 
+
                       <div className="flex items-center gap-1">
                         <span className="text-muted-foreground font-semibold text-[9px] uppercase tracking-wider">Velocidade:</span>
-                        <select
-                          value={speechRate}
-                          onChange={(e) => setSpeechRate(parseFloat(e.target.value))}
-                          className="bg-transparent border-none outline-none font-bold text-foreground cursor-pointer text-[10px]"
-                        >
-                          <option value="0.75" className="text-black bg-white">0.75x</option>
-                          <option value="1" className="text-black bg-white">1.0x</option>
-                          <option value="1.25" className="text-black bg-white">1.25x</option>
-                          <option value="1.5" className="text-black bg-white">1.5x</option>
-                          <option value="2" className="text-black bg-white">2.0x</option>
+                        <select value={speechRate} onChange={(e) => setSpeechRate(parseFloat(e.target.value))} className="bg-transparent border-none outline-none font-bold text-foreground cursor-pointer text-[10px]">
+                          <option value="0.75" className="text-black bg-white">
+                            0.75x
+                          </option>
+                          <option value="1" className="text-black bg-white">
+                            1.0x
+                          </option>
+                          <option value="1.25" className="text-black bg-white">
+                            1.25x
+                          </option>
+                          <option value="1.5" className="text-black bg-white">
+                            1.5x
+                          </option>
+                          <option value="2" className="text-black bg-white">
+                            2.0x
+                          </option>
                         </select>
                       </div>
                     </div>
- 
-                    <Button
-                      onClick={toggleSpeech}
-                      variant={isSpeaking ? "destructive" : "outline"}
-                      className="font-bold gap-1 text-[11px] shadow h-8 px-2.5"
-                      size="sm"
-                    >
+
+                    <Button onClick={toggleSpeech} variant={isSpeaking ? "destructive" : "outline"} className="h-9 min-w-0 flex-1 gap-1 px-2.5 text-[11px] font-bold shadow sm:h-8 sm:flex-none" size="sm">
                       {isSpeaking ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
                       {isSpeaking ? "Parar" : "Ouvir"}
                     </Button>
-                    <Button
-                      onClick={() => window.print()}
-                      className="bg-primary hover:bg-primary/95 text-primary-foreground font-bold gap-1 text-[11px] shadow h-8 px-2.5"
-                      size="sm"
-                    >
+                    <Button onClick={() => window.print()} className="h-9 min-w-0 flex-1 gap-1 bg-primary px-2.5 text-[11px] font-bold text-primary-foreground shadow hover:bg-primary/95 sm:h-8 sm:flex-none" size="sm">
                       <Printer className="h-3.5 w-3.5" />
                       Imprimir PDF
                     </Button>
                   </div>
                 </CardHeader>
-                <CardContent className="py-6">
+                <CardContent className="min-w-0 p-3 sm:px-6 sm:py-6">
                   {/* Clean preview card resembling A4 paper */}
-                  <div className="bg-white text-black p-8 border rounded-md shadow-inner max-w-[800px] mx-auto text-sm leading-relaxed dtc-document-font">
-                    <div className="border-2 border-black p-5 space-y-5">
+                  <div className="dtc-document-font mx-auto max-w-[800px] overflow-hidden rounded-md border bg-white p-2 text-xs leading-relaxed text-black shadow-inner [overflow-wrap:anywhere] [&_table]:table-fixed [&_td]:break-words [&_th]:break-words sm:p-8 sm:text-sm">
+                    <div className="space-y-4 border-2 border-black p-2 sm:space-y-5 sm:p-5">
                       {/* Document Header */}
                       <div className="text-center border-b-2 border-black pb-4">
                         <h2 className="text-xl font-bold tracking-tight uppercase text-gray-900">Documento de Transição de Conhecimento</h2>
                         <h3 className="text-base font-semibold text-gray-700">Implantação / Service Desk</h3>
-                        {localDtc.supportCallNumber && (
-                          <p className="text-xs font-bold text-gray-600 mt-1">Chamado de Origem: {localDtc.supportCallNumber}</p>
-                        )}
+                        {localDtc.supportCallNumber && <p className="text-xs font-bold text-gray-600 mt-1">Chamado de Origem: {localDtc.supportCallNumber}</p>}
                       </div>
 
                       {/* 1. IDENTIFICAÇÃO DA SERVENTIA */}
                       <div className="space-y-2">
-                        <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 border-l-2 border-black pl-2">
-                          1. Identificação da Serventia &amp; Responsáveis
-                        </h4>
+                        <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 border-l-2 border-black pl-2">1. Identificação da Serventia &amp; Responsáveis</h4>
                         <table className="w-full border-collapse border border-gray-300 text-xs">
                           <tbody>
                             <tr>
@@ -3952,10 +3854,7 @@ function TransicaoPlaceholder() {
                                 <strong>Tabelião/Oficial Titular:</strong> {renderVal(localDtc.oficial)}
                               </td>
                               <td className="border border-gray-300 p-2">
-                                <strong>Responsável Cartório:</strong>{" "}
-                                {localDtc.clientResponsible
-                                  ? `${localDtc.clientResponsible}${localDtc.clientResponsiblePhone ? ` (${localDtc.clientResponsiblePhone})` : ""}`
-                                  : renderVal(null)}
+                                <strong>Responsável Cartório:</strong> {localDtc.clientResponsible ? `${localDtc.clientResponsible}${localDtc.clientResponsiblePhone ? ` (${localDtc.clientResponsiblePhone})` : ""}` : renderVal(null)}
                               </td>
                             </tr>
                             <tr>
@@ -3965,11 +3864,14 @@ function TransicaoPlaceholder() {
                                   <div className="flex flex-wrap gap-2 mt-1">
                                     {localDtc.keyUsersList.map((u, i) => (
                                       <span key={i} className="bg-slate-100 px-1.5 py-0.5 rounded text-[11px] font-medium text-gray-700">
-                                        {u.name}{u.phone ? ` (${u.phone})` : ""}
+                                        {u.name}
+                                        {u.phone ? ` (${u.phone})` : ""}
                                       </span>
                                     ))}
                                   </div>
-                                ) : renderVal(null, "Nenhum informado")}
+                                ) : (
+                                  renderVal(null, "Nenhum informado")
+                                )}
                               </td>
                             </tr>
                             <tr>
@@ -3986,9 +3888,7 @@ function TransicaoPlaceholder() {
 
                       {/* 2. INFRAESTRUTURA & ACESSOS */}
                       <div className="space-y-2">
-                        <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 border-l-2 border-black pl-2">
-                          2. Infraestrutura, Banco de Dados &amp; Acessos
-                        </h4>
+                        <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 border-l-2 border-black pl-2">2. Infraestrutura, Banco de Dados &amp; Acessos</h4>
                         <table className="w-full border-collapse border border-gray-300 text-xs">
                           <tbody>
                             <tr>
@@ -4028,19 +3928,21 @@ function TransicaoPlaceholder() {
                               <td colSpan={2} className="border border-gray-300 p-2">
                                 <strong>Acessos Remotos Disponibilizados:</strong>
                                 <div className="flex flex-wrap gap-2 mt-1.5">
-                                  {!localDtc.remoteAccessList || localDtc.remoteAccessList.length === 0 ? (
-                                    renderVal(localDtc.remoteAccessData, "Nenhum informado")
-                                  ) : (
-                                    localDtc.remoteAccessList.map((a, i) => (
-                                      <div key={i} className="border border-slate-200 bg-slate-50 px-2 py-1 rounded flex gap-3 text-[11px]">
-                                        <span className="font-semibold text-gray-700">{a.system}</span>
-                                        <span><span className="text-gray-500">ID:</span> <code className="font-mono bg-white border border-gray-200 px-1 rounded text-black font-semibold">{a.id}</code></span>
-                                        {a.password && (
-                                          <span><span className="text-gray-500">Senha:</span> <code className="font-mono bg-white border border-gray-200 px-1 rounded text-black font-semibold">{a.password}</code></span>
-                                        )}
-                                      </div>
-                                    ))
-                                  )}
+                                  {!localDtc.remoteAccessList || localDtc.remoteAccessList.length === 0
+                                    ? renderVal(localDtc.remoteAccessData, "Nenhum informado")
+                                    : localDtc.remoteAccessList.map((a, i) => (
+                                        <div key={i} className="border border-slate-200 bg-slate-50 px-2 py-1 rounded flex gap-3 text-[11px]">
+                                          <span className="font-semibold text-gray-700">{a.system}</span>
+                                          <span>
+                                            <span className="text-gray-500">ID:</span> <code className="font-mono bg-white border border-gray-200 px-1 rounded text-black font-semibold">{a.id}</code>
+                                          </span>
+                                          {a.password && (
+                                            <span>
+                                              <span className="text-gray-500">Senha:</span> <code className="font-mono bg-white border border-gray-200 px-1 rounded text-black font-semibold">{a.password}</code>
+                                            </span>
+                                          )}
+                                        </div>
+                                      ))}
                                 </div>
                               </td>
                             </tr>
@@ -4049,7 +3951,10 @@ function TransicaoPlaceholder() {
                                 <td colSpan={2} className="border border-gray-300 p-2 bg-slate-50">
                                   <div className="flex flex-wrap gap-x-6 gap-y-1 items-center">
                                     <strong>Acesso SO Servidor:</strong>{" "}
-                                    <span>{localDtc.osType || ""}{localDtc.osVersion ? ` (${localDtc.osVersion})` : ""}</span>
+                                    <span>
+                                      {localDtc.osType || ""}
+                                      {localDtc.osVersion ? ` (${localDtc.osVersion})` : ""}
+                                    </span>
                                     <div className="flex gap-4 text-[11px]">
                                       <div>
                                         <span className="text-gray-500 font-medium">Usuário:</span>{" "}
@@ -4070,19 +3975,14 @@ function TransicaoPlaceholder() {
 
                       {/* 3. CONVERSÃO DE DADOS */}
                       <div className="space-y-2">
-                        <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 border-l-2 border-black pl-2">
-                          3. Conversão de Banco de Dados
-                        </h4>
+                        <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 border-l-2 border-black pl-2">3. Conversão de Banco de Dados</h4>
                         <table className="w-full border-collapse border border-gray-300 text-xs">
                           <tbody>
                             <tr>
                               <td className="border border-gray-300 p-2">
                                 <div className="flex items-center gap-2">
                                   <strong>Houve Conversão de Dados:</strong>
-                                  <span className={cn(
-                                    "px-2 py-0.5 rounded text-[10px] font-bold uppercase",
-                                    localDtc.hadConversion ? "bg-emerald-100 text-emerald-800" : "bg-gray-100 text-gray-700"
-                                  )}>
+                                  <span className={cn("px-2 py-0.5 rounded text-[10px] font-bold uppercase", localDtc.hadConversion ? "bg-emerald-100 text-emerald-800" : "bg-gray-100 text-gray-700")}>
                                     {localDtc.hadConversion ? "Sim" : "Não"}
                                   </span>
                                 </div>
@@ -4099,28 +3999,21 @@ function TransicaoPlaceholder() {
 
                       {/* 4. RELATO TÉCNICO */}
                       <div className="space-y-2">
-                        <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 border-l-2 border-black pl-2">
-                          4. Relato Técnico &amp; Processo de Implantação
-                        </h4>
+                        <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 border-l-2 border-black pl-2">4. Relato Técnico &amp; Processo de Implantação</h4>
                         <table className="w-full border-collapse border border-gray-300 text-xs">
                           <tbody>
                             <tr>
                               <td className="border border-gray-300 p-3">
                                 <strong className="block text-[11px] uppercase tracking-wider text-slate-800 mb-1">Processo de Implantação (Resumo):</strong>
                                 <div className="pl-2 border-l-2 border-gray-300 italic text-gray-700 leading-relaxed">
-                                  <LexicalRenderer
-                                    jsonStr={localDtc.implantationProcess}
-                                    fallback="(Nenhum relato técnico de implantação registrado)"
-                                  />
+                                  <LexicalRenderer jsonStr={localDtc.implantationProcess} fallback="(Nenhum relato técnico de implantação registrado)" />
                                 </div>
                                 {localDtc.implantationProcessLogs && localDtc.implantationProcessLogs.length > 0 && (
                                   <div className="mt-2.5 pl-2 border-l-2 border-slate-300 space-y-1.5 bg-slate-50 p-2.5 rounded">
                                     <strong className="block text-[9px] uppercase tracking-wider text-gray-600 font-bold mb-1">Acompanhamento Diário:</strong>
                                     {localDtc.implantationProcessLogs.map((log, idx) => (
                                       <div key={idx} className="text-[11px] leading-relaxed flex items-start gap-2">
-                                        <span className="font-semibold text-gray-700 shrink-0">
-                                          {log.date ? new Date(log.date + "T00:00:00").toLocaleDateString("pt-BR") : ""}:
-                                        </span>
+                                        <span className="font-semibold text-gray-700 shrink-0">{log.date ? new Date(log.date + "T00:00:00").toLocaleDateString("pt-BR") : ""}:</span>
                                         <span className="text-gray-700">{log.description || "(Sem descrição)"}</span>
                                       </div>
                                     ))}
@@ -4138,7 +4031,13 @@ function TransicaoPlaceholder() {
                                     {localDtc.employeesList.map((e, i) => (
                                       <div key={i} className="bg-slate-100 border border-slate-200 px-2 py-0.5 rounded text-[11px] font-medium text-gray-700">
                                         {e.name}
-                                        {e.department && <span className="text-gray-500 font-normal"> ({e.department}{e.role ? ` - ${e.role}` : ""})</span>}
+                                        {e.department && (
+                                          <span className="text-gray-500 font-normal">
+                                            {" "}
+                                            ({e.department}
+                                            {e.role ? ` - ${e.role}` : ""})
+                                          </span>
+                                        )}
                                       </div>
                                     ))}
                                   </div>
@@ -4194,20 +4093,10 @@ function TransicaoPlaceholder() {
                                     <strong className="text-[11px] uppercase tracking-wider text-slate-800">Grau de Satisfação do Cliente:</strong>
                                     <div className="flex items-center gap-0.5">
                                       {Array.from({ length: 5 }).map((_, i) => (
-                                        <Star
-                                          key={i}
-                                          className={cn(
-                                            "h-3.5 w-3.5",
-                                            i < (localDtc.clientSatisfactionScore ?? 0)
-                                              ? "fill-amber-400 text-amber-400"
-                                              : "fill-none text-gray-300"
-                                          )}
-                                        />
+                                        <Star key={i} className={cn("h-3.5 w-3.5", i < (localDtc.clientSatisfactionScore ?? 0) ? "fill-amber-400 text-amber-400" : "fill-none text-gray-300")} />
                                       ))}
                                     </div>
-                                    <span className="font-bold text-amber-600 text-xs">
-                                      {["", "Ruim", "Regular", "Bom", "Muito bom", "Excelente"][localDtc.clientSatisfactionScore ?? 0]}
-                                    </span>
+                                    <span className="font-bold text-amber-600 text-xs">{["", "Ruim", "Regular", "Bom", "Muito bom", "Excelente"][localDtc.clientSatisfactionScore ?? 0]}</span>
                                   </div>
                                 </td>
                               </tr>
@@ -4217,10 +4106,7 @@ function TransicaoPlaceholder() {
                                 <td className="border border-gray-300 p-3">
                                   <strong className="block text-[11px] uppercase tracking-wider text-slate-800 mb-1">Considerações Finais:</strong>
                                   <div className="text-gray-700 pl-1.5 border-l-2 border-slate-300 italic">
-                                    <LexicalRenderer
-                                      jsonStr={localDtc.finalConsiderations}
-                                      fallback="(Sem considerações finais registradas)"
-                                    />
+                                    <LexicalRenderer jsonStr={localDtc.finalConsiderations} fallback="(Sem considerações finais registradas)" />
                                   </div>
                                 </td>
                               </tr>
@@ -4231,9 +4117,7 @@ function TransicaoPlaceholder() {
 
                       {/* 5. PENDÊNCIAS & CHAMADOS */}
                       <div className="space-y-2">
-                        <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 border-l-2 border-black pl-2">
-                          5. Pendências &amp; Chamados de Suporte (0800)
-                        </h4>
+                        <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 border-l-2 border-black pl-2">5. Pendências &amp; Chamados de Suporte (0800)</h4>
                         {localDtc.implantationPendingList && localDtc.implantationPendingList.length > 0 && (
                           <div className="mb-3">
                             <strong className="block text-[10px] uppercase text-gray-600 mb-1.5">Pendências da Implantação:</strong>
@@ -4247,13 +4131,15 @@ function TransicaoPlaceholder() {
                                       {pending.department ? ` - ${pending.department}` : ""}
                                       {pending.assignedTo ? ` (Responsável: ${pending.assignedTo})` : ""}
                                     </span>
-                                    <span className={cn(
-                                      "px-1.5 py-0.5 rounded text-[9px] font-bold uppercase shrink-0",
-                                      pending.status === "Resolvido" && "bg-emerald-100 text-emerald-800",
-                                      pending.status === "Em andamento" && "bg-blue-100 text-blue-800",
-                                      pending.status === "Pendente" && "bg-amber-100 text-amber-800",
-                                      pending.status === "Cancelado" && "bg-gray-100 text-gray-800"
-                                    )}>
+                                    <span
+                                      className={cn(
+                                        "px-1.5 py-0.5 rounded text-[9px] font-bold uppercase shrink-0",
+                                        pending.status === "Resolvido" && "bg-emerald-100 text-emerald-800",
+                                        pending.status === "Em andamento" && "bg-blue-100 text-blue-800",
+                                        pending.status === "Pendente" && "bg-amber-100 text-amber-800",
+                                        pending.status === "Cancelado" && "bg-gray-100 text-gray-800",
+                                      )}
+                                    >
                                       {pending.status}
                                     </span>
                                   </div>
@@ -4267,9 +4153,7 @@ function TransicaoPlaceholder() {
                         )}
                         <div className="border border-gray-300 rounded overflow-hidden">
                           {localDtc.tickets.length === 0 ? (
-                            <div className="p-3 text-center text-gray-500 italic text-xs bg-slate-50">
-                              Nenhuma pendência ou chamado registrado para transição no 0800.
-                            </div>
+                            <div className="p-3 text-center text-gray-500 italic text-xs bg-slate-50">Nenhuma pendência ou chamado registrado para transição no 0800.</div>
                           ) : (
                             <table className="w-full border-collapse text-xs">
                               <thead>
@@ -4298,7 +4182,7 @@ function TransicaoPlaceholder() {
                       </div>
 
                       {/* Assinaturas */}
-                      <div className="grid grid-cols-2 gap-12 text-center text-xs pt-12">
+                      <div className="grid grid-cols-1 gap-10 pt-10 text-center text-xs sm:grid-cols-2 sm:gap-12 sm:pt-12">
                         <div className="space-y-1">
                           <p className="border-t border-black pt-2 font-bold">{localDtc.responsible || "Implantador Responsável"}</p>
                           <p className="text-[10px] text-gray-500">Implantador de Sistemas</p>
@@ -4313,7 +4197,6 @@ function TransicaoPlaceholder() {
                 </CardContent>
               </Card>
             </TabsContent>
-
           </Tabs>
         </div>
       )}
@@ -4326,48 +4209,67 @@ function TransicaoPlaceholder() {
             <div className="text-center border-b-2 border-black pb-4">
               <h2 className="text-2xl font-bold tracking-tight uppercase">Documento de Transição de Conhecimento</h2>
               <h3 className="text-lg font-semibold text-gray-700">Módulo Implantação / Service Desk</h3>
-              {localDtc.supportCallNumber && (
-                <p className="text-sm font-bold text-gray-600 mt-1">Chamado no 0800: {localDtc.supportCallNumber}</p>
-              )}
+              {localDtc.supportCallNumber && <p className="text-sm font-bold text-gray-600 mt-1">Chamado no 0800: {localDtc.supportCallNumber}</p>}
             </div>
 
             {/* Grid */}
             <div className="grid grid-cols-2 border-b-2 border-black pb-4 text-xs gap-y-3 gap-x-6">
-              <div><strong>Implantador Responsável:</strong> {localDtc.responsible || "__________________________"}</div>
-              <div><strong>Analista Suporte:</strong> {localDtc.analystResponsible || "__________________________"}</div>
-              <div className="col-span-2"><strong>Serventia (Cartório):</strong> {localDtc.serventia || "__________________________"}</div>
-              <div><strong>Tabelião/Oficial Titular:</strong> {localDtc.oficial || "__________________________"}</div>
-              <div><strong>Responsável Cartório:</strong> {localDtc.clientResponsible || "__________________________"}{localDtc.clientResponsiblePhone ? ` (${localDtc.clientResponsiblePhone})` : ""}</div>
-              <div className="col-span-2">
-                <strong>Key Users:</strong>{" "}
-                {localDtc.keyUsersList && localDtc.keyUsersList.length > 0
-                  ? localDtc.keyUsersList.map(u => `${u.name}${u.phone ? ` (${u.phone})` : ""}`).join(", ")
-                  : "Nenhum informado"}
+              <div>
+                <strong>Implantador Responsável:</strong> {localDtc.responsible || "__________________________"}
               </div>
-              <div><strong>Telefone:</strong> {localDtc.clientPhone || "__________________________"}</div>
-              <div><strong>E-mail:</strong> {localDtc.clientEmail || "__________________________"}</div>
+              <div>
+                <strong>Analista Suporte:</strong> {localDtc.analystResponsible || "__________________________"}
+              </div>
+              <div className="col-span-2">
+                <strong>Serventia (Cartório):</strong> {localDtc.serventia || "__________________________"}
+              </div>
+              <div>
+                <strong>Tabelião/Oficial Titular:</strong> {localDtc.oficial || "__________________________"}
+              </div>
+              <div>
+                <strong>Responsável Cartório:</strong> {localDtc.clientResponsible || "__________________________"}
+                {localDtc.clientResponsiblePhone ? ` (${localDtc.clientResponsiblePhone})` : ""}
+              </div>
+              <div className="col-span-2">
+                <strong>Key Users:</strong> {localDtc.keyUsersList && localDtc.keyUsersList.length > 0 ? localDtc.keyUsersList.map((u) => `${u.name}${u.phone ? ` (${u.phone})` : ""}`).join(", ") : "Nenhum informado"}
+              </div>
+              <div>
+                <strong>Telefone:</strong> {localDtc.clientPhone || "__________________________"}
+              </div>
+              <div>
+                <strong>E-mail:</strong> {localDtc.clientEmail || "__________________________"}
+              </div>
             </div>
 
             {/* Systems and database */}
             <div className="border-b-2 border-black pb-4 text-xs space-y-3">
               <div className="grid grid-cols-2 gap-3">
-                <div><strong>Sistemas Instalados:</strong> {localDtc.systemsInstalled || "__________________________"}</div>
-                <div><strong>Versões dos Sistemas:</strong> {localDtc.systemVersions || "__________________________"}</div>
-                <div><strong>Versão PostgreSQL:</strong> {localDtc.postgresVersion || "__________________________"}</div>
-                <div><strong>Local Instalação PG:</strong> {localDtc.postgresHost || "__________________________"}</div>
-                <div className="col-span-2"><strong>Acesso Banco PG:</strong> Usuário: {localDtc.postgresUser || "_____"} | Senha: {localDtc.postgresPassword || "_____"}</div>
+                <div>
+                  <strong>Sistemas Instalados:</strong> {localDtc.systemsInstalled || "__________________________"}
+                </div>
+                <div>
+                  <strong>Versões dos Sistemas:</strong> {localDtc.systemVersions || "__________________________"}
+                </div>
+                <div>
+                  <strong>Versão PostgreSQL:</strong> {localDtc.postgresVersion || "__________________________"}
+                </div>
+                <div>
+                  <strong>Local Instalação PG:</strong> {localDtc.postgresHost || "__________________________"}
+                </div>
+                <div className="col-span-2">
+                  <strong>Acesso Banco PG:</strong> Usuário: {localDtc.postgresUser || "_____"} | Senha: {localDtc.postgresPassword || "_____"}
+                </div>
               </div>
               <div>
                 <strong>Dados de Acesso Remoto:</strong>{" "}
-                {!localDtc.remoteAccessList || localDtc.remoteAccessList.length === 0 ? (
-                  localDtc.remoteAccessData || "__________________________"
-                ) : (
-                  localDtc.remoteAccessList.map(a => `${a.system} (ID: ${a.id}${a.password ? `, Senha: ${a.password}` : ""})`).join(" | ")
-                )}
+                {!localDtc.remoteAccessList || localDtc.remoteAccessList.length === 0
+                  ? localDtc.remoteAccessData || "__________________________"
+                  : localDtc.remoteAccessList.map((a) => `${a.system} (ID: ${a.id}${a.password ? `, Senha: ${a.password}` : ""})`).join(" | ")}
               </div>
               {(localDtc.soLogin || localDtc.soPassword || localDtc.osType || localDtc.osVersion) && (
                 <div className="mt-1">
-                  <strong>Acesso SO Servidor:</strong> {localDtc.osType && `${localDtc.osType} `}{localDtc.osVersion && `(${localDtc.osVersion})`} | Usuário: {localDtc.soLogin || "_____"} | Senha: {localDtc.soPassword || "_____"}
+                  <strong>Acesso SO Servidor:</strong> {localDtc.osType && `${localDtc.osType} `}
+                  {localDtc.osVersion && `(${localDtc.osVersion})`} | Usuário: {localDtc.soLogin || "_____"} | Senha: {localDtc.soPassword || "_____"}
                 </div>
               )}
               <div>
@@ -4385,10 +4287,7 @@ function TransicaoPlaceholder() {
               <div>
                 <strong className="block mb-1 text-sm uppercase">Processo de Implantação:</strong>
                 <div className="whitespace-pre-wrap min-h-20 pl-2 border-l-2 border-gray-400 italic mb-2">
-                  <LexicalRenderer 
-                    jsonStr={localDtc.implantationProcess} 
-                    fallback="(Nenhum relato técnico registrado)" 
-                  />
+                  <LexicalRenderer jsonStr={localDtc.implantationProcess} fallback="(Nenhum relato técnico registrado)" />
                 </div>
 
                 {localDtc.implantationProcessLogs && localDtc.implantationProcessLogs.length > 0 && (
@@ -4396,9 +4295,7 @@ function TransicaoPlaceholder() {
                     <strong className="block text-[10px] uppercase tracking-wider text-gray-700 font-bold">Relatórios Diários:</strong>
                     {localDtc.implantationProcessLogs.map((log, idx) => (
                       <div key={idx} className="text-[11px] leading-relaxed">
-                        <span className="font-semibold text-gray-800 mr-1.5">
-                          {log.date ? new Date(log.date + "T00:00:00").toLocaleDateString("pt-BR") : ""}:
-                        </span>
+                        <span className="font-semibold text-gray-800 mr-1.5">{log.date ? new Date(log.date + "T00:00:00").toLocaleDateString("pt-BR") : ""}:</span>
                         <span className="text-gray-700">{log.description || "(Sem descrição)"}</span>
                       </div>
                     ))}
@@ -4406,16 +4303,12 @@ function TransicaoPlaceholder() {
                 )}
               </div>
 
-
-
               <div>
                 <strong className="block mb-1 text-sm uppercase">Funcionários da Serventia:</strong>
                 <div className="whitespace-pre-wrap min-h-16 pl-2 border-l-2 border-gray-400 italic">
-                  {!localDtc.employeesList || localDtc.employeesList.length === 0 ? (
-                    localDtc.employees || "(Nenhum colaborador listado)"
-                  ) : (
-                    localDtc.employeesList.map(e => `${e.name}${e.department ? ` (${e.department}${e.role ? ` - ${e.role}` : ""})` : ""}`).join(", ")
-                  )}
+                  {!localDtc.employeesList || localDtc.employeesList.length === 0
+                    ? localDtc.employees || "(Nenhum colaborador listado)"
+                    : localDtc.employeesList.map((e) => `${e.name}${e.department ? ` (${e.department}${e.role ? ` - ${e.role}` : ""})` : ""}`).join(", ")}
                 </div>
               </div>
 
@@ -4444,20 +4337,22 @@ function TransicaoPlaceholder() {
                   <div className="pl-2 border-l-2 border-gray-400 space-y-2 mb-2">
                     {localDtc.implantationPendingList.map((pending, idx) => (
                       <div key={idx} className="text-xs">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
                           <span className="font-bold text-gray-800">
                             {pending.product ? `[${pending.product}] ` : ""}
                             {pending.title || "(Sem título)"}
                             {pending.department ? ` - ${pending.department}` : ""}
                             {pending.assignedTo ? ` (Responsável: ${pending.assignedTo})` : ""}
                           </span>
-                          <span className={cn(
-                            "px-1.5 py-0.5 rounded-sm text-[9px] font-bold uppercase",
-                            pending.status === "Resolvido" && "bg-emerald-100 text-emerald-800",
-                            pending.status === "Em andamento" && "bg-blue-100 text-blue-800",
-                            pending.status === "Pendente" && "bg-amber-100 text-amber-800",
-                            pending.status === "Cancelado" && "bg-gray-100 text-gray-800"
-                          )}>
+                          <span
+                            className={cn(
+                              "px-1.5 py-0.5 rounded-sm text-[9px] font-bold uppercase",
+                              pending.status === "Resolvido" && "bg-emerald-100 text-emerald-800",
+                              pending.status === "Em andamento" && "bg-blue-100 text-blue-800",
+                              pending.status === "Pendente" && "bg-amber-100 text-amber-800",
+                              pending.status === "Cancelado" && "bg-gray-100 text-gray-800",
+                            )}
+                          >
                             {pending.status}
                           </span>
                         </div>
@@ -4475,7 +4370,7 @@ function TransicaoPlaceholder() {
                   <div className="pl-2 border-l-2 border-gray-400 space-y-2 mb-2">
                     {localDtc.implantationSuggestionsList.map((suggestion, idx) => (
                       <div key={idx} className="text-xs">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
                           <span className="font-bold text-gray-800">
                             {suggestion.product ? `[${suggestion.product}] ` : ""}
                             {suggestion.title || "(Sem título)"}
@@ -4496,19 +4391,9 @@ function TransicaoPlaceholder() {
                   <strong className="block mb-1 text-sm uppercase">Satisfação do Cliente:</strong>
                   <div className="pl-2 border-l-2 border-gray-400 flex items-center gap-1 text-xs mb-3">
                     {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        className={cn(
-                          "h-4 w-4",
-                          i < (localDtc.clientSatisfactionScore ?? 0)
-                            ? "fill-amber-400 text-amber-400"
-                            : "fill-none text-gray-300"
-                        )}
-                      />
+                      <Star key={i} className={cn("h-4 w-4", i < (localDtc.clientSatisfactionScore ?? 0) ? "fill-amber-400 text-amber-400" : "fill-none text-gray-300")} />
                     ))}
-                    <span className="ml-1.5 font-bold text-amber-600">
-                      {["", "Ruim", "Regular", "Bom", "Muito bom", "Excelente"][localDtc.clientSatisfactionScore ?? 0]}
-                    </span>
+                    <span className="ml-1.5 font-bold text-amber-600">{["", "Ruim", "Regular", "Bom", "Muito bom", "Excelente"][localDtc.clientSatisfactionScore ?? 0]}</span>
                   </div>
                 </div>
               ) : null}
@@ -4516,10 +4401,7 @@ function TransicaoPlaceholder() {
               <div>
                 <strong className="block mb-1 text-sm uppercase">Considerações Finais:</strong>
                 <div className="whitespace-pre-wrap min-h-16 pl-2 border-l-2 border-gray-400 italic">
-                  <LexicalRenderer 
-                    jsonStr={localDtc.finalConsiderations} 
-                    fallback="(Nenhuma consideração adicional)" 
-                  />
+                  <LexicalRenderer jsonStr={localDtc.finalConsiderations} fallback="(Nenhuma consideração adicional)" />
                 </div>
               </div>
             </div>
@@ -4574,4 +4456,3 @@ function TransicaoPlaceholder() {
 }
 
 export default TransicaoPlaceholder;
-

@@ -6,10 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
-import {
-  PwaInstallButton,
-  PwaInstallDialog,
-} from "@/components/pwa/PwaInstallControls";
+import { PwaInstallButton, PwaInstallDialog } from "@/components/pwa/PwaInstallControls";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { FloatingCopilot } from "@/components/Copilot/FloatingCopilot";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -30,26 +27,15 @@ export function MainLayout({ children }: MainLayoutProps) {
   const isAssistantsKnowledgePage = location.pathname === "/assistentes/conhecimento";
   const isPosAiLogsPage = location.pathname === "/assistentes/logs";
   const isPosAiLinksChatsPage = location.pathname === "/assistentes/links-chats";
-  const isNoScrollPage =
-    isProjectsPage || isModelsWorkspacePage || isAssistantsKnowledgePage;
-  const isFullBleedPage =
-    isModelsWorkspacePage ||
-    isAssistantsKnowledgePage ||
-    isPosAiLogsPage ||
-    isPosAiLinksChatsPage;
+  const isImplantadoresHomologationPage = location.pathname === "/implantadores/homologation";
+  const isNoScrollPage = isProjectsPage || isModelsWorkspacePage || isAssistantsKnowledgePage || isImplantadoresHomologationPage;
+  const isFullBleedPage = isModelsWorkspacePage || isAssistantsKnowledgePage || isPosAiLogsPage || isPosAiLinksChatsPage || isImplantadoresHomologationPage;
   const isPrintMode = new URLSearchParams(location.search).get("print") === "true";
-  const headerAction = getContextualHeaderAction(
-    location.pathname,
-    (permissionKey) => !permissionKey || hasPermission(permissionKey, "view"),
-  );
+  const headerAction = getContextualHeaderAction(location.pathname, (permissionKey) => !permissionKey || hasPermission(permissionKey, "view"));
   const HeaderActionIcon = headerAction?.icon;
 
   if (isPrintMode) {
-    return (
-      <div className="min-h-screen w-full bg-background print:bg-white print:text-black">
-        {children}
-      </div>
-    );
+    return <div className="min-h-screen w-full bg-background print:bg-white print:text-black">{children}</div>;
   }
 
   return (
@@ -74,13 +60,7 @@ export function MainLayout({ children }: MainLayoutProps) {
 
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               {headerAction && HeaderActionIcon && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2 hidden md:flex"
-                  title={`Ir para ${headerAction.label}`}
-                  onClick={() => navigate(headerAction.path)}
-                >
+                <Button variant="outline" size="sm" className="gap-2 hidden md:flex" title={`Ir para ${headerAction.label}`} onClick={() => navigate(headerAction.path)}>
                   <HeaderActionIcon className="h-4 w-4" />
                   {headerAction.label}
                   <ArrowRight className="h-4 w-4" />
@@ -92,9 +72,7 @@ export function MainLayout({ children }: MainLayoutProps) {
             </div>
           </header>
 
-          <main className={`flex-1 flex flex-col ${isNoScrollPage ? 'overflow-hidden' : 'overflow-auto'} ${isFullBleedPage ? 'p-0' : 'pt-2 sm:pt-3 px-3 sm:px-6 pb-3 sm:pb-6'} min-w-0`}>
-            {children}
-          </main>
+          <main className={`flex-1 flex flex-col ${isNoScrollPage ? "overflow-hidden" : "overflow-auto"} ${isFullBleedPage ? "p-0" : "pt-2 sm:pt-3 px-3 sm:px-6 pb-3 sm:pb-6"} min-w-0`}>{children}</main>
         </div>
 
         {/* Botao flutuante do Copiloto (so aparece para usuarios habilitados) */}

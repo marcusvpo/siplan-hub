@@ -4,13 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Trash2, Plus, ArrowUp, ArrowDown, Settings2, ListPlus, Image, FileText, Binary, CheckSquare, Type, HelpCircle, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -26,14 +20,10 @@ export interface VisualQuestion {
 interface VisualQuestionBuilderProps {
   questions: VisualQuestion[];
   onChange: (questions: VisualQuestion[]) => void;
-  kind?: 'adherence' | 'commercial_checklist' | 'homologation_checklist';
+  kind?: "adherence" | "commercial_checklist" | "homologation_checklist";
 }
 
-export function VisualQuestionBuilder({
-  questions,
-  onChange,
-  kind,
-}: VisualQuestionBuilderProps) {
+export function VisualQuestionBuilder({ questions, onChange, kind }: VisualQuestionBuilderProps) {
   const theme = {
     adherence: {
       text: "text-amber-600 dark:text-amber-400",
@@ -67,9 +57,9 @@ export function VisualQuestionBuilder({
       addBtn: "hover:border-violet-500 hover:bg-violet-500/5 text-violet-600 dark:text-violet-400 hover:text-violet-700",
       inputFocus: "focus-visible:ring-violet-500",
       bulletBg: "bg-violet-500",
-    }
+    },
   }[kind || "adherence"];
-  
+
   // Add a new blank question
   const handleAddQuestion = () => {
     const newQuestion: VisualQuestion = {
@@ -91,18 +81,15 @@ export function VisualQuestionBuilder({
     onChange(
       questions.map((q) => {
         if (q.id !== id) return q;
-        
+
         // If type changed to select/checkboxes and there are no options, initialize them
         const updated = { ...q, ...updates };
-        if (
-          (updates.type === "select" || updates.type === "checkboxes") &&
-          (!updated.options || updated.options.length === 0)
-        ) {
+        if ((updates.type === "select" || updates.type === "checkboxes") && (!updated.options || updated.options.length === 0)) {
           updated.options = ["Opção 1"];
         }
 
         return updated;
-      })
+      }),
     );
   };
 
@@ -113,7 +100,7 @@ export function VisualQuestionBuilder({
 
     const newQuestions = [...questions];
     const targetIndex = direction === "up" ? index - 1 : index + 1;
-    
+
     // Swap
     const temp = newQuestions[index];
     newQuestions[index] = newQuestions[targetIndex];
@@ -132,7 +119,7 @@ export function VisualQuestionBuilder({
           ...q,
           options: [...currentOptions, `Opção ${currentOptions.length + 1}`],
         };
-      })
+      }),
     );
   };
 
@@ -146,7 +133,7 @@ export function VisualQuestionBuilder({
           ...q,
           options: currentOptions,
         };
-      })
+      }),
     );
   };
 
@@ -159,7 +146,7 @@ export function VisualQuestionBuilder({
           ...q,
           options: currentOptions.length > 0 ? currentOptions : ["Opção 1"], // keep at least 1 option
         };
-      })
+      }),
     );
   };
 
@@ -193,17 +180,15 @@ export function VisualQuestionBuilder({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-4 sm:space-y-6">
       {/* Questions list */}
       <div className="space-y-4">
         {questions.length === 0 ? (
-          <div className="p-8 border border-dashed rounded-xl flex flex-col items-center justify-center text-center space-y-3 bg-muted/10">
+          <div className="flex flex-col items-center justify-center space-y-3 rounded-xl border border-dashed bg-muted/10 p-5 text-center sm:p-8">
             <Settings2 className="h-8 w-8 text-muted-foreground animate-pulse" />
             <div className="space-y-1">
               <h4 className="text-sm font-bold">Nenhuma pergunta cadastrada</h4>
-              <p className="text-xs text-muted-foreground max-w-xs">
-                Clique no botão abaixo para adicionar a primeira pergunta ao formulário.
-              </p>
+              <p className="text-xs text-muted-foreground max-w-xs">Clique no botão abaixo para adicionar a primeira pergunta ao formulário.</p>
             </div>
           </div>
         ) : (
@@ -211,63 +196,33 @@ export function VisualQuestionBuilder({
             <Card
               key={q.id}
               className={cn(
-                "border-muted hover:border-muted-foreground/30 shadow-sm hover:shadow group overflow-hidden transition-all duration-200 bg-card/60 relative",
-                q.type === "section"
-                  ? `${theme.border} ${theme.bg} border-l-4 ${theme.borderLeft}`
-                  : "border-l-4 border-l-muted-foreground/25"
+                "group relative min-w-0 overflow-hidden border-muted bg-card/60 shadow-sm transition-all duration-200 hover:border-muted-foreground/30 hover:shadow",
+                q.type === "section" ? `${theme.border} ${theme.bg} border-l-4 ${theme.borderLeft}` : "border-l-4 border-l-muted-foreground/25",
               )}
             >
-              <CardContent className="p-5 space-y-4">
+              <CardContent className="min-w-0 space-y-4 p-3 sm:p-5">
                 {/* Header row: Question Title & Reordering */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                  <div className="flex items-center gap-2.5 w-full sm:max-w-md">
-                    <span className="text-xs font-bold bg-muted px-2 py-1 rounded border text-muted-foreground min-w-[24px] text-center">
-                      {index + 1}
-                    </span>
+                  <div className="flex min-w-0 w-full items-center gap-2 sm:max-w-md sm:gap-2.5">
+                    <span className="text-xs font-bold bg-muted px-2 py-1 rounded border text-muted-foreground min-w-[24px] text-center">{index + 1}</span>
                     <Input
                       value={q.title}
                       onChange={(e) => handleUpdateQuestion(q.id, { title: e.target.value })}
                       placeholder={q.type === "section" ? "Título da Seção (Ex: 1. Setor de Firmas)" : "Título da Pergunta"}
-                      className={cn(
-                        "font-bold text-sm bg-card border-muted-foreground/30 focus-visible:ring-primary h-9 flex-1",
-                        q.type === "section" ? `${theme.text} ${theme.inputFocus}` : ""
-                      )}
+                      className={cn("h-9 min-w-0 flex-1 border-muted-foreground/30 bg-card text-sm font-bold focus-visible:ring-primary", q.type === "section" ? `${theme.text} ${theme.inputFocus}` : "")}
                     />
                   </div>
 
                   {/* Actions buttons */}
-                  <div className="flex items-center gap-1.5 ml-auto sm:ml-0 shrink-0">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleMoveQuestion(index, "up")}
-                      disabled={index === 0}
-                      className="h-8 w-8 hover:bg-muted"
-                      title="Mover para Cima"
-                    >
+                  <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:ml-0">
+                    <Button type="button" variant="ghost" size="icon" onClick={() => handleMoveQuestion(index, "up")} disabled={index === 0} className="h-8 w-8 hover:bg-muted" title="Mover para Cima">
                       <ArrowUp className="h-4 w-4" />
                     </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleMoveQuestion(index, "down")}
-                      disabled={index === questions.length - 1}
-                      className="h-8 w-8 hover:bg-muted"
-                      title="Mover para Baixo"
-                    >
+                    <Button type="button" variant="ghost" size="icon" onClick={() => handleMoveQuestion(index, "down")} disabled={index === questions.length - 1} className="h-8 w-8 hover:bg-muted" title="Mover para Baixo">
                       <ArrowDown className="h-4 w-4" />
                     </Button>
                     <div className="h-4 w-px bg-muted mx-1" />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleRemoveQuestion(q.id)}
-                      className="h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20"
-                      title="Excluir Pergunta"
-                    >
+                    <Button type="button" variant="ghost" size="icon" onClick={() => handleRemoveQuestion(q.id)} className="h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20" title="Excluir Pergunta">
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -281,7 +236,9 @@ export function VisualQuestionBuilder({
                     <Select
                       value={q.type}
                       onValueChange={(val) =>
-                        handleUpdateQuestion(q.id, { type: val as VisualQuestion["type"] })
+                        handleUpdateQuestion(q.id, {
+                          type: val as VisualQuestion["type"],
+                        })
                       }
                     >
                       <SelectTrigger className="h-9 bg-card border-muted-foreground/30">
@@ -315,30 +272,24 @@ export function VisualQuestionBuilder({
                         </Label>
                         <span className="text-[10px] text-muted-foreground/75 mt-0.5">Torna o preenchimento mandatório</span>
                       </div>
-                      <Switch
-                        id={`req-${q.id}`}
-                        checked={q.required}
-                        onCheckedChange={(checked) => handleUpdateQuestion(q.id, { required: checked })}
-                      />
+                      <Switch id={`req-${q.id}`} checked={q.required} onCheckedChange={(checked) => handleUpdateQuestion(q.id, { required: checked })} />
                     </div>
                   )}
                 </div>
 
                 {/* Options section (renders if type is select or checkboxes) */}
                 {(q.type === "select" || q.type === "checkboxes") && (
-                  <div className={`pl-4 border-l-2 ${theme.border} space-y-2`}>
-                    <Label className={`text-xs font-bold ${theme.text} tracking-wide uppercase flex items-center gap-1`}>
-                      Opções da Pergunta
-                    </Label>
-                    <div className="space-y-2 max-w-md">
+                  <div className={`min-w-0 border-l-2 pl-2 sm:pl-4 ${theme.border} space-y-2`}>
+                    <Label className={`text-xs font-bold ${theme.text} tracking-wide uppercase flex items-center gap-1`}>Opções da Pergunta</Label>
+                    <div className="min-w-0 max-w-md space-y-2">
                       {(q.options || []).map((opt, optIdx) => (
-                        <div key={optIdx} className="flex items-center gap-2">
+                        <div key={optIdx} className="flex min-w-0 items-center gap-2">
                           <span className={cn("h-1.5 w-1.5 rounded-full opacity-50 shrink-0", theme.bulletBg)} />
                           <Input
                             value={opt}
                             onChange={(e) => handleUpdateOption(q.id, optIdx, e.target.value)}
                             placeholder={`Opção ${optIdx + 1}`}
-                            className={cn("h-8 text-xs bg-card border-muted-foreground/20", theme.inputFocus)}
+                            className={cn("h-8 min-w-0 text-xs bg-card border-muted-foreground/20", theme.inputFocus)}
                           />
                           <Button
                             type="button"
@@ -353,13 +304,7 @@ export function VisualQuestionBuilder({
                           </Button>
                         </div>
                       ))}
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleAddOption(q.id)}
-                        className={cn("h-8 text-[11px] gap-1 px-3 border border-muted hover:bg-muted/50", theme.button)}
-                      >
+                      <Button type="button" variant="outline" size="sm" onClick={() => handleAddOption(q.id)} className={cn("h-8 text-[11px] gap-1 px-3 border border-muted hover:bg-muted/50", theme.button)}>
                         <Plus className="h-3.5 w-3.5" />
                         Adicionar Opção
                       </Button>
@@ -373,12 +318,7 @@ export function VisualQuestionBuilder({
       </div>
 
       {/* Add question button */}
-      <Button
-        type="button"
-        variant="outline"
-        onClick={handleAddQuestion}
-        className={cn("w-full py-6 border-dashed border-2 transition-all text-xs font-bold gap-2 hover:bg-muted/50", theme.addBtn)}
-      >
+      <Button type="button" variant="outline" onClick={handleAddQuestion} className={cn("w-full py-6 border-dashed border-2 transition-all text-xs font-bold gap-2 hover:bg-muted/50", theme.addBtn)}>
         <Plus className="h-4 w-4" />
         Adicionar Nova Pergunta
       </Button>
@@ -387,12 +327,8 @@ export function VisualQuestionBuilder({
 }
 
 // SERIALIZATION HELPERS
-export function convertVisualToJSONSchema(
-  questions: VisualQuestion[],
-  title: string,
-  description: string
-) {
-  const hasAdherence = questions.some(q => q.type === "section" || q.type === "boolean_adherence" || q.type === "textarea_adherence" || q.type === "date_adherence");
+export function convertVisualToJSONSchema(questions: VisualQuestion[], title: string, description: string) {
+  const hasAdherence = questions.some((q) => q.type === "section" || q.type === "boolean_adherence" || q.type === "textarea_adherence" || q.type === "date_adherence");
 
   if (hasAdherence) {
     const properties: Record<string, any> = {};
@@ -436,9 +372,13 @@ export function convertVisualToJSONSchema(
             title: q.title,
             properties: {
               valor: { type: "string", title: "Resposta" },
-              impacto: { type: "boolean", title: "Possui algum impacto?", default: false },
-              detalhes: { type: "string", title: "Detalhes do Impacto" }
-            }
+              impacto: {
+                type: "boolean",
+                title: "Possui algum impacto?",
+                default: false,
+              },
+              detalhes: { type: "string", title: "Detalhes do Impacto" },
+            },
           };
         } else if (isDate) {
           currentSectionProps[qKey] = {
@@ -446,9 +386,13 @@ export function convertVisualToJSONSchema(
             title: q.title,
             properties: {
               valor: { type: "string", title: "Resposta", format: "date" },
-              impacto: { type: "boolean", title: "Possui algum impacto?", default: false },
-              detalhes: { type: "string", title: "Detalhes do Impacto" }
-            }
+              impacto: {
+                type: "boolean",
+                title: "Possui algum impacto?",
+                default: false,
+              },
+              detalhes: { type: "string", title: "Detalhes do Impacto" },
+            },
           };
         } else {
           currentSectionProps[qKey] = {
@@ -456,9 +400,13 @@ export function convertVisualToJSONSchema(
             title: q.title,
             properties: {
               utiliza: { type: "boolean", title: "Utiliza?", default: false },
-              impacto: { type: "boolean", title: "Possui algum impacto?", default: false },
-              detalhes: { type: "string", title: "Detalhes do Impacto" }
-            }
+              impacto: {
+                type: "boolean",
+                title: "Possui algum impacto?",
+                default: false,
+              },
+              detalhes: { type: "string", title: "Detalhes do Impacto" },
+            },
           };
         }
       } else {
@@ -471,7 +419,11 @@ export function convertVisualToJSONSchema(
         } else if (q.type === "number") {
           properties[qKey] = { type: "number", title: q.title };
         } else if (q.type === "boolean") {
-          properties[qKey] = { type: "boolean", title: q.title, default: false };
+          properties[qKey] = {
+            type: "boolean",
+            title: q.title,
+            default: false,
+          };
         } else if (q.type === "select") {
           properties[qKey] = {
             type: "string",
@@ -588,7 +540,7 @@ export function convertVisualToJSONSchema(
 }
 
 export function convertVisualToUISchema(questions: VisualQuestion[]) {
-  const hasAdherence = questions.some(q => q.type === "section" || q.type === "boolean_adherence" || q.type === "textarea_adherence" || q.type === "date_adherence");
+  const hasAdherence = questions.some((q) => q.type === "section" || q.type === "boolean_adherence" || q.type === "textarea_adherence" || q.type === "date_adherence");
 
   if (hasAdherence) {
     const uiSchema: Record<string, any> = {};
@@ -634,20 +586,20 @@ export function convertVisualToUISchema(questions: VisualQuestion[]) {
             "ui:field": "adherenceQuestion",
             valor: {
               "ui:widget": "textarea",
-              "ui:options": { placeholder }
-            }
+              "ui:options": { placeholder },
+            },
           };
         } else if (isDate) {
           currentSectionUi[qKey] = {
             "ui:field": "adherenceQuestion",
             valor: {
               "ui:widget": "date",
-              "ui:options": { placeholder: "DD/MM/YYYY" }
-            }
+              "ui:options": { placeholder: "DD/MM/YYYY" },
+            },
           };
         } else {
           currentSectionUi[qKey] = {
-            "ui:field": "adherenceQuestion"
+            "ui:field": "adherenceQuestion",
           };
         }
       } else {
@@ -703,7 +655,7 @@ export function parseJSONSchemaToVisual(schema: any, uiSchema: any): VisualQuest
   const requiredList = schema.required || [];
 
   // Check if it is a nested section schema (e.g. Orion TN template)
-  const isNested = Object.keys(schema.properties).some(key => {
+  const isNested = Object.keys(schema.properties).some((key) => {
     const prop = schema.properties[key];
     return prop && prop.type === "object" && prop.properties && !("impacto" in prop.properties);
   });
@@ -732,8 +684,7 @@ export function parseJSONSchemaToVisual(schema: any, uiSchema: any): VisualQuest
           const isText = "valor" in qProp.properties;
           let type: VisualQuestion["type"] = "boolean_adherence";
           if (isText) {
-            const isDate = qProp.properties.valor?.format === "date" || 
-                           uiSchema?.[secKey]?.[qKey]?.valor?.["ui:widget"] === "date";
+            const isDate = qProp.properties.valor?.format === "date" || uiSchema?.[secKey]?.[qKey]?.valor?.["ui:widget"] === "date";
             type = isDate ? "date_adherence" : "textarea_adherence";
           }
           questions.push({

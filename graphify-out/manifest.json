@@ -230,9 +230,9 @@
     "semantic_hash": ""
   },
   "src/components/FormRenderer/VisualQuestionBuilder.tsx": {
-    "mtime": 1782132906.2446828,
-    "ast_hash": "fbeef457886221679d8422238870cfb9",
-    "semantic_hash": "fbeef457886221679d8422238870cfb9"
+    "mtime": 1788273823.0858407,
+    "ast_hash": "4535453de96281a7961d1e5b04cff5c6",
+    "semantic_hash": ""
   },
   "src/components/Layout/AppSidebar.tsx": {
     "mtime": 1787935561.4491436,
@@ -245,8 +245,8 @@
     "semantic_hash": ""
   },
   "src/components/Layout/MainLayout.tsx": {
-    "mtime": 1788271578.9955616,
-    "ast_hash": "dc69a375aae41d22f762d806c6e591de",
+    "mtime": 1788273822.747196,
+    "ast_hash": "fa2def4f11b69bf6320b210cf32df580",
     "semantic_hash": ""
   },
   "src/components/Layout/UserProfileDrawer.tsx": {
@@ -460,8 +460,8 @@
     "semantic_hash": ""
   },
   "src/components/checklist/ChecklistEditor.tsx": {
-    "mtime": 1784123070.6382153,
-    "ast_hash": "d6cf62f3ac3a74ddeca3b1d62f262be8",
+    "mtime": 1788273822.8813014,
+    "ast_hash": "7ab79b35d0cf0065fe3aa9117a9628aa",
     "semantic_hash": ""
   },
   "src/components/commercial/DeploymentFormFields.tsx": {
@@ -665,8 +665,8 @@
     "semantic_hash": "6c2a4c39fb3f889fe94b854b7198b5ed"
   },
   "src/components/ui/rich-text-editor.tsx": {
-    "mtime": 1787930496.2368786,
-    "ast_hash": "1f5ac41548f873a83ea911a71a223fb6",
+    "mtime": 1788273823.1280026,
+    "ast_hash": "3269f3703c249951171387abe9ecb943",
     "semantic_hash": ""
   },
   "src/components/ui/scroll-area.tsx": {
@@ -1200,14 +1200,14 @@
     "semantic_hash": ""
   },
   "src/pages/implantadores/AderenciasFinalizadas.tsx": {
-    "mtime": 1784123070.655293,
-    "ast_hash": "c02de4f4c4cde683ed5d02bd54f8eee2",
+    "mtime": 1788273823.258599,
+    "ast_hash": "8e17d01deedc4f8f8ff8d7ee3e9371fc",
     "semantic_hash": ""
   },
   "src/pages/implantadores/EditarFormAderencia.tsx": {
-    "mtime": 1782132906.3083231,
-    "ast_hash": "08f748249b9a52614b026379c3c0bc95",
-    "semantic_hash": "08f748249b9a52614b026379c3c0bc95"
+    "mtime": 1788273823.148602,
+    "ast_hash": "32dfa00e396a5b7c9202b0cc8a23829c",
+    "semantic_hash": ""
   },
   "src/pages/implantadores/Implantadores.tsx": {
     "mtime": 1782132906.3094375,
@@ -1215,19 +1215,19 @@
     "semantic_hash": "31dca860292f63ab77ec000761bfb302"
   },
   "src/pages/implantadores/ImplantadoresHomologation.tsx": {
-    "mtime": 1787930496.2833166,
-    "ast_hash": "3b02353b9c7ea8498c00140e938cfea6",
+    "mtime": 1788273823.5987034,
+    "ast_hash": "0e847903f198762a2bb7f3c192750979",
     "semantic_hash": ""
   },
   "src/pages/implantadores/TransicaoPlaceholder.tsx": {
-    "mtime": 1784123070.6583219,
-    "ast_hash": "8fb13d88ec7ad4ffaf33128b444dba9e",
+    "mtime": 1788273989.4466789,
+    "ast_hash": "ff1bcb53e2965927a50576dca9e7af18",
     "semantic_hash": ""
   },
   "src/pages/implantadores/TreinamentoPlaceholder.tsx": {
-    "mtime": 1781122833.2353115,
-    "ast_hash": "928e858343c29c6dbbe74c07d884fcd3",
-    "semantic_hash": "928e858343c29c6dbbe74c07d884fcd3"
+    "mtime": 1788273823.6167698,
+    "ast_hash": "01a8130659378a5b059f0f6cd134146a",
+    "semantic_hash": ""
   },
   "src/pages/public/PublicChecklist.tsx": {
     "mtime": 1781122833.2353115,
@@ -2980,13 +2980,13 @@
     "semantic_hash": ""
   },
   "src/components/Admin/PosAiChatLinksManager.tsx": {
-    "mtime": 1788271768.5266268,
-    "ast_hash": "fc522d3a3b20b598ac5fcbb313ace20d",
+    "mtime": 1788272940.7755103,
+    "ast_hash": "fadabd7edeb0411bcd9ce10d2bb018b1",
     "semantic_hash": ""
   },
   "src/components/Admin/PosAiVisitorAnalytics.tsx": {
-    "mtime": 1788271469.9760396,
-    "ast_hash": "d4e914cc4b0d79424ea41441cceda8be",
+    "mtime": 1788272940.7860608,
+    "ast_hash": "eefa1535792ee3c8d74b24b23187be3b",
     "semantic_hash": ""
   },
   "src/components/DeploymentsTickets/TicketsAiAnalysis.tsx": {
@@ -3025,48 +3025,48 @@
     "semantic_hash": ""
   },
   "src/components/knowledge/ArticleMetadataCard.tsx": {
-    "mtime": 1788271348.4952106,
-    "ast_hash": "0ef805a1a496f4803eda2b3c34945245",
+    "mtime": 1788272940.801174,
+    "ast_hash": "7a72e37e04c1e2f6b9f9cecbbe6a31c7",
     "semantic_hash": ""
   },
   "src/components/knowledge/ArticleNavigator.tsx": {
-    "mtime": 1788272747.7638586,
-    "ast_hash": "d46f6d79f8dcbc466079208065d0b802",
+    "mtime": 1788272940.803173,
+    "ast_hash": "b828ac66ed477fa9be93aaf748d83bb2",
     "semantic_hash": ""
   },
   "src/components/knowledge/BunnyVideoModal.tsx": {
-    "mtime": 1788271554.1545167,
-    "ast_hash": "468350f110783d7667d462732bc4a601",
+    "mtime": 1788272940.804193,
+    "ast_hash": "efc7b3e4211dd48be316aa52da79c1e3",
     "semantic_hash": ""
   },
   "src/components/knowledge/CreateRoutineModal.tsx": {
-    "mtime": 1788271554.1042652,
-    "ast_hash": "1da7e4bd7e4ab14b058ece69e4690c93",
+    "mtime": 1788272940.818769,
+    "ast_hash": "d5a2d6d2b5e0d9119f80d3dbcd3d819c",
     "semantic_hash": ""
   },
   "src/components/knowledge/MarkdownTiptapEditor.tsx": {
-    "mtime": 1788271348.4942024,
-    "ast_hash": "1cdade04da719ae2366d49f203cdfa3d",
+    "mtime": 1788272940.8197749,
+    "ast_hash": "9dd98046b2e137785abdde57ec64f85a",
     "semantic_hash": ""
   },
   "src/components/knowledge/RestoreVersionModal.tsx": {
-    "mtime": 1788271554.1836083,
-    "ast_hash": "8265b1a5342d3b39998c25e3e11358d2",
+    "mtime": 1788272940.8222926,
+    "ast_hash": "15b5570174a40151b3c79da38ad40f95",
     "semantic_hash": ""
   },
   "src/components/knowledge/SavePublishModal.tsx": {
-    "mtime": 1788271554.1620402,
-    "ast_hash": "4571174fea0b8ef1ff6dd94c91d6cc65",
+    "mtime": 1788272940.824296,
+    "ast_hash": "bd673a5c901758d219a344109b03160a",
     "semantic_hash": ""
   },
   "src/components/knowledge/UnsavedChangesDialog.tsx": {
-    "mtime": 1788271554.1836083,
-    "ast_hash": "94893fd528cfce6da0bda8cf9a6d563d",
+    "mtime": 1788272940.825293,
+    "ast_hash": "1cb263a2bbba66a935b1c54bb1cf4dff",
     "semantic_hash": ""
   },
   "src/components/knowledge/VersionDetailModal.tsx": {
-    "mtime": 1788271554.16304,
-    "ast_hash": "e4699aa281ff9bc3947c1134b68122ab",
+    "mtime": 1788272940.8262935,
+    "ast_hash": "84f3a47f32f62b656778b6545a231946",
     "semantic_hash": ""
   },
   "src/components/knowledge/VersionHistoryDrawer.tsx": {
@@ -3345,13 +3345,13 @@
     "semantic_hash": ""
   },
   "src/pages/admin/PosAiLogs.tsx": {
-    "mtime": 1788271540.7901416,
-    "ast_hash": "04b36b84abbdc965400845ba1a737827",
+    "mtime": 1788272940.8262935,
+    "ast_hash": "4abc43fee828d2773ef469b5003e6563",
     "semantic_hash": ""
   },
   "src/pages/assistants/KnowledgeEditorPage.tsx": {
-    "mtime": 1788271348.493173,
-    "ast_hash": "0e43475cc36f438fa7c9479543089d13",
+    "mtime": 1788272940.830335,
+    "ast_hash": "84bb2ce3b9840039b9a141e6279acea7",
     "semantic_hash": ""
   },
   "src/pages/cs-cx/CsCxAdmin.tsx": {
@@ -3630,8 +3630,8 @@
     "semantic_hash": ""
   },
   "src/test/pos-ai-visitor-analytics.test.tsx": {
-    "mtime": 1788271697.6825306,
-    "ast_hash": "c4c43aba0404a8d0b148d892b67b6c97",
+    "mtime": 1788272940.8323298,
+    "ast_hash": "33d0d8bacbcdb80d675d3bad6edcf5a8",
     "semantic_hash": ""
   },
   "src/test/pos-chat-history-sidebar.test.tsx": {
@@ -4230,8 +4230,8 @@
     "semantic_hash": ""
   },
   "src/pages/assistants/PosAiLinksChats.tsx": {
-    "mtime": 1788271768.525627,
-    "ast_hash": "a61183710cb9b8452a9edec63b534c59",
+    "mtime": 1788272940.830335,
+    "ast_hash": "3280e6693ff5d56efb3789e5bca39f7c",
     "semantic_hash": ""
   },
   "src/test/pos-ai-chat-links-migration.test.ts": {
@@ -4265,8 +4265,8 @@
     "semantic_hash": ""
   },
   "src/components/Admin/PosAiChatUsersManager.tsx": {
-    "mtime": 1788271768.5266268,
-    "ast_hash": "1d07b0601b6dd8b6d8ea0c08d96553b2",
+    "mtime": 1788272940.7765112,
+    "ast_hash": "60344c2fa92e696e320e7cf52d42836a",
     "semantic_hash": ""
   },
   "src/components/Admin/SearchableClientSelect.tsx": {
@@ -4645,8 +4645,13 @@
     "semantic_hash": ""
   },
   "src/test/assistants-mobile-layout.test.ts": {
-    "mtime": 1788272747.7653801,
-    "ast_hash": "5670d71aeb10c578796b302b8c48a9fc",
+    "mtime": 1788272940.8313274,
+    "ast_hash": "3f2be12f04732c96a562bac0148c4d90",
+    "semantic_hash": ""
+  },
+  "src/test/implantadores-mobile-layout.test.ts": {
+    "mtime": 1788273812.4445906,
+    "ast_hash": "18afc304cc33ca3dd1f9d39f2a64bb65",
     "semantic_hash": ""
   }
 }
