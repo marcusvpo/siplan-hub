@@ -109,4 +109,19 @@ describe("interações do BI de atendimento", () => {
     expect(screen.getByText("#1006")).toBeInTheDocument();
     expect(screen.queryByText("#1001")).not.toBeInTheDocument();
   });
+
+  it("inicia com os filtros recolhidos no celular e permite expandir", () => {
+    const desktopWidth = window.innerWidth;
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: 390 });
+
+    try {
+      render(<SdAttendanceBi />);
+
+      expect(screen.queryByLabelText("Data inicial do BI")).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: "Abrir filtros do BI" }));
+      expect(screen.getByLabelText("Data inicial do BI")).toBeInTheDocument();
+    } finally {
+      Object.defineProperty(window, "innerWidth", { configurable: true, value: desktopWidth });
+    }
+  });
 });

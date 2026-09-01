@@ -53,4 +53,11 @@ describe("responsividade das telas do SD", () => {
     expect(attendanceBi.match(/className="text-\[11px\] \[&_td\]/g)).toHaveLength(2);
     expect(attendanceBi).toContain("width={isMobile ? 86 : 150}");
   });
+
+  it("recolhe os filtros do BI por padrão no celular", () => {
+    expect(attendanceBi).toContain("window.innerWidth >= 768");
+    expect(attendanceBi).toContain("<Collapsible open={filtersOpen}");
+    expect(attendanceBi).toContain("Abrir filtros do BI");
+    expect(attendanceBi).toContain("activeFilterCount");
+  });
 });
