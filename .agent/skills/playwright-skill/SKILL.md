@@ -8,9 +8,9 @@ This skill can be installed in different locations (plugin system, manual instal
 
 Common installation paths:
 
-- Plugin system: `~/.claude/plugins/marketplaces/playwright-skill/skills/playwright-skill`
-- Manual global: `~/.claude/skills/playwright-skill`
-- Project-specific: `<project>/.claude/skills/playwright-skill`
+- Project tool bundle: `<project>/.agent/skills/playwright-skill`
+- Codex project skill: `<project>/.codex/skills/playwright-skill`
+- Codex global skill: `$CODEX_HOME/skills/playwright-skill`
 
 # Playwright Browser Automation
 
@@ -416,7 +416,7 @@ Add wait: `await page.waitForSelector('.element', { timeout: 10000 })`
 ```
 User: "Test if the marketing page looks good"
 
-Claude: I'll test the marketing page across multiple viewports. Let me first detect running servers...
+Agent: I'll test the marketing page across multiple viewports. Let me first detect running servers...
 [Runs: detectDevServers()]
 [Output: Found server on port 3001]
 I found your dev server running on http://localhost:3001
@@ -429,7 +429,7 @@ I found your dev server running on http://localhost:3001
 ```
 User: "Check if login redirects correctly"
 
-Claude: I'll test the login flow. First, let me check for running servers...
+Agent: I'll test the login flow. First, let me check for running servers...
 [Runs: detectDevServers()]
 [Output: Found servers on ports 3000 and 3001]
 I found 2 dev servers. Which one should I test?

@@ -2,10 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const MODEL_SKILL_PARTS = ["skills", "criar-modelo-mesclado", "SKILL.md"];
-const MODEL_SKILL_SOURCES = [
-  [".codex", ...MODEL_SKILL_PARTS],
-  [".claude", ...MODEL_SKILL_PARTS],
-] as const;
+const MODEL_SKILL_SOURCE = [".codex", ...MODEL_SKILL_PARTS] as const;
 
 function buildManagedSkill(sourceRelativePath: string): string {
   return `---
@@ -71,26 +68,13 @@ o fluxo.
  * apenas descoberta pelo Codex e as regras do worker headless.
  */
 export async function ensureCodexModelSkill(projectDir: string): Promise<string> {
-  let source: string | undefined;
-  let sourceRelativePath: string | undefined;
-  const searched: string[] = [];
-
-  for (const parts of MODEL_SKILL_SOURCES) {
-    const candidate = path.join(projectDir, ...parts);
-    searched.push(candidate);
-    try {
-      await readFile(candidate, "utf-8");
-      source = candidate;
-      sourceRelativePath = parts.join("/");
-      break;
-    } catch {
-      // Tenta a proxima instalacao suportada.
-    }
-  }
-
-  if (!source || !sourceRelativePath) {
+  const source = path.join(projectDir, ...MODEL_SKILL_SOURCE);
+  const sourceRelativePath = MODEL_SKILL_SOURCE.join("/");
+  try {
+    await readFile(source, "utf-8");
+  } catch {
     throw new Error(
-      `Skill criar-modelo-mesclado nao encontrada. Caminhos verificados: ${searched.join(", ")}`
+      `Skill criar-modelo-mesclado nao encontrada: ${source}`
     );
   }
 

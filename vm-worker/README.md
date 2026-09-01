@@ -91,7 +91,7 @@ acionamento imediato por Realtime.
   `node_modules/.bin/codex`; `CODEX_BIN` permite override.
 - **Skill Codex:** no inicio de cada job o worker instala/atualiza automaticamente
   `.agents/skills/criar-modelo-mesclado/SKILL.md` dentro do Orion.Modelos. O wrapper carrega a skill
-  nativa de `.codex/skills` (com fallback para a instalacao legada em `.claude/skills`), aplica as
+  exclusivamente da fonte nativa em `.codex/skills` e aplica as
   regras headless e elimina perguntas/confirmacoes.
 
 </details>
