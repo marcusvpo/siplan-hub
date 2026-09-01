@@ -81,6 +81,14 @@ const CLASS_LABELS: Record<string, string> = {
   DETRATOR: "Detrator",
 };
 const DEFAULT_PAGE_SIZE = 5;
+const NPS_SECTIONS = [
+  { value: "analytics", label: "Análises" },
+  { value: "responses", label: "Respostas" },
+  { value: "invitations", label: "Solicitações" },
+  { value: "questionnaires", label: "Questionários" },
+  { value: "history", label: "Histórico consolidado" },
+] as const;
+type NpsSection = (typeof NPS_SECTIONS)[number]["value"];
 
 export default function CsCxNps() {
   const isMobile = useIsMobile();
@@ -111,7 +119,7 @@ export default function CsCxNps() {
   const [correctingProduct, setCorrectingProduct] =
     useState<CsCxNpsResponse | null>(null);
   const [correctedProductId, setCorrectedProductId] = useState("");
-  const [activeTab, setActiveTab] = useState("analytics");
+  const [activeTab, setActiveTab] = useState<NpsSection>("analytics");
   const [officeCoverage, setOfficeCoverage] = useState<
     "evaluated" | "not-evaluated" | null
   >(null);
@@ -355,7 +363,7 @@ export default function CsCxNps() {
           </CardContent>
         </Card>
       )}
-      <div className="grid auto-rows-fr gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div data-testid="cs-cx-nps-metrics" className="grid auto-rows-fr grid-cols-2 gap-2 lg:grid-cols-3 xl:grid-cols-6">
         <Metric icon={Star} label="NPS geral" value={nps} />
         <Metric
           icon={Smile}
@@ -393,24 +401,30 @@ export default function CsCxNps() {
           onClick={() => setOfficeCoverage("not-evaluated")}
         />
       </div>
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="h-auto w-full justify-start overflow-x-auto py-1 sm:h-9 sm:w-auto">
-          <TabsTrigger className="h-7" value="analytics">
-            Análises
-          </TabsTrigger>
-          <TabsTrigger className="h-7" value="responses">
-            Respostas
-          </TabsTrigger>
-          <TabsTrigger className="h-7" value="invitations">
-            Solicitações
-          </TabsTrigger>
-          <TabsTrigger className="h-7" value="questionnaires">
-            Questionários
-          </TabsTrigger>
-          <TabsTrigger className="h-7" value="history">
-            Histórico consolidado
-          </TabsTrigger>
-        </TabsList>
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as NpsSection)}>
+        {isMobile ? (
+          <div data-testid="cs-cx-nps-mobile-tabs" className="rounded-lg border bg-card p-2 shadow-sm">
+            <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+              Área do NPS
+            </span>
+            <Select value={activeTab} onValueChange={(value) => setActiveTab(value as NpsSection)}>
+              <SelectTrigger aria-label="Área do NPS" className="h-10 w-full bg-background text-left">
+                <SelectValue placeholder="Selecione uma área" />
+              </SelectTrigger>
+              <SelectContent>
+                {NPS_SECTIONS.map((section) => (
+                  <SelectItem key={section.value} value={section.value}>{section.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        ) : (
+          <TabsList className="h-9 w-auto justify-start">
+            {NPS_SECTIONS.map((section) => (
+              <TabsTrigger key={section.value} className="h-7" value={section.value}>{section.label}</TabsTrigger>
+            ))}
+          </TabsList>
+        )}
         <TabsContent value="responses" className="mt-3 space-y-3">
           <Card>
             <CardContent className="grid gap-2 p-3 md:grid-cols-2 xl:grid-cols-[minmax(260px,1fr)_200px_200px]">

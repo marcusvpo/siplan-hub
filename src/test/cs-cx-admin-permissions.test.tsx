@@ -170,4 +170,21 @@ describe("CS/CX administração — permissões", () => {
     expect(document.querySelector('a[href="/admin/users"]')).not.toBeInTheDocument();
     expect(document.querySelector('a[href="/admin/roles"]')).not.toBeInTheDocument();
   });
+
+  it("substitui as abas pelo seletor compacto no celular", async () => {
+    const desktopWidth = window.innerWidth;
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: 390 });
+    hasPermission.mockReturnValue(false);
+
+    try {
+      render(<CsCxAdmin />);
+
+      const mobileNavigation = await screen.findByTestId("cs-cx-admin-mobile-tabs");
+      expect(mobileNavigation).toHaveTextContent("Área da administração");
+      expect(screen.getByRole("combobox")).toHaveTextContent("Modelos e itens");
+      expect(screen.queryByRole("tablist")).not.toBeInTheDocument();
+    } finally {
+      Object.defineProperty(window, "innerWidth", { configurable: true, value: desktopWidth });
+    }
+  });
 });

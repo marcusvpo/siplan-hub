@@ -57,6 +57,10 @@ describe("responsividade das telas do CS/CX", () => {
   });
 
   it("compacta NPS, relatórios e seus detalhamentos", () => {
+    expect(nps).toContain('data-testid="cs-cx-nps-metrics"');
+    expect(nps).toContain("grid auto-rows-fr grid-cols-2 gap-2");
+    expect(nps).toContain('data-testid="cs-cx-nps-mobile-tabs"');
+    expect(nps).toContain("Área do NPS");
     expect(nps).toContain('data-testid="cs-cx-nps-responses-mobile-list"');
     expect(nps).toContain('data-testid="cs-cx-nps-history-mobile-list"');
     expect(invitations).toContain('data-testid="cs-cx-nps-invitations-mobile-list"');
@@ -70,5 +74,10 @@ describe("responsividade das telas do CS/CX", () => {
     expect(attention).toContain("h-[calc(100dvh-1rem)]");
     expect(analytics).toContain("h-[calc(100dvh-1rem)]");
     expect(admin).toContain('data-testid="cs-cx-admin-page"');
+    expect(admin).toContain('data-testid="cs-cx-admin-mobile-tabs"');
+    expect(admin).toContain('data-testid="cs-cx-admin-metrics"');
+    expect(admin).toContain("grid grid-cols-2 gap-2");
+    expect(admin).toContain("Área da administração");
+    expect(admin).toContain("isMobile ? (");
   });
 });
