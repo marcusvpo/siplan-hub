@@ -3005,8 +3005,8 @@
     "semantic_hash": ""
   },
   "src/components/cs-cx/CsCxAccessPanel.tsx": {
-    "mtime": 1788274762.9915767,
-    "ast_hash": "b970f0cef3fb94b1173e1af6b8ef3abb",
+    "mtime": 1788276867.4539628,
+    "ast_hash": "2809553bdc010ef0dff977ac89462c27",
     "semantic_hash": ""
   },
   "src/components/cs-cx/CsCxMultiSelect.tsx": {
@@ -3015,13 +3015,13 @@
     "semantic_hash": ""
   },
   "src/components/cs-cx/NpsAnalytics.tsx": {
-    "mtime": 1788275091.9885378,
-    "ast_hash": "98010cc5de5e772fc1c10769ba738f1a",
+    "mtime": 1788276867.4549685,
+    "ast_hash": "56a95f93ab8191cc5e6ac68ee5f4fb6d",
     "semantic_hash": ""
   },
   "src/components/cs-cx/NpsSurveyManagement.tsx": {
-    "mtime": 1788275091.9865308,
-    "ast_hash": "337d858cef90d3c80807e351c7b951a9",
+    "mtime": 1788276867.4585,
+    "ast_hash": "0855bd8c608e78530892df4e34a5a0f3",
     "semantic_hash": ""
   },
   "src/components/knowledge/ArticleMetadataCard.tsx": {
@@ -3355,18 +3355,18 @@
     "semantic_hash": ""
   },
   "src/pages/cs-cx/CsCxAdmin.tsx": {
-    "mtime": 1788274576.6493657,
-    "ast_hash": "b921ed9f4a3b31f08a013808ecfcddb1",
+    "mtime": 1788277295.948403,
+    "ast_hash": "a401189260fb54dd0b50b0ac385a396f",
     "semantic_hash": ""
   },
   "src/pages/cs-cx/CsCxAppointments.tsx": {
-    "mtime": 1788274965.5215259,
-    "ast_hash": "cd202035e645f3da3dde75afdab93ef0",
+    "mtime": 1788276867.4668248,
+    "ast_hash": "e597aa1344036d9853ad859e5d50be22",
     "semantic_hash": ""
   },
   "src/pages/cs-cx/CsCxContacts.tsx": {
-    "mtime": 1788274993.5229938,
-    "ast_hash": "c7d76ee1769760dc75e9f0337bd92edf",
+    "mtime": 1788276867.469693,
+    "ast_hash": "9569ba22d2bc99e63ed2d6eb0d6b7b6f",
     "semantic_hash": ""
   },
   "src/pages/cs-cx/CsCxMigrationPlaceholder.tsx": {
@@ -3375,43 +3375,43 @@
     "semantic_hash": ""
   },
   "src/pages/cs-cx/CsCxNps.tsx": {
-    "mtime": 1788275063.8822627,
-    "ast_hash": "79a29fd7136d9cf65ec234356629d1ca",
+    "mtime": 1788277474.67352,
+    "ast_hash": "3bc325424a3c6ae5bbe8ac1931ec37cc",
     "semantic_hash": ""
   },
   "src/pages/cs-cx/CsCxOverview.tsx": {
-    "mtime": 1788274584.0831046,
-    "ast_hash": "f2fea861bf13ab7786c3b7f5fb5dc35d",
+    "mtime": 1788276867.4709866,
+    "ast_hash": "47a655981c2b2dc58ea633f7c5e639ad",
     "semantic_hash": ""
   },
   "src/pages/cs-cx/CsCxRegistryOffices.tsx": {
-    "mtime": 1788274993.5219927,
-    "ast_hash": "97d93f41f64f1c5eafe527d9eb31f1e2",
+    "mtime": 1788276867.4722147,
+    "ast_hash": "01fe8ef2ad72103e7ac9af0f771267e4",
     "semantic_hash": ""
   },
   "src/pages/cs-cx/CsCxReports.tsx": {
-    "mtime": 1788275138.791851,
-    "ast_hash": "b08b82e58f508e406d8da251b57f714c",
+    "mtime": 1788276867.4727826,
+    "ast_hash": "df8ff0765a70ad6a583475072f20d18b",
     "semantic_hash": ""
   },
   "src/pages/cs-cx/CsCxRequests.tsx": {
-    "mtime": 1788274965.5205243,
-    "ast_hash": "c2bba902335f25b5a73ca46638892d70",
+    "mtime": 1788276867.4744177,
+    "ast_hash": "f05dc65f3ec9d4f90adf38f98bb626c8",
     "semantic_hash": ""
   },
   "src/pages/cs-cx/CsCxRoutines.tsx": {
-    "mtime": 1788275045.0056136,
-    "ast_hash": "ba4eca96e2fdea97c48fde56ba744877",
+    "mtime": 1788276867.475416,
+    "ast_hash": "4d3c3a23dddc5b86dd6c4716a110089f",
     "semantic_hash": ""
   },
   "src/pages/cs-cx/CsCxVisitDetails.tsx": {
-    "mtime": 1788274828.382444,
-    "ast_hash": "69eebd5326fd41820363aafa04babae8",
+    "mtime": 1788276867.4764144,
+    "ast_hash": "85591e2decf0477370731831415403e1",
     "semantic_hash": ""
   },
   "src/pages/cs-cx/CsCxVisits.tsx": {
-    "mtime": 1788274363.4281044,
-    "ast_hash": "07943cc32a7493f3bccda2218ec19803",
+    "mtime": 1788276867.4774177,
+    "ast_hash": "3da9e0a58a3b0db4a1cf38d16d09e84f",
     "semantic_hash": ""
   },
   "src/pages/public/PublicNpsResponse.tsx": {
@@ -3490,8 +3490,8 @@
     "semantic_hash": ""
   },
   "src/test/cs-cx-admin-permissions.test.tsx": {
-    "mtime": 1787686767.607855,
-    "ast_hash": "6c209a307910aaac6838fc4f1df0aebe",
+    "mtime": 1788277208.9640162,
+    "ast_hash": "de869942d1b92a425d34b316e8f488c0",
     "semantic_hash": ""
   },
   "src/test/cs-cx-appointment-contacts.test.ts": {
@@ -4180,8 +4180,8 @@
     "semantic_hash": ""
   },
   "src/components/cs-cx/ContactAttentionDashboard.tsx": {
-    "mtime": 1788275091.98753,
-    "ast_hash": "6dd2f460743089a0cf23f16e61df3788",
+    "mtime": 1788276867.453373,
+    "ast_hash": "9bbbbb66ea6b2dff233c82060c1c6cb2",
     "semantic_hash": ""
   },
   "src/components/DeploymentsTickets/TicketsSlaInfoDialog.tsx": {
@@ -4655,8 +4655,8 @@
     "semantic_hash": ""
   },
   "src/test/cs-cx-mobile-layout.test.ts": {
-    "mtime": 1788275156.1401038,
-    "ast_hash": "ff63e462f706c6b31d3179407f8e6b20",
+    "mtime": 1788277474.6785192,
+    "ast_hash": "9009838b1aed1313f7c691c5699cc9a1",
     "semantic_hash": ""
   }
 }

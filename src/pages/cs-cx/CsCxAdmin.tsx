@@ -39,6 +39,7 @@ import {
 } from "@/hooks/useCsCxRoutines";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { type CsCxRequestStatusConfig, useCsCxRequestStatusAdmin } from "@/hooks/useCsCxCore";
 import { CsCxAccessPanel } from "@/components/cs-cx/CsCxAccessPanel";
 
@@ -62,13 +63,24 @@ const EMPTY_ITEM = {
 const EMPTY_CATALOG = { kind: "category" as CatalogKind, id: "", name: "", description: "", active: true, color: "#6c757d" };
 const EMPTY_STATUS = { id: "", name: "", color: "slate", active: true, sort_order: 0 };
 const EMPTY_PRODUCT = { id: "", name: "", productCode: "", description: "", active: true };
+const ADMIN_SECTIONS = [
+  { value: "models", label: "Modelos e itens" },
+  { value: "products", label: "Produtos" },
+  { value: "categories", label: "Categorias" },
+  { value: "types", label: "Tipos" },
+  { value: "statuses", label: "Status das solicitações" },
+  { value: "access", label: "Usuários e permissões" },
+] as const;
+type AdminSection = (typeof ADMIN_SECTIONS)[number]["value"];
 
 export default function CsCxAdmin() {
   const admin = useCsCxRoutineAdmin();
   const statusAdmin = useCsCxRequestStatusAdmin();
   const { hasPermission } = usePermissions();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const canManage = hasPermission("cs_cx_admin", "manage");
+  const [activeSection, setActiveSection] = useState<AdminSection>("models");
   const [selectedModelId, setSelectedModelId] = useState("");
   const [modelOpen, setModelOpen] = useState(false);
   const [modelForm, setModelForm] = useState(EMPTY_MODEL);
@@ -291,7 +303,7 @@ export default function CsCxAdmin() {
       {admin.error && <Card className="border-destructive/40"><CardContent className="flex items-center justify-between gap-3 p-3"><div className="flex items-center gap-2 text-sm text-destructive"><TriangleAlert className="h-4 w-4" />{messageOf(admin.error)}</div><Button variant="outline" size="sm" onClick={() => admin.refetch()}><RefreshCw className="mr-2 h-4 w-4" />Tentar novamente</Button></CardContent></Card>}
       {statusAdmin.error && <Card className="border-destructive/40"><CardContent className="flex items-center justify-between gap-3 p-3"><div className="flex items-center gap-2 text-sm text-destructive"><TriangleAlert className="h-4 w-4" />{messageOf(statusAdmin.error)}</div><Button variant="outline" size="sm" onClick={() => statusAdmin.refetch()}><RefreshCw className="mr-2 h-4 w-4" />Tentar novamente</Button></CardContent></Card>}
 
-      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
+      <div data-testid="cs-cx-admin-metrics" className="grid grid-cols-2 gap-2 [&>*:last-child]:col-span-2 xl:grid-cols-5 xl:[&>*:last-child]:col-span-1">
         <Metric icon={Layers3} label="Modelos" value={admin.models.length} />
         <Metric icon={Package} label="Produtos" value={admin.products.length} />
         <Metric icon={Tags} label="Categorias" value={admin.categories.length} />
@@ -299,8 +311,30 @@ export default function CsCxAdmin() {
         <Metric icon={Workflow} label="Status" value={statusAdmin.statuses.length} />
       </div>
 
-      <Tabs defaultValue="models" className="min-w-0 max-md:[&_[role=tablist]]:h-auto max-md:[&_[role=tablist]]:w-full max-md:[&_[role=tablist]]:py-1">
-        <TabsList className="h-9 max-w-full justify-start overflow-x-auto"><TabsTrigger className="h-7" value="models">Modelos e itens</TabsTrigger><TabsTrigger className="h-7" value="products">Produtos</TabsTrigger><TabsTrigger className="h-7" value="categories">Categorias</TabsTrigger><TabsTrigger className="h-7" value="types">Tipos</TabsTrigger><TabsTrigger className="h-7" value="statuses">Status das solicitações</TabsTrigger><TabsTrigger className="h-7" value="access">Usuários e permissões</TabsTrigger></TabsList>
+      <Tabs value={activeSection} onValueChange={(value) => setActiveSection(value as AdminSection)} className="min-w-0">
+        {isMobile ? (
+          <div data-testid="cs-cx-admin-mobile-tabs" className="rounded-lg border bg-card p-2 shadow-sm">
+            <Label htmlFor="cs-cx-admin-section" className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+              Área da administração
+            </Label>
+            <Select value={activeSection} onValueChange={(value) => setActiveSection(value as AdminSection)}>
+              <SelectTrigger id="cs-cx-admin-section" className="h-10 w-full bg-background text-left">
+                <SelectValue placeholder="Selecione uma área" />
+              </SelectTrigger>
+              <SelectContent>
+                {ADMIN_SECTIONS.map((section) => (
+                  <SelectItem key={section.value} value={section.value}>{section.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        ) : (
+          <TabsList className="h-9 max-w-full justify-start overflow-x-auto">
+            {ADMIN_SECTIONS.map((section) => (
+              <TabsTrigger key={section.value} className="h-7" value={section.value}>{section.label}</TabsTrigger>
+            ))}
+          </TabsList>
+        )}
 
         <TabsContent value="models" className="mt-3 grid gap-3 lg:grid-cols-[280px_minmax(0,1fr)]">
           <Card className="min-h-0">
