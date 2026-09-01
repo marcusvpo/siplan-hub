@@ -129,14 +129,14 @@ export function CsCxAccessPanel({ canManage }: { canManage: boolean }) {
   }
 
   return (
-    <Card data-testid="cs-cx-access-panel" className="min-w-0 max-md:[&_div.grid]:grid-cols-1 max-md:[&_div.grid]:items-stretch max-md:[&_[role=tablist]]:h-auto max-md:[&_[role=tablist]]:w-full max-md:[&_[role=tablist]]:overflow-x-auto max-md:[&_[role=tablist]]:py-1">
+    <Card data-testid="cs-cx-access-panel" className="min-w-0 max-md:[&_div.grid]:grid-cols-1 max-md:[&_div.grid]:items-stretch">
       <CardHeader className="px-4 pb-2 pt-3">
         <CardTitle className="text-sm">Controle de acesso exclusivo do CS/CX</CardTitle>
         <CardDescription className="text-xs">Os vínculos abaixo não alteram o perfil global nem liberam outras áreas do Siplan HUB.</CardDescription>
       </CardHeader>
       <CardContent className="px-4 pb-4">
         <Tabs defaultValue="users">
-          <TabsList className="h-9"><TabsTrigger value="users" className="h-7"><Users className="mr-1.5 h-3.5 w-3.5" />Usuários do CS/CX</TabsTrigger><TabsTrigger value="profiles" className="h-7"><ShieldCheck className="mr-1.5 h-3.5 w-3.5" />Perfis do CS/CX</TabsTrigger></TabsList>
+          <TabsList className="grid h-auto w-full grid-cols-2 p-1 sm:h-9 sm:w-auto"><TabsTrigger value="users" className="min-h-10 whitespace-normal px-2 sm:min-h-7"><Users className="mr-1.5 h-3.5 w-3.5" />Usuários do CS/CX</TabsTrigger><TabsTrigger value="profiles" className="min-h-10 whitespace-normal px-2 sm:min-h-7"><ShieldCheck className="mr-1.5 h-3.5 w-3.5" />Perfis do CS/CX</TabsTrigger></TabsList>
 
           <TabsContent value="users" className="mt-3 space-y-3">
             <div className="flex items-center justify-between gap-3"><div><h2 className="text-sm font-semibold">Usuários do grupo</h2><p className="text-xs text-muted-foreground">Somente pessoas vinculadas ao módulo aparecem nesta lista.</p></div>{canManage && <Button size="sm" className="h-8" onClick={() => setAddOpen(true)}><UserPlus className="mr-1.5 h-4 w-4" />Adicionar usuário</Button>}</div>

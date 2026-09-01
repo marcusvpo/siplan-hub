@@ -34,6 +34,8 @@ import { Plus, Pencil, Trash2, Search, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Link } from "react-router-dom";
+import { AdminListPager } from "@/components/Admin/AdminListPagination";
+import { useAdminListPagination } from "@/hooks/useAdminListPagination";
 
 export default function TeamManagement() {
   const { members, addMember, updateMember, deleteMember, isLoading } =
@@ -61,6 +63,7 @@ export default function TeamManagement() {
       member.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.email.toLowerCase().includes(searchTerm.toLowerCase()),
   );
+  const pagination = useAdminListPagination(filteredMembers);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,7 +135,7 @@ export default function TeamManagement() {
   };
 
   return (
-    <div className="container mx-auto py-10 space-y-8">
+    <div className="container mx-auto space-y-5 py-3 sm:space-y-8 sm:py-10">
       <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />
         <AlertTitle>Página Descontinuada</AlertTitle>
@@ -147,9 +150,9 @@ export default function TeamManagement() {
           .
         </AlertDescription>
       </Alert>
-      <div className="flex justify-between items-center opacity-75">
+      <div className="flex flex-col gap-3 opacity-75 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
             Gerenciamento de Equipe
           </h1>
           <p className="text-muted-foreground">
@@ -255,7 +258,7 @@ export default function TeamManagement() {
       </div>
 
       <div className="rounded-md border">
-        <div className="w-full overflow-x-auto scrollbar-thin">
+        <div className="mobile-card-table w-full overflow-x-auto scrollbar-thin">
           <Table>
             <TableHeader>
               <TableRow>
@@ -277,12 +280,12 @@ export default function TeamManagement() {
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredMembers.map((member) => (
+                pagination.pageItems.map((member) => (
                   <TableRow key={member.id}>
-                    <TableCell className="font-medium">{member.name}</TableCell>
-                    <TableCell>{member.email}</TableCell>
-                    <TableCell>{member.role}</TableCell>
-                    <TableCell>
+                    <TableCell data-label="Nome" className="font-medium">{member.name}</TableCell>
+                    <TableCell data-label="E-mail">{member.email}</TableCell>
+                    <TableCell data-label="Cargo">{member.role}</TableCell>
+                    <TableCell data-label="Status">
                       <span
                         className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                           member.active
@@ -293,7 +296,7 @@ export default function TeamManagement() {
                         {member.active ? "Ativo" : "Inativo"}
                       </span>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell data-label="Ações" className="text-right">
                       <div className="flex justify-end gap-2">
                         <Button
                           variant="ghost"
@@ -317,6 +320,7 @@ export default function TeamManagement() {
               )}
             </TableBody>
           </Table>
+          <AdminListPager page={pagination.page} pageSize={pagination.pageSize} total={filteredMembers.length} totalPages={pagination.totalPages} onPageChange={pagination.setPage} />
         </div>
       </div>
 

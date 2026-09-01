@@ -20,6 +20,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, BarChart3, MessageSquare, Coins, Users, ThumbsUp } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { AdminListPager } from "@/components/Admin/AdminListPagination";
+import { useAdminListPagination } from "@/hooks/useAdminListPagination";
 
 interface JobRow {
   user_id: string;
@@ -140,6 +142,7 @@ export default function CopilotUsage() {
     return { up: u, down: d };
   }, [rows]);
   const satisfacao = up + down > 0 ? Math.round((up / (up + down)) * 100) : null;
+  const pagination = useAdminListPagination(byUser);
 
   const tiles = [
     { icon: MessageSquare, label: "Perguntas", value: rows.length.toLocaleString("pt-BR") },
@@ -154,7 +157,7 @@ export default function CopilotUsage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
             <BarChart3 className="h-5 w-5 text-primary" />
@@ -163,7 +166,7 @@ export default function CopilotUsage() {
           <p className="text-muted-foreground">Consumo de perguntas e tokens por usuario.</p>
         </div>
         <Select value={range} onValueChange={setRange}>
-          <SelectTrigger className="h-9 w-[170px]">
+          <SelectTrigger className="h-11 w-full sm:h-9 sm:w-[170px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -183,7 +186,7 @@ export default function CopilotUsage() {
       ) : (
         <>
           {/* Tiles */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
             {tiles.map((t) => {
               const Icon = t.icon;
               return (
@@ -202,7 +205,7 @@ export default function CopilotUsage() {
 
           {/* Por usuario */}
           <div className="border rounded-md bg-card">
-            <div className="w-full overflow-x-auto scrollbar-thin">
+            <div className="mobile-card-table w-full overflow-x-auto scrollbar-thin">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -221,15 +224,15 @@ export default function CopilotUsage() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    byUser.map((u) => (
+                    pagination.pageItems.map((u) => (
                       <TableRow key={u.userId} className="hover:bg-muted/50 transition-colors">
-                        <TableCell className="font-medium">{u.name}</TableCell>
-                        <TableCell className="text-muted-foreground font-mono text-xs">
+                        <TableCell data-label="Usuário" className="font-medium">{u.name}</TableCell>
+                        <TableCell data-label="E-mail" className="text-muted-foreground font-mono text-xs">
                           {u.email}
                         </TableCell>
-                        <TableCell className="text-right">{u.questions.toLocaleString("pt-BR")}</TableCell>
-                        <TableCell className="text-right">{u.tokens.toLocaleString("pt-BR")}</TableCell>
-                        <TableCell className="text-muted-foreground text-xs">
+                        <TableCell data-label="Perguntas" className="text-right">{u.questions.toLocaleString("pt-BR")}</TableCell>
+                        <TableCell data-label="Tokens" className="text-right">{u.tokens.toLocaleString("pt-BR")}</TableCell>
+                        <TableCell data-label="Última atividade" className="text-muted-foreground text-xs">
                           {format(new Date(u.last), "dd/MM/yyyy HH:mm", { locale: ptBR })}
                         </TableCell>
                       </TableRow>
@@ -238,6 +241,13 @@ export default function CopilotUsage() {
                 </TableBody>
               </Table>
             </div>
+            <AdminListPager
+              page={pagination.page}
+              pageSize={pagination.pageSize}
+              total={byUser.length}
+              totalPages={pagination.totalPages}
+              onPageChange={pagination.setPage}
+            />
           </div>
 
           {/* Perguntas mais feitas */}

@@ -18,20 +18,28 @@ export function ThemeProvider({
 
   useEffect(() => {
     const root = window.document.documentElement
+    const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
+    const themeColor = window.document.querySelector<HTMLMetaElement>(
+      "#app-theme-color"
+    )
 
-    root.classList.remove("light", "dark")
+    const applyTheme = () => {
+      const resolvedTheme =
+        theme === "system" ? (systemTheme.matches ? "dark" : "light") : theme
 
-    if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-        .matches
-        ? "dark"
-        : "light"
-
-      root.classList.add(systemTheme)
-      return
+      root.classList.remove("light", "dark")
+      root.classList.add(resolvedTheme)
+      root.style.colorScheme = resolvedTheme
+      themeColor?.setAttribute(
+        "content",
+        resolvedTheme === "dark" ? "#0a0a0a" : "#ffffff"
+      )
     }
 
-    root.classList.add(theme)
+    applyTheme()
+    if (theme === "system") systemTheme.addEventListener("change", applyTheme)
+
+    return () => systemTheme.removeEventListener("change", applyTheme)
   }, [theme])
 
   const value = {

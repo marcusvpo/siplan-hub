@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { lazy, ReactNode, Suspense } from "react";
 import { AppSidebar } from "./AppSidebar";
 import { Breadcrumbs } from "./Breadcrumbs";
 import { ModeToggle } from "@/components/mode-toggle";
@@ -8,9 +8,14 @@ import { ArrowRight } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
 import { PwaInstallButton, PwaInstallDialog } from "@/components/pwa/PwaInstallControls";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { FloatingCopilot } from "@/components/Copilot/FloatingCopilot";
 import { usePermissions } from "@/hooks/usePermissions";
 import { getContextualHeaderAction } from "./contextualHeaderAction";
+
+const FloatingCopilot = lazy(() =>
+  import("@/components/Copilot/FloatingCopilot").then((module) => ({
+    default: module.FloatingCopilot,
+  })),
+);
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -35,7 +40,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   const HeaderActionIcon = headerAction?.icon;
 
   if (isPrintMode) {
-    return <div className="min-h-screen w-full bg-background print:bg-white print:text-black">{children}</div>;
+    return <div className="min-h-[100dvh] w-full bg-background print:bg-white print:text-black">{children}</div>;
   }
 
   return (
@@ -48,11 +53,11 @@ export function MainLayout({ children }: MainLayoutProps) {
         } as React.CSSProperties
       }
     >
-      <div className="flex min-h-[100dvh] w-full bg-muted/10 overflow-hidden">
+      <div className="flex min-h-[100dvh] w-full overflow-hidden bg-muted/10 pb-[env(safe-area-inset-bottom)]">
         <AppSidebar />
 
         <div className="flex flex-col flex-1 min-h-[100dvh] overflow-hidden transition-all duration-300 min-w-0">
-          <header className="flex h-14 sm:h-16 items-center justify-between gap-2 sm:gap-4 border-b border-border/40 bg-background/80 backdrop-blur-md px-3 sm:px-6 shrink-0 z-10 sticky top-0 overflow-hidden">
+          <header className="sticky top-0 z-10 flex h-[calc(3.5rem+env(safe-area-inset-top))] shrink-0 items-center justify-between gap-2 overflow-hidden border-b border-border/40 bg-background/80 px-3 pt-[env(safe-area-inset-top)] backdrop-blur-md sm:h-16 sm:gap-4 sm:px-6 sm:pt-0">
             <div className="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-2">
               <SidebarTrigger className="md:hidden shrink-0" />
               <Breadcrumbs />
@@ -72,11 +77,13 @@ export function MainLayout({ children }: MainLayoutProps) {
             </div>
           </header>
 
-          <main className={`flex-1 flex flex-col ${isNoScrollPage ? "overflow-hidden" : "overflow-auto"} ${isFullBleedPage ? "p-0" : "pt-2 sm:pt-3 px-3 sm:px-6 pb-3 sm:pb-6"} min-w-0`}>{children}</main>
+          <main className={`flex min-w-0 flex-1 flex-col overflow-x-hidden ${isNoScrollPage ? "overflow-y-hidden" : "overflow-y-auto"} ${isFullBleedPage ? "p-0" : "px-3 pb-[calc(.75rem+env(safe-area-inset-bottom))] pt-2 sm:px-6 sm:pb-6 sm:pt-3"}`}>{children}</main>
         </div>
 
         {/* Botao flutuante do Copiloto (so aparece para usuarios habilitados) */}
-        <FloatingCopilot />
+        <Suspense fallback={null}>
+          <FloatingCopilot />
+        </Suspense>
         <PwaInstallDialog />
       </div>
     </SidebarProvider>

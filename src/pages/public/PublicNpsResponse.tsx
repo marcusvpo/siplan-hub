@@ -457,7 +457,7 @@ function PublicShell({
   return (
     <div
       data-testid="nps-public-shell"
-      className="relative min-h-screen overflow-hidden px-4 py-8 text-slate-950 sm:py-12"
+      className="relative min-h-[100dvh] overflow-hidden px-4 py-8 text-slate-950 sm:py-12"
       style={style}
     >
       {backgroundUrl && (

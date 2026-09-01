@@ -149,7 +149,7 @@ export default function ClientOverview() {
   return (
     <div className="space-y-6 animate-in slide-in-from-right-4 duration-500 pb-20">
       {/* 1. HEADER DO CLIENTE */}
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur py-4 border-b -mx-6 px-6 shadow-sm">
+      <div className="sticky top-0 z-10 -mx-3 border-b bg-background/95 px-3 py-3 shadow-sm backdrop-blur sm:-mx-6 sm:px-6 sm:py-4">
         <div className="flex flex-col gap-2">
           <Button
             variant="ghost"

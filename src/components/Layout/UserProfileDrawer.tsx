@@ -141,7 +141,7 @@ export function UserProfileDrawer({ isOpen, onClose }: UserProfileDrawerProps) {
               stiffness: 400,
               damping: 30,
             }}
-            className="fixed bottom-20 left-4 z-50 w-80 rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden"
+            className="fixed bottom-[max(5rem,calc(env(safe-area-inset-bottom)+4rem))] left-3 right-3 z-50 w-auto max-w-80 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900 sm:left-4 sm:right-auto sm:w-80"
           >
             {/* Header */}
             <div className="relative bg-gradient-to-r from-primary/10 via-rose-500/10 to-orange-500/10 px-5 py-4 border-b border-slate-100 dark:border-slate-800">

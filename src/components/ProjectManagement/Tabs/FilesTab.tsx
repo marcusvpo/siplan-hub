@@ -387,7 +387,7 @@ export function FilesTab({ project }: TabProps) {
 
       {/* Barra de Ações em Massa */}
       {canDeleteFiles && selectedFileIds.length > 0 && (
-        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 bg-white dark:bg-slate-900 border rounded-full shadow-2xl px-6 py-3 flex items-center gap-6 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
+        <div className="fixed bottom-[max(2.5rem,env(safe-area-inset-bottom))] left-1/2 z-50 flex max-w-[calc(100vw-1rem)] -translate-x-1/2 animate-in items-center gap-3 rounded-full border bg-white px-4 py-3 shadow-2xl duration-300 fade-in slide-in-from-bottom-4 dark:bg-slate-900 sm:gap-6 sm:px-6">
           <div className="flex items-center gap-3">
             <span className="bg-primary text-primary-foreground text-xs font-bold h-6 w-6 flex items-center justify-center rounded-full">
               {selectedFileIds.length}

@@ -28,6 +28,26 @@ export default defineConfig(({ mode }) => ({
         background_color: "#0a0a0a",
         theme_color: "#0a0a0a",
         categories: ["business", "productivity"],
+        shortcuts: [
+          {
+            name: "Painel de indicadores",
+            short_name: "Indicadores",
+            url: "/dashboard/indicadores",
+            icons: [{ src: "/pwa-192x192.png", sizes: "192x192" }],
+          },
+          {
+            name: "Projetos",
+            short_name: "Projetos",
+            url: "/projects",
+            icons: [{ src: "/pwa-192x192.png", sizes: "192x192" }],
+          },
+          {
+            name: "Calendário",
+            short_name: "Calendário",
+            url: "/calendar",
+            icons: [{ src: "/pwa-192x192.png", sizes: "192x192" }],
+          },
+        ],
         icons: [
           {
             src: "/pwa-192x192.png",
@@ -54,8 +74,37 @@ export default defineConfig(({ mode }) => ({
         navigateFallback: "index.html",
         navigateFallbackDenylist: [/^\/api\//, /^\/functions\//],
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
-        globIgnores: ["pwa-*.png", "maskable-icon-*.png"],
+        globIgnores: [
+          "pwa-*.png",
+          "maskable-icon-*.png",
+          "assets/KnowledgeEditorPage-*.js",
+          "assets/FormRenderer-*.js",
+          "assets/recharts-*.js",
+          "assets/BarChart-*.js",
+          "assets/PieChart-*.js",
+          "assets/LineChart-*.js",
+          "assets/Line-*.js",
+          "assets/CartesianGrid-*.js",
+          "assets/Legend-*.js",
+          "assets/getRadiusAndStrokeWidthFromDot-*.js",
+          "assets/rich-text-editor-*.js",
+          "assets/jszip.min-*.js",
+        ],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+        runtimeCaching: [
+          {
+            urlPattern: ({ request }) => request.destination === "script",
+            handler: "StaleWhileRevalidate",
+            options: {
+              cacheName: "siplan-route-scripts",
+              cacheableResponse: { statuses: [0, 200] },
+              expiration: {
+                maxEntries: 80,
+                maxAgeSeconds: 30 * 24 * 60 * 60,
+              },
+            },
+          },
+        ],
       },
     }),
   ],
@@ -67,15 +116,21 @@ export default defineConfig(({ mode }) => ({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
+        manualChunks(id) {
+          const normalizedId = id.replaceAll("\\", "/");
           // Separa recharts para evitar dependências circulares
-          recharts: ['recharts'],
+          if (
+            normalizedId.includes("/node_modules/react/") ||
+            normalizedId.includes("/node_modules/react-dom/") ||
+            normalizedId.includes("/node_modules/react-router/") ||
+            normalizedId.includes("/node_modules/react-router-dom/")
+          ) return "vendor";
           // Separa vendors principais para melhor caching
-          vendor: ['react', 'react-dom', 'react-router-dom'],
           // Separa @tanstack/react-query (pode ser grande)
-          query: ['@tanstack/react-query'],
+          if (normalizedId.includes("/node_modules/@tanstack/react-query/")) return "query";
           // Separa Supabase SDK
-          supabase: ['@supabase/supabase-js'],
+          if (normalizedId.includes("/node_modules/@supabase/")) return "supabase";
+          return undefined;
         },
       },
     },

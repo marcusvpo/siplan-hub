@@ -14,6 +14,7 @@ import { useState, useMemo, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import type { AuditLog } from "@/types/admin";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -160,6 +161,7 @@ const formatLogDetails = (log: AuditLog) => {
 
 export default function AuditLogPage() {
   const { logs, isLoading } = useAuditLogs();
+  const itemsPerPage = useIsMobile() ? 3 : ITEMS_PER_PAGE;
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -187,12 +189,12 @@ export default function AuditLogPage() {
     });
   }, [logs, searchTerm]);
 
-  const totalPages = Math.ceil(filteredLogs.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredLogs.length / itemsPerPage);
   
   const paginatedLogs = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredLogs.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [filteredLogs, currentPage]);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredLogs.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredLogs, currentPage, itemsPerPage]);
 
   return (
     <div className="space-y-6">
@@ -226,7 +228,7 @@ export default function AuditLogPage() {
 
       <div className="space-y-4">
         <div className="border rounded-lg overflow-hidden bg-card shadow-sm">
-          <div className="w-full overflow-x-auto scrollbar-thin">
+          <div className="mobile-card-table w-full overflow-x-auto scrollbar-thin">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50">
@@ -258,22 +260,22 @@ export default function AuditLogPage() {
                 ) : (
                   paginatedLogs.map((log) => (
                     <TableRow key={log.id} className="hover:bg-muted/30 transition-colors group">
-                      <TableCell className="whitespace-nowrap tabular-nums text-xs text-muted-foreground">
+                      <TableCell data-label="Data/Hora" className="whitespace-nowrap tabular-nums text-xs text-muted-foreground">
                         {format(new Date(log.created_at), "dd/MM/yyyy HH:mm:ss", {
                           locale: ptBR,
                         })}
                       </TableCell>
-                      <TableCell>
+                      <TableCell data-label="Usuário">
                         <span className="text-sm font-semibold group-hover:text-primary transition-colors">
                           {log.profile?.full_name || "Sistema"}
                         </span>
                       </TableCell>
-                      <TableCell>
+                      <TableCell data-label="Ação">
                         <span className="inline-flex items-center rounded-md bg-primary/5 px-2 py-0.5 text-[11px] font-semibold text-primary border border-primary/10">
                           {actionLabels[log.action] || log.action}
                         </span>
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground leading-relaxed py-3">
+                      <TableCell data-label="Detalhes" className="text-sm text-muted-foreground leading-relaxed py-3">
                         {formatLogDetails(log)}
                       </TableCell>
                     </TableRow>

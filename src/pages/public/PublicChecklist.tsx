@@ -27,7 +27,7 @@ export default function PublicChecklist() {
 
   if (state.isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-900 flex items-center justify-center p-6">
+      <div className="flex min-h-[100dvh] items-center justify-center bg-slate-50 p-6 text-slate-900">
         <div className="flex flex-col items-center gap-3">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
           <p className="text-sm text-slate-500 font-medium animate-pulse">
@@ -40,7 +40,7 @@ export default function PublicChecklist() {
 
   if (state.error || !state.checklist) {
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-900 flex items-center justify-center p-6">
+      <div className="flex min-h-[100dvh] items-center justify-center bg-slate-50 p-6 text-slate-900">
         <Card className="max-w-md w-full bg-white border-slate-200 shadow-xl">
           <CardContent className="p-6 text-center space-y-4">
             <div className="mx-auto w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-655 mb-2">
@@ -58,7 +58,7 @@ export default function PublicChecklist() {
 
   if (state.checklist.status === "submitted" || state.submittedSuccess) {
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-900 flex items-center justify-center p-6">
+      <div className="flex min-h-[100dvh] items-center justify-center bg-slate-50 p-6 text-slate-900">
         <Card className="max-w-lg w-full bg-white border-slate-200 shadow-xl animate-in zoom-in-95 duration-300">
           <CardContent className="p-8 text-center space-y-4">
             <div className="mx-auto w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 mb-4 animate-bounce">
@@ -78,7 +78,7 @@ export default function PublicChecklist() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 pb-20 font-sans antialiased selection:bg-primary/20 selection:text-primary">
+    <div className="min-h-[100dvh] bg-slate-50 pb-20 font-sans text-slate-900 antialiased selection:bg-primary/20 selection:text-primary">
       {/* Premium Header */}
       <header className="border-b border-slate-200 bg-white/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">

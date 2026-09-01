@@ -116,7 +116,7 @@ export default function AdminLayout() {
   ].filter((item) => hasPermission(item.resource, "view"));
 
   return (
-    <div className="flex h-[100dvh] min-h-[100dvh] overflow-hidden bg-muted/10">
+    <div className="flex h-[100dvh] min-h-[100dvh] overflow-hidden bg-muted/10 pb-[env(safe-area-inset-bottom)]">
       {/* Sidebar */}
       <aside
         aria-label="Navegação administrativa"
@@ -283,7 +283,7 @@ export default function AdminLayout() {
 
       {/* Main Content */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center border-b bg-card/80 px-3 backdrop-blur-sm sm:px-4 lg:px-6">
+        <header className="sticky top-0 z-40 flex h-[calc(4rem+env(safe-area-inset-top))] shrink-0 items-center border-b bg-card/80 px-3 pt-[env(safe-area-inset-top)] backdrop-blur-sm sm:h-16 sm:px-4 sm:pt-0 lg:px-6">
           <Button
             variant="ghost"
             size="icon"
@@ -299,7 +299,7 @@ export default function AdminLayout() {
               "Painel Administrativo"}
           </h1>
         </header>
-        <main className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-8">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto p-3 pb-[calc(.75rem+env(safe-area-inset-bottom))] sm:p-4 lg:p-8">
           <Outlet />
         </main>
       </div>

@@ -35,8 +35,8 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden bg-card border-border/40 text-card-foreground shadow-2xl">
-        <DialogHeader className="p-6 border-b shrink-0 bg-muted/20 relative">
+      <DialogContent className="flex max-h-[calc(100dvh-1rem)] max-w-4xl flex-col gap-0 overflow-hidden border-border/40 bg-card p-0 text-card-foreground shadow-2xl sm:max-h-[90vh]">
+        <DialogHeader className="relative shrink-0 border-b bg-muted/20 p-4 sm:p-6">
           <div className="flex items-center justify-between pr-8">
             <DialogTitle className="text-lg font-black uppercase tracking-tight max-w-[80%] leading-tight">
               {title}
@@ -50,14 +50,14 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
           </div>
         </DialogHeader>
         
-        <div className="flex-1 overflow-y-auto max-h-[calc(90vh-90px)] p-6 space-y-6 scrollbar-thin">
+        <div className="flex-1 space-y-6 overflow-y-auto p-3 scrollbar-thin sm:p-6">
           {projects.length === 0 ? (
             <div className="h-32 flex items-center justify-center text-center text-muted-foreground italic">
               Nenhum projeto encontrado nesta categoria.
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="w-full overflow-x-auto scrollbar-thin">
+              <div className="mobile-card-table w-full overflow-x-auto scrollbar-thin">
                 <Table>
                   <TableHeader className="bg-muted/30 sticky top-0 z-10">
                     <TableRow className="hover:bg-transparent">
@@ -72,7 +72,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                   <TableBody>
                     {projects.map((project) => (
                       <TableRow key={project.id} className="hover:bg-muted/30 transition-colors border-muted/20">
-                        <TableCell>
+                        <TableCell data-label="Cliente">
                           <div className="flex flex-col">
                             <span className="font-bold text-sm tracking-tight text-foreground">{project.clientName}</span>
                             <span className="text-[10px] text-muted-foreground font-mono opacity-60">
@@ -80,13 +80,13 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                             </span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-xs font-medium text-center">{project.projectLeader}</TableCell>
-                        <TableCell className="text-center">
+                        <TableCell data-label="Líder" className="text-xs font-medium text-center">{project.projectLeader}</TableCell>
+                        <TableCell data-label="Sistema" className="text-center">
                           <Badge variant="outline" className="text-[10px] font-bold py-0 h-5 bg-background/50 border-muted/50">
                             {project.systemType}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-center">
+                        <TableCell data-label="Última atualização" className="text-center">
                           <div className="flex flex-col items-center justify-center">
                             <span className="text-xs font-bold text-foreground">
                               {project.lastUpdatedAt ? format(new Date(project.lastUpdatedAt), "dd/MM/yyyy HH:mm", { locale: ptBR }) : "-"}
@@ -98,7 +98,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="text-center">
+                        <TableCell data-label="Saúde" className="text-center">
                           <Badge 
                             className={cn(
                               "text-[9px] font-black uppercase h-5 px-2",

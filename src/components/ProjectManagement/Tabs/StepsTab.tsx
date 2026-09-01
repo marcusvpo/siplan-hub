@@ -248,7 +248,7 @@ export function StepsTab({
   return (
     <div className="space-y-4 w-full">
       {/* Feedback Visual do Autosave */}
-      <div className="fixed bottom-4 right-4 z-50">
+      <div className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-16 z-50 md:right-4">
         <AnimatePresence mode="wait">
           {saveState.status === "saving" && (
             <motion.div

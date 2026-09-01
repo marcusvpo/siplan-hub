@@ -221,7 +221,7 @@ export default function KnowledgeEditorPage() {
   // 4. Error State
   if (isError || !selectedArticle) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-4rem)] p-6 text-center space-y-4">
+      <div className="flex h-[calc(100dvh-4rem)] flex-col items-center justify-center space-y-4 p-6 text-center">
         <div className="p-4 rounded-full bg-destructive/10 text-destructive">
           <AlertCircle className="h-10 w-10" />
         </div>

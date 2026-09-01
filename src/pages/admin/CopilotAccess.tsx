@@ -15,6 +15,8 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 import { Loader2, Search, Sparkles, Save } from "lucide-react";
+import { AdminListPager } from "@/components/Admin/AdminListPagination";
+import { useAdminListPagination } from "@/hooks/useAdminListPagination";
 
 const DEFAULT_LIMIT = 200000;
 
@@ -137,12 +139,13 @@ export default function CopilotAccess() {
       (r) => r.fullName.toLowerCase().includes(q) || r.email?.toLowerCase().includes(q)
     );
   }, [rows, search]);
+  const pagination = useAdminListPagination(filtered);
 
   const today = new Date().toISOString().slice(0, 10);
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
@@ -152,7 +155,7 @@ export default function CopilotAccess() {
             Habilite o copiloto por usuario e defina a cota diaria de tokens (0 = ilimitado).
           </p>
         </div>
-        <div className="relative w-64">
+        <div className="relative w-full sm:w-64">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Pesquisar por nome ou email..."
@@ -164,7 +167,7 @@ export default function CopilotAccess() {
       </div>
 
       <div className="border rounded-md bg-card">
-        <div className="w-full overflow-x-auto scrollbar-thin">
+        <div className="mobile-card-table w-full overflow-x-auto scrollbar-thin">
           <Table>
             <TableHeader>
               <TableRow>
@@ -190,12 +193,12 @@ export default function CopilotAccess() {
                   </TableCell>
                 </TableRow>
               ) : (
-                filtered.map((row) => {
+                pagination.pageItems.map((row) => {
                   const sameDay = String(row.periodResetAt || "").slice(0, 10) === today;
                   const usedToday = sameDay ? row.tokensUsedToday : 0;
                   return (
                     <TableRow key={row.userId} className="hover:bg-muted/50 transition-colors">
-                      <TableCell className="font-medium">
+                      <TableCell data-label="Usuário" className="font-medium">
                         {row.fullName}
                         {row.role === "admin" && (
                           <Badge variant="outline" className="ml-2 text-[10px]">
@@ -203,17 +206,17 @@ export default function CopilotAccess() {
                           </Badge>
                         )}
                       </TableCell>
-                      <TableCell className="text-muted-foreground font-mono text-xs">
+                      <TableCell data-label="E-mail" className="text-muted-foreground font-mono text-xs">
                         {row.email}
                       </TableCell>
-                      <TableCell className="text-center">
+                      <TableCell data-label="Habilitado" className="text-center">
                         <Switch
                           checked={row.enabled}
                           disabled={!canManageCopilot || savingId === row.userId}
                           onCheckedChange={(v) => toggleEnabled(row, v)}
                         />
                       </TableCell>
-                      <TableCell>
+                      <TableCell data-label="Cota diária">
                         <Input
                           type="number"
                           min={0}
@@ -232,11 +235,11 @@ export default function CopilotAccess() {
                           className="h-8 w-32"
                         />
                       </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
+                      <TableCell data-label="Consumo hoje" className="text-xs text-muted-foreground">
                         {usedToday.toLocaleString("pt-BR")}
                         {row.dailyTokenLimit > 0 && ` / ${row.dailyTokenLimit.toLocaleString("pt-BR")}`}
                       </TableCell>
-                      <TableCell className="text-right px-6">
+                      <TableCell data-label="Ações" className="text-right px-6">
                         <Button
                           variant="ghost"
                           size="sm"
@@ -258,6 +261,13 @@ export default function CopilotAccess() {
             </TableBody>
           </Table>
         </div>
+        <AdminListPager
+          page={pagination.page}
+          pageSize={pagination.pageSize}
+          total={filtered.length}
+          totalPages={pagination.totalPages}
+          onPageChange={pagination.setPage}
+        />
       </div>
     </div>
   );

@@ -36,6 +36,7 @@ import { useTeams } from "@/hooks/useTeams";
 import { useAuditLogs } from "@/hooks/useAuditLogs";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useMemo } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Profile {
   id: string;
@@ -49,6 +50,7 @@ interface Profile {
 const ITEMS_PER_PAGE = 6;
 
 export default function UserManagement() {
+  const itemsPerPage = useIsMobile() ? 3 : ITEMS_PER_PAGE;
   const [users, setUsers] = useState<Profile[]>([]);
   const [roles, setRoles] = useState<{id: string, name: string}[]>([]);
   const [loading, setLoading] = useState(true);
@@ -146,11 +148,11 @@ export default function UserManagement() {
   }, [users, searchTerm, teamFilter, roleFilter]);
 
   // Pagination Logic
-  const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
   const paginatedUsers = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredUsers.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [filteredUsers, currentPage]);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredUsers.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredUsers, currentPage, itemsPerPage]);
 
   // Reset to first page when filters change
   useEffect(() => {
@@ -377,7 +379,7 @@ export default function UserManagement() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">
             Gerenciamento de Usuários
@@ -386,9 +388,9 @@ export default function UserManagement() {
             Crie e gerencie as contas de acesso e times da plataforma.
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <div className="relative w-64">
+        <div className="grid w-full gap-2 sm:flex sm:w-auto sm:items-center sm:gap-3">
+          <div className="grid w-full gap-2 sm:flex sm:w-auto sm:items-center">
+            <div className="relative w-full sm:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Pesquisar por nome ou email..."
@@ -399,7 +401,7 @@ export default function UserManagement() {
             </div>
 
             <Select value={teamFilter} onValueChange={setTeamFilter}>
-              <SelectTrigger className="h-9 w-[150px]">
+              <SelectTrigger className="h-11 w-full sm:h-9 sm:w-[150px]">
                 <SelectValue placeholder="Time" />
               </SelectTrigger>
               <SelectContent>
@@ -413,7 +415,7 @@ export default function UserManagement() {
             </Select>
 
             <Select value={roleFilter} onValueChange={setRoleFilter}>
-              <SelectTrigger className="h-9 w-[150px]">
+              <SelectTrigger className="h-11 w-full sm:h-9 sm:w-[150px]">
                 <SelectValue placeholder="Perfil" />
               </SelectTrigger>
               <SelectContent>
@@ -430,7 +432,7 @@ export default function UserManagement() {
           {canCreateUsers && (
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
-              <Button size="sm">
+              <Button size="sm" className="w-full sm:w-auto">
                 <Plus className="mr-2 h-4 w-4" />
                 Novo Usuário
               </Button>
@@ -652,7 +654,7 @@ export default function UserManagement() {
 
       <div className="space-y-3">
         <div className="border rounded-md bg-card">
-          <div className="w-full overflow-x-auto scrollbar-thin">
+          <div className="mobile-card-table w-full overflow-x-auto scrollbar-thin">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -698,7 +700,7 @@ export default function UserManagement() {
                 ) : (
                   paginatedUsers.map((user) => (
                     <TableRow key={user.id} className="hover:bg-muted/50 transition-colors">
-                      <TableCell className="font-medium">
+                      <TableCell data-label="Nome" className="font-medium">
                         <div className="flex items-center gap-2">
                           <div className="h-8 w-8 rounded-md bg-primary/5 flex items-center justify-center border border-primary/10">
                             <UserCog className="h-4 w-4 text-primary" />
@@ -706,15 +708,15 @@ export default function UserManagement() {
                           {user.full_name || "Sem nome"}
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell data-label="Time">
                         {user.team ? (
                           <Badge variant="outline" className="font-normal">{getTeamLabel(user.team)}</Badge>
                         ) : (
                           <span className="text-muted-foreground text-xs">-</span>
                         )}
                       </TableCell>
-                      <TableCell className="text-muted-foreground font-mono text-xs">{user.email}</TableCell>
-                      <TableCell>
+                      <TableCell data-label="E-mail" className="text-muted-foreground font-mono text-xs">{user.email}</TableCell>
+                      <TableCell data-label="Função">
                         <Badge
                           variant={user.role === "admin" ? "default" : "secondary"}
                           className="font-medium"
@@ -722,18 +724,18 @@ export default function UserManagement() {
                           {user.role === "admin" ? "Administrador" : user.role === "user" ? "Usuário Padrão" : user.role}
                         </Badge>
                       </TableCell>
-                      <TableCell>
+                      <TableCell data-label="Perfil">
                         <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 capitalize">
                           {user.role === 'admin' ? 'Administrador' : user.role === 'user' ? 'Usuário Padrão' : user.role || "-"}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-muted-foreground text-xs">
+                      <TableCell data-label="Criado em" className="text-muted-foreground text-xs">
                         {user.created_at &&
                           format(new Date(user.created_at), "dd/MM/yyyy", {
                             locale: ptBR,
                           })}
                       </TableCell>
-                      <TableCell className="text-right px-6">
+                      <TableCell data-label="Ações" className="text-right px-6">
                         <div className="flex justify-end gap-1">
                           <Button
                             variant="ghost"
@@ -776,8 +778,8 @@ export default function UserManagement() {
         </div>
 
         {/* Pagination Controls */}
-        {!loading && filteredUsers.length > ITEMS_PER_PAGE && (
-          <div className="flex items-center justify-between px-2 py-2 bg-card border rounded-md">
+        {!loading && filteredUsers.length > itemsPerPage && (
+          <div className="flex flex-col items-center justify-between gap-2 rounded-md border bg-card px-2 py-2 sm:flex-row">
             <p className="text-xs text-muted-foreground">
               Mostrando <strong>{paginatedUsers.length}</strong> de <strong>{filteredUsers.length}</strong> usuários
             </p>
