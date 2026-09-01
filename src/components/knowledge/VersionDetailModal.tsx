@@ -52,7 +52,7 @@ export function VersionDetailModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-2xl bg-background border-border shadow-2xl p-0 overflow-hidden">
+      <DialogContent className="max-h-[calc(100dvh-1rem)] max-w-2xl overflow-hidden border-border bg-background p-0 shadow-2xl">
         <DialogHeader className="p-4 pb-3 border-b bg-muted/40">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
@@ -116,7 +116,7 @@ export function VersionDetailModal({
                 Resumo de Modificações (Diff)
               </span>
 
-              <div className="grid grid-cols-3 gap-2.5 text-xs">
+          <div className="grid grid-cols-1 gap-2 text-xs min-[360px]:grid-cols-3 sm:gap-2.5">
                 <div className="rounded-lg border bg-emerald-500/5 border-emerald-500/20 p-2.5 text-center">
                   <span className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 block">
                     Linhas Adicionadas

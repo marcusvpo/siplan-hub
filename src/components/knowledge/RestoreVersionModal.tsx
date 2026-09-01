@@ -31,7 +31,7 @@ export function RestoreVersionModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && !isRestoring && onClose()}>
-      <DialogContent className="max-w-md bg-background border-border shadow-2xl">
+      <DialogContent className="max-h-[calc(100dvh-1rem)] max-w-md overflow-y-auto border-border bg-background p-4 shadow-2xl sm:p-6">
         <DialogHeader>
           <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400 mb-1">
             <div className="p-2 rounded-lg bg-rose-500/10">

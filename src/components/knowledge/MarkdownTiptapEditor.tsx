@@ -206,7 +206,7 @@ export function MarkdownTiptapEditor({
       )}
     >
       {/* Barra de Ferramentas Fixa */}
-      <div className="sticky top-0 z-10 flex flex-wrap items-center gap-0.5 border-b border-border/50 bg-background/95 p-1.5 backdrop-blur-md rounded-t-xl">
+      <div className="sticky top-0 z-10 flex max-w-full flex-wrap items-center gap-0.5 rounded-t-xl border-b border-border/50 bg-background/95 p-1 backdrop-blur-md sm:p-1.5">
         {/* Headings */}
         <Tooltip>
           <TooltipTrigger asChild>
@@ -551,7 +551,7 @@ export function MarkdownTiptapEditor({
         </Tooltip>
 
         {/* Undo / Redo */}
-        <div className="ml-auto flex items-center gap-0.5">
+        <div className="flex items-center gap-0.5 sm:ml-auto">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -587,11 +587,11 @@ export function MarkdownTiptapEditor({
       </div>
 
       {/* Notion Canvas Centralizado */}
-      <div className="flex-1 overflow-y-auto bg-muted/10 p-6 md:p-8 flex justify-center min-h-[500px]">
-        <div className="w-full max-w-[850px] bg-background border border-border/40 rounded-xl p-8 md:p-12 shadow-sm min-h-[500px]">
+      <div className="flex min-h-[420px] flex-1 justify-center overflow-y-auto bg-muted/10 p-2 sm:min-h-[500px] sm:p-6 md:p-8">
+        <div className="min-h-[420px] w-full min-w-0 max-w-[850px] overflow-hidden rounded-xl border border-border/40 bg-background p-3 shadow-sm sm:min-h-[500px] sm:p-8 md:p-12">
           <EditorContent
             editor={editor}
-            className="prose prose-slate dark:prose-invert max-w-none focus:outline-none min-h-[400px] text-[15px] leading-relaxed"
+            className="prose prose-sm prose-slate min-h-[360px] max-w-none break-words text-sm leading-relaxed focus:outline-none dark:prose-invert sm:min-h-[400px] sm:text-[15px] [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_table]:text-xs sm:[&_table]:text-sm"
           />
         </div>
       </div>

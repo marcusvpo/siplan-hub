@@ -27,11 +27,16 @@ export function MainLayout({ children }: MainLayoutProps) {
 
   const isProjectsPage = location.pathname === "/projects";
   const isModelsWorkspacePage = normalizedPathname.startsWith("/orion-tn-models/");
+  const isAssistantsKnowledgePage = location.pathname === "/assistentes/conhecimento";
   const isPosAiLogsPage = location.pathname === "/assistentes/logs";
   const isPosAiLinksChatsPage = location.pathname === "/assistentes/links-chats";
-  const isNoScrollPage = isProjectsPage || isModelsWorkspacePage;
+  const isNoScrollPage =
+    isProjectsPage || isModelsWorkspacePage || isAssistantsKnowledgePage;
   const isFullBleedPage =
-    isModelsWorkspacePage || isPosAiLogsPage || isPosAiLinksChatsPage;
+    isModelsWorkspacePage ||
+    isAssistantsKnowledgePage ||
+    isPosAiLogsPage ||
+    isPosAiLinksChatsPage;
   const isPrintMode = new URLSearchParams(location.search).get("print") === "true";
   const headerAction = getContextualHeaderAction(
     location.pathname,

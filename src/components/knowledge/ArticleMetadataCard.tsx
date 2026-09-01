@@ -74,26 +74,26 @@ export function ArticleMetadataCard({
 
   return (
     <>
-      <Card className="border-border/60 bg-muted/20 shadow-sm overflow-hidden mb-6">
+      <Card className="mb-4 min-w-0 overflow-hidden border-border/60 bg-muted/20 shadow-sm sm:mb-6">
         {/* Top Bar with ID, Status, Video Button and 3-dots Menu */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/40 bg-muted/40 px-4 py-2.5">
-          <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/40 bg-muted/40 px-3 py-2.5 sm:gap-3 sm:px-4">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-2.5">
             <Badge
               variant="default"
               className="font-mono text-xs font-black tracking-wide bg-primary text-primary-foreground shadow-xs"
             >
               {article.id}
             </Badge>
-            <span className="text-xs text-muted-foreground font-medium flex items-center gap-1.5">
+            <span className="flex min-w-0 items-center gap-1.5 text-xs font-medium text-muted-foreground">
               <BookOpen className="h-3.5 w-3.5 text-muted-foreground/70" />
-              {article.sectionName}
+              <span className="break-words">{article.sectionName}</span>
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <div className="flex items-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded-md sm:gap-1.5 sm:px-2 sm:text-[11px]">
               <ShieldCheck className="h-3.5 w-3.5" />
-              <span>YAML Protegido</span>
+              <span className="hidden min-[360px]:inline">YAML Protegido</span>
             </div>
 
             {hasVideo && (
@@ -104,7 +104,7 @@ export function ArticleMetadataCard({
                 className="h-7 text-xs gap-1.5 border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 hover:text-rose-500 font-semibold"
               >
                 <PlayCircle className="h-3.5 w-3.5 text-rose-500 fill-rose-500/20" />
-                <span>Ver Vídeo</span>
+                <span className="hidden min-[360px]:inline">Ver Vídeo</span>
               </Button>
             )}
 
@@ -136,10 +136,10 @@ export function ArticleMetadataCard({
           </div>
         </div>
 
-        <CardContent className="p-4 space-y-3.5">
+        <CardContent className="space-y-3.5 p-3 sm:p-4">
           {/* Title */}
           <div>
-            <h2 className="text-lg font-bold text-foreground tracking-tight">
+            <h2 className="break-words text-base font-bold tracking-tight text-foreground sm:text-lg">
               {metadata.titulo || article.titulo}
             </h2>
           </div>

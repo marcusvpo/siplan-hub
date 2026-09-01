@@ -389,7 +389,7 @@ export function CreateRoutineModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && !isCreating && onClose()}>
-      <DialogContent className="max-w-4xl max-h-[90vh] bg-background border-border shadow-2xl flex flex-col p-0 overflow-hidden">
+      <DialogContent className="flex max-h-[calc(100dvh-1rem)] max-w-4xl flex-col overflow-hidden border-border bg-background p-0 shadow-2xl sm:max-h-[90vh]">
         {/* Header Fixo */}
         <DialogHeader className="p-5 border-b bg-muted/20 shrink-0">
           <div className="flex items-center justify-between">

@@ -28,7 +28,7 @@ export function UnsavedChangesDialog({
 }: UnsavedChangesDialogProps) {
   return (
     <AlertDialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
-      <AlertDialogContent className="max-w-md bg-background border-border shadow-2xl">
+      <AlertDialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-md overflow-y-auto border-border bg-background p-4 shadow-2xl sm:p-6">
         <AlertDialogHeader>
           <div className="flex items-center gap-2 text-amber-500 mb-1">
             <AlertTriangle className="h-5 w-5" />

@@ -93,10 +93,10 @@ export function PosAiVisitorAnalytics({
   }));
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <div className="min-w-0 space-y-3 overflow-x-hidden sm:space-y-4">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="min-w-0 p-3 sm:p-4">
             <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
               <span>Usuários ativos</span>
               <UsersRound className="h-4 w-4 text-rose-600" />
@@ -109,7 +109,7 @@ export function PosAiVisitorAnalytics({
         </Card>
 
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="min-w-0 p-3 sm:p-4">
             <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
               <span>Setores ativos</span>
               <Building2 className="h-4 w-4 text-blue-600" />
@@ -122,7 +122,7 @@ export function PosAiVisitorAnalytics({
         </Card>
 
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="min-w-0 p-3 sm:p-4">
             <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
               <span>Perguntas identificadas</span>
               <MessageSquareText className="h-4 w-4 text-amber-600" />
@@ -135,7 +135,7 @@ export function PosAiVisitorAnalytics({
         </Card>
 
         <Card className="border-emerald-200/80 bg-emerald-50/20 dark:border-emerald-950/60 dark:bg-emerald-950/10">
-          <CardContent className="p-4">
+          <CardContent className="min-w-0 p-3 sm:p-4">
             <div className="mb-1 flex items-center justify-between text-xs text-emerald-800 dark:text-emerald-300">
               <span>Custo atribuído</span>
               <CircleDollarSign className="h-4 w-4 text-emerald-600" />
@@ -206,7 +206,7 @@ export function PosAiVisitorAnalytics({
                     <BarChart data={chartData} layout="vertical" margin={{ top: 0, right: 20, bottom: 0, left: 25 }}>
                       <CartesianGrid strokeDasharray="3 3" horizontal={false} opacity={0.3} />
                       <XAxis type="number" allowDecimals={false} fontSize={11} />
-                      <YAxis type="category" dataKey="label" width={120} fontSize={11} />
+                      <YAxis type="category" dataKey="label" width={88} fontSize={10} />
                       <ChartTooltip
                         contentStyle={{
                           backgroundColor: "hsl(var(--card))",
@@ -239,7 +239,7 @@ export function PosAiVisitorAnalytics({
                             {index + 1}
                           </span>
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold">{sector.sector}</p>
+                            <p className="break-words text-sm font-semibold sm:truncate">{sector.sector}</p>
                             <p className="text-[11px] text-muted-foreground">
                               {sector.active_users} usuário{sector.active_users === 1 ? "" : "s"} · {sector.total_sessions} conversas
                             </p>
@@ -267,7 +267,31 @@ export function PosAiVisitorAnalytics({
               </CardDescription>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="overflow-x-auto">
+              <div className="space-y-2 p-3 md:hidden" data-testid="pos-ai-analytics-users-mobile-list">
+                {users.map((user, index) => (
+                  <article key={user.visitor_id} className="min-w-0 rounded-xl border bg-card p-3">
+                    <div className="flex min-w-0 items-start gap-2.5">
+                      <span className="w-5 shrink-0 pt-2 text-center text-xs font-semibold text-muted-foreground">{index + 1}</span>
+                      <UserInitials name={user.name} />
+                      <div className="min-w-0 flex-1">
+                        <p className="break-words text-sm font-semibold">{user.name}</p>
+                        <p className="break-words text-[11px] text-muted-foreground">{user.sector}</p>
+                        {showProject && <p className="mt-1 break-words text-[11px] text-muted-foreground">{user.client_name}</p>}
+                      </div>
+                    </div>
+                    <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 rounded-lg bg-muted/30 p-2.5 text-[10px]">
+                      <div><span className="text-muted-foreground">Perguntas</span><p className="text-xs font-semibold">{user.user_questions}</p></div>
+                      <div><span className="text-muted-foreground">Conversas</span><p className="text-xs font-semibold">{user.total_sessions}</p></div>
+                      <div><span className="text-muted-foreground">Tokens</span><p className="font-mono text-xs">{integerFormatter.format(user.total_tokens)}</p></div>
+                      <div><span className="text-muted-foreground">Custo</span><p className="font-mono text-xs font-semibold text-emerald-700 dark:text-emerald-400">{usdFormatter.format(user.estimated_cost_usd)}</p></div>
+                      <div><span className="text-muted-foreground">Satisfação</span><p className="text-xs font-semibold">{user.satisfaction_rate === null ? "N/A" : `${Number(user.satisfaction_rate).toFixed(1)}%`}</p></div>
+                      <div><span className="text-muted-foreground">Último acesso</span><p className="text-xs font-semibold">{formatLastActivity(user.last_activity)}</p></div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+
+              <div className="hidden overflow-x-auto md:block">
                 <Table>
                   <TableHeader>
                     <TableRow>

@@ -23,6 +23,7 @@ import { ptBR } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useKnowledgeBase } from "@/hooks/useKnowledgeBase";
 import { ArticleMetadataCard } from "@/components/knowledge/ArticleMetadataCard";
 import { MarkdownTiptapEditor } from "@/components/knowledge/MarkdownTiptapEditor";
@@ -81,6 +82,7 @@ export default function KnowledgeEditorPage() {
   } = useKnowledgeBase();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isMobileNavigatorOpen, setIsMobileNavigatorOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isHistoryDrawerOpen, setIsHistoryDrawerOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -178,22 +180,27 @@ export default function KnowledgeEditorPage() {
     cancelArticleSwitch();
   };
 
+  const handleSelectArticle = (articleId: string) => {
+    setSelectedArticleId(articleId);
+    setIsMobileNavigatorOpen(false);
+  };
+
   // 3. Loading State com Skeletons
   if (isLoading) {
     return (
-      <div className="flex flex-col h-[calc(100vh-4rem)] p-6 space-y-6">
-        <div className="flex items-center justify-between border-b pb-4">
+      <div className="flex h-[calc(100dvh-3.5rem)] flex-col space-y-4 overflow-hidden p-3 sm:h-[calc(100dvh-4rem)] sm:space-y-6 sm:p-6">
+        <div className="flex flex-col gap-3 border-b pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-2">
             <Skeleton className="h-4 w-64" />
-            <Skeleton className="h-7 w-96" />
+            <Skeleton className="h-7 w-full max-w-96" />
           </div>
-          <div className="flex gap-3">
-            <Skeleton className="h-9 w-32" />
-            <Skeleton className="h-9 w-44" />
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-3">
+            <Skeleton className="h-9 w-full sm:w-32" />
+            <Skeleton className="h-9 w-full sm:w-44" />
           </div>
         </div>
-        <div className="grid grid-cols-12 gap-6 flex-1">
-          <div className="col-span-3 space-y-3">
+        <div className="grid flex-1 grid-cols-1 gap-4 overflow-hidden md:grid-cols-12 md:gap-6">
+          <div className="hidden space-y-3 md:col-span-3 md:block">
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-8 w-full" />
             <div className="space-y-2 pt-2">
@@ -202,7 +209,7 @@ export default function KnowledgeEditorPage() {
               ))}
             </div>
           </div>
-          <div className="col-span-9 space-y-4">
+          <div className="space-y-4 md:col-span-9">
             <Skeleton className="h-32 w-full rounded-xl" />
             <Skeleton className="h-96 w-full rounded-xl" />
           </div>
@@ -249,12 +256,16 @@ export default function KnowledgeEditorPage() {
   const isAnyUnsavedAlertOpen = isUnsavedDialogOpen || Boolean(pendingNavigationPath);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4.2rem)] overflow-hidden bg-background">
+    <div
+      className="flex h-[calc(100dvh-3.5rem)] min-h-0 min-w-0 flex-col overflow-hidden bg-background sm:h-[calc(100dvh-4rem)]"
+      data-testid="assistants-knowledge-mobile-layout"
+    >
       {/* Header Superior */}
-      <header className="shrink-0 flex flex-wrap items-center justify-between gap-4 border-b border-border/50 bg-background/95 px-6 py-3 backdrop-blur-md">
-        <div className="space-y-1">
+      <header className="shrink-0 border-b border-border/50 bg-background/95 px-3 py-2 backdrop-blur-md sm:px-6 sm:py-3">
+        <div className="flex flex-col gap-2.5 xl:flex-row xl:items-center xl:justify-between xl:gap-4">
+        <div className="min-w-0 space-y-1">
           {/* Breadcrumb */}
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <div className="hidden items-center gap-1.5 text-xs text-muted-foreground sm:flex">
             <span className="font-medium">Assistentes</span>
             <ChevronRight className="h-3 w-3 text-muted-foreground/60" />
             <span className="font-medium">Base de Conhecimento</span>
@@ -265,23 +276,23 @@ export default function KnowledgeEditorPage() {
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
-            <h1 className="text-lg font-black tracking-tight text-foreground flex items-center gap-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-3">
+            <h1 className="min-w-0 text-base font-black leading-tight tracking-tight text-foreground sm:text-lg">
               Biblioteca de Conhecimento Orion TN
             </h1>
-            <Badge variant="outline" className="font-mono text-[11px] bg-muted/50">
+            <Badge variant="outline" className="shrink-0 bg-muted/50 font-mono text-[10px] sm:text-[11px]">
               {latestVersionTag} · {articles.length} tutoriais
             </Badge>
           </div>
         </div>
 
         {/* Status, Auditoria, Histórico, Nova Rotina & Ação Principal */}
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="grid min-w-0 grid-cols-3 items-center gap-1.5 sm:flex sm:flex-wrap sm:gap-2.5">
           {/* Indicador de Status Dinâmico */}
           {isDirty ? (
             <Badge
               variant="outline"
-              className="gap-1.5 border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold py-1 px-2.5 shadow-xs animate-pulse"
+              className="col-span-3 w-fit max-w-full gap-1.5 border-amber-500/40 bg-amber-500/10 px-2 py-1 text-[10px] font-semibold text-amber-600 shadow-xs animate-pulse dark:text-amber-400 sm:col-span-1 sm:px-2.5 sm:text-xs"
             >
               <span className="h-2 w-2 rounded-full bg-amber-500" />
               Alterações Pendentes
@@ -289,7 +300,7 @@ export default function KnowledgeEditorPage() {
           ) : saveStep === "syncing_openai" || latestSyncStatus === "syncing" ? (
             <Badge
               variant="outline"
-              className="gap-1.5 border-primary/40 bg-primary/10 text-primary font-semibold py-1 px-2.5 shadow-xs animate-pulse"
+              className="col-span-3 w-fit max-w-full gap-1.5 border-primary/40 bg-primary/10 px-2 py-1 text-[10px] font-semibold text-primary shadow-xs animate-pulse sm:col-span-1 sm:px-2.5 sm:text-xs"
             >
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
               Sincronizando com OpenAI...
@@ -297,7 +308,7 @@ export default function KnowledgeEditorPage() {
           ) : latestSyncStatus === "failed" ? (
             <Badge
               variant="outline"
-              className="gap-1.5 border-rose-500/40 bg-rose-500/10 text-rose-600 dark:text-rose-400 font-semibold py-1 px-2.5 shadow-xs"
+              className="col-span-3 w-fit max-w-full gap-1.5 border-rose-500/40 bg-rose-500/10 px-2 py-1 text-[10px] font-semibold text-rose-600 shadow-xs dark:text-rose-400 sm:col-span-1 sm:px-2.5 sm:text-xs"
             >
               <AlertTriangle className="h-3.5 w-3.5" />
               Falha na Sincronização OpenAI
@@ -305,7 +316,7 @@ export default function KnowledgeEditorPage() {
           ) : (
             <Badge
               variant="outline"
-              className="gap-1.5 border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold py-1 px-2.5 shadow-xs"
+              className="col-span-3 w-fit max-w-full gap-1.5 border-emerald-500/40 bg-emerald-500/10 px-2 py-1 text-[10px] font-semibold text-emerald-600 shadow-xs dark:text-emerald-400 sm:col-span-1 sm:px-2.5 sm:text-xs"
             >
               <CheckCircle2 className="h-3.5 w-3.5" />
               Sincronizado com OpenAI
@@ -318,11 +329,12 @@ export default function KnowledgeEditorPage() {
             variant="default"
             size="sm"
             onClick={() => setIsCreateModalOpen(true)}
-            className="gap-1.5 text-xs h-9 bg-primary/90 hover:bg-primary text-primary-foreground font-bold shadow-xs"
+            className="h-9 min-w-0 gap-1 bg-primary/90 px-2 text-[11px] font-bold text-primary-foreground shadow-xs hover:bg-primary sm:gap-1.5 sm:px-3 sm:text-xs"
             title="Cadastrar uma nova rotina/tutorial na base de conhecimento"
           >
             <PlusCircle className="h-4 w-4" />
-            <span>Nova Rotina</span>
+            <span className="sm:hidden">Nova</span>
+            <span className="hidden sm:inline">Nova Rotina</span>
           </Button>
 
           {/* Botão Biblioteca de Versões & Backups */}
@@ -331,10 +343,11 @@ export default function KnowledgeEditorPage() {
             variant="outline"
             size="sm"
             onClick={() => setIsHistoryDrawerOpen(true)}
-            className="gap-1.5 text-xs h-9"
+            className="h-9 min-w-0 gap-1 px-2 text-[11px] sm:gap-1.5 sm:px-3 sm:text-xs"
           >
             <History className="h-4 w-4 text-primary" />
-            <span>Histórico & Backups</span>
+            <span className="sm:hidden">Histórico</span>
+            <span className="hidden sm:inline">Histórico & Backups</span>
             {versions.length > 0 && (
               <Badge variant="secondary" className="ml-1 h-5 px-1.5 font-mono text-[10px]">
                 {versions.length}
@@ -356,20 +369,22 @@ export default function KnowledgeEditorPage() {
             size="sm"
             onClick={handleSaveClick}
             disabled={isSaving}
-            className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-md hover:shadow-lg transition-all h-9 px-4"
+            className="h-9 min-w-0 gap-1 bg-primary px-2 text-[11px] font-bold text-primary-foreground shadow-md transition-all hover:bg-primary/90 hover:shadow-lg sm:gap-2 sm:px-4 sm:text-sm"
           >
             {isSaving ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Processando...</span>
+                <span className="truncate">Processando...</span>
               </>
             ) : (
               <>
                 <CloudUpload className="h-4 w-4" />
-                <span>Salvar e Publicar na IA</span>
+                <span className="sm:hidden">Publicar</span>
+                <span className="hidden sm:inline">Salvar e Publicar na IA</span>
               </>
             )}
           </Button>
+        </div>
         </div>
       </header>
 
@@ -377,7 +392,7 @@ export default function KnowledgeEditorPage() {
       <div className="flex flex-1 overflow-hidden">
         {/* Barra Lateral do Navegador (Colapsável) */}
         <aside
-          className={`shrink-0 transition-all duration-300 ease-in-out relative ${
+          className={`relative hidden shrink-0 transition-all duration-300 ease-in-out md:block ${
             isSidebarOpen ? "w-80 md:w-96" : "w-0"
           } overflow-hidden`}
         >
@@ -386,7 +401,7 @@ export default function KnowledgeEditorPage() {
             filteredArticles={filteredArticles}
             sections={sections}
             selectedArticleId={selectedArticleId}
-            onSelectArticle={setSelectedArticleId}
+            onSelectArticle={handleSelectArticle}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             selectedSectionIndex={selectedSectionIndex}
@@ -399,15 +414,52 @@ export default function KnowledgeEditorPage() {
           />
         </aside>
 
+        <Sheet open={isMobileNavigatorOpen} onOpenChange={setIsMobileNavigatorOpen}>
+          <SheetContent
+            side="left"
+            className="w-[min(92vw,24rem)] max-w-none overflow-hidden p-0 pb-[env(safe-area-inset-bottom)] md:hidden"
+          >
+            <SheetTitle className="sr-only">Índice de tutoriais</SheetTitle>
+            <ArticleNavigator
+              articles={articles}
+              filteredArticles={filteredArticles}
+              sections={sections}
+              selectedArticleId={selectedArticleId}
+              onSelectArticle={handleSelectArticle}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              selectedSectionIndex={selectedSectionIndex}
+              onSectionChange={setSelectedSectionIndex}
+              selectedTag={selectedTag}
+              onTagChange={setSelectedTag}
+              allTags={allTags}
+              isDirty={isDirty}
+              onOpenCreateModal={() => {
+                setIsMobileNavigatorOpen(false);
+                setIsCreateModalOpen(true);
+              }}
+            />
+          </SheetContent>
+        </Sheet>
+
         {/* Área Central de Visualização e Edição */}
         <main className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-muted/5">
           {/* Botão de Toggle do Índice */}
-          <div className="flex items-center justify-between px-6 pt-3 pb-1">
+          <div className="flex items-center justify-between px-3 pb-1 pt-2 sm:px-6 sm:pt-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsMobileNavigatorOpen(true)}
+              className="h-8 max-w-full gap-1.5 px-2 text-xs md:hidden"
+            >
+              <BookOpen className="h-3.5 w-3.5" />
+              <span className="truncate">Tutoriais ({articles.length})</span>
+            </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setIsSidebarOpen((prev) => !prev)}
-              className="h-7 px-2 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
+              className="hidden h-7 gap-1.5 px-2 text-xs text-muted-foreground hover:text-foreground md:inline-flex"
             >
               {isSidebarOpen ? (
                 <>
@@ -423,7 +475,7 @@ export default function KnowledgeEditorPage() {
             </Button>
           </div>
 
-          <div className="p-6 md:p-8 max-w-5xl mx-auto w-full space-y-6">
+          <div className="mx-auto w-full max-w-5xl space-y-4 p-3 sm:space-y-6 sm:p-6 md:p-8">
             {/* Card de Metadados Read-Only (Proteção YAML + 3 Pontinhos para Excluir) */}
             <ArticleMetadataCard
               article={selectedArticle}
@@ -433,12 +485,12 @@ export default function KnowledgeEditorPage() {
 
             {/* Editor TipTap WYSIWYG Estilo Notion */}
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                 <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                   <Sparkles className="h-3.5 w-3.5 text-primary" />
                   Passo a Passo / Procedimento (WYSIWYG)
                 </span>
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-[10px] text-muted-foreground sm:text-[11px]">
                   Editor visual com serialização automática para Markdown
                 </span>
               </div>

@@ -29,7 +29,7 @@ export function BunnyVideoModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-4xl p-0 overflow-hidden bg-background border-border shadow-2xl">
+      <DialogContent className="max-h-[calc(100dvh-1rem)] max-w-4xl overflow-hidden border-border bg-background p-0 shadow-2xl">
         <DialogHeader className="p-4 pb-2 border-b bg-muted/40">
           <div className="flex items-center gap-2">
             {articleId && (
