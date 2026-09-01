@@ -42,20 +42,18 @@ const DEFAULT_QUESTIONS: VisualQuestion[] = [
 
 export default function EditarFormAderencia() {
   const topBanner = (
-    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gradient-to-br from-rose-500/10 via-rose-500/5 to-transparent border border-rose-500/20 p-4 rounded-xl gap-4 mb-2 animate-in slide-in-from-top-4 duration-300">
-      <div className="flex items-center gap-3">
-        <div className="p-2.5 bg-rose-500/15 text-rose-600 rounded-lg dark:text-rose-400">
+    <div className="mb-2 flex min-w-0 flex-col items-start justify-between gap-3 overflow-hidden rounded-xl border border-rose-500/20 bg-gradient-to-br from-rose-500/10 via-rose-500/5 to-transparent p-3 sm:flex-row sm:items-center sm:gap-4 sm:p-4 animate-in slide-in-from-top-4 duration-300">
+      <div className="flex min-w-0 items-start gap-3">
+        <div className="shrink-0 rounded-lg bg-rose-500/15 p-2.5 text-rose-600 dark:text-rose-400">
           <ClipboardCheck className="h-6 w-6" />
         </div>
-        <div>
+        <div className="min-w-0">
           <h4 className="text-sm font-bold text-foreground">Biblioteca de Respostas</h4>
-          <p className="text-xs text-muted-foreground mt-0.5">Consulte, exporte em PDF ou gerencie as análises de aderência já concluídas dos clientes.</p>
+          <p className="mt-0.5 break-words text-xs text-muted-foreground">Consulte, exporte em PDF ou gerencie as análises de aderência já concluídas dos clientes.</p>
         </div>
       </div>
       <Link to="/implantadores/aderencia/finalizadas" className="w-full sm:w-auto">
-        <Button 
-          className="w-full sm:w-auto bg-primary hover:bg-primary/95 text-white font-bold h-11 px-6 text-xs gap-2 shadow-md shadow-primary/20 uppercase tracking-wider transition-all duration-200 hover:-translate-y-0.5"
-        >
+        <Button className="h-10 w-full gap-2 bg-primary px-4 text-xs font-bold uppercase tracking-wider text-white shadow-md shadow-primary/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/95 sm:h-11 sm:w-auto sm:px-6">
           <ClipboardCheck className="h-4.5 w-4.5" />
           Aderências Finalizadas
         </Button>

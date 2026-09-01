@@ -41,21 +41,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -95,12 +82,11 @@ export default function ImplantadoresHomologation() {
   const canExecuteHomologation = hasPermission("conversion_homologation", "execute");
   const isImplantador = team === "implementation" || team === "implementer";
   const currentUserId = user?.id || "";
-  const currentUserName =
-    user?.user_metadata?.full_name || user?.email || "Implantador";
+  const currentUserName = user?.user_metadata?.full_name || user?.email || "Implantador";
   const navigate = useNavigate();
 
   const [queue, setQueue] = useState<ConversionQueueItem[]>([]);
-  
+
   // Selected item for validation modal
   const [selectedItem, setSelectedItem] = useState<ConversionQueueItem | null>(null);
 
@@ -119,11 +105,7 @@ export default function ImplantadoresHomologation() {
     const fetchTramites = async () => {
       setTramitesLoading(true);
       try {
-        const { data, error } = await supabase
-          .from("project_tramites")
-          .select("*")
-          .eq("project_id", selectedItem.projectId)
-          .order("data_tramite", { ascending: false });
+        const { data, error } = await supabase.from("project_tramites").select("*").eq("project_id", selectedItem.projectId).order("data_tramite", { ascending: false });
         if (!error && data) {
           setTramites(data);
         }
@@ -150,7 +132,7 @@ export default function ImplantadoresHomologation() {
     posts.forEach((post) => {
       let title = "Nota de Conversão";
       let badgeStyle = "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-900/40 dark:text-slate-400";
-      
+
       if (post.postType === "update") {
         title = "Atualização";
         badgeStyle = "bg-blue-50 text-blue-700 border-blue-150 dark:bg-blue-950/20 dark:text-blue-400";
@@ -238,7 +220,8 @@ export default function ImplantadoresHomologation() {
       setLoading(true);
       const { data, error } = await supabase
         .from("conversion_queue")
-        .select(`
+        .select(
+          `
           *,
           projects!inner (
             client_name,
@@ -247,7 +230,8 @@ export default function ImplantadoresHomologation() {
             legacy_system,
             implementation_phase1
           )
-        `)
+        `,
+        )
         .order("priority", { ascending: true })
         .order("sent_at", { ascending: true });
 
@@ -275,10 +259,12 @@ export default function ImplantadoresHomologation() {
         deploymentDate: (() => {
           try {
             const phase1 = item.projects?.implementation_phase1;
-            if (phase1 && typeof phase1 === 'object' && (phase1 as Record<string, unknown>).startDate) {
+            if (phase1 && typeof phase1 === "object" && (phase1 as Record<string, unknown>).startDate) {
               return (phase1 as Record<string, unknown>).startDate as string;
             }
-          } catch { /* ignore parse errors */ }
+          } catch {
+            /* ignore parse errors */
+          }
           return null;
         })(),
       }));
@@ -309,19 +295,13 @@ export default function ImplantadoresHomologation() {
   const filteredQueue = useMemo(() => {
     return queue.filter((item) => {
       // Show only active homologations (awaiting_homologation or homologation status)
-      const isActiveHomologation =
-        item.queueStatus === "awaiting_homologation" ||
-        item.queueStatus === "homologation";
+      const isActiveHomologation = item.queueStatus === "awaiting_homologation" || item.queueStatus === "homologation";
 
       if (!isActiveHomologation) return false;
 
-      const matchesSearch =
-        !searchQuery ||
-        item.clientName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.ticketNumber?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = !searchQuery || item.clientName?.toLowerCase().includes(searchQuery.toLowerCase()) || item.ticketNumber?.toLowerCase().includes(searchQuery.toLowerCase());
 
-      const matchesSystem =
-        systemFilter === "all" || item.systemType === systemFilter;
+      const matchesSystem = systemFilter === "all" || item.systemType === systemFilter;
 
       return matchesSearch && matchesSystem;
     });
@@ -337,9 +317,7 @@ export default function ImplantadoresHomologation() {
 
   // Stats
   const stats = useMemo(() => {
-    const active = queue.filter(
-      (i) => i.queueStatus === "awaiting_homologation" || i.queueStatus === "homologation"
-    );
+    const active = queue.filter((i) => i.queueStatus === "awaiting_homologation" || i.queueStatus === "homologation");
     const unassigned = active.filter((i) => !i.homologationAnalyst).length;
     const assignedToMeCount = active.filter((i) => i.homologationAnalyst === currentUserId).length;
     return { total: active.length, unassigned, mine: assignedToMeCount };
@@ -365,17 +343,15 @@ export default function ImplantadoresHomologation() {
       if (queueError) throw queueError;
 
       // Log to homologation_events
-      const { error: logError } = await supabase
-        .from("homologation_events")
-        .insert({
-          project_id: item.projectId,
-          from_status: item.queueStatus,
-          to_status: "homologation",
-          performed_by: currentUserId,
-          performed_by_name: currentUserName,
-          notes: "Homologação assumida pelo implantador responsável.",
-          issues_count: 0,
-        });
+      const { error: logError } = await supabase.from("homologation_events").insert({
+        project_id: item.projectId,
+        from_status: item.queueStatus,
+        to_status: "homologation",
+        performed_by: currentUserId,
+        performed_by_name: currentUserName,
+        notes: "Homologação assumida pelo implantador responsável.",
+        issues_count: 0,
+      });
 
       if (logError) console.error("Error logging event:", logError);
 
@@ -407,17 +383,15 @@ export default function ImplantadoresHomologation() {
       if (queueError) throw queueError;
 
       // Log to homologation_events
-      const { error: logError } = await supabase
-        .from("homologation_events")
-        .insert({
-          project_id: item.projectId,
-          from_status: item.queueStatus,
-          to_status: "awaiting_homologation",
-          performed_by: currentUserId,
-          performed_by_name: currentUserName,
-          notes: "Homologação devolvida para a fila geral.",
-          issues_count: 0,
-        });
+      const { error: logError } = await supabase.from("homologation_events").insert({
+        project_id: item.projectId,
+        from_status: item.queueStatus,
+        to_status: "awaiting_homologation",
+        performed_by: currentUserId,
+        performed_by_name: currentUserName,
+        notes: "Homologação devolvida para a fila geral.",
+        issues_count: 0,
+      });
 
       if (logError) console.error("Error logging event:", logError);
 
@@ -448,18 +422,14 @@ export default function ImplantadoresHomologation() {
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
       const filePath = `${projectId}/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from("conversion-posts")
-        .upload(filePath, file, {
-          contentType: file.type || 'image/png',
-          upsert: true
-        });
+      const { error: uploadError } = await supabase.storage.from("conversion-posts").upload(filePath, file, {
+        contentType: file.type || "image/png",
+        upsert: true,
+      });
 
       if (uploadError) throw uploadError;
 
-      const { data } = supabase.storage
-        .from("conversion-posts")
-        .getPublicUrl(filePath);
+      const { data } = supabase.storage.from("conversion-posts").getPublicUrl(filePath);
 
       return data.publicUrl;
     } catch (err) {
@@ -477,18 +447,18 @@ export default function ImplantadoresHomologation() {
     if (!editor) return;
 
     editor.focus();
-    
+
     // Fallback if selection isn't inside editor
     const sel = window.getSelection();
     let range: Range | null = null;
-    
+
     if (sel && sel.rangeCount > 0) {
       const activeRange = sel.getRangeAt(0);
       if (editor.contains(activeRange.commonAncestorContainer)) {
         range = activeRange;
       }
     }
-    
+
     if (!range) {
       range = document.createRange();
       range.selectNodeContents(editor);
@@ -498,7 +468,7 @@ export default function ImplantadoresHomologation() {
     }
 
     range.deleteContents();
-    
+
     const tempDiv = document.createElement("div");
     tempDiv.innerHTML = html;
     const frag = document.createDocumentFragment();
@@ -507,9 +477,9 @@ export default function ImplantadoresHomologation() {
     while ((node = tempDiv.firstChild)) {
       lastNode = frag.appendChild(node);
     }
-    
+
     range.insertNode(frag);
-    
+
     if (lastNode) {
       const newRange = range.cloneRange();
       newRange.setStartAfter(lastNode);
@@ -522,7 +492,7 @@ export default function ImplantadoresHomologation() {
   // Intercept Paste for Clipboard Images
   const handlePaste = async (e: React.ClipboardEvent<HTMLDivElement>) => {
     if (!selectedItem) return;
-    
+
     const clipboardData = e.clipboardData;
     if (!clipboardData) return;
 
@@ -549,7 +519,9 @@ export default function ImplantadoresHomologation() {
           const url = await handleImageUpload(file, selectedItem.projectId);
           if (url) {
             insertHtmlAtCursor(`<img src="${url}" class="max-w-full my-2 rounded border border-slate-200 shadow-sm" alt="Evidence Print" />`);
-            toast.success("Print colado e anexado inline!", { id: "paste-upload" });
+            toast.success("Print colado e anexado inline!", {
+              id: "paste-upload",
+            });
           } else {
             toast.error("Erro ao colar print", { id: "paste-upload" });
           }
@@ -585,7 +557,7 @@ export default function ImplantadoresHomologation() {
   // Open Verdict Modal
   const openVerdict = (type: "approve" | "issues") => {
     const reportHtml = editorRef.current?.innerHTML || "";
-    
+
     if (type === "issues" && (!reportHtml || reportHtml === "<br>" || reportHtml.trim() === "")) {
       toast.error("Por favor, descreva as inconsistências encontradas no editor antes de retornar.");
       return;
@@ -634,17 +606,15 @@ export default function ImplantadoresHomologation() {
         if (projectError) throw projectError;
 
         // 3. Log event to homologation_events
-        const { error: logError } = await supabase
-          .from("homologation_events")
-          .insert({
-            project_id: selectedItem.projectId,
-            from_status: "homologation",
-            to_status: "homologation_issues",
-            performed_by: currentUserId,
-            performed_by_name: currentUserName,
-            notes: reportHtml,
-            issues_count: 1,
-          });
+        const { error: logError } = await supabase.from("homologation_events").insert({
+          project_id: selectedItem.projectId,
+          from_status: "homologation",
+          to_status: "homologation_issues",
+          performed_by: currentUserId,
+          performed_by_name: currentUserName,
+          notes: reportHtml,
+          issues_count: 1,
+        });
 
         if (logError) throw logError;
 
@@ -689,17 +659,15 @@ export default function ImplantadoresHomologation() {
         if (projectError) throw projectError;
 
         // 3. Log event to homologation_events
-        const { error: logError } = await supabase
-          .from("homologation_events")
-          .insert({
-            project_id: selectedItem.projectId,
-            from_status: "homologation",
-            to_status: "approved",
-            performed_by: currentUserId,
-            performed_by_name: currentUserName,
-            notes: reportHtml || "<p>Homologação aprovada sem restrições.</p>",
-            issues_count: 0,
-          });
+        const { error: logError } = await supabase.from("homologation_events").insert({
+          project_id: selectedItem.projectId,
+          from_status: "homologation",
+          to_status: "approved",
+          performed_by: currentUserId,
+          performed_by_name: currentUserName,
+          notes: reportHtml || "<p>Homologação aprovada sem restrições.</p>",
+          issues_count: 0,
+        });
 
         if (logError) throw logError;
 
@@ -722,7 +690,9 @@ export default function ImplantadoresHomologation() {
       fetchQueue();
     } catch (err) {
       console.error("Error submitting verdict:", err);
-      toast.error("Erro ao enviar parecer de homologação", { id: "verdict-submit" });
+      toast.error("Erro ao enviar parecer de homologação", {
+        id: "verdict-submit",
+      });
     }
   };
 
@@ -730,9 +700,7 @@ export default function ImplantadoresHomologation() {
   const renderItemCard = (item: ConversionQueueItem, mode: "action" | "readonly" = "action") => {
     const isMine = item.homologationAnalyst === currentUserId;
     const isUnassigned = !item.homologationAnalyst;
-    const daysInQueue = Math.floor(
-      (new Date().getTime() - item.sentAt.getTime()) / (1000 * 60 * 60 * 24)
-    );
+    const daysInQueue = Math.floor((new Date().getTime() - item.sentAt.getTime()) / (1000 * 60 * 60 * 24));
 
     return (
       <Card
@@ -740,34 +708,20 @@ export default function ImplantadoresHomologation() {
         className={cn(
           "transition-all duration-300 border-l-4 hover:shadow-md",
           mode === "action"
-            ? cn(
-                isUnassigned && "border-l-amber-500",
-                isMine && "border-l-primary",
-                !isMine && !isUnassigned && "border-l-slate-350 dark:border-l-slate-800"
-              )
-            : cn(
-                isUnassigned && "border-l-amber-500/60",
-                isMine && "border-l-primary/60",
-                !isMine && !isUnassigned && "border-l-slate-300 dark:border-l-slate-800"
-              )
+            ? cn(isUnassigned && "border-l-amber-500", isMine && "border-l-primary", !isMine && !isUnassigned && "border-l-slate-350 dark:border-l-slate-800")
+            : cn(isUnassigned && "border-l-amber-500/60", isMine && "border-l-primary/60", !isMine && !isUnassigned && "border-l-slate-300 dark:border-l-slate-800"),
         )}
       >
-        <CardContent className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <CardContent className="flex min-w-0 flex-col justify-between gap-3 p-3 sm:p-4 md:flex-row md:items-center md:gap-4">
           <div className="flex-1 min-w-0 space-y-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="font-bold text-lg text-foreground truncate">
-                {item.clientName}
-              </h3>
+              <h3 className="break-words text-base font-bold leading-5 text-foreground sm:text-lg">{item.clientName}</h3>
               <Badge variant="secondary" className="text-xs bg-slate-100 text-slate-700 dark:bg-slate-900 dark:text-slate-400">
                 {item.systemType}
               </Badge>
-              {item.legacySystem && (
-                <span className="text-xs text-muted-foreground">
-                  ← {item.legacySystem}
-                </span>
-              )}
+              {item.legacySystem && <span className="text-xs text-muted-foreground">← {item.legacySystem}</span>}
             </div>
-            
+
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
               <span className="font-mono bg-muted px-1.5 py-0.5 rounded">#{item.ticketNumber}</span>
               <span>
@@ -777,7 +731,9 @@ export default function ImplantadoresHomologation() {
                   locale: ptBR,
                 })}
               </span>
-              <span>Convertido por: <strong>{item.assignedToName || "Sem analista"}</strong></span>
+              <span>
+                Convertido por: <strong>{item.assignedToName || "Sem analista"}</strong>
+              </span>
             </div>
 
             <div className="flex flex-wrap items-center gap-2 pt-1">
@@ -800,15 +756,10 @@ export default function ImplantadoresHomologation() {
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-2 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 md:border-l md:pl-4 border-slate-100 dark:border-slate-800">
-            <span className="text-xs text-muted-foreground mr-2 font-medium">{daysInQueue}d na fila</span>
-            
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => navigate(`/projects/${item.projectId}`)}
-              className="text-xs h-9 flex items-center gap-1.5 text-muted-foreground hover:text-foreground"
-            >
+          <div className="grid w-full grid-cols-2 gap-2 border-t border-slate-100 pt-3 dark:border-slate-800 sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:justify-end md:shrink-0 md:border-l md:border-t-0 md:pl-4 md:pt-0">
+            <span className="col-span-2 text-xs font-medium text-muted-foreground sm:col-span-1 sm:mr-2">{daysInQueue}d na fila</span>
+
+            <Button size="sm" variant="ghost" onClick={() => navigate(`/projects/${item.projectId}`)} className="h-9 min-w-0 gap-1.5 px-2 text-xs text-muted-foreground hover:text-foreground">
               <ExternalLink className="h-3.5 w-3.5" />
               Detalhes
             </Button>
@@ -817,16 +768,15 @@ export default function ImplantadoresHomologation() {
               <>
                 {isUnassigned ? (
                   isImplantador && canExecuteHomologation ? (
-                    <Button
-                      size="sm"
-                      onClick={() => handleAssume(item)}
-                      className="bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs h-9 flex items-center gap-1.5"
-                    >
+                    <Button size="sm" onClick={() => handleAssume(item)} className="h-9 min-w-0 gap-1.5 bg-amber-500 px-2 text-xs font-semibold text-white hover:bg-amber-600">
                       <UserPlus className="h-3.5 w-3.5" />
                       Assumir
                     </Button>
                   ) : (
-                    <Badge variant="outline" className="text-xs h-9 flex items-center gap-1.5 px-3 bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/10 dark:text-amber-400">
+                    <Badge
+                      variant="outline"
+                      className="col-span-2 flex h-auto min-h-9 items-center justify-center gap-1.5 whitespace-normal border-amber-200 bg-amber-50 px-2 py-1 text-center text-xs text-amber-700 dark:bg-amber-950/10 dark:text-amber-400 sm:col-span-1"
+                    >
                       <Clock className="h-3.5 w-3.5" />
                       Aguardando Implantador
                     </Badge>
@@ -837,27 +787,18 @@ export default function ImplantadoresHomologation() {
                       size="sm"
                       variant="outline"
                       onClick={() => handleRelease(item)}
-                      className="text-xs h-9 flex items-center gap-1.5 border-slate-300 text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
+                      className="h-9 min-w-0 gap-1.5 border-slate-300 px-2 text-xs text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
                     >
                       <UserMinus className="h-3.5 w-3.5" />
                       Devolver
                     </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => setSelectedItem(item)}
-                      className="bg-primary hover:bg-primary/95 text-primary-foreground font-semibold text-xs h-9 flex items-center gap-1.5"
-                    >
+                    <Button size="sm" onClick={() => setSelectedItem(item)} className="h-9 min-w-0 gap-1.5 bg-primary px-2 text-xs font-semibold text-primary-foreground hover:bg-primary/95">
                       <BookOpen className="h-3.5 w-3.5" />
                       Validar
                     </Button>
                   </>
                 ) : (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled
-                    className="text-xs h-9"
-                  >
+                  <Button size="sm" variant="outline" disabled className="col-span-2 h-auto min-h-9 whitespace-normal px-2 py-1 text-xs sm:col-span-1">
                     Atribuído a {item.homologationAnalystName?.split(" ")[0]}
                   </Button>
                 )}
@@ -870,59 +811,42 @@ export default function ImplantadoresHomologation() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-br from-background to-muted/30 overflow-hidden">
+    <div className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-gradient-to-br from-background to-muted/30" data-testid="implantadores-homologation-mobile-layout">
       {/* Drawer Mode: If a item is being validated, show the full details panel */}
       {selectedItem ? (
         <div className="flex-1 flex flex-col overflow-hidden bg-background">
           {/* Editor Header */}
-          <div className="flex-shrink-0 p-4 border-b flex items-center justify-between bg-muted/20">
-            <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setSelectedItem(null)}
-                className="hover:bg-muted"
-              >
+          <div className="flex shrink-0 flex-col items-stretch justify-between gap-3 border-b bg-muted/20 p-3 sm:p-4 md:flex-row md:items-center">
+            <div className="flex min-w-0 items-start gap-2 sm:gap-3">
+              <Button variant="ghost" size="icon" onClick={() => setSelectedItem(null)} className="hover:bg-muted">
                 <ArrowLeft className="h-5 w-5" />
               </Button>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="text-lg font-bold text-foreground">
-                    Parecer de Homologação: {selectedItem.clientName}
-                  </h1>
-                  <Badge className="bg-slate-700 text-white font-mono text-[10px]">
-                    #{selectedItem.ticketNumber}
-                  </Badge>
+              <div className="min-w-0">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <h1 className="min-w-0 break-words text-base font-bold leading-5 text-foreground sm:text-lg">Parecer de Homologação: {selectedItem.clientName}</h1>
+                  <Badge className="bg-slate-700 text-white font-mono text-[10px]">#{selectedItem.ticketNumber}</Badge>
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="break-words text-xs text-muted-foreground">
                   Sistema: {selectedItem.systemType} {selectedItem.legacySystem ? `(Migrado de: ${selectedItem.legacySystem})` : ""}
                 </p>
               </div>
             </div>
-            
+
             {/* Verdict Action Buttons */}
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setSelectedItem(null)}
-                className="text-xs h-9"
-              >
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-end">
+              <Button variant="outline" onClick={() => setSelectedItem(null)} className="h-9 min-w-0 text-xs">
                 Cancelar
               </Button>
               {canExecuteHomologation && (
                 <>
-                  <Button
-                    variant="default"
-                    onClick={() => openVerdict("issues")}
-                    className="bg-red-600 hover:bg-red-700 text-white font-semibold text-xs h-9 flex items-center gap-1.5 border border-red-700/30 shadow-xs"
-                  >
+                  <Button variant="default" onClick={() => openVerdict("issues")} className="h-9 min-w-0 gap-1 border border-red-700/30 bg-red-600 px-2 text-[11px] font-semibold text-white shadow-xs hover:bg-red-700 sm:gap-1.5 sm:text-xs">
                     <AlertTriangle className="h-3.5 w-3.5" />
                     Com Inconsistências
                   </Button>
                   <Button
                     variant="default"
                     onClick={() => openVerdict("approve")}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs h-9 flex items-center gap-1.5 border border-emerald-700/30 shadow-xs"
+                    className="col-span-2 h-9 min-w-0 gap-1 border border-emerald-700/30 bg-emerald-600 px-2 text-[11px] font-semibold text-white shadow-xs hover:bg-emerald-700 sm:col-span-1 sm:gap-1.5 sm:text-xs"
                   >
                     <CheckCircle2 className="h-3.5 w-3.5" />
                     Aprovar Homologação
@@ -933,9 +857,9 @@ export default function ImplantadoresHomologation() {
           </div>
 
           {/* Validation Form Layout */}
-          <div className="flex-1 flex overflow-hidden">
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
             {/* Left Column: Context Card */}
-            <div className="w-80 border-r p-5 flex flex-col gap-5 bg-muted/10 overflow-hidden h-full">
+            <aside className="flex w-full shrink-0 flex-col gap-4 border-b bg-muted/10 p-3 sm:p-4 lg:h-full lg:w-80 lg:gap-5 lg:overflow-hidden lg:border-b-0 lg:border-r lg:p-5">
               <div className="shrink-0">
                 <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Dados da Conversão</h4>
                 <div className="space-y-3 text-sm bg-card p-3 rounded-lg border">
@@ -945,12 +869,7 @@ export default function ImplantadoresHomologation() {
                   </div>
                   <div>
                     <span className="text-xs text-muted-foreground block">Data de Envio</span>
-                    <span className="font-medium text-foreground">
-                      {selectedItem.homologationSentAt 
-                        ? format(selectedItem.homologationSentAt, "dd/MM/yyyy HH:mm")
-                        : format(selectedItem.sentAt, "dd/MM/yyyy HH:mm")
-                      }
-                    </span>
+                    <span className="font-medium text-foreground">{selectedItem.homologationSentAt ? format(selectedItem.homologationSentAt, "dd/MM/yyyy HH:mm") : format(selectedItem.sentAt, "dd/MM/yyyy HH:mm")}</span>
                   </div>
                 </div>
               </div>
@@ -961,67 +880,65 @@ export default function ImplantadoresHomologation() {
                   <History className="h-3.5 w-3.5 text-primary" />
                   Histórico da Conversão
                 </h4>
-                
-                <div className="flex-1 overflow-y-auto pr-1 space-y-3 min-h-0 pt-1">
+
+                <div className="max-h-64 min-h-0 flex-1 space-y-3 overflow-y-auto pt-1 pr-1 lg:max-h-none">
                   {postsLoading || eventsLoading || tramitesLoading ? (
                     <div className="text-center py-6 text-xs text-muted-foreground flex items-center justify-center gap-1.5">
                       <RefreshCw className="h-3.5 w-3.5 animate-spin" />
                       Carregando histórico...
                     </div>
                   ) : combinedTimeline.length === 0 ? (
-                    <div className="text-center py-6 text-xs text-muted-foreground border border-dashed rounded-lg p-4 bg-background">
-                      Nenhum registro encontrado.
-                    </div>
+                    <div className="text-center py-6 text-xs text-muted-foreground border border-dashed rounded-lg p-4 bg-background">Nenhum registro encontrado.</div>
                   ) : (
                     <div className="space-y-4 relative pl-3 border-l border-slate-200 dark:border-slate-800 ml-1.5 py-1">
                       {combinedTimeline.map((item) => {
                         const isApproved = item.title === "Aprovada" || item.title === "Homologação Aprovada";
                         const isIssues = item.title === "Com Inconsistências" || item.title === "Inconsistência/Problema" || item.title === "Problema";
-                        
+
                         return (
-                           <div key={item.id} className="relative space-y-1">
-                             {/* Timeline Bullet */}
-                             <div className={cn(
-                               "absolute -left-[17px] top-1 w-2.5 h-2.5 rounded-full border bg-background shadow-xs",
-                               isApproved && "border-emerald-500 bg-emerald-500",
-                               isIssues && "border-red-500 bg-red-500",
-                               !isApproved && !isIssues && "border-primary bg-primary"
-                             )} />
-                             
-                             <div className="flex items-center justify-between gap-1.5 flex-wrap">
-                               <span className="text-[10px] font-bold text-foreground">
-                                 {item.title}
-                               </span>
-                               <span className="text-[9px] text-muted-foreground font-mono">
-                                 {format(item.timestamp, "dd/MM HH:mm")}
-                               </span>
-                             </div>
-                             
-                             <p className="text-[9px] text-muted-foreground">
-                               Por: <strong className="text-foreground text-[10px]">{item.author}</strong>
-                             </p>
-                             
-                             {item.content && (
-                               <div 
-                                 className="text-[11px] leading-relaxed p-2 bg-background border rounded-md max-w-full overflow-x-auto break-words prose prose-sm dark:prose-invert max-h-36 overflow-y-auto"
-                                 dangerouslySetInnerHTML={{ __html: item.content }}
-                               />
-                             )}
-                           </div>
+                          <div key={item.id} className="relative space-y-1">
+                            {/* Timeline Bullet */}
+                            <div
+                              className={cn(
+                                "absolute -left-[17px] top-1 w-2.5 h-2.5 rounded-full border bg-background shadow-xs",
+                                isApproved && "border-emerald-500 bg-emerald-500",
+                                isIssues && "border-red-500 bg-red-500",
+                                !isApproved && !isIssues && "border-primary bg-primary",
+                              )}
+                            />
+
+                            <div className="flex items-center justify-between gap-1.5 flex-wrap">
+                              <span className="text-[10px] font-bold text-foreground">{item.title}</span>
+                              <span className="text-[9px] text-muted-foreground font-mono">{format(item.timestamp, "dd/MM HH:mm")}</span>
+                            </div>
+
+                            <p className="text-[9px] text-muted-foreground">
+                              Por: <strong className="text-foreground text-[10px]">{item.author}</strong>
+                            </p>
+
+                            {item.content && (
+                              <div
+                                className="text-[11px] leading-relaxed p-2 bg-background border rounded-md max-w-full overflow-x-auto break-words prose prose-sm dark:prose-invert max-h-36 overflow-y-auto"
+                                dangerouslySetInnerHTML={{
+                                  __html: item.content,
+                                }}
+                              />
+                            )}
+                          </div>
                         );
                       })}
                     </div>
                   )}
                 </div>
               </div>
-            </div>
+            </aside>
 
             {/* Right Column: LibreOffice Style Text Editor */}
-            <div className="flex-1 flex flex-col overflow-hidden p-5">
+            <div className="flex min-w-0 flex-1 flex-col p-3 sm:p-4 lg:overflow-hidden lg:p-5">
               <Label className="text-sm font-bold mb-2 text-foreground">Relatório Detalhado de Homologação (Parecer Conclusivo)</Label>
-              
+
               {/* Text formatting bar */}
-              <div className="flex items-center gap-1 p-2 bg-muted/40 border border-b-0 rounded-t-md flex-wrap">
+              <div className="flex min-w-0 flex-wrap items-center gap-1 rounded-t-md border border-b-0 bg-muted/40 p-1.5 sm:p-2">
                 <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted" onClick={() => formatDoc("bold")} title="Negrito">
                   <Bold className="h-4 w-4" />
                 </Button>
@@ -1034,9 +951,9 @@ export default function ImplantadoresHomologation() {
                 <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted" onClick={() => formatDoc("strikeThrough")} title="Tachado">
                   <Strikethrough className="h-4 w-4" />
                 </Button>
-                
+
                 <div className="h-5 w-[1px] bg-slate-200 dark:bg-slate-800 mx-1.5" />
-                
+
                 <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted" onClick={() => formatDoc("formatBlock", "h1")} title="Título 1">
                   <Heading1 className="h-4 w-4" />
                 </Button>
@@ -1046,9 +963,9 @@ export default function ImplantadoresHomologation() {
                 <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted" onClick={() => formatDoc("formatBlock", "h3")} title="Título 3">
                   <Heading3 className="h-4 w-4" />
                 </Button>
-                
+
                 <div className="h-5 w-[1px] bg-slate-200 dark:bg-slate-800 mx-1.5" />
-                
+
                 <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted" onClick={() => formatDoc("justifyLeft")} title="Alinhar à Esquerda">
                   <AlignLeft className="h-4 w-4" />
                 </Button>
@@ -1061,59 +978,36 @@ export default function ImplantadoresHomologation() {
                 <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted" onClick={() => formatDoc("justifyFull")} title="Justificar">
                   <AlignJustify className="h-4 w-4" />
                 </Button>
-                
+
                 <div className="h-5 w-[1px] bg-slate-200 dark:bg-slate-800 mx-1.5" />
-                
+
                 <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted" onClick={() => formatDoc("insertUnorderedList")} title="Lista de Marcadores">
                   <List className="h-4 w-4" />
                 </Button>
-                
+
                 <div className="relative flex items-center">
-                  <input
-                    type="color"
-                    id="textColorPicker"
-                    className="sr-only"
-                    onChange={(e) => formatDoc("foreColor", e.target.value)}
-                  />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 hover:bg-muted"
-                    onClick={() => document.getElementById("textColorPicker")?.click()}
-                    title="Cor do Texto"
-                  >
+                  <input type="color" id="textColorPicker" className="sr-only" onChange={(e) => formatDoc("foreColor", e.target.value)} />
+                  <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted" onClick={() => document.getElementById("textColorPicker")?.click()} title="Cor do Texto">
                     <Palette className="h-4 w-4" />
                   </Button>
                 </div>
-                
+
                 <div className="h-5 w-[1px] bg-slate-200 dark:bg-slate-800 mx-1.5" />
-                
+
                 <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted" onClick={() => formatDoc("undo")} title="Desfazer">
                   <Undo className="h-4 w-4" />
                 </Button>
                 <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted" onClick={() => formatDoc("redo")} title="Refazer">
                   <Redo className="h-4 w-4" />
                 </Button>
-                
+
                 <div className="h-5 w-[1px] bg-slate-200 dark:bg-slate-800 mx-1.5" />
-                
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 gap-1.5 px-2 hover:bg-muted text-xs text-muted-foreground"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isUploading}
-                >
+
+                <Button variant="ghost" size="sm" className="h-8 gap-1.5 px-2 hover:bg-muted text-xs text-muted-foreground" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
                   <ImageIcon className="h-4 w-4" />
                   Inserir Print/Imagem
                 </Button>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  className="hidden"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                />
+                <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
                 {isUploading && (
                   <span className="text-xs text-primary animate-pulse ml-auto flex items-center gap-1.5">
                     <RefreshCw className="h-3 w-3 animate-spin" />
@@ -1127,18 +1021,16 @@ export default function ImplantadoresHomologation() {
                 ref={editorRef}
                 contentEditable
                 onPaste={handlePaste}
-                className="flex-1 border p-4 bg-background rounded-b-md overflow-y-auto prose dark:prose-invert max-w-none focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary border-slate-200 min-h-[300px]"
+                className="min-h-[360px] min-w-0 flex-1 overflow-y-auto rounded-b-md border border-slate-200 bg-background p-3 prose max-w-none break-words focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:prose-invert sm:p-4 lg:min-h-[300px]"
                 style={{ contentVisibility: "auto" }}
                 data-placeholder="Escreva seu parecer técnico e cole imagens de evidências aqui..."
               />
 
               {/* Horizontal Instructions Box */}
-              <div className="mt-4 shrink-0 text-xs text-muted-foreground leading-relaxed bg-primary/5 border border-primary/10 p-3 rounded-lg">
+              <div className="mt-3 shrink-0 rounded-lg border border-primary/10 bg-primary/5 p-3 text-xs leading-relaxed text-muted-foreground sm:mt-4">
                 <span className="font-bold text-primary block mb-1.5 text-[10px] uppercase tracking-wider">Instruções de Preenchimento</span>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    Substitua o arquivo Word de homologação preenchendo o parecer no editor acima diretamente.
-                  </div>
+                  <div>Substitua o arquivo Word de homologação preenchendo o parecer no editor acima diretamente.</div>
                   <div>
                     <strong>Prints de Telas:</strong> Copie e cole imagens do seu clipboard (<code>Ctrl+V</code>) diretamente no texto para inserir imagens inline no seu parecer.
                   </div>
@@ -1154,78 +1046,65 @@ export default function ImplantadoresHomologation() {
         // Dashboard Fila View
         <>
           {/* Header */}
-          <div className="flex-shrink-0 p-6 pb-0 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
+          <div className="shrink-0 space-y-3 p-3 pb-0 sm:space-y-4 sm:p-5 sm:pb-0 lg:p-6 lg:pb-0">
+            <div className="flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-center">
+              <div className="flex min-w-0 items-start gap-2.5 sm:items-center sm:gap-3">
                 <div className="p-2 rounded-lg bg-primary/10">
                   <CheckCircle2 className="h-6 w-6 text-primary" />
                 </div>
-                <div>
-                  <h1 className="text-2xl font-bold">Homologação de Conversões</h1>
-                  <p className="text-muted-foreground">
-                    Validação final de dados e geração de parecer técnico
-                  </p>
+                <div className="min-w-0">
+                  <h1 className="break-words text-xl font-bold leading-6 sm:text-2xl">Homologação de Conversões</h1>
+                  <p className="break-words text-xs text-muted-foreground sm:text-base">Validação final de dados e geração de parecer técnico</p>
                 </div>
               </div>
-              <Button onClick={fetchQueue} variant="outline" size="sm">
+              <Button onClick={fetchQueue} variant="outline" size="sm" className="w-full sm:w-auto">
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Atualizar
               </Button>
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3">
               <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-950/20 dark:to-indigo-900/10 border-indigo-200 dark:border-indigo-800/40">
-                <CardContent className="p-4 flex items-center justify-between">
+                <CardContent className="flex items-start justify-between gap-1 p-3 sm:p-4">
                   <div>
-                    <span className="text-xs font-semibold text-indigo-700 dark:text-indigo-400 block mb-1">
-                      Minhas Homologações
-                    </span>
-                    <p className="text-2xl font-bold text-indigo-800 dark:text-indigo-300">{stats.mine}</p>
+                    <span className="text-xs font-semibold text-indigo-700 dark:text-indigo-400 block mb-1">Minhas Homologações</span>
+                    <p className="text-xl font-bold text-indigo-800 dark:text-indigo-300 sm:text-2xl">{stats.mine}</p>
                   </div>
-                  <UserCheck className="h-8 w-8 text-indigo-500/40" />
+                  <UserCheck className="h-6 w-6 shrink-0 text-indigo-500/40 sm:h-8 sm:w-8" />
                 </CardContent>
               </Card>
 
               <Card className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/20 dark:to-amber-900/10 border-amber-200 dark:border-amber-800/40">
-                <CardContent className="p-4 flex items-center justify-between">
+                <CardContent className="flex items-start justify-between gap-1 p-3 sm:p-4">
                   <div>
-                    <span className="text-xs font-semibold text-amber-700 dark:text-amber-400 block mb-1">
-                      Aguardando Implantador (Em Aberto)
-                    </span>
-                    <p className="text-2xl font-bold text-amber-800 dark:text-amber-300">{stats.unassigned}</p>
+                    <span className="text-xs font-semibold text-amber-700 dark:text-amber-400 block mb-1">Aguardando Implantador (Em Aberto)</span>
+                    <p className="text-xl font-bold text-amber-800 dark:text-amber-300 sm:text-2xl">{stats.unassigned}</p>
                   </div>
-                  <Clock className="h-8 w-8 text-amber-500/40" />
+                  <Clock className="h-6 w-6 shrink-0 text-amber-500/40 sm:h-8 sm:w-8" />
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950/20 dark:to-slate-900/10 border-slate-250 dark:border-slate-800/40">
-                <CardContent className="p-4 flex items-center justify-between">
+              <Card className="col-span-2 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950/20 dark:to-slate-900/10 border-slate-250 dark:border-slate-800/40 md:col-span-1">
+                <CardContent className="flex items-start justify-between gap-1 p-3 sm:p-4">
                   <div>
-                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-400 block mb-1">
-                      Total na Fila
-                    </span>
-                    <p className="text-2xl font-bold text-slate-800 dark:text-slate-300">{stats.total}</p>
+                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-400 block mb-1">Total na Fila</span>
+                    <p className="text-xl font-bold text-slate-800 dark:text-slate-300 sm:text-2xl">{stats.total}</p>
                   </div>
-                  <AlertCircle className="h-8 w-8 text-slate-500/40" />
+                  <AlertCircle className="h-6 w-6 shrink-0 text-slate-500/40 sm:h-8 sm:w-8" />
                 </CardContent>
               </Card>
             </div>
 
             {/* Filter controls */}
-            <div className="flex items-center gap-4">
-              <div className="relative flex-1 max-w-sm">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar cliente ou ticket..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+              <div className="relative w-full max-w-sm flex-1">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
+                <Input placeholder="Buscar cliente ou ticket..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10" />
               </div>
-              
+
               <Select value={systemFilter} onValueChange={setSystemFilter}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[180px]">
                   <Filter className="h-4 w-4 mr-2" />
                   <SelectValue placeholder="Sistema" />
                 </SelectTrigger>
@@ -1242,14 +1121,10 @@ export default function ImplantadoresHomologation() {
           </div>
 
           {/* Fila Tabs */}
-          <Tabs
-            value={activeTab}
-            onValueChange={setActiveTab}
-            className="flex-1 flex flex-col overflow-hidden px-6 pt-4"
-          >
-            <TabsList className="mb-4 flex-shrink-0">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex min-h-0 flex-1 flex-col overflow-hidden px-3 pt-3 sm:px-5 sm:pt-4 lg:px-6">
+            <TabsList className="mb-3 grid h-auto shrink-0 grid-cols-2 overflow-hidden sm:mb-4 sm:inline-flex sm:w-fit">
               {isImplantador && (
-                <TabsTrigger value="my-queue" className="gap-2 relative">
+                <TabsTrigger value="my-queue" className="relative min-w-0 gap-1 px-1.5 text-[11px] sm:gap-2 sm:px-3 sm:text-sm">
                   Minha Fila
                   {myQueue.length > 0 && (
                     <span className="flex items-center gap-1.5">
@@ -1264,7 +1139,7 @@ export default function ImplantadoresHomologation() {
                   )}
                 </TabsTrigger>
               )}
-              <TabsTrigger value="general-queue" className="gap-2 relative">
+              <TabsTrigger value="general-queue" className="relative min-w-0 gap-1 px-1.5 text-[11px] sm:gap-2 sm:px-3 sm:text-sm">
                 Fila Geral (Todos)
                 {generalQueue.length > 0 && (
                   <span className="flex items-center gap-1.5">
@@ -1291,14 +1166,10 @@ export default function ImplantadoresHomologation() {
                     Carregando homologações...
                   </div>
                 ) : myQueue.length === 0 ? (
-                  <Card className="p-12 text-center border-2 border-dashed">
+                  <Card className="border-2 border-dashed p-6 text-center sm:p-12">
                     <CheckCircle2 className="h-12 w-12 mx-auto text-green-500/50 mb-4" />
-                    <h3 className="text-lg font-medium mb-1">
-                      Sua fila está limpa!
-                    </h3>
-                    <p className="text-muted-foreground text-sm">
-                      Assuma tarefas de homologação na Fila Geral para começar.
-                    </p>
+                    <h3 className="text-lg font-medium mb-1">Sua fila está limpa!</h3>
+                    <p className="text-muted-foreground text-sm">Assuma tarefas de homologação na Fila Geral para começar.</p>
                   </Card>
                 ) : (
                   myQueue.map((item) => renderItemCard(item, "action"))
@@ -1312,14 +1183,10 @@ export default function ImplantadoresHomologation() {
                     Carregando fila geral...
                   </div>
                 ) : generalQueue.length === 0 ? (
-                  <Card className="p-12 text-center border-2 border-dashed">
+                  <Card className="border-2 border-dashed p-6 text-center sm:p-12">
                     <AlertCircle className="h-12 w-12 mx-auto text-slate-350 mb-4" />
-                    <h3 className="text-lg font-medium mb-1">
-                      Nenhuma homologação ativa
-                    </h3>
-                    <p className="text-muted-foreground text-sm">
-                      As demandas de homologação aparecerão aqui quando forem finalizadas pelo time de conversão.
-                    </p>
+                    <h3 className="text-lg font-medium mb-1">Nenhuma homologação ativa</h3>
+                    <p className="text-muted-foreground text-sm">As demandas de homologação aparecerão aqui quando forem finalizadas pelo time de conversão.</p>
                   </Card>
                 ) : (
                   generalQueue.map((item) => renderItemCard(item, "readonly"))
@@ -1332,25 +1199,15 @@ export default function ImplantadoresHomologation() {
 
       {/* Verdict Confirmation Dialog */}
       <Dialog open={verdictModalOpen} onOpenChange={setVerdictModalOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>
-              {verdictType === "approve"
-                ? "Aprovar Homologação"
-                : "Retornar com Inconsistências"}
-            </DialogTitle>
-            <DialogDescription>
-              {verdictType === "approve"
-                ? `Confirmar aprovação definitiva do projeto "${selectedItem?.clientName}"?`
-                : `Confirmar devolução do projeto "${selectedItem?.clientName}" para correções?`}
-            </DialogDescription>
+            <DialogTitle>{verdictType === "approve" ? "Aprovar Homologação" : "Retornar com Inconsistências"}</DialogTitle>
+            <DialogDescription>{verdictType === "approve" ? `Confirmar aprovação definitiva do projeto "${selectedItem?.clientName}"?` : `Confirmar devolução do projeto "${selectedItem?.clientName}" para correções?`}</DialogDescription>
           </DialogHeader>
 
           <div className="p-3.5 rounded-lg border text-sm">
             {verdictType === "approve" ? (
-              <p className="text-emerald-700 dark:text-emerald-400">
-                ✓ A etapa de Conversão de Dados deste projeto será concluída (status: Concluído), o projeto avançará no pipeline e o parecer conclusivo será gravado permanentemente.
-              </p>
+              <p className="text-emerald-700 dark:text-emerald-400">✓ A etapa de Conversão de Dados deste projeto será concluída (status: Concluído), o projeto avançará no pipeline e o parecer conclusivo será gravado permanentemente.</p>
             ) : (
               <p className="text-red-700 dark:text-red-400">
                 ⚠ O projeto retornará para a Fila de Conversão com o status de "Inconsistências" para revisão. O analista de conversão receberá uma notificação contendo seu relatório de inconsistências.
@@ -1358,22 +1215,11 @@ export default function ImplantadoresHomologation() {
             )}
           </div>
 
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setVerdictModalOpen(false)}
-            >
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setVerdictModalOpen(false)}>
               Cancelar
             </Button>
-            <Button
-              onClick={submitVerdict}
-               className={cn(
-                 "text-white font-semibold",
-                 verdictType === "approve"
-                   ? "bg-emerald-600 hover:bg-emerald-700"
-                   : "bg-red-600 hover:bg-red-700"
-               )}
-            >
+            <Button onClick={submitVerdict} className={cn("text-white font-semibold", verdictType === "approve" ? "bg-emerald-600 hover:bg-emerald-700" : "bg-red-600 hover:bg-red-700")}>
               {verdictType === "approve" ? "Aprovar Definitivamente" : "Devolver para Conversão"}
             </Button>
           </DialogFooter>
