@@ -29,6 +29,8 @@ import { useTeamAreas } from "@/hooks/useTeamAreas";
 import { TEAM_AREA_LABELS, type TeamArea } from "@/types/conversion";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { AdminListPager } from "@/components/Admin/AdminListPagination";
+import { useAdminListPagination } from "@/hooks/useAdminListPagination";
 
 const AREA_COLORS: Record<TeamArea, string> = {
   implementation: "bg-blue-100 text-blue-700 border-blue-300",
@@ -43,6 +45,7 @@ export default function TeamAreasManagement() {
   const [pendingChanges, setPendingChanges] = useState<
     Record<string, TeamArea>
   >({});
+  const pagination = useAdminListPagination(members);
 
   const stats = getAreaStats();
 
@@ -88,9 +91,9 @@ export default function TeamAreasManagement() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-4 p-0 sm:space-y-6 sm:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg">
             <UserCog className="h-6 w-6 text-white" />
@@ -103,7 +106,7 @@ export default function TeamAreasManagement() {
           </div>
         </div>
         {hasChanges && (
-          <Button onClick={saveChanges}>
+          <Button onClick={saveChanges} className="w-full sm:w-auto">
             <Save className="h-4 w-4 mr-2" />
             Salvar Alterações ({Object.keys(pendingChanges).length})
           </Button>
@@ -111,7 +114,7 @@ export default function TeamAreasManagement() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-4">
         {(Object.keys(TEAM_AREA_LABELS) as TeamArea[]).map((area) => (
           <Card
             key={area}
@@ -187,7 +190,7 @@ export default function TeamAreasManagement() {
               <p>Nenhum membro cadastrado</p>
             </div>
           ) : (
-            <div className="w-full overflow-x-auto scrollbar-thin">
+            <div className="mobile-card-table w-full overflow-x-auto scrollbar-thin">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -199,7 +202,7 @@ export default function TeamAreasManagement() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {members.map((member) => {
+                  {pagination.pageItems.map((member) => {
                     const currentArea = getMemberCurrentArea(
                       member.id,
                       member.area,
@@ -211,7 +214,7 @@ export default function TeamAreasManagement() {
                         key={member.id}
                         className={hasChange ? "bg-primary/5" : undefined}
                       >
-                        <TableCell>
+                        <TableCell data-label="Membro">
                           <div className="flex items-center gap-3">
                             <Avatar className="h-8 w-8">
                               <AvatarImage src={member.avatarUrl} />
@@ -222,11 +225,11 @@ export default function TeamAreasManagement() {
                             <span className="font-medium">{member.name}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-muted-foreground">
+                        <TableCell data-label="E-mail" className="text-muted-foreground">
                           {member.email}
                         </TableCell>
-                        <TableCell>{member.role}</TableCell>
-                        <TableCell>
+                        <TableCell data-label="Cargo">{member.role}</TableCell>
+                        <TableCell data-label="Área atual">
                           <Badge
                             variant="outline"
                             className={cn(
@@ -238,14 +241,14 @@ export default function TeamAreasManagement() {
                             {TEAM_AREA_LABELS[member.area]}
                           </Badge>
                         </TableCell>
-                        <TableCell>
+                        <TableCell data-label="Nova área">
                           <Select
                             value={currentArea}
                             onValueChange={(v) =>
                               handleAreaChange(member.id, v as TeamArea)
                             }
                           >
-                            <SelectTrigger className="w-40">
+                            <SelectTrigger className="h-11 w-full min-w-0 sm:h-10 sm:w-40">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -264,6 +267,7 @@ export default function TeamAreasManagement() {
                   })}
                 </TableBody>
               </Table>
+              <AdminListPager page={pagination.page} pageSize={pagination.pageSize} total={members.length} totalPages={pagination.totalPages} onPageChange={pagination.setPage} />
             </div>
           )}
         </CardContent>

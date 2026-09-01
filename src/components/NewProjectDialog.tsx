@@ -142,7 +142,7 @@ export const NewProjectDialog = () => {
           <span className="hidden sm:inline">Cadastrar Novo Projeto</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-[94vw] sm:w-full sm:max-w-[700px] max-h-[88vh] overflow-y-auto p-4 sm:p-6">
+      <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] overflow-y-auto p-4 sm:max-h-[88vh] sm:w-full sm:max-w-[700px] sm:p-6">
         <DialogHeader>
           <DialogTitle>Criar Novo Projeto</DialogTitle>
           <DialogDescription>

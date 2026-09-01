@@ -267,7 +267,7 @@ export default function RoadmapPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center relative overflow-hidden">
+      <div className="relative flex min-h-[100dvh] items-center justify-center overflow-hidden bg-[#0a0a0a]">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,_rgba(120,0,0,0.1),transparent_50%)] animate-pulse" />
         <motion.div
           animate={{
@@ -284,7 +284,7 @@ export default function RoadmapPage() {
 
   if (error || !data) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center p-6 text-center">
+      <div className="flex min-h-[100dvh] items-center justify-center bg-[#0a0a0a] p-6 text-center text-white">
         <div>
           <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h1 className="text-3xl font-bold mb-2">Ops! Link Inválido</h1>
@@ -301,7 +301,7 @@ export default function RoadmapPage() {
   const primaryColor = roadmap.custom_theme?.primary || "#800000";
 
   return (
-    <div ref={containerRef} className="roadmap-page h-screen overflow-y-auto overflow-x-hidden bg-[#000000] text-gray-100 selection:bg-white/20 font-sans">
+    <div ref={containerRef} className="roadmap-page h-[100dvh] overflow-y-auto overflow-x-hidden bg-[#000000] font-sans text-gray-100 selection:bg-white/20">
       {/* Reading Progress Bar */}
       <div
         className="fixed top-0 left-0 h-[3px] z-[100] transition-all duration-100"

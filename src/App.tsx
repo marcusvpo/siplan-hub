@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-route
 import { lazy, Suspense } from "react";
 
 // Imports críticos (imediatos - usados no first load)
-import DashboardV2 from "./pages/DashboardV2";
 import { MainLayout } from "@/components/Layout/MainLayout";
 import { ThemeProvider } from "@/components/theme-provider";
 import { PwaProvider } from "@/components/pwa/PwaStatus";
@@ -16,6 +15,7 @@ import { RequirePermission } from "@/components/auth/RequirePermission";
 import Login from "@/pages/Login";
 
 // Code Splitting: Lazy loading para rotas secundárias
+const DashboardV2 = lazy(() => import("./pages/DashboardV2"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Index = lazy(() => import("./pages/Index"));
 const Home = lazy(() => import("./pages/Home"));

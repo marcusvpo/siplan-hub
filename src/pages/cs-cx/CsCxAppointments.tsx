@@ -404,7 +404,7 @@ export default function CsCxAppointments() {
           )}
         </div>
       </div>
-      <div className="grid gap-2 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 [&>*:last-child]:col-span-2 sm:[&>*:last-child]:col-span-1">
         <Metric label="Próximos" value={upcoming} icon={Clock3} />
         <Metric label="Vencidos" value={overdue} icon={XCircle} />
         <Metric

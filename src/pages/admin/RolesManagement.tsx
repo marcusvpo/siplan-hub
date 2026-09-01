@@ -15,6 +15,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Plus, Trash2, Edit, Shield, ArrowLeft } from "lucide-react";
 import { useAuditLogs } from "@/hooks/useAuditLogs";
 import { usePermissions } from "@/hooks/usePermissions";
+import { AdminListPager } from "@/components/Admin/AdminListPagination";
+import { useAdminListPagination } from "@/hooks/useAdminListPagination";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Accordion,
@@ -44,6 +46,7 @@ interface AppPermission {
 
 export default function RolesManagement() {
   const [roles, setRoles] = useState<AppRole[]>([]);
+  const pagination = useAdminListPagination(roles);
   const [permissions, setPermissions] = useState<AppPermission[]>([]);
   const [rolePermissions, setRolePermissions] = useState<Record<string, string[]>>({});
   
@@ -85,11 +88,11 @@ export default function RolesManagement() {
           .map((rp) => rp.permission_id);
       });
       setRolePermissions(rpMap);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         variant: "destructive",
         title: "Erro ao carregar dados",
-        description: error.message || "Erro desconhecido",
+        description: error instanceof Error ? error.message : "Erro desconhecido",
       });
     } finally {
       setLoading(false);
@@ -181,11 +184,11 @@ export default function RolesManagement() {
 
       setView("list");
       fetchData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         variant: "destructive",
         title: "Erro ao salvar perfil",
-        description: error.message || "Erro desconhecido",
+        description: error instanceof Error ? error.message : "Erro desconhecido",
       });
     } finally {
       setSaving(false);
@@ -226,11 +229,11 @@ export default function RolesManagement() {
         description: "O perfil foi removido com sucesso.",
       });
       fetchData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         variant: "destructive",
         title: "Erro ao excluir",
-        description: error.message || "Erro desconhecido",
+        description: error instanceof Error ? error.message : "Erro desconhecido",
       });
     }
   };
@@ -414,7 +417,7 @@ export default function RolesManagement() {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">
             Perfis de Acesso
@@ -424,7 +427,7 @@ export default function RolesManagement() {
           </p>
         </div>
         {canManageRoles && (
-          <Button onClick={openCreateForm}>
+          <Button onClick={openCreateForm} className="w-full sm:w-auto">
             <Plus className="mr-2 h-4 w-4" />
             Novo Perfil
           </Button>
@@ -432,7 +435,7 @@ export default function RolesManagement() {
       </div>
 
       <div className="border rounded-md bg-card shadow-sm">
-        <div className="w-full overflow-x-auto scrollbar-thin">
+        <div className="mobile-card-table w-full overflow-x-auto scrollbar-thin">
           <Table>
             <TableHeader>
               <TableRow>
@@ -456,9 +459,9 @@ export default function RolesManagement() {
                   </TableCell>
                 </TableRow>
               ) : (
-                roles.map((role) => (
+                pagination.pageItems.map((role) => (
                   <TableRow key={role.id} className="group hover:bg-muted/20">
-                    <TableCell className="font-medium">
+                    <TableCell data-label="Perfil" className="font-medium">
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                           <Shield className="h-5 w-5 text-primary" />
@@ -470,14 +473,14 @@ export default function RolesManagement() {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{role.description || "Nenhuma descrição informada."}</TableCell>
-                    <TableCell className="text-center">
+                    <TableCell data-label="Descrição" className="text-muted-foreground">{role.description || "Nenhuma descrição informada."}</TableCell>
+                    <TableCell data-label="Acessos" className="text-center">
                       <span className="inline-flex items-center justify-center bg-secondary text-secondary-foreground text-xs px-2 py-1 rounded-full font-medium">
                         {rolePermissions[role.id]?.length || 0} permissões
                       </span>
                     </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <TableCell data-label="Ações" className="text-right">
+                      <div className="flex justify-end gap-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
                         <Button
                           variant="ghost"
                           size="icon"
@@ -505,6 +508,7 @@ export default function RolesManagement() {
               )}
             </TableBody>
           </Table>
+          <AdminListPager page={pagination.page} pageSize={pagination.pageSize} total={roles.length} totalPages={pagination.totalPages} onPageChange={pagination.setPage} />
         </div>
       </div>
     </div>

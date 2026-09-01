@@ -490,7 +490,7 @@ export default function CsCxRegistryOffices() {
         </div>
       </div>
 
-      <div className="grid gap-2 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 [&>*:last-child]:col-span-2 sm:[&>*:last-child]:col-span-1">
         <Metric label="Total" value={filtered.length} icon={Building2} />
         <Metric
           label="Ativos"

@@ -64,10 +64,13 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AdminListPager } from "@/components/Admin/AdminListPagination";
+import { useAdminListPagination } from "@/hooks/useAdminListPagination";
 
 export default function VacationManagement() {
   const { vacations, isLoading, addVacation, updateVacation, deleteVacation } =
     useVacations();
+  const pagination = useAdminListPagination(vacations);
 
   // Permissões do recurso de férias
   const { hasPermission } = usePermissions();
@@ -197,10 +200,10 @@ export default function VacationManagement() {
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 p-0 sm:space-y-6 sm:p-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-3">
+          <h1 className="flex items-center gap-3 text-2xl font-bold sm:text-3xl">
             <Palmtree className="h-8 w-8 text-red-500" />
             Gestão de Férias
           </h1>
@@ -211,7 +214,7 @@ export default function VacationManagement() {
         {canCreateVacations && (
           <Button
             onClick={handleOpenCreate}
-            className="bg-red-600 hover:bg-red-700"
+            className="w-full bg-red-600 hover:bg-red-700 sm:w-auto"
           >
             <Plus className="h-4 w-4 mr-2" />
             Cadastrar Férias
@@ -256,7 +259,7 @@ export default function VacationManagement() {
               </p>
             </div>
           ) : (
-            <div className="w-full overflow-x-auto scrollbar-thin">
+            <div className="mobile-card-table w-full overflow-x-auto scrollbar-thin">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -268,11 +271,11 @@ export default function VacationManagement() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {vacations.map((vacation) => {
+                  {pagination.pageItems.map((vacation) => {
                     const status = getVacationStatus(vacation);
                     return (
                       <TableRow key={vacation.id}>
-                        <TableCell>
+                        <TableCell data-label="Implantador">
                           <div className="flex items-center gap-2">
                             <div
                               className={cn(
@@ -285,7 +288,7 @@ export default function VacationManagement() {
                             </span>
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell data-label="Período">
                           <div className="flex items-center gap-2 text-sm">
                             <span>
                               {format(
@@ -302,10 +305,10 @@ export default function VacationManagement() {
                             </span>
                           </div>
                         </TableCell>
-                        <TableCell className="max-w-xs truncate text-muted-foreground">
+                        <TableCell data-label="Descrição" className="max-w-xs truncate text-muted-foreground">
                           {vacation.description || "-"}
                         </TableCell>
-                        <TableCell>
+                        <TableCell data-label="Status">
                           <Badge
                             variant={status.variant}
                             className={status.className}
@@ -313,7 +316,7 @@ export default function VacationManagement() {
                             {status.label}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell data-label="Ações" className="text-right">
                           <div className="flex items-center justify-end gap-2">
                             <Button
                               variant="ghost"
@@ -340,6 +343,7 @@ export default function VacationManagement() {
                   })}
                 </TableBody>
               </Table>
+              <AdminListPager page={pagination.page} pageSize={pagination.pageSize} total={vacations.length} totalPages={pagination.totalPages} onPageChange={pagination.setPage} />
             </div>
           )}
         </CardContent>

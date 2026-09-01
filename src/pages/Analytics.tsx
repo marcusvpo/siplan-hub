@@ -34,7 +34,7 @@ export default function Analytics() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex min-h-[60dvh] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -109,9 +109,9 @@ export default function Analytics() {
   ].filter((d) => d.value > 0);
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500 pb-10">
+    <div className="space-y-4 pb-[calc(2.5rem+env(safe-area-inset-bottom))] animate-in fade-in duration-500 sm:space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">
+        <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
           Dashboard Executivo
         </h2>
         <p className="text-muted-foreground mt-1">
@@ -120,7 +120,7 @@ export default function Analytics() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4 lg:gap-6">
         <Card className="bg-card/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
@@ -183,16 +183,16 @@ export default function Analytics() {
       </div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 lg:gap-6">
         {/* Bar Chart */}
         <Card className="shadow-sm">
-          <CardHeader>
+          <CardHeader className="p-4 sm:p-6">
             <CardTitle>Entregas por Mês</CardTitle>
             <CardDescription>
               Volume de projetos concluídos nos últimos meses
             </CardDescription>
           </CardHeader>
-          <CardContent className="h-[300px]">
+          <CardContent className="h-[260px] p-2 pt-0 sm:h-[300px] sm:p-6 sm:pt-0">
             <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <BarChart data={barChartData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -219,11 +219,11 @@ export default function Analytics() {
 
         {/* Pie Chart */}
         <Card className="shadow-sm">
-          <CardHeader>
+          <CardHeader className="p-4 sm:p-6">
             <CardTitle>Distribuição de Status</CardTitle>
             <CardDescription>Visão geral da saúde do portfólio</CardDescription>
           </CardHeader>
-          <CardContent className="h-[300px]">
+          <CardContent className="h-[280px] p-2 pt-0 sm:h-[300px] sm:p-6 sm:pt-0">
             <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <PieChart>
                 <Pie

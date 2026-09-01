@@ -744,7 +744,7 @@ export default function CsCxRoutines() {
         </Card>
       )}
 
-      <div className="grid gap-2 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 [&>*:last-child]:col-span-2 sm:[&>*:last-child]:col-span-1">
         <Metric
           icon={Database}
           label="Cartórios com rotinas"
@@ -763,7 +763,7 @@ export default function CsCxRoutines() {
       </div>
 
       <Tabs defaultValue="applications" className="space-y-3">
-        <TabsList className="h-auto w-full justify-start overflow-x-auto py-1 sm:h-9 sm:w-auto">
+        <TabsList className="grid h-auto w-full grid-cols-3 py-1 sm:h-9 sm:w-auto">
           <TabsTrigger className="h-7" value="applications">
             Aplicações
           </TabsTrigger>
@@ -1374,7 +1374,7 @@ export default function CsCxRoutines() {
           className={cn(
             "flex max-h-[96vh] flex-col gap-2 overflow-hidden p-3 sm:max-w-6xl sm:p-4",
             analysisFullscreen &&
-              "h-[calc(100vh-1rem)] max-h-[calc(100vh-1rem)] w-[calc(100vw-1rem)] max-w-none sm:max-w-none",
+              "h-[calc(100dvh-1rem)] max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none sm:max-w-none",
           )}
         >
           <Button
@@ -1416,7 +1416,18 @@ export default function CsCxRoutines() {
                 value={analysisProductId}
                 onValueChange={updateAnalysisProduct}
               >
-                <TabsList className="h-8 w-full justify-start gap-0.5 overflow-x-auto p-0.5">
+                <Select value={analysisProductId} onValueChange={updateAnalysisProduct}>
+                  <SelectTrigger className="h-11 w-full md:hidden">
+                    <SelectValue placeholder="Selecione o produto" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {openedOfficeProducts.map((product) => (
+                      <SelectItem key={product.id} value={product.id}>{product.name}</SelectItem>
+                    ))}
+                    <SelectItem value="all">Todas</SelectItem>
+                  </SelectContent>
+                </Select>
+                <TabsList className="hidden h-8 w-full justify-start gap-0.5 overflow-x-auto p-0.5 md:flex">
                   {openedOfficeProducts.map((product) => {
                     const routineCount = openedOfficeRoutines.filter(
                       (routine) => {

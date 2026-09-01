@@ -66,7 +66,7 @@ export function FloatingCopilot() {
       <Button
         onClick={() => setOpen(true)}
         size="icon"
-        className="fixed bottom-2 right-3 z-40 h-9 w-9 rounded-full shadow-lg shadow-primary/30 opacity-40 hover:opacity-100 hover:scale-105 transition-all"
+        className="fixed bottom-[max(.75rem,env(safe-area-inset-bottom))] right-3 z-40 h-11 w-11 rounded-full opacity-80 shadow-lg shadow-primary/30 transition-all hover:scale-105 hover:opacity-100 md:h-9 md:w-9 md:opacity-40"
         title="Copiloto Operacional"
         aria-label="Abrir Copiloto"
       >

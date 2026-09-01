@@ -6,7 +6,7 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
   const location = useLocation();
 
   if (loading || !permissionsLoaded) {
-    return <div className="h-screen w-full flex items-center justify-center">Carregando...</div>;
+    return <div className="flex min-h-[100dvh] w-full items-center justify-center">Carregando...</div>;
   }
 
   if (!user) {

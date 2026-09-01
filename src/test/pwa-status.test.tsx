@@ -184,7 +184,7 @@ describe("PWA do Siplan HUB", () => {
     expect(screen.getByText(/dados e operações do sistema precisam de internet/i)).toBeInTheDocument();
   });
 
-  it("não interfere nas experiências públicas enviadas a clientes", () => {
+  it("mantém o aviso de conexão nas experiências públicas", () => {
     window.history.replaceState({}, "", "/public/checklist/123");
     render(<PwaProvider><div /></PwaProvider>);
 
@@ -192,6 +192,6 @@ describe("PWA do Siplan HUB", () => {
       window.dispatchEvent(new Event("offline"));
     });
 
-    expect(screen.queryByText("Você está sem conexão")).not.toBeInTheDocument();
+    expect(screen.getByText("Você está sem conexão")).toBeInTheDocument();
   });
 });

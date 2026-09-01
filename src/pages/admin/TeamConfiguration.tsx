@@ -25,11 +25,13 @@ import { Label } from "@/components/ui/label";
 import { Loader2, Plus, Trash2, Pencil, Search, ChevronLeft, ChevronRight, FilterX } from "lucide-react";
 
 import { Team } from "@/types/admin";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const ITEMS_PER_PAGE = 6;
 
 export default function TeamConfiguration() {
   const { teams, isLoading, createTeam, updateTeam, deleteTeam } = useTeams();
+  const itemsPerPage = useIsMobile() ? 3 : ITEMS_PER_PAGE;
   const { logAction } = useAuditLogs();
   const { hasPermission } = usePermissions();
 
@@ -62,11 +64,11 @@ export default function TeamConfiguration() {
   }, [teams, searchTerm]);
 
   // Pagination Logic
-  const totalPages = Math.ceil(filteredTeams.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredTeams.length / itemsPerPage);
   const paginatedTeams = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredTeams.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [filteredTeams, currentPage]);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredTeams.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredTeams, currentPage, itemsPerPage]);
 
   // Reset to first page when search changes
   useEffect(() => {
@@ -152,15 +154,15 @@ export default function TeamConfiguration() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Equipes</h2>
           <p className="text-muted-foreground">
             Gerencie as equipes disponíveis para atribuição de usuários.
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="relative w-64">
+        <div className="grid w-full gap-2 sm:flex sm:w-auto sm:items-center sm:gap-3">
+          <div className="relative w-full sm:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Pesquisar equipes..."
@@ -178,7 +180,7 @@ export default function TeamConfiguration() {
           >
             {canCreateTeams && (
               <DialogTrigger asChild>
-                <Button size="sm">
+                <Button size="sm" className="w-full sm:w-auto">
                   <Plus className="mr-2 h-4 w-4" />
                   Nova Equipe
                 </Button>
@@ -251,7 +253,7 @@ export default function TeamConfiguration() {
 
       <div className="space-y-3">
         <div className="border rounded-md bg-card">
-          <div className="w-full overflow-x-auto scrollbar-thin">
+          <div className="mobile-card-table w-full overflow-x-auto scrollbar-thin">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -285,14 +287,14 @@ export default function TeamConfiguration() {
                 ) : (
                   paginatedTeams.map((team) => (
                     <TableRow key={team.id} className="hover:bg-muted/50 transition-colors">
-                      <TableCell className="font-medium">{team.label}</TableCell>
-                      <TableCell>
+                      <TableCell data-label="Nome" className="font-medium">{team.label}</TableCell>
+                      <TableCell data-label="Identificador">
                         <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono text-muted-foreground">
                           {team.value}
                         </code>
                       </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">{team.description}</TableCell>
-                      <TableCell className="text-right px-6">
+                      <TableCell data-label="Descrição" className="text-muted-foreground text-sm">{team.description}</TableCell>
+                      <TableCell data-label="Ações" className="text-right px-6">
                         <div className="flex justify-end gap-1">
                           <Button
                             variant="ghost"
@@ -324,8 +326,8 @@ export default function TeamConfiguration() {
         </div>
 
         {/* Pagination Controls */}
-        {!isLoading && filteredTeams.length > ITEMS_PER_PAGE && (
-          <div className="flex items-center justify-between px-2 py-2 bg-card border rounded-md">
+        {!isLoading && filteredTeams.length > itemsPerPage && (
+          <div className="flex flex-col items-center justify-between gap-2 rounded-md border bg-card px-2 py-2 sm:flex-row">
             <p className="text-xs text-muted-foreground">
               Mostrando <strong>{paginatedTeams.length}</strong> de <strong>{filteredTeams.length}</strong> equipes
             </p>

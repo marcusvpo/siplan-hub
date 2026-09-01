@@ -306,7 +306,7 @@ export default function PublicPosChat() {
   const assistantMessages = messages.filter((m) => m.role === "assistant");
 
   return (
-    <div className="h-[100dvh] flex flex-col bg-slate-100/70 dark:bg-neutral-950 text-foreground font-sans overflow-hidden">
+    <div className="flex h-[100dvh] flex-col overflow-hidden bg-slate-100/70 pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] font-sans text-foreground dark:bg-neutral-950">
       {/* Header Estilo WhatsApp com Identidade Siplan */}
       <header className="sticky top-0 z-40 w-full border-b bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md shadow-xs shrink-0">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 flex items-center justify-between gap-3">
@@ -548,7 +548,7 @@ export default function PublicPosChat() {
             </div>
 
             {/* Input Bar Estilo WhatsApp */}
-            <div className="sticky bottom-0 z-20 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md rounded-2xl border border-slate-200 dark:border-neutral-800 shadow-lg p-2.5 transition-all mt-auto max-w-4xl w-full mx-auto">
+            <div className="sticky bottom-0 z-20 mx-auto mt-auto w-full max-w-4xl rounded-2xl border border-slate-200 bg-white/95 p-2.5 pb-[max(.625rem,env(safe-area-inset-bottom))] shadow-lg backdrop-blur-md transition-all dark:border-neutral-800 dark:bg-neutral-900/95">
               <div className="flex items-end gap-2">
                 <Textarea
                   ref={textareaRef}

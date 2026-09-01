@@ -30,7 +30,7 @@ export default function CompareProjects() {
 
   if (selectedProjects.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen gap-4">
+      <div className="flex min-h-[60dvh] flex-col items-center justify-center gap-4">
         <h2 className="text-xl font-bold">Nenhum projeto selecionado</h2>
         <Button onClick={() => navigate("/projects")}>
           Voltar para Projetos
@@ -83,9 +83,9 @@ export default function CompareProjects() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="flex h-full min-h-0 flex-col bg-background">
       {/* Header */}
-      <div className="border-b p-4 flex items-center gap-4 bg-card">
+      <div className="flex items-center gap-2 border-b bg-card p-3 sm:gap-4 sm:p-4">
         <Button
           variant="ghost"
           size="icon"
@@ -98,8 +98,8 @@ export default function CompareProjects() {
 
       {/* Comparison Grid */}
       <ScrollArea className="flex-1">
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="p-3 sm:p-6">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 lg:gap-6">
             {selectedProjects.map((project) => (
               <Card
                 key={project.id}

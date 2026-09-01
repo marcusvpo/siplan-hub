@@ -128,8 +128,37 @@ export default function ProjectDetails() {
             }}
             className="flex-1"
           >
-            <div className="px-4 md:px-6 border-b bg-muted/30 overflow-x-auto scrollbar-none">
-              <div className="max-w-[98%] mx-auto min-w-max">
+            <div className="border-b bg-muted/30 px-3 py-2 md:hidden">
+              <label className="sr-only" htmlFor="project-detail-section">
+                Seção do projeto
+              </label>
+              <select
+                id="project-detail-section"
+                value={activeTab}
+                onChange={(event) => {
+                  if (event.target.value === "transition") {
+                    navigate(`/implantadores/transicao?project=${id}`);
+                    return;
+                  }
+                  setActiveTab(event.target.value);
+                  setIsEditing(false);
+                }}
+                className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm font-medium"
+              >
+                <option value="general">Informações Gerais</option>
+                {project && (project.TituloChamado || project.descricaotramite || project.ResponsavelAtividade || project.EtapasProjeto) && (
+                  <option value="chamado_0800">Chamado 0800</option>
+                )}
+                <option value="steps">Etapas</option>
+                <option value="files">Arquivos</option>
+                <option value="logs">Logs</option>
+                <option value="roadmap">Roadmap</option>
+                <option value="pos_analysis">Análise Pós-Implantação</option>
+                <option value="transition">Transição</option>
+              </select>
+            </div>
+            <div className="hidden overflow-x-auto border-b bg-muted/30 px-4 scrollbar-none md:block md:px-6">
+              <div className="mx-auto min-w-max max-w-[98%]">
                 <TabsList className="h-12 bg-transparent p-0 gap-4 md:gap-8 flex-nowrap">
                   <TabsTrigger
                     value="general"
@@ -188,7 +217,7 @@ export default function ProjectDetails() {
               </div>
             </div>
 
-            <div className="p-6">
+            <div className="p-3 sm:p-6">
               {isEditing && project ? (
                 <div className="max-w-[98%] mx-auto">
                   <EditProjectTab project={project} onUpdate={handleUpdate} />

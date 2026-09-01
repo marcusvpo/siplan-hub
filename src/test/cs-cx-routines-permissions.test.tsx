@@ -352,7 +352,7 @@ describe("CS/CX rotinas — permissões", () => {
     expect(
       screen.getByRole("button", { name: "Sair da análise em tela cheia" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("dialog")).toHaveClass("h-[calc(100vh-1rem)]");
+    expect(screen.getByRole("dialog")).toHaveClass("h-[calc(100dvh-1rem)]");
     expect(
       screen.getByText("Configuração atual informada pelo cliente"),
     ).toBeInTheDocument();

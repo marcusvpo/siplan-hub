@@ -339,7 +339,7 @@ export default function CsCxAdmin() {
         <TabsContent value="models" className="mt-3 grid gap-3 lg:grid-cols-[280px_minmax(0,1fr)]">
           <Card className="min-h-0">
             <CardHeader className="px-3 pb-2 pt-3"><div className="flex items-center justify-between"><div><CardTitle className="text-sm">Modelos</CardTitle><CardDescription className="text-xs">Selecione para administrar os itens.</CardDescription></div>{canManage && <Button className="h-8 w-8" size="icon" variant="outline" aria-label="Criar modelo" onClick={() => openModel()}><Plus className="h-4 w-4" /></Button>}</div></CardHeader>
-            <CardContent className="max-h-[calc(100vh-330px)] space-y-1.5 overflow-y-auto px-3 pb-3 lg:min-h-64">
+            <CardContent className="max-h-[calc(100dvh-330px)] space-y-1.5 overflow-y-auto px-3 pb-3 lg:min-h-64">
               {admin.models.map((model) => <button key={model.id} type="button" onClick={() => setSelectedModelId(model.id)} className={`w-full rounded-lg border px-3 py-2 text-left transition-colors ${selectedModelId === model.id ? "border-rose-300 bg-rose-50/60 dark:border-rose-900 dark:bg-rose-950/20" : "hover:bg-muted/50"}`}><div className="flex items-start justify-between gap-2"><span className="truncate text-sm font-semibold" title={model.name}>{model.name}</span><Badge variant={model.active ? "default" : "secondary"} className="h-5 px-1.5 text-[10px] font-normal">{model.active ? "Ativo" : "Inativo"}</Badge></div><p className="mt-0.5 text-[11px] text-muted-foreground">{model.item_count} itens · {model.products.length} produtos</p></button>)}
               {!admin.models.length && <p className="py-6 text-center text-sm text-muted-foreground">Nenhum modelo cadastrado.</p>}
             </CardContent>

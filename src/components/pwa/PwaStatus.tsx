@@ -216,7 +216,7 @@ export function PwaProvider({ children }: PwaProviderProps) {
     <PwaInstallContext.Provider value={contextValue}>
       {children}
 
-      {!suppressStatus && !isOnline && (
+      {!isOnline && (
         <div className={cardClass} style={cardStyle} role="status" aria-live="polite">
           <WifiOff className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
           <div>

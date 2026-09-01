@@ -549,7 +549,7 @@ export default function PublicInfraCollection() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col items-center justify-center p-6">
+      <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-slate-50 p-6 text-slate-800">
         <div className="flex flex-col items-center gap-3">
           <Activity className="h-10 w-10 text-[hsl(346,84%,45%)] animate-pulse" />
           <p className="text-sm text-slate-500 font-medium animate-pulse">Carregando painel de coleta...</p>
@@ -560,7 +560,7 @@ export default function PublicInfraCollection() {
 
   if (error || !project) {
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-800 flex items-center justify-center p-6 text-center">
+      <div className="flex min-h-[100dvh] items-center justify-center bg-slate-50 p-6 text-center text-slate-800">
         <Card className="max-w-md w-full bg-white border-slate-200 shadow-xl">
           <CardContent className="p-8 text-center space-y-4">
             <div className="mx-auto w-12 h-12 rounded-full bg-red-50 text-red-600 flex items-center justify-center border border-red-100 mb-2">
@@ -579,7 +579,7 @@ export default function PublicInfraCollection() {
 
   if (project.infra_public_link_closed) {
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-800 flex items-center justify-center p-6 text-center">
+      <div className="flex min-h-[100dvh] items-center justify-center bg-slate-50 p-6 text-center text-slate-800">
         <Card className="max-w-md w-full bg-white border-slate-200 shadow-xl">
           <CardContent className="p-8 text-center space-y-4">
             <div className="mx-auto w-12 h-12 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100 mb-2">
@@ -601,7 +601,7 @@ export default function PublicInfraCollection() {
 
   if (submittedSuccess) {
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-800 flex items-center justify-center p-6">
+      <div className="flex min-h-[100dvh] items-center justify-center bg-slate-50 p-6 text-slate-800">
         <Card className="max-w-lg w-full bg-white border-slate-200 shadow-xl relative overflow-hidden animate-in zoom-in-95 duration-300">
           <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 animate-pulse" />
           <CardContent className="p-8 text-center space-y-5">
@@ -622,7 +622,7 @@ export default function PublicInfraCollection() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 pb-24 selection:bg-[hsl(346,84%,45%)]/10 selection:text-[hsl(346,84%,45%)] relative overflow-x-hidden font-sans">
+    <div className="relative min-h-[100dvh] overflow-x-hidden bg-slate-50 pb-24 font-sans text-slate-800 selection:bg-[hsl(346,84%,45%)]/10 selection:text-[hsl(346,84%,45%)]">
       
       {/* Decorative Blur Backgrounds */}
       <div className="absolute -top-40 -right-40 w-96 h-96 bg-[hsl(346,84%,45%)]/5 rounded-full blur-[100px] pointer-events-none" />
@@ -1100,7 +1100,61 @@ export default function PublicInfraCollection() {
               <p className="text-[11px] text-slate-400 mt-1">Solte arquivos na zona de upload acima.</p>
             </div>
           ) : (
-            <div className="border border-slate-200 rounded-xl overflow-x-auto shadow-md bg-white">
+            <>
+            <div className="space-y-3 md:hidden">
+              {workstations.map((ws, idx) => (
+                <section key={idx} className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+                  <div className="mb-3 flex items-center justify-between gap-2 border-b border-slate-100 pb-2">
+                    <p className="text-sm font-bold text-slate-800">Estação {idx + 1}</p>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => deleteWorkstation(idx)}
+                      className="h-11 w-11 text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                      aria-label={`Excluir estação ${idx + 1}`}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="grid gap-3">
+                    {[
+                      ["Hostname", "hostname", "Hostname"],
+                      ["Setor", "sector", "Ex: Balcão"],
+                      ["Usuário", "user", "Usuário"],
+                      ["Processador", "processor", "Processador"],
+                      ["Memória RAM", "memory", "RAM"],
+                      ["Disco / espaço livre", "disk", "Disco"],
+                      ["Sistema operacional", "os", "S.O."],
+                    ].map(([label, field, placeholder]) => (
+                      <label key={field} className="grid gap-1 text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                        {label}
+                        <EditableCell
+                          value={String(ws[field as keyof typeof ws] || "")}
+                          onChange={(value) => {
+                            const list = [...workstations];
+                            list[idx] = { ...list[idx], [field]: value };
+                            setWorkstations(list);
+                          }}
+                          placeholder={placeholder}
+                        />
+                      </label>
+                    ))}
+                    <div className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 p-3">
+                      <span className="text-xs font-bold text-slate-600">Atende aos requisitos?</span>
+                      <Badge
+                        className={cn(
+                          ws.meetsRequirements === "Sim" && "bg-emerald-100 text-emerald-700",
+                          ws.meetsRequirements === "Não" && "bg-rose-100 text-rose-700",
+                        )}
+                      >
+                        {ws.meetsRequirements || "Analisando"}
+                      </Badge>
+                    </div>
+                  </div>
+                </section>
+              ))}
+            </div>
+            <div className="hidden rounded-xl border border-slate-200 bg-white shadow-md md:block md:overflow-x-auto">
               <Table className="w-full table-fixed border-collapse">
                 <TableHeader className="bg-slate-50/70">
                   <TableRow className="h-9 border-b border-slate-200">
@@ -1278,6 +1332,7 @@ export default function PublicInfraCollection() {
                 </TableBody>
               </Table>
             </div>
+            </>
           )}
         </div>
 

@@ -90,7 +90,7 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="flex min-h-[100dvh] items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md border border-border/50 shadow-2xl bg-card/80 backdrop-blur-xl dark:bg-card/90">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-6">
