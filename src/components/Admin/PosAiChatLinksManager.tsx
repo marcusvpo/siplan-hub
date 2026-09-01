@@ -164,7 +164,7 @@ export function PosAiChatLinksManager({
   };
 
   return (
-    <Card className="overflow-hidden border-border/70 shadow-sm">
+    <Card className="min-w-0 overflow-hidden border-border/70 shadow-sm">
       <CardHeader className="border-b bg-muted/20 px-3 py-2.5">
         <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
@@ -237,7 +237,7 @@ export function PosAiChatLinksManager({
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
                       <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-                        <p className="truncate text-xs font-semibold">{link.client_name}</p>
+                        <p className="break-words text-xs font-semibold sm:truncate">{link.client_name}</p>
                         <Badge
                           variant="outline"
                           className={
@@ -274,11 +274,11 @@ export function PosAiChatLinksManager({
                     </Button>
                   </div>
 
-                  <div className="mt-2 flex min-w-0 flex-wrap items-center gap-1.5 sm:flex-nowrap">
+                  <div className="mt-2 grid min-w-0 grid-cols-2 items-center gap-1.5 sm:flex sm:flex-nowrap">
                     <button
                       type="button"
                       onClick={() => void handleCopy(link)}
-                      className="flex h-7 min-w-0 flex-1 items-center gap-1.5 rounded-md border bg-background px-2 text-left transition-colors hover:bg-muted/40"
+                      className="col-span-2 flex h-8 min-w-0 items-center gap-1.5 rounded-md border bg-background px-2 text-left transition-colors hover:bg-muted/40 sm:col-span-1 sm:h-7 sm:flex-1"
                     >
                       {copiedId === link.id ? (
                         <Check className="h-3 w-3 shrink-0 text-emerald-600" />
@@ -294,7 +294,7 @@ export function PosAiChatLinksManager({
                       type="button"
                       variant="outline"
                       size="sm"
-                      className="h-7 shrink-0 gap-1 px-2 text-[10px]"
+                      className="h-8 min-w-0 gap-1 px-2 text-[10px] sm:h-7 sm:shrink-0"
                       onClick={() => onViewChats(link.id)}
                     >
                       <MessageSquareText className="h-3 w-3 text-blue-600" />
@@ -305,7 +305,7 @@ export function PosAiChatLinksManager({
                         type="button"
                         variant="outline"
                         size="sm"
-                        className="h-7 shrink-0 gap-1 border-amber-300 px-2 text-[10px] text-amber-700 hover:bg-amber-50 dark:border-amber-900 dark:text-amber-300"
+                        className="h-8 min-w-0 gap-1 border-amber-300 px-2 text-[10px] text-amber-700 hover:bg-amber-50 dark:border-amber-900 dark:text-amber-300 sm:h-7 sm:shrink-0"
                         onClick={() => setLinkToDeactivate(link)}
                         disabled={isUpdating}
                       >
@@ -316,7 +316,7 @@ export function PosAiChatLinksManager({
                       <Button
                         type="button"
                         size="sm"
-                        className="h-7 shrink-0 gap-1 bg-emerald-600 px-2 text-[10px] text-white hover:bg-emerald-700"
+                        className="h-8 min-w-0 gap-1 bg-emerald-600 px-2 text-[10px] text-white hover:bg-emerald-700 sm:h-7 sm:shrink-0"
                         onClick={() => void updateLinkStatus(link, true)}
                         disabled={isUpdating}
                       >
@@ -333,9 +333,9 @@ export function PosAiChatLinksManager({
       </CardContent>
 
       <Dialog open={canManageLinks && Boolean(linkToDeactivate)} onOpenChange={(open) => !open && setLinkToDeactivate(null)}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-h-[calc(100dvh-1rem)] max-w-md p-4 sm:p-6">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-base">
+            <DialogTitle className="flex items-center gap-2 break-words pr-8 text-base">
               <AlertTriangle className="h-4 w-4 text-amber-600" />
               Encerrar acesso ao chat?
             </DialogTitle>

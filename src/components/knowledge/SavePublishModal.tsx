@@ -93,7 +93,7 @@ export function SavePublishModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && !isProcessing && handleClose()}>
-      <DialogContent className="max-w-lg bg-background border-border shadow-2xl overflow-hidden">
+      <DialogContent className="max-h-[calc(100dvh-1rem)] max-w-lg overflow-y-auto border-border bg-background p-4 shadow-2xl sm:p-6">
         {/* ===================== CASO 1: EM PROGRESSO OU SUCESSO/FALHA ===================== */}
         {saveStep !== "idle" ? (
           <div className="py-2 space-y-5">

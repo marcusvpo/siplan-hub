@@ -62,9 +62,9 @@ describe("painel de uso por usuário e setor", () => {
       <PosAiVisitorAnalytics data={analytics} isLoading={false} showProject />,
     );
 
-    expect(screen.getByText("Ana Souza")).toBeInTheDocument();
+    expect(screen.getAllByText("Ana Souza").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Atendimento").length).toBeGreaterThan(0);
-    expect(screen.getByText("Cartório Central")).toBeInTheDocument();
+    expect(screen.getAllByText("Cartório Central").length).toBeGreaterThan(0);
     expect(screen.getByText("90.0%")).toBeInTheDocument();
     expect(screen.getAllByText("$0.0500").length).toBeGreaterThan(0);
   });

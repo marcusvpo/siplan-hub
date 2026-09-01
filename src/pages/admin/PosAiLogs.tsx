@@ -561,24 +561,27 @@ export default function PosAiLogs() {
   }, [latencyDist]);
 
   return (
-    <div className="mx-auto max-w-[1600px] space-y-2 px-3 pb-3 pt-1.5 font-sans sm:px-4 sm:pb-4 lg:px-5 lg:pb-5">
+    <div
+      className="mx-auto max-w-[1600px] min-w-0 space-y-2 overflow-x-hidden px-2.5 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-1.5 font-sans sm:px-4 sm:pb-4 lg:px-5 lg:pb-5"
+      data-testid="assistants-logs-mobile-layout"
+    >
       {/* Header */}
       <div className="grid gap-3 border-b pb-3 xl:grid-cols-[minmax(340px,1fr)_auto] xl:items-center">
         <div className="min-w-0">
-          <div className="flex items-center gap-2.5">
+          <div className="flex min-w-0 items-start gap-2.5 sm:items-center">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-rose-600/10 text-rose-600 shadow-xs dark:bg-rose-900/30 dark:text-rose-400">
               <Bot className="h-4 w-4" />
             </div>
             <div className="min-w-0">
               <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-                <h1 className="truncate text-lg font-bold tracking-tight text-foreground sm:text-xl">
+                <h1 className="break-words text-base font-bold leading-tight tracking-tight text-foreground sm:text-xl">
                   Logs & Analytics do Assistente IA
                 </h1>
                 <Badge variant="outline" className="shrink-0 border-rose-200 bg-rose-500/10 px-1.5 py-0 text-[9px] font-semibold text-rose-600 dark:border-rose-800">
                   Orion TN · GPT-5-nano
                 </Badge>
               </div>
-              <p className="mt-0.5 truncate text-xs text-muted-foreground">
+              <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground sm:text-xs">
                 Auditoria de conversas, custos em USD ($), telemetria de tokens e satisfação dos clientes
               </p>
             </div>
@@ -668,7 +671,7 @@ export default function PosAiLogs() {
             <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-rose-600 text-white">
               <Building2 className="h-3 w-3" />
             </span>
-            <p className="min-w-0 truncate text-[10px] leading-none text-foreground sm:text-[11px]">
+            <p className="min-w-0 break-words text-[10px] leading-tight text-foreground sm:truncate sm:text-[11px]">
               <span className="font-bold">Cartório filtrado:</span>{" "}
               {selectedProjectInfo.client_name || (selectedProjectInfo as any).name}
               <span className="hidden text-muted-foreground lg:inline">
@@ -698,13 +701,13 @@ export default function PosAiLogs() {
       ) : (
         <>
           {/* Interactive KPI Cards Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 lg:grid-cols-6">
             {/* Total Cost in USD ($) */}
             <Card
               className="cursor-pointer hover:border-emerald-500 transition-all hover:shadow-xs border-emerald-200/80 dark:border-emerald-950/60 bg-emerald-50/15 dark:bg-emerald-950/10"
               onClick={() => setActiveTab("overview")}
             >
-              <CardContent className="p-4">
+              <CardContent className="min-w-0 p-3 sm:p-4">
                 <div className="flex items-center justify-between text-muted-foreground mb-1">
                   <span className="text-xs font-medium text-emerald-800 dark:text-emerald-300">Custo Total ($ USD)</span>
                   <DollarSign className="h-4 w-4 text-emerald-600" />
@@ -723,7 +726,7 @@ export default function PosAiLogs() {
               className="cursor-pointer hover:border-blue-400 transition-all hover:shadow-xs"
               onClick={() => setActiveTab("library")}
             >
-              <CardContent className="p-4">
+              <CardContent className="min-w-0 p-3 sm:p-4">
                 <div className="flex items-center justify-between text-muted-foreground mb-1">
                   <span className="text-xs font-medium">Total Mensagens</span>
                   <MessageSquare className="h-4 w-4 text-blue-500" />
@@ -740,7 +743,7 @@ export default function PosAiLogs() {
               className="cursor-pointer hover:border-amber-400 transition-all hover:shadow-xs"
               onClick={() => setActiveTab("library")}
             >
-              <CardContent className="p-4">
+              <CardContent className="min-w-0 p-3 sm:p-4">
                 <div className="flex items-center justify-between text-muted-foreground mb-1">
                   <span className="text-xs font-medium">Tokens Utilizados</span>
                   <Coins className="h-4 w-4 text-amber-500" />
@@ -760,7 +763,7 @@ export default function PosAiLogs() {
               className="cursor-pointer hover:border-indigo-400 transition-all hover:shadow-xs"
               onClick={() => setActiveTab("latency")}
             >
-              <CardContent className="p-4">
+              <CardContent className="min-w-0 p-3 sm:p-4">
                 <div className="flex items-center justify-between text-muted-foreground mb-1">
                   <span className="text-xs font-medium">Tokens Raciocínio</span>
                   <Sparkles className="h-4 w-4 text-indigo-500" />
@@ -779,7 +782,7 @@ export default function PosAiLogs() {
               className="cursor-pointer hover:border-emerald-400 transition-all hover:shadow-xs"
               onClick={() => setActiveTab("latency")}
             >
-              <CardContent className="p-4">
+              <CardContent className="min-w-0 p-3 sm:p-4">
                 <div className="flex items-center justify-between text-muted-foreground mb-1">
                   <span className="text-xs font-medium">Latência Média</span>
                   <Clock className="h-4 w-4 text-emerald-500" />
@@ -801,7 +804,7 @@ export default function PosAiLogs() {
               className="cursor-pointer hover:border-rose-400 transition-all hover:shadow-xs"
               onClick={() => setActiveTab("feedbacks")}
             >
-              <CardContent className="p-4">
+              <CardContent className="min-w-0 p-3 sm:p-4">
                 <div className="flex items-center justify-between text-muted-foreground mb-1">
                   <span className="text-xs font-medium">Satisfação (% Útil)</span>
                   <ThumbsUp className="h-4 w-4 text-rose-500" />
@@ -820,26 +823,26 @@ export default function PosAiLogs() {
 
           {/* Navigation Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:grid-cols-3 xl:grid-cols-5">
-              <TabsTrigger value="overview" className="text-xs gap-1.5">
+            <TabsList className="grid h-auto w-full grid-cols-2 gap-1 p-1 sm:grid-cols-3 xl:grid-cols-5">
+              <TabsTrigger value="overview" className="min-w-0 gap-1 px-1 text-[10px] sm:gap-1.5 sm:px-3 sm:text-xs">
                 <Gauge className="h-3.5 w-3.5" />
-                Visão Geral & Gráficos
+                <span className="sm:hidden">Visão geral</span><span className="hidden sm:inline">Visão Geral & Gráficos</span>
               </TabsTrigger>
-              <TabsTrigger value="library" className="text-xs gap-1.5">
+              <TabsTrigger value="library" className="min-w-0 gap-1 px-1 text-[10px] sm:gap-1.5 sm:px-3 sm:text-xs">
                 <Layers className="h-3.5 w-3.5 text-rose-600" />
-                Biblioteca de Registro ({messagePairs.length})
+                <span className="sm:hidden">Registros</span><span className="hidden sm:inline">Biblioteca de Registro</span> ({messagePairs.length})
               </TabsTrigger>
-              <TabsTrigger value="feedbacks" className="text-xs gap-1.5">
+              <TabsTrigger value="feedbacks" className="min-w-0 gap-1 px-1 text-[10px] sm:gap-1.5 sm:px-3 sm:text-xs">
                 <ThumbsUp className="h-3.5 w-3.5 text-emerald-600" />
-                Avaliações dos Clientes ({kpis?.total_feedbacks || 0})
+                <span className="sm:hidden">Avaliações</span><span className="hidden sm:inline">Avaliações dos Clientes</span> ({kpis?.total_feedbacks || 0})
               </TabsTrigger>
-              <TabsTrigger value="latency" className="text-xs gap-1.5">
+              <TabsTrigger value="latency" className="min-w-0 gap-1 px-1 text-[10px] sm:gap-1.5 sm:px-3 sm:text-xs">
                 <Clock className="h-3.5 w-3.5 text-blue-600" />
-                Performance & Latência
+                <span className="sm:hidden">Latência</span><span className="hidden sm:inline">Performance & Latência</span>
               </TabsTrigger>
-              <TabsTrigger value="visitors" className="text-xs gap-1.5">
+              <TabsTrigger value="visitors" className="min-w-0 gap-1 px-1 text-[10px] sm:gap-1.5 sm:px-3 sm:text-xs">
                 <UsersRound className="h-3.5 w-3.5 text-violet-600" />
-                Usuários & Setores ({visitorAnalytics?.kpis.active_users || 0})
+                <span className="sm:hidden">Usuários</span><span className="hidden sm:inline">Usuários & Setores</span> ({visitorAnalytics?.kpis.active_users || 0})
               </TabsTrigger>
             </TabsList>
 
@@ -1309,7 +1312,7 @@ export default function PosAiLogs() {
                                     · {pair.created_at ? format(new Date(pair.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : ""}
                                   </span>
                                 </div>
-                                <p className="mt-1 truncate text-[11px] text-muted-foreground">
+                                <p className="mt-1 break-words text-[11px] text-muted-foreground sm:truncate">
                                   {pair.user_message?.content || "Conversa sem pergunta registrada"}
                                 </p>
                               </div>
@@ -1445,7 +1448,55 @@ export default function PosAiLogs() {
                   {/* MODE 2, 3, 4: TABLE VIEW */}
                   {libraryMode !== "pairs" && (
                     <div className="space-y-3">
-                      <div className="max-h-[600px] overflow-x-auto">
+                      <div className="space-y-2 md:hidden" data-testid="pos-ai-logs-mobile-list">
+                        {paginatedLogs.map((log) => {
+                          const isUser = log.role === "user";
+                          return (
+                            <button
+                              key={log.id}
+                              type="button"
+                              onClick={() => setInspectingLog(log)}
+                              className="w-full min-w-0 rounded-xl border bg-card p-3 text-left transition-colors hover:bg-muted/40"
+                            >
+                              <div className="flex min-w-0 items-start justify-between gap-2">
+                                <div className="min-w-0 flex-1">
+                                  <p className="break-words text-xs font-semibold">{log.client_name || "Desconhecido"}</p>
+                                  <p className="mt-0.5 text-[10px] text-muted-foreground">
+                                    {log.created_at ? format(new Date(log.created_at), "dd/MM/yy HH:mm", { locale: ptBR }) : "—"}
+                                  </p>
+                                </div>
+                                {isUser ? (
+                                  <Badge variant="outline" className="shrink-0 bg-slate-100 py-0 text-[9px] dark:bg-slate-800"><User className="mr-1 h-2.5 w-2.5" /> Usuário</Badge>
+                                ) : (
+                                  <Badge variant="outline" className="shrink-0 border-rose-200 bg-rose-50 py-0 text-[9px] text-rose-600 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-400"><Bot className="mr-1 h-2.5 w-2.5" /> IA</Badge>
+                                )}
+                              </div>
+
+                              <p className="mt-2 line-clamp-3 break-words font-mono text-[11px] leading-relaxed text-foreground">
+                                {log.content}
+                              </p>
+                              {log.feedback_comment && <p className="mt-1 line-clamp-2 break-words text-[10px] italic text-amber-600">“{log.feedback_comment}”</p>}
+
+                              <div className="mt-2 grid grid-cols-3 gap-1.5 border-t pt-2 text-[9px]">
+                                <div><span className="block text-muted-foreground">Custo</span><strong className="font-mono text-emerald-700 dark:text-emerald-400">{isUser || !log.estimated_cost_usd ? "—" : `$${log.estimated_cost_usd.toFixed(4)}`}</strong></div>
+                                <div><span className="block text-muted-foreground">Tokens</span><strong className="font-mono">{isUser ? "—" : log.total_tokens?.toLocaleString("pt-BR") || 0}</strong></div>
+                                <div><span className="block text-muted-foreground">Latência</span><strong className="font-mono">{isUser || !log.latency_ms ? "—" : `${(log.latency_ms / 1000).toFixed(1)}s`}</strong></div>
+                              </div>
+
+                              {log.feedback && (
+                                <div className="mt-2">
+                                  <Badge variant="outline" className={log.feedback === "helpful" ? "border-emerald-300 bg-emerald-50 py-0 text-[9px] text-emerald-700" : "border-rose-300 bg-rose-50 py-0 text-[9px] text-rose-700"}>
+                                    {log.feedback === "helpful" ? <ThumbsUp className="mr-1 h-2.5 w-2.5" /> : <ThumbsDown className="mr-1 h-2.5 w-2.5" />}
+                                    {log.feedback === "helpful" ? "Útil" : "Não ajudou"}
+                                  </Badge>
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      <div className="hidden max-h-[600px] overflow-x-auto md:block">
                         <Table>
                         <TableHeader className="sticky top-0 bg-card z-10">
                           <TableRow className="text-xs">
@@ -1599,7 +1650,7 @@ export default function PosAiLogs() {
                           className="p-3 rounded-xl border bg-card hover:bg-muted/40 transition-colors cursor-pointer space-y-2 text-xs"
                         >
                           <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                            <span className="font-semibold text-foreground truncate max-w-[200px]">
+                            <span className="min-w-0 break-words font-semibold text-foreground sm:max-w-[200px] sm:truncate">
                               {item.client_name}
                             </span>
                             <span>{item.created_at ? format(new Date(item.created_at), "dd/MM HH:mm", { locale: ptBR }) : ""}</span>
@@ -1656,7 +1707,7 @@ export default function PosAiLogs() {
                           className="p-3 rounded-xl border border-rose-200/80 dark:border-rose-900/60 bg-card hover:bg-rose-50/30 dark:hover:bg-rose-950/20 transition-colors cursor-pointer space-y-2 text-xs"
                         >
                           <div className="flex items-center justify-between text-[11px]">
-                            <span className="font-bold text-foreground truncate max-w-[200px]">
+                            <span className="min-w-0 break-words font-bold text-foreground sm:max-w-[200px] sm:truncate">
                               {item.client_name}
                             </span>
                             <span className="text-muted-foreground">{item.created_at ? format(new Date(item.created_at), "dd/MM HH:mm", { locale: ptBR }) : ""}</span>
@@ -1767,7 +1818,7 @@ export default function PosAiLogs() {
                           className="p-3 rounded-xl border bg-card hover:bg-muted/40 transition-colors cursor-pointer space-y-1.5 text-xs"
                         >
                           <div className="flex items-center justify-between">
-                            <span className="font-bold text-foreground truncate max-w-[200px]">
+                            <span className="min-w-0 break-words font-bold text-foreground sm:max-w-[200px] sm:truncate">
                               #{idx + 1} · {item.client_name}
                             </span>
                             <div className="flex items-center gap-1.5">
@@ -1827,7 +1878,7 @@ export default function PosAiLogs() {
                           className="p-3 rounded-xl border bg-card hover:bg-muted/40 transition-colors cursor-pointer space-y-1.5 text-xs"
                         >
                           <div className="flex items-center justify-between">
-                            <span className="font-bold text-foreground truncate max-w-[200px]">
+                            <span className="min-w-0 break-words font-bold text-foreground sm:max-w-[200px] sm:truncate">
                               #{idx + 1} · {item.client_name}
                             </span>
                             <div className="flex items-center gap-1.5">
@@ -1859,10 +1910,10 @@ export default function PosAiLogs() {
 
       {/* Inspect Log Dialog */}
       <Dialog open={!!inspectingLog} onOpenChange={(open) => !open && setInspectingLog(null)}>
-        <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col p-0 overflow-hidden">
-          <DialogHeader className="p-5 border-b bg-muted/20">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
+        <DialogContent className="flex max-h-[calc(100dvh-1rem)] max-w-3xl flex-col overflow-hidden p-0 sm:max-h-[85vh]">
+          <DialogHeader className="border-b bg-muted/20 p-3 pr-12 sm:p-5">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 items-start gap-2 sm:items-center">
                 {(inspectingLog as any)?.role === "assistant" || (inspectingLog as any)?.feedback !== undefined ? (
                   <div className="flex h-8 w-8 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 items-center justify-center">
                     <Bot className="h-4 w-4" />
@@ -1872,18 +1923,18 @@ export default function PosAiLogs() {
                     <User className="h-4 w-4" />
                   </div>
                 )}
-                <div>
-                  <DialogTitle className="text-base font-bold">
+                <div className="min-w-0">
+                  <DialogTitle className="break-words text-sm font-bold sm:text-base">
                     {(inspectingLog as any)?.role === "user" ? "Mensagem do Cliente" : "Resposta do Especialista IA"}
                   </DialogTitle>
-                  <DialogDescription className="text-xs">
+                  <DialogDescription className="break-words text-[10px] sm:text-xs">
                     {inspectingLog?.client_name} · {inspectingLog?.created_at ? format(new Date(inspectingLog.created_at), "dd/MM/yyyy 'às' HH:mm:ss", { locale: ptBR }) : ""}
                   </DialogDescription>
                 </div>
               </div>
 
               {inspectingLog?.feedback && (
-                <div>
+                <div className="self-start sm:self-auto">
                   {inspectingLog.feedback === "helpful" ? (
                     <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-300 text-xs py-0.5">
                       <ThumbsUp className="h-3 w-3 mr-1" /> Avaliado como Útil
@@ -1898,7 +1949,7 @@ export default function PosAiLogs() {
             </div>
           </DialogHeader>
 
-          <div className="p-5 overflow-y-auto space-y-4">
+          <div className="min-h-0 space-y-4 overflow-y-auto p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:p-5">
             {/* Financial & Technical Telemetry Card */}
             {((inspectingLog as any)?.role === "assistant" || (inspectingLog as any)?.latency_ms > 0) && (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3.5 bg-muted/40 rounded-xl border text-xs">

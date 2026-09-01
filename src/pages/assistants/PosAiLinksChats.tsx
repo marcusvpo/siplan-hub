@@ -434,14 +434,17 @@ export default function PosAiLinksChats() {
   };
 
   return (
-    <div className="min-h-full bg-muted/10">
-      <div className="border-b bg-gradient-to-r from-background via-background to-rose-50/40 px-4 py-3 dark:to-rose-950/10 sm:px-5">
+    <div
+      className="min-h-full min-w-0 overflow-x-hidden bg-muted/10 pb-[env(safe-area-inset-bottom)]"
+      data-testid="assistants-links-chats-mobile-layout"
+    >
+      <div className="border-b bg-gradient-to-r from-background via-background to-rose-50/40 px-3 py-3 dark:to-rose-950/10 sm:px-5">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-2.5">
+          <div className="flex min-w-0 items-start gap-2.5 sm:items-center">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-rose-600 text-white shadow-sm shadow-rose-600/20">
               <MessageSquareText className="h-4 w-4" />
             </span>
-            <div>
+            <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-1.5">
                 <h1 className="text-lg font-bold tracking-tight">Links e Chats</h1>
                 <Badge variant="outline" className="h-5 border-rose-200 bg-rose-50 px-1.5 text-[9px] text-rose-700 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-300">
@@ -453,12 +456,12 @@ export default function PosAiLinksChats() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-1.5 sm:flex">
             <Button type="button" variant="outline" size="icon" className="h-8 w-8" title="Atualizar todos os dados" disabled={isRefreshing} onClick={() => void handleRefresh()}>
               <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
             </Button>
             {canManage && (
-              <Button onClick={openCreateDialog} size="sm" className="h-8 gap-1.5 bg-rose-600 px-3 text-xs text-white hover:bg-rose-700">
+              <Button onClick={openCreateDialog} size="sm" className="h-8 min-w-0 gap-1.5 bg-rose-600 px-3 text-xs text-white hover:bg-rose-700">
                 <Plus className="h-3.5 w-3.5" /> Gerar novo link
               </Button>
             )}
@@ -466,7 +469,7 @@ export default function PosAiLinksChats() {
         </div>
       </div>
 
-      <div className="space-y-3 p-3 sm:px-5 sm:py-3">
+      <div className="min-w-0 space-y-3 p-2.5 sm:px-5 sm:py-3">
         <div className="grid grid-cols-2 gap-2 xl:grid-cols-4">
           {[
             { filter: "active-links" as const, label: "Links ativos", value: activeLinks, detail: `${links.length} links gerados`, icon: Link2, color: "text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30" },
@@ -479,7 +482,7 @@ export default function PosAiLinksChats() {
               type="button"
               onClick={() => handleKpiFilter(item.filter)}
               aria-pressed={kpiFilter === item.filter}
-              className="rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="min-w-0 rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               <Card
                 className={`h-full border-border/70 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md ${
@@ -488,8 +491,8 @@ export default function PosAiLinksChats() {
                     : ""
                 }`}
               >
-                <CardContent className="flex items-center justify-between px-3 py-2.5">
-                  <div>
+                <CardContent className="flex min-w-0 items-center justify-between gap-2 px-2.5 py-2.5 sm:px-3">
+                  <div className="min-w-0">
                     <p className={`text-[10px] font-medium ${kpiFilter === item.filter ? "text-primary" : "text-muted-foreground"}`}>
                       {item.label}
                     </p>
@@ -508,15 +511,15 @@ export default function PosAiLinksChats() {
         </div>
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-3">
-          <TabsList className="grid h-8 w-full max-w-xl grid-cols-3 p-0.5">
-            <TabsTrigger value="links" className="h-7 gap-1.5 px-2 text-[11px]">
-              <Link2 className="h-3 w-3" /> Links de acesso ({links.length})
+          <TabsList className="grid h-auto w-full max-w-xl grid-cols-3 p-0.5">
+            <TabsTrigger value="links" className="h-9 min-w-0 gap-1 px-1 text-[10px] sm:h-8 sm:gap-1.5 sm:px-2 sm:text-[11px]">
+              <Link2 className="h-3 w-3 shrink-0" /> <span className="sm:hidden">Links</span><span className="hidden sm:inline">Links de acesso</span> ({links.length})
             </TabsTrigger>
-            <TabsTrigger value="chats" className="h-7 gap-1.5 px-2 text-[11px]">
-              <MessageSquareText className="h-3 w-3" /> Conversas ({conversations.length || totalConversationCount})
+            <TabsTrigger value="chats" className="h-9 min-w-0 gap-1 px-1 text-[10px] sm:h-8 sm:gap-1.5 sm:px-2 sm:text-[11px]">
+              <MessageSquareText className="h-3 w-3 shrink-0" /> Conversas ({conversations.length || totalConversationCount})
             </TabsTrigger>
-            <TabsTrigger value="users" className="h-7 gap-1.5 px-2 text-[11px]">
-              <UsersRound className="h-3 w-3" /> Usuários ({totalVisitors})
+            <TabsTrigger value="users" className="h-9 min-w-0 gap-1 px-1 text-[10px] sm:h-8 sm:gap-1.5 sm:px-2 sm:text-[11px]">
+              <UsersRound className="h-3 w-3 shrink-0" /> Usuários ({totalVisitors})
             </TabsTrigger>
           </TabsList>
 
@@ -548,8 +551,8 @@ export default function PosAiLinksChats() {
                   <h2 className="text-sm font-semibold">Histórico de conversas</h2>
                   <p className="mt-0.5 text-[11px] text-muted-foreground">Consulte as sessões e respostas trocadas em cada link.</p>
                 </div>
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <div className="relative">
+                <div className="grid grid-cols-2 items-center gap-1.5 sm:flex sm:flex-wrap">
+                  <div className="relative col-span-2 sm:col-span-1">
                     <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                     <Input value={chatSearch} onChange={(event) => setChatSearch(event.target.value)} placeholder="Buscar conversa..." className="h-8 w-full pl-8 text-xs sm:w-56" />
                   </div>
@@ -565,13 +568,14 @@ export default function PosAiLinksChats() {
                     ]}
                     placeholder="Filtrar por cliente"
                     searchPlaceholder="Digite o nome do cliente..."
+                    buttonClassName="col-span-2 w-full sm:col-span-1 sm:w-56"
                     onValueChange={(value) => {
                       setChatLinkFilter(value);
                       setChatUserFilter("all");
                     }}
                   />
                   <Select value={chatUserFilter} onValueChange={setChatUserFilter}>
-                    <SelectTrigger className="h-8 w-full text-xs sm:w-48">
+                    <SelectTrigger className="col-span-2 h-8 w-full text-xs sm:col-span-1 sm:w-48">
                       <SelectValue placeholder="Filtrar por usuário" />
                     </SelectTrigger>
                     <SelectContent>
@@ -649,7 +653,7 @@ export default function PosAiLinksChats() {
                               conversations: selectedConversations,
                             })
                           }
-                          className="h-7 gap-1.5 px-2.5 text-[10px]"
+                          className="h-8 gap-1.5 px-2.5 text-[10px] sm:h-7"
                         >
                           <Trash2 className="h-3 w-3" />
                           Limpar selecionadas
@@ -660,7 +664,7 @@ export default function PosAiLinksChats() {
                       {conversations.map((conversation) => (
                         <div
                           key={conversation.key}
-                          className="flex items-start transition-colors hover:bg-muted/30"
+                          className="flex min-w-0 items-start transition-colors hover:bg-muted/30"
                         >
                           {canManage && (
                             <div className="flex shrink-0 items-center self-stretch pl-3">
@@ -682,11 +686,11 @@ export default function PosAiLinksChats() {
                               <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-blue-50 text-blue-600 dark:bg-blue-950/30"><Bot className="h-3.5 w-3.5" /></span>
                               <div className="min-w-0">
                                 <div className="flex flex-wrap items-center gap-1.5">
-                                  <p className="truncate text-xs font-semibold">{conversation.client_name}</p>
+                                  <p className="break-words text-xs font-semibold sm:truncate">{conversation.client_name}</p>
                                   <Badge variant="secondary" className="px-1.5 py-0 text-[9px]">{conversation.message_count} mensagens</Badge>
                                   {conversation.visitor_active === false && <Badge variant="outline" className="px-1.5 py-0 text-[9px]">Usuário inativo</Badge>}
                                 </div>
-                                <p className="mt-0.5 truncate text-[10px] text-muted-foreground">{conversation.visitor_name} · {conversation.visitor_sector}</p>
+                                <p className="mt-0.5 break-words text-[10px] text-muted-foreground sm:truncate">{conversation.visitor_name} · {conversation.visitor_sector}</p>
                                 <p className="mt-0.5 line-clamp-1 text-[10px] text-foreground/80">{conversation.preview}</p>
                               </div>
                             </div>
@@ -776,9 +780,9 @@ export default function PosAiLinksChats() {
       </div>
 
       <Dialog open={createOpen} onOpenChange={(open) => (open ? setCreateOpen(true) : closeCreateDialog())}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-h-[calc(100dvh-1rem)] max-w-3xl p-4 sm:p-6">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-base"><Link2 className="h-4 w-4 text-rose-600" /> Gerar novo link</DialogTitle>
+            <DialogTitle className="flex items-center gap-2 pr-8 text-base"><Link2 className="h-4 w-4 shrink-0 text-rose-600" /> Gerar novo link</DialogTitle>
             <DialogDescription className="text-xs">Escolha um cliente cadastrado ou crie um acesso avulso apenas com o nome.</DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-2 rounded-xl bg-muted/50 p-1">
@@ -838,14 +842,14 @@ export default function PosAiLinksChats() {
       </Dialog>
 
       <Dialog open={Boolean(selectedConversation)} onOpenChange={(open) => !open && setSelectedConversation(null)}>
-        <DialogContent className="flex max-h-[85vh] max-w-3xl flex-col">
+        <DialogContent className="flex max-h-[calc(100dvh-1rem)] max-w-3xl flex-col p-4 sm:max-h-[85vh] sm:p-6">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-base"><MessageSquareText className="h-4 w-4 text-blue-600" /> {selectedConversation?.client_name}</DialogTitle>
-            <DialogDescription className="text-xs">{selectedConversation?.visitor_name} · {selectedConversation?.visitor_sector} · {selectedConversation ? format(new Date(selectedConversation.started_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : ""}</DialogDescription>
+            <DialogTitle className="flex min-w-0 items-start gap-2 break-words pr-8 text-sm sm:items-center sm:text-base"><MessageSquareText className="h-4 w-4 shrink-0 text-blue-600" /> {selectedConversation?.client_name}</DialogTitle>
+            <DialogDescription className="break-words text-[10px] sm:text-xs">{selectedConversation?.visitor_name} · {selectedConversation?.visitor_sector} · {selectedConversation ? format(new Date(selectedConversation.started_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : ""}</DialogDescription>
           </DialogHeader>
-          <div className="flex-1 space-y-3 overflow-y-auto pr-1">
+          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
             {selectedConversation?.messages.map((message) => (
-              <div key={message.id} className={`rounded-xl border p-3 text-xs ${message.role === "user" ? "ml-8 bg-slate-50 dark:bg-slate-900" : "mr-8 border-rose-100 bg-rose-50/50 dark:border-rose-950 dark:bg-rose-950/10"}`}>
+              <div key={message.id} className={`min-w-0 break-words rounded-xl border p-3 text-xs ${message.role === "user" ? "ml-2 bg-slate-50 dark:bg-slate-900 sm:ml-8" : "mr-2 border-rose-100 bg-rose-50/50 dark:border-rose-950 dark:bg-rose-950/10 sm:mr-8"}`}>
                 <div className="mb-1.5 flex items-center justify-between gap-2 text-[10px] font-medium text-muted-foreground">
                   <span>{message.role === "user" ? selectedConversation.visitor_name : "Assistente IA"}</span>
                   <span>{format(new Date(message.created_at), "dd/MM HH:mm", { locale: ptBR })}</span>
@@ -855,7 +859,7 @@ export default function PosAiLinksChats() {
             ))}
           </div>
           <DialogFooter className="border-t pt-3">
-            <div className="mr-auto flex items-center gap-3 text-[10px] text-muted-foreground">
+            <div className="mr-auto flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground sm:gap-3">
               <span className="flex items-center gap-1"><Activity className="h-3 w-3" />{selectedConversation?.messages.length || 0} mensagens</span>
               {selectedConversation && linkById.get(selectedConversation.link_id)?.project_id && <span className="flex items-center gap-1"><BarChart3 className="h-3 w-3" />Dados incluídos no Analytics</span>}
             </div>
@@ -882,7 +886,7 @@ export default function PosAiLinksChats() {
           if (!open && !isDeletingConversations) setDeleteRequest(null);
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] overflow-y-auto p-4 sm:p-6">
           <AlertDialogHeader>
             <AlertDialogTitle>
               {deleteRequest?.mode === "all"

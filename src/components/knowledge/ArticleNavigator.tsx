@@ -64,7 +64,7 @@ export function ArticleNavigator({
   return (
     <div className="flex flex-col h-full border-r border-border/60 bg-card/40 backdrop-blur-xs">
       {/* Header com busca e filtros */}
-      <div className="p-3.5 border-b border-border/50 space-y-2.5">
+      <div className="space-y-2.5 border-b border-border/50 p-3.5 pr-12 md:pr-3.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <BookOpen className="h-4 w-4 text-primary" />
@@ -94,12 +94,12 @@ export function ArticleNavigator({
 
         {/* Input de Busca */}
         <div className="relative">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Search className="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Buscar por ID (R-1.0), título, tag ou dúvida..."
-            className="pl-8.5 pr-8 h-9 text-xs bg-background/80"
+            className="h-9 bg-background/80 pl-9 pr-8 text-xs"
           />
           {searchQuery && (
             <button
@@ -140,7 +140,7 @@ export function ArticleNavigator({
 
         {/* Filtro por Tag (se houver tags) */}
         {allTags.length > 0 && (
-          <div className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-none text-xs">
+          <div className="flex flex-wrap items-center gap-1 pb-1 text-xs">
             <Button
               variant={selectedTag === "all" ? "default" : "outline"}
               size="sm"
