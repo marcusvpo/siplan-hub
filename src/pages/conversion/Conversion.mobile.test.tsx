@@ -124,7 +124,7 @@ const engines: ConversionEngineItem[] = [1, 2, 3, 4].map((index) => ({
         ? "protest"
         : index === 3
           ? "ri_td"
-          : null,
+          : "other",
   devopsUrl: "https://dev.azure.com/siplan/motores",
   engineStatus: index === 1 ? "maintenance" : "in_development",
   engineRequestedAt: new Date("2026-08-25T12:00:00Z"),
@@ -352,6 +352,7 @@ describe("Telas de conversão no mobile", () => {
     expect(screen.getAllByTestId("conversion-engine-card")).toHaveLength(1);
     expect(screen.getByText("Página 2 de 2")).toBeInTheDocument();
     expect(screen.getByText("Outra ferramenta")).toBeInTheDocument();
+    expect(screen.getByText("Outros")).toBeInTheDocument();
     expect(screen.getByText("Extrator de imagens legado")).toBeInTheDocument();
     expect(screen.getByTestId("conversion-engine-tool")).toHaveClass("min-w-0");
   });
@@ -445,7 +446,7 @@ describe("Telas de conversão no mobile", () => {
       target: { value: "Extrator de imagens" },
     });
     fireEvent.click(within(dialog).getByLabelText("Especialidade do motor"));
-    fireEvent.click(await screen.findByRole("option", { name: "RI/TD" }));
+    fireEvent.click(await screen.findByRole("option", { name: "Outros" }));
     fireEvent.change(within(dialog).getByLabelText("Observações"), {
       target: { value: "Extrai imagens dos livros digitalizados." },
     });
@@ -456,7 +457,7 @@ describe("Telas de conversão no mobile", () => {
         {
           recordType: "other_tool",
           toolName: "Extrator de imagens",
-          specialty: "ri_td",
+          specialty: "other",
           status: "in_development",
           devopsUrl: "",
           notes: "Extrai imagens dos livros digitalizados.",
