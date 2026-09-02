@@ -41,6 +41,7 @@ Antes de considerar uma nova tela, rota ou módulo concluído, verifique todos o
 8. **RLS:** para tabelas novas ou sensíveis, habilite e configure policies RLS com `has_permission(...)`. Nunca use `TO public` para dados autenticados ou sensíveis.
 9. **Tipos do Supabase:** ao criar ou alterar tabelas/colunas, atualize também `src/integrations/supabase/types.ts`; o build não regenera esse arquivo automaticamente.
 10. **Documentação e testes:** atualize a documentação relevante e rode as validações proporcionais à mudança, incluindo os testes de permissões quando houver alteração de RBAC.
+11. **Informativo de Ajuda da Tela (ⓘ):** cadastre ou atualize a entrada referente à nova rota em `src/constants/pageHelpRegistry.ts`, fornecendo o módulo, título, prévia do que a tela faz (`description`), recursos principais e o tutorial passo a passo (`steps`). Nenhuma nova tela ou rota deve ser considerada concluída sem o seu informativo de ajuda cadastrado.
 
 Referência detalhada: `docs/PERMISSOES_RBAC.md`. A sincronização com a tela inicial também está documentada em `docs/MANUAL_DESENVOLVEDOR.md`.
 
