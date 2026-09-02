@@ -105,7 +105,7 @@ export const PERMISSION_RESOURCES: PermissionResourceDef[] = [
   // Conversão
   { resource: "menu_conversao", label: "Menu Conversão", category: "Conversão", actions: ["view"] },
   { resource: "conversion_home", label: "Gestão de Atividades", category: "Conversão", actions: ["view", "edit", "delete", "execute"] },
-  { resource: "conversion_engines", label: "Motores de Conversão", category: "Conversão", actions: ["view", "edit"] },
+  { resource: "conversion_engines", label: "Motores de Conversão", category: "Conversão", actions: ["view", "create", "edit", "delete"] },
 
   // SD
   { resource: "menu_sd", label: "Menu SD", category: "SD", actions: ["view"] },
