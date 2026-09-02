@@ -227,16 +227,16 @@ export function ConversionIssuesTab({
   };
 
   return (
-    <div className="min-w-0 space-y-4" data-testid="conversion-issues-tab">
+    <div className="min-w-0 space-y-2" data-testid="conversion-issues-tab">
       {/* Header controls */}
-      <div className="flex min-w-0 flex-col items-stretch justify-between gap-3 rounded-xl border border-muted-foreground/10 bg-muted/40 p-3 sm:flex-row sm:items-center sm:p-4">
-        <div className="flex flex-wrap gap-2 items-center flex-1">
+      <div className="flex min-w-0 flex-col items-stretch justify-between gap-2 rounded-lg border border-border bg-muted/30 p-2 sm:flex-row sm:items-center">
+        <div className="flex flex-1 flex-wrap items-center gap-1.5">
           {/* Search Input */}
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <div className="relative w-full sm:w-60">
+            <Search className="absolute left-2.5 top-3 h-4 w-4 text-muted-foreground sm:top-2" />
             <Input
               placeholder="Buscar por cliente, chamado..."
-              className="pl-9 text-xs h-9 bg-background"
+              className="h-10 bg-background pl-9 text-xs sm:h-8"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -244,7 +244,7 @@ export function ConversionIssuesTab({
 
           {/* Status Filter */}
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-40 text-xs h-9 bg-background">
+            <SelectTrigger className="h-10 w-full bg-background text-xs sm:h-8 sm:w-40">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -258,7 +258,7 @@ export function ConversionIssuesTab({
 
           {/* Priority Filter */}
           <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-            <SelectTrigger className="w-full sm:w-36 text-xs h-9 bg-background">
+            <SelectTrigger className="h-10 w-full bg-background text-xs sm:h-8 sm:w-36">
               <SelectValue placeholder="Prioridade" />
             </SelectTrigger>
             <SelectContent>
@@ -273,7 +273,7 @@ export function ConversionIssuesTab({
 
         <Button
           size="sm"
-          className="h-9 w-full shrink-0 gap-1.5 bg-primary text-xs font-bold text-primary-foreground shadow-sm hover:bg-primary/95 sm:w-auto"
+          className="h-10 w-full shrink-0 gap-1.5 bg-primary text-xs font-bold text-primary-foreground shadow-sm hover:bg-primary/95 sm:h-8 sm:w-auto"
           onClick={() => setCreateDialogOpen(true)}
         >
           <Plus className="h-4 w-4" />
@@ -283,13 +283,13 @@ export function ConversionIssuesTab({
 
       {/* Grid of issues */}
       {isLoading ? (
-        <div className="text-center py-12 text-muted-foreground text-sm">
+        <div className="py-8 text-center text-sm text-muted-foreground">
           Carregando pendências...
         </div>
       ) : filteredIssues.length === 0 ? (
-        <Card className="border-2 border-dashed border-muted/50 bg-muted/5 p-6 text-center sm:p-12">
-          <AlertCircle className="h-12 w-12 mx-auto text-muted-foreground/45 mb-3" />
-          <h3 className="text-sm font-semibold text-foreground mb-1">
+        <Card className="border border-dashed border-border bg-muted/5 p-5 text-center">
+          <AlertCircle className="mx-auto mb-2 h-9 w-9 text-muted-foreground/45" />
+          <h3 className="mb-1 text-sm font-semibold text-foreground">
             Nenhuma pendência encontrada
           </h3>
           <p className="text-xs text-muted-foreground max-w-sm mx-auto">
@@ -297,7 +297,7 @@ export function ConversionIssuesTab({
           </p>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2">
           <AnimatePresence mode="popLayout">
             {filteredIssues.map((issue) => (
               <motion.div
@@ -314,7 +314,7 @@ export function ConversionIssuesTab({
                     PRIORITIES[issue.priority].bar
                   )}
                 >
-                  <CardContent className="flex min-w-0 flex-1 flex-col justify-between space-y-3 p-3 sm:p-4">
+                  <CardContent className="flex min-w-0 flex-1 flex-col justify-between space-y-2.5 p-3">
                     <div>
                       {/* Top Header Card */}
                       <div className="flex justify-between items-start gap-2">
@@ -351,7 +351,7 @@ export function ConversionIssuesTab({
                     </div>
 
                     {/* Footer Info */}
-                    <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2.5 mt-3">
+                    <div className="mt-2.5 space-y-2 border-t border-border pt-2.5">
                       <div className="flex flex-wrap items-center justify-between text-[11px] text-muted-foreground gap-2">
                         <div className="flex items-center gap-1">
                           <User className="h-3 w-3" />
@@ -386,7 +386,7 @@ export function ConversionIssuesTab({
                             {/* Delegate Menu */}
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="icon" className="h-7 w-7 text-slate-500">
+                                <Button variant="outline" size="icon" className="h-9 w-9 text-muted-foreground sm:h-7 sm:w-7">
                                   <MoreVertical className="h-3.5 w-3.5" />
                                 </Button>
                               </DropdownMenuTrigger>
@@ -416,7 +416,7 @@ export function ConversionIssuesTab({
                             <Button
                               size="sm"
                               variant="outline"
-                              className="text-xs border-emerald-200 text-emerald-700 hover:bg-emerald-50 h-7"
+                              className="h-9 border-emerald-200 text-xs text-emerald-700 hover:bg-emerald-50 sm:h-7"
                               onClick={() => {
                                 setSelectedIssue(issue);
                                 setResolveDialogOpen(true);

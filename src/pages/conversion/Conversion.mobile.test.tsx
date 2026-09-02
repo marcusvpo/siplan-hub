@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ConversionEngineItem } from "@/hooks/useConversionEngines";
@@ -163,9 +163,12 @@ describe("Telas de conversão no mobile", () => {
     render(<Conversion />);
 
     expect(screen.getByTestId("conversion-activities-page")).toHaveClass(
+      "h-full",
       "min-w-0",
       "overflow-x-hidden",
-      "md:h-screen",
+      "overflow-y-auto",
+      "md:h-[calc(100dvh-4rem-env(safe-area-inset-bottom))]",
+      "md:overflow-hidden",
     );
     expect(screen.getByTestId("conversion-activities-page")).toHaveAttribute(
       "data-viewport",
@@ -177,23 +180,98 @@ describe("Telas de conversão no mobile", () => {
     );
     expect(screen.getByTestId("conversion-activities-filters")).toHaveClass(
       "flex-col",
+      "gap-1.5",
+      "p-1.5",
       "sm:flex-row",
     );
+    expect(screen.getByLabelText("Buscar atividades")).toHaveClass("h-10", "sm:h-8");
+    expect(screen.getByLabelText("Filtrar atividades por status")).toHaveClass("h-10", "sm:h-8");
+    expect(screen.getByLabelText("Filtrar atividades por sistema")).toHaveClass("h-10", "sm:h-8");
 
     const lanes = screen.getAllByTestId("conversion-kanban-lane");
     expect(lanes).toHaveLength(5);
     lanes.forEach((lane) => {
-      expect(lane).toHaveClass("grid-cols-1", "md:overflow-x-auto");
+      expect(lane).toHaveClass(
+        "grid-cols-1",
+        "content-start",
+        "gap-1.5",
+        "xl:flex-1",
+        "xl:overflow-y-auto",
+      );
+      expect(lane).not.toHaveClass("md:overflow-x-auto");
     });
+
+    expect(screen.getByTestId("conversion-mobile-kanban")).toHaveClass(
+      "grid-cols-1",
+      "sm:grid-cols-2",
+      "lg:grid-cols-3",
+      "xl:grid-cols-5",
+      "xl:items-stretch",
+    );
 
     const cards = screen.getAllByTestId("conversion-queue-card");
     expect(cards).toHaveLength(2);
-    expect(cards[0]).toHaveClass("min-w-0", "overflow-hidden");
+    expect(cards[0]).toHaveClass(
+      "min-w-0",
+      "overflow-hidden",
+      "border-l-[3px]",
+      "border-border",
+      "bg-card",
+      "text-card-foreground",
+    );
+    expect(cards[0]).not.toHaveClass("dark:bg-slate-950");
     expect(
       screen.getByText(
         "Cartório de Registro de Imóveis com nome muito extenso para o celular",
       ),
-    ).toHaveClass("break-words", "md:truncate");
+    ).toHaveClass("line-clamp-2", "min-w-0");
+  });
+
+  it("expande a etapa selecionada no filtro de status com transição suave", async () => {
+    render(<Conversion />);
+
+    fireEvent.click(screen.getByLabelText("Filtrar atividades por status"));
+    fireEvent.click(screen.getByRole("option", { name: "Em Andamento" }));
+
+    await waitFor(() => {
+      expect(screen.getAllByTestId("conversion-mobile-kanban")).toHaveLength(1);
+    });
+
+    const board = screen.getByTestId("conversion-mobile-kanban");
+    const pendingColumn = screen.getByTestId("conversion-kanban-column-pending");
+    const inProgressColumn = screen.getByTestId("conversion-kanban-column-in-progress");
+    const expandedLane = within(inProgressColumn).getByTestId("conversion-kanban-lane");
+
+    expect(board).toHaveClass("xl:grid-cols-1");
+    expect(board).not.toHaveClass("xl:grid-cols-5");
+    expect(board).toHaveAttribute("data-filter-transition", "smooth");
+    expect(pendingColumn).toHaveClass("hidden");
+    expect(pendingColumn).not.toHaveClass("xl:flex");
+    expect(inProgressColumn).toHaveClass("xl:flex");
+    expect(inProgressColumn).not.toHaveClass("hidden");
+    expect(expandedLane).toHaveClass(
+      "sm:grid-cols-2",
+      "lg:grid-cols-3",
+      "xl:grid-cols-4",
+    );
+    expect(screen.getAllByTestId("conversion-queue-card")).toHaveLength(1);
+  });
+
+  it("mantem homologacoes e pendencias no topo com rolagem propria", () => {
+    render(<Conversion />);
+
+    expect(screen.getByTestId("conversion-homologations-panel")).toHaveClass(
+      "md:absolute",
+      "md:inset-0",
+      "md:overflow-y-auto",
+    );
+    expect(screen.getByTestId("conversion-issues-panel")).toHaveClass(
+      "md:absolute",
+      "md:inset-0",
+      "md:overflow-y-auto",
+    );
+    expect(screen.getByRole("tab", { name: /Homologa/ })).toHaveClass("min-h-8");
+    expect(screen.getByRole("tab", { name: /Pend/ })).toHaveClass("min-h-8");
   });
 
   it("pagina motores em blocos de três e mantém os cartões fluidos", () => {
