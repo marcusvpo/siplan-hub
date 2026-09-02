@@ -62,8 +62,11 @@ export function ConversionPostDrawer({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-[94vw] sm:w-full max-w-2xl max-h-[88vh] flex flex-col p-0 overflow-hidden">
-        <DialogHeader className="space-y-3 p-4 sm:p-6 pb-2 shrink-0 bg-muted/10">
+      <DialogContent
+        className="flex h-[calc(100dvh-1rem)] max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-4xl flex-col gap-0 overflow-hidden p-0 sm:h-[82dvh] sm:max-h-[760px] sm:w-[92vw]"
+        data-testid="conversion-feed-dialog"
+      >
+        <DialogHeader className="shrink-0 space-y-2.5 bg-muted/10 p-4 pb-3 sm:p-5 sm:pb-3">
           <DialogTitle className="flex items-center gap-2">
             <MessageSquare className="h-5 w-5 text-primary" />
             <span className="truncate">{clientName}</span>
@@ -91,26 +94,29 @@ export function ConversionPostDrawer({
 
         <Separator className="shrink-0" />
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
-          <TabsList className="mx-3 sm:mx-6 mt-4 shrink-0 bg-muted/40 border max-w-full overflow-x-auto scrollbar-none">
-            <TabsTrigger value="posts" className="gap-1.5 py-2">
-              <MessageSquare className="h-4 w-4" />
-              Diário / Notas ({posts.length})
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <TabsList
+            className="mx-3 mt-3 grid h-auto w-auto shrink-0 grid-cols-1 gap-1 overflow-hidden border bg-muted/40 p-1 sm:mx-5 sm:grid-cols-2"
+            data-testid="conversion-feed-tabs"
+          >
+            <TabsTrigger value="posts" className="min-w-0 gap-1.5 py-1.5">
+              <MessageSquare className="h-4 w-4 shrink-0" />
+              <span className="truncate">Diário / Notas ({posts.length})</span>
             </TabsTrigger>
-            <TabsTrigger value="homologations" className="gap-1.5 py-2">
-              <History className="h-4 w-4" />
-              Histórico de Homologações ({events.length})
+            <TabsTrigger value="homologations" className="min-w-0 gap-1.5 py-1.5">
+              <History className="h-4 w-4 shrink-0" />
+              <span className="truncate">Histórico de Homologações ({events.length})</span>
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="posts" className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 focus-visible:outline-none">
+          <TabsContent value="posts" className="mt-0 min-h-0 flex-1 overflow-y-auto px-3 py-3 focus-visible:outline-none data-[state=inactive]:hidden sm:px-5 sm:py-4">
             <h4 className="text-sm font-semibold mb-3 text-muted-foreground">
               Notas e Publicações da Conversão
             </h4>
             <ConversionPostFeed posts={posts} loading={postsLoading} readOnly />
           </TabsContent>
 
-          <TabsContent value="homologations" className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 focus-visible:outline-none">
+          <TabsContent value="homologations" className="mt-0 min-h-0 flex-1 overflow-y-auto px-3 py-3 focus-visible:outline-none data-[state=inactive]:hidden sm:px-5 sm:py-4">
             <h4 className="text-sm font-semibold mb-4 text-muted-foreground">
               Histórico de Movimentações da Homologação
             </h4>
