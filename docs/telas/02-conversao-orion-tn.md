@@ -126,7 +126,7 @@ Cadastrar e acompanhar manualmente motores/conversores e ferramentas auxiliares.
   - **`kpis`:** `{ inDevelopment, maintenance, finished, total }`.
   - **Mutations:** `createEngine(input, userName)` cadastra manualmente; `requestEngine(queueId, notes, userName)` sincroniza uma solicitação da fila; `updateEngine(engineId, input)` edita todos os campos e espelha o estado/notas na fila quando existir vínculo; `deleteEngine(engineId)` remove apenas o registro central do motor.
 - Tipo `EngineStatus = "in_development" | "maintenance" | "finished"`.
-- Tipo `EngineSpecialty = "tn_rc" | "protest" | "ri_td"`, exibido como TN/RC, Protesto ou RI/TD.
+- Tipo `EngineSpecialty = "tn_rc" | "protest" | "ri_td" | "other"`, exibido como TN/RC, Protesto, RI/TD ou Outros.
 - Tipo `EngineRecordType = "conversion_engine" | "other_tool"`, que define os campos obrigatórios e a apresentação do card.
 
 ### Componentes principais
