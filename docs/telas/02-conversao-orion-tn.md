@@ -115,37 +115,44 @@ Gerenciar a fila de migração de dados (conversão) dos clientes. Centraliza o 
 ## 2. Motores de Conversão
 - **Rota:** `/conversion/engines`
 - **Arquivo-fonte:** [src/pages/conversion/ConversionEngines.tsx](../../src/pages/conversion/ConversionEngines.tsx)
-- **Acesso:** Protegido (autenticado). Não há gate por equipe no componente; qualquer botão de atualização de status fica disponível ao usuário logado.
+- **Acesso:** Protegido por `conversion_engines.view`. Cadastro, atualização e exclusão exigem, respectivamente, `conversion_engines.create`, `conversion_engines.edit` e `conversion_engines.delete`.
 
 ### Objetivo
-Acompanhar as conversões que dependem da criação/desenvolvimento de um "motor"/conversor. Lista apenas itens da fila cujo `engine_status` não é nulo e permite avançar o estágio do motor.
+Cadastrar e acompanhar manualmente os motores/conversores, identificando o sistema de origem, o sistema de conversão, a especialidade, o repositório DevOps e as observações técnicas. Solicitações vindas da fila antiga continuam sincronizadas com o cadastro central.
 
 ### Dados e Hooks
 - **`useConversionEngines()`** — [src/hooks/useConversionEngines.ts](../../src/hooks/useConversionEngines.ts).
-  - **Query:** `supabase.from("conversion_queue").select("id, project_id, queue_status, assigned_to_name, priority, engine_status, engine_requested_at, engine_requested_by_name, engine_notes, projects:project_id(client_name, ticket_number, system_type, legacy_system)")` com filtro `.not("engine_status", "is", null)`, ordenado por `engine_requested_at` desc.
-  - **`kpis`:** `{ pendingEngine, inDevelopment, ready, total }`.
-  - **Mutations:** `requestEngine(queueId, notes, userName)` (marca `pending_engine`) e `updateEngineStatus(queueId, newStatus, notes?)` (atualiza `engine_status` e opcionalmente `engine_notes`). Ambas emitem toast e re-executam `fetchEngines`.
-- Tipo `EngineStatus = "pending_engine" | "engine_in_development" | "engine_ready"`.
+  - **Query:** lê `conversion_engines`, incluindo os vínculos opcionais com `projects` e `conversion_queue`, e ordena por `created_at` desc.
+  - **`kpis`:** `{ inDevelopment, maintenance, finished, total }`.
+  - **Mutations:** `createEngine(input, userName)` cadastra manualmente; `requestEngine(queueId, notes, userName)` sincroniza uma solicitação da fila; `updateEngine(engineId, input)` edita todos os campos e espelha o estado/notas na fila quando existir vínculo; `deleteEngine(engineId)` remove apenas o registro central do motor.
+- Tipo `EngineStatus = "in_development" | "maintenance" | "finished"`.
+- Tipo `EngineSpecialty = "tn_rc" | "protest" | "ri_td"`, exibido como TN/RC, Protesto ou RI/TD.
 
 ### Componentes principais
-- **4 KPIs:** Aguard. Extração da Base, Em Desenvolvimento, Prontos, Total (cards com borda colorida).
-- **Filtros:** busca por cliente/ticket/sistema legado (`search`) e filtro por status (`statusFilter`).
-- **Lista de motores:** cards clicáveis (abrem `ConversionPostDrawer` do projeto). Cada card mostra cliente, ticket, badge de status (`ENGINE_STATUS_CONFIG`), sistema, legado, responsável, data de solicitação e observações (`engineNotes`).
-- **Diálogo "Atualizar Status do Motor":** `Select` com as três opções → `handleSaveStatus` → `updateEngineStatus`.
+- **4 KPIs:** Em desenvolvimento, Em manutenção, Finalizados e Total (cards com borda colorida).
+- **Filtros:** busca por sistemas, repositório, cliente ou ticket (`search`) e filtro por status (`statusFilter`).
+- **Lista de motores:** grade responsiva que destaca o trajeto Origem → Conversão, badges de status e especialidade, vínculo opcional ao projeto, data, responsável, Link DevOps e observações. Cards vinculados à fila abrem o `ConversionPostDrawer`.
+- **Diálogo "Cadastrar motor":** campos obrigatórios Sistema de origem, Sistema de conversão, Especialidade e Status, além de Link DevOps validado e observações opcionais.
+- **Diálogo "Editar motor":** permite alterar todos os campos do cadastro, com o mesmo comportamento responsivo e as mesmas validações da criação.
+- **Confirmação "Excluir motor":** identifica o trajeto do motor e exige confirmação antes da remoção definitiva.
 - **`ConversionPostDrawer`** — histórico de publicações do motor selecionado.
 
 ### Fluxos e Interações
-- Clicar no card → abre o drawer de publicações.
-- Botão "Atualizar" (para em `stopPropagation`) → abre diálogo de edição de status → salvar persiste e recarrega.
+- Botão "+ Motor" → abre o cadastro manual → o usuário escolhe o status inicial entre as mesmas opções disponíveis no filtro.
+- Clicar em um card vinculado a projeto → abre o drawer de publicações.
+- Botão "Editar" (para em `stopPropagation`) → abre o cadastro preenchido → salvar persiste e recarrega.
+- Botão "Excluir" → abre confirmação destrutiva → `deleteEngine` remove e recarrega a lista.
 
 ### Regras de Negócio e Estados
-- **`ENGINE_STATUS_CONFIG`** define label/cor/ícone por status: `pending_engine` (Aguardando Extração da Base, laranja, ícone Database), `engine_in_development` (Motor em Desenvolvimento, azul, Loader2 girando), `engine_ready` (Motor Pronto, verde, CheckCircle2).
+- **`ENGINE_STATUS_CONFIG`** define label/cor/ícone por status: `in_development` (Em desenvolvimento, azul, Code2), `maintenance` (Em manutenção, laranja, Wrench) e `finished` (Finalizado, verde, CheckCircle2).
 - Estados de UI: `loading` (spinner central) e vazio ("Nenhum motor encontrado").
-- O ciclo do motor é a origem do indicador de engine visto nos cards de `/conversion`.
+- Os status desta tela representam o ciclo de vida do motor e não os estados operacionais dos projetos. Ao sincronizar com a fila legada, desenvolvimento/manutenção são espelhados como `engine_in_development` e finalizado como `engine_ready`.
+- A especialidade é obrigatória no cadastro e na edição. Registros anteriores à coluna permanecem sem classificação até serem editados, evitando atribuição automática incorreta.
 
 ### Pontos de Manutenção
-- A query usa cast `(supabase as any)` porque colunas de engine podem não estar nos tipos gerados — regenerar tipos do Supabase reduz esse acoplamento.
-- `requestEngine` existe no hook mas é acionado a partir de `/conversion`; nesta tela usa-se `updateEngineStatus`.
+- A persistência principal fica em `conversion_engines`, com RLS por ação. O cast `(supabase as any)` está restrito ao hook enquanto o restante do schema legado não puder ser regenerado integralmente.
+- A exclusão remove o registro de `conversion_engines`, mas preserva o histórico operacional da `conversion_queue` quando houver vínculo.
+- `requestEngine` é acionado a partir de `/conversion` e mantém `conversion_queue` sincronizada para compatibilidade.
 - Não há atualização em tempo real: depende do `refetch`/reabertura.
 
 ---
