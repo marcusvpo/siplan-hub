@@ -7,7 +7,7 @@ import type {
 import { toast } from "sonner";
 
 export type EngineStatus = "in_development" | "maintenance" | "finished";
-export type EngineSpecialty = "tn_rc" | "protest" | "ri_td";
+export type EngineSpecialty = "tn_rc" | "protest" | "ri_td" | "other";
 export type EngineRecordType = "conversion_engine" | "other_tool";
 
 export interface ConversionEngineItem {

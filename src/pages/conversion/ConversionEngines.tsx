@@ -89,6 +89,7 @@ const ENGINE_SPECIALTY_LABELS: Record<EngineSpecialty, string> = {
   tn_rc: "TN/RC",
   protest: "Protesto",
   ri_td: "RI/TD",
+  other: "Outros",
 };
 
 const getEngineDisplayName = (engine: ConversionEngineItem) =>
@@ -429,6 +430,7 @@ export default function ConversionEngines() {
             <SelectItem value="tn_rc">TN/RC</SelectItem>
             <SelectItem value="protest">Protesto</SelectItem>
             <SelectItem value="ri_td">RI/TD</SelectItem>
+            <SelectItem value="other">Outros</SelectItem>
             <SelectItem value="unassigned">Sem especialidade</SelectItem>
           </SelectContent>
         </Select>
@@ -825,6 +827,7 @@ export default function ConversionEngines() {
                       <SelectItem value="tn_rc">TN/RC</SelectItem>
                       <SelectItem value="protest">Protesto</SelectItem>
                       <SelectItem value="ri_td">RI/TD</SelectItem>
+                      <SelectItem value="other">Outros</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -1046,6 +1049,7 @@ export default function ConversionEngines() {
                       <SelectItem value="tn_rc">TN/RC</SelectItem>
                       <SelectItem value="protest">Protesto</SelectItem>
                       <SelectItem value="ri_td">RI/TD</SelectItem>
+                      <SelectItem value="other">Outros</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

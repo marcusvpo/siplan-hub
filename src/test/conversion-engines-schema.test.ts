@@ -31,6 +31,13 @@ const otherToolsMigration = readFileSync(
   ),
   "utf8",
 );
+const otherSpecialtyMigration = readFileSync(
+  resolve(
+    root,
+    "supabase/migrations/20260902150000_conversion_engines_other_specialty.sql",
+  ),
+  "utf8",
+);
 const types = readFileSync(
   resolve(root, "src/integrations/supabase/types.ts"),
   "utf8",
@@ -67,7 +74,9 @@ describe("cadastro manual de motores de conversão", () => {
     expect(specialtyMigration).toContain("FOR DELETE TO authenticated");
     expect(specialtyMigration).toContain("'conversion_engines', 'delete'");
     expect(specialtyMigration).not.toMatch(/\sTO\s+(public|anon)\b/i);
-    expect(types).toContain('specialty: "tn_rc" | "protest" | "ri_td" | null');
+    expect(types).toContain(
+      'specialty: "tn_rc" | "protest" | "ri_td" | "other" | null',
+    );
   });
 
   it("distingue motores de outras ferramentas e exige os campos correspondentes", () => {
@@ -83,6 +92,15 @@ describe("cadastro manual de motores de conversão", () => {
     expect(types).toContain("tool_name: string | null");
     expect(types).toContain("source_system: string | null");
     expect(types).toContain("target_system: string | null");
+  });
+
+  it("aceita Outros como especialidade genérica", () => {
+    expect(otherSpecialtyMigration).toContain(
+      "specialty IN ('tn_rc', 'protest', 'ri_td', 'other')",
+    );
+    expect(types).toContain(
+      'specialty: "tn_rc" | "protest" | "ri_td" | "other" | null',
+    );
   });
 
   it("protege leitura, cadastro e edição com permissões distintas", () => {
