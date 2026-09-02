@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
+import { PageHelpDrawer } from "./PageHelpDrawer";
 import { PwaInstallButton, PwaInstallDialog } from "@/components/pwa/PwaInstallControls";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -74,6 +75,7 @@ export function MainLayout({ children }: MainLayoutProps) {
               )}
               <PwaInstallButton visible={location.pathname === "/"} />
               <NotificationBell />
+              <PageHelpDrawer />
               <ModeToggle />
             </div>
           </header>
