@@ -3,6 +3,7 @@ import {
   useConversionEngines,
   EngineStatus,
   EngineSpecialty,
+  EngineRecordType,
   ConversionEngineItem,
 } from "@/hooks/useConversionEngines";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -89,6 +91,11 @@ const ENGINE_SPECIALTY_LABELS: Record<EngineSpecialty, string> = {
   ri_td: "RI/TD",
 };
 
+const getEngineDisplayName = (engine: ConversionEngineItem) =>
+  engine.recordType === "other_tool"
+    ? engine.toolName || "Ferramenta sem nome"
+    : `${engine.sourceSystem || "Sistema não informado"} → ${engine.targetSystem || "Sistema não informado"}`;
+
 export default function ConversionEngines() {
   const {
     engines,
@@ -109,8 +116,10 @@ export default function ConversionEngines() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedPageSize, setSelectedPageSize] = useState<number | null>(null);
   const [editItem, setEditItem] = useState<ConversionEngineItem | null>(null);
+  const [editRecordType, setEditRecordType] = useState<EngineRecordType>("conversion_engine");
   const [editSourceSystem, setEditSourceSystem] = useState("");
   const [editTargetSystem, setEditTargetSystem] = useState("");
+  const [editToolName, setEditToolName] = useState("");
   const [editSpecialty, setEditSpecialty] = useState<EngineSpecialty | "">("");
   const [editStatus, setEditStatus] = useState<EngineStatus>("in_development");
   const [editDevopsUrl, setEditDevopsUrl] = useState("");
@@ -118,8 +127,10 @@ export default function ConversionEngines() {
   const [editNotes, setEditNotes] = useState("");
   const [deletingItem, setDeletingItem] = useState<ConversionEngineItem | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [createRecordType, setCreateRecordType] = useState<EngineRecordType>("conversion_engine");
   const [sourceSystem, setSourceSystem] = useState("");
   const [targetSystem, setTargetSystem] = useState("");
+  const [toolName, setToolName] = useState("");
   const [createSpecialty, setCreateSpecialty] = useState<EngineSpecialty | "">("");
   const [createStatus, setCreateStatus] = useState<EngineStatus>("in_development");
   const [devopsUrl, setDevopsUrl] = useState("");
@@ -140,8 +151,9 @@ export default function ConversionEngines() {
     return engines.filter((engine) => {
       const matchesSearch =
         !normalizedSearch ||
-        engine.sourceSystem.toLowerCase().includes(normalizedSearch) ||
-        engine.targetSystem.toLowerCase().includes(normalizedSearch) ||
+        engine.sourceSystem?.toLowerCase().includes(normalizedSearch) ||
+        engine.targetSystem?.toLowerCase().includes(normalizedSearch) ||
+        engine.toolName?.toLowerCase().includes(normalizedSearch) ||
         (engine.specialty &&
           ENGINE_SPECIALTY_LABELS[engine.specialty]
             .toLowerCase()
@@ -179,8 +191,10 @@ export default function ConversionEngines() {
 
   const closeEditDialog = () => {
     setEditItem(null);
+    setEditRecordType("conversion_engine");
     setEditSourceSystem("");
     setEditTargetSystem("");
+    setEditToolName("");
     setEditSpecialty("");
     setEditStatus("in_development");
     setEditDevopsUrl("");
@@ -190,8 +204,10 @@ export default function ConversionEngines() {
 
   const openEditDialog = (engine: ConversionEngineItem) => {
     setEditItem(engine);
-    setEditSourceSystem(engine.sourceSystem);
-    setEditTargetSystem(engine.targetSystem);
+    setEditRecordType(engine.recordType);
+    setEditSourceSystem(engine.sourceSystem || "");
+    setEditTargetSystem(engine.targetSystem || "");
+    setEditToolName(engine.toolName || "");
     setEditSpecialty(engine.specialty || "");
     setEditStatus(engine.engineStatus);
     setEditDevopsUrl(engine.devopsUrl || "");
@@ -204,8 +220,9 @@ export default function ConversionEngines() {
     if (
       !canEditEngines ||
       !editItem ||
-      !editSourceSystem.trim() ||
-      !editTargetSystem.trim() ||
+      (editRecordType === "other_tool"
+        ? !editToolName.trim()
+        : !editSourceSystem.trim() || !editTargetSystem.trim()) ||
       !editSpecialty
     ) return;
     if (editDevopsUrl.trim() && !/^https?:\/\//i.test(editDevopsUrl.trim())) {
@@ -214,9 +231,15 @@ export default function ConversionEngines() {
     }
     setEditDevopsUrlError("");
 
+    const identity = editRecordType === "other_tool"
+      ? { recordType: "other_tool" as const, toolName: editToolName }
+      : {
+          recordType: "conversion_engine" as const,
+          sourceSystem: editSourceSystem,
+          targetSystem: editTargetSystem,
+        };
     const updated = await updateEngine(editItem.id, {
-      sourceSystem: editSourceSystem,
-      targetSystem: editTargetSystem,
+      ...identity,
       specialty: editSpecialty,
       status: editStatus,
       devopsUrl: editDevopsUrl,
@@ -235,8 +258,10 @@ export default function ConversionEngines() {
   };
 
   const resetCreateForm = () => {
+    setCreateRecordType("conversion_engine");
     setSourceSystem("");
     setTargetSystem("");
+    setToolName("");
     setCreateSpecialty("");
     setCreateStatus("in_development");
     setDevopsUrl("");
@@ -248,8 +273,9 @@ export default function ConversionEngines() {
     event.preventDefault();
     if (
       !canCreateEngines ||
-      !sourceSystem.trim() ||
-      !targetSystem.trim() ||
+      (createRecordType === "other_tool"
+        ? !toolName.trim()
+        : !sourceSystem.trim() || !targetSystem.trim()) ||
       !createSpecialty
     ) return;
     if (devopsUrl.trim() && !/^https?:\/\//i.test(devopsUrl.trim())) {
@@ -258,10 +284,16 @@ export default function ConversionEngines() {
     }
     setDevopsUrlError("");
 
+    const identity = createRecordType === "other_tool"
+      ? { recordType: "other_tool" as const, toolName }
+      : {
+          recordType: "conversion_engine" as const,
+          sourceSystem,
+          targetSystem,
+        };
     const created = await createEngine(
       {
-        sourceSystem,
-        targetSystem,
+        ...identity,
         specialty: createSpecialty,
         status: createStatus,
         devopsUrl,
@@ -289,7 +321,7 @@ export default function ConversionEngines() {
             Motores de Conversão
           </h1>
           <p className="mt-0.5 max-w-2xl text-[11px] leading-4 text-muted-foreground sm:text-xs">
-            Cadastro e acompanhamento do ciclo de vida dos motores
+            Cadastro e acompanhamento de motores e ferramentas auxiliares
           </p>
         </div>
         {canCreateEngines && (
@@ -368,7 +400,7 @@ export default function ConversionEngines() {
           <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             aria-label="Buscar motores"
-            placeholder="Buscar por sistema ou repositório..."
+            placeholder="Buscar por sistema, ferramenta ou repositório..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="h-10 pl-8 text-xs sm:h-8"
@@ -427,7 +459,7 @@ export default function ConversionEngines() {
         <Card data-testid="conversion-engines-empty-state">
           <CardContent className="flex flex-col items-center justify-center px-4 py-10 text-center sm:py-12">
             <Cog className="h-12 w-12 text-muted-foreground/30 mb-3" />
-            <p className="text-muted-foreground">Nenhum motor encontrado</p>
+            <p className="text-muted-foreground">Nenhum motor ou ferramenta encontrado</p>
             {hasActiveFilters && (
               <Button
                 type="button"
@@ -445,7 +477,7 @@ export default function ConversionEngines() {
             {!hasActiveFilters && canCreateEngines && (
               <Button type="button" size="sm" className="mt-3 gap-1.5" onClick={() => setCreateOpen(true)}>
                 <Plus className="h-4 w-4" />
-                Cadastrar primeiro motor
+                Cadastrar primeiro item
               </Button>
             )}
           </CardContent>
@@ -495,33 +527,49 @@ export default function ConversionEngines() {
                             ? ENGINE_SPECIALTY_LABELS[engine.specialty]
                             : "Sem especialidade"}
                         </Badge>
+                        {engine.recordType === "other_tool" && (
+                          <Badge variant="outline" className="h-5 max-w-full px-1.5 text-[10px]">
+                            Outra ferramenta
+                          </Badge>
+                        )}
                         {engine.ticketNumber && (
                           <Badge variant="outline" className="h-5 max-w-full shrink-0 px-1.5 text-[10px]">
                             #{engine.ticketNumber}
                           </Badge>
                         )}
                       </div>
-                      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 rounded-md border bg-muted/25 p-2" data-testid="conversion-engine-route">
-                        <div className="min-w-0">
+                      {engine.recordType === "other_tool" ? (
+                        <div className="min-w-0 rounded-md border bg-muted/25 p-2" data-testid="conversion-engine-tool">
                           <span className="block text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
-                            Sistema de origem
+                            Nome da ferramenta
                           </span>
                           <h3 className="line-clamp-2 min-w-0 break-words text-sm font-bold leading-5" data-testid="conversion-engine-name">
-                            {engine.sourceSystem}
+                            {engine.toolName}
                           </h3>
                         </div>
-                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary" aria-hidden="true">
-                          <ArrowRight className="h-3.5 w-3.5" />
-                        </span>
-                        <div className="min-w-0">
-                          <span className="block text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
-                            Sistema de conversão
+                      ) : (
+                        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 rounded-md border bg-muted/25 p-2" data-testid="conversion-engine-route">
+                          <div className="min-w-0">
+                            <span className="block text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
+                              Sistema de origem
+                            </span>
+                            <h3 className="line-clamp-2 min-w-0 break-words text-sm font-bold leading-5" data-testid="conversion-engine-name">
+                              {engine.sourceSystem}
+                            </h3>
+                          </div>
+                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary" aria-hidden="true">
+                            <ArrowRight className="h-3.5 w-3.5" />
                           </span>
-                          <p className="line-clamp-2 min-w-0 break-words text-sm font-bold leading-5">
-                            {engine.targetSystem}
-                          </p>
+                          <div className="min-w-0">
+                            <span className="block text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
+                              Sistema de conversão
+                            </span>
+                            <p className="line-clamp-2 min-w-0 break-words text-sm font-bold leading-5">
+                              {engine.targetSystem}
+                            </p>
+                          </div>
                         </div>
-                      </div>
+                      )}
                       <div className="mt-1.5 grid min-w-0 grid-cols-1 gap-x-3 gap-y-0.5 text-[11px] leading-4 text-muted-foreground sm:grid-cols-2" data-testid="conversion-engine-metadata">
                         {engine.clientName && (
                           <span className="min-w-0 break-words">
@@ -673,49 +721,89 @@ export default function ConversionEngines() {
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                     <Cog className="h-4 w-4" />
                   </span>
-                  Cadastrar motor
+                  {createRecordType === "other_tool" ? "Cadastrar ferramenta" : "Cadastrar motor"}
                 </DialogTitle>
                 <DialogDescription>
-                  Informe o caminho da conversão e, se disponível, o repositório do motor.
+                  {createRecordType === "other_tool"
+                    ? "Identifique a ferramenta e descreva nas observações para que ela é utilizada."
+                    : "Informe o caminho da conversão e, se disponível, o repositório do motor."}
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="mt-4 grid min-w-0 grid-cols-1 items-end gap-2 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]" data-testid="conversion-engine-create-route">
-                <div className="min-w-0 space-y-1.5">
-                  <label htmlFor="engine-source-system" className="text-xs font-medium">
-                    Sistema de origem <span className="text-destructive">*</span>
-                  </label>
-                  <Input
-                    id="engine-source-system"
-                    value={sourceSystem}
-                    onChange={(event) => setSourceSystem(event.target.value)}
-                    placeholder="Ex.: Sistema legado"
-                    autoComplete="off"
-                    autoFocus
-                    className="h-10"
-                    required
-                  />
-                </div>
-
-                <span className="mx-auto flex h-8 w-8 rotate-90 items-center justify-center rounded-full bg-primary/10 text-primary sm:mb-1 sm:rotate-0" aria-hidden="true">
-                  <ArrowRight className="h-4 w-4" />
+              <label
+                htmlFor="engine-create-other-tool"
+                className="mt-4 flex cursor-pointer items-start gap-2.5 rounded-lg border bg-muted/25 p-3"
+              >
+                <Checkbox
+                  id="engine-create-other-tool"
+                  aria-label="Outro tipo de ferramenta"
+                  checked={createRecordType === "other_tool"}
+                  onCheckedChange={(checked) =>
+                    setCreateRecordType(checked === true ? "other_tool" : "conversion_engine")
+                  }
+                  className="mt-0.5"
+                />
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium">Outro tipo de ferramenta</span>
+                  <span className="block text-xs leading-4 text-muted-foreground">
+                    Marque para extratores de imagens, utilitários e outros sistemas que não realizam conversão.
+                  </span>
                 </span>
+              </label>
 
-                <div className="min-w-0 space-y-1.5">
-                  <label htmlFor="engine-target-system" className="text-xs font-medium">
-                    Sistema de conversão <span className="text-destructive">*</span>
+              {createRecordType === "other_tool" ? (
+                <div className="mt-4 min-w-0 space-y-1.5" data-testid="conversion-engine-create-tool">
+                  <label htmlFor="engine-create-tool-name" className="text-xs font-medium">
+                    Nome da ferramenta <span className="text-destructive">*</span>
                   </label>
                   <Input
-                    id="engine-target-system"
-                    value={targetSystem}
-                    onChange={(event) => setTargetSystem(event.target.value)}
-                    placeholder="Ex.: Orion TN"
+                    id="engine-create-tool-name"
+                    value={toolName}
+                    onChange={(event) => setToolName(event.target.value)}
+                    placeholder="Ex.: Extrator de imagens"
                     autoComplete="off"
                     className="h-10"
                     required
                   />
                 </div>
-              </div>
+              ) : (
+                <div className="mt-4 grid min-w-0 grid-cols-1 items-end gap-2 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]" data-testid="conversion-engine-create-route">
+                  <div className="min-w-0 space-y-1.5">
+                    <label htmlFor="engine-source-system" className="text-xs font-medium">
+                      Sistema de origem <span className="text-destructive">*</span>
+                    </label>
+                    <Input
+                      id="engine-source-system"
+                      value={sourceSystem}
+                      onChange={(event) => setSourceSystem(event.target.value)}
+                      placeholder="Ex.: Sistema legado"
+                      autoComplete="off"
+                      autoFocus
+                      className="h-10"
+                      required
+                    />
+                  </div>
+
+                  <span className="mx-auto flex h-8 w-8 rotate-90 items-center justify-center rounded-full bg-primary/10 text-primary sm:mb-1 sm:rotate-0" aria-hidden="true">
+                    <ArrowRight className="h-4 w-4" />
+                  </span>
+
+                  <div className="min-w-0 space-y-1.5">
+                    <label htmlFor="engine-target-system" className="text-xs font-medium">
+                      Sistema de conversão <span className="text-destructive">*</span>
+                    </label>
+                    <Input
+                      id="engine-target-system"
+                      value={targetSystem}
+                      onChange={(event) => setTargetSystem(event.target.value)}
+                      placeholder="Ex.: Orion TN"
+                      autoComplete="off"
+                      className="h-10"
+                      required
+                    />
+                  </div>
+                </div>
+              )}
 
               <div className="mt-4 grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="min-w-0 space-y-1.5">
@@ -797,7 +885,11 @@ export default function ConversionEngines() {
                   id="engine-create-notes"
                   value={createNotes}
                   onChange={(event) => setCreateNotes(event.target.value)}
-                  placeholder="Detalhes técnicos, particularidades ou pendências..."
+                  placeholder={
+                    createRecordType === "other_tool"
+                      ? "Explique para que serve a ferramenta, como é utilizada e suas particularidades..."
+                      : "Detalhes técnicos, particularidades ou pendências..."
+                  }
                   className="min-h-24 resize-y"
                 />
               </div>
@@ -821,14 +913,15 @@ export default function ConversionEngines() {
                 className="h-10 w-full gap-1.5 sm:w-auto"
                 disabled={
                   creating ||
-                  !sourceSystem.trim() ||
-                  !targetSystem.trim() ||
+                  (createRecordType === "other_tool"
+                    ? !toolName.trim()
+                    : !sourceSystem.trim() || !targetSystem.trim()) ||
                   !createSpecialty ||
                   !canCreateEngines
                 }
               >
                 {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-                Cadastrar motor
+                {createRecordType === "other_tool" ? "Cadastrar ferramenta" : "Cadastrar motor"}
               </Button>
             </DialogFooter>
           </form>
@@ -854,44 +947,84 @@ export default function ConversionEngines() {
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                     <Pencil className="h-4 w-4" />
                   </span>
-                  Editar motor
+                  {editRecordType === "other_tool" ? "Editar ferramenta" : "Editar motor"}
                 </DialogTitle>
                 <DialogDescription>
-                  Atualize os sistemas, a especialidade, o status e os dados técnicos.
+                  {editRecordType === "other_tool"
+                    ? "Atualize o nome, a especialidade, o status e os detalhes da ferramenta."
+                    : "Atualize os sistemas, a especialidade, o status e os dados técnicos."}
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="mt-4 grid min-w-0 grid-cols-1 items-end gap-2 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
-                <div className="min-w-0 space-y-1.5">
-                  <label htmlFor="engine-edit-source-system" className="text-xs font-medium">
-                    Sistema de origem <span className="text-destructive">*</span>
-                  </label>
-                  <Input
-                    id="engine-edit-source-system"
-                    value={editSourceSystem}
-                    onChange={(event) => setEditSourceSystem(event.target.value)}
-                    className="h-10"
-                    required
-                  />
-                </div>
-
-                <span className="mx-auto flex h-8 w-8 rotate-90 items-center justify-center rounded-full bg-primary/10 text-primary sm:mb-1 sm:rotate-0" aria-hidden="true">
-                  <ArrowRight className="h-4 w-4" />
+              <label
+                htmlFor="engine-edit-other-tool"
+                className="mt-4 flex cursor-pointer items-start gap-2.5 rounded-lg border bg-muted/25 p-3"
+              >
+                <Checkbox
+                  id="engine-edit-other-tool"
+                  aria-label="Outro tipo de ferramenta"
+                  checked={editRecordType === "other_tool"}
+                  onCheckedChange={(checked) =>
+                    setEditRecordType(checked === true ? "other_tool" : "conversion_engine")
+                  }
+                  className="mt-0.5"
+                />
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium">Outro tipo de ferramenta</span>
+                  <span className="block text-xs leading-4 text-muted-foreground">
+                    Use para extratores de imagens, utilitários e outros sistemas que não realizam conversão.
+                  </span>
                 </span>
+              </label>
 
-                <div className="min-w-0 space-y-1.5">
-                  <label htmlFor="engine-edit-target-system" className="text-xs font-medium">
-                    Sistema de conversão <span className="text-destructive">*</span>
+              {editRecordType === "other_tool" ? (
+                <div className="mt-4 min-w-0 space-y-1.5" data-testid="conversion-engine-edit-tool">
+                  <label htmlFor="engine-edit-tool-name" className="text-xs font-medium">
+                    Nome da ferramenta <span className="text-destructive">*</span>
                   </label>
                   <Input
-                    id="engine-edit-target-system"
-                    value={editTargetSystem}
-                    onChange={(event) => setEditTargetSystem(event.target.value)}
+                    id="engine-edit-tool-name"
+                    value={editToolName}
+                    onChange={(event) => setEditToolName(event.target.value)}
+                    placeholder="Ex.: Extrator de imagens"
+                    autoComplete="off"
                     className="h-10"
                     required
                   />
                 </div>
-              </div>
+              ) : (
+                <div className="mt-4 grid min-w-0 grid-cols-1 items-end gap-2 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+                  <div className="min-w-0 space-y-1.5">
+                    <label htmlFor="engine-edit-source-system" className="text-xs font-medium">
+                      Sistema de origem <span className="text-destructive">*</span>
+                    </label>
+                    <Input
+                      id="engine-edit-source-system"
+                      value={editSourceSystem}
+                      onChange={(event) => setEditSourceSystem(event.target.value)}
+                      className="h-10"
+                      required
+                    />
+                  </div>
+
+                  <span className="mx-auto flex h-8 w-8 rotate-90 items-center justify-center rounded-full bg-primary/10 text-primary sm:mb-1 sm:rotate-0" aria-hidden="true">
+                    <ArrowRight className="h-4 w-4" />
+                  </span>
+
+                  <div className="min-w-0 space-y-1.5">
+                    <label htmlFor="engine-edit-target-system" className="text-xs font-medium">
+                      Sistema de conversão <span className="text-destructive">*</span>
+                    </label>
+                    <Input
+                      id="engine-edit-target-system"
+                      value={editTargetSystem}
+                      onChange={(event) => setEditTargetSystem(event.target.value)}
+                      className="h-10"
+                      required
+                    />
+                  </div>
+                </div>
+              )}
 
               <div className="mt-4 grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="min-w-0 space-y-1.5">
@@ -973,7 +1106,11 @@ export default function ConversionEngines() {
                   id="engine-edit-notes"
                   value={editNotes}
                   onChange={(event) => setEditNotes(event.target.value)}
-                  placeholder="Registre detalhes sobre o desenvolvimento do motor..."
+                  placeholder={
+                    editRecordType === "other_tool"
+                      ? "Explique para que serve a ferramenta, como é utilizada e suas particularidades..."
+                      : "Registre detalhes sobre o desenvolvimento do motor..."
+                  }
                   className="min-h-24 resize-y"
                 />
               </div>
@@ -994,8 +1131,9 @@ export default function ConversionEngines() {
                 className="h-10 w-full gap-1.5 sm:w-auto"
                 disabled={
                   updating ||
-                  !editSourceSystem.trim() ||
-                  !editTargetSystem.trim() ||
+                  (editRecordType === "other_tool"
+                    ? !editToolName.trim()
+                    : !editSourceSystem.trim() || !editTargetSystem.trim()) ||
                   !editSpecialty ||
                   !canEditEngines
                 }
@@ -1014,11 +1152,12 @@ export default function ConversionEngines() {
       >
         <AlertDialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-md overflow-y-auto p-4 sm:p-6">
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir motor?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {deletingItem?.recordType === "other_tool" ? "Excluir ferramenta?" : "Excluir motor?"}
+            </AlertDialogTitle>
             <AlertDialogDescription className="break-words">
-              O motor de <strong>{deletingItem?.sourceSystem}</strong> para{" "}
-              <strong>{deletingItem?.targetSystem}</strong> será removido do cadastro. Essa
-              ação não pode ser desfeita.
+              <strong>{deletingItem ? getEngineDisplayName(deletingItem) : "Este cadastro"}</strong>{" "}
+              será removido do cadastro. Essa ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -1036,7 +1175,11 @@ export default function ConversionEngines() {
               ) : (
                 <Trash2 className="h-4 w-4" />
               )}
-              {deleting ? "Excluindo..." : "Excluir motor"}
+              {deleting
+                ? "Excluindo..."
+                : deletingItem?.recordType === "other_tool"
+                  ? "Excluir ferramenta"
+                  : "Excluir motor"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

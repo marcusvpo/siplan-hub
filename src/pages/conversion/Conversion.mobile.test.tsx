@@ -113,8 +113,10 @@ const engines: ConversionEngineItem[] = [1, 2, 3, 4].map((index) => ({
       ? "Cartório de Registro de Imóveis e Tabelionato com nome muito extenso"
       : `Cliente do motor ${index}`,
   ticketNumber: `900${index}`,
-  sourceSystem: "Sistema legado com identificação extensa",
-  targetSystem: "Orion TN",
+  recordType: index === 4 ? "other_tool" : "conversion_engine",
+  sourceSystem: index === 4 ? null : "Sistema legado com identificação extensa",
+  targetSystem: index === 4 ? null : "Orion TN",
+  toolName: index === 4 ? "Extrator de imagens legado" : null,
   specialty:
     index === 1
       ? "tn_rc"
@@ -349,6 +351,9 @@ describe("Telas de conversão no mobile", () => {
 
     expect(screen.getAllByTestId("conversion-engine-card")).toHaveLength(1);
     expect(screen.getByText("Página 2 de 2")).toBeInTheDocument();
+    expect(screen.getByText("Outra ferramenta")).toBeInTheDocument();
+    expect(screen.getByText("Extrator de imagens legado")).toBeInTheDocument();
+    expect(screen.getByTestId("conversion-engine-tool")).toHaveClass("min-w-0");
   });
 
   it("filtra os motores pela especialidade e permite limpar a seleção", async () => {
@@ -409,12 +414,52 @@ describe("Telas de conversão no mobile", () => {
     await waitFor(() => {
       expect(mocks.createEngine).toHaveBeenCalledWith(
         {
+          recordType: "conversion_engine",
           sourceSystem: "Legado ABC",
           targetSystem: "Orion TN",
           specialty: "protest",
           status: "in_development",
           devopsUrl: "https://dev.azure.com/siplan/motor-abc",
           notes: "Importação inicial",
+        },
+        "Analista Mobile",
+      );
+    });
+  });
+
+  it("troca o trajeto por nome ao cadastrar outra ferramenta", async () => {
+    render(<ConversionEngines />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Motor" }));
+
+    const dialog = screen.getByTestId("conversion-engine-create-dialog");
+    fireEvent.click(within(dialog).getByLabelText("Outro tipo de ferramenta"));
+
+    expect(within(dialog).queryByLabelText(/Sistema de origem/)).not.toBeInTheDocument();
+    expect(within(dialog).queryByLabelText(/Sistema de conversão/)).not.toBeInTheDocument();
+    expect(within(dialog).getByTestId("conversion-engine-create-tool")).toHaveClass(
+      "min-w-0",
+    );
+
+    fireEvent.change(within(dialog).getByLabelText(/Nome da ferramenta/), {
+      target: { value: "Extrator de imagens" },
+    });
+    fireEvent.click(within(dialog).getByLabelText("Especialidade do motor"));
+    fireEvent.click(await screen.findByRole("option", { name: "RI/TD" }));
+    fireEvent.change(within(dialog).getByLabelText("Observações"), {
+      target: { value: "Extrai imagens dos livros digitalizados." },
+    });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Cadastrar ferramenta" }));
+
+    await waitFor(() => {
+      expect(mocks.createEngine).toHaveBeenCalledWith(
+        {
+          recordType: "other_tool",
+          toolName: "Extrator de imagens",
+          specialty: "ri_td",
+          status: "in_development",
+          devopsUrl: "",
+          notes: "Extrai imagens dos livros digitalizados.",
         },
         "Analista Mobile",
       );
@@ -458,10 +503,43 @@ describe("Telas de conversão no mobile", () => {
 
     await waitFor(() => {
       expect(mocks.updateEngine).toHaveBeenCalledWith("engine-1", {
+        recordType: "conversion_engine",
         sourceSystem: "Legado atualizado",
         targetSystem: "Orion TN",
         specialty: "tn_rc",
         status: "maintenance",
+        devopsUrl: "https://dev.azure.com/siplan/motores",
+        notes: "Observação longa sobre o desenvolvimento que precisa quebrar no celular.",
+      });
+    });
+  });
+
+  it("edita uma ferramenta sem exibir os campos de conversão", async () => {
+    render(<ConversionEngines />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Próxima página de motores" }));
+    fireEvent.click(screen.getByRole("button", { name: "Editar" }));
+
+    const dialog = screen.getByTestId("conversion-engine-dialog");
+    expect(within(dialog).getByLabelText("Outro tipo de ferramenta")).toBeChecked();
+    expect(within(dialog).getByLabelText(/Nome da ferramenta/)).toHaveValue(
+      "Extrator de imagens legado",
+    );
+    expect(within(dialog).queryByLabelText(/Sistema de origem/)).not.toBeInTheDocument();
+
+    fireEvent.change(within(dialog).getByLabelText(/Nome da ferramenta/), {
+      target: { value: "Extrator de imagens atualizado" },
+    });
+    fireEvent.click(within(dialog).getByLabelText("Editar especialidade do motor"));
+    fireEvent.click(await screen.findByRole("option", { name: "RI/TD" }));
+    fireEvent.click(within(dialog).getByRole("button", { name: "Salvar alterações" }));
+
+    await waitFor(() => {
+      expect(mocks.updateEngine).toHaveBeenCalledWith("engine-4", {
+        recordType: "other_tool",
+        toolName: "Extrator de imagens atualizado",
+        specialty: "ri_td",
+        status: "in_development",
         devopsUrl: "https://dev.azure.com/siplan/motores",
         notes: "Observação longa sobre o desenvolvimento que precisa quebrar no celular.",
       });

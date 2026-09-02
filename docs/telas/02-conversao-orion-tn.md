@@ -118,7 +118,7 @@ Gerenciar a fila de migração de dados (conversão) dos clientes. Centraliza o 
 - **Acesso:** Protegido por `conversion_engines.view`. Cadastro, atualização e exclusão exigem, respectivamente, `conversion_engines.create`, `conversion_engines.edit` e `conversion_engines.delete`.
 
 ### Objetivo
-Cadastrar e acompanhar manualmente os motores/conversores, identificando o sistema de origem, o sistema de conversão, a especialidade, o repositório DevOps e as observações técnicas. Solicitações vindas da fila antiga continuam sincronizadas com o cadastro central.
+Cadastrar e acompanhar manualmente motores/conversores e ferramentas auxiliares. Motores identificam origem e destino; extratores, utilitários e outros itens usam um nome próprio e as observações para descrever sua finalidade. Solicitações vindas da fila antiga continuam sincronizadas com o cadastro central.
 
 ### Dados e Hooks
 - **`useConversionEngines()`** — [src/hooks/useConversionEngines.ts](../../src/hooks/useConversionEngines.ts).
@@ -127,12 +127,13 @@ Cadastrar e acompanhar manualmente os motores/conversores, identificando o siste
   - **Mutations:** `createEngine(input, userName)` cadastra manualmente; `requestEngine(queueId, notes, userName)` sincroniza uma solicitação da fila; `updateEngine(engineId, input)` edita todos os campos e espelha o estado/notas na fila quando existir vínculo; `deleteEngine(engineId)` remove apenas o registro central do motor.
 - Tipo `EngineStatus = "in_development" | "maintenance" | "finished"`.
 - Tipo `EngineSpecialty = "tn_rc" | "protest" | "ri_td"`, exibido como TN/RC, Protesto ou RI/TD.
+- Tipo `EngineRecordType = "conversion_engine" | "other_tool"`, que define os campos obrigatórios e a apresentação do card.
 
 ### Componentes principais
 - **4 KPIs:** Em desenvolvimento, Em manutenção, Finalizados e Total (cards com borda colorida).
-- **Filtros:** busca por sistemas, especialidade, repositório, cliente ou ticket (`search`), filtro por status (`statusFilter`) e filtro por especialidade (`specialtyFilter`), incluindo registros antigos sem classificação.
-- **Lista de motores:** grade responsiva que destaca o trajeto Origem → Conversão, badges de status e especialidade, vínculo opcional ao projeto, data, responsável, Link DevOps e observações. Cards vinculados à fila abrem o `ConversionPostDrawer`.
-- **Diálogo "Cadastrar motor":** campos obrigatórios Sistema de origem, Sistema de conversão, Especialidade e Status, além de Link DevOps validado e observações opcionais.
+- **Filtros:** busca por sistemas, nome da ferramenta, especialidade, repositório, cliente ou ticket (`search`), filtro por status (`statusFilter`) e filtro por especialidade (`specialtyFilter`), incluindo registros antigos sem classificação.
+- **Lista de motores:** grade responsiva que destaca o trajeto Origem → Conversão nos motores ou o Nome da ferramenta nos demais itens, com badges de tipo, status e especialidade, vínculo opcional ao projeto, data, responsável, Link DevOps e observações. Cards vinculados à fila abrem o `ConversionPostDrawer`.
+- **Diálogo "Cadastrar motor":** a opção "Outro tipo de ferramenta" troca Sistema de origem e Sistema de conversão por Nome da ferramenta. Especialidade e Status continuam obrigatórios; Link DevOps e observações são opcionais.
 - **Diálogo "Editar motor":** permite alterar todos os campos do cadastro, com o mesmo comportamento responsivo e as mesmas validações da criação.
 - **Confirmação "Excluir motor":** identifica o trajeto do motor e exige confirmação antes da remoção definitiva.
 - **`ConversionPostDrawer`** — histórico de publicações do motor selecionado.
@@ -145,9 +146,10 @@ Cadastrar e acompanhar manualmente os motores/conversores, identificando o siste
 
 ### Regras de Negócio e Estados
 - **`ENGINE_STATUS_CONFIG`** define label/cor/ícone por status: `in_development` (Em desenvolvimento, azul, Code2), `maintenance` (Em manutenção, laranja, Wrench) e `finished` (Finalizado, verde, CheckCircle2).
-- Estados de UI: `loading` (spinner central) e vazio ("Nenhum motor encontrado").
+- Estados de UI: `loading` (spinner central) e vazio ("Nenhum motor ou ferramenta encontrado").
 - Os status desta tela representam o ciclo de vida do motor e não os estados operacionais dos projetos. Ao sincronizar com a fila legada, desenvolvimento/manutenção são espelhados como `engine_in_development` e finalizado como `engine_ready`.
 - A especialidade é obrigatória no cadastro e na edição. Registros anteriores à coluna permanecem sem classificação até serem editados, evitando atribuição automática incorreta.
+- O banco exige origem e destino para `conversion_engine`; para `other_tool`, exige apenas `tool_name` e mantém os dois sistemas nulos.
 
 ### Pontos de Manutenção
 - A persistência principal fica em `conversion_engines`, com RLS por ação. O cast `(supabase as any)` está restrito ao hook enquanto o restante do schema legado não puder ser regenerado integralmente.
