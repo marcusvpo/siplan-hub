@@ -245,8 +245,8 @@
     "semantic_hash": ""
   },
   "src/components/Layout/MainLayout.tsx": {
-    "mtime": 1788356136.8851266,
-    "ast_hash": "0eafb161ca0070e60f4245a203ed06e7",
+    "mtime": 1788374123.3743947,
+    "ast_hash": "bc5c367f2d23b685cd2b9a3511a9a99b",
     "semantic_hash": ""
   },
   "src/components/Layout/UserProfileDrawer.tsx": {
@@ -830,8 +830,8 @@
     "semantic_hash": "fcaa0f590572fa4cde4d5cda0c42a51e"
   },
   "src/hooks/useConversionEngines.ts": {
-    "mtime": 1788363182.0716274,
-    "ast_hash": "3ed050e90dbe53a7e5909642b2319067",
+    "mtime": 1788363637.8472261,
+    "ast_hash": "5dfd9d4d9dd5ae0eb3c2873444bcb369",
     "semantic_hash": ""
   },
   "src/hooks/useConversionIssues.ts": {
@@ -965,8 +965,8 @@
     "semantic_hash": "8cbc837200552502e544dcd4d195de98"
   },
   "src/integrations/supabase/types.ts": {
-    "mtime": 1788363182.0731378,
-    "ast_hash": "6735e42bd404d64dc4db25da3f9901c7",
+    "mtime": 1788363637.8472261,
+    "ast_hash": "9065c791dc049a524993baec6e14f8f1",
     "semantic_hash": ""
   },
   "src/layouts/AdminLayout.tsx": {
@@ -1175,8 +1175,8 @@
     "semantic_hash": ""
   },
   "src/pages/conversion/ConversionEngines.tsx": {
-    "mtime": 1788363182.076706,
-    "ast_hash": "c0cebe7dd64441cc752f720ac1332e83",
+    "mtime": 1788363637.8492658,
+    "ast_hash": "5eae4d7332715d1bf58f05afe4dc523f",
     "semantic_hash": ""
   },
   "src/pages/conversion/MyQueueDetailedCard.tsx": {
@@ -2330,8 +2330,8 @@
     "semantic_hash": "70c3c0942823983ef905d97a3d02eda0"
   },
   "docs/telas/02-conversao-orion-tn.md": {
-    "mtime": 1788363203.6570437,
-    "ast_hash": "311ab82e6f9585a46170137d53b50ba8",
+    "mtime": 1788363637.7744625,
+    "ast_hash": "280c95042931124924009cf700b5c0a9",
     "semantic_hash": ""
   },
   "docs/telas/03-comercial.md": {
@@ -4630,8 +4630,8 @@
     "semantic_hash": ""
   },
   "src/pages/conversion/Conversion.mobile.test.tsx": {
-    "mtime": 1788363203.653032,
-    "ast_hash": "cde4295c6d7f99c05c881542e1a413e1",
+    "mtime": 1788363637.8487558,
+    "ast_hash": "db4aacf66f575f3719e3bd8d8192c4a1",
     "semantic_hash": ""
   },
   "src/test/sd-mobile-layout.test.ts": {
@@ -4690,8 +4690,8 @@
     "semantic_hash": ""
   },
   "src/test/conversion-engines-schema.test.ts": {
-    "mtime": 1788363234.5984159,
-    "ast_hash": "2af31f00c6e5b4c479390d7e028573f8",
+    "mtime": 1788363637.8512921,
+    "ast_hash": "bcc2868265d52291082569f669574a2f",
     "semantic_hash": ""
   },
   "supabase/migrations/20260902111500_conversion_engines_manual_registry.sql": {
@@ -4725,8 +4725,18 @@
     "semantic_hash": ""
   },
   "supabase/migrations/20260902150000_conversion_engines_other_specialty.sql": {
-    "mtime": 1788363182.08175,
-    "ast_hash": "98b2aa90b57b7e9b0aa2708833ce03fa",
+    "mtime": 1788363637.8523786,
+    "ast_hash": "5ce164e1b13ff1ed0d975f126b7524af",
+    "semantic_hash": ""
+  },
+  "src/components/Layout/PageHelpDrawer.tsx": {
+    "mtime": 1788374654.16558,
+    "ast_hash": "18c97b9db5225c91fd9866d0557555d6",
+    "semantic_hash": ""
+  },
+  "src/constants/pageHelpRegistry.ts": {
+    "mtime": 1788374775.4862926,
+    "ast_hash": "0e5cea27c029ed0741c1b706127a997d",
     "semantic_hash": ""
   }
 }
