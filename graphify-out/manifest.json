@@ -145,8 +145,8 @@
     "semantic_hash": ""
   },
   "src/App.tsx": {
-    "mtime": 1788285746.5606413,
-    "ast_hash": "f8ce4868fa0d7172585d9b1e44853adb",
+    "mtime": 1788359562.2480757,
+    "ast_hash": "02e273632a7453d3d843e0418f318ea6",
     "semantic_hash": ""
   },
   "src/components/Admin/OverviewChart.tsx": {
@@ -480,8 +480,8 @@
     "semantic_hash": ""
   },
   "src/components/conversion/ConversionPostDrawer.tsx": {
-    "mtime": 1788356471.5286233,
-    "ast_hash": "6dec190e20e1a1500d4ab8f86bda4d0a",
+    "mtime": 1788356798.174398,
+    "ast_hash": "054f7c8bfb6bac39d491cd424b1a806b",
     "semantic_hash": ""
   },
   "src/components/conversion/ConversionPostFeed.tsx": {
@@ -830,9 +830,9 @@
     "semantic_hash": "fcaa0f590572fa4cde4d5cda0c42a51e"
   },
   "src/hooks/useConversionEngines.ts": {
-    "mtime": 1781122833.2067263,
-    "ast_hash": "c65dba447491d626be020d4bced115ad",
-    "semantic_hash": "c65dba447491d626be020d4bced115ad"
+    "mtime": 1788359562.64519,
+    "ast_hash": "c195c947001371d046c989a11bd31b90",
+    "semantic_hash": ""
   },
   "src/hooks/useConversionIssues.ts": {
     "mtime": 1783344525.725555,
@@ -965,9 +965,9 @@
     "semantic_hash": "8cbc837200552502e544dcd4d195de98"
   },
   "src/integrations/supabase/types.ts": {
-    "mtime": 1781122833.2142317,
-    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
-    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+    "mtime": 1788359562.646191,
+    "ast_hash": "7b965561cdfa23c7afc7a1ba14723969",
+    "semantic_hash": ""
   },
   "src/layouts/AdminLayout.tsx": {
     "mtime": 1788285746.5744188,
@@ -1000,9 +1000,9 @@
     "semantic_hash": ""
   },
   "src/main.tsx": {
-    "mtime": 1781122833.2162397,
-    "ast_hash": "1ef20455261f2c0932906b119928ffbb",
-    "semantic_hash": "1ef20455261f2c0932906b119928ffbb"
+    "mtime": 1788359562.249073,
+    "ast_hash": "4d9942d449563f474c12074b213a12d8",
+    "semantic_hash": ""
   },
   "src/pages/AgendaAnalistas.tsx": {
     "mtime": 1788201431.6013515,
@@ -1175,8 +1175,8 @@
     "semantic_hash": ""
   },
   "src/pages/conversion/ConversionEngines.tsx": {
-    "mtime": 1788209971.4325325,
-    "ast_hash": "1124933067cc5073f43744c984c8c604",
+    "mtime": 1788359562.6477041,
+    "ast_hash": "10b0dec3abace1b05bafe0f835e14c24",
     "semantic_hash": ""
   },
   "src/pages/conversion/MyQueueDetailedCard.tsx": {
@@ -1625,13 +1625,13 @@
     "semantic_hash": "ea3b5c2d9c1cc5d2b3fb3af706f2ca1a"
   },
   "vercel.json": {
-    "mtime": 1781122833.2534661,
-    "ast_hash": "0db7ccb3aff36e97aa469126e9e17f99",
-    "semantic_hash": "0db7ccb3aff36e97aa469126e9e17f99"
+    "mtime": 1788359562.251073,
+    "ast_hash": "adc2360ef501b715be7f1a057d44575c",
+    "semantic_hash": ""
   },
   "vite.config.ts": {
-    "mtime": 1788285746.6000073,
-    "ast_hash": "5b6f4827211e3c757e341b4a40fbda12",
+    "mtime": 1788359562.2520754,
+    "ast_hash": "318b6c2d60c0382a82eeeb511b957a3f",
     "semantic_hash": ""
   },
   "vm-worker/package.json": {
@@ -2330,8 +2330,8 @@
     "semantic_hash": "70c3c0942823983ef905d97a3d02eda0"
   },
   "docs/telas/02-conversao-orion-tn.md": {
-    "mtime": 1787930495.9517465,
-    "ast_hash": "cae63b5dd70810560b656e18b5722d0e",
+    "mtime": 1788359562.558073,
+    "ast_hash": "23407933e02a1aa39490966dbb5cf932",
     "semantic_hash": ""
   },
   "docs/telas/03-comercial.md": {
@@ -2600,8 +2600,8 @@
     "semantic_hash": ""
   },
   "src/constants/permissions.ts": {
-    "mtime": 1787950180.4486256,
-    "ast_hash": "e559a3abf9bd8c6bc144a7d8f2bcc814",
+    "mtime": 1788359562.5923722,
+    "ast_hash": "893b9397369a5b044755181557f0fc0d",
     "semantic_hash": ""
   },
   "src/test/permissions-catalog.test.ts": {
@@ -4630,8 +4630,8 @@
     "semantic_hash": ""
   },
   "src/pages/conversion/Conversion.mobile.test.tsx": {
-    "mtime": 1788356136.8881357,
-    "ast_hash": "91ab9acc7882c74721f8fcfd92b2e9f4",
+    "mtime": 1788359562.6466968,
+    "ast_hash": "d3a7ceeb51e2ed642c202bd3d160eb2b",
     "semantic_hash": ""
   },
   "src/test/sd-mobile-layout.test.ts": {
@@ -4685,8 +4685,38 @@
     "semantic_hash": ""
   },
   "src/components/conversion/ConversionPostDrawer.layout.test.tsx": {
-    "mtime": 1788356485.8677108,
-    "ast_hash": "87b27d29933161428ded65f654c4ac06",
+    "mtime": 1788356798.1733897,
+    "ast_hash": "e49790241e94d3896bacb9a9a817f169",
+    "semantic_hash": ""
+  },
+  "src/test/conversion-engines-schema.test.ts": {
+    "mtime": 1788359196.0046928,
+    "ast_hash": "d72f5245568882923dc9cf191c9391a2",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260902111500_conversion_engines_manual_registry.sql": {
+    "mtime": 1788358689.5098324,
+    "ast_hash": "8b813ee43dee8a8d261bd8d77ae9f743",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260902114500_conversion_engines_lifecycle_statuses.sql": {
+    "mtime": 1788358689.5108347,
+    "ast_hash": "2489c0ef959790c3e0ba115f7d1d2d0d",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260902131500_conversion_engines_specialty_delete.sql": {
+    "mtime": 1788359053.5082798,
+    "ast_hash": "8f617535aec2285f33893aa97ad3a079",
+    "semantic_hash": ""
+  },
+  "src/components/common/ChunkErrorBoundary.tsx": {
+    "mtime": 1788359562.249073,
+    "ast_hash": "5fc128f6710bc5a496faa252384d8152",
+    "semantic_hash": ""
+  },
+  "src/test/chunk-error-boundary.test.tsx": {
+    "mtime": 1788359562.250074,
+    "ast_hash": "bb92b9ee53bc41ce5efbfdf35933aecb",
     "semantic_hash": ""
   }
 }

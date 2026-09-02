@@ -9,7 +9,9 @@ import ConversionEngines from "./ConversionEngines";
 const mocks = vi.hoisted(() => ({
   useConversionQueue: vi.fn(),
   useConversionEngines: vi.fn(),
-  updateEngineStatus: vi.fn(),
+  updateEngine: vi.fn(),
+  deleteEngine: vi.fn(),
+  createEngine: vi.fn(),
 }));
 
 vi.mock("@/hooks/useConversionQueue", () => ({
@@ -27,6 +29,7 @@ vi.mock("@/hooks/use-mobile", () => ({
 vi.mock("@/hooks/useAuth", () => ({
   useAuth: () => ({
     team: "conversion",
+    fullName: "Analista Mobile",
     user: {
       id: "user-1",
       email: "analista@siplan.com.br",
@@ -103,15 +106,18 @@ const queue = [
 
 const engines: ConversionEngineItem[] = [1, 2, 3, 4].map((index) => ({
   id: `engine-${index}`,
+  queueId: `queue-${index}`,
   projectId: `project-${index}`,
   clientName:
     index === 1
       ? "Cartório de Registro de Imóveis e Tabelionato com nome muito extenso"
       : `Cliente do motor ${index}`,
   ticketNumber: `900${index}`,
-  systemType: "Orion TN",
-  legacySystem: "Sistema legado com identificação extensa",
-  engineStatus: index === 1 ? "pending_engine" : "engine_in_development",
+  sourceSystem: "Sistema legado com identificação extensa",
+  targetSystem: "Orion TN",
+  specialty: "tn_rc",
+  devopsUrl: "https://dev.azure.com/siplan/motores",
+  engineStatus: index === 1 ? "maintenance" : "in_development",
   engineRequestedAt: new Date("2026-08-25T12:00:00Z"),
   engineRequestedByName: "Analista Mobile",
   engineNotes: "Observação longa sobre o desenvolvimento que precisa quebrar no celular.",
@@ -122,7 +128,12 @@ const engines: ConversionEngineItem[] = [1, 2, 3, 4].map((index) => ({
 
 describe("Telas de conversão no mobile", () => {
   beforeEach(() => {
-    mocks.updateEngineStatus.mockReset();
+    mocks.updateEngine.mockReset();
+    mocks.updateEngine.mockResolvedValue(true);
+    mocks.deleteEngine.mockReset();
+    mocks.deleteEngine.mockResolvedValue(true);
+    mocks.createEngine.mockReset();
+    mocks.createEngine.mockResolvedValue(true);
     mocks.useConversionQueue.mockReturnValue({
       queue,
       myQueue: [],
@@ -148,13 +159,18 @@ describe("Telas de conversão no mobile", () => {
       engines,
       loading: false,
       kpis: {
-        pendingEngine: 1,
         inDevelopment: 3,
-        ready: 0,
+        maintenance: 1,
+        finished: 0,
         total: 4,
       },
+      creating: false,
+      updating: false,
+      deleting: false,
+      createEngine: mocks.createEngine,
       requestEngine: vi.fn(),
-      updateEngineStatus: mocks.updateEngineStatus,
+      updateEngine: mocks.updateEngine,
+      deleteEngine: mocks.deleteEngine,
       refetch: vi.fn(),
     });
   });
@@ -280,6 +296,7 @@ describe("Telas de conversão no mobile", () => {
     expect(screen.getByTestId("conversion-engines-page")).toHaveClass(
       "min-w-0",
       "overflow-x-hidden",
+      "space-y-2.5",
     );
     expect(screen.getByTestId("conversion-engines-kpis")).toHaveClass(
       "grid-cols-2",
@@ -288,6 +305,20 @@ describe("Telas de conversão no mobile", () => {
     expect(screen.getByTestId("conversion-engines-filters")).toHaveClass(
       "flex-col",
       "sm:flex-row",
+      "p-1.5",
+    );
+    expect(screen.getByLabelText("Buscar motores")).toHaveClass(
+      "h-10",
+      "sm:h-8",
+    );
+    expect(screen.getByTestId("conversion-engines-grid")).toHaveClass(
+      "grid-cols-1",
+      "md:grid-cols-2",
+      "xl:grid-cols-3",
+      "gap-2",
+    );
+    expect(screen.getAllByTestId("conversion-engine-route")[0]).toHaveClass(
+      "grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]",
     );
     expect(screen.getAllByTestId("conversion-engine-card")).toHaveLength(3);
     expect(screen.getByLabelText("Motores por página")).toHaveTextContent("3");
@@ -296,6 +327,8 @@ describe("Telas de conversão no mobile", () => {
     );
     expect(screen.getAllByTestId("conversion-engine-name")[0]).toHaveClass(
       "break-words",
+      "line-clamp-2",
+      "text-sm",
     );
     expect(screen.getAllByTestId("conversion-engine-metadata")[0]).toHaveClass(
       "grid-cols-1",
@@ -308,10 +341,61 @@ describe("Telas de conversão no mobile", () => {
     expect(screen.getByText("Página 2 de 2")).toBeInTheDocument();
   });
 
-  it("abre a atualização do motor em um modal seguro para o viewport", () => {
+  it("cadastra um motor manual pelo fluxo origem para conversão", async () => {
     render(<ConversionEngines />);
 
-    fireEvent.click(screen.getAllByRole("button", { name: "Atualizar" })[0]);
+    fireEvent.click(screen.getByRole("button", { name: "Motor" }));
+
+    const dialog = screen.getByTestId("conversion-engine-create-dialog");
+    expect(dialog).toHaveClass(
+      "max-h-[calc(100dvh-1rem)]",
+      "w-[calc(100vw-1rem)]",
+      "overflow-hidden",
+    );
+    expect(within(dialog).getByTestId("conversion-engine-create-route")).toHaveClass(
+      "grid-cols-1",
+      "sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]",
+    );
+    expect(within(dialog).getByLabelText("Status do motor")).toHaveTextContent(
+      "Em desenvolvimento",
+    );
+
+    fireEvent.click(within(dialog).getByLabelText("Especialidade do motor"));
+    fireEvent.click(await screen.findByRole("option", { name: "Protesto" }));
+
+    fireEvent.change(within(dialog).getByLabelText(/Sistema de origem/), {
+      target: { value: "Legado ABC" },
+    });
+    fireEvent.change(within(dialog).getByLabelText(/Sistema de conversão/), {
+      target: { value: "Orion TN" },
+    });
+    fireEvent.change(within(dialog).getByLabelText("Link DevOps"), {
+      target: { value: "https://dev.azure.com/siplan/motor-abc" },
+    });
+    fireEvent.change(within(dialog).getByLabelText("Observações"), {
+      target: { value: "Importação inicial" },
+    });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Cadastrar motor" }));
+
+    await waitFor(() => {
+      expect(mocks.createEngine).toHaveBeenCalledWith(
+        {
+          sourceSystem: "Legado ABC",
+          targetSystem: "Orion TN",
+          specialty: "protest",
+          status: "in_development",
+          devopsUrl: "https://dev.azure.com/siplan/motor-abc",
+          notes: "Importação inicial",
+        },
+        "Analista Mobile",
+      );
+    });
+  });
+
+  it("edita todos os dados do motor em um modal seguro para o viewport", async () => {
+    render(<ConversionEngines />);
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Editar" })[0]);
 
     const dialog = screen.getByTestId("conversion-engine-dialog");
     expect(dialog).toHaveClass(
@@ -320,14 +404,53 @@ describe("Telas de conversão no mobile", () => {
       "min-w-0",
       "overflow-hidden",
     );
-    expect(within(dialog).getByLabelText("Observações")).toBeInTheDocument();
+    expect(within(dialog).getByLabelText(/Sistema de origem/)).toHaveValue(
+      "Sistema legado com identificação extensa",
+    );
+    expect(within(dialog).getByLabelText("Editar especialidade do motor")).toHaveTextContent(
+      "TN/RC",
+    );
+    expect(within(dialog).getByLabelText("Link DevOps")).toHaveValue(
+      "https://dev.azure.com/siplan/motores",
+    );
     expect(within(dialog).getByRole("button", { name: "Cancelar" })).toHaveClass(
       "w-full",
       "sm:w-auto",
     );
-    expect(within(dialog).getByRole("button", { name: "Salvar" })).toHaveClass(
+    expect(within(dialog).getByRole("button", { name: "Salvar alterações" })).toHaveClass(
       "w-full",
       "sm:w-auto",
     );
+
+    fireEvent.change(within(dialog).getByLabelText(/Sistema de origem/), {
+      target: { value: "Legado atualizado" },
+    });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Salvar alterações" }));
+
+    await waitFor(() => {
+      expect(mocks.updateEngine).toHaveBeenCalledWith("engine-1", {
+        sourceSystem: "Legado atualizado",
+        targetSystem: "Orion TN",
+        specialty: "tn_rc",
+        status: "maintenance",
+        devopsUrl: "https://dev.azure.com/siplan/motores",
+        notes: "Observação longa sobre o desenvolvimento que precisa quebrar no celular.",
+      });
+    });
+  });
+
+  it("exclui um motor somente depois da confirmação", async () => {
+    render(<ConversionEngines />);
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Excluir" })[0]);
+
+    const confirmation = screen.getByRole("alertdialog");
+    expect(within(confirmation).getByText("Excluir motor?")).toBeInTheDocument();
+    expect(confirmation).toHaveTextContent("Essa ação não pode ser desfeita");
+    fireEvent.click(within(confirmation).getByRole("button", { name: "Excluir motor" }));
+
+    await waitFor(() => {
+      expect(mocks.deleteEngine).toHaveBeenCalledWith("engine-1");
+    });
   });
 });
