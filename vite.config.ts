@@ -94,13 +94,14 @@ export default defineConfig(({ mode }) => ({
         runtimeCaching: [
           {
             urlPattern: ({ request }) => request.destination === "script",
-            handler: "StaleWhileRevalidate",
+            handler: "NetworkFirst",
             options: {
               cacheName: "siplan-route-scripts",
-              cacheableResponse: { statuses: [0, 200] },
+              networkTimeoutSeconds: 5,
+              cacheableResponse: { statuses: [200] },
               expiration: {
                 maxEntries: 80,
-                maxAgeSeconds: 30 * 24 * 60 * 60,
+                maxAgeSeconds: 7 * 24 * 60 * 60,
               },
             },
           },
