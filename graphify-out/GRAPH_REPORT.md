@@ -1,16 +1,16 @@
 # Graph Report - siplan-hub  (2026-09-02)
 
 ## Corpus Check
-- 791 files · ~950,916 words
+- 791 files · ~951,069 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 4260 nodes · 11695 edges · 282 communities (227 shown, 55 thin omitted)
+- 4260 nodes · 11695 edges · 281 communities (227 shown, 54 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 128 edges (avg confidence: 0.71)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `b484c26d`
+- Built from commit: `9a5b915c`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -189,7 +189,6 @@
 - use Pos Ai Admin Analytics
 - sd-solutions-search.test.tsx
 - 06 calendario analytics relatorios
-- pos-ai-searchable-client-select.test.tsx
 - Cs Cx Routines
 - cs-cx-engagement-permissions.test.tsx
 - cs-cx-experience-permissions.test.tsx
@@ -312,7 +311,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (282 total, 55 thin omitted)
+## Communities (281 total, 54 thin omitted)
 
 ### Community 0 - "use Cs Cx Routines"
 Cohesion: 0.14
@@ -564,7 +563,7 @@ Nodes (12): Editor(), editorConfig, nodes, Plugins(), COLORS, FONT_SIZES, Toolba
 
 ### Community 71 - "sd attendance bi interactions.test"
 Cohesion: 0.19
-Nodes (13): buildContactAttentionRows(), contactStatus(), isIsoDate(), parseIsoDate(), OfficeFilterCombobox(), CsCxContact, contactIdentity(), contactTimestamp() (+5 more)
+Nodes (11): SearchableClientSelect(), OfficeFilterCombobox(), CsCxContact, contactIdentity(), contactTimestamp(), deduplicateAppointmentContacts(), paginateItems(), RoutineOfficeCombobox() (+3 more)
 
 ### Community 72 - "MANUAL DESENVOLVEDOR"
 Cohesion: 0.06
@@ -731,8 +730,8 @@ Cohesion: 0.29
 Nodes (11): CsCxNpsImportRow, detectDelimiter(), findColumn(), HEADERS, normalizeHeader(), NpsCsvResult, parseDate(), parseDelimited() (+3 more)
 
 ### Community 113 - "pos-chat-visitor-dialog.test.tsx"
-Cohesion: 0.25
-Nodes (7): AccessData, CsCxAccessCandidate, CsCxAccessProfile, CsCxAccessUser, CsCxModulePermission, db, QUERY_KEY
+Cohesion: 0.67
+Nodes (4): buildContactAttentionRows(), contactStatus(), isIsoDate(), parseIsoDate()
 
 ### Community 114 - "cs cx core permissions.test"
 Cohesion: 0.39
@@ -1171,18 +1170,18 @@ Cohesion: 0.50
 Nodes (3): page, sqlView, worker
 
 ### Community 419 - "use Cs Cx Access"
-Cohesion: 0.11
-Nodes (14): DEFAULT_HEALTH_SETTINGS, ProjectHealthSettings, AiTextImprovementJob, mapJob(), useAiTextImprovement(), Client, Contact, Project (+6 more)
+Cohesion: 0.08
+Nodes (21): DEFAULT_HEALTH_SETTINGS, ProjectHealthSettings, AiTextImprovementJob, mapJob(), useAiTextImprovement(), Client, Contact, Project (+13 more)
 
 ## Knowledge Gaps
 - **1695 isolated node(s):** `envPath`, `envContent`, `env`, `supabase`, `$schema` (+1690 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **55 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **54 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `cn()` connect `chart e relacionados` to `use Cs Cx Routines`, `getErrorMessage`, `Form Renderer`, `cs cx nps analytics`, `Post Observations`, `Visual Question Builder`, `infra validation`, `Pwa Status`, `sidebar e relacionados`, `useDebounce`, `Transicao Placeholder`, `sd solutions`, `card e relacionados`, `use Cs Cx Core`, `Nps Analytics`, `use Copilot`, `ai Routine Generator Service`, `filter Store`, `Implementer Phase1 Fichas`, `Project Modal`, `tickets ai analytics`, `command e relacionados`, `pos chat history sidebar.test`, `Families Manager`, `Cs Cx Appointments`, `pos-ai-searchable-client-select.test.tsx`, `Cs Cx Routines`, `toast e relacionados`, `sd solutions`, `use Pos Ai Project Summary`, `sd attendance bi interactions.test`, `usePosAiChatVisitors.ts`, `PostObservations`, `tickets sla`, `ImplementerCharts.tsx`, `useTheme`, `Reports.tsx`, `require-permission.test.tsx`, `chart.tsx`, `Página 404 (Not Found)`, `sidebar-empty-groups.test.tsx`, `sd-solutions-search.test.tsx`?**
+- **Why does `cn()` connect `chart e relacionados` to `use Cs Cx Routines`, `getErrorMessage`, `Form Renderer`, `cs cx nps analytics`, `Post Observations`, `Visual Question Builder`, `infra validation`, `Pwa Status`, `sidebar e relacionados`, `useDebounce`, `Transicao Placeholder`, `sd solutions`, `card e relacionados`, `use Cs Cx Core`, `Nps Analytics`, `use Copilot`, `ai Routine Generator Service`, `filter Store`, `Implementer Phase1 Fichas`, `Project Modal`, `tickets ai analytics`, `command e relacionados`, `pos chat history sidebar.test`, `Families Manager`, `Cs Cx Appointments`, `Cs Cx Routines`, `toast e relacionados`, `sd solutions`, `use Pos Ai Project Summary`, `sd attendance bi interactions.test`, `usePosAiChatVisitors.ts`, `PostObservations`, `tickets sla`, `ImplementerCharts.tsx`, `useTheme`, `Reports.tsx`, `require-permission.test.tsx`, `chart.tsx`, `Página 404 (Not Found)`, `sidebar-empty-groups.test.tsx`, `sd-solutions-search.test.tsx`?**
   _High betweenness centrality (0.063) - this node is a cross-community bridge._
 - **Why does `Button` connect `getErrorMessage` to `use Cs Cx Routines`, `Form Renderer`, `Cs Cx Requests`, `permissions e relacionados`, `Post Observations`, `Visual Question Builder`, `Pwa Status`, `sidebar e relacionados`, `chart e relacionados`, `useDebounce`, `Transicao Placeholder`, `card e relacionados`, `Nps Analytics`, `use Copilot`, `use Pos Ai Chat Conversations`, `ai Routine Generator Service`, `filter Store`, `tickets ai analytics`, `Project Modal`, `Implementer Phase1 Fichas`, `command e relacionados`, `pos chat history sidebar.test`, `sd attachments`, `Cs Cx Appointments`, `Families Manager`, `sd solutions`, `chamados date range`, `use Pos Ai Project Summary`, `sd e relacionados`, `PwaStatus.tsx`, `usePosAiChatVisitors.ts`, `cs-cx-nps-import.ts`, `PostObservations`, `cs-cx-nps-xlsx.ts`, `tickets sla`, `ImplementerCharts.tsx`, `Project Adherence Form`, `1. Gestão de Atividades — Fila de Conversão`, `5. Modelos Editor (Workspace)`, `Reports.tsx`, `require-permission.test.tsx`, `chart.tsx`, `dialog e relacionados`, `Página 404 (Not Found)`, `sidebar-empty-groups.test.tsx`, `sd-solutions-search.test.tsx`?**
   _High betweenness centrality (0.037) - this node is a cross-community bridge._
