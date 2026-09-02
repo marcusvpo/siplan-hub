@@ -19,6 +19,7 @@ import {
   MessageSquare,
   Cog,
   HelpCircle,
+  X,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -66,6 +67,7 @@ import { useConversionEngines } from "@/hooks/useConversionEngines";
 import { useConversionIssues } from "@/hooks/useConversionIssues";
 import { ConversionIssuesTab } from "@/components/conversion/ConversionIssuesTab";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 // Status labels and colors
 const STATUS_LABELS: Record<string, string> = {
@@ -89,6 +91,7 @@ const STATUS_COLORS: Record<string, string> = {
 export default function Conversion() {
   const { user, team } = useAuth();
   const isMobile = useIsMobile();
+  const shouldReduceMotion = useReducedMotion();
   const isConversionTeam = team === "conversion";
 
   // Permissões do perfil (ortogonais ao gate de time acima)
@@ -111,9 +114,7 @@ export default function Conversion() {
     loading,
     assignToMe,
     transferTo,
-    updateQueueStatus,
     sendToHomologation,
-    approveHomologation,
     removeFromQueue,
     refetch,
   } = useConversionQueue({ userId: currentUserId });
@@ -217,19 +218,10 @@ export default function Conversion() {
     });
   };
 
-  // Filter queue items for Kanban (ignoring statusFilter)
-  const filterKanbanItems = (items: ConversionQueueItem[]) => {
-    const normQuery = normalizeText(searchQuery);
-    return items.filter((item) => {
-      const matchesSearch =
-        !normQuery ||
-        normalizeText(item.clientName).includes(normQuery) ||
-        normalizeText(item.ticketNumber).includes(normQuery);
-      const matchesSystem =
-        systemFilter === "all" || item.systemType === systemFilter;
-      return matchesSearch && matchesSystem;
-    });
-  };
+  const filterKanbanItems = filterItems;
+  const isKanbanColumnVisible = (...statuses: string[]) =>
+    statusFilter === "all" || statuses.includes(statusFilter);
+  const isSingleStatusView = statusFilter !== "all";
 
   // Render Kanban Card (Compact version)
   const renderKanbanCard = (item: ConversionQueueItem) => {
@@ -245,14 +237,14 @@ export default function Conversion() {
         key={item.id}
         data-testid="conversion-queue-card"
         className={cn(
-          "transition-all duration-300 border-l-[5px] hover:shadow-md bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 relative group",
+          "group relative min-w-0 overflow-hidden border-l-[3px] border-border bg-card text-card-foreground transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm",
           statusVisual.borderColor
         )}
       >
-        <CardContent className="p-3.5 space-y-2">
+        <CardContent className="space-y-1.5 p-2.5">
           {/* Card Header */}
           <div className="flex items-start justify-between gap-1">
-            <h4 className="font-bold text-xs text-slate-900 dark:text-slate-100 leading-tight group-hover:text-primary transition-colors duration-200 line-clamp-2">
+            <h4 className="line-clamp-2 min-w-0 text-[13px] font-bold leading-tight text-foreground transition-colors duration-200 group-hover:text-primary">
               {item.clientName}
             </h4>
             
@@ -262,13 +254,24 @@ export default function Conversion() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0"
+                  aria-label={`Mais a\u00e7\u00f5es para ${item.clientName}`}
+                  className="h-8 w-8 shrink-0 transition-opacity duration-200 hover:bg-muted md:h-7 md:w-7 md:opacity-60 md:group-hover:opacity-100"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <MoreVertical className="h-3.5 w-3.5" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="text-xs">
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (item.projectId) window.location.href = `/projects?id=${item.projectId}`;
+                  }}
+                >
+                  <Database className="h-3.5 w-3.5 mr-1.5" />
+                  Ver projeto
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 {!item.engineStatus && isConversionTeam && canExecuteConversion && (
                   <DropdownMenuItem
                     onClick={(e) => {
@@ -313,20 +316,26 @@ export default function Conversion() {
           {/* Badges Info */}
           <div className="flex flex-wrap items-center gap-1">
             <Badge
+              variant="outline"
+              className={cn("px-1.5 py-0 text-[9px] font-semibold", STATUS_COLORS[item.queueStatus])}
+            >
+              {STATUS_LABELS[item.queueStatus] || item.queueStatus}
+            </Badge>
+            <Badge
               className={cn(
                 "text-[10px] font-bold py-0 px-1.5",
                 item.priority <= 2
                   ? "bg-red-100 text-red-700 border-red-200 dark:bg-red-950/20 dark:text-red-400"
                   : item.priority <= 4
                     ? "bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-950/20 dark:text-orange-400"
-                    : "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-900 dark:text-slate-400",
+                    : "border-border bg-muted text-muted-foreground",
               )}
             >
               P{item.priority}
             </Badge>
             <span
               className={cn(
-                "text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800",
+                "rounded bg-muted px-1.5 py-0 text-[9px] font-medium",
                 daysInQueue > 5
                   ? "text-red-600 dark:text-red-400 font-semibold"
                   : daysInQueue > 3
@@ -355,20 +364,20 @@ export default function Conversion() {
           </div>
 
           {/* Ticket and Systems */}
-          <div className="flex flex-wrap items-center gap-x-2 text-[11px] text-muted-foreground font-medium">
-            <span className="font-mono bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 px-1 py-0.2 rounded text-[10px]">
+          <div className="flex flex-wrap items-center gap-x-1.5 text-[10px] font-medium text-muted-foreground">
+            <span className="rounded border border-border bg-muted/50 px-1 py-0.2 font-mono text-[10px]">
               #{item.ticketNumber}
             </span>
             <span>{item.systemType}</span>
             {item.legacySystem && (
-              <span className="truncate max-w-[120px] text-slate-400">
+              <span className="max-w-[90px] truncate text-slate-400">
                 ← {item.legacySystem}
               </span>
             )}
           </div>
 
           {/* Responsável / Previsão */}
-          <div className="text-[11px] text-muted-foreground pt-1 border-t border-dashed border-slate-100 dark:border-slate-800 space-y-1">
+          <div className="space-y-0.5 border-t border-dashed border-border/60 pt-1 text-[10px] text-muted-foreground">
             {item.assignedToName ? (
               <div className="flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-450">
                 <UserCheck className="h-3 w-3" />
@@ -388,7 +397,7 @@ export default function Conversion() {
           </div>
 
           {/* Ações Rápidas do Card */}
-          <div className="flex gap-1.5 pt-1.5">
+          <div className="flex gap-1 pt-1">
             {/* Botão Assumir */}
             {!item.assignedTo && isConversionTeam && canEditConversion && (
               <Button
@@ -455,7 +464,7 @@ export default function Conversion() {
             <Button
               size="sm"
               variant="outline"
-              className="px-2 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 flex items-center justify-center text-[10px] h-7 grow"
+              className="h-7 grow border-border px-2 text-[10px] hover:bg-muted"
               onClick={(e) => {
                 e.stopPropagation();
                 setDrawerDefaultTab("posts");
@@ -536,103 +545,102 @@ export default function Conversion() {
     }
   };
 
-  const handleStatusChange = async (
-    item: ConversionQueueItem,
-    status: string,
-  ) => {
-    if (!canEditConversion) return;
+  // Indicadores compactos: continuam abrindo o detalhamento sem dominar a tela.
+  const renderKPIs = () => {
+    const cards: Array<{
+      title: string;
+      color: string;
+      value: number;
+      items: ConversionQueueItem[];
+      icon: ElementType;
+      className: string;
+      textClassName: string;
+    }> = [
+      {
+        title: "Minha Fila",
+        color: "primary",
+        value: kpis.myQueueCount,
+        items: myQueue,
+        icon: User,
+        className: "border-primary/20 bg-primary/5",
+        textClassName: "text-primary",
+      },
+      {
+        title: "Pendentes",
+        color: "slate",
+        value: kpis.pending,
+        items: queue.filter((item) => item.queueStatus === "pending"),
+        icon: Clock,
+        className: "border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/30",
+        textClassName: "text-slate-700 dark:text-slate-300",
+      },
+      {
+        title: "Em andamento",
+        color: "blue",
+        value: kpis.inProgress,
+        items: queue.filter((item) => item.queueStatus === "in_progress"),
+        icon: RefreshCw,
+        className: "border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/20",
+        textClassName: "text-blue-700 dark:text-blue-400",
+      },
+      {
+        title: "Finalizados",
+        color: "green",
+        value: kpis.completed,
+        items: queue.filter((item) => item.queueStatus === "done"),
+        icon: CheckCircle2,
+        className: "border-emerald-200 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950/20",
+        textClassName: "text-emerald-700 dark:text-emerald-400",
+      },
+      {
+        title: "Total na fila",
+        color: "amber",
+        value: kpis.totalInQueue,
+        items: queue,
+        icon: Database,
+        className: "border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/20",
+        textClassName: "text-amber-700 dark:text-amber-400",
+      },
+    ];
 
-    const success = await updateQueueStatus(item.id, status);
-    if (success) {
-      toast.success("Status atualizado!");
-    } else {
-      toast.error("Erro ao atualizar status");
-    }
+    return (
+      <div
+        className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5"
+        data-testid="conversion-activities-kpis"
+      >
+        {cards.map((card) => {
+          const Icon = card.icon;
+          return (
+            <Card
+              key={card.title}
+              role="button"
+              tabIndex={0}
+              aria-label={`Ver detalhes de ${card.title}`}
+              className={cn(
+                "min-w-0 cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                card.className,
+              )}
+              onClick={() => openKpiModal(card.title, card.color, card.items)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  openKpiModal(card.title, card.color, card.items);
+                }
+              }}
+            >
+              <CardContent className="flex min-w-0 items-center justify-between gap-2 p-2.5 sm:p-3">
+                <div className={cn("flex min-w-0 items-center gap-1.5", card.textClassName)}>
+                  <Icon className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate text-[11px] font-medium sm:text-xs">{card.title}</span>
+                </div>
+                <strong className={cn("shrink-0 text-xl leading-none", card.textClassName)}>{card.value}</strong>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+    );
   };
-
-  const handleApproveHomologation = async (item: ConversionQueueItem) => {
-    if (!canExecuteConversion) return;
-
-    const success = await approveHomologation(item.id);
-    if (success) {
-      toast.success("Homologação aprovada!");
-    } else {
-      toast.error("Erro ao aprovar homologação");
-    }
-  };
-
-  // KPI Cards
-  const renderKPIs = () => (
-    <div
-      className="mb-4 grid min-w-0 grid-cols-2 gap-2 sm:mb-6 sm:grid-cols-3 sm:gap-3 lg:grid-cols-5"
-      data-testid="conversion-activities-kpis"
-    >
-      <Card
-        className="bg-gradient-to-br from-primary/5 to-primary/10 dark:from-primary/10 dark:to-primary/5 border-primary/20 dark:border-primary/30 cursor-pointer hover:shadow-md transition-shadow"
-        onClick={() => openKpiModal("Minha Fila", "primary", myQueue)}
-      >
-        <CardContent className="p-4">
-          <div className="flex items-center gap-2 mb-1">
-            <User className="h-4 w-4 text-primary" />
-            <span className="text-xs font-medium text-primary">Minha Fila</span>
-          </div>
-          <p className="text-2xl font-bold text-primary">{kpis.myQueueCount}</p>
-        </CardContent>
-      </Card>
-
-      <Card
-        className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950/30 dark:to-slate-900/20 border-slate-200 dark:border-slate-800 cursor-pointer hover:shadow-md transition-shadow"
-        onClick={() => openKpiModal("Pendentes", "slate", queue.filter((i) => i.queueStatus === "pending"))}
-      >
-        <CardContent className="p-4">
-          <div className="flex items-center gap-2 mb-1">
-            <Clock className="h-4 w-4 text-slate-600" />
-            <span className="text-xs font-medium text-slate-600">Pendentes</span>
-          </div>
-          <p className="text-2xl font-bold text-slate-700">{kpis.pending}</p>
-        </CardContent>
-      </Card>
-
-      <Card
-        className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 border-blue-200 dark:border-blue-800 cursor-pointer hover:shadow-md transition-shadow"
-        onClick={() => openKpiModal("Em Andamento", "blue", queue.filter((i) => i.queueStatus === "in_progress"))}
-      >
-        <CardContent className="p-4">
-          <div className="flex items-center gap-2 mb-1">
-            <RefreshCw className="h-4 w-4 text-blue-600" />
-            <span className="text-xs font-medium text-blue-600">Em Andamento</span>
-          </div>
-          <p className="text-2xl font-bold text-blue-700">{kpis.inProgress}</p>
-        </CardContent>
-      </Card>
-
-      <Card
-        className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-900/20 border-green-200 dark:border-green-800 cursor-pointer hover:shadow-md transition-shadow"
-        onClick={() => openKpiModal("Finalizados", "green", queue.filter((i) => i.queueStatus === "done"))}
-      >
-        <CardContent className="p-4">
-          <div className="flex items-center gap-2 mb-1">
-            <CheckCircle2 className="h-4 w-4 text-green-600" />
-            <span className="text-xs font-medium text-green-600">Finalizados</span>
-          </div>
-          <p className="text-2xl font-bold text-green-700">{kpis.completed}</p>
-        </CardContent>
-      </Card>
-
-      <Card
-        className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/30 dark:to-amber-900/20 border-amber-200 dark:border-amber-800 cursor-pointer hover:shadow-md transition-shadow"
-        onClick={() => openKpiModal("Total na Fila", "amber", queue)}
-      >
-        <CardContent className="p-4">
-          <div className="flex items-center gap-2 mb-1">
-            <Database className="h-4 w-4 text-amber-600" />
-            <span className="text-xs font-medium text-amber-600">Total na Fila</span>
-          </div>
-          <p className="text-2xl font-bold text-amber-700">{kpis.totalInQueue}</p>
-        </CardContent>
-      </Card>
-    </div>
-  );
 
   // Configuração visual de status da fila
   const queueStatusConfig: Record<string, { icon: ElementType; bgColor: string; borderColor: string }> = {
@@ -668,597 +676,6 @@ export default function Conversion() {
     },
   };
 
-  // Queue Item Card
-  const renderQueueItem = (
-    item: ConversionQueueItem,
-    showAssignButton = false,
-    isKanban = false,
-  ) => {
-    const daysInQueue = Math.floor(
-      (new Date().getTime() - item.sentAt.getTime()) / (1000 * 60 * 60 * 24),
-    );
-
-    const statusVisual = queueStatusConfig[item.queueStatus] || queueStatusConfig.pending;
-    const StatusIcon = statusVisual.icon;
-
-    return (
-      <Card
-        key={item.id}
-        data-testid="conversion-queue-card"
-        className={cn(
-          "relative min-w-0 overflow-hidden border-l-[6px] border-slate-200 bg-white transition-all duration-300 hover:shadow-md dark:border-slate-800/80 dark:bg-slate-950",
-          statusVisual.borderColor
-        )}
-      >
-        <CardContent className={cn("min-w-0 p-4 sm:p-5", isKanban ? "space-y-3 px-3.5 py-4" : "")}>
-          {isKanban ? (
-            // DESIGN KANBAN COMPACTO
-            <div className="flex flex-col gap-3">
-              {/* Linha 1: Cliente e Status */}
-              <div className="flex items-start justify-between gap-2">
-                <div className="space-y-0.5 min-w-0 flex-1">
-                  <h4 className="break-words text-sm font-bold leading-tight tracking-tight text-slate-850 transition-colors duration-200 hover:text-primary dark:text-slate-200 md:truncate" title={item.clientName}>
-                    {item.clientName}
-                  </h4>
-                  <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground flex-wrap font-medium">
-                    <span className="font-mono bg-slate-100 dark:bg-slate-900 border border-slate-150 dark:border-slate-800 px-1 py-0.2 rounded font-semibold text-slate-700 dark:text-slate-300">
-                      #{item.ticketNumber}
-                    </span>
-                    <span className="font-semibold text-slate-600 dark:text-slate-350">{item.systemType}</span>
-                    {item.legacySystem && (
-                      <span className="truncate max-w-[110px] text-slate-400 dark:text-slate-550 font-normal">
-                        ← {item.legacySystem}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                
-                {/* Status Indicator Icon */}
-                <div className={cn(
-                  "flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-lg border shadow-sm",
-                  statusVisual.bgColor
-                )}>
-                  <StatusIcon className={cn(
-                    "h-3.5 w-3.5",
-                    item.queueStatus === "in_progress" && "animate-[spin_4s_linear_infinite]"
-                  )} />
-                </div>
-              </div>
-
-              {/* Linha 2: Badges (Prioridade, Status de Fila, Motor) */}
-              <div className="flex flex-wrap items-center gap-1 font-medium">
-                <Badge
-                  className={cn(
-                    "text-[9px] font-bold py-0 px-1.5 rounded-sm tracking-wider",
-                    item.priority <= 2
-                      ? "bg-red-500 text-red-50 hover:bg-red-500"
-                      : item.priority <= 4
-                        ? "bg-orange-500 text-orange-50 hover:bg-orange-500"
-                        : "bg-slate-500 text-slate-50 hover:bg-slate-500",
-                  )}
-                >
-                  P{item.priority}
-                </Badge>
-                
-                <span
-                  className={cn(
-                    "text-[9px] font-medium px-1.5 py-0.2 rounded-sm bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-150 dark:border-slate-800",
-                    daysInQueue > 5
-                      ? "text-red-650 dark:text-red-400 font-bold bg-red-50/20"
-                      : daysInQueue > 3
-                        ? "text-orange-655 dark:text-orange-455"
-                        : "",
-                  )}
-                >
-                  {daysInQueue}d na fila
-                </span>
-
-                {item.engineStatus && (
-                  <Badge
-                    variant="outline"
-                    className={cn(
-                      "py-0 px-1.5 text-[9px] gap-0.5 rounded-sm border-dashed font-semibold",
-                      item.engineStatus === "pending_engine" && "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/20",
-                      item.engineStatus === "engine_in_development" && "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/20",
-                      item.engineStatus === "engine_ready" && "bg-emerald-50 text-emerald-700 border-emerald-250 dark:bg-emerald-950/20",
-                    )}
-                  >
-                    <Cog className="h-2.5 w-2.5" />
-                    {item.engineStatus === "pending_engine" && "Aguard. Extração"}
-                    {item.engineStatus === "engine_in_development" && "Motor em Dev"}
-                    {item.engineStatus === "engine_ready" && "Motor Pronto"}
-                  </Badge>
-                )}
-              </div>
-
-              {/* Linha 3: Pessoas Envolvidas (Conversor, Implantador, Remetente) */}
-              <div className="text-[10px] text-slate-500 dark:text-slate-400 space-y-0.5 pt-1.5 border-t border-dashed border-slate-150 dark:border-slate-800/80 font-medium">
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  {item.assignedToName ? (
-                    <span className="flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-semibold" title={`Conversor: ${item.assignedToName}`}>
-                      <UserCheck className="h-3 w-3 shrink-0 text-emerald-600" />
-                      <span>Conv: <span className="text-slate-800 dark:text-slate-200 font-semibold">{item.assignedToName}</span></span>
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-1 text-amber-600 dark:text-amber-500 font-bold animate-pulse">
-                      <Clock className="h-3 w-3 shrink-0 text-amber-500" />
-                      <span>Fila aberta (Sem analista)</span>
-                    </span>
-                  )}
-
-                  {item.homologationAnalystName && (
-                    <span className="flex items-center gap-1 text-blue-700 dark:text-blue-450 font-semibold" title={`Implantador: ${item.homologationAnalystName}`}>
-                      <User className="h-3 w-3 shrink-0 text-blue-600" />
-                      <span>Impl: <span className="text-slate-800 dark:text-slate-200 font-semibold">{item.homologationAnalystName}</span></span>
-                    </span>
-                  )}
-                </div>
-
-                <div className="flex items-center justify-between gap-2 pt-0.5 text-[9px] text-slate-500 dark:text-slate-400 font-medium">
-                  <span className="truncate">
-                    Enviado por: <span className="text-slate-700 dark:text-slate-300 font-semibold">{item.sentByName || "Sistema"}</span> ({formatDistanceToNow(item.sentAt, { addSuffix: false, locale: ptBR })})
-                  </span>
-                  <span className="shrink-0">
-                    Prev: <span className="text-slate-750 dark:text-slate-250 font-semibold">{item.deploymentDate ? format(new Date(item.deploymentDate), "dd/MM/yy") : "Sem prev."}</span>
-                  </span>
-                </div>
-              </div>
-
-              {/* Linha 4: Botões de Ação na base */}
-              <div className="flex gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-905 w-full">
-                {/* Action 1: Assumir (Assign to Me) */}
-                {!item.assignedTo && isConversionTeam && canEditConversion && (
-                  <Button
-                    size="sm"
-                    className="flex-1 bg-primary hover:bg-primary/95 text-primary-foreground font-semibold flex items-center justify-center gap-1 text-[10px] h-7.5 px-2 rounded shadow-sm transition-all duration-200 active:scale-95"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleAssign(item);
-                    }}
-                  >
-                    <UserPlus className="h-3 w-3" />
-                    Assumir
-                  </Button>
-                )}
-
-                {item.queueStatus === "in_progress" && canExecuteConversion && (
-                  <Button
-                    size="sm"
-                    className="flex-1 bg-primary hover:bg-primary/95 text-primary-foreground font-semibold flex items-center justify-center gap-1 text-[10px] h-7.5 px-2 rounded shadow-sm transition-all duration-200 active:scale-95"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setHomologationDialog({ open: true, item });
-                    }}
-                  >
-                    <Send className="h-3 w-3" />
-                    Enviar Homologação
-                  </Button>
-                )}
-
-                {item.queueStatus === "homologation_issues" && (
-                  <Button
-                    size="sm"
-                    className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold flex items-center justify-center gap-1 text-[10px] h-7.5 px-2 rounded shadow-sm transition-all duration-200 active:scale-95"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDrawerDefaultTab("homologations");
-                      setDrawerItem(item);
-                    }}
-                  >
-                    <AlertCircle className="h-3 w-3" />
-                    Inconsistências
-                  </Button>
-                )}
-
-                {item.queueStatus === "done" && item.homologationStatus === "approved" && (
-                  <Button
-                    size="sm"
-                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold flex items-center justify-center gap-1 text-[10px] h-7.5 px-2 rounded shadow-sm transition-all duration-200 active:scale-95"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDrawerDefaultTab("homologations");
-                      setDrawerItem(item);
-                    }}
-                  >
-                    <CheckCircle2 className="h-3 w-3" />
-                    Parecer Final
-                  </Button>
-                )}
-
-                {/* Feed Button */}
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className={cn(
-                    "border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 flex items-center justify-center text-[10px] h-7.5 rounded shadow-sm font-semibold",
-                    (!item.assignedTo && isConversionTeam && canEditConversion) ||
-                    (item.queueStatus === "in_progress" && canExecuteConversion) ||
-                    (item.queueStatus === "homologation_issues") ||
-                    (item.queueStatus === "done" && item.homologationStatus === "approved")
-                      ? "w-8 px-0 shrink-0"
-                      : "flex-1 px-2"
-                  )}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setDrawerDefaultTab("posts");
-                    setDrawerItem(item);
-                  }}
-                  title="Ver publicações e posts"
-                >
-                  <MessageSquare className="h-3.5 w-3.5 text-primary" />
-                  {(!item.assignedTo && isConversionTeam && canEditConversion) ||
-                  (item.queueStatus === "in_progress" && canExecuteConversion) ||
-                  (item.queueStatus === "homologation_issues") ||
-                  (item.queueStatus === "done" && item.homologationStatus === "approved")
-                    ? ""
-                    : <span className="ml-1">Feed</span>
-                  }
-                </Button>
-
-                {/* Dropdown de Mais Opções no Kanban */}
-                {isConversionTeam && (canEditConversion || canDeleteConversion || canExecuteConversion) && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-7.5 w-8 px-0 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 rounded shrink-0"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <MoreVertical className="h-3.5 w-3.5 text-muted-foreground" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="text-xs">
-                      {!item.engineStatus && canExecuteConversion && (
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setEngineDialog({ open: true, item });
-                          }}
-                        >
-                          <Cog className="h-3.5 w-3.5 mr-1.5" />
-                          Enviar p/ Conversor
-                        </DropdownMenuItem>
-                      )}
-                      {canEditConversion && (
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setTransferDialog({ open: true, item });
-                          }}
-                        >
-                          <ArrowRight className="h-3.5 w-3.5 mr-1.5" />
-                          Transferir
-                        </DropdownMenuItem>
-                      )}
-                      {canDeleteConversion && (
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (!canDeleteConversion) return;
-                            if (confirm(`Remover "${item.clientName}"?`)) {
-                              removeFromQueue(item.id, item.projectId);
-                            }
-                          }}
-                          className="text-red-655 focus:text-red-655 focus:bg-red-50 dark:focus:bg-red-950/20"
-                        >
-                          <AlertCircle className="h-3.5 w-3.5 mr-1.5" />
-                          Remover da Fila
-                        </DropdownMenuItem>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            {/* Left Column: Info & Indicators */}
-            <div className="flex items-start gap-4 min-w-0 flex-1">
-              {/* Status Icon Badge */}
-              <div className={cn(
-                "flex-shrink-0 flex items-center justify-center w-11 h-11 rounded-xl border shadow-sm",
-                statusVisual.bgColor
-              )}>
-                <StatusIcon className={cn(
-                  "h-5 w-5",
-                  item.queueStatus === "in_progress" && "animate-[spin_4s_linear_infinite]"
-                )} />
-              </div>
-              {/* Engine Dependency Indicator */}
-              {item.engineStatus && (
-                <div
-                  className={cn(
-                    "flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-xl",
-                    item.engineStatus === "pending_engine" &&
-                      "bg-orange-100 dark:bg-orange-900/40 ring-2 ring-orange-300 dark:ring-orange-700",
-                    item.engineStatus === "engine_in_development" &&
-                      "bg-blue-100 dark:bg-blue-900/40 ring-2 ring-blue-300 dark:ring-blue-700",
-                    item.engineStatus === "engine_ready" &&
-                      "bg-emerald-100 dark:bg-emerald-900/40 ring-2 ring-emerald-300 dark:ring-emerald-700",
-                  )}
-                >
-                  <Cog
-                    className={cn(
-                      "h-7 w-7",
-                      item.engineStatus === "pending_engine" &&
-                        "text-orange-600 animate-[spin_3s_linear_infinite]",
-                      item.engineStatus === "engine_in_development" &&
-                        "text-blue-600 animate-spin",
-                      item.engineStatus === "engine_ready" && "text-emerald-600",
-                    )}
-                  />
-                </div>
-              )}
-
-              {/* Main Info */}
-              <div className="min-w-0 flex-1 space-y-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="font-bold text-lg text-slate-900 dark:text-slate-100 truncate">
-                    {item.clientName}
-                  </h3>
-                  <Badge
-                    variant="outline"
-                    className={cn(
-                      "text-xs font-semibold px-2 py-0.5",
-                      STATUS_COLORS[item.queueStatus] || "",
-                    )}
-                  >
-                    {STATUS_LABELS[item.queueStatus] || item.queueStatus}
-                  </Badge>
-                  <Badge
-                    className={cn(
-                      "text-xs font-bold",
-                      item.priority <= 2
-                        ? "bg-red-100 text-red-700 border-red-300 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/50"
-                        : item.priority <= 4
-                          ? "bg-orange-100 text-orange-700 border-orange-300 dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-900/50"
-                          : "bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-950/20 dark:text-slate-400 dark:border-slate-800",
-                    )}
-                  >
-                    P{item.priority}
-                  </Badge>
-                  <span
-                    className={cn(
-                      "text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800",
-                      daysInQueue > 5
-                        ? "text-red-600 dark:text-red-400 font-semibold"
-                        : daysInQueue > 3
-                          ? "text-orange-600 dark:text-orange-400"
-                          : "text-muted-foreground",
-                    )}
-                  >
-                    {daysInQueue}d na fila
-                  </span>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                  <span className="font-mono bg-muted px-1.5 py-0.5 rounded text-xs">#{item.ticketNumber}</span>
-                  <span>{item.systemType}</span>
-                  {item.legacySystem && (
-                    <span className="text-xs flex items-center gap-1">
-                      <span className="text-muted-foreground/50">←</span> {item.legacySystem}
-                    </span>
-                  )}
-                </div>
-
-                {/* Assignment Status & Deadlines */}
-                <div className="flex flex-wrap items-center gap-3 pt-1">
-                  {item.assignedToName ? (
-                    <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/10 dark:text-emerald-400 dark:border-emerald-900/30 gap-1 text-xs">
-                      <UserCheck className="h-3 w-3" />
-                      Assumido por: {item.assignedToName}
-                    </Badge>
-                  ) : (
-                    <Badge
-                      variant="outline"
-                      className="bg-amber-50/50 text-amber-700 border-amber-200 dark:bg-amber-950/10 dark:text-amber-400 dark:border-amber-900/30 gap-1 text-xs"
-                    >
-                      <Clock className="h-3 w-3" />
-                      Não assumido
-                    </Badge>
-                  )}
-
-                  {item.engineStatus && (
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        "gap-1 text-xs",
-                        item.engineStatus === "pending_engine" &&
-                          "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/10 dark:text-orange-400",
-                        item.engineStatus === "engine_in_development" &&
-                          "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/10 dark:text-blue-400",
-                        item.engineStatus === "engine_ready" &&
-                          "bg-green-50 text-green-700 border-green-200 dark:bg-emerald-950/10 dark:text-emerald-400",
-                      )}
-                    >
-                      <Cog className="h-3 w-3" />
-                      {item.engineStatus === "pending_engine" && "Aguard. Extração da Base"}
-                      {item.engineStatus === "engine_in_development" && "Motor em Dev"}
-                      {item.engineStatus === "engine_ready" && "Motor Pronto"}
-                    </Badge>
-                  )}
-
-                  <span className="text-xs text-muted-foreground flex items-center gap-1">
-                    📅 Prev. Implantação:{" "}
-                    <strong className="text-slate-700 dark:text-slate-300">
-                      {item.deploymentDate
-                        ? format(new Date(item.deploymentDate), "dd/MM/yyyy", { locale: ptBR })
-                        : "Ainda Sem Previsão"}
-                    </strong>
-                  </span>
-
-                  <span className="text-xs text-muted-foreground">
-                    Enviado {formatDistanceToNow(item.sentAt, { addSuffix: true, locale: ptBR })}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column / Actions Panel */}
-            <div className="flex flex-wrap lg:flex-nowrap items-center gap-2 pt-3 lg:pt-0 border-t lg:border-t-0 lg:border-l lg:pl-4 border-slate-100 dark:border-slate-800 shrink-0 w-full lg:w-auto justify-end">
-              {/* Action 1: Assumir (Assign to Me) */}
-              {!item.assignedTo && isConversionTeam && canEditConversion && (
-                <Button
-                  size="sm"
-                  variant="default"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleAssign(item);
-                  }}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold flex items-center gap-1.5 shadow-sm transition-all duration-200 active:scale-95 text-xs h-9 w-full lg:w-auto justify-center"
-                >
-                  <UserPlus className="h-3.5 w-3.5" />
-                  Assumir
-                </Button>
-              )}
-
-              {/* Action 2: Enviar p/ Homologação */}
-              {item.queueStatus === "in_progress" && canExecuteConversion && (
-                <Button
-                  size="sm"
-                  variant="default"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setHomologationDialog({ open: true, item });
-                  }}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold flex items-center gap-1.5 shadow-sm transition-all duration-200 active:scale-95 text-xs h-9 w-full lg:w-auto justify-center"
-                >
-                  <Send className="h-3.5 w-3.5" />
-                  Enviar p/ Homologação
-                </Button>
-              )}
-
-              {/* Action 3: Ver Parecer de Inconsistências */}
-              {item.queueStatus === "homologation_issues" && (
-                <Button
-                  size="sm"
-                  variant="default"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setDrawerDefaultTab("homologations");
-                    setDrawerItem(item);
-                  }}
-                  className="bg-red-600 hover:bg-red-700 text-white font-semibold flex items-center gap-1.5 shadow-sm transition-all duration-200 active:scale-95 text-xs h-9 w-full lg:w-auto justify-center"
-                >
-                  <AlertCircle className="h-3.5 w-3.5" />
-                  Ver Inconsistências
-                </Button>
-              )}
-
-              {/* Action 3b: Ver Parecer Final */}
-              {item.queueStatus === "done" && item.homologationStatus === "approved" && (
-                <Button
-                  size="sm"
-                  variant="default"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setDrawerDefaultTab("homologations");
-                    setDrawerItem(item);
-                  }}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold flex items-center gap-1.5 shadow-sm transition-all duration-200 active:scale-95 text-xs h-9 w-full lg:w-auto justify-center"
-                >
-                  <CheckCircle2 className="h-3.5 w-3.5" />
-                  Ver Parecer Final
-                </Button>
-              )}
-
-              {/* Action 4: Ver Publicações */}
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setDrawerDefaultTab("posts");
-                  setDrawerItem(item);
-                }}
-                className="border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 flex items-center gap-1.5 transition-colors duration-200 text-xs h-9 w-full lg:w-auto justify-center"
-              >
-                <MessageSquare className="h-3.5 w-3.5 text-primary" />
-                Ver Publicações
-              </Button>
-
-              {/* Action 5: Ver Detalhes */}
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (item.projectId) {
-                    window.location.href = `/projects?id=${item.projectId}`;
-                  }
-                }}
-                className="border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 flex items-center gap-1.5 transition-colors duration-200 text-xs h-9 w-full lg:w-auto justify-center"
-              >
-                <AlertCircle className="h-3.5 w-3.5 text-slate-500" />
-                Ver Detalhes
-              </Button>
-
-              {/* Secondary Actions Dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={(e) => e.stopPropagation()}
-                    className="hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0 h-9 w-9"
-                  >
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {!item.engineStatus && isConversionTeam && canExecuteConversion && (
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEngineDialog({ open: true, item });
-                      }}
-                    >
-                      <Cog className="h-4 w-4 mr-2" />
-                      Enviar para criação do Conversor
-                    </DropdownMenuItem>
-                  )}
-                  {isConversionTeam && canEditConversion && (
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setTransferDialog({ open: true, item });
-                      }}
-                    >
-                      <ArrowRight className="h-4 w-4 mr-2" />
-                      Transferir
-                    </DropdownMenuItem>
-                  )}
-                  {isConversionTeam && canDeleteConversion && (
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (!canDeleteConversion) return;
-                        if (
-                          confirm(
-                            `Tem certeza que deseja remover "${item.clientName}" da fila?`
-                          )
-                        ) {
-                          removeFromQueue(item.id, item.projectId);
-                        }
-                      }}
-                      className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/20"
-                    >
-                      <AlertCircle className="h-4 w-4 mr-2" />
-                      Remover da Fila
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-          )}
-        </CardContent>
-      </Card>
-    );
-  };
-
-  // Dedicated Card for Homologation Items
   const renderHomologationItem = (item: ConversionQueueItem) => {
     const daysInQueue = Math.floor(
       (new Date().getTime() - item.sentAt.getTime()) / (1000 * 60 * 60 * 24),
@@ -1267,32 +684,33 @@ export default function Conversion() {
     return (
       <Card
         key={item.id}
+        data-testid="conversion-homologation-card"
         className={cn(
-          "transition-all duration-300 border-l-4 hover:-translate-y-0.5 hover:shadow-md border-l-indigo-500 bg-gradient-to-br from-indigo-50/20 via-transparent to-transparent dark:from-indigo-950/10 dark:via-transparent dark:to-transparent"
+          "border-l-4 border-l-indigo-500 border-border bg-card text-card-foreground transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md"
         )}
       >
-        <CardContent className="min-w-0 p-4 sm:p-5">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <CardContent className="min-w-0 p-3">
+          <div className="flex flex-col justify-between gap-2.5 lg:flex-row lg:items-center">
             {/* Left Column: Info & Indicators */}
-            <div className="flex items-start gap-4 min-w-0 flex-1">
+            <div className="flex min-w-0 flex-1 items-start gap-2.5">
               {/* Distinctive Icon for Homologation */}
-              <div className="flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 ring-2 ring-indigo-300 dark:ring-indigo-700">
-                <CheckCircle2 className="h-7 w-7 text-indigo-600 dark:text-indigo-400" />
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-indigo-100 ring-1 ring-indigo-300 dark:bg-indigo-950/30 dark:ring-indigo-800">
+                <CheckCircle2 className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
               </div>
 
               {/* Main Info */}
-              <div className="min-w-0 flex-1 space-y-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[10px] font-bold tracking-wider uppercase bg-indigo-100 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded">
+              <div className="min-w-0 flex-1 space-y-1.5">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="rounded bg-indigo-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-300">
                     Esteira de Homologação
                   </span>
-                  <h3 className="min-w-0 break-words text-base font-bold text-slate-900 dark:text-slate-100 sm:text-lg">
+                  <h3 className="-order-1 basis-full truncate text-sm font-bold text-foreground">
                     {item.clientName}
                   </h3>
                   <Badge
                     variant="outline"
                     className={cn(
-                      "text-xs font-semibold px-2 py-0.5",
+                      "px-1.5 py-0 text-[10px] font-semibold",
                       STATUS_COLORS[item.queueStatus] || "",
                     )}
                   >
@@ -1300,7 +718,7 @@ export default function Conversion() {
                   </Badge>
                   <Badge
                     className={cn(
-                      "text-xs font-bold",
+                      "px-1.5 py-0 text-[10px] font-bold",
                       item.priority <= 2
                         ? "bg-red-100 text-red-700 border-red-300 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/50"
                         : item.priority <= 4
@@ -1310,26 +728,26 @@ export default function Conversion() {
                   >
                     P{item.priority}
                   </Badge>
-                  <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-muted-foreground">
+                  <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
                     {daysInQueue}d na fila
                   </span>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                  <span className="font-mono bg-muted px-1.5 py-0.5 rounded text-xs">#{item.ticketNumber}</span>
+                <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-muted-foreground">
+                  <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px]">#{item.ticketNumber}</span>
                   <span>{item.systemType}</span>
                   {item.legacySystem && (
-                    <span className="text-xs flex items-center gap-1">
+                    <span className="flex items-center gap-1 text-[11px]">
                       <span className="text-muted-foreground/50">←</span> {item.legacySystem}
                     </span>
                   )}
                 </div>
 
                 {/* Assignment Status (Converter & Implantador) */}
-                <div className="flex flex-wrap items-center gap-3 pt-1">
+                <div className="flex flex-wrap items-center gap-1.5">
                   {/* Conversor responsável */}
                   {item.assignedToName && (
-                    <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/10 dark:text-emerald-400 dark:border-emerald-900/30 gap-1 text-xs">
+                    <Badge variant="secondary" className="gap-1 border-emerald-200 bg-emerald-50 px-1.5 py-0 text-[10px] text-emerald-700 dark:border-emerald-900/30 dark:bg-emerald-950/10 dark:text-emerald-400">
                       <UserCheck className="h-3 w-3" />
                       Conversor: {item.assignedToName}
                     </Badge>
@@ -1337,21 +755,21 @@ export default function Conversion() {
 
                   {/* Implantador responsável (Aguardando ou Vinculado) */}
                   {item.homologationAnalystName ? (
-                    <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/10 dark:text-blue-400 dark:border-blue-900/30 gap-1 text-xs font-semibold">
+                    <Badge variant="secondary" className="gap-1 border-blue-200 bg-blue-50 px-1.5 py-0 text-[10px] font-semibold text-blue-700 dark:border-blue-900/30 dark:bg-blue-950/10 dark:text-blue-400">
                       <User className="h-3 w-3" />
                       Implantador: {item.homologationAnalystName}
                     </Badge>
                   ) : (
                     <Badge
                       variant="outline"
-                      className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/10 dark:text-amber-400 dark:border-amber-900/30 gap-1 text-xs font-bold animate-pulse"
+                      className="animate-pulse gap-1 border-amber-200 bg-amber-50 px-1.5 py-0 text-[10px] font-bold text-amber-700 dark:border-amber-900/30 dark:bg-amber-950/10 dark:text-amber-400"
                     >
                       <AlertCircle className="h-3 w-3" />
                       Fila em Aberto / Pendente
                     </Badge>
                   )}
 
-                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                  <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
                     📅 Prev. Implantação:{" "}
                     <strong className="text-slate-700 dark:text-slate-300">
                       {item.deploymentDate
@@ -1364,7 +782,7 @@ export default function Conversion() {
             </div>
 
             {/* Right Column / Actions Panel */}
-            <div className="flex flex-wrap lg:flex-nowrap items-center gap-2 pt-3 lg:pt-0 border-t lg:border-t-0 lg:border-l lg:pl-4 border-slate-100 dark:border-slate-800 shrink-0 w-full lg:w-auto justify-end">
+            <div className="flex w-full shrink-0 flex-wrap items-center justify-end gap-1.5 border-t border-border pt-2 lg:w-auto lg:flex-nowrap lg:border-l lg:border-t-0 lg:pl-3 lg:pt-0">
               {/* Action 1: Ver Inconsistências */}
               {item.queueStatus === "homologation_issues" && (
                 <Button
@@ -1375,7 +793,7 @@ export default function Conversion() {
                     setDrawerDefaultTab("homologations");
                     setDrawerItem(item);
                   }}
-                  className="bg-red-600 hover:bg-red-700 text-white font-semibold flex items-center gap-1.5 shadow-sm transition-all duration-200 active:scale-95 text-xs h-9 w-full lg:w-auto justify-center"
+                  className="h-8 w-full justify-center gap-1.5 bg-red-600 text-[11px] font-semibold text-white shadow-sm transition-all duration-200 hover:bg-red-700 active:scale-95 sm:w-auto"
                 >
                   <AlertCircle className="h-3.5 w-3.5" />
                   Ver Inconsistências
@@ -1392,7 +810,7 @@ export default function Conversion() {
                     setDrawerDefaultTab("homologations");
                     setDrawerItem(item);
                   }}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold flex items-center gap-1.5 shadow-sm transition-all duration-200 active:scale-95 text-xs h-9 w-full lg:w-auto justify-center"
+                  className="h-8 w-full justify-center gap-1.5 bg-emerald-600 text-[11px] font-semibold text-white shadow-sm transition-all duration-200 hover:bg-emerald-700 active:scale-95 sm:w-auto"
                 >
                   <CheckCircle2 className="h-3.5 w-3.5" />
                   Ver Parecer Final
@@ -1408,7 +826,7 @@ export default function Conversion() {
                   setDrawerDefaultTab("posts");
                   setDrawerItem(item);
                 }}
-                className="border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 flex items-center gap-1.5 transition-colors duration-200 text-xs h-9 w-full lg:w-auto justify-center"
+                className="h-8 w-full justify-center gap-1.5 border-border text-[11px] transition-colors duration-200 hover:bg-muted sm:w-auto"
               >
                 <MessageSquare className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
                 Ver Publicações
@@ -1424,7 +842,7 @@ export default function Conversion() {
                     window.location.href = `/projects?id=${item.projectId}`;
                   }
                 }}
-                className="border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 flex items-center gap-1.5 transition-colors duration-200 text-xs h-9 w-full lg:w-auto justify-center"
+                className="h-8 w-full justify-center gap-1.5 border-border text-[11px] transition-colors duration-200 hover:bg-muted sm:w-auto"
               >
                 <AlertCircle className="h-3.5 w-3.5 text-slate-500" />
                 Ver Detalhes
@@ -1438,42 +856,42 @@ export default function Conversion() {
 
   return (
     <div
-      className="min-h-0 min-w-0 overflow-x-hidden bg-gradient-to-br from-background to-muted/30 md:flex md:h-screen md:flex-col md:overflow-hidden"
+      className="h-full min-h-0 min-w-0 overflow-x-hidden overflow-y-auto bg-gradient-to-br from-background to-muted/30 md:h-[calc(100dvh-4rem-env(safe-area-inset-bottom))] md:flex md:flex-none md:flex-col md:overflow-hidden"
       data-testid="conversion-activities-page"
       data-viewport={isMobile ? "mobile" : "desktop"}
     >
       {/* Fixed Header Area */}
-      <div className="min-w-0 space-y-4 p-4 pb-0 sm:p-6 sm:pb-0 md:flex-shrink-0">
+      <div className="min-w-0 space-y-3 p-3 pb-0 sm:p-4 sm:pb-0 md:flex-shrink-0">
         {/* Header */}
-        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex min-w-0 items-start gap-3">
-            <div className="shrink-0 rounded-lg bg-primary/10 p-2">
-              <Database className="h-5 w-5 text-primary sm:h-6 sm:w-6" />
+        <div className="flex min-w-0 items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="shrink-0 rounded-lg bg-primary/10 p-1.5 sm:p-2">
+              <Database className="h-5 w-5 text-primary" />
             </div>
             <div className="min-w-0">
-              <h1 className="break-words text-xl font-bold sm:text-2xl">Gestão de Atividades</h1>
-              <p className="text-xs text-muted-foreground sm:text-base">
+              <h1 className="truncate text-lg font-bold sm:text-xl">Gestão de Atividades</h1>
+              <p className="truncate text-[11px] text-muted-foreground sm:text-sm">
                 Fila de conversão e homologação
               </p>
             </div>
           </div>
-          <div className="grid w-full min-w-0 grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:justify-end">
+          <div className="flex shrink-0 items-center gap-1.5">
             {/* Minha Fila Button - Only for conversion team */}
             {isConversionTeam && (
               <Button
                 onClick={() => setActiveTab("my-queue")}
                 variant={activeTab === "my-queue" ? "default" : "outline"}
                 className={cn(
-                  "relative col-span-2 w-full justify-center gap-2 sm:col-span-1 sm:w-auto",
+                  "relative h-9 w-9 justify-center gap-1.5 p-0 sm:w-auto sm:px-3",
                   activeTab === "my-queue"
                     ? "bg-primary hover:bg-primary/90 text-primary-foreground"
                     : "border-primary/30 text-primary hover:bg-primary/5",
                 )}
               >
                 <User className="h-4 w-4" />
-                Minha Fila
+                <span className="hidden sm:inline">Minha Fila</span>
                 {myQueue.length > 0 && (
-                  <span className="flex items-center gap-1.5">
+                  <span className="hidden items-center gap-1.5 sm:flex">
                     <Badge
                       variant={activeTab === "my-queue" ? "secondary" : "default"}
                       className={cn(
@@ -1499,13 +917,13 @@ export default function Conversion() {
                 )}
               </Button>
             )}
-            <Button onClick={() => setHelpOpen(true)} variant="outline" size="sm" className="w-full gap-1.5 border-primary/20 text-primary hover:bg-primary/5 sm:w-auto">
+            <Button onClick={() => setHelpOpen(true)} variant="outline" size="sm" className="h-9 w-9 gap-1.5 border-primary/20 p-0 text-primary hover:bg-primary/5 sm:w-auto sm:px-3">
               <HelpCircle className="h-4 w-4" />
-              Ajuda / Tutorial
+              <span className="hidden sm:inline">Ajuda</span>
             </Button>
-            <Button onClick={refetch} variant="outline" size="sm" className="w-full sm:w-auto">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Atualizar
+            <Button onClick={refetch} variant="outline" size="sm" className="h-9 w-9 p-0 sm:w-auto sm:px-3">
+              <RefreshCw className="h-4 w-4 sm:mr-1.5" />
+              <span className="hidden sm:inline">Atualizar</span>
             </Button>
           </div>
         </div>
@@ -1515,23 +933,22 @@ export default function Conversion() {
 
         {/* Search and Filters */}
         <div
-          className="flex min-w-0 flex-col gap-2 rounded-xl border bg-muted/20 p-3 sm:flex-row sm:items-center sm:gap-3"
+          className="flex min-w-0 flex-col gap-1.5 rounded-lg border bg-background/80 p-1.5 shadow-sm sm:flex-row sm:items-center sm:p-1"
           data-testid="conversion-activities-filters"
         >
-          <div className="relative min-w-0 flex-1 sm:max-w-sm">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <div className="relative min-w-0 flex-1">
+            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
               aria-label="Buscar atividades"
               placeholder="Buscar cliente ou ticket..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="h-10 pl-8 text-sm shadow-none sm:h-8 sm:text-xs"
             />
           </div>
-          {activeTab !== "general" && (
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger aria-label="Filtrar atividades por status" className="w-full min-w-0 sm:w-[180px]">
-                <Filter className="h-4 w-4 mr-2" />
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger aria-label="Filtrar atividades por status" className="h-10 w-full min-w-0 px-2 text-xs shadow-none sm:h-8 sm:w-[165px]">
+                <Filter className="mr-1.5 h-3.5 w-3.5" />
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -1542,13 +959,14 @@ export default function Conversion() {
                   Aguard. Homolog.
                 </SelectItem>
                 <SelectItem value="done">Concluídos</SelectItem>
+                <SelectItem value="homologation">{"Em homologa\u00e7\u00e3o"}</SelectItem>
+                <SelectItem value="homologation_issues">{"Com inconsist\u00eancias"}</SelectItem>
               </SelectContent>
-            </Select>
-          )}
+          </Select>
 
           <Select value={systemFilter} onValueChange={setSystemFilter}>
-            <SelectTrigger aria-label="Filtrar atividades por sistema" className="w-full min-w-0 sm:w-[180px]">
-              <Filter className="h-4 w-4 mr-2" />
+            <SelectTrigger aria-label="Filtrar atividades por sistema" className="h-10 w-full min-w-0 px-2 text-xs shadow-none sm:h-8 sm:w-[165px]">
+              <Filter className="mr-1.5 h-3.5 w-3.5" />
               <SelectValue placeholder="Sistema" />
             </SelectTrigger>
             <SelectContent>
@@ -1560,6 +978,22 @@ export default function Conversion() {
               ))}
             </SelectContent>
           </Select>
+          {(searchQuery || statusFilter !== "all" || systemFilter !== "all") && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-10 w-full shrink-0 gap-1 px-2 text-xs text-muted-foreground sm:h-8 sm:w-auto"
+              onClick={() => {
+                setSearchQuery("");
+                setStatusFilter("all");
+                setSystemFilter("all");
+              }}
+            >
+              <X className="h-4 w-4" />
+              Limpar
+            </Button>
+          )}
         </div>
       </div>
 
@@ -1567,15 +1001,15 @@ export default function Conversion() {
       <Tabs
         value={activeTab}
         onValueChange={setActiveTab}
-        className="min-w-0 px-4 pt-3 md:flex md:flex-1 md:flex-col md:overflow-hidden md:px-6 md:pt-4"
+        className="min-w-0 px-3 pt-1 sm:px-4 md:flex md:min-h-0 md:flex-1 md:flex-col md:overflow-hidden"
       >
-        <TabsList className="mb-3 grid h-auto w-full min-w-0 grid-cols-3 gap-1 p-1 md:mb-4 md:inline-flex md:w-auto md:flex-shrink-0">
-          <TabsTrigger value="general" className="relative min-w-0 gap-1 px-1.5 text-[10px] sm:gap-2 sm:px-3 sm:text-sm">
-            <Users className="h-4 w-4" />
+        <TabsList className="mb-1 grid h-auto w-full min-w-0 grid-cols-3 gap-0.5 rounded-lg p-0.5 md:inline-flex md:w-auto md:flex-shrink-0 md:self-start">
+          <TabsTrigger value="general" className="relative min-h-8 min-w-0 gap-1 px-1.5 text-[10px] sm:min-h-7 sm:px-2.5 sm:text-xs">
+            <Users className="h-3.5 w-3.5" />
             Fila Geral
             {generalQueue.length > 0 && (
               <span className="flex items-center gap-1.5">
-                <Badge variant="secondary" className="ml-1">
+                <Badge variant="secondary" className="ml-0.5 h-5 min-w-5 px-1 text-[10px]">
                   {generalQueue.length}
                 </Badge>
                 {generalQueue.some((item) => !item.assignedTo) && (
@@ -1587,12 +1021,12 @@ export default function Conversion() {
               </span>
             )}
           </TabsTrigger>
-          <TabsTrigger value="homologations" className="relative min-w-0 gap-1 px-1.5 text-[10px] sm:gap-2 sm:px-3 sm:text-sm">
-            <CheckCircle2 className="h-4 w-4" />
+          <TabsTrigger value="homologations" className="relative min-h-8 min-w-0 gap-1 px-1.5 text-[10px] sm:min-h-7 sm:px-2.5 sm:text-xs">
+            <CheckCircle2 className="h-3.5 w-3.5" />
             Homologações
             {homologationQueue.length > 0 && (
               <span className="flex items-center gap-1.5">
-                <Badge variant="secondary" className="ml-1">
+                <Badge variant="secondary" className="ml-0.5 h-5 min-w-5 px-1 text-[10px]">
                   {homologationQueue.length}
                 </Badge>
                 {homologationQueue.some((item) => item.queueStatus === "homologation_issues") && (
@@ -1604,12 +1038,12 @@ export default function Conversion() {
               </span>
             )}
           </TabsTrigger>
-          <TabsTrigger value="issues" className="relative min-w-0 gap-1 px-1.5 text-[10px] sm:gap-2 sm:px-3 sm:text-sm">
-            <AlertCircle className="h-4 w-4" />
+          <TabsTrigger value="issues" className="relative min-h-8 min-w-0 gap-1 px-1.5 text-[10px] sm:min-h-7 sm:px-2.5 sm:text-xs">
+            <AlertCircle className="h-3.5 w-3.5" />
             Pendências
             {activeIssuesCount > 0 && (
               <span className="flex items-center gap-1.5">
-                <Badge variant="destructive" className="ml-1 animate-pulse px-1.5 py-0 text-[10px]">
+                <Badge variant="destructive" className="ml-0.5 h-5 min-w-5 animate-pulse px-1 py-0 text-[10px]">
                   {activeIssuesCount}
                 </Badge>
               </span>
@@ -1618,9 +1052,9 @@ export default function Conversion() {
         </TabsList>
 
         {/* Scrollable Content Area */}
-        <div className="min-w-0 space-y-4 pb-6 md:flex-1 md:overflow-y-auto">
+        <div className="relative min-w-0 pb-[calc(1rem+env(safe-area-inset-bottom))] md:min-h-0 md:flex-1 md:overflow-hidden md:pr-1">
           {/* My Queue Tab - Detailed View */}
-          <TabsContent value="my-queue" className="mt-0">
+          <TabsContent value="my-queue" className="mt-0 min-w-0 data-[state=inactive]:hidden md:absolute md:inset-0 md:overflow-y-auto">
             {loading ? (
               <div className="text-center py-12 text-muted-foreground">
                 Carregando...
@@ -1661,7 +1095,7 @@ export default function Conversion() {
 
           {/* General Queue Tab */}
           {/* General Queue Tab - Kanban Layout */}
-          <TabsContent value="general" className="mt-0 min-w-0 md:flex md:flex-1 md:flex-col md:overflow-hidden">
+          <TabsContent value="general" className="mt-0 min-w-0 data-[state=inactive]:hidden md:absolute md:inset-0 md:overflow-y-auto xl:data-[state=active]:flex xl:flex-col xl:overflow-hidden">
             {loading ? (
               <div className="text-center py-12 text-muted-foreground flex-grow flex items-center justify-center min-h-[300px]">
                 <div className="space-y-2">
@@ -1670,13 +1104,38 @@ export default function Conversion() {
                 </div>
               </div>
             ) : (
-              <div className="min-w-0 space-y-5 pb-6 md:flex-1 md:space-y-6 md:overflow-y-auto md:pr-1 md:scrollbar-thin md:scrollbar-thumb-slate-200 dark:md:scrollbar-thumb-slate-800" data-testid="conversion-mobile-kanban">
+              <AnimatePresence initial={false} mode="popLayout">
+              <motion.div
+                key={statusFilter}
+                initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.992, y: 8 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={shouldReduceMotion ? undefined : { opacity: 0, scale: 0.992, y: -6 }}
+                transition={
+                  shouldReduceMotion
+                    ? { duration: 0 }
+                    : { duration: 0.28, ease: [0.22, 1, 0.36, 1] }
+                }
+                style={{ transformOrigin: "top center" }}
+                className={cn(
+                  "grid min-w-0 grid-cols-1 items-start gap-2 xl:min-h-0 xl:flex-1 xl:items-stretch",
+                  isSingleStatusView
+                    ? "xl:grid-cols-1"
+                    : "sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5",
+                )}
+                data-testid="conversion-mobile-kanban"
+                data-filter-transition={shouldReduceMotion ? "reduced" : "smooth"}
+              >
                 {/* 1. Pendentes Section */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-slate-800">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full bg-slate-400 dark:bg-slate-600 animate-pulse" />
-                      <span className="font-extrabold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                <div className={cn(
+                  "min-w-0 space-y-1.5",
+                  isKanbanColumnVisible("pending")
+                    ? "xl:flex xl:min-h-0 xl:flex-col xl:gap-1.5 xl:space-y-0"
+                    : "hidden",
+                )} data-testid="conversion-kanban-column-pending">
+                  <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-100/80 px-2 py-1.5 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-2 w-2 rounded-full bg-slate-400 dark:bg-slate-600 animate-pulse" />
+                      <span className="text-[11px] font-bold uppercase tracking-wide text-slate-800 dark:text-slate-200">
                         1. Pendentes
                       </span>
                       <Badge variant="outline" className="text-[10px] font-bold px-1.5 py-0 bg-slate-55 text-slate-600 border-slate-200 dark:bg-slate-900 dark:text-slate-400">
@@ -1684,15 +1143,18 @@ export default function Conversion() {
                       </Badge>
                     </div>
                   </div>
-                  <div className="grid min-w-0 grid-cols-1 gap-3 pb-3 pt-1 md:flex md:w-full md:gap-4 md:overflow-x-auto md:scrollbar-thin md:scrollbar-thumb-slate-250 dark:md:scrollbar-thumb-slate-800" data-testid="conversion-kanban-lane">
+                  <div className={cn(
+                    "grid min-w-0 grid-cols-1 content-start gap-1.5 rounded-lg border border-dashed border-slate-200 bg-slate-50/30 p-1.5 dark:border-slate-800 dark:bg-slate-900/20 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pr-1 xl:scrollbar-thin xl:scrollbar-thumb-slate-300 dark:xl:scrollbar-thumb-slate-700",
+                    isSingleStatusView && "sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
+                  )} data-testid="conversion-kanban-lane">
                     {filterKanbanItems(queue.filter((i) => i.queueStatus === "pending")).length === 0 ? (
-                      <div className="text-center py-6 text-muted-foreground text-xs bg-slate-50/30 dark:bg-slate-900/10 border border-dashed border-slate-200 dark:border-slate-800/50 rounded-lg w-full p-4 flex items-center justify-center min-h-[80px]">
+                      <div className="col-span-full flex min-h-[56px] w-full items-center justify-center rounded-md border border-dashed border-slate-200 bg-slate-50/30 p-2.5 text-center text-[11px] text-muted-foreground dark:border-slate-800/50 dark:bg-slate-900/10">
                         Nenhuma demanda pendente
                       </div>
                     ) : (
                       filterKanbanItems(queue.filter((i) => i.queueStatus === "pending")).map((item) => (
-                        <div key={item.id} className="min-w-0 w-full md:w-[380px] md:shrink-0">
-                          {renderQueueItem(item, !item.assignedTo, true)}
+                        <div key={item.id} className="min-w-0 w-full">
+                          {renderKanbanCard(item)}
                         </div>
                       ))
                     )}
@@ -1700,11 +1162,16 @@ export default function Conversion() {
                 </div>
 
                 {/* 2. Em Andamento Section */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-slate-800">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-                      <span className="font-extrabold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                <div className={cn(
+                  "min-w-0 space-y-1.5",
+                  isKanbanColumnVisible("in_progress")
+                    ? "xl:flex xl:min-h-0 xl:flex-col xl:gap-1.5 xl:space-y-0"
+                    : "hidden",
+                )} data-testid="conversion-kanban-column-in-progress">
+                  <div className="flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 px-2 py-1.5 shadow-sm dark:border-blue-900/60 dark:bg-blue-950/30">
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-2 w-2 rounded-full bg-blue-500" />
+                      <span className="text-[11px] font-bold uppercase tracking-wide text-slate-800 dark:text-slate-200">
                         2. Em Andamento
                       </span>
                       <Badge variant="outline" className="text-[10px] font-bold px-1.5 py-0 bg-blue-50 text-blue-650 border-blue-200 dark:bg-blue-950/20 dark:text-blue-400">
@@ -1712,15 +1179,18 @@ export default function Conversion() {
                       </Badge>
                     </div>
                   </div>
-                  <div className="grid min-w-0 grid-cols-1 gap-3 pb-3 pt-1 md:flex md:w-full md:gap-4 md:overflow-x-auto md:scrollbar-thin md:scrollbar-thumb-slate-250 dark:md:scrollbar-thumb-slate-800" data-testid="conversion-kanban-lane">
+                  <div className={cn(
+                    "grid min-w-0 grid-cols-1 content-start gap-1.5 rounded-lg border border-dashed border-blue-200/70 bg-blue-50/20 p-1.5 dark:border-blue-900/50 dark:bg-blue-950/10 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pr-1 xl:scrollbar-thin xl:scrollbar-thumb-blue-300 dark:xl:scrollbar-thumb-blue-800",
+                    isSingleStatusView && "sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
+                  )} data-testid="conversion-kanban-lane">
                     {filterKanbanItems(queue.filter((i) => i.queueStatus === "in_progress")).length === 0 ? (
-                      <div className="text-center py-6 text-muted-foreground text-xs bg-slate-50/30 dark:bg-slate-900/10 border border-dashed border-slate-200 dark:border-slate-800/50 rounded-lg w-full p-4 flex items-center justify-center min-h-[80px]">
+                      <div className="col-span-full flex min-h-[56px] w-full items-center justify-center rounded-md border border-dashed border-slate-200 bg-slate-50/30 p-2.5 text-center text-[11px] text-muted-foreground dark:border-slate-800/50 dark:bg-slate-900/10">
                         Nenhuma conversão em andamento
                       </div>
                     ) : (
                       filterKanbanItems(queue.filter((i) => i.queueStatus === "in_progress")).map((item) => (
-                        <div key={item.id} className="min-w-0 w-full md:w-[380px] md:shrink-0">
-                          {renderQueueItem(item, !item.assignedTo, true)}
+                        <div key={item.id} className="min-w-0 w-full">
+                          {renderKanbanCard(item)}
                         </div>
                       ))
                     )}
@@ -1728,11 +1198,16 @@ export default function Conversion() {
                 </div>
 
                 {/* 3. Em Homologação Section */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-slate-800">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full bg-purple-500" />
-                      <span className="font-extrabold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                <div className={cn(
+                  "min-w-0 space-y-1.5",
+                  isKanbanColumnVisible("awaiting_homologation", "homologation")
+                    ? "xl:flex xl:min-h-0 xl:flex-col xl:gap-1.5 xl:space-y-0"
+                    : "hidden",
+                )} data-testid="conversion-kanban-column-homologation">
+                  <div className="flex items-center justify-between rounded-lg border border-purple-200 bg-purple-50 px-2 py-1.5 shadow-sm dark:border-purple-900/60 dark:bg-purple-950/30">
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-2 w-2 rounded-full bg-purple-500" />
+                      <span className="text-[11px] font-bold uppercase tracking-wide text-slate-800 dark:text-slate-200">
                         3. Em Homologação
                       </span>
                       <Badge variant="outline" className="text-[10px] font-bold px-1.5 py-0 bg-purple-50 text-purple-650 border-purple-200 dark:bg-purple-950/20 dark:text-purple-400">
@@ -1740,15 +1215,18 @@ export default function Conversion() {
                       </Badge>
                     </div>
                   </div>
-                  <div className="grid min-w-0 grid-cols-1 gap-3 pb-3 pt-1 md:flex md:w-full md:gap-4 md:overflow-x-auto md:scrollbar-thin md:scrollbar-thumb-slate-250 dark:md:scrollbar-thumb-slate-800" data-testid="conversion-kanban-lane">
+                  <div className={cn(
+                    "grid min-w-0 grid-cols-1 content-start gap-1.5 rounded-lg border border-dashed border-purple-200/70 bg-purple-50/20 p-1.5 dark:border-purple-900/50 dark:bg-purple-950/10 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pr-1 xl:scrollbar-thin xl:scrollbar-thumb-purple-300 dark:xl:scrollbar-thumb-purple-800",
+                    isSingleStatusView && "sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
+                  )} data-testid="conversion-kanban-lane">
                     {filterKanbanItems(queue.filter((i) => i.queueStatus === "awaiting_homologation" || i.queueStatus === "homologation")).length === 0 ? (
-                      <div className="text-center py-6 text-muted-foreground text-xs bg-slate-50/30 dark:bg-slate-900/10 border border-dashed border-slate-200 dark:border-slate-800/50 rounded-lg w-full p-4 flex items-center justify-center min-h-[80px]">
+                      <div className="col-span-full flex min-h-[56px] w-full items-center justify-center rounded-md border border-dashed border-slate-200 bg-slate-50/30 p-2.5 text-center text-[11px] text-muted-foreground dark:border-slate-800/50 dark:bg-slate-900/10">
                         Nenhum projeto em homologação
                       </div>
                     ) : (
                       filterKanbanItems(queue.filter((i) => i.queueStatus === "awaiting_homologation" || i.queueStatus === "homologation")).map((item) => (
-                        <div key={item.id} className="min-w-0 w-full md:w-[380px] md:shrink-0">
-                          {renderQueueItem(item, !item.assignedTo, true)}
+                        <div key={item.id} className="min-w-0 w-full">
+                          {renderKanbanCard(item)}
                         </div>
                       ))
                     )}
@@ -1756,11 +1234,16 @@ export default function Conversion() {
                 </div>
 
                 {/* 4. Com Inconsistências Section */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-slate-800">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
-                      <span className="font-extrabold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                <div className={cn(
+                  "min-w-0 space-y-1.5",
+                  isKanbanColumnVisible("homologation_issues")
+                    ? "xl:flex xl:min-h-0 xl:flex-col xl:gap-1.5 xl:space-y-0"
+                    : "hidden",
+                )} data-testid="conversion-kanban-column-issues">
+                  <div className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50 px-2 py-1.5 shadow-sm dark:border-red-900/60 dark:bg-red-950/30">
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+                      <span className="text-[11px] font-bold uppercase tracking-wide text-slate-800 dark:text-slate-200">
                         4. Com Inconsistências
                       </span>
                       <Badge variant="outline" className="text-[10px] font-bold px-1.5 py-0 bg-red-50 text-red-655 border-red-205 dark:bg-red-950/20 dark:text-red-400">
@@ -1768,15 +1251,18 @@ export default function Conversion() {
                       </Badge>
                     </div>
                   </div>
-                  <div className="grid min-w-0 grid-cols-1 gap-3 pb-3 pt-1 md:flex md:w-full md:gap-4 md:overflow-x-auto md:scrollbar-thin md:scrollbar-thumb-slate-250 dark:md:scrollbar-thumb-slate-800" data-testid="conversion-kanban-lane">
+                  <div className={cn(
+                    "grid min-w-0 grid-cols-1 content-start gap-1.5 rounded-lg border border-dashed border-red-200/70 bg-red-50/20 p-1.5 dark:border-red-900/50 dark:bg-red-950/10 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pr-1 xl:scrollbar-thin xl:scrollbar-thumb-red-300 dark:xl:scrollbar-thumb-red-800",
+                    isSingleStatusView && "sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
+                  )} data-testid="conversion-kanban-lane">
                     {filterKanbanItems(queue.filter((i) => i.queueStatus === "homologation_issues")).length === 0 ? (
-                      <div className="text-center py-6 text-muted-foreground text-xs bg-slate-50/30 dark:bg-slate-900/10 border border-dashed border-slate-200 dark:border-slate-800/50 rounded-lg w-full p-4 flex items-center justify-center min-h-[80px]">
+                      <div className="col-span-full flex min-h-[56px] w-full items-center justify-center rounded-md border border-dashed border-slate-200 bg-slate-50/30 p-2.5 text-center text-[11px] text-muted-foreground dark:border-slate-800/50 dark:bg-slate-900/10">
                         Nenhum projeto com inconsistências
                       </div>
                     ) : (
                       filterKanbanItems(queue.filter((i) => i.queueStatus === "homologation_issues")).map((item) => (
-                        <div key={item.id} className="min-w-0 w-full md:w-[380px] md:shrink-0">
-                          {renderQueueItem(item, !item.assignedTo, true)}
+                        <div key={item.id} className="min-w-0 w-full">
+                          {renderKanbanCard(item)}
                         </div>
                       ))
                     )}
@@ -1784,11 +1270,16 @@ export default function Conversion() {
                 </div>
 
                 {/* 5. Concluídos Section */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-slate-800">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                      <span className="font-extrabold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                <div className={cn(
+                  "min-w-0 space-y-1.5",
+                  isKanbanColumnVisible("done")
+                    ? "xl:flex xl:min-h-0 xl:flex-col xl:gap-1.5 xl:space-y-0"
+                    : "hidden",
+                )} data-testid="conversion-kanban-column-done">
+                  <div className="flex items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-1.5 shadow-sm dark:border-emerald-900/60 dark:bg-emerald-950/30">
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                      <span className="text-[11px] font-bold uppercase tracking-wide text-slate-800 dark:text-slate-200">
                         5. Concluídos
                       </span>
                       <Badge variant="outline" className="text-[10px] font-bold px-1.5 py-0 bg-emerald-50 text-emerald-650 border-emerald-250 dark:bg-emerald-950/20 dark:text-emerald-400">
@@ -1796,26 +1287,30 @@ export default function Conversion() {
                       </Badge>
                     </div>
                   </div>
-                  <div className="grid min-w-0 grid-cols-1 gap-3 pb-3 pt-1 md:flex md:w-full md:gap-4 md:overflow-x-auto md:scrollbar-thin md:scrollbar-thumb-slate-250 dark:md:scrollbar-thumb-slate-800" data-testid="conversion-kanban-lane">
+                  <div className={cn(
+                    "grid min-w-0 grid-cols-1 content-start gap-1.5 rounded-lg border border-dashed border-emerald-200/70 bg-emerald-50/20 p-1.5 dark:border-emerald-900/50 dark:bg-emerald-950/10 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pr-1 xl:scrollbar-thin xl:scrollbar-thumb-emerald-300 dark:xl:scrollbar-thumb-emerald-800",
+                    isSingleStatusView && "sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
+                  )} data-testid="conversion-kanban-lane">
                     {filterKanbanItems(queue.filter((i) => i.queueStatus === "done")).length === 0 ? (
-                      <div className="text-center py-6 text-muted-foreground text-xs bg-slate-50/30 dark:bg-slate-900/10 border border-dashed border-slate-200 dark:border-slate-800/50 rounded-lg w-full p-4 flex items-center justify-center min-h-[80px]">
+                      <div className="col-span-full flex min-h-[56px] w-full items-center justify-center rounded-md border border-dashed border-slate-200 bg-slate-50/30 p-2.5 text-center text-[11px] text-muted-foreground dark:border-slate-800/50 dark:bg-slate-900/10">
                         Nenhuma conversão finalizada
                       </div>
                     ) : (
                       filterKanbanItems(queue.filter((i) => i.queueStatus === "done")).map((item) => (
-                        <div key={item.id} className="min-w-0 w-full md:w-[380px] md:shrink-0">
-                          {renderQueueItem(item, !item.assignedTo, true)}
+                        <div key={item.id} className="min-w-0 w-full">
+                          {renderKanbanCard(item)}
                         </div>
                       ))
                     )}
                   </div>
                 </div>
-              </div>
+              </motion.div>
+              </AnimatePresence>
             )}
           </TabsContent>
 
           {/* Homologations Queue Tab */}
-          <TabsContent value="homologations" className="mt-0">
+          <TabsContent value="homologations" className="mt-0 min-w-0 data-[state=inactive]:hidden md:absolute md:inset-0 md:overflow-y-auto" data-testid="conversion-homologations-panel">
             {loading ? (
               <div className="text-center py-12 text-muted-foreground">
                 Carregando...
@@ -1831,7 +1326,7 @@ export default function Conversion() {
                 </p>
               </Card>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {filterItems(homologationQueue).map((item) =>
                   renderHomologationItem(item),
                 )}
@@ -1840,7 +1335,7 @@ export default function Conversion() {
           </TabsContent>
 
           {/* Issues Tab */}
-          <TabsContent value="issues" className="mt-0">
+          <TabsContent value="issues" className="mt-0 min-w-0 data-[state=inactive]:hidden md:absolute md:inset-0 md:overflow-y-auto" data-testid="conversion-issues-panel">
             <ConversionIssuesTab
               currentUserId={currentUserId}
               currentUserName={currentUserName}
