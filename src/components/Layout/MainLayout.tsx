@@ -33,8 +33,9 @@ export function MainLayout({ children }: MainLayoutProps) {
   const isPosAiLogsPage = location.pathname === "/assistentes/logs";
   const isPosAiLinksChatsPage = location.pathname === "/assistentes/links-chats";
   const isImplantadoresHomologationPage = location.pathname === "/implantadores/homologation";
-  const isNoScrollPage = isProjectsPage || isModelsWorkspacePage || isAssistantsKnowledgePage || isImplantadoresHomologationPage;
-  const isFullBleedPage = isModelsWorkspacePage || isAssistantsKnowledgePage || isPosAiLogsPage || isPosAiLinksChatsPage || isImplantadoresHomologationPage;
+  const isConversionActivitiesPage = location.pathname === "/conversion/atividades";
+  const isNoScrollPage = isProjectsPage || isModelsWorkspacePage || isAssistantsKnowledgePage || isImplantadoresHomologationPage || isConversionActivitiesPage;
+  const isFullBleedPage = isModelsWorkspacePage || isAssistantsKnowledgePage || isPosAiLogsPage || isPosAiLinksChatsPage || isImplantadoresHomologationPage || isConversionActivitiesPage;
   const isPrintMode = new URLSearchParams(location.search).get("print") === "true";
   const headerAction = getContextualHeaderAction(location.pathname, (permissionKey) => !permissionKey || hasPermission(permissionKey, "view"));
   const HeaderActionIcon = headerAction?.icon;
@@ -77,7 +78,7 @@ export function MainLayout({ children }: MainLayoutProps) {
             </div>
           </header>
 
-          <main className={`flex min-w-0 flex-1 flex-col overflow-x-hidden ${isNoScrollPage ? "overflow-y-hidden" : "overflow-y-auto"} ${isFullBleedPage ? "p-0" : "px-3 pb-[calc(.75rem+env(safe-area-inset-bottom))] pt-2 sm:px-6 sm:pb-6 sm:pt-3"}`}>{children}</main>
+          <main className={`flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden ${isNoScrollPage ? "overflow-y-hidden" : "overflow-y-auto"} ${isFullBleedPage ? "p-0" : "px-3 pb-[calc(.75rem+env(safe-area-inset-bottom))] pt-2 sm:px-6 sm:pb-6 sm:pt-3"}`}>{children}</main>
         </div>
 
         {/* Botao flutuante do Copiloto (so aparece para usuarios habilitados) */}

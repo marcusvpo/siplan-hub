@@ -141,25 +141,25 @@ export function UserProfileDrawer({ isOpen, onClose }: UserProfileDrawerProps) {
               stiffness: 400,
               damping: 30,
             }}
-            className="fixed bottom-[max(5rem,calc(env(safe-area-inset-bottom)+4rem))] left-3 right-3 z-50 w-auto max-w-80 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900 sm:left-4 sm:right-auto sm:w-80"
+            className="fixed bottom-[max(5rem,calc(env(safe-area-inset-bottom)+4rem))] left-3 right-3 z-50 w-auto max-w-80 overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-2xl sm:left-4 sm:right-auto sm:w-80"
           >
             {/* Header */}
-            <div className="relative bg-gradient-to-r from-primary/10 via-rose-500/10 to-orange-500/10 px-5 py-4 border-b border-slate-100 dark:border-slate-800">
+            <div className="relative border-b border-border bg-gradient-to-r from-primary/10 via-rose-500/10 to-orange-500/10 px-5 py-4">
               <button
                 onClick={onClose}
-                className="absolute top-3 right-3 p-1.5 rounded-full hover:bg-white/50 dark:hover:bg-slate-800/50 transition-colors"
+                className="absolute right-3 top-3 rounded-full p-1.5 transition-colors hover:bg-muted"
               >
-                <X className="w-4 h-4 text-slate-500" />
+                <X className="h-4 w-4 text-muted-foreground" />
               </button>
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-rose-500 flex items-center justify-center text-white text-xl font-bold shadow-lg">
                   {initials || "?"}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-slate-900 dark:text-white truncate text-lg">
+                  <h3 className="truncate text-lg font-bold text-foreground">
                     {userName}
                   </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                  <p className="truncate text-xs text-muted-foreground">
                     Conectado
                   </p>
                 </div>
@@ -174,10 +174,10 @@ export function UserProfileDrawer({ isOpen, onClose }: UserProfileDrawerProps) {
                   <Mail className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold block">
+                  <span className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                     E-mail
                   </span>
-                  <span className="text-sm text-slate-700 dark:text-slate-200 truncate block">
+                  <span className="block truncate text-sm text-foreground">
                     {userEmail}
                   </span>
                 </div>
@@ -189,10 +189,10 @@ export function UserProfileDrawer({ isOpen, onClose }: UserProfileDrawerProps) {
                   <Users className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold block">
+                  <span className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                     Equipe
                   </span>
-                  <span className="text-sm text-slate-700 dark:text-slate-200 font-medium">
+                  <span className="text-sm font-medium text-foreground">
                     {team ? teamLabels[team] || team : "Não definida"}
                   </span>
                 </div>
@@ -205,10 +205,10 @@ export function UserProfileDrawer({ isOpen, onClose }: UserProfileDrawerProps) {
                     <User className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold block">
+                    <span className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                       Cargo
                     </span>
-                    <span className="text-sm text-slate-700 dark:text-slate-200 capitalize">
+                    <span className="text-sm capitalize text-foreground">
                       {role === "admin" ? "Administrador" : "Usuário"}
                     </span>
                   </div>
@@ -219,7 +219,7 @@ export function UserProfileDrawer({ isOpen, onClose }: UserProfileDrawerProps) {
               {role === "admin" && (
                 <button
                   onClick={handleToggleAdmin}
-                  className="w-full mt-2 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 transition-colors shadow-sm font-medium text-sm border border-transparent"
+                  className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-transparent bg-foreground px-4 py-2.5 text-sm font-medium text-background shadow-sm transition-colors hover:bg-foreground/90"
                 >
                   {isAdminRoute ? (
                     <>
@@ -238,7 +238,7 @@ export function UserProfileDrawer({ isOpen, onClose }: UserProfileDrawerProps) {
               {/* Change Password Button */}
               <button
                 onClick={() => setPasswordDialogOpen(true)}
-                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition-colors shadow-sm font-medium text-sm border border-transparent"
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-muted px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-accent"
               >
                 <KeyRound className="w-4 h-4" />
                 Alterar minha senha
@@ -246,8 +246,8 @@ export function UserProfileDrawer({ isOpen, onClose }: UserProfileDrawerProps) {
             </div>
 
             {/* Footer */}
-            <div className="px-5 py-3 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800">
-              <p className="text-[10px] text-slate-400 text-center">
+            <div className="border-t border-border bg-muted/40 px-5 py-3">
+              <p className="text-center text-[10px] text-muted-foreground">
                 Você está autenticado no sistema
               </p>
             </div>
