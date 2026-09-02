@@ -14,7 +14,7 @@ export type ConversionEngineRow = {
   target_system: string | null;
   record_type: "conversion_engine" | "other_tool";
   tool_name: string | null;
-  specialty: "tn_rc" | "protest" | "ri_td" | null;
+  specialty: "tn_rc" | "protest" | "ri_td" | "other" | null;
   devops_url: string | null;
   notes: string | null;
   status: "in_development" | "maintenance" | "finished";
@@ -32,7 +32,7 @@ export type ConversionEngineInsert = {
   target_system?: string | null;
   record_type?: "conversion_engine" | "other_tool";
   tool_name?: string | null;
-  specialty?: "tn_rc" | "protest" | "ri_td" | null;
+  specialty?: "tn_rc" | "protest" | "ri_td" | "other" | null;
   devops_url?: string | null;
   notes?: string | null;
   status?: "in_development" | "maintenance" | "finished";
