@@ -12,6 +12,7 @@ import { PwaProvider } from "@/components/pwa/PwaStatus";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { RequirePermission } from "@/components/auth/RequirePermission";
+import { ChunkErrorBoundary } from "@/components/common/ChunkErrorBoundary";
 import Login from "@/pages/Login";
 
 // Code Splitting: Lazy loading para rotas secundárias
@@ -193,10 +194,11 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <SonnerToaster />
-          <AuthProvider>
-            <BrowserRouter
-              future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-            >
+          <ChunkErrorBoundary>
+            <AuthProvider>
+              <BrowserRouter
+                future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+              >
             <Routes>
               {/* Public Routes */}
               <Route path="/login" element={<Login />} />
@@ -892,6 +894,7 @@ const App = () => (
             </Routes>
             </BrowserRouter>
           </AuthProvider>
+          </ChunkErrorBoundary>
         </TooltipProvider>
       </PwaProvider>
     </ThemeProvider>
