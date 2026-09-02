@@ -130,7 +130,7 @@ Cadastrar e acompanhar manualmente os motores/conversores, identificando o siste
 
 ### Componentes principais
 - **4 KPIs:** Em desenvolvimento, Em manutenção, Finalizados e Total (cards com borda colorida).
-- **Filtros:** busca por sistemas, repositório, cliente ou ticket (`search`) e filtro por status (`statusFilter`).
+- **Filtros:** busca por sistemas, especialidade, repositório, cliente ou ticket (`search`), filtro por status (`statusFilter`) e filtro por especialidade (`specialtyFilter`), incluindo registros antigos sem classificação.
 - **Lista de motores:** grade responsiva que destaca o trajeto Origem → Conversão, badges de status e especialidade, vínculo opcional ao projeto, data, responsável, Link DevOps e observações. Cards vinculados à fila abrem o `ConversionPostDrawer`.
 - **Diálogo "Cadastrar motor":** campos obrigatórios Sistema de origem, Sistema de conversão, Especialidade e Status, além de Link DevOps validado e observações opcionais.
 - **Diálogo "Editar motor":** permite alterar todos os campos do cadastro, com o mesmo comportamento responsivo e as mesmas validações da criação.

@@ -105,6 +105,7 @@ export default function ConversionEngines() {
   const { fullName, user } = useAuth();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [specialtyFilter, setSpecialtyFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedPageSize, setSelectedPageSize] = useState<number | null>(null);
   const [editItem, setEditItem] = useState<ConversionEngineItem | null>(null);
@@ -150,19 +151,27 @@ export default function ConversionEngines() {
         engine.ticketNumber?.toLowerCase().includes(normalizedSearch);
       const matchesStatus =
         statusFilter === "all" || engine.engineStatus === statusFilter;
-      return matchesSearch && matchesStatus;
+      const matchesSpecialty =
+        specialtyFilter === "all" ||
+        (specialtyFilter === "unassigned"
+          ? engine.specialty === null
+          : engine.specialty === specialtyFilter);
+      return matchesSearch && matchesStatus && matchesSpecialty;
     });
-  }, [engines, search, statusFilter]);
+  }, [engines, search, specialtyFilter, statusFilter]);
   const totalPages = Math.max(1, Math.ceil(filteredEngines.length / itemsPerPage));
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedEngines = filteredEngines.slice(startIndex, startIndex + itemsPerPage);
   const firstVisibleItem = filteredEngines.length === 0 ? 0 : startIndex + 1;
   const lastVisibleItem = Math.min(startIndex + itemsPerPage, filteredEngines.length);
-  const hasActiveFilters = search.trim().length > 0 || statusFilter !== "all";
+  const hasActiveFilters =
+    search.trim().length > 0 ||
+    statusFilter !== "all" ||
+    specialtyFilter !== "all";
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, statusFilter, itemsPerPage]);
+  }, [search, statusFilter, specialtyFilter, itemsPerPage]);
 
   useEffect(() => {
     setCurrentPage((page) => Math.min(page, totalPages));
@@ -376,6 +385,21 @@ export default function ConversionEngines() {
             <SelectItem value="finished">Finalizado</SelectItem>
           </SelectContent>
         </Select>
+        <Select value={specialtyFilter} onValueChange={setSpecialtyFilter}>
+          <SelectTrigger
+            aria-label="Filtrar motores por especialidade"
+            className="h-10 w-full min-w-0 text-xs sm:h-8 sm:w-[180px]"
+          >
+            <SelectValue placeholder="Filtrar especialidade" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas as especialidades</SelectItem>
+            <SelectItem value="tn_rc">TN/RC</SelectItem>
+            <SelectItem value="protest">Protesto</SelectItem>
+            <SelectItem value="ri_td">RI/TD</SelectItem>
+            <SelectItem value="unassigned">Sem especialidade</SelectItem>
+          </SelectContent>
+        </Select>
         {hasActiveFilters && (
           <Button
             type="button"
@@ -385,6 +409,7 @@ export default function ConversionEngines() {
             onClick={() => {
               setSearch("");
               setStatusFilter("all");
+              setSpecialtyFilter("all");
             }}
           >
             <X className="h-4 w-4" />
@@ -411,6 +436,7 @@ export default function ConversionEngines() {
                 onClick={() => {
                   setSearch("");
                   setStatusFilter("all");
+                  setSpecialtyFilter("all");
                 }}
               >
                 Limpar filtros
