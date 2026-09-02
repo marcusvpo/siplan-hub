@@ -8,6 +8,7 @@ import { toast } from "sonner";
 
 export type EngineStatus = "in_development" | "maintenance" | "finished";
 export type EngineSpecialty = "tn_rc" | "protest" | "ri_td";
+export type EngineRecordType = "conversion_engine" | "other_tool";
 
 export interface ConversionEngineItem {
   id: string;
@@ -15,8 +16,10 @@ export interface ConversionEngineItem {
   projectId: string | null;
   clientName: string | null;
   ticketNumber: string | null;
-  sourceSystem: string;
-  targetSystem: string;
+  recordType: EngineRecordType;
+  sourceSystem: string | null;
+  targetSystem: string | null;
+  toolName: string | null;
   specialty: EngineSpecialty | null;
   devopsUrl: string | null;
   engineStatus: EngineStatus;
@@ -28,14 +31,28 @@ export interface ConversionEngineItem {
   priority: number | null;
 }
 
-export interface CreateConversionEngineInput {
-  sourceSystem: string;
-  targetSystem: string;
+interface ConversionEngineInputBase {
   specialty: EngineSpecialty;
   status: EngineStatus;
   devopsUrl?: string;
   notes?: string;
 }
+
+export type CreateConversionEngineInput = ConversionEngineInputBase &
+  (
+    | {
+        recordType: "conversion_engine";
+        sourceSystem: string;
+        targetSystem: string;
+        toolName?: never;
+      }
+    | {
+        recordType: "other_tool";
+        toolName: string;
+        sourceSystem?: never;
+        targetSystem?: never;
+      }
+  );
 
 export type UpdateConversionEngineInput = CreateConversionEngineInput;
 
@@ -72,6 +89,8 @@ export function useConversionEngines() {
           project_id,
           source_system,
           target_system,
+          record_type,
+          tool_name,
           specialty,
           devops_url,
           notes,
@@ -99,8 +118,10 @@ export function useConversionEngines() {
         projectId: row.project_id,
         clientName: row.projects?.client_name || null,
         ticketNumber: row.projects?.ticket_number || null,
+        recordType: row.record_type || "conversion_engine",
         sourceSystem: row.source_system,
         targetSystem: row.target_system,
+        toolName: row.tool_name,
         specialty: row.specialty,
         devopsUrl: row.devops_url,
         engineStatus: row.status,
@@ -133,9 +154,14 @@ export function useConversionEngines() {
 
   const createEngine = useCallback(
     async (input: CreateConversionEngineInput, userName: string): Promise<boolean> => {
-      const sourceSystem = input.sourceSystem.trim();
-      const targetSystem = input.targetSystem.trim();
-      if (!sourceSystem || !targetSystem || !input.specialty) return false;
+      const isOtherTool = input.recordType === "other_tool";
+      const sourceSystem = isOtherTool ? null : input.sourceSystem.trim();
+      const targetSystem = isOtherTool ? null : input.targetSystem.trim();
+      const toolName = isOtherTool ? input.toolName.trim() : null;
+      if (
+        !input.specialty ||
+        (isOtherTool ? !toolName : !sourceSystem || !targetSystem)
+      ) return false;
 
       setCreating(true);
       try {
@@ -146,6 +172,8 @@ export function useConversionEngines() {
         const payload: ConversionEngineInsert = {
           source_system: sourceSystem,
           target_system: targetSystem,
+          record_type: input.recordType,
+          tool_name: toolName,
           specialty: input.specialty,
           devops_url: input.devopsUrl?.trim() || null,
           notes: input.notes?.trim() || null,
@@ -158,12 +186,18 @@ export function useConversionEngines() {
         const { error } = await (supabase as any).from("conversion_engines").insert(payload);
 
         if (error) throw error;
-        toast.success("Motor cadastrado com sucesso");
+        toast.success(
+          isOtherTool
+            ? "Ferramenta cadastrada com sucesso"
+            : "Motor cadastrado com sucesso",
+        );
         await fetchEngines();
         return true;
       } catch (err) {
         console.error("Error creating engine:", err);
-        toast.error("Erro ao cadastrar motor");
+        toast.error(
+          isOtherTool ? "Erro ao cadastrar ferramenta" : "Erro ao cadastrar motor",
+        );
         return false;
       } finally {
         setCreating(false);
@@ -213,6 +247,8 @@ export function useConversionEngines() {
           project_id: queueItem.project_id,
           source_system: queueItem.projects?.legacy_system || "Não informado",
           target_system: queueItem.projects?.system_type || "Não informado",
+          record_type: "conversion_engine",
+          tool_name: null,
           notes: notes || null,
           status: "in_development",
           created_by: user?.id || null,
@@ -239,9 +275,14 @@ export function useConversionEngines() {
 
   const updateEngine = useCallback(
     async (engineId: string, input: UpdateConversionEngineInput): Promise<boolean> => {
-      const sourceSystem = input.sourceSystem.trim();
-      const targetSystem = input.targetSystem.trim();
-      if (!sourceSystem || !targetSystem || !input.specialty) return false;
+      const isOtherTool = input.recordType === "other_tool";
+      const sourceSystem = isOtherTool ? null : input.sourceSystem.trim();
+      const targetSystem = isOtherTool ? null : input.targetSystem.trim();
+      const toolName = isOtherTool ? input.toolName.trim() : null;
+      if (
+        !input.specialty ||
+        (isOtherTool ? !toolName : !sourceSystem || !targetSystem)
+      ) return false;
 
       setUpdating(true);
       try {
@@ -250,6 +291,8 @@ export function useConversionEngines() {
         const updateData: ConversionEngineUpdate = {
           source_system: sourceSystem,
           target_system: targetSystem,
+          record_type: input.recordType,
+          tool_name: toolName,
           specialty: input.specialty,
           devops_url: input.devopsUrl?.trim() || null,
           notes: input.notes?.trim() || null,
@@ -283,12 +326,18 @@ export function useConversionEngines() {
           if (queueError) throw queueError;
         }
 
-        toast.success("Motor atualizado com sucesso");
+        toast.success(
+          isOtherTool
+            ? "Ferramenta atualizada com sucesso"
+            : "Motor atualizado com sucesso",
+        );
         await fetchEngines();
         return true;
       } catch (err) {
         console.error("Error updating engine:", err);
-        toast.error("Erro ao atualizar motor");
+        toast.error(
+          isOtherTool ? "Erro ao atualizar ferramenta" : "Erro ao atualizar motor",
+        );
         return false;
       } finally {
         setUpdating(false);
@@ -308,7 +357,7 @@ export function useConversionEngines() {
           .eq("id", engineId);
 
         if (error) throw error;
-        toast.success("Motor excluído com sucesso");
+        toast.success("Cadastro excluído com sucesso");
         await fetchEngines();
         return true;
       } catch (err) {

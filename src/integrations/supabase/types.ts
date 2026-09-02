@@ -10,8 +10,10 @@ export type ConversionEngineRow = {
   id: string;
   queue_id: string | null;
   project_id: string | null;
-  source_system: string;
-  target_system: string;
+  source_system: string | null;
+  target_system: string | null;
+  record_type: "conversion_engine" | "other_tool";
+  tool_name: string | null;
   specialty: "tn_rc" | "protest" | "ri_td" | null;
   devops_url: string | null;
   notes: string | null;
@@ -26,8 +28,10 @@ export type ConversionEngineInsert = {
   id?: string;
   queue_id?: string | null;
   project_id?: string | null;
-  source_system: string;
-  target_system: string;
+  source_system?: string | null;
+  target_system?: string | null;
+  record_type?: "conversion_engine" | "other_tool";
+  tool_name?: string | null;
   specialty?: "tn_rc" | "protest" | "ri_td" | null;
   devops_url?: string | null;
   notes?: string | null;

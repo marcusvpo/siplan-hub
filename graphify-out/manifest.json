@@ -830,8 +830,8 @@
     "semantic_hash": "fcaa0f590572fa4cde4d5cda0c42a51e"
   },
   "src/hooks/useConversionEngines.ts": {
-    "mtime": 1788359810.1466575,
-    "ast_hash": "c195c947001371d046c989a11bd31b90",
+    "mtime": 1788360992.0778825,
+    "ast_hash": "824d227918adeca0f2b9d97dcfc505ec",
     "semantic_hash": ""
   },
   "src/hooks/useConversionIssues.ts": {
@@ -965,8 +965,8 @@
     "semantic_hash": "8cbc837200552502e544dcd4d195de98"
   },
   "src/integrations/supabase/types.ts": {
-    "mtime": 1788359810.1466575,
-    "ast_hash": "7b965561cdfa23c7afc7a1ba14723969",
+    "mtime": 1788360999.471154,
+    "ast_hash": "73b8609ce6111591dfdcfd4b225fd0f5",
     "semantic_hash": ""
   },
   "src/layouts/AdminLayout.tsx": {
@@ -1175,8 +1175,8 @@
     "semantic_hash": ""
   },
   "src/pages/conversion/ConversionEngines.tsx": {
-    "mtime": 1788359950.2038689,
-    "ast_hash": "74225a32330d720ca16215886bdc2caa",
+    "mtime": 1788361349.7214942,
+    "ast_hash": "65fde78d907e27702983858f7c2e3c85",
     "semantic_hash": ""
   },
   "src/pages/conversion/MyQueueDetailedCard.tsx": {
@@ -2330,8 +2330,8 @@
     "semantic_hash": "70c3c0942823983ef905d97a3d02eda0"
   },
   "docs/telas/02-conversao-orion-tn.md": {
-    "mtime": 1788359950.2079275,
-    "ast_hash": "8d27e1bd29061175887a27f4b53b14ea",
+    "mtime": 1788361307.7433734,
+    "ast_hash": "f1f84fe9bf87da5a11b0053a1697dd66",
     "semantic_hash": ""
   },
   "docs/telas/03-comercial.md": {
@@ -4630,8 +4630,8 @@
     "semantic_hash": ""
   },
   "src/pages/conversion/Conversion.mobile.test.tsx": {
-    "mtime": 1788359950.20538,
-    "ast_hash": "858350bcade03f2f10499b9a8a6ed81e",
+    "mtime": 1788361264.5325243,
+    "ast_hash": "9d0429917462e40f29f221b857bd15fe",
     "semantic_hash": ""
   },
   "src/test/sd-mobile-layout.test.ts": {
@@ -4690,8 +4690,8 @@
     "semantic_hash": ""
   },
   "src/test/conversion-engines-schema.test.ts": {
-    "mtime": 1788359810.150171,
-    "ast_hash": "ab80a47cabfddd7031c56409dda4e7aa",
+    "mtime": 1788361279.500887,
+    "ast_hash": "bef0f44aad7eb41c5162f49074c0a529",
     "semantic_hash": ""
   },
   "supabase/migrations/20260902111500_conversion_engines_manual_registry.sql": {
@@ -4717,6 +4717,11 @@
   "src/test/chunk-error-boundary.test.tsx": {
     "mtime": 1788359809.584781,
     "ast_hash": "bb92b9ee53bc41ce5efbfdf35933aecb",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260902143000_conversion_engines_other_tools.sql": {
+    "mtime": 1788361015.011314,
+    "ast_hash": "72c576889d8656dcb6aa9897e97fcc61",
     "semantic_hash": ""
   }
 }
