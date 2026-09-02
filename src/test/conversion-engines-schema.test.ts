@@ -24,6 +24,13 @@ const specialtyMigration = readFileSync(
   ),
   "utf8",
 );
+const otherToolsMigration = readFileSync(
+  resolve(
+    root,
+    "supabase/migrations/20260902143000_conversion_engines_other_tools.sql",
+  ),
+  "utf8",
+);
 const types = readFileSync(
   resolve(root, "src/integrations/supabase/types.ts"),
   "utf8",
@@ -61,6 +68,21 @@ describe("cadastro manual de motores de conversão", () => {
     expect(specialtyMigration).toContain("'conversion_engines', 'delete'");
     expect(specialtyMigration).not.toMatch(/\sTO\s+(public|anon)\b/i);
     expect(types).toContain('specialty: "tn_rc" | "protest" | "ri_td" | null');
+  });
+
+  it("distingue motores de outras ferramentas e exige os campos correspondentes", () => {
+    expect(otherToolsMigration).toContain("ADD COLUMN IF NOT EXISTS record_type TEXT");
+    expect(otherToolsMigration).toContain("ADD COLUMN IF NOT EXISTS tool_name TEXT");
+    expect(otherToolsMigration).toContain("ALTER COLUMN source_system DROP NOT NULL");
+    expect(otherToolsMigration).toContain("record_type IN ('conversion_engine', 'other_tool')");
+    expect(otherToolsMigration).toContain("record_type = 'conversion_engine'");
+    expect(otherToolsMigration).toContain("record_type = 'other_tool'");
+    expect(otherToolsMigration).toContain("NULLIF(btrim(tool_name), '') IS NOT NULL");
+
+    expect(types).toContain('record_type: "conversion_engine" | "other_tool"');
+    expect(types).toContain("tool_name: string | null");
+    expect(types).toContain("source_system: string | null");
+    expect(types).toContain("target_system: string | null");
   });
 
   it("protege leitura, cadastro e edição com permissões distintas", () => {
