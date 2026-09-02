@@ -115,7 +115,14 @@ const engines: ConversionEngineItem[] = [1, 2, 3, 4].map((index) => ({
   ticketNumber: `900${index}`,
   sourceSystem: "Sistema legado com identificação extensa",
   targetSystem: "Orion TN",
-  specialty: "tn_rc",
+  specialty:
+    index === 1
+      ? "tn_rc"
+      : index === 2
+        ? "protest"
+        : index === 3
+          ? "ri_td"
+          : null,
   devopsUrl: "https://dev.azure.com/siplan/motores",
   engineStatus: index === 1 ? "maintenance" : "in_development",
   engineRequestedAt: new Date("2026-08-25T12:00:00Z"),
@@ -325,6 +332,9 @@ describe("Telas de conversão no mobile", () => {
     expect(screen.getByTestId("conversion-engines-pagination")).toHaveTextContent(
       "Mostrando 1–3 de 4",
     );
+    expect(screen.getByLabelText("Filtrar motores por especialidade")).toHaveTextContent(
+      "Todas as especialidades",
+    );
     expect(screen.getAllByTestId("conversion-engine-name")[0]).toHaveClass(
       "break-words",
       "line-clamp-2",
@@ -339,6 +349,25 @@ describe("Telas de conversão no mobile", () => {
 
     expect(screen.getAllByTestId("conversion-engine-card")).toHaveLength(1);
     expect(screen.getByText("Página 2 de 2")).toBeInTheDocument();
+  });
+
+  it("filtra os motores pela especialidade e permite limpar a seleção", async () => {
+    render(<ConversionEngines />);
+
+    fireEvent.click(screen.getByLabelText("Filtrar motores por especialidade"));
+    fireEvent.click(await screen.findByRole("option", { name: "Protesto" }));
+
+    expect(screen.getAllByTestId("conversion-engine-card")).toHaveLength(1);
+    expect(screen.getByTestId("conversion-engines-pagination")).toHaveTextContent(
+      "Mostrando 1–1 de 1",
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Limpar" }));
+
+    expect(screen.getAllByTestId("conversion-engine-card")).toHaveLength(3);
+    expect(screen.getByLabelText("Filtrar motores por especialidade")).toHaveTextContent(
+      "Todas as especialidades",
+    );
   });
 
   it("cadastra um motor manual pelo fluxo origem para conversão", async () => {

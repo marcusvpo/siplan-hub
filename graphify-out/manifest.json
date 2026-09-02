@@ -145,7 +145,7 @@
     "semantic_hash": ""
   },
   "src/App.tsx": {
-    "mtime": 1788359562.2480757,
+    "mtime": 1788359809.5832675,
     "ast_hash": "02e273632a7453d3d843e0418f318ea6",
     "semantic_hash": ""
   },
@@ -830,7 +830,7 @@
     "semantic_hash": "fcaa0f590572fa4cde4d5cda0c42a51e"
   },
   "src/hooks/useConversionEngines.ts": {
-    "mtime": 1788359562.64519,
+    "mtime": 1788359810.1466575,
     "ast_hash": "c195c947001371d046c989a11bd31b90",
     "semantic_hash": ""
   },
@@ -965,7 +965,7 @@
     "semantic_hash": "8cbc837200552502e544dcd4d195de98"
   },
   "src/integrations/supabase/types.ts": {
-    "mtime": 1788359562.646191,
+    "mtime": 1788359810.1466575,
     "ast_hash": "7b965561cdfa23c7afc7a1ba14723969",
     "semantic_hash": ""
   },
@@ -1000,7 +1000,7 @@
     "semantic_hash": ""
   },
   "src/main.tsx": {
-    "mtime": 1788359562.249073,
+    "mtime": 1788359809.5837739,
     "ast_hash": "4d9942d449563f474c12074b213a12d8",
     "semantic_hash": ""
   },
@@ -1175,8 +1175,8 @@
     "semantic_hash": ""
   },
   "src/pages/conversion/ConversionEngines.tsx": {
-    "mtime": 1788359562.6477041,
-    "ast_hash": "10b0dec3abace1b05bafe0f835e14c24",
+    "mtime": 1788359950.2038689,
+    "ast_hash": "74225a32330d720ca16215886bdc2caa",
     "semantic_hash": ""
   },
   "src/pages/conversion/MyQueueDetailedCard.tsx": {
@@ -1625,12 +1625,12 @@
     "semantic_hash": "ea3b5c2d9c1cc5d2b3fb3af706f2ca1a"
   },
   "vercel.json": {
-    "mtime": 1788359562.251073,
+    "mtime": 1788359809.584781,
     "ast_hash": "adc2360ef501b715be7f1a057d44575c",
     "semantic_hash": ""
   },
   "vite.config.ts": {
-    "mtime": 1788359562.2520754,
+    "mtime": 1788359809.5863063,
     "ast_hash": "318b6c2d60c0382a82eeeb511b957a3f",
     "semantic_hash": ""
   },
@@ -2330,8 +2330,8 @@
     "semantic_hash": "70c3c0942823983ef905d97a3d02eda0"
   },
   "docs/telas/02-conversao-orion-tn.md": {
-    "mtime": 1788359562.558073,
-    "ast_hash": "23407933e02a1aa39490966dbb5cf932",
+    "mtime": 1788359950.2079275,
+    "ast_hash": "8d27e1bd29061175887a27f4b53b14ea",
     "semantic_hash": ""
   },
   "docs/telas/03-comercial.md": {
@@ -2600,7 +2600,7 @@
     "semantic_hash": ""
   },
   "src/constants/permissions.ts": {
-    "mtime": 1788359562.5923722,
+    "mtime": 1788359810.145151,
     "ast_hash": "893b9397369a5b044755181557f0fc0d",
     "semantic_hash": ""
   },
@@ -4630,8 +4630,8 @@
     "semantic_hash": ""
   },
   "src/pages/conversion/Conversion.mobile.test.tsx": {
-    "mtime": 1788359562.6466968,
-    "ast_hash": "d3a7ceeb51e2ed642c202bd3d160eb2b",
+    "mtime": 1788359950.20538,
+    "ast_hash": "858350bcade03f2f10499b9a8a6ed81e",
     "semantic_hash": ""
   },
   "src/test/sd-mobile-layout.test.ts": {
@@ -4690,32 +4690,32 @@
     "semantic_hash": ""
   },
   "src/test/conversion-engines-schema.test.ts": {
-    "mtime": 1788359196.0046928,
-    "ast_hash": "d72f5245568882923dc9cf191c9391a2",
+    "mtime": 1788359810.150171,
+    "ast_hash": "ab80a47cabfddd7031c56409dda4e7aa",
     "semantic_hash": ""
   },
   "supabase/migrations/20260902111500_conversion_engines_manual_registry.sql": {
-    "mtime": 1788358689.5098324,
-    "ast_hash": "8b813ee43dee8a8d261bd8d77ae9f743",
+    "mtime": 1788359810.1537037,
+    "ast_hash": "f55008cf87e0a2d8c3f85cccf2b61b6f",
     "semantic_hash": ""
   },
   "supabase/migrations/20260902114500_conversion_engines_lifecycle_statuses.sql": {
-    "mtime": 1788358689.5108347,
-    "ast_hash": "2489c0ef959790c3e0ba115f7d1d2d0d",
+    "mtime": 1788359810.1537037,
+    "ast_hash": "b6c10bc6cc4e0af173f96f57691a88d7",
     "semantic_hash": ""
   },
   "supabase/migrations/20260902131500_conversion_engines_specialty_delete.sql": {
-    "mtime": 1788359053.5082798,
-    "ast_hash": "8f617535aec2285f33893aa97ad3a079",
+    "mtime": 1788359810.1547039,
+    "ast_hash": "d00426daca284045778e2d07927f1ccf",
     "semantic_hash": ""
   },
   "src/components/common/ChunkErrorBoundary.tsx": {
-    "mtime": 1788359562.249073,
+    "mtime": 1788359809.5837739,
     "ast_hash": "5fc128f6710bc5a496faa252384d8152",
     "semantic_hash": ""
   },
   "src/test/chunk-error-boundary.test.tsx": {
-    "mtime": 1788359562.250074,
+    "mtime": 1788359809.584781,
     "ast_hash": "bb92b9ee53bc41ce5efbfdf35933aecb",
     "semantic_hash": ""
   }
