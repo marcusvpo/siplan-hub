@@ -1594,7 +1594,7 @@ export const pageHelpData: PageHelpInfo[] = [
     keyFeatures: [
       "Agenda de compromissos por analista de CS",
       "Sincronização com pauta de reuniões e atas",
-      "Lembretes de check-ins periódicos",
+      "Filtros rápidos ao clicar nos cards de Próximos, Vencidos e Concluídos",
     ],
     steps: [
       {
@@ -1603,6 +1603,13 @@ export const pageHelpData: PageHelpInfo[] = [
         description:
           "Clique na data desejada no calendário para marcar o acompanhamento com o cartório.",
         icon: Plus,
+      },
+      {
+        stepNumber: 2,
+        title: "Filtre Clicando nos Cards",
+        description:
+          "Clique nos cards superiores (Próximos, Vencidos ou Concluídos) para aplicar ou remover rapidamente o filtro na tabela.",
+        icon: Filter,
       },
     ],
   },
