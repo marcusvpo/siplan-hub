@@ -7,6 +7,9 @@ import {
   Database,
   Eye,
   FileDown,
+  FilePlus2,
+  FileText,
+  Link2,
   Maximize2,
   MoreHorizontal,
   Minimize2,
@@ -64,7 +67,12 @@ import {
 } from "@/components/ui/table";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { AiRichTextField } from "@/components/ui/ai-rich-text-field";
-import { useCsCxRegistryOffices } from "@/hooks/useCsCxCore";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  type CsCxRequestInput,
+  useCsCxRegistryOffices,
+  useCsCxRequests,
+} from "@/hooks/useCsCxCore";
 import {
   type CsCxContact,
   type CsCxContactInput,
@@ -97,15 +105,21 @@ export default function CsCxContacts() {
   const isMobile = useIsMobile();
   const { contacts, isLoading, error, refetch, saveContact, deleteContact } =
     useCsCxContacts();
-  const { offices, products, error: referenceError } = useCsCxRegistryOffices();
+  const { offices, products, error: referenceError } =
+    useCsCxRegistryOffices();
+  const { requests, statuses, saveRequest: saveRequestMutation } =
+    useCsCxRequests();
   const { canCreate, canEditRecord, canDeleteRecord } =
     useCsCxRecordPermissions("cs_cx_contatos");
+  const { canCreate: canCreateRequest } =
+    useCsCxRecordPermissions("cs_cx_registros");
   const { user } = useAuth();
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [officeFilter, setOfficeFilter] = useState("all");
   const [productFilter, setProductFilter] = useState("all");
   const [responsibleFilter, setResponsibleFilter] = useState("all");
+  const [pendingFilter, setPendingFilter] = useState<"all" | "pending">("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [page, setPage] = useState(1);
@@ -118,6 +132,22 @@ export default function CsCxContacts() {
   const [deleting, setDeleting] = useState<CsCxContact | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [requestDialogOpen, setRequestDialogOpen] = useState(false);
+  const [requestForm, setRequestForm] = useState<CsCxRequestInput>({
+    registry_office_id: "",
+    ticket_number: "",
+    description: "",
+    module: "",
+    requester: "",
+    responsible: "",
+    requested_on: new Date().toISOString().slice(0, 10),
+    expected_delivery_on: "",
+    delivered_on: "",
+    status: "Aguardando",
+    new_observation: "",
+  });
+  const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
 
   const responsibleOptions = useMemo(
     () =>
@@ -154,8 +184,11 @@ export default function CsCxContacts() {
           contact.author?.full_name,
           ...contactProducts.map((product) => product.name),
         ].some((value) => value?.toLocaleLowerCase("pt-BR").includes(term));
+      const matchesPending =
+        pendingFilter === "all" || hasRichTextContent(contact.pending_items);
       return (
         matchesSearch &&
+        matchesPending &&
         (officeFilter === "all" ||
           contact.registry_office_id === officeFilter) &&
         (productFilter === "all" ||
@@ -172,6 +205,7 @@ export default function CsCxContacts() {
     officeFilter,
     productFilter,
     responsibleFilter,
+    pendingFilter,
     dateFrom,
     dateTo,
   ]);
@@ -198,6 +232,14 @@ export default function CsCxContacts() {
     setResponsibleFilter(value);
     setPage(1);
   };
+  const updatePendingFilter = (value: "all" | "pending") => {
+    setPendingFilter(value);
+    setPage(1);
+  };
+  const togglePendingFilter = () => {
+    setPendingFilter((prev) => (prev === "pending" ? "all" : "pending"));
+    setPage(1);
+  };
   const updateDateFrom = (value: string) => {
     setDateFrom(value);
     setPage(1);
@@ -209,6 +251,73 @@ export default function CsCxContacts() {
   const updatePageSize = (value: string) => {
     setPageSize(Number(value));
     setPage(1);
+  };
+
+  const openCreateRequestFromContact = () => {
+    const currentOfficeId = form.id
+      ? form.registry_office_id
+      : registryOfficeIds[0] || "";
+
+    if (!currentOfficeId) {
+      toast({
+        title: "Selecione um cartório",
+        description:
+          "Por favor, selecione ao menos um cartório no contato para vincular a solicitação.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setRequestForm({
+      registry_office_id: currentOfficeId,
+      ticket_number: form.ticket_number || "",
+      description:
+        richTextToPlainText(form.pending_items) ||
+        richTextToPlainText(form.notes) ||
+        "",
+      module: "",
+      requester: form.contact_person || "",
+      responsible: "",
+      requested_on: new Date().toISOString().slice(0, 10),
+      expected_delivery_on: "",
+      delivered_on: "",
+      status: statuses[0]?.name || "Aguardando",
+      new_observation: "",
+    });
+    setRequestDialogOpen(true);
+  };
+
+  const submitRequestFromContact = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!requestForm.registry_office_id || !requestForm.description.trim()) {
+      return;
+    }
+
+    setIsSubmittingRequest(true);
+    try {
+      await saveRequestMutation.mutateAsync(requestForm);
+      const ticketNum = requestForm.ticket_number?.trim();
+
+      if (ticketNum && !form.ticket_number) {
+        setForm((prev) => ({ ...prev, ticket_number: ticketNum }));
+      }
+
+      toast({
+        title: "Solicitação registrada",
+        description: ticketNum
+          ? `Solicitação Chamado #${ticketNum} criada e vinculada ao contato.`
+          : "Solicitação salva com sucesso.",
+      });
+      setRequestDialogOpen(false);
+    } catch (mutationError) {
+      toast({
+        title: "Não foi possível criar a solicitação",
+        description: errorMessage(mutationError),
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmittingRequest(false);
+    }
   };
 
   const openCreate = () => {
@@ -326,6 +435,9 @@ export default function CsCxContacts() {
           responsibleFilter === "all"
             ? "Todos os responsáveis"
             : `Responsável: ${responsibleOptions.find((profile) => profile.id === responsibleFilter)?.full_name ?? "Selecionado"}`,
+          pendingFilter === "all"
+            ? "Todas as interações"
+            : "Somente com pendências",
           dateFrom ? `De ${formatDate(dateFrom)}` : "Sem data inicial",
           dateTo ? `Até ${formatDate(dateTo)}` : "Sem data final",
         ].join(" · "),
@@ -400,12 +512,15 @@ export default function CsCxContacts() {
           label="Com pendências"
           value={contacts.filter((item) => hasRichTextContent(item.pending_items)).length}
           icon={TriangleAlert}
+          onClick={togglePendingFilter}
+          active={pendingFilter === "pending"}
+          title="Clique para filtrar somente os contatos que possuem pendências"
         />
       </div>
 
       <Card>
         <CardContent className="space-y-3 p-3">
-          <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-[minmax(240px,1fr)_190px_170px] 2xl:grid-cols-[minmax(240px,1fr)_190px_170px_180px_145px_145px]">
+          <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-[minmax(220px,1fr)_180px_160px_170px_175px_140px_140px]">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
@@ -457,6 +572,18 @@ export default function CsCxContacts() {
                 ))}
               </SelectContent>
             </Select>
+            <Select
+              value={pendingFilter}
+              onValueChange={(val) => updatePendingFilter(val as "all" | "pending")}
+            >
+              <SelectTrigger className="h-9" aria-label="Filtrar por pendências">
+                <SelectValue placeholder="Todas as interações" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as interações</SelectItem>
+                <SelectItem value="pending">Somente com pendências</SelectItem>
+              </SelectContent>
+            </Select>
             <Input
               className="h-9"
               aria-label="Data inicial"
@@ -493,7 +620,25 @@ export default function CsCxContacts() {
                       <div className="flex min-w-0 items-start justify-between gap-2">
                         <div className="min-w-0">
                           <p className="break-words text-sm font-bold">{contact.registry_office?.name ?? "—"}</p>
-                          <p className="mt-0.5 text-xs text-muted-foreground">{formatDate(contact.contact_date)}{contact.ticket_number ? ` · Chamado ${contact.ticket_number}` : ""}</p>
+                          <p className="mt-0.5 text-xs text-muted-foreground flex flex-wrap items-center gap-1">
+                            <span>{formatDate(contact.contact_date)}</span>
+                            {contact.ticket_number && (
+                              <>
+                                <span>· Chamado {contact.ticket_number}</span>
+                                {(() => {
+                                  const matched = requests.find(
+                                    (r) =>
+                                      r.registry_office_id === contact.registry_office_id &&
+                                      r.ticket_number &&
+                                      r.ticket_number.trim() === contact.ticket_number.trim(),
+                                  );
+                                  return matched ? (
+                                    <RequestStatusBadge status={matched.status} />
+                                  ) : null;
+                                })()}
+                              </>
+                            )}
+                          </p>
                         </div>
                         <div className="flex shrink-0">
                           <Button type="button" variant="ghost" size="icon" className="h-8 w-8" aria-label={`Visualizar contato de ${contact.contact_person}`} onClick={() => setViewing(contact)}><Eye className="h-4 w-4" /></Button>
@@ -568,9 +713,20 @@ export default function CsCxContacts() {
                               {contact.registry_office?.name ?? "—"}
                             </div>
                             {contact.ticket_number && (
-                              <span className="text-[11px] leading-4 text-muted-foreground">
-                                Chamado {contact.ticket_number}
-                              </span>
+                              <div className="flex items-center gap-1.5 text-[11px] leading-4 text-muted-foreground">
+                                <span>Chamado {contact.ticket_number}</span>
+                                {(() => {
+                                  const matched = requests.find(
+                                    (r) =>
+                                      r.registry_office_id === contact.registry_office_id &&
+                                      r.ticket_number &&
+                                      r.ticket_number.trim() === contact.ticket_number.trim(),
+                                  );
+                                  return matched ? (
+                                    <RequestStatusBadge status={matched.status} />
+                                  ) : null;
+                                })()}
+                              </div>
                             )}
                           </TableCell>
                           <TableCell className="px-3 py-2">
@@ -797,14 +953,74 @@ export default function CsCxContacts() {
                   }
                 />
               </Field>
-              <Field label="Chamado">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>Chamado</Label>
+                  {form.ticket_number && (
+                    (() => {
+                      const currentOfficeId = form.id
+                        ? form.registry_office_id
+                        : registryOfficeIds[0];
+                      const matched = requests.find(
+                        (r) =>
+                          r.registry_office_id === currentOfficeId &&
+                          r.ticket_number &&
+                          r.ticket_number.trim() === form.ticket_number.trim(),
+                      );
+                      return matched ? (
+                        <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                          <Link2 className="h-3 w-3 text-rose-500" />
+                          Solicitação: <RequestStatusBadge status={matched.status} />
+                        </span>
+                      ) : null;
+                    })()
+                  )}
+                </div>
                 <Input
                   value={form.ticket_number}
                   onChange={(event) =>
                     setForm({ ...form, ticket_number: event.target.value })
                   }
+                  placeholder="Número do chamado ou ID"
                 />
-              </Field>
+                {(() => {
+                  const currentOfficeId = form.id
+                    ? form.registry_office_id
+                    : registryOfficeIds[0];
+                  const officeReqs = requests.filter(
+                    (r) =>
+                      r.registry_office_id === currentOfficeId &&
+                      r.ticket_number,
+                  );
+                  if (!officeReqs.length) return null;
+                  return (
+                    <div className="mt-1 flex flex-wrap items-center gap-1 text-[11px] text-muted-foreground">
+                      <span>Vincular solicitação:</span>
+                      {officeReqs.slice(0, 4).map((req) => (
+                        <button
+                          key={req.id}
+                          type="button"
+                          onClick={() =>
+                            setForm((prev) => ({
+                              ...prev,
+                              ticket_number: req.ticket_number ?? "",
+                            }))
+                          }
+                          className={cn(
+                            "rounded border px-1.5 py-0.5 font-mono text-[10px] transition-colors",
+                            form.ticket_number === req.ticket_number
+                              ? "border-rose-500 bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300"
+                              : "border-muted hover:border-rose-300 hover:bg-muted/50",
+                          )}
+                          title={`Vincular #${req.ticket_number}: ${req.description}`}
+                        >
+                          #{req.ticket_number}
+                        </button>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </div>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Pessoa de contato *">
@@ -843,20 +1059,231 @@ export default function CsCxContacts() {
               requestedBy={user?.id}
               targetField={`cs_cx_contact:${form.id ?? "draft"}:pending_items`}
             />
+            <DialogFooter className="flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                {canCreateRequest && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={openCreateRequestFromContact}
+                    className="w-full gap-2 border-rose-200 text-rose-700 hover:bg-rose-50 dark:border-rose-900 dark:text-rose-300 dark:hover:bg-rose-950/50 sm:w-auto"
+                    title="Criar e vincular uma solicitação no módulo Registros a este contato"
+                  >
+                    <FilePlus2 className="h-4 w-4" />
+                    Nova solicitação
+                  </Button>
+                )}
+              </div>
+              <div className="flex w-full items-center justify-end gap-2 sm:w-auto">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setDialogOpen(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting
+                    ? "Salvando..."
+                    : registryOfficeIds.length > 1 && !form.id
+                      ? `Salvar ${registryOfficeIds.length} contatos`
+                      : "Salvar contato"}
+                </Button>
+              </div>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Diálogo de Nova Solicitação vinculada ao contato */}
+      <Dialog open={requestDialogOpen} onOpenChange={setRequestDialogOpen}>
+        <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none overflow-y-auto p-4 sm:max-h-[92vh] sm:max-w-4xl sm:p-6">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FilePlus2 className="h-5 w-5 text-rose-500" />
+              Nova solicitação (Registros)
+            </DialogTitle>
+            <DialogDescription>
+              Cadastre a solicitação que será vinculada a este contato.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={submitRequestFromContact} className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Cartório *">
+                <Select
+                  value={requestForm.registry_office_id}
+                  onValueChange={(value) =>
+                    setRequestForm({ ...requestForm, registry_office_id: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o cartório" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {offices
+                      .filter(
+                        (office) =>
+                          office.active ||
+                          office.id === requestForm.registry_office_id,
+                      )
+                      .map((office) => (
+                        <SelectItem key={office.id} value={office.id}>
+                          {office.name}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+              <Field label="Chamado">
+                <Input
+                  value={requestForm.ticket_number}
+                  onChange={(event) =>
+                    setRequestForm({
+                      ...requestForm,
+                      ticket_number: event.target.value,
+                    })
+                  }
+                  placeholder="Ex: 755261"
+                />
+              </Field>
+            </div>
+            <Field label="Descrição *">
+              <Textarea
+                required
+                maxLength={1500}
+                className="min-h-24"
+                value={requestForm.description}
+                onChange={(event) =>
+                  setRequestForm({
+                    ...requestForm,
+                    description: event.target.value,
+                  })
+                }
+                placeholder="Descreva a solicitação ou necessidade do cartório..."
+              />
+            </Field>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <Field label="Módulo">
+                <Input
+                  value={requestForm.module}
+                  onChange={(event) =>
+                    setRequestForm({ ...requestForm, module: event.target.value })
+                  }
+                  placeholder="Ex: OrionPRO"
+                />
+              </Field>
+              <Field label="Solicitante">
+                <Input
+                  value={requestForm.requester}
+                  onChange={(event) =>
+                    setRequestForm({
+                      ...requestForm,
+                      requester: event.target.value,
+                    })
+                  }
+                  placeholder="Pessoa que solicitou"
+                />
+              </Field>
+              <Field label="Responsável">
+                <Input
+                  value={requestForm.responsible}
+                  onChange={(event) =>
+                    setRequestForm({
+                      ...requestForm,
+                      responsible: event.target.value,
+                    })
+                  }
+                  placeholder="Analista ou responsável"
+                />
+              </Field>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <Field label="Solicitação">
+                <Input
+                  type="date"
+                  value={requestForm.requested_on}
+                  onChange={(event) =>
+                    setRequestForm({
+                      ...requestForm,
+                      requested_on: event.target.value,
+                    })
+                  }
+                />
+              </Field>
+              <Field label="Previsão">
+                <Input
+                  type="date"
+                  value={requestForm.expected_delivery_on}
+                  onChange={(event) =>
+                    setRequestForm({
+                      ...requestForm,
+                      expected_delivery_on: event.target.value,
+                    })
+                  }
+                />
+              </Field>
+              <Field label="Entrega">
+                <Input
+                  type="date"
+                  value={requestForm.delivered_on}
+                  onChange={(event) =>
+                    setRequestForm({
+                      ...requestForm,
+                      delivered_on: event.target.value,
+                    })
+                  }
+                />
+              </Field>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Status">
+                <Select
+                  value={requestForm.status}
+                  onValueChange={(value) =>
+                    setRequestForm({ ...requestForm, status: value })
+                  }
+                >
+                  <SelectTrigger aria-label="Status da solicitação">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(statuses.length
+                      ? statuses
+                      : [{ id: "def", name: "Aguardando" }]
+                    ).map((status) => (
+                      <SelectItem key={status.id} value={status.name}>
+                        {status.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+              <Field label="Observação inicial">
+                <Input
+                  value={requestForm.new_observation}
+                  onChange={(event) =>
+                    setRequestForm({
+                      ...requestForm,
+                      new_observation: event.target.value,
+                    })
+                  }
+                  placeholder="Observação para o histórico..."
+                />
+              </Field>
+            </div>
             <DialogFooter>
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setDialogOpen(false)}
+                onClick={() => setRequestDialogOpen(false)}
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting
-                  ? "Salvando..."
-                  : registryOfficeIds.length > 1 && !form.id
-                    ? `Salvar ${registryOfficeIds.length} contatos`
-                    : "Salvar contato"}
+              <Button type="submit" disabled={isSubmittingRequest}>
+                {isSubmittingRequest
+                  ? "Criando solicitação..."
+                  : "Salvar solicitação"}
               </Button>
             </DialogFooter>
           </form>
@@ -917,21 +1344,49 @@ function Metric({
   label,
   value,
   icon: Icon,
+  onClick,
+  active = false,
+  title,
 }: {
   label: string;
   value: number;
   icon: typeof Contact;
+  onClick?: () => void;
+  active?: boolean;
+  title?: string;
 }) {
   return (
-    <Card>
+    <Card
+      className={cn(
+        "transition-all",
+        onClick &&
+          "cursor-pointer hover:border-rose-300 hover:bg-rose-50/30 dark:hover:border-rose-800 dark:hover:bg-rose-950/20",
+        active &&
+          "border-rose-500 bg-rose-50/60 shadow-sm dark:border-rose-600 dark:bg-rose-950/40",
+      )}
+      onClick={onClick}
+      title={title}
+    >
       <CardContent className="flex items-center justify-between px-3 py-2.5">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-            {label}
-          </p>
+          <div className="flex items-center gap-1.5">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+              {label}
+            </p>
+            {active && (
+              <Badge variant="destructive" className="h-4 px-1 text-[9px] font-medium leading-none">
+                Filtrado
+              </Badge>
+            )}
+          </div>
           <p className="text-xl font-bold leading-6">{value}</p>
         </div>
-        <Icon className="h-4 w-4 text-rose-500" />
+        <Icon
+          className={cn(
+            "h-4 w-4",
+            active ? "text-rose-600 dark:text-rose-400" : "text-rose-500",
+          )}
+        />
       </CardContent>
     </Card>
   );
@@ -965,6 +1420,16 @@ function ContactProductBadges({ contact }: { contact: CsCxContact }) {
   );
 }
 function ContactReadOnlyDetails({ contact }: { contact: CsCxContact }) {
+  const { requests } = useCsCxRequests();
+  const linkedReq = contact.ticket_number
+    ? requests.find(
+        (r) =>
+          r.registry_office_id === contact.registry_office_id &&
+          r.ticket_number &&
+          r.ticket_number.trim() === contact.ticket_number.trim(),
+      )
+    : null;
+
   return (
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-2">
@@ -991,6 +1456,25 @@ function ContactReadOnlyDetails({ contact }: { contact: CsCxContact }) {
           value={contact.ticket_number || "Não informado"}
         />
       </div>
+
+      {linkedReq && (
+        <div className="space-y-2 rounded-lg border bg-rose-50/50 p-3 dark:bg-rose-950/20">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5 font-bold text-xs">
+              <FileText className="h-4 w-4 text-rose-600" />
+              <span>Solicitação #{linkedReq.ticket_number}</span>
+            </div>
+            <RequestStatusBadge status={linkedReq.status} />
+          </div>
+          <p className="text-xs text-muted-foreground line-clamp-2">{linkedReq.description}</p>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+            {linkedReq.module && <span>Módulo: <strong>{linkedReq.module}</strong></span>}
+            {linkedReq.requester && <span>Solicitante: <strong>{linkedReq.requester}</strong></span>}
+            {linkedReq.responsible && <span>Responsável: <strong>{linkedReq.responsible}</strong></span>}
+          </div>
+        </div>
+      )}
+
       <div className="space-y-2">
         <p className="text-xs font-medium text-muted-foreground">Produtos</p>
         <div className="rounded-md border bg-muted/20 p-3">
@@ -1188,6 +1672,30 @@ function DataError({
         Tentar novamente
       </Button>
     </div>
+  );
+}
+function RequestStatusBadge({ status }: { status: string | null }) {
+  return (
+    <Badge
+      variant="outline"
+      className={cn(
+        "h-5 text-[10px]",
+        status === "Finalizado" &&
+          "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300",
+        status === "Negado" &&
+          "border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300",
+        ["Projeto", "Desenvolvimento", "Em andamento", "Em execução"].includes(
+          status ?? "",
+        ) &&
+          "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-300",
+        status === "Sustentação" &&
+          "border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-900 dark:bg-orange-950/40 dark:text-orange-300",
+        status === "FastTrack" &&
+          "border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700 dark:border-fuchsia-900 dark:bg-fuchsia-950/40 dark:text-fuchsia-300",
+      )}
+    >
+      {status || "Aguardando"}
+    </Badge>
   );
 }
 function formatDate(value: string) {

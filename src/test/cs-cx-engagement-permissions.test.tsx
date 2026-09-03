@@ -38,6 +38,15 @@ vi.mock("@/hooks/useCsCxCore", () => ({
     products: [{ id: "product-1", name: "Orion", product_code: "ORI" }],
     error: null,
   }),
+  useCsCxRequests: () => ({
+    requests: [],
+    statuses: [
+      { id: "status-1", name: "Aguardando", active: true, is_system: true, sort_order: 1 },
+      { id: "status-2", name: "Em andamento", active: true, is_system: false, sort_order: 2 },
+    ],
+    saveRequest: mutation,
+    deleteRequest: mutation,
+  }),
 }));
 
 vi.mock("@/hooks/useCsCxEngagement", () => ({
@@ -54,7 +63,10 @@ vi.mock("@/hooks/useCsCxEngagement", () => ({
               .slice(0, 10)
           : new Date().toISOString().slice(0, 10),
       notes: "Contato produtivo",
-      pending_items: null,
+      pending_items:
+        index === 0
+          ? '{"root":{"children":[{"children":[{"text":"Acompanhar chamado pendente"}],"type":"paragraph"}]}}'
+          : null,
       product_id: "product-1",
       contact_person: index === 0 ? "Maria" : `Pessoa ${index + 1}`,
       contact_details: index === 0 ? "maria@exemplo.com" : `pessoa${index + 1}@exemplo.com`,
@@ -174,9 +186,39 @@ describe("CS/CX contatos e agendamentos — permissões", () => {
     renderPage(<CsCxContacts />, ["cs_cx_contatos:create"]);
     expect(screen.getByRole("button", { name: /exportar pdf/i })).toBeInTheDocument();
     expect(screen.getByText("Todos os responsáveis")).toBeInTheDocument();
+    expect(screen.getByText("Todas as interações")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /novo contato/i }));
     expect(screen.getByRole("combobox", { name: /produtos do contato/i })).toBeInTheDocument();
+  });
+
+  it("abre o diálogo de nova solicitação a partir do modal de contato", () => {
+    renderPage(<CsCxContacts />, ["cs_cx_contatos:create", "cs_cx_registros:create"]);
+
+    fireEvent.click(screen.getByRole("button", { name: /novo contato/i }));
+    const newRequestBtn = screen.getByRole("button", { name: /nova solicitação/i });
+    expect(newRequestBtn).toBeInTheDocument();
+
+    fireEvent.click(newRequestBtn);
+    expect(screen.getByText("Nova solicitação (Registros)")).toBeInTheDocument();
+  });
+
+  it("filtra apenas contatos com pendências pelo card de métrica e pelo select", () => {
+    renderPage(<CsCxContacts />, []);
+
+    expect(screen.getByText("Pessoa 2")).toBeInTheDocument();
+
+    // Clica na métrica "Com pendências"
+    const pendingMetricCard = screen.getByText("Com pendências");
+    fireEvent.click(pendingMetricCard);
+
+    // Deve filtrar mostrando somente Maria
+    expect(screen.getByText("Maria")).toBeInTheDocument();
+    expect(screen.queryByText("Pessoa 2")).not.toBeInTheDocument();
+
+    // Desativa clicando no card novamente
+    fireEvent.click(pendingMetricCard);
+    expect(screen.getByText("Pessoa 2")).toBeInTheDocument();
   });
 
   it("permite expandir o formulário de contato para tela cheia", () => {
