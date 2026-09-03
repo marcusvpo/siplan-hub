@@ -108,6 +108,20 @@ const STATUS_OPTIONS = [
   { value: "ativo", label: "Ativo" },
   { value: "inativo", label: "Inativo" },
 ] as const;
+
+const ROUTINE_STATUS_OPTIONS = [
+  { value: "all", label: "Todos os status" },
+  { value: "analyzed", label: "Analisado" },
+  { value: "not_analyzed", label: "Não analisado" },
+  { value: "no_routines", label: "Sem rotina" },
+] as const;
+
+const ITEM_STATUS_FILTER_OPTIONS = [
+  { value: "all", label: "Todos os status" },
+  { value: "ativo", label: "Ativo" },
+  { value: "inativo", label: "Inativo" },
+  { value: "analisar", label: "Analisar" },
+] as const;
 const DEFAULT_PAGE_SIZE = 5;
 const UNASSIGNED_PRODUCT_ID = "__without_product__";
 
@@ -228,6 +242,7 @@ export default function CsCxRoutines() {
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [officeFilter, setOfficeFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [applicationPage, setApplicationPage] = useState(1);
   const [applicationPageSize, setApplicationPageSize] =
     useState(DEFAULT_PAGE_SIZE);
@@ -255,6 +270,7 @@ export default function CsCxRoutines() {
   const [analysisProductId, setAnalysisProductId] = useState("all");
   const [analysisFullscreen, setAnalysisFullscreen] = useState(false);
   const [analysisSearch, setAnalysisSearch] = useState("");
+  const [analysisStatusFilter, setAnalysisStatusFilter] = useState("all");
   const [analysisPage, setAnalysisPage] = useState(1);
   const [analysisPageSize, setAnalysisPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [bulkAnalysisOpen, setBulkAnalysisOpen] = useState(false);
@@ -308,8 +324,8 @@ export default function CsCxRoutines() {
     const term = analysisSearch.trim().toLocaleLowerCase("pt-BR");
     return analysisRoutines
       .flatMap((routine) => routine.items.map((item) => ({ routine, item })))
-      .filter(
-        ({ routine, item }) =>
+      .filter(({ routine, item }) => {
+        const matchesTerm =
           !term ||
           [
             routine.routine_model?.name,
@@ -318,9 +334,15 @@ export default function CsCxRoutines() {
             item.model_item?.routine_type?.name,
             item.notes,
             item.analysis_notes,
-          ].some((value) => value?.toLocaleLowerCase("pt-BR").includes(term)),
-      );
-  }, [analysisRoutines, analysisSearch]);
+          ].some((value) => value?.toLocaleLowerCase("pt-BR").includes(term));
+        const matchesStatus =
+          analysisStatusFilter === "all" ||
+          (analysisStatusFilter === "ativo" && item.active === true) ||
+          (analysisStatusFilter === "inativo" && item.active === false) ||
+          (analysisStatusFilter === "analisar" && item.active === null);
+        return matchesTerm && matchesStatus;
+      });
+  }, [analysisRoutines, analysisSearch, analysisStatusFilter]);
   const analysisTotalPages = Math.max(
     1,
     Math.ceil(openedOfficeItems.length / analysisPageSize),
@@ -354,7 +376,7 @@ export default function CsCxRoutines() {
   const filteredOffices = useMemo(() => {
     const term = normalizeSearchText(search);
     const candidates =
-      term || officeFilter !== "all"
+      term || officeFilter !== "all" || statusFilter !== "all"
         ? allOfficeSummaries
         : appliedOfficeSummaries;
     return candidates.filter((summary) => {
@@ -367,12 +389,20 @@ export default function CsCxRoutines() {
             routine.notes,
           ]),
         ].some((value) => normalizeSearchText(value ?? "").includes(term));
-      return (
-        matchesTerm &&
-        (officeFilter === "all" || summary.registryOfficeId === officeFilter)
-      );
+      const matchesOffice =
+        officeFilter === "all" || summary.registryOfficeId === officeFilter;
+      const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === "no_routines" && summary.routines.length === 0) ||
+        (statusFilter === "analyzed" &&
+          summary.routines.length > 0 &&
+          summary.analyzed) ||
+        (statusFilter === "not_analyzed" &&
+          summary.routines.length > 0 &&
+          !summary.analyzed);
+      return matchesTerm && matchesOffice && matchesStatus;
     });
-  }, [allOfficeSummaries, appliedOfficeSummaries, officeFilter, search]);
+  }, [allOfficeSummaries, appliedOfficeSummaries, officeFilter, search, statusFilter]);
   const applicationTotalPages = Math.max(
     1,
     Math.ceil(filteredOffices.length / applicationPageSize),
@@ -463,6 +493,10 @@ export default function CsCxRoutines() {
     setOfficeFilter(value);
     setApplicationPage(1);
   };
+  const updateStatusFilter = (value: string) => {
+    setStatusFilter(value);
+    setApplicationPage(1);
+  };
   const updateApplicationPageSize = (value: string) => {
     setApplicationPageSize(Number(value));
     setApplicationPage(1);
@@ -495,6 +529,10 @@ export default function CsCxRoutines() {
     setAnalysisSearch(value);
     setAnalysisPage(1);
   };
+  const updateAnalysisStatusFilter = (value: string) => {
+    setAnalysisStatusFilter(value);
+    setAnalysisPage(1);
+  };
   const updateAnalysisPageSize = (value: string) => {
     setAnalysisPageSize(Number(value));
     setAnalysisPage(1);
@@ -502,6 +540,7 @@ export default function CsCxRoutines() {
   const updateAnalysisProduct = (value: string) => {
     setAnalysisProductId(value);
     setAnalysisSearch("");
+    setAnalysisStatusFilter("all");
     setAnalysisPage(1);
     setBulkAnalysisOpen(false);
   };
@@ -520,6 +559,7 @@ export default function CsCxRoutines() {
     );
     setAnalysisFullscreen(false);
     setAnalysisSearch("");
+    setAnalysisStatusFilter("all");
     setAnalysisPage(1);
   }
 
@@ -537,6 +577,7 @@ export default function CsCxRoutines() {
     setAnalysisProductId("all");
     setAnalysisFullscreen(false);
     setAnalysisSearch("");
+    setAnalysisStatusFilter("all");
     setAnalysisPage(1);
     setBulkAnalysisOpen(false);
   }
@@ -776,8 +817,8 @@ export default function CsCxRoutines() {
         </TabsList>
         <TabsContent value="applications" className="space-y-3">
           <Card>
-            <CardContent className="grid gap-2 p-3 md:grid-cols-[minmax(260px,1fr)_260px]">
-              <div className="relative">
+            <CardContent className="grid gap-2 p-3 sm:grid-cols-2 md:grid-cols-[minmax(240px,1fr)_220px_200px]">
+              <div className="relative sm:col-span-2 md:col-span-1">
                 <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   value={search}
@@ -787,7 +828,7 @@ export default function CsCxRoutines() {
                 />
               </div>
               <Select value={officeFilter} onValueChange={updateOfficeFilter}>
-                <SelectTrigger className="h-9">
+                <SelectTrigger className="h-9" aria-label="Filtrar por cartório">
                   <SelectValue placeholder="Todos os cartórios" />
                 </SelectTrigger>
                 <SelectContent>
@@ -795,6 +836,18 @@ export default function CsCxRoutines() {
                   {offices.map((office) => (
                     <SelectItem key={office.id} value={office.id}>
                       {office.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={statusFilter} onValueChange={updateStatusFilter}>
+                <SelectTrigger className="h-9" aria-label="Filtrar por status da aplicação">
+                  <SelectValue placeholder="Todos os status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ROUTINE_STATUS_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -1494,6 +1547,21 @@ export default function CsCxRoutines() {
                 onChange={(event) => updateAnalysisSearch(event.target.value)}
               />
             </div>
+            <Select
+              value={analysisStatusFilter}
+              onValueChange={updateAnalysisStatusFilter}
+            >
+              <SelectTrigger className="h-8 w-full sm:w-[160px]" aria-label="Filtrar por status dos itens">
+                <SelectValue placeholder="Todos os status" />
+              </SelectTrigger>
+              <SelectContent>
+                {ITEM_STATUS_FILTER_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             {analysisRoutines.length > 0 &&
               analysisRoutines.every((routine) =>
                 canEditRecord(routine.applied_by),
@@ -1513,12 +1581,12 @@ export default function CsCxRoutines() {
 
           <div className="min-h-0 flex-1 overflow-y-auto pr-1">
             {pagedOfficeItems.length > 0 && (
-              <div className="mb-1.5 hidden grid-cols-[minmax(0,1fr)_minmax(8rem,0.32fr)_minmax(7rem,0.28fr)_minmax(7rem,0.28fr)_auto] items-center gap-3 px-3 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground md:grid">
+              <div className="mb-1.5 hidden grid-cols-[minmax(0,1fr)_130px_110px_100px_140px] items-center gap-3 rounded-md border border-transparent px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground md:grid">
                 <span>Rotina e observações</span>
                 <span>Tipo</span>
                 <span>Ideal</span>
                 <span>Status</span>
-                <span className="sr-only">Ações</span>
+                <span className="text-right">Ações</span>
               </div>
             )}
             <div className="space-y-1.5">
@@ -1940,7 +2008,7 @@ function RoutineItemRow({
   const beforeObservations = decodeRoutineObservations(item.notes);
   const afterObservations = decodeRoutineObservations(item.analysis_notes);
   return (
-    <div className="grid gap-2 rounded-md border px-3 py-2 md:grid-cols-[minmax(0,1fr)_minmax(8rem,0.32fr)_minmax(7rem,0.28fr)_minmax(7rem,0.28fr)_auto] md:items-center md:gap-3">
+    <div className="grid gap-2 rounded-md border px-3 py-2 md:grid-cols-[minmax(0,1fr)_130px_110px_100px_140px] md:items-center md:gap-3">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-1.5">
           <span className="text-sm font-medium">

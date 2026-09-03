@@ -1617,6 +1617,7 @@ export const pageHelpData: PageHelpInfo[] = [
     keyFeatures: [
       "Matriz de adoção de rotinas por serventia",
       "Identificação de recursos subutilizados para agendamento de recapacitação",
+      "Filtros por cartório, busca textual e status de análise ou de itens",
     ],
     steps: [
       {
@@ -1625,6 +1626,13 @@ export const pageHelpData: PageHelpInfo[] = [
         description:
           "Selecione o cartório para marcar quais rotinas estão operacionais.",
         icon: ListChecks,
+      },
+      {
+        stepNumber: 2,
+        title: "Filtre por Status",
+        description:
+          "Utilize os seletores de status para visualizar cartórios analisados, não analisados ou sem rotina, assim como itens ativos/inativos na análise.",
+        icon: Filter,
       },
     ],
   },
