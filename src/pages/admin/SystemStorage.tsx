@@ -10,14 +10,14 @@ export default function SystemStorage() {
   const storageLimitMB = 50 * 1024; // 50GB in MB
   const storageUsedMB = stats?.storageSizeMB || 0;
 
-  const dbLimitMB = 5 * 1024; // 5GB in MB
+  const dbLimitMB = 8 * 1024; // 8GB (Plano Pro provisionado no Supabase)
   const dbUsedMB = stats?.dbSizeMB || 0;
 
   const storagePercentage = Math.min((storageUsedMB / storageLimitMB) * 100, 100) || 0;
   const dbPercentage = Math.min((dbUsedMB / dbLimitMB) * 100, 100) || 0;
 
   const formatSize = (mb: number) => {
-    if (mb > 1024) {
+    if (mb >= 1024) {
       return `${(mb / 1024).toFixed(2)} GB`;
     }
     return `${mb.toFixed(2)} MB`;
@@ -36,7 +36,7 @@ export default function SystemStorage() {
       <div className="space-y-1">
         <h2 className="text-2xl font-bold tracking-tight">Armazenamento</h2>
         <p className="text-muted-foreground">
-          Visão geral simulada do consumo de Storage e Banco de Dados (Supabase).
+          Visão geral em tempo real do consumo de Storage e Banco de Dados (Supabase).
         </p>
       </div>
 
@@ -51,7 +51,7 @@ export default function SystemStorage() {
               Uploads (Storage API)
             </CardTitle>
             <CardDescription>
-              Imagens, relatórios PDF, fotos de perfil (bucket principal).
+              Imagens, relatórios PDF, anexos e arquivos dos buckets do Supabase Storage.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -84,14 +84,14 @@ export default function SystemStorage() {
               Banco de Dados (PostgreSQL)
             </CardTitle>
             <CardDescription>
-              Dados transacionais, tabelas, logs de auditoria e perfis.
+              Dados transacionais, tabelas, logs de auditoria e perfis do Postgres.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex justify-between items-end">
               <div>
                 <p className="text-3xl font-bold">{formatSize(dbUsedMB)}</p>
-                <p className="text-sm font-medium text-muted-foreground">de 5 GB (Plano Pro)</p>
+                <p className="text-sm font-medium text-muted-foreground">de 8 GB (Plano Pro)</p>
               </div>
               <div className="text-right">
                 <p className="text-xl font-semibold text-emerald-500">{dbPercentage.toFixed(1)}%</p>
