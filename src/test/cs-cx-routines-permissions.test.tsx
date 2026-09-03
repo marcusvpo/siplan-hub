@@ -463,4 +463,24 @@ describe("CS/CX rotinas — permissões", () => {
       );
     });
   });
+
+  it("filtra cartórios por status da aplicação", () => {
+    renderPage([]);
+    const statusSelect = screen.getByRole("combobox", {
+      name: /filtrar por status da aplicação/i,
+    });
+    expect(statusSelect).toBeInTheDocument();
+  });
+
+  it("filtra itens do cartório por status no modal de análise", () => {
+    renderPage([]);
+    fireEvent.click(
+      screen.getAllByRole("button", { name: /analisar .* e suas rotinas/i })[0],
+    );
+    const itemStatusSelect = screen.getByRole("combobox", {
+      name: /filtrar por status dos itens/i,
+    });
+    expect(itemStatusSelect).toBeInTheDocument();
+  });
 });
+
