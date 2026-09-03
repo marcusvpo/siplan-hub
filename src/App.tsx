@@ -134,6 +134,7 @@ const VacationManagement = lazy(
 const SystemStorage = lazy(() => import("./pages/admin/SystemStorage"));
 const SystemInfrastructure = lazy(() => import("./pages/admin/SystemInfrastructure"));
 const InactiveUsers = lazy(() => import("./pages/admin/InactiveUsers"));
+const AdminChangelog = lazy(() => import("./pages/admin/AdminChangelog"));
 const ProjectDetails = lazy(() => import("./pages/ProjectDetails"));
 const ProjectAdherenceForm = lazy(() => import("./pages/ProjectAdherenceForm"));
 const ProjectsKanban = lazy(() => import("./pages/ProjectsKanban"));
@@ -383,6 +384,16 @@ const App = () => (
                     <Suspense fallback={<PageLoader />}>
                       <RequirePermission resource="copilot_usage">
                         <CopilotUsage />
+                      </RequirePermission>
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="changelog"
+                  element={
+                    <Suspense fallback={<PageLoader />}>
+                      <RequirePermission resource="admin_changelog">
+                        <AdminChangelog />
                       </RequirePermission>
                     </Suspense>
                   }
