@@ -12,10 +12,12 @@ const mobileViewportListeners = new Set<
   (event: MediaQueryListEvent) => void
 >();
 
+let mockNeedRefresh = false;
+
 vi.mock("virtual:pwa-register/react", () => ({
   useRegisterSW: () => ({
     offlineReady: [false, vi.fn()],
-    needRefresh: [false, vi.fn()],
+    needRefresh: [mockNeedRefresh, vi.fn()],
     updateServiceWorker,
   }),
 }));
@@ -68,6 +70,7 @@ function renderInstallControls(autoOpen = false) {
 
 describe("PWA do Siplan HUB", () => {
   beforeEach(() => {
+    mockNeedRefresh = false;
     mobileViewportListeners.clear();
     localStorage.clear();
     sessionStorage.clear();
@@ -184,14 +187,18 @@ describe("PWA do Siplan HUB", () => {
     expect(screen.getByText(/dados e operações do sistema precisam de internet/i)).toBeInTheDocument();
   });
 
-  it("mantém o aviso de conexão nas experiências públicas", () => {
-    window.history.replaceState({}, "", "/public/checklist/123");
+  it("exibe o aviso de nova versão no mobile mas não no desktop", () => {
+    mockNeedRefresh = true;
+
+    // No desktop: não deve exibir
+    mockMobileViewport(false);
+    const { unmount } = render(<PwaProvider><div /></PwaProvider>);
+    expect(screen.queryByText("Nova versão disponível")).not.toBeInTheDocument();
+    unmount();
+
+    // No mobile: deve exibir
+    mockMobileViewport(true);
     render(<PwaProvider><div /></PwaProvider>);
-
-    act(() => {
-      window.dispatchEvent(new Event("offline"));
-    });
-
-    expect(screen.getByText("Você está sem conexão")).toBeInTheDocument();
+    expect(screen.getByText("Nova versão disponível")).toBeInTheDocument();
   });
 });
