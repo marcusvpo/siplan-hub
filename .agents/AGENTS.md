@@ -42,6 +42,7 @@ Antes de considerar uma nova tela, rota ou módulo concluído, verifique todos o
 9. **Tipos do Supabase:** ao criar ou alterar tabelas/colunas, atualize também `src/integrations/supabase/types.ts`; o build não regenera esse arquivo automaticamente.
 10. **Documentação e testes:** atualize a documentação relevante e rode as validações proporcionais à mudança, incluindo os testes de permissões quando houver alteração de RBAC.
 11. **Informativo de Ajuda da Tela (ⓘ):** cadastre ou atualize a entrada referente à nova rota em `src/constants/pageHelpRegistry.ts`, fornecendo o módulo, título, prévia do que a tela faz (`description`), recursos principais e o tutorial passo a passo (`steps`). Nenhuma nova tela ou rota deve ser considerada concluída sem o seu informativo de ajuda cadastrado.
+12. **Notificação de Novidades / Changelog:** ao concluir a implementação de qualquer nova tela, módulo, melhoria relevante ou correção, insira na migration do trabalho (em `supabase/migrations/`) o registro da notificação em `public.notifications` com `category = 'changelog'`. Defina obrigatoriamente `type` (`'release_feature'`, `'release_fix'`, `'release_improvement'`, `'release_screen'`), `permission_resource` (para restringir aos usuários autorizados), `title`, `message` (resumo claro em PT-BR do que foi construído) e `action_url` (rota da novidade).
 
 Referência detalhada: `docs/PERMISSOES_RBAC.md`. A sincronização com a tela inicial também está documentada em `docs/MANUAL_DESENVOLVEDOR.md`.
 

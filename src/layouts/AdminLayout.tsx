@@ -22,6 +22,7 @@ import {
   BarChart3,
   PanelLeftClose,
   PanelLeftOpen,
+  Megaphone,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -115,6 +116,7 @@ export default function AdminLayout() {
     { href: "/admin/storage", label: "Armazenamento", icon: HardDrive, resource: "storage" },
     { href: "/admin/infra", label: "Infra & Hardware", icon: Cpu, resource: "infra_hardware" },
     { href: "/admin/audit", label: "Logs", icon: History, resource: "audit_logs" },
+    { href: "/admin/changelog", label: "Central de Novidades", icon: Megaphone, resource: "admin_changelog" },
   ].filter((item) => hasPermission(item.resource, "view"));
 
   return (

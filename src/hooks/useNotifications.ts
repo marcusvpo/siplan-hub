@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import type { Notification, NotificationType, TeamArea } from '@/types/conversion';
+import { usePermissions } from '@/hooks/usePermissions';
+import type { Notification, NotificationCategory, NotificationType, TeamArea } from '@/types/conversion';
 
 interface UseNotificationsOptions {
   userId?: string;
@@ -15,6 +16,14 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  let hasPermissionFunc: ((resource: string, action: string) => boolean) | null = null;
+  try {
+    const permContext = usePermissions();
+    hasPermissionFunc = permContext.hasPermission;
+  } catch {
+    hasPermissionFunc = null;
+  }
+
   const fetchNotifications = useCallback(async () => {
     try {
       setLoading(true);
@@ -22,8 +31,6 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
       const twoWeeksAgo = new Date();
       twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
       
-      // Build OR filter for user_id and team
-      // Users should see: their own notifications OR team-wide notifications for their team
       const orFilters: string[] = [];
       if (userId) {
         orFilters.push(`user_id.eq.${userId}`);
@@ -31,6 +38,8 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
       if (team) {
         orFilters.push(`team.eq.${team}`);
       }
+      orFilters.push(`category.eq.changelog`);
+      orFilters.push(`user_id.is.null`);
 
       let query = supabase
         .from('notifications')
@@ -46,13 +55,14 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
           read,
           created_at,
           read_at,
+          permission_resource,
+          category,
           projects(client_name)
         `)
         .gte('created_at', twoWeeksAgo.toISOString())
         .order('created_at', { ascending: false })
         .limit(limit);
 
-      // Apply OR filter if we have any conditions
       if (orFilters.length > 0) {
         query = query.or(orFilters.join(','));
       }
@@ -61,20 +71,29 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
 
       if (fetchError) throw fetchError;
 
-      const mapped: Notification[] = (data || []).map((n) => ({
-        id: n.id,
-        userId: n.user_id ?? undefined,
-        team: n.team as TeamArea | undefined,
-        projectId: n.project_id ?? undefined,
-        type: n.type as NotificationType,
-        title: n.title,
-        message: n.message,
-        actionUrl: n.action_url ?? undefined,
-        read: n.read ?? false,
-        createdAt: new Date(n.created_at),
-        readAt: n.read_at ? new Date(n.read_at) : undefined,
-        projectName: (n.projects as { client_name?: string } | null)?.client_name,
-      }));
+      const mapped: Notification[] = (data || [])
+        .map((n) => ({
+          id: n.id,
+          userId: n.user_id ?? undefined,
+          team: n.team as TeamArea | undefined,
+          projectId: n.project_id ?? undefined,
+          type: n.type as NotificationType,
+          title: n.title,
+          message: n.message,
+          actionUrl: n.action_url ?? undefined,
+          read: n.read ?? false,
+          createdAt: new Date(n.created_at),
+          readAt: n.read_at ? new Date(n.read_at) : undefined,
+          projectName: (n.projects as { client_name?: string } | null)?.client_name,
+          permissionResource: n.permission_resource ?? undefined,
+          category: (n.category as NotificationCategory) ?? (n.type?.startsWith('release_') ? 'changelog' : 'operational'),
+        }))
+        .filter((n) => {
+          if (n.permissionResource && hasPermissionFunc) {
+            return hasPermissionFunc(n.permissionResource, 'view');
+          }
+          return true;
+        });
 
       setNotifications(mapped);
       setUnreadCount(mapped.filter((n) => !n.read).length);
@@ -84,7 +103,7 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
     } finally {
       setLoading(false);
     }
-  }, [userId, team, limit]);
+  }, [userId, team, limit, hasPermissionFunc]);
 
   const markAsRead = useCallback(async (notificationId: string) => {
     try {
@@ -106,23 +125,36 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
     }
   }, []);
 
+  const deleteNotification = useCallback(async (notificationId: string) => {
+    try {
+      const { error: deleteError } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('id', notificationId);
+
+      if (deleteError) throw deleteError;
+
+      setNotifications((prev) => {
+        const target = prev.find((n) => n.id === notificationId);
+        if (target && !target.read) {
+          setUnreadCount((c) => Math.max(0, c - 1));
+        }
+        return prev.filter((n) => n.id !== notificationId);
+      });
+    } catch (err) {
+      console.error('Erro ao excluir notificação:', err);
+    }
+  }, []);
+
   const markAllAsRead = useCallback(async () => {
     try {
-      const orFilters: string[] = [];
-      if (userId) {
-        orFilters.push(`user_id.eq.${userId}`);
-      }
-      if (team) {
-        orFilters.push(`team.eq.${team}`);
-      }
-
-      if (orFilters.length === 0) return;
+      const idsToUpdate = notifications.filter((n) => !n.read).map((n) => n.id);
+      if (idsToUpdate.length === 0) return;
 
       const { error: updateError } = await supabase
         .from('notifications')
         .update({ read: true, read_at: new Date().toISOString() })
-        .eq('read', false)
-        .or(orFilters.join(','));
+        .in('id', idsToUpdate);
 
       if (updateError) throw updateError;
 
@@ -133,7 +165,7 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
     } catch (err) {
       console.error('Erro ao marcar todas como lidas:', err);
     }
-  }, [userId, team]);
+  }, [notifications]);
 
   const createNotification = useCallback(
     async (data: {
@@ -144,6 +176,8 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
       title: string;
       message: string;
       actionUrl?: string;
+      permissionResource?: string;
+      category?: NotificationCategory;
     }) => {
       try {
         const { data: newNotif, error: insertError } = await supabase
@@ -156,6 +190,8 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
             title: data.title,
             message: data.message,
             action_url: data.actionUrl,
+            permission_resource: data.permissionResource,
+            category: data.category ?? (data.type.startsWith('release_') ? 'changelog' : 'operational'),
           })
           .select()
           .single();
@@ -187,11 +223,16 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
         (payload) => {
           const newNotif = payload.new as Record<string, unknown>;
           
-          // Verify if the notification is for the current user or team
+          const isChangelog = newNotif.category === 'changelog' || (newNotif.type as string)?.startsWith('release_');
           const belongsToUser = userId && newNotif.user_id === userId;
           const belongsToTeam = team && newNotif.team === team;
+          const isGlobal = !newNotif.user_id && !newNotif.team;
           
-          if (!belongsToUser && !belongsToTeam) return;
+          if (!belongsToUser && !belongsToTeam && !isChangelog && !isGlobal) return;
+
+          if (newNotif.permission_resource && hasPermissionFunc && !hasPermissionFunc(newNotif.permission_resource as string, 'view')) {
+            return;
+          }
 
           const mapped: Notification = {
             id: newNotif.id as string,
@@ -204,6 +245,8 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
             actionUrl: newNotif.action_url as string | undefined,
             read: false,
             createdAt: new Date(newNotif.created_at as string),
+            permissionResource: newNotif.permission_resource as string | undefined,
+            category: (newNotif.category as NotificationCategory) ?? ((newNotif.type as string)?.startsWith('release_') ? 'changelog' : 'operational'),
           };
           setNotifications((prev) => [mapped, ...prev]);
           setUnreadCount((prev) => prev + 1);
@@ -214,7 +257,7 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [fetchNotifications, userId, team]);
+  }, [fetchNotifications, userId, team, hasPermissionFunc]);
 
   return {
     notifications,
@@ -222,6 +265,7 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
     loading,
     error,
     markAsRead,
+    deleteNotification,
     markAllAsRead,
     createNotification,
     refetch: fetchNotifications,
