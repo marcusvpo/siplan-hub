@@ -1496,16 +1496,29 @@ function localDateKey(value: string) {
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
-function formatDateTime(value: string) {
-  return new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(new Date(value));
+function formatDateTime(value: string | null | undefined) {
+  if (!value) return "—";
+  try {
+    const date = new Date(value);
+    if (isNaN(date.getTime())) return "—";
+    return new Intl.DateTimeFormat("pt-BR", {
+      dateStyle: "short",
+      timeStyle: "short",
+    }).format(date);
+  } catch {
+    return "—";
+  }
 }
-function formatDateOnly(value: string) {
-  return new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" }).format(
-    new Date(`${value}T00:00:00Z`),
-  );
+function formatDateOnly(value: string | null | undefined) {
+  if (!value) return "—";
+  try {
+    const raw = value.includes("T") ? value : `${value}T00:00:00Z`;
+    const date = new Date(raw);
+    if (isNaN(date.getTime())) return "—";
+    return new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" }).format(date);
+  } catch {
+    return "—";
+  }
 }
 function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Erro inesperado.";
