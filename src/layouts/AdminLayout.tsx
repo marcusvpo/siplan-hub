@@ -15,6 +15,7 @@ import {
   Settings2,
   Activity,
   HardDrive,
+  Cpu,
   UserMinus,
   ArrowLeft,
   Sparkles,
@@ -112,6 +113,7 @@ export default function AdminLayout() {
     { href: "/admin/vacations", label: "Férias", icon: Palmtree, resource: "vacations" },
     { href: "/admin/settings", label: "Saúde dos Projetos", icon: Activity, resource: "settings" },
     { href: "/admin/storage", label: "Armazenamento", icon: HardDrive, resource: "storage" },
+    { href: "/admin/infra", label: "Infra & Hardware", icon: Cpu, resource: "infra_hardware" },
     { href: "/admin/audit", label: "Logs", icon: History, resource: "audit_logs" },
   ].filter((item) => hasPermission(item.resource, "view"));
 

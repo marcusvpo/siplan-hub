@@ -132,6 +132,7 @@ const VacationManagement = lazy(
   () => import("./pages/admin/VacationManagement"),
 );
 const SystemStorage = lazy(() => import("./pages/admin/SystemStorage"));
+const SystemInfrastructure = lazy(() => import("./pages/admin/SystemInfrastructure"));
 const InactiveUsers = lazy(() => import("./pages/admin/InactiveUsers"));
 const ProjectDetails = lazy(() => import("./pages/ProjectDetails"));
 const ProjectAdherenceForm = lazy(() => import("./pages/ProjectAdherenceForm"));
@@ -342,6 +343,16 @@ const App = () => (
                     <Suspense fallback={<PageLoader />}>
                       <RequirePermission resource="storage">
                         <SystemStorage />
+                      </RequirePermission>
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="infra"
+                  element={
+                    <Suspense fallback={<PageLoader />}>
+                      <RequirePermission resource="infra_hardware">
+                        <SystemInfrastructure />
                       </RequirePermission>
                     </Suspense>
                   }

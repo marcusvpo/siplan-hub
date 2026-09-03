@@ -28,6 +28,8 @@ import {
   BookOpen,
   ListChecks,
   Building2,
+  Cpu,
+  Server,
   Star,
   LucideIcon,
   Home,
@@ -931,6 +933,42 @@ export const pageHelpData: PageHelpInfo[] = [
         description:
           "Conceda ou revogue os acessos desejados e clique em Salvar.",
         icon: CheckCircle2,
+      },
+    ],
+  },
+  {
+    route: "/admin/infra",
+    title: "Infraestrutura & Hardware",
+    subtitle: "Monitoramento de Processamento e Servidores",
+    moduleName: "Administração",
+    icon: Cpu,
+    description:
+      "Exibe a capacidade de hardware em tempo real, incluindo carga de vCPU (Compute Load), consumo de Memória RAM, taxa de I/O de disco (GP3) e status dos nós do Worker (Codex/Ollama).",
+    keyFeatures: [
+      "Métricas de carga de processamento (vCPU Compute)",
+      "Uso de memória RAM e taxa de cache",
+      "Detalhamento de disco (Tabelas, WAL e Sistema)",
+      "Status de operação do nó de contingência IA (Codex / Ollama)",
+    ],
+    steps: [
+      {
+        stepNumber: 1,
+        title: "Monitore a Carga de CPU",
+        description: "Verifique a taxa de ocupação da instância e da fila de execução do banco.",
+        icon: Cpu,
+      },
+      {
+        stepNumber: 2,
+        title: "Verifique os Workers",
+        description: "Confira o status de saúde dos nós de execução assíncrona do Codex e Ollama.",
+        icon: Server,
+      },
+    ],
+    tips: [
+      {
+        title: "Autoscaling GP3",
+        description: "O volume de disco possui Spend Cap com escalonamento automático de capacidade.",
+        variant: "info",
       },
     ],
   },
