@@ -383,4 +383,16 @@ describe("CS/CX contatos e agendamentos — permissões", () => {
     expect(screen.getByLabelText("Data inicial do agendamento")).toBeInTheDocument();
     expect(screen.getByLabelText("Data final do agendamento")).toBeInTheDocument();
   });
+
+  it("permite filtrar agendamentos ao clicar nos cards de métricas", () => {
+    renderPage(<CsCxAppointments />, []);
+    const upcomingCard = screen.getByRole("button", { name: /filtrar por próximos/i });
+    expect(upcomingCard).toBeInTheDocument();
+
+    fireEvent.click(upcomingCard);
+    expect(upcomingCard).toHaveAttribute("aria-pressed", "true");
+
+    fireEvent.click(upcomingCard);
+    expect(upcomingCard).toHaveAttribute("aria-pressed", "false");
+  });
 });
