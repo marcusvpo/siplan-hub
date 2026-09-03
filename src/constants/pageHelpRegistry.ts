@@ -1495,9 +1495,10 @@ export const pageHelpData: PageHelpInfo[] = [
       "Gerenciamento de chamados e solicitações operacionais de CS/CX enviadas pelos cartórios ou abertas pela equipe interna. Permite controlar o fluxo de atendimento por prioridade, status e visualização Kanban ou Lista.",
     keyFeatures: [
       "Alternância entre visualização por Lista detalhada e Quadro Kanban",
-      "Filtros múltiplos por cartório, status (Aguardando, Em Execução, Concluído), responsável e módulo",
-      "Formulário para abertura de novas solicitações com anexos e níveis de prioridade",
-      "Métricas no topo: Total de registros, Aguardando Atendimento e Em Execução",
+      "Filtros múltiplos por cartório, status, responsável e período",
+      "Botão de olho (👁) para leitura rápida de observações e histórico sem abrir edição",
+      "Formulário para abertura de novas solicitações e controle de prazos",
+      "Métricas no topo: Total de registros, Aguardando Atendimento, Em Execução e Finalizadas",
     ],
     steps: [
       {

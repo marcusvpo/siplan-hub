@@ -473,4 +473,16 @@ describe("CS/CX — ações por permissão", () => {
 
     await waitFor(() => expect(deleteObservationMutation.mutateAsync).toHaveBeenCalledWith("update-1"));
   });
+
+  it("abre o modal de visualização de observações ao clicar no botão de olho sem modo de edição", () => {
+    renderPage(<CsCxRequests />, []);
+    const viewButton = screen.getAllByRole("button", { name: /visualizar observações/i })[0];
+    expect(viewButton).toBeInTheDocument();
+
+    fireEvent.click(viewButton);
+    expect(screen.getByText("Descrição da Solicitação")).toBeInTheDocument();
+    expect(screen.getByText("Histórico de Observações (1)")).toBeInTheDocument();
+    expect(screen.getByText("Primeiro retorno")).toBeInTheDocument();
+    expect(screen.queryByLabelText(/cartório \*/i)).not.toBeInTheDocument();
+  });
 });

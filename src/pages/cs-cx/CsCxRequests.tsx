@@ -6,6 +6,7 @@ import {
   ClipboardList,
   Columns3,
   Database,
+  Eye,
   GripVertical,
   History,
   List,
@@ -223,6 +224,8 @@ export default function CsCxRequests() {
   const [observationText, setObservationText] = useState("");
   const [deletingObservation, setDeletingObservation] =
     useState<CsCxRequestUpdate | null>(null);
+  const [viewingObservationsRequest, setViewingObservationsRequest] =
+    useState<CsCxRequest | null>(null);
   const [isPrinting, setIsPrinting] = useState(false);
 
   const boardStatuses = useMemo(() => {
@@ -736,6 +739,9 @@ export default function CsCxRequests() {
                   canDelete={canDeleteRecord}
                   onEdit={openEdit}
                   onDelete={setDeleting}
+                  onViewObservations={(request) =>
+                    setViewingObservationsRequest(request)
+                  }
                 />
                 <PaginationBar
                   currentPage={currentPage}
@@ -753,6 +759,9 @@ export default function CsCxRequests() {
                   canEdit={canEditRecord}
                   onEdit={openEdit}
                   onStatusChange={changeStatus}
+                  onViewObservations={(request) =>
+                    setViewingObservationsRequest(request)
+                  }
                 />
               </TabsContent>
             </Tabs>
@@ -1145,6 +1154,118 @@ export default function CsCxRequests() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog
+        open={Boolean(viewingObservationsRequest)}
+        onOpenChange={(open) => !open && setViewingObservationsRequest(null)}
+      >
+        <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none overflow-y-auto p-4 sm:max-h-[92vh] sm:max-w-2xl sm:p-6">
+          <DialogHeader>
+            <div className="flex flex-wrap items-center gap-2">
+              <DialogTitle className="text-base font-bold">
+                Solicitação{" "}
+                {viewingObservationsRequest?.ticket_number
+                  ? `#${viewingObservationsRequest.ticket_number}`
+                  : `#${viewingObservationsRequest?.id.slice(0, 8)}`}
+              </DialogTitle>
+              {viewingObservationsRequest?.status && (
+                <StatusBadge status={viewingObservationsRequest.status} />
+              )}
+            </div>
+            <DialogDescription className="text-xs">
+              {viewingObservationsRequest?.registry_office?.name ??
+                "Cartório não informado"}
+              {viewingObservationsRequest?.module
+                ? ` · Módulo: ${viewingObservationsRequest.module}`
+                : ""}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-1 rounded-lg border bg-muted/20 p-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                Descrição da Solicitação
+              </p>
+              <p className="whitespace-pre-wrap text-xs leading-5 text-foreground">
+                {viewingObservationsRequest?.description || "Sem descrição"}
+              </p>
+              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 border-t pt-1 text-[11px] text-muted-foreground">
+                {viewingObservationsRequest?.requester && (
+                  <span>
+                    <strong>Solicitante:</strong>{" "}
+                    {viewingObservationsRequest.requester}
+                  </span>
+                )}
+                {viewingObservationsRequest?.responsible && (
+                  <span>
+                    <strong>Responsável:</strong>{" "}
+                    {viewingObservationsRequest.responsible}
+                  </span>
+                )}
+                {viewingObservationsRequest?.requested_on && (
+                  <span>
+                    <strong>Data da solicitação:</strong>{" "}
+                    {formatDate(viewingObservationsRequest.requested_on)}
+                  </span>
+                )}
+                {viewingObservationsRequest?.expected_delivery_on && (
+                  <span>
+                    <strong>Previsão de entrega:</strong>{" "}
+                    {formatDate(
+                      viewingObservationsRequest.expected_delivery_on,
+                    )}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <MessageSquareText className="h-4 w-4 text-rose-600" />
+                <h3 className="text-sm font-bold">
+                  Histórico de Observações (
+                  {viewingObservationsRequest?.updates?.length ?? 0})
+                </h3>
+              </div>
+
+              {viewingObservationsRequest?.updates &&
+              viewingObservationsRequest.updates.length > 0 ? (
+                <div className="max-h-72 space-y-2.5 overflow-y-auto pr-1">
+                  {viewingObservationsRequest.updates.map((update) => (
+                    <div
+                      key={update.id}
+                      className="space-y-1 rounded-lg border bg-card p-3 text-xs"
+                    >
+                      <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                        <span className="font-semibold text-foreground">
+                          {update.profile?.full_name ?? "Sistema"}
+                        </span>
+                        <span>{formatDateTime(update.created_at)}</span>
+                      </div>
+                      <p className="whitespace-pre-wrap text-xs leading-5 text-foreground/90">
+                        {update.observation}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-lg border border-dashed py-8 text-center text-xs text-muted-foreground">
+                  Nenhuma observação registrada para esta solicitação.
+                </div>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setViewingObservationsRequest(null)}
+            >
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -1155,12 +1276,14 @@ function RequestTable({
   canDelete,
   onEdit,
   onDelete,
+  onViewObservations,
 }: {
   requests: CsCxRequest[];
   canEdit: (ownerId: string | null) => boolean;
   canDelete: (ownerId: string | null) => boolean;
   onEdit: (request: CsCxRequest) => void;
   onDelete: (request: CsCxRequest) => void;
+  onViewObservations: (request: CsCxRequest) => void;
 }) {
   const isMobile = useIsMobile();
   const headClass = "h-9 px-3 text-xs";
@@ -1186,6 +1309,17 @@ function RequestTable({
                 </div>
                 <div className="flex shrink-0 items-center gap-1">
                   <StatusBadge status={request.status} />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    aria-label={`Visualizar observações da solicitação ${request.ticket_number || request.id}`}
+                    title="Visualizar observações"
+                    onClick={() => onViewObservations(request)}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
                   {(editable || deletable) && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -1221,7 +1355,7 @@ function RequestTable({
             <TableHead className={headClass}>Responsável</TableHead>
             <TableHead className={headClass}>Previsão</TableHead>
             <TableHead className={headClass}>Status</TableHead>
-            <TableHead className="h-9 w-12 px-2" />
+            <TableHead className="h-9 w-20 px-2 text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -1267,38 +1401,51 @@ function RequestTable({
                   <TableCell className={cellClass}>
                     <StatusBadge status={request.status} />
                   </TableCell>
-                  <TableCell className="px-2 py-1">
-                    {(editable || deletable) && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Ações</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          {editable && (
-                            <DropdownMenuItem onClick={() => onEdit(request)}>
-                              <Pencil className="mr-2 h-4 w-4" />
-                              Editar
-                            </DropdownMenuItem>
-                          )}
-                          {deletable && (
-                            <DropdownMenuItem
-                              className="text-destructive"
-                              onClick={() => onDelete(request)}
+                  <TableCell className="whitespace-nowrap px-2 py-1 text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                        aria-label={`Visualizar observações da solicitação ${request.ticket_number || request.id}`}
+                        title="Visualizar observações"
+                        onClick={() => onViewObservations(request)}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      {(editable || deletable) && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              aria-label="Mais ações"
                             >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Excluir
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {editable && (
+                              <DropdownMenuItem onClick={() => onEdit(request)}>
+                                <Pencil className="mr-2 h-4 w-4" />
+                                Editar
+                              </DropdownMenuItem>
+                            )}
+                            {deletable && (
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onClick={() => onDelete(request)}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Excluir
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               );
@@ -1390,12 +1537,14 @@ function RequestBoard({
   canEdit,
   onEdit,
   onStatusChange,
+  onViewObservations,
 }: {
   requests: CsCxRequest[];
   statuses: CsCxRequestStatusConfig[];
   canEdit: (ownerId: string | null) => boolean;
   onEdit: (request: CsCxRequest) => void;
   onStatusChange: (request: CsCxRequest, status: string) => void;
+  onViewObservations: (request: CsCxRequest) => void;
 }) {
   const isMobile = useIsMobile();
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -1596,17 +1745,30 @@ function RequestBoard({
                                   `#${request.legacy_id ?? request.id.slice(0, 6)}`}
                               </Badge>
                             </div>
-                            {editable && (
+                            <div className="flex items-center gap-0.5">
                               <Button
-                                aria-label={`Editar ${request.ticket_number || "solicitação"}`}
+                                aria-label={`Visualizar observações da solicitação ${request.ticket_number || "solicitação"}`}
+                                title="Visualizar observações"
                                 variant="ghost"
                                 size="icon"
-                                className="h-6 w-6 shrink-0"
-                                onClick={() => onEdit(request)}
+                                className="h-6 w-6 shrink-0 text-muted-foreground hover:text-foreground"
+                                onClick={() => onViewObservations(request)}
                               >
-                                <Pencil className="h-3 w-3" />
+                                <Eye className="h-3 w-3" />
                               </Button>
-                            )}
+                              {editable && (
+                                <Button
+                                  aria-label={`Editar ${request.ticket_number || "solicitação"}`}
+                                  title="Editar solicitação"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6 shrink-0"
+                                  onClick={() => onEdit(request)}
+                                >
+                                  <Pencil className="h-3 w-3" />
+                                </Button>
+                              )}
+                            </div>
                           </div>
                           <CardTitle
                             className="line-clamp-2 text-xs leading-4"
@@ -1774,18 +1936,30 @@ function DataError({
   );
 }
 
-function formatDate(value: string | null) {
+function formatDate(value: string | null | undefined) {
   if (!value) return "—";
-  return new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" }).format(
-    new Date(`${value}T00:00:00Z`),
-  );
+  try {
+    const raw = value.includes("T") ? value : `${value}T00:00:00Z`;
+    const date = new Date(raw);
+    if (isNaN(date.getTime())) return "—";
+    return new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" }).format(date);
+  } catch {
+    return "—";
+  }
 }
 
-function formatDateTime(value: string) {
-  return new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(new Date(value));
+function formatDateTime(value: string | null | undefined) {
+  if (!value) return "—";
+  try {
+    const date = new Date(value);
+    if (isNaN(date.getTime())) return "—";
+    return new Intl.DateTimeFormat("pt-BR", {
+      dateStyle: "short",
+      timeStyle: "short",
+    }).format(date);
+  } catch {
+    return "—";
+  }
 }
 
 const NEUTRAL_STATUS_STYLES = {

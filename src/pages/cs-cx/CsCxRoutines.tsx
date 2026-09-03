@@ -2293,17 +2293,29 @@ function hasStatusTransition(
   );
 }
 
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short" }).format(
-    new Date(value),
-  );
+function formatDate(value: string | null | undefined) {
+  if (!value) return "—";
+  try {
+    const date = new Date(value);
+    if (isNaN(date.getTime())) return "—";
+    return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short" }).format(date);
+  } catch {
+    return "—";
+  }
 }
 
-function formatDateTime(value: string) {
-  return new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(new Date(value));
+function formatDateTime(value: string | null | undefined) {
+  if (!value) return "—";
+  try {
+    const date = new Date(value);
+    if (isNaN(date.getTime())) return "—";
+    return new Intl.DateTimeFormat("pt-BR", {
+      dateStyle: "short",
+      timeStyle: "short",
+    }).format(date);
+  } catch {
+    return "—";
+  }
 }
 
 function localDateKey(value: string) {

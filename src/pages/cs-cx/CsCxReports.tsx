@@ -147,5 +147,5 @@ function EmptyChart() { return <div className="flex h-full items-center justify-
 function validColor(value: string) { return /^#[0-9a-f]{6}$/i.test(value) ? value : "#64748b"; }
 function formatMonth(value: string) { const [year, month] = value.split("-"); return `${month}/${year}`; }
 function formatDateOnly(value: string) { const [year, month, day] = value.split("-"); return `${day}/${month}/${year}`; }
-function formatDateTime(value: string) { return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value)); }
+function formatDateTime(value: string | null | undefined) { if (!value) return "—"; try { const date = new Date(value); if (isNaN(date.getTime())) return "—"; return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(date); } catch { return "—"; } }
 function messageOf(error: unknown) { return error instanceof Error ? error.message : "Erro inesperado."; }
