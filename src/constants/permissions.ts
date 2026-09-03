@@ -161,8 +161,9 @@ export const PERMISSION_RESOURCES: PermissionResourceDef[] = [
   { resource: "roles", label: "Admin - Perfis de Acesso", category: "Administração", actions: ["view", "manage"] },
   { resource: "vacations", label: "Admin - Férias", category: "Administração", actions: ["view", "create", "edit", "delete"] },
   { resource: "settings", label: "Admin - Saúde dos Projetos", category: "Administração", actions: ["view", "edit"] },
-  // Armazenamento, Usuários Inativos e Logs são telas de leitura.
+  // Armazenamento, Infraestrutura, Usuários Inativos e Logs são telas de leitura.
   { resource: "storage", label: "Admin - Armazenamento", category: "Administração", actions: ["view"] },
+  { resource: "infra_hardware", label: "Admin - Infraestrutura & Hardware", category: "Administração", actions: ["view"] },
   { resource: "inactive_users", label: "Admin - Usuários Inativos", category: "Administração", actions: ["view"] },
   { resource: "audit_logs", label: "Admin - Logs de Auditoria", category: "Administração", actions: ["view"] },
 ];
