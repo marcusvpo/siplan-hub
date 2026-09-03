@@ -10,7 +10,21 @@ export type QueueStatus =
   | 'cancelled';
 
 export type HomologationStatus = 'pending' | 'in_review' | 'approved' | 'issues_found';
-export type NotificationType = 'new_demand' | 'assignment' | 'status_change' | 'issue_reported' | 'client_response' | 'conversion_complete' | 'homologation_approved' | 'homologation_issues' | 'mention';
+export type NotificationCategory = 'operational' | 'changelog';
+export type NotificationType = 
+  | 'new_demand' 
+  | 'assignment' 
+  | 'status_change' 
+  | 'issue_reported' 
+  | 'client_response' 
+  | 'conversion_complete' 
+  | 'homologation_approved' 
+  | 'homologation_issues' 
+  | 'mention'
+  | 'release_feature'
+  | 'release_fix'
+  | 'release_improvement'
+  | 'release_screen';
 export type TeamArea = 'implementation' | 'conversion' | 'commercial' | 'support';
 export type IssueCategory = 'data_mismatch' | 'missing_data' | 'format_error' | 'duplicates' | 'other';
 export type IssueSeverity = 'critical' | 'high' | 'medium' | 'low';
@@ -31,6 +45,8 @@ export interface Notification {
   createdAt: Date;
   readAt?: Date;
   projectName?: string;
+  permissionResource?: string;
+  category?: NotificationCategory;
 }
 
 export interface ConversionQueueItem {

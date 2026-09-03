@@ -229,7 +229,7 @@ export function PwaProvider({ children }: PwaProviderProps) {
         </div>
       )}
 
-      {!suppressStatus && isOnline && needRefresh && (
+      {!suppressStatus && isMobile && isOnline && needRefresh && (
         <div className={cardClass} style={cardStyle} role="status" aria-live="polite">
           <RefreshCw className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
           <div className="min-w-0 flex-1">
@@ -249,7 +249,7 @@ export function PwaProvider({ children }: PwaProviderProps) {
         </div>
       )}
 
-      {!suppressStatus && isOnline && !needRefresh && offlineReady && (
+      {!suppressStatus && isMobile && isOnline && !needRefresh && offlineReady && (
         <div className={cardClass} style={cardStyle} role="status" aria-live="polite">
           <Download className="mt-0.5 h-5 w-5 shrink-0 text-success" />
           <div className="min-w-0 flex-1">

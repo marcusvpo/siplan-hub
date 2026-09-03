@@ -51,6 +51,7 @@ import {
   CheckSquare,
   Send,
   Lock,
+  Megaphone,
 } from "lucide-react";
 
 export interface PageHelpStep {
@@ -2207,6 +2208,43 @@ export const pageHelpData: PageHelpInfo[] = [
         description:
           "Verifique os horários e setores de maior consumo do Copilot.",
         icon: BarChart3,
+      },
+    ],
+  },
+  {
+    route: "/admin/changelog",
+    title: "Central de Novidades & Releases",
+    subtitle: "Publicação de Comunicados e Notas de Versão",
+    moduleName: "Administração",
+    icon: Megaphone,
+    description:
+      "Gerenciamento e envio de anúncios de atualizações, melhorias, correções de erros e lançamento de novas telas com filtragem RBAC para a equipe.",
+    keyFeatures: [
+      "Publicação de comunicados no ícone de notificações do sistema",
+      "Filtragem automática por permissão RBAC (o usuário só recebe o anúncio dos módulos permitidos)",
+      "Vínculo de links de ação direta para navegar até a nova tela ou recurso",
+    ],
+    steps: [
+      {
+        stepNumber: 1,
+        title: "Preencha os Dados da Novidade",
+        description:
+          "Informe o título, tipo de lançamento (funcionalidade, correção, melhoria ou tela) e a descrição do comunicado.",
+        icon: Megaphone,
+      },
+      {
+        stepNumber: 2,
+        title: "Selecione o Módulo Alvo (RBAC)",
+        description:
+          "Escolha o módulo de destino para restringir o envio apenas aos usuários autorizados, ou selecione Global para todos.",
+        icon: Shield,
+      },
+      {
+        stepNumber: 3,
+        title: "Publicar Notificação",
+        description:
+          "Ao clicar em Publicar Notificação, a mensagem será enviada instantaneamente para o sino de notificações dos usuários.",
+        icon: Send,
       },
     ],
   },
