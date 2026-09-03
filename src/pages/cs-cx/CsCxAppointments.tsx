@@ -135,6 +135,7 @@ export default function CsCxAppointments() {
     useCsCxRecordPermissions("cs_cx_agendamentos");
   const { toast } = useToast();
   const [search, setSearch] = useState("");
+  const [quickFilter, setQuickFilter] = useState<"all" | "proximos" | "vencidos" | "concluidos">("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [responsibleFilter, setResponsibleFilter] = useState("all");
@@ -156,6 +157,7 @@ export default function CsCxAppointments() {
 
   const filtered = useMemo(() => {
     const term = search.trim().toLocaleLowerCase("pt-BR");
+    const now = new Date();
     return appointments.filter((appointment) => {
       const matchesSearch =
         !term ||
@@ -170,8 +172,22 @@ export default function CsCxAppointments() {
           appointment.responsible?.full_name,
         ].some((value) => value?.toLocaleLowerCase("pt-BR").includes(term));
       const date = localDateKey(appointment.starts_at);
+      const appDate = new Date(appointment.starts_at);
+
+      let matchesQuickFilter = true;
+      if (quickFilter === "proximos") {
+        matchesQuickFilter =
+          appDate >= now && ["AGENDADO", "REMARCADO"].includes(appointment.status);
+      } else if (quickFilter === "vencidos") {
+        matchesQuickFilter =
+          appDate < now && appointment.status === "AGENDADO";
+      } else if (quickFilter === "concluidos") {
+        matchesQuickFilter = ["REALIZADO", "CONCLUIDO"].includes(appointment.status);
+      }
+
       return (
         matchesSearch &&
+        matchesQuickFilter &&
         (statusFilter === "all" || appointment.status === statusFilter) &&
         (typeFilter === "all" || appointment.appointment_type === typeFilter) &&
         (responsibleFilter === "all" ||
@@ -183,6 +199,7 @@ export default function CsCxAppointments() {
   }, [
     appointments,
     search,
+    quickFilter,
     statusFilter,
     typeFilter,
     responsibleFilter,
@@ -201,7 +218,13 @@ export default function CsCxAppointments() {
     setPage(1);
   };
   const updateStatusFilter = (value: string) => {
+    setQuickFilter("all");
     setStatusFilter(value);
+    setPage(1);
+  };
+  const handleCardClick = (filter: "proximos" | "vencidos" | "concluidos") => {
+    setQuickFilter((current) => (current === filter ? "all" : filter));
+    setStatusFilter("all");
     setPage(1);
   };
   const updateTypeFilter = (value: string) => {
@@ -405,8 +428,24 @@ export default function CsCxAppointments() {
         </div>
       </div>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 [&>*:last-child]:col-span-2 sm:[&>*:last-child]:col-span-1">
-        <Metric label="Próximos" value={upcoming} icon={Clock3} />
-        <Metric label="Vencidos" value={overdue} icon={XCircle} />
+        <Metric
+          label="Próximos"
+          value={upcoming}
+          icon={Clock3}
+          active={quickFilter === "proximos"}
+          onClick={() => handleCardClick("proximos")}
+          iconColor="text-amber-500"
+          activeClassName="ring-2 ring-amber-500 border-amber-500 bg-amber-50/40 dark:bg-amber-950/20"
+        />
+        <Metric
+          label="Vencidos"
+          value={overdue}
+          icon={XCircle}
+          active={quickFilter === "vencidos"}
+          onClick={() => handleCardClick("vencidos")}
+          iconColor="text-red-500"
+          activeClassName="ring-2 ring-red-500 border-red-500 bg-red-50/40 dark:bg-red-950/20"
+        />
         <Metric
           label="Concluídos"
           value={
@@ -415,6 +454,10 @@ export default function CsCxAppointments() {
             ).length
           }
           icon={CheckCircle2}
+          active={quickFilter === "concluidos"}
+          onClick={() => handleCardClick("concluidos")}
+          iconColor="text-emerald-500"
+          activeClassName="ring-2 ring-emerald-500 border-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/20"
         />
       </div>
       <Card>
@@ -1263,25 +1306,58 @@ function StatusBadge({ appointment }: { appointment: CsCxAppointment }) {
     </Badge>
   );
 }
+interface MetricProps {
+  label: string;
+  value: number;
+  icon: typeof CalendarDays;
+  active?: boolean;
+  onClick?: () => void;
+  iconColor?: string;
+  activeClassName?: string;
+}
+
 function Metric({
   label,
   value,
   icon: Icon,
-}: {
-  label: string;
-  value: number;
-  icon: typeof CalendarDays;
-}) {
+  active = false,
+  onClick,
+  iconColor = "text-rose-500",
+  activeClassName = "ring-2 ring-rose-500 border-rose-500 bg-rose-50/40 dark:bg-rose-950/20",
+}: MetricProps) {
   return (
-    <Card>
+    <Card
+      role="button"
+      tabIndex={0}
+      aria-pressed={active}
+      aria-label={`Filtrar por ${label} (${value})`}
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick?.();
+        }
+      }}
+      className={cn(
+        "cursor-pointer select-none transition-all duration-200 hover:border-rose-400 hover:shadow-sm",
+        active ? activeClassName : "hover:bg-accent/40",
+      )}
+    >
       <CardContent className="flex items-center justify-between px-3 py-2.5">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-            {label}
-          </p>
+          <div className="flex items-center gap-1.5">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+              {label}
+            </p>
+            {active && (
+              <Badge variant="secondary" className="h-4 px-1 text-[9px] font-normal">
+                Filtrado
+              </Badge>
+            )}
+          </div>
           <p className="text-xl font-bold leading-6">{value}</p>
         </div>
-        <Icon className="h-4 w-4 text-rose-500" />
+        <Icon className={cn("h-4 w-4", iconColor)} />
       </CardContent>
     </Card>
   );
