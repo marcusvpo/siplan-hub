@@ -42,6 +42,7 @@ export interface CsCxRegistryOffice {
   name: string;
   sap_code: string | null;
   active: boolean;
+  is_analyzed: boolean;
   contact_details: string | null;
   notes: string | null;
   origin: "legacy" | "hub";
@@ -242,7 +243,7 @@ export function useCsCxRegistryOffices() {
       const { data, error } = await db
         .from("cs_cx_registry_offices")
         .select(`
-          id, legacy_id, name, sap_code, active, contact_details, notes,
+          id, legacy_id, name, sap_code, active, is_analyzed, contact_details, notes,
           origin, created_at, created_by, analyst_profile_id,
           profiles!cs_cx_registry_offices_analyst_profile_id_fkey (id, full_name, email),
           cs_cx_registry_office_responsibles (
@@ -350,6 +351,21 @@ export function useCsCxRegistryOffices() {
     onSuccess: () => invalidateCore(queryClient),
   });
 
+  const toggleOfficeAnalyzed = useMutation({
+    mutationFn: async (input: { id: string; is_analyzed: boolean }) => {
+      const { error } = await db
+        .from("cs_cx_registry_offices")
+        .update({
+          is_analyzed: input.is_analyzed,
+          analysis_at: input.is_analyzed ? new Date().toISOString() : null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", input.id);
+      if (error) throw error;
+    },
+    onSuccess: () => invalidateCore(queryClient),
+  });
+
   return {
     offices: officesQuery.data ?? [],
     products: productsQuery.data ?? [],
@@ -359,6 +375,7 @@ export function useCsCxRegistryOffices() {
     refetch: officesQuery.refetch,
     saveOffice,
     deleteOffice,
+    toggleOfficeAnalyzed,
   };
 }
 
