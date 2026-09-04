@@ -17,6 +17,8 @@ vi.mock("@/hooks/use-toast", () => ({
   useToast: () => ({ toast: vi.fn() }),
 }));
 
+const toggleOfficeAnalyzedMutation = { mutateAsync: vi.fn(), isPending: false };
+
 vi.mock("@/hooks/useCsCxCore", () => ({
   useCsCxRegistryOffices: () => ({
     offices: Array.from({ length: 13 }, (_, index) => ({
@@ -27,7 +29,9 @@ vi.mock("@/hooks/useCsCxCore", () => ({
           : index === 12
             ? "Miguelópolis - TNPT"
             : `Cartório ${index + 1}`,
+      is_analyzed: index === 0,
     })),
+    toggleOfficeAnalyzed: toggleOfficeAnalyzedMutation,
   }),
 }));
 
@@ -481,6 +485,21 @@ describe("CS/CX rotinas — permissões", () => {
       name: /filtrar por status dos itens/i,
     });
     expect(itemStatusSelect).toBeInTheDocument();
+  });
+
+  it("permite alternar o status de análise do cartório via interruptor", async () => {
+    renderPage(["cs_cx_rotinas:edit"]);
+    const switches = screen.getAllByRole("switch", {
+      name: /marcar .* como/i,
+    });
+    expect(switches.length).toBeGreaterThan(0);
+    fireEvent.click(switches[0]);
+    await waitFor(() => {
+      expect(toggleOfficeAnalyzedMutation.mutateAsync).toHaveBeenCalledWith({
+        id: "office-1",
+        is_analyzed: false,
+      });
+    });
   });
 });
 
