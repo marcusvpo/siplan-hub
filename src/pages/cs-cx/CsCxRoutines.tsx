@@ -74,16 +74,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { useCsCxRegistryOffices } from "@/hooks/useCsCxCore";
 import {
   type CsCxOfficeRoutine,
@@ -166,7 +160,9 @@ export interface CsCxOfficeRoutineSummary {
 
 export function summarizeOfficeRoutines(
   routines: CsCxOfficeRoutine[],
+  offices?: Array<{ id: string; is_analyzed?: boolean }>,
 ): CsCxOfficeRoutineSummary[] {
+  const officesById = new Map(offices?.map((office) => [office.id, office]));
   const grouped = new Map<string, CsCxOfficeRoutine[]>();
   routines.forEach((routine) => {
     const current = grouped.get(routine.registry_office_id) ?? [];
@@ -180,6 +176,12 @@ export function summarizeOfficeRoutines(
       .map((item) => item.analyzed_at)
       .filter((value): value is string => Boolean(value))
       .sort();
+    const officeObj = officesById.get(registryOfficeId);
+    const isAnalyzed =
+      officeObj?.is_analyzed !== undefined
+        ? officeObj.is_analyzed
+        : items.length > 0 && items.every((item) => Boolean(item.analyzed_at));
+
     return {
       registryOfficeId,
       registryOfficeName:
@@ -190,25 +192,33 @@ export function summarizeOfficeRoutines(
       pendingItems: items.filter((item) => item.active === null).length,
       totalItems: items.length,
       lastAnalysis: analysisDates.at(-1) ?? null,
-      analyzed:
-        items.length > 0 && items.every((item) => Boolean(item.analyzed_at)),
+      analyzed: isAnalyzed,
     };
   });
 }
 
 function includeOfficesWithoutRoutines(
   summaries: CsCxOfficeRoutineSummary[],
-  offices: Array<{ id: string; name: string }>,
+  offices: Array<{ id: string; name: string; is_analyzed?: boolean }>,
 ) {
   const summariesByOffice = new Map(
     summaries.map((summary) => [summary.registryOfficeId, summary]),
   );
+  const officesById = new Map(offices.map((office) => [office.id, office]));
   const officeIds = new Set(offices.map((office) => office.id));
 
   return [
     ...offices.map(
-      (office): CsCxOfficeRoutineSummary =>
-        summariesByOffice.get(office.id) ?? {
+      (office): CsCxOfficeRoutineSummary => {
+        const summary = summariesByOffice.get(office.id);
+        const isAnalyzed = office.is_analyzed ?? summary?.analyzed ?? false;
+        if (summary) {
+          return {
+            ...summary,
+            analyzed: isAnalyzed,
+          };
+        }
+        return {
           registryOfficeId: office.id,
           registryOfficeName: office.name,
           routines: [],
@@ -217,10 +227,18 @@ function includeOfficesWithoutRoutines(
           pendingItems: 0,
           totalItems: 0,
           lastAnalysis: null,
-          analyzed: false,
-        },
+          analyzed: isAnalyzed,
+        };
+      },
     ),
-    ...summaries.filter((summary) => !officeIds.has(summary.registryOfficeId)),
+    ...summaries
+      .filter((summary) => !officeIds.has(summary.registryOfficeId))
+      .map((summary) => ({
+        ...summary,
+        analyzed:
+          officesById.get(summary.registryOfficeId)?.is_analyzed ??
+          summary.analyzed,
+      })),
   ];
 }
 
@@ -238,8 +256,36 @@ export default function CsCxRoutines() {
     setAllRoutineItems,
     deleteRoutine,
   } = useCsCxRoutines();
-  const { offices } = useCsCxRegistryOffices();
+  const { offices, toggleOfficeAnalyzed } = useCsCxRegistryOffices();
   const { toast } = useToast();
+  const [togglingOfficeId, setTogglingOfficeId] = useState<string | null>(null);
+
+  async function handleToggleAnalyzed(
+    registryOfficeId: string,
+    currentAnalyzed: boolean,
+  ) {
+    const newAnalyzed = !currentAnalyzed;
+    setTogglingOfficeId(registryOfficeId);
+    try {
+      await toggleOfficeAnalyzed.mutateAsync({
+        id: registryOfficeId,
+        is_analyzed: newAnalyzed,
+      });
+      toast({
+        title: newAnalyzed
+          ? "Cartório marcado como analisado"
+          : "Cartório marcado como não analisado",
+      });
+    } catch (mutationError) {
+      toast({
+        title: "Não foi possível atualizar a situação da análise",
+        description: messageOf(mutationError),
+        variant: "destructive",
+      });
+    } finally {
+      setTogglingOfficeId(null);
+    }
+  }
   const [search, setSearch] = useState("");
   const [officeFilter, setOfficeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -366,8 +412,8 @@ export default function CsCxRoutines() {
   }, [analysisRoutines]);
 
   const appliedOfficeSummaries = useMemo(
-    () => summarizeOfficeRoutines(routines),
-    [routines],
+    () => summarizeOfficeRoutines(routines, offices),
+    [routines, offices],
   );
   const allOfficeSummaries = useMemo(
     () => includeOfficesWithoutRoutines(appliedOfficeSummaries, offices),
@@ -869,7 +915,25 @@ export default function CsCxRoutines() {
               {isMobile && <div data-testid="cs-cx-routines-mobile-list" className="space-y-2 p-3 md:hidden">
                 {pagedOfficeSummaries.length === 0 ? <p className="py-8 text-center text-sm text-muted-foreground">Nenhum cartório ou rotina encontrado.</p> : pagedOfficeSummaries.map((summary) => (
                   <article key={summary.registryOfficeId} className="min-w-0 rounded-lg border bg-card p-3">
-                    <div className="flex min-w-0 items-start justify-between gap-2"><div className="min-w-0"><p className="break-words text-sm font-bold">{summary.registryOfficeName}</p><p className="mt-0.5 line-clamp-2 break-words text-xs text-muted-foreground">{summary.routines.length ? summary.routines.map((routine) => routine.routine_model?.name ?? "Modelo removido").join(", ") : "Nenhuma rotina vinculada"}</p></div><Badge variant="outline" className={!summary.routines.length ? "shrink-0 border-slate-200 bg-slate-50 text-slate-600" : summary.analyzed ? "shrink-0 border-emerald-200 bg-emerald-50 text-emerald-700" : "shrink-0 border-amber-200 bg-amber-50 text-amber-700"}>{!summary.routines.length ? "Sem rotina" : summary.analyzed ? "Analisado" : "Pendente"}</Badge></div>
+                    <div className="flex min-w-0 items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="break-words text-sm font-bold">{summary.registryOfficeName}</p>
+                        <p className="mt-0.5 line-clamp-2 break-words text-xs text-muted-foreground">
+                          {summary.routines.length ? summary.routines.map((routine) => routine.routine_model?.name ?? "Modelo removido").join(", ") : "Nenhuma rotina vinculada"}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <Switch
+                          checked={summary.analyzed}
+                          onCheckedChange={() => handleToggleAnalyzed(summary.registryOfficeId, summary.analyzed)}
+                          disabled={!canEditRecord(summary.routines[0]?.applied_by) || togglingOfficeId === summary.registryOfficeId}
+                          aria-label={`Marcar ${summary.registryOfficeName} como ${summary.analyzed ? "não analisado" : "analisado"}`}
+                        />
+                        <Badge variant="outline" className={!summary.routines.length ? "border-slate-200 bg-slate-50 text-slate-600" : summary.analyzed ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-amber-200 bg-amber-50 text-amber-700"}>
+                          {!summary.routines.length ? "Sem rotina" : summary.analyzed ? "Analisado" : "Pendente"}
+                        </Badge>
+                      </div>
+                    </div>
                     <div className="mt-3 grid grid-cols-3 gap-2 border-t pt-2 text-center text-xs"><div><strong className="block text-base">{summary.routines.length}</strong><span className="text-[10px] text-muted-foreground">Rotinas</span></div><div><strong className="block text-base text-emerald-700">{summary.activeItems}</strong><span className="text-[10px] text-muted-foreground">Ativos</span></div><div><strong className="block text-base text-rose-700">{summary.inactiveItems}</strong><span className="text-[10px] text-muted-foreground">Inativos</span></div></div>
                     <div className="mt-3 flex flex-wrap gap-1.5">{summary.routines.length ? <Button variant="outline" size="sm" className="h-8 flex-1" onClick={() => openOfficeAnalysis(summary.registryOfficeId)}><Eye className="mr-1.5 h-4 w-4" />Analisar</Button> : canCreate && <Button variant="outline" size="sm" className="h-8 flex-1" onClick={() => openApplyRoutine(summary.registryOfficeId)}><Plus className="mr-1.5 h-4 w-4" />Aplicar rotina</Button>}{summary.routines.map((routine) => <div key={routine.id} className="flex"><Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Exportar PDF da rotina ${routine.routine_model?.name ?? "sem nome"}`} disabled={exportingRoutineId === routine.id} onClick={() => handleRoutinePdf(routine)}><FileDown className="h-4 w-4" /></Button>{canDeleteRecord(routine.applied_by) && <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Desvincular rotina ${routine.routine_model?.name ?? "sem nome"}`} onClick={() => setDeleting(routine)}><Trash2 className="h-4 w-4 text-destructive" /></Button>}</div>)}</div>
                   </article>
@@ -879,7 +943,7 @@ export default function CsCxRoutines() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="h-9 min-w-56 px-3 text-xs">
+                      <TableHead className="h-9 min-w-44 px-3 text-xs">
                         Cartório
                       </TableHead>
                       <TableHead className="h-9 px-3 text-center text-xs">
@@ -891,13 +955,13 @@ export default function CsCxRoutines() {
                       <TableHead className="h-9 px-3 text-center text-xs">
                         Itens inativos
                       </TableHead>
-                      <TableHead className="h-9 min-w-32 px-3 text-xs">
+                      <TableHead className="h-9 min-w-28 px-3 text-xs">
                         Data da análise
                       </TableHead>
-                      <TableHead className="h-9 min-w-32 px-3 text-xs">
+                      <TableHead className="h-9 min-w-44 px-3 text-xs">
                         Status
                       </TableHead>
-                      <TableHead className="h-9 min-w-52 px-3 text-right text-xs">
+                      <TableHead className="h-9 min-w-28 px-3 text-right text-xs">
                         Ações
                       </TableHead>
                     </TableRow>
@@ -968,26 +1032,43 @@ export default function CsCxRoutines() {
                             </span>
                           )}
                         </TableCell>
-                        <TableCell className="px-3 py-2">
-                          <Badge
-                            variant="outline"
-                            className={
-                              !summary.routines.length
-                                ? "h-5 border-slate-200 bg-slate-50 px-1.5 text-[10px] text-slate-600"
+                        <TableCell className="whitespace-nowrap px-3 py-2">
+                          <div className="flex items-center gap-2">
+                            <Switch
+                              checked={summary.analyzed}
+                              onCheckedChange={() =>
+                                handleToggleAnalyzed(
+                                  summary.registryOfficeId,
+                                  summary.analyzed,
+                                )
+                              }
+                              disabled={
+                                !canEditRecord(summary.routines[0]?.applied_by) ||
+                                togglingOfficeId === summary.registryOfficeId
+                              }
+                              aria-label={`Marcar ${summary.registryOfficeName} como ${summary.analyzed ? "não analisado" : "analisado"}`}
+                            />
+                            <Badge
+                              variant="outline"
+                              className={cn(
+                                "h-5 shrink-0 whitespace-nowrap px-1.5 text-[10px]",
+                                !summary.routines.length
+                                  ? "border-slate-200 bg-slate-50 text-slate-600"
+                                  : summary.analyzed
+                                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                    : "border-amber-200 bg-amber-50 text-amber-700",
+                              )}
+                            >
+                              {summary.analyzed && (
+                                <CheckCircle2 className="mr-1 h-3 w-3 shrink-0" />
+                              )}
+                              {!summary.routines.length
+                                ? "Sem rotina"
                                 : summary.analyzed
-                                  ? "h-5 border-emerald-200 bg-emerald-50 px-1.5 text-[10px] text-emerald-700"
-                                  : "h-5 border-amber-200 bg-amber-50 px-1.5 text-[10px] text-amber-700"
-                            }
-                          >
-                            {summary.analyzed && (
-                              <CheckCircle2 className="mr-1 h-3 w-3" />
-                            )}
-                            {!summary.routines.length
-                              ? "Sem rotina"
-                              : summary.analyzed
-                                ? "Analisado"
-                                : "Não analisado"}
-                          </Badge>
+                                  ? "Analisado"
+                                  : "Não analisado"}
+                            </Badge>
+                          </div>
                           {!summary.analyzed && summary.pendingItems > 0 && (
                             <p className="mt-0.5 text-[10px] text-muted-foreground">
                               {summary.pendingItems} pendente
@@ -995,20 +1076,20 @@ export default function CsCxRoutines() {
                             </p>
                           )}
                         </TableCell>
-                        <TableCell className="px-3 py-2">
+                        <TableCell className="whitespace-nowrap px-3 py-2">
                           <div className="flex flex-wrap items-center justify-end gap-1">
                             {summary.routines.length ? (
                               <Button
                                 variant="outline"
-                                size="sm"
-                                className="h-8 px-2.5"
+                                size="icon"
+                                className="h-8 w-8"
                                 aria-label={`Analisar ${summary.registryOfficeName} e suas rotinas`}
+                                title={`Analisar cartório ${summary.registryOfficeName}`}
                                 onClick={() =>
                                   openOfficeAnalysis(summary.registryOfficeId)
                                 }
                               >
-                                <Eye className="mr-1.5 h-4 w-4" />
-                                Analisar cartório
+                                <Eye className="h-4 w-4" />
                               </Button>
                             ) : (
                               canCreate && (
