@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import {
-  CalendarDays, Check, Clock3, Download, Eye, FileSearch, FileText, FolderTree,
+  BookOpen, CalendarDays, Check, Clock3, Download, Eye, FileSearch, FileText, FolderTree,
   History, Loader2, Paperclip, Pencil, RefreshCw, RotateCcw, Server, Share2,
   ShieldAlert, ShieldCheck, Tag, ThumbsDown, ThumbsUp, Trash2, UserRound,
 } from "lucide-react";
@@ -80,6 +80,7 @@ export function SolutionDetails({ solutionId, onClose, onEdit, onDeleted, onUpda
   const [scanningAttachmentId, setScanningAttachmentId] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [preview, setPreview] = useState<AttachmentPreview | null>(null);
+  const [useInKnowledgeBase, setUseInKnowledgeBase] = useState(false);
   const [panelWidth, setPanelWidth] = useState(() => {
     const savedWidth = Number(localStorage.getItem(PANEL_WIDTH_KEY));
     return clampPanelWidth(savedWidth >= MIN_PANEL_WIDTH ? savedWidth : DEFAULT_PANEL_WIDTH);
@@ -127,6 +128,7 @@ export function SolutionDetails({ solutionId, onClose, onEdit, onDeleted, onUpda
   }, []);
 
   useEffect(() => {
+    setUseInKnowledgeBase(false);
     if (!solutionId) { setSolution(null); setVersions([]); setFeedback(null); return; }
     let active = true;
     setLoading(true);
@@ -230,7 +232,12 @@ export function SolutionDetails({ solutionId, onClose, onEdit, onDeleted, onUpda
 
   return (
     <>
-      <Sheet open={Boolean(solutionId)} onOpenChange={(open) => !open && onClose()}>
+      <Sheet open={Boolean(solutionId)} onOpenChange={(open) => {
+        if (!open) {
+          setUseInKnowledgeBase(false);
+          onClose();
+        }
+      }}>
         <SheetContent style={{ width: panelWidth, maxWidth: `${PANEL_VIEWPORT_MARGIN * 100}vw` }} className={`w-[calc(100vw-0.5rem)] overflow-y-auto p-4 sm:max-w-none sm:p-6 ${resizing ? "transition-none" : ""}`}>
           <div role="separator" aria-label="Redimensionar painel de detalhes" aria-orientation="vertical" aria-valuemin={MIN_PANEL_WIDTH} aria-valuemax={maxPanelWidth()} aria-valuenow={panelWidth} tabIndex={0} className="group absolute -left-1 top-0 z-50 hidden h-full w-2 cursor-col-resize touch-none outline-none sm:block" title="Arraste para redimensionar; duplo clique restaura o tamanho padrão" onPointerDown={(event) => { event.preventDefault(); setResizing(true); }} onDoubleClick={() => setPanelWidth(clampPanelWidth(DEFAULT_PANEL_WIDTH))} onKeyDown={(event) => {
             if (event.key === "ArrowLeft") setPanelWidth((current) => clampPanelWidth(current + 32));
@@ -248,6 +255,7 @@ export function SolutionDetails({ solutionId, onClose, onEdit, onDeleted, onUpda
 
               <div className="flex flex-wrap gap-2 border-y py-3">
                 <Button variant="outline" size="sm" className="gap-2" onClick={share}>{copied ? <Check className="h-4 w-4 text-emerald-500" /> : <Share2 className="h-4 w-4" />}{copied ? "Link copiado" : "Compartilhar"}</Button>
+                <Button type="button" variant={useInKnowledgeBase ? "default" : "outline"} size="sm" aria-pressed={useInKnowledgeBase} className="max-w-full gap-2 whitespace-normal" onClick={() => setUseInKnowledgeBase((current) => !current)}><BookOpen className="h-4 w-4 shrink-0" />Utilizar no banco de conhecimento</Button>
                 {hasPermission("sd_solutions", "edit") && <Button variant="outline" size="sm" className="gap-2" onClick={() => onEdit(solution)}><Pencil className="h-4 w-4" />Editar</Button>}
                 {hasPermission("sd_solutions", "delete") && <Button variant="outline" size="sm" className="gap-2 text-destructive hover:text-destructive" onClick={() => setConfirmDelete(true)}><Trash2 className="h-4 w-4" />Excluir</Button>}
               </div>
