@@ -127,6 +127,87 @@ describe("SolutionDetails", () => {
     expect(panel).toHaveStyle({ width: "672px" });
   });
 
+  it("permite alternar o uso local no banco de conhecimento", async () => {
+    render(
+      <SolutionDetails
+        solutionId="solution-1"
+        onClose={vi.fn()}
+        onEdit={vi.fn()}
+        onDeleted={vi.fn()}
+      />,
+    );
+
+    const knowledgeBaseButton = await screen.findByRole("button", {
+      name: "Utilizar no banco de conhecimento",
+    });
+    expect(knowledgeBaseButton).toHaveAttribute("aria-pressed", "false");
+
+    fireEvent.click(knowledgeBaseButton);
+    expect(knowledgeBaseButton).toHaveAttribute("aria-pressed", "true");
+
+    fireEvent.click(knowledgeBaseButton);
+    expect(knowledgeBaseButton).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("redefine o uso local ao trocar a solução", async () => {
+    const { rerender } = render(
+      <SolutionDetails
+        solutionId="solution-1"
+        onClose={vi.fn()}
+        onEdit={vi.fn()}
+        onDeleted={vi.fn()}
+      />,
+    );
+
+    const knowledgeBaseButton = await screen.findByRole("button", {
+      name: "Utilizar no banco de conhecimento",
+    });
+    fireEvent.click(knowledgeBaseButton);
+    expect(knowledgeBaseButton).toHaveAttribute("aria-pressed", "true");
+
+    rerender(
+      <SolutionDetails
+        solutionId="solution-2"
+        onClose={vi.fn()}
+        onEdit={vi.fn()}
+        onDeleted={vi.fn()}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", {
+        name: "Utilizar no banco de conhecimento",
+      })).toHaveAttribute("aria-pressed", "false");
+    });
+  });
+
+  it("redefine o uso local ao fechar o painel", async () => {
+    const onClose = vi.fn();
+    render(
+      <SolutionDetails
+        solutionId="solution-1"
+        onClose={onClose}
+        onEdit={vi.fn()}
+        onDeleted={vi.fn()}
+      />,
+    );
+
+    const knowledgeBaseButton = await screen.findByRole("button", {
+      name: "Utilizar no banco de conhecimento",
+    });
+    fireEvent.click(knowledgeBaseButton);
+    expect(knowledgeBaseButton).toHaveAttribute("aria-pressed", "true");
+
+    fireEvent.click(screen.getByRole("button", { name: "Fechar" }));
+
+    await waitFor(() => {
+      expect(onClose).toHaveBeenCalledOnce();
+      expect(screen.getByRole("button", {
+        name: "Utilizar no banco de conhecimento",
+      })).toHaveAttribute("aria-pressed", "false");
+    });
+  });
+
   it("exibe e baixa anexos usando uma URL assinada", async () => {
     const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
     render(

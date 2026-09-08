@@ -3115,8 +3115,8 @@
     "semantic_hash": ""
   },
   "src/components/sd/SolutionDetails.tsx": {
-    "mtime": 1788378628.2689197,
-    "ast_hash": "cf1f5f6ad4dd270c8ef3a1fde27bb5c4",
+    "mtime": 1788891014.7389603,
+    "ast_hash": "f0d98e379bc92d9cc40a6302a891dcb4",
     "semantic_hash": ""
   },
   "src/components/sd/SolutionForm.tsx": {
@@ -3400,8 +3400,8 @@
     "semantic_hash": ""
   },
   "src/pages/cs-cx/CsCxRoutines.tsx": {
-    "mtime": 1788530872.6335087,
-    "ast_hash": "054ca8be32dee2187225b49bbefa4ce4",
+    "mtime": 1788531031.8773642,
+    "ast_hash": "32ac7af5f07d76e68b05f8ca7fa2b76f",
     "semantic_hash": ""
   },
   "src/pages/cs-cx/CsCxVisitDetails.tsx": {
@@ -3675,8 +3675,8 @@
     "semantic_hash": ""
   },
   "src/test/sd-solution-details.test.tsx": {
-    "mtime": 1787168625.4122741,
-    "ast_hash": "fa63fc8cb1543006d54e5bd3ca9f276b",
+    "mtime": 1788891438.6061995,
+    "ast_hash": "822661dedb4352ff84adbeb5e494f0ed",
     "semantic_hash": ""
   },
   "src/test/sd-solutions-search.test.tsx": {
@@ -4782,6 +4782,41 @@
   "supabase/migrations/20260904120000_cs_cx_office_is_analyzed.sql": {
     "mtime": 1788530722.4134727,
     "ast_hash": "0d2b485df44bf8618599724a60048a72",
+    "semantic_hash": ""
+  },
+  ".maestri/roles/084c35a7-4b2f-47e2-8dd2-92f52076717f/role.json": {
+    "mtime": 1788889970.7420201,
+    "ast_hash": "756c6a76f708e7498938f04e45c97f64",
+    "semantic_hash": ""
+  },
+  ".maestri/roles/3c8d1a70-3454-4187-ada6-2ef377f8655a/role.json": {
+    "mtime": 1788881687.3616042,
+    "ast_hash": "f22648fa78c28e079266e2f50151940e",
+    "semantic_hash": ""
+  },
+  ".maestri/roles/8c0b6387-a51d-4100-abed-7eea9bedf9ac/role.json": {
+    "mtime": 1788879350.1592653,
+    "ast_hash": "2f90369b694146e095122422b7901580",
+    "semantic_hash": ""
+  },
+  ".maestri/roles/8c892943-9e5d-48e6-a16e-3264c4dd2880/role.json": {
+    "mtime": 1788879256.8328898,
+    "ast_hash": "d14bb757e046974195dd0ebacae81e79",
+    "semantic_hash": ""
+  },
+  ".maestri/roles/b5e2c30f-c449-497b-beb3-3a0c6af7c582/role.json": {
+    "mtime": 1788879406.1342423,
+    "ast_hash": "2b9b79b8cfa44b6998bd60ec49e6f755",
+    "semantic_hash": ""
+  },
+  "graphify-out/memory/query_20260908_144452_quais_as_intru\u00e7\u00f5es_para_o_tech_lead.md": {
+    "mtime": 1788878692.2302,
+    "ast_hash": "c0c23d81dbf9cf446ae8a3cc93112c15",
+    "semantic_hash": ""
+  },
+  "graphify-out/memory/query_20260908_145001_agora_fa\u00e7a_a_mesma_descri\u00e7\u00e3o_dos_outroa_agentes_pa.md": {
+    "mtime": 1788879001.777856,
+    "ast_hash": "b0390830d178998cb885519df00fe137",
     "semantic_hash": ""
   }
 }
