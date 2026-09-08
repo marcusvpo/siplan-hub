@@ -104,12 +104,13 @@ export function NpsInvitationsPanel({
   const isMobile = useIsMobile();
   const { invitations, questionnaires, createInvitation, cancelInvitation } =
     useCsCxNpsSurveys();
-  const { offices } = useCsCxRegistryOffices();
+  const { offices, products } = useCsCxRegistryOffices();
   const { contacts } = useCsCxContacts();
   const { canCreate, canEditRecord } =
     useCsCxRecordPermissions("cs_cx_nps");
   const { toast } = useToast();
   const [page, setPage] = useState(1);
+  const [invitationProductId, setInvitationProductId] = useState("all");
   const [officeId, setOfficeId] = useState("");
   const [productId, setProductId] = useState("");
   const [contactId, setContactId] = useState("none");
@@ -131,12 +132,44 @@ export function NpsInvitationsPanel({
         "pt-BR",
       ),
     );
-  const totalPages = Math.max(1, Math.ceil(invitations.length / PAGE_SIZE));
+  const invitationProducts = useMemo(
+    () =>
+      [...products].sort((left, right) =>
+        left.name.localeCompare(right.name, "pt-BR"),
+      ),
+    [products],
+  );
+  const hasLegacyInvitations = invitations.some(
+    (invitation) => !invitation.product_id,
+  );
+  const filteredInvitations = useMemo(
+    () =>
+      invitations.filter((invitation) => {
+        if (invitationProductId === "all") return true;
+        if (invitationProductId === "unassigned") {
+          return !invitation.product_id;
+        }
+        return invitation.product_id === invitationProductId;
+      }),
+    [invitationProductId, invitations],
+  );
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredInvitations.length / PAGE_SIZE),
+  );
   const currentPage = Math.min(page, totalPages);
-  const paged = invitations.slice(
+  const paged = filteredInvitations.slice(
     (currentPage - 1) * PAGE_SIZE,
     currentPage * PAGE_SIZE,
   );
+  const updateInvitationProductFilter = (value: string) => {
+    setInvitationProductId(value);
+    setPage(1);
+  };
+  const emptyInvitationsMessage =
+    invitationProductId === "all"
+      ? "Nenhuma solicitação criada."
+      : "Nenhuma solicitação encontrada para o produto selecionado.";
 
   useEffect(() => {
     if (!requestOpen) return;
@@ -238,8 +271,36 @@ export function NpsInvitationsPanel({
     <>
       <Card>
         <CardContent className="p-0">
+          <div className="flex min-w-0 flex-col gap-2 border-b p-3 sm:flex-row sm:items-center sm:justify-between">
+            <Label htmlFor="nps-invitations-product-filter" className="text-sm font-medium">
+              Filtrar solicitações por produto
+            </Label>
+            <Select
+              value={invitationProductId}
+              onValueChange={updateInvitationProductFilter}
+            >
+              <SelectTrigger
+                id="nps-invitations-product-filter"
+                aria-label="Filtrar solicitações por produto"
+                className="min-h-11 w-full sm:min-h-10 sm:w-64"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os produtos</SelectItem>
+                {hasLegacyInvitations && (
+                  <SelectItem value="unassigned">Sem produto (legado)</SelectItem>
+                )}
+                {invitationProducts.map((product) => (
+                  <SelectItem key={product.id} value={product.id}>
+                    {product.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           {isMobile && <div data-testid="cs-cx-nps-invitations-mobile-list" className="space-y-2 p-3 md:hidden">
-            {paged.length === 0 ? <p className="py-8 text-center text-sm text-muted-foreground">Nenhuma solicitação criada.</p> : paged.map((invitation) => { const status = effectiveInvitationStatus(invitation); return (
+            {paged.length === 0 ? <p className="py-8 text-center text-sm text-muted-foreground">{emptyInvitationsMessage}</p> : paged.map((invitation) => { const status = effectiveInvitationStatus(invitation); return (
               <article key={invitation.id} className="min-w-0 rounded-lg border bg-card p-3">
                 <div className="flex min-w-0 items-start justify-between gap-2"><div className="min-w-0"><p className="break-words text-sm font-bold">{invitation.registry_office?.name}</p><p className="mt-0.5 truncate text-xs text-muted-foreground">{invitation.recipient_name}{invitation.recipient_email ? ` · ${invitation.recipient_email}` : ""}</p></div><InvitationBadge status={status} /></div>
                 <div className="mt-2 flex flex-wrap gap-1.5"><Badge variant="outline">{invitation.product?.name ?? "Sem produto"}</Badge><span className="break-words text-xs">{invitation.questionnaire?.title ?? invitation.questionnaire_snapshot.title}</span></div>
@@ -324,14 +385,15 @@ export function NpsInvitationsPanel({
                   </TableRow>
                 );
               })}
-              {!invitations.length && (
+              {!filteredInvitations.length && (
                 <TableRow>
                   <TableCell
                     colSpan={8}
                     className="h-28 text-center text-sm text-muted-foreground"
                   >
-                    Nenhuma solicitação criada. Use “Solicitar NPS” para gerar o
-                    primeiro link.
+                    {invitationProductId === "all"
+                      ? "Nenhuma solicitação criada. Use “Solicitar NPS” para gerar o primeiro link."
+                      : emptyInvitationsMessage}
                   </TableCell>
                 </TableRow>
               )}
@@ -340,7 +402,7 @@ export function NpsInvitationsPanel({
           <Pagination
             page={currentPage}
             totalPages={totalPages}
-            total={invitations.length}
+            total={filteredInvitations.length}
             onChange={setPage}
           />
         </CardContent>
@@ -1197,18 +1259,18 @@ function Pagination({
   const first = total ? (page - 1) * PAGE_SIZE + 1 : 0;
   const last = Math.min(page * PAGE_SIZE, total);
   return (
-    <div className="flex items-center justify-between border-t px-3 py-3 text-xs text-muted-foreground">
+    <div className="flex min-w-0 flex-col gap-2 border-t px-3 py-3 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
       <span>
         Mostrando {first}–{last} de {total} solicitações
       </span>
-      <div className="flex items-center gap-2">
+      <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-start">
         <span>
           Página {page} de {totalPages}
         </span>
         <Button
           variant="outline"
           size="icon"
-          className="h-8 w-8"
+          className="h-11 w-11 sm:h-8 sm:w-8"
           disabled={page <= 1}
           aria-label="Página anterior de solicitações"
           onClick={() => onChange(page - 1)}
@@ -1218,7 +1280,7 @@ function Pagination({
         <Button
           variant="outline"
           size="icon"
-          className="h-8 w-8"
+          className="h-11 w-11 sm:h-8 sm:w-8"
           disabled={page >= totalPages}
           aria-label="Próxima página de solicitações"
           onClick={() => onChange(page + 1)}
