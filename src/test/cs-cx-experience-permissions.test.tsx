@@ -3,6 +3,9 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 
 const hasPermission = vi.fn();
 const mutation = { mutateAsync: vi.fn(), mutate: vi.fn(), isPending: false };
+const npsSurveyState = vi.hoisted(() => ({
+  invitations: [] as Array<Record<string, unknown>>,
+}));
 
 vi.mock("@/hooks/usePermissions", () => ({
   usePermissions: () => ({ hasPermission }),
@@ -44,6 +47,7 @@ vi.mock("@/hooks/useCsCxCore", () => ({
     products: [
       { id: "product-1", name: "OrionTN", product_code: "ORIONTN" },
       { id: "product-2", name: "OrionPRO", product_code: "ORIONPRO" },
+      { id: "product-3", name: "Siplan Cloud", product_code: "SIPLAN_CLOUD" },
     ],
   }),
 }));
@@ -66,7 +70,7 @@ vi.mock("@/hooks/useCsCxNpsSurveys", () => ({
         updated_at: "2026-08-01T00:00:00Z",
       },
     ],
-    invitations: [],
+    invitations: npsSurveyState.invitations,
     createInvitation: mutation,
     cancelInvitation: mutation,
     saveQuestionnaire: mutation,
@@ -192,7 +196,10 @@ function renderPage(page: React.ReactNode, permissions: string[]) {
 }
 
 describe("CS/CX visitas e NPS — permissões", () => {
-  beforeEach(() => hasPermission.mockReset());
+  beforeEach(() => {
+    hasPermission.mockReset();
+    npsSurveyState.invitations = [];
+  });
 
   it("mantém visitas em leitura sem liberar escrita", () => {
     renderPage(<CsCxVisits />, []);
@@ -318,6 +325,84 @@ describe("CS/CX visitas e NPS — permissões", () => {
     expect(productSelect).toBeEnabled();
     fireEvent.click(productSelect);
     expect(screen.getByRole("option", { name: "OrionTN" })).toBeInTheDocument();
+  });
+
+  it("filtra solicitações de NPS por produto e contempla convites legados", () => {
+    const invitation = (
+      id: string,
+      recipientName: string,
+      product: { id: string; name: string; product_code: string } | null,
+    ) => ({
+      id,
+      public_token: `token-${id}`,
+      questionnaire_id: "q-default",
+      registry_office_id: "office-1",
+      product_id: product?.id ?? null,
+      contact_id: null,
+      recipient_name: recipientName,
+      recipient_email: null,
+      questionnaire_snapshot: {
+        title: "Pesquisa de satisfação Siplan",
+        description: null,
+        questions: [],
+      },
+      status: "PENDENTE",
+      expires_at: "2026-09-30T00:00:00Z",
+      responded_at: null,
+      response_id: null,
+      created_at: "2026-09-01T00:00:00Z",
+      created_by: "profile-1",
+      registry_office: { id: "office-1", name: "Cartório Central" },
+      product,
+      contact: null,
+      questionnaire: { id: "q-default", title: "Pesquisa de satisfação Siplan" },
+    });
+    const orionPro = { id: "product-2", name: "OrionPRO", product_code: "ORIONPRO" };
+    const orionTn = { id: "product-1", name: "OrionTN", product_code: "ORIONTN" };
+    npsSurveyState.invitations = [
+      ...Array.from({ length: 5 }, (_, index) =>
+        invitation(`orion-pro-${index + 1}`, `Convite OrionPRO ${index + 1}`, orionPro),
+      ),
+      invitation("orion-tn", "Convite OrionTN", orionTn),
+      invitation("legacy", "Convite legado", null),
+    ];
+
+    renderPage(<CsCxNps />, []);
+    fireEvent.mouseDown(screen.getByRole("tab", { name: /solicitações/i }), {
+      button: 0,
+      ctrlKey: false,
+    });
+
+    const productFilter = screen.getByRole("combobox", {
+      name: "Filtrar solicitações por produto",
+    });
+    expect(productFilter).toHaveTextContent("Todos os produtos");
+    fireEvent.click(screen.getByRole("button", { name: /próxima página de solicitações/i }));
+    expect(screen.getByText("Convite OrionTN")).toBeInTheDocument();
+    expect(screen.getByText("Página 2 de 2")).toBeInTheDocument();
+
+    fireEvent.click(productFilter);
+    expect(screen.getByRole("option", { name: "Todos os produtos" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Sem produto (legado)" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("option", { name: "OrionTN" }));
+
+    expect(productFilter).toHaveTextContent("OrionTN");
+    expect(screen.getByText("Convite OrionTN")).toBeInTheDocument();
+    expect(screen.queryByText("Convite OrionPRO 1")).not.toBeInTheDocument();
+    expect(screen.queryByText("Convite legado")).not.toBeInTheDocument();
+    expect(screen.getByText("Página 1 de 1")).toBeInTheDocument();
+
+    fireEvent.click(productFilter);
+    fireEvent.click(screen.getByRole("option", { name: "Sem produto (legado)" }));
+    expect(screen.getByText("Convite legado")).toBeInTheDocument();
+    expect(screen.queryByText("Convite OrionTN")).not.toBeInTheDocument();
+
+    fireEvent.click(productFilter);
+    fireEvent.click(screen.getByRole("option", { name: "Siplan Cloud" }));
+    expect(
+      screen.getByText("Nenhuma solicitação encontrada para o produto selecionado."),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Mostrando 0–0 de 0 solicitações")).toBeInTheDocument();
   });
 
   it("permite solicitar NPS sem liberar inclusão ou importação de respostas", () => {
