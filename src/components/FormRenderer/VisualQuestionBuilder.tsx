@@ -5,7 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, Plus, ArrowUp, ArrowDown, Settings2, ListPlus, Image, FileText, Binary, CheckSquare, Type, HelpCircle, Calendar } from "lucide-react";
+import { Trash2, Plus, ArrowUp, ArrowDown, Settings2, ListPlus, Image, ImagePlus, ImageOff, FileText, Binary, CheckSquare, Type, HelpCircle, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Visual representation of a form question
@@ -15,7 +15,27 @@ export interface VisualQuestion {
   type: "text" | "textarea" | "number" | "boolean" | "select" | "checkboxes" | "images" | "section" | "boolean_adherence" | "textarea_adherence" | "date_adherence";
   required: boolean;
   options?: string[]; // Used for select or checkboxes
+  allowImages?: boolean;
 }
+
+const ADHERENCE_QUESTION_TYPES: VisualQuestion["type"][] = [
+  "boolean_adherence",
+  "textarea_adherence",
+  "date_adherence",
+];
+
+const createAdherenceImagesSchema = () => ({
+  type: "array",
+  title: "Imagens do item",
+  items: {
+    type: "object",
+    title: "Imagem",
+    properties: {
+      title: { type: "string", title: "Título da imagem" },
+      url: { type: "string", title: "Imagem" },
+    },
+  },
+});
 
 interface VisualQuestionBuilderProps {
   questions: VisualQuestion[];
@@ -87,6 +107,9 @@ export function VisualQuestionBuilder({ questions, onChange, kind }: VisualQuest
         if ((updates.type === "select" || updates.type === "checkboxes") && (!updated.options || updated.options.length === 0)) {
           updated.options = ["Opção 1"];
         }
+        if (updates.type && !ADHERENCE_QUESTION_TYPES.includes(updates.type)) {
+          updated.allowImages = false;
+        }
 
         return updated;
       }),
@@ -150,6 +173,26 @@ export function VisualQuestionBuilder({ questions, onChange, kind }: VisualQuest
     );
   };
 
+  const adherenceQuestions = questions.filter((question) =>
+    ADHERENCE_QUESTION_TYPES.includes(question.type),
+  );
+  const allAdherenceQuestionsAllowImages =
+    adherenceQuestions.length > 0 &&
+    adherenceQuestions.every((question) => question.allowImages);
+  const anyAdherenceQuestionAllowsImages = adherenceQuestions.some(
+    (question) => question.allowImages,
+  );
+
+  const handleToggleImagesForAll = (allowImages: boolean) => {
+    onChange(
+      questions.map((question) =>
+        ADHERENCE_QUESTION_TYPES.includes(question.type)
+          ? { ...question, allowImages }
+          : question,
+      ),
+    );
+  };
+
   const getIconForType = (type: VisualQuestion["type"]) => {
     switch (type) {
       case "section":
@@ -181,6 +224,44 @@ export function VisualQuestionBuilder({ questions, onChange, kind }: VisualQuest
 
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">
+      {kind === "adherence" && adherenceQuestions.length > 0 && (
+        <div
+          className="flex min-w-0 flex-col gap-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-3 sm:flex-row sm:items-center sm:justify-between"
+          data-testid="adherence-images-bulk-actions"
+        >
+          <div className="min-w-0">
+            <p className="text-xs font-bold text-foreground">Imagens nos itens de aderência</p>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
+              Aplique ou remova a opção de anexar imagens em todas as perguntas de uma vez.
+            </p>
+          </div>
+          <div className="grid w-full grid-cols-1 gap-2 min-[360px]:grid-cols-2 sm:w-auto">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => handleToggleImagesForAll(true)}
+              disabled={allAdherenceQuestionsAllowImages}
+              className="h-10 gap-1.5 whitespace-normal border-amber-500/30 px-3 text-xs sm:h-9"
+            >
+              <ImagePlus className="h-4 w-4 shrink-0" />
+              Aplicar a todos
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => handleToggleImagesForAll(false)}
+              disabled={!anyAdherenceQuestionAllowsImages}
+              className="h-10 gap-1.5 whitespace-normal px-3 text-xs sm:h-9"
+            >
+              <ImageOff className="h-4 w-4 shrink-0" />
+              Remover de todos
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Questions list */}
       <div className="space-y-4">
         {questions.length === 0 ? (
@@ -229,7 +310,7 @@ export function VisualQuestionBuilder({ questions, onChange, kind }: VisualQuest
                 </div>
 
                 {/* Configuration row: Type select & Required Toggle */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1 bg-muted/10 p-3.5 rounded-lg border">
+                <div className="grid grid-cols-1 gap-4 rounded-lg border bg-muted/10 p-3.5 pt-1 sm:grid-cols-2 lg:grid-cols-3">
                   {/* Type Selector */}
                   <div className="flex flex-col gap-1.5">
                     <Label className="text-xs font-semibold text-muted-foreground">Tipo de Pergunta</Label>
@@ -273,6 +354,24 @@ export function VisualQuestionBuilder({ questions, onChange, kind }: VisualQuest
                         <span className="text-[10px] text-muted-foreground/75 mt-0.5">Torna o preenchimento mandatório</span>
                       </div>
                       <Switch id={`req-${q.id}`} checked={q.required} onCheckedChange={(checked) => handleUpdateQuestion(q.id, { required: checked })} />
+                    </div>
+                  )}
+
+                  {kind === "adherence" && ADHERENCE_QUESTION_TYPES.includes(q.type) && (
+                    <div className="flex items-center justify-between py-2 sm:justify-end sm:gap-4 sm:py-0">
+                      <div className="flex flex-col">
+                        <Label htmlFor={`images-${q.id}`} className="cursor-pointer text-xs font-semibold text-muted-foreground">
+                          Anexar imagens?
+                        </Label>
+                        <span className="mt-0.5 text-[10px] text-muted-foreground/75">
+                          Inclui imagens com título neste item
+                        </span>
+                      </div>
+                      <Switch
+                        id={`images-${q.id}`}
+                        checked={q.allowImages ?? false}
+                        onCheckedChange={(checked) => handleUpdateQuestion(q.id, { allowImages: checked })}
+                      />
                     </div>
                   )}
                 </div>
@@ -378,6 +477,7 @@ export function convertVisualToJSONSchema(questions: VisualQuestion[], title: st
                 default: false,
               },
               detalhes: { type: "string", title: "Detalhes do Impacto" },
+              ...(q.allowImages ? { imagens: createAdherenceImagesSchema() } : {}),
             },
           };
         } else if (isDate) {
@@ -392,6 +492,7 @@ export function convertVisualToJSONSchema(questions: VisualQuestion[], title: st
                 default: false,
               },
               detalhes: { type: "string", title: "Detalhes do Impacto" },
+              ...(q.allowImages ? { imagens: createAdherenceImagesSchema() } : {}),
             },
           };
         } else {
@@ -406,6 +507,7 @@ export function convertVisualToJSONSchema(questions: VisualQuestion[], title: st
                 default: false,
               },
               detalhes: { type: "string", title: "Detalhes do Impacto" },
+              ...(q.allowImages ? { imagens: createAdherenceImagesSchema() } : {}),
             },
           };
         }
@@ -692,6 +794,7 @@ export function parseJSONSchemaToVisual(schema: any, uiSchema: any): VisualQuest
             title: qProp.title || "Pergunta sem título",
             type,
             required: false,
+            allowImages: Boolean(qProp.properties.imagens),
           });
         });
       } else {

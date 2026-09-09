@@ -19,6 +19,32 @@ const {
   selectBestImprovement,
   shouldRetryImprovement,
 } = await import("./improveTextPrompt.js");
+const { buildAdherenceTechnicalOpinionPrompt } = await import(
+  "./adherenceTechnicalOpinionPrompt.js"
+);
+
+test("gera o parecer de aderencia a partir da analise completa", () => {
+  const prompt = buildAdherenceTechnicalOpinionPrompt(
+    JSON.stringify({
+      finalVerdict: "Aderente com Restricoes",
+      sections: [
+        {
+          title: "Firmas",
+          questions: [
+            { title: "Impressora compativel?", impact: true, details: "Trocar antes da virada" },
+            { title: "Scanner compativel?", impact: false, details: "Validado" },
+          ],
+        },
+      ],
+    }),
+  );
+
+  assert.match(prompt, /Analise de Aderencia COMPLETA/);
+  assert.match(prompt, /todas as secoes, perguntas, respostas/i);
+  assert.match(prompt, /Gere o texto do zero/);
+  assert.match(prompt, /Impressora compativel/);
+  assert.match(prompt, /Nao alegue ter analisado o conteudo visual/);
+});
 
 test("exige reescrita estruturada para anotacoes de contato", () => {
   const prompt = buildImprovePrompt(

@@ -52,6 +52,7 @@ import {
   Send,
   Lock,
   Megaphone,
+  Image,
 } from "lucide-react";
 
 export interface PageHelpStep {
@@ -1319,6 +1320,11 @@ export const pageHelpData: PageHelpInfo[] = [
     keyFeatures: [
       "Checklist por especialidade cartorária",
       "Marcação de itens atendidos, parcialmente atendidos ou pendentes",
+      "Seções recolhíveis por setor, mantendo a primeira aberta para início rápido",
+      "Editor completo nas observações, com estilos, listas, alinhamento e cores",
+      "Editor completo nos itens com impacto e na justificativa técnica, com geração do parecer por IA a partir da análise inteira",
+      "Galeria compacta de imagens com título por item e configuração em massa no editor",
+      "Layout compacto para consultar e preencher mais itens com menos rolagem",
       "Cálculo automático do percentual de aderência",
     ],
     steps: [
@@ -1333,8 +1339,22 @@ export const pageHelpData: PageHelpInfo[] = [
         stepNumber: 2,
         title: "Valide Item a Item",
         description:
-          "Marque cada quesito conforme o fluxo testado junto ao cliente.",
+          "Expanda o setor, marque cada quesito e formate as observações com negrito, sublinhado, cores ou listas quando necessário.",
         icon: CheckCircle2,
+      },
+      {
+        stepNumber: 3,
+        title: "Registre Evidências",
+        description:
+          "Nos itens habilitados para imagens, anexe uma ou mais evidências e informe um título para cada uma.",
+        icon: Image,
+      },
+      {
+        stepNumber: 4,
+        title: "Gere e Revise o Parecer",
+        description:
+          "Selecione o parecer final e use Gerar com IA para criar uma justificativa baseada em todas as respostas. Revise a prévia antes de aplicá-la.",
+        icon: Sparkles,
       },
     ],
   },

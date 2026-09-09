@@ -5,8 +5,56 @@ import { Button } from "@/components/ui/button";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { VoiceDictationButton } from "@/components/ui/voice-dictation-button";
-import { appendPlainTextToLexicalJson, plainTextToLexicalJson } from "@/lib/lexical";
+import {
+  appendPlainTextToLexicalJson,
+  plainTextToLexicalJson,
+  richTextToPlainText,
+} from "@/lib/lexical";
 import { cn } from "@/lib/utils";
+
+const SUPPORTED_LEXICAL_NODE_TYPES = new Set([
+  "autolink",
+  "code",
+  "code-highlight",
+  "heading",
+  "linebreak",
+  "link",
+  "list",
+  "listitem",
+  "paragraph",
+  "quote",
+  "root",
+  "tab",
+  "text",
+]);
+
+const isValidSerializedNode = (value: unknown): boolean => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+
+  const node = value as Record<string, unknown>;
+  if (
+    typeof node.type !== "string"
+    || !SUPPORTED_LEXICAL_NODE_TYPES.has(node.type)
+    || typeof node.version !== "number"
+  ) {
+    return false;
+  }
+
+  return node.children === undefined
+    || (Array.isArray(node.children) && node.children.every(isValidSerializedNode));
+};
+
+const isValidSerializedEditorState = (value: unknown): value is SerializedEditorState => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+
+  const root = (value as Record<string, unknown>).root;
+  if (!isValidSerializedNode(root)) return false;
+
+  const children = (root as Record<string, unknown>).children;
+  return (root as Record<string, unknown>).type === "root"
+    && Array.isArray(children)
+    && children.length > 0;
+};
 
 interface RichTextEditorProps {
   content: string | object; // HTML string or JSON object
@@ -18,13 +66,24 @@ interface RichTextEditorProps {
   projectId?: string;
   requestedBy?: string;
   className?: string;
+  compact?: boolean;
 }
 
-export function RichTextEditor({ content, onChange, editable = true, placeholder, enableVoice, projectId, requestedBy, className }: RichTextEditorProps) {
+export function RichTextEditor({ content, onChange, editable = true, placeholder, enableVoice, projectId, requestedBy, className, compact = false }: RichTextEditorProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   // O componente Editor (Lexical) só lê o conteúdo no mount; ao aplicar texto por
   // voz forçamos um remount bumpando esta key para o novo conteúdo aparecer.
   const [editorKey, setEditorKey] = useState(0);
+
+  const handleExpandedChange = (open: boolean) => {
+    setIsExpanded(open);
+
+    if (!open) {
+      // O editor do modo foco é uma instância separada. Ao fechá-lo, remonta a
+      // versão compacta para carregar exatamente o último conteúdo salvo.
+      setEditorKey((key) => key + 1);
+    }
+  };
 
   const showVoice = !!(enableVoice && editable && projectId);
   const applyVoiceText = (text: string, mode: "append" | "replace") => {
@@ -39,26 +98,37 @@ export function RichTextEditor({ content, onChange, editable = true, placeholder
     if (!content) return undefined;
 
     if (typeof content === "object") {
-      if ("root" in content) {
-        return content as unknown as SerializedEditorState;
+      if (isValidSerializedEditorState(content)) {
+        return content;
       }
-      return undefined;
+
+      return JSON.parse(
+        plainTextToLexicalJson(richTextToPlainText(content)),
+      ) as SerializedEditorState;
     }
 
     try {
-      const parsed = JSON.parse(content);
-      if ("root" in parsed) {
-        return parsed as SerializedEditorState;
+      const parsed = JSON.parse(content) as unknown;
+      if (isValidSerializedEditorState(parsed)) {
+        return parsed;
       }
     } catch {
       // Conteúdo legado em texto simples é convertido apenas para apresentação;
       // ele só passa a ser salvo como Lexical quando o usuário editar o campo.
     }
-    return JSON.parse(plainTextToLexicalJson(content)) as SerializedEditorState;
+    return JSON.parse(
+      plainTextToLexicalJson(richTextToPlainText(content)),
+    ) as SerializedEditorState;
   }, [content]);
 
   return (
-    <div className={cn("group relative min-h-[200px] w-full min-w-0 overflow-hidden rounded-md border bg-background", className)}>
+    <div
+      className={cn(
+        "group relative w-full min-w-0 overflow-hidden rounded-md border bg-background",
+        compact ? "min-h-0" : "min-h-[200px]",
+        className,
+      )}
+    >
       {/* Toolbar do canto: voz (sempre visível) + modo foco (no hover) */}
       {(showVoice || editable) && (
         <div className="absolute top-2 right-2 z-10 flex items-center gap-1">
@@ -79,12 +149,12 @@ export function RichTextEditor({ content, onChange, editable = true, placeholder
         </div>
       )}
 
-      <div className={showVoice ? "p-1 pt-11" : "p-1"}>
-        <Editor key={editorKey} editorSerializedState={initialConfig} onSerializedChange={(value) => onChange(JSON.stringify(value))} placeholder={placeholder} editable={editable} />
+      <div className={showVoice ? "p-1 pt-11" : compact ? "p-0.5" : "p-1"}>
+        <Editor key={editorKey} editorSerializedState={initialConfig} onSerializedChange={(value) => onChange(JSON.stringify(value))} placeholder={placeholder} editable={editable} compact={compact} />
       </div>
 
       {/* Expanded Dialog */}
-      <Dialog open={isExpanded} onOpenChange={setIsExpanded}>
+      <Dialog open={isExpanded} onOpenChange={handleExpandedChange}>
         <DialogContent className="flex h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-[95vw] flex-col overflow-hidden p-0 sm:h-[95vh] sm:w-[95vw]">
           <DialogHeader className="flex shrink-0 flex-row items-center justify-between gap-2 border-b px-4 py-3 sm:px-6 sm:py-4">
             <DialogTitle className="min-w-0 break-words text-base sm:text-lg">Editor (Modo Foco)</DialogTitle>
@@ -92,7 +162,7 @@ export function RichTextEditor({ content, onChange, editable = true, placeholder
               type="button"
               variant="ghost"
               size="icon"
-              onClick={() => setIsExpanded(false)}
+              onClick={() => handleExpandedChange(false)}
               aria-label="Sair do modo tela cheia"
               className="mr-7 shrink-0" // spacing for close button
             >
@@ -109,6 +179,7 @@ export function RichTextEditor({ content, onChange, editable = true, placeholder
               onSerializedChange={(value) => onChange(JSON.stringify(value))}
               placeholder={placeholder}
               editable={editable}
+              compact={compact}
             />
           </div>
         </DialogContent>
