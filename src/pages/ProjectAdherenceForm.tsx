@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { useActiveTemplate } from "@/hooks/useFormTemplates";
 import { useProjectFormResponse, useUpsertFormResponse } from "@/hooks/useProjectFormResponse";
 import { useProjectDetails } from "@/hooks/useProjectDetails";
@@ -26,7 +26,8 @@ import {
   CheckCircle, 
   ClipboardCheck, 
   AlertCircle,
-  Printer
+  Printer,
+  Save
 } from "lucide-react";
 
 import { getImpactedItems } from "@/utils/adherence-helpers";
@@ -58,6 +59,10 @@ interface PrintSection {
   title: string;
   questions: PrintQuestion[];
 }
+
+type DraftSaveStatus = "idle" | "dirty" | "saving" | "saved" | "error";
+
+const serializeFormData = (formData: unknown) => JSON.stringify(formData ?? {});
 
 const getPrintSections = (schema: any, formData: any): PrintSection[] => {
   const sections: PrintSection[] = [];
@@ -220,7 +225,6 @@ export default function ProjectAdherenceForm() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const { isAdmin } = usePermissions();
   const { canEditProjects } = usePermissions();
 
   // Queries
@@ -232,11 +236,18 @@ export default function ProjectAdherenceForm() {
   const { data: activeTemplate, isLoading: isLoadingTpl } = useActiveTemplate("adherence", systemType);
 
   // Mutation
-  const upsertMutation = useUpsertFormResponse();
+  const { mutateAsync: upsertFormResponse, isPending: isUpserting } = useUpsertFormResponse();
 
-  // Local state for auto-saving form data
+  // Local state and refs used to persist draft changes without racing finalization.
   const [localFormData, setLocalFormData] = useState<any>({});
-  const [isAutoSaving, setIsAutoSaving] = useState(false);
+  const [draftSaveStatus, setDraftSaveStatus] = useState<DraftSaveStatus>("idle");
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const hydratedResponseIdRef = useRef<string | null>(null);
+  const latestFormDataRef = useRef(localFormData);
+  const lastSavedDataRef = useRef<string | null>(null);
+  const saveQueueRef = useRef<Promise<boolean>>(Promise.resolve(true));
+  const isTransitioningRef = useRef(false);
 
   const isPrintMode = new URLSearchParams(window.location.search).get("print") === "true";
 
@@ -258,58 +269,170 @@ export default function ProjectAdherenceForm() {
     }
   }, [isPrintMode, isLoadingProj, isLoadingResp, isLoadingTpl, project, response]);
 
-  // Sync local data with fetched response
+  // Sync server data only when there are no pending local edits. This prevents
+  // query invalidation after a save from restoring an older form snapshot.
   useEffect(() => {
-    if (response?.data) {
-      setLocalFormData(response.data);
-    } else {
-      setLocalFormData({});
+    if (!response) return;
+
+    const serverData = response.data ?? {};
+    const serverSerialized = serializeFormData(serverData);
+    const hasLocalChanges =
+      lastSavedDataRef.current !== null &&
+      serializeFormData(latestFormDataRef.current) !== lastSavedDataRef.current;
+    const isNewResponse = hydratedResponseIdRef.current !== response.id;
+
+    if (isNewResponse || !hasLocalChanges) {
+      latestFormDataRef.current = serverData;
+      setLocalFormData(serverData);
+      setDraftSaveStatus("saved");
     }
-  }, [response?.data]);
+
+    hydratedResponseIdRef.current = response.id;
+    lastSavedDataRef.current = serverSerialized;
+    const serverSavedAt = new Date(response.updated_at);
+    setLastSavedAt(Number.isNaN(serverSavedAt.getTime()) ? null : serverSavedAt);
+  }, [response]);
+
+  useEffect(() => {
+    latestFormDataRef.current = localFormData;
+
+    if (lastSavedDataRef.current === null || isTransitioningRef.current) return;
+
+    if (serializeFormData(localFormData) !== lastSavedDataRef.current) {
+      setDraftSaveStatus((current) => current === "saving" ? current : "dirty");
+    } else {
+      setDraftSaveStatus((current) =>
+        current === "idle" || current === "dirty" ? "saved" : current,
+      );
+    }
+  }, [localFormData]);
 
   // Debounce form data updates (1.2 seconds)
   const debouncedFormData = useDebounce(localFormData, 1200);
 
-  // Auto-save changes
-  useEffect(() => {
-    if (!response || !activeTemplate || !projectId) return;
+  const queueDraftSave = useCallback((formData: unknown, showSuccessToast = false) => {
+    if (
+      !response ||
+      response.status !== "draft" ||
+      !activeTemplate ||
+      !projectId ||
+      !canEditProjects
+    ) {
+      return Promise.resolve(false);
+    }
 
-    // Check if there are differences before saving
-    const hasChanges = JSON.stringify(debouncedFormData) !== JSON.stringify(response.data);
-    
-    // Only auto-save if form is editable (draft state)
-    const isFormLocked = response.status === "approved" || response.status === "approved_with_restrictions" || response.status === "rejected" || !canEditProjects;
+    const serializedSnapshot = serializeFormData(formData);
+    const snapshot = JSON.parse(serializedSnapshot);
 
-    if (hasChanges && !isFormLocked) {
-      setIsAutoSaving(true);
-      upsertMutation.mutate(
-        {
+    const persistSnapshot = async () => {
+      if (isTransitioningRef.current) return false;
+
+      if (serializedSnapshot === lastSavedDataRef.current) {
+        setDraftSaveStatus("saved");
+        if (showSuccessToast) {
+          toast({
+            title: "Rascunho já está salvo",
+            description: "Não há novas alterações pendentes.",
+          });
+        }
+        return true;
+      }
+
+      setDraftSaveStatus("saving");
+
+      try {
+        const savedResponse = await upsertFormResponse({
           project_id: projectId,
           template_id: activeTemplate.id,
           stage: "adherence",
-          data: debouncedFormData,
-          status: response.status, // preserve current status during autosave
-        },
-        {
-          onSuccess: () => {
-            setIsAutoSaving(false);
-            // Refetch to align data state
-            refetchResp();
-          },
-          onError: () => {
-            setIsAutoSaving(false);
-            toast({
-              title: "Erro de salvamento",
-              description: "Falha ao salvar rascunho automaticamente.",
-              variant: "destructive",
-            });
-          },
-        }
-      );
-    }
-  }, [debouncedFormData]);
+          data: snapshot,
+          status: "draft",
+        });
 
-  const handleFinalizeForm = () => {
+        lastSavedDataRef.current = serializedSnapshot;
+        const savedAt = new Date(savedResponse.updated_at);
+        setLastSavedAt(Number.isNaN(savedAt.getTime()) ? new Date() : savedAt);
+        setDraftSaveStatus(
+          serializeFormData(latestFormDataRef.current) === serializedSnapshot
+            ? "saved"
+            : "dirty",
+        );
+
+        if (showSuccessToast) {
+          toast({
+            title: "Rascunho salvo",
+            description: "Você pode sair e continuar o preenchimento depois.",
+            className: "bg-green-500 text-white border-green-600",
+          });
+        }
+
+        return true;
+      } catch {
+        setDraftSaveStatus("error");
+        toast({
+          title: "Erro de salvamento",
+          description: showSuccessToast
+            ? "Não foi possível salvar o rascunho. Tente novamente."
+            : "Falha ao salvar rascunho automaticamente. Use o botão Salvar rascunho para tentar novamente.",
+          variant: "destructive",
+        });
+        return false;
+      }
+    };
+
+    const queuedSave = saveQueueRef.current.then(persistSnapshot, persistSnapshot);
+    saveQueueRef.current = queuedSave;
+    return queuedSave;
+  }, [activeTemplate, canEditProjects, projectId, response, toast, upsertFormResponse]);
+
+  // Auto-save changes after the user pauses editing for 1.2 seconds.
+  useEffect(() => {
+    if (
+      response?.status !== "draft" ||
+      !activeTemplate ||
+      !projectId ||
+      !canEditProjects ||
+      isTransitioningRef.current ||
+      lastSavedDataRef.current === null ||
+      serializeFormData(debouncedFormData) !== serializeFormData(latestFormDataRef.current)
+    ) {
+      return;
+    }
+
+    if (serializeFormData(debouncedFormData) !== lastSavedDataRef.current) {
+      void queueDraftSave(debouncedFormData);
+    }
+  }, [activeTemplate, canEditProjects, debouncedFormData, projectId, queueDraftSave, response?.status]);
+
+  const hasUnsavedChanges =
+    lastSavedDataRef.current !== null &&
+    serializeFormData(localFormData) !== lastSavedDataRef.current;
+
+  useEffect(() => {
+    if (!hasUnsavedChanges || response?.status !== "draft" || !canEditProjects) return;
+
+    const warnBeforeLeaving = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", warnBeforeLeaving);
+    return () => window.removeEventListener("beforeunload", warnBeforeLeaving);
+  }, [canEditProjects, hasUnsavedChanges, response?.status]);
+
+  const handleSaveDraft = async () => {
+    await queueDraftSave(latestFormDataRef.current, true);
+  };
+
+  const handleBackToProject = async () => {
+    if (response?.status === "draft" && canEditProjects && hasUnsavedChanges) {
+      const saved = await queueDraftSave(latestFormDataRef.current);
+      if (!saved) return;
+    }
+    navigate(`/projects/${projectId}`);
+  };
+
+  const handleFinalizeForm = async () => {
     if (!response || !activeTemplate || !projectId) return;
 
     const incompleteImages = countIncompleteTitledImageAttachments(localFormData);
@@ -352,48 +475,74 @@ export default function ProjectAdherenceForm() {
       statusToSubmit = "rejected";
     }
 
-    upsertMutation.mutate(
-      {
+    isTransitioningRef.current = true;
+    setIsTransitioning(true);
+
+    try {
+      // Wait for any autosave already in flight so it cannot restore draft status
+      // after the final response is persisted.
+      await saveQueueRef.current;
+      const finalizedData = latestFormDataRef.current;
+      const finalizedResponse = await upsertFormResponse({
         project_id: projectId,
         template_id: activeTemplate.id,
         stage: "adherence",
-        data: localFormData,
+        data: finalizedData,
         status: statusToSubmit,
-      },
-      {
-        onSuccess: () => {
-          toast({
-            title: "Análise Concluída",
-            description: "Formulário de aderência finalizado com sucesso.",
-            className: "bg-green-500 text-white border-green-600",
-          });
-          refetchResp();
-        },
-      }
-    );
+      });
+      lastSavedDataRef.current = serializeFormData(finalizedData);
+      setLastSavedAt(new Date(finalizedResponse.updated_at));
+      setDraftSaveStatus("saved");
+      toast({
+        title: "Análise Concluída",
+        description: "Formulário de aderência finalizado com sucesso.",
+        className: "bg-green-500 text-white border-green-600",
+      });
+      await refetchResp();
+    } catch {
+      toast({
+        title: "Erro ao finalizar",
+        description: "Não foi possível finalizar o formulário. O rascunho permanece disponível.",
+        variant: "destructive",
+      });
+    } finally {
+      isTransitioningRef.current = false;
+      setIsTransitioning(false);
+    }
   };
 
-  const handleReopenForm = () => {
+  const handleReopenForm = async () => {
     if (!response || !activeTemplate || !projectId) return;
 
-    upsertMutation.mutate(
-      {
+    isTransitioningRef.current = true;
+    setIsTransitioning(true);
+
+    try {
+      const reopenedResponse = await upsertFormResponse({
         project_id: projectId,
         template_id: activeTemplate.id,
         stage: "adherence",
-        data: localFormData,
-        status: "draft", // Return to draft
-      },
-      {
-        onSuccess: () => {
-          toast({
-            title: "Formulário Reaberto",
-            description: "Formulário retornado para rascunho de edição.",
-          });
-          refetchResp();
-        },
-      }
-    );
+        data: latestFormDataRef.current,
+        status: "draft",
+      });
+      lastSavedDataRef.current = serializeFormData(latestFormDataRef.current);
+      setLastSavedAt(new Date(reopenedResponse.updated_at));
+      setDraftSaveStatus("saved");
+      toast({
+        title: "Formulário Reaberto",
+        description: "Formulário retornado para rascunho de edição.",
+      });
+      await refetchResp();
+    } catch {
+      toast({
+        title: "Erro ao reabrir",
+        description: "Não foi possível reabrir o formulário.",
+        variant: "destructive",
+      });
+    } finally {
+      isTransitioningRef.current = false;
+      setIsTransitioning(false);
+    }
   };
 
   if (isLoadingProj || isLoadingResp || isLoadingTpl) {
@@ -463,8 +612,21 @@ export default function ProjectAdherenceForm() {
     );
   }
 
-  const isFormLocked = response.status === "approved" || response.status === "approved_with_restrictions" || response.status === "rejected" || !canEditProjects;
+  const isFormLocked = response.status === "approved" || response.status === "approved_with_restrictions" || response.status === "rejected" || !canEditProjects || isTransitioning;
   const isFinalized = response.status === "approved" || response.status === "approved_with_restrictions" || response.status === "rejected";
+  const lastSavedTime = lastSavedAt?.toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  const draftSaveMessage = draftSaveStatus === "saving"
+    ? "Salvando rascunho"
+    : draftSaveStatus === "dirty"
+      ? "Alterações pendentes"
+      : draftSaveStatus === "error"
+        ? "Falha ao salvar"
+        : lastSavedTime
+          ? `Rascunho salvo às ${lastSavedTime}`
+          : "Rascunho salvo";
   const printSections = getPrintSections(activeTemplate.schema_json, localFormData);
   const generalFields = getGeneralFields(
     activeTemplate.schema_json,
@@ -910,7 +1072,8 @@ export default function ProjectAdherenceForm() {
           <Button 
             variant="ghost" 
             size="sm" 
-            onClick={() => navigate(`/projects/${projectId}`)} 
+            onClick={handleBackToProject}
+            disabled={isTransitioning}
             className="h-8 gap-1 text-xs text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-3.5 w-3.5" /> Voltar para o Projeto
@@ -937,10 +1100,31 @@ export default function ProjectAdherenceForm() {
               Imprimir / PDF
             </Button>
 
-            {isAutoSaving && (
-              <span className="text-xs text-muted-foreground flex items-center gap-1.5 animate-pulse">
-                <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                Auto-salvando...
+            {response.status === "draft" && canEditProjects && (
+              <span
+                data-testid="adherence-draft-save-status"
+                role="status"
+                aria-live="polite"
+                className={`flex items-center gap-1.5 text-xs ${
+                  draftSaveStatus === "error"
+                    ? "text-destructive"
+                    : draftSaveStatus === "dirty"
+                      ? "text-amber-600 dark:text-amber-400"
+                      : draftSaveStatus === "saved"
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-muted-foreground"
+                }`}
+              >
+                {draftSaveStatus === "saving" ? (
+                  <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                ) : draftSaveStatus === "saved" ? (
+                  <CheckCircle className="h-3.5 w-3.5" />
+                ) : draftSaveStatus === "error" ? (
+                  <AlertCircle className="h-3.5 w-3.5" />
+                ) : (
+                  <Save className="h-3.5 w-3.5" />
+                )}
+                {draftSaveMessage}
               </span>
             )}
           </div>
@@ -1093,23 +1277,46 @@ export default function ProjectAdherenceForm() {
       {/* Action Bar */}
       {canEditProjects && (
         <Card className="border-muted/50 shadow-sm">
-          <CardContent className="flex flex-wrap items-center justify-between gap-2 p-3">
-            <div className="text-xs text-muted-foreground italic">
-              {response.status === "draft" && "As alterações são salvas automaticamente no rascunho."}
+          <CardContent className="flex flex-col items-stretch justify-between gap-2 p-3 sm:flex-row sm:items-center">
+            <div className="text-xs text-muted-foreground">
+              {response.status === "draft" && (
+                <>
+                  <span className="font-medium text-foreground">{draftSaveMessage}.</span>{" "}
+                  {draftSaveStatus === "error"
+                    ? "Use Salvar rascunho para tentar novamente antes de sair."
+                    : "O preenchimento pode ser continuado depois sem finalizar o formulário."}
+                </>
+              )}
               {isFinalized && `Formulário concluído com parecer: ${response.data?.finalVerdict || ""}. Alterações travadas.`}
             </div>
 
-            <div className="ml-auto flex items-center gap-2">
-              {/* Draft actions: Finalize */}
+            <div className="grid w-full grid-cols-1 gap-2 min-[420px]:grid-cols-2 sm:ml-auto sm:flex sm:w-auto">
+              {/* Draft actions: Save and finalize */}
               {response.status === "draft" && (
-                <Button 
-                  onClick={handleFinalizeForm} 
-                  disabled={upsertMutation.isPending}
-                  className="h-10 gap-1.5 bg-green-600 text-xs font-semibold text-white hover:bg-green-700 sm:h-8"
-                >
-                  <Send className="h-3.5 w-3.5" />
-                  Finalizar Formulário
-                </Button>
+                <>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleSaveDraft}
+                    disabled={isUpserting || isTransitioning}
+                    className="h-10 w-full gap-1.5 text-xs font-semibold sm:h-8 sm:w-auto"
+                  >
+                    {draftSaveStatus === "saving" ? (
+                      <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Save className="h-3.5 w-3.5" />
+                    )}
+                    {draftSaveStatus === "saving" ? "Salvando..." : "Salvar rascunho"}
+                  </Button>
+                  <Button
+                    onClick={handleFinalizeForm}
+                    disabled={isUpserting || isTransitioning}
+                    className="h-10 w-full gap-1.5 bg-green-600 text-xs font-semibold text-white hover:bg-green-700 sm:h-8 sm:w-auto"
+                  >
+                    <Send className="h-3.5 w-3.5" />
+                    Finalizar Formulário
+                  </Button>
+                </>
               )}
 
               {/* Approved actions: Reopen */}
@@ -1117,8 +1324,8 @@ export default function ProjectAdherenceForm() {
                 <Button 
                   onClick={handleReopenForm} 
                   variant="outline"
-                  disabled={upsertMutation.isPending}
-                  className="h-10 gap-1.5 text-xs font-semibold sm:h-8"
+                  disabled={isUpserting || isTransitioning}
+                  className="h-10 w-full gap-1.5 text-xs font-semibold sm:h-8 sm:w-auto"
                 >
                   <Undo className="h-3.5 w-3.5" />
                   Reabrir para Edição

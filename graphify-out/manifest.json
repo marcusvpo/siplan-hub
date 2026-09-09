@@ -225,13 +225,13 @@
     "semantic_hash": ""
   },
   "src/components/FormRenderer/FormRenderer.tsx": {
-    "mtime": 1788971722.465484,
-    "ast_hash": "428bdd97e24c2f9da4215769a8807471",
+    "mtime": 1788977279.042924,
+    "ast_hash": "578ce4637f56fff0bae09b78b20bb17a",
     "semantic_hash": ""
   },
   "src/components/FormRenderer/VisualQuestionBuilder.tsx": {
-    "mtime": 1788964118.516707,
-    "ast_hash": "165632c727be9bd87479d5d59a3e2064",
+    "mtime": 1788977279.0439444,
+    "ast_hash": "32f5a6ab7a78808a99be26f98f4307ee",
     "semantic_hash": ""
   },
   "src/components/Layout/AppSidebar.tsx": {
@@ -295,8 +295,8 @@
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/Forms/StageForms/AdherenceStageForm.tsx": {
-    "mtime": 1788967974.4466279,
-    "ast_hash": "ccbdcebc562d94e5d5ddbc81329b0f72",
+    "mtime": 1788977279.0459473,
+    "ast_hash": "1426d8fbff5c515fe58b788b5f969274",
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/Forms/StageForms/ConversionStageForm.tsx": {
@@ -500,8 +500,8 @@
     "semantic_hash": "aa66165ef0718016ce690be8f6643ecf"
   },
   "src/components/editor/editor.tsx": {
-    "mtime": 1788970320.7298746,
-    "ast_hash": "6c8b193d1c6c87e6eb97c4b551d374d7",
+    "mtime": 1788977279.0479534,
+    "ast_hash": "ddb44d4c4481d9168a82aac8ee808b3c",
     "semantic_hash": ""
   },
   "src/components/editor/nodes.ts": {
@@ -510,13 +510,13 @@
     "semantic_hash": "f7ca6678206e911cc54fd7047edbb70f"
   },
   "src/components/editor/plugins.tsx": {
-    "mtime": 1788970320.730883,
-    "ast_hash": "e7b723737355e3f7d7007a64c22cb86e",
+    "mtime": 1788977279.0494435,
+    "ast_hash": "4a56a35b726d138a6b900f4ebdf9f80b",
     "semantic_hash": ""
   },
   "src/components/editor/plugins/toolbar-plugin.tsx": {
-    "mtime": 1788970597.3867857,
-    "ast_hash": "0b3d93958d9a7dfe4bd95287740cfbf9",
+    "mtime": 1788977279.0504565,
+    "ast_hash": "6108e410ad8c5b65b2719f1a36d7a4d1",
     "semantic_hash": ""
   },
   "src/components/editor/themes/editor-theme.ts": {
@@ -525,8 +525,8 @@
     "semantic_hash": "3714d6cc7b786122bd2180fec4549b81"
   },
   "src/components/editor/ui/content-editable.tsx": {
-    "mtime": 1788970320.740464,
-    "ast_hash": "be724fbd9bb9ee4e925877781e9d080b",
+    "mtime": 1788977279.0514712,
+    "ast_hash": "6fa764ac3ecf75a429b05bd541c16bb6",
     "semantic_hash": ""
   },
   "src/components/mode-toggle.tsx": {
@@ -665,8 +665,8 @@
     "semantic_hash": "6c2a4c39fb3f889fe94b854b7198b5ed"
   },
   "src/components/ui/rich-text-editor.tsx": {
-    "mtime": 1788976768.2416837,
-    "ast_hash": "8992870f2e25dd4a304f45930cbd4e2d",
+    "mtime": 1788977279.0574827,
+    "ast_hash": "e8c10e64d9959688872d20ab0aa214d6",
     "semantic_hash": ""
   },
   "src/components/ui/scroll-area.tsx": {
@@ -860,8 +860,8 @@
     "semantic_hash": ""
   },
   "src/hooks/useFormTemplates.ts": {
-    "mtime": 1788966634.861007,
-    "ast_hash": "d5974acd2beaaa72a99c2a58db7d5245",
+    "mtime": 1788977279.065813,
+    "ast_hash": "9b1b38c7c19b4c3ff3a13592a2f40ff3",
     "semantic_hash": ""
   },
   "src/hooks/useHomologationEvents.ts": {
@@ -1060,8 +1060,8 @@
     "semantic_hash": ""
   },
   "src/pages/ProjectAdherenceForm.tsx": {
-    "mtime": 1788972286.311272,
-    "ast_hash": "c1e47e62161c17cb8fa8187a5b743915",
+    "mtime": 1788979847.214982,
+    "ast_hash": "2d541257df0a9a3df2f53ec8709a1ff6",
     "semantic_hash": ""
   },
   "src/pages/ProjectDetails.tsx": {
@@ -1205,8 +1205,8 @@
     "semantic_hash": ""
   },
   "src/pages/implantadores/EditarFormAderencia.tsx": {
-    "mtime": 1788966282.8529606,
-    "ast_hash": "5a785e5f303d042dd754fffbabfe26b7",
+    "mtime": 1788977279.0764375,
+    "ast_hash": "17ca09b392470517e2a2f9800d76fac2",
     "semantic_hash": ""
   },
   "src/pages/implantadores/Implantadores.tsx": {
@@ -1670,8 +1670,8 @@
     "semantic_hash": ""
   },
   "vm-worker/src/processImproveJob.ts": {
-    "mtime": 1788972286.3122838,
-    "ast_hash": "d836739b8d073b8d7295dc3594d3816a",
+    "mtime": 1788977279.0915475,
+    "ast_hash": "0a20884fbb23e205e37b020eb4c4bc0f",
     "semantic_hash": ""
   },
   "vm-worker/src/processJob.ts": {
@@ -4075,8 +4075,8 @@
     "semantic_hash": ""
   },
   "vm-worker/src/runSkill.test.ts": {
-    "mtime": 1788971914.7194836,
-    "ast_hash": "41fd77b11427470ae3e89daac82aca6d",
+    "mtime": 1788977279.092561,
+    "ast_hash": "497afe998ce530a226770a85e2d2699c",
     "semantic_hash": ""
   },
   "docs/automacoes/sincronizacao_vector_store_openai.md": {
@@ -4205,18 +4205,18 @@
     "semantic_hash": ""
   },
   "src/components/ui/ai-rich-text-field.tsx": {
-    "mtime": 1788972295.6377926,
-    "ast_hash": "a1c9e9da26ad7ab2eb4a9e69bf358f21",
+    "mtime": 1788977279.054468,
+    "ast_hash": "1848f4e70bb4f70770885862e12264ce",
     "semantic_hash": ""
   },
   "src/hooks/useAiTextImprovement.ts": {
-    "mtime": 1788971609.6597226,
-    "ast_hash": "f4349f4405a0a1d632d806351888f2d9",
+    "mtime": 1788977279.0648143,
+    "ast_hash": "11bfb1642fdce0b74409b9a5a0b98de6",
     "semantic_hash": ""
   },
   "src/test/ai-rich-text-field.test.tsx": {
-    "mtime": 1788971914.7164347,
-    "ast_hash": "3285d8713bfa48213bc215dc793b801f",
+    "mtime": 1788977279.0809548,
+    "ast_hash": "d1bc4117a1f0f0cebddbc23bcd4aecf5",
     "semantic_hash": ""
   },
   "vm-worker/src/improveTextPrompt.ts": {
@@ -4650,8 +4650,8 @@
     "semantic_hash": ""
   },
   "src/test/implantadores-mobile-layout.test.ts": {
-    "mtime": 1788970527.9898071,
-    "ast_hash": "103917475297699298af152779a7503b",
+    "mtime": 1788979293.468418,
+    "ast_hash": "ed72ed8412c19e92ff8fbc469cf0e5ed",
     "semantic_hash": ""
   },
   "src/test/cs-cx-mobile-layout.test.ts": {
@@ -4735,8 +4735,8 @@
     "semantic_hash": ""
   },
   "src/constants/pageHelpRegistry.ts": {
-    "mtime": 1788971948.8598297,
-    "ast_hash": "1cefb411b8703c2201d0603ed3fe4d2d",
+    "mtime": 1788979312.9874601,
+    "ast_hash": "57822794b4b00475bd16f9dab4ef7d83",
     "semantic_hash": ""
   },
   "src/pages/admin/AdminChangelog.tsx": {
@@ -4835,43 +4835,53 @@
     "semantic_hash": ""
   },
   "src/lib/form-image-attachments.ts": {
-    "mtime": 1788963798.517886,
-    "ast_hash": "f008ba36600eaef0e7f52eb69702c119",
+    "mtime": 1788977279.069888,
+    "ast_hash": "7e70b509d899ca4408d85dc478612c2f",
     "semantic_hash": ""
   },
   "src/test/adherence-image-attachments.test.tsx": {
-    "mtime": 1788976881.4677813,
-    "ast_hash": "429a6a40f3a301457b4fb1c7356922b5",
+    "mtime": 1788977279.0774355,
+    "ast_hash": "0196bd897b7c9af77a93594d4683a0f8",
     "semantic_hash": ""
   },
   "supabase/migrations/20260909120000_adherence_item_image_attachments_changelog.sql": {
-    "mtime": 1788977135.789719,
-    "ast_hash": "9116a7b79f64c352b0a22fe28478ba2e",
+    "mtime": 1788977279.086501,
+    "ast_hash": "ea6edd56c7feb21abeb61652d2ca625d",
     "semantic_hash": ""
   },
   "src/lib/adherence-template.ts": {
-    "mtime": 1788966282.843006,
-    "ast_hash": "fbbae628cd8b290abef90b9e5c09be74",
+    "mtime": 1788977279.069888,
+    "ast_hash": "6a1aeb0a51355da3b66afc70bde56d6d",
     "semantic_hash": ""
   },
   "src/components/ui/rich-text-content.tsx": {
-    "mtime": 1788967910.862563,
-    "ast_hash": "05a1778afa68233e40191bbb5dda73a8",
+    "mtime": 1788977279.0554678,
+    "ast_hash": "f3355097e5adf720790079e840d5f232",
     "semantic_hash": ""
   },
   "src/lib/adherence-technical-opinion.ts": {
-    "mtime": 1788971609.6431491,
-    "ast_hash": "d84f4fb23e5e4b1b98ebe4013669b24a",
+    "mtime": 1788977279.0668137,
+    "ast_hash": "0ce30ec9ffabb549184dbfcb449302a4",
     "semantic_hash": ""
   },
   "src/test/adherence-technical-opinion.test.ts": {
-    "mtime": 1788971914.7174447,
-    "ast_hash": "52e7b5c0c2d29afcaf463204f4dc0a3e",
+    "mtime": 1788977279.0789433,
+    "ast_hash": "6fcd04efd3297476d7b63c423737dcd9",
     "semantic_hash": ""
   },
   "vm-worker/src/adherenceTechnicalOpinionPrompt.ts": {
-    "mtime": 1788971609.645116,
-    "ast_hash": "b9edfa1be36674f121b201312d162076",
+    "mtime": 1788977279.0890288,
+    "ast_hash": "bc0782ab9ec9fb571656eecead1e599f",
+    "semantic_hash": ""
+  },
+  "src/test/project-adherence-draft-saving.test.tsx": {
+    "mtime": 1788979716.6544657,
+    "ast_hash": "d300b6ceb25fc7fffe0622eef8c0cc6b",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260909153000_adherence_draft_saving_changelog.sql": {
+    "mtime": 1788979293.476555,
+    "ast_hash": "3cfdd4d4314c164ea360d6e1325b2c70",
     "semantic_hash": ""
   }
 }
