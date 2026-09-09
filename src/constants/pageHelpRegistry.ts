@@ -53,6 +53,7 @@ import {
   Lock,
   Megaphone,
   Image,
+  Save,
 } from "lucide-react";
 
 export interface PageHelpStep {
@@ -1324,6 +1325,7 @@ export const pageHelpData: PageHelpInfo[] = [
       "Editor completo nas observações, com estilos, listas, alinhamento e cores",
       "Editor completo nos itens com impacto e na justificativa técnica, com geração do parecer por IA a partir da análise inteira",
       "Galeria compacta de imagens com título por item e configuração em massa no editor",
+      "Salvamento automático do rascunho, confirmação de horário e botão para salvar manualmente sem finalizar",
       "Layout compacto para consultar e preencher mais itens com menos rolagem",
       "Cálculo automático do percentual de aderência",
     ],
@@ -1351,6 +1353,13 @@ export const pageHelpData: PageHelpInfo[] = [
       },
       {
         stepNumber: 4,
+        title: "Salve e Continue Depois",
+        description:
+          "Aguarde a confirmação do salvamento automático ou use Salvar rascunho. O conteúdo ficará disponível para continuar depois, sem finalizar a análise.",
+        icon: Save,
+      },
+      {
+        stepNumber: 5,
         title: "Gere e Revise o Parecer",
         description:
           "Selecione o parecer final e use Gerar com IA para criar uma justificativa baseada em todas as respostas. Revise a prévia antes de aplicá-la.",
