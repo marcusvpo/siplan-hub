@@ -28,6 +28,11 @@ interface AiRichTextFieldProps {
   placeholder?: string;
   requestedBy?: string;
   targetField: string;
+  projectId?: string;
+  mode?: "improve" | "generate";
+  aiInput?: string;
+  editable?: boolean;
+  compact?: boolean;
 }
 
 /** Editor rico com revisão humana obrigatória antes de aplicar a sugestão. */
@@ -38,17 +43,27 @@ export function AiRichTextField({
   placeholder,
   requestedBy,
   targetField,
+  projectId,
+  mode = "improve",
+  aiInput,
+  editable = true,
+  compact = false,
 }: AiRichTextFieldProps) {
   const { toast } = useToast();
   const { online } = useModelWorkerStatus();
   const { improve, reset, job, active, error } = useAiTextImprovement(
     targetField,
     requestedBy,
+    projectId,
   );
   const [editorKey, setEditorKey] = useState(0);
   const [isStarting, setIsStarting] = useState(false);
   const reportedErrorRef = useRef<string | null>(null);
-  const plainText = richTextToPlainText(content);
+  const isGeneration = mode === "generate";
+  const sourceText = isGeneration ? aiInput || "" : content;
+  const sourcePlainText = isGeneration
+    ? sourceText
+    : richTextToPlainText(sourceText);
   const suggestion =
     job?.status === "done" ? job.resultText?.trim() || "" : "";
   const formattedSuggestion = suggestion
@@ -56,38 +71,50 @@ export function AiRichTextField({
     : "";
   const isRunning = isStarting || active;
   const canImprove =
-    Boolean(requestedBy) && online && !isRunning && plainText.trim().length >= 10;
+    editable &&
+    Boolean(requestedBy) &&
+    online &&
+    !isRunning &&
+    sourcePlainText.trim().length >= 10;
 
   useEffect(() => {
     const message =
       job?.status === "error"
-        ? job.errorMessage || "Não foi possível melhorar o texto."
+        ? job.errorMessage ||
+          (isGeneration
+            ? "Não foi possível gerar o parecer."
+            : "Não foi possível melhorar o texto.")
         : error instanceof Error
           ? error.message
           : "";
     if (!message || reportedErrorRef.current === message) return;
     reportedErrorRef.current = message;
     toast({
-      title: "Não foi possível melhorar com IA",
+      title: isGeneration
+        ? "Não foi possível gerar com IA"
+        : "Não foi possível melhorar com IA",
       description: message,
       variant: "destructive",
     });
-  }, [error, job?.errorMessage, job?.status, toast]);
+  }, [error, isGeneration, job?.errorMessage, job?.status, toast]);
 
   const improveText = async () => {
     if (!canImprove) return;
     reportedErrorRef.current = null;
     setIsStarting(true);
     try {
-      await improve(content);
+      await improve(sourceText);
       toast({
-        title: "Melhoria em processamento",
-        description:
-          "O Codex está revisando o texto. A sugestão aparecerá aqui quando estiver pronta.",
+        title: isGeneration
+          ? "Parecer em processamento"
+          : "Melhoria em processamento",
+        description: `O Codex está ${isGeneration ? "gerando o parecer com base em toda a análise" : "revisando o texto"}. A sugestão aparecerá aqui quando estiver pronta.`,
       });
     } catch (improveError) {
       toast({
-        title: "Não foi possível iniciar a melhoria",
+        title: isGeneration
+          ? "Não foi possível gerar o parecer"
+          : "Não foi possível iniciar a melhoria",
         description: messageOf(improveError),
         variant: "destructive",
       });
@@ -103,15 +130,21 @@ export function AiRichTextField({
     reset();
   };
 
-  const improveTitle = !requestedBy
-    ? "Usuário não identificado"
+  const improveTitle = !editable
+    ? "Campo bloqueado para edição"
+    : !requestedBy
+      ? "Usuário não identificado"
     : !online
       ? "O gerador da IA está offline no momento"
-      : plainText.trim().length < 10
-        ? "Escreva um pouco mais antes de melhorar com IA"
+      : sourcePlainText.trim().length < 10
+        ? isGeneration
+          ? "Selecione o parecer final e preencha a análise antes de gerar"
+          : "Escreva um pouco mais antes de melhorar com IA"
         : isRunning
           ? job?.progress || "Aguarde a melhoria em andamento"
-          : "O Codex sugere uma versão melhor; você decide se quer aplicá-la";
+          : isGeneration
+            ? "O Codex lê toda a análise e gera uma justificativa para sua revisão"
+            : "O Codex sugere uma versão melhor; você decide se quer aplicá-la";
 
   return (
     <div className="space-y-2">
@@ -131,7 +164,13 @@ export function AiRichTextField({
           ) : (
             <Wand2 className="h-3.5 w-3.5" />
           )}
-          {isRunning ? "Melhorando…" : "Melhorar com IA"}
+          {isRunning
+            ? isGeneration
+              ? "Gerando…"
+              : "Melhorando…"
+            : isGeneration
+              ? "Gerar com IA"
+              : "Melhorar com IA"}
         </Button>
       </div>
 
@@ -140,6 +179,8 @@ export function AiRichTextField({
         content={content}
         onChange={onChange}
         placeholder={placeholder}
+        editable={editable}
+        compact={compact}
       />
 
       <AlertDialog
@@ -150,10 +191,12 @@ export function AiRichTextField({
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-indigo-500" />
-              Sugestão de melhoria da IA
+              {isGeneration
+                ? "Sugestão de parecer da IA"
+                : "Sugestão de melhoria da IA"}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Revise a sugestão abaixo. Seu texto atual só será substituído se
+              Revise a sugestão abaixo. O conteúdo atual só será substituído se
               você confirmar.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -165,6 +208,7 @@ export function AiRichTextField({
               content={formattedSuggestion}
               onChange={() => undefined}
               editable={false}
+              compact
               className="min-h-0 border-0 bg-transparent [&_[contenteditable]]:min-h-0"
             />
           </div>

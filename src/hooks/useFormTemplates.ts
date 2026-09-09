@@ -1,13 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  stripLegacyAdherencePhotoField,
+  stripLegacyPhotoFieldFromTemplate,
+} from "@/lib/adherence-template";
 
 export interface FormTemplate {
   id: string;
   kind: 'adherence' | 'homologation_checklist' | 'commercial_checklist';
   system_type: string;
   version: number;
-  schema_json: any;
-  ui_json: any;
+  schema_json: Record<string, unknown>;
+  ui_json: Record<string, unknown>;
   is_active: boolean;
   created_by?: string;
   created_at: string;
@@ -20,8 +24,8 @@ export interface FormTemplate {
 interface NewTemplateInput {
   kind: 'adherence' | 'homologation_checklist' | 'commercial_checklist';
   system_type: string;
-  schema_json: any;
-  ui_json: any;
+  schema_json: Record<string, unknown>;
+  ui_json: Record<string, unknown>;
   notes?: string;
 }
 
@@ -64,7 +68,9 @@ export function useFormTemplates(kind: 'adherence' | 'homologation_checklist' | 
         }
       }
 
-      return templates;
+      return kind === "adherence"
+        ? templates.map(stripLegacyPhotoFieldFromTemplate)
+        : templates;
     },
   });
 }
@@ -84,7 +90,11 @@ export function useActiveTemplate(kind: 'adherence' | 'homologation_checklist' |
         .maybeSingle();
 
       if (error) throw error;
-      return data as FormTemplate | undefined;
+
+      const template = data as FormTemplate | undefined;
+      return template && kind === "adherence"
+        ? stripLegacyPhotoFieldFromTemplate(template)
+        : template;
     },
     enabled: !!systemType,
   });
@@ -95,6 +105,15 @@ export function usePublishTemplate() {
 
   return useMutation<FormTemplate, Error, NewTemplateInput>({
     mutationFn: async (input) => {
+      let sanitizedInput = input;
+      if (input.kind === "adherence") {
+        const { schema, uiSchema } = stripLegacyAdherencePhotoField(
+          input.schema_json,
+          input.ui_json,
+        );
+        sanitizedInput = { ...input, schema_json: schema, ui_json: uiSchema };
+      }
+
       // 1. Get current user session
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id;
@@ -103,8 +122,8 @@ export function usePublishTemplate() {
       const { data: latest, error: fetchError } = await supabase
         .from("form_templates")
         .select("version")
-        .eq("kind", input.kind)
-        .eq("system_type", input.system_type)
+        .eq("kind", sanitizedInput.kind)
+        .eq("system_type", sanitizedInput.system_type)
         .order("version", { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -117,8 +136,8 @@ export function usePublishTemplate() {
       const { error: updateError } = await supabase
         .from("form_templates")
         .update({ is_active: false })
-        .eq("kind", input.kind)
-        .eq("system_type", input.system_type);
+        .eq("kind", sanitizedInput.kind)
+        .eq("system_type", sanitizedInput.system_type);
 
       if (updateError) throw updateError;
 
@@ -126,14 +145,14 @@ export function usePublishTemplate() {
       const { data, error: insertError } = await supabase
         .from("form_templates")
         .insert({
-          kind: input.kind,
-          system_type: input.system_type,
+          kind: sanitizedInput.kind,
+          system_type: sanitizedInput.system_type,
           version: nextVersion,
-          schema_json: input.schema_json,
-          ui_json: input.ui_json,
+          schema_json: sanitizedInput.schema_json,
+          ui_json: sanitizedInput.ui_json,
           is_active: true,
           created_by: userId,
-          notes: input.notes,
+          notes: sanitizedInput.notes,
         })
         .select()
         .single();

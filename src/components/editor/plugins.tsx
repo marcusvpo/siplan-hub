@@ -12,17 +12,19 @@ import { ToolbarPlugin } from "./plugins/toolbar-plugin"
 export function Plugins({
   placeholder,
   editable = true,
+  compact = false,
 }: {
   placeholder?: string
   editable?: boolean
+  compact?: boolean
 }) {
   return (
     <div className="relative flex flex-col h-full">
-      {editable && <ToolbarPlugin />}
+      {editable && <ToolbarPlugin compact={compact} />}
       <div className="relative flex-1">
         <RichTextPlugin
           contentEditable={
-            <EditorContentEditable placeholder={placeholder} className="h-full" />
+            <EditorContentEditable placeholder={placeholder} className="h-full" compact={compact} />
           }
           ErrorBoundary={LexicalErrorBoundary}
         />
