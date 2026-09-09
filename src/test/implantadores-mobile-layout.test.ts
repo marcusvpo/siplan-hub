@@ -39,7 +39,17 @@ describe("responsividade das telas de Implantadores", () => {
     expect(adherenceForm).toContain("compact");
     expect(adherenceForm).toContain("pb-[calc(0.75rem+env(safe-area-inset-bottom))]");
     expect(adherenceForm).toContain("lg:grid-cols-[minmax(180px,2fr)_repeat(5,minmax(90px,1fr))]");
+    expect(adherenceForm).toContain('data-testid="adherence-draft-save-status"');
+    expect(adherenceForm).toContain("Salvar rascunho");
+    expect(adherenceForm).toContain("min-[420px]:grid-cols-2");
     expect(richTextEditor).toContain("h-[calc(100dvh-1rem)]");
+  });
+
+  it("preserva o preenchimento parcial da aderência como rascunho", () => {
+    expect(adherenceForm).toContain("queueDraftSave");
+    expect(adherenceForm).toContain("await saveQueueRef.current");
+    expect(adherenceForm).toContain('window.addEventListener("beforeunload"');
+    expect(adherenceForm).toContain("O preenchimento pode ser continuado depois sem finalizar o formulário.");
   });
 
   it("substitui a tabela de aderências por cartões paginados no celular", () => {
