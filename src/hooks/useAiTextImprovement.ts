@@ -29,6 +29,7 @@ function mapJob(job: Record<string, unknown>): AiTextImprovementJob {
 export function useAiTextImprovement(
   targetField: string,
   requestedBy?: string,
+  projectId?: string,
 ) {
   const [jobId, setJobId] = useState<string | null>(null);
   const queryKey = ["ai-text-improvement", jobId];
@@ -59,7 +60,7 @@ export function useAiTextImprovement(
       const { data, error } = await supabase
         .from("dtc_ai_jobs")
         .insert({
-          project_id: null,
+          project_id: projectId ?? null,
           job_type: "improve_text",
           target_field: targetField,
           input_text: inputText,
@@ -70,7 +71,7 @@ export function useAiTextImprovement(
       if (error) throw error;
       setJobId(String(data.id));
     },
-    [requestedBy, targetField],
+    [projectId, requestedBy, targetField],
   );
 
   const reset = useCallback(() => setJobId(null), []);

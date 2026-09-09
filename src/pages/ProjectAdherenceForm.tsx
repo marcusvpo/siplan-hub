@@ -4,15 +4,17 @@ import { useActiveTemplate } from "@/hooks/useFormTemplates";
 import { useProjectFormResponse, useUpsertFormResponse } from "@/hooks/useProjectFormResponse";
 import { useProjectDetails } from "@/hooks/useProjectDetails";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useDebounce } from "@/hooks/use-debounce";
 import { FormRenderer } from "@/components/FormRenderer/FormRenderer";
+import { RichTextContent } from "@/components/ui/rich-text-content";
+import { AiRichTextField } from "@/components/ui/ai-rich-text-field";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { 
   ArrowLeft, 
@@ -27,7 +29,17 @@ import {
   Printer
 } from "lucide-react";
 
-import { getImpactedItems, ImpactedItem } from "@/utils/adherence-helpers";
+import { getImpactedItems } from "@/utils/adherence-helpers";
+import { richTextToPlainText } from "@/lib/lexical";
+import {
+  buildAdherenceTechnicalOpinionInput,
+  isAdherenceImpactDescriptionTitle,
+} from "@/lib/adherence-technical-opinion";
+import {
+  countIncompleteTitledImageAttachments,
+  getCompletedTitledImageAttachments,
+  TitledImageAttachment,
+} from "@/lib/form-image-attachments";
 
 
 interface PrintQuestion {
@@ -39,6 +51,7 @@ interface PrintQuestion {
   detalhes: string;
   nivel_impacto: string;
   impacto: boolean;
+  images: TitledImageAttachment[];
 }
 
 interface PrintSection {
@@ -82,6 +95,7 @@ const getPrintSections = (schema: any, formData: any): PrintSection[] => {
         detalhes,
         nivel_impacto,
         impacto,
+        images: getCompletedTitledImageAttachments(qData.imagens),
       });
     } else {
       const questions: PrintQuestion[] = [];
@@ -109,6 +123,7 @@ const getPrintSections = (schema: any, formData: any): PrintSection[] => {
           detalhes,
           nivel_impacto,
           impacto,
+          images: getCompletedTitledImageAttachments(qData.imagens),
         });
       });
       
@@ -204,6 +219,7 @@ export default function ProjectAdherenceForm() {
   const { id: projectId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const { isAdmin } = usePermissions();
   const { canEditProjects } = usePermissions();
 
@@ -296,6 +312,16 @@ export default function ProjectAdherenceForm() {
   const handleFinalizeForm = () => {
     if (!response || !activeTemplate || !projectId) return;
 
+    const incompleteImages = countIncompleteTitledImageAttachments(localFormData);
+    if (incompleteImages > 0) {
+      toast({
+        title: "Imagens incompletas",
+        description: `Complete o título e o arquivo de ${incompleteImages} ${incompleteImages === 1 ? "imagem" : "imagens"} antes de finalizar.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Validate that the final verdict and notes are filled
     const verdict = localFormData.finalVerdict;
     const notes = localFormData.finalNotes;
@@ -309,7 +335,7 @@ export default function ProjectAdherenceForm() {
       return;
     }
 
-    if (!notes || !notes.trim()) {
+    if (!notes || !richTextToPlainText(notes).trim()) {
       toast({
         title: "Justificativa obrigatória",
         description: "Descreva a justificativa/parecer técnico antes de concluir o formulário.",
@@ -439,12 +465,52 @@ export default function ProjectAdherenceForm() {
 
   const isFormLocked = response.status === "approved" || response.status === "approved_with_restrictions" || response.status === "rejected" || !canEditProjects;
   const isFinalized = response.status === "approved" || response.status === "approved_with_restrictions" || response.status === "rejected";
+  const printSections = getPrintSections(activeTemplate.schema_json, localFormData);
+  const generalFields = getGeneralFields(
+    activeTemplate.schema_json,
+    localFormData,
+    activeTemplate.ui_json,
+  );
+  const impactedItems = getImpactedItems(activeTemplate.schema_json, localFormData);
+  const technicalOpinionAiInput = buildAdherenceTechnicalOpinionInput({
+    project: {
+      id: project.id,
+      clientName: project.clientName,
+      ticketNumber: project.ticketNumber,
+      systemType: project.systemType,
+      responsibleAdherence: project.responsibleAdherence,
+    },
+    finalVerdict: localFormData.finalVerdict,
+    generalFields: generalFields
+      .filter(
+        (field) => field.type !== "images" && field.type !== "object",
+      )
+      .map((field) => ({
+        title: field.title,
+        value: Array.isArray(field.value)
+          ? field.value.join(", ")
+          : typeof field.value === "boolean"
+            ? field.value
+              ? "Sim"
+              : "Nao"
+            : richTextToPlainText(String(field.value || "")),
+      }))
+      .filter((field) => field.value.trim()),
+    sections: printSections.map((section) => ({
+      title: section.title,
+      questions: section.questions.map((question) => ({
+        title: question.title,
+        utiliza: question.utiliza,
+        value: question.valor,
+        impact: question.impacto,
+        impactLevel: question.nivel_impacto,
+        details: richTextToPlainText(question.detalhes),
+        imageTitles: question.images.map((image) => image.title),
+      })),
+    })),
+  });
 
   if (isPrintMode) {
-    const printSections = getPrintSections(activeTemplate.schema_json, localFormData);
-    const generalFields = getGeneralFields(activeTemplate.schema_json, localFormData, activeTemplate.ui_json);
-    const impactedItems = getImpactedItems(activeTemplate.schema_json, localFormData);
-
     return (
       <div className="bg-white text-black min-h-screen font-sans p-6 md:p-10 max-w-4xl mx-auto space-y-8 select-none">
         <style>{`
@@ -599,7 +665,15 @@ export default function ProjectAdherenceForm() {
                 return (
                   <div key={field.key} className={field.type === "textarea" ? "col-span-1 md:col-span-2" : "col-span-1"}>
                     <span className="text-muted-foreground block text-[10px] uppercase font-bold tracking-wider">{field.title}</span>
-                    <p className="text-slate-800 font-medium whitespace-pre-wrap mt-0.5">{displayVal}</p>
+                    {isAdherenceImpactDescriptionTitle(field.title) ? (
+                      <RichTextContent
+                        content={field.value}
+                        emptyText="Não informado"
+                        className="mt-0.5 text-xs font-medium text-slate-800"
+                      />
+                    ) : (
+                      <p className="text-slate-800 font-medium whitespace-pre-wrap mt-0.5">{displayVal}</p>
+                    )}
                   </div>
                 );
               })}
@@ -646,12 +720,13 @@ export default function ProjectAdherenceForm() {
                           {isAttention ? "Ponto de Atenção" : "Não Aderente"}
                         </span>
                       </div>
-                      <div className={`border-l-4 pl-3 py-1 font-semibold italic rounded-r-md text-xs ${
+                      <div className={`border-l-4 pl-3 py-1 font-semibold rounded-r-md text-xs ${
                         isAttention 
                           ? "border-amber-500 bg-amber-500/5 text-amber-700" 
                           : "border-rose-500 bg-rose-500/5 text-rose-700"
                       }`}>
-                        Impacto: {item.detalhes}
+                        <span className="font-bold">Impacto:</span>
+                        <RichTextContent content={item.detalhes} className="mt-0.5 text-xs" />
                       </div>
                     </div>
                   );
@@ -734,13 +809,36 @@ export default function ProjectAdherenceForm() {
                             {q.nivel_impacto || "NÃO"}
                           </span>
                           {q.detalhes && (
-                            <p className="text-slate-600 font-medium italic mt-0.5 leading-relaxed">
-                              {q.detalhes}
-                            </p>
+                            <RichTextContent
+                              content={q.detalhes}
+                              className="mt-0.5 text-xs font-medium text-slate-600"
+                            />
                           )}
                         </div>
                       </div>
                     </div>
+
+                    {q.images.length > 0 && (
+                      <div className="space-y-2 border-t pt-3">
+                        <span className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                          Imagens do item:
+                        </span>
+                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                          {q.images.map((image, imageIndex) => (
+                            <figure key={`${image.url}-${imageIndex}`} className="overflow-hidden rounded-md border bg-white shadow-sm">
+                              <img
+                                src={image.url}
+                                alt={image.title || `Imagem ${imageIndex + 1}`}
+                                className="aspect-video w-full object-cover"
+                              />
+                              <figcaption className="break-words border-t px-2 py-1.5 text-[10px] font-semibold text-slate-700">
+                                {image.title || "Sem título"}
+                              </figcaption>
+                            </figure>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -772,9 +870,11 @@ export default function ProjectAdherenceForm() {
 
             <div className="space-y-1">
               <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block">Justificativa e Considerações Finais:</span>
-              <p className="text-xs text-slate-800 font-medium whitespace-pre-wrap bg-white p-3 rounded-lg border italic">
-                {localFormData.finalNotes || "Nenhuma consideração registrada."}
-              </p>
+              <RichTextContent
+                content={localFormData.finalNotes}
+                emptyText="Nenhuma consideração registrada."
+                className="rounded-lg border bg-white p-3 text-xs font-medium text-slate-800"
+              />
             </div>
           </div>
         </div>
@@ -803,9 +903,9 @@ export default function ProjectAdherenceForm() {
   }
 
   return (
-    <div className="container mx-auto p-4 md:p-6 space-y-6 max-w-5xl">
+    <div className="container mx-auto max-w-5xl space-y-4 px-3 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:px-4 md:py-4">
       {/* Header / Breadcrumb */}
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1.5">
         <div className="flex items-center gap-2">
           <Button 
             variant="ghost" 
@@ -817,21 +917,21 @@ export default function ProjectAdherenceForm() {
           </Button>
         </div>
 
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-4">
+        <div className="flex flex-col justify-between gap-2 border-b pb-2.5 sm:flex-row sm:items-center">
           <div>
-            <div className="flex flex-wrap items-center gap-2 mb-1">
-              <h1 className="text-2xl font-black tracking-tight text-foreground bg-gradient-to-r from-primary to-orange-500 bg-clip-text text-transparent">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="bg-gradient-to-r from-primary to-orange-500 bg-clip-text text-xl font-black tracking-tight text-transparent">
                 Análise de Aderência
               </h1>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => window.open(`/projects/${projectId}/adherence?print=true`, "_blank")}
-              className="h-8 gap-1.5 text-xs border-primary/20 text-primary hover:bg-primary/5 mr-2"
+              className="h-9 gap-1.5 border-primary/20 text-xs text-primary hover:bg-primary/5 sm:h-8"
             >
               <Printer className="h-3.5 w-3.5" />
               Imprimir / PDF
@@ -847,26 +947,26 @@ export default function ProjectAdherenceForm() {
         </div>
 
         {/* Informações de Cabeçalho */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 p-4 rounded-xl border bg-muted/20 text-xs text-left mt-2">
-          <div className="col-span-2 md:col-span-3 lg:col-span-2">
+        <div className="mt-1 grid grid-cols-2 gap-x-3 gap-y-2 rounded-lg border bg-muted/20 p-3 text-left text-xs md:grid-cols-3 lg:grid-cols-[minmax(180px,2fr)_repeat(5,minmax(90px,1fr))]">
+          <div className="col-span-2 min-w-0 md:col-span-1">
             <span className="text-muted-foreground block text-[10px] uppercase font-bold tracking-wider mb-0.5">Cliente / Projeto</span>
-            <strong className="text-foreground text-[13px]">{project.clientName}</strong>
+            <strong className="block break-words text-xs leading-4 text-foreground">{project.clientName}</strong>
           </div>
           <div>
             <span className="text-muted-foreground block text-[10px] uppercase font-bold tracking-wider mb-0.5">Ticket</span>
-            <strong className="text-foreground text-[13px]">#{project.ticketNumber}</strong>
+            <strong className="text-xs text-foreground">#{project.ticketNumber}</strong>
           </div>
           <div>
             <span className="text-muted-foreground block text-[10px] uppercase font-bold tracking-wider mb-0.5">Sistema / Produto</span>
-            <strong className="text-foreground text-[13px]">{project.systemType}</strong>
+            <strong className="text-xs text-foreground">{project.systemType}</strong>
           </div>
           <div>
             <span className="text-muted-foreground block text-[10px] uppercase font-bold tracking-wider mb-0.5">Implantador</span>
-            <strong className="text-foreground text-[13px]">{project.responsibleAdherence || "Não definido"}</strong>
+            <strong className="block break-words text-xs leading-4 text-foreground">{project.responsibleAdherence || "Não definido"}</strong>
           </div>
           <div>
             <span className="text-muted-foreground block text-[10px] uppercase font-bold tracking-wider mb-0.5">Data da Análise</span>
-            <strong className="text-foreground text-[13px]">{getAnalysisDate()}</strong>
+            <strong className="text-xs text-foreground">{getAnalysisDate()}</strong>
           </div>
           <div>
             <span className="text-muted-foreground block text-[10px] uppercase font-bold tracking-wider mb-0.5">Status Homologação</span>
@@ -890,8 +990,8 @@ export default function ProjectAdherenceForm() {
       </div>
 
       {/* Main Content Area */}
-      <Card className="shadow-lg border-muted/50 overflow-hidden bg-card">
-        <CardHeader className="bg-muted/20 pb-4 border-b">
+      <Card className="overflow-hidden border-muted/50 bg-card shadow-md">
+        <CardHeader className="space-y-1 border-b bg-muted/20 px-4 py-3">
           <CardTitle className="text-sm font-bold uppercase tracking-wider text-primary flex items-center gap-2">
             <ClipboardCheck className="h-4.5 w-4.5" />
             Especificação Técnica de Aderência
@@ -900,7 +1000,7 @@ export default function ProjectAdherenceForm() {
             Preencha todos os campos e descreva observações detalhadas para itens que possuam impacto.
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-6">
+        <CardContent className="p-3 sm:p-4">
           <FormRenderer
             projectId={projectId}
             schema={activeTemplate.schema_json}
@@ -914,16 +1014,17 @@ export default function ProjectAdherenceForm() {
             readonly={isFormLocked}
             disabled={isFormLocked}
             showSubmit={false}
+            compact
           />
 
           {/* Conclusão da Análise Section */}
-          <div className="mt-8 pt-6 border-t border-dashed space-y-4">
+          <div className="mt-5 space-y-3 border-t border-dashed pt-4">
             <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider text-left">
               Conclusão da Análise de Aderência
             </h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
-              <div className="space-y-1.5 md:col-span-1">
+            <div className="grid grid-cols-1 gap-3 text-left md:grid-cols-3">
+              <div className="space-y-1 md:col-span-1">
                 <Label htmlFor="verdict" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
                   Parecer Técnico Final
                 </Label>
@@ -953,22 +1054,36 @@ export default function ProjectAdherenceForm() {
                 </Select>
               </div>
 
-              <div className="space-y-1.5 md:col-span-2">
-                <Label htmlFor="concludingNotes" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
-                  Justificativa / Parecer Técnico
-                </Label>
-                <Textarea
-                  id="concludingNotes"
-                  value={localFormData.finalNotes || ""}
-                  onChange={(e) => {
+              <div className="space-y-1 md:col-span-2">
+                <AiRichTextField
+                  label="Justificativa / Parecer Técnico"
+                  content={localFormData.finalNotes || ""}
+                  onChange={(finalNotes) => {
                     if (!isFormLocked) {
-                      setLocalFormData(prev => ({ ...prev, finalNotes: e.target.value }));
+                      setLocalFormData((previous) => ({
+                        ...previous,
+                        finalNotes,
+                      }));
                     }
                   }}
-                  disabled={isFormLocked}
-                  className="bg-background text-xs min-h-[70px] border-muted-foreground/20 focus-visible:ring-primary focus-visible:border-primary"
-                  placeholder="Resuma os gaps identificados e a justificativa técnica para o parecer..."
+                  placeholder="Gere com IA a partir da análise completa ou escreva o parecer técnico..."
+                  requestedBy={user?.id}
+                  targetField={`adherence_technical_opinion:${projectId}:finalNotes`}
+                  projectId={projectId}
+                  mode="generate"
+                  aiInput={
+                    localFormData.finalVerdict
+                      ? technicalOpinionAiInput
+                      : ""
+                  }
+                  editable={!isFormLocked}
+                  compact
                 />
+                {!isFormLocked && (
+                  <p className="text-[10px] leading-4 text-muted-foreground">
+                    A IA considera todas as seções, respostas, impactos e observações. Revise a sugestão antes de aplicá-la.
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -977,20 +1092,20 @@ export default function ProjectAdherenceForm() {
 
       {/* Action Bar */}
       {canEditProjects && (
-        <Card className="shadow-md border-muted/50">
-          <CardContent className="p-4 flex flex-wrap items-center justify-between gap-3">
+        <Card className="border-muted/50 shadow-sm">
+          <CardContent className="flex flex-wrap items-center justify-between gap-2 p-3">
             <div className="text-xs text-muted-foreground italic">
               {response.status === "draft" && "As alterações são salvas automaticamente no rascunho."}
               {isFinalized && `Formulário concluído com parecer: ${response.data?.finalVerdict || ""}. Alterações travadas.`}
             </div>
 
-            <div className="flex items-center gap-3 ml-auto">
+            <div className="ml-auto flex items-center gap-2">
               {/* Draft actions: Finalize */}
               {response.status === "draft" && (
                 <Button 
                   onClick={handleFinalizeForm} 
                   disabled={upsertMutation.isPending}
-                  className="text-xs font-semibold gap-1.5 bg-green-600 hover:bg-green-700 text-white"
+                  className="h-10 gap-1.5 bg-green-600 text-xs font-semibold text-white hover:bg-green-700 sm:h-8"
                 >
                   <Send className="h-3.5 w-3.5" />
                   Finalizar Formulário
@@ -1003,7 +1118,7 @@ export default function ProjectAdherenceForm() {
                   onClick={handleReopenForm} 
                   variant="outline"
                   disabled={upsertMutation.isPending}
-                  className="text-xs font-semibold gap-1.5"
+                  className="h-10 gap-1.5 text-xs font-semibold sm:h-8"
                 >
                   <Undo className="h-3.5 w-3.5" />
                   Reabrir para Edição

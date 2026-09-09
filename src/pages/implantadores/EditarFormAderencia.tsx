@@ -32,12 +32,6 @@ const DEFAULT_QUESTIONS: VisualQuestion[] = [
     type: "textarea",
     required: false,
   },
-  {
-    id: "printer_photos",
-    title: "Fotos e Imagens das Impressoras do Cliente",
-    type: "images",
-    required: false,
-  },
 ];
 
 export default function EditarFormAderencia() {
