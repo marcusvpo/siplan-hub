@@ -350,7 +350,7 @@ describe("imagens por item da análise de aderência", () => {
     expect(screen.queryByTestId("adherence-image-card")).not.toBeInTheDocument();
   });
 
-  it("exibe miniatura e título compacto no mesmo card após o upload", () => {
+  it("exibe miniatura e título compacto e permite ampliar a imagem", () => {
     const schema = convertVisualToJSONSchema(
       adherenceQuestions,
       "Aderência",
@@ -382,6 +382,18 @@ describe("imagens por item da análise de aderência", () => {
     const imageCard = screen.getByTestId("adherence-image-card");
     expect(within(imageCard).getByRole("img", { name: "Scanner atual" })).toBeInTheDocument();
     expect(within(imageCard).getByLabelText("Título da imagem")).toHaveValue("Scanner atual");
+
+    fireEvent.click(
+      within(imageCard).getByRole("button", { name: "Ampliar imagem Scanner atual" }),
+    );
+
+    const previewDialog = screen.getByTestId("adherence-image-preview-dialog");
+    expect(previewDialog).toHaveAttribute("role", "dialog");
+    expect(within(previewDialog).getByRole("heading", { name: "Scanner atual" })).toBeInTheDocument();
+    expect(within(previewDialog).getByRole("img", { name: "Scanner atual" })).toHaveAttribute(
+      "src",
+      "https://example.com/scanner.png",
+    );
   });
 
   it("exige título e arquivo apenas para linhas iniciadas", () => {

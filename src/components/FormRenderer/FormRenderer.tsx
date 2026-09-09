@@ -22,6 +22,13 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
@@ -37,7 +44,18 @@ import {
   TitledImageAttachment,
 } from "@/lib/form-image-attachments";
 import { supabase } from "@/integrations/supabase/client";
-import { UploadCloud, X, Loader2, AlertTriangle, CheckCircle2, AlertCircle, ImagePlus, Plus, ChevronDown } from "lucide-react";
+import {
+  UploadCloud,
+  X,
+  Loader2,
+  AlertTriangle,
+  CheckCircle2,
+  AlertCircle,
+  ImagePlus,
+  Plus,
+  ChevronDown,
+  Maximize2,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const FORM_IMAGES_BUCKET = "form-images";
@@ -709,6 +727,7 @@ const AdherenceImageAttachments = ({
   const attachmentsRef = React.useRef(attachments);
   attachmentsRef.current = attachments;
   const [uploadingIndex, setUploadingIndex] = React.useState<number | null>(null);
+  const [previewAttachment, setPreviewAttachment] = React.useState<TitledImageAttachment | null>(null);
   const addInputRef = React.useRef<HTMLInputElement>(null);
   const isLocked = Boolean(readonly || disabled);
   const visibleAttachments = isLocked
@@ -878,11 +897,21 @@ const AdherenceImageAttachments = ({
             >
               <div className="relative aspect-[4/3] overflow-hidden rounded-md bg-muted">
                 {attachment.url ? (
-                  <img
-                    src={attachment.url}
-                    alt={attachment.title || `Imagem ${index + 1}`}
-                    className="h-full w-full object-cover"
-                  />
+                  <button
+                    type="button"
+                    onClick={() => setPreviewAttachment(attachment)}
+                    className="group relative h-full w-full cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+                    aria-label={`Ampliar imagem ${attachment.title || index + 1}`}
+                  >
+                    <img
+                      src={attachment.url}
+                      alt={attachment.title || `Imagem ${index + 1}`}
+                      className="h-full w-full object-cover"
+                    />
+                    <span className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/20 group-focus-visible:bg-black/20">
+                      <Maximize2 className="h-5 w-5 text-white opacity-0 drop-shadow transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100" />
+                    </span>
+                  </button>
                 ) : (
                   <div className="flex h-full items-center justify-center text-[10px] text-muted-foreground">
                     Imagem pendente
@@ -952,6 +981,36 @@ const AdherenceImageAttachments = ({
           );
         })}
       </div>
+
+      <Dialog
+        open={Boolean(previewAttachment)}
+        onOpenChange={(open) => {
+          if (!open) setPreviewAttachment(null);
+        }}
+      >
+        {previewAttachment && (
+          <DialogContent
+            className="flex max-w-6xl flex-col gap-2 overflow-hidden p-2 sm:p-3"
+            data-testid="adherence-image-preview-dialog"
+          >
+            <DialogHeader className="min-w-0 pr-11 text-left">
+              <DialogTitle className="break-words text-sm sm:text-base">
+                {previewAttachment.title || "Imagem da análise de aderência"}
+              </DialogTitle>
+              <DialogDescription className="sr-only">
+                Visualização ampliada da imagem anexada ao item da análise de aderência.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex min-h-0 items-center justify-center overflow-auto rounded-md bg-black/95 p-1 sm:p-2">
+              <img
+                src={previewAttachment.url}
+                alt={previewAttachment.title || "Imagem ampliada da análise de aderência"}
+                className="max-h-[calc(100dvh-7rem)] max-w-full object-contain sm:max-h-[calc(90dvh-7rem)]"
+              />
+            </div>
+          </DialogContent>
+        )}
+      </Dialog>
     </div>
   );
 };
