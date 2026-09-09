@@ -1324,7 +1324,7 @@ export const pageHelpData: PageHelpInfo[] = [
       "Seções recolhíveis por setor, mantendo a primeira aberta para início rápido",
       "Editor completo nas observações, com estilos, listas, alinhamento e cores",
       "Editor completo nos itens com impacto e na justificativa técnica, com geração do parecer por IA a partir da análise inteira",
-      "Galeria compacta de imagens com título por item e configuração em massa no editor",
+      "Galeria compacta de imagens com título por item, ampliação em pop-up e configuração em massa no editor",
       "Salvamento automático do rascunho, confirmação de horário e botão para salvar manualmente sem finalizar",
       "Layout compacto para consultar e preencher mais itens com menos rolagem",
       "Cálculo automático do percentual de aderência",

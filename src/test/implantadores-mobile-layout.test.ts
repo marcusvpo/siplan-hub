@@ -31,6 +31,9 @@ describe("responsividade das telas de Implantadores", () => {
     expect(questionBuilder).toContain('data-testid="adherence-images-bulk-actions"');
     expect(questionBuilder).toContain("min-[360px]:grid-cols-2");
     expect(formRenderer).toContain('data-testid="adherence-image-attachments"');
+    expect(formRenderer).toContain('data-testid="adherence-image-preview-dialog"');
+    expect(formRenderer).toContain("max-h-[calc(100dvh-7rem)]");
+    expect(formRenderer).toContain("max-w-6xl");
     expect(formRenderer).toContain('data-testid="adherence-collapsible-section"');
     expect(formRenderer).toContain("flex w-full min-w-0");
     expect(formRenderer).toContain("min-h-11 gap-2 py-1.5 sm:min-h-10");
