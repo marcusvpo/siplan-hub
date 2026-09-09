@@ -69,6 +69,22 @@ function TestField() {
   );
 }
 
+function GenerationField() {
+  const [content, setContent] = useState("");
+  return (
+    <AiRichTextField
+      label="Justificativa / Parecer Técnico"
+      content={content}
+      onChange={setContent}
+      requestedBy="profile-1"
+      targetField="adherence_technical_opinion:project-1:finalNotes"
+      projectId="project-1"
+      mode="generate"
+      aiInput='{"finalVerdict":"Totalmente Aderente","sections":[{"title":"Firmas"}]}'
+    />
+  );
+}
+
 describe("AiRichTextField", () => {
   beforeEach(() => {
     mocks.improve.mockReset();
@@ -87,6 +103,19 @@ describe("AiRichTextField", () => {
 
     await waitFor(() => expect(mocks.improve).toHaveBeenCalledWith(original));
     expect(editor.value).toBe(original);
+  });
+
+  it("gera um parecer usando a análise como fonte, mesmo com o editor vazio", async () => {
+    render(<GenerationField />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Gerar com IA" }));
+
+    await waitFor(() =>
+      expect(mocks.improve).toHaveBeenCalledWith(
+        '{"finalVerdict":"Totalmente Aderente","sections":[{"title":"Firmas"}]}',
+      ),
+    );
+    expect(screen.getByLabelText("Editor rico")).toHaveValue("");
   });
 
   it("só substitui o texto quando o usuário aceita a sugestão", () => {

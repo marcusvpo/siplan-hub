@@ -8,6 +8,8 @@ const layout = readSource("src/components/Layout/MainLayout.tsx");
 const moduleOverview = readSource("src/pages/ModuleOverview.tsx");
 const adherenceEditor = readSource("src/components/checklist/ChecklistEditor.tsx");
 const questionBuilder = readSource("src/components/FormRenderer/VisualQuestionBuilder.tsx");
+const formRenderer = readSource("src/components/FormRenderer/FormRenderer.tsx");
+const adherenceForm = readSource("src/pages/ProjectAdherenceForm.tsx");
 const finishedAdherences = readSource("src/pages/implantadores/AderenciasFinalizadas.tsx");
 const homologation = readSource("src/pages/implantadores/ImplantadoresHomologation.tsx");
 const training = readSource("src/pages/implantadores/TreinamentoPlaceholder.tsx");
@@ -26,6 +28,17 @@ describe("responsividade das telas de Implantadores", () => {
     expect(adherenceEditor).toContain("overflow-x-hidden");
     expect(adherenceEditor).toContain("h-[calc(100dvh-1rem)]");
     expect(questionBuilder).toContain("min-w-0 space-y-4");
+    expect(questionBuilder).toContain('data-testid="adherence-images-bulk-actions"');
+    expect(questionBuilder).toContain("min-[360px]:grid-cols-2");
+    expect(formRenderer).toContain('data-testid="adherence-image-attachments"');
+    expect(formRenderer).toContain('data-testid="adherence-collapsible-section"');
+    expect(formRenderer).toContain("flex w-full min-w-0");
+    expect(formRenderer).toContain("min-h-11 gap-2 py-1.5 sm:min-h-10");
+    expect(formRenderer).toContain("<RichTextEditor");
+    expect(formRenderer).toContain("grid min-w-0 grid-cols-1");
+    expect(adherenceForm).toContain("compact");
+    expect(adherenceForm).toContain("pb-[calc(0.75rem+env(safe-area-inset-bottom))]");
+    expect(adherenceForm).toContain("lg:grid-cols-[minmax(180px,2fr)_repeat(5,minmax(90px,1fr))]");
     expect(richTextEditor).toContain("h-[calc(100dvh-1rem)]");
   });
 

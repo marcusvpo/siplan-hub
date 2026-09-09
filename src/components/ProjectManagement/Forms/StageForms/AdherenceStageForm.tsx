@@ -3,6 +3,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { RichTextContent } from "@/components/ui/rich-text-content";
 import { useActiveTemplate } from "@/hooks/useFormTemplates";
 import { useProjectFormResponse, useUpsertFormResponse } from "@/hooks/useProjectFormResponse";
 import { useToast } from "@/hooks/use-toast";
@@ -184,9 +185,10 @@ export function AdherenceStageForm({
                             {item.sectionTitle}
                           </span>
                         </div>
-                        <p className="text-[11px] text-muted-foreground leading-relaxed">
-                          <strong>Impacto / Detalhes:</strong> {item.detalhes}
-                        </p>
+                        <div className="text-[11px] text-muted-foreground leading-relaxed">
+                          <strong>Impacto / Detalhes:</strong>
+                          <RichTextContent content={item.detalhes} className="mt-0.5 text-[11px]" />
+                        </div>
                       </div>
                     ))}
                   </div>

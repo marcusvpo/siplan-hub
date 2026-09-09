@@ -7,6 +7,7 @@ import {
   selectBestImprovement,
   shouldRetryImprovement,
 } from "./improveTextPrompt.js";
+import { buildAdherenceTechnicalOpinionPrompt } from "./adherenceTechnicalOpinionPrompt.js";
 
 // Mantem apenas os ultimos N passos no banco (evita payloads gigantes no Realtime).
 const MAX_LOG_STEPS = 80;
@@ -308,16 +309,22 @@ export async function processImproveJob(job: DtcJob): Promise<void> {
   const isNpsAnalysis =
     job.job_type === "improve_text" &&
     job.target_field?.startsWith("nps_analysis:");
+  const isAdherenceTechnicalOpinion =
+    job.job_type === "improve_text" &&
+    job.target_field?.startsWith("adherence_technical_opinion:");
   const isParecer =
     job.job_type === "pos_parecer" ||
     job.job_type === "panorama_parecer" ||
     isTicketsAnalysis ||
-    isNpsAnalysis;
+    isNpsAnalysis ||
+    isAdherenceTechnicalOpinion;
   const isPanorama = job.job_type === "panorama_parecer";
 
   pushStep(
     isParecer
-      ? isNpsAnalysis
+      ? isAdherenceTechnicalOpinion
+        ? "Lendo todas as respostas da analise de aderencia..."
+        : isNpsAnalysis
         ? "Lendo os indicadores e comentarios de NPS..."
         : isTicketsAnalysis
         ? "Lendo os indicadores e chamados do filtro..."
@@ -335,7 +342,9 @@ export async function processImproveJob(job: DtcJob): Promise<void> {
   if (text.replace(/[^a-zA-Z0-9]/g, "").length < 10) {
     throw new Error(
       isParecer
-        ? isNpsAnalysis
+        ? isAdherenceTechnicalOpinion
+          ? "Nao ha dados suficientes para gerar a justificativa tecnica."
+          : isNpsAnalysis
           ? "Nao ha respostas de NPS suficientes para gerar o relatorio."
           : "Nao ha chamados suficientes para gerar um parecer."
         : isSummary
@@ -347,7 +356,9 @@ export async function processImproveJob(job: DtcJob): Promise<void> {
   // 2. Rodar o Codex para reescrever/resumir
   pushStep(
     isParecer
-      ? isNpsAnalysis
+      ? isAdherenceTechnicalOpinion
+        ? "Gerando a justificativa tecnica com base na analise completa..."
+        : isNpsAnalysis
         ? "Analisando tendencias, riscos e voz do cliente..."
         : isTicketsAnalysis
         ? "Analisando riscos, recorrencias e solucoes..."
@@ -372,7 +383,12 @@ export async function processImproveJob(job: DtcJob): Promise<void> {
   // do recorte dentro do JSON (payload.projetos). Best-effort — sem contexto o
   // parecer sai normalmente.
   let contextoProjetos = "";
-  if (isParecer && !isTicketsAnalysis && !isNpsAnalysis) {
+  if (
+    isParecer &&
+    !isTicketsAnalysis &&
+    !isNpsAnalysis &&
+    !isAdherenceTechnicalOpinion
+  ) {
     pushStep("Lendo as etapas dos projetos (conversao, aderencia, DTC)...");
     await flushProgress(true);
     if (isPanorama) {
@@ -389,7 +405,9 @@ export async function processImproveJob(job: DtcJob): Promise<void> {
     }
   }
 
-  const prompt = isNpsAnalysis
+  const prompt = isAdherenceTechnicalOpinion
+    ? buildAdherenceTechnicalOpinionPrompt(text, contextoProjetos)
+    : isNpsAnalysis
     ? buildNpsAnalysisPrompt(text)
     : isTicketsAnalysis
     ? buildTicketsAnalysisPrompt(text)
@@ -473,7 +491,9 @@ export async function processImproveJob(job: DtcJob): Promise<void> {
 
   // 3. Concluir job com o texto gerado
   pushStep(
-    isNpsAnalysis
+    isAdherenceTechnicalOpinion
+      ? "Justificativa tecnica pronta para revisao!"
+      : isNpsAnalysis
       ? "Relatorio de NPS pronto!"
       : isParecer
       ? "Parecer pronto!"
@@ -494,6 +514,6 @@ export async function processImproveJob(job: DtcJob): Promise<void> {
   if (doneError) throw new Error(`Falha ao concluir job: ${doneError.message}`);
 
   console.log(
-    `[${isNpsAnalysis ? "nps-analysis" : isSummary ? "summary" : "improve"} ${job.id}] concluido (${improved.length} chars)`,
+    `[${isAdherenceTechnicalOpinion ? "adherence-opinion" : isNpsAnalysis ? "nps-analysis" : isSummary ? "summary" : "improve"} ${job.id}] concluido (${improved.length} chars)`,
   );
 }

@@ -30,6 +30,7 @@ export function Editor({
   onSerializedChange,
   placeholder,
   editable,
+  compact,
 }: {
   editorState?: EditorState
   editorSerializedState?: SerializedEditorState
@@ -37,6 +38,7 @@ export function Editor({
   onSerializedChange?: (editorSerializedState: SerializedEditorState) => void
   placeholder?: string
   editable?: boolean
+  compact?: boolean
 }) {
   return (
     <div className="bg-background overflow-hidden rounded-lg border shadow w-full h-full flex flex-col">
@@ -51,7 +53,7 @@ export function Editor({
         }}
       >
         <TooltipProvider>
-          <Plugins placeholder={placeholder} editable={editable} />
+          <Plugins placeholder={placeholder} editable={editable} compact={compact} />
 
           <OnChangePlugin
             ignoreSelectionChange={true}

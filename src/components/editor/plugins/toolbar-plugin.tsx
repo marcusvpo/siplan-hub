@@ -47,6 +47,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
 
 const LowPriority = 1
 
@@ -66,7 +67,7 @@ const COLORS = [
   { name: 'Rosa', value: '#ec4899' },
 ]
 
-export function ToolbarPlugin() {
+export function ToolbarPlugin({ compact = false }: { compact?: boolean }) {
   const [editor] = useLexicalComposerContext()
   const [canUndo, setCanUndo] = useState(false)
   const [canRedo, setCanRedo] = useState(false)
@@ -150,8 +151,14 @@ export function ToolbarPlugin() {
     applyStyle({ "color": value })
   }
 
+  const toolbarButtonClass = cn("h-8 w-8 p-0", compact && "sm:h-7 sm:w-7")
+  const separatorClass = cn("w-px bg-border", compact ? "mx-0.5 h-5" : "mx-1 h-6")
+
   return (
-    <div className="flex items-center gap-1 p-2 border-b bg-muted/40 flex-wrap">
+    <div className={cn(
+      "flex flex-wrap items-center border-b bg-muted/40",
+      compact ? "gap-0.5 p-1" : "gap-1 p-2",
+    )}>
       <Button
         type="button"
         variant="ghost"
@@ -160,7 +167,7 @@ export function ToolbarPlugin() {
           e.preventDefault()
           formatHeading("h1")
         }}
-        className="h-8 w-8 p-0"
+        className={toolbarButtonClass}
         title="Título 1"
         aria-label="Título 1"
       >
@@ -174,7 +181,7 @@ export function ToolbarPlugin() {
           e.preventDefault()
           formatHeading("h2")
         }}
-        className="h-8 w-8 p-0"
+        className={toolbarButtonClass}
         title="Título 2"
         aria-label="Título 2"
       >
@@ -188,17 +195,17 @@ export function ToolbarPlugin() {
           e.preventDefault()
           formatHeading("h3")
         }}
-        className="h-8 w-8 p-0"
+        className={toolbarButtonClass}
         title="Título 3"
         aria-label="Título 3"
       >
         <Heading3 className="h-4 w-4" />
       </Button>
       
-      <div className="w-px h-6 bg-border mx-1" />
+      <div className={separatorClass} />
 
       <Select value={fontSize} onValueChange={handleFontSizeChange}>
-        <SelectTrigger className="w-[80px] h-8 text-xs" aria-label="Tamanho da fonte">
+        <SelectTrigger className={cn("h-8 w-[80px] text-xs", compact && "sm:h-7 sm:w-[72px]")} aria-label="Tamanho da fonte">
           <SelectValue placeholder="Size" />
         </SelectTrigger>
         <SelectContent>
@@ -210,7 +217,7 @@ export function ToolbarPlugin() {
         </SelectContent>
       </Select>
 
-      <div className="w-px h-6 bg-border mx-1" />
+      <div className={separatorClass} />
 
       <Toggle
         size="sm"
@@ -218,7 +225,7 @@ export function ToolbarPlugin() {
         onPressedChange={(pressed) => {
           editor.dispatchCommand(FORMAT_TEXT_COMMAND, "bold")
         }}
-        className="h-8 w-8"
+        className={toolbarButtonClass}
         title="Negrito"
         aria-label="Negrito"
       >
@@ -230,7 +237,7 @@ export function ToolbarPlugin() {
         onPressedChange={(pressed) => {
           editor.dispatchCommand(FORMAT_TEXT_COMMAND, "italic")
         }}
-        className="h-8 w-8"
+        className={toolbarButtonClass}
         title="Itálico"
         aria-label="Itálico"
       >
@@ -242,7 +249,7 @@ export function ToolbarPlugin() {
         onPressedChange={(pressed) => {
           editor.dispatchCommand(FORMAT_TEXT_COMMAND, "underline")
         }}
-        className="h-8 w-8"
+        className={toolbarButtonClass}
         title="Sublinhado"
         aria-label="Sublinhado"
       >
@@ -254,18 +261,18 @@ export function ToolbarPlugin() {
         onPressedChange={(pressed) => {
           editor.dispatchCommand(FORMAT_TEXT_COMMAND, "strikethrough")
         }}
-        className="h-8 w-8"
+        className={toolbarButtonClass}
         title="Tachado"
         aria-label="Tachado"
       >
         <Strikethrough className="h-4 w-4" />
       </Toggle>
 
-      <div className="w-px h-6 bg-border mx-1" />
+      <div className={separatorClass} />
 
       <Popover>
         <PopoverTrigger asChild>
-          <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" title="Cor do texto" aria-label="Cor do texto">
+          <Button type="button" variant="ghost" size="sm" className={toolbarButtonClass} title="Cor do texto" aria-label="Cor do texto">
             <Palette className="h-4 w-4" style={{ color: fontColor }} />
           </Button>
         </PopoverTrigger>
@@ -291,7 +298,7 @@ export function ToolbarPlugin() {
         </PopoverContent>
       </Popover>
 
-      <div className="w-px h-6 bg-border mx-1" />
+      <div className={separatorClass} />
 
       <Toggle
         size="sm"
@@ -300,7 +307,7 @@ export function ToolbarPlugin() {
           editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "left")
           setTextAlign("left")
         }}
-        className="h-8 w-8"
+        className={toolbarButtonClass}
         title="Alinhar à esquerda"
         aria-label="Alinhar à esquerda"
       >
@@ -313,7 +320,7 @@ export function ToolbarPlugin() {
           editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "center")
           setTextAlign("center")
         }}
-        className="h-8 w-8"
+        className={toolbarButtonClass}
         title="Centralizar"
         aria-label="Centralizar"
       >
@@ -326,14 +333,14 @@ export function ToolbarPlugin() {
           editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "right")
           setTextAlign("right")
         }}
-        className="h-8 w-8"
+        className={toolbarButtonClass}
         title="Alinhar à direita"
         aria-label="Alinhar à direita"
       >
         <AlignRight className="h-4 w-4" />
       </Toggle>
 
-      <div className="w-px h-6 bg-border mx-1" />
+      <div className={separatorClass} />
 
       <Button
         type="button"
@@ -343,7 +350,7 @@ export function ToolbarPlugin() {
           e.preventDefault()
           editor.dispatchCommand(INSERT_CHECK_LIST_COMMAND, undefined)
         }}
-        className="h-8 w-8 p-0"
+        className={toolbarButtonClass}
         title="Checklist"
         aria-label="Checklist"
       >
@@ -357,7 +364,7 @@ export function ToolbarPlugin() {
         onClick={() =>
           editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined)
         }
-        className="h-8 w-8 p-0"
+        className={toolbarButtonClass}
         title="Lista com marcadores"
         aria-label="Lista com marcadores"
       >
@@ -370,7 +377,7 @@ export function ToolbarPlugin() {
         onClick={() =>
           editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined)
         }
-        className="h-8 w-8 p-0"
+        className={toolbarButtonClass}
         title="Lista numerada"
         aria-label="Lista numerada"
       >
