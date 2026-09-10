@@ -31,8 +31,40 @@ export interface SdTimeImportItem {
   metadata: Record<string, string | number | boolean | null>;
 }
 
+function sanitizePostgresText(value: string) {
+  let sanitized = "";
+
+  for (let index = 0; index < value.length; index += 1) {
+    const codeUnit = value.charCodeAt(index);
+    if (codeUnit === 0) continue;
+
+    if (codeUnit >= 0xd800 && codeUnit <= 0xdbff) {
+      const nextCodeUnit = value.charCodeAt(index + 1);
+      if (nextCodeUnit >= 0xdc00 && nextCodeUnit <= 0xdfff) {
+        sanitized += value[index] + value[index + 1];
+        index += 1;
+      } else {
+        sanitized += "\ufffd";
+      }
+      continue;
+    }
+
+    sanitized += codeUnit >= 0xdc00 && codeUnit <= 0xdfff ? "\ufffd" : value[index];
+  }
+
+  return sanitized;
+}
+
 function compactText(value: string | null | undefined) {
-  return value?.replace(/\r\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim() || null;
+  if (!value) return null;
+  return sanitizePostgresText(value)
+    .replace(/\r\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim() || null;
+}
+
+function truncateText(value: string, maxCodePoints: number) {
+  return Array.from(value).slice(0, maxCodePoints).join("");
 }
 
 function decodeEllevoDescription(value: string | null | undefined) {
@@ -43,7 +75,11 @@ function decodeEllevoDescription(value: string | null | undefined) {
   }
   const fromCode = (code: number) => {
     try {
-      return code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : "";
+      return code > 0
+        && code <= 0x10ffff
+        && (code < 0xd800 || code > 0xdfff)
+        ? String.fromCodePoint(code)
+        : "";
     } catch {
       return "";
     }
@@ -80,7 +116,7 @@ export function mapEllevoHour(row: EllevoHourRow): SdTimeImportItem {
 
   return {
     external_id: String(row.id_lancamento_0800),
-    title: `${ticketLabel} — ${title}`.slice(0, 120),
+    title: truncateText(`${ticketLabel} — ${title}`, 120),
     description: details.length ? details.join("\n") : null,
     start: row.horario_inicio.slice(0, 5),
     end: row.horario_fim.slice(0, 5),
@@ -92,8 +128,8 @@ export function mapEllevoHour(row: EllevoHourRow): SdTimeImportItem {
       latest_tramite_at: row.data_ultimo_tramite_iso,
       activity,
       ellevo_user_id: row.id_analista_0800,
-      ellevo_login: row.login_analista,
-      ellevo_user_name: row.nome_analista,
+      ellevo_login: compactText(row.login_analista),
+      ellevo_user_name: compactText(row.nome_analista),
       ellevo_group_id: row.id_grupo_analista_0800,
       ellevo_group: compactText(row.grupo_analista),
       minutes: row.minutos,

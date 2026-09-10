@@ -44,3 +44,36 @@ test("mapeia um tempo do 0800 com origem estável e contexto do chamado", () => 
   assert.equal(item.metadata.ellevo_login, "marcos.fernandes");
   assert.equal(item.metadata.ellevo_group, "SD - Protesto");
 });
+
+test("remove caracteres que o jsonb do Postgres não aceita", () => {
+  const item = mapEllevoHour({
+    id_lancamento_0800: 5678,
+    numero_chamado: 756464,
+    sequencia_tramite: 2,
+    titulo_chamado: `${"A".repeat(109)}👍\u0000 inválido \ud800`,
+    atividade: "Análise\udc00",
+    id_analista_0800: 11890,
+    nome_analista: "Marcos\u0000 Fernandes",
+    login_analista: "marcos.fernandes\ud800",
+    id_grupo_analista_0800: 11186,
+    grupo_analista: "SD - Protesto",
+    horario_inicio: "08:03",
+    horario_fim: "08:05",
+    minutos: 2,
+    descricao_tramite: null,
+    ultima_sequencia_tramite: 3,
+    data_ultimo_tramite_iso: "2026-09-10T08:05:00",
+    descricao_ultimo_tramite: "Texto\u0000 com surrogate isolado \ud800 e emoji válido 👍.",
+    hora_extra: false,
+    retrabalho: "N",
+    tipo_tempo: "N",
+    considera_contrato: true,
+  });
+
+  const payload = JSON.stringify(item);
+
+  assert.doesNotMatch(payload, /\\u0000|\\ud800|\\udc00/i);
+  assert.match(item.title, /👍$/);
+  assert.match(item.description ?? "", /emoji válido 👍/);
+  assert.equal(item.metadata.ellevo_user_name, "Marcos Fernandes");
+});
