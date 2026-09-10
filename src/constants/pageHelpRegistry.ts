@@ -1327,6 +1327,7 @@ export const pageHelpData: PageHelpInfo[] = [
       "Galeria compacta de imagens com título por item, ampliação em pop-up e configuração em massa no editor",
       "Salvamento automático do rascunho, confirmação de horário e botão para salvar manualmente sem finalizar",
       "Layout compacto para consultar e preencher mais itens com menos rolagem",
+      "Relatório oficial em formato A4, com resumo executivo, itens compactos, evidências balanceadas e quebras de página controladas",
       "Cálculo automático do percentual de aderência",
     ],
     steps: [

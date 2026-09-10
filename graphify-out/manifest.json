@@ -225,8 +225,8 @@
     "semantic_hash": ""
   },
   "src/components/FormRenderer/FormRenderer.tsx": {
-    "mtime": 1788982956.4368007,
-    "ast_hash": "cbf0ca79c047fd25c0057e92e62846ca",
+    "mtime": 1788985509.685157,
+    "ast_hash": "6ab8f103ef4084121ab9585de634e443",
     "semantic_hash": ""
   },
   "src/components/FormRenderer/VisualQuestionBuilder.tsx": {
@@ -1060,8 +1060,8 @@
     "semantic_hash": ""
   },
   "src/pages/ProjectAdherenceForm.tsx": {
-    "mtime": 1788980091.023671,
-    "ast_hash": "a5dbceafa1d5576f7d02c71b87405a26",
+    "mtime": 1789044870.802818,
+    "ast_hash": "56b7578d3bf29cf568946bce509a6e99",
     "semantic_hash": ""
   },
   "src/pages/ProjectDetails.tsx": {
@@ -2270,8 +2270,8 @@
     "semantic_hash": "3728fcddd8461fad452967c4201665d3"
   },
   "README.md": {
-    "mtime": 1788980736.4057899,
-    "ast_hash": "34207d6b2e4cd06f25afd5e24c1be9b1",
+    "mtime": 1788985509.6500037,
+    "ast_hash": "22ae568fb77dd73fbecb7c3e30ebe612",
     "semantic_hash": ""
   },
   "assets/perguntas ader\u00eancia.txt": {
@@ -4650,8 +4650,8 @@
     "semantic_hash": ""
   },
   "src/test/implantadores-mobile-layout.test.ts": {
-    "mtime": 1788982877.4940715,
-    "ast_hash": "ef3a2914e7100faa68ce6566c54257f5",
+    "mtime": 1788985509.68867,
+    "ast_hash": "6c6251ea50cb5546debbb6a0bc6e36d5",
     "semantic_hash": ""
   },
   "src/test/cs-cx-mobile-layout.test.ts": {
@@ -4735,8 +4735,8 @@
     "semantic_hash": ""
   },
   "src/constants/pageHelpRegistry.ts": {
-    "mtime": 1788982682.6420264,
-    "ast_hash": "2e3048f06daa8b6f38e37a59f5cac01f",
+    "mtime": 1789044456.9471827,
+    "ast_hash": "32dbee5bc85f2c766a34de6d25021be7",
     "semantic_hash": ""
   },
   "src/pages/admin/AdminChangelog.tsx": {
@@ -4840,8 +4840,8 @@
     "semantic_hash": ""
   },
   "src/test/adherence-image-attachments.test.tsx": {
-    "mtime": 1788982956.4383078,
-    "ast_hash": "b765eda95fde0bfada79caf0b706fa2e",
+    "mtime": 1788985509.68867,
+    "ast_hash": "5b66320518439c034aa699ce7bae3498",
     "semantic_hash": ""
   },
   "supabase/migrations/20260909120000_adherence_item_image_attachments_changelog.sql": {
@@ -4885,8 +4885,23 @@
     "semantic_hash": ""
   },
   "supabase/migrations/20260909170000_adherence_image_preview_changelog.sql": {
-    "mtime": 1788982682.6440258,
-    "ast_hash": "0b9ee944567f53dd254843ad3d1848da",
+    "mtime": 1788985509.6906824,
+    "ast_hash": "0bca88a051bdea3a55b64356ca819905",
+    "semantic_hash": ""
+  },
+  "src/lib/adherence-print-layout.ts": {
+    "mtime": 1789044570.9218705,
+    "ast_hash": "2b63b4aaaed332dffe417adeb99699cb",
+    "semantic_hash": ""
+  },
+  "src/test/project-adherence-print-layout.test.ts": {
+    "mtime": 1789044570.9238827,
+    "ast_hash": "37fb90618d1a044d0a34da2058824c2d",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260910103000_adherence_print_report_layout_changelog.sql": {
+    "mtime": 1789044456.9506967,
+    "ast_hash": "1c8e06df00001e441faf7051e7d13be7",
     "semantic_hash": ""
   }
 }

@@ -41,6 +41,8 @@ import {
   getCompletedTitledImageAttachments,
   TitledImageAttachment,
 } from "@/lib/form-image-attachments";
+import { getPrintEvidenceGridClass } from "@/lib/adherence-print-layout";
+import { cn } from "@/lib/utils";
 
 
 interface PrintQuestion {
@@ -628,6 +630,13 @@ export default function ProjectAdherenceForm() {
           ? `Rascunho salvo às ${lastSavedTime}`
           : "Rascunho salvo";
   const printSections = getPrintSections(activeTemplate.schema_json, localFormData);
+  const printQuestions = printSections.flatMap((section) => section.questions);
+  const printSummary = {
+    questions: printQuestions.length,
+    impacts: printQuestions.filter((question) => question.nivel_impacto === "SIM").length,
+    warnings: printQuestions.filter((question) => question.nivel_impacto === "ATENÇÃO").length,
+    evidences: printQuestions.reduce((total, question) => total + question.images.length, 0),
+  };
   const generalFields = getGeneralFields(
     activeTemplate.schema_json,
     localFormData,
@@ -674,35 +683,61 @@ export default function ProjectAdherenceForm() {
 
   if (isPrintMode) {
     return (
-      <div className="bg-white text-black min-h-screen font-sans p-6 md:p-10 max-w-4xl mx-auto space-y-8 select-none">
+      <div className="min-h-screen bg-slate-100 px-3 py-5 font-sans text-black sm:px-6 sm:py-8 print:bg-white print:p-0">
         <style>{`
           @media print {
+            html,
             body {
               background-color: white !important;
               color: black !important;
+              margin: 0 !important;
               -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important;
             }
             .no-print {
               display: none !important;
             }
-            .print-card {
-              border: 1px solid #e2e8f0 !important;
-              background: white !important;
-              break-inside: avoid;
+            .print-report {
+              width: auto !important;
+              max-width: none !important;
+              min-height: auto !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              box-shadow: none !important;
+              border: 0 !important;
             }
-            .print-break-inside-avoid {
+            .print-keep-together,
+            .print-question,
+            .print-evidence,
+            .print-signatures {
               break-inside: avoid !important;
+              page-break-inside: avoid !important;
+            }
+            .print-section {
+              break-inside: auto !important;
+              page-break-inside: auto !important;
+            }
+            .print-section-heading {
+              break-after: avoid !important;
+              page-break-after: avoid !important;
+            }
+            .print-question-title,
+            .print-rich-text {
+              orphans: 3;
+              widows: 3;
+            }
+            .print-evidence img {
+              max-height: 42mm !important;
             }
           }
           @page {
             size: A4;
-            margin: 15mm;
+            margin: 12mm 14mm 14mm;
           }
         `}</style>
 
         {/* Screen Toolbar (no-print) */}
-        <div className="bg-slate-900 text-white p-3.5 rounded-xl flex items-center justify-between shadow-lg no-print mb-6">
+        <div className="no-print mx-auto mb-4 flex max-w-[210mm] flex-col gap-3 rounded-xl bg-slate-900 p-3.5 text-white shadow-lg sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <Printer className="h-4.5 w-4.5 text-primary animate-pulse" />
             <div className="space-y-0.5 text-left">
@@ -710,11 +745,11 @@ export default function ProjectAdherenceForm() {
               <p className="text-[10px] text-slate-400">O diálogo de impressão do navegador foi acionado automaticamente.</p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:flex">
             <Button 
               size="sm" 
               onClick={() => window.print()}
-              className="h-8 text-xs font-bold px-4 bg-primary hover:bg-primary/90 text-white"
+              className="h-9 px-3 text-xs font-bold text-white sm:h-8 sm:px-4"
             >
               Imprimir Novamente
             </Button>
@@ -722,344 +757,418 @@ export default function ProjectAdherenceForm() {
               size="sm" 
               variant="ghost" 
               onClick={() => window.close()}
-              className="h-8 text-xs font-bold text-white hover:bg-slate-800 border border-slate-700"
+              className="h-9 border border-slate-700 text-xs font-bold text-white hover:bg-slate-800 sm:h-8"
             >
               Fechar Aba
             </Button>
           </div>
         </div>
 
-        {/* Official Header */}
-        <div className="border-b-4 border-slate-800 pb-5 space-y-4 text-left">
-          <div className="flex items-start justify-between">
-            <div className="space-y-1">
-              <h1 className="text-xl font-extrabold tracking-wider uppercase text-slate-900">
-                Relatório de Análise de Aderência
-              </h1>
-              <p className="text-xs text-muted-foreground uppercase font-bold tracking-widest">
-                Siplan HUB &bull; Engenharia de Implantação
-              </p>
-            </div>
-            <div className="text-right">
-              <span className="text-xs font-bold bg-slate-100 border border-slate-200 px-3 py-1.5 rounded uppercase tracking-wider">
+        <article
+          className="print-report mx-auto max-w-[210mm] space-y-5 border border-slate-200 bg-white p-4 shadow-xl sm:p-7 print:space-y-4"
+          data-testid="adherence-print-report"
+        >
+          {/* Official Header */}
+          <header className="print-keep-together space-y-3 border-b-2 border-slate-800 pb-4 text-left">
+            <div className="flex items-start justify-between gap-4 border-l-4 border-rose-600 pl-3">
+              <div className="min-w-0 space-y-0.5">
+                <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-rose-700">
+                  Siplan Hub &bull; Engenharia de Implantação
+                </p>
+                <h1 className="text-lg font-black uppercase leading-tight tracking-wide text-slate-900 sm:text-xl">
+                  Relatório de Análise de Aderência
+                </h1>
+              </div>
+              <span className="shrink-0 rounded border border-slate-300 bg-slate-100 px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-wider text-slate-700">
                 Versão {activeTemplate.version}
               </span>
             </div>
-          </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-2 text-xs bg-slate-50 p-4 rounded-lg border">
-            <div>
-              <span className="text-muted-foreground block text-[10px] uppercase font-bold tracking-wider">Cliente / Projeto</span>
-              <strong className="text-slate-800 text-[13px]">{project.clientName}</strong>
-            </div>
-            <div>
-              <span className="text-muted-foreground block text-[10px] uppercase font-bold tracking-wider">Ticket</span>
-              <strong className="text-slate-800 text-[13px]">#{project.ticketNumber}</strong>
-            </div>
-            <div>
-              <span className="text-muted-foreground block text-[10px] uppercase font-bold tracking-wider">Sistema / Produto</span>
-              <strong className="text-slate-800 text-[13px]">{project.systemType}</strong>
-            </div>
-            <div>
-              <span className="text-muted-foreground block text-[10px] uppercase font-bold tracking-wider">Implantador</span>
-              <strong className="text-slate-800 text-[13px]">{project.responsibleAdherence || "Não definido"}</strong>
-            </div>
-            <div>
-              <span className="text-muted-foreground block text-[10px] uppercase font-bold tracking-wider">Data da Análise</span>
-              <strong className="text-slate-800 text-[13px]">{getAnalysisDate()}</strong>
-            </div>
-            <div>
-              <span className="text-muted-foreground block text-[10px] uppercase font-bold tracking-wider">Status Homologação</span>
-              <div className="mt-0.5">
-                <span className={`inline-block text-[10px] font-bold px-2 py-0.2 rounded border uppercase tracking-wider ${
-                  isFinalized 
-                    ? (localFormData.finalVerdict === "Totalmente Aderente"
-                      ? "bg-green-100 text-green-800 border-green-200" 
+            <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border bg-slate-200 text-xs sm:grid-cols-6 print:grid-cols-6">
+              <div className="col-span-2 bg-slate-50 px-3 py-2 sm:col-span-3">
+                <span className="block text-[8px] font-bold uppercase tracking-wider text-slate-500">Cliente / Projeto</span>
+                <strong className="mt-0.5 block break-words text-[11px] leading-snug text-slate-900">{project.clientName}</strong>
+              </div>
+              <div className="bg-slate-50 px-3 py-2 sm:col-span-1">
+                <span className="block text-[8px] font-bold uppercase tracking-wider text-slate-500">Ticket</span>
+                <strong className="mt-0.5 block text-[11px] text-slate-900">#{project.ticketNumber}</strong>
+              </div>
+              <div className="bg-slate-50 px-3 py-2 sm:col-span-2">
+                <span className="block text-[8px] font-bold uppercase tracking-wider text-slate-500">Sistema / Produto</span>
+                <strong className="mt-0.5 block break-words text-[11px] text-slate-900">{project.systemType}</strong>
+              </div>
+              <div className="col-span-2 bg-slate-50 px-3 py-2 sm:col-span-3">
+                <span className="block text-[8px] font-bold uppercase tracking-wider text-slate-500">Implantador responsável</span>
+                <strong className="mt-0.5 block break-words text-[11px] text-slate-900">{project.responsibleAdherence || "Não definido"}</strong>
+              </div>
+              <div className="bg-slate-50 px-3 py-2 sm:col-span-1">
+                <span className="block text-[8px] font-bold uppercase tracking-wider text-slate-500">Data</span>
+                <strong className="mt-0.5 block text-[11px] text-slate-900">{getAnalysisDate()}</strong>
+              </div>
+              <div className="bg-slate-50 px-3 py-2 sm:col-span-2">
+                <span className="block text-[8px] font-bold uppercase tracking-wider text-slate-500">Status da análise</span>
+                <span className={cn(
+                  "mt-0.5 inline-block rounded border px-1.5 py-0.5 text-[8px] font-extrabold uppercase tracking-wider",
+                  isFinalized
+                    ? localFormData.finalVerdict === "Totalmente Aderente"
+                      ? "border-emerald-200 bg-emerald-100 text-emerald-800"
                       : localFormData.finalVerdict === "Aderente com Restrições"
-                      ? "bg-amber-100 text-amber-800 border-amber-200"
-                      : "bg-rose-100 text-rose-800 border-rose-200")
-                    : "bg-slate-100 text-slate-800 border-slate-200"
-                }`}>
-                  {isFinalized 
-                    ? (localFormData.finalVerdict || "Finalizado") 
-                    : "Rascunho"}
+                        ? "border-amber-200 bg-amber-100 text-amber-800"
+                        : "border-rose-200 bg-rose-100 text-rose-800"
+                    : "border-slate-200 bg-slate-100 text-slate-700",
+                )}>
+                  {isFinalized ? localFormData.finalVerdict || "Finalizado" : "Rascunho"}
                 </span>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Informações Gerais */}
-        {generalFields.length > 0 && (
-          <div className="space-y-3 print-break-inside-avoid print-card p-5 border rounded-xl bg-slate-50/50 text-left">
-            <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 border-b pb-1.5">
-              1. Informações Gerais de Aderência
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-xs">
-              {generalFields.map((field) => {
-                const urls = extractUrlsFromValue(field.value);
-                if (field.type === "images" || urls.length > 0) {
-                  const displayUrls = urls.length > 0 ? urls : (Array.isArray(field.value) ? field.value : []);
-                  if (displayUrls.length === 0) return null;
-                  return (
-                    <div key={field.key} className="col-span-1 md:col-span-2 space-y-2 mt-2">
-                      <span className="text-muted-foreground block text-[10px] uppercase font-bold tracking-wider">{field.title}</span>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                        {displayUrls.map((url, idx) => (
-                          <div key={idx} className="border rounded-md overflow-hidden aspect-square bg-slate-100 shadow-sm">
-                            <img src={url} alt={`${field.title} ${idx + 1}`} className="w-full h-full object-cover" />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                }
+            <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4 print:grid-cols-4">
+              {[
+                ["Itens do checklist", printSummary.questions],
+                ["Não aderentes", printSummary.impacts],
+                ["Pontos de atenção", printSummary.warnings],
+                ["Evidências", printSummary.evidences],
+              ].map(([label, value]) => (
+                <div key={label} className="rounded-md border border-slate-200 px-2.5 py-1.5">
+                  <dt className="text-[8px] font-bold uppercase tracking-wider text-slate-500">{label}</dt>
+                  <dd className="mt-0.5 text-base font-black leading-none text-slate-900">{value}</dd>
+                </div>
+              ))}
+            </dl>
+          </header>
 
-                let displayVal = "";
-                if (field.type === "boolean") {
-                  displayVal = field.value ? "Sim" : "Não";
-                } else if (Array.isArray(field.value)) {
-                  displayVal = field.value.join(", ");
-                } else {
-                  displayVal = String(field.value || "Não informado");
-                }
-
-                return (
-                  <div key={field.key} className={field.type === "textarea" ? "col-span-1 md:col-span-2" : "col-span-1"}>
-                    <span className="text-muted-foreground block text-[10px] uppercase font-bold tracking-wider">{field.title}</span>
-                    {isAdherenceImpactDescriptionTitle(field.title) ? (
-                      <RichTextContent
-                        content={field.value}
-                        emptyText="Não informado"
-                        className="mt-0.5 text-xs font-medium text-slate-800"
-                      />
-                    ) : (
-                      <p className="text-slate-800 font-medium whitespace-pre-wrap mt-0.5">{displayVal}</p>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Itens com impacto Summary Block */}
-        <div className="print-break-inside-avoid text-left">
-          {impactedItems.length === 0 ? (
-            <div className="p-4 border border-dashed border-emerald-300 bg-emerald-50/30 rounded-xl flex items-start gap-3">
-              <div className="h-4 w-4 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">✓</div>
-              <span className="text-xs font-semibold text-emerald-800">
-                Nenhum gap técnico ou impacto identificado no checklist de aderência.
+          {/* Visão Geral */}
+          <section className="print-section space-y-3 text-left">
+            <div className="print-section-heading flex items-end justify-between gap-3 border-b border-slate-300 pb-1.5">
+              <h2 className="text-[11px] font-black uppercase tracking-wider text-slate-900">
+                1. Visão Geral da Análise
+              </h2>
+              <span className="text-[8px] font-bold uppercase tracking-wider text-slate-500">
+                Resumo executivo
               </span>
             </div>
-          ) : (
-            <div className="p-5 border-2 border-rose-300 bg-rose-50 rounded-xl space-y-3.5">
-              <div className="flex items-center gap-2 border-b border-rose-200 pb-2">
-                <span className="text-xs font-black text-rose-800 uppercase tracking-widest">
-                  Itens com impacto na implantação:
-                </span>
-                <span className="text-[10px] font-bold bg-rose-500 text-white px-2 py-0.5 rounded-full">
-                  {impactedItems.length}
-                </span>
-              </div>
-              <div className="space-y-3">
-                {impactedItems.map((item, idx) => {
-                  const isAttention = item.nivel_impacto === "ATENÇÃO";
+
+            {generalFields.length > 0 && (
+              <div className="grid grid-cols-1 gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3 sm:grid-cols-2 print:grid-cols-2">
+                {generalFields.map((field) => {
+                  const urls = extractUrlsFromValue(field.value);
+                  if (field.type === "images" || urls.length > 0) {
+                    const displayUrls = urls.length > 0
+                      ? urls
+                      : Array.isArray(field.value)
+                        ? field.value
+                        : [];
+                    if (displayUrls.length === 0) return null;
+                    return (
+                      <div key={field.key} className="print-keep-together col-span-full space-y-1.5 border-l-2 border-slate-300 pl-2.5">
+                        <span className="block text-[8px] font-bold uppercase tracking-wider text-slate-500">{field.title}</span>
+                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 print:grid-cols-4">
+                          {displayUrls.map((url, idx) => (
+                            <div key={idx} className="aspect-video overflow-hidden rounded border bg-white">
+                              <img src={url} alt={`${field.title} ${idx + 1}`} className="h-full w-full object-contain" />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  let displayVal = "";
+                  if (field.type === "boolean") {
+                    displayVal = field.value ? "Sim" : "Não";
+                  } else if (Array.isArray(field.value)) {
+                    displayVal = field.value.join(", ");
+                  } else {
+                    displayVal = String(field.value || "Não informado");
+                  }
+
+                  const isWideField = field.type === "textarea"
+                    || isAdherenceImpactDescriptionTitle(field.title)
+                    || displayVal.length > 90;
+
                   return (
-                    <div key={idx} className="text-xs space-y-1 pb-2 border-b border-rose-100 last:border-0 last:pb-0">
-                      <div className="flex items-center gap-1.5 text-[9px] font-bold text-muted-foreground uppercase flex-wrap">
-                        <span>{item.sectionTitle}</span>
-                        <span>&bull;</span>
-                        <span className={isAttention ? "text-amber-700" : "text-rose-700"}>
-                          {item.questionTitle}
-                        </span>
-                        <span>&bull;</span>
-                        <span className={`px-1.5 py-0.2 rounded text-[8px] font-extrabold uppercase tracking-wider border ${
-                          isAttention 
-                            ? "bg-amber-100 text-amber-800 border-amber-200" 
-                            : "bg-rose-100 text-rose-800 border-rose-200"
-                        }`}>
-                          {isAttention ? "Ponto de Atenção" : "Não Aderente"}
-                        </span>
-                      </div>
-                      <div className={`border-l-4 pl-3 py-1 font-semibold rounded-r-md text-xs ${
-                        isAttention 
-                          ? "border-amber-500 bg-amber-500/5 text-amber-700" 
-                          : "border-rose-500 bg-rose-500/5 text-rose-700"
-                      }`}>
-                        <span className="font-bold">Impacto:</span>
-                        <RichTextContent content={item.detalhes} className="mt-0.5 text-xs" />
-                      </div>
+                    <div
+                      key={field.key}
+                      className={cn(
+                        "print-keep-together min-w-0 border-l-2 border-slate-300 pl-2.5",
+                        isWideField && "sm:col-span-2 print:col-span-2",
+                      )}
+                    >
+                      <span className="block text-[8px] font-bold uppercase tracking-wider text-slate-500">{field.title}</span>
+                      {isAdherenceImpactDescriptionTitle(field.title) ? (
+                        <RichTextContent
+                          content={field.value}
+                          emptyText="Não informado"
+                          className="print-rich-text mt-0.5 text-[10px] font-medium leading-relaxed text-slate-800"
+                        />
+                      ) : (
+                        <p className="mt-0.5 whitespace-pre-wrap break-words text-[10px] font-medium leading-relaxed text-slate-800">{displayVal}</p>
+                      )}
                     </div>
                   );
                 })}
               </div>
-            </div>
-          )}
-        </div>
+            )}
 
-        {/* Detalhamento das Seções */}
-        <div className="space-y-6 text-left">
-          <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 border-b pb-1.5">
-            2. Detalhamento Técnico por Seção
-          </h2>
-
-          {printSections.map((section, sIdx) => (
-            <div key={sIdx} className="space-y-3 print-break-inside-avoid">
-              <h3 className="text-sm font-extrabold text-slate-800 bg-slate-100 px-3 py-1.5 rounded-md border-l-4 border-slate-700 uppercase tracking-wider">
-                {section.title}
-              </h3>
-
-              <div className="divide-y border rounded-lg overflow-hidden bg-white">
-                {section.questions.map((q) => (
-                  <div 
-                    key={q.id} 
-                    className={`p-4 text-xs transition-colors space-y-2.5 ${
-                      q.nivel_impacto === "SIM" 
-                        ? "bg-rose-50/20" 
-                        : q.nivel_impacto === "ATENÇÃO"
-                          ? "bg-amber-50/20"
-                          : (q.utiliza || (q.isText && q.valor))
-                            ? "bg-emerald-50/10"
-                            : "bg-white"
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <span className="font-bold text-slate-800 leading-snug">
-                        {q.title}
-                      </span>
-                      <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider shrink-0 border ${
-                        q.nivel_impacto === "SIM" 
-                          ? "bg-rose-100 text-rose-800 border-rose-200" 
-                          : q.nivel_impacto === "ATENÇÃO"
-                            ? "bg-amber-100 text-amber-800 border-amber-200"
-                            : "bg-emerald-100 text-emerald-800 border-emerald-200"
-                      }`}>
-                        {q.nivel_impacto === "SIM" 
-                          ? "Não Aderente" 
-                          : q.nivel_impacto === "ATENÇÃO"
-                            ? "Ponto de Atenção"
-                            : "Aderente"}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
-                      <div>
-                        <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block">Resposta:</span>
-                        {q.isText ? (
-                          <p className="text-slate-700 font-medium mt-0.5">{q.valor || "Não respondida"}</p>
-                        ) : (
-                          <span className={`inline-block mt-1 px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${
-                            q.utiliza 
-                              ? "bg-emerald-50 text-emerald-700 border-emerald-200" 
-                              : "bg-rose-50 text-rose-700 border-rose-200"
-                          }`}>
-                            {q.utiliza ? "Sim (Utiliza)" : "Não utiliza"}
-                          </span>
-                        )}
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block">Possui Impacto?</span>
-                        <div className="mt-1 flex flex-col gap-1">
-                          <span className={`inline-block px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border w-fit ${
-                            q.nivel_impacto === "SIM"
-                              ? "bg-rose-50 text-rose-700 border-rose-200"
-                              : q.nivel_impacto === "ATENÇÃO"
-                                ? "bg-amber-50 text-amber-700 border-amber-200"
-                                : "bg-emerald-50 text-emerald-700 border-emerald-200"
-                          }`}>
-                            {q.nivel_impacto || "NÃO"}
-                          </span>
-                          {q.detalhes && (
-                            <RichTextContent
-                              content={q.detalhes}
-                              className="mt-0.5 text-xs font-medium text-slate-600"
-                            />
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {q.images.length > 0 && (
-                      <div className="space-y-2 border-t pt-3">
-                        <span className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                          Imagens do item:
-                        </span>
-                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                          {q.images.map((image, imageIndex) => (
-                            <figure key={`${image.url}-${imageIndex}`} className="overflow-hidden rounded-md border bg-white shadow-sm">
-                              <img
-                                src={image.url}
-                                alt={image.title || `Imagem ${imageIndex + 1}`}
-                                className="aspect-video w-full object-cover"
-                              />
-                              <figcaption className="break-words border-t px-2 py-1.5 text-[10px] font-semibold text-slate-700">
-                                {image.title || "Sem título"}
-                              </figcaption>
-                            </figure>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+            <div className={impactedItems.length === 0 ? "print-keep-together" : "print-section"}>
+              {impactedItems.length === 0 ? (
+                <div className="flex items-center gap-2 rounded-lg border border-dashed border-emerald-300 bg-emerald-50/40 px-3 py-2.5">
+                  <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-[9px] font-bold text-white">✓</div>
+                  <span className="text-[10px] font-semibold text-emerald-800">
+                    Nenhum gap técnico ou impacto identificado no checklist de aderência.
+                  </span>
+                </div>
+              ) : (
+                <div className="space-y-2.5 rounded-lg border border-rose-300 bg-rose-50/70 p-3">
+                  <div className="flex items-center justify-between gap-2 border-b border-rose-200 pb-1.5">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-rose-800">
+                      Impactos identificados
+                    </span>
+                    <span className="rounded-full bg-rose-600 px-2 py-0.5 text-[8px] font-bold text-white">
+                      {impactedItems.length}
+                    </span>
                   </div>
-                ))}
-              </div>
+                  <div className="space-y-2">
+                    {impactedItems.map((item, idx) => {
+                      const isAttention = item.nivel_impacto === "ATENÇÃO";
+                      return (
+                        <div key={idx} className="print-question space-y-1 border-b border-rose-100 pb-2 text-[10px] last:border-0 last:pb-0">
+                          <div className="flex flex-wrap items-center gap-1.5 font-bold uppercase text-slate-600">
+                            <span>{item.sectionTitle}</span>
+                            <span className="text-slate-300">/</span>
+                            <span className={isAttention ? "text-amber-700" : "text-rose-700"}>{item.questionTitle}</span>
+                            <span className={cn(
+                              "rounded border px-1.5 py-0.5 text-[7px] font-extrabold uppercase tracking-wider",
+                              isAttention
+                                ? "border-amber-200 bg-amber-100 text-amber-800"
+                                : "border-rose-200 bg-rose-100 text-rose-800",
+                            )}>
+                              {isAttention ? "Ponto de atenção" : "Não aderente"}
+                            </span>
+                          </div>
+                          <RichTextContent
+                            content={item.detalhes}
+                            emptyText="Sem justificativa registrada."
+                            className={cn(
+                              "print-rich-text border-l-2 py-0.5 pl-2 text-[10px] font-medium leading-relaxed",
+                              isAttention ? "border-amber-500 text-amber-800" : "border-rose-500 text-rose-800",
+                            )}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
-          ))}
-        </div>
+          </section>
 
-        {/* Parecer Técnico Conclusivo */}
-        <div className="space-y-4 print-break-inside-avoid text-left border-t pt-6">
-          <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 border-b pb-1.5">
-            3. Parecer Técnico Conclusivo
-          </h2>
-
-          <div className="p-5 border rounded-xl bg-slate-50 space-y-4">
-            <div className="flex items-center gap-3">
-              <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Resultado da Homologação:</span>
-              <span className={`px-3 py-1 rounded text-xs font-bold uppercase tracking-wider border ${
-                localFormData.finalVerdict === "Totalmente Aderente"
-                  ? "bg-emerald-100 text-emerald-800 border-emerald-200"
-                  : localFormData.finalVerdict === "Aderente com Restrições"
-                  ? "bg-amber-100 text-amber-800 border-amber-200"
-                  : localFormData.finalVerdict === "Não Aderente / Impeditivo"
-                  ? "bg-rose-100 text-rose-800 border-rose-200"
-                  : "bg-slate-100 text-slate-500 border-slate-200"
-              }`}>
-                {localFormData.finalVerdict || "Não Informado"}
+          {/* Detalhamento das Seções */}
+          <section className="print-section space-y-4 text-left">
+            <div className="print-section-heading flex items-end justify-between gap-3 border-b border-slate-300 pb-1.5">
+              <h2 className="text-[11px] font-black uppercase tracking-wider text-slate-900">
+                2. Detalhamento Técnico por Seção
+              </h2>
+              <span className="text-[8px] font-bold uppercase tracking-wider text-slate-500">
+                {printSummary.questions} itens
               </span>
             </div>
 
-            <div className="space-y-1">
-              <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block">Justificativa e Considerações Finais:</span>
-              <RichTextContent
-                content={localFormData.finalNotes}
-                emptyText="Nenhuma consideração registrada."
-                className="rounded-lg border bg-white p-3 text-xs font-medium text-slate-800"
-              />
-            </div>
-          </div>
-        </div>
+            {printSections.map((section, sIdx) => (
+              <section key={sIdx} className="print-section space-y-2.5">
+                <div className="print-section-heading flex items-center justify-between gap-3 rounded-md border-l-4 border-slate-700 bg-slate-100 px-3 py-1.5">
+                  <h3 className="text-[11px] font-black uppercase tracking-wider text-slate-800">
+                    {section.title}
+                  </h3>
+                  <span className="shrink-0 text-[8px] font-bold uppercase tracking-wider text-slate-500">
+                    {section.questions.length} {section.questions.length === 1 ? "item" : "itens"}
+                  </span>
+                </div>
 
-        {/* Signature Section */}
-        <div className="pt-12 mt-12 border-t border-dashed print-break-inside-avoid">
-          <div className="grid grid-cols-2 gap-8 text-center text-xs">
-            <div className="space-y-16">
-              <div className="border-b border-slate-400 mx-auto w-3/4"></div>
-              <div>
-                <strong className="text-slate-800 block">Implantador Responsável</strong>
-                <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-wider">Siplan HUB</span>
+                <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+                  {section.questions.map((q, questionIndex) => (
+                    <article
+                      key={q.id}
+                      className={cn(
+                        "print-question space-y-2 border-b border-slate-200 px-3 py-2.5 text-[10px] last:border-b-0",
+                        q.nivel_impacto === "SIM"
+                          ? "bg-rose-50/50"
+                          : q.nivel_impacto === "ATENÇÃO"
+                            ? "bg-amber-50/50"
+                            : "bg-white",
+                      )}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex min-w-0 items-start gap-2">
+                          <span className="mt-px flex h-4 min-w-4 shrink-0 items-center justify-center rounded bg-slate-100 px-1 text-[7px] font-black text-slate-500">
+                            {questionIndex + 1}
+                          </span>
+                          <h4 className="print-question-title min-w-0 break-words text-[10px] font-bold leading-snug text-slate-900">
+                            {q.title}
+                          </h4>
+                        </div>
+                        <span className={cn(
+                          "shrink-0 rounded-full border px-2 py-0.5 text-[7px] font-extrabold uppercase tracking-wider",
+                          q.nivel_impacto === "SIM"
+                            ? "border-rose-200 bg-rose-100 text-rose-800"
+                            : q.nivel_impacto === "ATENÇÃO"
+                              ? "border-amber-200 bg-amber-100 text-amber-800"
+                              : "border-emerald-200 bg-emerald-100 text-emerald-800",
+                        )}>
+                          {q.nivel_impacto === "SIM"
+                            ? "Não aderente"
+                            : q.nivel_impacto === "ATENÇÃO"
+                              ? "Ponto de atenção"
+                              : "Aderente"}
+                        </span>
+                      </div>
+
+                      <dl className="flex flex-wrap items-center gap-x-6 gap-y-1.5 border-l-2 border-slate-200 pl-2.5">
+                        <div className="flex min-w-0 items-center gap-1.5">
+                          <dt className="text-[8px] font-bold uppercase tracking-wider text-slate-500">Resposta</dt>
+                          <dd>
+                            {q.isText ? (
+                              <span className="break-words font-semibold text-slate-800">{q.valor || "Não respondida"}</span>
+                            ) : (
+                              <span className={cn(
+                                "inline-block rounded border px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider",
+                                q.utiliza
+                                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                  : "border-rose-200 bg-rose-50 text-rose-700",
+                              )}>
+                                {q.utiliza ? "Sim, utiliza" : "Não utiliza"}
+                              </span>
+                            )}
+                          </dd>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <dt className="text-[8px] font-bold uppercase tracking-wider text-slate-500">Impacto</dt>
+                          <dd>
+                            <span className={cn(
+                              "inline-block rounded border px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider",
+                              q.nivel_impacto === "SIM"
+                                ? "border-rose-200 bg-rose-50 text-rose-700"
+                                : q.nivel_impacto === "ATENÇÃO"
+                                  ? "border-amber-200 bg-amber-50 text-amber-700"
+                                  : "border-emerald-200 bg-emerald-50 text-emerald-700",
+                            )}>
+                              {q.nivel_impacto || "Não"}
+                            </span>
+                          </dd>
+                        </div>
+                      </dl>
+
+                      {q.detalhes && (
+                        <div className="rounded-r-md border-l-2 border-slate-400 bg-slate-50 px-2.5 py-1.5">
+                          <span className="block text-[8px] font-bold uppercase tracking-wider text-slate-500">
+                            Observações / Justificativa
+                          </span>
+                          <RichTextContent
+                            content={q.detalhes}
+                            className="print-rich-text mt-0.5 text-[10px] font-medium leading-relaxed text-slate-700"
+                          />
+                        </div>
+                      )}
+
+                      {q.images.length > 0 && (
+                        <div className="print-evidence space-y-1.5 border-t border-slate-200 pt-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="block text-[8px] font-bold uppercase tracking-wider text-slate-500">
+                              Evidências do item
+                            </span>
+                            <span className="text-[8px] font-semibold text-slate-500">
+                              {q.images.length} {q.images.length === 1 ? "imagem" : "imagens"}
+                            </span>
+                          </div>
+                          <div className={cn("grid gap-2", getPrintEvidenceGridClass(q.images.length))}>
+                            {q.images.map((image, imageIndex) => (
+                              <figure key={`${image.url}-${imageIndex}`} className="overflow-hidden rounded border border-slate-200 bg-white">
+                                <div className="flex aspect-video items-center justify-center bg-slate-100">
+                                  <img
+                                    src={image.url}
+                                    alt={image.title || `Imagem ${imageIndex + 1}`}
+                                    className="h-full w-full object-contain"
+                                  />
+                                </div>
+                                <figcaption className="break-words border-t border-slate-200 px-1.5 py-1 text-[8px] font-semibold leading-snug text-slate-700">
+                                  {image.title || "Sem título"}
+                                </figcaption>
+                              </figure>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </article>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </section>
+
+          {/* Parecer Técnico Conclusivo */}
+          <section className="print-section space-y-3 text-left">
+            <div className="print-section-heading flex items-end justify-between gap-3 border-b border-slate-300 pb-1.5">
+              <h2 className="text-[11px] font-black uppercase tracking-wider text-slate-900">
+                3. Parecer Técnico Conclusivo
+              </h2>
+              <span className="text-[8px] font-bold uppercase tracking-wider text-slate-500">
+                Homologação
+              </span>
+            </div>
+
+            <div className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[8px] font-bold uppercase tracking-wider text-slate-500">Resultado</span>
+                <span className={cn(
+                  "rounded border px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider",
+                  localFormData.finalVerdict === "Totalmente Aderente"
+                    ? "border-emerald-200 bg-emerald-100 text-emerald-800"
+                    : localFormData.finalVerdict === "Aderente com Restrições"
+                      ? "border-amber-200 bg-amber-100 text-amber-800"
+                      : localFormData.finalVerdict === "Não Aderente / Impeditivo"
+                        ? "border-rose-200 bg-rose-100 text-rose-800"
+                        : "border-slate-200 bg-slate-100 text-slate-500",
+                )}>
+                  {localFormData.finalVerdict || "Não informado"}
+                </span>
+              </div>
+
+              <div className="border-l-2 border-slate-400 bg-white px-3 py-2">
+                <span className="block text-[8px] font-bold uppercase tracking-wider text-slate-500">
+                  Justificativa e considerações finais
+                </span>
+                <RichTextContent
+                  content={localFormData.finalNotes}
+                  emptyText="Nenhuma consideração registrada."
+                  className="print-rich-text mt-1 text-[10px] font-medium leading-relaxed text-slate-800"
+                />
               </div>
             </div>
-            <div className="space-y-16">
-              <div className="border-b border-slate-400 mx-auto w-3/4"></div>
-              <div>
-                <strong className="text-slate-800 block">Responsável Técnico / Cliente</strong>
-                <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-wider">Homologação</span>
+          </section>
+
+          {/* Signature Section */}
+          <section className="print-signatures border-t border-dashed border-slate-300 pt-3">
+            <div className="grid grid-cols-1 gap-5 text-center sm:grid-cols-2 sm:gap-10 print:grid-cols-2">
+              <div className="pt-10">
+                <div className="border-t border-slate-500 pt-2">
+                  <strong className="block text-[10px] text-slate-800">Implantador responsável</strong>
+                  <span className="text-[8px] font-bold uppercase tracking-wider text-slate-500">Siplan Hub</span>
+                </div>
+              </div>
+              <div className="pt-10">
+                <div className="border-t border-slate-500 pt-2">
+                  <strong className="block text-[10px] text-slate-800">Responsável técnico / cliente</strong>
+                  <span className="text-[8px] font-bold uppercase tracking-wider text-slate-500">Homologação</span>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
+          </section>
+
+          <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 pt-2 text-[7px] font-bold uppercase tracking-wider text-slate-400">
+            <span>Documento gerado pelo Siplan Hub</span>
+            <span>Projeto #{project.ticketNumber} &bull; Versão {activeTemplate.version}</span>
+          </footer>
+        </article>
       </div>
     );
   }
