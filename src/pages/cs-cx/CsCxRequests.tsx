@@ -1286,8 +1286,8 @@ function RequestTable({
   onViewObservations: (request: CsCxRequest) => void;
 }) {
   const isMobile = useIsMobile();
-  const headClass = "h-9 px-3 text-xs";
-  const cellClass = "px-3 py-2";
+  const headClass = "h-9 px-2 text-xs";
+  const cellClass = "min-w-0 overflow-hidden px-2 py-2";
   return (
     <>
       {isMobile && <div data-testid="cs-cx-requests-mobile-list" className="space-y-2 md:hidden">
@@ -1337,16 +1337,48 @@ function RequestTable({
               </div>
               <p className="mt-2 break-words text-sm font-medium">{request.registry_office?.name ?? "—"}</p>
               <p className="mt-1 line-clamp-3 break-words text-xs leading-5 text-muted-foreground">{request.description || "Sem descrição"}</p>
-              <div className="mt-3 grid grid-cols-2 gap-2 border-t pt-2 text-xs">
-                <div className="min-w-0"><span className="block text-[10px] uppercase text-muted-foreground">Responsável</span><span className="block truncate">{request.responsible || "—"}</span></div>
-                <div><span className="block text-[10px] uppercase text-muted-foreground">Previsão</span>{formatDate(request.expected_delivery_on)}</div>
+              <div className="mt-3 grid min-w-0 grid-cols-2 gap-2 border-t pt-2 text-xs">
+                <div className="min-w-0">
+                  <span className="block text-[10px] uppercase text-muted-foreground">
+                    Responsável
+                  </span>
+                  <span className="block truncate">
+                    {request.responsible || "—"}
+                  </span>
+                </div>
+                <div className="min-w-0">
+                  <span className="block text-[10px] uppercase text-muted-foreground">
+                    Previsão
+                  </span>
+                  <span className="block whitespace-nowrap">
+                    {formatDate(request.expected_delivery_on)}
+                  </span>
+                </div>
+                <div className="min-w-0">
+                  <span className="block text-[10px] uppercase text-muted-foreground">
+                    Data entrega
+                  </span>
+                  <span className="block whitespace-nowrap">
+                    {formatDate(request.delivered_on)}
+                  </span>
+                </div>
               </div>
             </article>
           );
         })}
       </div>}
       {!isMobile && <div className="hidden overflow-x-auto rounded-lg border md:block">
-      <Table>
+      <Table className="table-fixed">
+        <colgroup>
+          <col className="w-[9%]" />
+          <col className="w-[13%]" />
+          <col className="w-[21%]" />
+          <col className="w-[12%]" />
+          <col className="w-[10%]" />
+          <col className="w-[10%]" />
+          <col className="w-[15%]" />
+          <col className="w-[10%]" />
+        </colgroup>
         <TableHeader>
           <TableRow>
             <TableHead className={headClass}>Chamado</TableHead>
@@ -1354,15 +1386,16 @@ function RequestTable({
             <TableHead className={headClass}>Descrição</TableHead>
             <TableHead className={headClass}>Responsável</TableHead>
             <TableHead className={headClass}>Previsão</TableHead>
+            <TableHead className={headClass}>Data entrega</TableHead>
             <TableHead className={headClass}>Status</TableHead>
-            <TableHead className="h-9 w-20 px-2 text-right">Ações</TableHead>
+            <TableHead className="h-9 px-1 text-right text-xs">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {requests.length === 0 ? (
             <TableRow>
               <TableCell
-                colSpan={7}
+                colSpan={8}
                 className="h-24 text-center text-muted-foreground"
               >
                 Nenhuma solicitação encontrada.
@@ -1374,35 +1407,60 @@ function RequestTable({
               const deletable = canDelete(request.author_profile_id);
               return (
                 <TableRow key={request.id}>
-                  <TableCell className={cn(cellClass, "font-medium")}>
+                  <TableCell
+                    className={cn(cellClass, "truncate font-medium")}
+                    title={
+                      request.ticket_number ||
+                      `#${request.legacy_id ?? request.id.slice(0, 8)}`
+                    }
+                  >
                     {request.ticket_number ||
                       `#${request.legacy_id ?? request.id.slice(0, 8)}`}
                   </TableCell>
-                  <TableCell className={cellClass}>
+                  <TableCell
+                    className={cn(cellClass, "truncate")}
+                    title={request.registry_office?.name ?? "—"}
+                  >
                     {request.registry_office?.name ?? "—"}
                   </TableCell>
                   <TableCell className={cellClass}>
                     <p
-                      className="max-w-md truncate"
+                      className="w-full truncate"
                       title={request.description ?? ""}
                     >
                       {request.description || "Sem descrição"}
                     </p>
-                    <p className="text-[11px] leading-4 text-muted-foreground">
+                    <p
+                      className="truncate text-[11px] leading-4 text-muted-foreground"
+                      title={request.module || "Módulo não informado"}
+                    >
                       {request.module || "Módulo não informado"}
                     </p>
                   </TableCell>
                   <TableCell className={cellClass}>
-                    {request.responsible || "—"}
+                    <span
+                      className="block truncate"
+                      title={request.responsible || "—"}
+                    >
+                      {request.responsible || "—"}
+                    </span>
                   </TableCell>
-                  <TableCell className={cellClass}>
+                  <TableCell className="whitespace-nowrap px-1.5 py-2 text-xs tabular-nums">
                     {formatDate(request.expected_delivery_on)}
                   </TableCell>
-                  <TableCell className={cellClass}>
-                    <StatusBadge status={request.status} />
+                  <TableCell className="whitespace-nowrap px-1.5 py-2 text-xs tabular-nums">
+                    {formatDate(request.delivered_on)}
                   </TableCell>
-                  <TableCell className="whitespace-nowrap px-2 py-1 text-right">
-                    <div className="flex items-center justify-end gap-1">
+                  <TableCell className="min-w-0 overflow-hidden px-1.5 py-2">
+                    <div
+                      className="min-w-0 max-w-full overflow-hidden [&>span]:max-w-full [&>span]:truncate"
+                      title={request.status ?? ""}
+                    >
+                      <StatusBadge status={request.status} />
+                    </div>
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap px-1 py-1 text-right">
+                    <div className="flex items-center justify-end gap-0.5">
                       <Button
                         type="button"
                         variant="ghost"
