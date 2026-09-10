@@ -6,6 +6,54 @@ const mutation = { mutateAsync: vi.fn(), mutate: vi.fn(), isPending: false };
 const npsSurveyState = vi.hoisted(() => ({
   invitations: [] as Array<Record<string, unknown>>,
 }));
+const csCxRequestsState = vi.hoisted(() => ({
+  requests: [
+    {
+      id: "request-delivered",
+      legacy_id: null,
+      ticket_number: "CH-ENTREGUE",
+      description: "Solicitação concluída",
+      module: "OrionTN",
+      requester: "Ana",
+      responsible: "Bruno",
+      requested_on: "2026-09-01",
+      expected_delivery_on: "2026-09-09",
+      delivered_on: "2026-09-10",
+      status: "Finalizado",
+      notes: null,
+      registry_office_id: "office-1",
+      author_profile_id: "profile-1",
+      created_at: "2026-09-01T12:00:00Z",
+      updated_at: "2026-09-10T12:00:00Z",
+      origin: "hub",
+      registry_office: { id: "office-1", name: "Cartório Central" },
+      updates: [],
+      status_history: [],
+    },
+    {
+      id: "request-pending",
+      legacy_id: null,
+      ticket_number: "CH-PENDENTE",
+      description: "Solicitação em aberto",
+      module: "OrionPRO",
+      requester: "Bia",
+      responsible: "Carla",
+      requested_on: "2026-09-02",
+      expected_delivery_on: "2026-09-12",
+      delivered_on: null,
+      status: "Aguardando",
+      notes: null,
+      registry_office_id: "office-1",
+      author_profile_id: "profile-1",
+      created_at: "2026-09-02T12:00:00Z",
+      updated_at: "2026-09-02T12:00:00Z",
+      origin: "hub",
+      registry_office: { id: "office-1", name: "Cartório Central" },
+      updates: [],
+      status_history: [],
+    },
+  ],
+}));
 
 vi.mock("@/hooks/usePermissions", () => ({
   usePermissions: () => ({ hasPermission }),
@@ -49,6 +97,35 @@ vi.mock("@/hooks/useCsCxCore", () => ({
       { id: "product-2", name: "OrionPRO", product_code: "ORIONPRO" },
       { id: "product-3", name: "Siplan Cloud", product_code: "SIPLAN_CLOUD" },
     ],
+  }),
+  useCsCxRequests: () => ({
+    requests: csCxRequestsState.requests,
+    statuses: [
+      {
+        id: "status-1",
+        name: "Aguardando",
+        color: "amber",
+        sort_order: 10,
+        active: true,
+        is_system: true,
+      },
+      {
+        id: "status-2",
+        name: "Finalizado",
+        color: "emerald",
+        sort_order: 20,
+        active: true,
+        is_system: true,
+      },
+    ],
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+    saveRequest: mutation,
+    updateStatus: mutation,
+    updateRequestObservation: mutation,
+    deleteRequestObservation: mutation,
+    deleteRequest: mutation,
   }),
 }));
 vi.mock("@/hooks/useCsCxEngagement", () => ({
@@ -186,6 +263,7 @@ vi.mock("@/hooks/useCsCxExperience", () => ({
 }));
 
 import CsCxNps from "@/pages/cs-cx/CsCxNps";
+import CsCxRequests from "@/pages/cs-cx/CsCxRequests";
 import CsCxVisits from "@/pages/cs-cx/CsCxVisits";
 
 function renderPage(page: React.ReactNode, permissions: string[]) {
@@ -195,7 +273,7 @@ function renderPage(page: React.ReactNode, permissions: string[]) {
   return render(page);
 }
 
-describe("CS/CX visitas e NPS — permissões", () => {
+describe("CS/CX visitas, solicitações e NPS — permissões", () => {
   beforeEach(() => {
     hasPermission.mockReset();
     npsSurveyState.invitations = [];
@@ -256,6 +334,88 @@ describe("CS/CX visitas e NPS — permissões", () => {
     expect(
       screen.getByRole("button", { name: /gerar solicitação/i }),
     ).toBeInTheDocument();
+  });
+
+  it("exibe Data entrega entre Previsão e Status na lista de solicitações", () => {
+    const previousWidth = window.innerWidth;
+    Object.defineProperty(window, "innerWidth", {
+      configurable: true,
+      value: 1200,
+    });
+
+    try {
+      renderPage(<CsCxRequests />, []);
+
+      expect(
+        screen
+          .getAllByRole("columnheader")
+          .map((header) => header.textContent?.trim()),
+      ).toEqual([
+        "Chamado",
+        "Cartório",
+        "Descrição",
+        "Responsável",
+        "Previsão",
+        "Data entrega",
+        "Status",
+        "Ações",
+      ]);
+
+      const deliveredRow = screen.getByText("CH-ENTREGUE").closest("tr");
+      expect(deliveredRow).not.toBeNull();
+      expect(within(deliveredRow!).getByText("10/09/2026")).toBeInTheDocument();
+
+      const pendingRow = screen.getByText("CH-PENDENTE").closest("tr");
+      expect(pendingRow).not.toBeNull();
+      expect(within(pendingRow!).getAllByRole("cell")[5]).toHaveTextContent("—");
+    } finally {
+      Object.defineProperty(window, "innerWidth", {
+        configurable: true,
+        value: previousWidth,
+      });
+    }
+  });
+
+  it("exibe Data entrega depois de Previsão nos cards mobile em 320 px", async () => {
+    const previousWidth = window.innerWidth;
+    Object.defineProperty(window, "innerWidth", {
+      configurable: true,
+      value: 320,
+    });
+
+    try {
+      renderPage(<CsCxRequests />, []);
+
+      const mobileList = await screen.findByTestId("cs-cx-requests-mobile-list");
+      const cards = within(mobileList).getAllByRole("article");
+      const deliveredCard = cards.find((card) =>
+        within(card).queryByText("CH-ENTREGUE"),
+      );
+      expect(deliveredCard).toBeDefined();
+
+      const forecastLabel = within(deliveredCard!).getByText("Previsão");
+      const deliveredLabel = within(deliveredCard!).getByText("Data entrega");
+      expect(
+        Boolean(
+          forecastLabel.compareDocumentPosition(deliveredLabel) &
+            Node.DOCUMENT_POSITION_FOLLOWING,
+        ),
+      ).toBe(true);
+      expect(deliveredLabel.parentElement).toHaveTextContent("10/09/2026");
+
+      const pendingCard = cards.find((card) =>
+        within(card).queryByText("CH-PENDENTE"),
+      );
+      expect(pendingCard).toBeDefined();
+      expect(
+        within(pendingCard!).getByText("Data entrega").parentElement,
+      ).toHaveTextContent("—");
+    } finally {
+      Object.defineProperty(window, "innerWidth", {
+        configurable: true,
+        value: previousWidth,
+      });
+    }
   });
 
   it("mantém NPS em leitura sem liberar escrita", () => {
