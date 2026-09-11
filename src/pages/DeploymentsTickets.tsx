@@ -934,9 +934,8 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
 
               {/* Busca Rápida */}
               <div className="hidden space-y-0 md:block">
-                <label className="flex items-center justify-between gap-1 text-[10px] leading-none font-medium text-muted-foreground">
-                  <span>Busca Rápida</span>
-                  <span className="font-normal">Enter adiciona</span>
+                <label className="text-[10px] leading-none font-medium text-muted-foreground">
+                  Busca Rápida
                 </label>
                 <TicketKeywordSearch
                   compact
