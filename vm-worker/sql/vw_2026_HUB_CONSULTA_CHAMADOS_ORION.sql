@@ -22,7 +22,7 @@ SELECT
   c.Software,
   c.Produto,
   c.EquipeResponsavelChamado,
-  c.ResponsavelAtividade AS AnalistaResponsavel,
+  c.ResponsavelChamado AS AnalistaResponsavel,
   c.DataAberturaChamado,
   c.DataEncerramentoChamado AS SolDataFechamento
 FROM chamados_atuais AS c
