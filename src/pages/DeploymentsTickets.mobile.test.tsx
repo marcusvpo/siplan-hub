@@ -21,6 +21,8 @@ vi.mock("@/hooks/useChamados0800", () => ({
       status: "Em atendimento",
       produto: "Siplan",
       software: "Orion TN",
+      equipeResponsavel: "SD - TN/RC",
+      analistaResponsavel: "Ana Souza",
       dataAbertura: "2026-08-20",
     }],
     totalCount: 1,
@@ -33,6 +35,13 @@ vi.mock("@/hooks/useChamados0800", () => ({
   fetchAllChamadosForReport: vi.fn(),
   useChamadosClientOptions: () => ({
     data: [{ codigoCliente: "1", nomeCliente: "Cliente longo", aliases: ["Cliente longo"] }],
+    isLoading: false,
+  }),
+  useChamadosAssignmentOptions: () => ({
+    data: {
+      groups: ["SD - TN/RC", "Implantação"],
+      analysts: ["Ana Souza", "Bruno Lima"],
+    },
     isLoading: false,
   }),
 }));
@@ -70,6 +79,8 @@ describe("DeploymentsTickets no mobile", () => {
     fireEvent.click(filterButton);
     expect(filterButton).toHaveAttribute("aria-expanded", "true");
     expect(container.querySelector('input[type="date"]')).toHaveClass("h-10", "md:h-7");
+    expect(screen.getByRole("combobox", { name: "Todos os grupos" })).toHaveClass("w-full", "h-10");
+    expect(screen.getByRole("combobox", { name: "Todos os analistas" })).toHaveClass("w-full", "h-10");
 
     const tabs = screen.getByRole("tablist");
     expect(tabs).toHaveClass("grid-cols-2", "w-full", "md:flex");
@@ -79,6 +90,7 @@ describe("DeploymentsTickets no mobile", () => {
     const title = within(mobileList).getByText(/Solicitação extensa/);
     expect(client).toHaveClass("break-words");
     expect(title).toHaveClass("break-words");
+    expect(within(mobileList).getByText("SD - TN/RC · Ana Souza")).toHaveClass("break-words");
     expect(container.querySelector("table")?.parentElement?.parentElement).toHaveClass("hidden", "md:block");
 
     fireEvent.click(within(mobileList).getByRole("button", { name: /Abrir chamado 84521/ }));

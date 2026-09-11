@@ -44,19 +44,66 @@ export type ConversionEngineInsert = {
 
 export type ConversionEngineUpdate = Partial<ConversionEngineInsert>;
 
+export type ChamadoProcessoVendaRow = {
+  numero_chamado: string;
+  codigo_cliente: string | null;
+  nome_cliente: string | null;
+  razao_social_cliente: string | null;
+  data_pedido_venda: string | null;
+  numero_pedido_venda: string | null;
+  titulo: string | null;
+  descricao: string | null;
+  natureza: string | null;
+  status: string | null;
+  software: string | null;
+  produto: string | null;
+  criticidade: string | null;
+  equipe_responsavel: string | null;
+  analista_responsavel: string | null;
+  data_abertura: string | null;
+  data_encerramento: string | null;
+  aberto_em: string | null;
+  encerrado_em: string | null;
+  sla_primeira_resposta_prevista_em: string | null;
+  sla_primeira_resposta_real_em: string | null;
+  sla_vencimento_em: string | null;
+  sla_vencimento_pausado: boolean;
+  sla_vencimento_manual: boolean;
+  sla_tempo_primeira_resposta_minutos: number | null;
+  sla_tempo_vencimento_minutos: number | null;
+  sla_tempo_restante_minutos: number | null;
+  sla_retorno_previsto_em: string | null;
+  sla_retorno_real_em: string | null;
+  synced_at: string;
+};
+
+export type ChamadoProcessoVendaInsert = Partial<ChamadoProcessoVendaRow> & {
+  numero_chamado: string;
+};
+
+export type ChamadoProcessoVendaUpdate = Partial<ChamadoProcessoVendaRow>;
+
 /**
  * O arquivo gerado do projeto estava vazio antes desta mudança. Estes aliases
  * mantêm os consumidores legados sem tipagem até ser possível regenerar todo o
  * schema, enquanto o novo cadastro de motores permanece tipado explicitamente.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type Database = any;
+type UntypedSupabaseShape = any;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type Tables<TableName extends string> = TableName extends "conversion_engines" ? ConversionEngineRow : any;
+export type Database = UntypedSupabaseShape;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type TablesInsert<TableName extends string> = TableName extends "conversion_engines" ? ConversionEngineInsert : any;
+export type Tables<TableName extends string> =
+  TableName extends "conversion_engines" ? ConversionEngineRow
+    : TableName extends "chamados_processo_venda" ? ChamadoProcessoVendaRow
+      : UntypedSupabaseShape;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type TablesUpdate<TableName extends string> = TableName extends "conversion_engines" ? ConversionEngineUpdate : any;
+export type TablesInsert<TableName extends string> =
+  TableName extends "conversion_engines" ? ConversionEngineInsert
+    : TableName extends "chamados_processo_venda" ? ChamadoProcessoVendaInsert
+      : UntypedSupabaseShape;
+
+export type TablesUpdate<TableName extends string> =
+  TableName extends "conversion_engines" ? ConversionEngineUpdate
+    : TableName extends "chamados_processo_venda" ? ChamadoProcessoVendaUpdate
+      : UntypedSupabaseShape;

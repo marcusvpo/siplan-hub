@@ -145,6 +145,12 @@ export function Chamado0800DetailDialog({
                   <p>{chamado.equipeResponsavel}</p>
                 </div>
               )}
+              {chamado.analistaResponsavel && (
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Analista responsável</p>
+                  <p>{chamado.analistaResponsavel}</p>
+                </div>
+              )}
             </div>
 
             {showTramites ? (

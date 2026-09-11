@@ -2,7 +2,17 @@
 -- A aplicacao e o worker usam apenas SELECT nesta view.
 CREATE OR ALTER VIEW dbo.vw_2026_HUB_CONSULTA_CHAMADOS_LEGADO
 AS
-SELECT DISTINCT
+WITH chamados_atuais AS (
+  SELECT
+    c.*,
+    ROW_NUMBER() OVER (
+      PARTITION BY c.NumeroChamado
+      ORDER BY c.DataUltimaEdicaoTramite DESC
+    ) AS hub_rn
+  FROM dbo.vw_2026_ChamadosTodosStatus AS c
+  WHERE LTRIM(RTRIM(c.Produto)) IN ('Siplan', 'Control-M', 'Global')
+)
+SELECT
   c.NumeroChamado,
   c.CardCode0800 AS codigoCliente,
   cliente.NomeCliente,
@@ -13,9 +23,11 @@ SELECT DISTINCT
   c.StatusChamado,
   c.Software,
   c.Produto,
+  c.EquipeResponsavelChamado,
+  c.ResponsavelAtividade AS AnalistaResponsavel,
   c.DataAberturaChamado,
   c.DataEncerramentoChamado AS SolDataFechamento
-FROM dbo.vw_2026_ChamadosTodosStatus AS c
+FROM chamados_atuais AS c
 CROSS APPLY (
   VALUES (
     CASE
@@ -25,4 +37,4 @@ CROSS APPLY (
     END
   )
 ) AS cliente (NomeCliente)
-WHERE LTRIM(RTRIM(c.Produto)) IN ('Siplan', 'Control-M', 'Global');
+WHERE c.hub_rn = 1;

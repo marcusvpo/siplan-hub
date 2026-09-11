@@ -13,6 +13,8 @@ export interface ChamadosReportFilters {
   product?: string | null;
   products?: string[];
   softwares?: string[];
+  groups?: string[];
+  analysts?: string[];
   nature?: string | null;
   statuses: string[];
   searchTerm?: string | null;
@@ -202,6 +204,8 @@ export async function generateChamadosReportPdf(
       `Período: ${formatDate(filters.startDate)} a ${formatDate(filters.endDate)}`,
       `Produto: ${productLabel}`,
       ...(catalog === "legacy" ? [`Software: ${softwareLabel}`] : []),
+      `Grupos: ${text(summarizeClients(filters.groups ?? []))}`,
+      `Analistas: ${text(summarizeClients(filters.analysts ?? []))}`,
       `Natureza: ${text(natureLabel)}`,
       `Status: ${text(statusLabel)}`,
       `Clientes: ${text(summarizeClients(filters.clients))}`,

@@ -320,10 +320,10 @@ export const pageHelpData: PageHelpInfo[] = [
     moduleName: "Dashboard",
     icon: ClipboardList,
     description:
-      "Ferramenta de pesquisa detalhada para localizar tickets de atendimento 0800 por número de protocolo, nome do cliente, sistema ou intervalo de datas.",
+      "Ferramenta de pesquisa detalhada para localizar tickets de atendimento 0800 por protocolo, cliente, sistema, período, grupo responsável ou analista.",
     keyFeatures: [
       "Busca textual instantânea por cliente, protocolo ou resumo",
-      "Filtros por status, produto e período",
+      "Filtros combináveis por status, produto, período, grupo e analista",
       "Exportação da listagem de chamados encontrados",
     ],
     steps: [
@@ -336,6 +336,13 @@ export const pageHelpData: PageHelpInfo[] = [
       },
       {
         stepNumber: 2,
+        title: "Refine por Grupo ou Analista",
+        description:
+          "Abra Mais filtros e selecione um ou vários grupos e analistas responsáveis para restringir o resultado.",
+        icon: Filter,
+      },
+      {
+        stepNumber: 3,
         title: "Exporte a Lista",
         description:
           "Clique no botão de exportação se precisar gerar um relatório dos chamados listados.",
@@ -350,10 +357,11 @@ export const pageHelpData: PageHelpInfo[] = [
     moduleName: "Dashboard",
     icon: History,
     description:
-      "Consulta ao acervo histórico de chamados da plataforma Ellevo abrangendo as famílias de produtos Control-M, Global e Siplan Legado.",
+      "Consulta ao acervo histórico de chamados da plataforma Ellevo abrangendo Control-M, Global e Siplan, com filtros por grupo e analista responsável.",
     keyFeatures: [
       "Pesquisa no banco legado por contrato, cartório ou protocolo Ellevo",
       "Filtro por família de sistema legado",
+      "Filtros pesquisáveis por grupo e analista responsável",
       "Visualização das descrições e soluções aplicadas na época",
     ],
     steps: [
@@ -363,6 +371,13 @@ export const pageHelpData: PageHelpInfo[] = [
         description:
           "Digite o código Ellevo ou razão social para resgatar o histórico antigo do cliente.",
         icon: Search,
+      },
+      {
+        stepNumber: 2,
+        title: "Filtre a Responsabilidade",
+        description:
+          "Selecione os grupos ou analistas do Ellevo para encontrar os chamados atribuídos às equipes desejadas.",
+        icon: Filter,
       },
     ],
   },

@@ -9,6 +9,7 @@ import {
   fetchAllChamadosForReport,
   Chamado0800,
   useChamadosClientOptions,
+  useChamadosAssignmentOptions,
   type ChamadosClientOption,
   type ProcessoVendaSyncFilters,
 } from "@/hooks/useChamados0800";
@@ -98,6 +99,7 @@ function TicketFilterMultiSelect({
           variant="outline"
           role="combobox"
           aria-expanded={open}
+          aria-label={placeholder}
           disabled={disabled}
           className="h-10 w-full justify-between px-2 text-[11px] font-normal md:h-7"
         >
@@ -159,6 +161,8 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
   const [produto, setProduto] = useState<string>("todos");
   const [selectedLegacyProducts, setSelectedLegacyProducts] = useState<string[]>([]);
   const [selectedLegacySoftware, setSelectedLegacySoftware] = useState<string[]>([]);
+  const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
+  const [selectedAnalysts, setSelectedAnalysts] = useState<string[]>([]);
   const [natureza, setNatureza] = useState<string>("todas");
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [busca, setBusca] = useState<string>("");
@@ -207,6 +211,18 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
 
   const { data: clientOptions = [], isLoading: loadingClients } =
     useChamadosClientOptions(catalog);
+  const {
+    data: assignmentOptions = { groups: [], analysts: [] },
+    isLoading: loadingAssignmentOptions,
+  } = useChamadosAssignmentOptions(catalog);
+  const groupOptions = useMemo<TicketFilterOption[]>(
+    () => assignmentOptions.groups.map((group) => ({ value: group, label: group })),
+    [assignmentOptions.groups],
+  );
+  const analystOptions = useMemo<TicketFilterOption[]>(
+    () => assignmentOptions.analysts.map((analyst) => ({ value: analyst, label: analyst })),
+    [assignmentOptions.analysts],
+  );
 
   const clients = useMemo(
     () => clientOptions.map((option) => option.nomeCliente),
@@ -266,6 +282,8 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
     product: produto,
     products: isLegacy && selectedLegacyProducts.length > 0 ? selectedLegacyProducts : null,
     softwares: isLegacy && selectedLegacySoftware.length > 0 ? selectedLegacySoftware : null,
+    groups: selectedGroups.length > 0 ? selectedGroups : null,
+    analysts: selectedAnalysts.length > 0 ? selectedAnalysts : null,
     nature: natureza,
     statuses: selectedStatuses.length > 0 ? selectedStatuses : null,
     searchTerm: busca || null,
@@ -276,6 +294,8 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
     produto,
     selectedClientCodes,
     selectedClientFilterNames,
+    selectedGroups,
+    selectedAnalysts,
     selectedLegacyProducts,
     selectedLegacySoftware,
     selectedStatuses,
@@ -407,6 +427,8 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
     product: produto,
     products: isLegacy && selectedLegacyProducts.length > 0 ? selectedLegacyProducts : null,
     softwares: isLegacy && selectedLegacySoftware.length > 0 ? selectedLegacySoftware : null,
+    groups: selectedGroups.length > 0 ? selectedGroups : null,
+    analysts: selectedAnalysts.length > 0 ? selectedAnalysts : null,
     nature: natureza,
     searchTerm: busca || null,
     statuses: selectedStatuses.length > 0 ? selectedStatuses : null,
@@ -424,6 +446,8 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
     produto !== "todos" ||
     selectedLegacyProducts.length > 0 ||
     selectedLegacySoftware.length > 0 ||
+    selectedGroups.length > 0 ||
+    selectedAnalysts.length > 0 ||
     natureza !== "todas" ||
     selectedStatuses.length > 0 ||
     !!busca;
@@ -433,6 +457,8 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
     selectedClients.length > 0,
     produto !== "todos" || selectedLegacyProducts.length > 0,
     selectedLegacySoftware.length > 0,
+    selectedGroups.length > 0,
+    selectedAnalysts.length > 0,
     natureza !== "todas",
     selectedStatuses.length > 0,
   ].filter(Boolean).length;
@@ -464,6 +490,8 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
     setProduto("todos");
     setSelectedLegacyProducts([]);
     setSelectedLegacySoftware([]);
+    setSelectedGroups([]);
+    setSelectedAnalysts([]);
     setNatureza("todas");
     setSelectedStatuses([]);
     setBusca("");
@@ -519,6 +547,8 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
         product: produto,
         products: selectedLegacyProducts,
         softwares: selectedLegacySoftware,
+        groups: selectedGroups,
+        analysts: selectedAnalysts,
         nature: natureza,
         statuses: selectedStatuses,
         searchTerm: busca,
@@ -532,6 +562,8 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
         product: produto,
         products: isLegacy && selectedLegacyProducts.length > 0 ? selectedLegacyProducts : null,
         softwares: isLegacy && selectedLegacySoftware.length > 0 ? selectedLegacySoftware : null,
+        groups: selectedGroups.length > 0 ? selectedGroups : null,
+        analysts: selectedAnalysts.length > 0 ? selectedAnalysts : null,
         nature: natureza,
         searchTerm: busca || null,
         statuses: selectedStatuses.length > 0 ? selectedStatuses : null,
@@ -942,7 +974,43 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
               </div>
             )}
 
-            {/* Linha 2: Clientes / Serventias (Full Width) */}
+            {/* Linha 2: atribuicao atual no Ellevo */}
+            <div className="grid min-w-0 grid-cols-1 gap-1.5 sm:grid-cols-2">
+              <div className="min-w-0 space-y-0">
+                <label className="text-[10px] leading-none font-medium text-muted-foreground">
+                  Grupo responsável
+                </label>
+                <TicketFilterMultiSelect
+                  values={selectedGroups}
+                  options={groupOptions}
+                  placeholder="Todos os grupos"
+                  searchPlaceholder="Buscar grupo..."
+                  disabled={loadingAssignmentOptions}
+                  onChange={(values) => {
+                    setSelectedGroups(values);
+                    setPage(1);
+                  }}
+                />
+              </div>
+              <div className="min-w-0 space-y-0">
+                <label className="text-[10px] leading-none font-medium text-muted-foreground">
+                  Analista responsável
+                </label>
+                <TicketFilterMultiSelect
+                  values={selectedAnalysts}
+                  options={analystOptions}
+                  placeholder="Todos os analistas"
+                  searchPlaceholder="Buscar analista por nome..."
+                  disabled={loadingAssignmentOptions}
+                  onChange={(values) => {
+                    setSelectedAnalysts(values);
+                    setPage(1);
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Linha 3: Clientes / Serventias (Full Width) */}
             <div className="space-y-0">
               <div className="flex min-h-4 flex-wrap items-center gap-1">
                 <label className="mr-1 text-[10px] leading-none font-medium text-muted-foreground">Clientes / Serventias</label>
@@ -1132,6 +1200,16 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
                         <CalendarDays className="h-3 w-3 shrink-0" />
                         Abertura: {fmtDateBr(chamado.dataAbertura)}
                       </span>
+                      {(chamado.equipeResponsavel || chamado.analistaResponsavel) && (
+                        <span className="flex min-w-0 items-start gap-1.5">
+                          <Building2 className="mt-0.5 h-3 w-3 shrink-0" />
+                          <span className="break-words">
+                            {[chamado.equipeResponsavel, chamado.analistaResponsavel]
+                              .filter(Boolean)
+                              .join(" · ")}
+                          </span>
+                        </span>
+                      )}
                     </span>
 
                     <span className="mt-3 flex items-center justify-end gap-1 text-[10px] font-semibold text-primary">
@@ -1171,6 +1249,14 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
                           <span className="truncate text-[11px] text-muted-foreground" title={chamado.titulo}>
                             {chamado.titulo || "—"}
                           </span>
+                          {(chamado.equipeResponsavel || chamado.analistaResponsavel) && (
+                            <span
+                              className="truncate text-[10px] text-muted-foreground"
+                              title={[chamado.equipeResponsavel, chamado.analistaResponsavel].filter(Boolean).join(" · ")}
+                            >
+                              {[chamado.equipeResponsavel, chamado.analistaResponsavel].filter(Boolean).join(" · ")}
+                            </span>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell className="max-w-[180px] truncate px-3 py-2 text-xs font-normal text-muted-foreground" title={chamado.natureza}>
@@ -1306,6 +1392,8 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
             product: produto,
             products: isLegacy && selectedLegacyProducts.length > 0 ? selectedLegacyProducts : null,
             softwares: isLegacy && selectedLegacySoftware.length > 0 ? selectedLegacySoftware : null,
+            groups: selectedGroups.length > 0 ? selectedGroups : null,
+            analysts: selectedAnalysts.length > 0 ? selectedAnalysts : null,
             nature: natureza,
             searchTerm: busca || null,
             statuses: selectedStatuses.length > 0 ? selectedStatuses : null,
@@ -1318,6 +1406,8 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
             product: produto,
             products: selectedLegacyProducts,
             softwares: selectedLegacySoftware,
+            groups: selectedGroups,
+            analysts: selectedAnalysts,
             nature: natureza,
             statuses: selectedStatuses,
             searchTerm: busca,
@@ -1339,6 +1429,8 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
             product: produto,
             products: isLegacy && selectedLegacyProducts.length > 0 ? selectedLegacyProducts : null,
             softwares: isLegacy && selectedLegacySoftware.length > 0 ? selectedLegacySoftware : null,
+            groups: selectedGroups.length > 0 ? selectedGroups : null,
+            analysts: selectedAnalysts.length > 0 ? selectedAnalysts : null,
             nature: natureza,
             searchTerm: busca || null,
             statuses: selectedStatuses.length > 0 ? selectedStatuses : null,
@@ -1352,6 +1444,8 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
             product: produto,
             products: selectedLegacyProducts,
             softwares: selectedLegacySoftware,
+            groups: selectedGroups,
+            analysts: selectedAnalysts,
             nature: natureza,
             statuses: selectedStatuses,
             searchTerm: busca,
@@ -1372,6 +1466,8 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
             product: produto,
             products: isLegacy && selectedLegacyProducts.length > 0 ? selectedLegacyProducts : null,
             softwares: isLegacy && selectedLegacySoftware.length > 0 ? selectedLegacySoftware : null,
+            groups: selectedGroups.length > 0 ? selectedGroups : null,
+            analysts: selectedAnalysts.length > 0 ? selectedAnalysts : null,
             nature: natureza,
             searchTerm: busca || null,
             statuses: selectedStatuses.length > 0 ? selectedStatuses : null,

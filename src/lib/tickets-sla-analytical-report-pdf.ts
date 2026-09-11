@@ -113,6 +113,8 @@ export async function generateTicketsSlaAnalyticalReportPdf(
     ...(filters.catalog === "legacy"
       ? [`Software: ${safeText(summarize(filters.softwares || [], "Todos os softwares"))}`]
       : []),
+    `Grupos: ${safeText(summarize(filters.groups || [], "Todos"))}`,
+    `Analistas: ${safeText(summarize(filters.analysts || [], "Todos"))}`,
     `Natureza: ${!filters.nature || filters.nature === "todas" ? "Todas" : safeText(filters.nature)}`,
     `Status: ${safeText(summarize(filters.statuses, "Todos"))}`,
     `Classificação SLA: ${safeText(filters.slaClassification || "Todos")}`,

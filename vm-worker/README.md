@@ -281,6 +281,12 @@ Realtime). Escopo: chamados de origem dos projetos (`projects.ticket_number`) + 
 clientes com pos-implantacao ativa (janela = menor `post_start_date`; sai do escopo
 `CHAMADOS_SYNC_GRACE_DAYS` dias apos o fim do pos).
 
+As telas `/deployments/tickets` e `/deployments/tickets-legacy` usam a fila
+`chamados_sync_requests` para consultar períodos e filtros sob demanda. Os filtros de grupo e
+analista são enviados ao SQL Server e aplicados, respectivamente, sobre
+`EquipeResponsavelChamado` e `ResponsavelAtividade`; o resultado é espelhado em
+`chamados_processo_venda.equipe_responsavel` e `analista_responsavel`.
+
 **Rode o sync em UM worker so.** Os dois servicos compartilham o `.env`; para desligar no de
 modelos existe o drop-in `/etc/systemd/system/siplan-model-worker.service.d/no-chamados-sync.conf`
 com `Environment=MSSQL_HOST=` (vazio). Hoje o dono do sync e o `siplan-ai-worker`. No log do dono
