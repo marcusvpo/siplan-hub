@@ -3,16 +3,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import DeploymentsTickets from "./DeploymentsTickets";
 
-const { solicitarSync } = vi.hoisted(() => ({
+const { solicitarSync, useChamadosSearchMock } = vi.hoisted(() => ({
   solicitarSync: vi.fn().mockResolvedValue({ ticketNumbers: [] }),
-}));
-
-vi.mock("@tanstack/react-query", () => ({
-  useQuery: () => ({ data: ["Dúvida"], isLoading: false }),
-}));
-
-vi.mock("@/hooks/useChamados0800", () => ({
-  useChamadosSearch: () => ({
+  useChamadosSearchMock: vi.fn(() => ({
     chamados: [{
       numeroChamado: "84521",
       nomeCliente: "Cliente com nome muito extenso para validar a quebra de linha",
@@ -28,7 +21,15 @@ vi.mock("@/hooks/useChamados0800", () => ({
     totalCount: 1,
     isLoading: false,
     error: null,
-  }),
+  })),
+}));
+
+vi.mock("@tanstack/react-query", () => ({
+  useQuery: () => ({ data: ["Dúvida"], isLoading: false }),
+}));
+
+vi.mock("@/hooks/useChamados0800", () => ({
+  useChamadosSearch: useChamadosSearchMock,
   useSolicitarSyncProcessoVenda: () => ({ solicitarSync, syncing: false }),
   isProcessoVendaSyncSupersededError: () => false,
   fetchAllChamados: vi.fn(),
@@ -72,7 +73,10 @@ describe("DeploymentsTickets no mobile", () => {
   it("prioriza busca, recolhe filtros avançados e usa cartões sem tabela horizontal", () => {
     const { container } = render(<DeploymentsTickets />);
 
-    expect(screen.getByPlaceholderText("Buscar chamado, título ou termo...").parentElement).toHaveClass("md:hidden");
+    expect(screen.getByTestId("tickets-keyword-search-mobile")).toHaveClass("md:hidden");
+    expect(
+      within(screen.getByTestId("tickets-keyword-search-mobile")).getByRole("textbox"),
+    ).toHaveAttribute("placeholder", "Digite e pressione Enter...");
 
     const filterButton = screen.getByRole("button", { name: "Mais filtros" });
     expect(filterButton).toHaveAttribute("aria-expanded", "false");
@@ -99,6 +103,32 @@ describe("DeploymentsTickets no mobile", () => {
 
     fireEvent.click(within(mobileList).getByRole("button", { name: /Ver detalhes do chamado 84521/ }));
     expect(screen.getByTestId("ticket-detail")).toHaveTextContent("84521");
+  });
+
+  it("adiciona e remove palavras-chave usando Enter", () => {
+    render(<DeploymentsTickets />);
+    const search = screen.getByTestId("tickets-keyword-search-mobile");
+    const input = within(search).getByRole("textbox");
+
+    fireEvent.change(input, { target: { value: "  rtf  " } });
+    fireEvent.keyDown(input, { key: "Enter" });
+    expect(within(search).getByText("rtf")).toBeInTheDocument();
+    expect(useChamadosSearchMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ searchTerms: ["rtf"] }),
+    );
+
+    fireEvent.change(input, { target: { value: "pdf" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+    expect(within(search).getByText("pdf")).toBeInTheDocument();
+    expect(useChamadosSearchMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ searchTerms: ["rtf", "pdf"] }),
+    );
+
+    fireEvent.click(within(search).getByRole("button", { name: "Remover palavra-chave rtf" }));
+    expect(within(search).queryByText("rtf")).not.toBeInTheDocument();
+    expect(useChamadosSearchMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ searchTerms: ["pdf"] }),
+    );
   });
 
   it("aplica a mesma estrutura responsiva ao catálogo legado", () => {

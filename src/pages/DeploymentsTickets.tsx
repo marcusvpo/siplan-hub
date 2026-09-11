@@ -24,7 +24,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Chamado0800DetailDialog, fmtDateBr, statusBadgeClass } from "@/components/ProjectManagement/Chamado0800DetailDialog";
 import { 
-  ClipboardList, Search, CalendarDays, Filter, X, ChevronLeft, ChevronRight, ChevronsUpDown, Check, Eye, FileDown, Loader2, BarChart3, Timer, Building2
+  ClipboardList, CalendarDays, Filter, X, ChevronLeft, ChevronRight, ChevronsUpDown, Check, Eye, FileDown, Loader2, BarChart3, Timer, Building2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { normalizeSearchText } from "@/utils/normalize-search";
@@ -52,7 +52,12 @@ import { toast } from "sonner";
 import { TicketsAiAnalysis } from "@/components/DeploymentsTickets/TicketsAiAnalysis";
 import { TicketsSlaAnalysis } from "@/components/DeploymentsTickets/TicketsSlaAnalysis";
 import { TicketsSlaSectorAnalysis } from "@/components/DeploymentsTickets/TicketsSlaSectorAnalysis";
+import { TicketKeywordSearch } from "@/components/DeploymentsTickets/TicketKeywordSearch";
 import { EllevoTicketLink } from "@/components/EllevoTicketLink";
+import {
+  formatChamadosSearchKeywords,
+  normalizeChamadosSearchKeywords,
+} from "@/lib/chamados-search-keywords";
 
 const FILTER_SYNC_DEBOUNCE_MS = 700;
 const FILTER_SYNC_FRESHNESS_MS = 5 * 60_000;
@@ -166,8 +171,13 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
   const [selectedAnalysts, setSelectedAnalysts] = useState<string[]>([]);
   const [natureza, setNatureza] = useState<string>("todas");
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
-  const [busca, setBusca] = useState<string>("");
+  const [searchKeywords, setSearchKeywords] = useState<string[]>([]);
+  const [searchDraft, setSearchDraft] = useState("");
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const searchFilterLabel = useMemo(
+    () => formatChamadosSearchKeywords(searchKeywords),
+    [searchKeywords],
+  );
   
   // Paginação
   const [page, setPage] = useState(1);
@@ -287,12 +297,12 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
     analysts: selectedAnalysts.length > 0 ? selectedAnalysts : null,
     nature: natureza,
     statuses: selectedStatuses.length > 0 ? selectedStatuses : null,
-    searchTerm: busca || null,
+    searchTerms: searchKeywords.length > 0 ? searchKeywords : null,
   }), [
-    busca,
     isLegacy,
     natureza,
     produto,
+    searchKeywords,
     selectedClientCodes,
     selectedClientFilterNames,
     selectedGroups,
@@ -431,7 +441,7 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
     groups: selectedGroups.length > 0 ? selectedGroups : null,
     analysts: selectedAnalysts.length > 0 ? selectedAnalysts : null,
     nature: natureza,
-    searchTerm: busca || null,
+    searchTerms: searchKeywords.length > 0 ? searchKeywords : null,
     statuses: selectedStatuses.length > 0 ? selectedStatuses : null,
     ticketNumbers: syncedTicketNumbers,
     page,
@@ -451,7 +461,7 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
     selectedAnalysts.length > 0 ||
     natureza !== "todas" ||
     selectedStatuses.length > 0 ||
-    !!busca;
+    searchKeywords.length > 0;
 
   const activeFilterCount = [
     dataInicio !== defaultDateRange.startDate || dataFim !== defaultDateRange.endDate,
@@ -495,7 +505,22 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
     setSelectedAnalysts([]);
     setNatureza("todas");
     setSelectedStatuses([]);
-    setBusca("");
+    setSearchKeywords([]);
+    setSearchDraft("");
+    setPage(1);
+  };
+
+  const addSearchKeyword = (value: string) => {
+    const nextKeywords = normalizeChamadosSearchKeywords([...searchKeywords, value]);
+    setSearchDraft("");
+    if (nextKeywords.length === searchKeywords.length) return;
+
+    setSearchKeywords(nextKeywords);
+    setPage(1);
+  };
+
+  const removeSearchKeyword = (keyword: string) => {
+    setSearchKeywords((current) => current.filter((item) => item !== keyword));
     setPage(1);
   };
 
@@ -552,7 +577,7 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
         analysts: selectedAnalysts,
         nature: natureza,
         statuses: selectedStatuses,
-        searchTerm: busca,
+        searchTerm: searchFilterLabel,
       };
       const reportSearchFilters = {
         catalog,
@@ -566,7 +591,7 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
         groups: selectedGroups.length > 0 ? selectedGroups : null,
         analysts: selectedAnalysts.length > 0 ? selectedAnalysts : null,
         nature: natureza,
-        searchTerm: busca || null,
+        searchTerms: searchKeywords.length > 0 ? searchKeywords : null,
         statuses: selectedStatuses.length > 0 ? selectedStatuses : null,
         ticketNumbers: reportTicketNumbers,
       };
@@ -705,26 +730,17 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
             </div>
           </div>
 
-          <div className="relative md:hidden">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Buscar chamado, título ou termo..."
-              value={busca}
-              onChange={(e) => handleFilterChange(setBusca, e.target.value)}
-              className="h-10 min-w-0 pl-9 pr-8 text-sm"
-            />
-            {busca && (
-              <button
-                type="button"
-                aria-label="Limpar busca"
-                onClick={() => handleFilterChange(setBusca, "")}
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            )}
-          </div>
+          <TicketKeywordSearch
+            testId="tickets-keyword-search-mobile"
+            className="md:hidden"
+            keywords={searchKeywords}
+            value={searchDraft}
+            onValueChange={setSearchDraft}
+            onAdd={addSearchKeyword}
+            onRemove={removeSearchKeyword}
+            placeholder="Digite e pressione Enter..."
+            inputLabel="Adicionar palavra-chave à busca rápida"
+          />
 
           {/* Grid de Filtros: Linha 1 compacta, Linha 2 com Clientes (Full Width) */}
           <div className={cn("space-y-2 md:space-y-1.5", !mobileFiltersOpen && "hidden md:block")}>
@@ -918,26 +934,21 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
 
               {/* Busca Rápida */}
               <div className="hidden space-y-0 md:block">
-                <label className="text-[10px] leading-none font-medium text-muted-foreground">
-                  Busca Rápida
+                <label className="flex items-center justify-between gap-1 text-[10px] leading-none font-medium text-muted-foreground">
+                  <span>Busca Rápida</span>
+                  <span className="font-normal">Enter adiciona</span>
                 </label>
-                <div className="relative">
-                  <Input
-                    type="text"
-                    placeholder="Chamado, título, termo..."
-                    value={busca}
-                    onChange={(e) => handleFilterChange(setBusca, e.target.value)}
-                    className="h-7 w-full pr-7 text-[11px]"
-                  />
-                  {busca && (
-                    <button
-                      onClick={() => handleFilterChange(setBusca, "")}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  )}
-                </div>
+                <TicketKeywordSearch
+                  compact
+                  testId="tickets-keyword-search-desktop"
+                  keywords={searchKeywords}
+                  value={searchDraft}
+                  onValueChange={setSearchDraft}
+                  onAdd={addSearchKeyword}
+                  onRemove={removeSearchKeyword}
+                  placeholder="Digite um termo..."
+                  inputLabel="Adicionar palavra-chave à busca rápida"
+                />
               </div>
             </div>
 
@@ -1400,7 +1411,7 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
             groups: selectedGroups.length > 0 ? selectedGroups : null,
             analysts: selectedAnalysts.length > 0 ? selectedAnalysts : null,
             nature: natureza,
-            searchTerm: busca || null,
+            searchTerms: searchKeywords.length > 0 ? searchKeywords : null,
             statuses: selectedStatuses.length > 0 ? selectedStatuses : null,
             ticketNumbers: syncedTicketNumbers,
           }}
@@ -1415,7 +1426,7 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
             analysts: selectedAnalysts,
             nature: natureza,
             statuses: selectedStatuses,
-            searchTerm: busca,
+            searchTerm: searchFilterLabel,
           }}
           onAnalysisResultChange={setAnalysisResult}
         />
@@ -1437,7 +1448,7 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
             groups: selectedGroups.length > 0 ? selectedGroups : null,
             analysts: selectedAnalysts.length > 0 ? selectedAnalysts : null,
             nature: natureza,
-            searchTerm: busca || null,
+            searchTerms: searchKeywords.length > 0 ? searchKeywords : null,
             statuses: selectedStatuses.length > 0 ? selectedStatuses : null,
             ticketNumbers: syncedTicketNumbers,
           }}
@@ -1453,7 +1464,7 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
             analysts: selectedAnalysts,
             nature: natureza,
             statuses: selectedStatuses,
-            searchTerm: busca,
+            searchTerm: searchFilterLabel,
           }}
         />
       ) : (
@@ -1474,7 +1485,7 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
             groups: selectedGroups.length > 0 ? selectedGroups : null,
             analysts: selectedAnalysts.length > 0 ? selectedAnalysts : null,
             nature: natureza,
-            searchTerm: busca || null,
+            searchTerms: searchKeywords.length > 0 ? searchKeywords : null,
             statuses: selectedStatuses.length > 0 ? selectedStatuses : null,
             ticketNumbers: syncedTicketNumbers,
           }}

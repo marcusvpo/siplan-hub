@@ -322,7 +322,7 @@ export const pageHelpData: PageHelpInfo[] = [
     description:
       "Ferramenta de pesquisa detalhada para localizar tickets de atendimento 0800 por protocolo, cliente, sistema, período, grupo responsável ou analista.",
     keyFeatures: [
-      "Busca textual instantânea por cliente, protocolo ou resumo",
+      "Busca por múltiplas palavras-chave em cliente, protocolo, título ou descrição",
       "Filtros combináveis por status, produto, período, grupo e analista",
       "Acesso direto ao histórico do chamado no Ellevo pelo número",
       "Exportação da listagem de chamados encontrados",
@@ -330,9 +330,9 @@ export const pageHelpData: PageHelpInfo[] = [
     steps: [
       {
         stepNumber: 1,
-        title: "Digite o Parâmetro de Busca",
+        title: "Adicione Palavras-chave",
         description:
-          "Informe o nome do cartório ou número do chamado na barra de pesquisa.",
+          "Digite um termo e pressione Enter para criar uma palavra-chave. Repita para pesquisar alternativas e use o x de cada item para removê-lo.",
         icon: Search,
       },
       {
@@ -367,7 +367,7 @@ export const pageHelpData: PageHelpInfo[] = [
     description:
       "Consulta ao acervo histórico de chamados da plataforma Ellevo abrangendo Control-M, Global e Siplan, com filtros por grupo e analista responsável.",
     keyFeatures: [
-      "Pesquisa no banco legado por contrato, cartório ou protocolo Ellevo",
+      "Pesquisa por múltiplas palavras-chave no acervo legado do Ellevo",
       "Filtro por família de sistema legado",
       "Filtros pesquisáveis por grupo e analista responsável",
       "Acesso direto ao histórico do chamado no Ellevo pelo número",
@@ -376,9 +376,9 @@ export const pageHelpData: PageHelpInfo[] = [
     steps: [
       {
         stepNumber: 1,
-        title: "Pesquise por Protocolo Legado",
+        title: "Adicione Palavras-chave",
         description:
-          "Digite o código Ellevo ou razão social para resgatar o histórico antigo do cliente.",
+          "Digite um termo e pressione Enter para adicioná-lo. Os resultados podem corresponder a qualquer palavra-chave; remova cada uma pelo x.",
         icon: Search,
       },
       {
