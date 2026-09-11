@@ -65,6 +65,8 @@ interface ProcessoVendaSyncFilters {
   product?: string | null;
   products?: string[];
   softwares?: string[];
+  groups?: string[];
+  analysts?: string[];
   nature?: string | null;
   statuses?: string[];
   search_term?: string | null;
@@ -87,7 +89,12 @@ const PROCESSO_VENDA_CATALOGS: Record<ProcessoVendaScope, {
 }> = {
   processo_venda: {
     sourceView: `(
-      SELECT DISTINCT
+      SELECT NumeroChamado, codigoCliente, NomeCliente, RazaoSocialCliente,
+             TituloChamado, descricaotramite, Natureza, StatusChamado,
+             Software, Produto, EquipeResponsavelChamado, AnalistaResponsavel,
+             DataAberturaChamado, SolDataFechamento
+      FROM (
+        SELECT
              c.NumeroChamado,
              c.CodPN AS codigoCliente,
              c.NomeCliente,
@@ -98,17 +105,32 @@ const PROCESSO_VENDA_CATALOGS: Record<ProcessoVendaScope, {
              c.StatusChamado,
              c.Software,
              c.Produto,
+             c.EquipeResponsavelChamado,
+             c.ResponsavelAtividade AS AnalistaResponsavel,
              c.DataAberturaChamadoComHoras AS DataAberturaChamado,
-             c.SolDataFechamentoComHoras AS SolDataFechamento
-      FROM plataformaellevo.dbo.vw_ChamadosTodosStatus AS c WITH (NOLOCK)
-      WHERE LTRIM(RTRIM(c.Software)) COLLATE Latin1_General_CI_AI LIKE 'Orion%'
+             c.SolDataFechamentoComHoras AS SolDataFechamento,
+             ROW_NUMBER() OVER (
+               PARTITION BY c.NumeroChamado
+               ORDER BY c.DataUltimaEdicaoTramite DESC
+             ) AS rn
+        FROM plataformaellevo.dbo.vw_ChamadosTodosStatus AS c WITH (NOLOCK)
+        WHERE LTRIM(RTRIM(c.Software)) COLLATE Latin1_General_CI_AI LIKE 'Orion%'
+          AND c.DataAberturaChamadoComHoras >= @startDate
+          AND c.DataAberturaChamadoComHoras < DATEADD(DAY, 1, @endDate)
+      ) AS current_chamado
+      WHERE rn = 1
     ) AS chamados_orion`,
     label: "orion",
     legacy: false,
   },
   processo_venda_legado: {
     sourceView: `(
-      SELECT DISTINCT
+      SELECT NumeroChamado, codigoCliente, NomeCliente, RazaoSocialCliente,
+             TituloChamado, descricaotramite, Natureza, StatusChamado,
+             Software, Produto, EquipeResponsavelChamado, AnalistaResponsavel,
+             DataAberturaChamado, SolDataFechamento
+      FROM (
+        SELECT
              c.NumeroChamado,
              c.CodPN AS codigoCliente,
              c.NomeCliente,
@@ -119,10 +141,20 @@ const PROCESSO_VENDA_CATALOGS: Record<ProcessoVendaScope, {
              c.StatusChamado,
              c.Software,
              c.Produto,
+             c.EquipeResponsavelChamado,
+             c.ResponsavelAtividade AS AnalistaResponsavel,
              c.DataAberturaChamadoComHoras AS DataAberturaChamado,
-             c.SolDataFechamentoComHoras AS SolDataFechamento
-      FROM plataformaellevo.dbo.vw_ChamadosTodosStatus AS c WITH (NOLOCK)
-      WHERE LTRIM(RTRIM(c.Produto)) IN ('Siplan', 'Control-M', 'Global')
+             c.SolDataFechamentoComHoras AS SolDataFechamento,
+             ROW_NUMBER() OVER (
+               PARTITION BY c.NumeroChamado
+               ORDER BY c.DataUltimaEdicaoTramite DESC
+             ) AS rn
+        FROM plataformaellevo.dbo.vw_ChamadosTodosStatus AS c WITH (NOLOCK)
+        WHERE LTRIM(RTRIM(c.Produto)) IN ('Siplan', 'Control-M', 'Global')
+          AND c.DataAberturaChamadoComHoras >= @startDate
+          AND c.DataAberturaChamadoComHoras < DATEADD(DAY, 1, @endDate)
+      ) AS current_chamado
+      WHERE rn = 1
     ) AS chamados_legado`,
     label: "legado",
     legacy: true,
@@ -202,6 +234,8 @@ interface ProcessoVendaViewRow {
   StatusChamado: string | null;
   Software: string | null;
   Produto: string | null;
+  EquipeResponsavelChamado: string | null;
+  AnalistaResponsavel: string | null;
   DataAberturaChamado: Date | null;
   SolDataFechamento: Date | null;
   DataAberturaIso: string | null;
@@ -243,6 +277,8 @@ function normalizeProcessoVendaFilters(
     product: typeof filters?.product === "string" ? filters.product.trim() : null,
     products: cleanFilterValues(filters?.products),
     softwares: cleanFilterValues(filters?.softwares),
+    groups: cleanFilterValues(filters?.groups),
+    analysts: cleanFilterValues(filters?.analysts),
     nature: typeof filters?.nature === "string" ? filters.nature.trim() : null,
     statuses: cleanFilterValues(filters?.statuses)
       .map((status) => normalizeChamadoStatus(status))
@@ -594,6 +630,28 @@ async function runProcessoVendaOnce(
       );
     }
 
+    if (filters.groups && filters.groups.length > 0) {
+      const parameters = filters.groups.map((group, index) => {
+        const name = `group${index}`;
+        chamadoRequest.input(name, sql.NVarChar(300), group);
+        return `@${name}`;
+      });
+      whereClauses.push(
+        `LTRIM(RTRIM(EquipeResponsavelChamado)) COLLATE Latin1_General_CI_AI IN (${parameters.join(", ")})`
+      );
+    }
+
+    if (filters.analysts && filters.analysts.length > 0) {
+      const parameters = filters.analysts.map((analyst, index) => {
+        const name = `analyst${index}`;
+        chamadoRequest.input(name, sql.NVarChar(300), analyst);
+        return `@${name}`;
+      });
+      whereClauses.push(
+        `LTRIM(RTRIM(AnalistaResponsavel)) COLLATE Latin1_General_CI_AI IN (${parameters.join(", ")})`
+      );
+    }
+
     if (filters.statuses && filters.statuses.length > 0) {
       const parameters = filters.statuses.map((status, index) => {
         const name = `status${index}`;
@@ -625,7 +683,8 @@ async function runProcessoVendaOnce(
     const res = await executeControlledQuery<ProcessoVendaViewRow>(chamadoRequest, `
       SELECT NumeroChamado, codigoCliente, NomeCliente, RazaoSocialCliente,
              TituloChamado, descricaotramite, Natureza, StatusChamado,
-             Software, Produto, DataAberturaChamado, SolDataFechamento,
+             Software, Produto, EquipeResponsavelChamado, AnalistaResponsavel,
+             DataAberturaChamado, SolDataFechamento,
              CONVERT(varchar(19), DataAberturaChamado, 126) AS DataAberturaIso,
              CONVERT(varchar(19), SolDataFechamento, 126) AS DataEncerramentoIso
       FROM ${catalog.sourceView}
@@ -647,6 +706,8 @@ async function runProcessoVendaOnce(
       status: normalizeChamadoStatus(r.StatusChamado) || "Não iniciado",
       software: r.Software || null,
       produto: r.Produto || null,
+      equipe_responsavel: r.EquipeResponsavelChamado?.trim() || null,
+      analista_responsavel: r.AnalistaResponsavel?.trim() || null,
       data_abertura: r.DataAberturaIso?.slice(0, 10) || toIsoDate(r.DataAberturaChamado),
       data_encerramento: r.DataEncerramentoIso?.slice(0, 10) || toIsoDate(r.SolDataFechamento),
       aberto_em: r.DataAberturaIso || null,
@@ -710,7 +771,8 @@ async function runProcessoVendaOnce(
       return {
         ...row,
         criticidade: sla?.Criticidade || null,
-        equipe_responsavel: sla?.EquipeResponsavelChamado || null,
+        equipe_responsavel:
+          sla?.EquipeResponsavelChamado?.trim() || row.equipe_responsavel || null,
         sla_primeira_resposta_prevista_em: sla?.PrimeiraRespostaPrevistaIso || null,
         sla_primeira_resposta_real_em: sla?.PrimeiraRespostaRealIso || null,
         sla_vencimento_em: sla?.VencimentoIso || null,

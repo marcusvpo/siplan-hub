@@ -128,6 +128,8 @@ export async function generateTicketsAiAnalysisPdf(
     `Período: ${formatDate(filters.startDate)} a ${formatDate(filters.endDate)}`,
     `Produto: ${productLabel}`,
     ...(catalog === "legacy" ? [`Software: ${softwareLabel}`] : []),
+    `Grupos: ${summarizeClients(filters.groups ?? [])}`,
+    `Analistas: ${summarizeClients(filters.analysts ?? [])}`,
     `Natureza: ${!filters.nature || filters.nature === "todas" ? "Todas" : filters.nature}`,
     `Status: ${filters.statuses.length ? filters.statuses.join(", ") : "Todos"}`,
     `Clientes: ${summarizeClients(filters.clients)}`,

@@ -21,6 +21,7 @@ export interface Chamado0800 {
   software?: string;
   produto?: string;
   equipeResponsavel?: string;
+  analistaResponsavel?: string;
   dataAbertura?: string;
   dataEncerramento?: string;
   abertoEm?: string;
@@ -209,6 +210,7 @@ export const mapChamado0800 = (c: any): Chamado0800 => ({
   software: c.software ?? undefined,
   produto: c.produto ?? undefined,
   equipeResponsavel: c.equipe_responsavel ?? undefined,
+  analistaResponsavel: c.analista_responsavel ?? undefined,
   dataAbertura: c.data_abertura ?? undefined,
   dataEncerramento: c.data_encerramento ?? undefined,
   abertoEm: c.aberto_em ?? undefined,
@@ -592,9 +594,48 @@ export interface ProcessoVendaSyncFilters {
   product?: string | null;
   products?: string[] | null;
   softwares?: string[] | null;
+  groups?: string[] | null;
+  analysts?: string[] | null;
   nature?: string | null;
   statuses?: string[] | null;
   searchTerm?: string | null;
+}
+
+export interface ChamadosAssignmentOptions {
+  groups: string[];
+  analysts: string[];
+}
+
+/** Grupos e analistas disponiveis no espelho para os filtros da consulta. */
+export function useChamadosAssignmentOptions(catalog: ChamadosCatalog = "orion") {
+  return useQuery<ChamadosAssignmentOptions>({
+    queryKey: ["chamadosAssignmentOptions", catalog],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_chamados_assignment_options", {
+        p_catalog: catalog,
+      });
+      if (error) throw error;
+
+      const rows = (data ?? []) as Array<{
+        option_type?: string | null;
+        option_value?: string | null;
+      }>;
+      const groups = rows
+        .filter((row) => row.option_type === "group")
+        .map((row) => row.option_value?.trim())
+        .filter((value): value is string => Boolean(value));
+      const analysts = rows
+        .filter((row) => row.option_type === "analyst")
+        .map((row) => row.option_value?.trim())
+        .filter((value): value is string => Boolean(value));
+
+      return {
+        groups: [...new Set(groups)].sort((left, right) => left.localeCompare(right, "pt-BR")),
+        analysts: [...new Set(analysts)].sort((left, right) => left.localeCompare(right, "pt-BR")),
+      };
+    },
+    staleTime: 5 * 60_000,
+  });
 }
 
 /**
@@ -696,6 +737,8 @@ export function useSolicitarSyncProcessoVenda(catalog: ChamadosCatalog = "orion"
             product: filters.product ?? null,
             products: filters.products ?? [],
             softwares: filters.softwares ?? [],
+            groups: filters.groups ?? [],
+            analysts: filters.analysts ?? [],
             nature: filters.nature ?? null,
             statuses: filters.statuses ?? [],
             search_term: filters.searchTerm?.trim() || null,
@@ -725,6 +768,7 @@ export function useSolicitarSyncProcessoVenda(catalog: ChamadosCatalog = "orion"
             queryClient.invalidateQueries({ queryKey: ["ticketsAiDashboard"] }),
             queryClient.invalidateQueries({ queryKey: ["chamadosClientOptions", catalog] }),
             queryClient.invalidateQueries({ queryKey: ["distinctProcessoVendaNaturezas", catalog] }),
+            queryClient.invalidateQueries({ queryKey: ["chamadosAssignmentOptions", catalog] }),
           ]);
           return {
             ticketNumbers: Array.isArray(row.result_ticket_ids)
@@ -759,6 +803,8 @@ export interface ChamadosSearchFilters {
   product?: string | null;
   products?: string[] | null;
   softwares?: string[] | null;
+  groups?: string[] | null;
+  analysts?: string[] | null;
   nature?: string | null;
   searchTerm?: string | null;
   statuses?: string[] | null;
@@ -776,6 +822,8 @@ function createChamadosSearchQuery(
     product,
     products,
     softwares,
+    groups,
+    analysts,
     nature,
     searchTerm,
     statuses,
@@ -807,6 +855,8 @@ function createChamadosSearchQuery(
     q = q.ilike("software", getOrionProductPattern(product));
   }
   if (nature && nature !== "todas") q = q.eq("natureza", nature);
+  if (groups && groups.length > 0) q = q.in("equipe_responsavel", groups);
+  if (analysts && analysts.length > 0) q = q.in("analista_responsavel", analysts);
 
   const validStatuses = (statuses ?? []).filter(isChamadoStatus);
   q = q.in(
@@ -915,6 +965,8 @@ export function useChamadosSearch({
   product,
   products,
   softwares,
+  groups,
+  analysts,
   nature,
   searchTerm,
   statuses,
@@ -933,6 +985,8 @@ export function useChamadosSearch({
       product,
       products,
       softwares,
+      groups,
+      analysts,
       nature,
       searchTerm,
       statuses,
@@ -955,6 +1009,8 @@ export function useChamadosSearch({
           product,
           products,
           softwares,
+          groups,
+          analysts,
           nature,
           searchTerm,
           statuses,

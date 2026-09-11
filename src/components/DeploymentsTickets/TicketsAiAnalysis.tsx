@@ -65,6 +65,8 @@ interface TicketsAiAnalysisProps {
     product: string;
     products: string[];
     softwares: string[];
+    groups?: string[];
+    analysts?: string[];
     nature: string;
     statuses: string[];
     searchTerm: string;
@@ -145,6 +147,7 @@ export function TicketsAiAnalysis({
           ? ticketDaysBetween(row.dataAbertura, row.dataEncerramento)
           : null,
         equipe_responsavel: row.equipeResponsavel || null,
+        analista_responsavel: row.analistaResponsavel || null,
         solicitante: row.solicitante || null,
         ultimo_tramite: row.ultimoTramite
           ? {
