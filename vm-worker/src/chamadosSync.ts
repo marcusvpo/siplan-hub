@@ -106,7 +106,7 @@ const PROCESSO_VENDA_CATALOGS: Record<ProcessoVendaScope, {
              c.Software,
              c.Produto,
              c.EquipeResponsavelChamado,
-             c.ResponsavelAtividade AS AnalistaResponsavel,
+             c.ResponsavelChamado AS AnalistaResponsavel,
              c.DataAberturaChamadoComHoras AS DataAberturaChamado,
              c.SolDataFechamentoComHoras AS SolDataFechamento,
              ROW_NUMBER() OVER (
@@ -142,7 +142,7 @@ const PROCESSO_VENDA_CATALOGS: Record<ProcessoVendaScope, {
              c.Software,
              c.Produto,
              c.EquipeResponsavelChamado,
-             c.ResponsavelAtividade AS AnalistaResponsavel,
+             c.ResponsavelChamado AS AnalistaResponsavel,
              c.DataAberturaChamadoComHoras AS DataAberturaChamado,
              c.SolDataFechamentoComHoras AS SolDataFechamento,
              ROW_NUMBER() OVER (

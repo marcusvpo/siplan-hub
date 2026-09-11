@@ -284,7 +284,7 @@ clientes com pos-implantacao ativa (janela = menor `post_start_date`; sai do esc
 As telas `/deployments/tickets` e `/deployments/tickets-legacy` usam a fila
 `chamados_sync_requests` para consultar períodos e filtros sob demanda. Os filtros de grupo e
 analista são enviados ao SQL Server e aplicados, respectivamente, sobre
-`EquipeResponsavelChamado` e `ResponsavelAtividade`; o resultado é espelhado em
+`EquipeResponsavelChamado` e `ResponsavelChamado`; o resultado é espelhado em
 `chamados_processo_venda.equipe_responsavel` e `analista_responsavel`.
 
 **Rode o sync em UM worker so.** Os dois servicos compartilham o `.env`; para desligar no de

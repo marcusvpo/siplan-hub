@@ -74,6 +74,11 @@ Toda tela nova e toda alteração funcional em uma tela, rotina ou componente ex
 - Antes de concluir, faça uma verificação visual do estado inicial, carregamento, vazio, erro, conteúdo longo e modal aberto no mobile.
 - Uma implementação que funciona apenas no desktop não está concluída.
 
+## Autonomia para solicitações automáticas
+
+- Ao detectar um arquivo elegível em D:/AI/siplan-hub/novas_solicitacoes, a rotina deve iniciar e prosseguir automaticamente com todo o trabalho local autorizado, sem perguntar ao usuário se pode começar ou continuar e sem solicitar confirmação genérica.
+- Pergunte somente diante de decisão material ausente, bloqueio real ou operação restrita que exija autorização específica. A detecção do arquivo não autoriza commit, push, merge, deploy, alteração de produção ou outra operação externa privilegiada.
+
 ## Regras de segurança e permissões
 
 - Permissões novas devem nascer permissivas para quem já possuía acesso equivalente e ser restringidas deliberadamente pelo administrador. Nunca bloqueie silenciosamente usuários existentes durante um deploy.
