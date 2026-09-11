@@ -14,7 +14,7 @@ describe("filtros de grupo e analista na Consulta de Chamados", () => {
     expect(hook).toContain("groups: filters.groups ?? []");
     expect(hook).toContain("analysts: filters.analysts ?? []");
     expect(worker).toContain("c.EquipeResponsavelChamado");
-    expect(worker).toContain("c.ResponsavelAtividade AS AnalistaResponsavel");
+    expect(worker).toContain("c.ResponsavelChamado AS AnalistaResponsavel");
     expect(worker).toContain("PARTITION BY c.NumeroChamado");
     expect(worker).toContain("r.AnalistaResponsavel?.trim() || null");
     expect(worker).toContain("filters.groups && filters.groups.length > 0");
