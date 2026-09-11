@@ -77,6 +77,7 @@ describe("DeploymentsTickets no mobile", () => {
     expect(
       within(screen.getByTestId("tickets-keyword-search-mobile")).getByRole("textbox"),
     ).toHaveAttribute("placeholder", "Digite e pressione Enter...");
+    expect(screen.getByText("Busca Rápida").className).not.toContain("flex");
 
     const filterButton = screen.getByRole("button", { name: "Mais filtros" });
     expect(filterButton).toHaveAttribute("aria-expanded", "false");
