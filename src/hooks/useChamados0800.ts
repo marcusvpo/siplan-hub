@@ -7,6 +7,10 @@ import {
   type ChamadosCatalog,
 } from "@/lib/chamados-catalog";
 import { getOrionProductPattern } from "@/lib/chamados-product-filter";
+import {
+  buildChamadosKeywordOrFilter,
+  resolveChamadosSearchKeywords,
+} from "@/lib/chamados-search-keywords";
 import { CHAMADO_STATUS_OPTIONS, isChamadoStatus } from "@/lib/chamados-status";
 
 export interface Chamado0800 {
@@ -598,6 +602,8 @@ export interface ProcessoVendaSyncFilters {
   analysts?: string[] | null;
   nature?: string | null;
   statuses?: string[] | null;
+  searchTerms?: string[] | null;
+  /** Compatibilidade com chamadas antigas que ainda enviam um unico termo. */
   searchTerm?: string | null;
 }
 
@@ -718,6 +724,7 @@ export function useSolicitarSyncProcessoVenda(catalog: ChamadosCatalog = "orion"
     filters: ProcessoVendaSyncFilters = {}
   ): Promise<ProcessoVendaSyncResult> => {
     const requestVersion = ++latestRequestVersion.current;
+    const searchTerms = resolveChamadosSearchKeywords(filters.searchTerms, filters.searchTerm);
     const assertLatestRequest = () => {
       if (requestVersion !== latestRequestVersion.current) {
         throw new ProcessoVendaSyncSupersededError();
@@ -741,7 +748,10 @@ export function useSolicitarSyncProcessoVenda(catalog: ChamadosCatalog = "orion"
             analysts: filters.analysts ?? [],
             nature: filters.nature ?? null,
             statuses: filters.statuses ?? [],
-            search_term: filters.searchTerm?.trim() || null,
+            search_terms: searchTerms,
+            // Workers ainda nao atualizados continuam filtrando corretamente
+            // quando existe uma unica palavra-chave.
+            search_term: searchTerms.length === 1 ? searchTerms[0] : null,
           },
         }
       );
@@ -806,6 +816,8 @@ export interface ChamadosSearchFilters {
   groups?: string[] | null;
   analysts?: string[] | null;
   nature?: string | null;
+  searchTerms?: string[] | null;
+  /** Compatibilidade com consumidores que ainda usam a busca simples. */
   searchTerm?: string | null;
   statuses?: string[] | null;
   ticketNumbers?: string[] | null;
@@ -825,6 +837,7 @@ function createChamadosSearchQuery(
     groups,
     analysts,
     nature,
+    searchTerms,
     searchTerm,
     statuses,
     ticketNumbers,
@@ -864,13 +877,9 @@ function createChamadosSearchQuery(
     validStatuses.length > 0 ? validStatuses : [...CHAMADO_STATUS_OPTIONS]
   );
 
-  if (searchTerm) {
-    const term = searchTerm.trim();
-    if (/^\d+$/.test(term)) {
-      q = q.or(`numero_chamado.eq.${term},nome_cliente.ilike.%${term}%,titulo.ilike.%${term}%`);
-    } else {
-      q = q.or(`nome_cliente.ilike.%${term}%,titulo.ilike.%${term}%,descricao.ilike.%${term}%`);
-    }
+  const resolvedSearchTerms = resolveChamadosSearchKeywords(searchTerms, searchTerm);
+  if (resolvedSearchTerms.length > 0) {
+    q = q.or(buildChamadosKeywordOrFilter(resolvedSearchTerms));
   }
 
   return q;
@@ -968,6 +977,7 @@ export function useChamadosSearch({
   groups,
   analysts,
   nature,
+  searchTerms,
   searchTerm,
   statuses,
   ticketNumbers,
@@ -988,6 +998,7 @@ export function useChamadosSearch({
       groups,
       analysts,
       nature,
+      searchTerms,
       searchTerm,
       statuses,
       ticketNumbers,
@@ -1012,6 +1023,7 @@ export function useChamadosSearch({
           groups,
           analysts,
           nature,
+          searchTerms,
           searchTerm,
           statuses,
           ticketNumbers,

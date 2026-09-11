@@ -69,6 +69,7 @@ interface ProcessoVendaSyncFilters {
   analysts?: string[];
   nature?: string | null;
   statuses?: string[];
+  search_terms?: string[];
   search_term?: string | null;
 }
 
@@ -271,6 +272,15 @@ function cleanFilterValues(values?: unknown): string[] {
 function normalizeProcessoVendaFilters(
   filters?: ProcessoVendaSyncFilters | null
 ): ProcessoVendaSyncFilters {
+  const searchTerms = cleanFilterValues(filters?.search_terms);
+  if (
+    searchTerms.length === 0
+    && typeof filters?.search_term === "string"
+    && filters.search_term.trim()
+  ) {
+    searchTerms.push(filters.search_term.trim());
+  }
+
   return {
     client_codes: cleanFilterValues(filters?.client_codes),
     client_names: cleanFilterValues(filters?.client_names),
@@ -283,10 +293,8 @@ function normalizeProcessoVendaFilters(
     statuses: cleanFilterValues(filters?.statuses)
       .map((status) => normalizeChamadoStatus(status))
       .filter((status): status is string => Boolean(status)),
-    search_term:
-      typeof filters?.search_term === "string" && filters.search_term.trim()
-        ? filters.search_term.trim()
-        : null,
+    search_terms: searchTerms,
+    search_term: searchTerms.length === 1 ? searchTerms[0] : null,
   };
 }
 
@@ -663,18 +671,23 @@ async function runProcessoVendaOnce(
       );
     }
 
-    if (filters.search_term) {
-      chamadoRequest.input("searchLike", sql.NVarChar(1000), `%${filters.search_term}%`);
-      const searchParts = [
-        "NomeCliente COLLATE Latin1_General_CI_AI LIKE @searchLike",
-        "TituloChamado COLLATE Latin1_General_CI_AI LIKE @searchLike",
-        "CAST(descricaotramite AS nvarchar(max)) COLLATE Latin1_General_CI_AI LIKE @searchLike",
-      ];
-      if (/^\d+$/.test(filters.search_term)) {
-        chamadoRequest.input("searchNumber", sql.VarChar(50), filters.search_term);
-        searchParts.unshift("CONVERT(varchar(50), NumeroChamado) = @searchNumber");
-      }
-      whereClauses.push(`(${searchParts.join(" OR ")})`);
+    if (filters.search_terms && filters.search_terms.length > 0) {
+      const keywordParts = filters.search_terms.flatMap((keyword, index) => {
+        const likeParameter = `searchLike${index}`;
+        chamadoRequest.input(likeParameter, sql.NVarChar(1000), `%${keyword}%`);
+        const searchParts = [
+          `NomeCliente COLLATE Latin1_General_CI_AI LIKE @${likeParameter}`,
+          `TituloChamado COLLATE Latin1_General_CI_AI LIKE @${likeParameter}`,
+          `CAST(descricaotramite AS nvarchar(max)) COLLATE Latin1_General_CI_AI LIKE @${likeParameter}`,
+        ];
+        if (/^\d+$/.test(keyword)) {
+          const numberParameter = `searchNumber${index}`;
+          chamadoRequest.input(numberParameter, sql.VarChar(50), keyword);
+          searchParts.unshift(`CONVERT(varchar(50), NumeroChamado) = @${numberParameter}`);
+        }
+        return searchParts;
+      });
+      whereClauses.push(`(${keywordParts.join(" OR ")})`);
     }
 
     // A view historica do Ellevo cobre chamados desde 2020. O periodo e os
