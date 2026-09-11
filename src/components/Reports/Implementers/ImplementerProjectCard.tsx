@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { EllevoTicketLink } from '@/components/EllevoTicketLink';
 
 interface ImplementerProjectCardProps {
   project: ProjectV2;
@@ -182,7 +183,7 @@ export const ImplementerProjectCard: React.FC<ImplementerProjectCardProps> = ({ 
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2 min-w-0">
                 <h3 className="text-base font-bold truncate">{project.clientName}</h3>
-                <span className="text-xs text-muted-foreground shrink-0">#{project.ticketNumber}</span>
+                <EllevoTicketLink ticketNumber={project.ticketNumber} className="shrink-0 text-xs text-muted-foreground" />
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
                 {isOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
@@ -375,7 +376,9 @@ export const ImplementerProjectCard: React.FC<ImplementerProjectCardProps> = ({ 
                 {project.relatedTickets && project.relatedTickets.length > 0 ? (
                   project.relatedTickets.map((ticket, idx) => (
                     <Badge key={idx} variant="outline" className="bg-muted/50 text-muted-foreground">
-                      {ticket.name} (#{ticket.number})
+                      <EllevoTicketLink ticketNumber={ticket.number} showIcon={false}>
+                        {ticket.name} (#{ticket.number})
+                      </EllevoTicketLink>
                     </Badge>
                   ))
                 ) : (

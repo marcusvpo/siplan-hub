@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -3828,7 +3829,17 @@ function TransicaoPlaceholder() {
                       <div className="text-center border-b-2 border-black pb-4">
                         <h2 className="text-xl font-bold tracking-tight uppercase text-gray-900">Documento de Transição de Conhecimento</h2>
                         <h3 className="text-base font-semibold text-gray-700">Implantação / Service Desk</h3>
-                        {localDtc.supportCallNumber && <p className="text-xs font-bold text-gray-600 mt-1">Chamado de Origem: {localDtc.supportCallNumber}</p>}
+                        {localDtc.supportCallNumber && (
+                          <p className="mt-1 text-xs font-bold text-gray-600">
+                            Chamado de Origem:{" "}
+                            <EllevoTicketLink
+                              ticketNumber={localDtc.supportCallNumber}
+                              showIcon={false}
+                            >
+                              {localDtc.supportCallNumber}
+                            </EllevoTicketLink>
+                          </p>
+                        )}
                       </div>
 
                       {/* 1. IDENTIFICAÇÃO DA SERVENTIA */}

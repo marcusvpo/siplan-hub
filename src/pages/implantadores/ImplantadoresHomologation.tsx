@@ -53,6 +53,7 @@ import { ptBR } from "date-fns/locale";
 import { useConversionPosts } from "@/hooks/useConversionPosts";
 import { useHomologationEvents } from "@/hooks/useHomologationEvents";
 import { ProjectTramite } from "@/types/ProjectV2";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 
 interface ConversionQueueItem {
   id: string;
@@ -723,7 +724,11 @@ export default function ImplantadoresHomologation() {
             </div>
 
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-              <span className="font-mono bg-muted px-1.5 py-0.5 rounded">#{item.ticketNumber}</span>
+              <EllevoTicketLink
+                ticketNumber={item.ticketNumber}
+                className="rounded bg-muted px-1.5 py-0.5 font-mono"
+                showIcon={false}
+              />
               <span>
                 Enviado{" "}
                 {formatDistanceToNow(item.sentAt, {
@@ -824,7 +829,9 @@ export default function ImplantadoresHomologation() {
               <div className="min-w-0">
                 <div className="flex min-w-0 flex-wrap items-center gap-2">
                   <h1 className="min-w-0 break-words text-base font-bold leading-5 text-foreground sm:text-lg">Parecer de Homologação: {selectedItem.clientName}</h1>
-                  <Badge className="bg-slate-700 text-white font-mono text-[10px]">#{selectedItem.ticketNumber}</Badge>
+                  <Badge className="bg-slate-700 text-white font-mono text-[10px]">
+                    <EllevoTicketLink ticketNumber={selectedItem.ticketNumber} showIcon={false} />
+                  </Badge>
                 </div>
                 <p className="break-words text-xs text-muted-foreground">
                   Sistema: {selectedItem.systemType} {selectedItem.legacySystem ? `(Migrado de: ${selectedItem.legacySystem})` : ""}

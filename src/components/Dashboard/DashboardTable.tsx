@@ -12,6 +12,7 @@ import { format, isPast } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { getRelativeTime, getDaysSinceUpdate } from "@/utils/calculations";
 import { cn } from "@/lib/utils";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 import {
   Pagination,
   PaginationContent,
@@ -88,9 +89,10 @@ export const DashboardTable = ({ onProjectClick }: DashboardTableProps) => {
                     {project.systemType}
                   </span>
                   <span className="text-muted-foreground/30">•</span>
-                  <span className="shrink-0 text-[10px] font-mono text-muted-foreground/80">
-                    #{project.ticketNumber}
-                  </span>
+                  <EllevoTicketLink
+                    ticketNumber={project.ticketNumber}
+                    className="shrink-0 font-mono text-[10px] text-muted-foreground/80"
+                  />
                 </div>
               </div>
 

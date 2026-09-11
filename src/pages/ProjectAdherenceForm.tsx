@@ -43,6 +43,7 @@ import {
 } from "@/lib/form-image-attachments";
 import { getPrintEvidenceGridClass } from "@/lib/adherence-print-layout";
 import { cn } from "@/lib/utils";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 
 
 interface PrintQuestion {
@@ -1247,7 +1248,11 @@ export default function ProjectAdherenceForm() {
           </div>
           <div>
             <span className="text-muted-foreground block text-[10px] uppercase font-bold tracking-wider mb-0.5">Ticket</span>
-            <strong className="text-xs text-foreground">#{project.ticketNumber}</strong>
+            <EllevoTicketLink
+              ticketNumber={project.ticketNumber}
+              className="text-xs font-bold text-foreground"
+              showIcon={false}
+            />
           </div>
           <div>
             <span className="text-muted-foreground block text-[10px] uppercase font-bold tracking-wider mb-0.5">Sistema / Produto</span>

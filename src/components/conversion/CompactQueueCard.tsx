@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { ConversionQueueItem } from "@/hooks/useConversionQueue";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 
 interface CompactQueueCardProps {
   item: ConversionQueueItem;
@@ -72,9 +73,7 @@ export function CompactQueueCard({ item, onClick }: CompactQueueCardProps) {
               </Badge>
             </div>
             <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground sm:text-sm">
-              <span className="font-mono bg-muted px-2 py-0.5 rounded">
-                #{item.ticketNumber}
-              </span>
+              <EllevoTicketLink ticketNumber={item.ticketNumber} className="rounded bg-muted px-2 py-0.5 font-mono" />
               <span className="flex items-center gap-1">
                 <Database className="h-3.5 w-3.5" />
                 {item.systemType}

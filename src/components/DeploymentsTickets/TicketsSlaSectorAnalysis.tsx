@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -428,7 +429,10 @@ export function TicketsSlaSectorAnalysis({
                       <article key={`${entry.chamado.numeroChamado}:${entry.sector}`} className="min-w-0 rounded-lg border p-3">
                         <div className="flex min-w-0 items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <p className="font-mono text-xs font-semibold text-primary">#{entry.chamado.numeroChamado}</p>
+                            <EllevoTicketLink
+                              ticketNumber={entry.chamado.numeroChamado}
+                              className="font-mono text-xs font-semibold text-primary"
+                            />
                             <p className="mt-1 break-words text-xs font-semibold">{entry.chamado.nomeCliente || "—"}</p>
                             <p className="mt-0.5 break-words text-[9px] leading-relaxed text-muted-foreground">{entry.chamado.titulo || "—"}</p>
                           </div>
@@ -475,7 +479,9 @@ export function TicketsSlaSectorAnalysis({
                       const resolutionDisplay = getSlaCheckpointDisplay(official.resolution, "resolution");
                       return (
                         <tr key={`${entry.chamado.numeroChamado}:${entry.sector}`} className="border-t align-top">
-                          <td className="px-3 py-2 font-mono font-semibold text-primary">#{entry.chamado.numeroChamado}</td>
+                          <td className="px-3 py-2 font-mono font-semibold text-primary">
+                            <EllevoTicketLink ticketNumber={entry.chamado.numeroChamado} />
+                          </td>
                           <td className="max-w-[260px] px-3 py-2">
                             <p className="truncate font-semibold" title={entry.chamado.nomeCliente}>{entry.chamado.nomeCliente || "—"}</p>
                             <p className="truncate text-[8px] text-muted-foreground" title={entry.chamado.titulo}>{entry.chamado.titulo || "—"}</p>

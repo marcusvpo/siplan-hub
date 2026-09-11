@@ -9,6 +9,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ChevronDown, ChevronUp, Layers, CheckCircle2, Clock } from "lucide-react";
 import { ReportListPagination } from "./ReportListPagination";
 import { useReportPagination } from "./useReportPagination";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 
 const PAGE_SIZE = 3;
 const LIST_ID = "implementer-phase1-detail-list";
@@ -121,9 +122,12 @@ export const ImplementerPhase1Fichas: React.FC<ImplementerPhase1FichasProps> = (
                     <div className="min-w-0">
                       <h4 className="break-words text-sm font-black text-foreground md:text-base">
                         {(pagination.currentPage - 1) * pagination.pageSize + index + 1}. {project.clientName}{" "}
-                        <span className="text-xs font-bold text-muted-foreground font-mono">
+                        <EllevoTicketLink
+                          ticketNumber={project.ticketNumber}
+                          className="font-mono text-xs font-bold text-muted-foreground"
+                        >
                           (Ticket: #{project.ticketNumber})
-                        </span>
+                        </EllevoTicketLink>
                       </h4>
                       <p className="mt-0.5 break-words text-xs font-medium leading-relaxed text-muted-foreground">
                         Sistema: <strong className="text-foreground">{ficha.systemType}</strong> |{" "}

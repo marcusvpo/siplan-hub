@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 import { useConversionIssues, ConversionIssue } from "@/hooks/useConversionIssues";
 import { supabase } from "@/integrations/supabase/client";
 import { useProjectsV2 } from "@/hooks/useProjectsV2";
@@ -319,9 +320,12 @@ export function ConversionIssuesTab({
                       {/* Top Header Card */}
                       <div className="flex justify-between items-start gap-2">
                         <div>
-                          <span className="text-[10px] font-extrabold text-primary bg-primary/10 px-2 py-0.5 rounded-md border border-primary/20">
-                            #{issue.ticketNumber || "Sem Ticket"}
-                          </span>
+                          <EllevoTicketLink
+                            ticketNumber={issue.ticketNumber}
+                            className="rounded-md border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-extrabold text-primary"
+                          >
+                            {issue.ticketNumber ? `#${issue.ticketNumber}` : "Sem Ticket"}
+                          </EllevoTicketLink>
                           <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm mt-1.5 leading-snug break-words">
                             {issue.clientName}
                           </h4>
@@ -329,7 +333,9 @@ export function ConversionIssuesTab({
                         <div className="flex items-center gap-1.5 shrink-0">
                           {issue.ticketNumber0800 && (
                             <Badge variant="outline" className="bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/20 dark:text-rose-400 dark:border-rose-900/50 text-[10px] px-1.5 py-0">
-                              0800 #{issue.ticketNumber0800}
+                              <EllevoTicketLink ticketNumber={issue.ticketNumber0800} showIcon={false}>
+                                0800 #{issue.ticketNumber0800}
+                              </EllevoTicketLink>
                             </Badge>
                           )}
                           <Badge className={cn("text-[9px] font-bold px-1.5 py-0 shadow-none border", PRIORITIES[issue.priority].color)}>

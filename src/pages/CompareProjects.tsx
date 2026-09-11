@@ -15,6 +15,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { ProjectV2, StageStatus } from "@/types/ProjectV2";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 
 export default function CompareProjects() {
   const [searchParams] = useSearchParams();
@@ -123,7 +124,9 @@ export default function CompareProjects() {
                         {project.systemType}
                       </p>
                     </div>
-                    <Badge variant="outline">#{project.ticketNumber}</Badge>
+                    <Badge variant="outline">
+                      <EllevoTicketLink ticketNumber={project.ticketNumber} showIcon={false} />
+                    </Badge>
                   </div>
                 </CardHeader>
 

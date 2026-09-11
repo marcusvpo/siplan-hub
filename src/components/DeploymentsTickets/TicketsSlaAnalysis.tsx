@@ -52,6 +52,7 @@ import { generateTicketSlaDetailPdf } from "@/lib/tickets-sla-detail-pdf";
 import { generateTicketsSlaAnalyticalReportPdf } from "@/lib/tickets-sla-analytical-report-pdf";
 import { generateTicketsSlaReportPdf } from "@/lib/tickets-sla-report-pdf";
 import { cn } from "@/lib/utils";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 import { toast } from "sonner";
 import { TicketsSlaInfoDialog } from "./TicketsSlaInfoDialog";
 
@@ -270,11 +271,26 @@ function TicketSlaRow({
     <Collapsible open={open} onOpenChange={setOpen}>
       <div className="rounded-lg border bg-card transition-colors hover:bg-muted/20">
         <CollapsibleTrigger asChild>
-          <button type="button" className="w-full min-w-0 px-3 py-3 text-left text-xs md:py-2">
+          <div
+            role="button"
+            tabIndex={0}
+            className="w-full min-w-0 px-3 py-3 text-left text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:py-2"
+            onKeyDown={(event) => {
+              if (event.target !== event.currentTarget) return;
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                setOpen((current) => !current);
+              }
+            }}
+          >
             <span className="block min-w-0 md:hidden">
               <span className="flex min-w-0 items-center gap-2">
                 <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} />
-                <span className="font-mono font-semibold text-primary">#{chamado.numeroChamado}</span>
+                <EllevoTicketLink
+                  ticketNumber={chamado.numeroChamado}
+                  className="font-mono font-semibold text-primary"
+                  showIcon={false}
+                />
                 <span className="ml-auto font-medium">{formatSlaDuration(sla.hours)}</span>
               </span>
               <span className="mt-2 block break-words font-semibold leading-snug">{chamado.nomeCliente || "—"}</span>
@@ -297,7 +313,11 @@ function TicketSlaRow({
 
             <span className="hidden min-w-[1040px] grid-cols-[28px_85px_minmax(210px,1fr)_112px_112px_90px_125px_125px] items-center gap-2 md:grid">
               <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", open && "rotate-180")} />
-              <span className="font-mono font-semibold text-primary">#{chamado.numeroChamado}</span>
+              <EllevoTicketLink
+                ticketNumber={chamado.numeroChamado}
+                className="font-mono font-semibold text-primary"
+                showIcon={false}
+              />
               <span className="min-w-0">
                 <span className="block truncate font-semibold" title={chamado.nomeCliente}>{chamado.nomeCliente || "—"}</span>
                 <span className="block truncate text-[10px] text-muted-foreground" title={chamado.titulo}>{chamado.titulo || "—"}</span>
@@ -308,7 +328,7 @@ function TicketSlaRow({
               <SlaCheckpointCell display={firstResponseDisplay} deadline={sla.firstResponse.deadline} />
               <SlaCheckpointCell display={resolutionDisplay} deadline={sla.resolution.deadline} />
             </span>
-          </button>
+          </div>
         </CollapsibleTrigger>
 
         <CollapsibleContent>

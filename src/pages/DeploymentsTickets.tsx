@@ -52,6 +52,7 @@ import { toast } from "sonner";
 import { TicketsAiAnalysis } from "@/components/DeploymentsTickets/TicketsAiAnalysis";
 import { TicketsSlaAnalysis } from "@/components/DeploymentsTickets/TicketsSlaAnalysis";
 import { TicketsSlaSectorAnalysis } from "@/components/DeploymentsTickets/TicketsSlaSectorAnalysis";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 
 const FILTER_SYNC_DEBOUNCE_MS = 700;
 const FILTER_SYNC_FRESHNESS_MS = 5 * 60_000;
@@ -1159,17 +1160,16 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
             <>
               <div className="divide-y divide-border md:hidden" data-testid="tickets-mobile-list">
                 {chamados.map((chamado) => (
-                  <button
+                  <article
                     key={chamado.numeroChamado}
-                    type="button"
-                    onClick={() => setSelectedChamado(chamado)}
-                    className="block w-full min-w-0 px-3 py-3.5 text-left transition-colors active:bg-muted/50"
-                    aria-label={`Abrir chamado ${chamado.numeroChamado}: ${chamado.titulo || chamado.nomeCliente || "sem título"}`}
+                    className="block w-full min-w-0 px-3 py-3.5 text-left"
                   >
                     <span className="flex min-w-0 flex-wrap items-center justify-between gap-2">
-                      <span className="font-mono text-xs font-bold" style={{ color: "hsl(346, 84%, 45%)" }}>
-                        #{chamado.numeroChamado}
-                      </span>
+                      <EllevoTicketLink
+                        ticketNumber={chamado.numeroChamado}
+                        className="font-mono text-xs font-bold"
+                        title={`Abrir o chamado #${chamado.numeroChamado} no Ellevo`}
+                      />
                       <span className={cn("inline-flex max-w-full rounded-md px-1.5 py-0 text-[9px] font-semibold", statusBadgeClass(chamado.status))}>
                         <span className="truncate">{chamado.status || "—"}</span>
                       </span>
@@ -1212,10 +1212,15 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
                       )}
                     </span>
 
-                    <span className="mt-3 flex items-center justify-end gap-1 text-[10px] font-semibold text-primary">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedChamado(chamado)}
+                      className="mt-3 ml-auto flex min-h-9 items-center justify-end gap-1 rounded-md px-2 text-[10px] font-semibold text-primary hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      aria-label={`Ver detalhes do chamado ${chamado.numeroChamado}: ${chamado.titulo || chamado.nomeCliente || "sem título"}`}
+                    >
                       Ver detalhes <Eye className="h-3.5 w-3.5" />
-                    </span>
-                  </button>
+                    </button>
+                  </article>
                 ))}
               </div>
 
@@ -1239,7 +1244,7 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
                   {chamados.map((chamado) => (
                     <TableRow key={chamado.numeroChamado} className="hover:bg-muted/40 transition-colors">
                       <TableCell className="px-3 py-2 font-mono font-medium text-[11px] text-primary" style={{ color: "hsl(346, 84%, 45%)" }}>
-                        #{chamado.numeroChamado}
+                        <EllevoTicketLink ticketNumber={chamado.numeroChamado} />
                       </TableCell>
                       <TableCell className="max-w-[300px] px-3 py-2">
                         <div className="flex flex-col gap-0.5 leading-tight">

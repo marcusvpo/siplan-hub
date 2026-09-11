@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 import {
   useConversionEngines,
   EngineStatus,
@@ -536,7 +537,7 @@ export default function ConversionEngines() {
                         )}
                         {engine.ticketNumber && (
                           <Badge variant="outline" className="h-5 max-w-full shrink-0 px-1.5 text-[10px]">
-                            #{engine.ticketNumber}
+                            <EllevoTicketLink ticketNumber={engine.ticketNumber} showIcon={false} />
                           </Badge>
                         )}
                       </div>

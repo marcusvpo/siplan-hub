@@ -5,6 +5,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { format, differenceInDays, addDays, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ChartEmptyState } from "./ChartEmptyState";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 
 interface TimelineChartProps {
   projects: ProjectV2[];
@@ -211,8 +212,10 @@ export const TimelineChart = ({ projects }: TimelineChartProps) => {
                         >
                           {project.clientName}
                         </p>
-                        <p className="text-[9px] text-muted-foreground font-mono opacity-70 truncate">
-                          #{project.ticketNumber} • {stageName}
+                        <p className="flex min-w-0 items-center gap-1 text-[9px] text-muted-foreground opacity-70">
+                          <EllevoTicketLink ticketNumber={project.ticketNumber} className="shrink-0 font-mono" />
+                          <span aria-hidden="true">•</span>
+                          <span className="truncate">{stageName}</span>
                         </p>
                       </div>
                       <div className="flex-1 relative h-full flex items-center">

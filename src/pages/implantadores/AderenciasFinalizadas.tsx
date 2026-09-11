@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 import { ProjectFormResponse } from "@/hooks/useProjectFormResponse";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 
 interface CompletedFormWithProject extends Omit<ProjectFormResponse, "projects"> {
   projects: {
@@ -211,7 +212,13 @@ export default function AderenciasFinalizadas() {
                         <div className="min-w-0">
                           <h3 className="break-words text-sm font-bold leading-5">{proj.client_name}</h3>
                           <p className="mt-0.5 break-words text-[10px] text-muted-foreground">
-                            Ticket: #{proj.ticket_number || "Sem Número"} · {proj.system_type}
+                            Ticket:{" "}
+                            {proj.ticket_number ? (
+                              <EllevoTicketLink ticketNumber={proj.ticket_number} showIcon={false} />
+                            ) : (
+                              "Sem Número"
+                            )}{" "}
+                            · {proj.system_type}
                           </p>
                         </div>
                         <span
@@ -279,7 +286,14 @@ export default function AderenciasFinalizadas() {
                         <tr key={form.id} className="hover:bg-muted/20 transition-colors">
                           <td className="p-4 font-semibold text-foreground/90">
                             {proj.client_name}
-                            <span className="block text-[10px] text-muted-foreground font-normal mt-0.5">Ticket: #{proj.ticket_number || "Sem Número"}</span>
+                            <span className="mt-0.5 block text-[10px] font-normal text-muted-foreground">
+                              Ticket:{" "}
+                              {proj.ticket_number ? (
+                                <EllevoTicketLink ticketNumber={proj.ticket_number} showIcon={false} />
+                              ) : (
+                                "Sem Número"
+                              )}
+                            </span>
                           </td>
                           <td className="p-4">
                             <span className="font-medium bg-slate-700 text-white px-2 py-0.5 rounded text-[10px] whitespace-nowrap">{proj.system_type}</span>

@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { FileText, User, Clock, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 
 interface ProjectHeaderFormProps {
   project: ProjectV2;
@@ -34,7 +35,10 @@ export function ProjectHeaderForm({ project }: ProjectHeaderFormProps) {
                {/* Chamado */}
                <div className="bg-card hover:bg-accent/50 transition-colors rounded-xl border shadow-sm p-2.5 space-y-1 group">
                   <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider group-hover:text-primary transition-colors">Chamado</p>
-                  <p className="font-bold font-mono text-base text-foreground/80">#{project.ticketNumber}</p>
+                  <EllevoTicketLink
+                    ticketNumber={project.ticketNumber}
+                    className="font-mono text-base font-bold text-foreground/80"
+                  />
                </div>
             </div>
 

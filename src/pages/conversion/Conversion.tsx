@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import type { ElementType } from "react";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 import { normalizeText } from "@/lib/utils";
 import {
   Database,
@@ -365,9 +366,10 @@ export default function Conversion() {
 
           {/* Ticket and Systems */}
           <div className="flex flex-wrap items-center gap-x-1.5 text-[10px] font-medium text-muted-foreground">
-            <span className="rounded border border-border bg-muted/50 px-1 py-0.2 font-mono text-[10px]">
-              #{item.ticketNumber}
-            </span>
+            <EllevoTicketLink
+              ticketNumber={item.ticketNumber}
+              className="rounded border border-border bg-muted/50 px-1 py-0.5 font-mono text-[10px]"
+            />
             <span>{item.systemType}</span>
             {item.legacySystem && (
               <span className="max-w-[90px] truncate text-slate-400">
@@ -734,7 +736,7 @@ export default function Conversion() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-muted-foreground">
-                  <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px]">#{item.ticketNumber}</span>
+                  <EllevoTicketLink ticketNumber={item.ticketNumber} className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px]" />
                   <span>{item.systemType}</span>
                   {item.legacySystem && (
                     <span className="flex items-center gap-1 text-[11px]">
@@ -1601,7 +1603,7 @@ export default function Conversion() {
                     <div className="flex-1 min-w-0">
                       <p className="break-words text-sm font-semibold sm:truncate">{item.clientName}</p>
                       <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-2">
-                        <span className="text-[10px] font-mono text-muted-foreground">#{item.ticketNumber}</span>
+                        <EllevoTicketLink ticketNumber={item.ticketNumber} className="font-mono text-[10px] text-muted-foreground" />
                         <span className="text-[10px] text-muted-foreground">{item.systemType}</span>
                       </div>
                       {item.assignedToName && (

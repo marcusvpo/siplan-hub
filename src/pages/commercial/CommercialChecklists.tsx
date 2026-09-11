@@ -34,6 +34,7 @@ import { useDeploymentForms, type DeploymentFormRecord } from "@/hooks/useDeploy
 import { DeploymentFormFields } from "@/components/commercial/DeploymentFormFields";
 import { generateDeploymentTemplate, type DeploymentFormData } from "@/utils/deployment-template";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 
 const EMPTY_FORM: DeploymentFormData = {
   client_name: "",
@@ -557,7 +558,10 @@ export default function CommercialChecklists() {
                 </div>
                 <div className="space-y-1">
                   <span className="text-[11px] font-bold text-muted-foreground block uppercase">N.º do Chamado</span>
-                  <span className="break-all text-sm font-semibold font-mono">#{formData.ticket_number || "—"}</span>
+                  <EllevoTicketLink
+                    ticketNumber={formData.ticket_number}
+                    className="break-all font-mono text-sm font-semibold"
+                  />
                 </div>
                 <div className="space-y-1">
                   <span className="text-[11px] font-bold text-muted-foreground block uppercase">Sistema Principal</span>
@@ -738,7 +742,9 @@ export default function CommercialChecklists() {
                             <Badge variant="outline" className="h-auto max-w-full whitespace-normal break-words px-2 py-0.5 text-left text-[11px] leading-snug">{item.projects.systemType}</Badge>
                           )}
                           {item.projects?.ticketNumber && (
-                            <Badge variant="secondary" className="h-auto max-w-full whitespace-normal break-all px-2 py-0.5 text-left font-mono text-[11px] leading-snug">#{item.projects.ticketNumber}</Badge>
+                            <Badge variant="secondary" className="h-auto max-w-full whitespace-normal break-all px-2 py-0.5 text-left font-mono text-[11px] leading-snug">
+                              <EllevoTicketLink ticketNumber={item.projects.ticketNumber} showIcon={false} />
+                            </Badge>
                           )}
                         </div>
                         <div className="flex flex-wrap gap-1.5 mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
@@ -934,7 +940,15 @@ export default function CommercialChecklists() {
                       </DialogTitle>
                       <DialogDescription className="mt-1 min-w-0 break-words text-left text-xs leading-relaxed text-muted-foreground">
                         ID: <span className="break-all rounded bg-muted px-1 font-mono text-[10px] select-all">{viewChecklist.id}</span>
-                        {viewChecklist.projects?.ticketNumber && ` • Chamado: #${viewChecklist.projects.ticketNumber}`}
+                        {viewChecklist.projects?.ticketNumber && (
+                          <>
+                            {" • Chamado: "}
+                            <EllevoTicketLink
+                              ticketNumber={viewChecklist.projects.ticketNumber}
+                              showIcon={false}
+                            />
+                          </>
+                        )}
                         {viewChecklist.projects?.systemType && ` • Sistema: ${viewChecklist.projects.systemType}`}
                       </DialogDescription>
                     </div>

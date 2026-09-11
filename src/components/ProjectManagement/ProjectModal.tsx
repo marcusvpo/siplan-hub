@@ -26,6 +26,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PosSaudeBadge } from "@/components/ProjectManagement/PosSaudeBadge";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 import { cn } from "@/lib/utils";
 
 interface ProjectModalProps {
@@ -227,9 +228,10 @@ export function ProjectModal({
 
             {!isLoading && (
               <div className="flex items-center flex-wrap gap-1.5 sm:gap-2 text-xs mt-1">
-                <span className="text-[11px] font-extrabold text-primary bg-primary/10 px-2 py-0.5 rounded-md border border-primary/20 shrink-0">
-                  #{displayProject?.ticketNumber || "..."}
-                </span>
+                <EllevoTicketLink
+                  ticketNumber={displayProject?.ticketNumber}
+                  className="shrink-0 rounded-md border border-primary/20 bg-primary/10 px-2 py-0.5 text-[11px] font-extrabold text-primary"
+                />
 
                 <Badge
                   variant="default"

@@ -36,6 +36,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 
 // Helper to determine active blockers
 const getBlockers = (projectObj: Project) => {
@@ -472,7 +473,12 @@ export default function CommercialBlockers() {
                           Chamado
                         </span>
                         <span className="mt-0.5 max-w-full break-all font-mono text-foreground/80">
-                          {project.ticket_number || "N/A"}
+                          <EllevoTicketLink
+                            ticketNumber={project.ticket_number}
+                            showIcon={false}
+                          >
+                            {project.ticket_number || "N/A"}
+                          </EllevoTicketLink>
                         </span>
                       </div>
                     </div>
@@ -666,7 +672,12 @@ export default function CommercialBlockers() {
                     Chamado
                   </h4>
                   <p className="break-all font-mono text-sm">
-                    {selectedProject.ticket_number || "-"}
+                    <EllevoTicketLink
+                      ticketNumber={selectedProject.ticket_number}
+                      showIcon={false}
+                    >
+                      {selectedProject.ticket_number || "-"}
+                    </EllevoTicketLink>
                   </p>
                 </div>
                 <div className="min-w-0 space-y-1">

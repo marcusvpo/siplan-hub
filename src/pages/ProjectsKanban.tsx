@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useProjectsV2 } from "@/hooks/useProjectsV2";
 import { ProjectModal } from "@/components/ProjectManagement/ProjectModal";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 import { ProjectV2 } from "@/types/ProjectV2";
 import { 
   Loader2, 
@@ -212,37 +213,39 @@ export default function ProjectsKanban() {
                 key={project.id}
                 className="min-w-0 overflow-hidden border-border/60 bg-card/90 shadow-sm"
               >
-                <button
-                  type="button"
-                  className="block w-full p-4 text-left active:bg-muted/40"
-                  onClick={() => setSelectedProject(project)}
-                >
+                <div className="w-full p-4">
                   <span className="mb-2 flex min-w-0 flex-wrap items-center gap-1.5">
                     <Badge variant="outline" className="h-5 border-primary/20 bg-primary/5 px-1.5 text-[9px] text-primary">
-                      #{project.ticketNumber}
+                      <EllevoTicketLink ticketNumber={project.ticketNumber} showIcon={false} />
                     </Badge>
                     <Badge variant="secondary" className="h-5 max-w-full bg-slate-700 px-1.5 text-[9px] text-white">
                       <span className="truncate">{project.systemType}</span>
                     </Badge>
                   </span>
 
-                  <span className="block break-words text-sm font-bold leading-snug text-foreground">
-                    {project.clientName}
-                  </span>
-
-                  <span className="mt-4 block space-y-1.5">
-                    <span className="flex items-center justify-between text-[10px] text-muted-foreground">
-                      <span className="font-medium uppercase tracking-wider">Progresso</span>
-                      <span className="font-bold text-primary">{project.overallProgress}%</span>
+                  <button
+                    type="button"
+                    className="block min-h-11 w-full rounded-md text-left active:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    onClick={() => setSelectedProject(project)}
+                  >
+                    <span className="block break-words text-sm font-bold leading-snug text-foreground">
+                      {project.clientName}
                     </span>
-                    <Progress value={project.overallProgress} className="h-1.5" />
-                  </span>
 
-                  <span className="mt-3 flex min-w-0 items-center gap-1.5 text-[11px] text-muted-foreground">
-                    <User className="h-3.5 w-3.5 shrink-0" />
-                    <span className="truncate">{project.projectLeader || "Sem Líder"}</span>
-                  </span>
-                </button>
+                    <span className="mt-4 block space-y-1.5">
+                      <span className="flex items-center justify-between text-[10px] text-muted-foreground">
+                        <span className="font-medium uppercase tracking-wider">Progresso</span>
+                        <span className="font-bold text-primary">{project.overallProgress}%</span>
+                      </span>
+                      <Progress value={project.overallProgress} className="h-1.5" />
+                    </span>
+
+                    <span className="mt-3 flex min-w-0 items-center gap-1.5 text-[11px] text-muted-foreground">
+                      <User className="h-3.5 w-3.5 shrink-0" />
+                      <span className="truncate">{project.projectLeader || "Sem Líder"}</span>
+                    </span>
+                  </button>
+                </div>
 
                 {canEditKanban && (
                   <div className="flex items-center gap-3 border-t border-border/60 bg-muted/20 px-4 py-2.5">
@@ -335,7 +338,7 @@ export default function ProjectsKanban() {
                                   <div className="flex-1 min-w-0 mr-2">
                                      <div className="flex items-center gap-1.5 mb-1 flex-wrap">
                                         <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 border-primary/20 bg-primary/5 text-primary">
-                                          #{project.ticketNumber}
+                                          <EllevoTicketLink ticketNumber={project.ticketNumber} showIcon={false} />
                                         </Badge>
                                         <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 bg-slate-700 text-white">
                                           {project.systemType}

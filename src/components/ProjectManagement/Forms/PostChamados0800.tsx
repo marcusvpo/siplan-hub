@@ -8,6 +8,7 @@ import {
   fmtDateBr,
   statusBadgeClass,
 } from "@/components/ProjectManagement/Chamado0800DetailDialog";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 import { Headset, ChevronDown, ChevronRight, Loader2, CalendarDays, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
@@ -120,19 +121,24 @@ export function PostChamados0800({ ticketNumber, startDate, endDate, postStatus,
           ) : (
             <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 divide-y divide-neutral-100 dark:divide-neutral-800/60 overflow-hidden">
               {chamados.map((c) => (
-                <button
+                <div
                   key={c.numeroChamado}
-                  type="button"
-                  onClick={() => setSelecionado(c)}
-                  className="w-full text-left px-3 py-2 hover:bg-neutral-50 dark:hover:bg-neutral-900/40 transition-colors"
-                  title="Ver detalhes do chamado"
+                  className="w-full px-3 py-2 text-left transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-900/40"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs font-semibold truncate">
-                      <span className="text-indigo-600 dark:text-indigo-400 font-mono">
-                        #{c.numeroChamado}
-                      </span>{" "}
-                      {c.titulo || "(sem título)"}
+                    <span className="flex min-w-0 items-center gap-1 text-xs font-semibold">
+                      <EllevoTicketLink
+                        ticketNumber={c.numeroChamado}
+                        className="shrink-0 font-mono text-indigo-600 dark:text-indigo-400"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setSelecionado(c)}
+                        className="truncate rounded-sm text-left hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        title="Ver detalhes do chamado"
+                      >
+                        {c.titulo || "(sem título)"}
+                      </button>
                     </span>
                     <Badge className={cn("shrink-0 text-[10px] pointer-events-none", statusBadgeClass(c.status))}>
                       {c.status || "—"}
@@ -148,7 +154,7 @@ export function PostChamados0800({ ticketNumber, startDate, endDate, postStatus,
                       {c.dataEncerramento ? fmtDateBr(c.dataEncerramento) : "aberto"}
                     </span>
                   </div>
-                </button>
+                </div>
               ))}
             </div>
           )}

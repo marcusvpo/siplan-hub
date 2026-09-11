@@ -82,6 +82,7 @@ import {
 } from "@/hooks/useCsCxCore";
 import { cn } from "@/lib/utils";
 import { printCsCxRequestsReport } from "@/lib/cs-cx-requests-report";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 
 const emptyForm: CsCxRequestInput = {
   ticket_number: "",
@@ -1165,7 +1166,14 @@ export default function CsCxRequests() {
               <DialogTitle className="text-base font-bold">
                 Solicitação{" "}
                 {viewingObservationsRequest?.ticket_number
-                  ? `#${viewingObservationsRequest.ticket_number}`
+                  ? (
+                    <EllevoTicketLink
+                      ticketNumber={viewingObservationsRequest.ticket_number}
+                      showIcon={false}
+                    >
+                      #{viewingObservationsRequest.ticket_number}
+                    </EllevoTicketLink>
+                  )
                   : `#${viewingObservationsRequest?.id.slice(0, 8)}`}
               </DialogTitle>
               {viewingObservationsRequest?.status && (
@@ -1304,7 +1312,13 @@ function RequestTable({
                 <div className="min-w-0">
                   <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Chamado</p>
                   <p className="truncate text-sm font-bold">
-                    {request.ticket_number || `#${request.legacy_id ?? request.id.slice(0, 8)}`}
+                    {request.ticket_number ? (
+                      <EllevoTicketLink ticketNumber={request.ticket_number} showIcon={false}>
+                        {request.ticket_number}
+                      </EllevoTicketLink>
+                    ) : (
+                      `#${request.legacy_id ?? request.id.slice(0, 8)}`
+                    )}
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-1">
@@ -1414,8 +1428,13 @@ function RequestTable({
                       `#${request.legacy_id ?? request.id.slice(0, 8)}`
                     }
                   >
-                    {request.ticket_number ||
-                      `#${request.legacy_id ?? request.id.slice(0, 8)}`}
+                    {request.ticket_number ? (
+                      <EllevoTicketLink ticketNumber={request.ticket_number} showIcon={false}>
+                        {request.ticket_number}
+                      </EllevoTicketLink>
+                    ) : (
+                      `#${request.legacy_id ?? request.id.slice(0, 8)}`
+                    )}
                   </TableCell>
                   <TableCell
                     className={cn(cellClass, "truncate")}
@@ -1799,8 +1818,13 @@ function RequestBoard({
                                 variant="outline"
                                 className="h-5 max-w-[165px] truncate bg-background/70 px-1.5 font-mono text-[9px]"
                               >
-                                {request.ticket_number ||
-                                  `#${request.legacy_id ?? request.id.slice(0, 6)}`}
+                                {request.ticket_number ? (
+                                  <EllevoTicketLink ticketNumber={request.ticket_number} showIcon={false}>
+                                    {request.ticket_number}
+                                  </EllevoTicketLink>
+                                ) : (
+                                  `#${request.legacy_id ?? request.id.slice(0, 6)}`
+                                )}
                               </Badge>
                             </div>
                             <div className="flex items-center gap-0.5">
