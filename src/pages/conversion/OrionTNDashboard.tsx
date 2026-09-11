@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 import { useProjectsV2 } from "@/hooks/useProjectsV2";
 import {
     Card,
@@ -408,7 +409,7 @@ export default function OrionTNDashboard() {
                                         <div className="flex min-w-0 items-start justify-between gap-2">
                                             <div className="min-w-0">
                                                 <p className="break-words text-xs font-bold leading-snug">{project.clientName}</p>
-                                                <p className="mt-0.5 text-[9px] text-muted-foreground">#{project.ticketNumber}</p>
+                                                <EllevoTicketLink ticketNumber={project.ticketNumber} className="mt-0.5 text-[9px] text-muted-foreground" />
                                             </div>
                                             <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold ${statusCfg.badgeClass}`}>
                                                 {statusCfg.icon}
@@ -481,9 +482,7 @@ export default function OrionTNDashboard() {
                                             >
                                                 <td className="px-3 py-2 align-middle">
                                                     <div className="font-bold text-xs">{project.clientName}</div>
-                                                    <div className="text-[9px] text-muted-foreground">
-                                                        #{project.ticketNumber}
-                                                    </div>
+                                                    <EllevoTicketLink ticketNumber={project.ticketNumber} className="text-[9px] text-muted-foreground" />
                                                 </td>
                                                 <td className="px-3 py-2 align-middle">
                                                     <span

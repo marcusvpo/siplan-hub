@@ -146,8 +146,16 @@ describe("Panorama pós-implantação no mobile", () => {
     renderPanorama();
 
     const ticketButton = screen.getByRole("button", { name: new RegExp(longTitle) });
-    expect(ticketButton).toHaveClass("w-full", "min-w-0");
-    expect(within(ticketButton).getByText(longClient)).toHaveClass("break-words");
+    expect(ticketButton).toHaveClass("min-w-0", "text-left");
+    const ticketLink = screen.getByRole("link", { name: /Abrir o chamado #80001 no Ellevo/ });
+    const ticketRow = ticketLink.closest("div.w-full");
+    expect(ticketRow).not.toBeNull();
+    if (!ticketRow) throw new Error("Linha do chamado não encontrada");
+    expect(within(ticketRow).getByText(longClient)).toHaveClass("break-words");
+    expect(ticketLink).toHaveAttribute(
+      "target",
+      "_blank",
+    );
 
     const themeButton = screen
       .getAllByText("Tema fiscal recorrente")

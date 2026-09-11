@@ -1,5 +1,6 @@
 // legacy import removed
 import { useState } from "react";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 import { normalizeText } from "@/lib/utils";
 import { ProjectV2 } from "@/types/ProjectV2";
 import {
@@ -360,7 +361,7 @@ function ProjectTable({
                     <div className="flex min-w-0 items-start justify-between gap-2">
                         <div className="min-w-0">
                             <p className="break-words text-xs font-bold leading-snug">{project.clientName}</p>
-                            <p className="mt-0.5 text-[9px] text-muted-foreground">#{project.ticketNumber}</p>
+                            <EllevoTicketLink ticketNumber={project.ticketNumber} className="mt-0.5 text-[9px] text-muted-foreground" />
                         </div>
                         <span className={`shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-[9px] font-bold ${project.globalStatus === 'done' ? 'bg-emerald-100/80 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
                             project.globalStatus === 'blocked' ? 'bg-rose-100/80 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400' :
@@ -404,7 +405,7 @@ function ProjectTable({
                         <tr key={project.id} className="border-b transition-colors hover:bg-muted/30 h-10">
                             <td className="px-4 py-2 align-middle">
                                 <div className="font-bold text-foreground text-xs">{project.clientName}</div>
-                                <div className="text-[9px] text-muted-foreground">#{project.ticketNumber}</div>
+                                <EllevoTicketLink ticketNumber={project.ticketNumber} className="text-[9px] text-muted-foreground" />
                             </td>
                             <td className="px-4 py-2 align-middle text-xs">
                                 <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold whitespace-nowrap ${project.globalStatus === 'done' ? 'bg-emerald-100/80 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :

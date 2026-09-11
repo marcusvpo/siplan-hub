@@ -11,6 +11,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 
 export const fmtDateBr = (iso?: string): string => {
   if (!iso) return "—";
@@ -77,9 +78,10 @@ export function Chamado0800DetailDialog({
           <>
             <DialogHeader>
               <DialogTitle className="pr-8 leading-snug">
-                <span className="font-mono text-indigo-600 dark:text-indigo-400 mr-2">
-                  #{chamado.numeroChamado}
-                </span>
+                <EllevoTicketLink
+                  ticketNumber={chamado.numeroChamado}
+                  className="mr-2 font-mono text-indigo-600 dark:text-indigo-400"
+                />
                 <span className="break-words">{chamado.titulo || "(sem título)"}</span>
               </DialogTitle>
               <DialogDescription asChild>

@@ -32,6 +32,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 import { cn } from "@/lib/utils";
 
 export default function LatestDeployments() {
@@ -624,7 +625,11 @@ export default function LatestDeployments() {
 
                             <Badge variant="secondary" className="max-w-full rounded-full bg-slate-100 px-1 py-0.5 font-mono text-[8px] font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">
                               <Tag className="mr-1 h-2 w-2 shrink-0" />
-                              <span className="truncate">{project.ticketNumber}</span>
+                              <EllevoTicketLink
+                                ticketNumber={project.ticketNumber}
+                                className="truncate"
+                                showIcon={false}
+                              />
                             </Badge>
 
                             {/* Status Indicators */}

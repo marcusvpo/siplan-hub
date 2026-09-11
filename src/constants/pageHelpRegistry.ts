@@ -324,6 +324,7 @@ export const pageHelpData: PageHelpInfo[] = [
     keyFeatures: [
       "Busca textual instantânea por cliente, protocolo ou resumo",
       "Filtros combináveis por status, produto, período, grupo e analista",
+      "Acesso direto ao histórico do chamado no Ellevo pelo número",
       "Exportação da listagem de chamados encontrados",
     ],
     steps: [
@@ -343,6 +344,13 @@ export const pageHelpData: PageHelpInfo[] = [
       },
       {
         stepNumber: 3,
+        title: "Abra o Chamado no Ellevo",
+        description:
+          "Clique no número do chamado para abrir o histórico correspondente no Ellevo em uma nova aba.",
+        icon: Link2,
+      },
+      {
+        stepNumber: 4,
         title: "Exporte a Lista",
         description:
           "Clique no botão de exportação se precisar gerar um relatório dos chamados listados.",
@@ -362,6 +370,7 @@ export const pageHelpData: PageHelpInfo[] = [
       "Pesquisa no banco legado por contrato, cartório ou protocolo Ellevo",
       "Filtro por família de sistema legado",
       "Filtros pesquisáveis por grupo e analista responsável",
+      "Acesso direto ao histórico do chamado no Ellevo pelo número",
       "Visualização das descrições e soluções aplicadas na época",
     ],
     steps: [
@@ -378,6 +387,13 @@ export const pageHelpData: PageHelpInfo[] = [
         description:
           "Selecione os grupos ou analistas do Ellevo para encontrar os chamados atribuídos às equipes desejadas.",
         icon: Filter,
+      },
+      {
+        stepNumber: 3,
+        title: "Abra o Histórico no Ellevo",
+        description:
+          "Clique no número do chamado para consultar o atendimento correspondente diretamente no Ellevo.",
+        icon: Link2,
       },
     ],
   },

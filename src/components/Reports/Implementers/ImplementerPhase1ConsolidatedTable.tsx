@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ReportListPagination } from "./ReportListPagination";
 import { useReportPagination } from "./useReportPagination";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 
 const PAGE_SIZE = 3;
 const LIST_ID = "implementer-phase1-consolidated-list";
@@ -43,7 +44,7 @@ export const ImplementerPhase1ConsolidatedTable: React.FC<ImplementerPhase1Conso
                       {item.project.clientName}
                     </h4>
                     <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-semibold text-muted-foreground">
-                      <span>#{item.project.ticketNumber}</span>
+                      <EllevoTicketLink ticketNumber={item.project.ticketNumber} />
                       <span>{item.systemType}</span>
                     </div>
                   </div>
@@ -110,7 +111,7 @@ export const ImplementerPhase1ConsolidatedTable: React.FC<ImplementerPhase1Conso
                 return (
                   <TableRow key={item.project.id} className="hover:bg-muted/40 transition-colors border-b border-border/60">
                     <TableCell className="font-semibold text-xs text-muted-foreground">
-                      #{item.project.ticketNumber}
+                      <EllevoTicketLink ticketNumber={item.project.ticketNumber} />
                     </TableCell>
                     <TableCell className="font-bold text-xs text-foreground">
                       {item.project.clientName}

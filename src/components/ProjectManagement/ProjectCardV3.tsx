@@ -26,6 +26,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -308,9 +309,10 @@ export function ProjectCardV3({
           >
             {project.systemType}
           </Badge>
-          <span className="font-mono opacity-70 shrink-0">
-            #{project.ticketNumber}
-          </span>
+          <EllevoTicketLink
+            ticketNumber={project.ticketNumber}
+            className="shrink-0 font-mono opacity-70"
+          />
         </div>
 
         {project.TituloChamado && (

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import {
   CalendarDays,
   ChevronLeft,
@@ -87,6 +87,7 @@ import { ContactAttentionDashboard } from "@/components/cs-cx/ContactAttentionDa
 import { generateCsCxContactsPdf } from "@/lib/cs-cx-engagement-pdf";
 import { hasRichTextContent, richTextToPlainText } from "@/lib/lexical";
 import { cn } from "@/lib/utils";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 
 const emptyForm: CsCxContactInput = {
   contact_date: new Date().toISOString().slice(0, 10),
@@ -624,7 +625,12 @@ export default function CsCxContacts() {
                             <span>{formatDate(contact.contact_date)}</span>
                             {contact.ticket_number && (
                               <>
-                                <span>· Chamado {contact.ticket_number}</span>
+                                <span>
+                                  · Chamado{" "}
+                                  <EllevoTicketLink ticketNumber={contact.ticket_number} showIcon={false}>
+                                    {contact.ticket_number}
+                                  </EllevoTicketLink>
+                                </span>
                                 {(() => {
                                   const matched = requests.find(
                                     (r) =>
@@ -714,7 +720,12 @@ export default function CsCxContacts() {
                             </div>
                             {contact.ticket_number && (
                               <div className="flex items-center gap-1.5 text-[11px] leading-4 text-muted-foreground">
-                                <span>Chamado {contact.ticket_number}</span>
+                                <span>
+                                  Chamado{" "}
+                                  <EllevoTicketLink ticketNumber={contact.ticket_number} showIcon={false}>
+                                    {contact.ticket_number}
+                                  </EllevoTicketLink>
+                                </span>
                                 {(() => {
                                   const matched = requests.find(
                                     (r) =>
@@ -1453,7 +1464,15 @@ function ContactReadOnlyDetails({ contact }: { contact: CsCxContact }) {
         />
         <ReadOnlyField
           label="Chamado"
-          value={contact.ticket_number || "Não informado"}
+          value={
+            contact.ticket_number ? (
+              <EllevoTicketLink ticketNumber={contact.ticket_number}>
+                {contact.ticket_number}
+              </EllevoTicketLink>
+            ) : (
+              "Não informado"
+            )
+          }
         />
       </div>
 
@@ -1462,7 +1481,12 @@ function ContactReadOnlyDetails({ contact }: { contact: CsCxContact }) {
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 font-bold text-xs">
               <FileText className="h-4 w-4 text-rose-600" />
-              <span>Solicitação #{linkedReq.ticket_number}</span>
+              <span>
+                Solicitação{" "}
+                <EllevoTicketLink ticketNumber={linkedReq.ticket_number} showIcon={false}>
+                  #{linkedReq.ticket_number}
+                </EllevoTicketLink>
+              </span>
             </div>
             <RequestStatusBadge status={linkedReq.status} />
           </div>
@@ -1533,7 +1557,7 @@ function ReadOnlyField({
   warning = false,
 }: {
   label: string;
-  value: string;
+  value: ReactNode;
   multiline?: boolean;
   warning?: boolean;
 }) {

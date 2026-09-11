@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { getRelativeTime } from "@/utils/calculations";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 
 interface ProjectDetailsModalProps {
   isOpen: boolean;
@@ -75,9 +76,12 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                         <TableCell data-label="Cliente">
                           <div className="flex flex-col">
                             <span className="font-bold text-sm tracking-tight text-foreground">{project.clientName}</span>
-                            <span className="text-[10px] text-muted-foreground font-mono opacity-60">
+                            <EllevoTicketLink
+                              ticketNumber={project.ticketNumber}
+                              className="font-mono text-[10px] text-muted-foreground opacity-60"
+                            >
                               TKT: {project.ticketNumber}
-                            </span>
+                            </EllevoTicketLink>
                           </div>
                         </TableCell>
                         <TableCell data-label="Líder" className="text-xs font-medium text-center">{project.projectLeader}</TableCell>

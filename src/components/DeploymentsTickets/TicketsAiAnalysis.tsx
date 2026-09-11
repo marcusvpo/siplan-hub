@@ -30,6 +30,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MarkdownLite } from "@/components/MarkdownLite";
 import { Chamado0800DetailDialog } from "@/components/ProjectManagement/Chamado0800DetailDialog";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 import {
   fetchAllChamadosForReport,
   fetchAllChamados,
@@ -349,7 +350,10 @@ export function TicketsAiAnalysis({
               <article key={row.numeroChamado} className="min-w-0 rounded-md border border-muted/70 px-2 py-2 sm:flex sm:items-center sm:justify-between sm:gap-2 sm:py-1.5">
                 <div className="min-w-0 sm:flex-1">
                   <div className="flex min-w-0 items-center justify-between gap-2 sm:block">
-                    <span className="font-mono text-[10px] font-semibold text-rose-600">#{row.numeroChamado}</span>
+                    <EllevoTicketLink
+                      ticketNumber={row.numeroChamado}
+                      className="font-mono text-[10px] font-semibold text-rose-600"
+                    />
                     <div className="flex shrink-0 items-center gap-1 sm:hidden">
                       <Badge variant="outline" className="h-6 px-1.5 text-[8px]">{ticketDaysOpen(row.dataAbertura)} dias</Badge>
                       <Button

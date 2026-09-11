@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { CalendarDays, GitMerge, User, MessageSquare } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 
 interface Chamado0800TabProps {
   project: ProjectV2;
@@ -46,9 +47,10 @@ export function Chamado0800Tab({ project }: Chamado0800TabProps) {
                 </span>
                 <span className="text-xs text-muted-foreground/60">•</span>
                 <span className="flex items-center gap-1 shadow-sm px-2 py-0.5 rounded-md border border-border/50 text-xs bg-muted/40">
-                  <span className="font-mono bg-foreground/5 dark:bg-foreground/10 px-1 rounded text-xs opacity-75">
-                    #{project.ticketNumber}
-                  </span>
+                  <EllevoTicketLink
+                    ticketNumber={project.ticketNumber}
+                    className="rounded bg-foreground/5 px-1 font-mono text-xs opacity-75 dark:bg-foreground/10"
+                  />
                 </span>
               </div>
             </div>

@@ -92,8 +92,12 @@ describe("DeploymentsTickets no mobile", () => {
     expect(title).toHaveClass("break-words");
     expect(within(mobileList).getByText("SD - TN/RC · Ana Souza")).toHaveClass("break-words");
     expect(container.querySelector("table")?.parentElement?.parentElement).toHaveClass("hidden", "md:block");
+    expect(within(mobileList).getByRole("link", { name: /Abrir o chamado #84521 no Ellevo/ })).toHaveAttribute(
+      "href",
+      "https://sac.siplancontrolm.com.br/indexAtendente.html#/main/paginaurl/Historico.asp/Sol=84521",
+    );
 
-    fireEvent.click(within(mobileList).getByRole("button", { name: /Abrir chamado 84521/ }));
+    fireEvent.click(within(mobileList).getByRole("button", { name: /Ver detalhes do chamado 84521/ }));
     expect(screen.getByTestId("ticket-detail")).toHaveTextContent("84521");
   });
 

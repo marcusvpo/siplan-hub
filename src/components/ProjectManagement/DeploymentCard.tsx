@@ -5,6 +5,7 @@ import { ptBR } from "date-fns/locale";
 import { Calendar, Clock, Monitor, Tag, CheckCircle2, PlayCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { useMemo } from "react";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 
 interface DeploymentCardProps {
   project: ProjectV2;
@@ -140,7 +141,13 @@ export function DeploymentCard({
 
           <div className="flex max-w-full shrink-0 items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-400 dark:bg-slate-800">
             <Tag className="w-2.5 h-2.5" />
-            <span className="truncate">{project.ticketNumber || "N/A"}</span>
+            <EllevoTicketLink
+              ticketNumber={project.ticketNumber}
+              className="truncate"
+              showIcon={false}
+            >
+              {project.ticketNumber || "N/A"}
+            </EllevoTicketLink>
           </div>
         </div>
 

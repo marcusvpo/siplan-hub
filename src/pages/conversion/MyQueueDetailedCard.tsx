@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -307,9 +308,7 @@ export function MyQueueDetailedCard({
                   )}
                 </DialogTitle>
                 <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground sm:text-sm">
-                  <span className="font-mono bg-muted px-2 py-0.5 rounded">
-                    #{item.ticketNumber}
-                  </span>
+                  <EllevoTicketLink ticketNumber={item.ticketNumber} className="rounded bg-muted px-2 py-0.5 font-mono" />
                   <span className="flex items-center gap-1">
                     <Database className="h-3.5 w-3.5" />
                     {item.systemType}

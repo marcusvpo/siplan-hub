@@ -41,6 +41,7 @@ import { useProjectsV2 } from "@/hooks/useProjectsV2";
 import { usePermissions } from "@/hooks/usePermissions";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 
 interface DeploymentDetailsDialogProps {
   project: ProjectV2 | null;
@@ -205,7 +206,9 @@ export function DeploymentDetailsDialog({
             </Badge>
             <Badge variant="secondary" className="text-[9px] font-medium px-2 py-0.5">
               <Tag className="w-2.5 h-2.5 mr-1" />
-              {project.ticketNumber || "N/A"}
+              <EllevoTicketLink ticketNumber={project.ticketNumber} showIcon={false}>
+                {project.ticketNumber || "N/A"}
+              </EllevoTicketLink>
             </Badge>
             {isSaving && (
               <span className="text-[10px] text-blue-600 dark:text-blue-400 flex items-center gap-1 font-semibold animate-pulse ml-auto">

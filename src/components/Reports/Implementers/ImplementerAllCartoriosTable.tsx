@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ReportListPagination } from "./ReportListPagination";
 import { useReportPagination } from "./useReportPagination";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 
 const PAGE_SIZE = 3;
 const LIST_ID = "implementer-all-cartorios-list";
@@ -45,7 +46,7 @@ export const ImplementerAllCartoriosTable: React.FC<ImplementerAllCartoriosTable
                       {inv.project.clientName}
                     </h4>
                     <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-semibold text-muted-foreground">
-                      <span>#{inv.project.ticketNumber}</span>
+                      <EllevoTicketLink ticketNumber={inv.project.ticketNumber} />
                       <span>{inv.project.systemType}</span>
                     </div>
                   </div>
@@ -96,7 +97,7 @@ export const ImplementerAllCartoriosTable: React.FC<ImplementerAllCartoriosTable
                     {inv.project.clientName}
                   </TableCell>
                   <TableCell className="font-semibold text-xs text-muted-foreground">
-                    #{inv.project.ticketNumber}
+                    <EllevoTicketLink ticketNumber={inv.project.ticketNumber} />
                   </TableCell>
                   <TableCell className="text-xs font-semibold text-muted-foreground">
                     {inv.project.systemType}

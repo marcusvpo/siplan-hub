@@ -18,6 +18,7 @@ import {
   fmtDateBr,
   statusBadgeClass,
 } from "@/components/ProjectManagement/Chamado0800DetailDialog";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 import { MarkdownLite, markdownLiteToHtml } from "@/components/MarkdownLite";
 import { useModelWorkerStatus } from "@/hooks/useModelGenerationJobs";
 import { toast } from "sonner";
@@ -957,22 +958,29 @@ export function PanoramaBase({ escopo, titulo, descricao }: PanoramaBaseProps) {
                 {paginados.map((c) => {
                   const critico = isCriticoAberto(c);
                   return (
-                  <button
+                  <div
                     key={c.numeroChamado}
-                    type="button"
-                    onClick={() => setChamadoSelecionado(c)}
                     className={cn(
                       "w-full min-w-0 px-3 py-3 text-left transition-colors sm:py-1.5",
                       critico
                         ? "bg-red-50/70 dark:bg-red-950/20 border-l-2 border-l-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
                         : "hover:bg-neutral-50 dark:hover:bg-neutral-900/40"
                     )}
-                    title="Ver detalhes do chamado"
                   >
                     <div className="flex min-w-0 flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:justify-between">
-                      <span className="min-w-0 break-words text-xs font-semibold sm:truncate">
-                        <span className="text-indigo-600 dark:text-indigo-400 font-mono">#{c.numeroChamado}</span>{" "}
-                        {c.titulo || "(sem título)"}
+                      <span className="flex min-w-0 items-start gap-1 text-xs font-semibold">
+                        <EllevoTicketLink
+                          ticketNumber={c.numeroChamado}
+                          className="shrink-0 font-mono text-indigo-600 dark:text-indigo-400"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setChamadoSelecionado(c)}
+                          className="min-w-0 break-words rounded-sm text-left hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:truncate"
+                          title="Ver detalhes do chamado"
+                        >
+                          {c.titulo || "(sem título)"}
+                        </button>
                       </span>
                       <span className="flex flex-wrap items-center gap-1.5 sm:shrink-0 sm:flex-nowrap">
                         {critico && (
@@ -1008,7 +1016,7 @@ export function PanoramaBase({ escopo, titulo, descricao }: PanoramaBaseProps) {
                         )}
                       </span>
                     </div>
-                  </button>
+                  </div>
                   );
                 })}
               </div>

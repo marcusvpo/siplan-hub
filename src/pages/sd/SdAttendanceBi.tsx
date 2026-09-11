@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 import { format, parseISO, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion, useReducedMotion } from "framer-motion";
@@ -447,7 +448,7 @@ export default function SdAttendanceBi() {
                   {isMobile ? <div data-testid="sd-ticket-mobile-list" className="space-y-1.5">
                     {paginatedTickets.map((ticket) => (
                       <article key={ticket.ticket_number} className="min-w-0 rounded-lg border p-2.5">
-                        <div className="flex min-w-0 items-start justify-between gap-2"><div className="min-w-0"><p className="text-[10px] font-bold text-violet-600">#{ticket.ticket_number}</p><p className="break-words text-xs font-semibold">{ticket.ticket_title}</p><p className="break-words text-[10px] text-muted-foreground">{ticket.client_name}</p></div><Badge variant="secondary" className="shrink-0 text-[10px]">{formatMinutes(ticket.total_minutes)}</Badge></div>
+                        <div className="flex min-w-0 items-start justify-between gap-2"><div className="min-w-0"><EllevoTicketLink ticketNumber={ticket.ticket_number} className="text-[10px] font-bold text-violet-600" /><p className="break-words text-xs font-semibold">{ticket.ticket_title}</p><p className="break-words text-[10px] text-muted-foreground">{ticket.client_name}</p></div><Badge variant="secondary" className="shrink-0 text-[10px]">{formatMinutes(ticket.total_minutes)}</Badge></div>
                         <div className="mt-2 flex flex-wrap gap-1.5 text-[10px]"><Badge variant="outline" className="max-w-full whitespace-normal text-left">{ticket.nature || "Sem natureza"}</Badge><Badge variant="outline" className="max-w-full whitespace-normal text-left">{ticket.product || "Sem produto"}</Badge><span className="self-center text-muted-foreground">{ticket.entry_count} interações</span></div>
                       </article>
                     ))}
@@ -456,7 +457,7 @@ export default function SdAttendanceBi() {
                     <TableBody>
                       {paginatedTickets.map((ticket) => (
                         <TableRow key={ticket.ticket_number}>
-                          <TableCell className="font-bold">#{ticket.ticket_number}</TableCell>
+                          <TableCell className="font-bold"><EllevoTicketLink ticketNumber={ticket.ticket_number} /></TableCell>
                           <TableCell className="max-w-[360px]"><p className="truncate text-xs font-medium" title={ticket.ticket_title}>{ticket.ticket_title}</p><p className="truncate text-[10px] text-muted-foreground">{ticket.client_name}</p></TableCell>
                           <TableCell className="text-xs">{ticket.nature}</TableCell><TableCell className="text-xs">{ticket.product}</TableCell><TableCell className="text-right font-semibold tabular-nums">{formatMinutes(ticket.total_minutes)}</TableCell><TableCell className="text-right tabular-nums">{ticket.entry_count}</TableCell>
                         </TableRow>

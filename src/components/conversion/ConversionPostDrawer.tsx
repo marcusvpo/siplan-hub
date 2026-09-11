@@ -15,6 +15,7 @@ import { MessageSquare, User, History, Clock, RefreshCw } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 
 interface ConversionPostDrawerProps {
   isOpen: boolean;
@@ -77,7 +78,7 @@ export function ConversionPostDrawer({
           <div className="flex items-center gap-2 flex-wrap">
             {ticketNumber && (
               <Badge variant="outline" className="text-xs font-mono bg-background">
-                #{ticketNumber}
+                <EllevoTicketLink ticketNumber={ticketNumber} showIcon={false} />
               </Badge>
             )}
             <Badge variant="secondary" className="text-xs">

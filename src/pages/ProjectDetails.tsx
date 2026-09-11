@@ -19,6 +19,7 @@ import { Chamado0800Tab } from "@/components/ProjectManagement/Tabs/Chamado0800T
 import { PosImplantacaoTab } from "@/components/ProjectManagement/Tabs/PosImplantacaoTab";
 import { ProjectV2 } from "@/types/ProjectV2";
 import { useQueryClient } from "@tanstack/react-query";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 
 export default function ProjectDetails() {
   const { id } = useParams<{ id: string }>();
@@ -68,9 +69,10 @@ export default function ProjectDetails() {
               </h1>
               
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-                <span className="text-[11px] font-extrabold text-primary bg-primary/10 px-2 py-0.5 rounded-md border border-primary/20 shrink-0">
-                  #{project?.ticketNumber}
-                </span>
+                <EllevoTicketLink
+                  ticketNumber={project?.ticketNumber}
+                  className="shrink-0 rounded-md border border-primary/20 bg-primary/10 px-2 py-0.5 text-[11px] font-extrabold text-primary"
+                />
                 <Badge variant="secondary" className="bg-slate-700 text-white hover:bg-slate-800 text-xs py-0.5 px-2 shrink-0">
                   {project?.systemType}
                 </Badge>

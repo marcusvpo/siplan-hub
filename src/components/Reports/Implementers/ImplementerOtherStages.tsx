@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import type { ImplementerInvolvement } from "@/hooks/useImplementerReport";
 import type { GlobalStatus } from "@/types/ProjectV2";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 
 export interface ImplementerOtherStagesProps {
   involvements: ImplementerInvolvement[];
@@ -93,9 +94,9 @@ export function ImplementerOtherStages({ involvements }: ImplementerOtherStagesP
                     <TableCell className="font-medium text-foreground">
                       <div>{project?.clientName || "Cliente não informado"}</div>
                       {project?.ticketNumber && (
-                        <div className="text-xs text-muted-foreground font-normal">
+                        <EllevoTicketLink ticketNumber={project.ticketNumber} className="text-xs font-normal text-muted-foreground">
                           OS #{project.ticketNumber}
-                        </div>
+                        </EllevoTicketLink>
                       )}
                     </TableCell>
 
