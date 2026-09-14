@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { EllevoTicketLink } from "@/components/EllevoTicketLink";
+import { Chamado0800DetailsButton } from "@/components/sd/Chamado0800DetailsButton";
 import { format, parseISO, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion, useReducedMotion } from "framer-motion";
@@ -448,18 +449,18 @@ export default function SdAttendanceBi() {
                   {isMobile ? <div data-testid="sd-ticket-mobile-list" className="space-y-1.5">
                     {paginatedTickets.map((ticket) => (
                       <article key={ticket.ticket_number} className="min-w-0 rounded-lg border p-2.5">
-                        <div className="flex min-w-0 items-start justify-between gap-2"><div className="min-w-0"><EllevoTicketLink ticketNumber={ticket.ticket_number} className="text-[10px] font-bold text-violet-600" /><p className="break-words text-xs font-semibold">{ticket.ticket_title}</p><p className="break-words text-[10px] text-muted-foreground">{ticket.client_name}</p></div><Badge variant="secondary" className="shrink-0 text-[10px]">{formatMinutes(ticket.total_minutes)}</Badge></div>
+                        <div className="flex min-w-0 items-start justify-between gap-2"><div className="min-w-0"><EllevoTicketLink ticketNumber={ticket.ticket_number} className="text-[10px] font-bold text-violet-600" /><p className="break-words text-xs font-semibold">{ticket.ticket_title}</p><p className="break-words text-[10px] text-muted-foreground">{ticket.client_name}</p></div><div className="flex shrink-0 items-center gap-1"><Badge variant="secondary" className="text-[10px]">{formatMinutes(ticket.total_minutes)}</Badge><Chamado0800DetailsButton ticketNumber={ticket.ticket_number} variant="outline" className="h-10 w-10" /></div></div>
                         <div className="mt-2 flex flex-wrap gap-1.5 text-[10px]"><Badge variant="outline" className="max-w-full whitespace-normal text-left">{ticket.nature || "Sem natureza"}</Badge><Badge variant="outline" className="max-w-full whitespace-normal text-left">{ticket.product || "Sem produto"}</Badge><span className="self-center text-muted-foreground">{ticket.entry_count} interações</span></div>
                       </article>
                     ))}
                   </div> : <Table className="text-[11px] [&_td]:px-2 [&_td]:py-1.5 [&_th]:h-8 [&_th]:px-2 [&_th]:text-[10px]">
-                    <TableHeader><TableRow><TableHead>Chamado</TableHead><TableHead>Cliente / título</TableHead><TableHead>Natureza</TableHead><TableHead>Produto</TableHead><TableHead className="text-right">Horas</TableHead><TableHead className="text-right">Interações</TableHead></TableRow></TableHeader>
+                    <TableHeader><TableRow><TableHead>Chamado</TableHead><TableHead>Cliente / título</TableHead><TableHead>Natureza</TableHead><TableHead>Produto</TableHead><TableHead className="text-right">Horas</TableHead><TableHead className="text-right">Interações</TableHead><TableHead className="w-16 text-center">Detalhes</TableHead></TableRow></TableHeader>
                     <TableBody>
                       {paginatedTickets.map((ticket) => (
                         <TableRow key={ticket.ticket_number}>
                           <TableCell className="font-bold"><EllevoTicketLink ticketNumber={ticket.ticket_number} /></TableCell>
                           <TableCell className="max-w-[360px]"><p className="truncate text-xs font-medium" title={ticket.ticket_title}>{ticket.ticket_title}</p><p className="truncate text-[10px] text-muted-foreground">{ticket.client_name}</p></TableCell>
-                          <TableCell className="text-xs">{ticket.nature}</TableCell><TableCell className="text-xs">{ticket.product}</TableCell><TableCell className="text-right font-semibold tabular-nums">{formatMinutes(ticket.total_minutes)}</TableCell><TableCell className="text-right tabular-nums">{ticket.entry_count}</TableCell>
+                          <TableCell className="text-xs">{ticket.nature}</TableCell><TableCell className="text-xs">{ticket.product}</TableCell><TableCell className="text-right font-semibold tabular-nums">{formatMinutes(ticket.total_minutes)}</TableCell><TableCell className="text-right tabular-nums">{ticket.entry_count}</TableCell><TableCell className="text-center"><Chamado0800DetailsButton ticketNumber={ticket.ticket_number} className="h-7 w-7" iconClassName="h-3.5 w-3.5" /></TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
