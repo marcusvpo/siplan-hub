@@ -4,9 +4,39 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import SdAttendanceBi from "@/pages/sd/SdAttendanceBi";
 
 const hookState = vi.hoisted(() => ({ current: {} as Record<string, unknown> }));
+const mobileState = vi.hoisted(() => ({ current: false }));
+const detailHookState = vi.hoisted(() => ({
+  lastTicketNumber: null as string | null,
+  ticket: {
+    numeroChamado: "1001",
+    titulo: "Chamado 1",
+    analistaResponsavel: "Responsável Teste",
+  },
+}));
 
 vi.mock("@/hooks/useSdAttendanceBi", () => ({
   useSdAttendanceBi: () => hookState.current,
+}));
+
+vi.mock("@/hooks/use-mobile", () => ({
+  useIsMobile: () => mobileState.current,
+}));
+
+vi.mock("@/hooks/useChamados0800", () => ({
+  useChamado0800ByNumber: (ticketNumber?: string | null) => {
+    if (ticketNumber) detailHookState.lastTicketNumber = ticketNumber;
+    return {
+      data: ticketNumber ? detailHookState.ticket : null,
+      isLoading: false,
+      isError: false,
+      isSuccess: Boolean(ticketNumber),
+    };
+  },
+}));
+
+vi.mock("@/components/ProjectManagement/Chamado0800DetailDialog", () => ({
+  Chamado0800DetailDialog: ({ chamado }: { chamado: { numeroChamado: string } | null }) =>
+    chamado ? <div role="dialog">Detalhes do chamado {chamado.numeroChamado}</div> : null,
 }));
 
 vi.mock("recharts", () => {
@@ -82,6 +112,8 @@ function queryState(isFetching = false) {
 describe("interações do BI de atendimento", () => {
   beforeEach(() => {
     hookState.current = queryState();
+    mobileState.current = false;
+    detailHookState.lastTicketNumber = null;
   });
 
   it("preserva a aba ativa enquanto os filtros atualizam os dados", () => {
@@ -108,6 +140,27 @@ describe("interações do BI de atendimento", () => {
     expect(screen.getByText("Página 2 de 2")).toBeInTheDocument();
     expect(screen.getByText("#1006")).toBeInTheDocument();
     expect(screen.queryByText("#1001")).not.toBeInTheDocument();
+  });
+
+  it("abre os detalhes do chamado pelo ícone de olho", () => {
+    render(<SdAttendanceBi />);
+    fireEvent.mouseDown(screen.getByRole("tab", { name: "Chamados" }), { button: 0, ctrlKey: false });
+
+    fireEvent.click(screen.getByRole("button", { name: "Ver detalhes do chamado 1001" }));
+
+    expect(detailHookState.lastTicketNumber).toBe("1001");
+    expect(screen.getByRole("dialog")).toHaveTextContent("Detalhes do chamado 1001");
+  });
+
+  it("mantém o acesso aos detalhes nos cards para celular", () => {
+    mobileState.current = true;
+    render(<SdAttendanceBi />);
+    fireEvent.mouseDown(screen.getByRole("tab", { name: "Chamados" }), { button: 0, ctrlKey: false });
+
+    expect(screen.getByTestId("sd-ticket-mobile-list")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Ver detalhes do chamado 1001" }));
+
+    expect(screen.getByRole("dialog")).toHaveTextContent("Detalhes do chamado 1001");
   });
 
   it("inicia com os filtros recolhidos no celular e permite expandir", () => {
