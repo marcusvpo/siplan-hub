@@ -227,6 +227,11 @@ describe("imagens por item da análise de aderência", () => {
 
     expect(screen.getAllByRole("button", { name: "Negrito" })).toHaveLength(2);
     expect(screen.getAllByRole("button", { name: "Cor do texto" })).toHaveLength(2);
+    expect(
+      screen.queryByText(
+        "Itens com impacto: (descreva os itens que podem ter impacto na implantação)",
+      ),
+    ).not.toBeInTheDocument();
   });
 
   it("aplica densidade compacta sem reduzir os controles de toque no celular", () => {
