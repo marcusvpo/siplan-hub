@@ -12,6 +12,11 @@ export interface SdTimeEntryLike {
   intervals: SdTimeIntervalLike[];
 }
 
+export interface SortableSdTimeEntry extends SdTimeEntryLike {
+  created_at?: string;
+  id?: string;
+}
+
 export function timeToMinutes(value: string | null | undefined) {
   if (!value) return null;
   const match = value.match(/^(\d{2}):(\d{2})/);
@@ -38,6 +43,18 @@ export function entryStartMinutes(entry: Pick<SdTimeEntryLike, "intervals">) {
     .map((interval) => timeToMinutes(interval.started_at))
     .filter((minutes): minutes is number => minutes !== null);
   return starts.length ? Math.min(...starts) : -1;
+}
+
+export function compareSdTimeEntriesDescending(
+  first: SortableSdTimeEntry,
+  second: SortableSdTimeEntry,
+) {
+  return (
+    second.work_date.localeCompare(first.work_date) ||
+    entryStartMinutes(second) - entryStartMinutes(first) ||
+    (second.created_at ?? "").localeCompare(first.created_at ?? "") ||
+    (first.id ?? "").localeCompare(second.id ?? "")
+  );
 }
 
 export function totalMinutes(entries: Array<Pick<SdTimeEntryLike, "intervals">>) {
