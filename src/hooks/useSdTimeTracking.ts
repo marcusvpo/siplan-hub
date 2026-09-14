@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { compareSdTimeEntriesDescending } from "@/lib/sd-time";
 
 const db = supabase as unknown as SupabaseClient;
 
@@ -165,7 +166,9 @@ export function useManagedSdTimeEntries(
         total_count?: number;
       };
       return {
-        entries: (payload.items ?? []).map(normalizeEntry),
+        entries: (payload.items ?? [])
+          .map(normalizeEntry)
+          .sort(compareSdTimeEntriesDescending),
         totalCount: Number(payload.total_count ?? 0),
       } satisfies SdTimeManagementPage;
     },
