@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  compareSdTimeEntriesDescending,
   entryMinutes,
   entryStartMinutes,
   formatMinutes,
@@ -43,6 +44,21 @@ describe("cálculos do gerenciamento de horas do SD", () => {
         ],
       }),
     ).toBe(15 * 60 + 35);
+  });
+
+  it("ordena os lançamentos do dia pelo horário inicial decrescente", () => {
+    const entries = ["09:31", "15:31", "13:30", "08:15"].map((startedAt, index) => ({
+      id: String(index),
+      work_date: "2026-09-08",
+      created_at: `2026-09-08T${String(index).padStart(2, "0")}:00:00Z`,
+      intervals: [{ started_at: startedAt, ended_at: "18:00" }],
+    }));
+
+    expect(
+      entries
+        .sort(compareSdTimeEntriesDescending)
+        .map((entry) => entry.intervals[0].started_at),
+    ).toEqual(["15:31", "13:30", "09:31", "08:15"]);
   });
 
   it("calcula a semana de segunda a domingo", () => {
