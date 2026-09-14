@@ -6,6 +6,7 @@ const page = readFileSync(resolve(process.cwd(), "src/pages/sd/SdAttendanceBi.ts
 const hook = readFileSync(resolve(process.cwd(), "src/hooks/useSdAttendanceBi.ts"), "utf8");
 const app = readFileSync(resolve(process.cwd(), "src/App.tsx"), "utf8");
 const menu = readFileSync(resolve(process.cwd(), "src/constants/menuItems.ts"), "utf8");
+const sidebar = readFileSync(resolve(process.cwd(), "src/components/Layout/AppSidebar.tsx"), "utf8");
 const permissionCatalog = readFileSync(resolve(process.cwd(), "src/constants/permissions.ts"), "utf8");
 const migration = readFileSync(resolve(process.cwd(), "supabase/migrations/20260828235955_sd_attendance_bi.sql"), "utf8");
 
@@ -15,6 +16,10 @@ describe("BI de atendimento do SD", () => {
     expect(app).toContain('<RequirePermission resource="sd_attendance_bi">');
     expect(menu).toContain('title: "BI de Atendimento"');
     expect(menu).toContain('permissionKey: "sd_attendance_bi"');
+    expect(sidebar).toContain('["sd_attendance_bi", "/sd/bi-atendimento"]');
+    expect(sidebar).toContain('can("sd_attendance_bi")');
+    expect(sidebar).toContain('<Link to="/sd/bi-atendimento">');
+    expect(sidebar).toContain("<span>BI de Atendimento</span>");
     expect(permissionCatalog).toContain('resource: "sd_attendance_bi"');
   });
 
