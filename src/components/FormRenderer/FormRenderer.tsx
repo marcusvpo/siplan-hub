@@ -117,10 +117,12 @@ const CustomFieldTemplate = (props: FieldTemplateProps) => {
     readonly,
   } = props;
   const compact = Boolean(props.registry.formContext?.compact);
+  const hideLabel =
+    typeof label === "string" && isAdherenceImpactDescriptionTitle(label);
 
   return (
     <div className={cn(compact ? "space-y-1 py-0.5" : "space-y-1.5 py-1", classNames)}>
-      {displayLabel && label && (
+      {displayLabel && label && !hideLabel && (
         <Label
           htmlFor={id}
           className={cn(
