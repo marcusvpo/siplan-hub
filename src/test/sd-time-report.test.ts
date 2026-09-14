@@ -14,6 +14,13 @@ const groupFilterMigration = readFileSync(
   resolve(process.cwd(), "supabase/migrations/20260828235945_sd_time_group_filters.sql"),
   "utf8",
 );
+const descendingOrderMigration = readFileSync(
+  resolve(
+    process.cwd(),
+    "supabase/migrations/20260914130000_order_sd_daily_entries_desc_changelog.sql",
+  ),
+  "utf8",
+);
 
 describe("consulta gerencial de horas do SD", () => {
   it("pagina os lançamentos da equipe com cinco itens por padrão", () => {
@@ -24,6 +31,14 @@ describe("consulta gerencial de horas do SD", () => {
     expect(timeHook).toContain('db.rpc("get_sd_time_management_page"');
     expect(timeHook).toContain("p_offset: (page - 1) * pageSize");
     expect(timeHook).toContain('db.rpc("get_sd_time_management_report"');
+  });
+
+  it("ordena os lançamentos pelo horário inicial em ordem decrescente", () => {
+    expect(timeHook).toContain("sort(compareSdTimeEntriesDescending)");
+    expect(descendingOrderMigration).toContain("min(time_interval.started_at)");
+    expect(descendingOrderMigration).toContain(
+      "ORDER BY work_date DESC, first_started_at DESC NULLS LAST, created_at DESC, id",
+    );
   });
 
   it("mantém cada nome alinhado com sua barra na visão diária", () => {
