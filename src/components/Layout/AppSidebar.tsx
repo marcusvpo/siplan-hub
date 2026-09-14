@@ -167,6 +167,7 @@ export function AppSidebar() {
     ["sd_solutions", "/sd/solucoes"],
     ["sd_time_entries", "/sd/horas"],
     ["sd_time_management", "/sd/consulta-horas"],
+    ["sd_attendance_bi", "/sd/bi-atendimento"],
   );
   const rotaOrion = primeiraRota(
     ["orion_dashboard", "/orion-tn-models/dashboard"],
@@ -896,6 +897,18 @@ export function AppSidebar() {
                         >
                           <BarChart3 className="h-4 w-4" />
                           <span>Consulta de horas</span>
+                        </Button>
+                      </Link>
+                    )}
+                    {can("sd_attendance_bi") && (
+                      <Link to="/sd/bi-atendimento">
+                        <Button
+                          variant={isActive("/sd/bi-atendimento") ? "secondary" : "ghost"}
+                          size="sm"
+                          className="h-9 w-full justify-start gap-3"
+                        >
+                          <BarChart3 className="h-4 w-4" />
+                          <span>BI de Atendimento</span>
                         </Button>
                       </Link>
                     )}
