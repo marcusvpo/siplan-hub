@@ -17,6 +17,8 @@ import {
   UsersRound,
 } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { EllevoTicketLink } from "@/components/EllevoTicketLink";
+import { Chamado0800DetailsButton } from "@/components/sd/Chamado0800DetailsButton";
 import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
@@ -57,6 +59,7 @@ import { toast } from "sonner";
 import {
   entryMinutes,
   formatMinutes,
+  getSdTimeEntryTicket,
   getWeekRange,
   SD_DAILY_TARGET_MINUTES,
 } from "@/lib/sd-time";
@@ -381,20 +384,43 @@ export default function TimeManagementReport() {
             <CardContent className="space-y-1 p-2 pt-0">
               {pagedEntries.length === 0 ? (
                 <div className="flex flex-col items-center gap-2 py-12 text-center"><FileSearch className="h-8 w-8 text-muted-foreground" /><p className="font-semibold">Nenhum lançamento encontrado</p><p className="text-sm text-muted-foreground">Ajuste os filtros ou consulte outra semana.</p></div>
-              ) : pagedEntries.map((entry) => (
-                <div key={entry.id} className="rounded-lg border px-2.5 py-2">
-                  <div className="flex flex-col justify-between gap-1 sm:flex-row sm:items-start">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-1.5"><h3 className="text-sm font-bold leading-5">{entry.title}</h3><Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{formatMinutes(entryMinutes(entry))}</Badge></div>
-                      <p className="text-[11px] leading-4 text-muted-foreground"><span className="font-semibold text-foreground">{entry.user_name}</span>{entry.attendance_group ? ` · ${entry.attendance_group}` : entry.user_team ? ` · ${entry.user_team}` : ""} · {format(parseISO(entry.work_date), "EEEE, dd/MM", { locale: ptBR })}</p>
-                      {entry.description && <p className="mt-0.5 line-clamp-2 text-[11px] leading-4 text-muted-foreground">{formatEntryDescription(entry.description)}</p>}
-                    </div>
-                    <div className="flex shrink-0 flex-wrap gap-1">
-                      {entry.intervals.map((interval) => <span key={interval.id} className="rounded-md border bg-muted/40 px-1.5 py-0 text-[11px] leading-5 tabular-nums">{interval.started_at} — {interval.ended_at ?? "em andamento"}</span>)}
+              ) : pagedEntries.map((entry) => {
+                const ticket = getSdTimeEntryTicket(entry);
+
+                return (
+                  <div key={entry.id} className="rounded-lg border px-2.5 py-2">
+                    <div className="flex flex-col justify-between gap-1 sm:flex-row sm:items-start">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <h3 className="flex min-w-0 flex-wrap items-center text-sm font-bold leading-5">
+                            {ticket.ticketNumber ? (
+                              <>
+                                <EllevoTicketLink ticketNumber={ticket.ticketNumber} className="shrink-0 text-violet-700 dark:text-violet-300" />
+                                <span className="mx-1" aria-hidden="true">—</span>
+                                <span className="min-w-0 break-words">{ticket.displayTitle}</span>
+                              </>
+                            ) : entry.title}
+                          </h3>
+                          <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{formatMinutes(entryMinutes(entry))}</Badge>
+                        </div>
+                        <p className="text-[11px] leading-4 text-muted-foreground"><span className="font-semibold text-foreground">{entry.user_name}</span>{entry.attendance_group ? ` · ${entry.attendance_group}` : entry.user_team ? ` · ${entry.user_team}` : ""} · {format(parseISO(entry.work_date), "EEEE, dd/MM", { locale: ptBR })}</p>
+                        {entry.description && <p className="mt-0.5 line-clamp-2 text-[11px] leading-4 text-muted-foreground">{formatEntryDescription(entry.description)}</p>}
+                      </div>
+                      <div className="flex shrink-0 flex-wrap items-center gap-1">
+                        {entry.intervals.map((interval) => <span key={interval.id} className="rounded-md border bg-muted/40 px-1.5 py-0 text-[11px] leading-5 tabular-nums">{interval.started_at} — {interval.ended_at ?? "em andamento"}</span>)}
+                        {ticket.ticketNumber && (
+                          <Chamado0800DetailsButton
+                            ticketNumber={ticket.ticketNumber}
+                            variant="outline"
+                            className="h-10 w-10 sm:h-7 sm:w-7"
+                            iconClassName="h-3.5 w-3.5"
+                          />
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               {pagedEntries.length > 0 && (
                 <ReportPagination
                   currentPage={activePage}

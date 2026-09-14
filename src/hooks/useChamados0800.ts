@@ -233,6 +233,59 @@ export const mapChamado0800 = (c: any): Chamado0800 => ({
   tema: c.tema_ia && c.tema_ia !== "interno" ? c.tema_ia : undefined,
 });
 
+/** Busca os dados completos de um chamado pelo número para exibição sob demanda. */
+export function useChamado0800ByNumber(numeroChamado?: string | null) {
+  const ticket = (numeroChamado || "").trim();
+
+  return useQuery<Chamado0800 | null>({
+    queryKey: ["chamado0800ByNumber", ticket],
+    enabled: Boolean(ticket),
+    staleTime: 60_000,
+    queryFn: async () => {
+      const [processoVenda, geral] = await Promise.all([
+        supabase
+          .from("chamados_processo_venda")
+          .select("*")
+          .eq("numero_chamado", ticket)
+          .maybeSingle(),
+        supabase
+          .from("chamados_0800")
+          .select("*")
+          .eq("numero_chamado", ticket)
+          .maybeSingle(),
+      ]);
+
+      if (processoVenda.error) throw processoVenda.error;
+      if (geral.error) throw geral.error;
+      if (!processoVenda.data && !geral.data) return null;
+
+      const principal = processoVenda.data ?? geral.data;
+      const complementar = processoVenda.data ? geral.data : null;
+
+      return mapChamado0800({
+        ...complementar,
+        ...principal,
+        nome_cliente: principal?.nome_cliente || complementar?.nome_cliente,
+        solicitante: principal?.solicitante || complementar?.solicitante,
+        titulo: principal?.titulo || complementar?.titulo,
+        descricao: principal?.descricao || complementar?.descricao,
+        natureza: principal?.natureza || complementar?.natureza,
+        status: principal?.status || complementar?.status,
+        criticidade: principal?.criticidade || complementar?.criticidade,
+        software: principal?.software || complementar?.software,
+        produto: principal?.produto || complementar?.produto,
+        equipe_responsavel:
+          principal?.equipe_responsavel || complementar?.equipe_responsavel,
+        analista_responsavel:
+          principal?.analista_responsavel || complementar?.analista_responsavel,
+        data_abertura: principal?.data_abertura || complementar?.data_abertura,
+        data_encerramento:
+          principal?.data_encerramento || complementar?.data_encerramento,
+      });
+    },
+  });
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mapChamadoTramite = (tramite: any): ChamadoTramite => ({
   sequenciaTramite: Number(tramite.sequencia_tramite),

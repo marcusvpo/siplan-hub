@@ -1,4 +1,5 @@
 import { addDays, format, startOfWeek } from "date-fns";
+import { normalizeEllevoTicketNumber } from "@/lib/ellevo-ticket";
 
 export const SD_DAILY_TARGET_MINUTES = 8 * 60;
 
@@ -15,6 +16,34 @@ export interface SdTimeEntryLike {
 export interface SortableSdTimeEntry extends SdTimeEntryLike {
   created_at?: string;
   id?: string;
+}
+
+interface SdTimeTicketEntryLike {
+  title: string;
+  source_metadata?: Record<string, unknown>;
+}
+
+export interface SdTimeEntryTicket {
+  ticketNumber: string | null;
+  displayTitle: string;
+}
+
+/** Separa o número do chamado do título dos lançamentos importados do 0800. */
+export function getSdTimeEntryTicket(entry: SdTimeTicketEntryLike): SdTimeEntryTicket {
+  const metadataValue = entry.source_metadata?.ticket_number;
+  const metadataTicket = typeof metadataValue === "string" || typeof metadataValue === "number"
+    ? normalizeEllevoTicketNumber(metadataValue)
+    : null;
+  const titleMatch = entry.title.trim().match(/^#?\s*(\d+)\s*(?:—|–|-)\s*(.+)$/s);
+  const titleTicket = normalizeEllevoTicketNumber(titleMatch?.[1]);
+  const ticketNumber = metadataTicket ?? titleTicket;
+
+  return {
+    ticketNumber,
+    displayTitle: titleMatch && (!metadataTicket || titleTicket === metadataTicket)
+      ? titleMatch[2].trim()
+      : entry.title,
+  };
 }
 
 export function timeToMinutes(value: string | null | undefined) {

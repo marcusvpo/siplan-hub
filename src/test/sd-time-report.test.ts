@@ -41,6 +41,13 @@ describe("consulta gerencial de horas do SD", () => {
     );
   });
 
+  it("permite abrir o chamado e transforma seu número em link para o 0800", () => {
+    expect(reportPage).toContain("getSdTimeEntryTicket(entry)");
+    expect(reportPage).toContain("<EllevoTicketLink ticketNumber={ticket.ticketNumber}");
+    expect(reportPage).toContain("<Chamado0800DetailsButton");
+    expect(reportPage).toContain("ticketNumber={ticket.ticketNumber}");
+  });
+
   it("mantém cada nome alinhado com sua barra na visão diária", () => {
     expect(reportPage).toContain("AnalystAxisTick");
     expect(reportPage).toContain("interval={0}");

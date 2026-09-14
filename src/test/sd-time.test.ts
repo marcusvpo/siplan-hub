@@ -4,6 +4,7 @@ import {
   entryMinutes,
   entryStartMinutes,
   formatMinutes,
+  getSdTimeEntryTicket,
   getWeekRange,
   intervalsOverlap,
   timeToMinutes,
@@ -59,6 +60,25 @@ describe("cálculos do gerenciamento de horas do SD", () => {
         .sort(compareSdTimeEntriesDescending)
         .map((entry) => entry.intervals[0].started_at),
     ).toEqual(["15:31", "13:30", "09:31", "08:15"]);
+  });
+
+  it("separa o número e o título dos chamados importados do 0800", () => {
+    expect(
+      getSdTimeEntryTicket({
+        title: "#755461 — Erro na porcentagem de fotocopia",
+        source_metadata: { ticket_number: "755461" },
+      }),
+    ).toEqual({
+      ticketNumber: "755461",
+      displayTitle: "Erro na porcentagem de fotocopia",
+    });
+  });
+
+  it("reconhece o chamado no título de lançamentos antigos sem metadados", () => {
+    expect(getSdTimeEntryTicket({ title: "#742489 - Atualizações" })).toEqual({
+      ticketNumber: "742489",
+      displayTitle: "Atualizações",
+    });
   });
 
   it("calcula a semana de segunda a domingo", () => {
