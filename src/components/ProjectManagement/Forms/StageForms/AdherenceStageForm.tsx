@@ -11,6 +11,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { Link, useNavigate } from "react-router-dom";
 import { FileWarning, CheckCircle, ClipboardCheck, ArrowUpRight, AlertTriangle, Printer, AlertCircle } from "lucide-react";
 import { getImpactedItems } from "@/utils/adherence-helpers";
+import { hasRichTextContent } from "@/lib/lexical";
 
 interface AdherenceStageFormProps {
   projectId: string;
@@ -77,6 +78,7 @@ export function AdherenceStageForm({
   const isFormLocked = isFinalized || !canEditProjects;
   const isImpeditivoVerdict = response?.data?.finalVerdict === "Não Aderente / Impeditivo" || response?.status === "rejected";
   const impeditivoItems = getImpactedItems(activeTemplate?.schema_json, response?.data);
+  const hasFinalNotes = hasRichTextContent(response?.data?.finalNotes);
 
   return (
     <div className="col-span-1 md:col-span-2 lg:col-span-3 space-y-4">
@@ -165,9 +167,13 @@ export function AdherenceStageForm({
                 <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
                   <AlertCircle className="h-3.5 w-3.5" /> Motivo do Impedimento:
                 </span>
-                <p className="text-xs text-foreground bg-background/80 p-2.5 rounded border border-rose-500/20 italic whitespace-pre-wrap">
-                  {response.data?.finalNotes || "Nenhuma justificativa ou parecer final registrado."}
-                </p>
+                <div className="text-xs text-foreground bg-background/80 p-2.5 rounded border border-rose-500/20 italic whitespace-pre-wrap">
+                  {hasFinalNotes ? (
+                    <RichTextContent content={response.data?.finalNotes} className="text-xs" />
+                  ) : (
+                    "Nenhuma justificativa ou parecer final registrado."
+                  )}
+                </div>
               </div>
 
               {/* Perguntas consideradas impeditivo */}
