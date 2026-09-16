@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Loader2, Sparkles, Wand2 } from "lucide-react";
 import {
   AlertDialog,
@@ -23,6 +23,7 @@ import {
 
 interface AiRichTextFieldProps {
   label: string;
+  labelAction?: ReactNode;
   content: string;
   onChange: (content: string) => void;
   placeholder?: string;
@@ -38,6 +39,7 @@ interface AiRichTextFieldProps {
 /** Editor rico com revisão humana obrigatória antes de aplicar a sugestão. */
 export function AiRichTextField({
   label,
+  labelAction,
   content,
   onChange,
   placeholder,
@@ -149,7 +151,10 @@ export function AiRichTextField({
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <Label>{label}</Label>
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <Label>{label}</Label>
+          {labelAction}
+        </div>
         <Button
           type="button"
           variant="ghost"

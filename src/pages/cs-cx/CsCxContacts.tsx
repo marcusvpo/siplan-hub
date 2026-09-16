@@ -1,5 +1,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import {
+  BellRing,
+  CalendarCheck2,
   CalendarDays,
   ChevronLeft,
   ChevronRight,
@@ -18,7 +20,6 @@ import {
   RefreshCw,
   Search,
   Trash2,
-  TriangleAlert,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -89,10 +90,15 @@ import { hasRichTextContent, richTextToPlainText } from "@/lib/lexical";
 import { cn } from "@/lib/utils";
 import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 
+function localIsoDate(date = new Date()) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
 const emptyForm: CsCxContactInput = {
-  contact_date: new Date().toISOString().slice(0, 10),
+  contact_date: localIsoDate(),
   notes: "",
   pending_items: "",
+  is_alert: false,
   product_ids: [],
   contact_person: "",
   contact_details: "",
@@ -121,6 +127,7 @@ export default function CsCxContacts() {
   const [productFilter, setProductFilter] = useState("all");
   const [responsibleFilter, setResponsibleFilter] = useState("all");
   const [pendingFilter, setPendingFilter] = useState<"all" | "pending">("all");
+  const [alertOnly, setAlertOnly] = useState(false);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [page, setPage] = useState(1);
@@ -187,9 +194,11 @@ export default function CsCxContacts() {
         ].some((value) => value?.toLocaleLowerCase("pt-BR").includes(term));
       const matchesPending =
         pendingFilter === "all" || hasRichTextContent(contact.pending_items);
+      const matchesAlert = !alertOnly || contact.is_alert;
       return (
         matchesSearch &&
         matchesPending &&
+        matchesAlert &&
         (officeFilter === "all" ||
           contact.registry_office_id === officeFilter) &&
         (productFilter === "all" ||
@@ -207,6 +216,7 @@ export default function CsCxContacts() {
     productFilter,
     responsibleFilter,
     pendingFilter,
+    alertOnly,
     dateFrom,
     dateTo,
   ]);
@@ -237,8 +247,8 @@ export default function CsCxContacts() {
     setPendingFilter(value);
     setPage(1);
   };
-  const togglePendingFilter = () => {
-    setPendingFilter((prev) => (prev === "pending" ? "all" : "pending"));
+  const toggleAlertFilter = () => {
+    setAlertOnly((current) => !current);
     setPage(1);
   };
   const updateDateFrom = (value: string) => {
@@ -324,7 +334,8 @@ export default function CsCxContacts() {
   const openCreate = () => {
     setForm({
       ...emptyForm,
-      contact_date: new Date().toISOString().slice(0, 10),
+      contact_date: localIsoDate(),
+      is_alert: false,
     });
     setRegistryOfficeIds([]);
     setIsFormFullscreen(false);
@@ -334,7 +345,8 @@ export default function CsCxContacts() {
   const openCreateForOffice = (officeId: string) => {
     setForm({
       ...emptyForm,
-      contact_date: new Date().toISOString().slice(0, 10),
+      contact_date: localIsoDate(),
+      is_alert: false,
     });
     setRegistryOfficeIds([officeId]);
     setIsFormFullscreen(false);
@@ -347,6 +359,7 @@ export default function CsCxContacts() {
       contact_date: contact.contact_date,
       notes: contact.notes ?? "",
       pending_items: contact.pending_items ?? "",
+      is_alert: contact.is_alert,
       product_ids: (
         contact.products ??
         (contact.product ? [{ ...contact.product, is_primary: true }] : [])
@@ -439,6 +452,7 @@ export default function CsCxContacts() {
           pendingFilter === "all"
             ? "Todas as interações"
             : "Somente com pendências",
+          alertOnly ? "Somente alertas" : "Alertas e contatos comuns",
           dateFrom ? `De ${formatDate(dateFrom)}` : "Sem data inicial",
           dateTo ? `Até ${formatDate(dateTo)}` : "Sem data final",
         ].join(" · "),
@@ -459,6 +473,10 @@ export default function CsCxContacts() {
   const recentCount = contacts.filter(
     (item) => new Date(`${item.contact_date}T00:00:00`) >= last30Days,
   ).length;
+  const todayCount = contacts.filter(
+    (item) => item.contact_date === localIsoDate(),
+  ).length;
+  const alertCount = contacts.filter((item) => item.is_alert).length;
 
   return (
     <div data-testid="cs-cx-contacts-page" className="container mx-auto w-full min-w-0 max-w-[1600px] space-y-4 overflow-x-hidden px-3 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:px-4 lg:px-6">
@@ -485,6 +503,24 @@ export default function CsCxContacts() {
             onRegisterContact={openCreateForOffice}
           />
           <Button
+            type="button"
+            size="sm"
+            variant={alertOnly ? "destructive" : "outline"}
+            aria-label={"Filtrar somente contatos em alerta (" + alertCount + ")"}
+            aria-pressed={alertOnly}
+            onClick={toggleAlertFilter}
+            className="gap-2"
+          >
+            <BellRing className="h-4 w-4" />
+            Alerta
+            <Badge
+              variant={alertOnly ? "secondary" : "destructive"}
+              className="h-5 min-w-5 justify-center rounded-full px-1.5 text-[10px]"
+            >
+              {alertCount}
+            </Badge>
+          </Button>
+          <Button
             size="sm"
             variant="outline"
             disabled={!filtered.length || isExporting}
@@ -510,12 +546,9 @@ export default function CsCxContacts() {
           icon={CalendarDays}
         />
         <Metric
-          label="Com pendências"
-          value={contacts.filter((item) => hasRichTextContent(item.pending_items)).length}
-          icon={TriangleAlert}
-          onClick={togglePendingFilter}
-          active={pendingFilter === "pending"}
-          title="Clique para filtrar somente os contatos que possuem pendências"
+          label="Hoje"
+          value={todayCount}
+          icon={CalendarCheck2}
         />
       </div>
 
@@ -1062,6 +1095,25 @@ export default function CsCxContacts() {
             />
             <AiRichTextField
               label="Pendências"
+              labelAction={
+                <Button
+                  type="button"
+                  variant={form.is_alert ? "destructive" : "outline"}
+                  size="sm"
+                  className="h-10 gap-1.5 px-3 sm:h-7 sm:px-2"
+                  aria-label="Alerta"
+                  aria-pressed={form.is_alert}
+                  onClick={() =>
+                    setForm((current) => ({
+                      ...current,
+                      is_alert: !current.is_alert,
+                    }))
+                  }
+                >
+                  <BellRing className="h-3.5 w-3.5" />
+                  Alerta
+                </Button>
+              }
               content={form.pending_items ?? ""}
               onChange={(pending_items) =>
                 setForm({ ...form, pending_items })
@@ -1355,49 +1407,21 @@ function Metric({
   label,
   value,
   icon: Icon,
-  onClick,
-  active = false,
-  title,
 }: {
   label: string;
   value: number;
   icon: typeof Contact;
-  onClick?: () => void;
-  active?: boolean;
-  title?: string;
 }) {
   return (
-    <Card
-      className={cn(
-        "transition-all",
-        onClick &&
-          "cursor-pointer hover:border-rose-300 hover:bg-rose-50/30 dark:hover:border-rose-800 dark:hover:bg-rose-950/20",
-        active &&
-          "border-rose-500 bg-rose-50/60 shadow-sm dark:border-rose-600 dark:bg-rose-950/40",
-      )}
-      onClick={onClick}
-      title={title}
-    >
+    <Card className="transition-all">
       <CardContent className="flex items-center justify-between px-3 py-2.5">
         <div>
-          <div className="flex items-center gap-1.5">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-              {label}
-            </p>
-            {active && (
-              <Badge variant="destructive" className="h-4 px-1 text-[9px] font-medium leading-none">
-                Filtrado
-              </Badge>
-            )}
-          </div>
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+            {label}
+          </p>
           <p className="text-xl font-bold leading-6">{value}</p>
         </div>
-        <Icon
-          className={cn(
-            "h-4 w-4",
-            active ? "text-rose-600 dark:text-rose-400" : "text-rose-500",
-          )}
-        />
+        <Icon className="h-4 w-4 text-rose-500" />
       </CardContent>
     </Card>
   );
