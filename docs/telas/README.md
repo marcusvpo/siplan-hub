@@ -1,6 +1,6 @@
 # 🖥️ Documentação por Tela — Siplan HUB
 
-Referência técnica de **todas as 48 telas** do sistema, agrupadas por módulo. Cada tela documenta: rota, arquivo-fonte, nível de acesso, objetivo, dados/hooks (queries, mutations, tabelas/RPCs Supabase), componentes principais, fluxos e interações, regras de negócio/estados e pontos de manutenção.
+Referência técnica das telas do sistema, agrupadas por módulo. Cada tela documenta: rota, arquivo-fonte, nível de acesso, objetivo, dados/hooks (queries, mutations, tabelas/RPCs Supabase), componentes principais, fluxos e interações, regras de negócio/estados e pontos de manutenção.
 
 > Para o modelo de dados subjacente veja [../MODELO_DE_DADOS.md](../MODELO_DE_DADOS.md) e o catálogo de hooks em [../REFERENCIA_HOOKS.md](../REFERENCIA_HOOKS.md).
 
@@ -35,6 +35,10 @@ Calendário (DnD), Agenda dos Analistas (Power BI), Analytics, Relatórios, Road
 ### 7. [Telas Públicas e Autenticação](07-telas-publicas-autenticacao.md)
 AuthContext / ProtectedRoute, Login, Checklist Público, Coleta Pública de Infraestrutura e 404.
 `/login` · `/public/checklist/:id` · `/public/infra-coleta/:id` · `*` (404)
+
+### 8. [Central de Trabalho / Meu Dia](08-central-trabalho.md)
+Painel pessoal de projetos, prioridades, pendências, agenda, atalhos e resumo diário do Copiloto.
+`/meu-dia`
 
 ---
 

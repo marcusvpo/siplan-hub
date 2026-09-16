@@ -30,6 +30,7 @@ import {
     Bot,
     Link2,
     Clock3,
+    ListTodo,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -49,6 +50,13 @@ export interface MenuItem {
 }
 
 export const menuItems: MenuItem[] = [
+    {
+        title: "Meu Dia",
+        icon: ListTodo,
+        path: "/meu-dia",
+        description: "Prioridades, compromissos e atalhos do seu trabalho",
+        permissionKey: "work_center",
+    },
     {
         title: "Dashboard",
         icon: LayoutGrid,
