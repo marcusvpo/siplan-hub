@@ -9,6 +9,7 @@ export function Breadcrumbs() {
   const { projects } = useProjectsV2();
 
   const breadcrumbMap: Record<string, string> = {
+    "meu-dia": "Meu Dia",
     implantacao: "Implantação",
     calendario: "Calendário",
     calendar: "Calendário de Projetos",
