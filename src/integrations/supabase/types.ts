@@ -83,6 +83,70 @@ export type ChamadoProcessoVendaInsert = Partial<ChamadoProcessoVendaRow> & {
 
 export type ChamadoProcessoVendaUpdate = Partial<ChamadoProcessoVendaRow>;
 
+export type MyDayTaskRow = {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string | null;
+  due_at: string;
+  priority: "low" | "medium" | "high" | "critical";
+  status: "pending" | "completed";
+  linked_path: string | null;
+  recurrence: "none" | "daily" | "weekly" | "monthly";
+  reminder_minutes: number | null;
+  snoozed_until: string | null;
+  recurrence_parent_id: string | null;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type MyDayTaskInsert = {
+  id?: string;
+  user_id: string;
+  title: string;
+  description?: string | null;
+  due_at: string;
+  priority?: MyDayTaskRow["priority"];
+  status?: MyDayTaskRow["status"];
+  linked_path?: string | null;
+  recurrence?: MyDayTaskRow["recurrence"];
+  reminder_minutes?: number | null;
+  snoozed_until?: string | null;
+  recurrence_parent_id?: string | null;
+  completed_at?: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type MyDayTaskUpdate = Partial<MyDayTaskInsert>;
+
+export type MyDayPreferencesRow = {
+  user_id: string;
+  density: "compact" | "comfortable";
+  widget_order: string[];
+  hidden_widgets: string[];
+  widget_layout: Json;
+  quick_links: string[] | null;
+  notifications_enabled: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type MyDayPreferencesInsert = {
+  user_id: string;
+  density?: MyDayPreferencesRow["density"];
+  widget_order?: string[];
+  hidden_widgets?: string[];
+  widget_layout?: Json;
+  quick_links?: string[] | null;
+  notifications_enabled?: boolean;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type MyDayPreferencesUpdate = Partial<MyDayPreferencesInsert>;
+
 /**
  * O arquivo gerado do projeto estava vazio antes desta mudança. Estes aliases
  * mantêm os consumidores legados sem tipagem até ser possível regenerar todo o
@@ -96,14 +160,20 @@ export type Database = UntypedSupabaseShape;
 export type Tables<TableName extends string> =
   TableName extends "conversion_engines" ? ConversionEngineRow
     : TableName extends "chamados_processo_venda" ? ChamadoProcessoVendaRow
-      : UntypedSupabaseShape;
+      : TableName extends "my_day_tasks" ? MyDayTaskRow
+        : TableName extends "my_day_preferences" ? MyDayPreferencesRow
+          : UntypedSupabaseShape;
 
 export type TablesInsert<TableName extends string> =
   TableName extends "conversion_engines" ? ConversionEngineInsert
     : TableName extends "chamados_processo_venda" ? ChamadoProcessoVendaInsert
-      : UntypedSupabaseShape;
+      : TableName extends "my_day_tasks" ? MyDayTaskInsert
+        : TableName extends "my_day_preferences" ? MyDayPreferencesInsert
+          : UntypedSupabaseShape;
 
 export type TablesUpdate<TableName extends string> =
   TableName extends "conversion_engines" ? ConversionEngineUpdate
     : TableName extends "chamados_processo_venda" ? ChamadoProcessoVendaUpdate
-      : UntypedSupabaseShape;
+      : TableName extends "my_day_tasks" ? MyDayTaskUpdate
+        : TableName extends "my_day_preferences" ? MyDayPreferencesUpdate
+          : UntypedSupabaseShape;

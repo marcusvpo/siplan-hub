@@ -22,7 +22,7 @@ export const useProjectsV2 = () => {
   const queryClient = useQueryClient();
   const { addAutoLog, getCurrentUserName } = useTimeline();
 
-  const { data: projects, isLoading } = useQuery({
+  const projectsQuery = useQuery({
     queryKey: ["projectsV3_with_dates"], // Changed key to force refresh
     queryFn: async () => {
       const { data, error } = await supabase
@@ -37,6 +37,7 @@ export const useProjectsV2 = () => {
     },
     staleTime: 1000 * 60 * 5, // 5 minutos de cache
   });
+  const { data: projects, isLoading } = projectsQuery;
 
   const updateProject = useMutation({
     mutationFn: async ({ projectId, updates }: { projectId: string; updates: Partial<ProjectV2> }) => {
@@ -242,6 +243,9 @@ export const useProjectsV2 = () => {
   return {
     projects: projects || [],
     isLoading,
+    isFetching: projectsQuery.isFetching,
+    error: projectsQuery.error,
+    refetch: projectsQuery.refetch,
     updateProject,
     createProject,
     deleteProject: useMutation({
