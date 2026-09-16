@@ -4,6 +4,12 @@ import { MemoryRouter } from "react-router-dom";
 
 const hasPermission = vi.fn();
 const mutation = { mutateAsync: vi.fn(), isPending: false };
+const generateContactsPdf = vi.hoisted(() => vi.fn());
+const pendingItems =
+  '{"root":{"children":[{"children":[{"text":"Acompanhar chamado pendente"}],"type":"paragraph"}]}}';
+
+const localIsoDate = (date = new Date()) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 
 vi.mock("@/hooks/usePermissions", () => ({
   usePermissions: () => ({ hasPermission }),
@@ -26,6 +32,9 @@ vi.mock("@/hooks/useModelGenerationJobs", () => ({
 
 vi.mock("@/hooks/use-toast", () => ({
   useToast: () => ({ toast: vi.fn() }),
+}));
+vi.mock("@/lib/cs-cx-engagement-pdf", () => ({
+  generateCsCxContactsPdf: generateContactsPdf,
 }));
 
 vi.mock("@/hooks/useCsCxCore", () => ({
@@ -58,15 +67,11 @@ vi.mock("@/hooks/useCsCxEngagement", () => ({
       legacy_id: index + 1,
       contact_date:
         index === 11
-          ? new Date(Date.now() - 100 * 24 * 60 * 60 * 1000)
-              .toISOString()
-              .slice(0, 10)
-          : new Date().toISOString().slice(0, 10),
+          ? localIsoDate(new Date(Date.now() - 100 * 24 * 60 * 60 * 1000))
+          : localIsoDate(),
       notes: "Contato produtivo",
-      pending_items:
-        index === 0
-          ? '{"root":{"children":[{"children":[{"text":"Acompanhar chamado pendente"}],"type":"paragraph"}]}}'
-          : null,
+      pending_items: index === 0 ? pendingItems : null,
+      is_alert: index < 2,
       product_id: "product-1",
       contact_person: index === 0 ? "Maria" : `Pessoa ${index + 1}`,
       contact_details: index === 0 ? "maria@exemplo.com" : `pessoa${index + 1}@exemplo.com`,
@@ -141,6 +146,8 @@ describe("CS/CX contatos e agendamentos — permissões", () => {
     hasPermission.mockReset();
     mutation.mutateAsync.mockReset();
     mutation.mutateAsync.mockResolvedValue(undefined);
+    generateContactsPdf.mockReset();
+    generateContactsPdf.mockResolvedValue(undefined);
   });
 
   it("mantém contatos em leitura e esconde criação", () => {
@@ -203,22 +210,71 @@ describe("CS/CX contatos e agendamentos — permissões", () => {
     expect(screen.getByText("Nova solicitação (Registros)")).toBeInTheDocument();
   });
 
-  it("filtra apenas contatos com pendências pelo card de métrica e pelo select", () => {
+  it("contabiliza no card Hoje apenas os contatos da data local atual", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 8, 16, 23, 30));
+
+    try {
+      renderPage(<CsCxContacts />, []);
+
+      const todayMetric = screen.getByText("Hoje").closest(".transition-all");
+      expect(todayMetric).not.toBeNull();
+      expect(within(todayMetric!).getByText("11")).toBeInTheDocument();
+      expect(screen.queryByText("Com pendências")).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("conta, combina e alterna o filtro de alertas na lista, busca e exportação", async () => {
+    renderPage(<CsCxContacts />, []);
+
+    const alertFilter = screen.getByRole("button", {
+      name: /filtrar somente contatos em alerta \(2\)/i,
+    });
+    expect(alertFilter).toHaveAttribute("aria-pressed", "false");
+    expect(within(alertFilter).getByText("2")).toBeInTheDocument();
+
+    fireEvent.click(alertFilter);
+    expect(alertFilter).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByText("Maria")).toBeInTheDocument();
+    expect(screen.getByText("Pessoa 2")).toBeInTheDocument();
+    expect(screen.queryByText("Pessoa 3")).not.toBeInTheDocument();
+
+    const search = screen.getByPlaceholderText(
+      /buscar pessoa, cartório, produto ou chamado/i,
+    );
+    fireEvent.change(search, { target: { value: "Pessoa 3" } });
+    expect(screen.getByText("Nenhum contato encontrado.")).toBeInTheDocument();
+    fireEvent.change(search, { target: { value: "" } });
+
+    fireEvent.click(screen.getByRole("button", { name: /exportar pdf/i }));
+    await waitFor(() => expect(generateContactsPdf).toHaveBeenCalledTimes(1));
+    const exportedContacts = generateContactsPdf.mock.calls[0][0] as Array<{
+      is_alert: boolean;
+    }>;
+    expect(exportedContacts).toHaveLength(2);
+    expect(exportedContacts.every((contact) => contact.is_alert)).toBe(true);
+    expect(generateContactsPdf.mock.calls[0][1]).toContain("Somente alertas");
+
+    fireEvent.click(alertFilter);
+    expect(alertFilter).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByText("Pessoa 3")).toBeInTheDocument();
+  });
+
+  it("filtra contatos com pendências pelo seletor", () => {
     renderPage(<CsCxContacts />, []);
 
     expect(screen.getByText("Pessoa 2")).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("combobox", { name: /filtrar por pendências/i }),
+    );
+    fireEvent.click(
+      screen.getByRole("option", { name: "Somente com pendências" }),
+    );
 
-    // Clica na métrica "Com pendências"
-    const pendingMetricCard = screen.getByText("Com pendências");
-    fireEvent.click(pendingMetricCard);
-
-    // Deve filtrar mostrando somente Maria
     expect(screen.getByText("Maria")).toBeInTheDocument();
     expect(screen.queryByText("Pessoa 2")).not.toBeInTheDocument();
-
-    // Desativa clicando no card novamente
-    fireEvent.click(pendingMetricCard);
-    expect(screen.getByText("Pessoa 2")).toBeInTheDocument();
   });
 
   it("permite expandir o formulário de contato para tela cheia", () => {
@@ -238,12 +294,82 @@ describe("CS/CX contatos e agendamentos — permissões", () => {
     expect(
       screen.getAllByRole("button", { name: "Melhorar com IA" }),
     ).toHaveLength(2);
+    expect(
+      screen.getByRole("button", { name: "Alerta" }),
+    ).toHaveAttribute("aria-pressed", "false");
     fireEvent.click(expand);
 
     expect(screen.getByRole("dialog")).toHaveClass("h-[100dvh]");
     expect(
       screen.getByRole("button", { name: /sair da tela cheia/i }),
     ).toBeInTheDocument();
+  });
+
+  it("carrega o alerta na edição e preserva as pendências no payload", async () => {
+    renderPage(<CsCxContacts />, ["cs_cx_contatos:edit"]);
+
+    const contactRow = screen.getByText("maria@exemplo.com").closest("tr");
+    expect(contactRow).not.toBeNull();
+    fireEvent.keyDown(
+      within(contactRow!).getByRole("button", { name: /ações/i }),
+      { key: "Enter", code: "Enter" },
+    );
+    fireEvent.click(
+      await screen.findByRole("menuitem", { name: /editar/i }),
+    );
+
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toHaveTextContent("Editar contato");
+    const alertControl = within(dialog).getByRole("button", { name: "Alerta" });
+    expect(alertControl).toHaveAttribute("aria-pressed", "true");
+    expect(
+      within(dialog).getAllByRole("button", { name: "Melhorar com IA" }),
+    ).toHaveLength(2);
+
+    fireEvent.click(alertControl);
+    expect(alertControl).toHaveAttribute("aria-pressed", "false");
+    fireEvent.click(
+      within(dialog).getByRole("button", { name: /salvar contato/i }),
+    );
+
+    await waitFor(() => expect(mutation.mutateAsync).toHaveBeenCalledTimes(1));
+    expect(mutation.mutateAsync).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "contact-1",
+        is_alert: false,
+        pending_items: pendingItems,
+      }),
+    );
+  });
+
+  it("reseta e envia o alerta ao criar um contato", async () => {
+    renderPage(<CsCxContacts />, ["cs_cx_contatos:create"]);
+    fireEvent.click(screen.getByRole("button", { name: /novo contato/i }));
+
+    const dialog = screen.getByRole("dialog");
+    const alertControl = within(dialog).getByRole("button", { name: "Alerta" });
+    expect(alertControl).toHaveAttribute("aria-pressed", "false");
+    fireEvent.click(alertControl);
+    expect(alertControl).toHaveAttribute("aria-pressed", "true");
+
+    const comboboxes = within(dialog).getAllByRole("combobox");
+    fireEvent.click(comboboxes[0]);
+    fireEvent.click(screen.getAllByRole("option")[0]);
+    fireEvent.click(comboboxes[1]);
+    fireEvent.click(screen.getByRole("option", { name: "Orion" }));
+
+    const contactPerson = within(dialog).getByText("Pessoa de contato *")
+      .parentElement?.querySelector("input");
+    expect(contactPerson).not.toBeNull();
+    fireEvent.change(contactPerson!, { target: { value: "Maria" } });
+    fireEvent.click(
+      within(dialog).getByRole("button", { name: /salvar contato/i }),
+    );
+
+    await waitFor(() => expect(mutation.mutateAsync).toHaveBeenCalledTimes(1));
+    expect(mutation.mutateAsync).toHaveBeenCalledWith(
+      expect.objectContaining({ is_alert: true }),
+    );
   });
 
   it("exibe o painel de cartórios que precisam de atenção", () => {

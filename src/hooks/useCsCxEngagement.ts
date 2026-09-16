@@ -11,6 +11,7 @@ export interface CsCxContact {
   contact_date: string;
   notes: string | null;
   pending_items: string | null;
+  is_alert: boolean;
   product_id: string;
   contact_person: string;
   contact_details: string | null;
@@ -31,6 +32,7 @@ export interface CsCxContactInput {
   contact_date: string;
   notes?: string;
   pending_items?: string;
+  is_alert: boolean;
   product_ids: string[];
   contact_person: string;
   contact_details?: string;
@@ -120,7 +122,7 @@ export function useCsCxContacts() {
       const { data, error } = await db
         .from("cs_cx_contacts")
         .select(`
-          id, legacy_id, contact_date, notes, pending_items, product_id,
+          id, legacy_id, contact_date, notes, pending_items, is_alert, product_id,
           contact_person, contact_details, registry_office_id, ticket_number,
           author_profile_id, created_at, updated_at, origin,
           cs_cx_products (id, name),
@@ -164,6 +166,7 @@ export function useCsCxContacts() {
         p_contact_date: input.contact_date,
         p_notes: emptyToNull(input.notes),
         p_pending_items: emptyToNull(input.pending_items),
+        p_is_alert: input.is_alert,
         p_product_ids: input.product_ids,
         p_contact_person: input.contact_person.trim(),
         p_contact_details: emptyToNull(input.contact_details),

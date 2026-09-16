@@ -147,6 +147,52 @@ export type MyDayPreferencesInsert = {
 
 export type MyDayPreferencesUpdate = Partial<MyDayPreferencesInsert>;
 
+export type CsCxContactRow = {
+  id: string;
+  legacy_id: number | null;
+  contact_date: string;
+  notes: string | null;
+  pending_items: string | null;
+  product_id: string;
+  contact_person: string;
+  contact_details: string | null;
+  registry_office_id: string;
+  ticket_number: string | null;
+  legacy_user_id: number | null;
+  author_profile_id: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  source_hash: string | null;
+  source_present: boolean;
+  last_synced_at: string;
+  origin: "legacy" | "hub";
+  is_alert: boolean;
+};
+
+export type CsCxContactInsert = {
+  id?: string;
+  legacy_id?: number | null;
+  contact_date: string;
+  notes?: string | null;
+  pending_items?: string | null;
+  product_id: string;
+  contact_person: string;
+  contact_details?: string | null;
+  registry_office_id: string;
+  ticket_number?: string | null;
+  legacy_user_id?: number | null;
+  author_profile_id?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  source_hash?: string | null;
+  source_present?: boolean;
+  last_synced_at?: string;
+  origin?: CsCxContactRow["origin"];
+  is_alert?: boolean;
+};
+
+export type CsCxContactUpdate = Partial<CsCxContactInsert>;
+
 /**
  * O arquivo gerado do projeto estava vazio antes desta mudança. Estes aliases
  * mantêm os consumidores legados sem tipagem até ser possível regenerar todo o
@@ -162,18 +208,21 @@ export type Tables<TableName extends string> =
     : TableName extends "chamados_processo_venda" ? ChamadoProcessoVendaRow
       : TableName extends "my_day_tasks" ? MyDayTaskRow
         : TableName extends "my_day_preferences" ? MyDayPreferencesRow
-          : UntypedSupabaseShape;
+          : TableName extends "cs_cx_contacts" ? CsCxContactRow
+            : UntypedSupabaseShape;
 
 export type TablesInsert<TableName extends string> =
   TableName extends "conversion_engines" ? ConversionEngineInsert
     : TableName extends "chamados_processo_venda" ? ChamadoProcessoVendaInsert
       : TableName extends "my_day_tasks" ? MyDayTaskInsert
         : TableName extends "my_day_preferences" ? MyDayPreferencesInsert
-          : UntypedSupabaseShape;
+          : TableName extends "cs_cx_contacts" ? CsCxContactInsert
+            : UntypedSupabaseShape;
 
 export type TablesUpdate<TableName extends string> =
   TableName extends "conversion_engines" ? ConversionEngineUpdate
     : TableName extends "chamados_processo_venda" ? ChamadoProcessoVendaUpdate
       : TableName extends "my_day_tasks" ? MyDayTaskUpdate
         : TableName extends "my_day_preferences" ? MyDayPreferencesUpdate
-          : UntypedSupabaseShape;
+          : TableName extends "cs_cx_contacts" ? CsCxContactUpdate
+            : UntypedSupabaseShape;
