@@ -54,6 +54,7 @@ import {
   Megaphone,
   Image,
   Save,
+  ListTodo,
 } from "lucide-react";
 
 export interface PageHelpStep {
@@ -141,6 +142,82 @@ export const pageHelpData: PageHelpInfo[] = [
           "Se um módulo não estiver visível, solicite permissão ao Administrador em /admin/roles.",
         variant: "info",
       },
+    ],
+  },
+
+  {
+    route: "/meu-dia",
+    title: "Central de Trabalho / Meu Dia",
+    subtitle: "Sua rotina em um só lugar",
+    moduleName: "Siplan HUB",
+    icon: ListTodo,
+    description:
+      "Central pessoal e compacta que reúne uma fila de prioridades, projetos, gráficos, agenda avançada, compromissos de CS/CX, atalhos e o resumo diário do Copiloto.",
+    keyFeatures: [
+      "Projetos personalizados por líder e responsáveis das etapas",
+      "Indicadores clicáveis e gráficos que filtram os projetos e a agenda",
+      "Agenda pessoal com criação, conclusão, edição e exclusão de tarefas",
+      "Recorrência, lembretes locais, adiamento, filtros e expansão da agenda",
+      "Blocos com modelos, prévia, arrastar e soltar, visibilidade e largura personalizáveis",
+      "Atualização automática e falhas isoladas por bloco",
+      "Densidade da tela e até oito atalhos personalizáveis por usuário",
+      "Alternância entre trabalho pessoal e portfólio para administradores",
+      "Permissões e RLS aplicadas aos dados e às opções disponíveis",
+    ],
+    steps: [
+      {
+        stepNumber: 1,
+        title: "Confira o resumo do dia",
+        description:
+          "Clique nos indicadores do topo para filtrar projetos, prioridades, pendências ou a agenda de hoje.",
+        icon: LayoutDashboard,
+      },
+      {
+        stepNumber: 2,
+        title: "Analise os gráficos",
+        description:
+          "Use as legendas de situação e próxima etapa para refinar a lista de projetos.",
+        icon: LayoutDashboard,
+      },
+      {
+        stepNumber: 3,
+        title: "Gerencie sua agenda",
+        description:
+          "Adicione tarefas, defina prazo, prioridade, repetição e lembrete, filtre a lista e adie ou conclua os itens.",
+        icon: Calendar,
+      },
+      {
+        stepNumber: 4,
+        title: "Personalize o Meu Dia",
+        description:
+          "Comece por um modelo ou ajuste a densidade, visibilidade, ordem, largura e atalhos; confira a prévia antes de salvar.",
+        icon: Settings2,
+      },
+    ],
+    tips: [
+      {
+        title: "Lembretes no PWA",
+        description:
+          "As notificações locais são exibidas enquanto o HUB ou PWA estiver aberto e dependem da permissão do navegador.",
+        variant: "info",
+      },
+      {
+        title: "Conteúdo personalizado",
+        description:
+          "Sua organização é salva no banco e acompanha o usuário em outros dispositivos.",
+        variant: "info",
+      },
+      {
+        title: "Responsabilidades do projeto",
+        description:
+          "Um projeto aparece em Meu trabalho quando você é líder ou responsável por alguma etapa ativa.",
+        variant: "tip",
+      },
+    ],
+    quickLinks: [
+      { label: "Projetos", path: "/projects" },
+      { label: "Calendário", path: "/calendar" },
+      { label: "Copiloto", path: "/copilot" },
     ],
   },
 

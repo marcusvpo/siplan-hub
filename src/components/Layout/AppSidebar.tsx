@@ -44,6 +44,7 @@ import {
   Bot,
   Link2,
   Clock3,
+  ListTodo,
 } from "lucide-react";
 import {
   Collapsible,
@@ -121,6 +122,7 @@ export function AppSidebar() {
   const canViewSd = hasPermission("menu_sd", "view");
   const canViewAssistentes = hasPermission("menu_assistentes", "view");
   const canViewDashboard = hasPermission("dashboard", "view");
+  const canViewWorkCenter = hasPermission("work_center", "view");
   const canViewDashboardView = hasPermission("dashboard_view", "view");
   const canViewKanban = hasPermission("kanban", "view");
   const canViewPosPanorama = hasPermission("pos_panorama", "view");
@@ -271,6 +273,25 @@ export function AppSidebar() {
             </Button>
           </Link>
         </div>
+
+        {/* Central de Trabalho */}
+        {canViewWorkCenter && (
+          <div className="px-2">
+            <Link to="/meu-dia">
+              <Button
+                variant={isActive("/meu-dia") ? "secondary" : "ghost"}
+                className={cn(
+                  "w-full justify-start gap-3",
+                  collapsed ? "justify-center px-0" : "",
+                )}
+                title="Central de Trabalho / Meu Dia"
+              >
+                <ListTodo className="h-5 w-5" />
+                {!collapsed && <span>Meu Dia</span>}
+              </Button>
+            </Link>
+          </div>
+        )}
 
         {/* Copiloto (IA) - so aparece para usuarios habilitados */}
         {hasCopilotAccess && (

@@ -20,6 +20,7 @@ const DashboardV2 = lazy(() => import("./pages/DashboardV2"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Index = lazy(() => import("./pages/Index"));
 const Home = lazy(() => import("./pages/Home"));
+const MyDay = lazy(() => import("./pages/MyDay"));
 const Reports = lazy(() => import("./pages/Reports"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const CompareProjects = lazy(() => import("./pages/CompareProjects"));
@@ -409,6 +410,14 @@ const App = () => (
                       <Suspense fallback={<PageLoader />}>
                         <Routes>
                           <Route path="/" element={<Home />} />
+                          <Route
+                            path="/meu-dia"
+                            element={
+                              <RequirePermission resource="work_center">
+                                <MyDay />
+                              </RequirePermission>
+                            }
+                          />
                           <Route
                             path="/implantacao"
                             element={

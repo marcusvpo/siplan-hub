@@ -76,7 +76,13 @@ export function useCopilot() {
   const channelIdRef = useRef(Math.random().toString(36).slice(2));
 
   // Cota/permissao do usuario atual. A linha pode nao existir (=> sem acesso).
-  const { data: access, isLoading: accessLoading } = useQuery({
+  const {
+    data: access,
+    isLoading: accessLoading,
+    isFetching: accessFetching,
+    error: accessError,
+    refetch: refetchAccess,
+  } = useQuery({
     queryKey: ["copilotAccess", userId],
     enabled: !!userId,
     queryFn: async () => {
@@ -134,7 +140,12 @@ export function useCopilot() {
   });
 
   // Resumo diario do portfolio (gerado pelo worker). Mostra o mais recente.
-  const { data: digest } = useQuery({
+  const {
+    data: digest,
+    isFetching: digestFetching,
+    error: digestError,
+    refetch: refetchDigest,
+  } = useQuery({
     queryKey: ["copilotDigest", userId],
     enabled: !!userId,
     queryFn: async () => {
@@ -251,5 +262,10 @@ export function useCopilot() {
     digest,
     activeJob,
     hasAccess: !!access?.enabled,
+    error: accessError ?? digestError,
+    isRefreshing: accessFetching || digestFetching,
+    refreshSummary: async () => {
+      await Promise.all([refetchAccess(), refetchDigest()]);
+    },
   };
 }
