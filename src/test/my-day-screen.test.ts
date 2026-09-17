@@ -123,7 +123,7 @@ describe("integração da Central de Trabalho", () => {
     expect(migration).toContain("'/meu-dia/quadro'");
   });
 
-  it("integra prazos do quadro na agenda e mantém layout mobile sem rolagem horizontal", () => {
+  it("integra prazos do quadro na agenda e separa os layouts desktop e mobile", () => {
     const page = readSource("src/pages/MyDayBoard.tsx");
     const myDay = readSource("src/pages/MyDay.tsx");
     const agenda = readSource("src/components/my-day/MyDayAgenda.tsx");
@@ -131,11 +131,45 @@ describe("integração da Central de Trabalho", () => {
     expect(page).toContain("overflow-x-hidden");
     expect(page).toContain("safe-area-inset-bottom");
     expect(page).toContain('data-testid="my-day-board-mobile"');
+    expect(page).toContain('data-testid="my-day-board-desktop"');
+    expect(page).toContain('data-testid="my-day-board-hero"');
+    expect(page).toContain("overflow-x-auto");
+    expect(page).toContain("[scrollbar-width:none]");
+    expect(page).toContain("linear-gradient(to_right,#64748b1a_1px,transparent_1px)");
+    expect(page).toContain("bg-[size:24px_24px]");
+    expect(page).toContain("startBoardPan");
+    expect(page).toContain("lg:min-h-[calc(100dvh-17rem)]");
+    expect(page).toContain("Segure e arraste qualquer área livre");
+    expect(page).toContain('data-testid="my-day-board-zoom-controls"');
+    expect(page).toContain('data-testid="my-day-board-zoom-layer"');
+    expect(page).toContain("changeBoardZoom");
+    expect(page).toContain("fitBoardToViewport");
+    expect(page).toContain('data-testid="my-day-board-filters"');
+    expect(page).toContain('data-testid="my-day-board-minimap"');
+    expect(page).toContain("renderQuickAdd");
+    expect(page).toContain("collapsedColumnIds");
+    expect(page).toContain("BOARD_VIEW_STORAGE_PREFIX");
+    expect(page).toContain("Desfazer");
+    expect(page).toContain("sticky top-0");
+    expect(page).toContain("safe-area-inset-bottom");
+    expect(page).toContain("shrink-0");
     expect(page).toContain("activeMobileColumnId");
     expect(myDay).toContain("buildMyDayBoardAgendaEvents");
     expect(myDay).toContain('widgetId === "board"');
     expect(agenda).toContain("canViewBoard");
     expect(agenda).toContain('sourceFilter === "board"');
+  });
+
+  it("publica o layout horizontal e compacto do Meu Quadro", () => {
+    const migration = readSource(
+      "supabase/migrations/20260917171000_my_day_board_horizontal_layout_changelog.sql",
+    );
+
+    expect(migration).toContain("'release_improvement'");
+    expect(migration).toContain("'work_board'");
+    expect(migration).toContain("'/meu-dia/quadro'");
+    expect(migration).toContain("busca e filtros");
+    expect(migration).toContain("minimapa");
   });
 
   it("integra a agenda ao quadro com drag responsivo e publica a melhoria", () => {
@@ -155,5 +189,30 @@ describe("integração da Central de Trabalho", () => {
     expect(migration).toContain("'release_improvement'");
     expect(migration).toContain("'work_board'");
     expect(migration).toContain("'/meu-dia/quadro'");
+  });
+
+  it("reforça conclusão, sincronização, lembretes e recorrência com segurança", () => {
+    const boardHook = readSource("src/hooks/useMyDayBoard.ts");
+    const board = readSource("src/lib/my-day-board.ts");
+    const reminders = readSource("src/hooks/useMyDayReminders.ts");
+    const help = readSource("src/constants/pageHelpRegistry.ts");
+    const preparer = readSource("scripts/prepare-my-day-board-schema.mjs");
+    const migration = readSource(
+      "supabase/migrations/20260917170000_my_day_reliability_improvements.sql",
+    );
+
+    expect(boardHook).toContain("sync_my_day_board_cards");
+    expect(boardHook).toContain("update_my_day_board_column");
+    expect(boardHook).toContain("reorder_my_day_board_columns");
+    expect(board).toContain("buildMyDayBoardLinkedCardUpdates");
+    expect(reminders).toContain("navigator.serviceWorker.ready");
+    expect(help).toContain("Conclusão explícita");
+    expect(preparer).toContain("20260917170000_my_day_reliability_improvements.sql");
+    expect(preparer).toContain("EXPECTED_UPGRADE_FUNCTIONS");
+    expect(migration).toContain("is_completion BOOLEAN");
+    expect(migration).toContain("SECURITY INVOKER");
+    expect(migration).toContain("has_permission(auth.uid(), 'work_center', 'create')");
+    expect(migration).toContain("'release_improvement'");
+    expect(migration).toContain("'/meu-dia'");
   });
 });

@@ -11,6 +11,7 @@ import {
   type MyDayBoardCardInput,
   type MyDayBoardChecklistItem,
   type MyDayBoardColumn,
+  type MyDayBoardLinkedCardUpdate,
 } from "@/lib/my-day-board";
 
 const db = supabase as unknown as SupabaseClient;
@@ -31,6 +32,7 @@ interface RawColumn {
   board_id: string;
   title: string;
   color: string;
+  is_completion: boolean;
   position: number;
   created_at: string;
   updated_at: string;
@@ -57,7 +59,7 @@ interface RawCard {
 const BOARD_SELECT =
   "id, name, description, color, is_default, position, created_at, updated_at";
 const COLUMN_SELECT =
-  "id, board_id, title, color, position, created_at, updated_at";
+  "id, board_id, title, color, is_completion, position, created_at, updated_at";
 const CARD_SELECT =
   "id, board_id, column_id, title, description, priority, due_at, labels, checklist, linked_path, position, archived_at, completed_at, created_at, updated_at";
 
@@ -80,6 +82,7 @@ function mapColumn(column: RawColumn): MyDayBoardColumn {
     boardId: column.board_id,
     title: column.title,
     color: column.color,
+    isCompletion: column.is_completion,
     position: Number(column.position),
     createdAt: new Date(column.created_at),
     updatedAt: new Date(column.updated_at),
@@ -260,7 +263,7 @@ export function useMyDayBoard() {
   });
 
   const createColumnMutation = useMutation({
-    mutationFn: async (input: { boardId: string; title: string; color: string }) => {
+    mutationFn: async (input: { boardId: string; title: string; color: string; isCompletion: boolean }) => {
       if (!userId || !canCreate) throw new Error("Sem permissão para criar colunas.");
       const boardColumns = (columnsQuery.data ?? []).filter((column) => column.boardId === input.boardId);
       const lastPosition = boardColumns.at(-1)?.position ?? 0;
@@ -269,6 +272,7 @@ export function useMyDayBoard() {
         user_id: userId,
         title: input.title.trim(),
         color: input.color,
+        is_completion: input.isCompletion,
         position: lastPosition + 1024,
       });
       if (error) throw error;
@@ -281,23 +285,15 @@ export function useMyDayBoard() {
   });
 
   const updateColumnMutation = useMutation({
-    mutationFn: async ({ id, ...input }: { id: string; title: string; color: string }) => {
+    mutationFn: async ({ id, ...input }: { id: string; title: string; color: string; isCompletion: boolean }) => {
       if (!userId || !canEdit) throw new Error("Sem permissão para editar colunas.");
-      const { error } = await db
-        .from("my_day_board_columns")
-        .update({ title: input.title.trim(), color: input.color })
-        .eq("id", id)
-        .eq("user_id", userId);
+      const { error } = await db.rpc("update_my_day_board_column", {
+        p_column_id: id,
+        p_title: input.title.trim(),
+        p_color: input.color,
+        p_is_completion: input.isCompletion,
+      });
       if (error) throw error;
-
-      const completed = /conclu|finaliz|feito|done/i.test(input.title);
-      const { error: cardsError } = await db
-        .from("my_day_board_cards")
-        .update({ completed_at: completed ? new Date().toISOString() : null })
-        .eq("column_id", id)
-        .eq("user_id", userId)
-        .is("archived_at", null);
-      if (cardsError) throw cardsError;
     },
     onSuccess: () => {
       void invalidate();
@@ -309,17 +305,14 @@ export function useMyDayBoard() {
   const reorderColumnsMutation = useMutation({
     mutationFn: async (orderedColumnIds: string[]) => {
       if (!userId || !canEdit) throw new Error("Sem permissão para organizar colunas.");
-      const results = await Promise.all(
-        orderedColumnIds.map((id, index) =>
-          db
-            .from("my_day_board_columns")
-            .update({ position: (index + 1) * 1024 })
-            .eq("id", id)
-            .eq("user_id", userId),
-        ),
-      );
-      const failed = results.find((result) => result.error);
-      if (failed?.error) throw failed.error;
+      const boardId = (columnsQuery.data ?? [])
+        .find((column) => column.id === orderedColumnIds[0])?.boardId;
+      if (!boardId) throw new Error("Quadro não encontrado para reordenar as colunas.");
+      const { error } = await db.rpc("reorder_my_day_board_columns", {
+        p_board_id: boardId,
+        p_column_ids: orderedColumnIds,
+      });
+      if (error) throw error;
     },
     onSuccess: () => void invalidate(),
     onError: () => toast.error("Não foi possível reordenar as colunas."),
@@ -378,7 +371,7 @@ export function useMyDayBoard() {
     mutationFn: async ({ id, input }: { id: string; input: MyDayBoardCardInput }) => {
       if (!userId || !canEdit) throw new Error("Sem permissão para editar cartões.");
       const targetColumn = (columnsQuery.data ?? []).find((column) => column.id === input.columnId);
-      const completed = Boolean(targetColumn && /conclu|finaliz|feito|done/i.test(targetColumn.title));
+      const completed = Boolean(targetColumn?.isCompletion);
       const { data, error } = await db
         .from("my_day_board_cards")
         .update({
@@ -411,7 +404,7 @@ export function useMyDayBoard() {
     mutationFn: async (input: { cardId: string; columnId: string; position: number }) => {
       if (!userId || !canEdit) throw new Error("Sem permissão para mover cartões.");
       const targetColumn = (columnsQuery.data ?? []).find((column) => column.id === input.columnId);
-      const completed = Boolean(targetColumn && /conclu|finaliz|feito|done/i.test(targetColumn.title));
+      const completed = Boolean(targetColumn?.isCompletion);
       const { error } = await db
         .from("my_day_board_cards")
         .update({
@@ -425,6 +418,27 @@ export function useMyDayBoard() {
     },
     onSuccess: () => void invalidate(),
     onError: () => toast.error("Não foi possível mover o cartão."),
+  });
+
+  const syncLinkedCardsMutation = useMutation({
+    mutationFn: async (updates: MyDayBoardLinkedCardUpdate[]) => {
+      if (!userId || !canEdit || updates.length === 0) return;
+      const { error } = await db.rpc("sync_my_day_board_cards", {
+        p_updates: updates.map((update) => ({
+          id: update.id,
+          title: update.title,
+          priority: update.priority,
+          due_at: update.dueAt.toISOString(),
+        })),
+      });
+      if (error) throw error;
+    },
+    onSuccess: (_, updates) => {
+      if (updates.length > 0) {
+        void queryClient.invalidateQueries({ queryKey: ["my-day", "board-cards", userId] });
+      }
+    },
+    onError: () => toast.error("Não foi possível sincronizar os cartões vinculados à agenda."),
   });
 
   const archiveCardMutation = useMutation({
@@ -464,6 +478,7 @@ export function useMyDayBoard() {
   const cards = cardsQuery.data ?? [];
 
   return {
+    userId,
     boards: boardsQuery.data ?? [],
     columns: columnsQuery.data ?? [],
     cards,
@@ -474,7 +489,7 @@ export function useMyDayBoard() {
     setDefaultBoard: setDefaultBoardMutation.mutateAsync,
     deleteBoard: deleteBoardMutation.mutateAsync,
     createColumn: createColumnMutation.mutateAsync,
-    updateColumn: (id: string, input: { title: string; color: string }) =>
+    updateColumn: (id: string, input: { title: string; color: string; isCompletion: boolean }) =>
       updateColumnMutation.mutateAsync({ id, ...input }),
     reorderColumns: reorderColumnsMutation.mutateAsync,
     deleteColumn: deleteColumnMutation.mutateAsync,
@@ -482,6 +497,7 @@ export function useMyDayBoard() {
     updateCard: (id: string, input: MyDayBoardCardInput) =>
       updateCardMutation.mutateAsync({ id, input }),
     moveCard: moveCardMutation.mutateAsync,
+    syncLinkedCards: syncLinkedCardsMutation.mutateAsync,
     archiveCard: (cardId: string) => archiveCardMutation.mutateAsync({ cardId, archived: true }),
     restoreCard: (cardId: string) => archiveCardMutation.mutateAsync({ cardId, archived: false }),
     deleteCard: deleteCardMutation.mutateAsync,
@@ -507,8 +523,10 @@ export function useMyDayBoard() {
       createCardMutation.isPending ||
       updateCardMutation.isPending ||
       moveCardMutation.isPending ||
+      syncLinkedCardsMutation.isPending ||
       archiveCardMutation.isPending ||
       deleteCardMutation.isPending,
+    isSyncingLinkedCards: syncLinkedCardsMutation.isPending,
     error: boardsQuery.error ?? columnsQuery.error ?? cardsQuery.error,
     refresh: async () => {
       await Promise.all([

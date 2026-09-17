@@ -209,7 +209,7 @@ export const pageHelpData: PageHelpInfo[] = [
       {
         title: "Lembretes no PWA",
         description:
-          "As notificações locais são exibidas enquanto o HUB ou PWA estiver aberto e dependem da permissão do navegador.",
+          "As notificações usam o service worker quando disponível, mas o HUB ou PWA precisa permanecer aberto para verificar os horários. Também dependem da permissão do navegador.",
         variant: "info",
       },
       {
@@ -243,9 +243,16 @@ export const pageHelpData: PageHelpInfo[] = [
       "Espaço privado e personalizável para organizar notas, ideias e atividades em quadros Kanban. A entrada inteligente reúne compromissos da agenda e permite transformá-los em cartões sem duplicação.",
     keyFeatures: [
       "Múltiplos quadros privados por usuário",
-      "Colunas com nomes, cores e ordem personalizáveis",
+      "Colunas com nomes, cores, ordem e estado de conclusão personalizáveis",
       "Cartões com notas, prioridade, etiquetas, prazo, checklist e link para o HUB",
       "Entrada automática de tarefas pessoais e compromissos de CS/CX e Implantação",
+      "Sincronização de título, prazo e prioridade dos cartões vinculados à agenda",
+      "Colunas sempre em uma faixa horizontal sobre uma grade visual no desktop, com navegação ao clicar, segurar e arrastar em toda a área livre do quadro",
+      "Busca por texto e filtros combináveis de prioridade, prazo, origem e etiqueta",
+      "Controle de zoom entre 50% e 130%, ajuste automático à tela e minimapa clicável",
+      "Visualização compacta ou confortável, colunas recolhíveis e cabeçalhos fixos",
+      "Preferências de zoom, posição, densidade, minimapa e colunas salvas por usuário e quadro",
+      "Criação rápida de cartões dentro das colunas e opção de desfazer uma movimentação",
       "Movimentação por arrastar e soltar no desktop, celular e PWA",
       "Navegação por uma coluna de cada vez no celular, com alvos de movimentação por toque",
       "Integração automática dos prazos com a agenda do Meu Dia",
@@ -264,7 +271,7 @@ export const pageHelpData: PageHelpInfo[] = [
         stepNumber: 2,
         title: "Personalize as colunas",
         description:
-          "Abra Configurar para alterar nome, cor e ordem das colunas ou definir o quadro principal.",
+          "Abra Configurar para alterar nome, cor e ordem, marcar as colunas que concluem cartões ou definir o quadro principal.",
         icon: Settings2,
       },
       {
@@ -278,8 +285,22 @@ export const pageHelpData: PageHelpInfo[] = [
         stepNumber: 4,
         title: "Atualize o andamento",
         description:
-          "Segure o ícone de arrastar para reordenar cartões ou movê-los entre colunas. No celular, solte o cartão sobre o botão da coluna de destino.",
+          "Segure o ícone de arrastar para reordenar cartões ou movê-los entre colunas. Se mudar de ideia, use Desfazer na confirmação. No celular, solte o cartão sobre o botão da coluna de destino.",
         icon: Columns3,
+      },
+      {
+        stepNumber: 5,
+        title: "Localize e crie rapidamente",
+        description:
+          "Use a busca e os filtros para localizar cartões. O botão Adicionar cartão no fim da coluna cria uma atividade sem abrir o formulário completo.",
+        icon: Search,
+      },
+      {
+        stepNumber: 6,
+        title: "Ajuste a visualização",
+        description:
+          "Alterne a densidade, recolha colunas e use zoom, ajuste à tela ou minimapa. Essas escolhas e a posição horizontal são restauradas neste quadro.",
+        icon: Sliders,
       },
     ],
     tips: [
@@ -290,15 +311,15 @@ export const pageHelpData: PageHelpInfo[] = [
         variant: "info",
       },
       {
-        title: "Conclusão automática",
+        title: "Conclusão explícita",
         description:
-          "Colunas cujo nome contenha Concluído, Finalizado ou Feito encerram o cartão na agenda.",
+          "Em Configurar, marque uma coluna como Conclusão. Cartões movidos para ela são encerrados mesmo que o nome da coluna seja personalizado.",
         variant: "tip",
       },
       {
         title: "Sem compromissos duplicados",
         description:
-          "Um item convertido deixa a entrada da agenda, mas continua vinculado à tela de origem. O cartão não cria uma segunda ocorrência na agenda.",
+          "Um item convertido deixa a entrada, mantém título, prazo e prioridade sincronizados e não cria uma segunda ocorrência. Notas, checklist e conclusão do cartão continuam independentes da origem.",
         variant: "info",
       },
     ],

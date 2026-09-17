@@ -23,6 +23,7 @@ export interface MyDayBoardColumn {
   boardId: string;
   title: string;
   color: string;
+  isCompletion: boolean;
   position: number;
   createdAt: Date;
   updatedAt: Date;
@@ -83,6 +84,13 @@ export interface MyDayBoardInboxItem {
   isOverdue: boolean;
 }
 
+export interface MyDayBoardLinkedCardUpdate {
+  id: string;
+  title: string;
+  priority: MyDayBoardCardPriority;
+  dueAt: Date;
+}
+
 const MY_DAY_BOARD_SOURCE_PARAM = "myDaySource";
 
 export const MY_DAY_BOARD_COLORS = [
@@ -123,7 +131,7 @@ export function isMyDayBoardCardCompleted(
 ) {
   if (card.completedAt) return true;
   const column = columns.find((item) => item.id === card.columnId);
-  return Boolean(column && /conclu|finaliz|feito|done/i.test(column.title));
+  return Boolean(column?.isCompletion);
 }
 
 export function getMyDayBoardInboxSourceKey(
@@ -172,26 +180,13 @@ function isCompletedAgendaEvent(event: MyDayAgendaEvent) {
   return /complet|conclu|finaliz|cancel/i.test(event.status);
 }
 
-export function buildMyDayBoardInboxItems(
+export function buildMyDayBoardSourceItems(
   tasks: MyDayTask[],
   events: MyDayAgendaEvent[],
-  cards: MyDayBoardCard[],
   now = new Date(),
 ) {
-  const linkedSourceKeys = new Set(
-    cards
-      .map((card) => getMyDayBoardInboxSourceKeyFromPath(card.linkedPath))
-      .filter((key): key is string => Boolean(key)),
-  );
-  const rangeStart = startOfDay(subDays(now, 30)).getTime();
-  const rangeEnd = endOfDay(addDays(now, 7)).getTime();
-
   const taskItems: MyDayBoardInboxItem[] = tasks
     .filter((task) => task.status === "pending")
-    .filter(
-      (task) =>
-        task.dueAt.getTime() >= rangeStart && task.dueAt.getTime() <= rangeEnd,
-    )
     .map((task) => ({
       id: `agenda-personal-${task.id}`,
       source: "personal",
@@ -214,11 +209,6 @@ export function buildMyDayBoardInboxItems(
       } => event.source !== "board",
     )
     .filter((event) => !isCompletedAgendaEvent(event))
-    .filter(
-      (event) =>
-        event.startsAt.getTime() >= rangeStart &&
-        event.startsAt.getTime() <= rangeEnd,
-    )
     .map((event) => ({
       id: `agenda-${event.source}-${event.id}`,
       source: event.source,
@@ -235,14 +225,68 @@ export function buildMyDayBoardInboxItems(
     }));
 
   return [...taskItems, ...eventItems]
+    .sort((left, right) => left.dueAt.getTime() - right.dueAt.getTime());
+}
+
+export function buildMyDayBoardInboxItems(
+  tasks: MyDayTask[],
+  events: MyDayAgendaEvent[],
+  cards: MyDayBoardCard[],
+  now = new Date(),
+) {
+  const rangeStart = startOfDay(subDays(now, 30)).getTime();
+  const rangeEnd = endOfDay(addDays(now, 7)).getTime();
+  const linkedSourceKeys = new Set(
+    cards
+      .map((card) => getMyDayBoardInboxSourceKeyFromPath(card.linkedPath))
+      .filter((key): key is string => Boolean(key)),
+  );
+
+  return buildMyDayBoardSourceItems(tasks, events, now)
+    .filter(
+      (item) =>
+        item.dueAt.getTime() >= rangeStart &&
+        item.dueAt.getTime() <= rangeEnd,
+    )
     .filter(
       (item) =>
         !linkedSourceKeys.has(
           getMyDayBoardInboxSourceKey(item.source, item.sourceId),
         ),
     )
-    .sort((left, right) => left.dueAt.getTime() - right.dueAt.getTime())
     .slice(0, 50);
+}
+
+export function buildMyDayBoardLinkedCardUpdates(
+  cards: MyDayBoardCard[],
+  sourceItems: MyDayBoardInboxItem[],
+): MyDayBoardLinkedCardUpdate[] {
+  const sourceByKey = new Map(
+    sourceItems.map((item) => [
+      getMyDayBoardInboxSourceKey(item.source, item.sourceId),
+      item,
+    ]),
+  );
+
+  return cards.flatMap((card) => {
+    if (card.archivedAt) return [];
+    const sourceKey = getMyDayBoardInboxSourceKeyFromPath(card.linkedPath);
+    const source = sourceKey ? sourceByKey.get(sourceKey) : undefined;
+    if (!source) return [];
+
+    const isCurrent =
+      card.title === source.title &&
+      card.priority === source.priority &&
+      card.dueAt?.getTime() === source.dueAt.getTime();
+    if (isCurrent) return [];
+
+    return [{
+      id: card.id,
+      title: source.title,
+      priority: source.priority,
+      dueAt: source.dueAt,
+    }];
+  });
 }
 
 export function buildMyDayBoardCardInputFromInbox(

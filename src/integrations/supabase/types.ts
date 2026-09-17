@@ -179,6 +179,7 @@ export type MyDayBoardColumnRow = {
   user_id: string;
   title: string;
   color: string;
+  is_completion: boolean;
   position: number;
   created_at: string;
   updated_at: string;
@@ -190,6 +191,7 @@ export type MyDayBoardColumnInsert = {
   user_id: string;
   title: string;
   color?: string;
+  is_completion?: boolean;
   position?: number;
   created_at?: string;
   updated_at?: string;
