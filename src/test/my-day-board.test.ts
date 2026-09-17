@@ -3,6 +3,8 @@ import {
   buildMyDayBoardCardInputFromInbox,
   buildMyDayBoardAgendaEvents,
   buildMyDayBoardInboxItems,
+  buildMyDayBoardLinkedCardUpdates,
+  buildMyDayBoardSourceItems,
   calculateBoardPosition,
   getDefaultMyDayBoard,
   isMyDayBoardCardCompleted,
@@ -34,6 +36,7 @@ const columns: MyDayBoardColumn[] = [
     boardId: "board-1",
     title: "Em andamento",
     color: "#f59e0b",
+    isCompletion: false,
     position: 1024,
     createdAt: now,
     updatedAt: now,
@@ -43,6 +46,7 @@ const columns: MyDayBoardColumn[] = [
     boardId: "board-1",
     title: "Concluído",
     color: "#10b981",
+    isCompletion: true,
     position: 2048,
     createdAt: now,
     updatedAt: now,
@@ -86,6 +90,10 @@ describe("Meu Quadro", () => {
   it("considera concluído o cartão movido para uma coluna de conclusão", () => {
     expect(isMyDayBoardCardCompleted(card({ columnId: "done" }), columns)).toBe(true);
     expect(isMyDayBoardCardCompleted(card(), columns)).toBe(false);
+    expect(isMyDayBoardCardCompleted(card({ columnId: "done" }), [
+      columns[0],
+      { ...columns[1], title: "Publicado" },
+    ])).toBe(true);
   });
 
   it("integra somente cartões com prazo e mantém o link direto", () => {
@@ -165,6 +173,40 @@ describe("Meu Quadro", () => {
     expect(linkedInput.labels).toEqual(["Agenda", "Pessoal"]);
     expect(linkedInput.linkedPath).toContain("myDaySource=personal%3Atask-1");
     expect(afterImport.map((item) => item.source)).toEqual(["cs_cx"]);
+  });
+
+  it("sincroniza título, prazo e prioridade sem sobrescrever as notas do cartão", () => {
+    const task: MyDayTask = {
+      id: "task-1",
+      title: "Revisar pauta atualizada",
+      description: "Descrição da agenda",
+      dueAt: new Date("2026-09-20T11:00:00"),
+      priority: "critical",
+      status: "pending",
+      linkedPath: null,
+      recurrence: "none",
+      reminderMinutes: null,
+      snoozedUntil: null,
+      recurrenceParentId: null,
+      completedAt: null,
+      createdAt: now,
+      updatedAt: now,
+    };
+    const linkedCard = card({
+      title: "Revisar pauta",
+      description: "Minhas notas não podem ser substituídas",
+      priority: "medium",
+      dueAt: new Date("2026-09-18T10:00:00"),
+      linkedPath: "/meu-dia?myDaySource=personal%3Atask-1",
+    });
+
+    const sourceItems = buildMyDayBoardSourceItems([task], [], now);
+    expect(buildMyDayBoardLinkedCardUpdates([linkedCard], sourceItems)).toEqual([{
+      id: "card-1",
+      title: "Revisar pauta atualizada",
+      priority: "critical",
+      dueAt: task.dueAt,
+    }]);
   });
 
   it("não duplica na agenda um cartão que veio da própria agenda", () => {

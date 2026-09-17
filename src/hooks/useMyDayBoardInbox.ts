@@ -3,6 +3,7 @@ import { useMyDay } from "@/hooks/useMyDay";
 import { useMyDayWorkspace } from "@/hooks/useMyDayWorkspace";
 import {
   buildMyDayBoardInboxItems,
+  buildMyDayBoardSourceItems,
   type MyDayBoardCard,
 } from "@/lib/my-day-board";
 
@@ -20,8 +21,14 @@ export function useMyDayBoardInbox(cards: MyDayBoardCard[]) {
     [cards, myDay.agendaEvents, workspace.tasks],
   );
 
+  const sourceItems = useMemo(
+    () => buildMyDayBoardSourceItems(workspace.tasks, myDay.agendaEvents),
+    [myDay.agendaEvents, workspace.tasks],
+  );
+
   return {
     items,
+    sourceItems,
     isLoading: myDay.loading.agenda || workspace.loading.tasks,
     isRefreshing: myDay.isRefreshing || workspace.isRefreshing,
     error: myDay.errors.agenda ?? workspace.errors.tasks,

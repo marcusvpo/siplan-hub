@@ -3,7 +3,10 @@ import path from "node:path";
 import pg from "pg";
 
 const { Client } = pg;
-const MIGRATION = "20260917130000_my_day_personal_board.sql";
+const BASE_MIGRATION = "20260917130000_my_day_personal_board.sql";
+const UPGRADE_MIGRATIONS = [
+  "20260917170000_my_day_reliability_improvements.sql",
+];
 const EXPECTED_TABLES = [
   "my_day_boards",
   "my_day_board_columns",
@@ -12,6 +15,12 @@ const EXPECTED_TABLES = [
 const EXPECTED_FUNCTIONS = [
   "public.create_my_day_board(text,text,text)",
   "public.set_default_my_day_board(uuid)",
+];
+const EXPECTED_UPGRADE_FUNCTIONS = [
+  "public.update_my_day_board_column(uuid,text,text,boolean)",
+  "public.sync_my_day_board_cards(jsonb)",
+  "public.reorder_my_day_board_columns(uuid,uuid[])",
+  "public.complete_my_day_task(uuid)",
 ];
 const EXPECTED_PERMISSIONS = ["view", "create", "edit", "delete"];
 const EXPECTED_POLICIES = [
@@ -37,7 +46,7 @@ const confirmation = [...args]
   .find((arg) => arg.startsWith("--confirm-project="))
   ?.split("=")[1];
 
-const migrationSql = validateMigrationFile();
+const { baseSql, upgradeSql } = validateMigrationFiles();
 if (staticOnly) {
   console.log("Migration do Meu Quadro validada; nenhuma conexao ou escrita executada.");
   process.exit(0);
@@ -65,19 +74,22 @@ try {
   } else if (before.ready) {
     console.log("O schema do Meu Quadro ja esta publicado; nenhuma escrita foi necessaria.");
   } else {
-    if (before.presentCount > 0) {
+    if (!before.baseReady && before.basePresentCount > 0) {
       throw new Error(
-        `Schema parcial detectado (${before.presentCount} itens presentes). Revise antes de aplicar: ${before.missing.join(", ")}.`,
+        `Schema base parcial detectado (${before.basePresentCount} itens presentes). Revise antes de aplicar: ${before.baseMissing.join(", ")}.`,
       );
     }
 
     await assertBaseDependencies();
+    const sqlToApply = before.baseReady
+      ? upgradeSql
+      : `${baseSql}\n${upgradeSql}`;
     await target.query("BEGIN");
     try {
       await target.query(
         "SELECT pg_advisory_xact_lock(hashtext('siplan-hub:my-day-board-schema'))",
       );
-      await target.query(migrationSql);
+      await target.query(sqlToApply);
       await target.query("COMMIT");
     } catch (error) {
       await target.query("ROLLBACK");
@@ -95,29 +107,47 @@ try {
   await target.end();
 }
 
-function validateMigrationFile() {
-  const migrationPath = path.resolve("supabase", "migrations", MIGRATION);
-  if (!fs.existsSync(migrationPath)) fail(`Migration ausente: ${MIGRATION}`);
-  const sql = fs.readFileSync(migrationPath, "utf8");
-  if (!sql.trim()) fail(`Migration vazia: ${MIGRATION}`);
-  if (/\b(?:COMMIT|ROLLBACK|VACUUM)\s*;/i.test(sql)) {
-    fail(`Migration incompativel com aplicacao transacional: ${MIGRATION}`);
+function validateMigrationFiles() {
+  const readMigration = (migration) => {
+    const migrationPath = path.resolve("supabase", "migrations", migration);
+    if (!fs.existsSync(migrationPath)) fail(`Migration ausente: ${migration}`);
+    const sql = fs.readFileSync(migrationPath, "utf8");
+    if (!sql.trim()) fail(`Migration vazia: ${migration}`);
+    if (/\b(?:COMMIT|ROLLBACK|VACUUM)\s*;/i.test(sql)) {
+      fail(`Migration incompativel com aplicacao transacional: ${migration}`);
+    }
+    return sql;
+  };
+
+  const baseSql = readMigration(BASE_MIGRATION);
+  const upgradeSql = UPGRADE_MIGRATIONS.map(readMigration).join("\n");
+
+  for (const requiredToken of [
+    "is_completion BOOLEAN",
+    "update_my_day_board_column",
+    "sync_my_day_board_cards",
+    "reorder_my_day_board_columns",
+    "complete_my_day_task",
+  ]) {
+    if (!upgradeSql.includes(requiredToken)) {
+      fail(`Evolucao do Meu Quadro incompleta: ${requiredToken}`);
+    }
   }
 
   for (const table of EXPECTED_TABLES) {
-    if (!new RegExp(`CREATE\\s+TABLE\\s+public\\.${table}\\b`, "i").test(sql)) {
+    if (!new RegExp(`CREATE\\s+TABLE\\s+public\\.${table}\\b`, "i").test(baseSql)) {
       fail(`Criacao da tabela ausente no pacote: ${table}`);
     }
-    if (!new RegExp(`ALTER\\s+TABLE\\s+public\\.${table}\\s+ENABLE\\s+ROW\\s+LEVEL\\s+SECURITY`, "i").test(sql)) {
+    if (!new RegExp(`ALTER\\s+TABLE\\s+public\\.${table}\\s+ENABLE\\s+ROW\\s+LEVEL\\s+SECURITY`, "i").test(baseSql)) {
       fail(`Ativacao de RLS ausente no pacote: ${table}`);
     }
   }
   for (const action of EXPECTED_PERMISSIONS) {
-    if (!sql.includes(`('work_board', '${action}'`)) {
+    if (!baseSql.includes(`('work_board', '${action}'`)) {
       fail(`Permissao ausente no pacote: work_board.${action}`);
     }
   }
-  return sql;
+  return { baseSql, upgradeSql };
 }
 
 async function inspectReadiness() {
@@ -133,6 +163,19 @@ async function inspectReadiness() {
      FROM unnest($1::text[]) AS expected(signature)
      WHERE to_regprocedure(signature) IS NOT NULL`,
     [EXPECTED_FUNCTIONS],
+  );
+  const upgradeFunctionResult = await target.query(
+    `SELECT signature
+     FROM unnest($1::text[]) AS expected(signature)
+     WHERE to_regprocedure(signature) IS NOT NULL`,
+    [EXPECTED_UPGRADE_FUNCTIONS],
+  );
+  const upgradeColumnResult = await target.query(
+    `SELECT 1
+     FROM information_schema.columns
+     WHERE table_schema = 'public'
+       AND table_name = 'my_day_board_columns'
+       AND column_name = 'is_completion'`,
   );
   const permissionResult = await target.query(
     `SELECT action
@@ -161,24 +204,36 @@ async function inspectReadiness() {
 
   const tables = new Set(tableResult.rows.map((row) => row.tablename));
   const functions = new Set(functionResult.rows.map((row) => row.signature));
+  const upgradeFunctions = new Set(upgradeFunctionResult.rows.map((row) => row.signature));
   const permissions = new Set(permissionResult.rows.map((row) => row.action));
   const adminGrants = new Set(adminGrantResult.rows.map((row) => row.action));
   const policies = new Set(policyResult.rows.map((row) => row.policyname));
-  const missing = [
+  const baseMissing = [
     ...EXPECTED_TABLES.filter((item) => !tables.has(item)).map((item) => `tabela ${item}`),
     ...EXPECTED_FUNCTIONS.filter((item) => !functions.has(item)).map((item) => `funcao ${item}`),
     ...EXPECTED_PERMISSIONS.filter((item) => !permissions.has(item)).map((item) => `permissao work_board.${item}`),
     ...EXPECTED_PERMISSIONS.filter((item) => !adminGrants.has(item)).map((item) => `acesso admin work_board.${item}`),
     ...EXPECTED_POLICIES.filter((item) => !policies.has(item)).map((item) => `policy ${item}`),
   ];
-  const presentCount = tables.size + functions.size + permissions.size + adminGrants.size + policies.size;
+  const upgradeMissing = [
+    ...(upgradeColumnResult.rowCount === 1 ? [] : ["coluna my_day_board_columns.is_completion"]),
+    ...EXPECTED_UPGRADE_FUNCTIONS
+      .filter((item) => !upgradeFunctions.has(item))
+      .map((item) => `funcao ${item}`),
+  ];
+  const basePresentCount = tables.size + functions.size + permissions.size + adminGrants.size + policies.size;
 
   return {
-    ready: missing.length === 0,
-    missing,
-    presentCount,
+    ready: baseMissing.length === 0 && upgradeMissing.length === 0,
+    baseReady: baseMissing.length === 0,
+    baseMissing,
+    upgradeMissing,
+    missing: [...baseMissing, ...upgradeMissing],
+    basePresentCount,
     tableCount: tables.size,
     functionCount: functions.size,
+    upgradeFunctionCount: upgradeFunctions.size,
+    upgradeColumnCount: upgradeColumnResult.rowCount,
     permissionCount: permissions.size,
     adminGrantCount: adminGrants.size,
     policyCount: policies.size,
@@ -194,6 +249,10 @@ function printReadiness(projectRef, readiness) {
       `${readiness.adminGrantCount}/${EXPECTED_PERMISSIONS.length} acessos administrativos e ` +
       `${readiness.policyCount}/${EXPECTED_POLICIES.length} policies.`,
   );
+  console.log(
+    `Evolucoes: ${readiness.upgradeColumnCount}/1 coluna e ` +
+      `${readiness.upgradeFunctionCount}/${EXPECTED_UPGRADE_FUNCTIONS.length} funcoes.`,
+  );
   if (readiness.missing.length) console.log(`Pendencias: ${readiness.missing.join(", ")}.`);
 }
 
@@ -204,6 +263,7 @@ async function assertBaseDependencies() {
       to_regclass('public.app_roles') IS NOT NULL AS roles,
       to_regclass('public.app_role_permissions') IS NOT NULL AS role_permissions,
       to_regclass('public.my_day_preferences') IS NOT NULL AS preferences,
+      to_regclass('public.my_day_tasks') IS NOT NULL AS tasks,
       to_regclass('public.notifications') IS NOT NULL AS notifications,
       to_regprocedure('public.has_permission(uuid,text,text)') IS NOT NULL AS has_permission,
       to_regprocedure('public.update_updated_at_column()') IS NOT NULL AS updated_at

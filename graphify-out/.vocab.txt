@@ -7,6 +7,7 @@ accessibility
 accordion
 acessando
 acesso
+acha
 acompanhar
 acontece
 action
@@ -35,6 +36,7 @@ agg
 ago
 agora
 agrupamento
+ajusta
 ajustar
 ajustes
 ajv
@@ -42,6 +44,7 @@ alert
 alerta
 alertas
 alerts
+algo
 aliases
 alignment
 all
@@ -66,6 +69,7 @@ antes
 any
 aos
 aparece
+aparentemente
 apenas
 api
 aplica
@@ -78,6 +82,7 @@ apply
 appointment
 appointments
 apresentados
+aqui
 architecture
 area
 areas
@@ -89,6 +94,7 @@ arquitetura
 arquitetural
 arquivo
 arquivos
+arrastar
 array
 article
 assert
@@ -122,6 +128,7 @@ auto
 autocomplete
 autom
 automa
+automaticamente
 automation
 autoprefixer
 autosave
@@ -133,6 +140,7 @@ background
 backup
 badge
 badges
+baixo
 banco
 banner
 bar
@@ -284,6 +292,7 @@ communities
 community
 como
 compact
+compacto
 comparar
 compare
 compartilhadas
@@ -314,6 +323,7 @@ conhecimento
 connected
 connection
 connections
+consigo
 consolidated
 constructor
 cont
@@ -344,6 +354,8 @@ copiloto
 copy
 core
 corpus
+corre
+correto
 cors
 cota
 count
@@ -391,12 +403,14 @@ deduplicate
 def
 default
 define
+deixa
 delete
 delimited
 delimiter
 deno
 density
 depend
+depende
 dependencies
 deploy
 deployment
@@ -481,6 +495,7 @@ editor
 effective
 eixo
 elapsed
+ele
 element
 ellevo
 ellipsis
@@ -495,6 +510,7 @@ engagement
 engine
 engines
 ensure
+ent
 entendendo
 entities
 entre
@@ -516,6 +532,7 @@ esm
 especiais
 essas
 est
+esta
 estado
 estados
 estender
@@ -556,6 +573,7 @@ families
 family
 faq
 fast
+faz
 fazer
 feature
 features
@@ -563,6 +581,7 @@ feed
 feedback
 fetch
 ffmpeg
+ficassem
 fichas
 field
 fields
@@ -666,6 +685,7 @@ heartbeat
 hello
 help
 helpers
+hero
 heuristic
 hex
 highlight
@@ -678,6 +698,7 @@ homologa
 homologation
 hook
 hooks
+horizontal
 hour
 hourly
 hours
@@ -703,6 +724,7 @@ ids
 ignorada
 ignoradas
 ignorado
+igual
 image
 images
 impact
@@ -726,6 +748,7 @@ improve
 improvement
 inactive
 inativos
+inbox
 include
 incomplete
 index
@@ -755,6 +778,7 @@ instance
 instructions
 int
 integer
+integrado
 integration
 intera
 interactions
@@ -781,6 +805,7 @@ issue
 issues
 item
 items
+itens
 janela
 java
 jest
@@ -833,6 +858,7 @@ limites
 limpar
 line
 link
+linked
 linkify
 links
 lint
@@ -891,6 +917,7 @@ matching
 matriz
 max
 maybe
+melhor
 member
 members
 memory
@@ -945,6 +972,7 @@ mutation
 muted
 name
 names
+nao
 nas
 nativo
 natureza
@@ -1029,6 +1057,7 @@ out
 outcome
 output
 outra
+outro
 outroa
 outros
 overdue
@@ -1112,6 +1141,8 @@ player
 playwright
 plugin
 plugins
+pode
+poder
 point
 policies
 policy
@@ -1119,6 +1150,7 @@ pontos
 pool
 popover
 por
+porque
 portal
 pos
 position
@@ -1128,6 +1160,7 @@ postgre
 postgres
 postgrest
 posts
+precisa
 predictability
 preenchimento
 preferences
@@ -1192,10 +1225,12 @@ quadro
 quais
 qual
 qualidade
+quando
 quatro
 que
 queira
 quem
+queria
 queries
 query
 question
@@ -1270,6 +1305,7 @@ relevantes
 reload
 remember
 remembered
+reminder
 reminders
 remote
 remove
@@ -1308,6 +1344,7 @@ retry
 return
 review
 revis
+revisar
 revogar
 rewrites
 ria
@@ -1386,8 +1423,11 @@ selection
 selector
 selo
 sem
+sempre
 send
+sentido
 separator
+ser
 serialization
 serialize
 serialized
@@ -1517,6 +1557,8 @@ tabs
 tags
 tailwind
 tailwindcss
+tamb
+tambem
 tan
 tanstack
 tarde
@@ -1626,6 +1668,8 @@ unsaved
 untyped
 unused
 update
+updates
+upgrade
 upload
 upsert
 urgency
@@ -1689,6 +1733,7 @@ vite
 vitejs
 vitest
 vivo
+voc
 voice
 volume
 voz

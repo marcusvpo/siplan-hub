@@ -965,8 +965,8 @@
     "semantic_hash": "8cbc837200552502e544dcd4d195de98"
   },
   "src/integrations/supabase/types.ts": {
-    "mtime": 1789651316.225166,
-    "ast_hash": "31f8a32b76a080929be02eddf13d28af",
+    "mtime": 1789661672.9237275,
+    "ast_hash": "6a63231a8cf1a57f9f9a27e4908fceeb",
     "semantic_hash": ""
   },
   "src/layouts/AdminLayout.tsx": {
@@ -4735,8 +4735,8 @@
     "semantic_hash": ""
   },
   "src/constants/pageHelpRegistry.ts": {
-    "mtime": 1789655235.0730963,
-    "ast_hash": "ef4565e0e9b4867f97485bce2c99ff35",
+    "mtime": 1789675712.7333088,
+    "ast_hash": "60f4ad72db6c0b21889670fbd3ae3e94",
     "semantic_hash": ""
   },
   "src/pages/admin/AdminChangelog.tsx": {
@@ -5045,8 +5045,8 @@
     "semantic_hash": ""
   },
   "src/test/my-day-screen.test.ts": {
-    "mtime": 1789655246.3420916,
-    "ast_hash": "9afd475de501dee8dd96195672e526b2",
+    "mtime": 1789675719.6337688,
+    "ast_hash": "06be41a6b22f1520ed85a3e9382a8d0c",
     "semantic_hash": ""
   },
   "src/test/my-day.test.ts": {
@@ -5060,8 +5060,8 @@
     "semantic_hash": ""
   },
   "docs/telas/08-central-trabalho.md": {
-    "mtime": 1789655235.0730963,
-    "ast_hash": "047e99720a1b0a4aee754ee7232570e3",
+    "mtime": 1789675712.737822,
+    "ast_hash": "bcb724fcd880de11606d3cb58b95f10e",
     "semantic_hash": ""
   },
   "src/components/my-day/MyDayAgenda.tsx": {
@@ -5085,8 +5085,8 @@
     "semantic_hash": ""
   },
   "src/hooks/useMyDayWorkspace.ts": {
-    "mtime": 1789578082.423182,
-    "ast_hash": "3acc1f3f1e7ce75b8c6f48ac8127d257",
+    "mtime": 1789661835.1711476,
+    "ast_hash": "517a1735f71dfed2b5ab6a1fa6fdec68",
     "semantic_hash": ""
   },
   "src/lib/my-day-workspace.ts": {
@@ -5115,8 +5115,8 @@
     "semantic_hash": ""
   },
   "src/hooks/useMyDayReminders.ts": {
-    "mtime": 1789578160.6121109,
-    "ast_hash": "dd905015b86b2cbf214077a2ea5bfd37",
+    "mtime": 1789662301.872735,
+    "ast_hash": "6249f9704f030fad00df027ec9c4fb98",
     "semantic_hash": ""
   },
   "supabase/migrations/20260916120000_my_day_operational_improvements.sql": {
@@ -5170,8 +5170,8 @@
     "semantic_hash": ""
   },
   "src/components/my-day/MyDayBoardSettingsDialog.tsx": {
-    "mtime": 1789652409.5093317,
-    "ast_hash": "6717454048e9d5947560d388b53cdfd8",
+    "mtime": 1789661729.6328409,
+    "ast_hash": "d124e62d37ab64deb876a7b1585a5afa",
     "semantic_hash": ""
   },
   "src/components/my-day/MyDayBoardWidget.tsx": {
@@ -5180,28 +5180,28 @@
     "semantic_hash": ""
   },
   "src/hooks/useMyDayBoard.ts": {
-    "mtime": 1789651881.4420192,
-    "ast_hash": "1fe7f33a814d26ff59ddf11c39a69dd4",
+    "mtime": 1789675182.8832588,
+    "ast_hash": "d1651adc80376f29affcc463287f7c8c",
     "semantic_hash": ""
   },
   "src/lib/my-day-board.ts": {
-    "mtime": 1789654868.3512328,
-    "ast_hash": "e85bbd1e8d39387c15ac9cabca415582",
+    "mtime": 1789662080.5005066,
+    "ast_hash": "5557e9ed1ff0041756d95b2934ccac18",
     "semantic_hash": ""
   },
   "src/pages/MyDayBoard.test.tsx": {
-    "mtime": 1789655192.0484605,
-    "ast_hash": "5f770cb94de5e48007feb377ca88866e",
+    "mtime": 1789675650.99392,
+    "ast_hash": "b4dbb9c8d91db5f898cddd4942dae436",
     "semantic_hash": ""
   },
   "src/pages/MyDayBoard.tsx": {
-    "mtime": 1789655125.7622612,
-    "ast_hash": "a7900942c7d6976bf19d90c16c9f4055",
+    "mtime": 1789675766.4236877,
+    "ast_hash": "aa6277c9bc1a97bc763aac0b926985e8",
     "semantic_hash": ""
   },
   "src/test/my-day-board.test.ts": {
-    "mtime": 1789655151.8260188,
-    "ast_hash": "7945549c987a93e935c36649f9ffd5c7",
+    "mtime": 1789661971.0747278,
+    "ast_hash": "2529c8e9383fc39fe7859a38eadf1b46",
     "semantic_hash": ""
   },
   "supabase/migrations/20260917130000_my_day_personal_board.sql": {
@@ -5225,8 +5225,8 @@
     "semantic_hash": ""
   },
   "scripts/prepare-my-day-board-schema.mjs": {
-    "mtime": 1789653640.452437,
-    "ast_hash": "cab96e4ccfd5f453a1f0eb19d76263ba",
+    "mtime": 1789662644.697322,
+    "ast_hash": "108ce71715adaac89d10c9821b8070cd",
     "semantic_hash": ""
   },
   "supabase/migrations/20260917150000_fix_nps_report_best_clients_changelog.sql": {
@@ -5245,8 +5245,8 @@
     "semantic_hash": ""
   },
   "src/hooks/useMyDayBoardInbox.ts": {
-    "mtime": 1789654868.3523524,
-    "ast_hash": "e3702e4b21176d6623d53773bf50a4b7",
+    "mtime": 1789661672.9217253,
+    "ast_hash": "d73c5d94885443354f7504c3428f2988",
     "semantic_hash": ""
   },
   "supabase/migrations/20260917160000_my_day_board_agenda_inbox_changelog.sql": {
@@ -5262,6 +5262,66 @@
   "novas_solicitacoes/Corre\u00e7\u00f5es menu NPS_resultado.md": {
     "mtime": 1789654600.089687,
     "ast_hash": "192b08f1e47a807a657b9bc39f971e59",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260917170000_my_day_reliability_improvements.sql": {
+    "mtime": 1789662654.1610582,
+    "ast_hash": "c1c9d7388a0afb258879895a8ab0cce8",
+    "semantic_hash": ""
+  },
+  "graphify-out/memory/query_20260917_143334_pode_fazer_como_acha_melhor__precisa_revisar_tamb\u00e9.md": {
+    "mtime": 1789655614.7822447,
+    "ast_hash": "fd64b440d6e65ae29cf4a910e21ab1e4",
+    "semantic_hash": ""
+  },
+  "graphify-out/memory/query_20260917_153910_acha_que_o_meu_dia_esta_100__agora.md": {
+    "mtime": 1789659550.4847562,
+    "ast_hash": "13c7b27f8bd6275100d340c77f624f39",
+    "semantic_hash": ""
+  },
+  "graphify-out/memory/query_20260917_162933_ajusta_o_que_depende_de_voc\u00ea_ent\u00e3o.md": {
+    "mtime": 1789662573.32403,
+    "ast_hash": "1876400f9b2e9184624bf3b62a34e154",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260917171000_my_day_board_horizontal_layout_changelog.sql": {
+    "mtime": 1789675712.745359,
+    "ast_hash": "0ce79c555b1cc43caabdddf1cc31614d",
+    "semantic_hash": ""
+  },
+  "graphify-out/memory/query_20260917_183719_aqui_na_tela_do_meu_quadro_eu_queria_que_os_cards.md": {
+    "mtime": 1789670239.275037,
+    "ast_hash": "5c5a2d45f0bf1d1f24d50e07901212c2",
+    "semantic_hash": ""
+  },
+  "graphify-out/memory/query_20260917_191604_get_my_day_board_columns_com_is_completion_retorna.md": {
+    "mtime": 1789672564.0836813,
+    "ast_hash": "eb042f928a816c467cc90d163cefe1b7",
+    "semantic_hash": ""
+  },
+  "graphify-out/memory/query_20260917_192830_tira_esse_scroll_e_transforma_toda_a_area_disponiv.md": {
+    "mtime": 1789673310.174549,
+    "ast_hash": "cc53d461caf10570f312c2867a1d97c7",
+    "semantic_hash": ""
+  },
+  "graphify-out/memory/query_20260917_194249_tem_como_fazer_um_desaning_de_grade_atras_dos_card.md": {
+    "mtime": 1789674169.3099368,
+    "ast_hash": "88319cb201914b4114dcfaa92ee6a2f4",
+    "semantic_hash": ""
+  },
+  "graphify-out/memory/query_20260917_194751_tem_como_criar_uma_opcao_de_zoom_ali_no_canto_infe.md": {
+    "mtime": 1789674471.6212533,
+    "ast_hash": "ea7b5176020d05f6e0ff0f5e8d0f648c",
+    "semantic_hash": ""
+  },
+  "graphify-out/memory/query_20260917_195245_mais_alguma_ideia_de_melhoria_pra_essa_parte_do_qu.md": {
+    "mtime": 1789674765.697484,
+    "ast_hash": "bc5d4926f65ae9379a7262cace973d0c",
+    "semantic_hash": ""
+  },
+  "graphify-out/memory/query_20260917_201218_pode_fazer_todos.md": {
+    "mtime": 1789675938.5485153,
+    "ast_hash": "5f6e5e94cfc4648c919cc2312312a9ad",
     "semantic_hash": ""
   }
 }
