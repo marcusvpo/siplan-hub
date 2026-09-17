@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ArrowDown, ArrowUp, Plus, Star, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -31,8 +32,8 @@ interface MyDayBoardSettingsDialogProps {
   onSaveBoard: (input: { name: string; description?: string | null; color: string }) => Promise<unknown>;
   onSetDefault?: () => Promise<unknown>;
   onDeleteBoard?: () => Promise<unknown>;
-  onCreateColumn?: (input: { title: string; color: string }) => Promise<unknown>;
-  onUpdateColumn?: (id: string, input: { title: string; color: string }) => Promise<unknown>;
+  onCreateColumn?: (input: { title: string; color: string; isCompletion: boolean }) => Promise<unknown>;
+  onUpdateColumn?: (id: string, input: { title: string; color: string; isCompletion: boolean }) => Promise<unknown>;
   onReorderColumns?: (orderedIds: string[]) => Promise<unknown>;
   onDeleteColumn?: (id: string) => Promise<unknown>;
 }
@@ -57,17 +58,23 @@ export function MyDayBoardSettingsDialog({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [color, setColor] = useState<string>(MY_DAY_BOARD_COLORS[0]);
-  const [columnDrafts, setColumnDrafts] = useState<Record<string, { title: string; color: string }>>({});
+  const [columnDrafts, setColumnDrafts] = useState<Record<string, { title: string; color: string; isCompletion: boolean }>>({});
   const [newColumnTitle, setNewColumnTitle] = useState("");
   const [newColumnColor, setNewColumnColor] = useState<string>(MY_DAY_BOARD_COLORS[7]);
+  const [newColumnIsCompletion, setNewColumnIsCompletion] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     setName(board?.name ?? "");
     setDescription(board?.description ?? "");
     setColor(board?.color ?? MY_DAY_BOARD_COLORS[0]);
-    setColumnDrafts(Object.fromEntries(columns.map((column) => [column.id, { title: column.title, color: column.color }])));
+    setColumnDrafts(Object.fromEntries(columns.map((column) => [column.id, {
+      title: column.title,
+      color: column.color,
+      isCompletion: column.isCompletion,
+    }])));
     setNewColumnTitle("");
+    setNewColumnIsCompletion(false);
   }, [board, columns, open]);
 
   const saveBoard = async () => {
@@ -153,11 +160,15 @@ export function MyDayBoardSettingsDialog({
             <section className="space-y-2 border-t pt-4" aria-labelledby="board-columns-title">
               <div>
                 <Label id="board-columns-title">Colunas</Label>
-                <p className="text-[10px] text-muted-foreground">Personalize nomes, cores e ordem. Uma coluna com “Concluído” encerra o cartão.</p>
+                <p className="text-[10px] text-muted-foreground">Personalize nomes, cores e ordem. Marque explicitamente quais colunas encerram os cartões.</p>
               </div>
               <div className="space-y-2">
                 {columns.map((column, index) => {
-                  const draft = columnDrafts[column.id] ?? { title: column.title, color: column.color };
+                  const draft = columnDrafts[column.id] ?? {
+                    title: column.title,
+                    color: column.color,
+                    isCompletion: column.isCompletion,
+                  };
                   return (
                     <div key={column.id} className="flex min-w-0 flex-col gap-2 rounded-lg border p-2 sm:flex-row sm:items-center">
                       <input
@@ -175,9 +186,20 @@ export function MyDayBoardSettingsDialog({
                         disabled={!canEdit}
                         onChange={(event) => setColumnDrafts((current) => ({ ...current, [column.id]: { ...draft, title: event.target.value } }))}
                       />
+                      <label className="flex min-h-9 shrink-0 cursor-pointer items-center gap-2 rounded-md border px-2 text-[10px] font-medium sm:border-0 sm:px-1">
+                        <Checkbox
+                          checked={draft.isCompletion}
+                          disabled={!canEdit}
+                          onCheckedChange={(checked) => setColumnDrafts((current) => ({
+                            ...current,
+                            [column.id]: { ...draft, isCompletion: checked === true },
+                          }))}
+                        />
+                        Conclusão
+                      </label>
                       <div className="flex shrink-0 gap-1">
                         {canEdit && onUpdateColumn && (
-                          <Button type="button" size="sm" variant="outline" className="h-9" disabled={isSaving || !draft.title.trim()} onClick={() => void onUpdateColumn(column.id, { title: draft.title.trim(), color: draft.color })}>Salvar</Button>
+                          <Button type="button" size="sm" variant="outline" className="h-9" disabled={isSaving || !draft.title.trim()} onClick={() => void onUpdateColumn(column.id, { title: draft.title.trim(), color: draft.color, isCompletion: draft.isCompletion })}>Salvar</Button>
                         )}
                         {canEdit && onReorderColumns && (
                           <>
@@ -197,7 +219,11 @@ export function MyDayBoardSettingsDialog({
                 <div className="flex min-w-0 flex-col gap-2 rounded-lg border border-dashed p-2 sm:flex-row sm:items-center">
                   <input type="color" aria-label="Cor da nova coluna" className="h-9 w-full cursor-pointer rounded border bg-transparent p-1 sm:w-11" value={newColumnColor} onChange={(event) => setNewColumnColor(event.target.value)} />
                   <Input value={newColumnTitle} maxLength={60} onChange={(event) => setNewColumnTitle(event.target.value)} placeholder="Nome da nova coluna" />
-                  <Button type="button" variant="outline" className="h-9 shrink-0 gap-1" disabled={isSaving || !newColumnTitle.trim()} onClick={async () => { await onCreateColumn({ title: newColumnTitle.trim(), color: newColumnColor }); setNewColumnTitle(""); }}>
+                  <label className="flex min-h-9 shrink-0 cursor-pointer items-center gap-2 rounded-md border px-2 text-[10px] font-medium sm:border-0 sm:px-1">
+                    <Checkbox checked={newColumnIsCompletion} onCheckedChange={(checked) => setNewColumnIsCompletion(checked === true)} />
+                    Conclusão
+                  </label>
+                  <Button type="button" variant="outline" className="h-9 shrink-0 gap-1" disabled={isSaving || !newColumnTitle.trim()} onClick={async () => { await onCreateColumn({ title: newColumnTitle.trim(), color: newColumnColor, isCompletion: newColumnIsCompletion }); setNewColumnTitle(""); setNewColumnIsCompletion(false); }}>
                     <Plus className="h-4 w-4" /> Adicionar coluna
                   </Button>
                 </div>

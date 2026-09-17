@@ -13,6 +13,37 @@ function currentPermission(): MyDayNotificationPermission {
   return Notification.permission;
 }
 
+async function showReminderNotification(
+  title: string,
+  body: string,
+  tag: string,
+) {
+  if ("serviceWorker" in navigator) {
+    try {
+      const registration = navigator.serviceWorker.controller
+        ? await navigator.serviceWorker.ready
+        : await navigator.serviceWorker.getRegistration();
+      if (registration) {
+        await registration.showNotification(title, {
+          body,
+          tag,
+          data: { path: "/meu-dia" },
+        });
+        return;
+      }
+    } catch {
+      // Usa a notificação da janela quando o service worker ainda não está pronto.
+    }
+  }
+
+  const notification = new Notification(title, { body, tag });
+  notification.onclick = () => {
+    window.focus();
+    window.location.assign("/meu-dia");
+    notification.close();
+  };
+}
+
 export function useMyDayReminders({
   userId,
   tasks,
@@ -53,14 +84,8 @@ export function useMyDayReminders({
       notifiedRef.current.add(notificationKey);
       changed = true;
       const body = `Prazo ${format(attentionAt, "dd/MM 'às' HH:mm")}`;
-      const notification = new Notification(`Meu Dia: ${task.title}`, {
-        body,
-        tag: notificationKey,
-      });
-      notification.onclick = () => {
-        window.focus();
-        notification.close();
-      };
+      void showReminderNotification(`Meu Dia: ${task.title}`, body, notificationKey)
+        .catch(() => undefined);
       toast.info(task.title, { description: body });
     }
 
