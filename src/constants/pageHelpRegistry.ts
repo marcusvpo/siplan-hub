@@ -41,6 +41,7 @@ import {
   Settings2,
   FolderClosed,
   FileCheck,
+  Eye,
   UserX,
   GitCompare,
   Key,
@@ -55,6 +56,7 @@ import {
   Image,
   Save,
   ListTodo,
+  Columns3,
 } from "lucide-react";
 
 export interface PageHelpStep {
@@ -152,11 +154,13 @@ export const pageHelpData: PageHelpInfo[] = [
     moduleName: "Siplan HUB",
     icon: ListTodo,
     description:
-      "Central pessoal e compacta que reúne uma fila de prioridades, projetos, gráficos, agenda avançada, compromissos de CS/CX, atalhos e o resumo diário do Copiloto.",
+      "Central pessoal e compacta que reúne prioridades, projetos, gráficos, agenda integrada, um quadro Kanban pessoal, atalhos e o resumo diário do Copiloto.",
     keyFeatures: [
       "Projetos personalizados por líder e responsáveis das etapas",
       "Indicadores clicáveis e gráficos que filtram os projetos e a agenda",
       "Agenda pessoal com criação, conclusão, edição e exclusão de tarefas",
+      "Compromissos de CS/CX e etapas agendadas de Implantação identificados pela origem",
+      "Meu Quadro pessoal para organizar notas e atividades em colunas personalizáveis",
       "Recorrência, lembretes locais, adiamento, filtros e expansão da agenda",
       "Blocos com modelos, prévia, arrastar e soltar, visibilidade e largura personalizáveis",
       "Atualização automática e falhas isoladas por bloco",
@@ -183,11 +187,18 @@ export const pageHelpData: PageHelpInfo[] = [
         stepNumber: 3,
         title: "Gerencie sua agenda",
         description:
-          "Adicione tarefas, defina prazo, prioridade, repetição e lembrete, filtre a lista e adie ou conclua os itens.",
+          "Adicione tarefas, defina prazo, prioridade, repetição e lembrete e filtre por situação ou origem. Compromissos de CS/CX e Implantação abrem a tela responsável pelo dado.",
         icon: Calendar,
       },
       {
         stepNumber: 4,
+        title: "Organize seu quadro",
+        description:
+          "Use o bloco Meu Quadro para abrir seu Kanban, criar cartões e acompanhar na agenda aqueles que possuem prazo.",
+        icon: Columns3,
+      },
+      {
+        stepNumber: 5,
         title: "Personalize o Meu Dia",
         description:
           "Comece por um modelo ou ajuste a densidade, visibilidade, ordem, largura e atalhos; confira a prévia antes de salvar.",
@@ -217,7 +228,83 @@ export const pageHelpData: PageHelpInfo[] = [
     quickLinks: [
       { label: "Projetos", path: "/projects" },
       { label: "Calendário", path: "/calendar" },
+      { label: "Meu Quadro", path: "/meu-dia/quadro" },
       { label: "Copiloto", path: "/copilot" },
+    ],
+  },
+
+  {
+    route: "/meu-dia/quadro",
+    title: "Meu Quadro",
+    subtitle: "Kanban pessoal de notas e atividades",
+    moduleName: "Meu Dia",
+    icon: Columns3,
+    description:
+      "Espaço privado e personalizável para organizar notas, ideias e atividades em quadros Kanban. A entrada inteligente reúne compromissos da agenda e permite transformá-los em cartões sem duplicação.",
+    keyFeatures: [
+      "Múltiplos quadros privados por usuário",
+      "Colunas com nomes, cores e ordem personalizáveis",
+      "Cartões com notas, prioridade, etiquetas, prazo, checklist e link para o HUB",
+      "Entrada automática de tarefas pessoais e compromissos de CS/CX e Implantação",
+      "Movimentação por arrastar e soltar no desktop, celular e PWA",
+      "Navegação por uma coluna de cada vez no celular, com alvos de movimentação por toque",
+      "Integração automática dos prazos com a agenda do Meu Dia",
+      "Quadro principal configurável para o widget da Central de Trabalho",
+      "Permissões de visualização, criação, edição e exclusão protegidas por RLS",
+    ],
+    steps: [
+      {
+        stepNumber: 1,
+        title: "Crie ou selecione um quadro",
+        description:
+          "Use Novo quadro para começar ou selecione outro quadro pessoal no topo da tela.",
+        icon: Plus,
+      },
+      {
+        stepNumber: 2,
+        title: "Personalize as colunas",
+        description:
+          "Abra Configurar para alterar nome, cor e ordem das colunas ou definir o quadro principal.",
+        icon: Settings2,
+      },
+      {
+        stepNumber: 3,
+        title: "Aproveite sua agenda",
+        description:
+          "A entrada da agenda mostra itens pessoais, de CS/CX e de Implantação. Arraste um item para uma coluna ou use Adicionar para convertê-lo em cartão.",
+        icon: CheckSquare,
+      },
+      {
+        stepNumber: 4,
+        title: "Atualize o andamento",
+        description:
+          "Segure o ícone de arrastar para reordenar cartões ou movê-los entre colunas. No celular, solte o cartão sobre o botão da coluna de destino.",
+        icon: Columns3,
+      },
+    ],
+    tips: [
+      {
+        title: "Dados privados",
+        description:
+          "Cada usuário visualiza apenas os próprios quadros, colunas e cartões.",
+        variant: "info",
+      },
+      {
+        title: "Conclusão automática",
+        description:
+          "Colunas cujo nome contenha Concluído, Finalizado ou Feito encerram o cartão na agenda.",
+        variant: "tip",
+      },
+      {
+        title: "Sem compromissos duplicados",
+        description:
+          "Um item convertido deixa a entrada da agenda, mas continua vinculado à tela de origem. O cartão não cria uma segunda ocorrência na agenda.",
+        variant: "info",
+      },
+    ],
+    quickLinks: [
+      { label: "Meu Dia", path: "/meu-dia" },
+      { label: "Calendário", path: "/calendar" },
     ],
   },
 
@@ -1734,6 +1821,7 @@ export const pageHelpData: PageHelpInfo[] = [
     keyFeatures: [
       "Agenda de compromissos por analista de CS",
       "Sincronização com pauta de reuniões e atas",
+      "Visualização rápida das observações pelo botão de olho, sem abrir a edição",
       "Filtros rápidos ao clicar nos cards de Próximos, Vencidos e Concluídos",
     ],
     steps: [
@@ -1750,6 +1838,13 @@ export const pageHelpData: PageHelpInfo[] = [
         description:
           "Clique nos cards superiores (Próximos, Vencidos ou Concluídos) para aplicar ou remover rapidamente o filtro na tabela.",
         icon: Filter,
+      },
+      {
+        stepNumber: 3,
+        title: "Consulte as Observações",
+        description:
+          "Use o botão de olho na lista para ler as observações do agendamento sem abrir ou alterar o formulário de edição.",
+        icon: Eye,
       },
     ],
   },
@@ -1817,6 +1912,7 @@ export const pageHelpData: PageHelpInfo[] = [
       "Métricas consolidadas de NPS global da empresa",
       "Histórico de notas e comentários por cartório",
       "Controle de planos de ação para clientes detratores",
+      "Relatório PDF filtrado com melhores notas, clientes em atenção e desempenho por nota média",
     ],
     steps: [
       {
@@ -1832,6 +1928,13 @@ export const pageHelpData: PageHelpInfo[] = [
         description:
           "Acompanhe notas baixas para abrir imediatamente um plano de contorno.",
         icon: AlertCircle,
+      },
+      {
+        stepNumber: 3,
+        title: "Exporte o Recorte Analisado",
+        description:
+          "Aplique os filtros de período, cartório e produto e exporte o PDF com os clientes de notas 9 e 10, os que precisam de atenção e o desempenho por nota média.",
+        icon: FileText,
       },
     ],
   },

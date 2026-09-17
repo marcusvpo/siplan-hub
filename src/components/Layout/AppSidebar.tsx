@@ -45,6 +45,7 @@ import {
   Link2,
   Clock3,
   ListTodo,
+  Columns3,
 } from "lucide-react";
 import {
   Collapsible,
@@ -72,6 +73,9 @@ export function AppSidebar() {
   const [isDashboardOpen, setIsDashboardOpen] = useState(
     location.pathname.startsWith("/dashboard") ||
       location.pathname.startsWith("/deployments/tickets"),
+  );
+  const [isWorkCenterOpen, setIsWorkCenterOpen] = useState(
+    location.pathname.startsWith("/meu-dia"),
   );
   const [isImplantacaoOpen, setIsImplantacaoOpen] = useState(
     location.pathname === "/implantacao" ||
@@ -123,6 +127,7 @@ export function AppSidebar() {
   const canViewAssistentes = hasPermission("menu_assistentes", "view");
   const canViewDashboard = hasPermission("dashboard", "view");
   const canViewWorkCenter = hasPermission("work_center", "view");
+  const canViewWorkBoard = hasPermission("work_board", "view");
   const canViewDashboardView = hasPermission("dashboard_view", "view");
   const canViewKanban = hasPermission("kanban", "view");
   const canViewPosPanorama = hasPermission("pos_panorama", "view");
@@ -277,19 +282,38 @@ export function AppSidebar() {
         {/* Central de Trabalho */}
         {canViewWorkCenter && (
           <div className="px-2">
-            <Link to="/meu-dia">
-              <Button
-                variant={isActive("/meu-dia") ? "secondary" : "ghost"}
-                className={cn(
-                  "w-full justify-start gap-3",
-                  collapsed ? "justify-center px-0" : "",
-                )}
-                title="Central de Trabalho / Meu Dia"
-              >
-                <ListTodo className="h-5 w-5" />
-                {!collapsed && <span>Meu Dia</span>}
-              </Button>
-            </Link>
+            {!collapsed ? (
+              <Collapsible open={isWorkCenterOpen} onOpenChange={setIsWorkCenterOpen} className="space-y-1">
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" className="w-full justify-between hover:bg-muted/50" title="Central de Trabalho / Meu Dia">
+                    <div className="flex items-center gap-3"><ListTodo className="h-5 w-5" /><span>Meu Dia</span></div>
+                    <ChevronDown className={cn("h-4 w-4 transition-transform", isWorkCenterOpen && "rotate-180")} />
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-1 pl-4 animate-in slide-in-from-top-2">
+                  <div className="pb-2 pt-1">
+                    <Link to="/meu-dia">
+                      <Button variant={isActive("/meu-dia") ? "secondary" : "ghost"} size="sm" className="h-9 w-full justify-start gap-3">
+                        <ListTodo className="h-4 w-4" /><span>Visão geral</span>
+                      </Button>
+                    </Link>
+                    {canViewWorkBoard && (
+                      <Link to="/meu-dia/quadro">
+                        <Button variant={isActive("/meu-dia/quadro") ? "secondary" : "ghost"} size="sm" className="h-9 w-full justify-start gap-3">
+                          <Columns3 className="h-4 w-4" /><span>Meu Quadro</span>
+                        </Button>
+                      </Link>
+                    )}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            ) : (
+              <Link to="/meu-dia">
+                <Button variant={location.pathname.startsWith("/meu-dia") ? "secondary" : "ghost"} className="w-full justify-center px-0" title="Central de Trabalho / Meu Dia">
+                  <ListTodo className="h-5 w-5" />
+                </Button>
+              </Link>
+            )}
           </div>
         )}
 

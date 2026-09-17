@@ -21,6 +21,7 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Index = lazy(() => import("./pages/Index"));
 const Home = lazy(() => import("./pages/Home"));
 const MyDay = lazy(() => import("./pages/MyDay"));
+const MyDayBoard = lazy(() => import("./pages/MyDayBoard"));
 const Reports = lazy(() => import("./pages/Reports"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const CompareProjects = lazy(() => import("./pages/CompareProjects"));
@@ -415,6 +416,14 @@ const App = () => (
                             element={
                               <RequirePermission resource="work_center">
                                 <MyDay />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/meu-dia/quadro"
+                            element={
+                              <RequirePermission resource="work_board">
+                                <MyDayBoard />
                               </RequirePermission>
                             }
                           />

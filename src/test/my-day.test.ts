@@ -7,6 +7,10 @@ import {
   normalizeAssignment,
   toMyDayProject,
 } from "@/lib/my-day";
+import {
+  buildMyDayImplementationEvents,
+  isMyDayAgendaEventOnDay,
+} from "@/lib/my-day-agenda";
 
 const NOW = new Date("2026-09-16T12:00:00-03:00");
 
@@ -110,5 +114,53 @@ describe("Central de Trabalho / Meu Dia", () => {
     );
 
     expect(result.map((item) => item.id)).toEqual(["blocked", "normal"]);
+  });
+
+  it("integra apenas eventos de Implantação atribuídos ao usuário", () => {
+    const source = project({
+      id: "implementation-project",
+      clientName: "Cartório Integrado",
+      stages: {
+        infra: { status: "done", responsible: "Outra Pessoa" },
+        adherence: { status: "done", responsible: "Outra Pessoa" },
+        environment: { status: "done", responsible: "Outra Pessoa" },
+        conversion: { status: "done", responsible: "Outra Pessoa" },
+        implementation: {
+          status: "in-progress",
+          responsible: "Bruno Fernandes",
+          phase1: {
+            status: "in-progress",
+            responsible: "Brúno Fernandes",
+            startDate: new Date("2026-09-15T12:00:00-03:00"),
+            endDate: new Date("2026-09-17T12:00:00-03:00"),
+          },
+          phase2: {
+            status: "todo",
+            responsible: "Outra Pessoa",
+            startDate: new Date("2026-09-18T12:00:00-03:00"),
+            endDate: new Date("2026-09-19T12:00:00-03:00"),
+          },
+        },
+        post: { status: "todo", responsible: "" },
+      },
+    });
+
+    const events = buildMyDayImplementationEvents(
+      [source],
+      ["Bruno Fernandes"],
+      {
+        now: NOW,
+        projectPath: (projectId) => `/projects/${projectId}`,
+      },
+    );
+
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({
+      title: "Implantação",
+      context: "Cartório Integrado",
+      source: "implementation",
+      path: "/projects/implementation-project",
+    });
+    expect(isMyDayAgendaEventOnDay(events[0], NOW)).toBe(true);
   });
 });

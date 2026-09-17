@@ -24,15 +24,19 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SimpleMarkdown } from "@/components/Copilot/SimpleMarkdown";
 import { MyDayAgenda, type MyDayAgendaFilter } from "@/components/my-day/MyDayAgenda";
+import { MyDayBoardWidget } from "@/components/my-day/MyDayBoardWidget";
 import { MyDayInsights } from "@/components/my-day/MyDayInsights";
 import { MyDayPriorityQueue } from "@/components/my-day/MyDayPriorityQueue";
 import { MyDayWidgetError } from "@/components/my-day/MyDayWidgetError";
 import { PersonalizeMyDayDialog } from "@/components/my-day/PersonalizeMyDayDialog";
 import { useMyDay, type MyDayConversionIssue } from "@/hooks/useMyDay";
+import { useMyDayBoard } from "@/hooks/useMyDayBoard";
 import { useMyDayReminders } from "@/hooks/useMyDayReminders";
 import { useMyDayWorkspace } from "@/hooks/useMyDayWorkspace";
 import { humanizeCopilotText } from "@/lib/copilot-language";
 import type { MyDayProject, MyDayProjectTone } from "@/lib/my-day";
+import { isMyDayAgendaEventOnDay } from "@/lib/my-day-agenda";
+import { buildMyDayBoardAgendaEvents } from "@/lib/my-day-board";
 import {
   isMyDayTaskOverdue,
   type MyDayWidgetId,
@@ -235,6 +239,7 @@ function WidgetLoading({ label }: { label: string }) {
 export default function MyDay() {
   const data = useMyDay();
   const workspace = useMyDayWorkspace();
+  const boardWorkspace = useMyDayBoard();
   const [scope, setScope] = useState<Scope>("mine");
   const [metricFilter, setMetricFilter] = useState<MetricFilter>("all");
   const [toneFilter, setToneFilter] = useState<MyDayProjectTone | null>(null);
@@ -244,11 +249,13 @@ export default function MyDay() {
   const [refreshedAt, setRefreshedAt] = useState(() => new Date());
   const dataRefreshRef = useRef(data.refresh);
   const workspaceRefreshRef = useRef(workspace.refresh);
+  const boardRefreshRef = useRef(boardWorkspace.refresh);
 
   useEffect(() => {
     dataRefreshRef.current = data.refresh;
     workspaceRefreshRef.current = workspace.refresh;
-  }, [data.refresh, workspace.refresh]);
+    boardRefreshRef.current = boardWorkspace.refresh;
+  }, [boardWorkspace.refresh, data.refresh, workspace.refresh]);
 
   useEffect(() => {
     const intervalId = window.setInterval(() => setNow(new Date()), 30_000);
@@ -262,6 +269,19 @@ export default function MyDay() {
   });
 
   const compact = workspace.preferences.density === "compact";
+  const boardAgendaEvents = useMemo(
+    () => buildMyDayBoardAgendaEvents(
+      boardWorkspace.cards,
+      boardWorkspace.boards,
+      boardWorkspace.columns,
+      now,
+    ),
+    [boardWorkspace.boards, boardWorkspace.cards, boardWorkspace.columns, now],
+  );
+  const unifiedAgendaEvents = useMemo(
+    () => [...data.agendaEvents, ...boardAgendaEvents].sort((left, right) => left.startsAt.getTime() - right.startsAt.getTime()),
+    [boardAgendaEvents, data.agendaEvents],
+  );
   const projects = scope === "portfolio" ? data.portfolioProjects : data.myProjects;
   const urgentProjects = useMemo(
     () => projects.filter((project) => project.tone === "critical"),
@@ -271,17 +291,17 @@ export default function MyDay() {
     () => workspace.tasks.filter((task) => task.status === "pending" && (task.priority === "critical" || isMyDayTaskOverdue(task, now))),
     [now, workspace.tasks],
   );
-  const overdueAppointments = useMemo(
-    () => data.appointments.filter((appointment) => appointment.isOverdue),
-    [data.appointments],
+  const overdueAgendaEvents = useMemo(
+    () => unifiedAgendaEvents.filter((event) => event.isOverdue),
+    [unifiedAgendaEvents],
   );
   const criticalIssues = useMemo(
     () => data.issues.filter((issue) => issue.priority === "critical" || issue.priority === "high"),
     [data.issues],
   );
-  const todayAppointments = useMemo(
-    () => data.appointments.filter((appointment) => isSameDay(appointment.startsAt, now)),
-    [data.appointments, now],
+  const todayAgendaEvents = useMemo(
+    () => unifiedAgendaEvents.filter((event) => isMyDayAgendaEventOnDay(event, now)),
+    [now, unifiedAgendaEvents],
   );
   const todayTasks = useMemo(
     () => workspace.tasks.filter((task) => task.status === "pending" && isSameDay(task.dueAt, now)),
@@ -298,11 +318,12 @@ export default function MyDay() {
 
   const availableWidgetIds = useMemo(() => {
     const widgets: MyDayWidgetId[] = ["priorities", "agenda", "shortcuts"];
+    if (boardWorkspace.permissions.canView) widgets.push("board");
     if (data.permissions.canViewProjects) widgets.push("projects", "insights");
     if (data.permissions.canViewConversion) widgets.push("conversion");
     if (data.hasCopilotAccess) widgets.push("copilot");
     return widgets;
-  }, [data.hasCopilotAccess, data.permissions.canViewConversion, data.permissions.canViewProjects]);
+  }, [boardWorkspace.permissions.canView, data.hasCopilotAccess, data.permissions.canViewConversion, data.permissions.canViewProjects]);
 
   const orderedWidgetIds = workspace.preferences.widgetOrder.filter((id) => availableWidgetIds.includes(id));
   const effectiveQuickLinkPaths = workspace.preferences.quickLinks ?? data.defaultQuickLinkPaths;
@@ -329,7 +350,7 @@ export default function MyDay() {
     metricFilter === "today" ? "today" : metricFilter === "critical" ? "critical" : "all";
 
   const refreshAll = useCallback(async () => {
-    await Promise.all([dataRefreshRef.current(), workspaceRefreshRef.current()]);
+    await Promise.all([dataRefreshRef.current(), workspaceRefreshRef.current(), boardRefreshRef.current()]);
     setRefreshedAt(new Date());
     setNow(new Date());
   }, []);
@@ -419,8 +440,8 @@ export default function MyDay() {
                 <Settings2 className="h-3.5 w-3.5" /> Personalizar
               </Button>
             )}
-            <Button type="button" variant="outline" size="sm" className="h-8 gap-1.5 bg-background/80 px-2 text-[10px]" disabled={data.isRefreshing || workspace.isRefreshing} onClick={() => void refreshAll()}>
-              <RefreshCw className={cn("h-3.5 w-3.5", (data.isRefreshing || workspace.isRefreshing) && "animate-spin")} /> Atualizar
+            <Button type="button" variant="outline" size="sm" className="h-8 gap-1.5 bg-background/80 px-2 text-[10px]" disabled={data.isRefreshing || workspace.isRefreshing || boardWorkspace.isRefreshing} onClick={() => void refreshAll()}>
+              <RefreshCw className={cn("h-3.5 w-3.5", (data.isRefreshing || workspace.isRefreshing || boardWorkspace.isRefreshing) && "animate-spin")} /> Atualizar
             </Button>
           </div>
         </div>
@@ -432,9 +453,9 @@ export default function MyDay() {
 
       <section className="grid min-w-0 grid-cols-2 gap-2 lg:grid-cols-4" aria-label="Resumo do dia">
         <MetricCard icon={FolderKanban} label={scope === "portfolio" ? "Projetos ativos" : "Meus projetos"} value={projects.length} detail="clique para ver a carteira" active={metricFilter === "projects"} onClick={() => selectMetricFilter("projects")} />
-        <MetricCard icon={AlertTriangle} label="Prioridades críticas" value={urgentProjects.length + criticalTasks.length + overdueAppointments.length + criticalIssues.length} detail="projetos, tarefas e atrasos" tone="danger" active={metricFilter === "critical"} onClick={() => selectMetricFilter("critical")} />
+        <MetricCard icon={AlertTriangle} label="Prioridades críticas" value={urgentProjects.length + criticalTasks.length + overdueAgendaEvents.length + criticalIssues.length} detail="projetos, tarefas e atrasos" tone="danger" active={metricFilter === "critical"} onClick={() => selectMetricFilter("critical")} />
         <MetricCard icon={Database} label="Pendências" value={data.issues.length} detail="abertas na conversão" tone="warning" active={metricFilter === "issues"} onClick={() => selectMetricFilter("issues")} />
-        <MetricCard icon={CalendarDays} label="Agenda de hoje" value={todayAppointments.length + todayTasks.length} detail="tarefas e compromissos" tone="success" active={metricFilter === "today"} onClick={() => selectMetricFilter("today")} />
+        <MetricCard icon={CalendarDays} label="Agenda de hoje" value={todayAgendaEvents.length + todayTasks.length} detail="tarefas e compromissos" tone="success" active={metricFilter === "today"} onClick={() => selectMetricFilter("today")} />
       </section>
 
       {(metricFilter !== "all" || toneFilter || stageFilter) && (
@@ -463,7 +484,8 @@ export default function MyDay() {
               <div key={widgetId} className={cn(widgetClassName, "space-y-2")} data-widget-id={widgetId} data-widget-width={widgetWidth}>
                 {data.errors?.projects && <MyDayWidgetError label="os projetos prioritários" onRetry={data.refreshers.projects} />}
                 {workspace.errors?.tasks && <MyDayWidgetError label="as tarefas prioritárias" onRetry={workspace.refreshTasks} />}
-                {data.errors?.appointments && <MyDayWidgetError label="os compromissos prioritários" onRetry={data.refreshers.appointments} />}
+                {data.errors?.agenda && <MyDayWidgetError label="os compromissos prioritários" onRetry={data.refreshers.agenda} />}
+                {boardWorkspace.error && <MyDayWidgetError label="os cartões prioritários" onRetry={boardWorkspace.refresh} />}
                 {data.errors?.conversion && <MyDayWidgetError label="as pendências prioritárias" onRetry={data.refreshers.conversion} />}
                 {(data.loading?.projects || workspace.loading?.tasks) && !projects.length && !workspace.tasks.length ? (
                   <WidgetLoading label="fila de prioridades" />
@@ -471,7 +493,7 @@ export default function MyDay() {
                   <MyDayPriorityQueue
                     projects={projects}
                     tasks={workspace.tasks}
-                    appointments={data.appointments}
+                    events={unifiedAgendaEvents}
                     issues={data.issues}
                     projectPath={(project) => data.permissions.canOpenProjectDetails ? `/projects/${project.id}` : data.permissions.projectOverviewPath}
                     compact={compact}
@@ -541,14 +563,17 @@ export default function MyDay() {
             return (
               <div key={widgetId} className={cn(widgetClassName, "space-y-2")} data-widget-id={widgetId} data-widget-width={widgetWidth}>
                 {workspace.errors?.tasks && <MyDayWidgetError label="suas tarefas" onRetry={workspace.refreshTasks} />}
-                {data.errors?.appointments && <MyDayWidgetError label="os compromissos" onRetry={data.refreshers.appointments} />}
-                {(workspace.loading?.tasks && data.loading?.appointments) && !workspace.tasks.length && !data.appointments.length ? <WidgetLoading label="agenda" /> : <MyDayAgenda
+                {data.errors?.agenda && <MyDayWidgetError label="os compromissos" onRetry={data.refreshers.agenda} />}
+                {boardWorkspace.error && <MyDayWidgetError label="os cartões com prazo" onRetry={boardWorkspace.refresh} />}
+                {(workspace.loading?.tasks && data.loading?.agenda && boardWorkspace.isLoading) && !workspace.tasks.length && !unifiedAgendaEvents.length ? <WidgetLoading label="agenda" /> : <MyDayAgenda
                   tasks={workspace.tasks}
-                  appointments={data.appointments}
+                  events={unifiedAgendaEvents}
                   shortcuts={data.availableShortcuts}
                   filter={agendaFilter}
                   compact={compact}
-                  canViewAppointments={data.permissions.canViewAppointments}
+                  canViewCsCx={data.permissions.canViewAppointments}
+                  canViewImplementation={data.permissions.canViewCalendar}
+                  canViewBoard={boardWorkspace.permissions.canView}
                   canCreateTask={workspace.permissions.canCreateTask}
                   canEditTask={workspace.permissions.canEditTask}
                   canDeleteTask={workspace.permissions.canDeleteTask}
@@ -563,6 +588,21 @@ export default function MyDay() {
                   onSetTaskStatus={workspace.setTaskStatus}
                   onSnoozeTask={workspace.snoozeTask}
                   onDeleteTask={workspace.deleteTask}
+                />}
+              </div>
+            );
+          }
+
+          if (widgetId === "board") {
+            return (
+              <div key={widgetId} className={cn(widgetClassName, "space-y-2")} data-widget-id={widgetId} data-widget-width={widgetWidth}>
+                {boardWorkspace.error && <MyDayWidgetError label="seu quadro pessoal" onRetry={boardWorkspace.refresh} />}
+                {boardWorkspace.isLoading ? <WidgetLoading label="Meu Quadro" /> : <MyDayBoardWidget
+                  boards={boardWorkspace.boards}
+                  columns={boardWorkspace.columns}
+                  cards={boardWorkspace.cards}
+                  compact={compact}
+                  canCreate={boardWorkspace.permissions.canCreate}
                 />}
               </div>
             );
