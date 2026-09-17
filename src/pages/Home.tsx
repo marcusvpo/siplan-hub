@@ -26,16 +26,16 @@ export default function Home() {
     // Ter o menu não basta: um grupo cujos subitens estão todos bloqueados
     // vira um card que abre vazio, então ele também some.
     const allowedMenuItems = useMemo(() => {
-        return menuItems.filter(item => {
-            if (isAdmin) return true;
-            if (item.permissionKey && !hasPermission(item.permissionKey, "view")) {
-                return false;
+        return menuItems.flatMap(item => {
+            if (!isAdmin && item.permissionKey && !hasPermission(item.permissionKey, "view")) {
+                return [];
             }
-            const subItems = item.subItems ?? [];
-            if (subItems.length === 0) return true;
-            return subItems.some(
-                sub => !sub.permissionKey || hasPermission(sub.permissionKey, "view"),
+            if (!item.subItems) return [item];
+
+            const subItems = item.subItems.filter(
+                sub => isAdmin || !sub.permissionKey || hasPermission(sub.permissionKey, "view"),
             );
+            return subItems.length > 0 ? [{ ...item, subItems }] : [];
         });
     }, [hasPermission, isAdmin]);
 

@@ -17,6 +17,7 @@ export interface CalendarEvent {
   type: "implementation" | "training" | "adherence" | "homologation" | "vacation" | "other";
   projectId?: string; // Link to real project
   clientName?: string;
+  responsibleName?: string;
   status?: "planned" | "confirmed" | "completed";
   notes?: string;
   isGhost?: boolean; // True if it's a draggable ghost card

@@ -6,6 +6,7 @@ import {
   ChevronRight,
   Clock3,
   Database,
+  Eye,
   FileDown,
   MoreHorizontal,
   Pencil,
@@ -146,6 +147,8 @@ export default function CsCxAppointments() {
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [form, setForm] = useState<CsCxAppointmentInput>(defaultForm());
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [viewingObservations, setViewingObservations] =
+    useState<CsCxAppointment | null>(null);
   const [deleting, setDeleting] = useState<CsCxAppointment | null>(null);
   const [action, setAction] = useState<{
     appointment: CsCxAppointment;
@@ -548,6 +551,7 @@ export default function CsCxAppointments() {
                   appointments={pagedAppointments}
                   canEdit={canEditRecord}
                   canDelete={canDeleteRecord}
+                  onViewObservations={setViewingObservations}
                   onEdit={openEdit}
                   onAction={openAction}
                   onDelete={setDeleting}
@@ -822,6 +826,11 @@ export default function CsCxAppointments() {
         </DialogContent>
       </Dialog>
 
+      <AppointmentObservationsDialog
+        appointment={viewingObservations}
+        onClose={() => setViewingObservations(null)}
+      />
+
       <Dialog open={!!action} onOpenChange={(open) => !open && setAction(null)}>
         <DialogContent>
           <DialogHeader>
@@ -892,6 +901,7 @@ function AppointmentTable({
   appointments,
   canEdit,
   canDelete,
+  onViewObservations,
   onEdit,
   onAction,
   onDelete,
@@ -899,6 +909,7 @@ function AppointmentTable({
   appointments: CsCxAppointment[];
   canEdit: (ownerId: string | null) => boolean;
   canDelete: (ownerId: string | null) => boolean;
+  onViewObservations: (item: CsCxAppointment) => void;
   onEdit: (item: CsCxAppointment) => void;
   onAction: (item: CsCxAppointment, status: string) => void;
   onDelete: (item: CsCxAppointment) => void;
@@ -919,15 +930,28 @@ function AppointmentTable({
                   <p className="break-words text-sm font-bold">{item.title}</p>
                   <p className="mt-0.5 text-xs text-muted-foreground">{formatDateTime(item.starts_at)} · {item.duration_minutes} min</p>
                 </div>
-                {(editable || deletable) && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label="Ações do agendamento"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      {editable && <><DropdownMenuItem onClick={() => onEdit(item)}><Pencil className="mr-2 h-4 w-4" />Editar</DropdownMenuItem><DropdownMenuSeparator /><DropdownMenuItem onClick={() => onAction(item, "REALIZADO")}>Marcar realizado</DropdownMenuItem><DropdownMenuItem onClick={() => onAction(item, "CONCLUIDO")}>Concluir</DropdownMenuItem><DropdownMenuItem onClick={() => onAction(item, "REMARCADO")}>Remarcar</DropdownMenuItem><DropdownMenuItem className="text-amber-700" onClick={() => onAction(item, "CANCELADO")}>Cancelar</DropdownMenuItem></>}
-                      {deletable && <><DropdownMenuSeparator /><DropdownMenuItem className="text-destructive" onClick={() => onDelete(item)}><Trash2 className="mr-2 h-4 w-4" />Excluir</DropdownMenuItem></>}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
+                <div className="flex shrink-0 items-center gap-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-10 w-10 text-muted-foreground"
+                    aria-label={`Visualizar observações de ${item.title}`}
+                    title="Visualizar observações"
+                    onClick={() => onViewObservations(item)}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                  {(editable || deletable) && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-10 w-10 shrink-0" aria-label="Ações do agendamento"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {editable && <><DropdownMenuItem onClick={() => onEdit(item)}><Pencil className="mr-2 h-4 w-4" />Editar</DropdownMenuItem><DropdownMenuSeparator /><DropdownMenuItem onClick={() => onAction(item, "REALIZADO")}>Marcar realizado</DropdownMenuItem><DropdownMenuItem onClick={() => onAction(item, "CONCLUIDO")}>Concluir</DropdownMenuItem><DropdownMenuItem onClick={() => onAction(item, "REMARCADO")}>Remarcar</DropdownMenuItem><DropdownMenuItem className="text-amber-700" onClick={() => onAction(item, "CANCELADO")}>Cancelar</DropdownMenuItem></>}
+                        {deletable && <><DropdownMenuSeparator /><DropdownMenuItem className="text-destructive" onClick={() => onDelete(item)}><Trash2 className="mr-2 h-4 w-4" />Excluir</DropdownMenuItem></>}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                </div>
               </div>
               <div className="mt-2 flex flex-wrap gap-1.5"><StatusBadge appointment={item} /><Badge variant="secondary" className="h-5 px-1.5 text-[10px] font-normal">{TYPE_LABELS[item.appointment_type] ?? item.appointment_type}</Badge>{item.is_lead && <Badge variant="outline" className="h-5 px-1.5 text-[10px] font-normal text-amber-700">Lead</Badge>}</div>
               <div className="mt-3 grid grid-cols-2 gap-2 border-t pt-2 text-xs">
@@ -949,7 +973,7 @@ function AppointmentTable({
             <TableHead className="h-9 px-3 text-xs">Responsável</TableHead>
             <TableHead className="h-9 px-3 text-xs">Tipo</TableHead>
             <TableHead className="h-9 px-3 text-xs">Status</TableHead>
-            <TableHead className="h-9 w-12 px-2" />
+            <TableHead className="h-9 w-20 px-2" />
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -1037,6 +1061,18 @@ function AppointmentTable({
                   <StatusBadge appointment={item} />
                 </TableCell>
                 <TableCell className="px-2 py-1">
+                  <div className="flex items-center justify-end gap-0.5">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                      aria-label={`Visualizar observações de ${item.title}`}
+                      title="Visualizar observações"
+                      onClick={() => onViewObservations(item)}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
                   {(editable || deletable) && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -1091,6 +1127,7 @@ function AppointmentTable({
                       </DropdownMenuContent>
                     </DropdownMenu>
                   )}
+                  </div>
                 </TableCell>
               </TableRow>
               );
@@ -1100,6 +1137,67 @@ function AppointmentTable({
       </Table>
       </div>}
     </>
+  );
+}
+
+function AppointmentObservationsDialog({
+  appointment,
+  onClose,
+}: {
+  appointment: CsCxAppointment | null;
+  onClose: () => void;
+}) {
+  const observations = decodeAppointmentObservations(appointment?.notes);
+
+  return (
+    <Dialog open={Boolean(appointment)} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] top-[calc(env(safe-area-inset-top)+0.5rem)] my-auto flex h-fit max-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-1rem)] w-[calc(100vw-1rem)] max-w-none translate-y-0 flex-col gap-0 overflow-hidden p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:max-h-[calc(90dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom))] sm:max-w-2xl sm:p-6">
+        <DialogHeader className="shrink-0 pr-10">
+          <DialogTitle className="flex items-center gap-2 text-left">
+            <Eye className="h-5 w-5 shrink-0 text-primary" />
+            Observações do agendamento
+          </DialogTitle>
+          <DialogDescription className="break-words text-left [overflow-wrap:anywhere]">
+            {appointment?.title
+              ? `Consulta somente leitura de ${appointment.title}.`
+              : "Consulta somente leitura das observações."}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1">
+          {observations.length > 0 ? (
+            <ol
+              aria-label="Observações do agendamento"
+              className="space-y-3 pl-6"
+            >
+              {observations.map((observation, index) => (
+                <li
+                  key={`${index}-${observation}`}
+                  className="list-decimal rounded-lg border bg-muted/20 px-3 py-2 marker:font-semibold marker:text-muted-foreground"
+                >
+                  <p className="min-w-0 whitespace-pre-wrap break-words text-sm leading-6 [overflow-wrap:anywhere]">
+                    {observation}
+                  </p>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p
+              role="status"
+              className="rounded-lg border border-dashed px-4 py-8 text-center text-sm text-muted-foreground"
+            >
+              Nenhuma observação registrada para este agendamento.
+            </p>
+          )}
+        </div>
+
+        <DialogFooter className="mt-4 shrink-0">
+          <Button type="button" className="min-h-10" onClick={onClose}>
+            Fechar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 

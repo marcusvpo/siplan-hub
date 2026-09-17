@@ -23,7 +23,7 @@ import {
   endOfWeek 
 } from "date-fns";
 import { useProjectsV2 } from "@/hooks/useProjectsV2";
-import { ProjectV2 } from "@/types/ProjectV2";
+import { buildProjectCalendarEvents } from "@/lib/project-calendar-events";
 import { Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useVacations } from "@/hooks/useVacations";
@@ -92,145 +92,7 @@ export default function Calendar() {
   const realEvents = useMemo(() => {
     if (!projects || isLoading) return [];
 
-    const events: CalendarEvent[] = [];
-
-    const findMember = (name: string) => {
-      if (!name) return undefined;
-      const n = name.toLowerCase().trim();
-      return CALENDAR_MEMBERS.find((m) => {
-        const mName = m.name.toLowerCase();
-        return mName === n || mName.includes(n) || n.includes(mName);
-      });
-    };
-
-    const getFallbackColor = (name: string) => {
-      const colors = [
-        "bg-indigo-500",
-        "bg-blue-500",
-        "bg-green-500",
-        "bg-orange-500",
-        "bg-pink-500",
-        "bg-purple-500",
-        "bg-cyan-500",
-      ];
-      let hash = 0;
-      for (let i = 0; i < name.length; i++) {
-        hash = name.charCodeAt(i) + ((hash << 5) - hash);
-      }
-      return colors[Math.abs(hash) % colors.length];
-    };
-
-    const isValidDate = (date: Date | string | null | undefined) => {
-      if (!date) return false;
-      const d = new Date(date);
-      return d instanceof Date && !isNaN(d.getTime());
-    };
-
-    projects.forEach((project: ProjectV2) => {
-      // Helper to ensure dates are treated as local noon to avoid timezone shifts
-      const toLocalDate = (dateStr: Date | string | null | undefined) => {
-        if (!dateStr) return null;
-        const d = new Date(dateStr);
-        if (isNaN(d.getTime())) return null;
-        // If it's a string from Supabase (yyyy-mm-dd), append noon
-        if (typeof dateStr === 'string' && dateStr.length === 10) {
-          return new Date(dateStr + "T12:00:00");
-        }
-        return d;
-      };
-
-      // Implementation Phase 1
-      const phase1Start = toLocalDate(project.stages.implementation?.phase1?.startDate);
-      const phase1End = toLocalDate(project.stages.implementation?.phase1?.endDate);
-      const phase1Responsible = project.stages.implementation?.phase1?.responsible;
-
-      if (phase1Start && phase1End && phase1Responsible) {
-        const member = findMember(phase1Responsible);
-        const color = member ? member.color : getFallbackColor(phase1Responsible);
-
-        events.push({
-          id: `real-${project.id}-p1`,
-          resourceId: member?.id || "unknown",
-          title: `Implantação: ${project.clientName}`,
-          clientName: project.clientName,
-          start: phase1Start,
-          end: phase1End,
-          type: "implementation",
-          status: "confirmed",
-          projectId: project.id,
-          notes: project.stages.implementation.phase1.observations,
-          color,
-        });
-      }
-
-      // Implementation Phase 2 (Treinamento)
-      const phase2Start = toLocalDate(project.stages.implementation?.phase2?.startDate);
-      const phase2End = toLocalDate(project.stages.implementation?.phase2?.endDate);
-      const phase2Responsible = project.stages.implementation?.phase2?.responsible;
-
-      if (phase2Start && phase2End && phase2Responsible) {
-        const member = findMember(phase2Responsible);
-        const color = member ? member.color : getFallbackColor(phase2Responsible);
-
-        events.push({
-          id: `real-${project.id}-p2`,
-          resourceId: member?.id || "unknown",
-          title: `Treinamento: ${project.clientName}`,
-          clientName: project.clientName,
-          start: phase2Start,
-          end: phase2End,
-          type: "training",
-          status: "confirmed",
-          projectId: project.id,
-          notes: project.stages.implementation.phase2.observations,
-          color,
-        });
-      }
-
-      // Adherence (Agendado Para - dia único)
-      const adherenceEnd = toLocalDate(project.stages.adherence?.endDate);
-      const adherenceResponsible = project.stages.adherence?.responsible;
-
-      if (adherenceEnd && adherenceResponsible) {
-        const member = findMember(adherenceResponsible);
-
-        events.push({
-          id: `real-${project.id}-adherence`,
-          resourceId: member?.id || "unknown",
-          title: `Aderência: ${project.clientName}`,
-          clientName: project.clientName,
-          start: adherenceEnd,
-          end: adherenceEnd,
-          type: "adherence",
-          status: "confirmed",
-          projectId: project.id,
-          notes: project.stages.adherence.observations,
-          color: "bg-amber-500",
-        });
-      }
-
-      // Homologation
-      const homologDate = toLocalDate(project.stages.conversion?.finishedAt);
-      const homologResponsible = project.stages.conversion?.homologationResponsible;
-
-      if (homologDate && homologResponsible) {
-        const member = findMember(homologResponsible);
-
-        events.push({
-          id: `real-${project.id}-homologation`,
-          resourceId: member?.id || "unknown",
-          title: `Homologação: ${project.clientName}`,
-          clientName: project.clientName,
-          start: homologDate,
-          end: homologDate,
-          type: "homologation",
-          status: "confirmed",
-          projectId: project.id,
-          notes: project.stages.conversion.observations,
-          color: "bg-violet-500",
-        });
-      }
-    });
+    const events = buildProjectCalendarEvents(projects);
 
     // Process Vacations
     if (vacations && Array.isArray(vacations)) {

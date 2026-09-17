@@ -17,7 +17,12 @@ export const MY_DAY_WIDGETS = [
   {
     id: "agenda",
     title: "Minha agenda",
-    description: "Tarefas pessoais e compromissos de CS/CX.",
+    description: "Tarefas pessoais e compromissos integrados.",
+  },
+  {
+    id: "board",
+    title: "Meu Quadro",
+    description: "Notas e atividades em um Kanban pessoal.",
   },
   {
     id: "conversion",
@@ -83,6 +88,7 @@ export interface MyDayPreferences {
 export const DEFAULT_MY_DAY_WIDGET_ORDER: MyDayWidgetId[] = [
   "priorities",
   "agenda",
+  "board",
   "insights",
   "projects",
   "shortcuts",
@@ -93,6 +99,7 @@ export const DEFAULT_MY_DAY_WIDGET_ORDER: MyDayWidgetId[] = [
 export const DEFAULT_MY_DAY_WIDGET_LAYOUT: MyDayWidgetLayout = {
   priorities: "full",
   agenda: "half",
+  board: "full",
   insights: "half",
   projects: "full",
   shortcuts: "full",

@@ -88,9 +88,8 @@ export async function generateCsCxNpsPdf(responses: CsCxNpsResponse[], filterDes
   );
 }
 
-export async function generateCsCxNpsAnalysisPdf(
+export function buildCsCxNpsAnalysisReportBlocks(
   analytics: NpsAnalytics,
-  filterDescription: string,
   aiReport?: string,
 ) {
   const blocks: CsCxReportBlock[] = [];
@@ -111,6 +110,17 @@ export async function generateCsCxNpsAnalysisPdf(
     ]),
   });
 
+  blocks.push({
+    title: "CLIENTES COM MELHORES NOTAS",
+    subtitle: "Melhor nota 9 ou 10 de cada cartório no recorte",
+    rows: analytics.bestClients.length
+      ? analytics.bestClients.map((client) => [
+          client.name,
+          `Nota ${client.score} · ${client.classification} · ${client.reason || "Motivo não informado"}`,
+        ])
+      : [["Nenhum cliente", "Não há respostas com nota 9 ou 10 no recorte."]],
+  });
+
   if (analytics.attentionClients.length) {
     blocks.push({
       title: "CLIENTES QUE PRECISAM DE ATENÇÃO",
@@ -122,12 +132,19 @@ export async function generateCsCxNpsAnalysisPdf(
     });
   }
 
+  const officesByAverageScore = [...analytics.byOffice].sort(
+    (left, right) =>
+      right.averageScore - left.averageScore ||
+      right.latestResponseAt.localeCompare(left.latestResponseAt) ||
+      left.name.localeCompare(right.name, "pt-BR"),
+  );
+
   blocks.push({
     title: "DESEMPENHO POR CARTÓRIO",
-    subtitle: "Maior NPS primeiro; empates pela resposta mais recente",
-    rows: analytics.byOffice.map((office) => [
+    subtitle: "Maior nota média primeiro; empates pela resposta mais recente",
+    rows: officesByAverageScore.map((office) => [
       office.name,
-      `NPS ${office.nps} · Nota média ${office.averageScore} · ${office.responses} resposta(s) · ${office.promoters} promotor(es) · ${office.neutrals} neutro(s) · ${office.detractors} detrator(es)`,
+      `Nota média ${office.averageScore}/10 · ${office.responses} resposta(s) · ${office.promoters} promotor(es) · ${office.neutrals} neutro(s) · ${office.detractors} detrator(es)`,
     ]),
   });
 
@@ -174,6 +191,16 @@ export async function generateCsCxNpsAnalysisPdf(
       ]),
     });
   }
+
+  return blocks;
+}
+
+export async function generateCsCxNpsAnalysisPdf(
+  analytics: NpsAnalytics,
+  filterDescription: string,
+  aiReport?: string,
+) {
+  const blocks = buildCsCxNpsAnalysisReportBlocks(analytics, aiReport);
 
   await generateCsCxPdfReport(
     "BI E RELATÓRIO DE NPS",

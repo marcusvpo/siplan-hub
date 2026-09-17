@@ -78,4 +78,82 @@ describe("integração da Central de Trabalho", () => {
     expect(personalization).toContain("DndContext");
     expect(personalization).toContain("Prévia das linhas");
   });
+
+  it("integra a agenda de Implantação e publica a melhoria", () => {
+    const agenda = readSource("src/components/my-day/MyDayAgenda.tsx");
+    const hook = readSource("src/hooks/useMyDay.ts");
+    const calendar = readSource("src/pages/Calendar.tsx");
+    const migration = readSource(
+      "supabase/migrations/20260917110000_my_day_unified_agenda_changelog.sql",
+    );
+
+    expect(agenda).toContain("Filtrar agenda por origem");
+    expect(agenda).toContain("canViewImplementation");
+    expect(hook).toContain("buildMyDayImplementationEvents");
+    expect(calendar).toContain("buildProjectCalendarEvents");
+    expect(migration).toContain("'release_improvement'");
+    expect(migration).toContain("'work_center'");
+    expect(migration).toContain("'/meu-dia'");
+  });
+
+  it("registra o Meu Quadro com rota, menu, permissões, RLS e ajuda", () => {
+    const app = readSource("src/App.tsx");
+    const menu = readSource("src/constants/menuItems.ts");
+    const sidebar = readSource("src/components/Layout/AppSidebar.tsx");
+    const permissions = readSource("src/constants/permissions.ts");
+    const help = readSource("src/constants/pageHelpRegistry.ts");
+    const types = readSource("src/integrations/supabase/types.ts");
+    const migration = readSource(
+      "supabase/migrations/20260917130000_my_day_personal_board.sql",
+    );
+
+    expect(app).toContain('path="/meu-dia/quadro"');
+    expect(app).toContain('<RequirePermission resource="work_board">');
+    expect(menu).toContain('permissionKey: "work_board"');
+    expect(sidebar).toContain('hasPermission("work_board", "view")');
+    expect(help).toContain('route: "/meu-dia/quadro"');
+    expect(permissions).toContain('resource: "work_board"');
+    expect(types).toContain('TableName extends "my_day_board_cards"');
+    expect(migration).toContain("CREATE TABLE public.my_day_boards");
+    expect(migration).toContain("CREATE TABLE public.my_day_board_columns");
+    expect(migration).toContain("CREATE TABLE public.my_day_board_cards");
+    expect(migration).toContain("ENABLE ROW LEVEL SECURITY");
+    expect(migration).toContain("user_id = auth.uid()");
+    expect(migration).toContain("'release_screen'");
+    expect(migration).toContain("'/meu-dia/quadro'");
+  });
+
+  it("integra prazos do quadro na agenda e mantém layout mobile sem rolagem horizontal", () => {
+    const page = readSource("src/pages/MyDayBoard.tsx");
+    const myDay = readSource("src/pages/MyDay.tsx");
+    const agenda = readSource("src/components/my-day/MyDayAgenda.tsx");
+
+    expect(page).toContain("overflow-x-hidden");
+    expect(page).toContain("safe-area-inset-bottom");
+    expect(page).toContain('data-testid="my-day-board-mobile"');
+    expect(page).toContain("activeMobileColumnId");
+    expect(myDay).toContain("buildMyDayBoardAgendaEvents");
+    expect(myDay).toContain('widgetId === "board"');
+    expect(agenda).toContain("canViewBoard");
+    expect(agenda).toContain('sourceFilter === "board"');
+  });
+
+  it("integra a agenda ao quadro com drag responsivo e publica a melhoria", () => {
+    const page = readSource("src/pages/MyDayBoard.tsx");
+    const board = readSource("src/lib/my-day-board.ts");
+    const help = readSource("src/constants/pageHelpRegistry.ts");
+    const migration = readSource(
+      "supabase/migrations/20260917160000_my_day_board_agenda_inbox_changelog.sql",
+    );
+
+    expect(page).toContain("Entrada da agenda");
+    expect(page).toContain("MOBILE_TARGET_PREFIX");
+    expect(page).toContain("dragHandleProps");
+    expect(board).toContain("buildMyDayBoardInboxItems");
+    expect(board).toContain("myDaySource");
+    expect(help).toContain("alvos de movimentação por toque");
+    expect(migration).toContain("'release_improvement'");
+    expect(migration).toContain("'work_board'");
+    expect(migration).toContain("'/meu-dia/quadro'");
+  });
 });

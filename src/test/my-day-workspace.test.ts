@@ -25,6 +25,7 @@ describe("preferências e tarefas do Meu Dia", () => {
     expect(preferences.hiddenWidgets).toEqual(["copilot"]);
     expect(preferences.widgetLayout.agenda).toBe("full");
     expect(preferences.widgetLayout.insights).toBe("half");
+    expect(preferences.widgetLayout.board).toBe("full");
     expect(preferences.quickLinks).toEqual(["/calendar", "/projects"]);
   });
 
@@ -32,15 +33,17 @@ describe("preferências e tarefas do Meu Dia", () => {
     const preferences = normalizeMyDayPreferences(null);
 
     expect(preferences.quickLinks).toBeNull();
-    expect(preferences.widgetOrder.slice(0, 4)).toEqual([
+    expect(preferences.widgetOrder.slice(0, 5)).toEqual([
       "priorities",
       "agenda",
+      "board",
       "insights",
       "projects",
     ]);
     expect(preferences.widgetLayout).toEqual(
       expect.objectContaining({
         agenda: "half",
+        board: "full",
         priorities: "full",
         insights: "half",
         projects: "full",

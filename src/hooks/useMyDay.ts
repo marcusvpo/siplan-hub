@@ -8,6 +8,10 @@ import { useCopilot } from "@/hooks/useCopilot";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useProjectsV2 } from "@/hooks/useProjectsV2";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  buildMyDayImplementationEvents,
+  type MyDayAgendaEvent,
+} from "@/lib/my-day-agenda";
 import { buildMyDayProjects } from "@/lib/my-day";
 import { menuItems } from "@/constants/menuItems";
 
@@ -22,17 +26,6 @@ export interface MyDayConversionIssue {
   priority: "low" | "medium" | "high" | "critical";
   status: "open" | "in_progress";
   updatedAt: Date;
-}
-
-export interface MyDayAppointment {
-  id: string;
-  title: string;
-  startsAt: Date;
-  status: string;
-  appointmentType: string;
-  location: string | null;
-  officeName: string;
-  isOverdue: boolean;
 }
 
 export interface MyDayShortcut {
@@ -58,8 +51,6 @@ interface RawAppointment {
   title: string;
   starts_at: string;
   status: string;
-  appointment_type: string;
-  location: string | null;
   is_lead: boolean;
   lead_office_name: string | null;
   cs_cx_registry_offices: { name: string | null } | null;
@@ -232,15 +223,15 @@ export function useMyDay() {
     refetchOnWindowFocus: true,
   });
 
-  const appointmentsQuery = useQuery({
-    queryKey: ["my-day", "appointments", userId],
+  const csCxAppointmentsQuery = useQuery({
+    queryKey: ["my-day", "cs-cx-appointments", userId],
     enabled: Boolean(userId && canViewAppointments),
     queryFn: async () => {
       const now = new Date();
       let query = db
         .from("cs_cx_appointments")
         .select(`
-          id, title, starts_at, status, appointment_type, location,
+          id, title, starts_at, status,
           is_lead, lead_office_name,
           cs_cx_registry_offices (name)
         `)
@@ -263,15 +254,18 @@ export function useMyDay() {
             id: appointment.id,
             title: appointment.title,
             startsAt,
+            endsAt: startsAt,
             status: appointment.status,
-            appointmentType: appointment.appointment_type,
-            location: appointment.location,
-            officeName: appointment.is_lead
+            context: appointment.is_lead
               ? appointment.lead_office_name || "Lead comercial"
               : appointment.cs_cx_registry_offices?.name || "Cartório não identificado",
+            source: "cs_cx" as const,
+            sourceLabel: "CS/CX",
+            path: "/cs-cx/agendamentos",
             isOverdue: startsAt.getTime() < now.getTime(),
+            allDay: false,
           };
-        }) satisfies MyDayAppointment[];
+        }) satisfies MyDayAgendaEvent[];
     },
     staleTime: 60_000,
     refetchInterval: 120_000,
@@ -279,7 +273,23 @@ export function useMyDay() {
   });
 
   const issues = issuesQuery.data ?? [];
-  const appointments = appointmentsQuery.data ?? [];
+  const implementationEvents = useMemo(
+    () =>
+      canViewCalendar
+        ? buildMyDayImplementationEvents(projects, identities, {
+            projectPath: (projectId) =>
+              canOpenProjectDetails ? `/projects/${projectId}` : "/calendar",
+          })
+        : [],
+    [canOpenProjectDetails, canViewCalendar, identities, projects],
+  );
+  const agendaEvents = useMemo(
+    () =>
+      [...(csCxAppointmentsQuery.data ?? []), ...implementationEvents].sort(
+        (left, right) => left.startsAt.getTime() - right.startsAt.getTime(),
+      ),
+    [csCxAppointmentsQuery.data, implementationEvents],
+  );
 
   return {
     userId,
@@ -289,7 +299,7 @@ export function useMyDay() {
     myProjects,
     portfolioProjects,
     issues,
-    appointments,
+    agendaEvents,
     digest,
     hasCopilotAccess,
     availableShortcuts,
@@ -306,39 +316,48 @@ export function useMyDay() {
     isLoading:
       (canViewProjects && projectsLoading) ||
       issuesQuery.isLoading ||
-      appointmentsQuery.isLoading ||
+      csCxAppointmentsQuery.isLoading ||
       copilotLoading,
     loading: {
       projects: canViewProjects && projectsLoading,
       conversion: issuesQuery.isLoading,
-      appointments: appointmentsQuery.isLoading,
+      agenda:
+        (canViewAppointments && csCxAppointmentsQuery.isLoading) ||
+        (canViewCalendar && projectsLoading),
       copilot: copilotLoading,
     },
-    error: projectsError ?? issuesQuery.error ?? appointmentsQuery.error ?? copilotError,
+    error: projectsError ?? issuesQuery.error ?? csCxAppointmentsQuery.error ?? copilotError,
     errors: {
       projects: projectsError,
       conversion: issuesQuery.error,
-      appointments: appointmentsQuery.error,
+      agenda:
+        (canViewCalendar ? projectsError : null) ??
+        (canViewAppointments ? csCxAppointmentsQuery.error : null),
       copilot: copilotError,
     },
     refreshers: {
       projects: refetchProjects,
       conversion: issuesQuery.refetch,
-      appointments: appointmentsQuery.refetch,
+      agenda: async () => {
+        await Promise.all([
+          canViewCalendar ? refetchProjects() : Promise.resolve(),
+          canViewAppointments ? csCxAppointmentsQuery.refetch() : Promise.resolve(),
+        ]);
+      },
       copilot: refreshCopilot,
     },
     refresh: async () => {
       await Promise.all([
         canViewProjects ? refetchProjects() : Promise.resolve(),
         canViewConversion ? issuesQuery.refetch() : Promise.resolve(),
-        canViewAppointments ? appointmentsQuery.refetch() : Promise.resolve(),
+        canViewAppointments ? csCxAppointmentsQuery.refetch() : Promise.resolve(),
         hasCopilotAccess ? refreshCopilot() : Promise.resolve(),
       ]);
     },
     isRefreshing:
       projectsFetching ||
       issuesQuery.isFetching ||
-      appointmentsQuery.isFetching ||
+      csCxAppointmentsQuery.isFetching ||
       copilotRefreshing,
   };
 }

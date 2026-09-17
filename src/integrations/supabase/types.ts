@@ -147,6 +147,96 @@ export type MyDayPreferencesInsert = {
 
 export type MyDayPreferencesUpdate = Partial<MyDayPreferencesInsert>;
 
+export type MyDayBoardRow = {
+  id: string;
+  user_id: string;
+  name: string;
+  description: string | null;
+  color: string;
+  is_default: boolean;
+  position: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type MyDayBoardInsert = {
+  id?: string;
+  user_id: string;
+  name: string;
+  description?: string | null;
+  color?: string;
+  is_default?: boolean;
+  position?: number;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type MyDayBoardUpdate = Partial<MyDayBoardInsert>;
+
+export type MyDayBoardColumnRow = {
+  id: string;
+  board_id: string;
+  user_id: string;
+  title: string;
+  color: string;
+  position: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type MyDayBoardColumnInsert = {
+  id?: string;
+  board_id: string;
+  user_id: string;
+  title: string;
+  color?: string;
+  position?: number;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type MyDayBoardColumnUpdate = Partial<MyDayBoardColumnInsert>;
+
+export type MyDayBoardCardRow = {
+  id: string;
+  board_id: string;
+  column_id: string;
+  user_id: string;
+  title: string;
+  description: string | null;
+  priority: "low" | "medium" | "high" | "critical";
+  due_at: string | null;
+  labels: string[];
+  checklist: Json;
+  linked_path: string | null;
+  position: number;
+  archived_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type MyDayBoardCardInsert = {
+  id?: string;
+  board_id: string;
+  column_id: string;
+  user_id: string;
+  title: string;
+  description?: string | null;
+  priority?: MyDayBoardCardRow["priority"];
+  due_at?: string | null;
+  labels?: string[];
+  checklist?: Json;
+  linked_path?: string | null;
+  position?: number;
+  archived_at?: string | null;
+  completed_at?: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type MyDayBoardCardUpdate = Partial<MyDayBoardCardInsert>;
+
 export type CsCxContactRow = {
   id: string;
   legacy_id: number | null;
@@ -208,21 +298,30 @@ export type Tables<TableName extends string> =
     : TableName extends "chamados_processo_venda" ? ChamadoProcessoVendaRow
       : TableName extends "my_day_tasks" ? MyDayTaskRow
         : TableName extends "my_day_preferences" ? MyDayPreferencesRow
-          : TableName extends "cs_cx_contacts" ? CsCxContactRow
-            : UntypedSupabaseShape;
+          : TableName extends "my_day_boards" ? MyDayBoardRow
+            : TableName extends "my_day_board_columns" ? MyDayBoardColumnRow
+              : TableName extends "my_day_board_cards" ? MyDayBoardCardRow
+                : TableName extends "cs_cx_contacts" ? CsCxContactRow
+                  : UntypedSupabaseShape;
 
 export type TablesInsert<TableName extends string> =
   TableName extends "conversion_engines" ? ConversionEngineInsert
     : TableName extends "chamados_processo_venda" ? ChamadoProcessoVendaInsert
       : TableName extends "my_day_tasks" ? MyDayTaskInsert
         : TableName extends "my_day_preferences" ? MyDayPreferencesInsert
-          : TableName extends "cs_cx_contacts" ? CsCxContactInsert
-            : UntypedSupabaseShape;
+          : TableName extends "my_day_boards" ? MyDayBoardInsert
+            : TableName extends "my_day_board_columns" ? MyDayBoardColumnInsert
+              : TableName extends "my_day_board_cards" ? MyDayBoardCardInsert
+                : TableName extends "cs_cx_contacts" ? CsCxContactInsert
+                  : UntypedSupabaseShape;
 
 export type TablesUpdate<TableName extends string> =
   TableName extends "conversion_engines" ? ConversionEngineUpdate
     : TableName extends "chamados_processo_venda" ? ChamadoProcessoVendaUpdate
       : TableName extends "my_day_tasks" ? MyDayTaskUpdate
         : TableName extends "my_day_preferences" ? MyDayPreferencesUpdate
-          : TableName extends "cs_cx_contacts" ? CsCxContactUpdate
-            : UntypedSupabaseShape;
+          : TableName extends "my_day_boards" ? MyDayBoardUpdate
+            : TableName extends "my_day_board_columns" ? MyDayBoardColumnUpdate
+              : TableName extends "my_day_board_cards" ? MyDayBoardCardUpdate
+                : TableName extends "cs_cx_contacts" ? CsCxContactUpdate
+                  : UntypedSupabaseShape;

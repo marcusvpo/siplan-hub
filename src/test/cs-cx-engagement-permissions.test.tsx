@@ -7,6 +7,8 @@ const mutation = { mutateAsync: vi.fn(), isPending: false };
 const generateContactsPdf = vi.hoisted(() => vi.fn());
 const pendingItems =
   '{"root":{"children":[{"children":[{"text":"Acompanhar chamado pendente"}],"type":"paragraph"}]}}';
+const encodedAppointmentNotes =
+  'siplan-appointment-observations:v1:["Primeira observação\\ncom quebra de linha.","Segunda observação com palavra-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"]';
 
 const localIsoDate = (date = new Date()) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -110,7 +112,12 @@ vi.mock("@/hooks/useCsCxEngagement", () => ({
       created_by: "profile-1",
       description: null,
       location: "Online",
-      notes: index === 0 ? "Observação cadastrada" : null,
+      notes:
+        index === 0
+          ? encodedAppointmentNotes
+          : index === 2
+            ? "Nota legada simples."
+            : null,
       result: null,
       realized_at: null,
       canceled_at: null,
@@ -452,6 +459,87 @@ describe("CS/CX contatos e agendamentos — permissões", () => {
     renderPage(<CsCxAppointments />, []);
     expect(screen.getByText("Reunião de acompanhamento")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /novo agendamento/i })).not.toBeInTheDocument();
+  });
+
+  it("abre as observações decodificadas e ordenadas sem abrir a edição", () => {
+    renderPage(<CsCxAppointments />, []);
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Visualizar observações de Reunião de acompanhamento",
+      }),
+    );
+
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toHaveClass(
+      "top-[calc(env(safe-area-inset-top)+0.5rem)]",
+      "bottom-[calc(env(safe-area-inset-bottom)+0.5rem)]",
+      "max-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-1rem)]",
+      "sm:max-h-[calc(90dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom))]",
+      "my-auto",
+      "h-fit",
+      "translate-y-0",
+      "pb-[max(1rem,env(safe-area-inset-bottom))]",
+    );
+    expect(within(dialog).getByRole("heading", {
+      name: "Observações do agendamento",
+    })).toBeInTheDocument();
+    const observations = within(dialog).getAllByRole("listitem");
+    expect(observations).toHaveLength(2);
+    expect(observations[0]).toHaveTextContent(
+      "Primeira observação com quebra de linha.",
+    );
+    expect(observations[1]).toHaveTextContent("Segunda observação");
+    expect(within(observations[0]).getByText(/Primeira observação/)).toHaveClass(
+      "whitespace-pre-wrap",
+      "[overflow-wrap:anywhere]",
+    );
+    expect(
+      within(dialog).queryByRole("button", { name: /salvar agendamento/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("mostra estado vazio e ação tocável na lista mobile de 320 px", async () => {
+    const desktopWidth = window.innerWidth;
+    Object.defineProperty(window, "innerWidth", {
+      configurable: true,
+      value: 320,
+    });
+
+    try {
+      renderPage(<CsCxAppointments />, []);
+      const mobileList = await screen.findByTestId(
+        "cs-cx-appointments-mobile-list",
+      );
+      const viewButton = within(mobileList).getByRole("button", {
+        name: "Visualizar observações de Agendamento 2",
+      });
+      expect(viewButton).toHaveClass("h-10", "w-10");
+
+      fireEvent.click(viewButton);
+      expect(screen.getByRole("status")).toHaveTextContent(
+        "Nenhuma observação registrada para este agendamento.",
+      );
+    } finally {
+      Object.defineProperty(window, "innerWidth", {
+        configurable: true,
+        value: desktopWidth,
+      });
+    }
+  });
+
+  it("exibe uma nota legada simples no diálogo somente leitura", () => {
+    renderPage(<CsCxAppointments />, []);
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Visualizar observações de Agendamento 3",
+      }),
+    );
+
+    expect(screen.getByRole("dialog")).toHaveTextContent(
+      "Nota legada simples.",
+    );
   });
 
   it("libera criação de agendamentos com a permissão correta", () => {
