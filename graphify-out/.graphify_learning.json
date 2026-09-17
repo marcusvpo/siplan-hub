@@ -1,0 +1,287 @@
+{
+  "generated_at": "2026-09-17T14:16:02.748247+00:00",
+  "nodes": {
+    "src_app": {
+      "code_fingerprint": "f02d354c5c926c8c43b76b9da73adcb734ea71ba1f6e2dd16389f3ab38504faf",
+      "label": "App.tsx",
+      "last": "2026-09-08T14:50:01.777808+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-08T14:50:01.777808+00:00",
+          "outcome": "useful",
+          "q": "Agora faça a mesma descrição dos outroa agentes para que configuralos"
+        },
+        {
+          "date": "2026-09-08T14:44:52.230064+00:00",
+          "outcome": "useful",
+          "q": "Quais as intruções para o Tech Lead"
+        }
+      ],
+      "score": 1.625323562,
+      "source_file": "src/App.tsx",
+      "status": "preferred",
+      "uses": 2
+    },
+    "src_app_myday": {
+      "code_fingerprint": "f02d354c5c926c8c43b76b9da73adcb734ea71ba1f6e2dd16389f3ab38504faf",
+      "label": "MyDay",
+      "last": "2026-09-17T14:14:06.434699+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-17T14:14:06.434699+00:00",
+          "outcome": "useful",
+          "q": "Tem como ele ser integrado com a agenda dos usuários? Tipo ele cria automaticamente quando tem algo na agenda, ou não faz sentido?"
+        },
+        {
+          "date": "2026-09-17T13:38:14.433593+00:00",
+          "outcome": "useful",
+          "q": "Criar um modulo Kanban pessoal no Meu Dia"
+        }
+      ],
+      "score": 1.999362492,
+      "source_file": "src/App.tsx",
+      "status": "preferred",
+      "uses": 2
+    },
+    "src_components_cs_cx_contactattentiondashboard": {
+      "code_fingerprint": "ccd0288c00d7f3092289baba414b0841edf3e598cdf63c265a602b9eabcbdca2",
+      "label": "ContactAttentionDashboard.tsx",
+      "last": "2026-09-16T18:28:13.294643+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-16T18:28:13.294643+00:00",
+          "outcome": "useful",
+          "q": "Como adicionar um alerta persistente aos contatos e filtrar a lista pelo card Alerta?"
+        }
+      ],
+      "score": 0.981121742,
+      "source_file": "src/components/cs-cx/ContactAttentionDashboard.tsx",
+      "status": "tentative",
+      "uses": 1
+    },
+    "src_components_cs_cx_npsanalytics": {
+      "code_fingerprint": "f9f1afd76fdb888b8b565716f3a7ddc4b6478c4a2a192e22241287041a42da10",
+      "label": "NpsAnalytics.tsx",
+      "last": "2026-09-17T13:52:12.432005+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-17T13:52:12.432005+00:00",
+          "outcome": "useful",
+          "q": "Onde são montados o PDF exportado do BI de NPS, os filtros e as métricas por cartório?"
+        }
+      ],
+      "score": 0.999617581,
+      "source_file": "src/components/cs-cx/NpsAnalytics.tsx",
+      "status": "tentative",
+      "uses": 1
+    },
+    "src_components_cs_cx_npssurveymanagement": {
+      "code_fingerprint": "37c8d76f2640dcde376191435540beb183805682d491267ebf00f714cce536f4",
+      "label": "NpsSurveyManagement.tsx",
+      "last": "2026-09-08T19:48:11.036760+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-08T19:48:11.036760+00:00",
+          "outcome": "useful",
+          "q": "Onde implementar o filtro por Produto nas solicitações NPS e qual o risco arquitetural?"
+        }
+      ],
+      "score": 0.816592591,
+      "source_file": "src/components/cs-cx/NpsSurveyManagement.tsx",
+      "status": "tentative",
+      "uses": 1
+    },
+    "src_components_pwa_pwastatus": {
+      "code_fingerprint": "8598a836805bcd19a8e9e415eba3a2aca43a18fbd57764522812809719d2debd",
+      "label": "PwaStatus.tsx",
+      "last": "2026-09-08T14:50:01.777808+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-08T14:50:01.777808+00:00",
+          "outcome": "useful",
+          "q": "Agora faça a mesma descrição dos outroa agentes para que configuralos"
+        },
+        {
+          "date": "2026-09-08T14:44:52.230064+00:00",
+          "outcome": "useful",
+          "q": "Quais as intruções para o Tech Lead"
+        }
+      ],
+      "score": 1.625323562,
+      "source_file": "src/components/pwa/PwaStatus.tsx",
+      "status": "preferred",
+      "uses": 2
+    },
+    "src_hooks_usecscxcore": {
+      "code_fingerprint": "25fd8cb2a68c217f0005d00050e3a11bbe7bf425c420f230aafeaabffd98a890",
+      "label": "useCsCxCore.ts",
+      "last": "2026-09-08T19:48:11.036760+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-08T19:48:11.036760+00:00",
+          "outcome": "useful",
+          "q": "Onde implementar o filtro por Produto nas solicitações NPS e qual o risco arquitetural?"
+        }
+      ],
+      "score": 0.816592591,
+      "source_file": "src/hooks/useCsCxCore.ts",
+      "status": "tentative",
+      "uses": 1
+    },
+    "src_hooks_usecscxengagement": {
+      "code_fingerprint": "031cfb13f2f55dd3a38a2bd6880c2ef37d92c5ceb302e3a445282684965d3f69",
+      "label": "useCsCxEngagement.ts",
+      "last": "2026-09-16T18:28:13.294643+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-16T18:28:13.294643+00:00",
+          "outcome": "useful",
+          "q": "Como adicionar um alerta persistente aos contatos e filtrar a lista pelo card Alerta?"
+        }
+      ],
+      "score": 0.981121742,
+      "source_file": "src/hooks/useCsCxEngagement.ts",
+      "status": "tentative",
+      "uses": 1
+    },
+    "src_hooks_usepermissions": {
+      "code_fingerprint": "6035d211416c060c17ace3a038c73d192ebbb3a0da2fab94c1cca399c8040572",
+      "label": "usePermissions.ts",
+      "last": "2026-09-08T14:50:01.777808+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-08T14:50:01.777808+00:00",
+          "outcome": "useful",
+          "q": "Agora faça a mesma descrição dos outroa agentes para que configuralos"
+        },
+        {
+          "date": "2026-09-08T14:44:52.230064+00:00",
+          "outcome": "useful",
+          "q": "Quais as intruções para o Tech Lead"
+        }
+      ],
+      "score": 1.625323562,
+      "source_file": "src/hooks/usePermissions.ts",
+      "status": "preferred",
+      "uses": 2
+    },
+    "src_lib_cs_cx_experience_pdf": {
+      "code_fingerprint": "ff58554d36496f66a6b382abb509f1953e683e8df281a41018c0866039e7a6ae",
+      "label": "cs-cx-experience-pdf.ts",
+      "last": "2026-09-17T13:52:12.432005+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-17T13:52:12.432005+00:00",
+          "outcome": "useful",
+          "q": "Onde são montados o PDF exportado do BI de NPS, os filtros e as métricas por cartório?"
+        }
+      ],
+      "score": 0.999617581,
+      "source_file": "src/lib/cs-cx-experience-pdf.ts",
+      "status": "tentative",
+      "uses": 1
+    },
+    "src_lib_cs_cx_nps_analytics": {
+      "code_fingerprint": "efbb3cd34311f8f21e16e67c9a95f5c6ae5db5c8b2426028f7edaa7d34f965ef",
+      "label": "cs-cx-nps-analytics.ts",
+      "last": "2026-09-17T13:52:12.432005+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-17T13:52:12.432005+00:00",
+          "outcome": "useful",
+          "q": "Onde são montados o PDF exportado do BI de NPS, os filtros e as métricas por cartório?"
+        }
+      ],
+      "score": 0.999617581,
+      "source_file": "src/lib/cs-cx-nps-analytics.ts",
+      "status": "tentative",
+      "uses": 1
+    },
+    "src_lib_my_day_workspace_my_day_widgets": {
+      "code_fingerprint": "8ff87e559fb7298a7a198a62fbb5053044d510a32703f6313a05193cbfaffe5b",
+      "label": "MY_DAY_WIDGETS",
+      "last": "2026-09-17T13:06:01.862972+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-17T13:06:01.862972+00:00",
+          "outcome": "useful",
+          "q": "Tinha pensado em criar um novo modulo/card para o menu Meu dia, tipo trello que é um sistema kanban com notas e personalizável por usuário, teria como fazer isso?"
+        }
+      ],
+      "score": 0.998877239,
+      "source_file": "src/lib/my-day-workspace.ts",
+      "status": "tentative",
+      "uses": 1
+    },
+    "src_pages_cs_cx_cscxcontacts": {
+      "code_fingerprint": "a11809980dba2e066b9b650c51ace9c0a026a710bfb39e7805c864afffd1ef3f",
+      "label": "CsCxContacts.tsx",
+      "last": "2026-09-16T18:28:13.294643+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-16T18:28:13.294643+00:00",
+          "outcome": "useful",
+          "q": "Como adicionar um alerta persistente aos contatos e filtrar a lista pelo card Alerta?"
+        }
+      ],
+      "score": 0.981121742,
+      "source_file": "src/pages/cs-cx/CsCxContacts.tsx",
+      "status": "tentative",
+      "uses": 1
+    },
+    "src_types_projectv2": {
+      "code_fingerprint": "01cb69ff9676ddd2db90379c2b851290ebc3cfd569aa7d4a636fdb4d8fefd9fb",
+      "label": "ProjectV2.ts",
+      "last": "2026-09-08T14:50:01.777808+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-08T14:50:01.777808+00:00",
+          "outcome": "useful",
+          "q": "Agora faça a mesma descrição dos outroa agentes para que configuralos"
+        },
+        {
+          "date": "2026-09-08T14:44:52.230064+00:00",
+          "outcome": "useful",
+          "q": "Quais as intruções para o Tech Lead"
+        }
+      ],
+      "score": 1.625323562,
+      "source_file": "src/types/ProjectV2.ts",
+      "status": "preferred",
+      "uses": 2
+    },
+    "src_utils_infra_validation": {
+      "code_fingerprint": "fb00578b7263f1f9aca5ecd830341598a9a50346d5e689334a8a57ff34ea2e6a",
+      "label": "infra-validation.ts",
+      "last": "2026-09-08T14:50:01.777808+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-08T14:50:01.777808+00:00",
+          "outcome": "useful",
+          "q": "Agora faça a mesma descrição dos outroa agentes para que configuralos"
+        }
+      ],
+      "score": 0.812695416,
+      "source_file": "src/utils/infra-validation.ts",
+      "status": "tentative",
+      "uses": 1
+    },
+    "vm_worker_src_codexmodelskill": {
+      "code_fingerprint": "a3a947ac58d0c119d543d8451e38e086883491f67d4afebb4b45f0dce5cdd7c8",
+      "label": "codexModelSkill.ts",
+      "last": "2026-09-08T14:50:01.777808+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-08T14:50:01.777808+00:00",
+          "outcome": "useful",
+          "q": "Agora faça a mesma descrição dos outroa agentes para que configuralos"
+        }
+      ],
+      "score": 0.812695416,
+      "source_file": "vm-worker/src/codexModelSkill.ts",
+      "status": "tentative",
+      "uses": 1
+    }
+  },
+  "version": 1
+}
