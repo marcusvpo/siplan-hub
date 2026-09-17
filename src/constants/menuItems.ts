@@ -31,6 +31,7 @@ import {
     Link2,
     Clock3,
     ListTodo,
+    Columns3,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -56,6 +57,22 @@ export const menuItems: MenuItem[] = [
         path: "/meu-dia",
         description: "Prioridades, compromissos e atalhos do seu trabalho",
         permissionKey: "work_center",
+        subItems: [
+            {
+                title: "Visão geral",
+                path: "/meu-dia",
+                icon: ListTodo,
+                description: "Prioridades, agenda e widgets personalizados",
+                permissionKey: "work_center",
+            },
+            {
+                title: "Meu Quadro",
+                path: "/meu-dia/quadro",
+                icon: Columns3,
+                description: "Kanban pessoal integrado à sua agenda",
+                permissionKey: "work_board",
+            },
+        ],
     },
     {
         title: "Dashboard",

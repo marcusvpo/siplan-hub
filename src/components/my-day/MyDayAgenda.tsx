@@ -31,7 +31,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import type { MyDayAppointment, MyDayShortcut } from "@/hooks/useMyDay";
+import type { MyDayShortcut } from "@/hooks/useMyDay";
+import {
+  isMyDayAgendaEventOnDay,
+  type MyDayAgendaEvent,
+  type MyDayAgendaEventSource,
+} from "@/lib/my-day-agenda";
 import {
   getMyDayTaskAttentionAt,
   isMyDayTaskOverdue,
@@ -45,6 +50,7 @@ import type { MyDayNotificationPermission } from "@/hooks/useMyDayReminders";
 
 export type MyDayAgendaFilter = "all" | "today" | "critical";
 type TaskStatusFilter = "all" | "pending" | "overdue" | "completed";
+type AgendaSourceFilter = "all" | "personal" | MyDayAgendaEventSource;
 
 const PRIORITY_LABELS: Record<MyDayTask["priority"], string> = {
   low: "Baixa",
@@ -62,11 +68,13 @@ const PRIORITY_CLASSES: Record<MyDayTask["priority"], string> = {
 
 interface MyDayAgendaProps {
   tasks: MyDayTask[];
-  appointments: MyDayAppointment[];
+  events: MyDayAgendaEvent[];
   shortcuts: MyDayShortcut[];
   filter: MyDayAgendaFilter;
   compact?: boolean;
-  canViewAppointments: boolean;
+  canViewCsCx: boolean;
+  canViewImplementation: boolean;
+  canViewBoard: boolean;
   canCreateTask: boolean;
   canEditTask: boolean;
   canDeleteTask: boolean;
@@ -83,11 +91,18 @@ interface MyDayAgendaProps {
   onDeleteTask: (id: string) => Promise<unknown>;
 }
 
-function AppointmentRow({ appointment, compact, now }: { appointment: MyDayAppointment; compact: boolean; now: Date }) {
-  const today = isSameDay(appointment.startsAt, now);
+function AgendaEventRow({ event, compact, now }: { event: MyDayAgendaEvent; compact: boolean; now: Date }) {
+  const today = isMyDayAgendaEventOnDay(event, now);
+  const period = event.allDay
+    ? isSameDay(event.startsAt, event.endsAt)
+      ? format(event.startsAt, "dd/MM")
+      : `${format(event.startsAt, "dd/MM")} a ${format(event.endsAt, "dd/MM")}`
+    : format(event.startsAt, "dd/MM 'às' HH:mm");
+
   return (
     <Link
-      to="/cs-cx/agendamentos"
+      to={event.path}
+      data-agenda-source={event.source}
       className={cn(
         "group flex min-w-0 items-center gap-2 rounded-lg border border-border/70 transition-colors hover:border-primary/40 hover:bg-muted/20",
         compact ? "p-2" : "p-3",
@@ -96,7 +111,7 @@ function AppointmentRow({ appointment, compact, now }: { appointment: MyDayAppoi
       <div
         className={cn(
           "flex w-11 shrink-0 flex-col items-center rounded-md px-1 py-1.5 text-center",
-          appointment.isOverdue
+          event.isOverdue
             ? "bg-rose-500/10 text-rose-600 dark:text-rose-300"
             : today
               ? "bg-primary/10 text-primary"
@@ -104,15 +119,30 @@ function AppointmentRow({ appointment, compact, now }: { appointment: MyDayAppoi
         )}
       >
         <span className="text-[8px] font-black uppercase">
-          {appointment.isOverdue ? "Atraso" : format(appointment.startsAt, "EEE", { locale: ptBR })}
+          {event.isOverdue ? "Atraso" : today ? "Hoje" : format(event.startsAt, "EEE", { locale: ptBR })}
         </span>
-        <span className="text-xs font-black">{format(appointment.startsAt, "HH:mm")}</span>
+        <span className="text-xs font-black">
+          {event.allDay ? format(event.startsAt, "dd/MM") : format(event.startsAt, "HH:mm")}
+        </span>
       </div>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-xs font-bold">{appointment.title}</p>
-        <p className="truncate text-[10px] text-muted-foreground">
-          {appointment.officeName} · {format(appointment.startsAt, "dd/MM")}
-        </p>
+        <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+          <p className="min-w-0 flex-1 truncate text-xs font-bold">{event.title}</p>
+          <Badge
+            variant="outline"
+            className={cn(
+              "h-5 px-1.5 text-[8px]",
+              event.source === "implementation"
+                ? "border-indigo-200 text-indigo-700 dark:border-indigo-900 dark:text-indigo-300"
+                : event.source === "board"
+                  ? "border-violet-200 text-violet-700 dark:border-violet-900 dark:text-violet-300"
+                  : "border-sky-200 text-sky-700 dark:border-sky-900 dark:text-sky-300",
+            )}
+          >
+            {event.sourceLabel}
+          </Badge>
+        </div>
+        <p className="truncate text-[10px] text-muted-foreground">{event.context} · {period}</p>
       </div>
       <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground group-hover:text-primary" />
     </Link>
@@ -121,11 +151,13 @@ function AppointmentRow({ appointment, compact, now }: { appointment: MyDayAppoi
 
 export function MyDayAgenda({
   tasks,
-  appointments,
+  events,
   shortcuts,
   filter,
   compact = true,
-  canViewAppointments,
+  canViewCsCx,
+  canViewImplementation,
+  canViewBoard,
   canCreateTask,
   canEditTask,
   canDeleteTask,
@@ -145,11 +177,13 @@ export function MyDayAgenda({
   const [editingTask, setEditingTask] = useState<MyDayTask | null>(null);
   const [deletingTask, setDeletingTask] = useState<MyDayTask | null>(null);
   const [statusFilter, setStatusFilter] = useState<TaskStatusFilter>("all");
+  const [sourceFilter, setSourceFilter] = useState<AgendaSourceFilter>("all");
   const [expanded, setExpanded] = useState(false);
 
   const visibleTasks = useMemo(
     () =>
       tasks.filter((task) => {
+        if (sourceFilter !== "all" && sourceFilter !== "personal") return false;
         const matchesPageFilter = filter === "today"
           ? isSameDay(task.dueAt, now)
           : filter === "critical"
@@ -162,26 +196,32 @@ export function MyDayAgenda({
         if (statusFilter === "completed") return task.status === "completed";
         return true;
       }),
-    [filter, now, statusFilter, tasks],
+    [filter, now, sourceFilter, statusFilter, tasks],
   );
 
-  const visibleAppointments = useMemo(
+  const visibleEvents = useMemo(
     () =>
-      appointments.filter((appointment) => {
-        if (statusFilter === "completed") return false;
-        if (statusFilter === "overdue" && !appointment.isOverdue) return false;
-        if (filter === "today") return isSameDay(appointment.startsAt, now);
-        if (filter === "critical") return appointment.isOverdue;
+      events.filter((event) => {
+        if (sourceFilter !== "all" && sourceFilter !== event.source) return false;
+        const matchesPageFilter = filter === "today"
+          ? isMyDayAgendaEventOnDay(event, now)
+          : filter === "critical"
+            ? event.isOverdue
+            : event.status !== "completed" || isMyDayAgendaEventOnDay(event, now);
+        if (!matchesPageFilter) return false;
+        if (statusFilter === "completed") return event.status === "completed";
+        if (statusFilter === "pending" && event.status === "completed") return false;
+        if (statusFilter === "overdue" && !event.isOverdue) return false;
         return true;
       }),
-    [appointments, filter, now, statusFilter],
+    [events, filter, now, sourceFilter, statusFilter],
   );
 
-  const totalItems = visibleTasks.length + (canViewAppointments ? visibleAppointments.length : 0);
+  const totalItems = visibleTasks.length + visibleEvents.length;
   const taskLimit = expanded ? visibleTasks.length : 8;
-  const appointmentLimit = expanded ? visibleAppointments.length : 5;
+  const eventLimit = expanded ? visibleEvents.length : 5;
   const shownItems = Math.min(visibleTasks.length, taskLimit) +
-    (canViewAppointments ? Math.min(visibleAppointments.length, appointmentLimit) : 0);
+    Math.min(visibleEvents.length, eventLimit);
 
   const openNewTask = () => {
     setEditingTask(null);
@@ -207,8 +247,8 @@ export function MyDayAgenda({
               <CalendarDays className="h-4 w-4 text-primary" />
               Minha agenda
             </CardTitle>
-            <p className="mt-0.5 truncate text-[10px] text-muted-foreground">
-              Tarefas pessoais e compromissos em um só lugar.
+            <p className="mt-0.5 break-words text-[10px] leading-tight text-muted-foreground">
+              Tarefas pessoais, Meu Quadro, CS/CX e Implantação em um só lugar.
             </p>
           </div>
           {canCreateTask && (
@@ -219,18 +259,42 @@ export function MyDayAgenda({
           )}
         </CardHeader>
         <CardContent className={cn("min-w-0 space-y-2", compact ? "p-2.5" : "p-4")}>
-          <div className="flex min-w-0 flex-wrap items-center gap-1" aria-label="Filtrar tarefas da agenda">
+          <div className="flex min-w-0 flex-wrap items-center gap-1" aria-label="Filtrar agenda por status">
             {([
               ["all", "Tudo"],
               ["pending", "Pendentes"],
               ["overdue", "Atrasadas"],
               ["completed", "Concluídas"],
             ] as const).map(([value, label]) => (
-              <Button key={value} type="button" size="sm" variant={statusFilter === value ? "secondary" : "ghost"} className="h-7 px-2 text-[10px]" aria-pressed={statusFilter === value} onClick={() => setStatusFilter(value)}>
+              <Button key={value} type="button" size="sm" variant={statusFilter === value ? "secondary" : "ghost"} className="h-8 px-2.5 text-[10px]" aria-pressed={statusFilter === value} onClick={() => setStatusFilter(value)}>
                 {label}
               </Button>
             ))}
             <span className="ml-auto text-[10px] font-semibold text-muted-foreground">{totalItems} {totalItems === 1 ? "item" : "itens"}</span>
+          </div>
+
+          <div className="flex min-w-0 flex-wrap items-center gap-1" aria-label="Filtrar agenda por origem">
+            <span className="mr-1 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">Origem</span>
+            {(["all", "personal"] as const).map((value) => (
+              <Button key={value} type="button" size="sm" variant={sourceFilter === value ? "secondary" : "ghost"} className="h-8 px-2.5 text-[10px]" aria-pressed={sourceFilter === value} onClick={() => setSourceFilter(value)}>
+                {value === "all" ? "Todas" : "Pessoal"}
+              </Button>
+            ))}
+            {canViewCsCx && (
+              <Button type="button" size="sm" variant={sourceFilter === "cs_cx" ? "secondary" : "ghost"} className="h-8 px-2.5 text-[10px]" aria-pressed={sourceFilter === "cs_cx"} onClick={() => setSourceFilter("cs_cx")}>
+                CS/CX
+              </Button>
+            )}
+            {canViewImplementation && (
+              <Button type="button" size="sm" variant={sourceFilter === "implementation" ? "secondary" : "ghost"} className="h-8 px-2.5 text-[10px]" aria-pressed={sourceFilter === "implementation"} onClick={() => setSourceFilter("implementation")}>
+                Implantação
+              </Button>
+            )}
+            {canViewBoard && (
+              <Button type="button" size="sm" variant={sourceFilter === "board" ? "secondary" : "ghost"} className="h-8 px-2.5 text-[10px]" aria-pressed={sourceFilter === "board"} onClick={() => setSourceFilter("board")}>
+                Meu Quadro
+              </Button>
+            )}
           </div>
 
           {visibleTasks.slice(0, taskLimit).map((task) => {
@@ -240,6 +304,7 @@ export function MyDayAgenda({
             return (
               <div
                 key={task.id}
+                data-agenda-source="personal"
                 className={cn(
                   "group flex min-w-0 items-center gap-2 rounded-lg border border-border/70",
                   compact ? "p-2" : "p-3",
@@ -263,6 +328,7 @@ export function MyDayAgenda({
                     <Badge variant="outline" className={cn("h-5 px-1.5 text-[8px]", PRIORITY_CLASSES[task.priority])}>
                       {PRIORITY_LABELS[task.priority]}
                     </Badge>
+                    <Badge variant="outline" className="h-5 border-emerald-200 px-1.5 text-[8px] text-emerald-700 dark:border-emerald-900 dark:text-emerald-300">Pessoal</Badge>
                     {overdue && <Badge variant="destructive" className="h-5 px-1.5 text-[8px]">Atrasada</Badge>}
                     {task.recurrence !== "none" && <Badge variant="secondary" className="h-5 gap-1 px-1.5 text-[8px]"><Repeat2 className="h-2.5 w-2.5" /> Recorrente</Badge>}
                     {task.reminderMinutes !== null && <Badge variant="secondary" className="h-5 gap-1 px-1.5 text-[8px]"><Bell className="h-2.5 w-2.5" /> Lembrete</Badge>}
@@ -315,11 +381,11 @@ export function MyDayAgenda({
             );
           })}
 
-          {canViewAppointments && visibleAppointments.slice(0, appointmentLimit).map((appointment) => (
-            <AppointmentRow key={appointment.id} appointment={appointment} compact={compact} now={now} />
+          {visibleEvents.slice(0, eventLimit).map((event) => (
+            <AgendaEventRow key={event.id} event={event} compact={compact} now={now} />
           ))}
 
-          {visibleTasks.length === 0 && visibleAppointments.length === 0 && (
+          {visibleTasks.length === 0 && visibleEvents.length === 0 && (
             <div className="py-7 text-center">
               <CheckCircle2 className="mx-auto h-7 w-7 text-emerald-500" />
               <p className="mt-2 text-xs font-semibold">Agenda livre para este filtro.</p>

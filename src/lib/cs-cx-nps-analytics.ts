@@ -45,6 +45,8 @@ export interface NpsAttentionClient {
   suggestion: string | null;
 }
 
+export type NpsBestClient = NpsAttentionClient;
+
 export interface NpsScoreDistribution {
   score: number;
   label: string;
@@ -72,6 +74,7 @@ export interface NpsAnalytics {
   officesCount: number;
   monthly: NpsAnalyticsPoint[];
   byOffice: NpsOfficeAnalytics[];
+  bestClients: NpsBestClient[];
   attentionClients: NpsAttentionClient[];
   scoreDistribution: NpsScoreDistribution[];
   feedback: NpsFeedbackItem[];
@@ -258,6 +261,32 @@ export function buildNpsAnalytics(
         left.name.localeCompare(right.name, "pt-BR"),
     );
 
+  const bestClients = [...officeGroups.values()]
+    .map((group) => {
+      const bestResponse = [...group.responses].sort(
+        (left, right) =>
+          right.score - left.score ||
+          right.responded_at.localeCompare(left.responded_at),
+      )[0];
+      return {
+        key: group.id,
+        officeId: group.id,
+        name: group.name,
+        score: bestResponse.score,
+        classification: bestResponse.classification,
+        respondedAt: bestResponse.responded_at,
+        reason: bestResponse.score_reason?.trim() || null,
+        suggestion: bestResponse.improvement_suggestion?.trim() || null,
+      } satisfies NpsBestClient;
+    })
+    .filter((client) => client.score >= 9)
+    .sort(
+      (left, right) =>
+        right.score - left.score ||
+        right.respondedAt.localeCompare(left.respondedAt) ||
+        left.name.localeCompare(right.name, "pt-BR"),
+    );
+
   const attentionClients = [...officeGroups.values()]
     .map((group) => {
       const worstResponse = [...group.responses].sort(
@@ -343,6 +372,7 @@ export function buildNpsAnalytics(
     officesCount: byOffice.length,
     monthly,
     byOffice,
+    bestClients,
     attentionClients,
     scoreDistribution,
     feedback,
