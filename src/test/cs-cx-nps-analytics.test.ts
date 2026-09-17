@@ -35,6 +35,9 @@ describe("BI de NPS", () => {
       latestResponseAt: "2026-02-05T12:00:00Z",
     });
     expect(analytics.feedback[0].classification).toBe("DETRATOR");
+    expect(analytics.bestClients.map((client) => [client.name, client.score])).toEqual([
+      ["Cartório A", 10],
+    ]);
     expect(analytics.attentionClients.map((client) => [client.name, client.score])).toEqual([
       ["Cartório A", 0],
       ["Cartório B", 8],
@@ -97,6 +100,39 @@ describe("BI de NPS", () => {
     expect(npsRankingMinPointSize(0)).toBe(8);
     expect(npsRankingMinPointSize(100)).toBe(0);
     expect(npsRankingMinPointSize(-100)).toBe(0);
+  });
+
+  it("seleciona e ordena a melhor nota 9 ou 10 de cada cartório no recorte", () => {
+    const analytics = buildNpsAnalytics(
+      [
+        { ...response("a-9", "office-a", "Cartório A", "2026-09-01T12:00:00Z", 9, "PROMOTOR", "Boa", "Ana"), product_id: "product-a" },
+        { ...response("a-10-old", "office-a", "Cartório A", "2026-09-02T12:00:00Z", 10, "PROMOTOR", "Excelente antiga", "Ana"), product_id: "product-a" },
+        { ...response("a-10-new", "office-a", "Cartório A", "2026-09-03T12:00:00Z", 10, "PROMOTOR", "Excelente recente", "Ana"), product_id: "product-a" },
+        { ...response("b-10", "office-b", "Cartório B", "2026-09-04T12:00:00Z", 10, "PROMOTOR", "Excelente", "Bia"), product_id: "product-a" },
+        { ...response("c-9", "office-c", "Cartório C", "2026-09-05T12:00:00Z", 9, "PROMOTOR", "Muito boa", "Caio"), product_id: "product-a" },
+        { ...response("d-8", "office-d", "Cartório D", "2026-09-06T12:00:00Z", 8, "NEUTRO", "Regular", "Dani"), product_id: "product-a" },
+        { ...response("outside", "office-e", "Cartório fora do produto", "2026-09-07T12:00:00Z", 10, "PROMOTOR", "Fora", "Eva"), product_id: "product-b" },
+      ],
+      {
+        startDate: "2026-09-01",
+        endDate: "2026-09-30",
+        officeId: "all",
+        productId: "product-a",
+      },
+    );
+
+    expect(
+      analytics.bestClients.map((client) => [
+        client.name,
+        client.score,
+        client.respondedAt,
+        client.reason,
+      ]),
+    ).toEqual([
+      ["Cartório B", 10, "2026-09-04T12:00:00Z", "Excelente"],
+      ["Cartório A", 10, "2026-09-03T12:00:00Z", "Excelente recente"],
+      ["Cartório C", 9, "2026-09-05T12:00:00Z", "Muito boa"],
+    ]);
   });
 
   it("prepara evidências para a IA sem expor o nome do respondente", () => {

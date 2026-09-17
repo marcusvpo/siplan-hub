@@ -7,6 +7,7 @@ import MyDay from "./MyDay";
 
 const useMyDayMock = vi.hoisted(() => vi.fn());
 const useMyDayWorkspaceMock = vi.hoisted(() => vi.fn());
+const useMyDayBoardMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/hooks/useMyDay", () => ({
   useMyDay: useMyDayMock,
@@ -14,6 +15,10 @@ vi.mock("@/hooks/useMyDay", () => ({
 
 vi.mock("@/hooks/useMyDayWorkspace", () => ({
   useMyDayWorkspace: useMyDayWorkspaceMock,
+}));
+
+vi.mock("@/hooks/useMyDayBoard", () => ({
+  useMyDayBoard: useMyDayBoardMock,
 }));
 
 vi.mock("recharts", () => {
@@ -73,16 +78,32 @@ function buildData(overrides: Record<string, unknown> = {}) {
         updatedAt: new Date("2026-09-16T10:00:00"),
       },
     ],
-    appointments: [
+    agendaEvents: [
       {
         id: "appointment-1",
         title: "Reunião de acompanhamento",
         startsAt: new Date(),
+        endsAt: new Date(),
         status: "AGENDADO",
-        appointmentType: "ACOMPANHAMENTO",
-        location: "Teams",
-        officeName: "Cartório Central",
+        context: "Cartório Central",
+        source: "cs_cx",
+        sourceLabel: "CS/CX",
+        path: "/cs-cx/agendamentos",
         isOverdue: false,
+        allDay: false,
+      },
+      {
+        id: "implementation-1",
+        title: "Implantação",
+        startsAt: new Date(),
+        endsAt: new Date(),
+        status: "confirmed",
+        context: "Cartório Central",
+        source: "implementation",
+        sourceLabel: "Implantação",
+        path: "/projects/project-1",
+        isOverdue: false,
+        allDay: true,
       },
     ],
     digest: null,
@@ -110,20 +131,20 @@ function buildData(overrides: Record<string, unknown> = {}) {
     loading: {
       projects: false,
       conversion: false,
-      appointments: false,
+      agenda: false,
       copilot: false,
     },
     error: null,
     errors: {
       projects: null,
       conversion: null,
-      appointments: null,
+      agenda: null,
       copilot: null,
     },
     refreshers: {
       projects: vi.fn().mockResolvedValue(undefined),
       conversion: vi.fn().mockResolvedValue(undefined),
-      appointments: vi.fn().mockResolvedValue(undefined),
+      agenda: vi.fn().mockResolvedValue(undefined),
       copilot: vi.fn().mockResolvedValue(undefined),
     },
     refresh: vi.fn().mockResolvedValue(undefined),
@@ -137,13 +158,14 @@ function buildWorkspace(overrides: Record<string, unknown> = {}) {
     tasks: [],
     preferences: {
       density: "compact",
-      widgetOrder: ["priorities", "projects", "insights", "agenda", "conversion", "shortcuts", "copilot"],
+      widgetOrder: ["priorities", "projects", "insights", "agenda", "board", "conversion", "shortcuts", "copilot"],
       hiddenWidgets: [],
       widgetLayout: {
         priorities: "full",
         projects: "full",
         insights: "half",
         agenda: "half",
+        board: "full",
         conversion: "full",
         shortcuts: "full",
         copilot: "full",
@@ -177,6 +199,54 @@ function buildWorkspace(overrides: Record<string, unknown> = {}) {
   };
 }
 
+function buildBoardWorkspace(overrides: Record<string, unknown> = {}) {
+  return {
+    boards: [{
+      id: "board-1",
+      name: "Planejamento pessoal",
+      description: null,
+      color: "#e11d48",
+      isDefault: true,
+      position: 1024,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }],
+    columns: [{
+      id: "column-1",
+      boardId: "board-1",
+      title: "Ideias",
+      color: "#64748b",
+      position: 1024,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }],
+    cards: [{
+      id: "card-1",
+      boardId: "board-1",
+      columnId: "column-1",
+      title: "Preparar apresentação",
+      description: "Organizar os principais tópicos",
+      priority: "high",
+      dueAt: new Date(),
+      labels: ["reunião"],
+      checklist: [],
+      linkedPath: null,
+      position: 1024,
+      archivedAt: null,
+      completedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }],
+    permissions: { canView: true, canCreate: true, canEdit: true, canDelete: true },
+    isLoading: false,
+    isRefreshing: false,
+    isSaving: false,
+    error: null,
+    refresh: vi.fn().mockResolvedValue(undefined),
+    ...overrides,
+  };
+}
+
 function renderPage() {
   return render(
     <MemoryRouter>
@@ -189,7 +259,9 @@ describe("Central de Trabalho / Meu Dia", () => {
   beforeEach(() => {
     useMyDayMock.mockReset();
     useMyDayWorkspaceMock.mockReset();
+    useMyDayBoardMock.mockReset();
     useMyDayWorkspaceMock.mockReturnValue(buildWorkspace());
+    useMyDayBoardMock.mockReturnValue(buildBoardWorkspace());
   });
 
   it("reúne prioridades, pendências, agenda e atalhos permitidos", () => {
@@ -202,6 +274,8 @@ describe("Central de Trabalho / Meu Dia", () => {
     expect(screen.getByText("Cartório Central", { selector: "h3" })).toBeInTheDocument();
     expect(screen.getAllByText("Validar carga final").length).toBeGreaterThan(0);
     expect(screen.getByText("Reunião de acompanhamento")).toBeInTheDocument();
+    expect(screen.getAllByText("Meu Quadro").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Preparar apresentação").length).toBeGreaterThan(0);
     expect(screen.getByRole("link", { name: /Projetos/ })).toHaveAttribute(
       "href",
       "/projects",
@@ -213,10 +287,46 @@ describe("Central de Trabalho / Meu Dia", () => {
     );
   });
 
+  it("combina CS/CX e Implantação e filtra a agenda pela origem", () => {
+    useMyDayMock.mockReturnValue(buildData());
+
+    const { container } = renderPage();
+
+    expect(container.querySelector('[data-agenda-source="cs_cx"]')).toBeInTheDocument();
+    expect(container.querySelector('[data-agenda-source="implementation"]')).toHaveAttribute(
+      "href",
+      "/projects/project-1",
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Implantação" }));
+
+    expect(container.querySelector('[data-agenda-source="cs_cx"]')).not.toBeInTheDocument();
+    expect(container.querySelector('[data-agenda-source="implementation"]')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Meu Quadro" }));
+    expect(container.querySelector('[data-agenda-source="board"]')).toHaveAttribute(
+      "href",
+      "/meu-dia/quadro?board=board-1&card=card-1",
+    );
+  });
+
+  it("mantém os filtros de origem tocáveis e fluidos no mobile", () => {
+    useMyDayMock.mockReturnValue(buildData());
+
+    renderPage();
+
+    const sourceFilters = screen.getByLabelText("Filtrar agenda por origem");
+    expect(sourceFilters).toHaveClass("min-w-0", "flex-wrap");
+    sourceFilters.querySelectorAll("button").forEach((button) => {
+      expect(button).toHaveClass("h-8");
+    });
+  });
+
   it("mostra estados vazios sem esconder os acessos rápidos", () => {
     useMyDayMock.mockReturnValue(
-      buildData({ myProjects: [], issues: [], appointments: [] }),
+      buildData({ myProjects: [], issues: [], agendaEvents: [] }),
     );
+    useMyDayBoardMock.mockReturnValue(buildBoardWorkspace({ cards: [] }));
 
     renderPage();
 
@@ -248,13 +358,13 @@ describe("Central de Trabalho / Meu Dia", () => {
   });
 
   it("isola carregamento e falha no bloco afetado", () => {
-    useMyDayMock.mockReturnValue(buildData({ loading: { projects: true, conversion: false, appointments: false, copilot: false }, myProjects: [] }));
+    useMyDayMock.mockReturnValue(buildData({ loading: { projects: true, conversion: false, agenda: false, copilot: false }, myProjects: [] }));
     const { rerender } = renderPage();
 
     expect(screen.getAllByLabelText("Carregando projetos").length).toBeGreaterThan(0);
     expect(screen.getByText("Acessos rápidos")).toBeInTheDocument();
 
-    useMyDayMock.mockReturnValue(buildData({ errors: { projects: new Error("falha"), conversion: null, appointments: null, copilot: null } }));
+    useMyDayMock.mockReturnValue(buildData({ errors: { projects: new Error("falha"), conversion: null, agenda: null, copilot: null } }));
     rerender(
       <MemoryRouter>
         <MyDay />

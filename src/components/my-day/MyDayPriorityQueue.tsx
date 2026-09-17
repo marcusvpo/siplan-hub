@@ -13,10 +13,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type {
-  MyDayAppointment,
-  MyDayConversionIssue,
-} from "@/hooks/useMyDay";
+import type { MyDayConversionIssue } from "@/hooks/useMyDay";
+import type { MyDayAgendaEvent } from "@/lib/my-day-agenda";
 import type { MyDayProject } from "@/lib/my-day";
 import {
   getMyDayTaskAttentionAt,
@@ -28,20 +26,20 @@ import { cn } from "@/lib/utils";
 type PriorityItem =
   | { kind: "project"; id: string; title: string; detail: string; score: number; at: Date; path: string }
   | { kind: "task"; id: string; title: string; detail: string; score: number; at: Date; task: MyDayTask }
-  | { kind: "appointment"; id: string; title: string; detail: string; score: number; at: Date; path: string }
+  | { kind: "event"; id: string; title: string; detail: string; score: number; at: Date; path: string }
   | { kind: "issue"; id: string; title: string; detail: string; score: number; at: Date; path: string };
 
 const ICONS = {
   project: AlertTriangle,
   task: AlarmClock,
-  appointment: CalendarClock,
+  event: CalendarClock,
   issue: Database,
 };
 
 export function MyDayPriorityQueue({
   projects,
   tasks,
-  appointments,
+  events,
   issues,
   projectPath,
   compact = true,
@@ -52,7 +50,7 @@ export function MyDayPriorityQueue({
 }: {
   projects: MyDayProject[];
   tasks: MyDayTask[];
-  appointments: MyDayAppointment[];
+  events: MyDayAgendaEvent[];
   issues: MyDayConversionIssue[];
   projectPath: (project: MyDayProject) => string;
   compact?: boolean;
@@ -89,16 +87,16 @@ export function MyDayPriorityQueue({
             task,
           };
         }),
-      ...appointments
-        .filter((appointment) => appointment.isOverdue)
-        .map((appointment) => ({
-          kind: "appointment" as const,
-          id: appointment.id,
-          title: appointment.title,
-          detail: `${appointment.officeName} · ${format(appointment.startsAt, "dd/MM 'às' HH:mm")}`,
+      ...events
+        .filter((event) => event.isOverdue)
+        .map((event) => ({
+          kind: "event" as const,
+          id: event.id,
+          title: event.title,
+          detail: `${event.context} · ${event.sourceLabel} · ${format(event.startsAt, event.allDay ? "dd/MM" : "dd/MM 'às' HH:mm")}`,
           score: 5,
-          at: appointment.startsAt,
-          path: "/cs-cx/agendamentos",
+          at: event.startsAt,
+          path: event.path,
         })),
       ...issues
         .filter((issue) => issue.priority === "critical" || issue.priority === "high")
@@ -112,7 +110,7 @@ export function MyDayPriorityQueue({
           path: "/conversion/atividades",
         })),
     ].sort((left, right) => right.score - left.score || left.at.getTime() - right.at.getTime());
-  }, [appointments, issues, projectPath, projects, tasks]);
+  }, [events, issues, projectPath, projects, tasks]);
 
   return (
     <Card className="h-full min-w-0 overflow-hidden border-border/70 shadow-sm" data-testid="my-day-priority-queue">

@@ -10,6 +10,7 @@ export function Breadcrumbs() {
 
   const breadcrumbMap: Record<string, string> = {
     "meu-dia": "Meu Dia",
+    quadro: "Meu Quadro",
     implantacao: "Implantação",
     calendario: "Calendário",
     calendar: "Calendário de Projetos",
