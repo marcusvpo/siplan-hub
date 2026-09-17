@@ -1,0 +1,14 @@
+approval_policy = "never"
+sandbox_mode = "workspace-write"
+
+[features]
+hooks = true
+
+[[hooks.PreToolUse]]
+matcher = "^Bash$"
+
+[[hooks.PreToolUse.hooks]]
+type = "command"
+command = 'powershell -NoProfile -ExecutionPolicy Bypass -File "D:\AI\siplan-hub\.maestri\codex-hooks\block-release-operations.ps1"'
+timeout = 10
+statusMessage = "Validando protecao de Git e release"

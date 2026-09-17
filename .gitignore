@@ -56,3 +56,6 @@ src/graphify-out/cache/
 
 # Supabase CLI local state (link do projeto, machine-specific)
 supabase/.temp/
+
+# Maestri usa somente agentes Codex neste projeto
+.maestri/roles/**/CLAUDE.md
