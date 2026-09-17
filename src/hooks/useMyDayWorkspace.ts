@@ -184,6 +184,15 @@ export function useMyDayWorkspace() {
   const setTaskStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: MyDayTaskStatus }) => {
       if (!userId || !canEditTask) throw new Error("Sem permissão para editar tarefas.");
+      const task = tasksQuery.data?.find((item) => item.id === id);
+      if (
+        status === "completed" &&
+        task?.recurrence !== undefined &&
+        task.recurrence !== "none" &&
+        !canCreateTask
+      ) {
+        throw new Error("Para concluir uma tarefa recorrente, seu perfil também precisa da permissão de criar tarefas.");
+      }
 
       const result = status === "completed"
         ? await db.rpc("complete_my_day_task", { p_task_id: id })
@@ -198,7 +207,11 @@ export function useMyDayWorkspace() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["my-day", "tasks", userId] });
     },
-    onError: () => toast.error("Não foi possível alterar o status da tarefa."),
+    onError: (error) => toast.error(
+      error instanceof Error
+        ? error.message
+        : "Não foi possível alterar o status da tarefa.",
+    ),
   });
 
   const snoozeTaskMutation = useMutation({
