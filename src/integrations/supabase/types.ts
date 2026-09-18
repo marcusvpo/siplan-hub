@@ -285,6 +285,146 @@ export type CsCxContactInsert = {
 
 export type CsCxContactUpdate = Partial<CsCxContactInsert>;
 
+export type OrionUpdateProductRow = {
+  id: number;
+  name: string;
+  slug: "oriontn" | "orionpro" | "orionreg";
+  description: string | null;
+  active: boolean;
+  display_order: number;
+  created_at: string;
+  updated_at: string;
+};
+export type OrionUpdateProductInsert = Omit<OrionUpdateProductRow, "id" | "created_at" | "updated_at"> & {
+  id?: number;
+  created_at?: string;
+  updated_at?: string;
+};
+export type OrionUpdateProductUpdate = Partial<OrionUpdateProductInsert>;
+
+export type OrionUpdateVersionRow = {
+  id: number;
+  product_id: number;
+  code: string;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+export type OrionUpdateVersionInsert = Omit<OrionUpdateVersionRow, "id" | "created_by" | "created_at" | "updated_at"> & {
+  id?: number;
+  created_by?: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+export type OrionUpdateVersionUpdate = Partial<OrionUpdateVersionInsert>;
+
+export type OrionUpdateMediaRow = {
+  id: string;
+  storage_path: string;
+  uploaded_by: string;
+  created_at: string;
+};
+export type OrionUpdateMediaInsert = Omit<OrionUpdateMediaRow, "id" | "uploaded_by" | "created_at"> & {
+  id?: string;
+  uploaded_by?: string;
+  created_at?: string;
+};
+export type OrionUpdateMediaUpdate = Partial<OrionUpdateMediaInsert>;
+
+export type OrionUpdatePostRow = {
+  id: number;
+  version_id: number;
+  title: string;
+  subtitle: string;
+  slug: string;
+  post_type: "novidade" | "melhoria" | "correcao" | "aviso";
+  body: string;
+  cover_media_id: string | null;
+  status: "rascunho" | "agendado" | "publicado" | "arquivado";
+  published_at: string | null;
+  author_id: string | null;
+  created_at: string;
+  updated_at: string;
+};
+export type OrionUpdatePostInsert = Omit<OrionUpdatePostRow, "id" | "subtitle" | "body" | "status" | "author_id" | "created_at" | "updated_at"> & {
+  id?: number;
+  subtitle?: string;
+  body?: string;
+  status?: OrionUpdatePostRow["status"];
+  author_id?: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+export type OrionUpdatePostUpdate = Partial<OrionUpdatePostInsert>;
+
+export type OrionUpdateReadRow = {
+  post_id: number;
+  user_id: string;
+  read_at: string;
+};
+export type OrionUpdateReadInsert = Omit<OrionUpdateReadRow, "user_id" | "read_at"> & {
+  user_id?: string;
+  read_at?: string;
+};
+export type OrionUpdateReadUpdate = Partial<OrionUpdateReadInsert>;
+
+export type OrionUpdateReactionRow = {
+  post_id: number;
+  user_id: string;
+  type: "like" | "dislike";
+  reason: string | null;
+  updated_at: string;
+};
+export type OrionUpdateReactionInsert = Omit<OrionUpdateReactionRow, "user_id" | "updated_at"> & {
+  user_id?: string;
+  updated_at?: string;
+};
+export type OrionUpdateReactionUpdate = Partial<OrionUpdateReactionInsert>;
+
+export type OrionUpdateShareRow = {
+  id: string;
+  post_id: number;
+  user_id: string;
+  channel: "copiar" | "nativo";
+  created_at: string;
+};
+export type OrionUpdateShareInsert = Omit<OrionUpdateShareRow, "user_id" | "created_at"> & {
+  user_id?: string;
+  created_at?: string;
+};
+export type OrionUpdateShareUpdate = Partial<OrionUpdateShareInsert>;
+
+export type OrionUpdateSuggestionRow = {
+  id: string;
+  user_id: string;
+  name: string;
+  registry_office: string;
+  suggestion: string;
+  created_at: string;
+};
+export type OrionUpdateSuggestionInsert = Omit<OrionUpdateSuggestionRow, "user_id" | "created_at"> & {
+  user_id?: string;
+  created_at?: string;
+};
+export type OrionUpdateSuggestionUpdate = Partial<OrionUpdateSuggestionInsert>;
+
+export type OrionUpdateAuditRow = {
+  id: number;
+  user_id: string | null;
+  action: string;
+  entity: string;
+  entity_id: number | null;
+  details: Json;
+  created_at: string;
+};
+export type OrionUpdateAuditInsert = Omit<OrionUpdateAuditRow, "id" | "user_id" | "details" | "created_at"> & {
+  id?: number;
+  user_id?: string | null;
+  details?: Json;
+  created_at?: string;
+};
+export type OrionUpdateAuditUpdate = Partial<OrionUpdateAuditInsert>;
+
 /**
  * O arquivo gerado do projeto estava vazio antes desta mudança. Estes aliases
  * mantêm os consumidores legados sem tipagem até ser possível regenerar todo o
@@ -304,7 +444,16 @@ export type Tables<TableName extends string> =
             : TableName extends "my_day_board_columns" ? MyDayBoardColumnRow
               : TableName extends "my_day_board_cards" ? MyDayBoardCardRow
                 : TableName extends "cs_cx_contacts" ? CsCxContactRow
-                  : UntypedSupabaseShape;
+                  : TableName extends "orion_update_products" ? OrionUpdateProductRow
+                    : TableName extends "orion_update_versions" ? OrionUpdateVersionRow
+                      : TableName extends "orion_update_media" ? OrionUpdateMediaRow
+                        : TableName extends "orion_update_posts" ? OrionUpdatePostRow
+                          : TableName extends "orion_update_reads" ? OrionUpdateReadRow
+                            : TableName extends "orion_update_reactions" ? OrionUpdateReactionRow
+                              : TableName extends "orion_update_shares" ? OrionUpdateShareRow
+                                : TableName extends "orion_update_suggestions" ? OrionUpdateSuggestionRow
+                                  : TableName extends "orion_update_audit" ? OrionUpdateAuditRow
+                                    : UntypedSupabaseShape;
 
 export type TablesInsert<TableName extends string> =
   TableName extends "conversion_engines" ? ConversionEngineInsert
@@ -315,7 +464,16 @@ export type TablesInsert<TableName extends string> =
             : TableName extends "my_day_board_columns" ? MyDayBoardColumnInsert
               : TableName extends "my_day_board_cards" ? MyDayBoardCardInsert
                 : TableName extends "cs_cx_contacts" ? CsCxContactInsert
-                  : UntypedSupabaseShape;
+                  : TableName extends "orion_update_products" ? OrionUpdateProductInsert
+                    : TableName extends "orion_update_versions" ? OrionUpdateVersionInsert
+                      : TableName extends "orion_update_media" ? OrionUpdateMediaInsert
+                        : TableName extends "orion_update_posts" ? OrionUpdatePostInsert
+                          : TableName extends "orion_update_reads" ? OrionUpdateReadInsert
+                            : TableName extends "orion_update_reactions" ? OrionUpdateReactionInsert
+                              : TableName extends "orion_update_shares" ? OrionUpdateShareInsert
+                                : TableName extends "orion_update_suggestions" ? OrionUpdateSuggestionInsert
+                                  : TableName extends "orion_update_audit" ? OrionUpdateAuditInsert
+                                    : UntypedSupabaseShape;
 
 export type TablesUpdate<TableName extends string> =
   TableName extends "conversion_engines" ? ConversionEngineUpdate
@@ -326,4 +484,13 @@ export type TablesUpdate<TableName extends string> =
             : TableName extends "my_day_board_columns" ? MyDayBoardColumnUpdate
               : TableName extends "my_day_board_cards" ? MyDayBoardCardUpdate
                 : TableName extends "cs_cx_contacts" ? CsCxContactUpdate
-                  : UntypedSupabaseShape;
+                  : TableName extends "orion_update_products" ? OrionUpdateProductUpdate
+                    : TableName extends "orion_update_versions" ? OrionUpdateVersionUpdate
+                      : TableName extends "orion_update_media" ? OrionUpdateMediaUpdate
+                        : TableName extends "orion_update_posts" ? OrionUpdatePostUpdate
+                          : TableName extends "orion_update_reads" ? OrionUpdateReadUpdate
+                            : TableName extends "orion_update_reactions" ? OrionUpdateReactionUpdate
+                              : TableName extends "orion_update_shares" ? OrionUpdateShareUpdate
+                                : TableName extends "orion_update_suggestions" ? OrionUpdateSuggestionUpdate
+                                  : TableName extends "orion_update_audit" ? OrionUpdateAuditUpdate
+                                    : UntypedSupabaseShape;

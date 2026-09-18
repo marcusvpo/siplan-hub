@@ -34,6 +34,7 @@ export type PermissionCategory =
   | "Implantadores"
   | "CS/CX"
   | "Modelos Editor OrionTN"
+  | "Atualizações Orion"
   | "Assistentes"
   | "Copiloto"
   | "Administração";
@@ -50,6 +51,7 @@ export const PERMISSION_CATEGORY_ORDER: PermissionCategory[] = [
   "Implantadores",
   "CS/CX",
   "Modelos Editor OrionTN",
+  "Atualizações Orion",
   "Assistentes",
   "Copiloto",
   "Administração",
@@ -145,6 +147,11 @@ export const PERMISSION_RESOURCES: PermissionResourceDef[] = [
   { resource: "orion_dashboard", label: "Orion - Dashboard", category: "Modelos Editor OrionTN", actions: ["view"] },
   { resource: "orion_projects", label: "Orion - Projetos", category: "Modelos Editor OrionTN", actions: ["view"] },
   { resource: "orion_editor", label: "Orion - Editor de Modelos", category: "Modelos Editor OrionTN", actions: ["view", "edit"] },
+
+  // Atualizações Orion
+  { resource: "menu_atualizacoes", label: "Menu Atualizações Orion", category: "Atualizações Orion", actions: ["view"] },
+  { resource: "orion_updates", label: "Central de Atualizações Orion - Leitura", category: "Atualizações Orion", actions: ["view"] },
+  { resource: "orion_updates_management", label: "Central de Atualizações Orion - Gestão", category: "Atualizações Orion", actions: ["view", "create", "edit", "delete"] },
 
   // Assistentes
   { resource: "menu_assistentes", label: "Menu Assistentes", category: "Assistentes", actions: ["view"] },

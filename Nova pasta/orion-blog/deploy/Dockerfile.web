@@ -1,0 +1,19 @@
+FROM node:24-bookworm-slim AS build
+WORKDIR /app
+COPY package.json package-lock.json ./
+COPY apps/api/package.json apps/api/package.json
+COPY apps/web/package.json apps/web/package.json
+RUN npm ci
+COPY apps/web ./apps/web
+COPY deploy/render-nginx.mjs deploy/nginx.conf.template ./deploy/
+ARG BLOG_BASE_PATH=/blog/
+ENV VITE_BLOG_BASE_PATH=$BLOG_BASE_PATH
+RUN npm run build -w apps/web
+RUN node deploy/render-nginx.mjs
+
+FROM nginxinc/nginx-unprivileged:stable-alpine AS runtime
+ARG BLOG_BASE_PATH=/blog/
+COPY --from=build /app/apps/web/dist /srv/orion${BLOG_BASE_PATH}
+COPY --from=build /app/deploy/nginx.generated.conf /etc/nginx/conf.d/default.conf
+EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=5s CMD wget -q -O /dev/null http://127.0.0.1:8080/healthz || exit 1

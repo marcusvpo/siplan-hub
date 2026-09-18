@@ -1,0 +1,206 @@
+/* Gestão: compartilha a identidade do blog, sem modificar as páginas do leitor. */
+:root :is(.management-page, .management-login) {
+  color: var(--publication-ink);
+  --management-shadow: 0 2px 8px rgb(32 54 82 / 3%);
+}
+.management-icon { flex: 0 0 18px; }
+:root :is(.management-page, .management-login) :is(.primary, .secondary, .danger) {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 44px; padding: 10px 16px; border-radius: 999px;
+  font-size: 12px; font-weight: 600; line-height: 1.4;
+  transition: background .16s, border-color .16s, color .16s;
+}
+:root :is(.management-page, .management-login) .secondary {
+  color: var(--publication-muted); background: var(--publication-surface);
+  border-color: var(--publication-line); box-shadow: none;
+}
+:root :is(.management-page, .management-login) .primary {
+  color: #fff; background: #c91243; border-color: #c91243; box-shadow: none;
+}
+:root :is(.management-page, .management-login) .primary:hover:not(:disabled) { background: #ad103a; border-color: #ad103a; }
+:root .management-page .danger { color: var(--publication-accent); background: transparent; border-color: var(--publication-tint-line); }
+:root :is(.management-page, .management-login) :is(.secondary, .danger):hover:not(:disabled) {
+  background: var(--publication-tint); color: var(--publication-accent); border-color: var(--publication-tint-line);
+}
+:root :is(.management-page, .management-login) button:disabled { cursor: not-allowed; opacity: .55; }
+:root :is(.management-page, .management-login) :is(button, input, select, textarea, a):focus-visible {
+  outline: 2px solid var(--publication-focus); outline-offset: 3px;
+}
+:root :is(.management-page, .management-login) :is(input:not([type="range"]), select, textarea) {
+  min-width: 0; max-width: 100%; min-height: 44px; border-radius: 10px;
+  border-color: var(--publication-line); background: var(--publication-surface); color: var(--publication-ink);
+  font-size: 14px; padding: 11px 13px;
+}
+:root :is(.management-page, .management-login) input::placeholder { color: var(--publication-muted); opacity: 1; }
+:root :is(.management-page, .management-login) label { color: var(--publication-muted); font-size: 12px; }
+:root :is(.management-page, .management-login) :is(.publication-kicker, .eyebrow) { font-size: 10px; font-weight: 600; letter-spacing: .09em; color: var(--publication-accent); }
+:root :is(.management-page, .management-login) .error { padding: 14px 16px; border: 1px solid var(--publication-tint-line); border-radius: 12px; background: var(--publication-tint); color: var(--publication-accent); font-size: 13px; line-height: 1.65; overflow-wrap: anywhere; }
+
+/* Cabeçalho e navegação permanecem no mesmo lugar em todas as abas. */
+:root .management-page .topbar-row { min-height: 98px; align-items: center; padding-block: 20px; gap: 18px; }
+:root .management-page .brand-title { gap: 14px; align-items: center; }
+:root .management-page .brand-title > img { width: 48px; height: 48px; margin: 0; }
+:root .management-page .brand-title h1 { font-size: clamp(20px, 2.1vw, 26px); letter-spacing: -.65px; color: var(--publication-ink); }
+:root .management-page .brand-title p { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; margin: 0; color: var(--publication-muted); font-size: 12px; }
+.management-mode { display: inline-flex; align-items: center; gap: 6px; }
+.management-mode::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--publication-accent); }
+.management-email { padding-left: 10px; border-left: 1px solid var(--publication-line); overflow-wrap: anywhere; }
+:root .management-page .management-header-actions { width: auto; flex: 0 0 auto; gap: 8px; }
+:root :is(.management-page, .management-login) .theme-toggle { width: 44px; height: 44px; border-radius: 50%; box-shadow: none; }
+.management-main { padding-top: 22px; }
+:root .management-page .management-tabs {
+  display: flex; gap: 4px; width: fit-content; max-width: 100%; margin: 0 0 22px; padding: 5px;
+  border: 1px solid var(--publication-line); border-radius: 999px; background: var(--publication-surface); box-shadow: var(--management-shadow);
+}
+:root .management-page .management-tabs button { gap: 8px; padding-inline: 18px; background: transparent; border: 1px solid transparent; color: var(--publication-muted); }
+:root .management-page .management-tabs button[aria-pressed="true"] { color: var(--publication-accent); border-color: var(--publication-tint-line); background: var(--publication-tint); }
+:root .management-page .filters { margin-top: 0; padding: 16px 18px; box-shadow: var(--management-shadow); }
+:root .management-page .filter-label { font-size: 12px; color: var(--publication-muted); }
+:root .management-page .filter-scroll-control { padding: 0; border: 0; background: transparent; }
+:root .management-page :is(.system-tab, .type-tab) { min-height: 46px; padding: 8px 14px; font-size: 13px; border-radius: 10px; box-shadow: none; }
+:root .management-page :is(.system-tab, .type-tab):is(:hover, :focus-visible) { transform: none; box-shadow: none; background: var(--publication-tint); border-color: var(--publication-tint-line); }
+:root .management-page :is(.system-tab, .type-tab).active { background: var(--publication-tint); color: var(--publication-accent); border-color: var(--publication-tint-line); }
+:root .management-page .type-filter { margin-top: 12px; padding-top: 12px; }
+
+/* Publicações e ações de cadastro. */
+:root .management-page .management-toolbar { margin: 22px 0 4px; gap: 16px; }
+.management-summary > span { display: inline-flex; gap: 7px; align-items: center; font-size: 12px; color: var(--publication-muted); }
+.management-summary .management-icon { width: 15px; height: 15px; flex-basis: 15px; }
+:root .management-page .management-toolbar-actions { display: flex; flex-direction: row; flex-wrap: wrap; gap: 8px; }
+:root .management-page .feed { padding-top: 2px; }
+:root .management-page .management-entry { gap: 26px; padding: 22px; background: var(--publication-surface); border-color: var(--publication-line); }
+:root .management-page .management-entry.archived { opacity: 1; }
+:root .management-page .management-entry aside { width: 164px; flex-basis: 164px; padding-right: 20px; gap: 12px; border-color: var(--publication-line); }
+.management-entry-meta { display: grid; gap: 6px; min-width: 0; }
+:root .management-page .management-entry-meta strong { font-size: 14px; color: var(--publication-ink); overflow-wrap: anywhere; }
+:root .management-page .management-entry-meta time { font-size: 11px; line-height: 1.6; color: var(--publication-muted); }
+:root .management-page .management-entry :is(h2, .entry-toggle p) { overflow-wrap: anywhere; }
+:root .management-page .management-entry h2 { font-size: 19px; line-height: 1.5; color: var(--publication-ink); }
+:root .management-page .entry-toggle p { font-size: 14px; color: var(--publication-muted); }
+:root .management-page .entry-toggle small { display: inline-block; margin-top: 6px; color: var(--publication-accent); text-decoration: none; font-size: 12px; }
+:root .management-page .entry-toggle:hover small { text-decoration: underline; text-underline-offset: 3px; }
+:root .management-page .entry-actions { margin-top: 18px; padding-top: 14px; border-color: var(--publication-line); }
+:root .management-page .entry-actions .danger { margin-left: auto; border-color: transparent; }
+:root .management-page :is(.version-required, .feed > .empty) { padding: 28px; margin-top: 22px; border: 1px dashed var(--publication-line); border-radius: 14px; background: var(--publication-surface); color: var(--publication-muted); font-size: 13px; line-height: 1.7; }
+:root .management-page .version-required { gap: 12px; }
+:root .management-page .version-required > svg { color: var(--publication-accent); width: 28px; height: 28px; }
+:root .management-page .version-required strong { color: var(--publication-ink); }
+
+/* Formulários: hierarquia leve, sem alterar o fluxo de publicação. */
+:root .management-page :is(.publication-editor, .version-editor) { padding: 26px; border-color: var(--publication-line); border-radius: 16px; background: var(--publication-surface); box-shadow: var(--management-shadow); }
+:root .management-page :is(.editor-heading, .version-editor > div) h2 { font-size: 22px; letter-spacing: -.4px; line-height: 1.4; color: var(--publication-ink); overflow-wrap: anywhere; }
+:root .management-page .editor-heading { padding-bottom: 20px; border-bottom: 1px solid var(--publication-line); }
+:root .management-page .editor-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+:root .management-page .editor-grid > label { gap: 8px; }
+:root .management-page .editor-section-label { grid-column: 1 / -1; margin: 8px 0 -3px; padding-top: 20px; border-top: 1px solid var(--publication-line); font-size: 13px; font-weight: 600; color: var(--publication-ink); }
+:root .management-page .cover-field { padding: 18px; border: 1px solid var(--publication-line); background: var(--publication-soft); border-radius: 12px; margin-top: 4px; }
+:root .management-page .cover-field-row > .post-cover { width: 144px; flex-basis: 144px; }
+:root .management-page .cover-field :is(.field-help, .field-help strong) { font-size: 11px; line-height: 1.7; }
+:root .management-page .content-field { margin-top: 4px; }
+:root .management-page .rich-editor { border-color: var(--publication-line); border-radius: 12px; }
+:root .management-page .rich-toolbar { background: var(--publication-soft); border-color: var(--publication-line); padding: 8px; }
+:root .management-page .rich-toolbar button { min-height: 36px; border-color: transparent; border-radius: 8px; color: var(--publication-muted); }
+:root .management-page .rich-toolbar button:is(:hover, [aria-pressed="true"]) { background: var(--publication-tint); color: var(--publication-accent); }
+:root .management-page .editor-actions { border-top: 1px solid var(--publication-line); padding-top: 18px; margin-top: 22px; }
+:root .management-page .version-editor { align-items: start; gap: 30px; }
+:root .management-page .version-editor p { font-size: 13px; color: var(--publication-muted); line-height: 1.7; }
+
+/* Acompanhamento e sugestões usam a mesma escala de títulos e filtros. */
+:root .management-page :is(.manager-dashboard, .suggestions-inbox) { margin-top: 26px; }
+:root .management-page :is(.manager-heading, .suggestions-inbox-heading) h2 { font-size: clamp(21px, 2vw, 25px); margin: 6px 0; letter-spacing: -.5px; }
+:root .management-page :is(.manager-heading, .suggestions-inbox-heading) p { font-size: 13px; }
+:root .management-page .suggestions-inbox-note { margin: 16px 0 22px; font-size: 11px; padding-left: 12px; border-left: 2px solid var(--publication-tint-line); }
+:root .management-page :is(.manager-controls, .suggestions-inbox-filters) { gap: 12px; }
+:root .management-page :is(.manager-controls, .suggestions-inbox-filters, .manager-results-tools) :is(input, select) { min-height: 44px; font-size: 12px; border-radius: 999px; padding-inline: 14px; }
+:root .management-page :is(.manager-search, .suggestions-inbox-search) > div { border-radius: 999px; background: var(--publication-surface); }
+:root .management-page :is(.manager-search, .suggestions-inbox-search) input { background: transparent; }
+:root .management-page :is(.manager-search, .suggestions-inbox-search) button { border-radius: 999px; }
+:root .management-page :is(.manager-search, .suggestions-inbox-search) > div:focus-within { outline: 2px solid var(--publication-focus); outline-offset: 3px; }
+:root .management-page :is(.manager-search, .suggestions-inbox-search) input:focus-visible { outline: 0; }
+:root .management-page :is(.manager-controls, .suggestions-inbox-filters) label { font-size: 11px; margin-bottom: 6px; }
+:root .management-page .manager-kpis { gap: 12px; margin-block: 20px 24px; }
+:root .management-page .manager-kpi { padding: 18px; box-shadow: var(--management-shadow); }
+:root .management-page .manager-kpi > strong { font-size: 29px; }
+:root .management-page .manager-priorities { margin-bottom: 24px; }
+:root .management-page .manager-priority { padding: 14px; }
+:root .management-page :is(.manager-results-title, .manager-section-heading h3) { font-size: 16px; }
+:root .management-page .manager-list { padding: 20px; box-shadow: var(--management-shadow); }
+:root .management-page .manager-results-action { font-size: 11px; }
+:root .management-page :is(.manager-row-actions button, .manager-all, .manager-method > div) { border-radius: 12px; }
+:root .management-page .manager-all { border-radius: 999px; }
+:root .management-page .suggestions-inbox-count { margin-block: 22px 12px; font-size: 11px; }
+:root .management-page .suggestions-inbox-count strong { color: var(--publication-ink); }
+:root .management-page .suggestion-inbox-item { box-shadow: var(--management-shadow); transition: border-color .16s, box-shadow .16s; }
+:root .management-page .suggestion-inbox-item:is(:hover, [open]) { border-color: var(--publication-tint-line); }
+:root .management-page .suggestion-inbox-item summary { padding: 18px 20px; }
+:root .management-page .suggestion-inbox-avatar { width: 34px; height: 34px; border-radius: 50%; }
+:root .management-page .suggestion-inbox-avatar svg { width: 17px; height: 17px; }
+:root .management-page .suggestion-inbox-author strong { font-size: 14px; }
+:root .management-page .suggestion-inbox-preview { margin-top: 12px; }
+:root .management-page .suggestion-inbox-action { width: fit-content; gap: 6px; min-height: 30px; margin-top: 8px; font-size: 11px; color: var(--publication-accent); }
+:root .management-page .suggestion-inbox-message { margin: 0 20px 20px; padding-top: 16px; }
+:root .analytics-feedback-dialog :is(.primary, .secondary) { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; border-radius: 999px; font-size: 12px; }
+:root .analytics-feedback-dialog .secondary { border-color: var(--publication-line); color: var(--publication-muted); background: var(--publication-surface); }
+:root .analytics-feedback-dialog .primary { background: #c91243; border-color: #c91243; color: #fff; box-shadow: none; }
+
+/* Acesso administrativo também segue a linguagem do blog. */
+.management-login { width: min(430px, calc(100% - 32px)); margin: 0 auto; padding: 32px 0 48px; }
+.management-login-top { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 28px; }
+.management-back { display: inline-flex; align-items: center; min-height: 44px; font-size: 12px; color: var(--publication-muted); text-decoration: none; }
+.management-back:hover { color: var(--publication-accent); text-decoration: underline; text-underline-offset: 3px; }
+.management-login-card { padding: 32px; background: var(--publication-surface); border: 1px solid var(--publication-line); border-radius: 20px; box-shadow: var(--management-shadow); }
+.management-login-logo { display: block; width: 54px; height: 54px; object-fit: contain; margin-bottom: 22px; }
+:root[data-theme="dark"] .management-login-logo { padding: 5px; border-radius: 10px; background: #eef2f7; }
+:root .management-login-card h1 { color: var(--publication-ink); font-size: 27px; letter-spacing: -.6px; margin: 8px 0 10px; }
+.management-login-card > p { font-size: 13px; line-height: 1.7; color: var(--publication-muted); margin: 0 0 24px; }
+.management-login-card form { display: grid; gap: 18px; }
+.management-login-card .primary { margin-top: 6px; }
+.management-login-card > small { display: block; margin-top: 24px; font-size: 11px; text-align: center; color: var(--publication-muted); }
+
+@media (max-width: 700px) {
+  :root .management-page .topbar-row { flex-direction: row; flex-wrap: wrap; gap: 12px; padding-block: 16px; min-height: 0; }
+  :root .management-page .brand-title { width: 100%; gap: 10px; }
+  :root .management-page .brand-title > img { width: 36px; height: 36px; }
+  :root .management-page .brand-title h1 { font-size: clamp(17px, 4.2vw, 23px); letter-spacing: -.5px; }
+  :root .management-page .brand-title p { gap: 6px; font-size: 11px; }
+  :root .management-page .management-email { padding-left: 6px; }
+  :root .management-page .management-header-actions { margin-left: auto; align-self: auto; }
+  .management-main { padding-top: 16px; }
+  :root .management-page .management-tabs { display: grid; grid-template-columns: 1fr 1.4fr 1fr; width: 100%; padding: 4px; gap: 2px; margin-bottom: 18px; }
+  :root .management-page .management-tabs button { min-width: 0; font-size: 12px; padding-inline: 5px; gap: 5px; }
+  :root .management-page .management-tabs .management-icon { display: none; }
+  :root .management-page .filters { padding: 14px; }
+  :root .management-page .management-toolbar { align-items: stretch; gap: 12px; margin-top: 18px; }
+  :root .management-page .management-summary { flex-direction: row; gap: 8px 14px; }
+  :root .management-page .management-toolbar-actions > button { width: auto; flex: 1; padding-inline: 10px; gap: 6px; }
+  :root .management-page .management-entry { padding: 18px; gap: 16px; }
+  :root .management-page .management-entry aside { display: grid; grid-template-columns: 112px minmax(0, 1fr); width: 100%; flex-basis: auto; align-items: center; gap: 16px; padding: 0 0 16px; border-right: 0; border-bottom: 1px solid var(--publication-line); }
+  :root .management-page .management-entry aside .post-cover { grid-column: 1; margin: 0; }
+  :root .management-page .management-entry .stamps { justify-content: flex-start; }
+  :root .management-page .management-entry h2 { font-size: 18px; }
+  :root .management-page .entry-actions { gap: 6px; }
+  :root .management-page .entry-actions button { padding-inline: 10px; font-size: 11px; }
+  :root .management-page :is(.publication-editor, .version-editor) { padding: 18px; }
+  :root .management-page .editor-heading { flex-direction: row; align-items: flex-start; gap: 10px; }
+  :root .management-page .editor-heading > div { min-width: 0; }
+  :root .management-page .editor-heading > button { flex-shrink: 0; padding-inline: 12px; }
+  :root .management-page :is(.editor-heading, .version-editor > div) h2 { font-size: 19px; }
+  :root .management-page .editor-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  :root .management-page .cover-field { padding: 14px; }
+  :root .management-page .cover-field-row > .post-cover { flex: none; width: 112px; }
+  :root .management-page .rich-toolbar { gap: 3px; padding: 6px; }
+  :root .management-page .rich-toolbar button { min-height: 44px; font-size: 12px; padding-inline: 8px; }
+  :root .management-page .version-editor { gap: 18px; }
+  :root .management-page .manager-kpi { padding: 14px; }
+  :root .management-page .manager-list { padding: 16px; }
+  :root .management-page :is(.manager-controls, .suggestions-inbox-filters) { gap: 12px 10px; }
+  :root .management-page .suggestion-inbox-item summary { padding: 16px; }
+  :root .management-page .suggestion-inbox-message { margin-inline: 16px; }
+  :root :is(.management-page, .management-login) :is(input, textarea),
+  :root .management-page :is(.manager-controls, .suggestions-inbox-filters) input { font-size: 16px; }
+  .management-login { padding-top: 18px; }
+  .management-login-card { padding: 24px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root :is(.management-page, .management-login) :is(.primary, .secondary, .danger, .suggestion-inbox-item) { transition: none; }
+}

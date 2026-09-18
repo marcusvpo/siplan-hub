@@ -35,8 +35,9 @@ export function MainLayout({ children }: MainLayoutProps) {
   const isPosAiLinksChatsPage = location.pathname === "/assistentes/links-chats";
   const isImplantadoresHomologationPage = location.pathname === "/implantadores/homologation";
   const isConversionActivitiesPage = location.pathname === "/conversion/atividades";
+  const isOrionUpdatesPage = normalizedPathname.startsWith("/atualizacoes/");
   const isNoScrollPage = isProjectsPage || isModelsWorkspacePage || isAssistantsKnowledgePage || isImplantadoresHomologationPage || isConversionActivitiesPage;
-  const isFullBleedPage = isModelsWorkspacePage || isAssistantsKnowledgePage || isPosAiLogsPage || isPosAiLinksChatsPage || isImplantadoresHomologationPage || isConversionActivitiesPage;
+  const isFullBleedPage = isModelsWorkspacePage || isAssistantsKnowledgePage || isPosAiLogsPage || isPosAiLinksChatsPage || isImplantadoresHomologationPage || isConversionActivitiesPage || isOrionUpdatesPage;
   const isPrintMode = new URLSearchParams(location.search).get("print") === "true";
   const headerAction = getContextualHeaderAction(location.pathname, (permissionKey) => !permissionKey || hasPermission(permissionKey, "view"));
   const HeaderActionIcon = headerAction?.icon;

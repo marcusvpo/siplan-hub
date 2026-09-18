@@ -151,6 +151,9 @@ const KnowledgeEditorPage = lazy(
   () => import("./pages/assistants/KnowledgeEditorPage"),
 );
 const ModuleOverview = lazy(() => import("./pages/ModuleOverview"));
+const OrionUpdatesPage = lazy(
+  () => import("./pages/orion-updates/OrionUpdatesPage"),
+);
 
 const queryClient = new QueryClient();
 
@@ -190,6 +193,30 @@ const ProjectAdherenceRouteWrapper = () => {
     </ProtectedRoute>
   );
 };
+
+const OrionUpdatesOverviewRoute = () => (
+  <ProtectedRoute>
+    <MainLayout>
+      <Suspense fallback={<PageLoader />}>
+        <RequirePermission resource="menu_atualizacoes">
+          <ModuleOverview moduleName="Atualizações Orion" />
+        </RequirePermission>
+      </Suspense>
+    </MainLayout>
+  </ProtectedRoute>
+);
+
+const OrionUpdatesManagementRoute = () => (
+  <ProtectedRoute>
+    <MainLayout>
+      <Suspense fallback={<PageLoader />}>
+        <RequirePermission resource="orion_updates_management">
+          <OrionUpdatesPage />
+        </RequirePermission>
+      </Suspense>
+    </MainLayout>
+  </ProtectedRoute>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -257,6 +284,22 @@ const App = () => (
               <Route
                 path="/projects/:id/adherence"
                 element={<ProjectAdherenceRouteWrapper />}
+              />
+              <Route
+                path="/atualizacoes"
+                element={<OrionUpdatesOverviewRoute />}
+              />
+              <Route
+                path="/atualizacoes/gestao"
+                element={<OrionUpdatesManagementRoute />}
+              />
+              <Route
+                path="/atualizacoes/*"
+                element={
+                  <Suspense fallback={<PageLoader />}>
+                    <OrionUpdatesPage />
+                  </Suspense>
+                }
               />
 
               <Route path="/admin/pos-ai-logs" element={<LegacyPosAiLogsRedirect />} />

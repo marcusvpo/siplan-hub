@@ -1,0 +1,35 @@
+.suggestion-box { width: 210px; max-width: 100%; text-align: center; color: var(--publication-accent); }
+.suggestion-box h3 { margin: 0; color: var(--publication-muted); font-size: 13px; font-weight: 500; font-style: italic; line-height: 1.5; }
+.suggestion-box-interaction { position: relative; padding-bottom: 36px; }
+.suggestion-gift-button { display: block; width: 110px; height: 88px; margin: -10px auto 0; padding: 0; color: inherit; background: transparent; border: 0; border-radius: 12px; }
+.suggestion-gift { display: block; width: 100%; height: 100%; overflow: visible; }
+.suggestion-gift-body { fill: var(--publication-tint); }
+.suggestion-gift-ribbon { fill: var(--publication-surface); }
+.suggestion-gift-lid { transform-origin: 80px 52px; transition: transform .3s ease; }
+.suggestion-invitation { position: absolute; bottom: 0; left: 50%; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; width: max-content; max-width: 100%; padding: 8px 4px; border: 0; border-radius: 4px; background: transparent; color: var(--publication-accent); font-size: 12px; font-weight: 400; text-decoration: underline; text-decoration-color: var(--publication-tint-line); text-underline-offset: 3px; opacity: 0; visibility: hidden; transform: translate(-50%, 8px); transition: opacity .25s ease, transform .25s ease, visibility .25s; }
+.suggestion-box[data-expanded="true"] .suggestion-gift-lid { transform: translate(4px, -10px) rotate(-6deg); }
+.suggestion-box[data-expanded="true"] .suggestion-invitation { opacity: 1; visibility: visible; transform: translate(-50%, 0); }
+.suggestion-invitation:hover { text-decoration-color: currentColor; }
+.suggestion-dialog { box-sizing: border-box; width: min(500px, calc(100% - 32px)); max-height: calc(100dvh - 32px); overflow: auto; padding: 28px; border: 1px solid var(--publication-tint-line); border-radius: 20px; background: var(--publication-surface); color: var(--publication-ink); box-shadow: 0 20px 70px rgb(0 0 0 / 22%); }
+.suggestion-dialog::backdrop { background: rgb(10 20 35 / 55%); backdrop-filter: blur(3px); }
+.suggestion-dialog h2 { margin: 6px 0 10px; font-size: clamp(20px, 4vw, 25px); letter-spacing: -.4px; }
+.suggestion-dialog p { margin: 0 0 18px; color: var(--publication-muted); font-size: 14px; line-height: 1.6; }
+.suggestion-dialog label { display: grid; gap: 7px; margin-top: 15px; font-size: 13px; color: var(--publication-ink); }
+.suggestion-dialog input, .suggestion-dialog textarea { box-sizing: border-box; width: 100%; min-width: 0; min-height: 44px; border-radius: 9px; font-size: 16px; }
+.suggestion-dialog textarea { resize: vertical; }
+.suggestion-dialog small { display: block; margin-top: 8px; color: var(--publication-muted); line-height: 1.5; font-size: 12px; }
+.suggestion-dialog .error { color: var(--publication-accent); margin: 14px 0 0; }
+.suggestion-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
+.suggestion-dialog-actions button { min-height: 44px; border-radius: 9px; padding-inline: 20px; }
+.suggestion-dialog button:disabled { opacity: .6; cursor: wait; }
+.suggestion-success { padding: 12px 0; text-align: center; }
+.suggestion-success:focus { outline: none; }
+.suggestion-success-icon { display: grid; place-items: center; width: 64px; height: 64px; margin: 0 auto 20px; border: 1px solid var(--publication-tint-line); border-radius: 50%; color: var(--publication-accent); background: var(--publication-tint); }
+.suggestion-success-icon svg { width: 32px; height: 32px; }
+@media (max-width: 480px) {
+  .suggestion-dialog { padding: 22px 18px; }
+  .suggestion-dialog-actions button { flex: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .suggestion-gift-lid, .suggestion-invitation { transition: none; }
+}

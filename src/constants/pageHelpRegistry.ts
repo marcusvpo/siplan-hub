@@ -2510,6 +2510,120 @@ export const pageHelpData: PageHelpInfo[] = [
       },
     ],
   },
+  {
+    route: "/atualizacoes",
+    title: "Atualizações Orion",
+    subtitle: "Central de novidades dos produtos Orion",
+    moduleName: "Atualizações Orion",
+    icon: Megaphone,
+    description:
+      "Centraliza as novidades, melhorias, correções e avisos dos sistemas Orion TN, Orion PRO e Orion REG dentro do Siplan Hub.",
+    keyFeatures: [
+      "Atalhos para leitura e gestão de publicações",
+      "Acesso controlado por permissões do perfil",
+      "Experiência responsiva para desktop, celular e PWA",
+    ],
+    steps: [
+      {
+        stepNumber: 1,
+        title: "Escolha uma Área",
+        description:
+          "Acesse a Central de Atualizações para consultar novidades ou a Gestão de Publicações para administrar conteúdo, quando seu perfil permitir.",
+        icon: LayoutGrid,
+      },
+      {
+        stepNumber: 2,
+        title: "Consulte as Novidades",
+        description:
+          "Abra a área de leitura e filtre as publicações por sistema, versão e tipo.",
+        icon: Search,
+      },
+    ],
+  },
+  {
+    route: "/atualizacoes/inicio",
+    title: "Central de Atualizações Orion",
+    subtitle: "Novidades, melhorias e correções por produto",
+    moduleName: "Atualizações Orion",
+    icon: Megaphone,
+    description:
+      "Apresenta as publicações disponíveis dos produtos Orion, com filtros, leitura detalhada e recursos de engajamento.",
+    keyFeatures: [
+      "Filtros por Orion TN, Orion PRO, Orion REG, versão e tipo",
+      "Marcação de publicações lidas e não lidas",
+      "Reações, compartilhamento e envio de sugestões",
+      "Visualização ampliada de imagens",
+    ],
+    steps: [
+      {
+        stepNumber: 1,
+        title: "Selecione o Produto",
+        description:
+          "Use os filtros no topo para escolher o sistema e restringir as versões ou os tipos de publicação.",
+        icon: Filter,
+      },
+      {
+        stepNumber: 2,
+        title: "Abra uma Publicação",
+        description:
+          "Selecione um card para ler o conteúdo completo, consultar detalhes e ampliar imagens.",
+        icon: Eye,
+      },
+      {
+        stepNumber: 3,
+        title: "Registre sua Opinião",
+        description:
+          "Use as reações disponíveis ou envie uma sugestão para contribuir com a evolução dos produtos.",
+        icon: MessageSquare,
+      },
+    ],
+  },
+  {
+    route: "/atualizacoes/gestao",
+    title: "Gestão de Publicações Orion",
+    subtitle: "Produção e acompanhamento das atualizações",
+    moduleName: "Atualizações Orion",
+    icon: Settings2,
+    description:
+      "Permite criar versões e publicações, salvar rascunhos, agendar ou publicar conteúdo e acompanhar resultados.",
+    keyFeatures: [
+      "Editor rico com imagens otimizadas no Storage",
+      "Rascunhos, agendamento, publicação e arquivamento",
+      "Indicadores de leitura, reações, compartilhamentos e sugestões",
+      "Ações de criação, edição e exclusão protegidas por RBAC",
+    ],
+    steps: [
+      {
+        stepNumber: 1,
+        title: "Cadastre a Versão",
+        description:
+          "Selecione o produto Orion e informe a versão que receberá as publicações.",
+        icon: Plus,
+      },
+      {
+        stepNumber: 2,
+        title: "Prepare o Conteúdo",
+        description:
+          "Crie ou edite a publicação, preencha os detalhes e adicione imagens quando necessário.",
+        icon: FileEdit,
+      },
+      {
+        stepNumber: 3,
+        title: "Publique ou Agende",
+        description:
+          "Salve como rascunho, publique imediatamente ou defina uma data futura conforme as permissões do seu perfil.",
+        icon: Send,
+      },
+    ],
+    tips: [
+      {
+        title: "Permissões independentes",
+        description:
+          "Os botões de criar, editar e excluir só aparecem quando a ação correspondente está liberada para o perfil.",
+        variant: "info",
+      },
+    ],
+  },
 ];
 
 /**

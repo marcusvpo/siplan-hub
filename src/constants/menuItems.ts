@@ -32,6 +32,7 @@ import {
     Clock3,
     ListTodo,
     Columns3,
+    Newspaper,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -432,6 +433,29 @@ export const menuItems: MenuItem[] = [
                 icon: Settings2,
                 description: "Configurações e cadastros do módulo",
                 permissionKey: "cs_cx_admin",
+            },
+        ],
+    },
+    {
+        title: "Atualizações Orion",
+        icon: Newspaper,
+        path: "/atualizacoes",
+        description: "Novidades, melhorias, correções e avisos dos sistemas Orion",
+        permissionKey: "menu_atualizacoes",
+        subItems: [
+            {
+                title: "Central de Atualizações",
+                path: "/atualizacoes/inicio",
+                icon: Newspaper,
+                description: "Publicações por sistema, versão e tipo de atualização",
+                permissionKey: "orion_updates",
+            },
+            {
+                title: "Gestão de Publicações",
+                path: "/atualizacoes/gestao",
+                icon: Settings2,
+                description: "Criação, agendamento e acompanhamento das publicações",
+                permissionKey: "orion_updates_management",
             },
         ],
     },

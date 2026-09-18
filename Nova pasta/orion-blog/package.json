@@ -1,0 +1,40 @@
+{
+  "name": "orion-central-atualizacoes",
+  "private": true,
+  "version": "0.1.0",
+  "engines": { "node": ">=24 <25", "npm": ">=11 <12" },
+  "workspaces": [
+    "apps/api",
+    "apps/web"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev -w apps/api\" \"npm run dev -w apps/web\"",
+    "start": "node apps/api/dist/server.js",
+    "db:migrate:prod": "node apps/api/dist/db/migrate.js",
+    "export:project": "node scripts/export-project.mjs",
+    "test:export": "node scripts/verify-export.mjs",
+    "test:base-path": "node scripts/verify-base-path.mjs",
+    "test:deployment": "node scripts/verify-deployment.mjs",
+    "build": "npm run build -w apps/api && npm run build -w apps/web",
+    "typecheck": "npm run typecheck -w apps/api && npm run typecheck -w apps/web",
+    "test:workflows": "node --import tsx scripts/verify-workflows.mjs",
+    "test:listings": "node --import tsx scripts/verify-listings.mjs",
+    "test:suggestions": "node --import tsx scripts/verify-suggestions.mjs",
+    "test:admin-suggestions": "node --import tsx scripts/verify-admin-suggestions.mjs",
+    "test:engagement": "node --import tsx scripts/verify-engagement.mjs",
+    "test:host-integration": "node --import tsx scripts/verify-host-integration.mjs",
+    "test:analytics": "node --import tsx scripts/verify-analytics.mjs",
+    "test:visual": "node scripts/verify-visual-refinement.mjs",
+    "test:navigation": "node scripts/verify-navigation.mjs",
+    "test:mobile-filters": "node scripts/verify-mobile-filters.mjs",
+    "db:migrate": "tsx apps/api/src/db/migrate.ts",
+    "db:seed": "tsx apps/api/src/db/seed.ts",
+    "admin:hash": "tsx apps/api/src/auth/hash-password.ts"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "playwright": "^1.63.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}

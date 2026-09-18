@@ -1,0 +1,93 @@
+/*Author: Erik Marques*/
+.orion-blog-module .home-latest { margin: 14px 0 28px; }
+.orion-blog-module .home-latest-heading { display: flex; justify-content: space-between; align-items: end; gap: 12px; margin-bottom: 12px; }
+.orion-blog-module .home-latest-heading h2 { margin: 4px 0 4px; color: var(--publication-ink); font-size: clamp(18px, 1.8vw, 22px); letter-spacing: -.4px; }
+.orion-blog-module .home-latest-heading p { margin: 0; color: var(--publication-muted); font-size: 13px; line-height: 1.5; }
+.orion-blog-module .home-latest-content { display: grid; grid-template-columns: minmax(0, 1fr) 210px; align-items: center; gap: 16px; }
+.orion-blog-module .home-news-results { min-width: 0; }
+.orion-blog-module .home-suggestions-footer { display: grid; place-items: center; min-width: 0; }
+.orion-blog-module .home-news-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.orion-blog-module .home-news-card { display: flex; flex-direction: column; min-width: 0; padding: 14px 16px; border: 1px solid var(--publication-tint-line); border-top-width: 3px; border-radius: 10px; background: linear-gradient(180deg, var(--publication-tint), var(--publication-surface) 140px); color: var(--publication-ink); text-decoration: none; box-shadow: 0 2px 8px rgb(32 54 82 / 5%); transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+/* Vermelho mais acolhedor nas novidades anteriores, sem mudar a paleta global. */
+.orion-blog-module .home-news-card:not(.home-news-card--latest) {
+  --publication-tint: #fff0f1;
+  --publication-tint-line: #e6aeb5;
+  --home-read-soft-fill: #f8e0e3;
+  border-top-color: #c9707b;
+}
+.dark .orion-blog-module .home-news-card:not(.home-news-card--latest) {
+  --publication-tint: #33222b;
+  --publication-tint-line: #874957;
+  --home-read-soft-fill: #482936;
+  border-top-color: #c47586;
+}
+/* O dourado pertence somente à novidade mais recente, inclusive no hover. */
+.orion-blog-module .home-news-card--latest {
+  --publication-accent: #866011;
+  --publication-tint: #fff9e8;
+  --publication-tint-line: #e6cf95;
+  --publication-focus: #997216;
+  --publication-hover-border: rgb(174 130 34 / 48%);
+  --publication-hover-shadow: 0 0 5px 1px rgb(174 130 34 / 16%), 0 8px 20px rgb(174 130 34 / 14%);
+  --home-read-fill: #f3e6c7;
+  --home-read-hover-fill: #dfc789;
+  --home-read-ink: #332509;
+  border-top-color: #b58a2b;
+}
+.dark .orion-blog-module .home-news-card--latest {
+  --publication-accent: #e4c574;
+  --publication-tint: #2a2418;
+  --publication-tint-line: #69572c;
+  --publication-focus: #e4c574;
+  --publication-hover-border: rgb(228 197 116 / 55%);
+  --publication-hover-shadow: 0 0 5px 1px rgb(228 197 116 / 16%), 0 8px 20px rgb(228 197 116 / 12%);
+  --home-read-fill: #c8b88e;
+  --home-read-hover-fill: #b79d63;
+  --home-read-ink: #251e10;
+  border-top-color: #d8b462;
+}
+.orion-blog-module .home-news-meta { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.orion-blog-module .home-news-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 7px; border: 1px solid var(--publication-tint-line); border-radius: 999px; color: var(--publication-accent); background: var(--publication-surface); font-size: 10px; font-weight: 700; }
+.orion-blog-module .home-news-badge svg { width: 12px; height: 12px; flex-shrink: 0; }
+.orion-blog-module .home-news-system { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 8px; color: var(--publication-muted); font-size: 11px; font-weight: 650; }
+.orion-blog-module .home-news-system img { width: 24px; height: 24px; padding: 2px; object-fit: contain; border-radius: 5px; background: #fff; }
+.orion-blog-module .home-news-meta time { color: var(--publication-muted); font-size: 10px; }
+.orion-blog-module .home-news-card h3 { margin: 0 0 8px; color: var(--publication-ink); font-size: 16px; line-height: 1.35; letter-spacing: -.3px; overflow-wrap: anywhere; text-wrap: pretty; }
+.orion-blog-module .home-news-card > p { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; margin: 0 0 12px; color: var(--publication-muted); font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
+.orion-blog-module .home-news-read { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 36px; margin-top: auto; padding: 6px 10px; border: 1px solid var(--publication-tint-line); border-radius: 7px; background: var(--home-read-soft-fill, var(--publication-tint)); color: var(--publication-accent); font-size: 12px; font-weight: 700; transition: background .18s ease, color .18s ease, border-color .18s ease; }
+.orion-blog-module .home-news-read svg { flex-shrink: 0; transition: transform .18s ease; }
+.orion-blog-module .home-news-card--latest .home-news-read,.orion-blog-module  .home-news-card:focus-visible .home-news-read { color: var(--home-read-ink, var(--publication-surface)); background: var(--home-read-fill, var(--publication-accent)); border-color: var(--home-read-fill, var(--publication-accent)); }
+.orion-blog-module .home-news-card:focus-visible { outline: 2px solid var(--publication-focus); outline-offset: 4px; }
+.orion-blog-module .home-news-status { margin: 0; padding: 28px; border: 1px dashed var(--publication-line); border-radius: 14px; background: var(--publication-surface); color: var(--publication-muted); text-align: center; line-height: 1.7; }
+.orion-blog-module .home-news-status > svg { width: 28px; height: 28px; color: var(--publication-accent); }
+.orion-blog-module .home-news-status h3 { margin: 12px 0 8px; font-size: 17px; color: var(--publication-ink); }
+.orion-blog-module .home-news-status p { max-width: 530px; margin: 0 auto 16px; font-size: 14px; }
+.orion-blog-module .home-news-status p:last-child { margin-bottom: 0; }
+@media (hover: hover) and (pointer: fine) {
+  .orion-blog-module .home-news-card:hover { transform: translateY(-2px); border-color: var(--publication-hover-border); box-shadow: var(--publication-hover-shadow); }
+  .orion-blog-module .home-news-card:hover .home-news-read { color: var(--home-read-ink, var(--publication-surface)); background: var(--home-read-hover-fill, var(--home-read-fill, var(--publication-accent))); border-color: var(--home-read-hover-fill, var(--home-read-fill, var(--publication-accent))); }
+  .orion-blog-module .home-news-card:hover .home-news-read svg { transform: translateX(3px); }
+}
+/* Aproveita a margem lateral em telas amplas, preservando a largura dos cartões. */
+@media (min-width: 1580px) {
+  .orion-blog-module .home-latest-content { margin-inline-end: -234px; }
+}
+@media (min-width: 901px) and (max-width: 1100px) {
+  .orion-blog-module .home-news-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 900px) {
+  .orion-blog-module .home-latest-content { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+  .orion-blog-module .home-suggestions-footer { padding-top: 24px; border-top: 1px solid var(--publication-line); }
+  .orion-blog-module .home-news-grid { grid-template-columns: 1fr; }
+  .orion-blog-module .home-news-card { padding: 20px; }
+  .orion-blog-module .home-news-meta { margin-bottom: 14px; }
+  .orion-blog-module .home-latest-heading { align-items: start; flex-direction: column; gap: 10px; }
+}
+@media (max-width: 480px) {
+  .orion-blog-module .home-news-card { padding: 20px 18px; }
+  .orion-blog-module .home-news-card h3 { font-size: 20px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .orion-blog-module .home-news-card,.orion-blog-module  .home-news-read,.orion-blog-module  .home-news-read svg { transition: none; }
+  .orion-blog-module .home-news-card:hover,.orion-blog-module  .home-news-card:hover .home-news-read svg { transform: none; }
+}

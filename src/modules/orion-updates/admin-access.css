@@ -1,0 +1,12 @@
+.orion-blog-module .reader-management-access { display: flex; justify-content: flex-end; padding-top: 14px; }
+.orion-blog-module .view-mode-switch { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; max-width: 100%; padding: 10px 15px; border: 1px solid var(--publication-tint-line); border-radius: 999px; background: var(--publication-tint); color: var(--publication-accent); font-size: 12px; font-weight: 600; line-height: 1.5; }
+.orion-blog-module .view-mode-switch:hover:not(:disabled) { border-color: var(--publication-accent); }
+.orion-blog-module .view-mode-switch:focus-visible { outline: 2px solid var(--publication-focus); outline-offset: 3px; }
+.orion-blog-module .view-mode-switch:disabled { opacity: .55; cursor: not-allowed; }
+.orion-blog-module .management-access-state { width: min(520px, calc(100% - 32px)); margin: 48px auto; padding: 28px; background: var(--publication-surface); color: var(--publication-ink); border: 1px solid var(--publication-line); border-radius: 18px; }
+.orion-blog-module .management-access-state h1 { color: var(--publication-ink); font-size: 24px; margin: 0 0 12px; }
+.orion-blog-module .management-access-state p { color: var(--publication-muted); font-size: 14px; line-height: 1.7; }
+.orion-blog-module .management-access-state > div { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; margin-top: 22px; }
+.orion-blog-module .management-access-state a { color: var(--publication-focus); font-size: 13px; display: inline-flex; align-items: center; min-height: 44px; }
+.orion-blog-module .management-page .management-header-actions { flex-wrap: wrap; justify-content: flex-end; }
+@media (max-width: 700px) { .orion-blog-module .reader-management-access { padding-top: 10px; }.orion-blog-module .view-mode-switch { font-size: 11px; padding-inline: 12px; } }

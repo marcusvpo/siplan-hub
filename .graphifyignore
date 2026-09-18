@@ -5,6 +5,9 @@
 .codex/
 .gemini/
 
+# Cópia de origem usada somente como entrada da migração do Orion Blog.
+Nova pasta/
+
 # Root instruction files belong to the agent runtime, not the product graph.
 AGENTS.md
 CLAUDE.md
