@@ -585,14 +585,18 @@ function getFinalSectorVerdict(stages: TicketAreaStage[]): TicketSectorVerdict {
  * os trâmites não preservam a fotografia do vencimento vigente em cada repasse.
  */
 export function buildTicketSectorAnalysis(
-  tickets: Array<{ chamado: Chamado0800; tramites: ChamadoTramite[] }>,
+  tickets: Array<{
+    chamado: Chamado0800;
+    tramites: ChamadoTramite[];
+    flow?: TicketFlowAnalysis;
+  }>,
   now = new Date(),
 ): TicketSectorAnalysis {
   const entries: TicketSectorEntry[] = [];
 
-  tickets.forEach(({ chamado, tramites }) => {
+  tickets.forEach(({ chamado, tramites, flow }) => {
     const stagesBySector = new Map<string, TicketAreaStage[]>();
-    buildTicketFlowAnalysis(chamado, tramites, now).areaStages.forEach((stage) => {
+    (flow ?? buildTicketFlowAnalysis(chamado, tramites, now)).areaStages.forEach((stage) => {
       const sector = getTicketSectorLabel(stage.area);
       const current = stagesBySector.get(sector) ?? [];
       current.push(stage);

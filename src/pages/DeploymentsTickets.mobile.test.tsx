@@ -1,9 +1,15 @@
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import DeploymentsTickets from "./DeploymentsTickets";
 
-const { solicitarSync, useChamadosSearchMock } = vi.hoisted(() => ({
+const {
+  solicitarSync,
+  useChamadosSearchMock,
+  fetchAllChamadosMock,
+  fetchChamadosTramitesMock,
+  generateChamadosAnalyticalXlsxMock,
+} = vi.hoisted(() => ({
   solicitarSync: vi.fn().mockResolvedValue({ ticketNumbers: [] }),
   useChamadosSearchMock: vi.fn(() => ({
     chamados: [{
@@ -22,6 +28,24 @@ const { solicitarSync, useChamadosSearchMock } = vi.hoisted(() => ({
     isLoading: false,
     error: null,
   })),
+  fetchAllChamadosMock: vi.fn().mockResolvedValue([{
+    numeroChamado: "84521",
+    nomeCliente: "Cliente longo",
+    titulo: "Falha ao emitir documento",
+    natureza: "Erro",
+    status: "Em atendimento",
+    software: "Orion TN",
+    dataAbertura: "2026-08-20",
+  }]),
+  fetchChamadosTramitesMock: vi.fn().mockResolvedValue(new Map([
+    ["84521", [{
+      sequenciaTramite: 1,
+      dataTramite: "2026-08-20T10:00:00-03:00",
+      atividade: "Abertura",
+      descricao: "Chamado recebido",
+    }]],
+  ])),
+  generateChamadosAnalyticalXlsxMock: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("@tanstack/react-query", () => ({
@@ -32,8 +56,9 @@ vi.mock("@/hooks/useChamados0800", () => ({
   useChamadosSearch: useChamadosSearchMock,
   useSolicitarSyncProcessoVenda: () => ({ solicitarSync, syncing: false }),
   isProcessoVendaSyncSupersededError: () => false,
-  fetchAllChamados: vi.fn(),
+  fetchAllChamados: fetchAllChamadosMock,
   fetchAllChamadosForReport: vi.fn(),
+  fetchChamadosTramites: fetchChamadosTramitesMock,
   useChamadosClientOptions: () => ({
     data: [{ codigoCliente: "1", nomeCliente: "Cliente longo", aliases: ["Cliente longo"] }],
     isLoading: false,
@@ -45,6 +70,10 @@ vi.mock("@/hooks/useChamados0800", () => ({
     },
     isLoading: false,
   }),
+}));
+
+vi.mock("@/lib/chamados-analytical-xlsx", () => ({
+  generateChamadosAnalyticalXlsx: generateChamadosAnalyticalXlsxMock,
 }));
 
 vi.mock("@/components/ProjectManagement/Chamado0800DetailDialog", () => ({
@@ -67,7 +96,10 @@ vi.mock("@/components/DeploymentsTickets/TicketsSlaSectorAnalysis", () => ({
   TicketsSlaSectorAnalysis: () => <div>SLA por setor</div>,
 }));
 
-afterEach(() => cleanup());
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("DeploymentsTickets no mobile", () => {
   it("prioriza busca, recolhe filtros avançados e usa cartões sem tabela horizontal", () => {
@@ -104,6 +136,27 @@ describe("DeploymentsTickets no mobile", () => {
 
     fireEvent.click(within(mobileList).getByRole("button", { name: /Ver detalhes do chamado 84521/ }));
     expect(screen.getByTestId("ticket-detail")).toHaveTextContent("84521");
+  });
+
+  it("mantém o relatório analítico acessível no mobile e exporta todo o filtro", async () => {
+    render(<DeploymentsTickets />);
+
+    expect(screen.getByTestId("tickets-report-actions")).toHaveClass("flex-wrap");
+    const reportButton = screen.getByRole("button", { name: "Relatório analítico" });
+    expect(reportButton).toHaveClass("h-10", "flex-1", "sm:h-7", "sm:flex-none");
+
+    fireEvent.click(reportButton);
+
+    await waitFor(() => expect(fetchAllChamadosMock).toHaveBeenCalledWith(
+      expect.objectContaining({ ticketNumbers: [] }),
+    ));
+    expect(fetchChamadosTramitesMock).toHaveBeenCalledWith(["84521"]);
+    await waitFor(() => expect(generateChamadosAnalyticalXlsxMock).toHaveBeenCalledWith(
+      expect.arrayContaining([expect.objectContaining({ numeroChamado: "84521" })]),
+      expect.any(Map),
+      expect.objectContaining({ catalog: "orion" }),
+      expect.objectContaining({ aiAnalysis: null }),
+    ));
   });
 
   it("adiciona e remove palavras-chave usando Enter", () => {

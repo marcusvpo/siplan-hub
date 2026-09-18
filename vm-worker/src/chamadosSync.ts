@@ -854,7 +854,6 @@ async function runProcessoVendaOnce(
           AND DataAberturaChamado < DATEADD(DAY, 1, @endDate)
           AND CONVERT(varchar(50), NumeroChamado) IN (${ticketParameters.join(", ")})
           AND SequenciaTramite IS NOT NULL
-          AND NULLIF(LTRIM(RTRIM(CAST(descricaotramite AS nvarchar(max)))), '') IS NOT NULL
       `, control);
       tramiteRows.push(...tramitesResult.recordset);
     }
