@@ -120,9 +120,9 @@
     "semantic_hash": "237367fea9ecc053a2edc802502d67ae"
   },
   "eslint.config.js": {
-    "mtime": 1781122833.1402087,
-    "ast_hash": "bc484741cdf3591af5da7d9f3da3a647",
-    "semantic_hash": "bc484741cdf3591af5da7d9f3da3a647"
+    "mtime": 1789744625.6718924,
+    "ast_hash": "b68f72d1e0d4f209e586ea4be186f2ef",
+    "semantic_hash": ""
   },
   "files/info-system.ps1": {
     "mtime": 1782161535.1647384,
@@ -130,8 +130,8 @@
     "semantic_hash": "4bf12498562950a1602f3902102b7cc8"
   },
   "package.json": {
-    "mtime": 1789679710.6252358,
-    "ast_hash": "d5dc83ac886976bcb3416320f48a6b25",
+    "mtime": 1789746513.6729155,
+    "ast_hash": "14da695eff3993e64911b3a131399b55",
     "semantic_hash": ""
   },
   "postcss.config.js": {
@@ -145,8 +145,8 @@
     "semantic_hash": ""
   },
   "src/App.tsx": {
-    "mtime": 1789679779.4963675,
-    "ast_hash": "e4b9a52bc7fad83dfad631a89a2bec17",
+    "mtime": 1789739229.9091377,
+    "ast_hash": "6ae52b54d5272fa42ab6e65dd4d11d66",
     "semantic_hash": ""
   },
   "src/components/Admin/OverviewChart.tsx": {
@@ -235,13 +235,13 @@
     "semantic_hash": ""
   },
   "src/components/Layout/AppSidebar.tsx": {
-    "mtime": 1789679810.517099,
-    "ast_hash": "46573506e8848c28d9ab4d1c59842f3e",
+    "mtime": 1789739557.0890179,
+    "ast_hash": "e582ecfc1befc35abeb76046782debd8",
     "semantic_hash": ""
   },
   "src/components/Layout/Breadcrumbs.tsx": {
-    "mtime": 1789679779.4993663,
-    "ast_hash": "0cd1b96e91cc367f302de6404843a1ac",
+    "mtime": 1789739442.5685399,
+    "ast_hash": "12c83ee725e33d2dc3526b997798e840",
     "semantic_hash": ""
   },
   "src/components/Layout/MainLayout.tsx": {
@@ -755,8 +755,8 @@
     "semantic_hash": "5bff9ea3904b15a9e1908b128c88e75f"
   },
   "src/constants/menuItems.ts": {
-    "mtime": 1789679779.4933662,
-    "ast_hash": "7059bedd63de1d2cf5f39d5f18259332",
+    "mtime": 1789739381.9199336,
+    "ast_hash": "ee601d54dde07321b78a23f6d85c9c73",
     "semantic_hash": ""
   },
   "src/contexts/AuthContext.tsx": {
@@ -2600,8 +2600,8 @@
     "semantic_hash": ""
   },
   "src/constants/permissions.ts": {
-    "mtime": 1789679779.491357,
-    "ast_hash": "cbe69521015649b6a24a029936728179",
+    "mtime": 1789739323.3307576,
+    "ast_hash": "d88e2116e8b028f067035b849834667e",
     "semantic_hash": ""
   },
   "src/test/permissions-catalog.test.ts": {
@@ -4315,8 +4315,8 @@
     "semantic_hash": ""
   },
   "src/pages/ModuleOverview.tsx": {
-    "mtime": 1789679779.494367,
-    "ast_hash": "541b95f6c94de6d4df0fcb547ffa6339",
+    "mtime": 1789739149.4385555,
+    "ast_hash": "63c884826165a3db266bc7c23637c307",
     "semantic_hash": ""
   },
   "src/test/breadcrumbs-module-overview.test.tsx": {
@@ -4735,8 +4735,8 @@
     "semantic_hash": ""
   },
   "src/constants/pageHelpRegistry.ts": {
-    "mtime": 1789679846.8056004,
-    "ast_hash": "7156ba70db9dddb45eb09e0e7088e262",
+    "mtime": 1789739668.4710486,
+    "ast_hash": "aa71e3ff6533bb943052f52e1bef243a",
     "semantic_hash": ""
   },
   "src/pages/admin/AdminChangelog.tsx": {
@@ -5735,8 +5735,8 @@
     "semantic_hash": ""
   },
   "src/hooks/useOrionUpdatesData.ts": {
-    "mtime": 1789678996.8003893,
-    "ast_hash": "15207dd3083dfd0441d14d086eff7fb4",
+    "mtime": 1789740011.3347442,
+    "ast_hash": "3802e3c5b32891a43802f43080a33783",
     "semantic_hash": ""
   },
   "src/modules/orion-updates/AdminAccess.tsx": {
@@ -5745,8 +5745,8 @@
     "semantic_hash": ""
   },
   "src/modules/orion-updates/App.tsx": {
-    "mtime": 1789733802.1376748,
-    "ast_hash": "b5ce91a3853362042a03cbb557347dd8",
+    "mtime": 1789739927.9681392,
+    "ast_hash": "7bed853ec930f3bb9841e9b296aaf6ed",
     "semantic_hash": ""
   },
   "src/modules/orion-updates/BlogSignature.tsx": {
@@ -5755,8 +5755,8 @@
     "semantic_hash": ""
   },
   "src/modules/orion-updates/ContentTransition.tsx": {
-    "mtime": 315540000.0,
-    "ast_hash": "527850cfa49ab1d11d1e3ca4bb7d84fb",
+    "mtime": 1789746227.8938892,
+    "ast_hash": "2663d8cdb293f8a151bc01a346d69d0b",
     "semantic_hash": ""
   },
   "src/modules/orion-updates/CoverField.tsx": {
@@ -5775,8 +5775,8 @@
     "semantic_hash": ""
   },
   "src/modules/orion-updates/Home.tsx": {
-    "mtime": 315540000.0,
-    "ast_hash": "47b79a07bd8057a6b4109ee4b26d96b8",
+    "mtime": 1789735136.9174273,
+    "ast_hash": "61ce92e707c1a53abbbba1ab7ad54467",
     "semantic_hash": ""
   },
   "src/modules/orion-updates/ImageViewer.tsx": {
@@ -5800,8 +5800,8 @@
     "semantic_hash": ""
   },
   "src/modules/orion-updates/PostActions.tsx": {
-    "mtime": 315540000.0,
-    "ast_hash": "fa4851e3c6cb51469269f3b0f6340ebc",
+    "mtime": 1789735136.9164276,
+    "ast_hash": "c217af8804329a272bd4ac9de82c4352",
     "semantic_hash": ""
   },
   "src/modules/orion-updates/PostAnalytics.tsx": {
@@ -5830,8 +5830,8 @@
     "semantic_hash": ""
   },
   "src/modules/orion-updates/RichTextEditor.tsx": {
-    "mtime": 1789679083.2443292,
-    "ast_hash": "ca72c5e64b0a0d51f27d047118551b40",
+    "mtime": 1789747334.5180078,
+    "ast_hash": "32e89dd01f4c57c2d5ad047528171834",
     "semantic_hash": ""
   },
   "src/modules/orion-updates/SuggestionBox.tsx": {
@@ -5850,8 +5850,8 @@
     "semantic_hash": ""
   },
   "src/modules/orion-updates/api.ts": {
-    "mtime": 1789679036.5030005,
-    "ast_hash": "a035c1bc3fdbd4f751f7c28dc7bbedf5",
+    "mtime": 1789736023.4937146,
+    "ast_hash": "305f6eb275d775b60c63ff3d7b589558",
     "semantic_hash": ""
   },
   "src/modules/orion-updates/content.ts": {
@@ -5875,8 +5875,8 @@
     "semantic_hash": ""
   },
   "src/test/orion-updates-module.test.ts": {
-    "mtime": 1789733790.8555782,
-    "ast_hash": "e20971045963816a9254d25233df7395",
+    "mtime": 1789740191.5164473,
+    "ast_hash": "264cf0461b905c795e9fc2dd1f350f76",
     "semantic_hash": ""
   },
   "supabase/migrations/20260917180000_orion_updates_module.sql": {
@@ -5952,6 +5952,21 @@
   "public/assets/OrionREG.png": {
     "mtime": 315540000.0,
     "ast_hash": "6590d8cba664b40f324ecdf0d0ac6e12",
+    "semantic_hash": ""
+  },
+  "src/modules/orion-updates/PublicMaintenance.tsx": {
+    "mtime": 1789739763.7511022,
+    "ast_hash": "de0797ab74a9ec3034a2d04554ae79e3",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260918100000_orion_updates_public_link_setting.sql": {
+    "mtime": 1789740102.2388735,
+    "ast_hash": "73e662505c9afc18faeead22ce740eee",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260918110000_allow_public_orion_updates_read.sql": {
+    "mtime": 1789754682.4978902,
+    "ast_hash": "9beb6a09a0e68817282b4b84ba71c367",
     "semantic_hash": ""
   }
 }
