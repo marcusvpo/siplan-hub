@@ -16,6 +16,7 @@ export type ModuleOverviewName =
   | "Modelos Editor OrionTN"
   | "Implantadores"
   | "CS/CX"
+  | "Atualizações Orion"
   | "Assistentes";
 
 interface ModuleOverviewProps {

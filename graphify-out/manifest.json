@@ -130,8 +130,8 @@
     "semantic_hash": "4bf12498562950a1602f3902102b7cc8"
   },
   "package.json": {
-    "mtime": 1789653640.5024369,
-    "ast_hash": "3a319cf6194b1f014e40ea4eef60cf8c",
+    "mtime": 1789679710.6252358,
+    "ast_hash": "d5dc83ac886976bcb3416320f48a6b25",
     "semantic_hash": ""
   },
   "postcss.config.js": {
@@ -145,8 +145,8 @@
     "semantic_hash": ""
   },
   "src/App.tsx": {
-    "mtime": 1789651248.8750174,
-    "ast_hash": "6a3d1c7d9f5d6b47c82e63ce95f3729e",
+    "mtime": 1789679779.4963675,
+    "ast_hash": "e4b9a52bc7fad83dfad631a89a2bec17",
     "semantic_hash": ""
   },
   "src/components/Admin/OverviewChart.tsx": {
@@ -235,18 +235,18 @@
     "semantic_hash": ""
   },
   "src/components/Layout/AppSidebar.tsx": {
-    "mtime": 1789651280.8018188,
-    "ast_hash": "0eecb49af1aaa0fe1ba8eb7eb087d36a",
+    "mtime": 1789679810.517099,
+    "ast_hash": "46573506e8848c28d9ab4d1c59842f3e",
     "semantic_hash": ""
   },
   "src/components/Layout/Breadcrumbs.tsx": {
-    "mtime": 1789651291.491549,
-    "ast_hash": "429c19382fcf8af3246aa38c0d9b7bca",
+    "mtime": 1789679779.4993663,
+    "ast_hash": "0cd1b96e91cc367f302de6404843a1ac",
     "semantic_hash": ""
   },
   "src/components/Layout/MainLayout.tsx": {
-    "mtime": 1788378724.2934992,
-    "ast_hash": "bc5c367f2d23b685cd2b9a3511a9a99b",
+    "mtime": 1789679779.4983654,
+    "ast_hash": "8239e66151a5476113f05cbeef417ed8",
     "semantic_hash": ""
   },
   "src/components/Layout/UserProfileDrawer.tsx": {
@@ -755,8 +755,8 @@
     "semantic_hash": "5bff9ea3904b15a9e1908b128c88e75f"
   },
   "src/constants/menuItems.ts": {
-    "mtime": 1789655235.0766177,
-    "ast_hash": "8339b865dc8de5c2553ee9116516ecf9",
+    "mtime": 1789679779.4933662,
+    "ast_hash": "7059bedd63de1d2cf5f39d5f18259332",
     "semantic_hash": ""
   },
   "src/contexts/AuthContext.tsx": {
@@ -965,8 +965,8 @@
     "semantic_hash": "8cbc837200552502e544dcd4d195de98"
   },
   "src/integrations/supabase/types.ts": {
-    "mtime": 1789661672.9237275,
-    "ast_hash": "6a63231a8cf1a57f9f9a27e4908fceeb",
+    "mtime": 1789680566.278219,
+    "ast_hash": "ce0eef433c3be087a97263e8a2cbd5aa",
     "semantic_hash": ""
   },
   "src/layouts/AdminLayout.tsx": {
@@ -2600,8 +2600,8 @@
     "semantic_hash": ""
   },
   "src/constants/permissions.ts": {
-    "mtime": 1789651253.5831301,
-    "ast_hash": "fedf064bd66726f933fb69fac2a26c7f",
+    "mtime": 1789679779.491357,
+    "ast_hash": "cbe69521015649b6a24a029936728179",
     "semantic_hash": ""
   },
   "src/test/permissions-catalog.test.ts": {
@@ -4315,8 +4315,8 @@
     "semantic_hash": ""
   },
   "src/pages/ModuleOverview.tsx": {
-    "mtime": 1788378629.2699082,
-    "ast_hash": "bf6efe070c5678981cc676021dd84baf",
+    "mtime": 1789679779.494367,
+    "ast_hash": "541b95f6c94de6d4df0fcb547ffa6339",
     "semantic_hash": ""
   },
   "src/test/breadcrumbs-module-overview.test.tsx": {
@@ -4735,8 +4735,8 @@
     "semantic_hash": ""
   },
   "src/constants/pageHelpRegistry.ts": {
-    "mtime": 1789675712.7333088,
-    "ast_hash": "60f4ad72db6c0b21889670fbd3ae3e94",
+    "mtime": 1789679846.8056004,
+    "ast_hash": "7156ba70db9dddb45eb09e0e7088e262",
     "semantic_hash": ""
   },
   "src/pages/admin/AdminChangelog.tsx": {
@@ -5045,8 +5045,8 @@
     "semantic_hash": ""
   },
   "src/test/my-day-screen.test.ts": {
-    "mtime": 1789675719.6337688,
-    "ast_hash": "06be41a6b22f1520ed85a3e9382a8d0c",
+    "mtime": 1789676069.5860264,
+    "ast_hash": "ee92c233dc7a01a9ce25352ed25a1a0f",
     "semantic_hash": ""
   },
   "src/test/my-day.test.ts": {
@@ -5060,8 +5060,8 @@
     "semantic_hash": ""
   },
   "docs/telas/08-central-trabalho.md": {
-    "mtime": 1789675712.737822,
-    "ast_hash": "bcb724fcd880de11606d3cb58b95f10e",
+    "mtime": 1789676069.5346642,
+    "ast_hash": "efd8f24875f7e5d7d52c8ac987e6d0c6",
     "semantic_hash": ""
   },
   "src/components/my-day/MyDayAgenda.tsx": {
@@ -5085,8 +5085,8 @@
     "semantic_hash": ""
   },
   "src/hooks/useMyDayWorkspace.ts": {
-    "mtime": 1789661835.1711476,
-    "ast_hash": "517a1735f71dfed2b5ab6a1fa6fdec68",
+    "mtime": 1789676069.5812166,
+    "ast_hash": "1364267639f30d8f1fa68cd1a5ef681f",
     "semantic_hash": ""
   },
   "src/lib/my-day-workspace.ts": {
@@ -5115,8 +5115,8 @@
     "semantic_hash": ""
   },
   "src/hooks/useMyDayReminders.ts": {
-    "mtime": 1789662301.872735,
-    "ast_hash": "6249f9704f030fad00df027ec9c4fb98",
+    "mtime": 1789676069.5812166,
+    "ast_hash": "f6a989df77b65772dd0e32100e9442d5",
     "semantic_hash": ""
   },
   "supabase/migrations/20260916120000_my_day_operational_improvements.sql": {
@@ -5170,8 +5170,8 @@
     "semantic_hash": ""
   },
   "src/components/my-day/MyDayBoardSettingsDialog.tsx": {
-    "mtime": 1789661729.6328409,
-    "ast_hash": "d124e62d37ab64deb876a7b1585a5afa",
+    "mtime": 1789676069.576697,
+    "ast_hash": "27bcb90369c0084a775f0634a25eb84f",
     "semantic_hash": ""
   },
   "src/components/my-day/MyDayBoardWidget.tsx": {
@@ -5180,28 +5180,28 @@
     "semantic_hash": ""
   },
   "src/hooks/useMyDayBoard.ts": {
-    "mtime": 1789675182.8832588,
-    "ast_hash": "d1651adc80376f29affcc463287f7c8c",
+    "mtime": 1789676069.5802097,
+    "ast_hash": "0fa775884a4c85f64c38683707e08542",
     "semantic_hash": ""
   },
   "src/lib/my-day-board.ts": {
-    "mtime": 1789662080.5005066,
-    "ast_hash": "5557e9ed1ff0041756d95b2934ccac18",
+    "mtime": 1789676069.5822194,
+    "ast_hash": "5defae780158d8fca742a1e296c9ab54",
     "semantic_hash": ""
   },
   "src/pages/MyDayBoard.test.tsx": {
-    "mtime": 1789675650.99392,
-    "ast_hash": "b4dbb9c8d91db5f898cddd4942dae436",
+    "mtime": 1789676069.5835216,
+    "ast_hash": "44af1cd2b1f6a1e42799851e42f554bd",
     "semantic_hash": ""
   },
   "src/pages/MyDayBoard.tsx": {
-    "mtime": 1789675766.4236877,
-    "ast_hash": "aa6277c9bc1a97bc763aac0b926985e8",
+    "mtime": 1789676069.5845225,
+    "ast_hash": "440c6269913e0665b71210f9e72be23a",
     "semantic_hash": ""
   },
   "src/test/my-day-board.test.ts": {
-    "mtime": 1789661971.0747278,
-    "ast_hash": "2529c8e9383fc39fe7859a38eadf1b46",
+    "mtime": 1789676069.5860264,
+    "ast_hash": "d531d5cddb4cd0045f0f39c3d27f7360",
     "semantic_hash": ""
   },
   "supabase/migrations/20260917130000_my_day_personal_board.sql": {
@@ -5219,14 +5219,9 @@
     "ast_hash": "b6424a88207bda6defd7de2ec3604dd6",
     "semantic_hash": ""
   },
-  "novas_solicitacoes/Adicionar bot\u00e3o na rotina de agendamentos_resultado.md": {
-    "mtime": 1789650476.8919976,
-    "ast_hash": "0f456748e79ef25e0d4403ebb0e6c777",
-    "semantic_hash": ""
-  },
   "scripts/prepare-my-day-board-schema.mjs": {
-    "mtime": 1789662644.697322,
-    "ast_hash": "108ce71715adaac89d10c9821b8070cd",
+    "mtime": 1789676069.5751865,
+    "ast_hash": "71deec8fa185e89fe5b6387ce061aa66",
     "semantic_hash": ""
   },
   "supabase/migrations/20260917150000_fix_nps_report_best_clients_changelog.sql": {
@@ -5245,8 +5240,8 @@
     "semantic_hash": ""
   },
   "src/hooks/useMyDayBoardInbox.ts": {
-    "mtime": 1789661672.9217253,
-    "ast_hash": "d73c5d94885443354f7504c3428f2988",
+    "mtime": 1789676069.5802097,
+    "ast_hash": "371c92304b11529eb7f072a73874b887",
     "semantic_hash": ""
   },
   "supabase/migrations/20260917160000_my_day_board_agenda_inbox_changelog.sql": {
@@ -5259,14 +5254,9 @@
     "ast_hash": "005b820bfd220aa5b2fa45041754defd",
     "semantic_hash": ""
   },
-  "novas_solicitacoes/Corre\u00e7\u00f5es menu NPS_resultado.md": {
-    "mtime": 1789654600.089687,
-    "ast_hash": "192b08f1e47a807a657b9bc39f971e59",
-    "semantic_hash": ""
-  },
   "supabase/migrations/20260917170000_my_day_reliability_improvements.sql": {
-    "mtime": 1789662654.1610582,
-    "ast_hash": "c1c9d7388a0afb258879895a8ab0cce8",
+    "mtime": 1789676069.5870342,
+    "ast_hash": "7c3e95cc10c37d8d43ac998bd9ce38f3",
     "semantic_hash": ""
   },
   "graphify-out/memory/query_20260917_143334_pode_fazer_como_acha_melhor__precisa_revisar_tamb\u00e9.md": {
@@ -5275,53 +5265,693 @@
     "semantic_hash": ""
   },
   "graphify-out/memory/query_20260917_153910_acha_que_o_meu_dia_esta_100__agora.md": {
-    "mtime": 1789659550.4847562,
+    "mtime": 1789676069.570146,
     "ast_hash": "13c7b27f8bd6275100d340c77f624f39",
     "semantic_hash": ""
   },
   "graphify-out/memory/query_20260917_162933_ajusta_o_que_depende_de_voc\u00ea_ent\u00e3o.md": {
-    "mtime": 1789662573.32403,
+    "mtime": 1789676069.5711465,
     "ast_hash": "1876400f9b2e9184624bf3b62a34e154",
     "semantic_hash": ""
   },
   "supabase/migrations/20260917171000_my_day_board_horizontal_layout_changelog.sql": {
-    "mtime": 1789675712.745359,
-    "ast_hash": "0ce79c555b1cc43caabdddf1cc31614d",
+    "mtime": 1789676069.5881076,
+    "ast_hash": "8787d659c376ac5fe8f5e53b8234a68f",
     "semantic_hash": ""
   },
   "graphify-out/memory/query_20260917_183719_aqui_na_tela_do_meu_quadro_eu_queria_que_os_cards.md": {
-    "mtime": 1789670239.275037,
+    "mtime": 1789676069.5711465,
     "ast_hash": "5c5a2d45f0bf1d1f24d50e07901212c2",
     "semantic_hash": ""
   },
   "graphify-out/memory/query_20260917_191604_get_my_day_board_columns_com_is_completion_retorna.md": {
-    "mtime": 1789672564.0836813,
+    "mtime": 1789676069.5711465,
     "ast_hash": "eb042f928a816c467cc90d163cefe1b7",
     "semantic_hash": ""
   },
   "graphify-out/memory/query_20260917_192830_tira_esse_scroll_e_transforma_toda_a_area_disponiv.md": {
-    "mtime": 1789673310.174549,
+    "mtime": 1789676069.572149,
     "ast_hash": "cc53d461caf10570f312c2867a1d97c7",
     "semantic_hash": ""
   },
   "graphify-out/memory/query_20260917_194249_tem_como_fazer_um_desaning_de_grade_atras_dos_card.md": {
-    "mtime": 1789674169.3099368,
+    "mtime": 1789676069.572149,
     "ast_hash": "88319cb201914b4114dcfaa92ee6a2f4",
     "semantic_hash": ""
   },
   "graphify-out/memory/query_20260917_194751_tem_como_criar_uma_opcao_de_zoom_ali_no_canto_infe.md": {
-    "mtime": 1789674471.6212533,
+    "mtime": 1789676069.572149,
     "ast_hash": "ea7b5176020d05f6e0ff0f5e8d0f648c",
     "semantic_hash": ""
   },
   "graphify-out/memory/query_20260917_195245_mais_alguma_ideia_de_melhoria_pra_essa_parte_do_qu.md": {
-    "mtime": 1789674765.697484,
+    "mtime": 1789676069.573185,
     "ast_hash": "bc5d4926f65ae9379a7262cace973d0c",
     "semantic_hash": ""
   },
   "graphify-out/memory/query_20260917_201218_pode_fazer_todos.md": {
-    "mtime": 1789675938.5485153,
+    "mtime": 1789676069.5741858,
     "ast_hash": "5f6e5e94cfc4648c919cc2312312a9ad",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/RELEASE_MANIFEST.json": {
+    "mtime": 315540000.0,
+    "ast_hash": "a740e9a68b8bcac252f0b48495d34aab",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/api/package.json": {
+    "mtime": 315540000.0,
+    "ast_hash": "7e08b53a96946d45aac6e9ae8ad332d2",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/api/src/analytics.ts": {
+    "mtime": 315540000.0,
+    "ast_hash": "1fc38fde8a4bcb485dd246d3543af379",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/api/src/auth/hash-password.ts": {
+    "mtime": 315540000.0,
+    "ast_hash": "af3ee3809495db65567e6c069da71580",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/api/src/auth/host-adapter.ts": {
+    "mtime": 315540000.0,
+    "ast_hash": "d9120aaa9d456da199bc4192f1163ac8",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/api/src/auth/host.ts": {
+    "mtime": 315540000.0,
+    "ast_hash": "9e4e91826f5e61e0cab096cd000a1be7",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/api/src/auth/password.ts": {
+    "mtime": 315540000.0,
+    "ast_hash": "d33a97c19e04f044a66fb0aa26dd976a",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/api/src/auth/routes.ts": {
+    "mtime": 315540000.0,
+    "ast_hash": "0c9d010ccaca35fa9cec5ad68a48dc2e",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/api/src/auth/session.ts": {
+    "mtime": 315540000.0,
+    "ast_hash": "8a5e33dc3cbfb35b535152f6f4b37865",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/api/src/config.ts": {
+    "mtime": 315540000.0,
+    "ast_hash": "e69ff5898d929f610b863cf9818138f1",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/api/src/content.ts": {
+    "mtime": 315540000.0,
+    "ast_hash": "b8967701ff1e28ee07a6c3f2b4dbc2a6",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/api/src/db/index.ts": {
+    "mtime": 315540000.0,
+    "ast_hash": "7815fc7d359ec971eadbd939b942f948",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/api/src/db/migrate.ts": {
+    "mtime": 315540000.0,
+    "ast_hash": "76f98ee9235dd690aae2e17945b26b42",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/api/src/db/seed.ts": {
+    "mtime": 315540000.0,
+    "ast_hash": "310f354fa724ba4b63a7937cee627d8b",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/api/src/engagement.ts": {
+    "mtime": 315540000.0,
+    "ast_hash": "5e32684dc19cbd5d04c04b377029e30c",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/api/src/listing-search.ts": {
+    "mtime": 315540000.0,
+    "ast_hash": "d88b9dbbc169145b62b6f0b1881fd408",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/api/src/media.ts": {
+    "mtime": 315540000.0,
+    "ast_hash": "5c5a728a39b4af299ebade55c843628b",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/api/src/posts.ts": {
+    "mtime": 315540000.0,
+    "ast_hash": "582fde1746746514575eca5b25e8e1bb",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/api/src/public-action.ts": {
+    "mtime": 315540000.0,
+    "ast_hash": "47d7e22b34744214dbe2c12edce1ee04",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/api/src/security.ts": {
+    "mtime": 315540000.0,
+    "ast_hash": "7a4ae1b240840ae30d38685bbcca2c7b",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/api/src/server.ts": {
+    "mtime": 315540000.0,
+    "ast_hash": "de68951240d0312678d260305f9bdad3",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/api/src/suggestions.ts": {
+    "mtime": 315540000.0,
+    "ast_hash": "2b667faa94f2bda474d7b5364ac1421d",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/api/src/versions.ts": {
+    "mtime": 315540000.0,
+    "ast_hash": "82e6da9ee8ac5c87a01cb8423fa160fe",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/api/src/visitor.ts": {
+    "mtime": 315540000.0,
+    "ast_hash": "a8574ad42a6b2c9f5394bc1174152c89",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/api/tsconfig.json": {
+    "mtime": 315540000.0,
+    "ast_hash": "23ab46147179bd63fbe0767dad20e08a",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/web/package.json": {
+    "mtime": 315540000.0,
+    "ast_hash": "66fb3dce5f2d147a3d21e6a976b77304",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/web/public/theme.js": {
+    "mtime": 315540000.0,
+    "ast_hash": "2527d02db6909456fb648fe3b73117e9",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/web/src/AdminAccess.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "dab653cb51785f7f8545307c280441e2",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/web/src/App.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "7616364a545958adbd2be021f8ad6f51",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/web/src/BlogSignature.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "259dcaca41e6a512999606dfb7a1b917",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/web/src/ContentTransition.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "527850cfa49ab1d11d1e3ca4bb7d84fb",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/web/src/CoverField.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "54b13df8d9b043cc0495bca3dea5ce28",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/web/src/EmptyPosts.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "f223956867d42701601fd7639e7beb17",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/web/src/FilterTabs.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "bcf007f55ef13ece21348e7596817d61",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/web/src/Home.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "47b79a07bd8057a6b4109ee4b26d96b8",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/web/src/ImageViewer.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "95dca1b125367e0e052bcffb2c28ea9d",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/web/src/ListingTools.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "04985ef3cb206f70faef52d6147cb346",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/web/src/ManagementIcon.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "6c8c4d2cc092ed5f544f077b5156edd3",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/web/src/NotaryIllustration.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "983c4d89294350a38ce778597b0943eb",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/web/src/PostActions.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "fa4851e3c6cb51469269f3b0f6340ebc",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/web/src/PostAnalytics.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "b2a28a1c15956f921a02fb0482987336",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/web/src/PostCover.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "823352757fdd7a19149a1a3aad8acf9b",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/web/src/PostEditor.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "553881264771fc6351a30652c6c3cbbc",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/web/src/PublicationContent.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "7c85241173951191d778cc84fdda9761",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/web/src/PublicationUi.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "00a34ab09dbeb4589d9eafe62e3ca5df",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/web/src/RichTextEditor.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "ca8c0a10f887c5970120f04536d3ea24",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/web/src/SuggestionBox.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "b3f265476065ddfb693736e0f79d0d49",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/web/src/SuggestionsInbox.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "8b932daba7812344497f08de0b93a1ff",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/web/src/VersionIcon.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "31d12b224c1015ff8e20fb35d8183e26",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/web/src/api.ts": {
+    "mtime": 315540000.0,
+    "ast_hash": "d7458cb5055815d43286a492d446b713",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/web/src/content.ts": {
+    "mtime": 315540000.0,
+    "ast_hash": "0a89c0cceb35c8523450f267079d59ad",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/web/src/main.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "41b54be6415a1701e995789e60cd79eb",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/web/src/navigation.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "85b128c1524c12fe581fe1a668ac326b",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/web/src/paths.ts": {
+    "mtime": 315540000.0,
+    "ast_hash": "4ffeb8d79d46de25478c1de425393c3c",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/web/src/vite-env.d.ts": {
+    "mtime": 315540000.0,
+    "ast_hash": "0352474ba2918efe13895edbc3780d94",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/web/tsconfig.json": {
+    "mtime": 315540000.0,
+    "ast_hash": "7e67e3604b35619b66ba634982884418",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/web/vite.config.ts": {
+    "mtime": 315540000.0,
+    "ast_hash": "f07d4717f788c533f73d5c148a39fc96",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/database/migrations/001_initial.sql": {
+    "mtime": 315540000.0,
+    "ast_hash": "6decc30e265a403b319277d90b92181a",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/database/migrations/002_versions_posts.sql": {
+    "mtime": 315540000.0,
+    "ast_hash": "cbc4e8a4ba837e51b82073bd09421261",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/database/migrations/003_system_versions_content.sql": {
+    "mtime": 315540000.0,
+    "ast_hash": "b5bd0638fa45f7480d7bf65709b4a361",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/database/migrations/004_post_covers.sql": {
+    "mtime": 315540000.0,
+    "ast_hash": "018d222a74eec44256d723755cd6d3a2",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/database/migrations/005_post_engagement.sql": {
+    "mtime": 315540000.0,
+    "ast_hash": "f16c232452ffbb2861407df2f429c3e4",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/database/migrations/006_suggestions.sql": {
+    "mtime": 315540000.0,
+    "ast_hash": "5c07a8cac1ea918b7a7969adef7e4003",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/database/migrations/007_host_admin_identity.sql": {
+    "mtime": 315540000.0,
+    "ast_hash": "5facd68b558f6b4b089905bdee02bc07",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/deploy/render-nginx.mjs": {
+    "mtime": 315540000.0,
+    "ast_hash": "fef8d74e77e8db6180ce081468944f76",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/package.json": {
+    "mtime": 315540000.0,
+    "ast_hash": "5b14b12e0636be3d91582037f6019886",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/scripts/check-image-viewer.mjs": {
+    "mtime": 315540000.0,
+    "ast_hash": "7dcdc4f50cdadbd263016b310df08592",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/scripts/check-listing-tools.mjs": {
+    "mtime": 315540000.0,
+    "ast_hash": "c1fb2b02f16e3dd67be8e3ae199eb865",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/scripts/check-management-style.mjs": {
+    "mtime": 315540000.0,
+    "ast_hash": "cbad033cc90d50858f35e70870790f43",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/scripts/check-suggestion-box.mjs": {
+    "mtime": 315540000.0,
+    "ast_hash": "df1e3c79d73a8c48dfbfd3f6ab359364",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/scripts/export-project.mjs": {
+    "mtime": 315540000.0,
+    "ast_hash": "049d9c149b0a70933fc26e1a19edd63d",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/scripts/verify-admin-suggestions.mjs": {
+    "mtime": 315540000.0,
+    "ast_hash": "fda8702aceaa148e7013bb88692f6b65",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/scripts/verify-analytics.mjs": {
+    "mtime": 315540000.0,
+    "ast_hash": "005b8987d9ff6f3c7152502aaf919117",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/scripts/verify-base-path.mjs": {
+    "mtime": 315540000.0,
+    "ast_hash": "c2f09cc1cb148e86ec2d6f538710127a",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/scripts/verify-deployment.mjs": {
+    "mtime": 315540000.0,
+    "ast_hash": "a095c05fc6bd0d2903e22f3285bf224e",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/scripts/verify-engagement.mjs": {
+    "mtime": 315540000.0,
+    "ast_hash": "21ad288cdf41831e8fed15deeb416a88",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/scripts/verify-export.mjs": {
+    "mtime": 315540000.0,
+    "ast_hash": "3b106dc0f2161ba54c31f2c4d0a6a75e",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/scripts/verify-host-integration.mjs": {
+    "mtime": 315540000.0,
+    "ast_hash": "9b0904a6491c682d6ec0fcc58047cfd1",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/scripts/verify-listings.mjs": {
+    "mtime": 315540000.0,
+    "ast_hash": "ce785967ee8bbde8d1d052e1fcf0cd8d",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/scripts/verify-mobile-filters.mjs": {
+    "mtime": 315540000.0,
+    "ast_hash": "d5c46958d43d3ee75eeb7d387bdb218d",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/scripts/verify-navigation.mjs": {
+    "mtime": 315540000.0,
+    "ast_hash": "a9cd0d8552fed27154bc888d7615d139",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/scripts/verify-suggestions.mjs": {
+    "mtime": 315540000.0,
+    "ast_hash": "38b7d44ea0a3d67a9c6d288ee0ce592a",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/scripts/verify-visual-refinement.mjs": {
+    "mtime": 315540000.0,
+    "ast_hash": "c6d1cc212d45884baf813b9c48f740d0",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/scripts/verify-workflows.mjs": {
+    "mtime": 315540000.0,
+    "ast_hash": "eae125d3e12407f7bd18c9bf7662c651",
+    "semantic_hash": ""
+  },
+  "src/hooks/useOrionUpdatesData.ts": {
+    "mtime": 1789678996.8003893,
+    "ast_hash": "15207dd3083dfd0441d14d086eff7fb4",
+    "semantic_hash": ""
+  },
+  "src/modules/orion-updates/AdminAccess.tsx": {
+    "mtime": 1789679064.9708793,
+    "ast_hash": "79b81b53467b1fd5d0cda6e2bee5f288",
+    "semantic_hash": ""
+  },
+  "src/modules/orion-updates/App.tsx": {
+    "mtime": 1789733802.1376748,
+    "ast_hash": "b5ce91a3853362042a03cbb557347dd8",
+    "semantic_hash": ""
+  },
+  "src/modules/orion-updates/BlogSignature.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "259dcaca41e6a512999606dfb7a1b917",
+    "semantic_hash": ""
+  },
+  "src/modules/orion-updates/ContentTransition.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "527850cfa49ab1d11d1e3ca4bb7d84fb",
+    "semantic_hash": ""
+  },
+  "src/modules/orion-updates/CoverField.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "54b13df8d9b043cc0495bca3dea5ce28",
+    "semantic_hash": ""
+  },
+  "src/modules/orion-updates/EmptyPosts.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "f223956867d42701601fd7639e7beb17",
+    "semantic_hash": ""
+  },
+  "src/modules/orion-updates/FilterTabs.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "bcf007f55ef13ece21348e7596817d61",
+    "semantic_hash": ""
+  },
+  "src/modules/orion-updates/Home.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "47b79a07bd8057a6b4109ee4b26d96b8",
+    "semantic_hash": ""
+  },
+  "src/modules/orion-updates/ImageViewer.tsx": {
+    "mtime": 1789679204.885878,
+    "ast_hash": "1cac71157d686e9ab0d77b09dec7f68c",
+    "semantic_hash": ""
+  },
+  "src/modules/orion-updates/ListingTools.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "04985ef3cb206f70faef52d6147cb346",
+    "semantic_hash": ""
+  },
+  "src/modules/orion-updates/ManagementIcon.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "6c8c4d2cc092ed5f544f077b5156edd3",
+    "semantic_hash": ""
+  },
+  "src/modules/orion-updates/NotaryIllustration.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "983c4d89294350a38ce778597b0943eb",
+    "semantic_hash": ""
+  },
+  "src/modules/orion-updates/PostActions.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "fa4851e3c6cb51469269f3b0f6340ebc",
+    "semantic_hash": ""
+  },
+  "src/modules/orion-updates/PostAnalytics.tsx": {
+    "mtime": 1789680078.362676,
+    "ast_hash": "3e960cd69bb22823b01b772bb4fbcf44",
+    "semantic_hash": ""
+  },
+  "src/modules/orion-updates/PostCover.tsx": {
+    "mtime": 1789679091.8374257,
+    "ast_hash": "92ee94dbdeac9141bd790c2c4f25d1ce",
+    "semantic_hash": ""
+  },
+  "src/modules/orion-updates/PostEditor.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "553881264771fc6351a30652c6c3cbbc",
+    "semantic_hash": ""
+  },
+  "src/modules/orion-updates/PublicationContent.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "7c85241173951191d778cc84fdda9761",
+    "semantic_hash": ""
+  },
+  "src/modules/orion-updates/PublicationUi.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "00a34ab09dbeb4589d9eafe62e3ca5df",
+    "semantic_hash": ""
+  },
+  "src/modules/orion-updates/RichTextEditor.tsx": {
+    "mtime": 1789679083.2443292,
+    "ast_hash": "ca72c5e64b0a0d51f27d047118551b40",
+    "semantic_hash": ""
+  },
+  "src/modules/orion-updates/SuggestionBox.tsx": {
+    "mtime": 1789680201.7667303,
+    "ast_hash": "dd7c432e7f55dc55d5c726a5a655e18f",
+    "semantic_hash": ""
+  },
+  "src/modules/orion-updates/SuggestionsInbox.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "8b932daba7812344497f08de0b93a1ff",
+    "semantic_hash": ""
+  },
+  "src/modules/orion-updates/VersionIcon.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "31d12b224c1015ff8e20fb35d8183e26",
+    "semantic_hash": ""
+  },
+  "src/modules/orion-updates/api.ts": {
+    "mtime": 1789679036.5030005,
+    "ast_hash": "a035c1bc3fdbd4f751f7c28dc7bbedf5",
+    "semantic_hash": ""
+  },
+  "src/modules/orion-updates/content.ts": {
+    "mtime": 1789679091.835914,
+    "ast_hash": "6f418357a423773f5089f385f8010c15",
+    "semantic_hash": ""
+  },
+  "src/modules/orion-updates/navigation.tsx": {
+    "mtime": 315540000.0,
+    "ast_hash": "85b128c1524c12fe581fe1a668ac326b",
+    "semantic_hash": ""
+  },
+  "src/modules/orion-updates/paths.ts": {
+    "mtime": 1789679083.2433264,
+    "ast_hash": "a1e90ce86a348814a0770106554aacb9",
+    "semantic_hash": ""
+  },
+  "src/pages/orion-updates/OrionUpdatesPage.tsx": {
+    "mtime": 1789679216.7923472,
+    "ast_hash": "e3cfb02f18c84d93b38726147174a660",
+    "semantic_hash": ""
+  },
+  "src/test/orion-updates-module.test.ts": {
+    "mtime": 1789733790.8555782,
+    "ast_hash": "e20971045963816a9254d25233df7395",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260917180000_orion_updates_module.sql": {
+    "mtime": 1789679969.450046,
+    "ast_hash": "60d2ba0b7459fbe80e12d22fb875b758",
+    "semantic_hash": ""
+  },
+  "Nova pasta/delivery.md": {
+    "mtime": 1789677073.155546,
+    "ast_hash": "f63e3a1c324f94b67f4f24ac0685f94f",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/README.md": {
+    "mtime": 315540000.0,
+    "ast_hash": "e9bd528672cbcaddcde008ff02860259",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/web/index.html": {
+    "mtime": 315540000.0,
+    "ast_hash": "cabf7aadb54b39df34a4fdd160f2ac97",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/deploy/compose.production.yml": {
+    "mtime": 315540000.0,
+    "ast_hash": "af57804a28a819bee6c7f32c568b904e",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/docker-compose.yml": {
+    "mtime": 315540000.0,
+    "ast_hash": "a900ea44acade8feb196c847366848b3",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/docs/delivery.md": {
+    "mtime": 315540000.0,
+    "ast_hash": "f63e3a1c324f94b67f4f24ac0685f94f",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/docs/deployment.md": {
+    "mtime": 315540000.0,
+    "ast_hash": "46febf3cce7a4800ea2bb417f3823a19",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/docs/host-integration.md": {
+    "mtime": 315540000.0,
+    "ast_hash": "33a642ed9dd8f3d4dd4fa912cab70ca4",
+    "semantic_hash": ""
+  },
+  "docs/CENTRAL_ATUALIZACOES_ORION.md": {
+    "mtime": 1789732158.4315834,
+    "ast_hash": "8b3b4201eae1cc63195eb0333b77f24d",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/web/public/assets/OrionPRO.png": {
+    "mtime": 315540000.0,
+    "ast_hash": "a39939984594a537b42bd16a239af8a6",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/web/public/assets/OrionREG.png": {
+    "mtime": 315540000.0,
+    "ast_hash": "6590d8cba664b40f324ecdf0d0ac6e12",
+    "semantic_hash": ""
+  },
+  "Nova pasta/orion-blog/apps/web/public/assets/Siplan_logo.png": {
+    "mtime": 315540000.0,
+    "ast_hash": "a9d40f4c3b8f76385317469aa5eb22f3",
+    "semantic_hash": ""
+  },
+  "public/assets/OrionPRO.png": {
+    "mtime": 315540000.0,
+    "ast_hash": "a39939984594a537b42bd16a239af8a6",
+    "semantic_hash": ""
+  },
+  "public/assets/OrionREG.png": {
+    "mtime": 315540000.0,
+    "ast_hash": "6590d8cba664b40f324ecdf0d0ac6e12",
     "semantic_hash": ""
   }
 }

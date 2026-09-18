@@ -1,0 +1,25 @@
+/* Atualizações locais: sem tela branca, atraso artificial ou bloqueio dos filtros. */
+@media (min-width: 701px) { .orion-blog-module { scrollbar-gutter: stable; } }
+.orion-blog-module .content-transition { position: relative; min-width: 0; outline: none; }
+.orion-blog-module .content-transition-body { display: flow-root; min-width: 0; transition: opacity 160ms ease; }
+.orion-blog-module .content-transition[data-pending="true"] > .content-transition-body { opacity: .82; transition-delay: 100ms; }
+.orion-blog-module .content-transition-status {
+  position: absolute; top: 0; right: 0; z-index: 2; display: inline-flex; align-items: center; gap: 8px;
+  max-width: calc(100% - 24px); padding: 4px 10px; border: 1px solid var(--publication-line);
+  border-radius: 999px; background: var(--publication-surface); color: var(--publication-muted);
+  font-size: 11px; line-height: 1.4; box-shadow: 0 2px 8px #15223808; pointer-events: none;
+  animation: content-status-appear 160ms ease 180ms both;
+}
+.orion-blog-module .content-transition-status > span { width: 6px; height: 6px; flex: 0 0 auto; border-radius: 50%; background: var(--publication-accent); }
+.orion-blog-module .content-placeholder { display: grid; gap: 16px; padding: 28px 0; }
+.orion-blog-module .content-placeholder-heading { width: min(230px, 58%); height: 18px; border-radius: 6px; background: var(--publication-line); margin-bottom: 10px; }
+.orion-blog-module .content-placeholder-card { display: flex; align-items: center; gap: 18px; min-height: 96px; padding: 20px; border-radius: 14px; border: 1px solid var(--publication-line); background: var(--publication-surface); }
+.orion-blog-module .content-placeholder-card > span { width: 40px; height: 40px; flex-shrink: 0; border-radius: 10px; background: var(--publication-line); opacity: .55; }
+.orion-blog-module .content-placeholder-card > div { display: grid; gap: 12px; width: min(380px, 70%); }
+.orion-blog-module .content-placeholder-card i { height: 10px; border-radius: 5px; background: var(--publication-line); opacity: .6; }
+.orion-blog-module .content-placeholder-card i + i { width: 68%; opacity: .35; }
+@keyframes content-status-appear { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .orion-blog-module .content-transition-body { transition: none; }
+  .orion-blog-module .content-transition-status { animation: none; }
+}

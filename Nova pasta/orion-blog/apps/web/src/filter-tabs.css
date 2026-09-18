@@ -1,0 +1,71 @@
+/*Author: Erik Marques*/
+.filter-scroll { min-width: 0; --filter-track: #edf1f6; --filter-thumb: #8492a6; }
+:root[data-theme="dark"] .filter-scroll { --filter-track: #243247; --filter-thumb: #75869f; }
+.filter-home-action { display: flex; justify-content: flex-end; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--publication-line); }
+.clear-filters { line-height: 1.5; text-align: left; }
+.clear-filters:hover { border-color: var(--publication-hover-border); box-shadow: var(--publication-hover-shadow); }
+.clear-filters svg { flex-shrink: 0; }
+.clear-filters span { min-width: 0; }
+@media (max-width: 700px) {
+  .filter-home-action { justify-content: flex-start; }
+  /* Compensa os 14px de padding e 1px de borda do painel de filtros. */
+  .filter-home-action .clear-filters { margin-inline-start: -15px; }
+}
+.filter-scroll .filter-scroll-content {
+  min-width: 0;
+  max-width: 100%;
+  overflow: visible;
+  scrollbar-width: none;
+}
+.filter-scroll .filter-scroll-content::-webkit-scrollbar { display: none; }
+.filter-scroll-content > button { flex-shrink: 0; }
+.filter-scroll[data-overflow="true"] .filter-scroll-content {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 6px 2px 8px;
+  overscroll-behavior-x: contain;
+}
+
+/* A trilha é discreta, mas toda a área de 44px aceita o toque. */
+.filter-scroll-control {
+  display: block;
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  min-width: 0;
+  height: 44px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  color: var(--publication-muted);
+  background: transparent;
+  cursor: grab;
+  touch-action: none;
+}
+.filter-scroll-control:active { cursor: grabbing; }
+.filter-scroll-control:focus-visible { outline: 2px solid var(--publication-focus); outline-offset: 2px; }
+.filter-scroll-control::-webkit-slider-runnable-track { height: 2px; border-radius: 999px; background: var(--filter-track); }
+.filter-scroll-control::-moz-range-track { height: 2px; border-radius: 999px; background: var(--filter-track); }
+.filter-scroll-control::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: var(--filter-thumb-width);
+  height: 3px;
+  margin-top: -.5px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--filter-thumb);
+}
+.filter-scroll-control::-moz-range-thumb { width: var(--filter-thumb-width); height: 3px; border: 0; border-radius: 999px; background: var(--filter-thumb); }
+.filter-scroll-control:active::-webkit-slider-thumb { background: var(--publication-accent); }
+.filter-scroll-control:active::-moz-range-thumb { background: var(--publication-accent); }
+
+/* A contenção funciona antes mesmo da medição do ResizeObserver. */
+@media (max-width: 900px) {
+  .filter-scroll .filter-scroll-content { overflow-x: auto; overflow-y: hidden; }
+}
+
+@media (hover: none) {
+  .filter-scroll-content > button:hover { transform: none; }
+}

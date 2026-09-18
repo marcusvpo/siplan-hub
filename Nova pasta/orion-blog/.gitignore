@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+coverage/
+*.log
+*.tsbuildinfo
+.test-results/
+exports/
+*.zip
+*.dump
+*.backup
+*.pem
+*.key
+deploy/nginx.generated.conf

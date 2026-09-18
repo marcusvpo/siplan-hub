@@ -1,0 +1,142 @@
+.orion-blog-module .analytics-panel.manager-dashboard, .dark .orion-blog-module .analytics-panel.manager-dashboard { margin: 24px 0 56px; padding: 0; border: 0; background: transparent; box-shadow: none; color: var(--publication-ink); }
+.orion-blog-module .manager-heading,.orion-blog-module  .manager-section-heading,.orion-blog-module  .manager-scope { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+.orion-blog-module .manager-heading h2 { font-size: clamp(22px, 2.6vw, 28px); letter-spacing: -.6px; margin: 7px 0 8px; }
+.orion-blog-module .manager-heading p,.orion-blog-module  .manager-section-heading p { margin: 0; color: var(--publication-muted); font-size: 13px; line-height: 1.65; }
+.orion-blog-module .manager-refresh,.orion-blog-module  .manager-review { display: inline-flex; align-items: center; justify-content: center; gap: 8px; flex-shrink: 0; min-height: 44px; }
+.orion-blog-module .manager-scope { flex-wrap: wrap; margin: 18px 0; font-size: 12px; color: var(--publication-muted); }
+.orion-blog-module .manager-scope > span:first-child { padding: 6px 10px; border: 1px solid var(--publication-line); border-radius: 999px; background: var(--publication-surface); }
+.orion-blog-module .manager-controls { display: grid; grid-template-columns: minmax(0, 1.5fr) repeat(2, minmax(0, 1fr)); gap: 14px; margin-bottom: 20px; }
+.orion-blog-module .manager-controls label { min-width: 0; color: var(--publication-muted); font-size: 12px; }
+.orion-blog-module .manager-search,.orion-blog-module  .manager-control { min-width: 0; }
+.orion-blog-module .manager-search > label,.orion-blog-module  .manager-control > label { display: block; margin-bottom: 7px; }
+.orion-blog-module .manager-controls input,.orion-blog-module  .manager-controls select { width: 100%; min-width: 0; min-height: 44px; border: 1px solid var(--publication-line); border-radius: 10px; background: var(--publication-surface); color: var(--publication-ink); font-size: 13px; }
+.orion-blog-module .manager-search > div { display: flex; min-width: 0; border: 1px solid var(--publication-line); border-radius: 10px; background: var(--publication-surface); }
+.orion-blog-module .manager-search input { flex: 1; border: 0; background: transparent; }
+.orion-blog-module .manager-search button { width: 44px; flex-shrink: 0; border: 0; border-radius: 9px; color: var(--publication-accent); background: transparent; }
+.orion-blog-module .manager-clear { justify-self: start; padding: 4px 0; min-height: 32px; grid-column: 1 / -1; border: 0; background: transparent; color: var(--publication-focus); font-size: 12px; text-decoration: underline; text-underline-offset: 3px; }
+.orion-blog-module .manager-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin: 22px 0 28px; }
+.orion-blog-module .manager-kpi { min-width: 0; padding: 20px; border: 1px solid var(--publication-line); border-radius: 14px; background: var(--publication-surface); box-shadow: 0 2px 6px rgb(32 54 82 / 3%); }
+.orion-blog-module .manager-kpi > div:first-child { display: flex; justify-content: space-between; align-items: center; gap: 8px; color: var(--publication-muted); font-size: 12px; }
+.orion-blog-module .manager-kpi svg { flex-shrink: 0; color: var(--publication-accent); }
+.orion-blog-module .manager-kpi > strong { display: block; margin: 12px 0 8px; font-size: clamp(25px, 3vw, 34px); font-weight: 700; letter-spacing: -1px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.orion-blog-module .manager-kpi-detail { color: var(--publication-muted); font-size: 11px; line-height: 1.6; }
+.orion-blog-module .manager-priorities { margin-bottom: 28px; }
+.orion-blog-module .manager-section-heading h3 { margin: 0 0 5px; font-size: 17px; }
+.orion-blog-module .manager-all { display: inline-flex; align-items: center; gap: 9px; min-height: 44px; border: 1px solid var(--publication-line); border-radius: 999px; background: var(--publication-surface); color: var(--publication-muted); padding: 8px 13px; font-size: 12px; white-space: nowrap; }
+.orion-blog-module .manager-all[aria-pressed="true"] { color: var(--publication-accent); border-color: var(--publication-tint-line); }
+.orion-blog-module .manager-all span { font-variant-numeric: tabular-nums; font-weight: 700; }
+.orion-blog-module .manager-priority-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+.orion-blog-module .manager-priority { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: start; text-align: left; padding: 16px; min-width: 0; background: var(--publication-surface); border: 1px solid var(--publication-line); border-radius: 12px; color: var(--publication-ink); transition: border-color .18s, background .18s; }
+.orion-blog-module .manager-priority-icon { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; background: var(--publication-soft); color: var(--publication-muted); }
+.orion-blog-module .manager-priority strong { display: block; font-size: 12px; line-height: 1.5; }
+.orion-blog-module .manager-priority small { display: block; margin-top: 5px; color: var(--publication-muted); font-size: 11px; line-height: 1.6; }
+.orion-blog-module .manager-priority b { font-size: 21px; font-variant-numeric: tabular-nums; }
+.orion-blog-module .manager-priority:hover,.orion-blog-module  .manager-priority[aria-pressed="true"] { border-color: var(--publication-tint-line); background: var(--publication-tint); }
+.orion-blog-module .manager-priority[aria-pressed="true"] .manager-priority-icon,.orion-blog-module  .manager-priority[aria-pressed="true"] b { color: var(--publication-accent); }
+.orion-blog-module .manager-note { margin: 12px 0 0; color: var(--publication-muted); font-size: 11px; line-height: 1.7; }
+.orion-blog-module .manager-list { padding: 22px; border: 1px solid var(--publication-line); border-radius: 14px; background: var(--publication-surface); }
+.orion-blog-module .manager-results-heading { margin: 0; }
+.orion-blog-module .manager-results-toggle { display: flex; align-items: center; justify-content: space-between; gap: 18px; width: 100%; min-height: 52px; padding: 0; border: 0; background: transparent; color: var(--publication-ink); text-align: left; border-radius: 6px; scroll-margin-top: 18px; }
+.orion-blog-module .manager-results-toggle > span:first-child { min-width: 0; }
+.orion-blog-module .manager-results-title { display: block; font-size: 17px; font-weight: 600; line-height: 1.5; }
+.orion-blog-module .manager-results-toggle small { display: block; margin-top: 5px; font-size: 12px; line-height: 1.6; font-weight: 400; color: var(--publication-muted); }
+.orion-blog-module .manager-results-action { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; min-height: 44px; flex-shrink: 0; border: 1px solid var(--publication-tint-line); border-radius: 999px; background: var(--publication-tint); color: var(--publication-accent); font-size: 12px; font-weight: 500; }
+.orion-blog-module .manager-results-action svg { transition: transform .18s; }
+.orion-blog-module .manager-results-toggle[aria-expanded="true"] .manager-results-action svg { transform: rotate(180deg); }
+.orion-blog-module .manager-results-toggle:hover .manager-results-action { border-color: var(--publication-accent); }
+.orion-blog-module .manager-results-tools { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; border-top: 1px solid var(--publication-line); margin-top: 18px; padding-top: 16px; color: var(--publication-muted); font-size: 12px; }
+.orion-blog-module .manager-results-tools > div { display: flex; align-items: center; gap: 8px; }
+.orion-blog-module .manager-results-tools label { font-size: 12px; color: var(--publication-muted); }
+.orion-blog-module .manager-results-tools select { min-height: 44px; min-width: 70px; border: 1px solid var(--publication-line); border-radius: 9px; color: var(--publication-ink); background: var(--publication-surface); }
+.orion-blog-module .manager-results-prompt p { max-width: 580px; margin-inline: auto; }
+.orion-blog-module .manager-table-wrap { min-width: 0; margin-top: 18px; }
+.orion-blog-module .manager-table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 12px; }
+.orion-blog-module .manager-table thead th { padding: 12px 5px; color: var(--publication-muted); font-size: 11px; font-weight: 500; background: var(--publication-soft); text-align: center; overflow-wrap: anywhere; }
+.orion-blog-module .manager-table thead th:first-child { text-align: left; padding-left: 12px; width: 28%; }
+.orion-blog-module .manager-table thead th:last-child { width: 115px; }
+.orion-blog-module .manager-table tbody th,.orion-blog-module  .manager-table tbody td { padding: 18px 5px; border-bottom: 1px solid var(--publication-line); text-align: center; vertical-align: middle; }
+.orion-blog-module .manager-table tbody tr:last-child > * { border-bottom: 0; }
+.orion-blog-module .manager-table tbody th { text-align: left; padding-left: 12px; font-weight: normal; }
+.orion-blog-module .manager-table th strong { display: block; color: var(--publication-ink); font-size: 13px; line-height: 1.55; overflow-wrap: anywhere; }
+.orion-blog-module .manager-table th small { display: block; margin: 5px 0; color: var(--publication-muted); font-size: 11px; line-height: 1.6; }
+.orion-blog-module .manager-has-feedback > th { box-shadow: inset 2px 0 var(--publication-tint-line); }
+.orion-blog-module .manager-status { display: inline-block; padding: 3px 7px; border-radius: 6px; font-size: 10px; background: var(--publication-soft); color: var(--publication-muted); }
+.orion-blog-module .manager-status-publicado { color: var(--publication-focus); }
+.orion-blog-module .manager-status-agendado { color: var(--publication-accent); background: var(--publication-tint); }
+.orion-blog-module .manager-number { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.orion-blog-module .manager-negative { color: var(--publication-accent); }
+.orion-blog-module .manager-approval { display: grid; gap: 4px; min-width: 0; }
+.orion-blog-module .manager-approval strong { font-size: 11px; font-weight: 600; }
+.orion-blog-module .manager-approval small { color: var(--publication-muted); font-size: 10px; }
+.orion-blog-module .manager-approval meter { display: block; width: 100%; height: 6px; border: 0; border-radius: 99px; background: var(--publication-tint-line); }
+.orion-blog-module .manager-approval meter::-webkit-meter-bar { border: 0; border-radius: 99px; background: var(--publication-tint-line); }
+.orion-blog-module .manager-approval meter::-webkit-meter-optimum-value { background: var(--publication-focus); border-radius: 99px; }
+.orion-blog-module .manager-approval meter::-moz-meter-bar { background: var(--publication-focus); }
+.orion-blog-module .manager-approval-compact { margin-top: 8px; }
+.orion-blog-module .manager-row-actions button { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; min-height: 38px; padding: 6px 4px; border-radius: 7px; font-size: 11px; }
+.orion-blog-module .manager-row-actions svg { width: 15px; height: 15px; flex-shrink: 0; }
+.orion-blog-module .manager-reasons-button { border: 1px solid var(--publication-tint-line); color: var(--publication-accent); background: var(--publication-tint); }
+.orion-blog-module .manager-edit-button { border: 0; margin-top: 5px; background: transparent; color: var(--publication-focus); }
+.orion-blog-module .manager-row-actions button:disabled { opacity: .55; cursor: not-allowed; background: transparent; border-color: var(--publication-line); color: var(--publication-muted); }
+.orion-blog-module .manager-state { padding: 32px 20px; text-align: center; border: 1px dashed var(--publication-line); border-radius: 12px; color: var(--publication-muted); background: var(--publication-surface); font-size: 13px; }
+.orion-blog-module .manager-list .manager-state { margin-top: 20px; border: 0; }
+.orion-blog-module .manager-state svg { color: var(--publication-accent); width: 28px; height: 28px; }
+.orion-blog-module .manager-state h3,.orion-blog-module  .manager-state h4 { color: var(--publication-ink); font-size: 16px; margin: 12px 0 6px; }
+.orion-blog-module .manager-state p { line-height: 1.7; }
+.orion-blog-module .manager-method { margin-top: 20px; color: var(--publication-muted); font-size: 12px; line-height: 1.75; }
+.orion-blog-module .manager-method summary { cursor: pointer; width: fit-content; padding: 8px 0; color: var(--publication-focus); }
+.orion-blog-module .manager-method > div { padding: 10px 18px; background: var(--publication-surface); border: 1px solid var(--publication-line); border-radius: 10px; }
+.orion-blog-module .manager-method p { margin: 8px 0; }
+.orion-blog-module .manager-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.orion-blog-module .manager-dashboard .analytics-pagination,.orion-blog-module  .analytics-feedback-dialog .analytics-pagination { margin-top: 20px; }
+.orion-blog-module .manager-dashboard .analytics-pagination button,.orion-blog-module  .analytics-feedback-dialog .analytics-pagination button { min-height: 44px; }
+.orion-blog-module .analytics-feedback-dialog { box-sizing: border-box; width: min(600px, calc(100% - 28px)); max-height: calc(100dvh - 32px); padding: 28px; border: 1px solid var(--publication-line); border-radius: 18px; background: var(--publication-surface); color: var(--publication-ink); box-shadow: 0 18px 70px rgb(0 0 0 / 25%); }
+.orion-blog-module .analytics-feedback-dialog::backdrop { background: rgb(10 20 35 / 55%); backdrop-filter: blur(3px); }
+.orion-blog-module .analytics-feedback-dialog .dislike-reasons { margin: 0; padding: 0; border: 0; }
+.orion-blog-module .manager-feedback-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.orion-blog-module .manager-feedback-header button { display: grid; place-items: center; min-width: 44px; min-height: 44px; }
+.orion-blog-module .analytics-feedback-dialog h2 { margin: 14px 0 10px; font-size: 23px; }
+.orion-blog-module .analytics-feedback-dialog h3 { margin: 0; font-size: 16px; line-height: 1.6; overflow-wrap: anywhere; }
+.orion-blog-module .manager-feedback-context { color: var(--publication-muted); font-size: 12px; margin: 4px 0 16px; }
+.orion-blog-module .manager-feedback-tip { display: flex; gap: 10px; padding: 14px; border-radius: 10px; background: var(--publication-tint); color: var(--publication-accent); }
+.orion-blog-module .manager-feedback-tip svg { flex-shrink: 0; }
+.orion-blog-module .manager-feedback-tip p { margin: 0; font-size: 12px; line-height: 1.65; }
+.orion-blog-module .manager-feedback-total { font-size: 13px; font-weight: 600; margin: 22px 0 8px; }
+.orion-blog-module .analytics-feedback-dialog .dislike-reasons li { background: var(--publication-soft); border-color: var(--publication-line); border-radius: 10px; }
+.orion-blog-module .analytics-feedback-dialog .dislike-reasons li p { font-size: 14px; line-height: 1.7; }
+.orion-blog-module .manager-review { margin-top: 24px; width: 100%; }
+@media (max-width: 1000px) { .orion-blog-module .manager-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }.orion-blog-module .manager-priority-grid { grid-template-columns: 1fr; }.orion-blog-module .manager-priority small { margin-top: 2px; } }
+@media (max-width: 1000px) {
+  .orion-blog-module .manager-list { padding: 16px; }
+  .orion-blog-module .manager-table,.orion-blog-module  .manager-table tbody { display: block; }
+  .orion-blog-module .manager-table thead { position: absolute; width: 1px; height: 1px; clip-path: inset(50%); overflow: hidden; }
+  .orion-blog-module .manager-table tbody tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 18px 0; border-bottom: 1px solid var(--publication-line); }
+  .orion-blog-module .manager-table tbody tr:last-child { border-bottom: 0; }
+  .orion-blog-module .manager-table tbody th { grid-column: 1 / -1; padding: 0; border: 0; box-shadow: none; }
+  .orion-blog-module .manager-table tbody td { display: flex; flex-direction: column; align-items: start; gap: 5px; padding: 0; border: 0; text-align: left; }
+  .orion-blog-module .manager-table td[data-label]::before { content: attr(data-label); color: var(--publication-muted); font-size: 11px; }
+  .orion-blog-module .manager-table td[data-label="Aprovação"] { grid-column: 1 / -1; }
+  .orion-blog-module .manager-table .manager-approval { width: 100%; }
+  .orion-blog-module .manager-table td.manager-row-actions { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .orion-blog-module .manager-row-actions button { min-height: 44px; font-size: 12px; }
+  .orion-blog-module .manager-edit-button { margin-top: 0; border: 1px solid var(--publication-line); }
+}
+@media (max-width: 700px) {
+  .orion-blog-module .manager-results-toggle { align-items: flex-start; flex-direction: column; gap: 12px; }
+  .orion-blog-module .manager-results-title { font-size: 16px; }
+  .orion-blog-module .manager-results-action { align-self: flex-start; }
+  .orion-blog-module .manager-heading,.orion-blog-module  .manager-section-heading { align-items: flex-start; flex-direction: column; gap: 12px; }
+  .orion-blog-module .manager-heading h2 { font-size: 22px; }
+  .orion-blog-module .manager-refresh { align-self: flex-start; }
+  .orion-blog-module .manager-scope { gap: 10px; font-size: 11px; }
+  .orion-blog-module .manager-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .orion-blog-module .manager-search { grid-column: 1 / -1; }
+  .orion-blog-module .manager-controls input { font-size: 16px; }
+  .orion-blog-module .manager-kpis { gap: 10px; }
+  .orion-blog-module .manager-kpi { padding: 14px; }
+  .orion-blog-module .manager-kpi > div:first-child { flex-wrap: wrap; font-size: 11px; }
+  .orion-blog-module .manager-kpi svg { width: 17px; height: 17px; }
+  .orion-blog-module .analytics-feedback-dialog { padding: 20px; }
+  .orion-blog-module .manager-clear { min-height: 44px; }
+}
+@media (prefers-reduced-motion: reduce) { .orion-blog-module .manager-priority,.orion-blog-module  .manager-results-action svg { transition: none; } }

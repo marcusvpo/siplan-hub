@@ -46,6 +46,7 @@ import {
   Clock3,
   ListTodo,
   Columns3,
+  Newspaper,
 } from "lucide-react";
 import {
   Collapsible,
@@ -108,6 +109,9 @@ export function AppSidebar() {
   const [isAssistentesOpen, setIsAssistentesOpen] = useState(
     location.pathname.startsWith("/assistentes"),
   );
+  const [isAtualizacoesOpen, setIsAtualizacoesOpen] = useState(
+    location.pathname.startsWith("/atualizacoes"),
+  );
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -125,6 +129,7 @@ export function AppSidebar() {
   const canViewOrion = hasPermission("menu_orion", "view");
   const canViewSd = hasPermission("menu_sd", "view");
   const canViewAssistentes = hasPermission("menu_assistentes", "view");
+  const canViewAtualizacoes = hasPermission("menu_atualizacoes", "view");
   const canViewDashboard = hasPermission("dashboard", "view");
   const canViewWorkCenter = hasPermission("work_center", "view");
   const canViewWorkBoard = hasPermission("work_board", "view");
@@ -205,6 +210,10 @@ export function AppSidebar() {
     ["pos_ai_logs", "/assistentes/logs"],
     ["pos_ai_logs", "/assistentes/links-chats"],
   );
+  const rotaAtualizacoes = primeiraRota(
+    ["orion_updates", "/atualizacoes/inicio"],
+    ["orion_updates_management", "/atualizacoes/gestao"],
+  );
 
   const mostrarDashboard = canViewDashboard && !!rotaDashboard;
   const mostrarImplantacao = canViewImplantacao && !!rotaImplantacao;
@@ -216,6 +225,7 @@ export function AppSidebar() {
   const mostrarImplantadores = canViewImplantadores && !!rotaImplantadores;
   const mostrarCsCx = canViewCsCx && !!rotaCsCx;
   const mostrarAssistentes = canViewAssistentes && !!rotaAssistentes;
+  const mostrarAtualizacoes = canViewAtualizacoes && !!rotaAtualizacoes;
   
   const logoSrc = isDark
     ? "/assets/Siplan_logo_branco.png"
@@ -1362,6 +1372,100 @@ export function AppSidebar() {
             </Link>
           )}
         </div>
+        )}
+
+        {/* Atualizações Orion Group */}
+        {mostrarAtualizacoes && (
+          <div className="px-2">
+            {!collapsed ? (
+              <Collapsible
+                open={isAtualizacoesOpen}
+                onOpenChange={setIsAtualizacoesOpen}
+                className="space-y-1"
+              >
+                <CollapsibleTrigger asChild>
+                  <Button
+                    variant={
+                      location.pathname.startsWith("/atualizacoes")
+                        ? "secondary"
+                        : "ghost"
+                    }
+                    className="w-full justify-between hover:bg-muted/50"
+                    title="Atualizações Orion"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Newspaper className="h-5 w-5" />
+                      <span>Atualizações Orion</span>
+                    </div>
+                    <ChevronDown
+                      className={cn(
+                        "h-4 w-4 transition-transform",
+                        isAtualizacoesOpen ? "transform rotate-180" : "",
+                      )}
+                    />
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-1 pl-4 animate-in slide-in-from-top-2">
+                  <div className="px-4 pt-2">
+                    <Link to="/atualizacoes">
+                      <Button
+                        variant={isActive("/atualizacoes") ? "secondary" : "ghost"}
+                        size="sm"
+                        className="h-9 w-full justify-start gap-3"
+                      >
+                        <LayoutDashboard className="h-4 w-4" />
+                        <span className="text-xs font-medium">Visão Geral</span>
+                      </Button>
+                    </Link>
+                  </div>
+                  {can("orion_updates") && (
+                    <div className="px-4 pt-2">
+                      <Link to="/atualizacoes/inicio">
+                        <Button
+                          variant={
+                            location.pathname.startsWith("/atualizacoes") &&
+                            location.pathname !== "/atualizacoes" &&
+                            location.pathname !== "/atualizacoes/gestao"
+                              ? "secondary"
+                              : "ghost"
+                          }
+                          size="sm"
+                          className="h-9 w-full justify-start gap-3"
+                        >
+                          <Newspaper className="h-4 w-4" />
+                          <span className="text-xs font-medium">Central de Atualizações</span>
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
+                  {can("orion_updates_management") && (
+                    <div className="px-4 py-2">
+                      <Link to="/atualizacoes/gestao">
+                        <Button
+                          variant={isActive("/atualizacoes/gestao") ? "secondary" : "ghost"}
+                          size="sm"
+                          className="h-9 w-full justify-start gap-3"
+                        >
+                          <Settings2 className="h-4 w-4" />
+                          <span className="text-xs font-medium">Gestão de Publicações</span>
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
+                </CollapsibleContent>
+              </Collapsible>
+            ) : (
+              <Link to={rotaAtualizacoes!}>
+                <Button
+                  variant={location.pathname.startsWith("/atualizacoes") ? "secondary" : "ghost"}
+                  className="w-full justify-center px-0"
+                  title="Atualizações Orion"
+                >
+                  <Newspaper className="h-5 w-5" />
+                </Button>
+              </Link>
+            )}
+          </div>
         )}
 
         {/* Assistentes Group */}

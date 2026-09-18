@@ -1,0 +1,55 @@
+name: orion-blog
+
+x-api-environment: &api-environment
+  NODE_ENV: production
+  PORT: "3333"
+  ADMIN_AUTH_MODE: host
+  APP_ORIGIN: ${APP_ORIGIN:?Configure APP_ORIGIN com a origem HTTPS do sistema principal}
+  BLOG_BASE_PATH: ${BLOG_BASE_PATH:-/blog/}
+  COOKIE_SECRET: ${COOKIE_SECRET:?Configure um segredo exclusivo e aleatorio}
+  TRUST_PROXY_CIDRS: ${TRUST_PROXY_CIDRS:-}
+
+services:
+  api:
+    image: orion-blog-api:${RELEASE_TAG:-local}
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.api
+    environment:
+      <<: *api-environment
+      DATABASE_URL: ${DATABASE_URL:?Configure a conexao PostgreSQL TLS com usuario de runtime}
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs: ["/tmp"]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+    # Sem ports: a API só é alcançada pela rede interna e pelo proxy.
+
+  web:
+    image: orion-blog-web:${RELEASE_TAG:-local}
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.web
+      args:
+        BLOG_BASE_PATH: ${BLOG_BASE_PATH:-/blog/}
+    ports: ["127.0.0.1:${BLOG_HTTP_PORT:-8080}:8080"]
+    depends_on:
+      api: { condition: service_healthy }
+    restart: unless-stopped
+    read_only: true
+    tmpfs: ["/tmp"]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+
+  migrate:
+    image: orion-blog-api:${RELEASE_TAG:-local}
+    profiles: ["tools"]
+    environment:
+      <<: *api-environment
+      DATABASE_URL: ${MIGRATION_DATABASE_URL:-}
+    command: ["node", "apps/api/dist/db/migrate.js"]
+    read_only: true
+    tmpfs: ["/tmp"]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
