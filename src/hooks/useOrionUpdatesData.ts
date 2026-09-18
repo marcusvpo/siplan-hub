@@ -289,7 +289,7 @@ export const orionUpdatesData = {
     return {
       public_enabled: true,
       maintenance_title: "Estamos em manutenção",
-      maintenance_message: "A Central de Atualizações Orion está passando por melhorias no momento. Voltaremos em breve.",
+      maintenance_message: "O Orion Blog está passando por melhorias no momento. Voltaremos em breve.",
     };
   },
 
@@ -305,7 +305,7 @@ export const orionUpdatesData = {
     return {
       public_enabled: input.public_enabled,
       maintenance_title: input.maintenance_title || "Estamos em manutenção",
-      maintenance_message: input.maintenance_message || "A Central de Atualizações Orion está passando por melhorias no momento. Voltaremos em breve.",
+      maintenance_message: input.maintenance_message || "O Orion Blog está passando por melhorias no momento. Voltaremos em breve.",
     };
   },
 };

@@ -8,7 +8,7 @@ interface PublicMaintenanceProps {
 
 export function PublicMaintenance({
   title = "Estamos em manutenção",
-  message = "A Central de Atualizações Orion está passando por melhorias no momento. Voltaremos em breve.",
+  message = "O Orion Blog está passando por melhorias no momento. Voltaremos em breve.",
 }: PublicMaintenanceProps) {
   return (
     <div className="page maintenance-page">
@@ -17,7 +17,7 @@ export function PublicMaintenance({
           <div className="brand-title">
             <img src={appPath("/assets/Siplan_logo.png")} alt="Logo Siplan" />
             <div>
-              <h1>Central de Atualizações Orion</h1>
+              <h1>Orion Blog</h1>
               <p>Acompanhe as novidades dos sistemas</p>
             </div>
           </div>
