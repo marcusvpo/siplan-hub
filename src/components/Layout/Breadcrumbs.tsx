@@ -40,7 +40,7 @@ export function Breadcrumbs() {
     conhecimento: "Base de Conhecimento",
     logs: "Logs & Analytics",
     "links-chats": "Links e Chats",
-    atualizacoes: "Atualizações Orion",
+    atualizacoes: "Orion Blog",
     inicio: "Central de Atualizações",
     gestao: "Gestão de Publicações",
   };

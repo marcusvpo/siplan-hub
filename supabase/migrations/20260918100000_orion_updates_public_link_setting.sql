@@ -4,13 +4,13 @@ CREATE TABLE IF NOT EXISTS public.orion_update_settings (
   id INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
   public_enabled BOOLEAN NOT NULL DEFAULT true,
   maintenance_title VARCHAR(200) NOT NULL DEFAULT 'Estamos em manutenção',
-  maintenance_message TEXT NOT NULL DEFAULT 'A Central de Atualizações Orion está passando por melhorias no momento. Voltaremos em breve.',
+  maintenance_message TEXT NOT NULL DEFAULT 'O Orion Blog está passando por melhorias no momento. Voltaremos em breve.',
   updated_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 INSERT INTO public.orion_update_settings (id, public_enabled, maintenance_title, maintenance_message)
-VALUES (1, true, 'Estamos em manutenção', 'A Central de Atualizações Orion está passando por melhorias no momento. Voltaremos em breve.')
+VALUES (1, true, 'Estamos em manutenção', 'O Orion Blog está passando por melhorias no momento. Voltaremos em breve.')
 ON CONFLICT (id) DO NOTHING;
 
 ALTER TABLE public.orion_update_settings ENABLE ROW LEVEL SECURITY;
@@ -70,7 +70,7 @@ BEGIN
   SET
     public_enabled = p_public_enabled,
     maintenance_title = COALESCE(NULLIF(btrim(p_maintenance_title), ''), 'Estamos em manutenção'),
-    maintenance_message = COALESCE(NULLIF(btrim(p_maintenance_message), ''), 'A Central de Atualizações Orion está passando por melhorias no momento. Voltaremos em breve.'),
+    maintenance_message = COALESCE(NULLIF(btrim(p_maintenance_message), ''), 'O Orion Blog está passando por melhorias no momento. Voltaremos em breve.'),
     updated_by = auth.uid(),
     updated_at = now()
   WHERE id = 1;

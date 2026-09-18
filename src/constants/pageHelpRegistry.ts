@@ -2512,9 +2512,9 @@ export const pageHelpData: PageHelpInfo[] = [
   },
   {
     route: "/atualizacoes",
-    title: "Atualizações Orion",
+    title: "Orion Blog",
     subtitle: "Central de novidades dos produtos Orion",
-    moduleName: "Atualizações Orion",
+    moduleName: "Orion Blog",
     icon: Megaphone,
     description:
       "Centraliza as novidades, melhorias, correções e avisos dos sistemas Orion TN, Orion PRO e Orion REG dentro do Siplan Hub.",
@@ -2542,9 +2542,9 @@ export const pageHelpData: PageHelpInfo[] = [
   },
   {
     route: "/atualizacoes/inicio",
-    title: "Central de Atualizações Orion",
+    title: "Orion Blog",
     subtitle: "Novidades, melhorias e correções por produto",
-    moduleName: "Atualizações Orion",
+    moduleName: "Orion Blog",
     icon: Megaphone,
     description:
       "Apresenta as publicações disponíveis dos produtos Orion, com filtros, leitura detalhada e recursos de engajamento.",
@@ -2580,9 +2580,9 @@ export const pageHelpData: PageHelpInfo[] = [
   },
   {
     route: "/atualizacoes/gestao",
-    title: "Gestão de Publicações Orion",
+    title: "Gestão do Orion Blog",
     subtitle: "Produção e acompanhamento das atualizações",
-    moduleName: "Atualizações Orion",
+    moduleName: "Orion Blog",
     icon: Settings2,
     description:
       "Permite criar versões e publicações, salvar rascunhos, agendar ou publicar conteúdo e acompanhar resultados.",

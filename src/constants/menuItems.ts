@@ -437,7 +437,7 @@ export const menuItems: MenuItem[] = [
         ],
     },
     {
-        title: "Atualizações Orion",
+        title: "Orion Blog",
         icon: Newspaper,
         path: "/atualizacoes",
         description: "Novidades, melhorias, correções e avisos dos sistemas Orion",
