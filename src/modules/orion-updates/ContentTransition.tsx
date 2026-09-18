@@ -39,7 +39,7 @@ export function ContentTransition({ pending = false, contentKey, children, label
 
   return <div ref={region} className="content-transition" tabIndex={-1} aria-busy={pending}
     data-pending={pending} style={pending && height.current ? { minHeight: height.current } : undefined}>
-    <div ref={content} className="content-transition-body" inert={pending} aria-hidden={pending || undefined}>
+    <div ref={content} className="content-transition-body" inert={pending ? "true" : undefined} aria-hidden={pending || undefined}>
       {pending ? (retain && previous.current) || <LoadingPlaceholder /> : children}
     </div>
     {pending && <span className="content-transition-status" role="status"><span aria-hidden="true" />{label}</span>}
