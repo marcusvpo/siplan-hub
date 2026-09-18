@@ -2695,8 +2695,8 @@
     "semantic_hash": ""
   },
   "src/hooks/useChamados0800.ts": {
-    "mtime": 1789398304.7056463,
-    "ast_hash": "bf35789725dc38ea0837dce73fa68396",
+    "mtime": 1789761123.89209,
+    "ast_hash": "56df3a2dde83120d22674eb63c398438",
     "semantic_hash": ""
   },
   "supabase/migrations/20260716120000_chamados_0800_mirror.sql": {
@@ -2705,8 +2705,8 @@
     "semantic_hash": ""
   },
   "vm-worker/src/chamadosSync.ts": {
-    "mtime": 1789152452.184747,
-    "ast_hash": "5628463006142761f27fecefd4ac9d52",
+    "mtime": 1789761123.948842,
+    "ast_hash": "18ecfe9a9ea578936453f04c13b8a21c",
     "semantic_hash": ""
   },
   "docs/PERMISSOES_RBAC.md": {
@@ -2885,8 +2885,8 @@
     "semantic_hash": ""
   },
   "src/pages/DeploymentsTickets.tsx": {
-    "mtime": 1789156572.0534763,
-    "ast_hash": "04434d7bead587596d49517532853baa",
+    "mtime": 1789761055.606642,
+    "ast_hash": "5836c8e9a3182720cdbd16a41ae3d21b",
     "semantic_hash": ""
   },
   "src/utils/adherence-helpers.ts": {
@@ -3225,8 +3225,8 @@
     "semantic_hash": ""
   },
   "src/lib/chamados-catalog.ts": {
-    "mtime": 1787930496.2504277,
-    "ast_hash": "c97c8278423b180168cabfda7e1ab373",
+    "mtime": 1789761055.6191852,
+    "ast_hash": "89c3fc3d7e7f2379d6754a677de6e344",
     "semantic_hash": ""
   },
   "src/lib/chamados-date-range.ts": {
@@ -3235,8 +3235,8 @@
     "semantic_hash": ""
   },
   "src/lib/chamados-product-filter.ts": {
-    "mtime": 1786361797.0064883,
-    "ast_hash": "688d11a6b549a36b5e5df40d6f18a4e0",
+    "mtime": 1789761123.9031477,
+    "ast_hash": "3a187880f93ea7ee7c81a9310c4e0149",
     "semantic_hash": ""
   },
   "src/lib/chamados-report-pdf.ts": {
@@ -3465,8 +3465,8 @@
     "semantic_hash": ""
   },
   "src/test/chamados-client-options-migration.test.ts": {
-    "mtime": 1787084496.964806,
-    "ast_hash": "3a533ac0c23fb89880baa6c32fd10f04",
+    "mtime": 1789761332.6428983,
+    "ast_hash": "39a7b6c69cd4e9f0b02482a5f47d827e",
     "semantic_hash": ""
   },
   "src/test/chamados-date-range.test.ts": {
@@ -3480,8 +3480,8 @@
     "semantic_hash": ""
   },
   "src/test/chamados-product-filter.test.ts": {
-    "mtime": 1786361797.297628,
-    "ast_hash": "78368b24604ae286f80b36f9486e595f",
+    "mtime": 1789761055.6357694,
+    "ast_hash": "da9a411ee599ac8279e3449128b8dd52",
     "semantic_hash": ""
   },
   "src/test/chamados-status.test.ts": {
@@ -4735,8 +4735,8 @@
     "semantic_hash": ""
   },
   "src/constants/pageHelpRegistry.ts": {
-    "mtime": 1789739668.4710486,
-    "ast_hash": "aa71e3ff6533bb943052f52e1bef243a",
+    "mtime": 1789761055.691086,
+    "ast_hash": "df31b4f93443cf758065608ee41e3c17",
     "semantic_hash": ""
   },
   "src/pages/admin/AdminChangelog.tsx": {
@@ -5965,8 +5965,13 @@
     "semantic_hash": ""
   },
   "supabase/migrations/20260918110000_allow_public_orion_updates_read.sql": {
-    "mtime": 1789754682.4978902,
+    "mtime": 1789754769.3470101,
     "ast_hash": "9beb6a09a0e68817282b4b84ba71c367",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260918120000_expand_chamados_supported_modules.sql": {
+    "mtime": 1789761055.7001588,
+    "ast_hash": "7a3b882a415e39d0c2270166c18c9a61",
     "semantic_hash": ""
   }
 }

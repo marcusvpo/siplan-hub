@@ -115,13 +115,18 @@ const PROCESSO_VENDA_CATALOGS: Record<ProcessoVendaScope, {
                ORDER BY c.DataUltimaEdicaoTramite DESC
              ) AS rn
         FROM plataformaellevo.dbo.vw_ChamadosTodosStatus AS c WITH (NOLOCK)
-        WHERE LTRIM(RTRIM(c.Software)) COLLATE Latin1_General_CI_AI LIKE 'Orion%'
+        WHERE (
+            LTRIM(RTRIM(c.Software)) COLLATE Latin1_General_CI_AI LIKE 'Orion%'
+            OR LTRIM(RTRIM(c.Software)) COLLATE Latin1_General_CI_AI LIKE 'LCW%'
+            OR LTRIM(RTRIM(c.Software)) COLLATE Latin1_General_CI_AI LIKE 'SGA%'
+            OR LTRIM(RTRIM(c.Software)) COLLATE Latin1_General_CI_AI LIKE 'Siplan%NFSe%'
+          )
           AND c.DataAberturaChamadoComHoras >= @startDate
           AND c.DataAberturaChamadoComHoras < DATEADD(DAY, 1, @endDate)
       ) AS current_chamado
       WHERE rn = 1
-    ) AS chamados_orion`,
-    label: "orion",
+    ) AS chamados_produtos_atuais`,
+    label: "produtos atuais",
     legacy: false,
   },
   processo_venda_legado: {
@@ -298,13 +303,17 @@ function normalizeProcessoVendaFilters(
   };
 }
 
-function getWorkerOrionProductPattern(product?: string | null): string | null {
+function getWorkerProductPattern(product?: string | null): string | null {
   const normalized = (product || "").toLowerCase().replace(/[^a-z0-9]/g, "");
   if (!normalized || normalized === "todos") return null;
   if (normalized === "oriontn") return "orion%tn%";
   if (normalized === "orionpro") return "orion%pro%";
   if (normalized === "orionreg") return "orion%reg%";
-  return "orion%";
+  if (normalized === "lcw") return "lcw%";
+  if (normalized === "sga") return "sga%";
+  if (normalized === "orionged") return "orion%ged%";
+  if (normalized === "siplannfse") return "siplan%nfse%";
+  return null;
 }
 
 // Colunas de chamado da view + dedupe por NumeroChamado (1 linha por chamado).
@@ -622,7 +631,7 @@ async function runProcessoVendaOnce(
         );
       }
     } else {
-      const productPattern = getWorkerOrionProductPattern(filters.product);
+      const productPattern = getWorkerProductPattern(filters.product);
       if (productPattern) {
         chamadoRequest.input("softwarePattern", sql.NVarChar(100), productPattern);
         whereClauses.push(

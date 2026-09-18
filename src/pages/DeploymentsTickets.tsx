@@ -32,8 +32,8 @@ import {
   getDefaultChamadosDateRange,
 } from "@/lib/chamados-date-range";
 import {
-  CHAMADOS_ORION_PRODUCTS,
-  getOrionProductPattern,
+  buildChamadosSoftwareOrFilter,
+  CHAMADOS_PRODUCTS,
 } from "@/lib/chamados-product-filter";
 import {
   CHAMADOS_CATALOG_CONFIG,
@@ -399,7 +399,7 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
           q = q.in("software", selectedLegacySoftware);
         }
       } else {
-        q = q.ilike("software", getOrionProductPattern(produto));
+        q = q.or(buildChamadosSoftwareOrFilter(produto));
       }
 
       if (dataInicio) q = q.gte("data_abertura", dataInicio);
@@ -829,7 +829,7 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
                       <SelectValue placeholder="Selecione o produto" />
                     </SelectTrigger>
                     <SelectContent>
-                      {CHAMADOS_ORION_PRODUCTS.map((option) => (
+                      {CHAMADOS_PRODUCTS.map((option) => (
                         <SelectItem key={option.value} value={option.value}>
                           {option.label}
                         </SelectItem>
