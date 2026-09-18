@@ -37,6 +37,15 @@ describe("SLA oficial da Consulta de Chamados", () => {
     expect(worker).not.toMatch(/\b(?:UPDATE|INSERT|DELETE)\s+plataformaellevo\b/i);
   });
 
+  it("sincroniza trâmites mesmo quando a descrição está vazia", () => {
+    const historyQuery = worker.match(
+      /FROM plataformaellevo\.\.vw_ChamadosTodosStatus_Tramites_Tempos([\s\S]*?)`, control\);/,
+    )?.[1] ?? "";
+
+    expect(historyQuery).toContain("SequenciaTramite IS NOT NULL");
+    expect(historyQuery).not.toContain("descricaotramite");
+  });
+
   it("não oferece parâmetros manuais de SLA na tela", () => {
     expect(slaScreen).toContain("SLA automático do Ellevo");
     expect(slaScreen).toContain("1ª resposta fora");

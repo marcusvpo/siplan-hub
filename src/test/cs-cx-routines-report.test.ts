@@ -61,6 +61,20 @@ describe("relatórios de rotinas CS/CX", () => {
     expect(await zip.file("xl/worksheets/sheet1.xml")?.async("string")).toContain("A &lt; B");
   });
 
+  it("compacta o arquivo e sinaliza textos que excedem o limite do Excel", async () => {
+    const oversizedText = "A".repeat(40_000);
+    const bytes = await buildXlsxWorkbook([{
+      name: "Textos longos",
+      rows: [["Descrição"], [oversizedText]],
+    }]);
+    const zip = await JSZip.loadAsync(bytes);
+    const worksheet = await zip.file("xl/worksheets/sheet1.xml")?.async("string");
+
+    expect(bytes.byteLength).toBeLessThan(15_000);
+    expect(worksheet).toContain("[Conteúdo truncado no limite da célula do Excel]");
+    expect(worksheet).not.toContain(oversizedText);
+  });
+
   it("concede somente leitura de relatórios nas tabelas de rotinas", () => {
     const migration = readFileSync(resolve(process.cwd(), "supabase/migrations/20260812105000_cs_cx_routine_reports.sql"), "utf8");
     expect(migration).toContain("has_permission(auth.uid(), 'cs_cx_reports', 'view')");

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -7,10 +7,12 @@ import {
   isProcessoVendaSyncSupersededError,
   fetchAllChamados,
   fetchAllChamadosForReport,
+  fetchChamadosTramites,
   Chamado0800,
   useChamadosClientOptions,
   useChamadosAssignmentOptions,
   type ChamadosClientOption,
+  type ChamadosSearchFilters,
   type ProcessoVendaSyncFilters,
 } from "@/hooks/useChamados0800";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -24,7 +26,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Chamado0800DetailDialog, fmtDateBr, statusBadgeClass } from "@/components/ProjectManagement/Chamado0800DetailDialog";
 import { 
-  ClipboardList, CalendarDays, Filter, X, ChevronLeft, ChevronRight, ChevronsUpDown, Check, Eye, FileDown, Loader2, BarChart3, Timer, Building2
+  ClipboardList, CalendarDays, Filter, X, ChevronLeft, ChevronRight, ChevronsUpDown, Check, Eye, FileDown, FileSpreadsheet, Loader2, BarChart3, Timer, Building2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { normalizeSearchText } from "@/utils/normalize-search";
@@ -43,7 +45,10 @@ import {
   type ChamadosCatalog,
 } from "@/lib/chamados-catalog";
 import { CHAMADO_STATUS_OPTIONS } from "@/lib/chamados-status";
-import { generateChamadosReportPdf } from "@/lib/chamados-report-pdf";
+import {
+  generateChamadosReportPdf,
+  type ChamadosReportFilters,
+} from "@/lib/chamados-report-pdf";
 import {
   generateTicketsAiAnalysisPdf,
   type TicketsAiReportAnalysis,
@@ -188,8 +193,11 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
   const [clientSearchOpen, setClientSearchOpen] = useState(false);
   const [statusSearchOpen, setStatusSearchOpen] = useState(false);
   const [generatingPdf, setGeneratingPdf] = useState(false);
+  const [generatingAnalyticalReport, setGeneratingAnalyticalReport] = useState(false);
   const [activeView, setActiveView] = useState<"list" | "analysis" | "sla" | "sla-sector">("list");
-  const [analysisResult, setAnalysisResult] = useState<TicketsAiReportAnalysis | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<(
+    TicketsAiReportAnalysis & { filterKey: string }
+  ) | null>(null);
   const [syncSnapshot, setSyncSnapshot] = useState<{
     key: string;
     syncedAt: number;
@@ -316,6 +324,12 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
     () => JSON.stringify([catalog, dataInicio, dataFim, syncFilters]),
     [catalog, dataInicio, dataFim, syncFilters]
   );
+  const currentAnalysisResult = analysisResult?.filterKey === filterSyncKey
+    ? analysisResult
+    : null;
+  const handleAnalysisResultChange = useCallback((result: TicketsAiReportAnalysis | null) => {
+    setAnalysisResult(result ? { ...result, filterKey: filterSyncKey } : null);
+  }, [filterSyncKey]);
 
   useEffect(() => {
     if (!dataInicio || !dataFim || dataInicio > dataFim) return;
@@ -428,8 +442,7 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
       ? syncSnapshot.ticketNumbers
       : null;
 
-  // Query principal dos chamados usando o hook recém-criado
-  const { chamados, totalCount, isLoading, error } = useChamadosSearch({
+  const currentSearchFilters = useMemo<Omit<ChamadosSearchFilters, "page" | "pageSize">>(() => ({
     catalog,
     startDate: dataInicio || null,
     endDate: dataFim || null,
@@ -444,6 +457,54 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
     searchTerms: searchKeywords.length > 0 ? searchKeywords : null,
     statuses: selectedStatuses.length > 0 ? selectedStatuses : null,
     ticketNumbers: syncedTicketNumbers,
+  }), [
+    catalog,
+    dataFim,
+    dataInicio,
+    isLegacy,
+    natureza,
+    produto,
+    searchKeywords,
+    selectedAnalysts,
+    selectedClientCodes,
+    selectedClientFilterNames,
+    selectedGroups,
+    selectedLegacyProducts,
+    selectedLegacySoftware,
+    selectedStatuses,
+    syncedTicketNumbers,
+  ]);
+  const currentReportFilters = useMemo<ChamadosReportFilters>(() => ({
+    catalog,
+    startDate: dataInicio,
+    endDate: dataFim,
+    clients: selectedClients,
+    product: produto,
+    products: selectedLegacyProducts,
+    softwares: selectedLegacySoftware,
+    groups: selectedGroups,
+    analysts: selectedAnalysts,
+    nature: natureza,
+    statuses: selectedStatuses,
+    searchTerm: searchFilterLabel,
+  }), [
+    catalog,
+    dataFim,
+    dataInicio,
+    natureza,
+    produto,
+    searchFilterLabel,
+    selectedAnalysts,
+    selectedClients,
+    selectedGroups,
+    selectedLegacyProducts,
+    selectedLegacySoftware,
+    selectedStatuses,
+  ]);
+
+  // Query principal dos chamados usando o hook recém-criado
+  const { chamados, totalCount, isLoading, error } = useChamadosSearch({
+    ...currentSearchFilters,
     page,
     pageSize,
   });
@@ -529,10 +590,35 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
     setPage(1);
   };
 
-  const handleGeneratePdf = async () => {
-    if (generatingPdf || !dataInicio || !dataFim || dataInicio > dataFim) return;
+  const prepareReportTicketNumbers = async (toastId: string) => {
+    let cached = syncedQueries.current.get(filterSyncKey);
 
-    if (activeView === "analysis" && !analysisResult) {
+    if (!cached || Date.now() - cached.syncedAt >= FILTER_SYNC_FRESHNESS_MS) {
+      toast.loading("Atualizando os dados do relatório...", { id: toastId });
+      const result = await solicitarSyncPeriodo(dataInicio, dataFim, syncFilters);
+      cached = {
+        syncedAt: Date.now(),
+        ticketNumbers: result.ticketNumbers,
+      };
+      syncedQueries.current.set(filterSyncKey, cached);
+      setSyncSnapshot({ key: filterSyncKey, ...cached });
+    }
+
+    return cached.ticketNumbers.length <= MAX_SYNC_SNAPSHOT_TICKETS
+      ? cached.ticketNumbers
+      : null;
+  };
+
+  const handleGeneratePdf = async () => {
+    if (
+      generatingPdf ||
+      generatingAnalyticalReport ||
+      !dataInicio ||
+      !dataFim ||
+      dataInicio > dataFim
+    ) return;
+
+    if (activeView === "analysis" && !currentAnalysisResult) {
       toast.info("Gere as considerações da IA antes de emitir o relatório da análise.");
       return;
     }
@@ -540,23 +626,7 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
     setGeneratingPdf(true);
     try {
       const toastId = activeView === "analysis" ? "tickets-ai-report-pdf" : "chamados-report-pdf";
-      let reportTicketNumbers: string[] | null = null;
-      let cached = syncedQueries.current.get(filterSyncKey);
-
-      if (!cached || Date.now() - cached.syncedAt >= FILTER_SYNC_FRESHNESS_MS) {
-        toast.loading("Atualizando os dados do relatório...", { id: toastId });
-        const result = await solicitarSyncPeriodo(dataInicio, dataFim, syncFilters);
-        cached = {
-          syncedAt: Date.now(),
-          ticketNumbers: result.ticketNumbers,
-        };
-        syncedQueries.current.set(filterSyncKey, cached);
-        setSyncSnapshot({ key: filterSyncKey, ...cached });
-      }
-
-      if (cached.ticketNumbers.length <= MAX_SYNC_SNAPSHOT_TICKETS) {
-        reportTicketNumbers = cached.ticketNumbers;
-      }
+      const reportTicketNumbers = await prepareReportTicketNumbers(toastId);
 
       toast.loading(
         activeView === "analysis"
@@ -565,34 +635,8 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
         { id: toastId }
       );
 
-      const reportFilters = {
-        catalog,
-        startDate: dataInicio,
-        endDate: dataFim,
-        clients: selectedClients,
-        product: produto,
-        products: selectedLegacyProducts,
-        softwares: selectedLegacySoftware,
-        groups: selectedGroups,
-        analysts: selectedAnalysts,
-        nature: natureza,
-        statuses: selectedStatuses,
-        searchTerm: searchFilterLabel,
-      };
       const reportSearchFilters = {
-        catalog,
-        startDate: dataInicio,
-        endDate: dataFim,
-        clientCodes: selectedClientCodes.length > 0 ? selectedClientCodes : null,
-        clientNames: selectedClientFilterNames.length > 0 ? selectedClientFilterNames : null,
-        product: produto,
-        products: isLegacy && selectedLegacyProducts.length > 0 ? selectedLegacyProducts : null,
-        softwares: isLegacy && selectedLegacySoftware.length > 0 ? selectedLegacySoftware : null,
-        groups: selectedGroups.length > 0 ? selectedGroups : null,
-        analysts: selectedAnalysts.length > 0 ? selectedAnalysts : null,
-        nature: natureza,
-        searchTerms: searchKeywords.length > 0 ? searchKeywords : null,
-        statuses: selectedStatuses.length > 0 ? selectedStatuses : null,
+        ...currentSearchFilters,
         ticketNumbers: reportTicketNumbers,
       };
 
@@ -602,7 +646,11 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
           toast.info("Nenhum chamado encontrado para gerar o relatório.", { id: toastId });
           return;
         }
-        await generateTicketsAiAnalysisPdf(reportRows, reportFilters, analysisResult as TicketsAiReportAnalysis);
+        await generateTicketsAiAnalysisPdf(
+          reportRows,
+          currentReportFilters,
+          currentAnalysisResult as TicketsAiReportAnalysis,
+        );
         toast.success(`Relatório de análise gerado com ${reportRows.length} chamado(s).`, {
           id: toastId,
         });
@@ -618,7 +666,7 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
         return;
       }
 
-      await generateChamadosReportPdf(reportRows, reportFilters);
+      await generateChamadosReportPdf(reportRows, currentReportFilters);
       toast.success(`Relatório gerado com ${reportRows.length} chamado(s).`, {
         id: toastId,
       });
@@ -630,6 +678,74 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
       );
     } finally {
       setGeneratingPdf(false);
+    }
+  };
+
+  const handleGenerateAnalyticalReport = async () => {
+    if (
+      generatingAnalyticalReport ||
+      generatingPdf ||
+      !dataInicio ||
+      !dataFim ||
+      dataInicio > dataFim
+    ) return;
+
+    const toastId = "chamados-analytical-xlsx";
+    setGeneratingAnalyticalReport(true);
+    try {
+      const reportTicketNumbers = await prepareReportTicketNumbers(toastId);
+      toast.loading("Buscando todos os chamados do filtro...", { id: toastId });
+      const reportRows = await fetchAllChamados({
+        ...currentSearchFilters,
+        ticketNumbers: reportTicketNumbers,
+      });
+
+      if (reportRows.length === 0) {
+        toast.info("Nenhum chamado encontrado para gerar o relatório analítico.", {
+          id: toastId,
+        });
+        return;
+      }
+
+      toast.loading(
+        `Carregando o histórico completo de ${reportRows.length} chamado(s)...`,
+        { id: toastId },
+      );
+      const tramitesPorChamado = await fetchChamadosTramites(
+        reportRows.map((chamado) => chamado.numeroChamado),
+      );
+      const totalTramites = [...tramitesPorChamado.values()]
+        .reduce((total, tramites) => total + tramites.length, 0);
+
+      const largeReport = reportRows.length > 10_000 || totalTramites > 100_000;
+      toast.loading(largeReport
+        ? "Relatório grande: compactando as abas; isso pode levar alguns minutos..."
+        : "Montando a planilha, as abas de SLA e os gráficos...", {
+        id: toastId,
+      });
+      const { generateChamadosAnalyticalXlsx } = await import(
+        "@/lib/chamados-analytical-xlsx"
+      );
+      await generateChamadosAnalyticalXlsx(
+        reportRows,
+        tramitesPorChamado,
+        currentReportFilters,
+        { aiAnalysis: currentAnalysisResult },
+      );
+      toast.success(
+        `Relatório analítico gerado com ${reportRows.length} chamado(s) e ${totalTramites} trâmite(s).`,
+        { id: toastId },
+      );
+    } catch (error) {
+      console.error("Erro ao gerar relatório analítico de chamados:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível gerar o relatório analítico.",
+        { id: toastId },
+      );
+    } finally {
+      setGeneratingAnalyticalReport(false);
     }
   };
 
@@ -647,14 +763,18 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
           </p>
         </div>
         
-        <div className="flex w-full min-w-0 items-center justify-between gap-1.5 md:w-auto md:justify-end">
+        <div
+          data-testid="tickets-report-actions"
+          className="flex w-full min-w-0 flex-wrap items-center gap-1.5 md:w-auto md:justify-end"
+        >
           {activeView !== "sla" && activeView !== "sla-sector" && (
             <Button
+              type="button"
               variant="outline"
               size="sm"
-              className="h-10 gap-1.5 px-2 text-[10px] sm:h-7"
+              className="h-10 min-w-0 flex-1 gap-1.5 px-2 text-[10px] sm:h-7 sm:flex-none"
               onClick={handleGeneratePdf}
-              disabled={generatingPdf || syncingPeriodo || !dataInicio || !dataFim || dataInicio > dataFim}
+              disabled={generatingPdf || generatingAnalyticalReport || syncingPeriodo || !dataInicio || !dataFim || dataInicio > dataFim}
               title={activeView === "analysis"
                 ? "Gerar PDF executivo com gráficos e parecer da IA"
                 : "Gerar PDF com todos os chamados filtrados"}
@@ -672,8 +792,25 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
             </Button>
           )}
 
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-10 min-w-0 flex-1 gap-1.5 px-2 text-[10px] sm:h-7 sm:flex-none"
+            onClick={handleGenerateAnalyticalReport}
+            disabled={generatingAnalyticalReport || generatingPdf || syncingPeriodo || !dataInicio || !dataFim || dataInicio > dataFim}
+            title="Baixar uma planilha com todos os chamados filtrados, trâmites, SLA e gráficos analíticos"
+          >
+            {generatingAnalyticalReport ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <FileSpreadsheet className="h-3 w-3" />
+            )}
+            {generatingAnalyticalReport ? "Gerando planilha..." : "Relatório analítico"}
+          </Button>
+
           {/* Indicador de Status/Sync rápido */}
-          <Badge variant="outline" className="flex h-6 min-w-0 items-center gap-1.5 px-2 py-0 text-[9px] font-normal text-muted-foreground sm:text-[10px]">
+          <Badge variant="outline" className="flex h-6 w-full min-w-0 items-center justify-center gap-1.5 px-2 py-0 text-[9px] font-normal text-muted-foreground sm:w-auto sm:text-[10px]">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
             <span className="sm:hidden">{syncingPeriodo ? "Sincronizando..." : "Ellevo ativo"}</span>
             <span className="hidden sm:inline">
@@ -1398,22 +1535,7 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
           filterKey={filterSyncKey}
           syncedAt={syncSnapshot?.key === filterSyncKey ? syncSnapshot.syncedAt : undefined}
           syncing={syncingPeriodo}
-          filters={{
-            catalog,
-            startDate: dataInicio || null,
-            endDate: dataFim || null,
-            clientCodes: selectedClientCodes.length > 0 ? selectedClientCodes : null,
-            clientNames: selectedClientFilterNames.length > 0 ? selectedClientFilterNames : null,
-            product: produto,
-            products: isLegacy && selectedLegacyProducts.length > 0 ? selectedLegacyProducts : null,
-            softwares: isLegacy && selectedLegacySoftware.length > 0 ? selectedLegacySoftware : null,
-            groups: selectedGroups.length > 0 ? selectedGroups : null,
-            analysts: selectedAnalysts.length > 0 ? selectedAnalysts : null,
-            nature: natureza,
-            searchTerms: searchKeywords.length > 0 ? searchKeywords : null,
-            statuses: selectedStatuses.length > 0 ? selectedStatuses : null,
-            ticketNumbers: syncedTicketNumbers,
-          }}
+          filters={currentSearchFilters}
           filterDescription={{
             startDate: dataInicio,
             endDate: dataFim,
@@ -1427,7 +1549,7 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
             statuses: selectedStatuses,
             searchTerm: searchFilterLabel,
           }}
-          onAnalysisResultChange={setAnalysisResult}
+          onAnalysisResultChange={handleAnalysisResultChange}
         />
       ) : activeView === "sla" ? (
         <TicketsSlaAnalysis
@@ -1435,36 +1557,8 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
           filterKey={filterSyncKey}
           syncedAt={syncSnapshot?.key === filterSyncKey ? syncSnapshot.syncedAt : undefined}
           syncing={syncingPeriodo}
-          filters={{
-            catalog,
-            startDate: dataInicio || null,
-            endDate: dataFim || null,
-            clientCodes: selectedClientCodes.length > 0 ? selectedClientCodes : null,
-            clientNames: selectedClientFilterNames.length > 0 ? selectedClientFilterNames : null,
-            product: produto,
-            products: isLegacy && selectedLegacyProducts.length > 0 ? selectedLegacyProducts : null,
-            softwares: isLegacy && selectedLegacySoftware.length > 0 ? selectedLegacySoftware : null,
-            groups: selectedGroups.length > 0 ? selectedGroups : null,
-            analysts: selectedAnalysts.length > 0 ? selectedAnalysts : null,
-            nature: natureza,
-            searchTerms: searchKeywords.length > 0 ? searchKeywords : null,
-            statuses: selectedStatuses.length > 0 ? selectedStatuses : null,
-            ticketNumbers: syncedTicketNumbers,
-          }}
-          reportFilters={{
-            catalog,
-            startDate: dataInicio,
-            endDate: dataFim,
-            clients: selectedClients,
-            product: produto,
-            products: selectedLegacyProducts,
-            softwares: selectedLegacySoftware,
-            groups: selectedGroups,
-            analysts: selectedAnalysts,
-            nature: natureza,
-            statuses: selectedStatuses,
-            searchTerm: searchFilterLabel,
-          }}
+          filters={currentSearchFilters}
+          reportFilters={currentReportFilters}
         />
       ) : (
         <TicketsSlaSectorAnalysis
@@ -1472,22 +1566,7 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
           filterKey={filterSyncKey}
           syncedAt={syncSnapshot?.key === filterSyncKey ? syncSnapshot.syncedAt : undefined}
           syncing={syncingPeriodo}
-          filters={{
-            catalog,
-            startDate: dataInicio || null,
-            endDate: dataFim || null,
-            clientCodes: selectedClientCodes.length > 0 ? selectedClientCodes : null,
-            clientNames: selectedClientFilterNames.length > 0 ? selectedClientFilterNames : null,
-            product: produto,
-            products: isLegacy && selectedLegacyProducts.length > 0 ? selectedLegacyProducts : null,
-            softwares: isLegacy && selectedLegacySoftware.length > 0 ? selectedLegacySoftware : null,
-            groups: selectedGroups.length > 0 ? selectedGroups : null,
-            analysts: selectedAnalysts.length > 0 ? selectedAnalysts : null,
-            nature: natureza,
-            searchTerms: searchKeywords.length > 0 ? searchKeywords : null,
-            statuses: selectedStatuses.length > 0 ? selectedStatuses : null,
-            ticketNumbers: syncedTicketNumbers,
-          }}
+          filters={currentSearchFilters}
         />
       )}
     </div>

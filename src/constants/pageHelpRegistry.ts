@@ -15,6 +15,7 @@ import {
   Contact,
   Database,
   FileText,
+  FileSpreadsheet,
   FileEdit,
   Cog,
   Bot,
@@ -511,6 +512,7 @@ export const pageHelpData: PageHelpInfo[] = [
       "Filtros combináveis por status, período, grupo, analista e módulos Orion TN, Orion PRO, Orion REG, LCW, SGA, OrionGED e Siplan NFSe",
       "Acesso direto ao histórico do chamado no Ellevo pelo número",
       "Exportação da listagem de chamados encontrados",
+      "Relatório analítico em Excel com chamados, histórico completo de trâmites, SLA, jornada por área e gráficos da Análise de IA",
     ],
     steps: [
       {
@@ -536,10 +538,10 @@ export const pageHelpData: PageHelpInfo[] = [
       },
       {
         stepNumber: 4,
-        title: "Exporte a Lista",
+        title: "Baixe o Relatório Analítico",
         description:
-          "Clique no botão de exportação se precisar gerar um relatório dos chamados listados.",
-        icon: FileText,
+          "Clique em 'Relatório analítico' para baixar todos os chamados do filtro em uma planilha com abas de trâmites, SLA, jornada por área, consolidação por setor e gráficos nativos do Excel.",
+        icon: FileSpreadsheet,
       },
     ],
   },
@@ -557,6 +559,7 @@ export const pageHelpData: PageHelpInfo[] = [
       "Filtros pesquisáveis por grupo e analista responsável",
       "Acesso direto ao histórico do chamado no Ellevo pelo número",
       "Visualização das descrições e soluções aplicadas na época",
+      "Relatório analítico em Excel com chamados, trâmites, SLA e gráficos do acervo filtrado",
     ],
     steps: [
       {
@@ -579,6 +582,13 @@ export const pageHelpData: PageHelpInfo[] = [
         description:
           "Clique no número do chamado para consultar o atendimento correspondente diretamente no Ellevo.",
         icon: Link2,
+      },
+      {
+        stepNumber: 4,
+        title: "Exporte o Acervo Filtrado",
+        description:
+          "Use 'Relatório analítico' para baixar a planilha completa do recorte, incluindo os trâmites e as análises de SLA.",
+        icon: FileSpreadsheet,
       },
     ],
   },

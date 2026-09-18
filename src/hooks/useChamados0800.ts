@@ -15,6 +15,7 @@ import { CHAMADO_STATUS_OPTIONS, isChamadoStatus } from "@/lib/chamados-status";
 
 export interface Chamado0800 {
   numeroChamado: string;
+  codigoCliente?: string;
   nomeCliente?: string;
   solicitante?: string;
   titulo?: string;
@@ -204,6 +205,7 @@ function toIsoDay(value?: Date | string | null): string | undefined {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const mapChamado0800 = (c: any): Chamado0800 => ({
   numeroChamado: c.numero_chamado,
+  codigoCliente: c.codigo_cliente ?? undefined,
   nomeCliente: c.nome_cliente ?? undefined,
   solicitante: c.solicitante ?? undefined,
   titulo: c.titulo ?? undefined,
