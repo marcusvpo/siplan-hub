@@ -508,7 +508,7 @@ export const pageHelpData: PageHelpInfo[] = [
       "Ferramenta de pesquisa detalhada para localizar tickets de atendimento 0800 por protocolo, cliente, sistema, período, grupo responsável ou analista.",
     keyFeatures: [
       "Busca por múltiplas palavras-chave em cliente, protocolo, título ou descrição",
-      "Filtros combináveis por status, produto, período, grupo e analista",
+      "Filtros combináveis por status, período, grupo, analista e módulos Orion TN, Orion PRO, Orion REG, LCW, SGA, OrionGED e Siplan NFSe",
       "Acesso direto ao histórico do chamado no Ellevo pelo número",
       "Exportação da listagem de chamados encontrados",
     ],

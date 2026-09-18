@@ -6,7 +6,7 @@ import {
   LEGACY_PRODUCT_FAMILIES,
   type ChamadosCatalog,
 } from "@/lib/chamados-catalog";
-import { getOrionProductPattern } from "@/lib/chamados-product-filter";
+import { buildChamadosSoftwareOrFilter } from "@/lib/chamados-product-filter";
 import {
   buildChamadosKeywordOrFilter,
   resolveChamadosSearchKeywords,
@@ -80,7 +80,7 @@ export function useChamadosClientOptions(catalog: ChamadosCatalog = "orion") {
   const isLegacy = catalog === "legacy";
 
   return useQuery<ChamadosClientOption[]>({
-    queryKey: ["chamadosClientOptions", catalog, "catalog-v1"],
+    queryKey: ["chamadosClientOptions", catalog, "catalog-v2"],
     queryFn: async () => {
       try {
         const { data, error } = await supabase.rpc(
@@ -107,7 +107,7 @@ export function useChamadosClientOptions(catalog: ChamadosCatalog = "orion") {
         let query = supabase.from("chamados_processo_venda").select("nome_cliente");
         query = isLegacy
           ? query.in("produto", [...LEGACY_PRODUCT_FAMILIES])
-          : query.ilike("software", getOrionProductPattern("todos"));
+          : query.or(buildChamadosSoftwareOrFilter("todos"));
         const { data, error } = await query;
         if (!error && data) {
           const names = data
@@ -918,7 +918,7 @@ function createChamadosSearchQuery(
     );
     if (softwares && softwares.length > 0) q = q.in("software", softwares);
   } else {
-    q = q.ilike("software", getOrionProductPattern(product));
+    q = q.or(buildChamadosSoftwareOrFilter(product));
   }
   if (nature && nature !== "todas") q = q.eq("natureza", nature);
   if (groups && groups.length > 0) q = q.in("equipe_responsavel", groups);

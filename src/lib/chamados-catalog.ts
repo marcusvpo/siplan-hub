@@ -1,6 +1,6 @@
 import {
-  formatOrionProductLabel,
-  getOrionProductPattern,
+  formatChamadosProductLabel as formatSupportedProductLabel,
+  getChamadosProductPatterns,
 } from "@/lib/chamados-product-filter";
 
 export type ChamadosCatalog = "orion" | "legacy";
@@ -79,7 +79,7 @@ export const CHAMADOS_CATALOG_CONFIG = {
   orion: {
     title: "Consulta de Chamados (Ellevo/0800)",
     description: "Pesquise e consulte o histórico de chamados sincronizados do Ellevo de forma global e consolidada.",
-    allProductsLabel: "Todos os produtos Orion",
+    allProductsLabel: "Todos os produtos / módulos",
     permission: "chamados_query",
     route: "/deployments/tickets",
     syncRpc: "request_processo_venda_sync",
@@ -98,7 +98,7 @@ export function formatChamadosProductLabel(
   product: string | null | undefined,
   catalog: ChamadosCatalog = "orion",
 ): string {
-  if (catalog === "orion") return formatOrionProductLabel(product);
+  if (catalog === "orion") return formatSupportedProductLabel(product);
   return product?.trim() || "—";
 }
 
@@ -119,10 +119,10 @@ export function isLegacyFamily(value: string | null | undefined): boolean {
   );
 }
 
-export function getCatalogSoftwarePattern(
+export function getCatalogSoftwarePatterns(
   product: string | null | undefined,
   catalog: ChamadosCatalog,
-): string | null {
-  if (catalog === "orion") return getOrionProductPattern(product);
-  return product && product !== "todos" ? product : null;
+): readonly string[] {
+  if (catalog === "orion") return getChamadosProductPatterns(product);
+  return product && product !== "todos" ? [product] : [];
 }
