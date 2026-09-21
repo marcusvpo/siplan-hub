@@ -40,18 +40,49 @@ export function parseArticleFrontmatter(frontmatterRaw: string): KnowledgeArticl
     let video: BunnyVideoMetadata | undefined;
     if (loaded.video && typeof loaded.video === "object") {
       const v = loaded.video as Record<string, unknown>;
+      const rawSec = v.video_start_seconds;
+      let startSec: number | undefined;
+      if (typeof rawSec === "number" && !isNaN(rawSec)) {
+        startSec = rawSec;
+      } else if (rawSec !== undefined && rawSec !== null && String(rawSec).trim() !== "") {
+        const parsed = parseInt(String(rawSec), 10);
+        startSec = isNaN(parsed) ? undefined : parsed;
+      }
+
+      let rawTs =
+        v.video_timestamp !== undefined && v.video_timestamp !== null
+          ? String(v.video_timestamp).trim()
+          : undefined;
+
+      // Se video_start_seconds existe mas video_timestamp não, derivar
+      if (startSec !== undefined && !rawTs) {
+        rawTs = formatSecondsToTimestamp(startSec);
+      }
+      // Se video_timestamp existe mas video_start_seconds não, derivar
+      if (rawTs && startSec === undefined) {
+        startSec = parseTimestampToSeconds(rawTs);
+      }
+
+      const libId = v.bunny_library_id ? String(v.bunny_library_id).trim() : undefined;
+      const vidId = v.bunny_video_id ? String(v.bunny_video_id).trim() : undefined;
+      let videoUrl = v.video_url ? String(v.video_url).trim() : undefined;
+      if (!videoUrl && libId && vidId) {
+        videoUrl = `https://iframe.mediadelivery.net/embed/${libId}/${vidId}?t=${startSec || 0}`;
+      }
+
       video = {
         tem_video: Boolean(v.tem_video),
-        bunny_library_id: v.bunny_library_id ? String(v.bunny_library_id).trim() : undefined,
-        bunny_video_id: v.bunny_video_id ? String(v.bunny_video_id).trim() : undefined,
+        bunny_library_id: libId,
+        bunny_video_id: vidId,
         video_title: v.video_title ? String(v.video_title).trim() : undefined,
-        video_url: v.video_url ? String(v.video_url).trim() : undefined,
-        video_timestamp: v.video_timestamp ? String(v.video_timestamp).trim() : undefined,
-        video_start_seconds: typeof v.video_start_seconds === "number" ? v.video_start_seconds : undefined,
+        video_url: videoUrl,
+        video_timestamp: rawTs,
+        video_start_seconds: startSec,
       };
     }
 
     return {
+      ...loaded,
       id,
       titulo,
       tags,
@@ -59,7 +90,6 @@ export function parseArticleFrontmatter(frontmatterRaw: string): KnowledgeArticl
       sinonimos,
       perguntas_usuario,
       video,
-      ...loaded,
     };
   } catch {
     // Fallback por regex robusto caso o YAML contenha chaves duplicadas ou sintaxe atípica
@@ -92,12 +122,23 @@ export function parseArticleFrontmatter(frontmatterRaw: string): KnowledgeArticl
     let video: BunnyVideoMetadata | undefined;
     if (frontmatterRaw.includes("video:")) {
       const temVideo = /tem_video:\s*true/i.test(frontmatterRaw);
-      const bunnyLibraryId = frontmatterRaw.match(/bunny_library_id:\s*"?([^"\r\n]+)"?/)?.[1];
-      const bunnyVideoId = frontmatterRaw.match(/bunny_video_id:\s*"?([^"\r\n]+)"?/)?.[1];
-      const videoTitle = frontmatterRaw.match(/video_title:\s*"?([^"\r\n]+)"?/)?.[1];
-      const videoUrl = frontmatterRaw.match(/video_url:\s*"?([^"\r\n]+)"?/)?.[1];
-      const videoTimestamp = frontmatterRaw.match(/video_timestamp:\s*"?([^"\r\n]+)"?/)?.[1];
+      const bunnyLibraryId = frontmatterRaw.match(/bunny_library_id:\s*"?([^"\r\n]+)"?/)?.[1]?.trim();
+      const bunnyVideoId = frontmatterRaw.match(/bunny_video_id:\s*"?([^"\r\n]+)"?/)?.[1]?.trim();
+      const videoTitle = frontmatterRaw.match(/video_title:\s*"?([^"\r\n]+)"?/)?.[1]?.trim();
+      let videoUrl = frontmatterRaw.match(/video_url:\s*"?([^"\r\n]+)"?/)?.[1]?.trim();
+      let videoTimestamp = frontmatterRaw.match(/video_timestamp:\s*"?([^"\r\n]+)"?/)?.[1]?.trim();
       const startSecMatch = frontmatterRaw.match(/video_start_seconds:\s*(\d+)/);
+      let startSec = startSecMatch ? parseInt(startSecMatch[1], 10) : undefined;
+
+      if (startSec !== undefined && !videoTimestamp) {
+        videoTimestamp = formatSecondsToTimestamp(startSec);
+      }
+      if (videoTimestamp && startSec === undefined) {
+        startSec = parseTimestampToSeconds(videoTimestamp);
+      }
+      if (!videoUrl && bunnyLibraryId && bunnyVideoId) {
+        videoUrl = `https://iframe.mediadelivery.net/embed/${bunnyLibraryId}/${bunnyVideoId}?t=${startSec || 0}`;
+      }
 
       video = {
         tem_video: temVideo,
@@ -106,7 +147,7 @@ export function parseArticleFrontmatter(frontmatterRaw: string): KnowledgeArticl
         video_title: videoTitle,
         video_url: videoUrl,
         video_timestamp: videoTimestamp,
-        video_start_seconds: startSecMatch ? parseInt(startSecMatch[1], 10) : undefined,
+        video_start_seconds: startSec,
       };
     }
 
@@ -542,4 +583,21 @@ export function parseTimestampToSeconds(ts: string): number {
   }
   return 0;
 }
+
+/**
+ * Converte segundos inteiros para formato textual MM:SS ou HH:MM:SS.
+ */
+export function formatSecondsToTimestamp(seconds?: number | null): string {
+  if (seconds === undefined || seconds === null || isNaN(seconds) || seconds < 0) {
+    return "00:00";
+  }
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+  if (h > 0) {
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  }
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
 

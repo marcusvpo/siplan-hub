@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -353,6 +355,28 @@ export default function KnowledgeEditorPage() {
                 {versions.length}
               </Badge>
             )}
+          </Button>
+
+          {/* Botão Recarregar Base do Supabase Storage */}
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={async () => {
+              try {
+                await refetch();
+                toast.success("Base de conhecimento recarregada do Supabase Storage!");
+              } catch (err: any) {
+                toast.error("Erro ao recarregar a base de conhecimento", {
+                  description: err?.message,
+                });
+              }
+            }}
+            disabled={isFetching}
+            className="h-9 w-9 text-muted-foreground hover:text-foreground shrink-0"
+            title="Recarregar arquivo mestre do Supabase Storage"
+          >
+            <RotateCw className={cn("h-4 w-4", isFetching && "animate-spin")} />
           </Button>
 
           {/* Histórico de Última Modificação */}

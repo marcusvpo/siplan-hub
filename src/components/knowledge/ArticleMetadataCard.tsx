@@ -14,7 +14,13 @@ import {
   Trash2,
   AlertTriangle,
   Loader2,
+  Copy,
+  Clock,
+  Film,
+  Link2,
 } from "lucide-react";
+import { toast } from "sonner";
+import { parseTimestampToSeconds } from "@/services/markdownKnowledgeService";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -237,20 +243,128 @@ export function ArticleMetadataCard({
 
                   {/* Detalhes Técnicos do Bunny.net */}
                   {hasVideo && metadata.video && (
-                    <div className="space-y-1 md:col-span-2 pt-2 border-t border-border/40 text-[11px] text-muted-foreground font-mono">
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-                        <span>
-                          <strong className="text-foreground">Bunny Library:</strong>{" "}
-                          {metadata.video.bunny_library_id || "N/A"}
+                    <div className="space-y-2.5 md:col-span-2 pt-3 border-t border-border/40 text-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-foreground flex items-center gap-1.5">
+                          <Film className="h-3.5 w-3.5 text-rose-500" />
+                          Metadados do Vídeo Tutorial (Bunny.net):
                         </span>
-                        <span>
-                          <strong className="text-foreground">Video GUID:</strong>{" "}
-                          {metadata.video.bunny_video_id || "N/A"}
-                        </span>
-                        <span>
-                          <strong className="text-foreground">Duração:</strong>{" "}
-                          {metadata.video.video_timestamp || "00:00"}
-                        </span>
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] font-semibold border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 gap-1"
+                        >
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                          tem_video: {metadata.video.tem_video ? "true" : "false"}
+                        </Badge>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-[11px] font-mono">
+                        {/* Título do Vídeo */}
+                        <div className="col-span-1 sm:col-span-2 lg:col-span-3 rounded-md bg-muted/40 border border-border/40 p-2 flex flex-col gap-0.5">
+                          <span className="text-[10px] font-sans font-semibold text-muted-foreground uppercase tracking-wider">
+                            Título Oficial do Vídeo (video_title)
+                          </span>
+                          <span className="font-sans font-medium text-foreground text-xs">
+                            {metadata.video.video_title || metadata.titulo || "Vídeo Tutorial"}
+                          </span>
+                        </div>
+
+                        {/* Bunny Library ID */}
+                        <div className="rounded-md bg-muted/40 border border-border/40 p-2 flex flex-col gap-0.5">
+                          <span className="text-[10px] font-sans font-semibold text-muted-foreground uppercase tracking-wider">
+                            Library ID (bunny_library_id)
+                          </span>
+                          <span className="text-foreground font-semibold">
+                            {metadata.video.bunny_library_id || "467408"}
+                          </span>
+                        </div>
+
+                        {/* Bunny Video ID (GUID) */}
+                        <div className="rounded-md bg-muted/40 border border-border/40 p-2 flex flex-col gap-0.5 relative group">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-sans font-semibold text-muted-foreground uppercase tracking-wider">
+                              Video GUID (bunny_video_id)
+                            </span>
+                            {metadata.video.bunny_video_id && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(metadata.video!.bunny_video_id!);
+                                  toast.success("GUID do vídeo copiado!");
+                                }}
+                                className="text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded"
+                                title="Copiar GUID"
+                              >
+                                <Copy className="h-3 w-3" />
+                              </button>
+                            )}
+                          </div>
+                          <span className="text-foreground truncate" title={metadata.video.bunny_video_id}>
+                            {metadata.video.bunny_video_id || "N/A"}
+                          </span>
+                        </div>
+
+                        {/* Timestamp de Início */}
+                        <div className="rounded-md bg-muted/40 border border-border/40 p-2 flex flex-col gap-0.5">
+                          <span className="text-[10px] font-sans font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                            <Clock className="h-3 w-3 text-amber-500" />
+                            Timestamp / Início (video_timestamp)
+                          </span>
+                          <span className="text-foreground font-bold text-amber-600 dark:text-amber-400">
+                            {metadata.video.video_timestamp || "00:00"}
+                          </span>
+                        </div>
+
+                        {/* Início em Segundos */}
+                        <div className="rounded-md bg-muted/40 border border-border/40 p-2 flex flex-col gap-0.5">
+                          <span className="text-[10px] font-sans font-semibold text-muted-foreground uppercase tracking-wider">
+                            Início em Segundos (video_start_seconds)
+                          </span>
+                          <span className="text-foreground font-bold text-amber-600 dark:text-amber-400">
+                            {typeof metadata.video.video_start_seconds === "number"
+                              ? `${metadata.video.video_start_seconds}s`
+                              : metadata.video.video_timestamp
+                                ? `${parseTimestampToSeconds(metadata.video.video_timestamp)}s`
+                                : "0s"}
+                          </span>
+                        </div>
+
+                        {/* URL do Embed */}
+                        <div className="col-span-1 sm:col-span-2 lg:col-span-2 rounded-md bg-muted/40 border border-border/40 p-2 flex flex-col gap-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-sans font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                              <Link2 className="h-3 w-3 text-primary" />
+                              URL do Player / Embed (video_url)
+                            </span>
+                            {metadata.video.video_url && (
+                              <div className="flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(metadata.video!.video_url!);
+                                    toast.success("URL do vídeo copiada!");
+                                  }}
+                                  className="text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded"
+                                  title="Copiar URL"
+                                >
+                                  <Copy className="h-3 w-3" />
+                                </button>
+                                <a
+                                  href={metadata.video.video_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-muted-foreground hover:text-primary transition-colors p-0.5 rounded"
+                                  title="Abrir no navegador"
+                                >
+                                  <ExternalLink className="h-3 w-3" />
+                                </a>
+                              </div>
+                            )}
+                          </div>
+                          <span className="text-foreground truncate text-[10px] select-all" title={metadata.video.video_url}>
+                            {metadata.video.video_url || "N/A"}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   )}
