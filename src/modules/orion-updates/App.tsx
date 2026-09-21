@@ -18,6 +18,7 @@ import { EmptyPosts } from "./EmptyPosts";
 import { FilterTabs } from "./FilterTabs";
 import { HomeLatest } from "./Home";
 import { BlogSignature } from "./BlogSignature";
+import { PublicFooter } from "./PublicFooter";
 import { ListingTools, ListingPagination, SearchEmpty, versionOrders, publicationOrders, type VersionOrder, type PublicationOrder } from "./ListingTools";
 import { BackToVersions, PublicationIcon, PublicationMeta, VersionOverview } from "./PublicationUi";
 import { AppLink } from "./navigation";
@@ -140,19 +141,36 @@ function SharedPostPage({ id }: { id: string }) {
     return () => { cancelled = true; };
   }, [id, checkingSettings, settings]);
 
-  if (!checkingSettings && settings && !settings.public_enabled) {
-    return <PublicMaintenance title={settings.maintenance_title} message={settings.maintenance_message} />;
-  }
   useEffect(() => {
     if (!post) return;
     const previous = document.title;
-    document.title = `${post.titulo} — Orion Blog`;
+    document.title = `${post.titulo} — Orion Changelog`;
     // O identificador mantém o link válido mesmo após a edição da palavra-chave.
     window.history.replaceState(null, "", postPath(post));
     return () => { document.title = previous; };
   }, [post]);
+
+  if (!checkingSettings && settings && !settings.public_enabled) {
+    return <PublicMaintenance title={settings.maintenance_title} message={settings.maintenance_message} />;
+  }
   return <div className="page">
-    <header className="topbar"><div className="container topbar-row reader-topbar-row"><div className="brand-title"><img src={appPath("/assets/Siplan_logo.png")} alt="Logo Siplan"/><div><h1>Orion Blog</h1><p>Acompanhe as novidades dos sistemas</p></div></div><BlogSignature /><div className="header-tools"><ThemeToggle/></div></div></header>
+    <header className="topbar">
+      <div className="container topbar-row reader-topbar-row">
+        <div className="reader-header-start">
+          <h1>Orion Changelog</h1>
+          <p>Acompanhe as novidades dos sistemas</p>
+        </div>
+        <div className="reader-header-center">
+          <img src={appPath("/assets/Siplan_logo.png")} alt="Logo Siplan" className="reader-header-logo" />
+        </div>
+        <div className="reader-header-end">
+          <BlogSignature />
+          <div className="header-tools">
+            <ThemeToggle />
+          </div>
+        </div>
+      </div>
+    </header>
     <ReaderManagementAccess />
     <main className="container shared-post">
       <BackToVersions href={post ? filterRoute(post.sistema, post.tipo) : HOME_PATH} />
@@ -161,6 +179,7 @@ function SharedPostPage({ id }: { id: string }) {
         {post && <PublicationArticle post={post} />}
       </ContentTransition>
     </main>
+    <PublicFooter />
   </div>;
 }
 
@@ -326,7 +345,23 @@ function PublicApp() {
   }
 
   return <div className="page">
-    <header className="topbar"><div className="container topbar-row reader-topbar-row"><div className="brand-title"><img src={appPath("/assets/Siplan_logo.png")} alt="Logo Siplan" /><div><h1>Orion Blog</h1><p>Acompanhe as novidades dos sistemas</p></div></div><BlogSignature /><div className="header-tools"><ThemeToggle /></div></div></header>
+    <header className="topbar">
+      <div className="container topbar-row reader-topbar-row">
+        <div className="reader-header-start">
+          <h1>Orion Changelog</h1>
+          <p>Acompanhe as novidades dos sistemas</p>
+        </div>
+        <div className="reader-header-center">
+          <img src={appPath("/assets/Siplan_logo.png")} alt="Logo Siplan" className="reader-header-logo" />
+        </div>
+        <div className="reader-header-end">
+          <BlogSignature />
+          <div className="header-tools">
+            <ThemeToggle />
+          </div>
+        </div>
+      </div>
+    </header>
     {!isHome && <ReaderManagementAccess />}
     <main className="container">
       <div className="filters">
@@ -365,6 +400,7 @@ function PublicApp() {
       </section>}
       </ContentTransition>
     </main>
+    <PublicFooter />
   </div>;
 }
 
@@ -539,7 +575,7 @@ function ManagementApp({ admin }: { admin: { id: string; email: string } }) {
 
   return <div className="page management-page">
     <header className="topbar"><div className="container topbar-row">
-      <div className="brand-title"><img src={appPath("/assets/Siplan_logo.png")} alt="Logo Siplan" /><div><h1>Orion Blog</h1><p><span className="management-mode">Modo Gestão</span><span className="management-email">{admin.email}</span></p></div></div>
+      <div className="brand-title"><img src={appPath("/assets/Siplan_logo.png")} alt="Logo Siplan" /><div><h1>Orion Changelog</h1><p><span className="management-mode">Modo Gestão</span><span className="management-email">{admin.email}</span></p></div></div>
       <div className="management-header-actions"><ViewModeSwitch management disabled={Boolean(editing) || creatingVersion} /><ThemeToggle /></div>
     </div></header>
     <main className="container management-main">
@@ -618,7 +654,7 @@ function ManagementApp({ admin }: { admin: { id: string; email: string } }) {
                   rows={4}
                   value={maintenanceMessageInput}
                   onChange={(e) => setMaintenanceMessageInput(e.target.value)}
-                  placeholder="Ex: O Orion Blog está passando por melhorias..."
+                  placeholder="Ex: O Orion Changelog está passando por melhorias..."
                   required
                 />
               </div>

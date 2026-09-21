@@ -24,9 +24,9 @@ const publicationStyles = readFileSync(
   "utf8",
 );
 
-describe("módulo Orion Blog", () => {
+describe("módulo Orion Changelog", () => {
   it("integra visão geral, leitura e gestão ao menu e às rotas protegidas", () => {
-    const module = menuItems.find((item) => item.title === "Orion Blog");
+    const module = menuItems.find((item) => item.title === "Orion Changelog");
 
     expect(module?.path).toBe("/atualizacoes");
     expect(module?.permissionKey).toBe("menu_atualizacoes");
@@ -113,7 +113,7 @@ describe("módulo Orion Blog", () => {
       "/atualizacoes/gestao",
     ]) {
       const help = getPageHelp(route);
-      expect(help.moduleName).toBe("Orion Blog");
+      expect(help.moduleName).toBe("Orion Changelog");
       expect(help.steps.length).toBeGreaterThan(0);
       expect(help.keyFeatures.length).toBeGreaterThan(0);
     }

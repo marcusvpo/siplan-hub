@@ -1,0 +1,226 @@
+/* Public Footer for Orion Changelog */
+.orion-blog-module,
+.orion-blog-module .page {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 100%;
+}
+
+.orion-blog-module .page > main {
+  flex: 1 0 auto;
+}
+
+.orion-blog-module .public-footer {
+  margin-top: auto;
+  border-top: 1px solid var(--publication-line, #dce3ed);
+  background: var(--publication-surface, #ffffff);
+  color: var(--publication-ink, #101b2d);
+  padding: 12px 0;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.orion-blog-module .public-footer-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.orion-blog-module .public-footer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.orion-blog-module .public-footer-primary-info {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.orion-blog-module .public-footer-brand-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--publication-ink, #101b2d);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.orion-blog-module .public-footer-brand-link:hover {
+  color: var(--publication-accent, #d9164a);
+}
+
+.orion-blog-module .public-footer-brand-name {
+  font-weight: 750;
+  letter-spacing: 0.5px;
+}
+
+.orion-blog-module .public-footer-brand-desc {
+  color: var(--publication-muted, #637590);
+  font-size: 11px;
+}
+
+.orion-blog-module .public-footer-external-icon {
+  color: var(--publication-muted, #637590);
+  opacity: 0.7;
+}
+
+.orion-blog-module .public-footer-dot {
+  color: var(--publication-line, #dce3ed);
+  font-weight: bold;
+}
+
+.orion-blog-module .public-footer-copyright {
+  color: var(--publication-muted, #637590);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.orion-blog-module .public-footer-addresses {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--publication-muted, #637590);
+  line-height: 1.4;
+}
+
+.orion-blog-module .public-footer-address-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.orion-blog-module .public-footer-city {
+  font-weight: 600;
+  color: var(--publication-ink, #101b2d);
+}
+
+.orion-blog-module .public-footer-divider {
+  color: var(--publication-line, #dce3ed);
+  font-size: 10px;
+}
+
+.orion-blog-module .public-footer-links {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* Help Desk - Destacado */
+.orion-blog-module .public-footer-link-helpdesk {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--publication-accent, #d9164a);
+  background: var(--publication-tint, #fff0f4);
+  color: var(--publication-accent, #d9164a);
+  font-size: 12px;
+  font-weight: 650;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(217, 22, 74, 0.1);
+}
+
+.orion-blog-module .public-footer-link-helpdesk:hover {
+  background: var(--publication-accent, #d9164a);
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(217, 22, 74, 0.25);
+}
+
+.orion-blog-module .public-footer-link-helpdesk:focus-visible {
+  outline: 2px solid var(--publication-focus, #2865a7);
+  outline-offset: 2px;
+}
+
+/* Redes Sociais - Apenas ícones */
+.orion-blog-module .public-footer-socials {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.orion-blog-module .public-footer-social-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--publication-line, #dce3ed);
+  background: var(--publication-soft, #f7f9fc);
+  color: var(--publication-muted, #637590);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.orion-blog-module .public-footer-social-link:hover {
+  border-color: var(--publication-accent, #d9164a);
+  color: var(--publication-accent, #d9164a);
+  background: var(--publication-tint, #fff0f4);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(217, 22, 74, 0.12);
+}
+
+.orion-blog-module .public-footer-social-link:focus-visible {
+  outline: 2px solid var(--publication-focus, #2865a7);
+  outline-offset: 2px;
+}
+
+.orion-blog-module .public-footer-icon {
+  flex-shrink: 0;
+}
+
+@media (max-width: 860px) {
+  .orion-blog-module .public-footer {
+    padding: 12px 0 16px;
+  }
+
+  .orion-blog-module .public-footer-container {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 12px;
+  }
+
+  .orion-blog-module .public-footer-info {
+    align-items: center;
+  }
+
+  .orion-blog-module .public-footer-primary-info {
+    justify-content: center;
+  }
+
+  .orion-blog-module .public-footer-addresses {
+    justify-content: center;
+  }
+
+  .orion-blog-module .public-footer-links {
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .orion-blog-module .public-footer-link-helpdesk {
+    font-size: 11px;
+    padding: 3px 10px;
+    min-height: 28px;
+  }
+
+  .orion-blog-module .public-footer-social-link {
+    width: 28px;
+    height: 28px;
+  }
+}
