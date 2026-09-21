@@ -61,6 +61,30 @@ export function useKnowledgeBase() {
   } = useQuery<MasterKnowledgeDocument>({
     queryKey: ["assistant_knowledge_doc", STORAGE_BUCKET, STORAGE_FILE_PATH],
     queryFn: async () => {
+      // 1. Tenta buscar via URL pública com cache buster para garantir que alterações manuais no Storage reflitam imediatamente
+      try {
+        const { data: publicData } = supabase.storage
+          .from(STORAGE_BUCKET)
+          .getPublicUrl(STORAGE_FILE_PATH);
+
+        if (publicData?.publicUrl) {
+          const res = await fetch(`${publicData.publicUrl}?t=${Date.now()}`, {
+            cache: "no-store",
+            headers: {
+              "Cache-Control": "no-cache",
+              Pragma: "no-cache",
+            },
+          });
+          if (res.ok) {
+            const fileText = await res.text();
+            return parseMasterDocument(fileText);
+          }
+        }
+      } catch (fetchErr) {
+        console.warn("Fallback para download direto do Supabase Storage:", fetchErr);
+      }
+
+      // Fallback via download autenticado do SDK
       const { data, error: downloadError } = await supabase.storage
         .from(STORAGE_BUCKET)
         .download(STORAGE_FILE_PATH);
