@@ -199,7 +199,7 @@ const OrionUpdatesOverviewRoute = () => (
     <MainLayout>
       <Suspense fallback={<PageLoader />}>
         <RequirePermission resource="menu_atualizacoes">
-          <ModuleOverview moduleName="Orion Blog" />
+          <ModuleOverview moduleName="Orion Changelog" />
         </RequirePermission>
       </Suspense>
     </MainLayout>
