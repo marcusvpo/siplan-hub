@@ -200,16 +200,24 @@ export function ProjectGrid() {
           return (a.clientName || "").localeCompare(b.clientName || "");
         case "alpha-desc":
           return (b.clientName || "").localeCompare(a.clientName || "");
-        case "uat-desc":
-          return (
+        case "uat-desc": {
+          const diff =
             new Date(b.lastUpdatedAt).getTime() -
-            new Date(a.lastUpdatedAt).getTime()
-          );
-        case "uat-asc":
+            new Date(a.lastUpdatedAt).getTime();
+          if (diff !== 0) return diff;
           return (
-            new Date(a.lastUpdatedAt).getTime() -
-            new Date(b.lastUpdatedAt).getTime()
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
           );
+        }
+        case "uat-asc": {
+          const diff =
+            new Date(a.lastUpdatedAt).getTime() -
+            new Date(b.lastUpdatedAt).getTime();
+          if (diff !== 0) return diff;
+          return (
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          );
+        }
         case "created-desc":
           return (
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
