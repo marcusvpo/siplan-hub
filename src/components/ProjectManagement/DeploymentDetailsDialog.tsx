@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/select";
 import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 import { useProjectsV2 } from "@/hooks/useProjectsV2";
+import { normalizeSpecialty } from "@/utils/projectSpecialty";
 import { usePermissions } from "@/hooks/usePermissions";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -390,7 +391,7 @@ export function DeploymentDetailsDialog({
                   Especialidade
                 </p>
                 <p className="text-xs font-bold text-slate-900 dark:text-slate-200 truncate">
-                  {project.specialty || "Módulo Padrão"}
+                  {normalizeSpecialty(project.specialty) || "Módulo Padrão"}
                 </p>
               </div>
             </div>

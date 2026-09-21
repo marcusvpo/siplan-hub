@@ -31,6 +31,12 @@ import {
 import { Check, ChevronsUpDown, Plus, Trash2, X, PauseCircle, PlayCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import {
+  MAIN_SYSTEMS,
+  SPECIALTY_OPTIONS,
+  getSpecialtyForSystem,
+  normalizeSpecialty,
+} from "@/utils/projectSpecialty";
 
 
 interface TabProps {
@@ -49,8 +55,15 @@ export function EditProjectTab({ project, onUpdate }: TabProps) {
 
   const [productsOpen, setProductsOpen] = useState(false);
 
+  const handleSystemTypeChange = (value: string) => {
+    handleChange("systemType", value);
+    const autoSpecialty = getSpecialtyForSystem(value);
+    if (autoSpecialty) {
+      handleChange("specialty", autoSpecialty);
+    }
+  };
+
   // Constants
-  const MAIN_SYSTEMS = ["Orion TN", "Orion PRO", "Orion REG", "Modelos TN"];
   const AVAILABLE_PRODUCTS = [
     "LCW",
     "SGA",
@@ -117,7 +130,7 @@ export function EditProjectTab({ project, onUpdate }: TabProps) {
             <Label>Sistema Principal</Label>
             <Select
               value={data.systemType}
-              onValueChange={(value) => handleChange("systemType", value)}
+              onValueChange={handleSystemTypeChange}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione..." />
@@ -276,20 +289,18 @@ export function EditProjectTab({ project, onUpdate }: TabProps) {
               <div className="space-y-2">
                 <Label>Especialidade</Label>
                 <Select
-                  value={data.specialty || ""}
+                  value={normalizeSpecialty(data.specialty) || ""}
                   onValueChange={(value) => handleChange("specialty", value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="protesto">Protesto</SelectItem>
-                    <SelectItem value="notas">Notas</SelectItem>
-                    <SelectItem value="registro_civil">Registro Civil</SelectItem>
-                    <SelectItem value="registro_imoveis">
-                      Registro de Imóveis
-                    </SelectItem>
-                    <SelectItem value="tdpj">TDPJ</SelectItem>
+                    {SPECIALTY_OPTIONS.map((spec) => (
+                      <SelectItem key={spec} value={spec}>
+                        {spec}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

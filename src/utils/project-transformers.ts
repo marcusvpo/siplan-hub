@@ -14,6 +14,7 @@ import {
   AuditEntry,
   ProjectTramite
 } from "@/types/ProjectV2";
+import { normalizeSpecialty } from "./projectSpecialty";
 
 export function calculateHealthScore(row: Record<string, unknown>): "ok" | "warning" | "critical" {
   const now = new Date();
@@ -98,7 +99,7 @@ export function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
     soldHours: row.sold_hours as number | undefined,
     workHours: row.work_hours as number | undefined,
     legacySystem: row.legacy_system as string | undefined,
-    specialty: row.specialty as string | undefined,
+    specialty: normalizeSpecialty(row.specialty as string | undefined) || undefined,
     products: (row.products as string[]) || [],
 
     // Integração 0800
@@ -467,7 +468,7 @@ export function transformToDB(project: Partial<ProjectV2>, currentProject?: Proj
   if (project.soldHours !== undefined) dbRow.sold_hours = project.soldHours;
   if (project.workHours !== undefined) dbRow.work_hours = project.workHours;
   if (project.legacySystem !== undefined) dbRow.legacy_system = project.legacySystem;
-  if (project.specialty !== undefined) dbRow.specialty = project.specialty;
+  if (project.specialty !== undefined) dbRow.specialty = normalizeSpecialty(project.specialty) || null;
   if (project.products !== undefined) dbRow.products = project.products;
 
   // Missing field mappings added
