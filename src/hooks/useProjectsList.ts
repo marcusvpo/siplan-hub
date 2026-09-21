@@ -17,6 +17,7 @@ import {
 } from "@/types/ProjectV2";
 
 import { ViewPreset } from "@/stores/filterStore";
+import { normalizeSpecialty } from "@/utils/projectSpecialty";
 
 export const useProjectsList = (
   searchQuery: string = "",
@@ -34,7 +35,7 @@ export const useProjectsList = (
       let query = supabase
         .from("projects")
         .select(`
-          id, client_name, ticket_number, system_type, global_status, updated_at, 
+          id, client_name, ticket_number, system_type, specialty, global_status, updated_at, 
           project_leader, client_primary_contact, overall_progress, priority, is_deleted, created_at,
           infra_status, infra_start_date, infra_end_date, infra_responsible,
           adherence_status, adherence_start_date, adherence_end_date, adherence_responsible, adherence_has_product_gap, adherence_gap_description,
@@ -89,6 +90,7 @@ interface ProjectRow {
     client_name: string;
     ticket_number: string;
     system_type: string;
+    specialty?: string;
     global_status: string;
     updated_at: string;
     project_leader: string;
@@ -129,6 +131,7 @@ function userProjectsListTransform(row: ProjectRow): Partial<ProjectV2> {
         clientName: row.client_name,
         ticketNumber: row.ticket_number,
         systemType: row.system_type,
+        specialty: normalizeSpecialty(row.specialty) || undefined,
         globalStatus: row.global_status as GlobalStatus,
         lastUpdatedAt: lastUpdatedAt, // Using updated_at as proxy for lastUpdatedAt which is in ProjectV2
         projectLeader: row.project_leader,
