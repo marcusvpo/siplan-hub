@@ -78,13 +78,77 @@ const BULLET_RE = /^\s*[-*]\s+(.*)$/;
 const ORDERED_RE = /^\s*\d+[.)]\s+(.*)$/;
 
 /**
+ * Converte HTML básico (como <p>, <ol>, <ul>, <li>, <strong>, <b>, <em>, <i>, <br>)
+ * em Markdown leve compatível com o parser Lexical do Siplan HUB.
+ */
+export function htmlToMarkdown(html: string): string {
+  if (!html) return "";
+  let text = html.replace(/\r\n/g, "\n");
+
+  // Inline formatting antes de remover tags de bloco
+  text = text.replace(/<(strong|b)[^>]*>([\s\S]*?)<\/\1>/gi, "**$2**");
+  text = text.replace(/<(em|i)[^>]*>([\s\S]*?)<\/\1>/gi, "*$2*");
+  text = text.replace(/<u[^>]*>([\s\S]*?)<\/u>/gi, "__$1__");
+
+  // Listas ordenadas
+  text = text.replace(/<ol[^>]*>([\s\S]*?)<\/ol>/gi, (_, listContent: string) => {
+    let index = 1;
+    const items = listContent.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (__: string, item: string) => {
+      const cleaned = item.trim();
+      return `${index++}. ${cleaned}\n`;
+    });
+    return `\n${items}\n`;
+  });
+
+  // Listas não ordenadas
+  text = text.replace(/<ul[^>]*>([\s\S]*?)<\/ul>/gi, (_, listContent: string) => {
+    const items = listContent.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (__: string, item: string) => {
+      const cleaned = item.trim();
+      return `- ${cleaned}\n`;
+    });
+    return `\n${items}\n`;
+  });
+
+  // Li soltas se houver
+  text = text.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, "- $1\n");
+
+  // Parágrafos, quebras de bloco e quebras de linha
+  text = text.replace(/<\/?(div|p|h[1-6]|section|header)[^>]*>/gi, "\n\n");
+  text = text.replace(/<br\s*\/?>/gi, "\n");
+
+  // Remove qualquer tag restante
+  text = text.replace(/<[^>]+>/g, "");
+
+  // Entidades HTML
+  text = text
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'");
+
+  // Normalização de quebras de linha
+  return text
+    .split("\n")
+    .map((line) => line.trimEnd())
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+/**
  * Converte texto Markdown leve (com quebras de linha) em um SerializedEditorState
  * do Lexical (string JSON pronta para o campo `content` do RichTextEditor).
  * Suporta: parágrafos, listas com marcadores (- / *) e numeradas (1.), e
  * formatação inline **negrito**, __sublinhado__ e *itálico*.
  */
 export function plainTextToLexicalJson(text: string): string {
-  const lines = (text || "").replace(/\r\n/g, "\n").split("\n");
+  let normalized = (text || "").replace(/\r\n/g, "\n");
+  if (/<[a-z][\s\S]*>/i.test(normalized)) {
+    normalized = htmlToMarkdown(normalized);
+  }
+  const lines = normalized.split("\n");
   const children: LexicalNode[] = [];
 
   let bucket: string[] | null = null;
@@ -180,6 +244,9 @@ export function richTextToPlainText(
     try {
       parsed = JSON.parse(value) as LexicalNode;
     } catch {
+      if (/<[a-z][\s\S]*>/i.test(value)) {
+        return htmlToMarkdown(value).replace(/[*_#]/g, "").trim();
+      }
       return value;
     }
   } else {
@@ -187,7 +254,11 @@ export function richTextToPlainText(
   }
 
   if (!parsed?.root || !Array.isArray(parsed.root.children)) {
-    return typeof value === "string" ? value : "";
+    const rawStr = typeof value === "string" ? value : "";
+    if (/<[a-z][\s\S]*>/i.test(rawStr)) {
+      return htmlToMarkdown(rawStr).replace(/[*_#]/g, "").trim();
+    }
+    return rawStr;
   }
 
   return lexicalNodeToPlainText(parsed.root).trim();

@@ -285,8 +285,15 @@ export default function ProjectAdherenceForm() {
     const isNewResponse = hydratedResponseIdRef.current !== response.id;
 
     if (isNewResponse || !hasLocalChanges) {
-      latestFormDataRef.current = serverData;
-      setLocalFormData(serverData);
+      const normalizedServerData = { ...serverData };
+      if (typeof normalizedServerData.finalNotes === "string") {
+        const raw = normalizedServerData.finalNotes.trim();
+        if (raw.startsWith("{") || raw.includes("<")) {
+          normalizedServerData.finalNotes = richTextToPlainText(raw);
+        }
+      }
+      latestFormDataRef.current = normalizedServerData;
+      setLocalFormData(normalizedServerData);
       setDraftSaveStatus("saved");
     }
 
