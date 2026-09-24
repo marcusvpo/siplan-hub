@@ -66,7 +66,45 @@ export function parseArticleFrontmatter(frontmatterRaw: string): KnowledgeArticl
       const libId = v.bunny_library_id ? String(v.bunny_library_id).trim() : undefined;
       const vidId = v.bunny_video_id ? String(v.bunny_video_id).trim() : undefined;
       let videoUrl = v.video_url ? String(v.video_url).trim() : undefined;
-      if (!videoUrl && libId && vidId) {
+
+      // Se videoUrl existe mas não tínhamos startSec nem rawTs, tentar extrair t da videoUrl
+      if (startSec === undefined && videoUrl) {
+        try {
+          const parsed = new URL(videoUrl);
+          const tParam = parsed.searchParams.get("t");
+          if (tParam) {
+            const parsedVal = parseInt(tParam, 10);
+            if (!isNaN(parsedVal)) {
+              startSec = parsedVal;
+              rawTs = formatSecondsToTimestamp(startSec);
+            }
+          }
+        } catch {
+          const match = videoUrl.match(/[?&]t=(\d+)/);
+          if (match) {
+            startSec = parseInt(match[1], 10);
+            rawTs = formatSecondsToTimestamp(startSec);
+          }
+        }
+      }
+
+      // Garantir que videoUrl sempre tenha ?t=${startSec || 0} atualizado
+      if (videoUrl) {
+        try {
+          const parsed = new URL(videoUrl);
+          parsed.searchParams.set("t", String(startSec ?? 0));
+          videoUrl = parsed.toString();
+        } catch {
+          if (videoUrl.includes("?")) {
+            videoUrl = videoUrl.replace(/([?&])t=[^&]*/, `$1t=${startSec || 0}`);
+            if (!videoUrl.includes("t=")) {
+              videoUrl = `${videoUrl}&t=${startSec || 0}`;
+            }
+          } else {
+            videoUrl = `${videoUrl}?t=${startSec || 0}`;
+          }
+        }
+      } else if (libId && vidId) {
         videoUrl = `https://iframe.mediadelivery.net/embed/${libId}/${vidId}?t=${startSec || 0}`;
       }
 
@@ -136,7 +174,42 @@ export function parseArticleFrontmatter(frontmatterRaw: string): KnowledgeArticl
       if (videoTimestamp && startSec === undefined) {
         startSec = parseTimestampToSeconds(videoTimestamp);
       }
-      if (!videoUrl && bunnyLibraryId && bunnyVideoId) {
+      if (startSec === undefined && videoUrl) {
+        try {
+          const parsed = new URL(videoUrl);
+          const tParam = parsed.searchParams.get("t");
+          if (tParam) {
+            const parsedVal = parseInt(tParam, 10);
+            if (!isNaN(parsedVal)) {
+              startSec = parsedVal;
+              videoTimestamp = formatSecondsToTimestamp(startSec);
+            }
+          }
+        } catch {
+          const match = videoUrl.match(/[?&]t=(\d+)/);
+          if (match) {
+            startSec = parseInt(match[1], 10);
+            videoTimestamp = formatSecondsToTimestamp(startSec);
+          }
+        }
+      }
+
+      if (videoUrl) {
+        try {
+          const parsed = new URL(videoUrl);
+          parsed.searchParams.set("t", String(startSec ?? 0));
+          videoUrl = parsed.toString();
+        } catch {
+          if (videoUrl.includes("?")) {
+            videoUrl = videoUrl.replace(/([?&])t=[^&]*/, `$1t=${startSec || 0}`);
+            if (!videoUrl.includes("t=")) {
+              videoUrl = `${videoUrl}&t=${startSec || 0}`;
+            }
+          } else {
+            videoUrl = `${videoUrl}?t=${startSec || 0}`;
+          }
+        }
+      } else if (bunnyLibraryId && bunnyVideoId) {
         videoUrl = `https://iframe.mediadelivery.net/embed/${bunnyLibraryId}/${bunnyVideoId}?t=${startSec || 0}`;
       }
 
@@ -387,11 +460,26 @@ export function serializeArticleToMarkdown(
     const cleanTimestamp = v.video_timestamp?.trim() || "00:00";
     const cleanLibId = v.bunny_library_id?.trim() || "467408";
     const cleanVidId = v.bunny_video_id?.trim() || "";
-    const cleanEmbedUrl =
-      v.video_url?.trim() ||
-      (cleanLibId && cleanVidId
-        ? `https://iframe.mediadelivery.net/embed/${cleanLibId}/${cleanVidId}?t=${startSecs}`
-        : "");
+    let cleanEmbedUrl = v.video_url?.trim() || "";
+
+    if (cleanEmbedUrl) {
+      try {
+        const parsed = new URL(cleanEmbedUrl);
+        parsed.searchParams.set("t", String(startSecs));
+        cleanEmbedUrl = parsed.toString();
+      } catch {
+        if (cleanEmbedUrl.includes("?")) {
+          cleanEmbedUrl = cleanEmbedUrl.replace(/([?&])t=[^&]*/, `$1t=${startSecs}`);
+          if (!cleanEmbedUrl.includes("t=")) {
+            cleanEmbedUrl = `${cleanEmbedUrl}&t=${startSecs}`;
+          }
+        } else {
+          cleanEmbedUrl = `${cleanEmbedUrl}?t=${startSecs}`;
+        }
+      }
+    } else if (cleanLibId && cleanVidId) {
+      cleanEmbedUrl = `https://iframe.mediadelivery.net/embed/${cleanLibId}/${cleanVidId}?t=${startSecs}`;
+    }
 
     yamlObj.video = {
       tem_video: true,

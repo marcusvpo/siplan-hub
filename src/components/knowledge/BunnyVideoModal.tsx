@@ -20,12 +20,28 @@ export function BunnyVideoModal({
 }: BunnyVideoModalProps) {
   if (!video || !video.tem_video) return null;
 
-  // URL do player iframe Bunny.net
-  const embedUrl =
-    video.video_url ||
-    (video.bunny_library_id && video.bunny_video_id
-      ? `https://iframe.mediadelivery.net/embed/${video.bunny_library_id}/${video.bunny_video_id}?t=${video.video_start_seconds || 0}`
-      : null);
+  // URL do player iframe Bunny.net com parâmetros start_seconds, autoplay e playerjs
+  const startSeconds = video.video_start_seconds || 0;
+
+  let embedUrl: string | null = null;
+  if (video.video_url) {
+    try {
+      const parsed = new URL(video.video_url);
+      parsed.searchParams.set("t", String(startSeconds));
+      parsed.searchParams.set("autoplay", "true");
+      parsed.searchParams.set("playerjs", "true");
+      if (!parsed.searchParams.has("preload")) {
+        parsed.searchParams.set("preload", "true");
+      }
+      embedUrl = parsed.toString();
+    } catch {
+      let cleaned = video.video_url.replace(/([?&])(autoplay|playerjs|t)=[^&]*/gi, "");
+      const sep = cleaned.includes("?") ? "&" : "?";
+      embedUrl = `${cleaned}${sep}t=${startSeconds}&autoplay=true&playerjs=true`;
+    }
+  } else if (video.bunny_library_id && video.bunny_video_id) {
+    embedUrl = `https://iframe.mediadelivery.net/embed/${video.bunny_library_id}/${video.bunny_video_id}?t=${startSeconds}&autoplay=true&playerjs=true`;
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>

@@ -4,6 +4,7 @@ import React from "react";
 import {
   PosChatMessageContent,
   isBunnyStreamUrl,
+  extractBunnyVideoFromLine,
 } from "@/components/pos-chat/PosChatMessageContent";
 import { isTriageMessage } from "@/pages/public/PublicPosChat";
 import { formatBunnyEmbedUrl } from "@/components/pos-chat/BunnyVideoPlayer";
@@ -24,12 +25,28 @@ describe("PosChatMessageContent & BunnyVideoPlayer", () => {
     expect(isBunnyStreamUrl("")).toBe(false);
   });
 
-  it("enforces autoplay=false and preload=true on Bunny embed URLs", () => {
+  it("enforces autoplay=false, preload=true, playerjs=true and t parameter on Bunny embed URLs", () => {
     const formatted = formatBunnyEmbedUrl(
       "https://iframe.mediadelivery.net/embed/467408/bb9395dc-a4e9-4140-92ba-bd8195e75c82?t=0"
     );
     expect(formatted).toContain("autoplay=false");
     expect(formatted).toContain("preload=true");
+    expect(formatted).toContain("playerjs=true");
+    expect(formatted).toContain("t=0");
+
+    const formattedWithStart = formatBunnyEmbedUrl(
+      "https://iframe.mediadelivery.net/embed/467408/bb9395dc-a4e9-4140-92ba-bd8195e75c82?t=0",
+      135
+    );
+    expect(formattedWithStart).toContain("autoplay=false");
+    expect(formattedWithStart).toContain("preload=true");
+    expect(formattedWithStart).toContain("playerjs=true");
+    expect(formattedWithStart).toContain("t=135");
+
+    const formattedPreserve = formatBunnyEmbedUrl(
+      "https://iframe.mediadelivery.net/embed/467408/bb9395dc-a4e9-4140-92ba-bd8195e75c82?t=90"
+    );
+    expect(formattedPreserve).toContain("t=90");
   });
 
   it("identifies triage messages vs substantive step-by-step resolution answers", () => {
@@ -208,5 +225,48 @@ Essa rotina conta com uma videoaula em etapas para facilitar seu aprendizado:
     const link2 = screen.getByRole("link", { name: /CNJ/i });
     expect(link2).toHaveAttribute("href", "https://www.cnj.jus.br");
     expect(link2).toHaveAttribute("target", "_blank");
+  });
+
+  it("extracts startSeconds and timestamp from Bunny video links and markdown text", () => {
+    // 1. A partir de ?t=135
+    const videoWithParam = extractBunnyVideoFromLine(
+      "▶️ Assista ao tutorial: [[Cadastro de Cartão]](https://iframe.mediadelivery.net/embed/467408/bb9395dc-a4e9-4140-92ba-bd8195e75c82?t=135)"
+    );
+    expect(videoWithParam).not.toBeNull();
+    expect(videoWithParam?.startSeconds).toBe(135);
+    expect(videoWithParam?.timestamp).toBe("02:15");
+    expect(videoWithParam?.title).toBe("Cadastro de Cartão");
+
+    // 2. A partir de texto 'Início em: 03:40'
+    const videoWithText = extractBunnyVideoFromLine(
+      "▶️ Assista ao tutorial: [[Distribuição de Produtos]](https://iframe.mediadelivery.net/embed/467408/bb9395dc-a4e9-4140-92ba-bd8195e75c82) - Início em: 03:40"
+    );
+    expect(videoWithText).not.toBeNull();
+    expect(videoWithText?.startSeconds).toBe(220);
+    expect(videoWithText?.timestamp).toBe("03:40");
+
+    // 3. A partir de colchetes no título '[01:15]'
+    const videoWithBracket = extractBunnyVideoFromLine(
+      "▶️ [[Distribuição de Produtos [01:15]]](https://iframe.mediadelivery.net/embed/467408/bb9395dc-a4e9-4140-92ba-bd8195e75c82?t=0)"
+    );
+    expect(videoWithBracket).not.toBeNull();
+    expect(videoWithBracket?.startSeconds).toBe(75);
+    expect(videoWithBracket?.timestamp).toBe("01:15");
+    expect(videoWithBracket?.title).toBe("Distribuição de Produtos");
+  });
+
+  it("renders BunnyVideoPlayer with allow containing autoplay and badge 'Início aos MM:SS'", () => {
+    const markdown = `▶️ Assista ao tutorial: [[Aquisição e Distribuição - Orion TN]](https://iframe.mediadelivery.net/embed/467408/bb9395dc-a4e9-4140-92ba-bd8195e75c82?t=135)`;
+
+    render(<PosChatMessageContent content={markdown} />);
+
+    const iframe = document.querySelector("iframe");
+    expect(iframe).toBeInTheDocument();
+    expect(iframe?.getAttribute("allow")).toContain("autoplay");
+    expect(iframe?.getAttribute("src")).toContain("playerjs=true");
+    expect(iframe?.getAttribute("src")).toContain("t=135");
+
+    // Badge interativo de início aos MM:SS
+    expect(screen.getByText(/Início aos 02:15/i)).toBeInTheDocument();
   });
 });
