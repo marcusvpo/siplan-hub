@@ -1,6 +1,10 @@
 import React, { Fragment, ReactNode } from "react";
 import { BunnyVideoPlayer } from "./BunnyVideoPlayer";
 import { ExternalLink, Info, AlertCircle, Sparkles, Layers } from "lucide-react";
+import {
+  formatSecondsToTimestamp,
+  parseTimestampToSeconds,
+} from "@/services/markdownKnowledgeService";
 
 interface PosChatMessageContentProps {
   content: string;
@@ -18,6 +22,69 @@ export function isBunnyStreamUrl(url: string): boolean {
     url.includes(BUNNY_NET_DOMAIN) ||
     url.includes("mediadelivery.net/embed")
   );
+}
+
+/**
+ * Extrai segundos e timestamp a partir da URL (?t= ou &t=) ou do texto envolvente
+ * (ex: "Início em: 02:15", "Início aos 01:30", "[02:15]").
+ */
+export function extractVideoTimeInfo(
+  url: string,
+  textContext?: string
+): { startSeconds?: number; timestamp?: string } {
+  let seconds: number | undefined;
+  let timestamp: string | undefined;
+
+  // 1. Extrair de query params da URL (?t=120 ou &t=120 ou ?t=02:15)
+  try {
+    const parsed = new URL(url, "https://iframe.mediadelivery.net");
+    const tParam = parsed.searchParams.get("t");
+    if (tParam) {
+      if (/^\d+$/.test(tParam)) {
+        seconds = parseInt(tParam, 10);
+      } else if (tParam.includes(":")) {
+        seconds = parseTimestampToSeconds(tParam);
+        timestamp = tParam;
+      }
+    }
+  } catch {
+    const match = url.match(/[?&]t=([^&#\s]+)/);
+    if (match) {
+      const val = match[1];
+      if (/^\d+$/.test(val)) {
+        seconds = parseInt(val, 10);
+      } else if (val.includes(":")) {
+        seconds = parseTimestampToSeconds(val);
+        timestamp = val;
+      }
+    }
+  }
+
+  // 2. Extrair do texto de contexto se houver
+  if (textContext) {
+    const explicitTimeRegex = /(?:In[íi]cio\s+(?:em|aos?):?\s*|come[çc]a\s+em:?\s*)\[?(\d{1,2}:\d{2}(?::\d{2})?)\]?/i;
+    const bracketTimeRegex = /\[(\d{1,2}:\d{2}(?::\d{2})?)\]/;
+
+    const expMatch = explicitTimeRegex.exec(textContext);
+    const bracketMatch = bracketTimeRegex.exec(textContext);
+
+    const timeMatch = expMatch || bracketMatch;
+    if (timeMatch) {
+      const tsStr = timeMatch[1];
+      const parsedSec = parseTimestampToSeconds(tsStr);
+      if (seconds === undefined || seconds === 0) {
+        seconds = parsedSec;
+      }
+      timestamp = tsStr;
+    }
+  }
+
+  // 3. Se temos seconds > 0 mas não temos timestamp, deriva
+  if (seconds !== undefined && seconds > 0 && !timestamp) {
+    timestamp = formatSecondsToTimestamp(seconds);
+  }
+
+  return { startSeconds: seconds, timestamp };
 }
 
 /**
@@ -49,9 +116,16 @@ function renderInline(text: string): ReactNode[] {
       const rawUrl = match[3].trim();
 
       if (isBunnyStreamUrl(rawUrl)) {
+        const timeInfo = extractVideoTimeInfo(rawUrl, rawLabel);
+        const cleanTitle = rawLabel.replace(/\[\d{1,2}:\d{2}(?::\d{2})?\]/, "").trim();
         nodes.push(
           <div key={`video-${key++}`} className="my-2 block w-full">
-            <BunnyVideoPlayer url={rawUrl} title={rawLabel || "Videoaula - Orion TN"} />
+            <BunnyVideoPlayer
+              url={rawUrl}
+              title={cleanTitle || "Videoaula - Orion TN"}
+              startSeconds={timeInfo.startSeconds}
+              timestamp={timeInfo.timestamp}
+            />
           </div>
         );
       } else {
@@ -106,12 +180,27 @@ export interface StepItem {
   subItems: string[];
 }
 
+export interface ExtractedBunnyVideo {
+  url: string;
+  title: string;
+  prefixText?: string;
+  startSeconds?: number;
+  timestamp?: string;
+}
+
 export type Block =
   | { type: "heading"; level: number; text: string; routineCode?: string }
   | { type: "section"; title: string }
   | { type: "steps"; items: StepItem[] }
   | { type: "ul"; items: string[] }
-  | { type: "video"; url: string; title: string; prefixText?: string }
+  | {
+      type: "video";
+      url: string;
+      title: string;
+      prefixText?: string;
+      startSeconds?: number;
+      timestamp?: string;
+    }
   | { type: "callout"; title?: string; text: string }
   | { type: "quote"; text: string }
   | { type: "hr" }
@@ -120,36 +209,63 @@ export type Block =
 /**
  * Robust extraction of Bunny.net stream video links from a line of text.
  */
-function extractBunnyVideoFromLine(line: string): { url: string; title: string; prefixText?: string } | null {
+export function extractBunnyVideoFromLine(line: string): ExtractedBunnyVideo | null {
   if (!isBunnyStreamUrl(line)) return null;
 
+  // Extrair time info global da linha e da URL antes de sanitizar para regex de markdown
+  const lineTimeInfo = extractVideoTimeInfo(line, line);
+
+  // Sanitizar timestamps em colchetes para não truncar links do tipo [[Título [01:15]]]
+  const sanitizedLine = line.replace(/\[\d{1,2}:\d{2}(?::\d{2})?\]/g, " ");
+
   // 1. Markdown link with optional prefix: e.g. "▶️ Assista ao tutorial: [[Título]](https://iframe.mediadelivery.net/...)"
-  const mdRegex = /^(.*?)(?:▶️|🎬|🎥)?\s*(\*{0,2}(?:Parte \d+:?|Assista ao tutorial:?|Tutorial:?|Vídeo:?|Videoaula:?)?\*{0,2})?\s*\[+([^\]]+)\]+\s*\((https?:\/\/iframe\.mediadelivery\.net\/[^\s)]+)\)\s*$/i;
-  const mdMatch = mdRegex.exec(line);
+  const mdRegex = /^(.*?)(?:▶️|🎬|🎥)?\s*(\*{0,2}(?:Parte \d+:?|Assista ao tutorial:?|Tutorial:?|Vídeo:?|Videoaula:?)?\*{0,2})?\s*\[+([^\]]+)\]+\s*\((https?:\/\/iframe\.mediadelivery\.net\/[^\s)]+)\)\s*(.*?)$/i;
+  const mdMatch = mdRegex.exec(sanitizedLine);
 
   if (mdMatch) {
     const prefix = [mdMatch[1], mdMatch[2]].filter(Boolean).join(" ").trim();
-    const title = mdMatch[3].replace(/^\[+|\]+$/g, "").trim();
+    const rawTitle = mdMatch[3].replace(/^\[+|\]+$/g, "").trim();
     const url = mdMatch[4].trim();
+    const suffix = mdMatch[5]?.trim() || "";
+
+    const timeInfo = extractVideoTimeInfo(url, `${prefix} ${rawTitle} ${suffix} ${line}`);
+    const finalStartSeconds = timeInfo.startSeconds ?? lineTimeInfo.startSeconds;
+    const finalTimestamp = timeInfo.timestamp ?? lineTimeInfo.timestamp;
+
+    let cleanTitle = rawTitle.replace(/\[\d{1,2}:\d{2}(?::\d{2})?\]/g, "").replace(/^\[+|\]+$/g, "").trim();
+    cleanTitle = cleanTitle || "Videoaula - Orion TN";
+
     return {
       url,
-      title: title || "Videoaula - Orion TN",
+      title: cleanTitle,
       prefixText: prefix || undefined,
+      startSeconds: finalStartSeconds,
+      timestamp: finalTimestamp,
     };
   }
 
   // 2. Generic markdown link anywhere in the line: e.g. "... [[Título]](https://iframe.mediadelivery.net/...)"
   const genericMdRegex = /\[+([^\]]+)\]+\s*\((https?:\/\/iframe\.mediadelivery\.net\/[^\s)]+)\)/i;
-  const genericMatch = genericMdRegex.exec(line);
+  const genericMatch = genericMdRegex.exec(sanitizedLine);
 
   if (genericMatch) {
-    const title = genericMatch[1].replace(/^\[+|\]+$/g, "").trim();
+    const rawTitle = genericMatch[1].replace(/^\[+|\]+$/g, "").trim();
     const url = genericMatch[2].trim();
-    const prefix = line.replace(genericMatch[0], "").replace(/^[▶️🎬🎥\s*:]+/, "").trim();
+    const prefix = sanitizedLine.replace(genericMatch[0], "").replace(/^[▶️🎬🎥\s*:]+/, "").trim();
+
+    const timeInfo = extractVideoTimeInfo(url, `${prefix} ${rawTitle} ${line}`);
+    const finalStartSeconds = timeInfo.startSeconds ?? lineTimeInfo.startSeconds;
+    const finalTimestamp = timeInfo.timestamp ?? lineTimeInfo.timestamp;
+
+    let cleanTitle = rawTitle.replace(/\[\d{1,2}:\d{2}(?::\d{2})?\]/g, "").replace(/^\[+|\]+$/g, "").trim();
+    cleanTitle = cleanTitle || "Videoaula - Orion TN";
+
     return {
       url,
-      title: title || "Videoaula - Orion TN",
+      title: cleanTitle,
       prefixText: prefix || undefined,
+      startSeconds: finalStartSeconds,
+      timestamp: finalTimestamp,
     };
   }
 
@@ -160,10 +276,14 @@ function extractBunnyVideoFromLine(line: string): { url: string; title: string; 
   if (bareMatch) {
     const url = bareMatch[1].trim();
     const prefix = line.replace(url, "").replace(/^[▶️🎬🎥\s*:]+/, "").trim();
+    const timeInfo = extractVideoTimeInfo(url, line);
+
     return {
       url,
       title: prefix || "Videoaula - Orion TN",
       prefixText: prefix || undefined,
+      startSeconds: timeInfo.startSeconds ?? lineTimeInfo.startSeconds,
+      timestamp: timeInfo.timestamp ?? lineTimeInfo.timestamp,
     };
   }
 
@@ -236,6 +356,8 @@ function parseBlocks(markdown: string): Block[] {
         url: videoData.url,
         title: videoData.title,
         prefixText: videoData.prefixText,
+        startSeconds: videoData.startSeconds,
+        timestamp: videoData.timestamp,
       });
       continue;
     }
@@ -522,7 +644,12 @@ export function PosChatMessageContent({ content, className }: PosChatMessageCont
                     <span>{renderInline(block.prefixText.replace(/^▶️\s*/, ""))}</span>
                   </div>
                 )}
-                <BunnyVideoPlayer url={block.url} title={block.title} />
+                <BunnyVideoPlayer
+                  url={block.url}
+                  title={block.title}
+                  startSeconds={block.startSeconds}
+                  timestamp={block.timestamp}
+                />
               </div>
             );
 
