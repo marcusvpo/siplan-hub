@@ -509,39 +509,39 @@ export const pageHelpData: PageHelpInfo[] = [
       "Ferramenta de pesquisa detalhada para localizar tickets de atendimento 0800 por protocolo, cliente, sistema, período, grupo responsável ou analista.",
     keyFeatures: [
       "Busca por múltiplas palavras-chave em cliente, protocolo, título ou descrição",
-      "Filtros combináveis por status, período, grupo, analista e módulos Orion TN, Orion PRO, Orion REG, LCW, SGA, OrionGED e Siplan NFSe",
+      "Filtros combináveis por status, período, cliente, grupo, analista e módulos do sistema",
+      "Exportação de planilha completa (.xlsx ou .csv) contendo todos os dados do chamado, descrição de abertura e 100% dos trâmites",
+      "Relatórios em PDF e Analítico com SLA e parecer técnico de IA",
       "Acesso direto ao histórico do chamado no Ellevo pelo número",
-      "Exportação da listagem de chamados encontrados",
-      "Relatório analítico em Excel com chamados, histórico completo de trâmites, SLA, jornada por área e gráficos da Análise de IA",
     ],
     steps: [
       {
         stepNumber: 1,
-        title: "Adicione Palavras-chave",
+        title: "Defina os Filtros Desejados",
         description:
-          "Digite um termo e pressione Enter para criar uma palavra-chave. Repita para pesquisar alternativas e use o x de cada item para removê-lo.",
-        icon: Search,
-      },
-      {
-        stepNumber: 2,
-        title: "Refine por Grupo ou Analista",
-        description:
-          "Abra Mais filtros e selecione um ou vários grupos e analistas responsáveis para restringir o resultado.",
+          "Selecione o período, clientes, status (ex: chamados parados), grupos, analistas e palavras-chave para delimitar a visualização atual.",
         icon: Filter,
       },
       {
-        stepNumber: 3,
-        title: "Abra o Chamado no Ellevo",
+        stepNumber: 2,
+        title: "Exportar Planilha Completa",
         description:
-          "Clique no número do chamado para abrir o histórico correspondente no Ellevo em uma nova aba.",
-        icon: Link2,
+          "Clique em 'Exportar Planilha' e escolha entre Planilha Excel (.xlsx) recomendada ou CSV. O arquivo traz abas separadas para os dados completos dos chamados (com descrições integrais), histórico de todos os trâmites e o resumo dos filtros.",
+        icon: FileSpreadsheet,
+      },
+      {
+        stepNumber: 3,
+        title: "Consulte o Detalhe e Trâmites",
+        description:
+          "Clique em 'Visualizar Chamado' na listagem para conferir em tela os detalhes, campos cadastrais, tempos, SLA, descrição e histórico de trâmites.",
+        icon: Search,
       },
       {
         stepNumber: 4,
-        title: "Baixe o Relatório Analítico",
+        title: "Acesse o Chamado na Origem",
         description:
-          "Clique em 'Relatório analítico' para baixar todos os chamados do filtro em uma planilha com abas de trâmites, SLA, jornada por área, consolidação por setor e gráficos nativos do Excel.",
-        icon: FileSpreadsheet,
+          "Clique no link do protocolo ou ícone do Ellevo para abrir diretamente a ocorrência correspondente na base do 0800.",
+        icon: Link2,
       },
     ],
   },

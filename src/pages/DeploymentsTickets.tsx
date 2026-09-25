@@ -24,9 +24,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Chamado0800DetailDialog, fmtDateBr, statusBadgeClass } from "@/components/ProjectManagement/Chamado0800DetailDialog";
 import { 
-  ClipboardList, CalendarDays, Filter, X, ChevronLeft, ChevronRight, ChevronsUpDown, Check, Eye, FileDown, FileSpreadsheet, Loader2, BarChart3, Timer, Building2
+  ClipboardList, CalendarDays, Filter, X, ChevronLeft, ChevronRight, ChevronsUpDown, Check, Eye, FileDown, FileSpreadsheet, Loader2, BarChart3, Timer, Building2, ChevronDown, Download
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { normalizeSearchText } from "@/utils/normalize-search";
@@ -194,6 +202,7 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
   const [statusSearchOpen, setStatusSearchOpen] = useState(false);
   const [generatingPdf, setGeneratingPdf] = useState(false);
   const [generatingAnalyticalReport, setGeneratingAnalyticalReport] = useState(false);
+  const [exportingSpreadsheet, setExportingSpreadsheet] = useState(false);
   const [activeView, setActiveView] = useState<"list" | "analysis" | "sla" | "sla-sector">("list");
   const [analysisResult, setAnalysisResult] = useState<(
     TicketsAiReportAnalysis & { filterKey: string }
@@ -436,6 +445,7 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
   });
 
   const statusList = CHAMADO_STATUS_OPTIONS;
+  const hasInvalidDateRange = Boolean(dataInicio && dataFim && dataInicio > dataFim);
   const syncedTicketNumbers =
     syncSnapshot?.key === filterSyncKey &&
     syncSnapshot.ticketNumbers.length <= MAX_SYNC_SNAPSHOT_TICKETS
@@ -476,8 +486,8 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
   ]);
   const currentReportFilters = useMemo<ChamadosReportFilters>(() => ({
     catalog,
-    startDate: dataInicio,
-    endDate: dataFim,
+    startDate: dataInicio || null,
+    endDate: dataFim || null,
     clients: selectedClients,
     product: produto,
     products: selectedLegacyProducts,
@@ -590,32 +600,48 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
     setPage(1);
   };
 
-  const prepareReportTicketNumbers = async (toastId: string) => {
+  const prepareReportTicketNumbers = async (toastId: string): Promise<string[] | null> => {
+    // Sincronização remota sob demanda na origem exige período completo delimitado
+    if (!dataInicio || !dataFim || dataInicio > dataFim) {
+      return null;
+    }
+
     let cached = syncedQueries.current.get(filterSyncKey);
 
     if (!cached || Date.now() - cached.syncedAt >= FILTER_SYNC_FRESHNESS_MS) {
-      toast.loading("Atualizando os dados do relatório...", { id: toastId });
-      const result = await solicitarSyncPeriodo(dataInicio, dataFim, syncFilters);
-      cached = {
-        syncedAt: Date.now(),
-        ticketNumbers: result.ticketNumbers,
-      };
-      syncedQueries.current.set(filterSyncKey, cached);
-      setSyncSnapshot({ key: filterSyncKey, ...cached });
+      try {
+        toast.loading("Verificando atualizações no espelho...", { id: toastId });
+        const syncPromise = solicitarSyncPeriodo(dataInicio, dataFim, syncFilters);
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("SYNC_TIMEOUT")), 6000)
+        );
+        const result = await Promise.race([syncPromise, timeoutPromise]);
+        cached = {
+          syncedAt: Date.now(),
+          ticketNumbers: result.ticketNumbers,
+        };
+        syncedQueries.current.set(filterSyncKey, cached);
+        setSyncSnapshot({ key: filterSyncKey, ...cached });
+      } catch (syncError) {
+        console.warn(
+          "Sincronização sob demanda do período excedeu o tempo ou falhou, prosseguindo com dados do espelho:",
+          syncError
+        );
+      }
     }
 
-    return cached.ticketNumbers.length <= MAX_SYNC_SNAPSHOT_TICKETS
-      ? cached.ticketNumbers
-      : null;
+    if (cached && cached.ticketNumbers.length > 0 && cached.ticketNumbers.length <= MAX_SYNC_SNAPSHOT_TICKETS) {
+      return cached.ticketNumbers;
+    }
+    return null;
   };
 
   const handleGeneratePdf = async () => {
     if (
       generatingPdf ||
       generatingAnalyticalReport ||
-      !dataInicio ||
-      !dataFim ||
-      dataInicio > dataFim
+      exportingSpreadsheet ||
+      hasInvalidDateRange
     ) return;
 
     if (activeView === "analysis" && !currentAnalysisResult) {
@@ -626,7 +652,9 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
     setGeneratingPdf(true);
     try {
       const toastId = activeView === "analysis" ? "tickets-ai-report-pdf" : "chamados-report-pdf";
-      const reportTicketNumbers = await prepareReportTicketNumbers(toastId);
+      if (dataInicio && dataFim && !hasInvalidDateRange) {
+        await prepareReportTicketNumbers(toastId);
+      }
 
       toast.loading(
         activeView === "analysis"
@@ -637,7 +665,9 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
 
       const reportSearchFilters = {
         ...currentSearchFilters,
-        ticketNumbers: reportTicketNumbers,
+        startDate: dataInicio || null,
+        endDate: dataFim || null,
+        ticketNumbers: null,
       };
 
       if (activeView === "analysis") {
@@ -685,19 +715,22 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
     if (
       generatingAnalyticalReport ||
       generatingPdf ||
-      !dataInicio ||
-      !dataFim ||
-      dataInicio > dataFim
+      exportingSpreadsheet ||
+      hasInvalidDateRange
     ) return;
 
     const toastId = "chamados-analytical-xlsx";
     setGeneratingAnalyticalReport(true);
     try {
-      const reportTicketNumbers = await prepareReportTicketNumbers(toastId);
+      if (dataInicio && dataFim && !hasInvalidDateRange) {
+        await prepareReportTicketNumbers(toastId);
+      }
       toast.loading("Buscando todos os chamados do filtro...", { id: toastId });
       const reportRows = await fetchAllChamados({
         ...currentSearchFilters,
-        ticketNumbers: reportTicketNumbers,
+        startDate: dataInicio || null,
+        endDate: dataFim || null,
+        ticketNumbers: null,
       });
 
       if (reportRows.length === 0) {
@@ -749,6 +782,88 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
     }
   };
 
+  const handleExportSpreadsheet = async (
+    format: "xlsx" | "csv_chamados" | "csv_tramites" = "xlsx"
+  ) => {
+    if (
+      exportingSpreadsheet ||
+      generatingAnalyticalReport ||
+      generatingPdf ||
+      hasInvalidDateRange
+    ) return;
+
+    const toastId = "chamados-export-spreadsheet";
+    setExportingSpreadsheet(true);
+    try {
+      if (dataInicio && dataFim && !hasInvalidDateRange) {
+        await prepareReportTicketNumbers(toastId);
+      }
+      toast.loading("Buscando todos os chamados com os filtros aplicados...", { id: toastId });
+
+      const exportFilters = {
+        ...currentSearchFilters,
+        startDate: dataInicio || null,
+        endDate: dataFim || null,
+        ticketNumbers: null,
+      };
+
+      const reportRows = await fetchAllChamados(exportFilters);
+
+      if (reportRows.length === 0) {
+        toast.info("Nenhum chamado encontrado na visualização atual para exportar.", {
+          id: toastId,
+        });
+        return;
+      }
+
+      toast.loading(
+        `Carregando todos os trâmites de ${reportRows.length} chamado(s)...`,
+        { id: toastId },
+      );
+
+      const tramitesPorChamado = await fetchChamadosTramites(
+        reportRows.map((chamado) => chamado.numeroChamado)
+      );
+
+      const totalTramites = [...tramitesPorChamado.values()]
+        .reduce((total, tramites) => total + tramites.length, 0);
+
+      toast.loading(
+        format === "xlsx"
+          ? `Compilando planilha Excel com ${reportRows.length} chamados e ${totalTramites} trâmites...`
+          : `Compilando arquivo CSV com ${reportRows.length} chamados...`,
+        { id: toastId }
+      );
+
+      const { generateChamadosSpreadsheet } = await import(
+        "@/lib/chamados-export-spreadsheet"
+      );
+
+      await generateChamadosSpreadsheet(
+        reportRows,
+        tramitesPorChamado,
+        currentReportFilters,
+        { format }
+      );
+
+      const formatLabel = format === "xlsx" ? "Planilha Excel (.xlsx)" : "Arquivo CSV";
+      toast.success(
+        `${formatLabel} gerada com sucesso! (${reportRows.length} chamado(s) e ${totalTramites} trâmite(s)).`,
+        { id: toastId }
+      );
+    } catch (error) {
+      console.error("Erro ao exportar planilha de chamados:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível exportar a planilha de chamados.",
+        { id: toastId },
+      );
+    } finally {
+      setExportingSpreadsheet(false);
+    }
+  };
+
   return (
     <div className="container mx-auto w-full min-w-0 space-y-3 px-0 pb-4 pt-2 sm:p-3 md:p-4">
       {/* Cabeçalho */}
@@ -767,6 +882,68 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
           data-testid="tickets-report-actions"
           className="flex w-full min-w-0 flex-wrap items-center gap-1.5 md:w-auto md:justify-end"
         >
+          {/* Novo Botão: Exportar Planilha Completa (com Trâmites e Descrições) */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                variant="default"
+                size="sm"
+                className="h-10 min-w-0 flex-1 gap-1.5 px-2.5 text-[10px] font-semibold bg-emerald-700 hover:bg-emerald-800 text-white shadow-sm sm:h-7 sm:flex-none"
+                disabled={exportingSpreadsheet || generatingAnalyticalReport || generatingPdf || hasInvalidDateRange}
+                title={hasInvalidDateRange
+                  ? "A data inicial não pode ser posterior à data final"
+                  : "Exportar planilha completa com todos os chamados da visualização, descrições integrais e histórico de trâmites"}
+              >
+                {exportingSpreadsheet ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <FileSpreadsheet className="h-3 w-3" />
+                )}
+                {exportingSpreadsheet ? "Exportando..." : "Exportar Planilha"}
+                <ChevronDown className="h-3 w-3 opacity-70 ml-0.5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64">
+              <DropdownMenuLabel className="text-xs font-semibold">
+                Opções de Planilha
+              </DropdownMenuLabel>
+              <DropdownMenuItem
+                className="cursor-pointer gap-2 py-2"
+                onClick={() => void handleExportSpreadsheet("xlsx")}
+              >
+                <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
+                <div className="flex flex-col">
+                  <span className="font-medium text-xs">Planilha Excel (.xlsx)</span>
+                  <span className="text-[10px] text-muted-foreground">
+                    Recomendado: Chamados + Trâmites + Filtros
+                  </span>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="cursor-pointer gap-2 py-1.5"
+                onClick={() => void handleExportSpreadsheet("csv_chamados")}
+              >
+                <Download className="h-3.5 w-3.5 text-muted-foreground" />
+                <div className="flex flex-col">
+                  <span className="text-xs">Chamados em CSV (.csv)</span>
+                  <span className="text-[10px] text-muted-foreground">Dados cadastrais e descrição</span>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer gap-2 py-1.5"
+                onClick={() => void handleExportSpreadsheet("csv_tramites")}
+              >
+                <Download className="h-3.5 w-3.5 text-muted-foreground" />
+                <div className="flex flex-col">
+                  <span className="text-xs">Todos os Trâmites em CSV (.csv)</span>
+                  <span className="text-[10px] text-muted-foreground">Histórico linha a linha</span>
+                </div>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           {activeView !== "sla" && activeView !== "sla-sector" && (
             <Button
               type="button"
@@ -774,8 +951,10 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
               size="sm"
               className="h-10 min-w-0 flex-1 gap-1.5 px-2 text-[10px] sm:h-7 sm:flex-none"
               onClick={handleGeneratePdf}
-              disabled={generatingPdf || generatingAnalyticalReport || syncingPeriodo || !dataInicio || !dataFim || dataInicio > dataFim}
-              title={activeView === "analysis"
+              disabled={generatingPdf || generatingAnalyticalReport || exportingSpreadsheet || hasInvalidDateRange}
+              title={hasInvalidDateRange
+                ? "A data inicial não pode ser posterior à data final"
+                : activeView === "analysis"
                 ? "Gerar PDF executivo com gráficos e parecer da IA"
                 : "Gerar PDF com todos os chamados filtrados"}
             >
@@ -798,8 +977,10 @@ export default function DeploymentsTickets({ catalog = "orion" }: DeploymentsTic
             size="sm"
             className="h-10 min-w-0 flex-1 gap-1.5 px-2 text-[10px] sm:h-7 sm:flex-none"
             onClick={handleGenerateAnalyticalReport}
-            disabled={generatingAnalyticalReport || generatingPdf || syncingPeriodo || !dataInicio || !dataFim || dataInicio > dataFim}
-            title="Baixar uma planilha com todos os chamados filtrados, trâmites, SLA e gráficos analíticos"
+            disabled={generatingAnalyticalReport || generatingPdf || exportingSpreadsheet || hasInvalidDateRange}
+            title={hasInvalidDateRange
+              ? "A data inicial não pode ser posterior à data final"
+              : "Baixar uma planilha com todos os chamados filtrados, trâmites, SLA e gráficos analíticos"}
           >
             {generatingAnalyticalReport ? (
               <Loader2 className="h-3 w-3 animate-spin" />

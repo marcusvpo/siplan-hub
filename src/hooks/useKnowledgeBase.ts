@@ -150,14 +150,13 @@ export function useKnowledgeBase() {
     return docData.articles.find((a) => a.id === selectedArticleId) || docData.articles[0];
   }, [docData, selectedArticleId]);
 
-  // Sincronizar o draftBody ao mudar de artigo garantindo baseline limpo
+  // Sincronizar o draftBody ao mudar de artigo ou atualizar a base garantindo baseline limpo
   useEffect(() => {
-    if (selectedArticle) {
+    if (selectedArticle && !isDirty) {
       setDraftBody(selectedArticle.body);
       initialBodyRef.current = ""; // Reset baseline para receber o primeiro render do editor
-      setIsDirty(false);
     }
-  }, [selectedArticle?.id]);
+  }, [selectedArticle?.id, selectedArticle?.body, isDirty]);
 
   // Prevenir fechamento acidental de aba se houver alterações pendentes
   useEffect(() => {
@@ -883,6 +882,77 @@ export function useKnowledgeBase() {
     setSyncedFileId(null);
   }, []);
 
+  const [isSyncingStorage, setIsSyncingStorage] = useState(false);
+
+  // Sincronização manual com o Supabase Storage & OpenAI
+  const syncStorageKnowledgeBase = useCallback(
+    async (summaryChanges?: string) => {
+      setIsSyncingStorage(true);
+      try {
+        // 1. Chamar a RPC para sincronização e registro no banco
+        const { data: rpcResult, error: rpcError } = await supabase.rpc(
+          "sync_manual_knowledge_version" as any,
+          {
+            p_summary_changes: summaryChanges || "Sincronização manual com Supabase Storage & OpenAI",
+          },
+        );
+
+        if (rpcError) {
+          throw new Error(`Erro ao registrar versão no banco: ${rpcError.message}`);
+        }
+
+        const resObj = rpcResult as Record<string, unknown> | null;
+        if (resObj && resObj.success === false) {
+          throw new Error(String(resObj.error || "Falha na sincronização manual."));
+        }
+
+        // 2. Se a RPC gerou um backup_file_path, tentar salvar cópia física de backup no Storage
+        if (resObj?.backup_file_path && docData?.rawContent) {
+          try {
+            const blob = new Blob([docData.rawContent], {
+              type: "text/markdown;charset=utf-8",
+            });
+            await supabase.storage
+              .from(STORAGE_BUCKET)
+              .upload(String(resObj.backup_file_path), blob, {
+                upsert: true,
+                contentType: "text/markdown",
+              });
+          } catch (backupErr) {
+            console.warn("Aviso ao gerar cópia física de backup:", backupErr);
+          }
+        }
+
+        // 3. Forçar refetch com cache bypass de todas as queries relevantes
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["assistant_knowledge_doc"] }),
+          queryClient.invalidateQueries({ queryKey: ["assistant_knowledge_versions"] }),
+          queryClient.invalidateQueries({ queryKey: ["assistant_knowledge_last_sync"] }),
+        ]);
+
+        const [freshDocResult] = await Promise.all([
+          refetch(),
+          refetchVersions(),
+          queryClient.refetchQueries({ queryKey: ["assistant_knowledge_last_sync"] }),
+        ]);
+
+        const articlesCount = freshDocResult.data?.articles?.length || docData?.articles?.length || 0;
+        const versionTag = String(resObj?.version_tag || "v" + (resObj?.version_number ?? ""));
+
+        return {
+          success: true,
+          versionTag,
+          versionNumber: resObj?.version_number as number | undefined,
+          articlesCount,
+          syncedAt: String(resObj?.synced_at || new Date().toISOString()),
+        };
+      } finally {
+        setIsSyncingStorage(false);
+      }
+    },
+    [docData, queryClient, refetch, refetchVersions],
+  );
+
   return {
     docData,
     articles: docData?.articles || [],
@@ -930,6 +1000,9 @@ export function useKnowledgeBase() {
     syncErrorMessage,
     syncedFileId,
     resetSaveState,
+    // Sincronização manual com o Supabase Storage
+    syncStorageKnowledgeBase,
+    isSyncingStorage,
     // Guarda de alterações não salvas
     isUnsavedDialogOpen,
     confirmDiscardAndSwitch,
