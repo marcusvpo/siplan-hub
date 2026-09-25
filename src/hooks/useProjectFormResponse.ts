@@ -132,6 +132,22 @@ export function useUpsertFormResponse() {
         responseData = data;
       }
 
+      // Replicar o campo Justificativa / Parecer Técnico para Observações da etapa 2 caso finalizado
+      const isFinalized = status === 'approved' || status === 'approved_with_restrictions' || status === 'rejected';
+      if (input.stage === 'adherence' && isFinalized && input.data?.finalNotes && typeof input.data.finalNotes === 'string' && input.data.finalNotes.trim()) {
+        try {
+          await supabase
+            .from("projects")
+            .update({
+              adherence_observations: input.data.finalNotes,
+              updated_at: now,
+            })
+            .eq("id", input.project_id);
+        } catch (syncErr) {
+          console.error("Erro ao sincronizar parecer técnico para observações do projeto:", syncErr);
+        }
+      }
+
       return responseData as ProjectFormResponse;
     },
     onSuccess: (data) => {

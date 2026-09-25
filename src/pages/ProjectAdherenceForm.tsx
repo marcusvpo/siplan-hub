@@ -7,6 +7,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useDebounce } from "@/hooks/use-debounce";
+import { supabase } from "@/integrations/supabase/client";
 import { FormRenderer } from "@/components/FormRenderer/FormRenderer";
 import { RichTextContent } from "@/components/ui/rich-text-content";
 import { AiRichTextField } from "@/components/ui/ai-rich-text-field";
@@ -500,6 +501,23 @@ export default function ProjectAdherenceForm() {
         data: finalizedData,
         status: statusToSubmit,
       });
+
+      // Replicar o conteúdo de "Justificativa / Parecer Técnico" para "Observações & Detalhes"
+      // na etapa 2 (Análise de Aderência) do projeto
+      if (finalizedData.finalNotes?.trim()) {
+        try {
+          await supabase
+            .from("projects")
+            .update({
+              adherence_observations: finalizedData.finalNotes,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", projectId);
+        } catch (syncError) {
+          console.error("Falha ao replicar parecer técnico para observações do projeto:", syncError);
+        }
+      }
+
       lastSavedDataRef.current = serializeFormData(finalizedData);
       setLastSavedAt(new Date(finalizedResponse.updated_at));
       setDraftSaveStatus("saved");
